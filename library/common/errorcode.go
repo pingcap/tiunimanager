@@ -210,7 +210,7 @@ var explanationContainer = map[TIEM_ERROR_CODE]ErrorCodeExplanation{
 	// param group & cluster param
 	TIEM_DEFAULT_PARAM_GROUP_NOT_DEL:                 {TIEM_DEFAULT_PARAM_GROUP_NOT_DEL, "The default param group cannot be deleted", 500},
 	TIEM_MODIFY_PARAM_FAILED:                         {TIEM_MODIFY_PARAM_FAILED, "apply or modify parameters failed!", 500},
-	TIEM_CONVERT_OBJ_FAILED:                          {TIEM_CONVERT_OBJ_FAILED, "convert obj failed!", 500},
+	TIEM_CONVERT_OBJ_FAILED:                          {TIEM_CONVERT_OBJ_FAILED, "convert object failed!", 500},
 	TIEM_PARAMETER_GROUP_CREATE_ERROR:                {TIEM_PARAMETER_GROUP_CREATE_ERROR, "failed to create parameter group", 500},
 	TIEM_PARAMETER_GROUP_UPDATE_ERROR:                {TIEM_PARAMETER_GROUP_UPDATE_ERROR, "failed to update parameter group", 500},
 	TIEM_PARAMETER_GROUP_DELETE_ERROR:                {TIEM_PARAMETER_GROUP_DELETE_ERROR, "failed to delete parameter group", 500},

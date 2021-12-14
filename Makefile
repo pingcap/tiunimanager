@@ -281,6 +281,8 @@ mock:
 	mockgen -destination ./test/mockmodels/mockbr/mock_br_interface.go -package mockbr -source ./models/cluster/backuprestore/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockimportexport/mock_importexport_interface.go -package mockimportexport -source ./models/datatransfer/importexport/readerwriter.go
 	mockgen -destination ./test/mockmodels/mocksecondparty/mock_secondparty_interface.go -package mocksecondparty -source ./models/workflow/secondparty/readerwriter.go
+	mockgen -destination ./test/mockmodels/mockparametergroup/mock_parametergroup_interface.go -package mockparametergroup -source ./models/parametergroup/readerwriter.go
+	mockgen -destination ./test/mockmodels/mockclusterparameter/mock_clusterparameter_interface.go -package mockclusterparameter -source ./models/cluster/parameter/readerwriter.go
 
 swag:
 	$(GO) install github.com/swaggo/swag/cmd/swag@v1.7.1

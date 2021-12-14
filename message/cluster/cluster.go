@@ -263,7 +263,8 @@ type QueryClusterParametersReq struct {
 }
 
 type QueryClusterParametersResp struct {
-	structs.ClusterParameterInfo
+	ParameterGroupId string                         `json:"parameterGroupId"`
+	Params           []structs.ClusterParameterInfo `json:"params"`
 }
 
 type UpdateClusterParametersReq struct {
@@ -282,7 +283,7 @@ type InspectClusterParametersReq struct {
 }
 
 type InspectClusterParametersResp struct {
-	ParamId       int64                      `json:"paramId" example:"1"`
+	ParamID       int64                      `json:"paramId" example:"1"`
 	Name          string                     `json:"name" example:"binlog_cache"`
 	ComponentType string                     `json:"componentType" example:"tidb"`
 	Instance      string                     `json:"instance" example:"172.16.5.23"`

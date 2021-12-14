@@ -15,7 +15,7 @@
 
 /*******************************************************************************
  * @File: manager
- * @Description:
+ * @Description: cluster parameter service implements
  * @Author: jiangxunyu@pingcap.com
  * @Version: 1.0.0
  * @Date: 2021/12/10 10:01
@@ -25,11 +25,19 @@ package parameter
 
 import (
 	"context"
+	"encoding/json"
 
-	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+
+	"github.com/pingcap-inc/tiem/models/cluster/parameter"
+
+	"github.com/pingcap-inc/tiem/common/structs"
+
+	"github.com/pingcap-inc/tiem/library/common"
+
+	"github.com/pingcap-inc/tiem/models"
+
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/util/convert"
 	"github.com/pingcap-inc/tiem/message/cluster"
 )
 
@@ -39,53 +47,67 @@ func NewManager() *Manager {
 	return &Manager{}
 }
 
-func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryClusterParametersReq) (resp []cluster.QueryClusterParametersResp, err error) {
-	var dbReq *dbpb.DBFindParamsByClusterIdRequest
-	err = convert.ConvertObj(req, &dbReq)
+func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryClusterParametersReq) (resp cluster.QueryClusterParametersResp, page *clusterpb.RpcPage, err error) {
+	offset := (req.Page - 1) * req.PageSize
+	pgId, params, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, offset, req.PageSize)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("list cluster params req: %v, err: %v", req, err)
-		return
+		return resp, page, framework.WrapError(common.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, "failed to query cluster parameter", err)
 	}
 
-	_, err = client.DBClient.FindParamsByClusterId(ctx, dbReq)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("list cluster param invoke metadb err: %v", err)
-		return
+	resp = cluster.QueryClusterParametersResp{ParameterGroupId: pgId}
+	resp.Params = make([]structs.ClusterParameterInfo, len(params))
+	for i, param := range params {
+		resp.Params[i] = structs.ClusterParameterInfo{
+			ParamId:        param.ID,
+			Category:       param.Category,
+			Name:           param.Name,
+			InstanceType:   param.InstanceType,
+			SystemVariable: param.SystemVariable,
+			Type:           param.Type,
+			Unit:           param.Unit,
+			//Range:          param.Range,
+			HasReboot:    param.HasReboot,
+			HasApply:     param.HasApply,
+			UpdateSource: param.UpdateSource,
+			DefaultValue: param.DefaultValue,
+			//RealValue:      param.RealValue,
+			Description: param.Description,
+			Note:        param.Note,
+			CreatedAt:   param.CreatedAt.Unix(),
+			UpdatedAt:   param.UpdatedAt.Unix(),
+		}
 	}
 
-	//resp.Page = convertPage(dbRsp.Page)
-	//resp.RespStatus = convertRespStatus(dbRsp.Status)
-	//resp.ID = dbRsp.ID
-	//if dbRsp.Params != nil {
-	//	ps := make([]*clusterpb.ClusterParamDTO, len(dbRsp.Params))
-	//	err = convert.ConvertObj(dbRsp.Params, &ps)
-	//	if err != nil {
-	//		framework.LogWithContext(ctx).Errorf("list cluster params convert resp err: %v", err)
-	//		return err
-	//	}
-	//	resp.Params = ps
-	//}
-	return resp, nil
+	page = &clusterpb.RpcPage{
+		Page:     int32(req.Page),
+		PageSize: int32(req.PageSize),
+		Total:    int32(total),
+	}
+	return resp, page, nil
 }
 
 func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.UpdateClusterParametersReq) (resp cluster.UpdateClusterParametersResp, err error) {
-	var dbReq *dbpb.DBUpdateClusterParamsRequest
-	err = convert.ConvertObj(req, &dbReq)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("update cluster params req: %v, err: %v", req, err)
-		return
+	params := make([]*parameter.ClusterParameterMapping, len(req.Params))
+	for i, param := range req.Params {
+		b, err := json.Marshal(param.RealValue)
+		if err != nil {
+			return cluster.UpdateClusterParametersResp{}, err
+		}
+		params[i] = &parameter.ClusterParameterMapping{
+			ClusterID:   req.ClusterID,
+			ParameterID: param.ParamId,
+			RealValue:   string(b),
+		}
 	}
-
-	dbRsp, err := client.DBClient.UpdateClusterParams(ctx, dbReq)
+	err = models.GetClusterParameterReaderWriter().UpdateClusterParameter(ctx, req.ClusterID, params)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("update cluster param invoke metadb err: %v", err)
-		return
+		return cluster.UpdateClusterParametersResp{}, err
 	}
-	resp.ClusterID = dbRsp.ClusterId
+	resp = cluster.UpdateClusterParametersResp{ClusterID: req.ClusterID}
 	return resp, nil
 }
 
-func (m *Manager) InspectClusterParams(ctx context.Context, req cluster.InspectClusterParametersReq) (resp cluster.InspectClusterParametersResp, err error) {
+func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.InspectClusterParametersReq) (resp cluster.InspectClusterParametersResp, err error) {
 	// todo: Reliance on parameter source query implementation
 	return
 }

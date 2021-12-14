@@ -32,7 +32,7 @@ import (
 // @Security ApiKeyAuth
 // @Param queryReq query cluster.QueryClusterParametersReq false "page" default(1)
 // @Param clusterId path string true "clusterId"
-// @Success 200 {object} controller.ResultWithPage{data=[]cluster.QueryClusterParametersResp}
+// @Success 200 {object} controller.ResultWithPage{data=cluster.QueryClusterParametersResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
@@ -41,7 +41,7 @@ func QueryParams(c *gin.Context) {
 	var req cluster.QueryClusterParametersReq
 
 	if requestBody, ok := controller.HandleJsonRequestFromBody(c, req); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryClusterParameters, make([][]cluster.QueryClusterParametersResp, 0),
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryClusterParameters, &cluster.QueryClusterParametersResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

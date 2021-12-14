@@ -189,7 +189,7 @@ func (handler *ClusterServiceHandler) QueryParameterGroup(ctx context.Context, r
 
 	if handleRequest(ctx, req, resp, request) {
 		result, page, err := handler.parameterGroupManager.QueryParameterGroup(ctx, request)
-		handleResponse(ctx, resp, err, result, &page)
+		handleResponse(ctx, resp, err, result, page)
 	}
 	return nil
 }
@@ -215,7 +215,7 @@ func (handler *ClusterServiceHandler) ApplyParameterGroup(ctx context.Context, r
 	}
 
 	// query params list by param group id
-	pgDetail, err := handler.parameterGroupManager.DetailParameterGroup(ctx, message.DetailParameterGroupReq{ID: request.ID})
+	pgDetail, err := handler.parameterGroupManager.DetailParameterGroup(ctx, message.DetailParameterGroupReq{ParamGroupID: request.ParamGroupId})
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("apply param group err: %v", err)
 		handleResponse(ctx, resp, framework.SimpleError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR), nil, nil)
@@ -231,7 +231,7 @@ func (handler *ClusterServiceHandler) ApplyParameterGroup(ctx context.Context, r
 	}
 	// Convert the default value of the parameter group to the real value of the modified parameter
 	for i, param := range pgDetail.Params {
-		params[i].RealValue.Cluster = param.DefaultValue
+		params[i].RealValue.ClusterValue = param.DefaultValue
 	}
 	modifyParam := &parametergroup.ModifyParam{Reboot: request.Reboot, Params: params}
 	clusterAggregation, err := domain.ModifyParameters(ctx, nil, request.ClusterID, modifyParam)
@@ -264,8 +264,8 @@ func (handler *ClusterServiceHandler) QueryClusterParameters(ctx context.Context
 	request := cluster.QueryClusterParametersReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterParameterManager.QueryClusterParameters(ctx, request)
-		handleResponse(ctx, resp, err, result, nil)
+		result, page, err := handler.clusterParameterManager.QueryClusterParameters(ctx, request)
+		handleResponse(ctx, resp, err, result, page)
 	}
 	return nil
 }
@@ -308,7 +308,7 @@ func (handler *ClusterServiceHandler) InspectClusterParameters(ctx context.Conte
 	request := cluster.InspectClusterParametersReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterParameterManager.InspectClusterParams(ctx, request)
+		result, err := handler.clusterParameterManager.InspectClusterParameters(ctx, request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil

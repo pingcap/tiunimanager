@@ -15,7 +15,7 @@
 
 /*******************************************************************************
  * @File: manager.go
- * @Description:
+ * @Description: parameter group service implements
  * @Author: jiangxunyu@pingcap.com
  * @Version: 1.0.0
  * @Date: 2021/12/9 15:27
@@ -25,16 +25,22 @@ package parametergroup
 
 import (
 	"context"
-	"strconv"
+	"encoding/json"
+
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+
+	"github.com/pingcap-inc/tiem/models/cluster/parameter"
+
+	"github.com/pingcap-inc/tiem/models/parametergroup"
+
+	"github.com/pingcap-inc/tiem/models"
+
+	"github.com/pingcap-inc/tiem/common/structs"
 
 	"github.com/pingcap-inc/tiem/message"
 
-	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/util/convert"
 )
 
 type Manager struct{}
@@ -74,198 +80,249 @@ type ModifyParam struct {
 }
 
 type ApplyParam struct {
-	ParamId       int64
-	Name          string
-	ComponentType string
-	HasReboot     int32
-	Source        int32
-	Type          int32
-	RealValue     clusterpb.ParamRealValueDTO
+	ParameterId  string
+	Name         string
+	InstanceType string
+	HasReboot    int
+	UpdateSource int
+	Type         int
+	RealValue    structs.ParameterRealValue
 }
 
 func (m *Manager) CreateParameterGroup(ctx context.Context, req message.CreateParameterGroupReq) (resp message.CreateParameterGroupResp, err error) {
-	dbReq := dbpb.DBCreateParamGroupRequest{}
-	err = convert.ConvertObj(req, &dbReq)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("create param group req: %v, err: %v", req, err)
-		return
+	pg := &parametergroup.ParameterGroup{
+		Name:           req.Name,
+		ClusterSpec:    req.ClusterSpec,
+		HasDefault:     req.HasDefault,
+		DBType:         req.HasDefault,
+		GroupType:      req.GroupType,
+		ClusterVersion: req.ClusterVersion,
+		Note:           req.Note,
 	}
-	dbRsp, err := client.DBClient.CreateParamGroup(ctx, &dbReq)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("create param group req: %v, err: %v", req, err)
-		err = framework.WrapError(common.TIEM_PARAMETER_GROUP_CREATE_ERROR, "failed to create parameter group", err)
-		return
+	pgm := make([]*parametergroup.ParameterGroupMapping, len(req.Params))
+	for i, param := range req.Params {
+		pgm[i] = &parametergroup.ParameterGroupMapping{
+			ParameterID:  param.ID,
+			DefaultValue: param.DefaultValue,
+			Note:         param.Note,
+		}
 	}
-	resp = message.CreateParameterGroupResp{ParamGroupID: strconv.FormatInt(dbRsp.ParamGroupId, 10)}
+	// invoke database reader writer.
+	parameterGroup, err := models.GetParameterGroupReaderWriter().CreateParameterGroup(ctx, pg, pgm)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("create parameter group req: %v, err: %v", req, err)
+		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_CREATE_ERROR, "failed to create parameter group", err)
+	}
+	resp = message.CreateParameterGroupResp{ParamGroupID: parameterGroup.ID}
 	return resp, nil
 }
 
 func (m *Manager) UpdateParameterGroup(ctx context.Context, req message.UpdateParameterGroupReq) (resp message.UpdateParameterGroupResp, err error) {
-	dbReq := dbpb.DBUpdateParamGroupRequest{}
-	err = convert.ConvertObj(req, &dbReq)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("update param group req: %v, err: %v", req, err)
-		return
+	pg := &parametergroup.ParameterGroup{
+		ID:             req.ParamGroupID,
+		Name:           req.Name,
+		ClusterSpec:    req.ClusterSpec,
+		ClusterVersion: req.ClusterVersion,
+		Note:           req.Note,
 	}
-	dbRsp, err := client.DBClient.UpdateParamGroup(ctx, &dbReq)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("update param group invoke metadb err: %v", err)
-		err = framework.WrapError(common.TIEM_PARAMETER_GROUP_UPDATE_ERROR, "failed to update parameter group", err)
-		return
+	pgm := make([]*parametergroup.ParameterGroupMapping, len(req.Params))
+	for i, param := range req.Params {
+		pgm[i] = &parametergroup.ParameterGroupMapping{
+			ParameterID:  param.ID,
+			DefaultValue: param.DefaultValue,
+			Note:         param.Note,
+		}
 	}
-	resp = message.UpdateParameterGroupResp{ParamGroupID: strconv.FormatInt(dbRsp.ParamGroupId, 10)}
+	err = models.GetParameterGroupReaderWriter().UpdateParameterGroup(ctx, pg, pgm)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("update parameter group invoke metadb err: %v", err)
+		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_UPDATE_ERROR, "failed to update parameter group", err)
+	}
+	resp = message.UpdateParameterGroupResp{ParamGroupID: req.ParamGroupID}
 	return resp, nil
 }
 
 func (m *Manager) DeleteParameterGroup(ctx context.Context, req message.DeleteParameterGroupReq) (resp message.DeleteParameterGroupResp, err error) {
-	paramGroupId, err := strconv.Atoi(req.ID)
-	if err != nil {
-		return resp, err
-	}
-	group, err := client.DBClient.FindParamGroupByID(ctx, &dbpb.DBFindParamGroupByIDRequest{ParamGroupId: int64(paramGroupId)})
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("delete param group req: %v, err: %v", req, err)
+	pg, _, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID)
+	if err != nil || pg.ID == "" {
+		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
+		err = framework.WrapError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR, "failed to detail parameter group", err)
 		return
 	}
-	if group.ParamGroup.HasDefault == int32(DEFAULT) {
-		err = framework.WrapError(common.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL, common.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL.Explain(), err)
-		return
+
+	if pg.HasDefault == int(DEFAULT) {
+		return resp, framework.WrapError(common.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL, common.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL.Explain(), err)
 	}
-	dbRsp, err := client.DBClient.DeleteParamGroup(ctx, &dbpb.DBDeleteParamGroupRequest{ParamGroupId: int64(paramGroupId)})
+	err = models.GetParameterGroupReaderWriter().DeleteParameterGroup(ctx, pg.ID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("delete param group invoke metadb err: %v", err)
+		framework.LogWithContext(ctx).Errorf("delete parameter group invoke metadb err: %v", err)
+		err = framework.WrapError(common.TIEM_PARAMETER_GROUP_DELETE_ERROR, "failed to delete parameter group", err)
 		return
 	}
-	resp = message.DeleteParameterGroupResp{ParamGroupID: strconv.FormatInt(dbRsp.ParamGroupId, 10)}
+	resp = message.DeleteParameterGroupResp{ParamGroupID: pg.ID}
 	return resp, nil
 }
 
-func (m *Manager) QueryParameterGroup(ctx context.Context, req message.QueryParameterGroupReq) (resp []message.QueryParameterGroupResp, page clusterpb.RpcPage, err error) {
-	var dbReq dbpb.DBListParamGroupRequest
-	err = convert.ConvertObj(req, &dbReq)
+func (m *Manager) QueryParameterGroup(ctx context.Context, req message.QueryParameterGroupReq) (resp []message.QueryParameterGroupResp, page *clusterpb.RpcPage, err error) {
+	offset := (req.Page - 1) * req.PageSize
+	pgs, total, err := models.GetParameterGroupReaderWriter().QueryParameterGroup(ctx, req.Name, req.ClusterSpec, req.ClusterVersion, req.DBType, req.HasDefault, offset, req.PageSize)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("list param group req: %v, err: %v", req, err)
-		return
+		framework.LogWithContext(ctx).Errorf("query parameter group req: %v, err: %v", req, err)
+		return resp, page, framework.WrapError(common.TIEM_PARAMETER_GROUP_QUERY_ERROR, "failed to query parameter group", err)
 	}
 
-	_, err = client.DBClient.ListParamGroup(ctx, &dbReq)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("list param group invoke metadb err: %v", err)
-		return
-	}
+	resp = make([]message.QueryParameterGroupResp, len(pgs))
+	for i, pg := range pgs {
+		resp[i] = message.QueryParameterGroupResp{ParameterGroupInfo: convertParameterGroupInfo(pg)}
 
-	//resp.Page = convertPage(dbRsp.Page)
-	//resp.RespStatus = convertRespStatus(dbRsp.Status)
-	//if dbRsp.ParamGroups != nil {
-	//	pgs := make([]*clusterpb.ParamGroupDTO, len(dbRsp.ParamGroups))
-	//	err = convert.ConvertObj(dbRsp.ParamGroups, &pgs)
-	//	if err != nil {
-	//		framework.LogWithContext(ctx).Errorf("list param group convert resp err: %v", err)
-	//		return err
-	//	}
-	//	resp.ParamGroups = pgs
-	//}
-	return resp, clusterpb.RpcPage{Page: 1, PageSize: 10, Total: 10}, nil
-}
-
-func (m *Manager) DetailParameterGroup(ctx context.Context, req message.DetailParameterGroupReq) (resp message.DetailParameterGroupResp, err error) {
-	id, err := strconv.Atoi(req.ID)
-	if err != nil {
-		return
-	}
-	_, err = client.DBClient.FindParamGroupByID(ctx, &dbpb.DBFindParamGroupByIDRequest{ParamGroupId: int64(id)})
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("detail param group invoke metadb err: %v", err)
-		return
-	}
-	//if dbRsp.ParamGroup != nil {
-	//	pg := clusterpb.ParamGroupDTO{}
-	//	err = convert.ConvertObj(dbRsp.ParamGroup, &pg)
-	//	if err != nil {
-	//		framework.LogWithContext(ctx).Errorf("detail param group convert resp err: %v", err)
-	//		return err
-	//	}
-	//	resp.ParamGroup = &pg
-	//}
-	return resp, nil
-}
-
-func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyParameterGroupReq) (resp message.ApplyParameterGroupResp, err error) {
-	// query param group by id
-	paramGroupId, err := strconv.Atoi(req.ID)
-	if err != nil {
-		return
-	}
-	group, err := client.DBClient.FindParamGroupByID(ctx, &dbpb.DBFindParamGroupByIDRequest{ParamGroupId: int64(paramGroupId)})
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("apply param group invoke metadb err: %v", err)
-		return
-	}
-	params := make([]*dbpb.DBApplyParamDTO, len(group.ParamGroup.Params))
-	for i, param := range group.ParamGroup.Params {
-		params[i] = &dbpb.DBApplyParamDTO{
-			ParamId:   param.ParamId,
-			RealValue: &dbpb.DBParamRealValueDTO{Cluster: param.DefaultValue},
+		// condition load parameter details
+		if req.HasDetail {
+			pgm, err := models.GetParameterGroupReaderWriter().QueryParametersByGroupId(ctx, pg.ID)
+			if err != nil {
+				return resp, page, framework.WrapError(common.TIEM_PARAMETER_QUERY_ERROR, "failed to query parameter list", err)
+			}
+			params := make([]structs.ParameterGroupParameterInfo, len(pgm))
+			for j, param := range pgm {
+				pgi, err := convertParameterGroupParameterInfo(param)
+				if err != nil {
+					return resp, page, framework.WrapError(common.TIEM_CONVERT_OBJ_FAILED, "failed to convert parameter group relation parameter", err)
+				}
+				params[j] = pgi
+			}
+			resp[i].Params = params
 		}
 	}
 
-	dbRsp, err := client.DBClient.ApplyParamGroup(ctx, &dbpb.DBApplyParamGroupRequest{
-		ParamGroupId: int64(paramGroupId),
-		ClusterId:    req.ClusterID,
-		Params:       params,
-	})
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("apply param group convert resp err: %v", err)
-		return
+	page = &clusterpb.RpcPage{
+		Page:     int32(req.Page),
+		PageSize: int32(req.PageSize),
+		Total:    int32(total),
 	}
-	resp.ParamGroupId = strconv.FormatInt(dbRsp.ParamGroupId, 10)
-	return resp, nil
+	return resp, page, nil
+}
 
+func (m *Manager) DetailParameterGroup(ctx context.Context, req message.DetailParameterGroupReq) (resp message.DetailParameterGroupResp, err error) {
+	pg, pgm, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
+		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR, "failed to detail parameter group", err)
+	}
+	resp = message.DetailParameterGroupResp{ParameterGroupInfo: convertParameterGroupInfo(pg)}
+
+	params := make([]structs.ParameterGroupParameterInfo, len(pgm))
+	for i, param := range pgm {
+		pgi, err := convertParameterGroupParameterInfo(param)
+		if err != nil {
+			return resp, framework.WrapError(common.TIEM_CONVERT_OBJ_FAILED, "failed to convert parameter group relation parameter", err)
+		}
+		params[i] = pgi
+	}
+	resp.Params = params
+	return resp, nil
 }
 
 func (m *Manager) CopyParameterGroup(ctx context.Context, req message.CopyParameterGroupReq) (resp message.CopyParameterGroupResp, err error) {
-	// query param group by id
-	id, err := strconv.Atoi(req.ID)
-	if err != nil {
-		return
+	// get parameter group by id
+	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID)
+	if err != nil || pg.ID == "" {
+		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
+		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR, "failed to detail parameter group", err)
 	}
-	group, err := client.DBClient.FindParamGroupByID(ctx, &dbpb.DBFindParamGroupByIDRequest{ParamGroupId: int64(id)})
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("copy param group invoke metadb err: %v", err)
-		return
-	}
-	params := make([]*dbpb.DBSubmitParamDTO, len(group.ParamGroup.Params))
-	for i, param := range group.ParamGroup.Params {
-		params[i] = &dbpb.DBSubmitParamDTO{
-			ParamId:      param.ParamId,
+
+	pgm := make([]*parametergroup.ParameterGroupMapping, len(params))
+	for i, param := range params {
+		pgm[i] = &parametergroup.ParameterGroupMapping{
+			ParameterID:  param.ID,
 			DefaultValue: param.DefaultValue,
 			Note:         param.Note,
 		}
 	}
 
-	dbRsp, err := client.DBClient.CreateParamGroup(ctx, &dbpb.DBCreateParamGroupRequest{
-		Name:       req.Name,
-		Note:       req.Note,
-		DbType:     group.ParamGroup.DbType,
-		HasDefault: int32(CUSTOM),
-		Version:    group.ParamGroup.Version,
-		Spec:       group.ParamGroup.Spec,
-		GroupType:  group.ParamGroup.GroupType,
-		ParentId:   group.ParamGroup.ParamGroupId,
-		Params:     params,
-	})
+	// reset parameter group object
+	pg.ID = ""
+	pg.Name = req.Name
+	pg.Note = req.Note
+	parameterGroup, err := models.GetParameterGroupReaderWriter().CreateParameterGroup(ctx, pg, pgm)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("copy param group convert resp err: %v", err)
+		framework.LogWithContext(ctx).Errorf("copy parameter group convert resp err: %v", err)
 		return
 	}
-	resp.ParamGroupID = strconv.FormatInt(dbRsp.ParamGroupId, 10)
+	resp = message.CopyParameterGroupResp{ParamGroupID: parameterGroup.ID}
 	return resp, nil
 }
 
-func convertRespStatus(status *dbpb.DBParamResponseStatus) *clusterpb.ResponseStatusDTO {
-	return &clusterpb.ResponseStatusDTO{Code: status.Code, Message: status.Message}
+func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyParameterGroupReq) (resp message.ApplyParameterGroupResp, err error) {
+	// get parameter group by id
+	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId)
+	if err != nil || pg.ID == "" {
+		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
+		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR, "failed to detail parameter group", err)
+	}
+
+	pgs := make([]*parameter.ClusterParameterMapping, len(params))
+	for i, param := range params {
+		realValue := structs.ParameterRealValue{ClusterValue: param.DefaultValue}
+		b, err := json.Marshal(realValue)
+		if err != nil {
+			return message.ApplyParameterGroupResp{}, err
+		}
+		pgs[i] = &parameter.ClusterParameterMapping{
+			ClusterID:   req.ClusterID,
+			ParameterID: param.ID,
+			RealValue:   string(b),
+		}
+	}
+	err = models.GetClusterParameterReaderWriter().ApplyClusterParameter(ctx, req.ParamGroupId, req.ClusterID, pgs)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("apply parameter group convert resp err: %v", err)
+		return
+	}
+	resp = message.ApplyParameterGroupResp{ParamGroupID: req.ParamGroupId}
+	return resp, nil
 }
 
-func convertPage(page *dbpb.DBParamsPageDTO) *clusterpb.PageDTO {
-	return &clusterpb.PageDTO{Page: page.Page, PageSize: page.PageSize, Total: page.Total}
+func convertParameterGroupParameterInfo(param *parametergroup.ParamDetail) (pgi structs.ParameterGroupParameterInfo, err error) {
+	// convert range
+	ranges := make([]string, 0)
+	if len(param.Range) > 0 {
+		err = json.Unmarshal([]byte(param.Range), &ranges)
+		if err != nil {
+			return pgi, err
+		}
+	}
+
+	pgi = structs.ParameterGroupParameterInfo{
+		ID:             param.ID,
+		Category:       param.Category,
+		Name:           param.Name,
+		InstanceType:   param.InstanceType,
+		SystemVariable: param.SystemVariable,
+		Type:           param.Type,
+		Unit:           param.Unit,
+		Range:          ranges,
+		HasReboot:      param.HasReboot,
+		HasApply:       param.HasApply,
+		DefaultValue:   param.DefaultValue,
+		UpdateSource:   param.UpdateSource,
+		Description:    param.Description,
+		Note:           param.Note,
+		CreatedAt:      param.CreatedAt.Unix(),
+		UpdatedAt:      param.UpdatedAt.Unix(),
+	}
+	return pgi, nil
+}
+
+func convertParameterGroupInfo(pg *parametergroup.ParameterGroup) message.ParameterGroupInfo {
+	return message.ParameterGroupInfo{
+		ParamGroupID:   pg.ID,
+		Name:           pg.Name,
+		DBType:         pg.DBType,
+		HasDefault:     pg.HasDefault,
+		ClusterVersion: pg.ClusterVersion,
+		ClusterSpec:    pg.ClusterSpec,
+		GroupType:      pg.GroupType,
+		Note:           pg.Note,
+		CreatedAt:      pg.CreatedAt.Unix(),
+		UpdatedAt:      pg.UpdatedAt.Unix(),
+	}
 }

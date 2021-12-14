@@ -865,27 +865,27 @@ func modifyParameters(task *TaskEntity, context *FlowContext) bool {
 	paramContainer := make(map[interface{}][]*parametergroup.ApplyParam, 0)
 	for i, param := range modifyParam.Params {
 		// if source is 2, then insert tiup and sql respectively
-		getLoggerWithContext(context).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.Cluster)
-		if param.Source == int32(parametergroup.TiupAndSql) {
+		getLoggerWithContext(context).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.ClusterValue)
+		if param.UpdateSource == int(parametergroup.TiupAndSql) {
 			putParamContainer(paramContainer, int32(parametergroup.TiUP), param)
 			putParamContainer(paramContainer, int32(parametergroup.SQL), param)
 		} else {
-			putParamContainer(paramContainer, param.Source, param)
+			putParamContainer(paramContainer, param.UpdateSource, param)
 		}
 	}
 
 	for source, params := range paramContainer {
 		getLoggerWithContext(context).Debugf("loop current param container source: %v, params size: %d", source, len(params))
-		switch source.(int32) {
-		case int32(parametergroup.TiUP):
+		switch source.(int) {
+		case int(parametergroup.TiUP):
 			if !tiupEditConfig(context, task, params, clusterAggregation) {
 				return false
 			}
-		case int32(parametergroup.SQL):
+		case int(parametergroup.SQL):
 			if !sqlEditConfig(context, task, params, clusterAggregation) {
 				return false
 			}
-		case int32(parametergroup.API):
+		case int(parametergroup.API):
 			if !apiEditConfig(context, task, params, clusterAggregation) {
 				return false
 			}
@@ -901,10 +901,10 @@ func sqlEditConfig(context *FlowContext, task *TaskEntity, params []*parametergr
 	configs := make([]secondparty.ClusterComponentConfig, len(params))
 	for i, param := range params {
 		configs[i] = secondparty.ClusterComponentConfig{
-			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.ComponentType)),
+			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.InstanceType)),
 			// todo: should be replaced with the system variable corresponding to the parameter
 			ConfigKey:   param.Name,
-			ConfigValue: param.RealValue.Cluster,
+			ConfigValue: param.RealValue.ClusterValue,
 		}
 	}
 	req := secondparty.ClusterEditConfigReq{
@@ -928,8 +928,8 @@ func sqlEditConfig(context *FlowContext, task *TaskEntity, params []*parametergr
 func apiEditConfig(context *FlowContext, task *TaskEntity, params []*parametergroup.ApplyParam, clusterAggregation *ClusterAggregation) bool {
 	compContainer := make(map[interface{}][]*parametergroup.ApplyParam, 0)
 	for i, param := range params {
-		getLoggerWithContext(context).Debugf("loop %d api componet type: %v, param name: %v", i, param.ComponentType, param.Name)
-		putParamContainer(compContainer, param.ComponentType, param)
+		getLoggerWithContext(context).Debugf("loop %d api componet type: %v, param name: %v", i, param.InstanceType, param.Name)
+		putParamContainer(compContainer, param.InstanceType, param)
 	}
 	if len(compContainer) > 0 {
 		for comp, params := range compContainer {
@@ -990,7 +990,7 @@ func tiupEditConfig(context *FlowContext, task *TaskEntity, params []*parameterg
 		}
 		cm[param.Name] = clusterValue
 		configs[i] = secondparty.GlobalComponentConfig{
-			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.ComponentType)),
+			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.InstanceType)),
 			ConfigMap:            cm,
 		}
 	}
@@ -1015,29 +1015,29 @@ func tiupEditConfig(context *FlowContext, task *TaskEntity, params []*parameterg
 
 func convertRealParamType(context *FlowContext, param *parametergroup.ApplyParam) (interface{}, error) {
 	switch param.Type {
-	case int32(parametergroup.Integer):
-		c, err := strconv.ParseInt(param.RealValue.Cluster, 0, 64)
+	case int(parametergroup.Integer):
+		c, err := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)
 		if err != nil {
 			getLoggerWithContext(context).Errorf("strconv realvalue type int fail, err = %s", err.Error())
 			return nil, err
 		}
 		return c, nil
-	case int32(parametergroup.Boolean):
-		c, err := strconv.ParseBool(param.RealValue.Cluster)
+	case int(parametergroup.Boolean):
+		c, err := strconv.ParseBool(param.RealValue.ClusterValue)
 		if err != nil {
 			getLoggerWithContext(context).Errorf("strconv realvalue type bool fail, err = %s", err.Error())
 			return nil, err
 		}
 		return c, nil
-	case int32(parametergroup.Float):
-		c, err := strconv.ParseFloat(param.RealValue.Cluster, 64)
+	case int(parametergroup.Float):
+		c, err := strconv.ParseFloat(param.RealValue.ClusterValue, 64)
 		if err != nil {
 			getLoggerWithContext(context).Errorf("strconv realvalue type float fail, err = %s", err.Error())
 			return nil, err
 		}
 		return c, nil
 	default:
-		return param.RealValue.Cluster, nil
+		return param.RealValue.ClusterValue, nil
 	}
 }
 

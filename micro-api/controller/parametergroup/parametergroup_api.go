@@ -71,7 +71,7 @@ const paramNameOfParameterGroupId = "paramGroupId"
 // @Router /param-groups/{paramGroupId} [get]
 func Detail(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.DetailParameterGroupReq{
-		ID: c.Param(paramNameOfParameterGroupId),
+		ParamGroupID: c.Param(paramNameOfParameterGroupId),
 	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DetailParameterGroup, &message.DetailParameterGroupResp{},
 			requestBody,
@@ -117,7 +117,7 @@ func Create(c *gin.Context) {
 // @Router /param-groups/{paramGroupId} [delete]
 func Delete(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.DeleteParameterGroupReq{
-		ID: c.Param(paramNameOfParameterGroupId),
+		ParamGroupID: c.Param(paramNameOfParameterGroupId),
 	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteParameterGroup, &message.DeleteParameterGroupResp{},
 			requestBody,
@@ -145,7 +145,7 @@ func Update(c *gin.Context) {
 		req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
-			req.(*message.UpdateParameterGroupReq).ID = c.Param(paramNameOfParameterGroupId)
+			req.(*message.UpdateParameterGroupReq).ParamGroupID = c.Param(paramNameOfParameterGroupId)
 			return nil
 		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateParameterGroup, &message.UpdateParameterGroupResp{},
@@ -174,7 +174,7 @@ func Copy(c *gin.Context) {
 		req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
-			req.(*message.CopyParameterGroupReq).ID = c.Param(paramNameOfParameterGroupId)
+			req.(*message.CopyParameterGroupReq).ParamGroupID = c.Param(paramNameOfParameterGroupId)
 			return nil
 		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CopyParameterGroup, &message.CopyParameterGroupResp{},
@@ -203,7 +203,7 @@ func Apply(c *gin.Context) {
 		req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
-			req.(*message.ApplyParameterGroupReq).ID = c.Param(paramNameOfParameterGroupId)
+			req.(*message.ApplyParameterGroupReq).ParamGroupId = c.Param(paramNameOfParameterGroupId)
 			return nil
 		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.ApplyParameterGroup, &message.ApplyParameterGroupResp{},

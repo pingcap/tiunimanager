@@ -47,9 +47,7 @@ import (
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/ [post]
 func Create(c *gin.Context) {
-	var req cluster.CreateClusterReq
-
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &cluster.CreateClusterReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateCluster, &cluster.CreateClusterResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -126,7 +124,7 @@ func Query(c *gin.Context) {
 		return
 	}
 
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, request); ok {
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &request); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.QueryCluster, cluster.QueryClusterResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -152,7 +150,7 @@ func Delete(c *gin.Context) {
 		ClusterID: c.Param("clusterId"),
 	}
 
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, req); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteCluster, &cluster.DeleteClusterResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -173,7 +171,7 @@ func Delete(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/restart [post]
 func Restart(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, cluster.RestartClusterReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.RestartClusterReq{
 		ClusterID: c.Param("clusterId"),
 	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.RestartCluster, &cluster.RestartClusterResp{},
@@ -196,7 +194,7 @@ func Restart(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/stop [post]
 func Stop(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, cluster.StopClusterReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.StopClusterReq{
 		ClusterID: c.Param("clusterId"),
 	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.StopCluster, &cluster.StopClusterResp{},
@@ -219,7 +217,7 @@ func Stop(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId} [get]
 func Detail(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, cluster.QueryClusterDetailReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.QueryClusterDetailReq{
 		ClusterID: c.Param("clusterId"),
 	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DetailCluster, &cluster.QueryClusterDetailResp{},
@@ -244,7 +242,7 @@ func Detail(c *gin.Context) {
 func Takeover(c *gin.Context) {
 	var req cluster.TakeoverClusterReq
 
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, req); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.TakeoverClusters, &cluster.TakeoverClusterResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -357,7 +355,7 @@ func ScaleOut(c *gin.Context) {
 	var request cluster.ScaleOutClusterReq
 
 	// handle scale out request and call rpc method
-	if body, ok := controller.HandleJsonRequestFromBody(c, request); ok {
+	if body, ok := controller.HandleJsonRequestFromBody(c, &request); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.ScaleOutCluster,
 			&cluster.ScaleOutClusterResp{}, body, controller.DefaultTimeout)
 	}
@@ -381,7 +379,7 @@ func ScaleIn(c *gin.Context) {
 	var request cluster.ScaleInClusterReq
 
 	// handle scale in request and call rpc method
-	if body, ok := controller.HandleJsonRequestFromBody(c, request); ok {
+	if body, ok := controller.HandleJsonRequestFromBody(c, &request); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.ScaleInCluster,
 			&cluster.ScaleInClusterResp{}, body, controller.DefaultTimeout)
 	}
@@ -404,7 +402,7 @@ func Clone(c *gin.Context) {
 	var request cluster.CloneClusterReq
 
 	// handle clone cluster request and call rpc method
-	if body, ok := controller.HandleJsonRequestFromBody(c, request); ok {
+	if body, ok := controller.HandleJsonRequestFromBody(c, &request); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CloneCluster,
 			&cluster.CloneClusterResp{}, body, controller.DefaultTimeout)
 	}

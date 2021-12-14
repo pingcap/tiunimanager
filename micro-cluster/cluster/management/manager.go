@@ -265,3 +265,11 @@ func asyncMaintenance(ctx context.Context, meta *handler.ClusterMeta, status con
 	}
 	return
 }
+
+func (p *Manager) QueryCluster(ctx context.Context, req cluster.QueryClustersReq) (resp cluster.QueryClusterResp, total int, err error) {
+	return
+}
+
+func (p *Manager) DetailCluster(ctx context.Context, req cluster.QueryClusterDetailReq) (resp cluster.QueryClusterDetailResp, err error) {
+	return
+}

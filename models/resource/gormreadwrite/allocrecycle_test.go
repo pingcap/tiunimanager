@@ -23,6 +23,8 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/structs"
 	"github.com/pingcap-inc/tiem/models/resource/management"
 	"github.com/pingcap-inc/tiem/models/resource/resourcepool"
@@ -68,6 +70,16 @@ func CreateTestHost(region, zone, rack, hostName, ip, clusterType, purpose, disk
 		})
 	}
 	return GormRW.Create(context.TODO(), []resourcepool.Host{h})
+}
+
+func recycleClusterResources(holderId string) error {
+	var request resource_structs.RecycleRequest
+	var recycleRequire resource_structs.RecycleRequire
+	recycleRequire.HolderID = holderId
+
+	recycleRequire.RecycleType = resource_structs.RecycleHolder
+	request.RecycleReqs = append(request.RecycleReqs, recycleRequire)
+	return GormRW.RecycleResources(context.TODO(), &request)
 }
 
 func Test_Create_Delete_Host_Succeed(t *testing.T) {
@@ -182,13 +194,6 @@ func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 16, 64, 3)
 	id3, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host3", "474.111.111.119",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 15, 64, 3)
-	t.Log(id1, id2, id3)
-	// Host Status should be inused or exhausted, so delete would failed
-	/*
-		defer Dao.ResourceManager().DeleteHost(id1)
-		defer Dao.ResourceManager().DeleteHost(id2)
-		defer Dao.ResourceManager().DeleteHost(id3)
-	*/
 
 	loc := structs.Location{}
 	loc.Region = "Test_Region1"
@@ -254,7 +259,14 @@ func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
 	for i := 0; i < 15; i++ {
 		assert.Equal(t, int32(10000+i), usedPorts[i].Port)
 	}
-
+	err = recycleClusterResources("TestCluster1")
+	assert.Nil(t, err)
+	err = GormRW.Delete(context.TODO(), id1)
+	assert.Nil(t, err)
+	err = GormRW.Delete(context.TODO(), id2)
+	assert.Nil(t, err)
+	err = GormRW.Delete(context.TODO(), id3)
+	assert.Nil(t, err)
 }
 
 func TestAllocResources_1Requirement_3Hosts_Filted_by_Label(t *testing.T) {
@@ -264,13 +276,6 @@ func TestAllocResources_1Requirement_3Hosts_Filted_by_Label(t *testing.T) {
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 16, 64, 2)
 	id3, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone3", "Test_Region1,Test_Zone3,Test_Rack1", "Test_Host3", "474.111.111.160",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 15, 64, 1)
-	t.Log(id1, id2, id3)
-	// Host Status should be inused or exhausted, so delete would failed
-	/*
-		defer Dao.ResourceManager().DeleteHost(id1)
-		defer Dao.ResourceManager().DeleteHost(id2)
-		defer Dao.ResourceManager().DeleteHost(id3)
-	*/
 
 	loc := structs.Location{}
 	loc.Region = "Test_Region1"
@@ -326,6 +331,14 @@ func TestAllocResources_1Requirement_3Hosts_Filted_by_Label(t *testing.T) {
 	assert.Equal(t, int32(64-8), host3.FreeMemory)
 	assert.True(t, host3.Stat == string(constants.HostLoadInUsed))
 
+	err = recycleClusterResources("TestCluster59")
+	assert.Nil(t, err)
+	err = GormRW.Delete(context.TODO(), id1)
+	assert.Nil(t, err)
+	err = GormRW.Delete(context.TODO(), id2)
+	assert.Nil(t, err)
+	err = GormRW.Delete(context.TODO(), id3)
+	assert.Nil(t, err)
 }
 
 func newRequirementForRequest(cpuCores, memory int32, needDisk bool, diskcap int32, disktype string, portStart, portEnd, portCount int32) *resource_structs.Requirement {
@@ -352,13 +365,6 @@ func TestAllocResources_3RequestsInBatch_SpecifyHost_Strategy(t *testing.T) {
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 16, 64, 3)
 	id3, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host3", "474.111.111.129",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 15, 64, 3)
-	t.Log(id1, id2, id3)
-	// Host Status should be inused or exhausted, so delete would failed
-	/*
-		defer Dao.ResourceManager().DeleteHost(id1)
-		defer Dao.ResourceManager().DeleteHost(id2)
-		defer Dao.ResourceManager().DeleteHost(id3)
-	*/
 
 	loc1 := structs.Location{}
 	loc1.Region = "Test_Region1"
@@ -445,4 +451,165 @@ func TestAllocResources_3RequestsInBatch_SpecifyHost_Strategy(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		assert.Equal(t, int32(10000+i), usedPorts[i].Port)
 	}
+
+	err = recycleClusterResources("TestCluster1")
+	assert.Nil(t, err)
+	err = GormRW.Delete(context.TODO(), id1)
+	assert.Nil(t, err)
+	err = GormRW.Delete(context.TODO(), id2)
+	assert.Nil(t, err)
+	err = GormRW.Delete(context.TODO(), id3)
+	assert.Nil(t, err)
+}
+
+func TestAllocResources_SpecifyHost_Strategy_TakeOver(t *testing.T) {
+	id1, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone4", "Test_Region1,Test_Zon4,Test_Rack1", "Test_Host1", "474.111.111.147",
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 17, 64, 3)
+
+	err := GormRW.UpdateHostReserved(context.TODO(), id1, true)
+	assert.Equal(t, nil, err)
+	var host resourcepool.Host
+	MetaDB.First(&host, "IP = ?", "474.111.111.147")
+	assert.Equal(t, true, host.Reserved)
+
+	loc1 := structs.Location{}
+	loc1.Region = "Test_Region1"
+	loc1.Zone = "Test_Zone4"
+	loc1.HostIp = "474.111.111.147"
+
+	require1 := newRequirementForRequest(4, 8, true, 256, string(constants.SSD), 10000, 10015, 5)
+
+	var test_req resource_structs.AllocReq
+	test_req.Applicant.HolderId = "TestCluster1"
+	test_req.Applicant.RequestId = "TestRequestID1"
+	test_req.Requires = append(test_req.Requires, resource_structs.AllocRequirement{
+		Location: loc1,
+		Strategy: resource_structs.UserSpecifyHost,
+		Require:  *require1,
+		Count:    1,
+	})
+
+	var batchReq resource_structs.BatchAllocRequest
+	batchReq.BatchRequests = append(batchReq.BatchRequests, test_req)
+	assert.Equal(t, 1, len(batchReq.BatchRequests))
+
+	rsp, err := GormRW.AllocResources(context.TODO(), &batchReq)
+	assert.True(t, nil == rsp && err != nil)
+	t.Log(err)
+	te, ok := err.(framework.TiEMError)
+	assert.Equal(t, true, ok)
+	assert.True(t, common.TIEM_RESOURCE_NOT_ALL_SUCCEED.Equal(int32(te.GetCode())))
+
+	batchReq.BatchRequests[0].Applicant.TakeoverOperation = true
+	rsp, err2 := GormRW.AllocResources(context.TODO(), &batchReq)
+	t.Log(err2)
+	assert.Equal(t, nil, err2)
+	assert.True(t, rsp.BatchResults[0].Results[0].HostId == id1[0])
+
+	err = recycleClusterResources("TestCluster1")
+	assert.Nil(t, err)
+	err = GormRW.Delete(context.TODO(), id1)
+	assert.Nil(t, err)
+}
+
+func Test_AllocResources_ClusterPorts_Strategy(t *testing.T) {
+	var ids []string
+	id1, _ := CreateTestHost("Test_Region29", "Test_Region29,Zone5", "Test_Region29,Zone5,Rack1", "HostName1", "429.111.111.137", string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 17, 64, 3)
+	id2, _ := CreateTestHost("Test_Region29", "Test_Region29,Zone5", "Test_Region29,Zone5,Rack2", "HostName2", "429.111.111.138", string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 16, 64, 3)
+	id3, _ := CreateTestHost("Test_Region29", "Test_Region29,Zone5", "Test_Region29,Zone5,Rack1", "HostName3", "429.111.111.139", string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 15, 64, 3)
+	ids = append(ids, id1...)
+	ids = append(ids, id2...)
+	ids = append(ids, id3...)
+	loc1 := structs.Location{}
+	loc1.Region = "Test_Region29"
+	loc1.Zone = "Zone5"
+
+	filter1 := resource_structs.Filter{}
+	filter1.Arch = string(constants.ArchX8664)
+	require1 := newRequirementForRequest(4, 8, false, 0, string(constants.SSD), 10000, 10015, 5)
+
+	var test_req resource_structs.AllocReq
+	test_req.Applicant = resource_structs.Applicant{}
+	test_req.Applicant.HolderId = "TestCluster29"
+	test_req.Applicant.RequestId = "TestRequestID29"
+	test_req.Requires = append(test_req.Requires, resource_structs.AllocRequirement{
+		Location:   loc1,
+		HostFilter: filter1,
+		Strategy:   resource_structs.RandomRack,
+		Require:    *require1,
+		Count:      3,
+	})
+
+	loc2 := structs.Location{}
+	loc2.Region = "Test_Region29"
+
+	require2 := resource_structs.Requirement{}
+	require2.PortReq = append(require2.PortReq, resource_structs.PortRequirement{
+		Start:   11000,
+		End:     11005,
+		PortCnt: 5,
+	})
+
+	test_req.Requires = append(test_req.Requires, resource_structs.AllocRequirement{
+		Location:   loc2,
+		HostFilter: filter1,
+		Strategy:   resource_structs.ClusterPorts,
+		Require:    require2,
+		Count:      1,
+	})
+
+	var batchReq resource_structs.BatchAllocRequest
+	batchReq.BatchRequests = append(batchReq.BatchRequests, test_req)
+	assert.Equal(t, 1, len(batchReq.BatchRequests))
+
+	rsp, err := GormRW.AllocResources(context.TODO(), &batchReq)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(rsp.BatchResults))
+	assert.Equal(t, 4, len(rsp.BatchResults[0].Results))
+	assert.Equal(t, int32(1), rsp.BatchResults[0].Results[3].Reqseq)
+	assert.Equal(t, int32(10003), rsp.BatchResults[0].Results[0].PortRes[0].Ports[3])
+	assert.True(t, rsp.BatchResults[0].Results[0].HostIp != rsp.BatchResults[0].Results[1].HostIp)
+	assert.True(t, rsp.BatchResults[0].Results[0].HostIp == "429.111.111.137")
+	assert.True(t, rsp.BatchResults[0].Results[1].HostIp == "429.111.111.138")
+	assert.True(t, rsp.BatchResults[0].Results[2].HostIp == "429.111.111.139")
+	assert.Equal(t, int32(4), rsp.BatchResults[0].Results[0].ComputeRes.CpuCores)
+	assert.Equal(t, int32(8), rsp.BatchResults[0].Results[0].ComputeRes.Memory)
+	assert.Equal(t, "", rsp.BatchResults[0].Results[0].DiskRes.DiskId)
+	assert.Equal(t, "", rsp.BatchResults[0].Results[1].DiskRes.DiskId)
+	var host resourcepool.Host
+	MetaDB.First(&host, "IP = ?", "429.111.111.137")
+	assert.Equal(t, int32(17-4), host.FreeCpuCores)
+	assert.Equal(t, int32(64-8), host.FreeMemory)
+	assert.True(t, host.Stat == string(constants.HostLoadInUsed))
+	//var usedPorts []int32
+	for _, id := range ids {
+		var usedPorts []management.UsedPort
+		MetaDB.Order("port").Model(&management.UsedPort{}).Where("host_id = ?", id).Scan(&usedPorts)
+		assert.Equal(t, 10, len(usedPorts))
+
+		for i := 0; i < 5; i++ {
+			assert.Equal(t, int32(10000+i), usedPorts[i].Port)
+			assert.Equal(t, test_req.Applicant.HolderId, usedPorts[i].HolderId)
+			assert.Equal(t, test_req.Applicant.RequestId, usedPorts[i].RequestId)
+		}
+		for i := 0; i < 5; i++ {
+			assert.Equal(t, int32(11000+i), usedPorts[i+5].Port)
+			assert.Equal(t, test_req.Applicant.HolderId, usedPorts[i+5].HolderId)
+			assert.Equal(t, test_req.Applicant.RequestId, usedPorts[i+5].RequestId)
+		}
+	}
+
+	err = recycleClusterResources("TestCluster29")
+	assert.Nil(t, err)
+	var host2 resourcepool.Host
+	MetaDB.First(&host2, "IP = ?", "429.111.111.138")
+	assert.Equal(t, int32(16), host2.FreeCpuCores)
+	assert.Equal(t, int32(64), host2.FreeMemory)
+	assert.True(t, host2.Stat == string(constants.HostLoadLoadLess))
+	var usedPorts2 []management.UsedPort
+	MetaDB.Order("port").Model(&management.UsedPort{}).Where("holder_id = ?", "TestCluster29").Scan(&usedPorts2)
+	assert.Equal(t, 0, len(usedPorts2))
+
+	err = GormRW.Delete(context.TODO(), ids)
+	assert.Nil(t, err)
 }

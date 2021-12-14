@@ -52,7 +52,7 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 
 	clusterFacade := secondparty.ClusterFacade{
 		DbConnParameter: secondparty.DbConnParam{
-			Username: "root", //todo: replace admin account
+			Username: "root", //todo: get username passwd from meta
 			Password: "",
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),
@@ -117,7 +117,7 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 
 	clusterFacade := secondparty.ClusterFacade{
 		DbConnParameter: secondparty.DbConnParam{
-			Username: "root", //todo: replace admin account
+			Username: "root", //todo: get username passwd from meta
 			Password: "",
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),
@@ -144,6 +144,8 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 func defaultEnd(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin defaultEnd")
 	defer framework.LogWithContext(ctx).Info("end defaultEnd")
+
+	//todo: update cluster status
 
 	return nil
 }

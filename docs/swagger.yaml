@@ -297,6 +297,17 @@ definitions:
       strategy:
         $ref: '#/definitions/structs.BackupStrategy'
     type: object
+  cluster.GetDashboardInfoResp:
+    properties:
+      clusterId:
+        example: abc
+        type: string
+      token:
+        type: string
+      url:
+        example: http://127.0.0.1:9093
+        type: string
+    type: object
   cluster.PauseChangeFeedTaskResp:
     properties:
       status:
@@ -931,15 +942,6 @@ definitions:
       totalNodeCount:
         type: integer
     type: object
-  management.DescribeDashboardRsp:
-    properties:
-      clusterId:
-        type: string
-      token:
-        type: string
-      url:
-        type: string
-    type: object
   management.DescribeMonitorRsp:
     properties:
       alertUrl:
@@ -1071,8 +1073,6 @@ definitions:
   message.DataExportReq:
     properties:
       accessKey:
-        type: string
-      bucketRegion:
         type: string
       bucketUrl:
         type: string
@@ -2472,7 +2472,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.DescribeDashboardRsp'
+                  $ref: '#/definitions/cluster.GetDashboardInfoResp'
               type: object
         "401":
           description: Unauthorized
@@ -2702,98 +2702,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: restart a cluster
-      tags:
-      - cluster
-  /clusters/{clusterId}/scale-in:
-    post:
-      consumes:
-      - application/json
-      description: scale in a cluster
-      parameters:
-      - description: cluster id
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      - description: scale in request
-        in: body
-        name: scaleInReq
-        required: true
-        schema:
-          $ref: '#/definitions/cluster.ScaleInClusterReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.ScaleInClusterResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: scale in a cluster
-      tags:
-      - cluster
-  /clusters/{clusterId}/scale-out:
-    post:
-      consumes:
-      - application/json
-      description: scale out a cluster
-      parameters:
-      - description: cluster id
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      - description: scale out request
-        in: body
-        name: scaleOutReq
-        required: true
-        schema:
-          $ref: '#/definitions/cluster.ScaleOutClusterReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.ScaleOutClusterResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: scale out a cluster
       tags:
       - cluster
   /clusters/{clusterId}/stop:
@@ -3125,6 +3033,98 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: restore a new cluster by backup record
+      tags:
+      - cluster
+  /clusters/scale-in:
+    post:
+      consumes:
+      - application/json
+      description: scale in a cluster
+      parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: scale in request
+        in: body
+        name: scaleInReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.ScaleInClusterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.ScaleInClusterResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: scale in a cluster
+      tags:
+      - cluster
+  /clusters/scale-out:
+    post:
+      consumes:
+      - application/json
+      description: scale out a cluster
+      parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: scale out request
+        in: body
+        name: scaleOutReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.ScaleOutClusterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.ScaleOutClusterResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: scale out a cluster
       tags:
       - cluster
   /clusters/takeover:

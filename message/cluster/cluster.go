@@ -84,19 +84,19 @@ type ScaleInClusterReq struct {
 // ScaleInClusterResp Reply message for delete an instance in the cluster
 type ScaleInClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
-	ClusterID                     string `json:"clusterId"`
+	ClusterID string `json:"clusterId"`
 }
 
 // ScaleOutClusterReq Message for cluster expansion operation
 type ScaleOutClusterReq struct {
-	ClusterID                        string `json:"clusterId" form:"clusterId"`
+	ClusterID string `json:"clusterId" form:"clusterId"`
 	structs.ClusterResourceParameter
 }
 
 // ScaleOutClusterResp Reply message for cluster expansion operation
 type ScaleOutClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
-	ClusterID                     string `json:"clusterId"`
+	ClusterID string `json:"clusterId"`
 }
 
 //RestoreNewClusterReq Restore to a new cluster message using the backup file
@@ -133,7 +133,7 @@ type CloneClusterReq struct {
 // CloneClusterResp Reply message for clone a new cluster
 type CloneClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
-	ClusterID                     string `json:"clusterId"`
+	ClusterID string `json:"clusterId"`
 }
 
 // MasterSlaveClusterSwitchoverReq Master and slave cluster switchover messages
@@ -227,13 +227,13 @@ type QueryMonitorInfoResp struct {
 	GrafanaUrl string `json:"grafanaUrl" example:"http://127.0.0.1:3000"`
 }
 
-// QueryDashboardInfoReq Message to query the dashboard address information of a cluster
-type QueryDashboardInfoReq struct {
+// GetDashboardInfoReq Message to query the dashboard address information of a cluster
+type GetDashboardInfoReq struct {
 	ClusterID string `json:"clusterId" example:"abc"`
 }
 
-// QueryDashboardInfoResp Reply message for querying the dashboard address information of the cluster
-type QueryDashboardInfoResp struct {
+// GetDashboardInfoResp Reply message for querying the dashboard address information of the cluster
+type GetDashboardInfoResp struct {
 	ClusterID string `json:"clusterId" example:"abc"`
 	Url       string `json:"url" example:"http://127.0.0.1:9093"`
 	Token     string `json:"token"`

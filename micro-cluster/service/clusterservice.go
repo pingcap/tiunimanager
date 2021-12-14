@@ -550,19 +550,18 @@ func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clus
 	return err
 }
 
-func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *clusterpb.DescribeDashboardRequest, response *clusterpb.DescribeDashboardResponse) (err error) {
+func (c ClusterServiceHandler) GetDashboardInfo(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "DescribeDashboard", int(response.GetStatus().GetCode()))
-	info, err := domain.DescribeDashboard(ctx, request.Operator, request.ClusterId)
-	if err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_DASHBOARD_NOT_FOUND), Message: common.TIEM_DASHBOARD_NOT_FOUND.Explain()}
-	} else {
-		response.Status = SuccessResponseStatus
-		response.ClusterId = info.ClusterId
-		response.Url = info.Url
-		response.Token = info.Token
+	defer handleMetrics(start, "DescribeDashboard", int(response.GetCode()))
+	framework.LogWithContext(ctx).Info("get cluster dashboard info")
+	dashboardReq := cluster.GetDashboardInfoReq{}
+
+	if handleRequest(ctx, request, response, dashboardReq) {
+		result, err := c.clusterManager.GetClusterDashboardInfo(ctx, &dashboardReq)
+		handleResponse(ctx, response, err, *result, nil)
 	}
+
+	return nil
 
 	return nil
 }

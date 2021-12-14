@@ -102,6 +102,8 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request *cluster.Backup
 		return nil, fmt.Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
 	}
 
+	//todo: update cluster status
+
 	//todo: only support FULL Physics backup now
 	record := &backuprestore.BackupRecord{
 		Entity: dbModel.Entity{

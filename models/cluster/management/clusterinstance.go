@@ -36,20 +36,20 @@ type ClusterInstance struct {
 	DiskCapacity int32
 
 	// instance resource info
-	CpuCores       int8
-	Memory         int8
-	HostID         string
-	Zone           string
-	Rack           string
-	HostIP         []string `gorm:"-"`
-	Ports          []int32 `gorm:"-"`
-	DiskID         string
-	DiskPath       string
+	CpuCores int8
+	Memory   int8
+	HostID   string
+	Zone     string
+	Rack     string
+	HostIP   []string `gorm:"-"`
+	Ports    []int32  `gorm:"-"`
+	DiskID   string
+	DiskPath string
 
 	// marshal HostIP, never use
-	HostInfo	   string `gorm:"type:varchar(128)"`
+	HostInfo string `gorm:"type:varchar(128)"`
 	// marshal PortInfo, never use
-	PortInfo	   string `gorm:"type:varchar(128)"`
+	PortInfo string `gorm:"type:varchar(128)"`
 }
 
 func (t *ClusterInstance) BeforeSave(tx *gorm.DB) (err error) {

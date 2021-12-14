@@ -77,14 +77,13 @@ func (m *GormChangeFeedReadWrite) LockStatus(ctx context.Context, taskId string)
 		}).Error
 }
 
-
 func (m *GormChangeFeedReadWrite) UnlockStatus(ctx context.Context, taskId string, targetStatus string) error {
 	if "" == taskId {
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 
 	task := &ChangeFeedTask{}
-	err :=m.DB(ctx).First(task, "id = ?", taskId).Error
+	err := m.DB(ctx).First(task, "id = ?", taskId).Error
 
 	if err != nil {
 		return framework.SimpleError(common.TIEM_CHANGE_FEED_NOT_FOUND)

@@ -13,4 +13,34 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package specs
+/*******************************************************************************
+ * @File: parametergroup_mapping.go
+ * @Description: parameter group mapping table orm
+ * @Author: jiangxunyu@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/10 14:46
+*******************************************************************************/
+
+package parametergroup
+
+import "time"
+
+// ParameterGroupMapping
+// @Description: parameter_group_mapping table orm
+type ParameterGroupMapping struct {
+	ParameterGroupID string    `gorm:"primaryKey;comment:'parameter group id, relation parameter_group table'"`
+	ParameterID      string    `gorm:"primaryKey;comment:'group id, relation parameter table'"`
+	DefaultValue     string    `gorm:"not null;comment:'parameter default value'"`
+	Note             string    `gorm:"comment:'parameter remark information'"`
+	CreatedAt        time.Time `gorm:"<-:create"`
+	UpdatedAt        time.Time
+}
+
+// ParamDetail
+// @Description: parameter group detail object
+type ParamDetail struct {
+	Parameter
+
+	DefaultValue string `json:"defaultValue"`
+	Note         string `json:"note"`
+}

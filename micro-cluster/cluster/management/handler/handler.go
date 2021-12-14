@@ -462,7 +462,7 @@ func (p *ClusterMeta) GetScaleOutConfig() (string, error) {
 }
 
 type ComponentAddress struct {
-	IP string
+	IP   string
 	Port int
 }
 

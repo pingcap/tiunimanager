@@ -257,20 +257,34 @@ type QueryClusterLogResp struct {
 }
 
 type QueryClusterParametersReq struct {
-	ClusterID string `json:"clusterID"`
+	ClusterID string `json:"clusterId"`
 	structs.PageRequest
 }
 
 type QueryClusterParametersResp struct {
-	Parameters []structs.ClusterParameterInfo `json:"parameters"`
+	structs.ClusterParameterInfo
 }
 
 type UpdateClusterParametersReq struct {
-	Params []structs.ClusterParameterSampleInfo `json:"params"`
-	Reboot bool                                 `json:"reboot"`
+	ClusterID string                               `json:"clusterId"`
+	Params    []structs.ClusterParameterSampleInfo `json:"params"`
+	Reboot    bool                                 `json:"reboot"`
 }
 
 type UpdateClusterParametersResp struct {
 	ClusterID                     string `json:"clusterId" example:"1"`
 	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
+}
+
+type InspectClusterParametersReq struct {
+	ClusterID string `json:"clusterId"`
+}
+
+type InspectClusterParametersResp struct {
+	ParamId       int64                      `json:"paramId" example:"1"`
+	Name          string                     `json:"name" example:"binlog_cache"`
+	ComponentType string                     `json:"componentType" example:"tidb"`
+	Instance      string                     `json:"instance" example:"172.16.5.23"`
+	RealValue     structs.ParameterRealValue `json:"realValue"`
+	InspectValue  string                     `json:"inspectValue" example:"1"`
 }

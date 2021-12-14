@@ -90,6 +90,10 @@ const (
 	TIEM_CHANGE_FEED_STATUS_CONFLICT        TIEM_ERROR_CODE = 703
 	TIEM_CHANGE_FEED_LOCK_EXPIRED           TIEM_ERROR_CODE = 704
 	TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM TIEM_ERROR_CODE = 705
+
+	QueryProductComponentProperty = 706 //TODO
+	QueryProductsScanRowError     = 707 //TODO
+	QueryZoneScanRowError         = 708 //TODO
 )
 
 type ErrorCodeExplanation struct {

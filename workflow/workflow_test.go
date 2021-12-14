@@ -38,6 +38,9 @@ var doSuccess = func(node *wfModel.WorkFlowNode, context *FlowContext) error {
 var doFail = func(node *wfModel.WorkFlowNode, context *FlowContext) error {
 	return nil
 }
+var defaultSuccess = func(node *wfModel.WorkFlowNode, context *FlowContext) error {
+	return nil
+}
 
 func init() {
 	models.MockDB()
@@ -82,7 +85,7 @@ func TestFlowManager_Start(t *testing.T) {
 			TaskNodes: map[string]*NodeDefine{
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
-				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
+				"nodeName2Done": {"end", "", "", SyncFuncNode, CompositeExecutor(doFail, defaultSuccess)},
 				"fail":          {"fail", "", "", SyncFuncNode, doFail},
 			},
 		})

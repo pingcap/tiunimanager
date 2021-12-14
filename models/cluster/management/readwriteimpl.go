@@ -100,7 +100,7 @@ func (g *ClusterReadWrite) UpdateInstance(ctx context.Context, instances ...*Clu
 	return g.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		toCreate := make([]*ClusterInstance, 0)
 
-		for _,instance := range instances {
+		for _, instance := range instances {
 			if instance.ID == "" {
 				toCreate = append(toCreate, instance)
 			} else {
@@ -111,7 +111,7 @@ func (g *ClusterReadWrite) UpdateInstance(ctx context.Context, instances ...*Clu
 				}
 			}
 		}
-		if len(toCreate) > 0{
+		if len(toCreate) > 0 {
 			err := tx.CreateInBatches(toCreate, len(toCreate)).Error
 			if err != nil {
 				err = dbCommon.WrapDBError(err)

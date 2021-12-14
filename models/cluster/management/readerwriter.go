@@ -21,7 +21,6 @@ import (
 )
 
 type ReaderWriter interface {
-
 	Create(ctx context.Context, cluster *Cluster) (*Cluster, error)
 	Delete(ctx context.Context, clusterID string) (err error)
 	Get(ctx context.Context, clusterID string) (*Cluster, error)

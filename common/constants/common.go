@@ -23,25 +23,6 @@
 
 package constants
 
-const (
-	Sunday    string = "Sunday"
-	Monday    string = "Monday"
-	Tuesday   string = "Tuesday"
-	Wednesday string = "Wednesday"
-	Thursday  string = "Thursday"
-	Friday    string = "Friday"
-	Saturday  string = "Saturday"
-)
-
-var WeekDayMap = map[string]int{
-	Sunday:    0,
-	Monday:    1,
-	Tuesday:   2,
-	Wednesday: 3,
-	Thursday:  4,
-	Friday:    5,
-	Saturday:  6}
-
 //System log-related constants
 const (
 	LogFileSystem      string = "system"
@@ -74,22 +55,72 @@ const (
 	DefaultMetricsPort      int = 4121
 )
 
-type EMProductNameType string
+type EMProductIDType string
 
-//Definition of product names provided by Enterprise manager
+//Definition of product ID provided by Enterprise manager
 const (
-	EMProductNameTiDB              EMProductNameType = "TiDB"
-	EMProductNameDataMigration     EMProductNameType = "DataMigration"
-	EMProductNameEnterpriseManager EMProductNameType = "EnterpriseManager"
+	EMProductIDTiDB              EMProductIDType = "TiDB"
+	EMProductIDDataMigration     EMProductIDType = "DataMigration"
+	EMProductIDEnterpriseManager EMProductIDType = "EnterpriseManager"
+)
+
+type EMProductComponentIDType string
+
+//Definition of product component ID provided by Enterprise manager
+const (
+	ComponentIDTiDB    EMProductComponentIDType = "TiDB"
+	ComponentIDTiKV    EMProductComponentIDType = "TiKV"
+	ComponentIDPD      EMProductComponentIDType = "PD"
+	ComponentIDTiFlash EMProductComponentIDType = "TiFlash"
+	ComponentIDTiCDC   EMProductComponentIDType = "CDC"
+
+	ComponentIDGrafana          EMProductComponentIDType = "Grafana"
+	ComponentIDPrometheus       EMProductComponentIDType = "Prometheus"
+	ComponentIDAlertManger      EMProductComponentIDType = "AlertManger"
+	ComponentIDNodeExporter     EMProductComponentIDType = "NodeExporter"
+	ComponentIDBlackboxExporter EMProductComponentIDType = "BlackboxExporter"
+
+	ComponentIDClusterServer EMProductComponentIDType = "cluster-server"
+	ComponentIDOpenAPIServer EMProductComponentIDType = "openapi-server"
+	ComponentIDFileServer    EMProductComponentIDType = "file-server"
+)
+
+type EMProductComponentNameType string
+
+//Consistent names and IDs for some components, and only define components that are inconsistent
+
+const (
+	ComponentNameTiDB        EMProductComponentIDType = "Compute Engine"
+	ComponentNameTiKV        EMProductComponentIDType = "Storage Engine"
+	ComponentNamePD          EMProductComponentIDType = "Schedule Engine"
+	ComponentNameTiFlash     EMProductComponentIDType = "Column Storage Engine"
+	ComponentNameGrafana     EMProductComponentIDType = "Monitor GUI"
+	ComponentNamePrometheus  EMProductComponentIDType = "Monitor"
+	ComponentNameAlertManger EMProductComponentIDType = "Alter GUI"
+)
+
+type EMInternalProduct int
+
+//Definition of internal product, only Enterprise Manager' value is EMInternalProductYes
+const (
+	EMInternalProductNo  = 0
+	EMInternalProductYes = 1
 )
 
 type ProductStatus string
 
 //Definition product status information
 const (
-	ProductStatusOnline    ProductStatus = "Online"
-	ProductStatusOffline   ProductStatus = "Offline"
-	ProductStatusException ProductStatus = "Exception" // only TiDB Enterprise Manager
+	ProductStatusOnline  ProductStatus = "Online"
+	ProductStatusOffline ProductStatus = "Offline"
+)
+
+type ProductComponentStatus string
+
+//Definition product component status information
+const (
+	ProductComponentStatusOnline  ProductComponentStatus = "Online"
+	ProductComponentStatusOffline ProductComponentStatus = "Offline"
 )
 
 type ProductSpecStatus string
@@ -106,4 +137,9 @@ type ProductUpgradePathStatus string
 const (
 	ProductUpgradePathAvailable   ProductUpgradePathStatus = "Available"
 	ProductUpgradePathUnAvailable ProductUpgradePathStatus = "UnAvailable"
+)
+
+// MaxBatchQueryDataNumber Batch querying data from an array with maximum conditions
+const (
+	MaxBatchQueryDataNumber int = 512
 )

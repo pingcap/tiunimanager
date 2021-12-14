@@ -230,7 +230,7 @@ func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 		"start cluster[%s], version = %s", cluster.Name, cluster.Version)
 	taskId, err := secondparty.Manager.ClusterStart(
 		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, 0, []string{}, node.ID,
-		)
+	)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster[%s] start error: %s", clusterMeta.Cluster.Name, err.Error())

@@ -421,7 +421,7 @@ func (p *ClusterMeta) EndMaintenance(ctx context.Context, originStatus constants
 }
 
 type ComponentAddress struct {
-	IP string
+	IP   string
 	Port int
 }
 

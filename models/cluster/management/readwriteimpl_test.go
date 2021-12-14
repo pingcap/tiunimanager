@@ -68,7 +68,7 @@ func TestGormClusterReadWrite_Create(t *testing.T) {
 		got, err := testRW.Create(context.TODO(), &Cluster{
 			Entity: common.Entity{
 				TenantId: "111",
-				Status: string(constants.ClusterRunning),
+				Status:   string(constants.ClusterRunning),
 			},
 			Tags: []string{"tag1", "tag2"},
 		})
@@ -99,9 +99,9 @@ func TestGormClusterReadWrite_Create(t *testing.T) {
 func TestGormClusterReadWrite_CreateRelation(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		relation := &ClusterRelation{
-			ObjectClusterID: "111",
+			ObjectClusterID:  "111",
 			SubjectClusterID: "222",
-			RelationType: constants.ClusterRelationCloneFrom,
+			RelationType:     constants.ClusterRelationCloneFrom,
 		}
 		err := testRW.CreateRelation(context.TODO(), relation)
 
@@ -118,7 +118,7 @@ func TestGormClusterReadWrite_Delete(t *testing.T) {
 		},
 		Tags: []string{"tag1", "tag2"},
 	}
-	got, _ := testRW.Create(context.TODO(),cluster)
+	got, _ := testRW.Create(context.TODO(), cluster)
 	defer testRW.Delete(context.TODO(), got.ID)
 
 	t.Run("normal", func(t *testing.T) {
@@ -143,11 +143,11 @@ func TestGormClusterReadWrite_Delete(t *testing.T) {
 
 func TestGormClusterReadWrite_DeleteRelation(t *testing.T) {
 	relation := &ClusterRelation{
-		ObjectClusterID: "111",
+		ObjectClusterID:  "111",
 		SubjectClusterID: "222",
-		RelationType: constants.ClusterRelationCloneFrom,
+		RelationType:     constants.ClusterRelationCloneFrom,
 	}
-	testRW.CreateRelation(context.TODO(),relation)
+	testRW.CreateRelation(context.TODO(), relation)
 
 	t.Run("normal", func(t *testing.T) {
 		err := testRW.DB(context.TODO()).Where("id = ?", relation.ID).First(relation).Error
@@ -306,7 +306,7 @@ func TestGormClusterReadWrite_ClusterTopologySnapshot(t *testing.T) {
 		assert.Error(t, err)
 	})
 	t.Run("latest", func(t *testing.T) {
-		err := testRW.CreateClusterTopologySnapshot(context.TODO(), ClusterTopologySnapshot {
+		err := testRW.CreateClusterTopologySnapshot(context.TODO(), ClusterTopologySnapshot{
 			TenantID: "tenant111", ClusterID: "cluster111", Config: "content111",
 		})
 		assert.NoError(t, err)

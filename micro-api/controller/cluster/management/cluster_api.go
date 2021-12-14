@@ -114,8 +114,8 @@ func Preview(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param queryReq query QueryReq false "query request"
-// @Success 200 {object} controller.ResultWithPage{data=[]ClusterDisplayInfo}
+// @Param queryReq query cluster.QueryClustersReq false "query request"
+// @Success 200 {object} controller.ResultWithPage{data=[]cluster.QueryClusterResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult

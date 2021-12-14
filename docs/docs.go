@@ -741,11 +741,13 @@ var doc = `{
                     },
                     {
                         "type": "integer",
+                        "description": "Current page location",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "Number of this request",
                         "name": "pageSize",
                         "in": "query"
                     }
@@ -764,7 +766,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/management.ClusterDisplayInfo"
+                                                "$ref": "#/definitions/cluster.QueryClusterResp"
                                             }
                                         }
                                     }
@@ -4593,6 +4595,17 @@ var doc = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.ClusterInstanceInfo"
+                    }
+                }
+            }
+        },
+        "cluster.QueryClusterResp": {
+            "type": "object",
+            "properties": {
+                "clusters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ClusterInfo"
                     }
                 }
             }

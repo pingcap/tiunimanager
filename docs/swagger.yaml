@@ -373,6 +373,13 @@ definitions:
           $ref: '#/definitions/structs.ClusterInstanceInfo'
         type: array
     type: object
+  cluster.QueryClusterResp:
+    properties:
+      clusters:
+        items:
+          $ref: '#/definitions/structs.ClusterInfo'
+        type: array
+    type: object
   cluster.ResumeChangeFeedTaskResp:
     properties:
       status:
@@ -2283,10 +2290,12 @@ paths:
       - in: query
         name: clusterType
         type: string
-      - in: query
+      - description: Current page location
+        in: query
         name: page
         type: integer
-      - in: query
+      - description: Number of this request
+        in: query
         name: pageSize
         type: integer
       produces:
@@ -2300,7 +2309,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/management.ClusterDisplayInfo'
+                    $ref: '#/definitions/cluster.QueryClusterResp'
                   type: array
               type: object
         "401":

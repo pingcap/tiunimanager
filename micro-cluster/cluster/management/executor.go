@@ -121,7 +121,7 @@ func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*handler.ClusterMeta)
 	cloneStrategy := context.GetData(ContextCloneStrategy).(string)
 
-	if cloneStrategy == string(constants.EmptyDataClone) {
+	if cloneStrategy == string(constants.ClusterTopologyClone) {
 		return nil
 	}
 	backupResponse, err := backuprestore.GetBRService().BackupCluster(context.Context,
@@ -135,8 +135,7 @@ func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		return err
 	}
 
-	//backupResponse.WorkFlowID
-	if err = handler.WaitWorkflow(backupResponse.WorkFlowID, 10 * time.Second); err != nil {
+	if err = handler.WaitWorkflow(backupResponse.WorkFlowID, 10*time.Second); err != nil {
 		framework.LogWithContext(context.Context).Errorf("backup workflow error: %s", err)
 		return err
 	}
@@ -231,13 +230,91 @@ func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 		"start cluster[%s], version = %s", cluster.Name, cluster.Version)
 	taskId, err := secondparty.Manager.ClusterStart(
 		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, 0, []string{}, node.ID,
-		)
+	)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster[%s] start error: %s", clusterMeta.Cluster.Name, err.Error())
 		return err
 	}
 	framework.LogWithContext(context.Context).Infof("get start cluster task id: %d", taskId)
+	return nil
+}
+
+func saveClusterMeta(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	if err := clusterMeta.Save(context.Context); err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"save cluster[%s] meta into db error: %s", clusterMeta.Cluster.Name, err.Error())
+		return err
+	}
+	return nil
+}
+
+func syncBackupStrategy(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*handler.ClusterMeta)
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+
+	sourceStrategyRes, err := backuprestore.GetBRService().GetBackupStrategy(context.Context,
+		&cluster.GetBackupStrategyReq{
+			ClusterID: sourceClusterMeta.Cluster.ID,
+		})
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"get cluster[%s] backup strategy error: %s", sourceClusterMeta.Cluster.Name, err.Error())
+		return err
+	}
+
+	_, err = backuprestore.GetBRService().SaveBackupStrategy(context.Context,
+		&cluster.SaveBackupStrategyReq{
+			ClusterID: clusterMeta.Cluster.ID,
+			Strategy:  sourceStrategyRes.Strategy,
+		})
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"save cluster[%s] backup strategy error: %s", clusterMeta.Cluster.Name, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	return nil
+}
+
+func syncSystemVariables(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	//TODO: sync system variables
+	return nil
+}
+
+func restoreCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	cloneStrategy := context.GetData(ContextCloneStrategy).(string)
+	backupID := context.GetData(ContextBackupID).(string)
+
+	if cloneStrategy == string(constants.ClusterTopologyClone) {
+		return nil
+	}
+	restoreResponse, err := backuprestore.GetBRService().RestoreExistCluster(context.Context,
+		&cluster.RestoreExistClusterReq{
+			ClusterID:  clusterMeta.Cluster.ID,
+			BackupID: backupID,
+		})
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"do restore for cluster[%s] by backup id[%s] error: %s", clusterMeta.Cluster.Name, backupID, err.Error())
+		return err
+	}
+
+	if err = handler.WaitWorkflow(restoreResponse.WorkFlowID, 10*time.Second); err != nil {
+		framework.LogWithContext(context.Context).Errorf("restore workflow error: %s", err)
+		return err
+	}
+
+	return nil
+}
+
+func syncIncrData(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	return nil
 }
 

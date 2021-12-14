@@ -425,6 +425,14 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 	return meta, nil
 }
 
+// Save
+// @Description save cluster meta into db
+// @Return		error
+func (p *ClusterMeta) Save(ctx context.Context) error {
+	//TODO: write cluster meta into db
+	return nil
+}
+
 // TryMaintenance
 // @Description: try to change maintenance status to target status with former status validation
 // @Receiver p

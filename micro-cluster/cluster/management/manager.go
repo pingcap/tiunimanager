@@ -59,11 +59,20 @@ var scaleInDefine = workflow.WorkFlowDefine{
 var cloneDefine = workflow.WorkFlowDefine{
 	FlowName: constants.FlowCloneCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":        {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
-		"resourceDone": {"backupSourceCluster", "backupDone", "fail", workflow.SyncFuncNode, backupSourceCluster},
-		"backupDone":   {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
-		"configDone":   {"end", "", "", workflow.SyncFuncNode, clusterEnd},
-		"fail":         {"fail", "", "", workflow.SyncFuncNode, clusterFail},
+		"start":                   {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
+		"resourceDone":            {"backupSourceCluster", "backupDone", "fail", workflow.SyncFuncNode, backupSourceCluster},
+		"backupDone":              {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
+		"configDone":              {"deployCluster", "deployDone", "fail", workflow.PollingNode, deployCluster},
+		"deployDone":              {"startCluster", "startDone", "fail", workflow.PollingNode, startCluster},
+		"startDone":               {"saveClusterMeta", "saveClusterMetaDone", "fail", workflow.SyncFuncNode, saveClusterMeta},
+		"saveClusterMetaDone":     {"syncBackupStrategy", "syncBackupStrategyDone", "fail", workflow.SyncFuncNode, syncBackupStrategy},
+		"syncBackupStrategyDone":  {"syncParameters", "syncParametersDone", "fail", workflow.SyncFuncNode, syncParameters},
+		"syncParametersDone":      {"syncSystemVariables", "syncSystemVariablesDone", "fail", workflow.SyncFuncNode, syncSystemVariables},
+		"syncSystemVariablesDone": {"restoreCluster", "restoreClusterDone", "fail", workflow.SyncFuncNode, restoreCluster},
+		"restoreClusterDone":      {"syncIncrData", "syncIncrDataDone", "fail", workflow.SyncFuncNode, syncIncrData},
+		"syncIncrDataDone":        {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
+		"onlineDone":              {"end", "", "", workflow.SyncFuncNode, clusterEnd},
+		"fail":                    {"fail", "", "", workflow.SyncFuncNode, clusterFail},
 	},
 }
 

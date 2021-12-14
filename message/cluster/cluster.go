@@ -186,6 +186,7 @@ type TakeoverClusterReq struct {
 
 // TakeoverClusterResp Reply message for takeover a cluster
 type TakeoverClusterResp struct {
+
 	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
 	Clusters                      []structs.ClusterInfo `json:"clusters"`
 }
@@ -202,7 +203,7 @@ type QueryClustersReq struct {
 
 // QueryClusterResp Query the cluster list to reply to messages
 type QueryClusterResp struct {
-	Info []structs.ClusterInfo `json:"clusters"`
+	Clusters []structs.ClusterInfo `json:"clusters"`
 }
 
 // QueryClusterDetailReq Query cluster detail messages

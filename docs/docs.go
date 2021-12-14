@@ -1384,7 +1384,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/management.TakeoverReq"
+                            "$ref": "#/definitions/cluster.TakeoverClusterReq"
                         }
                     }
                 ],
@@ -1400,10 +1400,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/management.ClusterDisplayInfo"
-                                            }
+                                            "$ref": "#/definitions/cluster.TakeoverClusterResp"
                                         }
                                     }
                                 }
@@ -4702,6 +4699,52 @@ var doc = `{
                 }
             }
         },
+        "cluster.TakeoverClusterReq": {
+            "type": "object",
+            "properties": {
+                "TiUPIp": {
+                    "type": "string",
+                    "example": "172.16.4.147"
+                },
+                "TiUPPath": {
+                    "type": "string",
+                    "example": ".tiup/"
+                },
+                "TiUPPort": {
+                    "type": "integer",
+                    "example": 22
+                },
+                "TiUPUserName": {
+                    "type": "string",
+                    "example": "root"
+                },
+                "TiUPUserPassword": {
+                    "type": "string",
+                    "example": "password"
+                },
+                "clusterNames": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "cluster.TakeoverClusterResp": {
+            "type": "object",
+            "properties": {
+                "clusters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ClusterInfo"
+                    }
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
         "cluster.UpdateChangeFeedTaskReq": {
             "type": "object",
             "properties": {
@@ -4844,20 +4887,6 @@ var doc = `{
                 },
                 "updateTime": {
                     "type": "string"
-                }
-            }
-        },
-        "controller.Usage": {
-            "type": "object",
-            "properties": {
-                "total": {
-                    "type": "number"
-                },
-                "usageRate": {
-                    "type": "number"
-                },
-                "used": {
-                    "type": "number"
                 }
             }
         },
@@ -5316,95 +5345,6 @@ var doc = `{
                 }
             }
         },
-        "management.ClusterDisplayInfo": {
-            "type": "object",
-            "properties": {
-                "backupFileUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "clusterId": {
-                    "type": "string"
-                },
-                "clusterName": {
-                    "type": "string"
-                },
-                "clusterType": {
-                    "type": "string"
-                },
-                "clusterVersion": {
-                    "type": "string"
-                },
-                "cpuUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "createTime": {
-                    "type": "string"
-                },
-                "dbPassword": {
-                    "type": "string"
-                },
-                "deleteTime": {
-                    "type": "string"
-                },
-                "diskUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "extranetConnectAddresses": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "intranetConnectAddresses": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "memoryUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "portList": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "recoverInfo": {
-                    "$ref": "#/definitions/management.RecoverInfo"
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "storageUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "tls": {
-                    "type": "boolean"
-                },
-                "updateTime": {
-                    "type": "string"
-                },
-                "whitelist": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
         "management.ClusterNodeDemand": {
             "type": "object",
             "properties": {
@@ -5594,37 +5534,6 @@ var doc = `{
                 },
                 "zoneCode": {
                     "type": "string"
-                }
-            }
-        },
-        "management.TakeoverReq": {
-            "type": "object",
-            "properties": {
-                "clusterNames": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "tiupIp": {
-                    "type": "string",
-                    "example": "172.16.4.147"
-                },
-                "tiupPath": {
-                    "type": "string",
-                    "example": ".tiup/"
-                },
-                "tiupPort": {
-                    "type": "integer",
-                    "example": 22
-                },
-                "tiupUserName": {
-                    "type": "string",
-                    "example": "root"
-                },
-                "tiupUserPassword": {
-                    "type": "string",
-                    "example": "password"
                 }
             }
         },

@@ -242,8 +242,8 @@ func Detail(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param takeoverReq body TakeoverReq true "takeover request"
-// @Success 200 {object} controller.CommonResult{data=[]ClusterDisplayInfo}
+// @Param takeoverReq body cluster.TakeoverClusterReq true "takeover request"
+// @Success 200 {object} controller.CommonResult{data=cluster.TakeoverClusterResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult

@@ -442,6 +442,38 @@ definitions:
         description: Asynchronous task workflow ID
         type: string
     type: object
+  cluster.TakeoverClusterReq:
+    properties:
+      TiUPIp:
+        example: 172.16.4.147
+        type: string
+      TiUPPath:
+        example: .tiup/
+        type: string
+      TiUPPort:
+        example: 22
+        type: integer
+      TiUPUserName:
+        example: root
+        type: string
+      TiUPUserPassword:
+        example: password
+        type: string
+      clusterNames:
+        items:
+          type: string
+        type: array
+    type: object
+  cluster.TakeoverClusterResp:
+    properties:
+      clusters:
+        items:
+          $ref: '#/definitions/structs.ClusterInfo'
+        type: array
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
   cluster.UpdateChangeFeedTaskReq:
     properties:
       clusterId:
@@ -542,15 +574,6 @@ definitions:
         type: string
       updateTime:
         type: string
-    type: object
-  controller.Usage:
-    properties:
-      total:
-        type: number
-      usageRate:
-        type: number
-      used:
-        type: number
     type: object
   hostresource.AllocHostsReq:
     properties:
@@ -859,65 +882,6 @@ definitions:
         example: 10
         type: integer
     type: object
-  management.ClusterDisplayInfo:
-    properties:
-      backupFileUsage:
-        $ref: '#/definitions/controller.Usage'
-      clusterId:
-        type: string
-      clusterName:
-        type: string
-      clusterType:
-        type: string
-      clusterVersion:
-        type: string
-      cpuUsage:
-        $ref: '#/definitions/controller.Usage'
-      createTime:
-        type: string
-      dbPassword:
-        type: string
-      deleteTime:
-        type: string
-      diskUsage:
-        $ref: '#/definitions/controller.Usage'
-      extranetConnectAddresses:
-        items:
-          type: string
-        type: array
-      inProcessFlowId:
-        type: integer
-      intranetConnectAddresses:
-        items:
-          type: string
-        type: array
-      memoryUsage:
-        $ref: '#/definitions/controller.Usage'
-      portList:
-        items:
-          type: integer
-        type: array
-      recoverInfo:
-        $ref: '#/definitions/management.RecoverInfo'
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      storageUsage:
-        $ref: '#/definitions/controller.Usage'
-      tags:
-        items:
-          type: string
-        type: array
-      tls:
-        type: boolean
-      updateTime:
-        type: string
-      whitelist:
-        items:
-          type: string
-        type: array
-    type: object
   management.ClusterNodeDemand:
     properties:
       componentType:
@@ -1042,28 +1006,6 @@ definitions:
       specCode:
         type: string
       zoneCode:
-        type: string
-    type: object
-  management.TakeoverReq:
-    properties:
-      clusterNames:
-        items:
-          type: string
-        type: array
-      tiupIp:
-        example: 172.16.4.147
-        type: string
-      tiupPath:
-        example: .tiup/
-        type: string
-      tiupPort:
-        example: 22
-        type: integer
-      tiupUserName:
-        example: root
-        type: string
-      tiupUserPassword:
-        example: password
         type: string
     type: object
   message.DataExportReq:
@@ -3140,7 +3082,7 @@ paths:
         name: takeoverReq
         required: true
         schema:
-          $ref: '#/definitions/management.TakeoverReq'
+          $ref: '#/definitions/cluster.TakeoverClusterReq'
       produces:
       - application/json
       responses:
@@ -3151,9 +3093,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/management.ClusterDisplayInfo'
-                  type: array
+                  $ref: '#/definitions/cluster.TakeoverClusterResp'
               type: object
         "401":
           description: Unauthorized

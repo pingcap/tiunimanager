@@ -11,30 +11,36 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
-package parameter
+/*******************************************************************************
+ * @File: parametergroup_mapping.go
+ * @Description: parameter group mapping table orm
+ * @Author: jiangxunyu@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/10 14:46
+*******************************************************************************/
 
-import (
-	"github.com/pingcap-inc/tiem/micro-api/controller"
-)
+package parametergroup
 
-type ParamQueryReq struct {
-	controller.PageRequest
+import "time"
+
+// ParameterGroupMapping
+// @Description: parameter_group_mapping table orm
+type ParameterGroupMapping struct {
+	ParameterGroupID string    `gorm:"primaryKey;comment:'parameter group id, relation parameter_group table'"`
+	ParameterID      string    `gorm:"primaryKey;comment:'group id, relation parameter table'"`
+	DefaultValue     string    `gorm:"not null;comment:'parameter default value'"`
+	Note             string    `gorm:"comment:'parameter remark information'"`
+	CreatedAt        time.Time `gorm:"<-:create"`
+	UpdatedAt        time.Time
 }
 
-type UpdateParamsReq struct {
-	Params     []UpdateParam `json:"params"`
-	NeedReboot bool          `json:"needReboot" example:"false"`
-}
+// ParamDetail
+// @Description: parameter group detail object
+type ParamDetail struct {
+	Parameter
 
-type UpdateParam struct {
-	ParamId       int64          `json:"paramId" example:"1"`
-	Name          string         `json:"name" example:"binlog_cache"`
-	ComponentType string         `json:"componentType" example:"TiDB"`
-	HasReboot     int32          `json:"hasReboot" example:"0" enums:"0,1"`
-	Source        int32          `json:"source" example:"0" enums:"0,1,2,3"`
-	Type          int32          `json:"type" example:"0" enums:"0,1,2"`
-	RealValue     ParamRealValue `json:"realValue"`
+	DefaultValue string `json:"defaultValue"`
+	Note         string `json:"note"`
 }

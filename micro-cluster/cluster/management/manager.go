@@ -46,10 +46,10 @@ var scaleOutDefine = workflow.WorkFlowDefine{
 var scaleInDefine = workflow.WorkFlowDefine{
 	FlowName: constants.FlowScaleInCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":            {"scaleInCluster", "scaleInDone", "fail", workflow.PollingNode, scaleInCluster},
-		"scaleInDone":      {"freeInstanceResource", "freeDone", "fail", workflow.SyncFuncNode, freeInstanceResource},
-		"freeDone": {"end", "", "", workflow.SyncFuncNode, clusterEnd},
-		"fail":             {"fail", "", "", workflow.SyncFuncNode, clusterFail},
+		"start":       {"scaleInCluster", "scaleInDone", "fail", workflow.PollingNode, scaleInCluster},
+		"scaleInDone": {"freeInstanceResource", "freeDone", "fail", workflow.SyncFuncNode, freeInstanceResource},
+		"freeDone":    {"end", "", "", workflow.SyncFuncNode, clusterEnd},
+		"fail":        {"fail", "", "", workflow.SyncFuncNode, clusterFail},
 	},
 }
 
@@ -199,9 +199,10 @@ func (p *Manager) CreateCluster(ctx context.Context, req cluster.CreateClusterRe
 	return
 }
 
-var stopClusterFlow = &workflow.WorkFlowDefine {
+var stopClusterFlow = &workflow.WorkFlowDefine{
 	// define
 }
+
 func (p *Manager) StopCluster(ctx context.Context, req cluster.StopClusterReq) (resp cluster.StopClusterResp, err error) {
 	meta, err := handler.Get(ctx, req.ClusterID)
 

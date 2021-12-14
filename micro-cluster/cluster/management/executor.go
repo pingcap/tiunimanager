@@ -20,6 +20,8 @@ import (
 	"github.com/pingcap-inc/tiem/workflow"
 )
 
+// prepareResource
+// @Description: prepare resource for creating, scaling out
 func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
@@ -36,6 +38,8 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	return nil
 }
 
+// buildConfig
+// @Description: generate topology config with cluster meta
 func buildConfig(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
@@ -50,6 +54,8 @@ func buildConfig(node *workflowModel.WorkFlowNode, context *workflow.FlowContext
 	return nil
 }
 
+// scaleOutCluster
+// @Description: execute command, scale out
 func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
@@ -69,6 +75,8 @@ func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	return nil
 }
 
+// scaleInCluster
+// @Description: execute command, scale in
 func scaleInCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	instanceID := context.GetData(ContextInstanceID).(string)
@@ -100,6 +108,8 @@ func scaleInCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	return nil
 }
 
+// freeInstanceResource
+// @Description: todo
 func freeInstanceResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	instanceID := context.GetData(ContextInstanceID).(string)
@@ -114,6 +124,8 @@ func freeInstanceResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 	return nil
 }
 
+// setClusterOnline
+// @Description: set cluster running status to constants.ClusterRunning
 func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	if clusterMeta.Cluster.Status == string(constants.ClusterInitializing) {
@@ -134,6 +146,8 @@ func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 	return nil
 }
 
+// setClusterOnline
+// @Description: set cluster running status to constants.Stopped
 func setClusterOffline(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	if err := clusterMeta.UpdateClusterStatus(context.Context, constants.ClusterStopped); err != nil {
@@ -144,6 +158,8 @@ func setClusterOffline(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 	return nil
 }
 
+// setClusterOnline
+// @Description: revert allocated resource after creating, scaling out
 func revertResourceAfterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	allocID := context.GetData(ContextAllocResource)
 	if allocID != nil {
@@ -167,15 +183,14 @@ func revertResourceAfterFailure(node *workflowModel.WorkFlowNode, context *workf
 }
 
 // maintenanceEnd
-// @Description: use for maintenance flow, clear maintenance status
-// @Parameter node
-// @Parameter context
-// @return error
+// @Description: clear maintenance status after maintenance finished or failed
 func endMaintenance(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	return clusterMeta.EndMaintenance(context, clusterMeta.Cluster.MaintenanceStatus)
 }
 
+// persistCluster
+// @Description: save cluster and instances after flow finished or failed
 func persistCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	err := clusterMeta.UpdateMeta(context)
@@ -185,6 +200,8 @@ func persistCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	return err
 }
 
+// deployCluster
+// @Description: execute command, deploy
 func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
@@ -204,6 +221,8 @@ func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 	return nil
 }
 
+// startCluster
+// @Description: execute command, start
 func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
@@ -222,11 +241,15 @@ func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	return nil
 }
 
+// syncTopology
+// @Description: get topology content from tiup, save it as a snapshot for comparing or recovering
 // todo
 func syncTopology(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	return nil
 }
 
+// stopCluster
+// @Description: execute command, stop
 func stopCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
@@ -246,6 +269,8 @@ func stopCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext
 	return nil
 }
 
+// destroyCluster
+// @Description: execute command, destroy
 func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
@@ -265,11 +290,15 @@ func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	return nil
 }
 
+// deleteCluster
+// @Description: delete cluster from database
 func deleteCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	return clusterMeta.Delete(context)
 }
 
+// freedResource
+// @Description: freed resource
 func freedResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	err := clusterMeta.FreedInstanceResource(context)
@@ -286,10 +315,7 @@ func freedResource(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 }
 
 // initDatabaseAccount
-// @Description: init database account after deploy
-// @Parameter node
-// @Parameter context
-// @return error
+// @Description: init database account for new cluster
 func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	// todo
 	return nil

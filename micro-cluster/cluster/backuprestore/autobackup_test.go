@@ -55,8 +55,8 @@ func Test_AutoBackup_doBackup(t *testing.T) {
 
 	mockBRService := mock_br_service.NewMockBRService(ctrl)
 	mockBRService.EXPECT().BackupCluster(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
-	SetBRServiceForUt(mockBRService)
-	defer SetBRServiceForUt(NewBRManager())
+	MockBRService(mockBRService)
+	defer MockBRService(NewBRManager())
 
 	strategy := &backuprestore.BackupStrategy{
 		ClusterID:  "cls-xxxx",

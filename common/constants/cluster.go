@@ -61,6 +61,29 @@ const (
 	ClusterMaintenanceModifyParameterAndRestarting ClusterMaintenanceStatus = "ModifyParameterRestarting"
 )
 
+type ClusterInstanceRunningStatus string
+
+//Definition of cluster instance running status information
+const (
+	ClusterInstanceInitializing ClusterInstanceRunningStatus = "Initializing"
+	ClusterInstanceStopped      ClusterInstanceRunningStatus = "Stopped"
+	ClusterInstanceRunning      ClusterInstanceRunningStatus = "Running"
+	ClusterInstanceRecovering   ClusterInstanceRunningStatus = "Recovering"
+	ClusterInstanceFailure      ClusterInstanceRunningStatus = "Failure"
+)
+
+type ClusterInstanceMaintenanceStatus string
+
+// Definition cluster instance maintenance status information
+const (
+	ClusterInstanceMaintenanceCreating                     ClusterInstanceMaintenanceStatus = "Creating"
+	ClusterInstanceMaintenanceDeleting                     ClusterInstanceMaintenanceStatus = "Deleting"
+	ClusterInstanceMaintenanceStopping                     ClusterInstanceMaintenanceStatus = "Stopping"
+	ClusterInstanceMaintenanceRestarting                   ClusterInstanceMaintenanceStatus = "Restarting"
+	ClusterInstanceMaintenanceUpgrading                    ClusterInstanceMaintenanceStatus = "Upgrading"
+	ClusterInstanceMaintenanceModifyParameterAndRestarting ClusterInstanceMaintenanceStatus = "ModifyParameterRestarting"
+)
+
 type ClusterBackupStatus string
 
 //Definition of cluster backup status information

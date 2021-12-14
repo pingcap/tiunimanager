@@ -39,8 +39,6 @@ const (
 	TiDBVersion51            = "5.1.0"
 	EnterpriseManager        = "EnterpriseManager"
 	EnterpriseManagerVersion = "1.0.0"
-	TiDBStatus               = "Available"
-	EnterpriseManagerStatus  = "Available"
 )
 
 var vendors = []Vendor{
@@ -87,144 +85,144 @@ var beijingproducts = []Product{
 
 var components = []ProductComponent{
 	//TiDB v5.0.0
-	{ComponentID: "TiDB", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Compute Engine", Status: "Available", PurposeType: "Compute", StartPort: 10000, EndPort: 10020, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
-	{ComponentID: "TiKV", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Storage Engine", Status: "Available", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
-	{ComponentID: "TiFlash", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Column Storage Engine", Status: "Available", PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 1, MaxInstance: 10240},
-	{ComponentID: "PD", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Schedule Engine", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 7},
-	{ComponentID: "TiCDC", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "CDC", Status: "Available", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
-	{ComponentID: "Grafana", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Monitor GUI", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "Prometheus", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Monitor", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "AlertManger", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Alert", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "NodeExporter", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "NodeExporter", Status: "Available", PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "BlackboxExporter", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "BlackboxExporter", Status: "Available", PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "TiDB", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Compute Engine", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Compute", StartPort: 10000, EndPort: 10020, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
+	{ComponentID: "TiKV", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Storage Engine", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
+	{ComponentID: "TiFlash", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Column Storage Engine", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 1, MaxInstance: 10240},
+	{ComponentID: "PD", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Schedule Engine", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 7},
+	{ComponentID: "TiCDC", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "CDC", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
+	{ComponentID: "Grafana", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Monitor GUI", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "Prometheus", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Monitor", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "AlertManger", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Alert", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "NodeExporter", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "NodeExporter", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "BlackboxExporter", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "BlackboxExporter", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 
 	//TiDB v5.1.0
-	{ComponentID: "TiDB", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Compute Engine", Status: "Available", PurposeType: "Compute", StartPort: 10000, EndPort: 10020, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
-	{ComponentID: "TiKV", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Storage Engine", Status: "Available", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
-	{ComponentID: "TiFlash", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Column Storage Engine", Status: "Available", PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 1, MaxInstance: 10240},
-	{ComponentID: "PD", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Schedule Engine", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 7},
-	{ComponentID: "TiCDC", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "CDC", Status: "Available", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
-	{ComponentID: "Grafana", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Monitor GUI", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "Prometheus", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Monitor", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "AlertManger", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Alert", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "NodeExporter", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "NodeExporter", Status: "Available", PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "BlackboxExporter", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "BlackboxExporter", Status: "Available", PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "TiDB", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Compute Engine", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Compute", StartPort: 10000, EndPort: 10020, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
+	{ComponentID: "TiKV", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Storage Engine", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
+	{ComponentID: "TiFlash", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Column Storage Engine", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 1, MaxInstance: 10240},
+	{ComponentID: "PD", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Schedule Engine", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 7},
+	{ComponentID: "TiCDC", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "CDC", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
+	{ComponentID: "Grafana", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Monitor GUI", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "Prometheus", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Monitor", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "AlertManger", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Alert", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "NodeExporter", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "NodeExporter", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "BlackboxExporter", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "BlackboxExporter", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 
 	//Enterprise Manager v1.0.0
-	{ComponentID: "cluster-server", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "cluster-server", Status: "Available", PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "openapi-server", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "openapi-server", Status: "Available", PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "Grafana", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "Monitor GUI", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "Prometheus", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "Monitor", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "AlertManger", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "Alert", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "cluster-server", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "cluster-server", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "openapi-server", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "openapi-server", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "Grafana", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "Monitor GUI", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "Prometheus", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "Monitor", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "AlertManger", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "Alert", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 }
 
 var TiDB50Components = []ProductComponent{
 	//TiDB v5.0.0
-	{ComponentID: "TiDB", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Compute Engine", Status: "Available", PurposeType: "Compute", StartPort: 10000, EndPort: 10020, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
-	{ComponentID: "TiKV", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Storage Engine", Status: "Available", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
-	{ComponentID: "TiFlash", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Column Storage Engine", Status: "Available", PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 1, MaxInstance: 10240},
-	{ComponentID: "PD", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Schedule Engine", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 7},
-	{ComponentID: "TiCDC", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "CDC", Status: "Available", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
-	{ComponentID: "Grafana", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Monitor GUI", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "Prometheus", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Monitor", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "AlertManger", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Alert", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "NodeExporter", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "NodeExporter", Status: "Available", PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "BlackboxExporter", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "BlackboxExporter", Status: "Available", PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "TiDB", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Compute Engine", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Compute", StartPort: 10000, EndPort: 10020, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
+	{ComponentID: "TiKV", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Storage Engine", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
+	{ComponentID: "TiFlash", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Column Storage Engine", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 1, MaxInstance: 10240},
+	{ComponentID: "PD", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Schedule Engine", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 7},
+	{ComponentID: "TiCDC", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "CDC", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
+	{ComponentID: "Grafana", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Monitor GUI", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "Prometheus", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Monitor", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "AlertManger", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "Alert", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "NodeExporter", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "NodeExporter", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "BlackboxExporter", ProductID: "TiDB", ProductVersion: "5.0.0", Name: "BlackboxExporter", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 }
 var TiDB51Components = []ProductComponent{
 	//TiDB v5.1.0
-	{ComponentID: "TiDB", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Compute Engine", Status: "Available", PurposeType: "Compute", StartPort: 10000, EndPort: 10020, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
-	{ComponentID: "TiKV", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Storage Engine", Status: "Available", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
-	{ComponentID: "TiFlash", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Column Storage Engine", Status: "Available", PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 1, MaxInstance: 10240},
-	{ComponentID: "PD", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Schedule Engine", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 7},
-	{ComponentID: "TiCDC", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "CDC", Status: "Available", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
-	{ComponentID: "Grafana", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Monitor GUI", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "Prometheus", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Monitor", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "AlertManger", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Alert", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "NodeExporter", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "NodeExporter", Status: "Available", PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "BlackboxExporter", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "BlackboxExporter", Status: "Available", PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "TiDB", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Compute Engine", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Compute", StartPort: 10000, EndPort: 10020, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
+	{ComponentID: "TiKV", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Storage Engine", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
+	{ComponentID: "TiFlash", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Column Storage Engine", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 1, MaxInstance: 10240},
+	{ComponentID: "PD", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Schedule Engine", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 7},
+	{ComponentID: "TiCDC", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "CDC", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
+	{ComponentID: "Grafana", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Monitor GUI", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "Prometheus", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Monitor", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "AlertManger", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "Alert", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "NodeExporter", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "NodeExporter", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "BlackboxExporter", ProductID: "TiDB", ProductVersion: "5.1.0", Name: "BlackboxExporter", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 }
 var EnterpriseManager10Components = []ProductComponent{
 	//Enterprise Manager v1.0.0
-	{ComponentID: "cluster-server", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "cluster-server", Status: "Available", PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "openapi-server", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "openapi-server", Status: "Available", PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "Grafana", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "Monitor GUI", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "Prometheus", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "Monitor", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
-	{ComponentID: "AlertManger", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "Alert", Status: "Available", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "cluster-server", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "cluster-server", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "openapi-server", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "openapi-server", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "Grafana", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "Monitor GUI", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "Prometheus", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "Monitor", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
+	{ComponentID: "AlertManger", ProductID: "EnterpriseManager", ProductVersion: "1.0.0", Name: "Alert", Status: string(constants.ProductSpecStatusOnline), PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 }
 
 var specs = []ResourceSpec{
 	/*CN-BEIJING-H X86_64***/
-	{ResourceSpecID: "c2.g.large", ZoneID: "CN-BEIJING-H", Arch: "x86_64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c2.g.xlarge", ZoneID: "CN-BEIJING-H", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c2.g.2xlarge", ZoneID: "CN-BEIJING-H", Arch: "x86_64", Name: "16C32G", CPU: 16, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c3.g.large", ZoneID: "CN-BEIJING-H", Arch: "x86_64", Name: "8C32G", CPU: 8, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c3.g.xlarge", ZoneID: "CN-BEIJING-H", Arch: "x86_64", Name: "16C64G", CPU: 16, Memory: 64, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "sd2.g.xlarge", ZoneID: "CN-BEIJING-H", Arch: "x86_64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Schedule", Status: "Available"},
-	{ResourceSpecID: "sd2.g.2xlarge", ZoneID: "CN-BEIJING-H", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Schedule", Status: "Available"},
-	{ResourceSpecID: "s2.g.large", ZoneID: "CN-BEIJING-H", Arch: "x86_64", Name: "8C64G", CPU: 8, Memory: 64, DiskType: "NVMeSSD", PurposeType: "Storage", Status: "Available"},
-	{ResourceSpecID: "s2.g.xlarge", ZoneID: "CN-BEIJING-H", Arch: "x86_64", Name: "16C128G", CPU: 16, Memory: 128, DiskType: "NVMeSSD", PurposeType: "Storage", Status: "Available"},
+	{ResourceSpecID: "c2.g.large", ZoneID: "CN-BEIJING-H", Arch: "x86_64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c2.g.xlarge", ZoneID: "CN-BEIJING-H", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c2.g.2xlarge", ZoneID: "CN-BEIJING-H", Arch: "x86_64", Name: "16C32G", CPU: 16, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c3.g.large", ZoneID: "CN-BEIJING-H", Arch: "x86_64", Name: "8C32G", CPU: 8, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c3.g.xlarge", ZoneID: "CN-BEIJING-H", Arch: "x86_64", Name: "16C64G", CPU: 16, Memory: 64, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "sd2.g.xlarge", ZoneID: "CN-BEIJING-H", Arch: "x86_64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Schedule", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "sd2.g.2xlarge", ZoneID: "CN-BEIJING-H", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Schedule", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "s2.g.large", ZoneID: "CN-BEIJING-H", Arch: "x86_64", Name: "8C64G", CPU: 8, Memory: 64, DiskType: "NVMeSSD", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "s2.g.xlarge", ZoneID: "CN-BEIJING-H", Arch: "x86_64", Name: "16C128G", CPU: 16, Memory: 128, DiskType: "NVMeSSD", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
 	/*CN-BEIJING-G X86_64*/
-	{ResourceSpecID: "c2.g.large", ZoneID: "CN-BEIJING-G", Arch: "x86_64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c2.g.xlarge", ZoneID: "CN-BEIJING-G", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c2.g.2xlarge", ZoneID: "CN-BEIJING-G", Arch: "x86_64", Name: "16C32G", CPU: 16, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c3.g.large", ZoneID: "CN-BEIJING-G", Arch: "x86_64", Name: "8C32G", CPU: 8, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c3.g.xlarge", ZoneID: "CN-BEIJING-G", Arch: "x86_64", Name: "16C64G", CPU: 16, Memory: 64, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "sd2.g.large", ZoneID: "CN-BEIJING-G", Arch: "x86_64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Schedule", Status: "Available"},
-	{ResourceSpecID: "sd2.g.xlarge", ZoneID: "CN-BEIJING-G", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Schedule", Status: "Available"},
-	{ResourceSpecID: "s2.g.large", ZoneID: "CN-BEIJING-G", Arch: "x86_64", Name: "8C64G", CPU: 8, Memory: 64, DiskType: "NVMeSSD", PurposeType: "Storage", Status: "Available"},
-	{ResourceSpecID: "s2.g.xlarge", ZoneID: "CN-BEIJING-G", Arch: "x86_64", Name: "16C128G", CPU: 16, Memory: 128, DiskType: "NVMeSSD", PurposeType: "Storage", Status: "Available"},
+	{ResourceSpecID: "c2.g.large", ZoneID: "CN-BEIJING-G", Arch: "x86_64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c2.g.xlarge", ZoneID: "CN-BEIJING-G", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c2.g.2xlarge", ZoneID: "CN-BEIJING-G", Arch: "x86_64", Name: "16C32G", CPU: 16, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c3.g.large", ZoneID: "CN-BEIJING-G", Arch: "x86_64", Name: "8C32G", CPU: 8, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c3.g.xlarge", ZoneID: "CN-BEIJING-G", Arch: "x86_64", Name: "16C64G", CPU: 16, Memory: 64, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "sd2.g.large", ZoneID: "CN-BEIJING-G", Arch: "x86_64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Schedule", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "sd2.g.xlarge", ZoneID: "CN-BEIJING-G", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Schedule", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "s2.g.large", ZoneID: "CN-BEIJING-G", Arch: "x86_64", Name: "8C64G", CPU: 8, Memory: 64, DiskType: "NVMeSSD", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "s2.g.xlarge", ZoneID: "CN-BEIJING-G", Arch: "x86_64", Name: "16C128G", CPU: 16, Memory: 128, DiskType: "NVMeSSD", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
 
 	/*CN-HANGZHOU-G X86_64*/
-	{ResourceSpecID: "c1.g.large", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c2.g.large", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c2.g.xlarge", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c2.g.2xlarge", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "16C32G", CPU: 16, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c3.g.large", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "8C32G", CPU: 8, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c3.g.xlarge", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "16C64G", CPU: 16, Memory: 64, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "sd1.g.large", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "SSD", PurposeType: "Schedule", Status: "Available"},
-	{ResourceSpecID: "sd2.g.large", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Schedule", Status: "Available"},
-	{ResourceSpecID: "sd2.g.xlarge", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Schedule", Status: "Available"},
-	{ResourceSpecID: "s1.g.large", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "NVMeSSD", PurposeType: "Storage", Status: "Available"},
-	{ResourceSpecID: "s2.g.large", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "8C64G", CPU: 8, Memory: 64, DiskType: "NVMeSSD", PurposeType: "Storage", Status: "Available"},
-	{ResourceSpecID: "s2.g.xlarge", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "16C128G", CPU: 16, Memory: 128, DiskType: "NVMeSSD", PurposeType: "Storage", Status: "Available"},
-	{ResourceSpecID: "cs1.g.large", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "SATA", PurposeType: "Storage", Status: "Available"},
-	{ResourceSpecID: "cs2.g.large", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 64, DiskType: "SATA", PurposeType: "Storage", Status: "Available"},
-	{ResourceSpecID: "cs2.g.xlarge", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "16C128G", CPU: 16, Memory: 128, DiskType: "SATA", PurposeType: "Storage", Status: "Available"},
+	{ResourceSpecID: "c1.g.large", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c2.g.large", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c2.g.xlarge", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c2.g.2xlarge", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "16C32G", CPU: 16, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c3.g.large", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "8C32G", CPU: 8, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c3.g.xlarge", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "16C64G", CPU: 16, Memory: 64, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "sd1.g.large", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "SSD", PurposeType: "Schedule", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "sd2.g.large", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Schedule", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "sd2.g.xlarge", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Schedule", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "s1.g.large", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "NVMeSSD", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "s2.g.large", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "8C64G", CPU: 8, Memory: 64, DiskType: "NVMeSSD", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "s2.g.xlarge", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "16C128G", CPU: 16, Memory: 128, DiskType: "NVMeSSD", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "cs1.g.large", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "SATA", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "cs2.g.large", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 64, DiskType: "SATA", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "cs2.g.xlarge", ZoneID: "CN-HANGZHOU-G", Arch: "x86_64", Name: "16C128G", CPU: 16, Memory: 128, DiskType: "SATA", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
 
 	/*CN-HANGZHOU-H X86_64*/
-	{ResourceSpecID: "c1.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c2.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c2.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c2.g.2xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "16C32G", CPU: 16, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c3.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "8C32G", CPU: 8, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c3.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "16C64G", CPU: 16, Memory: 64, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "sd1.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "SSD", PurposeType: "Schedule", Status: "Available"},
-	{ResourceSpecID: "sd2.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Schedule", Status: "Available"},
-	{ResourceSpecID: "sd2.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Schedule", Status: "Available"},
-	{ResourceSpecID: "s1.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "NVMeSSD", PurposeType: "Storage", Status: "Available"},
-	{ResourceSpecID: "s2.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "8C64G", CPU: 8, Memory: 64, DiskType: "NVMeSSD", PurposeType: "Storage", Status: "Available"},
-	{ResourceSpecID: "s2.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "16C128G", CPU: 16, Memory: 128, DiskType: "NVMeSSD", PurposeType: "Storage", Status: "Available"},
-	{ResourceSpecID: "cs1.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "SATA", PurposeType: "Storage", Status: "Available"},
-	{ResourceSpecID: "cs2.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 64, DiskType: "SATA", PurposeType: "Storage", Status: "Available"},
-	{ResourceSpecID: "cs2.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "16C128G", CPU: 16, Memory: 128, DiskType: "SATA", PurposeType: "Storage", Status: "Available"},
+	{ResourceSpecID: "c1.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c2.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c2.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c2.g.2xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "16C32G", CPU: 16, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c3.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "8C32G", CPU: 8, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c3.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "16C64G", CPU: 16, Memory: 64, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "sd1.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "SSD", PurposeType: "Schedule", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "sd2.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Schedule", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "sd2.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Schedule", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "s1.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "NVMeSSD", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "s2.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "8C64G", CPU: 8, Memory: 64, DiskType: "NVMeSSD", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "s2.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "16C128G", CPU: 16, Memory: 128, DiskType: "NVMeSSD", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "cs1.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "SATA", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "cs2.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "8C16G", CPU: 8, Memory: 64, DiskType: "SATA", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "cs2.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "x86_64", Name: "16C128G", CPU: 16, Memory: 128, DiskType: "SATA", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
 
 	/*CN-HANGZHOU-H ARM64*/
-	{ResourceSpecID: "c1.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c2.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c2.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c2.g.2xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "16C32G", CPU: 16, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c3.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "8C32G", CPU: 8, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "c3.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "16C64G", CPU: 16, Memory: 64, DiskType: "SSD", PurposeType: "Compute", Status: "Available"},
-	{ResourceSpecID: "sd1.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "SSD", PurposeType: "Schedule", Status: "Available"},
-	{ResourceSpecID: "sd2.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Schedule", Status: "Available"},
-	{ResourceSpecID: "sd2.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Schedule", Status: "Available"},
-	{ResourceSpecID: "s1.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "NVMeSSD", PurposeType: "Storage", Status: "Available"},
-	{ResourceSpecID: "s2.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "8C64G", CPU: 8, Memory: 64, DiskType: "NVMeSSD", PurposeType: "Storage", Status: "Available"},
-	{ResourceSpecID: "s2.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "16C128G", CPU: 16, Memory: 128, DiskType: "NVMeSSD", PurposeType: "Storage", Status: "Available"},
-	{ResourceSpecID: "cs1.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "SATA", PurposeType: "Storage", Status: "Available"},
-	{ResourceSpecID: "cs2.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "8C16G", CPU: 8, Memory: 64, DiskType: "SATA", PurposeType: "Storage", Status: "Available"},
-	{ResourceSpecID: "cs2.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "16C128G", CPU: 16, Memory: 128, DiskType: "SATA", PurposeType: "Storage", Status: "Available"},
+	{ResourceSpecID: "c1.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c2.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c2.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c2.g.2xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "16C32G", CPU: 16, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c3.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "8C32G", CPU: 8, Memory: 32, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "c3.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "16C64G", CPU: 16, Memory: 64, DiskType: "SSD", PurposeType: "Compute", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "sd1.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "SSD", PurposeType: "Schedule", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "sd2.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "4C8G", CPU: 4, Memory: 8, DiskType: "SSD", PurposeType: "Schedule", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "sd2.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "8C16G", CPU: 8, Memory: 16, DiskType: "SSD", PurposeType: "Schedule", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "s1.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "NVMeSSD", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "s2.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "8C64G", CPU: 8, Memory: 64, DiskType: "NVMeSSD", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "s2.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "16C128G", CPU: 16, Memory: 128, DiskType: "NVMeSSD", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "cs1.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "2C2G", CPU: 2, Memory: 2, DiskType: "SATA", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "cs2.g.large", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "8C16G", CPU: 8, Memory: 64, DiskType: "SATA", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
+	{ResourceSpecID: "cs2.g.xlarge", ZoneID: "CN-HANGZHOU-H", Arch: "ARM64", Name: "16C128G", CPU: 16, Memory: 128, DiskType: "SATA", PurposeType: "Storage", Status: string(constants.ProductSpecStatusOnline)},
 }
 
 func initAllData() {
@@ -276,7 +274,7 @@ func TestProductReadWriter_QueryProductComponentProperty(t *testing.T) {
 
 	initAllData()
 	tmp50 := make(map[string]structs.ProductComponentProperty)
-	re, err := prw.QueryProductComponentProperty(context.TODO(), TiDB, TiDBVersion50, TiDBStatus)
+	re, err := prw.QueryProductComponentProperty(context.TODO(), TiDB, TiDBVersion50, constants.ProductComponentStatusOnline)
 	assert.NoError(t, err)
 	//First convert the query results into a map to facilitate comparison of results
 	for _, item := range re {
@@ -302,7 +300,7 @@ func TestProductReadWriter_QueryProductComponentProperty(t *testing.T) {
 	}
 
 	tmp51 := make(map[string]structs.ProductComponentProperty)
-	re, err = prw.QueryProductComponentProperty(context.TODO(), TiDB, TiDBVersion51, TiDBStatus)
+	re, err = prw.QueryProductComponentProperty(context.TODO(), TiDB, TiDBVersion51, constants.ProductComponentStatusOnline)
 	assert.NoError(t, err)
 	//First convert the query results into a map to facilitate comparison of results
 	for _, item := range re {
@@ -328,7 +326,7 @@ func TestProductReadWriter_QueryProductComponentProperty(t *testing.T) {
 	}
 
 	tmp10 := make(map[string]structs.ProductComponentProperty)
-	re, err = prw.QueryProductComponentProperty(context.TODO(), EnterpriseManager, EnterpriseManagerVersion, EnterpriseManagerStatus)
+	re, err = prw.QueryProductComponentProperty(context.TODO(), EnterpriseManager, EnterpriseManagerVersion, constants.ProductComponentStatusOnline)
 	assert.NoError(t, err)
 	//First convert the query results into a map to facilitate comparison of results
 	for _, item := range re {

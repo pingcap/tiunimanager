@@ -51,7 +51,7 @@ type ProductComponent struct {
 	ProductID      string         `gorm:"primaryKey;"`
 	ProductVersion string         `gorm:"primaryKey;"`
 	Name           string         `gorm:"primaryKey;comment:'original name of the product'"`
-	Status         string         `gorm:"not null;size:32;"` //Available、UnAvailable
+	Status         string         `gorm:"not null;size:32;"` //Online,Offline
 	PurposeType    string         `gorm:"size:32;comment:Compute/Storage/Schedule"`
 	StartPort      int32          `gorm:"comment:'starting value of the port opened by the component'"`
 	EndPort        int32          `gorm:"comment:'ending value of the port opened by the component'"`
@@ -85,5 +85,5 @@ t4.resource_spec_id,t4.name,t4.disk_type,t4.cpu,t4.memory,t3.component_id,t3.nam
 t3.max_port,t3.max_instance,t3.min_instance FROM products t1,zones t2,product_components t3,resource_specs t4
 WHERE t1.region_id=t2.region_id AND t1.region_id='CN-HANGZHOU' AND
 t1.version=t3.product_version AND t1.product_id=t3.product_id AND t3.purpose_type=t4.purpose_type
-AND t1.arch=t4.arch AND t2.zone_id =t4.zone_id AND t1.status = 'Online' AND t3.status = 'Available' AND t4.status = 'Available';
+AND t1.arch=t4.arch AND t2.zone_id =t4.zone_id AND t1.status = 'Online' AND t3.status = 'Online' AND t4.status = 'Online';
 */

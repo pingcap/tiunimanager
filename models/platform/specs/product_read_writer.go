@@ -100,7 +100,7 @@ type ProductReadWriterInterface interface {
 	// @param productVersion
 	// @return err
 	// @return property[]
-	QueryProductComponentProperty(ctx context.Context, productID, productVersion, productStatus string) (err error, property []structs.ProductComponentProperty)
+	QueryProductComponentProperty(ctx context.Context, productID, productVersion string, productStatus constants.ProductComponentStatus) (err error, property []structs.ProductComponentProperty)
 }
 
 func NewProductReadWriter(db *gorm.DB) *ProductReadWriter {
@@ -185,7 +185,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 	var info, productComponentInfo structs.ProductComponentProperty
 	var productName, version, arch string
 	products = make(map[string]structs.ProductDetail)
-	rows, err := p.DB(ctx).Raw(SQL, vendorID, regionID, internal, productID, status, "Available", "Available").Rows()
+	rows, err := p.DB(ctx).Raw(SQL, vendorID, regionID, internal, productID, status, constants.ProductSpecStatusOnline, constants.ProductSpecStatusOnline).Rows()
 	defer rows.Close()
 	log := framework.LogWithContext(ctx)
 	log.Debugf("QueryProductDetail SQL: %s vendorID:%s, regionID: %s productID: %s, internal: %d, status: %s, execute result, error: %v",
@@ -237,7 +237,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 }
 
 // QueryProductComponentProperty Query the properties of a product component,For creating, expanding and shrinking clusters only
-func (p *ProductReadWriter) QueryProductComponentProperty(ctx context.Context, productID, productVersion, productStatus string) (property []structs.ProductComponentProperty, er error) {
+func (p *ProductReadWriter) QueryProductComponentProperty(ctx context.Context, productID, productVersion string, productStatus constants.ProductComponentStatus) (property []structs.ProductComponentProperty, er error) {
 	if "" == productID || "" == productVersion {
 		//TODO wait for SimpleError modify
 		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)

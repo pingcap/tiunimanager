@@ -80,209 +80,209 @@ CREATE TABLE IF NOT EXISTS `resource_specs`
 
 /**CN-BEIJING-H X86_64**/
 INSERT INTO resource_specs
-VALUES ('c2.g.large', 'CN-BEIJING-H', 'x86_64', '4C8G', 4, 8, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c2.g.large', 'CN-BEIJING-H', 'x86_64', '4C8G', 4, 8, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c2.g.xlarge', 'CN-BEIJING-H', 'x86_64', '8C16G', 8, 16, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c2.g.xlarge', 'CN-BEIJING-H', 'x86_64', '8C16G', 8, 16, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c2.g.2xlarge', 'CN-BEIJING-H', 'x86_64', '16C32G', 16, 32, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c2.g.2xlarge', 'CN-BEIJING-H', 'x86_64', '16C32G', 16, 32, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c3.g.large', 'CN-BEIJING-H', 'x86_64', '8C32G', 8, 32, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c3.g.large', 'CN-BEIJING-H', 'x86_64', '8C32G', 8, 32, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c3.g.xlarge', 'CN-BEIJING-H', 'x86_64', '16C64G', 16, 64, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c3.g.xlarge', 'CN-BEIJING-H', 'x86_64', '16C64G', 16, 64, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('sd2.g.large', 'CN-BEIJING-H', 'x86_64', '4C8G', 4, 8, 'SSD', 'Schedule', 'Available', datetime('now'),
+VALUES ('sd2.g.large', 'CN-BEIJING-H', 'x86_64', '4C8G', 4, 8, 'SSD', 'Schedule', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('sd2.g.xlarge', 'CN-BEIJING-H', 'x86_64', '8C16G', 8, 16, 'SSD', 'Schedule', 'Available', datetime('now'),
+VALUES ('sd2.g.xlarge', 'CN-BEIJING-H', 'x86_64', '8C16G', 8, 16, 'SSD', 'Schedule', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('s2.g.large', 'CN-BEIJING-H', 'x86_64', '8C64G', 8, 64, 'NVMeSSD', 'Storage', 'Available', datetime('now'),
+VALUES ('s2.g.large', 'CN-BEIJING-H', 'x86_64', '8C64G', 8, 64, 'NVMeSSD', 'Storage', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('s2.g.xlarge', 'CN-BEIJING-H', 'x86_64', '16C128G', 16, 128, 'NVMeSSD', 'Storage', 'Available', datetime('now'),
+VALUES ('s2.g.xlarge', 'CN-BEIJING-H', 'x86_64', '16C128G', 16, 128, 'NVMeSSD', 'Storage', 'Online', datetime('now'),
         datetime('now'));
 
 /**CN-BEIJING-G X86_64**/
 INSERT INTO resource_specs
-VALUES ('c2.g.large', 'CN-BEIJING-G', 'x86_64', '4C8G', 4, 8, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c2.g.large', 'CN-BEIJING-G', 'x86_64', '4C8G', 4, 8, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c2.g.xlarge', 'CN-BEIJING-G', 'x86_64', '8C16G', 8, 16, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c2.g.xlarge', 'CN-BEIJING-G', 'x86_64', '8C16G', 8, 16, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c2.g.2xlarge', 'CN-BEIJING-G', 'x86_64', '16C32G', 16, 32, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c2.g.2xlarge', 'CN-BEIJING-G', 'x86_64', '16C32G', 16, 32, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c3.g.large', 'CN-BEIJING-G', 'x86_64', '8C32G', 8, 32, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c3.g.large', 'CN-BEIJING-G', 'x86_64', '8C32G', 8, 32, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c3.g.xlarge', 'CN-BEIJING-G', 'x86_64', '16C64G', 16, 64, 'SSD', 'Compute', 'Available', datetime('now'),
-        datetime('now'));
-
-INSERT INTO resource_specs
-VALUES ('sd2.g.large', 'CN-BEIJING-G', 'x86_64', '4C8G', 4, 8, 'SSD', 'Schedule', 'Available', datetime('now'),
-        datetime('now'));
-INSERT INTO resource_specs
-VALUES ('sd2.g.xlarge', 'CN-BEIJING-G', 'x86_64', '8C16G', 8, 16, 'SSD', 'Schedule', 'Available', datetime('now'),
+VALUES ('c3.g.xlarge', 'CN-BEIJING-G', 'x86_64', '16C64G', 16, 64, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 
 INSERT INTO resource_specs
-VALUES ('s2.g.large', 'CN-BEIJING-G', 'x86_64', '8C64G', 8, 64, 'NVMeSSD', 'Storage', 'Available', datetime('now'),
+VALUES ('sd2.g.large', 'CN-BEIJING-G', 'x86_64', '4C8G', 4, 8, 'SSD', 'Schedule', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('s2.g.xlarge', 'CN-BEIJING-G', 'x86_64', '16C128G', 16, 128, 'NVMeSSD', 'Storage', 'Available', datetime('now'),
+VALUES ('sd2.g.xlarge', 'CN-BEIJING-G', 'x86_64', '8C16G', 8, 16, 'SSD', 'Schedule', 'Online', datetime('now'),
+        datetime('now'));
+
+INSERT INTO resource_specs
+VALUES ('s2.g.large', 'CN-BEIJING-G', 'x86_64', '8C64G', 8, 64, 'NVMeSSD', 'Storage', 'Online', datetime('now'),
+        datetime('now'));
+INSERT INTO resource_specs
+VALUES ('s2.g.xlarge', 'CN-BEIJING-G', 'x86_64', '16C128G', 16, 128, 'NVMeSSD', 'Storage', 'Online', datetime('now'),
         datetime('now'));
 
 /**CN-HANGZHOU-H X86_64**/
 INSERT INTO resource_specs
-VALUES ('c1.g.large', 'CN-HANGZHOU-H', 'x86_64', '2C2G', 2, 2, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c1.g.large', 'CN-HANGZHOU-H', 'x86_64', '2C2G', 2, 2, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c2.g.large', 'CN-HANGZHOU-H', 'x86_64', '4C8G', 4, 8, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c2.g.large', 'CN-HANGZHOU-H', 'x86_64', '4C8G', 4, 8, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c2.g.xlarge', 'CN-HANGZHOU-H', 'x86_64', '8C16G', 8, 16, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c2.g.xlarge', 'CN-HANGZHOU-H', 'x86_64', '8C16G', 8, 16, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c2.g.2xlarge', 'CN-HANGZHOU-H', 'x86_64', '16C32G', 16, 32, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c2.g.2xlarge', 'CN-HANGZHOU-H', 'x86_64', '16C32G', 16, 32, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c3.g.large', 'CN-HANGZHOU-H', 'x86_64', '8C32G', 8, 32, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c3.g.large', 'CN-HANGZHOU-H', 'x86_64', '8C32G', 8, 32, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c3.g.xlarge', 'CN-HANGZHOU-H', 'x86_64', '16C64G', 16, 64, 'SSD', 'Compute', 'Available', datetime('now'),
-        datetime('now'));
-
-INSERT INTO resource_specs
-VALUES ('sd1.g.large', 'CN-HANGZHOU-H', 'x86_64', '2C2G', 2, 2, 'SSD', 'Schedule', 'Available', datetime('now'),
-        datetime('now'));
-INSERT INTO resource_specs
-VALUES ('sd2.g.large', 'CN-HANGZHOU-H', 'x86_64', '4C8G', 4, 8, 'SSD', 'Schedule', 'Available', datetime('now'),
-        datetime('now'));
-INSERT INTO resource_specs
-VALUES ('sd2.g.xlarge', 'CN-HANGZHOU-H', 'x86_64', '8C16G', 8, 16, 'SSD', 'Schedule', 'Available', datetime('now'),
+VALUES ('c3.g.xlarge', 'CN-HANGZHOU-H', 'x86_64', '16C64G', 16, 64, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 
 INSERT INTO resource_specs
-VALUES ('s1.g.large', 'CN-HANGZHOU-H', 'x86_64', '2C2G', 2, 2, 'NVMeSSD', 'Storage', 'Available', datetime('now'),
+VALUES ('sd1.g.large', 'CN-HANGZHOU-H', 'x86_64', '2C2G', 2, 2, 'SSD', 'Schedule', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('s2.g.large', 'CN-HANGZHOU-H', 'x86_64', '8C64G', 8, 64, 'NVMeSSD', 'Storage', 'Available', datetime('now'),
+VALUES ('sd2.g.large', 'CN-HANGZHOU-H', 'x86_64', '4C8G', 4, 8, 'SSD', 'Schedule', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('s2.g.xlarge', 'CN-HANGZHOU-H', 'x86_64', '16C128G', 16, 128, 'NVMeSSD', 'Storage', 'Available',
+VALUES ('sd2.g.xlarge', 'CN-HANGZHOU-H', 'x86_64', '8C16G', 8, 16, 'SSD', 'Schedule', 'Online', datetime('now'),
+        datetime('now'));
+
+INSERT INTO resource_specs
+VALUES ('s1.g.large', 'CN-HANGZHOU-H', 'x86_64', '2C2G', 2, 2, 'NVMeSSD', 'Storage', 'Online', datetime('now'),
+        datetime('now'));
+INSERT INTO resource_specs
+VALUES ('s2.g.large', 'CN-HANGZHOU-H', 'x86_64', '8C64G', 8, 64, 'NVMeSSD', 'Storage', 'Online', datetime('now'),
+        datetime('now'));
+INSERT INTO resource_specs
+VALUES ('s2.g.xlarge', 'CN-HANGZHOU-H', 'x86_64', '16C128G', 16, 128, 'NVMeSSD', 'Storage', 'Online',
         datetime('now'), datetime('now'));
 INSERT INTO resource_specs
-VALUES ('cs1.g.large', 'CN-HANGZHOU-H', 'x86_64', '2C2G', 2, 2, 'SATA', 'Storage', 'Available', datetime('now'),
+VALUES ('cs1.g.large', 'CN-HANGZHOU-H', 'x86_64', '2C2G', 2, 2, 'SATA', 'Storage', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('cs2.g.large', 'CN-HANGZHOU-H', 'x86_64', '8C64G', 8, 64, 'SATA', 'Storage', 'Available', datetime('now'),
+VALUES ('cs2.g.large', 'CN-HANGZHOU-H', 'x86_64', '8C64G', 8, 64, 'SATA', 'Storage', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('cs2.g.xlarge', 'CN-HANGZHOU-H', 'x86_64', '16C128G', 16, 128, 'SATA', 'Storage', 'Available', datetime('now'),
+VALUES ('cs2.g.xlarge', 'CN-HANGZHOU-H', 'x86_64', '16C128G', 16, 128, 'SATA', 'Storage', 'Online', datetime('now'),
         datetime('now'));
 
 /**CN-HANGZHOU-H ARM64*/
 INSERT INTO resource_specs
-VALUES ('c1.g.large', 'CN-HANGZHOU-H', 'ARM64', '2C2G', 2, 2, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c1.g.large', 'CN-HANGZHOU-H', 'ARM64', '2C2G', 2, 2, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c2.g.large', 'CN-HANGZHOU-H', 'ARM64', '4C8G', 4, 8, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c2.g.large', 'CN-HANGZHOU-H', 'ARM64', '4C8G', 4, 8, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c2.g.xlarge', 'CN-HANGZHOU-H', 'ARM64', '8C16G', 8, 16, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c2.g.xlarge', 'CN-HANGZHOU-H', 'ARM64', '8C16G', 8, 16, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c2.g.2xlarge', 'CN-HANGZHOU-H', 'ARM64', '16C32G', 16, 32, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c2.g.2xlarge', 'CN-HANGZHOU-H', 'ARM64', '16C32G', 16, 32, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c3.g.large', 'CN-HANGZHOU-H', 'ARM64', '8C32G', 8, 32, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c3.g.large', 'CN-HANGZHOU-H', 'ARM64', '8C32G', 8, 32, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c3.g.xlarge', 'CN-HANGZHOU-H', 'ARM64', '16C64G', 16, 64, 'SSD', 'Compute', 'Available', datetime('now'),
-        datetime('now'));
-
-INSERT INTO resource_specs
-VALUES ('sd1.g.large', 'CN-HANGZHOU-H', 'ARM64', '2C2G', 2, 2, 'SSD', 'Schedule', 'Available', datetime('now'),
-        datetime('now'));
-INSERT INTO resource_specs
-VALUES ('sd2.g.large', 'CN-HANGZHOU-H', 'ARM64', '4C8G', 4, 8, 'SSD', 'Schedule', 'Available', datetime('now'),
-        datetime('now'));
-INSERT INTO resource_specs
-VALUES ('sd2.g.xlarge', 'CN-HANGZHOU-H', 'ARM64', '8C16G', 8, 16, 'SSD', 'Schedule', 'Available', datetime('now'),
+VALUES ('c3.g.xlarge', 'CN-HANGZHOU-H', 'ARM64', '16C64G', 16, 64, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 
 INSERT INTO resource_specs
-VALUES ('s1.g.large', 'CN-HANGZHOU-H', 'ARM64', '2C2G', 2, 2, 'NVMeSSD', 'Storage', 'Available', datetime('now'),
+VALUES ('sd1.g.large', 'CN-HANGZHOU-H', 'ARM64', '2C2G', 2, 2, 'SSD', 'Schedule', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('s2.g.large', 'CN-HANGZHOU-H', 'ARM64', '8C64G', 8, 64, 'NVMeSSD', 'Storage', 'Available', datetime('now'),
+VALUES ('sd2.g.large', 'CN-HANGZHOU-H', 'ARM64', '4C8G', 4, 8, 'SSD', 'Schedule', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('s2.g.xlarge', 'CN-HANGZHOU-H', 'ARM64', '16C128G', 16, 128, 'NVMeSSD', 'Storage', 'Available', datetime('now'),
+VALUES ('sd2.g.xlarge', 'CN-HANGZHOU-H', 'ARM64', '8C16G', 8, 16, 'SSD', 'Schedule', 'Online', datetime('now'),
+        datetime('now'));
+
+INSERT INTO resource_specs
+VALUES ('s1.g.large', 'CN-HANGZHOU-H', 'ARM64', '2C2G', 2, 2, 'NVMeSSD', 'Storage', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('cs1.g.large', 'CN-HANGZHOU-H', 'ARM64', '2C2G', 2, 2, 'SATA', 'Storage', 'Available', datetime('now'),
+VALUES ('s2.g.large', 'CN-HANGZHOU-H', 'ARM64', '8C64G', 8, 64, 'NVMeSSD', 'Storage', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('cs2.g.large', 'CN-HANGZHOU-H', 'ARM64', '8C64G', 8, 64, 'SATA', 'Storage', 'Available', datetime('now'),
+VALUES ('s2.g.xlarge', 'CN-HANGZHOU-H', 'ARM64', '16C128G', 16, 128, 'NVMeSSD', 'Storage', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('cs2.g.xlarge', 'CN-HANGZHOU-H', 'ARM64', '16C128G', 16, 128, 'SATA', 'Storage', 'Available', datetime('now'),
+VALUES ('cs1.g.large', 'CN-HANGZHOU-H', 'ARM64', '2C2G', 2, 2, 'SATA', 'Storage', 'Online', datetime('now'),
+        datetime('now'));
+INSERT INTO resource_specs
+VALUES ('cs2.g.large', 'CN-HANGZHOU-H', 'ARM64', '8C64G', 8, 64, 'SATA', 'Storage', 'Online', datetime('now'),
+        datetime('now'));
+INSERT INTO resource_specs
+VALUES ('cs2.g.xlarge', 'CN-HANGZHOU-H', 'ARM64', '16C128G', 16, 128, 'SATA', 'Storage', 'Online', datetime('now'),
         datetime('now'));
 
 /**CN-HANGZHOU-G X86_64*/
 INSERT INTO resource_specs
-VALUES ('c1.g.large', 'CN-HANGZHOU-G', 'x86_64', '2C2G', 2, 2, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c1.g.large', 'CN-HANGZHOU-G', 'x86_64', '2C2G', 2, 2, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c2.g.large', 'CN-HANGZHOU-G', 'x86_64', '4C8G', 4, 8, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c2.g.large', 'CN-HANGZHOU-G', 'x86_64', '4C8G', 4, 8, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c2.g.xlarge', 'CN-HANGZHOU-G', 'x86_64', '8C16G', 8, 16, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c2.g.xlarge', 'CN-HANGZHOU-G', 'x86_64', '8C16G', 8, 16, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c2.g.2xlarge', 'CN-HANGZHOU-G', 'x86_64', '16C32G', 16, 32, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c2.g.2xlarge', 'CN-HANGZHOU-G', 'x86_64', '16C32G', 16, 32, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c3.g.large', 'CN-HANGZHOU-G', 'x86_64', '8C32G', 8, 32, 'SSD', 'Compute', 'Available', datetime('now'),
+VALUES ('c3.g.large', 'CN-HANGZHOU-G', 'x86_64', '8C32G', 8, 32, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('c3.g.xlarge', 'CN-HANGZHOU-G', 'x86_64', '16C64G', 16, 64, 'SSD', 'Compute', 'Available', datetime('now'),
-        datetime('now'));
-
-INSERT INTO resource_specs
-VALUES ('sd1.g.large', 'CN-HANGZHOU-G', 'x86_64', '2C2G', 2, 2, 'SSD', 'Schedule', 'Available', datetime('now'),
-        datetime('now'));
-INSERT INTO resource_specs
-VALUES ('sd2.g.large', 'CN-HANGZHOU-G', 'x86_64', '4C8G', 4, 8, 'SSD', 'Schedule', 'Available', datetime('now'),
-        datetime('now'));
-INSERT INTO resource_specs
-VALUES ('sd2.g.xlarge', 'CN-HANGZHOU-G', 'x86_64', '8C16G', 8, 16, 'SSD', 'Schedule', 'Available', datetime('now'),
+VALUES ('c3.g.xlarge', 'CN-HANGZHOU-G', 'x86_64', '16C64G', 16, 64, 'SSD', 'Compute', 'Online', datetime('now'),
         datetime('now'));
 
 INSERT INTO resource_specs
-VALUES ('s1.g.large', 'CN-HANGZHOU-G', 'x86_64', '2C2G', 2, 2, 'NVMeSSD', 'Storage', 'Available', datetime('now'),
+VALUES ('sd1.g.large', 'CN-HANGZHOU-G', 'x86_64', '2C2G', 2, 2, 'SSD', 'Schedule', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('s2.g.large', 'CN-HANGZHOU-G', 'x86_64', '8C64G', 8, 64, 'NVMeSSD', 'Storage', 'Available', datetime('now'),
+VALUES ('sd2.g.large', 'CN-HANGZHOU-G', 'x86_64', '4C8G', 4, 8, 'SSD', 'Schedule', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('s2.g.xlarge', 'CN-HANGZHOU-G', 'x86_64', '16C128G', 16, 128, 'NVMeSSD', 'Storage', 'Available',
+VALUES ('sd2.g.xlarge', 'CN-HANGZHOU-G', 'x86_64', '8C16G', 8, 16, 'SSD', 'Schedule', 'Online', datetime('now'),
+        datetime('now'));
+
+INSERT INTO resource_specs
+VALUES ('s1.g.large', 'CN-HANGZHOU-G', 'x86_64', '2C2G', 2, 2, 'NVMeSSD', 'Storage', 'Online', datetime('now'),
+        datetime('now'));
+INSERT INTO resource_specs
+VALUES ('s2.g.large', 'CN-HANGZHOU-G', 'x86_64', '8C64G', 8, 64, 'NVMeSSD', 'Storage', 'Online', datetime('now'),
+        datetime('now'));
+INSERT INTO resource_specs
+VALUES ('s2.g.xlarge', 'CN-HANGZHOU-G', 'x86_64', '16C128G', 16, 128, 'NVMeSSD', 'Storage', 'Online',
         datetime('now'), datetime('now'));
 INSERT INTO resource_specs
-VALUES ('cs1.g.large', 'CN-HANGZHOU-G', 'x86_64', '2C2G', 2, 2, 'SATA', 'Storage', 'Available', datetime('now'),
+VALUES ('cs1.g.large', 'CN-HANGZHOU-G', 'x86_64', '2C2G', 2, 2, 'SATA', 'Storage', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('cs2.g.large', 'CN-HANGZHOU-G', 'x86_64', '8C64G', 8, 64, 'SATA', 'Storage', 'Available', datetime('now'),
+VALUES ('cs2.g.large', 'CN-HANGZHOU-G', 'x86_64', '8C64G', 8, 64, 'SATA', 'Storage', 'Online', datetime('now'),
         datetime('now'));
 INSERT INTO resource_specs
-VALUES ('cs2.g.xlarge', 'CN-HANGZHOU-G', 'x86_64', '16C128G', 16, 128, 'SATA', 'Storage', 'Available', datetime('now'),
+VALUES ('cs2.g.xlarge', 'CN-HANGZHOU-G', 'x86_64', '16C128G', 16, 128, 'SATA', 'Storage', 'Online', datetime('now'),
         datetime('now'));
 
 CREATE TABLE IF NOT EXISTS `products`
@@ -311,7 +311,7 @@ VALUES ('Aliyun','CN-BEIJING', 'TiDB', 'TiDB', '5.1.0', 'x86_64', 'Online', 0, d
 INSERT INTO products
 VALUES ('Aliyun','CN-HANGZHOU', 'EnterpriseManager', 'EnterpriseManager', '1.0.0', 'x86_64', 'Online', 1, datetime('now'),
         datetime('now'));
-/**INSERT INTO products VALUES('CN-HANGZHOU','TiDB Data Migration','Data Migration','2.0.0','x86_64','UnAvailable',datetime('now'),datetime('now'));*/
+/**INSERT INTO products VALUES('CN-HANGZHOU','TiDB Data Migration','Data Migration','2.0.0','x86_64','UnOnline',datetime('now'),datetime('now'));*/
 
 
 CREATE TABLE IF NOT EXISTS `product_components`
@@ -333,80 +333,80 @@ CREATE TABLE IF NOT EXISTS `product_components`
 );
 
 INSERT INTO product_components
-VALUES ('TiDB', 'TiDB', '5.0.0', 'Compute Engine', 'Available', 'Compute', 10000, 10020, 2, 1, 10240, datetime('now'),
+VALUES ('TiDB', 'TiDB', '5.0.0', 'Compute Engine', 'Online', 'Compute', 10000, 10020, 2, 1, 10240, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('TiKV', 'TiDB', '5.0.0', 'Storage Engine', 'Available', 'Storage', 10020, 10040, 2, 1, 10240, datetime('now'),
+VALUES ('TiKV', 'TiDB', '5.0.0', 'Storage Engine', 'Online', 'Storage', 10020, 10040, 2, 1, 10240, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('TiFlash', 'TiDB', '5.0.0', 'Column Storage Engine', 'Available', 'Storage', 10120, 10180, 6, 1, 10240,
+VALUES ('TiFlash', 'TiDB', '5.0.0', 'Column Storage Engine', 'Online', 'Storage', 10120, 10180, 6, 1, 10240,
         datetime('now'), datetime('now'));
 INSERT INTO product_components
-VALUES ('PD', 'TiDB', '5.0.0', 'Schedule Engine', 'Available', 'Schedule', 10040, 10120, 8, 1, 7, datetime('now'),
+VALUES ('PD', 'TiDB', '5.0.0', 'Schedule Engine', 'Online', 'Schedule', 10040, 10120, 8, 1, 7, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('TiCDC', 'TiDB', '5.0.0', 'CDC', 'Available', 'Schedule', 10180, 10200, 2, 1, 512, datetime('now'),
+VALUES ('TiCDC', 'TiDB', '5.0.0', 'CDC', 'Online', 'Schedule', 10180, 10200, 2, 1, 512, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('Grafana', 'TiDB', '5.0.0', 'Monitor GUI', 'Available', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
+VALUES ('Grafana', 'TiDB', '5.0.0', 'Monitor GUI', 'Online', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('Prometheus', 'TiDB', '5.0.0', 'Monitor', 'Available', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
+VALUES ('Prometheus', 'TiDB', '5.0.0', 'Monitor', 'Online', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('AlertManger', 'TiDB', '5.0.0', 'Alert', 'Available', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
+VALUES ('AlertManger', 'TiDB', '5.0.0', 'Alert', 'Online', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('NodeExporter', 'TiDB', '5.0.0', 'NodeExporter', 'Available', 'Schedule', 11000, 12000, 2, 1, 1,
+VALUES ('NodeExporter', 'TiDB', '5.0.0', 'NodeExporter', 'Online', 'Schedule', 11000, 12000, 2, 1, 1,
         datetime('now'), datetime('now'));
 INSERT INTO product_components
-VALUES ('BlackboxExporter', 'TiDB', '5.0.0', 'BlackboxExporter', 'Available', 'Schedule', 11000, 12000, 1, 1, 1,
-        datetime('now'), datetime('now'));
-
-INSERT INTO product_components
-VALUES ('TiDB', 'TiDB', '5.1.0', 'Compute Engine', 'Available', 'Compute', 10000, 10020, 2, 1, 10240, datetime('now'),
-        datetime('now'));
-INSERT INTO product_components
-VALUES ('TiKV', 'TiDB', '5.1.0', 'Storage Engine', 'Available', 'Storage', 10020, 10040, 2, 1, 10240, datetime('now'),
-        datetime('now'));
-INSERT INTO product_components
-VALUES ('TiFlash', 'TiDB', '5.1.0', 'Column Storage Engine', 'Available', 'Storage', 10120, 10180, 6, 1, 10240,
-        datetime('now'), datetime('now'));
-INSERT INTO product_components
-VALUES ('PD', 'TiDB', '5.1.0', 'Schedule Engine', 'Available', 'Schedule', 10040, 10120, 8, 1, 7, datetime('now'),
-        datetime('now'));
-INSERT INTO product_components
-VALUES ('TiCDC', 'TiDB', '5.1.0', 'CDC', 'Available', 'Schedule', 10180, 10200, 2, 1, 512, datetime('now'),
-        datetime('now'));
-INSERT INTO product_components
-VALUES ('Grafana', 'TiDB', '5.1.0', 'Monitor GUI', 'Available', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
-        datetime('now'));
-INSERT INTO product_components
-VALUES ('Prometheus', 'TiDB', '5.1.0', 'Monitor', 'Available', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
-        datetime('now'));
-INSERT INTO product_components
-VALUES ('AlertManger', 'TiDB', '5.1.0', 'Alert', 'Available', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
-        datetime('now'));
-INSERT INTO product_components
-VALUES ('NodeExporter', 'TiDB', '5.1.0', 'NodeExporter', 'Available', 'Schedule', 11000, 12000, 2, 1, 1,
-        datetime('now'), datetime('now'));
-INSERT INTO product_components
-VALUES ('BlackboxExporter', 'TiDB', '5.1.0', 'BlackboxExporter', 'Available', 'Schedule', 11000, 12000, 1, 1, 1,
+VALUES ('BlackboxExporter', 'TiDB', '5.0.0', 'BlackboxExporter', 'Online', 'Schedule', 11000, 12000, 1, 1, 1,
         datetime('now'), datetime('now'));
 
 INSERT INTO product_components
-VALUES ('cluster-server', 'EnterpriseManager', '1.0.0', 'cluster-server', 'Available', 'Schedule', 10000, 10400, 2, 1,
-        1, datetime('now'), datetime('now'));
+VALUES ('TiDB', 'TiDB', '5.1.0', 'Compute Engine', 'Online', 'Compute', 10000, 10020, 2, 1, 10240, datetime('now'),
+        datetime('now'));
 INSERT INTO product_components
-VALUES ('openapi-server', 'EnterpriseManager', '1.0.0', 'openapi-server', 'Available', 'Storage', 10000, 10400, 2, 1,
-        1, datetime('now'), datetime('now'));
+VALUES ('TiKV', 'TiDB', '5.1.0', 'Storage Engine', 'Online', 'Storage', 10020, 10040, 2, 1, 10240, datetime('now'),
+        datetime('now'));
 INSERT INTO product_components
-VALUES ('Grafana', 'EnterpriseManager', '1.0.0', 'Monitor GUI', 'Available', 'Schedule', 10000, 10400, 2, 1, 1,
+VALUES ('TiFlash', 'TiDB', '5.1.0', 'Column Storage Engine', 'Online', 'Storage', 10120, 10180, 6, 1, 10240,
         datetime('now'), datetime('now'));
 INSERT INTO product_components
-VALUES ('Prometheus', 'EnterpriseManager', '1.0.0', 'Monitor', 'Available', 'Schedule', 10000, 10400, 2, 1, 1,
+VALUES ('PD', 'TiDB', '5.1.0', 'Schedule Engine', 'Online', 'Schedule', 10040, 10120, 8, 1, 7, datetime('now'),
+        datetime('now'));
+INSERT INTO product_components
+VALUES ('TiCDC', 'TiDB', '5.1.0', 'CDC', 'Online', 'Schedule', 10180, 10200, 2, 1, 512, datetime('now'),
+        datetime('now'));
+INSERT INTO product_components
+VALUES ('Grafana', 'TiDB', '5.1.0', 'Monitor GUI', 'Online', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
+        datetime('now'));
+INSERT INTO product_components
+VALUES ('Prometheus', 'TiDB', '5.1.0', 'Monitor', 'Online', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
+        datetime('now'));
+INSERT INTO product_components
+VALUES ('AlertManger', 'TiDB', '5.1.0', 'Alert', 'Online', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
+        datetime('now'));
+INSERT INTO product_components
+VALUES ('NodeExporter', 'TiDB', '5.1.0', 'NodeExporter', 'Online', 'Schedule', 11000, 12000, 2, 1, 1,
         datetime('now'), datetime('now'));
 INSERT INTO product_components
-VALUES ('AlertManger', 'EnterpriseManager', '1.0.0', 'Alert GUI', 'Available', 'Schedule', 10000, 10400, 2, 1, 1,
+VALUES ('BlackboxExporter', 'TiDB', '5.1.0', 'BlackboxExporter', 'Online', 'Schedule', 11000, 12000, 1, 1, 1,
+        datetime('now'), datetime('now'));
+
+INSERT INTO product_components
+VALUES ('cluster-server', 'EnterpriseManager', '1.0.0', 'cluster-server', 'Online', 'Schedule', 10000, 10400, 2, 1,
+        1, datetime('now'), datetime('now'));
+INSERT INTO product_components
+VALUES ('openapi-server', 'EnterpriseManager', '1.0.0', 'openapi-server', 'Online', 'Storage', 10000, 10400, 2, 1,
+        1, datetime('now'), datetime('now'));
+INSERT INTO product_components
+VALUES ('Grafana', 'EnterpriseManager', '1.0.0', 'Monitor GUI', 'Online', 'Schedule', 10000, 10400, 2, 1, 1,
+        datetime('now'), datetime('now'));
+INSERT INTO product_components
+VALUES ('Prometheus', 'EnterpriseManager', '1.0.0', 'Monitor', 'Online', 'Schedule', 10000, 10400, 2, 1, 1,
+        datetime('now'), datetime('now'));
+INSERT INTO product_components
+VALUES ('AlertManger', 'EnterpriseManager', '1.0.0', 'Alert GUI', 'Online', 'Schedule', 10000, 10400, 2, 1, 1,
         datetime('now'), datetime('now'));
 

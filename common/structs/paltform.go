@@ -44,7 +44,7 @@ type ProductComponentProperty struct {
 	MaxPort     int32
 	MinInstance int32                                    //Minimum number of instances of product components at runtime, e.g. at least 1 instance of PD, at least 3 instances of TiKV
 	MaxInstance int32                                    //Maximum number of instances when the product component is running, e.g. PD can run up to 7 instances, other components have no upper limit
-	Spec        map[string]ComponentInstanceResourceSpec //Information on the specifications of the resources available for the running of product components,organized by different Zone
+	Spec        map[string]ComponentInstanceResourceSpec //Information on the specifications of the resources online for the running of product components,organized by different Zone
 }
 
 //ProductVersion Product version and component details, with each product categorized by version and supported CPU architecture

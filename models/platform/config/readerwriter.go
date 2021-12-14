@@ -22,10 +22,10 @@ type ReaderWriter interface {
 	// @Description: create system config
 	// @Receiver m
 	// @Parameter ctx
-	// @Parameter config
+	// @Parameter cfg
 	// @Return *SystemConfig
 	// @Return error
-	CreateConfig(ctx context.Context, config *SystemConfig) (*SystemConfig, error)
+	CreateConfig(ctx context.Context, cfg *SystemConfig) (*SystemConfig, error)
 
 	// GetConfig
 	// @Description: get system config by configKey

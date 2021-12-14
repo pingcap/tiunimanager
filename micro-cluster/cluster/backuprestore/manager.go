@@ -45,6 +45,11 @@ func GetBRService() BRService {
 	return brService
 }
 
+func SetBRServiceForUt(service BRService) {
+	GetBRService()
+	brService = service
+}
+
 type BRManager struct {
 	autoBackupMgr *autoBackupManager
 }

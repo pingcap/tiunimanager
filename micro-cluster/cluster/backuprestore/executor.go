@@ -204,7 +204,7 @@ func getBRStoragePath(ctx context.Context, storageType string, filePath string) 
 func convertBrStorageType(storageType string) (secondparty.StorageType, error) {
 	if string(constants.StorageTypeS3) == storageType {
 		return secondparty.StorageTypeS3, nil
-	} else if string(constants.StorageTypeLocal) == storageType {
+	} else if string(constants.StorageTypeNFS) == storageType {
 		return secondparty.StorageTypeLocal, nil
 	} else {
 		return "", fmt.Errorf("invalid storage type, %s", storageType)

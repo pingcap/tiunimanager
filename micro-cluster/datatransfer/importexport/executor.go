@@ -74,7 +74,7 @@ func importDataToCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) 
 		framework.LogWithContext(ctx).Errorf("call tiup lightning api failed, %s", err.Error())
 		return fmt.Errorf("call tiup lightning api failed, %s", err.Error())
 	}
-	framework.LogWithContext(ctx).Infof("call tiupmgr tidb-lightning api success, importTaskId %d", importTaskId)
+	framework.LogWithContext(ctx).Infof("call tiupmgr tidb-lightning api success, importTaskId %s", importTaskId)
 	return nil
 }
 
@@ -139,7 +139,7 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 		return fmt.Errorf("call tiup dumpling api failed, %s", err.Error())
 	}
 
-	framework.LogWithContext(ctx).Infof("call tiupmgr succee, exportTaskId: %d", exportTaskId)
+	framework.LogWithContext(ctx).Infof("call tiupmgr succee, exportTaskId: %s", exportTaskId)
 	return nil
 }
 
@@ -164,7 +164,7 @@ func importDataFailed(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) err
 	framework.LogWithContext(ctx).Info("begin importDataFailed")
 	defer framework.LogWithContext(ctx).Info("end importDataFailed")
 
-	info := ctx.GetData(contextDataTransportRecordKey).(*ExportInfo)
+	info := ctx.GetData(contextDataTransportRecordKey).(*ImportInfo)
 	if err := updateTransportRecordFailed(ctx, info.RecordId); err != nil {
 		framework.LogWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return fmt.Errorf("update data transport record failed, %s", err.Error())
@@ -174,6 +174,15 @@ func importDataFailed(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) err
 }
 
 func exportDataFailed(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.LogWithContext(ctx).Info("begin exportDataFailed")
+	defer framework.LogWithContext(ctx).Info("end exportDataFailed")
+
+	info := ctx.GetData(contextDataTransportRecordKey).(*ExportInfo)
+	if err := updateTransportRecordFailed(ctx, info.RecordId); err != nil {
+		framework.LogWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
+		return fmt.Errorf("update data transport record failed, %s", err.Error())
+	}
+
 	return clusterFail(node, ctx)
 }
 

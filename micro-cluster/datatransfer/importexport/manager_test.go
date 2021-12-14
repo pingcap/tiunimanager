@@ -1,0 +1,71 @@
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ *  Unless required by applicable law or agreed to in writing, software       *
+ *  distributed under the License is distributed on an "AS IS" BASIS,         *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+ *  See the License for the specific language governing permissions and       *
+ *  limitations under the License.                                            *
+ ******************************************************************************/
+
+package importexport
+
+import (
+	"context"
+	"github.com/golang/mock/gomock"
+	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockimportexport"
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
+
+func init() {
+	models.MockDB()
+}
+
+func TestGetImportExportService(t *testing.T) {
+	service := GetImportExportService()
+	assert.NotNil(t, service)
+}
+
+func TestImportExportManager_DeleteDataTransportRecord(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockImportExportRW := mockimportexport.NewMockReaderWriter(ctrl)
+	mockImportExportRW.EXPECT().GetDataTransportRecord(gomock.Any(), gomock.Any()).Return(&importexport.DataTransportRecord{StorageType: "nfs"}, nil).AnyTimes()
+	mockImportExportRW.EXPECT().DeleteDataTransportRecord(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	models.SetImportExportReaderWriter(mockImportExportRW)
+
+	service := GetImportExportService()
+	_, err := service.DeleteDataTransportRecord(context.TODO(), &message.DeleteImportExportRecordReq{RecordID: "record-xxx"})
+	assert.Nil(t, err)
+}
+
+func TestImportExportManager_QueryDataTransportRecords(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	records := make([]*importexport.DataTransportRecord, 1)
+	records[0] = &importexport.DataTransportRecord{
+		Entity: common.Entity{
+			ID: "record-xxx",
+		},
+		FilePath: "./testdata",
+	}
+	mockImportExportRW := mockimportexport.NewMockReaderWriter(ctrl)
+	mockImportExportRW.EXPECT().QueryDataTransportRecords(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(records, int64(1), nil).AnyTimes()
+	models.SetImportExportReaderWriter(mockImportExportRW)
+
+	service := GetImportExportService()
+	_, _, err := service.QueryDataTransportRecords(context.TODO(), &message.QueryDataImportExportRecordsReq{RecordID: "record-xxx"})
+	assert.Nil(t, err)
+}

@@ -24,7 +24,7 @@ import (
 	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
 	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
-	paramGroupApi "github.com/pingcap-inc/tiem/micro-api/controller/param/paramgroup"
+	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-api/controller/platform/specs"
@@ -98,23 +98,26 @@ func Route(g *gin.Engine) {
 			cluster.GET("/:clusterId/monitor", clusterApi.DescribeMonitor)
 
 			// Scale cluster
-			cluster.POST("/:clusterId/scale-out", clusterApi.ScaleOut)
-			cluster.POST("/:clusterId/scale-in", clusterApi.ScaleIn)
+			cluster.POST("/scale-out", clusterApi.ScaleOut)
+			cluster.POST("/scale-in", clusterApi.ScaleIn)
+
+			// Clone cluster
+			cluster.POST("/clone", clusterApi.Clone)
 
 			// Params
 			cluster.GET("/:clusterId/params", parameterApi.QueryParams)
 			cluster.PUT("/:clusterId/params", parameterApi.UpdateParams)
-			cluster.POST("/:clusterId/params/inspect", parameterApi.InspectParams)
+			//cluster.POST("/:clusterId/params/inspect", parameterApi.InspectParams)
 
 			// Backup Strategy
-			cluster.GET("/:clusterId/strategy", backuprestore.QueryBackupStrategy)
+			cluster.GET("/:clusterId/strategy", backuprestore.GetBackupStrategy)
 			cluster.PUT("/:clusterId/strategy", backuprestore.SaveBackupStrategy)
 			// cluster.DELETE("/:clusterId/strategy", instanceapi.DeleteBackupStrategy)
 
 			//Import and Export
 			cluster.POST("/import", importexport.ImportData)
 			cluster.POST("/export", importexport.ExportData)
-			cluster.GET("/transport", importexport.DescribeDataTransport)
+			cluster.GET("/transport", importexport.QueryDataTransport)
 			cluster.DELETE("/transport/:recordId", importexport.DeleteDataTransportRecord)
 		}
 
@@ -127,10 +130,10 @@ func Route(g *gin.Engine) {
 		{
 			backup.Use(interceptor.VerifyIdentity)
 			backup.Use(interceptor.AuditLog())
+
 			backup.POST("/", backuprestore.Backup)
-			backup.GET("/", backuprestore.QueryBackup)
+			backup.GET("/", backuprestore.QueryBackupRecords)
 			backup.DELETE("/:backupId", backuprestore.DeleteBackup)
-			//backup.GET("/:backupId", instanceapi.DetailsBackup)
 		}
 
 		changeFeeds := apiV1.Group("/changefeeds")
@@ -181,13 +184,13 @@ func Route(g *gin.Engine) {
 		{
 			paramGroups.Use(interceptor.VerifyIdentity)
 			paramGroups.Use(interceptor.AuditLog())
-			paramGroups.GET("/", paramGroupApi.Query)
-			paramGroups.GET("/:paramGroupId", paramGroupApi.Detail)
-			paramGroups.POST("/", paramGroupApi.Create)
-			paramGroups.PUT("/:paramGroupId", paramGroupApi.Update)
-			paramGroups.DELETE("/:paramGroupId", paramGroupApi.Delete)
-			paramGroups.POST("/:paramGroupId/copy", paramGroupApi.Copy)
-			paramGroups.POST("/:paramGroupId/apply", paramGroupApi.Apply)
+			paramGroups.GET("/", parametergroup.Query)
+			paramGroups.GET("/:paramGroupId", parametergroup.Detail)
+			paramGroups.POST("/", parametergroup.Create)
+			paramGroups.PUT("/:paramGroupId", parametergroup.Update)
+			paramGroups.DELETE("/:paramGroupId", parametergroup.Delete)
+			paramGroups.POST("/:paramGroupId/copy", parametergroup.Copy)
+			paramGroups.POST("/:paramGroupId/apply", parametergroup.Apply)
 		}
 	}
 

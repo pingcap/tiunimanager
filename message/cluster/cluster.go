@@ -24,6 +24,7 @@
 package cluster
 
 import (
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 )
 
@@ -82,20 +83,20 @@ type ScaleInClusterReq struct {
 
 // ScaleInClusterResp Reply message for delete an instance in the cluster
 type ScaleInClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
-	ClusterID                     string `json:"clusterID"`
+	structs.AsyncTaskWorkFlowInfo
+	ClusterID string `json:"clusterId"`
 }
 
 // ScaleOutClusterReq Message for cluster expansion operation
 type ScaleOutClusterReq struct {
-	ClusterID                        string `json:"clusterId" form:"clusterId"`
-	structs.ClusterResourceParameter `json:"resourceParameter"`
+	ClusterID string `json:"clusterId" form:"clusterId"`
+	structs.ClusterResourceParameter
 }
 
 // ScaleOutClusterResp Reply message for cluster expansion operation
 type ScaleOutClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
-	ClusterID                     string `json:"clusterID"`
+	structs.AsyncTaskWorkFlowInfo
+	ClusterID string `json:"clusterId"`
 }
 
 //RestoreNewClusterReq Restore to a new cluster message using the backup file
@@ -119,21 +120,20 @@ type RestoreExistClusterReq struct {
 //RestoreExistClusterResp Restore to exist cluster using the backup file Reply Message
 type RestoreExistClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
-	ClusterID                     string `json:"clusterID"`
 }
 
 // CloneClusterReq Message for clone a new cluster
 type CloneClusterReq struct {
 	structs.CreateClusterParameter
-	ParamGroupID    int64  `json:"paramGroupID"`    // specify cloned cluster parameter group id(option)
-	CloneStrategy   string `json:"cloneStrategy"`   // specify clone strategy, include empty, snapshot and sync, default empty(option)
-	SourceClusterID string `json:"sourceClusterID"` // specify source cluster id(require)
+	ParamGroupID    int64                          `json:"paramGroupId"`    // specify cloned cluster parameter group id(option)
+	CloneStrategy   constants.ClusterCloneStrategy `json:"cloneStrategy"`   // specify clone strategy, include empty, snapshot and sync, default empty(option)
+	SourceClusterID string                         `json:"sourceClusterId"` // specify source cluster id(require)
 }
 
 // CloneClusterResp Reply message for clone a new cluster
 type CloneClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
-	ClusterID                     string `json:"clusterID"`
+	structs.AsyncTaskWorkFlowInfo
+	ClusterID string `json:"clusterId"`
 }
 
 // MasterSlaveClusterSwitchoverReq Master and slave cluster switchover messages
@@ -258,20 +258,34 @@ type QueryClusterLogResp struct {
 }
 
 type QueryClusterParametersReq struct {
-	ClusterID string `json:"clusterID"`
+	ClusterID string `json:"clusterId"`
 	structs.PageRequest
 }
 
 type QueryClusterParametersResp struct {
-	Parameters []structs.ClusterParameterInfo `json:"parameters"`
+	structs.ClusterParameterInfo
 }
 
 type UpdateClusterParametersReq struct {
-	Params []structs.ClusterParameterSampleInfo `json:"params"`
-	Reboot bool                                 `json:"reboot"`
+	ClusterID string                               `json:"clusterId"`
+	Params    []structs.ClusterParameterSampleInfo `json:"params"`
+	Reboot    bool                                 `json:"reboot"`
 }
 
 type UpdateClusterParametersResp struct {
 	ClusterID                     string `json:"clusterId" example:"1"`
 	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
+}
+
+type InspectClusterParametersReq struct {
+	ClusterID string `json:"clusterId"`
+}
+
+type InspectClusterParametersResp struct {
+	ParamId       int64                      `json:"paramId" example:"1"`
+	Name          string                     `json:"name" example:"binlog_cache"`
+	ComponentType string                     `json:"componentType" example:"tidb"`
+	Instance      string                     `json:"instance" example:"172.16.5.23"`
+	RealValue     structs.ParameterRealValue `json:"realValue"`
+	InspectValue  string                     `json:"inspectValue" example:"1"`
 }

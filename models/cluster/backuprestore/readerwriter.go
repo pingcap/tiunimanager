@@ -40,7 +40,7 @@ type ReaderWriter interface {
 	// @Parameter backupTso
 	// @Parameter endTime
 	// @Return error
-	UpdateBackupRecord(ctx context.Context, backupId string, status string, size uint64, backupTso int64, endTime time.Time) (err error)
+	UpdateBackupRecord(ctx context.Context, backupId string, status string, size uint64, backupTso uint64, endTime time.Time) (err error)
 
 	// GetBackupRecord
 	// @Description: get backup record by Id
@@ -56,6 +56,7 @@ type ReaderWriter interface {
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter backupId
+	// @Parameter backupMode
 	// @Parameter clusterId
 	// @Parameter startTime
 	// @Parameter endTime
@@ -64,7 +65,7 @@ type ReaderWriter interface {
 	// @Return []*BackupRecord
 	// @Return total
 	// @Return error
-	QueryBackupRecords(ctx context.Context, clusterId, backupId string, startTime, endTime time.Time, page int, pageSize int) (records []*BackupRecord, total int64, err error)
+	QueryBackupRecords(ctx context.Context, clusterId, backupId, backupMode string, startTime, endTime time.Time, page int, pageSize int) (records []*BackupRecord, total int64, err error)
 
 	// DeleteBackupRecord
 	// @Description: delete backup record by Id

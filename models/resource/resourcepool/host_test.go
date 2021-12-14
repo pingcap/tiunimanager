@@ -40,9 +40,9 @@ func Test_BuildDefaultTraits(t *testing.T) {
 		host Host
 		want want
 	}{
-		{"test1", Host{ClusterType: string(constants.EMProductNameTiDB), Purpose: string(constants.PurposeCompute), DiskType: string(constants.NVMeSSD)}, want{common.TIEM_SUCCESS, 73}},
-		{"test2", Host{ClusterType: string(constants.EMProductNameTiDB), Purpose: string(constants.PurposeCompute) + "," + string(constants.PurposeSchedule), DiskType: string(constants.SSD)}, want{common.TIEM_SUCCESS, 169}},
-		{"test3", Host{ClusterType: string(constants.EMProductNameTiDB), Purpose: "General", DiskType: string(constants.NVMeSSD)}, want{common.TIEM_RESOURCE_TRAIT_NOT_FOUND, 0}},
+		{"test1", Host{ClusterType: string(constants.EMProductIDTiDB), Purpose: string(constants.PurposeCompute), DiskType: string(constants.NVMeSSD)}, want{common.TIEM_SUCCESS, 73}},
+		{"test2", Host{ClusterType: string(constants.EMProductIDTiDB), Purpose: string(constants.PurposeCompute) + "," + string(constants.PurposeSchedule), DiskType: string(constants.SSD)}, want{common.TIEM_SUCCESS, 169}},
+		{"test3", Host{ClusterType: string(constants.EMProductIDTiDB), Purpose: "General", DiskType: string(constants.NVMeSSD)}, want{common.TIEM_RESOURCE_TRAIT_NOT_FOUND, 0}},
 	}
 
 	for _, tt := range tests {
@@ -153,7 +153,7 @@ func Test_Host_Hooks(t *testing.T) {
 	defer func() { _ = os.Remove(dbPath) }()
 
 	host := genFakeHost("Region1", "Region1,Zone1", "Region1,Zone1,Rack1", "TEST_HOST1", "192.168.999.999", 32, 64,
-		string(constants.EMProductNameDataMigration), string(constants.PurposeSchedule), string(constants.NVMeSSD))
+		string(constants.EMProductIDDataMigration), string(constants.PurposeSchedule), string(constants.NVMeSSD))
 	db.AutoMigrate(&Host{})
 	db.AutoMigrate(&Disk{})
 	err = db.Model(&Host{}).Create(host).Error
@@ -195,7 +195,7 @@ func Test_ConstructFromHostInfo(t *testing.T) {
 
 func Test_ToHostInfo(t *testing.T) {
 	src := genFakeHost("Region1", "Region1,Zone1", "Region1,Zone1,Rack1", "TEST_HOST1", "192.168.999.999", 32, 64,
-		string(constants.EMProductNameDataMigration), string(constants.PurposeSchedule), string(constants.NVMeSSD))
+		string(constants.EMProductIDDataMigration), string(constants.PurposeSchedule), string(constants.NVMeSSD))
 
 	var dst structs.HostInfo
 	src.ToHostInfo(&dst)

@@ -86,7 +86,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			host.FreeMemory = host.Memory
 			host.Nic = row[NIC_FIELD]
 
-			if err = constants.ValidProductName(row[CLUSTER_TYPE_FIELD]); err != nil {
+			if err = constants.ValidProductID(row[CLUSTER_TYPE_FIELD]); err != nil {
 				errMsg := fmt.Sprintf("Row %d get cluster type(%s) failed, %v", irow, row[CLUSTER_TYPE_FIELD], err)
 				return nil, errors.New(errMsg)
 			}
@@ -165,11 +165,11 @@ func ImportHosts(c *gin.Context) {
 		return
 	}
 
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, message.ImportHostsReq{
+	requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, message.ImportHostsReq{
 		Hosts: hosts,
 	})
 
-	if err == nil {
+	if ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.ImportHosts,
 			&message.ImportHostsResp{},
 			requestBody,
@@ -190,9 +190,9 @@ func ImportHosts(c *gin.Context) {
 func QueryHosts(c *gin.Context) {
 	var req message.QueryHostsReq
 
-	requestBody, err := controller.HandleJsonRequestFromQuery(c, &req)
+	requestBody, ok := controller.HandleJsonRequestFromQuery(c, &req)
 
-	if err == nil {
+	if ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.QueryHosts, &message.QueryHostsResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -228,13 +228,13 @@ func detectDuplicateElement(hostIds []string) (string, bool) {
 func RemoveHosts(c *gin.Context) {
 	var req message.DeleteHostsReq
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
-	if str, dup := detectDuplicateElement(req.HostIDs); dup {
-		c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), str+" Is Duplicated in request"))
-		return
-	}
+	requestBody, ok := controller.HandleJsonRequestFromBody(c, &req)
+	if ok {
+		if str, dup := detectDuplicateElement(req.HostIDs); dup {
+			c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), str+" Is Duplicated in request"))
+			return
+		}
 
-	if err == nil {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteHosts, &message.DeleteHostsResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -283,13 +283,13 @@ func DownloadHostTemplateFile(c *gin.Context) {
 func UpdateHostReserved(c *gin.Context) {
 	var req message.UpdateHostReservedReq
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
-	if str, dup := detectDuplicateElement(req.HostIDs); dup {
-		c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), str+" Is Duplicated in request"))
-		return
-	}
+	requestBody, ok := controller.HandleJsonRequestFromBody(c, &req)
+	if ok {
+		if str, dup := detectDuplicateElement(req.HostIDs); dup {
+			c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), str+" Is Duplicated in request"))
+			return
+		}
 
-	if err == nil {
 		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateHostReserved, &message.UpdateHostReservedResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -309,19 +309,19 @@ func UpdateHostReserved(c *gin.Context) {
 func UpdateHostStatus(c *gin.Context) {
 	var req message.UpdateHostStatusReq
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
-	if str, dup := detectDuplicateElement(req.HostIDs); dup {
-		c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), str+" Is Duplicated in request"))
-		return
-	}
+	requestBody, ok := controller.HandleJsonRequestFromBody(c, &req)
+	if ok {
+		if str, dup := detectDuplicateElement(req.HostIDs); dup {
+			c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), str+" Is Duplicated in request"))
+			return
+		}
 
-	if !constants.HostStatus(req.Status).IsValidStatus() {
-		errmsg := fmt.Sprintf("input status %s is invalid, [Online,Offline,Deleted]", req.Status)
-		c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), errmsg))
-		return
-	}
+		if !constants.HostStatus(req.Status).IsValidStatus() {
+			errmsg := fmt.Sprintf("input status %s is invalid, [Online,Offline,Deleted]", req.Status)
+			c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), errmsg))
+			return
+		}
 
-	if err == nil {
 		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateHostStatus, &message.UpdateHostStatusResp{},
 			requestBody,
 			controller.DefaultTimeout)

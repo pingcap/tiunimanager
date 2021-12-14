@@ -29,7 +29,7 @@ type WorkFlowDefine struct {
 	ContextParser func(string) *FlowContext
 }
 
-type NodeExecutor func(task *workflow.WorkFlowNode, context *FlowContext) bool
+type NodeExecutor func(task *workflow.WorkFlowNode, context *FlowContext) error
 
 type NodeDefine struct {
 	Name         string
@@ -66,24 +66,14 @@ func (define *WorkFlowDefine) getNodeNameList() []string {
 }
 
 func CompositeExecutor(executors ...NodeExecutor) NodeExecutor {
-	return func(node *workflow.WorkFlowNode, context *FlowContext) bool {
+	return func(node *workflow.WorkFlowNode, context *FlowContext) error {
 		for _, executor := range executors {
-			if executor(node, context) {
+			if err := executor(node, context); err == nil {
 				continue
 			} else {
-				return false
+				return err
 			}
 		}
-		return true
+		return nil
 	}
-}
-
-func defaultEnd(node *workflow.WorkFlowNode, context *FlowContext) bool {
-	node.Status = constants.WorkFlowStatusFinished
-	return true
-}
-
-func defaultFail(node *workflow.WorkFlowNode, context *FlowContext) bool {
-	node.Status = constants.WorkFlowStatusError
-	return true
 }

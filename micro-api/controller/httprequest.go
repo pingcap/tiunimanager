@@ -22,7 +22,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
-	"github.com/pingcap-inc/tiem/file-server/controller"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 )
 
@@ -33,9 +33,9 @@ import (
 // @Parameter c
 // @Parameter req
 // @Parameter appenders append request data out of http body, such as id in path
-// @return err
+// @return bool
 // @return requestBody
-func HandleJsonRequestWithBuiltReq(c *gin.Context, req interface{}) (requestBody string, err error) {
+func HandleJsonRequestWithBuiltReq(c *gin.Context, req interface{}) (string, bool) {
 	return HandleRequest(c,
 		req,
 		func(c *gin.Context, req interface{}) error {
@@ -58,16 +58,16 @@ func HandleJsonRequestWithBuiltReq(c *gin.Context, req interface{}) (requestBody
 // @Parameter c
 // @Parameter req
 // @Parameter appenders append request data out of http body, such as id in path
-// @return err
+// @return ok
 // @return requestBody
 func HandleJsonRequestFromQuery(c *gin.Context,
 	req interface{},
 	appenders ...func(c *gin.Context, req interface{}) error,
-) (requestBody string, err error) {
+) (requestBody string, ok bool) {
 	return HandleRequest(c,
 		req,
 		func(c *gin.Context, req interface{}) error {
-			err = c.ShouldBindQuery(req)
+			err := c.ShouldBindQuery(req)
 			if err != nil {
 				return err
 			}
@@ -101,11 +101,11 @@ func HandleJsonRequestFromQuery(c *gin.Context,
 func HandleJsonRequestFromBody(c *gin.Context,
 	req interface{},
 	appenders ...func(c *gin.Context, req interface{}) error,
-) (requestBody string, err error) {
+) (requestBody string, ok bool) {
 	return HandleRequest(c,
 		req,
 		func(c *gin.Context, req interface{}) error {
-			err = c.ShouldBindBodyWith(req, binding.JSON)
+			err := c.ShouldBindBodyWith(&req, binding.JSON)
 			if err != nil {
 				return err
 			}
@@ -139,29 +139,28 @@ func HandleRequest(c *gin.Context,
 	req interface{},
 	builder func(c *gin.Context, req interface{}) error,
 	validator func(req interface{}) error,
-	serializer func(req interface{}) ([]byte, error)) (requestBody string, err error) {
+	serializer func(req interface{}) ([]byte, error)) (string, bool) {
 
-	err = builder(c, req)
+	err := builder(c, req)
 	if err != nil {
-		framework.LogWithContext(c).Errorf("get request failed, %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-		return
+		framework.LogWithContext(c).Errorf("unmarshal request failed, %s", err.Error())
+		c.JSON(http.StatusBadRequest, Fail(int(common.TIEM_UNMARSHAL_ERROR), err.Error()))
+		return "", false
 	}
 
 	err = validator(req)
 	if err != nil {
 		framework.LogWithContext(c).Errorf("validate request failed, %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-		return
+		c.JSON(http.StatusBadRequest, Fail(int(common.TIEM_PARAMETER_INVALID), err.Error()))
+		return "", false
 	}
 
 	requestBodyBytes, err := serializer(req)
 	if err != nil {
-		framework.LogWithContext(c).Errorf("serialize request failed, %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-		return
+		framework.LogWithContext(c).Errorf("marshal request failed, %s", err.Error())
+		c.JSON(http.StatusBadRequest, Fail(int(common.TIEM_MARSHAL_ERROR), err.Error()))
+		return "", false
 	} else {
-		requestBody = string(requestBodyBytes)
-		return
+		return string(requestBodyBytes), true
 	}
 }

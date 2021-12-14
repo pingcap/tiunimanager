@@ -2,36 +2,34 @@ syntax = "proto3";
 
 import "common.proto";
 import "softwarespec.proto";
-import "database.proto";
 import "mng_auth.proto";
 import "mng_allocation.proto";
-import "param.proto";
 option go_package = "./clusterpb/;clusterpb";
 
 service ClusterService {
     // Cluster manager module
-    rpc CreateCluster(ClusterCreateReqDTO) returns (ClusterCreateRespDTO);
+    rpc CreateCluster(RpcRequest) returns (RpcResponse);
     rpc QueryCluster(RpcRequest) returns (RpcResponse);
-    rpc DeleteCluster(ClusterDeleteReqDTO) returns (ClusterDeleteRespDTO);
+    rpc DeleteCluster(RpcRequest) returns (RpcResponse);
     rpc DetailCluster(RpcRequest) returns (RpcResponse);
-    rpc RestartCluster(ClusterRestartReqDTO) returns (ClusterRestartRespDTO);
-    rpc StopCluster(ClusterStopReqDTO) returns (ClusterStopRespDTO);
+    rpc RestartCluster(RpcRequest) returns (RpcResponse);
+    rpc StopCluster(RpcRequest) returns (RpcResponse);
     rpc TakeoverClusters(ClusterTakeoverReqDTO) returns (ClusterTakeoverRespDTO);
+    rpc ScaleOutCluster(RpcRequest) returns (RpcResponse);
+    rpc ScaleInCluster(RpcRequest) returns (RpcResponse);
+    rpc CloneCluster(RpcRequest) returns (RpcResponse);
 
-    rpc ScaleOutCluster(ScaleOutRequest) returns (ScaleOutResponse);
-    rpc ScaleInCluster(ScaleInRequest) returns (ScaleInResponse);
+    rpc ImportData(RpcRequest) returns (RpcResponse);
+    rpc ExportData(RpcRequest) returns (RpcResponse);
+    rpc QueryDataTransport(RpcRequest) returns (RpcResponse);
+    rpc DeleteDataTransportRecord(RpcRequest) returns (RpcResponse);
 
-    rpc ImportData(DataImportRequest) returns (DataImportResponse);
-    rpc ExportData(DataExportRequest) returns (DataExportResponse);
-    rpc DescribeDataTransport(DataTransportQueryRequest) returns (DataTransportQueryResponse);
-    rpc DeleteDataTransportRecord(DataTransportDeleteRequest) returns (DataTransportDeleteResponse);
-
-    rpc QueryBackupRecord(QueryBackupRequest) returns (QueryBackupResponse);
-    rpc CreateBackup(CreateBackupRequest) returns (CreateBackupResponse);
+    rpc QueryBackupRecords(RpcRequest) returns (RpcResponse);
+    rpc CreateBackup(RpcRequest) returns (RpcResponse);
     rpc RecoverCluster(RecoverRequest) returns (RecoverResponse);
-    rpc DeleteBackupRecord(DeleteBackupRequest) returns (DeleteBackupResponse);
-    rpc SaveBackupStrategy(SaveBackupStrategyRequest) returns (SaveBackupStrategyResponse);
-    rpc GetBackupStrategy(GetBackupStrategyRequest) returns (GetBackupStrategyResponse);
+    rpc DeleteBackupRecords(RpcRequest) returns (RpcResponse);
+    rpc SaveBackupStrategy(RpcRequest) returns (RpcResponse);
+    rpc GetBackupStrategy(RpcRequest) returns (RpcResponse);
 
     rpc QueryParameters(QueryClusterParametersRequest) returns (QueryClusterParametersResponse);
     rpc SaveParameters(SaveClusterParametersRequest) returns (SaveClusterParametersResponse);
@@ -60,17 +58,17 @@ service ClusterService {
     rpc ListFlows(RpcRequest) returns (RpcResponse);
     rpc DetailFlow(RpcRequest) returns (RpcResponse);
 
-    // Param Group & Cluster Params
-    rpc CreateParamGroup(CreateParamGroupRequest) returns (CreateParamGroupResponse);
-    rpc UpdateParamGroup(UpdateParamGroupRequest) returns (UpdateParamGroupResponse);
-    rpc DeleteParamGroup(DeleteParamGroupRequest) returns (DeleteParamGroupResponse);
-    rpc ListParamGroup(ListParamGroupRequest) returns (ListParamGroupResponse);
-    rpc DetailParamGroup(DetailParamGroupRequest) returns (DetailParamGroupResponse);
-    rpc ApplyParamGroup(ApplyParamGroupRequest) returns (ApplyParamGroupResponse);
-    rpc CopyParamGroup(CopyParamGroupRequest) returns (CopyParamGroupResponse);
-    rpc ListClusterParams(ListClusterParamsRequest) returns (ListClusterParamsResponse);
-    rpc UpdateClusterParams(UpdateClusterParamsRequest) returns (UpdateClusterParamsResponse);
-    rpc InspectClusterParams(InspectClusterParamsRequest) returns (InspectClusterParamsResponse);
+    // Parameter Group & Cluster Parameters
+    rpc CreateParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc UpdateParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc DeleteParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc QueryParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc DetailParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc ApplyParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc CopyParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc QueryClusterParameters(RpcRequest) returns (RpcResponse);
+    rpc UpdateClusterParameters(RpcRequest) returns (RpcResponse);
+    rpc InspectClusterParameters(RpcRequest) returns (RpcResponse);
 
     // change feed task
     rpc CreateChangeFeedTask(RpcRequest) returns (RpcResponse);
@@ -130,28 +128,6 @@ message ClusterRestartRespDTO {
     ResponseStatusDTO respStatus = 1;
     string clusterId = 2;
     DisplayStatusDTO clusterStatus = 3;
-}
-
-message ScaleOutRequest {
-    OperatorDTO operator = 1;
-    string clusterId = 2;
-    repeated ClusterNodeDemandDTO demands = 3;
-}
-
-message ScaleOutResponse {
-    ResponseStatusDTO respStatus = 1;
-    DisplayStatusDTO clusterStatus = 2;
-}
-
-message ScaleInRequest {
-    OperatorDTO operator = 1;
-    string clusterId = 2;
-    string nodeId = 3;
-}
-
-message ScaleInResponse {
-    ResponseStatusDTO respStatus = 1;
-    DisplayStatusDTO clusterStatus = 2;
 }
 
 message ClusterStopReqDTO {

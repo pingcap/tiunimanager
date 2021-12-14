@@ -75,7 +75,7 @@ func Log() *log.Entry {
 
 func LogWithContext(ctx context.Context) *log.Entry {
 	id := GetTraceIDFromContext(ctx)
-	return GetRootLogger().defaultLogEntry.WithField(TiEM_X_TRACE_ID_NAME, id)
+	return GetRootLogger().defaultLogEntry.WithField(TiEM_X_TRACE_ID_KEY, id)
 }
 
 func LogForkFile(fileName string) *log.Entry {
@@ -285,7 +285,7 @@ func (b *BaseFramework) Log() *log.Entry {
 
 func (b *BaseFramework) LogWithContext(ctx context.Context) *log.Entry {
 	id := GetTraceIDFromContext(ctx)
-	return b.Log().WithField(TiEM_X_TRACE_ID_NAME, id)
+	return b.Log().WithField(TiEM_X_TRACE_ID_KEY, id)
 }
 
 func (b *BaseFramework) GetTracer() *Tracer {
@@ -332,7 +332,6 @@ func (b *BaseFramework) prometheusBoot() {
 		SetToCurrentTime()
 
 	http.Handle("/metrics", promhttp.Handler())
-	// 启动web服务，监听8085端口
 	go func() {
 		metricsPort := b.GetClientArgs().MetricsPort
 		if metricsPort <= 0 {

@@ -30,7 +30,7 @@ type BackupRecord struct {
 	BackupMode   string
 	FilePath     string
 	Size         uint64
-	BackupTso    int64
+	BackupTso    uint64
 	StartTime    time.Time
 	EndTime      time.Time
 }

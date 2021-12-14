@@ -46,6 +46,7 @@ func TestMain(m *testing.M) {
 			db.Migrator().CreateTable(Cluster{})
 			db.Migrator().CreateTable(ClusterRelation{})
 			db.Migrator().CreateTable(ClusterInstance{})
+			db.Migrator().CreateTable(ClusterTopologySnapshot{})
 
 			testRW = NewGormClusterReadWrite(db)
 			return nil

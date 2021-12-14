@@ -19,32 +19,35 @@ package service
 import (
 	"context"
 	"encoding/json"
-
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/util/convert"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
+	management2 "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
-	"github.com/pingcap-inc/tiem/workflow"
-
-	"github.com/pingcap-inc/tiem/library/util/convert"
+	clusterManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/management"
+	clusterParameter "github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
+	"github.com/pingcap-inc/tiem/micro-cluster/datatransfer/importexport"
+	"github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
+	parameterGroupManager "github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager"
+	"github.com/pingcap-inc/tiem/workflow"
 
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/adapt"
 	user "github.com/pingcap-inc/tiem/micro-cluster/service/user/application"
 
-	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	userDomain "github.com/pingcap-inc/tiem/micro-cluster/service/user/domain"
@@ -58,53 +61,62 @@ var SuccessResponseStatus = &clusterpb.ResponseStatusDTO{Code: 0}
 var BizErrorResponseStatus = &clusterpb.ResponseStatusDTO{Code: 500}
 
 type ClusterServiceHandler struct {
-	resourceManager   *resource.ResourceManager
-	resourceManager2  *resourcemanager.ResourceManager
-	authManager       *user.AuthManager
-	tenantManager     *user.TenantManager
-	userManager       *user.UserManager
-	changeFeedManager *changeFeedManager.Manager
+	resourceManager         *resource.ResourceManager
+	resourceManager2        *resourcemanager.ResourceManager
+	authManager             *user.AuthManager
+	tenantManager           *user.TenantManager
+	userManager             *user.UserManager
+	changeFeedManager       *changeFeedManager.Manager
+	parameterGroupManager   *parametergroup.Manager
+	clusterParameterManager *clusterParameter.Manager
+	clusterManager          *clusterManager.Manager
 }
 
-func handleResponse(resp *clusterpb.RpcResponse, err error, getData func() ([]byte, error)) {
+func handleRequest(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse, requestBody interface{}) bool {
+	err := json.Unmarshal([]byte(req.GetRequest()), &requestBody)
+	if err != nil {
+		errMsg := fmt.Sprintf("unmarshal request error, request = %s, err = %s", req.GetRequest(), err.Error())
+		handleResponse(ctx, resp, framework.NewTiEMErrorf(common.TIEM_UNMARSHAL_ERROR, errMsg), nil, nil)
+		return false
+	} else {
+		return true
+	}
+}
+
+func handleResponse(ctx context.Context, resp *clusterpb.RpcResponse, err error, responseData interface{}, page *clusterpb.RpcPage) {
 	if err == nil {
-		respData, getDataError := getData()
+		data, getDataError := json.Marshal(responseData)
 		if getDataError != nil {
-			err = framework.WrapError(common.TIEM_UNRECOGNIZED_ERROR, "", getDataError)
+			// deal with err uniformly later
+			err = framework.WrapError(common.TIEM_MARSHAL_ERROR, fmt.Sprintf("marshal request data error, data = %v", responseData), getDataError)
 		} else {
+			// handle data and page
 			resp.Code = int32(common.TIEM_SUCCESS)
-			resp.Response = string(respData)
+			resp.Response = string(data)
+			if page != nil {
+				resp.Page = page
+			}
 			return
 		}
 	}
 
-	if _, ok := err.(framework.TiEMError); !ok {
-		err = framework.WrapError(common.TIEM_UNRECOGNIZED_ERROR, "", err)
+	if err != nil {
+		if _, ok := err.(framework.TiEMError); !ok {
+			err = framework.WrapError(common.TIEM_UNRECOGNIZED_ERROR, "", err)
+		}
+		framework.LogWithContext(ctx).Error(err.Error())
+		resp.Code = int32(err.(framework.TiEMError).GetCode())
+		resp.Message = err.(framework.TiEMError).GetMsg()
 	}
-
-	resp.Code = int32(err.(framework.TiEMError).GetCode())
-	resp.Message = err.(framework.TiEMError).GetMsg()
 }
 
-func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	reqData := request.GetRequest()
+func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	request := cluster.CreateChangeFeedTaskReq{}
 
-	req := &cluster.CreateChangeFeedTaskReq{}
-
-	err := json.Unmarshal([]byte(reqData), req)
-
-	if err != nil {
-		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
-		return nil
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.changeFeedManager.Create(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
 	}
-
-	result, err := handler.changeFeedManager.Create(ctx, *req)
-
-	handleResponse(response, err, func() ([]byte, error) {
-		return json.Marshal(cluster.CreateChangeFeedTaskResp{
-			ID: result,
-		})
-	})
 
 	return nil
 }
@@ -136,11 +148,174 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.tenantManager = user.NewTenantManager(adapt.MicroMetaDbRepo{})
 	handler.authManager = user.NewAuthManager(handler.userManager, adapt.MicroMetaDbRepo{})
 	handler.changeFeedManager = changeFeedManager.NewManager()
+	handler.parameterGroupManager = parameterGroupManager.NewManager()
+	handler.clusterParameterManager = clusterParameter.NewManager()
+	handler.clusterManager = clusterManager.NewClusterManager()
 
 	handler.resourceManager2 = resourcemanager.NewResourceManager()
 
 	domain.InitFlowMap()
 	return handler
+}
+
+func (handler *ClusterServiceHandler) CreateParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	request := message.CreateParameterGroupReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.parameterGroupManager.CreateParameterGroup(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) UpdateParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	request := message.UpdateParameterGroupReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.parameterGroupManager.UpdateParameterGroup(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) DeleteParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	request := message.DeleteParameterGroupReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.parameterGroupManager.DeleteParameterGroup(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) QueryParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	request := message.QueryParameterGroupReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, page, err := handler.parameterGroupManager.QueryParameterGroup(ctx, request)
+		handleResponse(ctx, resp, err, result, &page)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) DetailParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	request := message.DetailParameterGroupReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.parameterGroupManager.DetailParameterGroup(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) ApplyParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	reqData := req.GetRequest()
+	request := message.ApplyParameterGroupReq{}
+
+	err := json.Unmarshal([]byte(reqData), req)
+	if err != nil {
+		handleResponse(ctx, resp, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil, nil)
+		return nil
+	}
+
+	// query params list by param group id
+	pgDetail, err := handler.parameterGroupManager.DetailParameterGroup(ctx, message.DetailParameterGroupReq{ID: request.ID})
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("apply param group err: %v", err)
+		handleResponse(ctx, resp, framework.SimpleError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR), nil, nil)
+		return err
+	}
+
+	params := make([]*parametergroup.ApplyParam, len(pgDetail.Params))
+	err = convert.ConvertObj(pgDetail.Params, &params)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("apply param group convert obj err: %v", err)
+		handleResponse(ctx, resp, framework.SimpleError(common.TIEM_CONVERT_OBJ_FAILED), nil, nil)
+		return nil
+	}
+	// Convert the default value of the parameter group to the real value of the modified parameter
+	for i, param := range pgDetail.Params {
+		params[i].RealValue.Cluster = param.DefaultValue
+	}
+	modifyParam := &parametergroup.ModifyParam{Reboot: request.Reboot, Params: params}
+	clusterAggregation, err := domain.ModifyParameters(ctx, nil, request.ClusterID, modifyParam)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("apply param group modify parameters err: %v", err)
+		handleResponse(ctx, resp, framework.SimpleError(common.TIEM_MODIFY_PARAM_FAILED), nil, nil)
+		return nil
+	}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.parameterGroupManager.ApplyParameterGroup(ctx, request)
+		result.WorkFlowID = clusterAggregation.CurrentWorkFlow.BizId
+		result.AsyncTaskWorkFlowInfo = structs.AsyncTaskWorkFlowInfo{WorkFlowID: strconv.Itoa(int(clusterAggregation.CurrentWorkFlow.Id))}
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) CopyParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	request := message.CopyParameterGroupReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.parameterGroupManager.CopyParameterGroup(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) QueryClusterParameters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	request := cluster.QueryClusterParametersReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.clusterParameterManager.QueryClusterParameters(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) UpdateClusterParameters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	reqData := req.GetRequest()
+	request := cluster.UpdateClusterParametersReq{}
+
+	err := json.Unmarshal([]byte(reqData), req)
+	if err != nil {
+		handleResponse(ctx, resp, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil, nil)
+		return nil
+	}
+
+	params := make([]*parametergroup.ApplyParam, len(request.Params))
+	err = convert.ConvertObj(request.Params, &params)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("update cluster params convert obj err: %v", err)
+		handleResponse(ctx, resp, framework.SimpleError(common.TIEM_CONVERT_OBJ_FAILED), nil, nil)
+		return err
+	}
+
+	modifyParam := &parametergroup.ModifyParam{Reboot: request.Reboot, Params: params}
+	clusterAggregation, err := domain.ModifyParameters(ctx, nil, request.ClusterID, modifyParam)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("update cluster params modify parameters err: %v", err)
+		handleResponse(ctx, resp, framework.SimpleError(common.TIEM_MODIFY_PARAM_FAILED), nil, nil)
+		return nil
+	}
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.clusterParameterManager.UpdateClusterParameters(ctx, request)
+		result.WorkFlowID = clusterAggregation.CurrentWorkFlow.BizId
+		result.AsyncTaskWorkFlowInfo = structs.AsyncTaskWorkFlowInfo{WorkFlowID: strconv.Itoa(int(clusterAggregation.CurrentWorkFlow.Id))}
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) InspectClusterParameters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	request := cluster.InspectClusterParametersReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.clusterParameterManager.InspectClusterParams(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
 }
 
 func (handler *ClusterServiceHandler) SetResourceManager(resourceManager *resource.ResourceManager) {
@@ -169,50 +344,61 @@ func handleMetrics(start time.Time, funcName string, code int) {
 		Inc()
 }
 
-func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb.ClusterCreateReqDTO, resp *clusterpb.ClusterCreateRespDTO) (err error) {
-	framework.LogWithContext(ctx).Info("create cluster")
-	clusterAggregation, err := domain.CreateCluster(ctx, req.GetOperator(), req.GetCluster(), req.GetCommonDemand(), req.GetDemands())
+func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+	start := time.Now()
+	defer handleMetrics(start, "CreateCluster", int(resp.GetCode()))
 
-	if err != nil {
-		framework.LogWithContext(ctx).Info(err)
-		resp.RespStatus = BizErrorResponseStatus
-		resp.RespStatus.Message = err.Error()
-		return nil
-	} else {
-		resp.RespStatus = SuccessResponseStatus
-		resp.ClusterId = clusterAggregation.Cluster.Id
-		resp.BaseInfo = clusterAggregation.ExtractBaseInfoDTO()
-		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+	request := cluster.CreateClusterReq{}
 
-		return nil
-	}
-}
+	if handleRequest(ctx, req, resp, request) {
+		result, err := c.clusterManager.CreateCluster(ctx, request)
 
-func (c ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *clusterpb.ScaleOutRequest, resp *clusterpb.ScaleOutResponse) (err error) {
-	framework.LogWithContext(ctx).Info("scale out cluster")
-	_, err = domain.ScaleOutCluster(ctx, req.GetOperator(), req.GetClusterId(), req.GetDemands())
-
-	if err != nil {
-		framework.LogWithContext(ctx).Info(err)
-		resp.RespStatus = BizErrorResponseStatus
-		resp.RespStatus.Message = err.Error()
-	} else {
-		resp.RespStatus = SuccessResponseStatus
+		handleResponse(ctx, resp, err, result, nil)
 	}
 
 	return nil
 }
 
-func (c ClusterServiceHandler) ScaleInCluster(ctx context.Context, req *clusterpb.ScaleInRequest, resp *clusterpb.ScaleInResponse) (err error) {
-	framework.LogWithContext(ctx).Info("scale in cluster")
-	_, err = domain.ScaleInCluster(ctx, req.GetOperator(), req.GetClusterId(), req.GetNodeId())
+func (handler *ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "ScaleOutCluster", int(resp.GetCode()))
 
-	if err != nil {
-		framework.LogWithContext(ctx).Info(err)
-		resp.RespStatus = BizErrorResponseStatus
-		resp.RespStatus.Message = err.Error()
-	} else {
-		resp.RespStatus = SuccessResponseStatus
+	request := cluster.ScaleOutClusterReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.clusterManager.ScaleOut(ctx, request)
+
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) ScaleInCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "ScaleInCluster", int(resp.GetCode()))
+
+	request := cluster.ScaleInClusterReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.clusterManager.ScaleIn(ctx, request)
+
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) CloneCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "CloneCluster", int(resp.GetCode()))
+
+	request := cluster.CloneClusterReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.clusterManager.Clone(ctx, &request)
+
+		handleResponse(ctx, resp, err, *result, nil)
 	}
 
 	return nil
@@ -234,7 +420,7 @@ func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *cluste
 
 func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	framework.LogWithContext(ctx).Info("query cluster")
-	request := &management.QueryReq{}
+	request := &management2.QueryReq{}
 	err = json.Unmarshal([]byte(req.Request), request)
 	if err != nil {
 		resp.Code = int32(common.TIEM_PARAMETER_INVALID)
@@ -246,7 +432,7 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.
 		resp.Code = int32(err.(framework.TiEMError).GetCode())
 		resp.Message = err.(framework.TiEMError).GetMsg()
 	} else {
-		response := make([]management.ClusterDisplayInfo, 0)
+		response := make([]management2.ClusterDisplayInfo, 0)
 
 		for _, cluster := range clusters {
 			response = append(response, cluster.ExtractDisplayInfo())
@@ -268,55 +454,44 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.
 	return
 }
 
-func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb.ClusterDeleteReqDTO, resp *clusterpb.ClusterDeleteRespDTO) (err error) {
-	framework.LogWithContext(ctx).Info("delete cluster")
-
-	clusterAggregation, err := domain.DeleteCluster(ctx, req.GetOperator(), req.GetClusterId())
-	if err != nil {
-		// todo
-		framework.LogWithContext(ctx).Info(err)
-		return nil
-	} else {
-		resp.RespStatus = SuccessResponseStatus
-		resp.ClusterId = clusterAggregation.Cluster.Id
-		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
-		return nil
-	}
-}
-
-func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterpb.ClusterRestartReqDTO, resp *clusterpb.ClusterRestartRespDTO) (err error) {
-	framework.LogWithContext(ctx).Info("restart cluster")
+func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "RestartCluster", int(resp.GetRespStatus().GetCode()))
+	defer handleMetrics(start, "DeleteCluster", int(resp.GetCode()))
 
-	clusterAggregation, err := domain.RestartCluster(ctx, req.GetOperator(), req.GetClusterId())
-	if err != nil {
-		resp.RespStatus = BizErrorResponseStatus
-		resp.RespStatus.Message = err.Error()
-		framework.LogWithContext(ctx).Error(err)
-		return nil
+	request := cluster.DeleteClusterReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := c.clusterManager.DeleteCluster(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
 	}
-	resp.RespStatus = SuccessResponseStatus
-	resp.ClusterId = clusterAggregation.Cluster.Id
-	resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+
 	return nil
 }
 
-func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.ClusterStopReqDTO, resp *clusterpb.ClusterStopRespDTO) (err error) {
-	framework.LogWithContext(ctx).Info("stop cluster")
+func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "StopCluster", int(resp.GetRespStatus().GetCode()))
+	defer handleMetrics(start, "RestartCluster", int(resp.GetCode()))
 
-	clusterAggregation, err := domain.StopCluster(ctx, req.GetOperator(), req.GetClusterId())
-	if err != nil {
-		resp.RespStatus = BizErrorResponseStatus
-		resp.RespStatus.Message = err.Error()
-		framework.LogWithContext(ctx).Error(err)
-		return nil
+	request := cluster.RestartClusterReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := c.clusterManager.RestartCluster(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
 	}
-	resp.RespStatus = SuccessResponseStatus
-	resp.ClusterId = clusterAggregation.Cluster.Id
-	resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+
+	return nil
+}
+
+func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+	start := time.Now()
+	defer handleMetrics(start, "StopCluster", int(resp.GetCode()))
+
+	request := cluster.StopClusterReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := c.clusterManager.StopCluster(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
 
 	return nil
 }
@@ -324,7 +499,7 @@ func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.C
 func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	framework.LogWithContext(ctx).Info("detail cluster")
 
-	request := &management.DetailReq{}
+	request := &management2.DetailReq{}
 	err = json.Unmarshal([]byte(req.Request), request)
 	if err != nil {
 		resp.Code = int32(common.TIEM_PARAMETER_INVALID)
@@ -350,109 +525,82 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb
 	return
 }
 
-func (c ClusterServiceHandler) ExportData(ctx context.Context, req *clusterpb.DataExportRequest, resp *clusterpb.DataExportResponse) error {
+func (c ClusterServiceHandler) ExportData(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
-	defer handleMetrics(start, "ExportData", int(resp.GetRespStatus().GetCode()))
-	if err := domain.ExportDataPreCheck(req); err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_EXPORT_PARAM_INVALID), Message: err.Error()}
-		return nil
-	}
+	defer handleMetrics(start, "ExportData", int(response.GetCode()))
+	framework.LogWithContext(ctx).Info("export data")
+	exportReq := message.DataExportReq{}
 
-	recordId, err := domain.ExportData(ctx, req)
-	if err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_EXPORT_PROCESS_FAILED), Message: common.TIEM_EXPORT_PROCESS_FAILED.Explain()}
-	} else {
-		resp.RespStatus = SuccessResponseStatus
-		resp.RecordId = recordId
+	if handleRequest(ctx, request, response, exportReq) {
+		manager := importexport.GetImportExportService()
+		result, err := manager.ExportData(ctx, &exportReq)
+		handleResponse(ctx, response, err, *result, nil)
 	}
 
 	return nil
 }
 
-func (c ClusterServiceHandler) ImportData(ctx context.Context, req *clusterpb.DataImportRequest, resp *clusterpb.DataImportResponse) error {
+func (c ClusterServiceHandler) ImportData(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
-	defer handleMetrics(start, "ImportData", int(resp.GetRespStatus().GetCode()))
-	if err := domain.ImportDataPreCheck(ctx, req); err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_IMPORT_PARAM_INVALID), Message: err.Error()}
-		return nil
-	}
+	defer handleMetrics(start, "ImportData", int(response.GetCode()))
+	framework.LogWithContext(ctx).Info("import data")
+	importReq := message.DataImportReq{}
 
-	recordId, err := domain.ImportData(ctx, req)
-	if err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_IMPORT_PARAM_INVALID), Message: common.TIEM_IMPORT_PARAM_INVALID.Explain()}
-	} else {
-		resp.RespStatus = SuccessResponseStatus
-		resp.RecordId = recordId
+	if handleRequest(ctx, request, response, importReq) {
+		manager := importexport.GetImportExportService()
+		result, err := manager.ImportData(ctx, &importReq)
+		handleResponse(ctx, response, err, *result, nil)
 	}
 
 	return nil
 }
 
-func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *clusterpb.DataTransportQueryRequest, resp *clusterpb.DataTransportQueryResponse) error {
+func (c ClusterServiceHandler) QueryDataTransport(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
-	defer handleMetrics(start, "DescribeDataTransport", int(resp.GetRespStatus().GetCode()))
-	infos, page, err := domain.DescribeDataTransportRecord(ctx, req.GetOperator(), req.GetRecordId(), req.GetClusterId(), req.GetReImport(), req.GetStartTime(), req.GetEndTime(), req.GetPageReq().GetPage(), req.GetPageReq().GetPageSize())
-	if err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_TRANSPORT_RECORD_NOT_FOUND), Message: common.TIEM_TRANSPORT_RECORD_NOT_FOUND.Explain()}
-	} else {
-		resp.RespStatus = SuccessResponseStatus
-		resp.PageReq = &clusterpb.PageDTO{
-			Page:     page.GetPage(),
-			PageSize: page.GetPageSize(),
-			Total:    page.GetTotal(),
-		}
-		resp.TransportInfos = make([]*clusterpb.DataTransportInfo, len(infos))
-		for i, v := range infos {
-			resp.TransportInfos[i] = &clusterpb.DataTransportInfo{
-				RecordId:      infos[i].GetRecord().GetRecordId(),
-				ClusterId:     infos[i].GetRecord().GetClusterId(),
-				TransportType: infos[i].GetRecord().GetTransportType(),
-				StorageType:   infos[i].GetRecord().GetStorageType(),
-				FilePath:      infos[i].GetRecord().GetFilePath(),
-				ZipName:       infos[i].GetRecord().GetZipName(),
-				StartTime:     infos[i].GetRecord().GetStartTime(),
-				EndTime:       infos[i].GetRecord().GetEndTime(),
-				Comment:       infos[i].GetRecord().GetComment(),
-				DisplayStatus: &clusterpb.DisplayStatusDTO{
-					StatusCode: strconv.Itoa(int(v.Flow.Status)),
-					//StatusName:      v.Flow.StatusAlias,
-					StatusName:      domain.TaskStatus(int(v.Flow.Status)).Display(),
-					InProcessFlowId: int32(v.Flow.Id),
-				},
-			}
-		}
-	}
-	return nil
-}
+	defer handleMetrics(start, "QueryDataTransport", int(response.GetCode()))
+	framework.LogWithContext(ctx).Info("query data transport")
+	queryReq := message.QueryDataImportExportRecordsReq{}
 
-func (c ClusterServiceHandler) DeleteDataTransportRecord(ctx context.Context, req *clusterpb.DataTransportDeleteRequest, resp *clusterpb.DataTransportDeleteResponse) error {
-	err := domain.DeleteDataTransportRecord(ctx, req.GetOperator(), req.GetClusterId(), req.GetRecordId())
-	if err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		resp.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_TRANSPORT_RECORD_DEL_FAIL), Message: common.TIEM_TRANSPORT_RECORD_DEL_FAIL.Explain()}
-	} else {
-		resp.Status = SuccessResponseStatus
+	if handleRequest(ctx, request, response, queryReq) {
+		manager := importexport.GetImportExportService()
+		result, page, err := manager.QueryDataTransportRecords(ctx, &queryReq)
+		handleResponse(ctx, response, err, *result, &clusterpb.RpcPage{
+			Page:     int32(page.Page),
+			PageSize: int32(page.PageSize),
+			Total:    int32(page.Total),
+		})
 	}
 
 	return nil
 }
 
-func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *clusterpb.CreateBackupRequest, response *clusterpb.CreateBackupResponse) (err error) {
+func (c ClusterServiceHandler) DeleteDataTransportRecord(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
-	defer handleMetrics(start, "CreateBackup", int(response.GetStatus().GetCode()))
-	clusterAggregation, err := domain.Backup(ctx, request.Operator, request.ClusterId, request.BackupMethod, request.BackupType, domain.BackupModeManual, request.FilePath)
-	if err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_BACKUP_PROCESS_FAILED), Message: common.TIEM_BACKUP_PROCESS_FAILED.Explain()}
-	} else {
-		response.Status = SuccessResponseStatus
-		response.BackupRecord = clusterAggregation.ExtractBackupRecordDTO()
+	defer handleMetrics(start, "DeleteDataTransportRecord", int(response.GetCode()))
+	framework.LogWithContext(ctx).Info("delete data transport record")
+	deleteReq := message.DeleteImportExportRecordReq{}
+
+	if handleRequest(ctx, request, response, deleteReq) {
+		manager := importexport.GetImportExportService()
+		result, err := manager.DeleteDataTransportRecord(ctx, &deleteReq)
+		handleResponse(ctx, response, err, *result, nil)
 	}
+
+	return nil
+}
+
+func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "CreateBackup", int(response.GetCode()))
+	framework.LogWithContext(ctx).Info("create backup")
+	backupReq := cluster.BackupClusterDataReq{}
+
+	if handleRequest(ctx, request, response, backupReq) {
+		manager := backuprestore.GetBRService()
+		result, err := manager.BackupCluster(ctx, &backupReq)
+		handleResponse(ctx, response, err, *result, nil)
+	}
+
 	return nil
 }
 
@@ -478,100 +626,67 @@ func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterp
 	return nil
 }
 
-func (c ClusterServiceHandler) DeleteBackupRecord(ctx context.Context, request *clusterpb.DeleteBackupRequest, response *clusterpb.DeleteBackupResponse) (err error) {
+func (c ClusterServiceHandler) DeleteBackupRecords(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
-	defer handleMetrics(start, "DeleteBackupRecord", int(response.GetStatus().GetCode()))
-	err = domain.DeleteBackup(ctx, request.Operator, request.GetClusterId(), request.GetBackupRecordId())
-	if err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_BACKUP_RECORD_DELETE_FAILED), Message: common.TIEM_BACKUP_RECORD_DELETE_FAILED.Explain()}
-	} else {
-		response.Status = SuccessResponseStatus
+	defer handleMetrics(start, "DeleteBackupRecord", int(response.GetCode()))
+	framework.LogWithContext(ctx).Info("delete backup records")
+	deleteReq := cluster.DeleteBackupDataReq{}
+
+	if handleRequest(ctx, request, response, deleteReq) {
+		manager := backuprestore.GetBRService()
+		result, err := manager.DeleteBackupRecords(ctx, &deleteReq)
+		handleResponse(ctx, response, err, *result, nil)
 	}
+
 	return nil
 }
 
-func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *clusterpb.SaveBackupStrategyRequest, response *clusterpb.SaveBackupStrategyResponse) (err error) {
+func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
-	defer handleMetrics(start, "SaveBackupStrategy", int(response.GetStatus().GetCode()))
-	err = domain.SaveBackupStrategyPreCheck(request.GetOperator(), request.GetStrategy())
-	if err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_BACKUP_STRATEGY_PARAM_INVALID), Message: err.Error()}
-		return nil
+	defer handleMetrics(start, "SaveBackupStrategy", int(response.GetCode()))
+	framework.LogWithContext(ctx).Info("save backup strategy")
+	saveReq := cluster.SaveBackupStrategyReq{}
+
+	if handleRequest(ctx, request, response, saveReq) {
+		manager := backuprestore.GetBRService()
+		result, err := manager.SaveBackupStrategy(ctx, &saveReq)
+		handleResponse(ctx, response, err, *result, nil)
 	}
 
-	err = domain.SaveBackupStrategy(ctx, request.GetOperator(), request.GetStrategy())
-	if err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_BACKUP_STRATEGY_SAVE_FAILED), Message: common.TIEM_BACKUP_STRATEGY_SAVE_FAILED.Explain()}
-	} else {
-		response.Status = SuccessResponseStatus
-	}
 	return nil
 }
 
-func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *clusterpb.GetBackupStrategyRequest, response *clusterpb.GetBackupStrategyResponse) (err error) {
+func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
-	defer handleMetrics(start, "GetBackupStrategy", int(response.GetStatus().GetCode()))
-	strategy, err := domain.QueryBackupStrategy(ctx, request.GetOperator(), request.GetClusterId())
-	if err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_BACKUP_STRATEGY_QUERY_FAILED), Message: common.TIEM_BACKUP_STRATEGY_QUERY_FAILED.Explain()}
-	} else {
-		response.Status = SuccessResponseStatus
-		response.Strategy = strategy
+	defer handleMetrics(start, "GetBackupStrategy", int(response.GetCode()))
+	framework.LogWithContext(ctx).Info("get backup strategy")
+	getReq := cluster.GetBackupStrategyReq{}
+
+	if handleRequest(ctx, request, response, getReq) {
+		manager := backuprestore.GetBRService()
+		result, err := manager.GetBackupStrategy(ctx, &getReq)
+		handleResponse(ctx, response, err, *result, nil)
 	}
+
 	return nil
 }
 
-func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *clusterpb.QueryBackupRequest, response *clusterpb.QueryBackupResponse) (err error) {
+func (c ClusterServiceHandler) QueryBackupRecords(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "QueryBackupRecord", int(response.GetStatus().GetCode()))
-	result, err := client.DBClient.ListBackupRecords(ctx, &dbpb.DBListBackupRecordsRequest{
-		ClusterId: request.ClusterId,
-		StartTime: request.StartTime,
-		EndTime:   request.EndTime,
-		Page: &dbpb.DBPageDTO{
-			Page:     request.Page.Page,
-			PageSize: request.Page.PageSize,
-		},
-	})
-	if err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_BACKUP_RECORD_QUERY_FAILED), Message: common.TIEM_BACKUP_RECORD_QUERY_FAILED.Explain()}
-	} else {
-		response.Status = SuccessResponseStatus
-		response.Page = &clusterpb.PageDTO{
-			Page:     result.Page.Page,
-			PageSize: result.Page.PageSize,
-			Total:    result.Page.Total,
-		}
-		response.BackupRecords = make([]*clusterpb.BackupRecordDTO, len(result.BackupRecords))
-		for i, v := range result.BackupRecords {
-			response.BackupRecords[i] = &clusterpb.BackupRecordDTO{
-				Id:           v.BackupRecord.Id,
-				ClusterId:    v.BackupRecord.ClusterId,
-				BackupMethod: v.BackupRecord.BackupMethod,
-				BackupType:   v.BackupRecord.BackupType,
-				BackupMode:   v.BackupRecord.BackupMode,
-				FilePath:     v.BackupRecord.FilePath,
-				StartTime:    v.Flow.CreateTime,
-				EndTime:      v.Flow.UpdateTime,
-				Size:         float32(v.BackupRecord.Size) / bytes.MB, //Byte to MByte
-				BackupTso:    v.BackupRecord.BackupTso,
-				Operator: &clusterpb.OperatorDTO{
-					Id: v.BackupRecord.OperatorId,
-				},
-				DisplayStatus: &clusterpb.DisplayStatusDTO{
-					StatusCode: strconv.Itoa(int(v.Flow.Status)),
-					//StatusName:      v.Flow.StatusAlias,
-					StatusName:      domain.TaskStatus(int(v.Flow.Status)).Display(),
-					InProcessFlowId: int32(v.Flow.Id),
-				},
-			}
-		}
+	defer handleMetrics(start, "QueryBackupRecords", int(response.GetCode()))
+	framework.LogWithContext(ctx).Info("query backup records")
+	queryReq := cluster.QueryBackupRecordsReq{}
+
+	if handleRequest(ctx, request, response, queryReq) {
+		manager := backuprestore.GetBRService()
+		result, page, err := manager.QueryClusterBackupRecords(ctx, &queryReq)
+		handleResponse(ctx, response, err, *result, &clusterpb.RpcPage{
+			Page:     int32(page.Page),
+			PageSize: int32(page.PageSize),
+			Total:    int32(page.Total),
+		})
 	}
+
 	return nil
 }
 
@@ -650,7 +765,7 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb
 	err := json.Unmarshal([]byte(reqData), listReq)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("json unmarshal reuqest failed %s", err.Error())
-		handleResponse(response, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, err.Error()), nil)
+		handleResponse(ctx, response, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, err.Error()), nil, nil)
 		return nil
 	}
 
@@ -658,7 +773,7 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb
 	flows, total, err := manager.ListWorkFlows(ctx, listReq.BizID, listReq.FlowName, listReq.Status, listReq.Page, listReq.PageSize)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call workflow manager list flows failed %s", err.Error())
-		handleResponse(response, framework.NewTiEMError(common.TIEM_LIST_WORKFLOW_FAILED, err.Error()), nil)
+		handleResponse(ctx, response, framework.NewTiEMError(common.TIEM_LIST_WORKFLOW_FAILED, err.Error()), nil, nil)
 		return nil
 	}
 
@@ -668,7 +783,7 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb
 	data, err := json.Marshal(listResp)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("json marshal response failed %s", err.Error())
-		handleResponse(response, framework.NewTiEMError(common.TIEM_LIST_WORKFLOW_FAILED, err.Error()), nil)
+		handleResponse(ctx, response, framework.NewTiEMError(common.TIEM_LIST_WORKFLOW_FAILED, err.Error()), nil, nil)
 	} else {
 		response.Code = int32(common.TIEM_SUCCESS)
 		response.Response = string(data)
@@ -689,14 +804,14 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 	detailReq := &message.QueryWorkFlowDetailReq{}
 	err := json.Unmarshal([]byte(reqData), detailReq)
 	if err != nil {
-		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
+		handleResponse(ctx, response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil, nil)
 		return nil
 	}
 
 	manager := workflow.GetWorkFlowService()
 	flowDetail, err := manager.DetailWorkFlow(ctx, detailReq.WorkFlowID)
 	if err != nil {
-		handleResponse(response, framework.NewTiEMError(common.TIEM_DETAIL_WORKFLOW_FAILED, err.Error()), nil)
+		handleResponse(ctx, response, framework.NewTiEMError(common.TIEM_DETAIL_WORKFLOW_FAILED, err.Error()), nil, nil)
 		return nil
 	}
 
@@ -708,7 +823,7 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 
 	data, err := json.Marshal(detailResp)
 	if err != nil {
-		handleResponse(response, framework.NewTiEMError(common.TIEM_DETAIL_WORKFLOW_FAILED, err.Error()), nil)
+		handleResponse(ctx, response, framework.NewTiEMError(common.TIEM_DETAIL_WORKFLOW_FAILED, err.Error()), nil, nil)
 	} else {
 		response.Code = int32(common.TIEM_SUCCESS)
 		response.Response = string(data)
@@ -788,125 +903,6 @@ func (p *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *cluster
 	return nil
 }
 
-func (c *ClusterServiceHandler) CreateParamGroup(ctx context.Context, req *clusterpb.CreateParamGroupRequest, resp *clusterpb.CreateParamGroupResponse) error {
-	start := time.Now()
-	defer handleMetrics(start, "CreateParamGroup", int(resp.GetRespStatus().GetCode()))
-	return domain.CreateParamGroup(ctx, req, resp)
-}
-
-func (c *ClusterServiceHandler) UpdateParamGroup(ctx context.Context, req *clusterpb.UpdateParamGroupRequest, resp *clusterpb.UpdateParamGroupResponse) error {
-	start := time.Now()
-	defer handleMetrics(start, "UpdateParamGroup", int(resp.GetRespStatus().GetCode()))
-	return domain.UpdateParamGroup(ctx, req, resp)
-}
-
-func (c *ClusterServiceHandler) DeleteParamGroup(ctx context.Context, req *clusterpb.DeleteParamGroupRequest, resp *clusterpb.DeleteParamGroupResponse) error {
-	start := time.Now()
-	defer handleMetrics(start, "DeleteParamGroup", int(resp.GetRespStatus().GetCode()))
-	return domain.DeleteParamGroup(ctx, req, resp)
-}
-
-func (c *ClusterServiceHandler) ListParamGroup(ctx context.Context, req *clusterpb.ListParamGroupRequest, resp *clusterpb.ListParamGroupResponse) error {
-	start := time.Now()
-	defer handleMetrics(start, "ListParamGroup", int(resp.GetRespStatus().GetCode()))
-	return domain.ListParamGroup(ctx, req, resp)
-}
-
-func (c *ClusterServiceHandler) DetailParamGroup(ctx context.Context, req *clusterpb.DetailParamGroupRequest, resp *clusterpb.DetailParamGroupResponse) error {
-	start := time.Now()
-	defer handleMetrics(start, "DetailParamGroup", int(resp.GetRespStatus().GetCode()))
-	return domain.DetailParamGroup(ctx, req, resp)
-}
-
-func (c *ClusterServiceHandler) ApplyParamGroup(ctx context.Context, req *clusterpb.ApplyParamGroupRequest, resp *clusterpb.ApplyParamGroupResponse) error {
-	start := time.Now()
-	defer handleMetrics(start, "ApplyParamGroup", int(resp.GetRespStatus().GetCode()))
-
-	// query params list by param group id
-	pgDetail := &clusterpb.DetailParamGroupResponse{}
-	err := domain.DetailParamGroup(ctx, &clusterpb.DetailParamGroupRequest{ParamGroupId: req.ParamGroupId}, pgDetail)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("apply param group err: %v", err)
-		return err
-	}
-
-	params := make([]*domain.ApplyParam, len(pgDetail.ParamGroup.Params))
-	err = convert.ConvertObj(pgDetail.ParamGroup.Params, &params)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("apply param group convert obj err: %v", err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_CONVERT_OBJ_FAILED), Message: common.TIEM_CONVERT_OBJ_FAILED.Explain() + err.Error()}
-		return err
-	}
-	// Convert the default value of the parameter group to the real value of the modified parameter
-	for i, param := range pgDetail.ParamGroup.Params {
-		params[i].RealValue.Cluster = param.DefaultValue
-	}
-	modifyParam := &domain.ModifyParam{NeedReboot: req.NeedReboot, Params: params}
-	clusterAggregation, err := domain.ModifyParameters(ctx, req.Operator, req.ClusterId, modifyParam)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("apply param group modify parameters err: %v", err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_MODIFY_PARAM_FAILED), Message: common.TIEM_MODIFY_PARAM_FAILED.Explain() + err.Error()}
-		return nil
-	} else {
-		resp.DisplayInfo = &clusterpb.DisplayStatusDTO{
-			StatusCode:      strconv.Itoa(int(clusterAggregation.CurrentWorkFlow.Status)),
-			StatusName:      clusterAggregation.CurrentWorkFlow.Status.Display(),
-			InProcessFlowId: int32(clusterAggregation.CurrentWorkFlow.Id),
-			CreateTime:      clusterAggregation.CurrentWorkFlow.CreateTime.Unix(),
-			UpdateTime:      clusterAggregation.CurrentWorkFlow.UpdateTime.Unix(),
-		}
-		return domain.ApplyParamGroup(ctx, req, resp)
-	}
-}
-
-func (c *ClusterServiceHandler) CopyParamGroup(ctx context.Context, req *clusterpb.CopyParamGroupRequest, resp *clusterpb.CopyParamGroupResponse) error {
-	start := time.Now()
-	defer handleMetrics(start, "CopyParamGroup", int(resp.GetRespStatus().GetCode()))
-	return domain.CopyParamGroup(ctx, req, resp)
-}
-
-func (c *ClusterServiceHandler) ListClusterParams(ctx context.Context, req *clusterpb.ListClusterParamsRequest, resp *clusterpb.ListClusterParamsResponse) error {
-	start := time.Now()
-	defer handleMetrics(start, "ListClusterParams", int(resp.GetRespStatus().GetCode()))
-	return domain.ListClusterParams(ctx, req, resp)
-}
-
-func (c *ClusterServiceHandler) UpdateClusterParams(ctx context.Context, req *clusterpb.UpdateClusterParamsRequest, resp *clusterpb.UpdateClusterParamsResponse) error {
-	start := time.Now()
-	defer handleMetrics(start, "UpdateClusterParams", int(resp.GetRespStatus().GetCode()))
-
-	params := make([]*domain.ApplyParam, len(req.Params))
-	err := convert.ConvertObj(req.Params, &params)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("update cluster params convert obj err: %v", err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_CONVERT_OBJ_FAILED), Message: common.TIEM_CONVERT_OBJ_FAILED.Explain() + err.Error()}
-		return err
-	}
-
-	modifyParam := &domain.ModifyParam{NeedReboot: req.NeedReboot, Params: params}
-	clusterAggregation, err := domain.ModifyParameters(ctx, req.Operator, req.ClusterId, modifyParam)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("update cluster params modify parameters err: %v", err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_MODIFY_PARAM_FAILED), Message: common.TIEM_MODIFY_PARAM_FAILED.Explain() + err.Error()}
-		return nil
-	} else {
-		resp.DisplayInfo = &clusterpb.DisplayStatusDTO{
-			StatusCode:      strconv.Itoa(int(clusterAggregation.CurrentWorkFlow.Status)),
-			StatusName:      clusterAggregation.CurrentWorkFlow.Status.Display(),
-			InProcessFlowId: int32(clusterAggregation.CurrentWorkFlow.Id),
-			CreateTime:      clusterAggregation.CurrentWorkFlow.CreateTime.Unix(),
-			UpdateTime:      clusterAggregation.CurrentWorkFlow.UpdateTime.Unix(),
-		}
-		return domain.UpdateClusterParams(ctx, req, resp)
-	}
-}
-
-func (c *ClusterServiceHandler) InspectClusterParams(ctx context.Context, req *clusterpb.InspectClusterParamsRequest, resp *clusterpb.InspectClusterParamsResponse) error {
-	start := time.Now()
-	defer handleMetrics(start, "InspectClusterParams", int(resp.GetRespStatus().GetCode()))
-	return domain.InspectClusterParams(ctx, req, resp)
-}
-
 func (clusterManager *ClusterServiceHandler) AllocResourcesInBatch(ctx context.Context, in *clusterpb.BatchAllocRequest, out *clusterpb.BatchAllocResponse) error {
 	return clusterManager.resourceManager.AllocResourcesInBatch(ctx, in, out)
 }
@@ -916,167 +912,98 @@ func (clusterManager *ClusterServiceHandler) RecycleResources(ctx context.Contex
 }
 
 func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	reqString := request.GetRequest()
-
 	reqStruct := message.ImportHostsReq{}
 
-	err := json.Unmarshal([]byte(reqString), &reqStruct)
-
-	if err != nil {
-		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
-		return nil
-	}
-
-	hostIds, err := handler.resourceManager2.ImportHosts(ctx, reqStruct.Hosts)
-
-	handleResponse(response, err, func() ([]byte, error) {
+	if handleRequest(ctx, request, response, reqStruct) {
+		hostIds, err := handler.resourceManager2.ImportHosts(ctx, reqStruct.Hosts)
 		var rsp message.ImportHostsResp
 		rsp.HostIDS = hostIds
-		return json.Marshal(rsp)
-	})
+		handleResponse(ctx, response, err, rsp, nil)
+	}
 
 	return nil
 }
 
 func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	reqString := request.GetRequest()
-
 	reqStruct := message.DeleteHostsReq{}
 
-	err := json.Unmarshal([]byte(reqString), &reqStruct)
-
-	if err != nil {
-		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
-		return nil
+	if handleRequest(ctx, request, response, reqStruct) {
+		err := handler.resourceManager2.DeleteHosts(ctx, reqStruct.HostIDs)
+		var rsp message.DeleteHostsResp
+		handleResponse(ctx, response, err, rsp, nil)
 	}
 
-	err = handler.resourceManager2.DeleteHosts(ctx, reqStruct.HostIDs)
-
-	handleResponse(response, err, func() ([]byte, error) {
-		var rsp message.DeleteHostsResp
-		return json.Marshal(rsp)
-	})
 	return nil
 }
 
 func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	reqString := request.GetRequest()
-
 	reqStruct := message.QueryHostsReq{}
 
-	err := json.Unmarshal([]byte(reqString), &reqStruct)
+	if handleRequest(ctx, request, response, reqStruct) {
+		filter := reqStruct.GetHostFilter()
+		page := reqStruct.GetPage()
 
-	if err != nil {
-		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
-		return nil
-	}
-
-	filter := reqStruct.GetHostFilter()
-	page := reqStruct.GetPage()
-
-	hosts, err := handler.resourceManager2.QueryHosts(ctx, filter, page)
-
-	handleResponse(response, err, func() ([]byte, error) {
+		hosts, err := handler.resourceManager2.QueryHosts(ctx, filter, page)
 		var rsp message.QueryHostsResp
 		rsp.Hosts = hosts
-		return json.Marshal(rsp)
-	})
+		handleResponse(ctx, response, err, rsp, nil)
+	}
 
 	return nil
 }
 
 func (handler *ClusterServiceHandler) UpdateHostReserved(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	reqString := request.GetRequest()
-
 	reqStruct := message.UpdateHostReservedReq{}
 
-	err := json.Unmarshal([]byte(reqString), &reqStruct)
-
-	if err != nil {
-		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
-		return nil
-	}
-
-	err = handler.resourceManager2.UpdateHostReserved(ctx, reqStruct.HostIDs, reqStruct.Reserved)
-
-	handleResponse(response, err, func() ([]byte, error) {
+	if handleRequest(ctx, request, response, reqStruct) {
+		err := handler.resourceManager2.UpdateHostReserved(ctx, reqStruct.HostIDs, reqStruct.Reserved)
 		var rsp message.UpdateHostReservedResp
-		return json.Marshal(rsp)
-	})
+		handleResponse(ctx, response, err, rsp, nil)
+	}
 
 	return nil
 }
 
 func (handler *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	reqString := request.GetRequest()
-
 	reqStruct := message.UpdateHostStatusReq{}
 
-	err := json.Unmarshal([]byte(reqString), &reqStruct)
-
-	if err != nil {
-		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
-		return nil
-	}
-
-	err = handler.resourceManager2.UpdateHostStatus(ctx, reqStruct.HostIDs, reqStruct.Status)
-
-	handleResponse(response, err, func() ([]byte, error) {
+	if handleRequest(ctx, request, response, reqStruct) {
+		err := handler.resourceManager2.UpdateHostStatus(ctx, reqStruct.HostIDs, reqStruct.Status)
 		var rsp message.UpdateHostStatusResp
-		return json.Marshal(rsp)
-	})
+		handleResponse(ctx, response, err, rsp, nil)
+	}
 
 	return nil
 }
 
 func (handler *ClusterServiceHandler) GetHierarchy(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	reqString := request.GetRequest()
-
 	reqStruct := message.GetHierarchyReq{}
 
-	err := json.Unmarshal([]byte(reqString), &reqStruct)
+	if handleRequest(ctx, request, response, reqStruct) {
+		filter := reqStruct.GetHostFilter()
 
-	if err != nil {
-		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
-		return nil
-	}
-
-	filter := reqStruct.GetHostFilter()
-
-	root, err := handler.resourceManager2.GetHierarchy(ctx, filter, reqStruct.Level, reqStruct.Depth)
-
-	handleResponse(response, err, func() ([]byte, error) {
+		root, err := handler.resourceManager2.GetHierarchy(ctx, filter, reqStruct.Level, reqStruct.Depth)
 		var rsp message.GetHierarchyResp
 		rsp.Root = *root
-		return json.Marshal(rsp)
-	})
+		handleResponse(ctx, response, err, rsp, nil)
+	}
 
 	return nil
 }
 
 func (handler *ClusterServiceHandler) GetStocks(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	reqString := request.GetRequest()
-
 	reqStruct := message.GetStocksReq{}
 
-	err := json.Unmarshal([]byte(reqString), &reqStruct)
+	if handleRequest(ctx, request, response, reqStruct) {
+		location := reqStruct.GetLocation()
+		hostFilter := reqStruct.GetHostFilter()
+		diskFilter := reqStruct.GetDiskFilter()
 
-	if err != nil {
-		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
-		return nil
-	}
-
-	location := reqStruct.GetLocation()
-	hostFilter := reqStruct.GetHostFilter()
-	diskFilter := reqStruct.GetDiskFilter()
-
-	stocks, err := handler.resourceManager2.GetStocks(ctx, location, hostFilter, diskFilter)
-
-	handleResponse(response, err, func() ([]byte, error) {
+		stocks, err := handler.resourceManager2.GetStocks(ctx, location, hostFilter, diskFilter)
 		var rsp message.GetStocksResp
 		rsp.Stocks = *stocks
-		return json.Marshal(rsp)
-	})
+		handleResponse(ctx, response, err, rsp, nil)
+	}
 
 	return nil
 }

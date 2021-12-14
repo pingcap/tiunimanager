@@ -17,18 +17,13 @@
 package importexport
 
 import (
-	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
-	"github.com/pingcap-inc/tiem/micro-api/interceptor"
-	"net/http"
-	"strconv"
-	"time"
-
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"net/http"
 )
 
 // ExportData
@@ -38,59 +33,29 @@ import (
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param dataExport body DataExportReq true "cluster info for data export"
-// @Success 200 {object} controller.CommonResult{data=DataExportResp}
+// @Param dataExport body message.DataExportReq true "cluster info for data export"
+// @Success 200 {object} controller.CommonResult{data=message.DataExportResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/export [post]
 func ExportData(c *gin.Context) {
-	var status *clusterpb.ResponseStatusDTO
-	start := time.Now()
-	defer interceptor.HandleMetrics(start, "ExportData", int(status.GetCode()))
+	var request message.DataExportReq
 
-	var req DataExportReq
-	err := c.ShouldBindJSON(&req)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-		_ = c.Error(err)
+	if err := c.ShouldBindQuery(&request); err != nil {
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	operator := controller.GetOperator(c)
-
-	respDTO, err := client.ClusterClient.ExportData(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataExportRequest{
-		Operator:        operator.ConvertToDTO(),
-		ClusterId:       req.ClusterId,
-		UserName:        req.UserName,
-		Password:        req.Password,
-		FileType:        req.FileType,
-		Filter:          req.Filter,
-		Sql:             req.Sql,
-		StorageType:     req.StorageType,
-		ZipName:         req.ZipName,
-		BucketUrl:       req.BucketUrl,
-		BucketRegion:    req.BucketRegion,
-		EndpointUrl:     req.EndpointUrl,
-		AccessKey:       req.AccessKey,
-		SecretAccessKey: req.SecretAccessKey,
-		Comment:         req.Comment,
-	}, controller.DefaultTimeout)
-
+	body, err := json.Marshal(request)
 	if err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-	} else {
-		status = respDTO.GetRespStatus()
-		if int32(common.TIEM_SUCCESS) == status.GetCode() {
-			result := controller.BuildCommonResult(int(status.Code), status.Message, DataExportResp{
-				RecordId: respDTO.GetRecordId(),
-			})
-			c.JSON(http.StatusOK, result)
-		} else {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		}
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
+
+	controller.InvokeRpcMethod(c, client.ClusterClient.ExportData, &message.DataExportResp{}, string(body), controller.DefaultTimeout)
 }
 
 // ImportData
@@ -100,123 +65,61 @@ func ExportData(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param dataImport body DataImportReq true "cluster info for import data"
-// @Success 200 {object} controller.CommonResult{data=DataImportResp}
+// @Param dataImport body message.DataImportReq true "cluster info for import data"
+// @Success 200 {object} controller.CommonResult{data=message.DataImportResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/import [post]
 func ImportData(c *gin.Context) {
-	var status *clusterpb.ResponseStatusDTO
-	start := time.Now()
-	defer interceptor.HandleMetrics(start, "ImportData", int(status.GetCode()))
+	var request message.DataImportReq
 
-	var req DataImportReq
-	err := c.ShouldBindJSON(&req)
-	if err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		_ = c.Error(err)
+	if err := c.ShouldBindQuery(&request); err != nil {
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	operator := controller.GetOperator(c)
-
-	respDTO, err := client.ClusterClient.ImportData(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataImportRequest{
-		Operator:        operator.ConvertToDTO(),
-		ClusterId:       req.ClusterId,
-		UserName:        req.UserName,
-		Password:        req.Password,
-		RecordId:        req.RecordId,
-		StorageType:     req.StorageType,
-		BucketUrl:       req.BucketUrl,
-		EndpointUrl:     req.EndpointUrl,
-		AccessKey:       req.AccessKey,
-		SecretAccessKey: req.SecretAccessKey,
-		Comment:         req.Comment,
-	}, controller.DefaultTimeout)
-
+	body, err := json.Marshal(request)
 	if err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-	} else {
-		status = respDTO.GetRespStatus()
-		if int32(common.TIEM_SUCCESS) == status.GetCode() {
-			result := controller.BuildCommonResult(int(status.Code), status.Message, DataImportResp{
-				RecordId: respDTO.GetRecordId(),
-			})
-			c.JSON(http.StatusOK, result)
-		} else {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		}
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
+
+	controller.InvokeRpcMethod(c, client.ClusterClient.ImportData, &message.DataImportResp{}, string(body), controller.DefaultTimeout)
 }
 
-// DescribeDataTransport
+// QueryDataTransport
 // @Summary query records of import and export
 // @Description query records of import and export
 // @Tags cluster data transport
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param dataTransportQueryReq query DataTransportQueryReq true "transport records query condition"
-// @Success 200 {object} controller.CommonResult{data=DataTransportRecordQueryResp}
+// @Param dataTransportQueryReq query message.QueryDataImportExportRecordsReq true "transport records query condition"
+// @Success 200 {object} controller.CommonResult{data=message.QueryDataImportExportRecordsResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/transport [get]
-func DescribeDataTransport(c *gin.Context) {
-	var status *clusterpb.ResponseStatusDTO
-	start := time.Now()
-	defer interceptor.HandleMetrics(start, "DescribeDataTransport", int(status.GetCode()))
+func QueryDataTransport(c *gin.Context) {
+	var request message.QueryDataImportExportRecordsReq
 
-	var req DataTransportQueryReq
-	err := c.ShouldBindQuery(&req)
-	if err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		_ = c.Error(err)
+	if err := c.ShouldBindQuery(&request); err != nil {
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	operator := controller.GetOperator(c)
-	respDTO, err := client.ClusterClient.DescribeDataTransport(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataTransportQueryRequest{
-		Operator:  operator.ConvertToDTO(),
-		ClusterId: req.ClusterId,
-		RecordId:  req.RecordId,
-		ReImport:  req.ReImport,
-		StartTime: req.StartTime,
-		EndTime:   req.EndTime,
-		PageReq:   req.PageRequest.ConvertToDTO(),
-	})
-
+	body, err := json.Marshal(request)
 	if err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-	} else {
-		status = respDTO.GetRespStatus()
-		if int32(common.TIEM_SUCCESS) == status.GetCode() {
-			data := &DataTransportRecordQueryResp{
-				TransportRecords: make([]*DataTransportInfo, len(respDTO.GetTransportInfos())),
-			}
-			for index, value := range respDTO.GetTransportInfos() {
-				data.TransportRecords[index] = &DataTransportInfo{
-					RecordId:      value.GetRecordId(),
-					ClusterId:     value.GetClusterId(),
-					TransportType: value.GetTransportType(),
-					FilePath:      value.GetFilePath(),
-					ZipName:       value.GetZipName(),
-					StorageType:   value.GetStorageType(),
-					Status:        *management.ParseStatusFromDTO(value.DisplayStatus),
-					StartTime:     time.Unix(value.GetStartTime(), 0),
-					EndTime:       time.Unix(value.GetEndTime(), 0),
-					Comment:       value.GetComment(),
-				}
-			}
-			result := controller.SuccessWithPage(data, *controller.ParsePageFromDTO(respDTO.PageReq))
-			c.JSON(http.StatusOK, result)
-		} else {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		}
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
+
+	controller.InvokeRpcMethod(c, client.ClusterClient.QueryDataTransport, &message.QueryDataImportExportRecordsResp{}, string(body), controller.DefaultTimeout)
 }
 
 // DeleteDataTransportRecord
@@ -227,44 +130,28 @@ func DescribeDataTransport(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param recordId path int true "data transport recordId"
-// @Param DataTransportDeleteReq body DataTransportDeleteReq true "data transport record delete request"
-// @Success 200 {object} controller.CommonResult{data=int}
+// @Param DataTransportDeleteReq body message.DeleteImportExportRecordReq true "data transport record delete request"
+// @Success 200 {object} controller.CommonResult{data=message.DeleteImportExportRecordResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/transport/{recordId} [delete]
 func DeleteDataTransportRecord(c *gin.Context) {
-	var status *clusterpb.ResponseStatusDTO
-	start := time.Now()
-	defer interceptor.HandleMetrics(start, "DeleteDataTransportRecord", int(status.GetCode()))
+	var request message.DeleteImportExportRecordReq
 
-	recordId, err := strconv.Atoi(c.Param("recordId"))
-	if err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+	if err := c.ShouldBindQuery(&request); err != nil {
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	var req DataTransportDeleteReq
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+	request.RecordID = c.Param("recordId")
+	body, err := json.Marshal(request)
+	if err != nil {
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	operator := controller.GetOperator(c)
-	resp, err := client.ClusterClient.DeleteDataTransportRecord(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataTransportDeleteRequest{
-		Operator:  operator.ConvertToDTO(),
-		ClusterId: req.ClusterId,
-		RecordId:  int64(recordId),
-	}, controller.DefaultTimeout)
-	if err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-	} else {
-		status = resp.GetStatus()
-		if common.TIEM_SUCCESS.Equal(status.GetCode()) {
-			c.JSON(http.StatusOK, controller.Success(recordId))
-		} else {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		}
-	}
+
+	controller.InvokeRpcMethod(c, client.ClusterClient.DeleteDataTransportRecord, &message.DeleteImportExportRecordResp{}, string(body), controller.DefaultTimeout)
 }

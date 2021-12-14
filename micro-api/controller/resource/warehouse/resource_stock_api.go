@@ -44,9 +44,9 @@ import (
 func GetHierarchy(c *gin.Context) {
 	var req message.GetHierarchyReq
 
-	requestBody, err := controller.HandleJsonRequestFromQuery(c, &req)
-	if err == nil {
-		if err = constants.ValidArchType(req.Arch); err != nil {
+	requestBody, ok := controller.HandleJsonRequestFromQuery(c, &req)
+	if ok {
+		if err := constants.ValidArchType(req.Arch); err != nil {
 			c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), err.Error()))
 			return
 		}
@@ -81,10 +81,10 @@ func GetHierarchy(c *gin.Context) {
 // @Router /resources/stocks [get]
 func GetStocks(c *gin.Context) {
 	var req message.GetStocksReq
-	requestBody, err := controller.HandleJsonRequestFromQuery(c, &req)
-	if err == nil {
+	requestBody, ok := controller.HandleJsonRequestFromQuery(c, &req)
+	if ok {
 		if req.Arch != "" {
-			if err = constants.ValidArchType(req.Arch); err != nil {
+			if err := constants.ValidArchType(req.Arch); err != nil {
 				c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), err.Error()))
 				return
 			}

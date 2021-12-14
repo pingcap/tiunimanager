@@ -11,31 +11,36 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
-package parameter
+/*******************************************************************************
+ * @File: parametergroup_mapping.go
+ * @Description: parameter group mapping table orm
+ * @Author: jiangxunyu@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/10 14:46
+*******************************************************************************/
 
-import (
-	"github.com/pingcap-inc/tiem/library/knowledge"
-)
+package parametergroup
 
-type ParamRealValue struct {
-	Cluster   string                    `json:"cluster" example:"1"`
-	Instances []*ParamInstanceRealValue `json:"instances"`
+import "time"
+
+// ParameterGroupMapping
+// @Description: parameter_group_mapping table orm
+type ParameterGroupMapping struct {
+	ParameterGroupID string    `gorm:"primaryKey;comment:'parameter group id, relation parameter_group table'"`
+	ParameterID      string    `gorm:"primaryKey;comment:'group id, relation parameter table'"`
+	DefaultValue     string    `gorm:"not null;comment:'parameter default value'"`
+	Note             string    `gorm:"comment:'parameter remark information'"`
+	CreatedAt        time.Time `gorm:"<-:create"`
+	UpdatedAt        time.Time
 }
 
-type ParamInstanceRealValue struct {
-	Instance string `json:"instance" example:"172.16.10.2"`
-	Value    string `json:"value" example:"2"`
-}
+// ParamDetail
+// @Description: parameter group detail object
+type ParamDetail struct {
+	Parameter
 
-type ParamItem struct {
-	Definition   knowledge.Parameter `json:"definition"`
-	CurrentValue ParamInstance       `json:"currentValue"`
-}
-
-type ParamInstance struct {
-	Name  string      `json:"name"`
-	Value interface{} `json:"value"`
+	DefaultValue string `json:"defaultValue"`
+	Note         string `json:"note"`
 }

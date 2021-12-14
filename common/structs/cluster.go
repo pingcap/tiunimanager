@@ -29,7 +29,7 @@ import "time"
 type ClusterResourceParameterComputeResource struct {
 	Zone         string `json:"zoneCode"` //
 	DiskType     string `json:"diskType"` //NVMeSSD/SSD/SATA
-	DiskCapacity string `json:"diskCapacity"`
+	DiskCapacity int    `json:"diskCapacity"`
 	Spec         string `json:"specCode"` //4C8G/8C16G ?
 	Count        int    `json:"count"`
 }
@@ -119,10 +119,9 @@ type ClusterTopologyInfo struct {
 
 // BackupStrategy Timed or scheduled data backup strategy
 type BackupStrategy struct {
-	ClusterID      string    `json:"clusterId"`
-	BackupDate     string    `json:"backupDate"`
-	Period         string    `json:"period"`
-	NextBackupTime time.Time `json:"nextBackupTime"`
+	ClusterID  string `json:"clusterId"`
+	BackupDate string `json:"backupDate"`
+	Period     string `json:"period"`
 }
 
 // BackupRecord Single backup file details
@@ -180,8 +179,13 @@ type ParameterRealValue struct {
 }
 
 type ClusterParameterSampleInfo struct {
-	ParamId   int64              `json:"paramId" example:"1"`
-	RealValue ParameterRealValue `json:"realValue"`
+	ParamId       int64              `json:"paramId" example:"1"`
+	Name          string             `json:"name" example:"binlog_cache"`
+	ComponentType string             `json:"componentType" example:"TiDB"`
+	HasReboot     int32              `json:"hasReboot" example:"0" enums:"0,1"`
+	Source        int32              `json:"source" example:"0" enums:"0,1,2,3"`
+	Type          int32              `json:"type" example:"0" enums:"0,1,2,3,4"`
+	RealValue     ParameterRealValue `json:"realValue"`
 }
 
 type ClusterParameterInfo struct {

@@ -72,18 +72,18 @@ func CreateTestHost(region, zone, rack, hostName, ip, clusterType, purpose, disk
 
 func Test_Create_Delete_Host_Succeed(t *testing.T) {
 	id1, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
 	assert.Nil(t, err)
 }
 
 func Test_Create_Dup_Host(t *testing.T) {
 	id1, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
 	assert.Nil(t, err)
 	id2, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	assert.NotNil(t, err)
 	assert.Nil(t, id2)
 }
@@ -92,7 +92,7 @@ func Test_Create_Query_Host_Succeed(t *testing.T) {
 	hostIp := "192.168.999.999"
 	hostName := "Test_Host2"
 	id1, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", hostName, hostIp,
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
 	assert.Nil(t, err)
 	hosts, err := GormRW.Query(context.TODO(), &structs.HostFilter{HostID: id1[0]}, 0, 3)
@@ -106,7 +106,7 @@ func Test_Create_Query_Host_Succeed(t *testing.T) {
 
 func Test_UpdateHostReserved_Succeed(t *testing.T) {
 	id1, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
 	assert.Nil(t, err)
 	hosts, err := GormRW.Query(context.TODO(), &structs.HostFilter{Arch: string(constants.ArchX8664), Status: string(constants.HostOnline)}, 0, 3)
@@ -120,7 +120,7 @@ func Test_UpdateHostReserved_Succeed(t *testing.T) {
 
 func Test_UpdateHostStatus_Succeed(t *testing.T) {
 	id1, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
 	assert.Nil(t, err)
 	hosts, err := GormRW.Query(context.TODO(), &structs.HostFilter{Arch: string(constants.ArchX8664), Status: string(constants.HostOnline)}, 0, 3)
@@ -134,15 +134,15 @@ func Test_UpdateHostStatus_Succeed(t *testing.T) {
 
 func Test_GetHostItems(t *testing.T) {
 	id1, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
 	assert.Nil(t, err)
 	id2, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack2", "Test_Host2", "192.168.192.169",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id2) }()
 	assert.Nil(t, err)
 	id3, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone2,Test_Rack1", "Test_Host3", "192.168.192.170",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id3) }()
 	assert.Nil(t, err)
 	items, err := GormRW.GetHostItems(context.TODO(), &structs.HostFilter{Arch: string(constants.ArchX8664)}, 1, 3)
@@ -154,15 +154,15 @@ func Test_GetHostItems(t *testing.T) {
 
 func Test_GetHostStocks(t *testing.T) {
 	id1, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
 	assert.Nil(t, err)
 	id2, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack2", "Test_Host2", "192.168.192.169",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id2) }()
 	assert.Nil(t, err)
 	id3, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone2,Test_Rack1", "Test_Host3", "192.168.192.170",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 32, 64, 2)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 32, 64, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id3) }()
 	assert.Nil(t, err)
 	stocks, err := GormRW.GetHostStocks(context.TODO(), &structs.Location{Region: "Test_Region1", Zone: "Test_Zone2"}, &structs.HostFilter{}, &structs.DiskFilter{})
@@ -177,11 +177,11 @@ func Test_GetHostStocks(t *testing.T) {
 
 func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
 	id1, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "474.111.111.117",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 17, 64, 3)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 17, 64, 3)
 	id2, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host2", "474.111.111.118",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 16, 64, 3)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 16, 64, 3)
 	id3, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host3", "474.111.111.119",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 15, 64, 3)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 15, 64, 3)
 	t.Log(id1, id2, id3)
 	// Host Status should be inused or exhausted, so delete would failed
 	/*
@@ -259,11 +259,11 @@ func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
 
 func TestAllocResources_1Requirement_3Hosts_Filted_by_Label(t *testing.T) {
 	id1, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone3", "Test_Region1,Test_Zone3,Test_Rack1", "Test_Host1", "474.111.111.158",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute)+","+string(constants.PurposeStorage), string(constants.SSD), 17, 64, 1)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute)+","+string(constants.PurposeStorage), string(constants.SSD), 17, 64, 1)
 	id2, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone3", "Test_Region1,Test_Zone3,Test_Rack1", "Test_Host2", "474.111.111.159",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 16, 64, 2)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 16, 64, 2)
 	id3, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone3", "Test_Region1,Test_Zone3,Test_Rack1", "Test_Host3", "474.111.111.160",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 15, 64, 1)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 15, 64, 1)
 	t.Log(id1, id2, id3)
 	// Host Status should be inused or exhausted, so delete would failed
 	/*
@@ -347,11 +347,11 @@ func newRequirementForRequest(cpuCores, memory int32, needDisk bool, diskcap int
 
 func TestAllocResources_3RequestsInBatch_SpecifyHost_Strategy(t *testing.T) {
 	id1, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "474.111.111.127",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 17, 64, 3)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 17, 64, 3)
 	id2, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host2", "474.111.111.128",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 16, 64, 3)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 16, 64, 3)
 	id3, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host3", "474.111.111.129",
-		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 15, 64, 3)
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 15, 64, 3)
 	t.Log(id1, id2, id3)
 	// Host Status should be inused or exhausted, so delete would failed
 	/*

@@ -28,26 +28,28 @@ import (
 type ClusterInstance struct {
 	common.Entity
 
-	Type           string `gorm:"not null;default:null"`
-	Version        string `gorm:"not null;default:null"`
-	ClusterID      string `gorm:"not null;default:null"`
-	Role           string
+	Type         string `gorm:"not null;default:null"`
+	Version      string `gorm:"not null;default:null"`
+	ClusterID    string `gorm:"not null;default:null"`
+	Role         string
+	DiskType     string
+	DiskCapacity int32
 
 	// instance resource info
-	CpuCores       int8
-	Memory         int8
-	HostID         string
-	Zone           string
-	Rack           string
-	HostIP         []string `gorm:"-"`
-	Ports          []string `gorm:"-"`
-	DiskId         string
-	DiskPath       string
+	CpuCores int8
+	Memory   int8
+	HostID   string
+	Zone     string
+	Rack     string
+	HostIP   []string `gorm:"-"`
+	Ports    []int32  `gorm:"-"`
+	DiskID   string
+	DiskPath string
 
 	// marshal HostIP, never use
-	HostInfo	   string `gorm:"type:varchar(128)"`
+	HostInfo string `gorm:"type:varchar(128)"`
 	// marshal PortInfo, never use
-	PortInfo	   string `gorm:"type:varchar(128)"`
+	PortInfo string `gorm:"type:varchar(128)"`
 }
 
 func (t *ClusterInstance) BeforeSave(tx *gorm.DB) (err error) {
@@ -56,7 +58,7 @@ func (t *ClusterInstance) BeforeSave(tx *gorm.DB) (err error) {
 	}
 
 	if t.Ports == nil {
-		t.Ports = make([]string, 0)
+		t.Ports = make([]int32, 0)
 	}
 	p, jsonErr := json.Marshal(t.Ports)
 	if jsonErr == nil {
@@ -83,7 +85,7 @@ func (t *ClusterInstance) BeforeSave(tx *gorm.DB) (err error) {
 
 func (t *ClusterInstance) AfterFind(tx *gorm.DB) (err error) {
 	if len(t.PortInfo) > 0 {
-		t.Ports = make([]string, 0)
+		t.Ports = make([]int32, 0)
 		err = json.Unmarshal([]byte(t.PortInfo), &t.Ports)
 	}
 	if err == nil && len(t.HostInfo) > 0 {

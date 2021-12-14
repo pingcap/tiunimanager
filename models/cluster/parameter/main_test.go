@@ -43,7 +43,7 @@ import (
 
 var clusterParameterRW *ClusterParameterReadWrite
 var parameterGroupRW *parametergroup.ParameterGroupReadWrite
-var clusterRW *management.GormClusterReadWrite
+var clusterRW *management.ClusterReadWrite
 
 func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
@@ -75,7 +75,7 @@ func TestMain(m *testing.M) {
 
 			clusterParameterRW = NewClusterParameterReadWrite(db)
 			parameterGroupRW = parametergroup.NewParameterGroupReadWrite(db)
-			clusterRW = management.NewGormClusterReadWrite(db)
+			clusterRW = management.NewClusterReadWrite(db)
 			return nil
 		},
 	)

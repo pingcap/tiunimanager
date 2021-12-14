@@ -47,7 +47,7 @@ func TestManager_Delete(t *testing.T) {
 	result, err := manager.Create(context.TODO(), cluster.CreateChangeFeedTaskReq{
 		ChangeFeedTask: cluster.ChangeFeedTask{
 			DownstreamType: "tidb",
-			Name: "name",
+			Name:           "name",
 			Downstream: cluster.TiDBDownstream{
 				MaxTxnRow: 4,
 			},
@@ -63,7 +63,7 @@ func TestManager_Create(t *testing.T) {
 	id, err := manager.Create(context.TODO(), cluster.CreateChangeFeedTaskReq{
 		ChangeFeedTask: cluster.ChangeFeedTask{
 			DownstreamType: "mysql",
-			Name: "name",
+			Name:           "name",
 			Downstream: cluster.MysqlDownstream{
 				Username: "root",
 			},

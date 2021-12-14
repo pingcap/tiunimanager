@@ -26,7 +26,7 @@ import (
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 )
 
-type Manager struct {}
+type Manager struct{}
 
 func NewManager() *Manager {
 	return &Manager{}

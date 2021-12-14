@@ -11,30 +11,31 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
-package parameter
+/*******************************************************************************
+ * @File: zone.go
+ * @Description:
+ * @Author: duanbing@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/6
+*******************************************************************************/
+
+package specs
 
 import (
-	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"gorm.io/gorm"
+	"time"
 )
 
-type ParamQueryReq struct {
-	controller.PageRequest
-}
-
-type UpdateParamsReq struct {
-	Params     []UpdateParam `json:"params"`
-	NeedReboot bool          `json:"needReboot" example:"false"`
-}
-
-type UpdateParam struct {
-	ParamId       int64          `json:"paramId" example:"1"`
-	Name          string         `json:"name" example:"binlog_cache"`
-	ComponentType string         `json:"componentType" example:"TiDB"`
-	HasReboot     int32          `json:"hasReboot" example:"0" enums:"0,1"`
-	Source        int32          `json:"source" example:"0" enums:"0,1,2,3"`
-	Type          int32          `json:"type" example:"0" enums:"0,1,2"`
-	RealValue     ParamRealValue `json:"realValue"`
+// Zone information provided by Enterprise Manager
+type Zone struct {
+	VendorID  string         `gorm:"primaryKey;"`
+	RegionID  string         `gorm:"primaryKey;"`
+	ZoneID    string         `gorm:"primaryKey;"`
+	Name      string         `gorm:"size:32"`
+	Comment   string         `gorm:"size:1024;"`
+	CreatedAt time.Time      `gorm:"autoCreateTime;<-:create;->;"`
+	UpdatedAt time.Time      `gorm:"autoUpdateTime"`
+	DeletedAt gorm.DeletedAt `gorm:""`
 }

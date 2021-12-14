@@ -179,6 +179,22 @@ func SetSecondPartyOperationReaderWriter(rw secondparty.ReaderWriter) {
 	defaultDb.secondPartyOperationReaderWriter = rw
 }
 
+func GetParameterGroupReaderWriter() parametergroup.ReaderWriter {
+	return defaultDb.parameterGroupReaderWriter
+}
+
+func SetParameterGroupReaderWriter(rw parametergroup.ReaderWriter) {
+	defaultDb.parameterGroupReaderWriter = rw
+}
+
+func GetClusterParameterReaderWriter() parameter.ReaderWriter {
+	return defaultDb.clusterParameterReaderWriter
+}
+
+func SetClusterParameterReaderWriter(rw parameter.ReaderWriter) {
+	defaultDb.clusterParameterReaderWriter = rw
+}
+
 func MockDB() {
 	defaultDb = &database{}
 }

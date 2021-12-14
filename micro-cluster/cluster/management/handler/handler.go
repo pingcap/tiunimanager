@@ -28,6 +28,7 @@ import (
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
+	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"strconv"
 	"strings"
 	"text/template"
@@ -38,6 +39,43 @@ type ClusterMeta struct {
 	Instances            map[string][]*management.ClusterInstance
 	NodeExporterPort     int32
 	BlackboxExporterPort int32
+}
+
+// BuildCluster
+// @Description: build cluster from structs.CreateClusterParameter
+// @Receiver p
+// @Parameter ctx
+// @Parameter param
+// @return error
+func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClusterParameter) error {
+	p.Cluster = &management.Cluster{
+		Entity: dbCommon.Entity {
+			TenantId: framework.GetTenantIDFromContext(ctx),
+			Status: string(constants.ClusterInitializing),
+		},
+		Name: param.Name,
+		DBUser: param.DBUser,
+		DBPassword: param.DBPassword,
+		Type: param.Type,
+		Version: param.Version,
+		TLS: param.TLS,
+		Tags: param.Tags,
+		OwnerId: framework.GetUserIDFromContext(ctx),
+		ParameterGroupID:  param.ParameterGroupID,
+		Copies:            param.Copies,
+		Exclusive:         param.Exclusive,
+		Region:            param.Region,
+		CpuArchitecture: constants.ArchType(param.CpuArchitecture),
+		MaintenanceStatus: constants.ClusterMaintenanceNone,
+		MaintainWindow: "",
+	}
+	_, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
+	if err == nil {
+		framework.LogWithContext(ctx).Infof("create cluster [%s] succeed", p.Cluster.Name)
+	} else {
+		framework.LogWithContext(ctx).Errorf("create cluster [%s] failed, err : %s", p.Cluster.Name, err.Error())
+	}
+	return err
 }
 
 // AddInstances
@@ -449,14 +487,26 @@ func (p *ClusterMeta) Delete(ctx context.Context) error {
 }
 
 func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
-	cluster, _, err := models.GetClusterReaderWriter().GetMeta(ctx, clusterID)
-	// todo
+	cluster, instances, err := models.GetClusterReaderWriter().GetMeta(ctx, clusterID)
+
 	if err != nil {
-		return &ClusterMeta{
-			Cluster: cluster,
-			//Instances: instances,
-		}, err
+		return nil, err
 	}
 
-	return nil, framework.WrapError(common.TIEM_CLUSTER_NOT_FOUND, "", err)
+	instancesMap := make(map[string][]*management.ClusterInstance)
+
+	if instances != nil && len(instances) > 0 {
+		for _, instance := range instances {
+			if existed, ok := instancesMap[instance.Type]; ok {
+				existed = append(existed, instance)
+			} else {
+				existed = make([]*management.ClusterInstance, 0)
+				existed = append(existed, instance)
+			}
+		}
+	}
+	return &ClusterMeta{
+		Cluster: cluster,
+		Instances: instancesMap,
+	}, nil
 }

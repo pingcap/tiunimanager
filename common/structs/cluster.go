@@ -48,17 +48,18 @@ type ClusterResourceInfo struct {
 
 //CreateClusterParameter User input parameters when creating a cluster
 type CreateClusterParameter struct {
-	Name            string   `json:"clusterName"`
-	DBUser          string   `json:"dbUser"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
-	DBPassword      string   `json:"dbPassword"`
-	Type            string   `json:"clusterType"`
-	Version         string   `json:"clusterVersion"`
-	Tags            []string `json:"tags"`
-	TLS             bool     `json:"tls"`
-	Copies          int      `json:"copies"`                                 //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
-	Exclusive       bool     `json:"exclusive" form:"exclusive"`             //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
-	Region          string   `json:"region" form:"region"`                   //The Region where the cluster is located
-	CpuArchitecture string   `json:"cpuArchitecture" form:"cpuArchitecture"` //X86/X86_64/ARM
+	Name             string   `json:"clusterName"`
+	DBUser           string   `json:"dbUser"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
+	DBPassword       string   `json:"dbPassword"`
+	Type             string   `json:"clusterType"`
+	Version          string   `json:"clusterVersion"`
+	Tags             []string `json:"tags"`
+	TLS              bool     `json:"tls"`
+	Copies           int      `json:"copies"`                                 //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
+	Exclusive        bool     `json:"exclusive" form:"exclusive"`             //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+	Region           string   `json:"region" form:"region"`                   //The Region where the cluster is located
+	CpuArchitecture  string   `json:"cpuArchitecture" form:"cpuArchitecture"` //X86/X86_64/ARM
+	ParameterGroupID string   `json:"parameterGroupID" form:"parameterGroupID"`
 }
 
 // ClusterInfo Cluster details information

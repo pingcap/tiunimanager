@@ -150,8 +150,13 @@ var createClusterFlow = workflow.WorkFlowDefine{
 // @return resp
 // @return err
 func (p *Manager) CreateCluster(ctx context.Context, req cluster.CreateClusterReq) (resp cluster.CreateClusterResp, err error) {
-	// get meta ClusterMeta from request or database
 	meta := &handler.ClusterMeta{}
+	if err = meta.BuildCluster(ctx, req.CreateClusterParameter); err != nil {
+		return
+	}
+	if err = meta.AddInstances(ctx, req.ResourceParameter.InstanceResource); err != nil {
+		return
+	}
 
 	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceStopping, createClusterFlow.FlowName)
 
@@ -207,7 +212,6 @@ var restartClusterFlow = workflow.WorkFlowDefine {
 		"fail":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistCluster)},
 	},
 }
-
 func (p *Manager) RestartCluster(ctx context.Context, req cluster.RestartClusterReq) (resp cluster.RestartClusterResp, err error) {
 	meta, err := handler.Get(ctx, req.ClusterID)
 	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceRestarting, restartClusterFlow.FlowName)
@@ -217,6 +221,14 @@ func (p *Manager) RestartCluster(ctx context.Context, req cluster.RestartCluster
 	return
 }
 
+// asyncMaintenance
+// @Description: common asynchronous process for cluster maintenance
+// @Parameter ctx
+// @Parameter meta
+// @Parameter status
+// @Parameter flowName
+// @return flowID
+// @return err
 func asyncMaintenance(ctx context.Context, meta *handler.ClusterMeta, status constants.ClusterMaintenanceStatus, flowName string) (flowID string, err error){
 	if err = meta.StartMaintenance(ctx, status); err != nil {
 		framework.LogWithContext(ctx).Errorf("start maintenance failed, clusterID = %s, status = %s,error = %s", meta.Cluster.ID, status, err.Error())
@@ -236,4 +248,3 @@ func asyncMaintenance(ctx context.Context, meta *handler.ClusterMeta, status con
 	}
 	return
 }
-

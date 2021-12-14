@@ -487,10 +487,7 @@ func (mgr *ImportExportManager) importDataPreCheck(ctx context.Context, request 
 func (mgr *ImportExportManager) checkFilePathExists(path string) bool {
 	_, err := os.Stat(path)
 	if err != nil {
-		if os.IsExist(err) {
-			return true
-		}
-		return false
+		return os.IsExist(err)
 	}
 	return true
 }
@@ -506,10 +503,7 @@ func (mgr *ImportExportManager) checkExportParamSupportReimport(request *message
 }
 
 func (mgr *ImportExportManager) checkImportParamSupportReimport(request *message.DataImportReq) bool {
-	if common.NfsStorageType == request.StorageType {
-		return true
-	}
-	return false
+	return common.NfsStorageType == request.StorageType
 }
 
 func (mgr *ImportExportManager) getDataExportFilePath(request *message.DataExportReq, exportDir string, persist bool) string {

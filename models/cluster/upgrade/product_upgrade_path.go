@@ -24,30 +24,49 @@
 package upgrade
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"gorm.io/gorm"
 )
 
 type ProductUpgradePath struct {
 	ID         string         `gorm:"primaryKey;"`
 	Type       string         `gorm:"not null;comment:'in-place/migration'"`
 	ProductID  string         `gorm:"not null;size:64;comment:'TiDB/DM/TiEM'"`
-	SrcVersion string         `gorm:"index:path_index,unique;not null;size:64;comment:'original version of the cluster'"`
-	DstVersion string         `gorm:"index:path_index,unique;not null;size:64;comment:'available upgrade version of the cluster'"`
-	Status     string         `gorm:"not null;size:32;"`
+	SrcVersion string         `gorm:"not null;size:64;comment:'original version of the cluster'"`
+	DstVersion string         `gorm:"not null;size:64;comment:'available upgrade version of the cluster'"`
 	CreatedAt  time.Time      `gorm:"autoCreateTime;<-:create;->;"`
 	UpdatedAt  time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt  gorm.DeletedAt `gorm:"index"`
 }
 
-type DeploymentPackage struct {
-	ID          string         `gorm:"primaryKey;"`
-	ProductID   string         `gorm:"not null;size:64;comment:'TiDB/DM/TiEM'"`
-	Version     string         `gorm:"not null;size:64;comment:'installed version, separated by comma, no space'"`
-	Platforms   string         `gorm:"not null;size:64;comment:'supported platforms, separated by comma, no space'"`
-	Url         string         `gorm:"not null"`
-	Description string         `gorm:"size:64;comment:'description'"`
-	CreatedAt   time.Time      `gorm:"autoCreateTime;<-:create;->;"`
-	UpdatedAt   time.Time      `gorm:"autoUpdateTime"`
-	DeletedAt   gorm.DeletedAt `gorm:"index"`
+func (s *ProductUpgradePath) BeforeCreate(tx *gorm.DB) (err error) {
+	s.ID = uuidutil.GenerateID()
+	return nil
 }
+
+const (
+	ColumnType       = "type"
+	ColumnProductID  = "product_id"
+	ColumnSrcVersion = "src_version"
+	ColumnDstVersion = "dst_version"
+	ColumnStatus     = "status"
+)
+
+const (
+	StatusValid   = "valid"
+	StatusInvalid = "invalid"
+)
+
+//type DeploymentPackage struct {
+//	ID          string         `gorm:"primaryKey;"`
+//	ProductID   string         `gorm:"not null;size:64;comment:'TiDB/DM/TiEM'"`
+//	Version     string         `gorm:"not null;size:64;comment:'installed version, separated by comma, no space'"`
+//	Platforms   string         `gorm:"not null;size:64;comment:'supported platforms, separated by comma, no space'"`
+//	Url         string         `gorm:"not null"`
+//	Description string         `gorm:"size:64;comment:'description'"`
+//	CreatedAt   time.Time      `gorm:"autoCreateTime;<-:create;->;"`
+//	UpdatedAt   time.Time      `gorm:"autoUpdateTime"`
+//	DeletedAt   gorm.DeletedAt `gorm:"index"`
+//}

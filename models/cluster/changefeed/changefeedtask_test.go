@@ -18,11 +18,12 @@ package changefeed
 import (
 	"context"
 	"database/sql"
+	"testing"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func TestChangeFeedTask_Locked(t1 *testing.T) {
@@ -284,7 +285,6 @@ func TestGormChangeFeedReadWrite_UpdateConfig(t *testing.T) {
 			Entity: common.Entity{ID: "111"},
 		}}, true},
 		{"without id", args{context.TODO(), &ChangeFeedTask{}}, true},
-
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

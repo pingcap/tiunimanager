@@ -24,13 +24,14 @@
 package upgrade
 
 import (
+	"os"
+	"testing"
+
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"os"
-	"testing"
 )
 
 var testRW *GormProductUpgradePathReadWrite
@@ -38,7 +39,6 @@ var testRW *GormProductUpgradePathReadWrite
 func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
 	os.MkdirAll(testFilePath, 0755)
-
 
 	logins := framework.LogForkFile(common.LogFileSystem)
 
@@ -64,5 +64,8 @@ func TestMain(m *testing.M) {
 		},
 	)
 
-	os.Exit(m.Run())
+	code := m.Run()
+	os.RemoveAll("testdata/")
+	os.RemoveAll("logs/")
+	os.Exit(code)
 }

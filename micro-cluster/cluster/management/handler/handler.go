@@ -178,6 +178,14 @@ func (p *ClusterMeta) generateAllocMonitoredPortRequirements() []resource.AllocR
 	return requirements
 }
 
+func (p *ClusterMeta) applyGlobalPortResource(resource *resource.BatchAllocResponse) {
+
+}
+
+func (p *ClusterMeta) applyInstanceResource(resource *resource.BatchAllocResponse) {
+
+}
+
 // AllocInstanceResource
 // @Description alloc host ip, port and disk for all new instances
 // @Return		alloc request id
@@ -283,27 +291,15 @@ func (p *ClusterMeta) GenerateTopologyConfig(ctx context.Context) (string, error
 // @Return		error
 func (p *ClusterMeta) UpdateClusterStatus(ctx context.Context, status constants.ClusterRunningStatus) error {
 	p.Cluster.Status = string(status)
-	models.GetClusterReaderWriter().UpdateStatus(ctx, p.Cluster.ID, status)
+	err := models.GetClusterReaderWriter().UpdateStatus(ctx, p.Cluster.ID, status)
 
-	framework.LogWithContext(ctx).Infof("update cluster[%s] status into %s", p.Cluster.Name, status)
-	return nil
-}
+	if err != nil {
+		framework.LogWithContext(ctx).Infof("update cluster[%s] status into %s failed", p.Cluster.Name, status)
 
-// UpdateInstancesStatus
-// @Description update cluster Instances status
-// @Return		error
-func (p *ClusterMeta) UpdateInstancesStatus(ctx context.Context,
-	originStatus constants.ClusterRunningStatus, status constants.ClusterRunningStatus) error {
-	for _, components := range p.Instances {
-		for _, instance := range components {
-			if instance.Status == string(originStatus) {
-				instance.Status = string(status)
-			}
-		}
+	} else {
+		framework.LogWithContext(ctx).Errorf("update cluster[%s] status into %s succeed", p.Cluster.Name, status)
 	}
-	// TODO: write db
-	framework.LogWithContext(ctx).Infof("update cluster[%s] instances status into %s", p.Cluster.ID, status)
-	return nil
+	return err
 }
 
 // GetInstance
@@ -311,8 +307,8 @@ func (p *ClusterMeta) UpdateInstancesStatus(ctx context.Context,
 // @Parameter	instance id (format: ip:port)
 // @Return		instance
 // @Return		error
-func (p *ClusterMeta) GetInstance(ctx context.Context, instanceID string) (*management.ClusterInstance, error) {
-	host := strings.Split(instanceID, ":")
+func (p *ClusterMeta) GetInstance(ctx context.Context, instanceAddress string) (*management.ClusterInstance, error) {
+	host := strings.Split(instanceAddress, ":")
 	if len(host) != 2 {
 		return nil, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter format is wrong")
 	}
@@ -344,8 +340,8 @@ func (p *ClusterMeta) IsComponentRequired(ctx context.Context, componentType str
 // @Description delete instance from cluster topology based on instance id
 // @Parameter	instance id (format: ip:port)
 // @Return		error
-func (p *ClusterMeta) DeleteInstance(ctx context.Context, instanceID string) error {
-	instance, err := p.GetInstance(ctx, instanceID)
+func (p *ClusterMeta) DeleteInstance(ctx context.Context, instanceAddress string) error {
+	instance, err := p.GetInstance(ctx, instanceAddress)
 	if err != nil {
 		return err
 	}
@@ -498,10 +494,9 @@ func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
 	if instances != nil && len(instances) > 0 {
 		for _, instance := range instances {
 			if existed, ok := instancesMap[instance.Type]; ok {
-				existed = append(existed, instance)
+				instancesMap[instance.Type] = append(existed, instance)
 			} else {
-				existed = make([]*management.ClusterInstance, 0)
-				existed = append(existed, instance)
+				instancesMap[instance.Type] = append(make([]*management.ClusterInstance, 0), instance)
 			}
 		}
 	}

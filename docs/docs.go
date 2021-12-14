@@ -764,10 +764,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/cluster.QueryClusterResp"
-                                            }
+                                            "$ref": "#/definitions/cluster.QueryClusterResp"
                                         }
                                     }
                                 }

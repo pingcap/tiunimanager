@@ -31,7 +31,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func CreateTestHost(region, zone, rack, hostName, ip, clusterType, purpose, diskType string, freeCpuCores, freeMemory, availableDiskCount int32) (id []string, err error) {
+func createTestHost(region, zone, rack, hostName, ip, clusterType, purpose, diskType string, freeCpuCores, freeMemory, availableDiskCount int32) (id []string, err error) {
 	h := resourcepool.Host{
 		HostName:     hostName,
 		IP:           ip,
@@ -82,19 +82,29 @@ func recycleClusterResources(holderId string) error {
 	return GormRW.RecycleResources(context.TODO(), &request)
 }
 
+func recycleRequestResources(requestId string) error {
+	var request resource_structs.RecycleRequest
+	var recycleRequire resource_structs.RecycleRequire
+	recycleRequire.RequestID = requestId
+
+	recycleRequire.RecycleType = resource_structs.RecycleOperate
+	request.RecycleReqs = append(request.RecycleReqs, recycleRequire)
+	return GormRW.RecycleResources(context.TODO(), &request)
+}
+
 func Test_Create_Delete_Host_Succeed(t *testing.T) {
-	id1, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
+	id1, err := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
 	assert.Nil(t, err)
 }
 
 func Test_Create_Dup_Host(t *testing.T) {
-	id1, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
+	id1, err := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
 	assert.Nil(t, err)
-	id2, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
+	id2, err := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	assert.NotNil(t, err)
 	assert.Nil(t, id2)
@@ -103,7 +113,7 @@ func Test_Create_Dup_Host(t *testing.T) {
 func Test_Create_Query_Host_Succeed(t *testing.T) {
 	hostIp := "192.168.999.999"
 	hostName := "Test_Host2"
-	id1, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", hostName, hostIp,
+	id1, err := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", hostName, hostIp,
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
 	assert.Nil(t, err)
@@ -117,7 +127,7 @@ func Test_Create_Query_Host_Succeed(t *testing.T) {
 }
 
 func Test_UpdateHostReserved_Succeed(t *testing.T) {
-	id1, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
+	id1, err := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
 	assert.Nil(t, err)
@@ -131,7 +141,7 @@ func Test_UpdateHostReserved_Succeed(t *testing.T) {
 }
 
 func Test_UpdateHostStatus_Succeed(t *testing.T) {
-	id1, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
+	id1, err := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
 	assert.Nil(t, err)
@@ -145,15 +155,15 @@ func Test_UpdateHostStatus_Succeed(t *testing.T) {
 }
 
 func Test_GetHostItems(t *testing.T) {
-	id1, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
+	id1, err := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
 	assert.Nil(t, err)
-	id2, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack2", "Test_Host2", "192.168.192.169",
+	id2, err := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack2", "Test_Host2", "192.168.192.169",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id2) }()
 	assert.Nil(t, err)
-	id3, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone2,Test_Rack1", "Test_Host3", "192.168.192.170",
+	id3, err := createTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone2,Test_Rack1", "Test_Host3", "192.168.192.170",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id3) }()
 	assert.Nil(t, err)
@@ -165,15 +175,15 @@ func Test_GetHostItems(t *testing.T) {
 }
 
 func Test_GetHostStocks(t *testing.T) {
-	id1, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
+	id1, err := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
 	assert.Nil(t, err)
-	id2, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack2", "Test_Host2", "192.168.192.169",
+	id2, err := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack2", "Test_Host2", "192.168.192.169",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id2) }()
 	assert.Nil(t, err)
-	id3, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone2,Test_Rack1", "Test_Host3", "192.168.192.170",
+	id3, err := createTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone2,Test_Rack1", "Test_Host3", "192.168.192.170",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 32, 64, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id3) }()
 	assert.Nil(t, err)
@@ -188,11 +198,11 @@ func Test_GetHostStocks(t *testing.T) {
 }
 
 func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
-	id1, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "474.111.111.117",
+	id1, _ := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "474.111.111.117",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 17, 64, 3)
-	id2, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host2", "474.111.111.118",
+	id2, _ := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host2", "474.111.111.118",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 16, 64, 3)
-	id3, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host3", "474.111.111.119",
+	id3, _ := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host3", "474.111.111.119",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 15, 64, 3)
 
 	loc := structs.Location{}
@@ -270,11 +280,11 @@ func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
 }
 
 func TestAllocResources_1Requirement_3Hosts_Filted_by_Label(t *testing.T) {
-	id1, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone3", "Test_Region1,Test_Zone3,Test_Rack1", "Test_Host1", "474.111.111.158",
+	id1, _ := createTestHost("Test_Region1", "Test_Region1,Test_Zone3", "Test_Region1,Test_Zone3,Test_Rack1", "Test_Host1", "474.111.111.158",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute)+","+string(constants.PurposeStorage), string(constants.SSD), 17, 64, 1)
-	id2, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone3", "Test_Region1,Test_Zone3,Test_Rack1", "Test_Host2", "474.111.111.159",
+	id2, _ := createTestHost("Test_Region1", "Test_Region1,Test_Zone3", "Test_Region1,Test_Zone3,Test_Rack1", "Test_Host2", "474.111.111.159",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 16, 64, 2)
-	id3, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone3", "Test_Region1,Test_Zone3,Test_Rack1", "Test_Host3", "474.111.111.160",
+	id3, _ := createTestHost("Test_Region1", "Test_Region1,Test_Zone3", "Test_Region1,Test_Zone3,Test_Rack1", "Test_Host3", "474.111.111.160",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 15, 64, 1)
 
 	loc := structs.Location{}
@@ -359,11 +369,11 @@ func newRequirementForRequest(cpuCores, memory int32, needDisk bool, diskcap int
 }
 
 func TestAllocResources_3RequestsInBatch_SpecifyHost_Strategy(t *testing.T) {
-	id1, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "474.111.111.127",
+	id1, _ := createTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "474.111.111.127",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 17, 64, 3)
-	id2, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host2", "474.111.111.128",
+	id2, _ := createTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host2", "474.111.111.128",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 16, 64, 3)
-	id3, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host3", "474.111.111.129",
+	id3, _ := createTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host3", "474.111.111.129",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 15, 64, 3)
 
 	loc1 := structs.Location{}
@@ -463,7 +473,7 @@ func TestAllocResources_3RequestsInBatch_SpecifyHost_Strategy(t *testing.T) {
 }
 
 func TestAllocResources_SpecifyHost_Strategy_TakeOver(t *testing.T) {
-	id1, _ := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone4", "Test_Region1,Test_Zon4,Test_Rack1", "Test_Host1", "474.111.111.147",
+	id1, _ := createTestHost("Test_Region1", "Test_Region1,Test_Zone4", "Test_Region1,Test_Zon4,Test_Rack1", "Test_Host1", "474.111.111.147",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 17, 64, 3)
 
 	err := GormRW.UpdateHostReserved(context.TODO(), id1, true)
@@ -506,7 +516,7 @@ func TestAllocResources_SpecifyHost_Strategy_TakeOver(t *testing.T) {
 	assert.Equal(t, nil, err2)
 	assert.True(t, rsp.BatchResults[0].Results[0].HostId == id1[0])
 
-	err = recycleClusterResources("TestCluster1")
+	err = recycleRequestResources("TestRequestID1")
 	assert.Nil(t, err)
 	err = GormRW.Delete(context.TODO(), id1)
 	assert.Nil(t, err)
@@ -514,9 +524,9 @@ func TestAllocResources_SpecifyHost_Strategy_TakeOver(t *testing.T) {
 
 func Test_AllocResources_ClusterPorts_Strategy(t *testing.T) {
 	var ids []string
-	id1, _ := CreateTestHost("Test_Region29", "Test_Region29,Zone5", "Test_Region29,Zone5,Rack1", "HostName1", "429.111.111.137", string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 17, 64, 3)
-	id2, _ := CreateTestHost("Test_Region29", "Test_Region29,Zone5", "Test_Region29,Zone5,Rack2", "HostName2", "429.111.111.138", string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 16, 64, 3)
-	id3, _ := CreateTestHost("Test_Region29", "Test_Region29,Zone5", "Test_Region29,Zone5,Rack1", "HostName3", "429.111.111.139", string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 15, 64, 3)
+	id1, _ := createTestHost("Test_Region29", "Test_Region29,Zone5", "Test_Region29,Zone5,Rack1", "HostName1", "429.111.111.137", string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 17, 64, 3)
+	id2, _ := createTestHost("Test_Region29", "Test_Region29,Zone5", "Test_Region29,Zone5,Rack2", "HostName2", "429.111.111.138", string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 16, 64, 3)
+	id3, _ := createTestHost("Test_Region29", "Test_Region29,Zone5", "Test_Region29,Zone5,Rack1", "HostName3", "429.111.111.139", string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 15, 64, 3)
 	ids = append(ids, id1...)
 	ids = append(ids, id2...)
 	ids = append(ids, id3...)

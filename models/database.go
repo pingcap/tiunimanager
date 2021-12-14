@@ -89,6 +89,10 @@ func (p *database) initTables() {
 	p.addTable(new(backuprestore.BackupStrategy))
 	p.addTable(new(config.SystemConfig))
 	p.addTable(new(secondparty.SecondPartyOperation))
+	p.addTable(new(parametergroup.Parameter))
+	p.addTable(new(parametergroup.ParameterGroup))
+	p.addTable(new(parametergroup.ParameterGroupMapping))
+	p.addTable(new(parameter.ClusterParameterMapping))
 
 	// other tables
 }

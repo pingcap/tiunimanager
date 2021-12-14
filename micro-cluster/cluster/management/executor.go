@@ -156,7 +156,17 @@ func clusterFail(node *workflowModel.WorkFlowNode, context *workflow.FlowContext
 	return nil
 }
 
-func clusterEnd(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+func emptyEnd(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	// do nothing
+	return nil
+}
+
+// maintenanceEnd
+// @Description: use for maintenance flow, clear maintenance status
+// @Parameter node
+// @Parameter context
+// @return error
+func maintenanceEnd(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	if err := clusterMeta.UpdateClusterMaintenanceStatus(context.Context, constants.ClusterMaintenanceNone); err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -200,6 +210,11 @@ func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 		return err
 	}
 	framework.LogWithContext(context.Context).Infof("get start cluster task id: %d", taskId)
+	return nil
+}
+
+// todo
+func syncTopology(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	return nil
 }
 

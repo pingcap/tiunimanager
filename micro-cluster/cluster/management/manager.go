@@ -38,7 +38,7 @@ var scaleOutDefine = workflow.WorkFlowDefine{
 		"resourceDone": {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
 		"configDone":   {"scaleOutCluster", "scaleOutDone", "fail", workflow.PollingNode, scaleOutCluster},
 		"scaleOutDone": {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
-		"onlineDone":   {"end", "", "", workflow.SyncFuncNode, clusterEnd},
+		"onlineDone":   {"end", "", "", workflow.SyncFuncNode, maintenanceEnd},
 		"fail":         {"fail", "", "", workflow.SyncFuncNode, clusterFail},
 	},
 }
@@ -48,7 +48,7 @@ var scaleInDefine = workflow.WorkFlowDefine{
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":            {"scaleInCluster", "scaleInDone", "fail", workflow.PollingNode, scaleInCluster},
 		"scaleInDone":      {"freeInstanceResource", "freeDone", "fail", workflow.SyncFuncNode, freeInstanceResource},
-		"freeDone": {"end", "", "", workflow.SyncFuncNode, clusterEnd},
+		"freeDone": {"end", "", "", workflow.SyncFuncNode, maintenanceEnd},
 		"fail":             {"fail", "", "", workflow.SyncFuncNode, clusterFail},
 	},
 }
@@ -164,7 +164,18 @@ func (manager *Manager) Clone(ctx context.Context, request *cluster.CloneCluster
 type Manager struct{}
 
 var createClusterFlow = &workflow.WorkFlowDefine{
-	// define
+	FlowName: constants.FlowCreateCluster,
+	TaskNodes: map[string]*workflow.NodeDefine{
+		"start":            {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
+		"resourceDone":     {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
+		"configDone":       {"deployCluster", "deployDone", "fail", workflow.PollingNode, deployCluster},
+		"deployDone":       {"startupCluster", "startupDone", "fail", workflow.PollingNode, startCluster},
+		"startupDone":      {"syncTopology", "syncTopologyDone", "fail", workflow.SyncFuncNode, syncTopology},
+		"syncTopologyDone": {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
+		"onlineDone":       {"end", "", "", workflow.SyncFuncNode, maintenanceEnd},
+		"fail":             {"fail", "", "", workflow.SyncFuncNode, maintenanceEnd},
+
+	},
 }
 
 // CreateCluster

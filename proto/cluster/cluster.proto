@@ -2,7 +2,6 @@ syntax = "proto3";
 
 import "common.proto";
 import "softwarespec.proto";
-import "database.proto";
 import "mng_auth.proto";
 import "mng_host.proto";
 import "mng_allocation.proto";
@@ -11,28 +10,28 @@ option go_package = "./clusterpb/;clusterpb";
 
 service ClusterService {
     // Cluster manager module
-    rpc CreateCluster(ClusterCreateReqDTO) returns (ClusterCreateRespDTO);
-    rpc QueryCluster(ClusterQueryReqDTO) returns (ClusterQueryRespDTO);
-    rpc DeleteCluster(ClusterDeleteReqDTO) returns (ClusterDeleteRespDTO);
-    rpc DetailCluster(ClusterDetailReqDTO) returns (ClusterDetailRespDTO);
-    rpc RestartCluster(ClusterRestartReqDTO) returns (ClusterRestartRespDTO);
-    rpc StopCluster(ClusterStopReqDTO) returns (ClusterStopRespDTO);
+    rpc CreateCluster(RpcRequest) returns (RpcResponse);
+    rpc QueryCluster(RpcRequest) returns (RpcResponse);
+    rpc DeleteCluster(RpcRequest) returns (RpcResponse);
+    rpc DetailCluster(RpcRequest) returns (RpcResponse);
+    rpc RestartCluster(RpcRequest) returns (RpcResponse);
+    rpc StopCluster(RpcRequest) returns (RpcResponse);
     rpc TakeoverClusters(ClusterTakeoverReqDTO) returns (ClusterTakeoverRespDTO);
+    rpc ScaleOutCluster(RpcRequest) returns (RpcResponse);
+    rpc ScaleInCluster(RpcRequest) returns (RpcResponse);
+    rpc CloneCluster(RpcRequest) returns (RpcResponse);
 
-    rpc ScaleOutCluster(ScaleOutRequest) returns (ScaleOutResponse);
-    rpc ScaleInCluster(ScaleInRequest) returns (ScaleInResponse);
+    rpc ImportData(RpcRequest) returns (RpcResponse);
+    rpc ExportData(RpcRequest) returns (RpcResponse);
+    rpc QueryDataTransport(RpcRequest) returns (RpcResponse);
+    rpc DeleteDataTransportRecord(RpcRequest) returns (RpcResponse);
 
-    rpc ImportData(DataImportRequest) returns (DataImportResponse);
-    rpc ExportData(DataExportRequest) returns (DataExportResponse);
-    rpc DescribeDataTransport(DataTransportQueryRequest) returns (DataTransportQueryResponse);
-    rpc DeleteDataTransportRecord(DataTransportDeleteRequest) returns (DataTransportDeleteResponse);
-
-    rpc QueryBackupRecord(QueryBackupRequest) returns (QueryBackupResponse);
-    rpc CreateBackup(CreateBackupRequest) returns (CreateBackupResponse);
+    rpc QueryBackupRecords(RpcRequest) returns (RpcResponse);
+    rpc CreateBackup(RpcRequest) returns (RpcResponse);
     rpc RecoverCluster(RecoverRequest) returns (RecoverResponse);
-    rpc DeleteBackupRecord(DeleteBackupRequest) returns (DeleteBackupResponse);
-    rpc SaveBackupStrategy(SaveBackupStrategyRequest) returns (SaveBackupStrategyResponse);
-    rpc GetBackupStrategy(GetBackupStrategyRequest) returns (GetBackupStrategyResponse);
+    rpc DeleteBackupRecords(RpcRequest) returns (RpcResponse);
+    rpc SaveBackupStrategy(RpcRequest) returns (RpcResponse);
+    rpc GetBackupStrategy(RpcRequest) returns (RpcResponse);
 
     rpc QueryParameters(QueryClusterParametersRequest) returns (QueryClusterParametersResponse);
     rpc SaveParameters(SaveClusterParametersRequest) returns (SaveClusterParametersResponse);
@@ -62,8 +61,8 @@ service ClusterService {
     rpc GetStocks(GetStocksRequest) returns (GetStocksResponse);
 
     // task manager
-    rpc ListFlows(ListFlowsRequest) returns (ListFlowsResponse);
-    rpc DetailFlow(DetailFlowRequest) returns (DetailFlowsResponse);
+    rpc ListFlows(RpcRequest) returns (RpcResponse);
+    rpc DetailFlow(RpcRequest) returns (RpcResponse);
 
     // Param Group & Cluster Params
     rpc CreateParamGroup(CreateParamGroupRequest) returns (CreateParamGroupResponse);
@@ -84,7 +83,6 @@ service ClusterService {
     rpc DeleteChangeFeedTask(RpcRequest) returns (RpcResponse);
     rpc UpdateChangeFeedTask(RpcRequest) returns (RpcResponse);
     rpc QueryChangeFeedTasks(RpcRequest) returns (RpcResponse);
-
 }
 
 message ClusterCreateReqDTO {
@@ -116,22 +114,6 @@ message ClusterTakeoverRespDTO {
     repeated ClusterDisplayDTO clusters = 2;
 }
 
-message ClusterQueryReqDTO {
-    OperatorDTO operator = 1;
-    PageDTO pageReq = 2;
-    string clusterId = 3;
-    string clusterName = 4;
-    string clusterType = 5;
-    string clusterStatus = 6;
-    string clusterTag = 7;
-}
-
-message ClusterQueryRespDTO {
-    ResponseStatusDTO respStatus = 1;
-    PageDTO page = 2;
-    repeated ClusterDisplayDTO clusters = 3;
-}
-
 message ClusterDeleteReqDTO {
     OperatorDTO operator = 1;
     string clusterId = 2;
@@ -141,18 +123,6 @@ message ClusterDeleteRespDTO {
     ResponseStatusDTO respStatus = 1;
     string clusterId = 2;
     DisplayStatusDTO clusterStatus = 3;
-}
-
-message ClusterDetailReqDTO {
-    OperatorDTO operator = 1;
-    string clusterId = 2;
-}
-
-message ClusterDetailRespDTO {
-    ResponseStatusDTO respStatus = 1;
-    ClusterDisplayDTO displayInfo = 2;
-    ClusterMaintenanceDTO maintenanceInfo = 3;
-    repeated ComponentInstanceDTO components = 4;
 }
 
 message ClusterRestartReqDTO {
@@ -166,28 +136,6 @@ message ClusterRestartRespDTO {
     DisplayStatusDTO clusterStatus = 3;
 }
 
-message ScaleOutRequest {
-    OperatorDTO operator = 1;
-    string clusterId = 2;
-    repeated ClusterNodeDemandDTO demands = 3;
-}
-
-message ScaleOutResponse {
-    ResponseStatusDTO respStatus = 1;
-    DisplayStatusDTO clusterStatus = 2;
-}
-
-message ScaleInRequest {
-    OperatorDTO operator = 1;
-    string clusterId = 2;
-    string nodeId = 3;
-}
-
-message ScaleInResponse {
-    ResponseStatusDTO respStatus = 1;
-    DisplayStatusDTO clusterStatus = 2;
-}
-
 message ClusterStopReqDTO {
     OperatorDTO operator = 1;
     string clusterId = 2;
@@ -197,15 +145,6 @@ message ClusterStopRespDTO {
     ResponseStatusDTO respStatus = 1;
     string clusterId = 2;
     DisplayStatusDTO clusterStatus = 3;
-}
-
-message ClusterMaintenanceDTO {
-    string maintainTaskCron = 1;
-}
-
-message ComponentInstanceDTO {
-    ComponentBaseInfoDTO baseInfo = 1;
-    repeated ComponentNodeDisplayInfoDTO nodes = 2;
 }
 
 message ComponentNodeDisplayInfoDTO {
@@ -285,7 +224,6 @@ message DistributionItemDTO {
     string specCode = 2;
     int32  count = 3;
 }
-
 message ClusterDisplayDTO {
     string clusterId = 1;
     ClusterBaseInfoDTO baseInfo = 2;

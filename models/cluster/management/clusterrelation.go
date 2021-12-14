@@ -13,35 +13,18 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package changefeed
+package management
 
-import "github.com/pingcap-inc/tiem/micro-api/controller"
+import (
+	"github.com/pingcap-inc/tiem/common/constants"
+	"gorm.io/gorm"
+)
 
-type CreateReq struct {
-	ChangeFeedTask
+// ClusterRelation Cluster relationship, the system will establish a master-slave relationship
+type ClusterRelation struct {
+	gorm.Model
+	RelationType     constants.ClusterRelationType `gorm:"not null;size:32"`
+	SubjectClusterID string                        `gorm:"not null;size:32"`
+	ObjectClusterID  string                        `gorm:"not null;size:32"`
 }
 
-type QueryReq struct {
-	ClusterId string `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
-	controller.Page
-}
-
-type DetailReq struct {
-	Id string `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22"`
-}
-
-type PauseReq struct {
-	Id string `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22"`
-}
-
-type ResumeReq struct {
-	Id string `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22"`
-}
-
-type UpdateReq struct {
-	ChangeFeedTask
-}
-
-type DeleteReq struct {
-	Id string `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22"`
-}

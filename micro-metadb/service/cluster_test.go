@@ -51,22 +51,22 @@ func Test_unix2NullTime(t *testing.T) {
 func TestDBServiceHandler_CreateClusterRelation(t *testing.T) {
 	data := []*models.ClusterRelation{
 		{
-			Record: models.Record{TenantId: "111"},
+			Record:           models.Record{TenantId: "111"},
 			SubjectClusterId: "1",
-			ObjectClusterId: "2",
-			RelationType: uint32(common.SlaveTo),
+			ObjectClusterId:  "2",
+			RelationType:     uint32(common.SlaveTo),
 		},
 		{
-			Record: models.Record{TenantId: ""},
+			Record:           models.Record{TenantId: ""},
 			SubjectClusterId: "",
-			ObjectClusterId: "",
-			RelationType: uint32(common.StandBy),
+			ObjectClusterId:  "",
+			RelationType:     uint32(common.StandBy),
 		},
 		{
-			Record: models.Record{TenantId: "111"},
+			Record:           models.Record{TenantId: "111"},
 			SubjectClusterId: "1",
-			ObjectClusterId: "6",
-			RelationType: uint32(common.CloneFrom),
+			ObjectClusterId:  "6",
+			RelationType:     uint32(common.CloneFrom),
 		},
 	}
 	dataDTOs := make([]*dbpb.DBClusterRelationDTO, len(data))
@@ -84,7 +84,7 @@ func TestDBServiceHandler_CreateClusterRelation(t *testing.T) {
 		}
 	})
 	t.Run("empty parameter", func(t *testing.T) {
-		err := handler.CreateClusterRelation(context.TODO(), req2,resp)
+		err := handler.CreateClusterRelation(context.TODO(), req2, resp)
 		if err == nil {
 			t.Errorf("CreateClusterRelation() error = %v", err)
 		}
@@ -99,10 +99,10 @@ func TestDBServiceHandler_SwapClusterRelation(t *testing.T) {
 		RelationType:     uint32(common.SlaveTo),
 	}
 	data2 := models.ClusterRelation{
-		Record: models.Record{TenantId: "111"},
+		Record:           models.Record{TenantId: "111"},
 		SubjectClusterId: "1",
-		ObjectClusterId: "6",
-		RelationType: uint32(common.CloneFrom),
+		ObjectClusterId:  "6",
+		RelationType:     uint32(common.CloneFrom),
 	}
 	clusterManager := handler.Dao().ClusterManager()
 	clusterManager.CreateClusterRelation(context.TODO(), data1)
@@ -138,21 +138,21 @@ func TestDBServiceHandler_SwapClusterRelation(t *testing.T) {
 func TestDBServiceHandler_ListClusterRelation(t *testing.T) {
 	data1 := models.ClusterRelation{
 		Record:           models.Record{TenantId: "111"},
-		SubjectClusterId: "1",
-		ObjectClusterId:  "2",
+		SubjectClusterId: "1212",
+		ObjectClusterId:  "2323",
 		RelationType:     uint32(common.SlaveTo),
 	}
 	data2 := models.ClusterRelation{
-		Record: models.Record{TenantId: "111"},
-		SubjectClusterId: "1",
-		ObjectClusterId: "6",
-		RelationType: uint32(common.CloneFrom),
+		Record:           models.Record{TenantId: "111"},
+		SubjectClusterId: "1212",
+		ObjectClusterId:  "6767",
+		RelationType:     uint32(common.CloneFrom),
 	}
 	clusterManager := handler.Dao().ClusterManager()
 	clusterManager.CreateClusterRelation(context.TODO(), data1)
 	clusterManager.CreateClusterRelation(context.TODO(), data2)
 	t.Run("normal", func(t *testing.T) {
-		req := &dbpb.DBListClusterRelationRequest{SubjectClusterId: "1"}
+		req := &dbpb.DBListClusterRelationRequest{SubjectClusterId: "1212"}
 		resp := &dbpb.DBListClusterRelationResponse{}
 		err := handler.ListClusterRelation(context.TODO(), req, resp)
 		if err != nil {
@@ -164,7 +164,7 @@ func TestDBServiceHandler_ListClusterRelation(t *testing.T) {
 	})
 
 	t.Run("no record", func(t *testing.T) {
-		req := &dbpb.DBListClusterRelationRequest{SubjectClusterId: "2"}
+		req := &dbpb.DBListClusterRelationRequest{SubjectClusterId: "2323"}
 		resp := &dbpb.DBListClusterRelationResponse{}
 		_ = handler.ListClusterRelation(context.TODO(), req, resp)
 

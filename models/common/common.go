@@ -17,85 +17,30 @@ package common
 
 import (
 	"context"
-	"errors"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"time"
 
-	"github.com/mozillazg/go-pinyin"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
 )
 
 type Entity struct {
-	ID        string    `gorm:"primaryKey;"`
+	ID        string    `gorm:"primarykey"`
 	CreatedAt time.Time `gorm:"<-:create"`
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 
-	Code     string `gorm:"uniqueIndex;default:null;not null;<-:create"`
 	TenantId string `gorm:"default:null;not null;<-:create"`
-	Status   int8   `gorm:"type:SMALLINT;default:0"`
+	Status   string `gorm:"not null;"`
 }
 
 func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
 	e.ID = uuidutil.GenerateID()
-	if e.Code == "" {
-		e.Code = e.ID
-	}
-	e.Status = 0
-
-	if len(e.Code) > 128 {
-		return errors.New("entity code is too long, code = " + e.Code)
-	}
-
 	return nil
 }
 
-type Record struct {
-	ID        uint      `gorm:"primaryKey"`
-	CreatedAt time.Time `gorm:"<-:create"`
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
-
-	TenantId string `gorm:"default:null;not null;<-:create"`
-}
-
-type Data struct {
-	ID        uint      `gorm:"primaryKey"`
-	CreatedAt time.Time `gorm:"<-:create"`
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
-
-	BizId  string `gorm:"default:null;<-:create"`
-	Status int8   `gorm:"type:SMALLINT;default:0"`
-}
-
 var split = []byte("_")
-
-func generateEntityCode(name string) string {
-	a := pinyin.NewArgs()
-
-	a.Fallback = func(r rune, a pinyin.Args) []string {
-		return []string{string(r)}
-	}
-
-	code := pinyin.Pinyin(name, a)
-
-	bytes := make([]byte, 0, len(name)*4)
-
-	// split code with "_" before and after chinese word
-	previousSplitFlag := false
-	for _, v := range code {
-		currentWord := v[0]
-
-		if previousSplitFlag || len(currentWord) > 1 {
-			bytes = append(bytes, split...)
-		}
-
-		bytes = append(bytes, []byte(currentWord)...)
-		previousSplitFlag = len(currentWord) > 1
-	}
-	return string(bytes)
-}
 
 type GormDB struct {
 	db *gorm.DB
@@ -107,4 +52,21 @@ func WrapDB(db *gorm.DB) GormDB {
 
 func (m *GormDB) DB(ctx context.Context) *gorm.DB {
 	return m.db.WithContext(ctx)
+}
+
+// WrapDBError
+// @Description:
+// @Parameter err
+// @return error is nil or TiEMError
+func WrapDBError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	switch err.(type) {
+	case framework.TiEMError:
+		return err
+	default:
+		return framework.NewTiEMErrorf(common.TIEM_UNRECOGNIZED_ERROR, err.Error())
+	}
 }

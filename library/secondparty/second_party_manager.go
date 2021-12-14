@@ -18,12 +18,13 @@ package secondparty
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	"github.com/pingcap-inc/tiem/library/client"
 	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/sirupsen/logrus"
-	"sync"
 )
 
 var SecondParty MicroSrv
@@ -33,7 +34,7 @@ var logger *logrus.Entry
 type MicroSrv interface {
 	MicroInit()
 	MicroSrvTiupDeploy(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
-	MicroSrvTiupScaleOut(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, configStrYaml string, timeoutS int, flags []string, bizID uint64)(taskID uint64, err error)
+	MicroSrvTiupScaleOut(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
 	MicroSrvTiupScaleIn(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, nodeId string, timeoutS int, flags []string, bizID uint64) (taskId uint64, err error)
 	MicroSrvTiupStart(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
 	MicroSrvTiupRestart(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
@@ -55,6 +56,8 @@ type MicroSrv interface {
 	MicroSrvShowRestoreInfo(ctx context.Context, cluster ClusterFacade) CmdShowRestoreInfoResp
 	MicroSrvGetTaskStatus(ctx context.Context, taskID uint64) (stat dbPb.TiupTaskStatus, errStr string, err error)
 	MicroSrvGetTaskStatusByBizID(ctx context.Context, bizID uint64) (stat dbPb.TiupTaskStatus, statErrStr string, err error)
+	ApiEditConfig(ctx context.Context, apiEditConfigReq ApiEditConfigReq) (bool, error)
+	EditClusterConfig(ctx context.Context, req ClusterEditConfigReq, bizID uint64) error
 }
 
 type SecondMicro struct {

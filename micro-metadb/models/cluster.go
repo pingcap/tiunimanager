@@ -293,11 +293,16 @@ func (m *DAOClusterManager) ListClusterDetails(ctx context.Context, clusterId, c
 		return nil, 0, errors.New(fmt.Sprintf("ListClusterDetails, query cluster lists failed, error: %v", err))
 	}
 
+	result = make([]*ClusterFetchResult, len(clusters))
+
+	if total == 0 {
+		return result, 0, nil
+	}
+
 	flowIds := make([]uint, len(clusters))
 	demandIds := make([]uint, len(clusters))
 	topologyConfigIds := make([]uint, len(clusters))
 
-	result = make([]*ClusterFetchResult, len(clusters))
 	clusterMap := make(map[string]*ClusterFetchResult)
 
 	for i, c := range clusters {
@@ -350,15 +355,20 @@ func (m *DAOClusterManager) ListClusters(ctx context.Context, clusterId, cluster
 	if clusterName != "" {
 		query = query.Where("name like '%" + clusterName + "%'")
 	}
+
 	if clusterType != "" {
 		query = query.Where("type = ?", clusterType)
 	}
+
 	if clusterStatus != "" {
 		query = query.Where("status = ?", clusterStatus)
 	}
+
 	if clusterTag != "" {
 		query = query.Where("tags like '%," + clusterTag + ",%'")
 	}
+
+	query = query.Where("deleted_at is NULL")
 	return clusters, total, query.Count(&total).Order("updated_at desc").Offset(offset).Limit(length).Find(&clusters).Error
 }
 
@@ -604,7 +614,7 @@ func (m *DAOClusterManager) QueryBackupStartegyByTime(ctx context.Context, weekd
 }
 
 func (m *DAOClusterManager) CreateClusterRelation(ctx context.Context, request ClusterRelation) (result *ClusterRelation, err error) {
-	if "" == request.TenantId || "" == request.SubjectClusterId || "" == request.ObjectClusterId || request.RelationType <= 0{
+	if "" == request.TenantId || "" == request.SubjectClusterId || "" == request.ObjectClusterId || request.RelationType <= 0 {
 		return nil, errors.New(fmt.Sprintf("CreateClusterRelation failed, has invalid parameter, tenantId: %s, subjectClusterId: %s, objectClusterId: %s, relationType: %d", request.TenantId, request.SubjectClusterId, request.ObjectClusterId, request.RelationType))
 	}
 	result = &ClusterRelation{

@@ -25,10 +25,16 @@ type ParamQueryReq struct {
 }
 
 type UpdateParamsReq struct {
-	Params []UpdateParam `json:"params"`
+	Params     []UpdateParam `json:"params"`
+	NeedReboot bool          `json:"needReboot" example:"false"`
 }
 
 type UpdateParam struct {
-	ParamId   int64          `json:"paramId" example:"1"`
-	RealValue ParamRealValue `json:"realValue"`
+	ParamId       int64          `json:"paramId" example:"1"`
+	Name          string         `json:"name" example:"binlog_cache"`
+	ComponentType string         `json:"componentType" example:"TiDB"`
+	HasReboot     int32          `json:"hasReboot" example:"0" enums:"0,1"`
+	Source        int32          `json:"source" example:"0" enums:"0,1,2,3"`
+	Type          int32          `json:"type" example:"0" enums:"0,1,2"`
+	RealValue     ParamRealValue `json:"realValue"`
 }

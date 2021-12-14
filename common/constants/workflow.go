@@ -33,30 +33,3 @@ const (
 	WorkFlowStatusError        = "Error"
 	WorkFlowStatusCanceled     = "Canceled"
 )
-
-type WorkFlowReturnType string
-
-//Definition workflow return type information
-const (
-	WorkFlowReturnTypeUserTask     WorkFlowReturnType = "UserTask"
-	WorkFlowReturnTypeSyncFuncTask WorkFlowReturnType = "SyncFuncTask"
-	WorkFlowReturnTypeCallbackTask WorkFlowReturnType = "CallbackTask"
-	WorkFlowReturnTypePollingTasK  WorkFlowReturnType = "PollingTasK"
-)
-
-// Definition workflow name
-const (
-	WorkFlowCreateCluster    = "CreateCluster"
-	WorkFlowDeleteCluster    = "DeleteCluster"
-	WorkFlowBackupCluster    = "BackupCluster"
-	WorkFlowRecoverCluster   = "RecoverCluster"
-	WorkFlowModifyParameters = "ModifyParameters"
-	WorkFlowExportData       = "ExportData"
-	WorkFlowImportData       = "ImportData"
-	WorkFlowRestartCluster   = "RestartCluster"
-	WorkFlowStopCluster      = "StopCluster"
-	WorkFlowTakeoverCluster  = "TakeoverCluster"
-	WorkFlowBuildLogConfig   = "BuildLogConfig"
-	WorkFlowScaleOutCluster  = "ScaleOutCluster"
-	WorkFlowScaleInCluster   = "ScaleInCluster"
-)

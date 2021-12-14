@@ -7,65 +7,6 @@ definitions:
       userName:
         type: string
     type: object
-  backuprestore.BackupDeleteReq:
-    properties:
-      clusterId:
-        type: string
-    type: object
-  backuprestore.BackupRecord:
-    properties:
-      backupMethod:
-        type: string
-      backupMode:
-        type: string
-      backupTso:
-        type: integer
-      backupType:
-        type: string
-      clusterId:
-        type: string
-      endTime:
-        type: string
-      filePath:
-        type: string
-      id:
-        type: integer
-      operator:
-        $ref: '#/definitions/controller.Operator'
-      size:
-        type: number
-      startTime:
-        type: string
-      status:
-        $ref: '#/definitions/controller.StatusInfo'
-    type: object
-  backuprestore.BackupReq:
-    properties:
-      backupMethod:
-        type: string
-      backupType:
-        type: string
-      clusterId:
-        type: string
-      filePath:
-        type: string
-    type: object
-  backuprestore.BackupStrategy:
-    properties:
-      backupDate:
-        type: string
-      clusterId:
-        type: string
-      nextBackupTime:
-        type: string
-      period:
-        type: string
-    type: object
-  backuprestore.BackupStrategyUpdateReq:
-    properties:
-      strategy:
-        $ref: '#/definitions/backuprestore.BackupStrategy'
-    type: object
   backuprestore.RestoreReq:
     properties:
       clusterName:
@@ -95,7 +36,63 @@ definitions:
       tls:
         type: boolean
     type: object
-  changefeed.ChangeFeedTask:
+  cluster.CloneClusterReq:
+    properties:
+      backupId:
+        type: string
+      cloneStrategy:
+        description: specify clone strategy, include empty, snapshot and sync, default
+          empty(option)
+        type: string
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      copies:
+        description: The number of copies of the newly created cluster data, consistent
+          with the number of copies set in PD
+        type: integer
+      cpuArchitecture:
+        description: X86/X86_64/ARM
+        type: string
+      dbPassword:
+        type: string
+      dbUser:
+        description: The username and password for the newly created database cluster,
+          default is the root user, which is not valid for Data Migration clusters
+        type: string
+      exclusive:
+        description: Whether the newly created cluster is exclusive to physical resources,
+          when exclusive, a host will only deploy instances of the same cluster, which
+          may result in poor resource utilization
+        type: boolean
+      paramGroupId:
+        description: specify cloned cluster parameter group id(option)
+        type: integer
+      region:
+        description: The Region where the cluster is located
+        type: string
+      sourceClusterId:
+        description: specify source cluster id(require)
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      tls:
+        type: boolean
+    type: object
+  cluster.CloneClusterResp:
+    properties:
+      clusterId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  cluster.CreateChangeFeedTaskReq:
     properties:
       clusterId:
         example: CLUSTER_ID_IN_TIEM__22
@@ -128,6 +125,91 @@ definitions:
         type: integer
       status:
         enum:
+        - Initial
+        - Normal
+        - Stopped
+        - Finished
+        - Error
+        - Failed
+        example: "1"
+        type: string
+      updateTime:
+        type: string
+    type: object
+  cluster.CreateChangeFeedTaskResp:
+    properties:
+      id:
+        example: TASK_ID_IN_TIEM____22
+        type: string
+    type: object
+  cluster.CreateClusterReq:
+    properties:
+      backupId:
+        type: string
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      copies:
+        description: The number of copies of the newly created cluster data, consistent
+          with the number of copies set in PD
+        type: integer
+      cpuArchitecture:
+        description: X86/X86_64/ARM
+        type: string
+      dbPassword:
+        type: string
+      dbUser:
+        description: The username and password for the newly created database cluster,
+          default is the root user, which is not valid for Data Migration clusters
+        type: string
+      exclusive:
+        description: Whether the newly created cluster is exclusive to physical resources,
+          when exclusive, a host will only deploy instances of the same cluster, which
+          may result in poor resource utilization
+        type: boolean
+      region:
+        description: The Region where the cluster is located
+        type: string
+      resourceParameters:
+        items:
+          $ref: '#/definitions/structs.ClusterResourceParameter'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      tls:
+        type: boolean
+    type: object
+  cluster.CreateClusterResp:
+    properties:
+      clusterId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  cluster.DeleteBackupDataReq:
+    properties:
+      backupId:
+        type: string
+      backupMode:
+        type: string
+      clusterId:
+        type: string
+    type: object
+  cluster.DeleteBackupDataResp:
+    type: object
+  cluster.DeleteChangeFeedTaskResp:
+    properties:
+      id:
+        example: TASK_ID_IN_TIEM____22
+        type: string
+      status:
+        enum:
         - 0
         - 1
         - 2
@@ -136,10 +218,25 @@ definitions:
         - 5
         example: 1
         type: integer
-      updateTime:
+    type: object
+  cluster.DeleteClusterReq:
+    properties:
+      autoBackup:
+        type: boolean
+      clearBackupData:
+        type: boolean
+      clusterID:
         type: string
     type: object
-  changefeed.ChangeFeedTaskDetail:
+  cluster.DeleteClusterResp:
+    properties:
+      clusterID:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  cluster.DetailChangeFeedTaskResp:
     properties:
       clusterId:
         example: CLUSTER_ID_IN_TIEM__22
@@ -178,14 +275,14 @@ definitions:
         type: integer
       status:
         enum:
-        - 0
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-        example: 1
-        type: integer
+        - Initial
+        - Normal
+        - Stopped
+        - Finished
+        - Error
+        - Failed
+        example: "1"
+        type: string
       unsteady:
         example: false
         type: boolean
@@ -195,106 +292,213 @@ definitions:
         example: 415241823337054209
         type: integer
     type: object
-  changefeed.KafkaDownstream:
+  cluster.GetBackupStrategyResp:
     properties:
-      clientId:
-        example: "213"
+      strategy:
+        $ref: '#/definitions/structs.BackupStrategy'
+    type: object
+  cluster.PauseChangeFeedTaskResp:
+    properties:
+      status:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        example: 1
+        type: integer
+    type: object
+  cluster.QueryBackupRecordsResp:
+    properties:
+      backupRecords:
+        items:
+          $ref: '#/definitions/structs.BackupRecord'
+        type: array
+    type: object
+  cluster.QueryChangeFeedTaskResp:
+    properties:
+      clusterId:
+        example: CLUSTER_ID_IN_TIEM__22
         type: string
-      dispatchers:
+      createTime:
+        type: string
+      downstream:
+        type: object
+      downstreamFetchTs:
+        example: 415241823337054209
+        type: integer
+      downstreamSyncTs:
+        example: 415241823337054209
+        type: integer
+      downstreamType:
+        enum:
+        - tidb
+        - kafka
+        - mysql
+        example: tidb
+        type: string
+      id:
+        example: CLUSTER_ID_IN_TIEM__22
+        type: string
+      name:
+        example: my_sync_name
+        type: string
+      rules:
+        example:
+        - '*.*'
         items:
           type: string
         type: array
-      ip:
-        example: 127.0.0.1
-        type: string
-      maxBatchSize:
-        example: 5
+      startTS:
+        example: 415241823337054209
         type: integer
-      maxMessageBytes:
-        example: 16
-        type: integer
-      partitions:
-        example: 1
-        type: integer
-      port:
-        example: 9001
-        type: integer
-      protocol:
+      status:
         enum:
-        - default
-        - canal
-        - avro
-        - maxwell
-        example: default
+        - Initial
+        - Normal
+        - Stopped
+        - Finished
+        - Error
+        - Failed
+        example: "1"
         type: string
-      replicationFactor:
+      unsteady:
+        example: false
+        type: boolean
+      updateTime:
+        type: string
+      upstreamUpdateTs:
+        example: 415241823337054209
+        type: integer
+    type: object
+  cluster.QueryClusterDetailResp:
+    properties:
+      info:
+        $ref: '#/definitions/structs.ClusterInfo'
+      topology:
+        items:
+          $ref: '#/definitions/structs.ClusterInstanceInfo'
+        type: array
+    type: object
+  cluster.ResumeChangeFeedTaskResp:
+    properties:
+      status:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
         example: 1
         type: integer
-      tls:
-        example: false
-        type: boolean
-      topicName:
-        example: my_topic
+    type: object
+  cluster.SaveBackupStrategyReq:
+    properties:
+      clusterId:
         type: string
-      version:
-        example: 2.4.0
+      strategy:
+        $ref: '#/definitions/structs.BackupStrategy'
+    type: object
+  cluster.SaveBackupStrategyResp:
+    type: object
+  cluster.ScaleInClusterReq:
+    properties:
+      clusterId:
+        type: string
+      instanceId:
         type: string
     type: object
-  changefeed.MysqlDownstream:
+  cluster.ScaleInClusterResp:
     properties:
-      concurrentThreads:
-        example: 7
-        type: integer
-      ip:
-        example: 127.0.0.1
+      clusterId:
         type: string
-      maxTxnRow:
-        example: 5
-        type: integer
-      password:
-        example: my_password
+      workFlowId:
+        description: Asynchronous task workflow ID
         type: string
-      port:
-        example: 8001
-        type: integer
-      tls:
-        example: false
-        type: boolean
-      username:
-        example: root
-        type: string
-      workerCount:
-        example: 2
-        type: integer
     type: object
-  changefeed.TiDBDownstream:
+  cluster.ScaleOutClusterReq:
     properties:
-      concurrentThreads:
-        example: 5
-        type: integer
-      ip:
-        example: 127.0.0.1
+      clusterId:
         type: string
-      maxTxnRow:
-        example: 4
-        type: integer
-      password:
-        example: my_password
+      compute:
+        items:
+          $ref: '#/definitions/structs.ClusterResourceParameterCompute'
+        type: array
+    type: object
+  cluster.ScaleOutClusterResp:
+    properties:
+      clusterId:
         type: string
-      port:
-        example: 4534
-        type: integer
-      targetClusterId:
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  cluster.StopClusterResp:
+    properties:
+      clusterId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  cluster.UpdateChangeFeedTaskReq:
+    properties:
+      clusterId:
         example: CLUSTER_ID_IN_TIEM__22
         type: string
-      tls:
-        example: false
-        type: boolean
-      username:
+      createTime:
+        type: string
+      downstream:
+        type: object
+      downstreamType:
+        enum:
+        - tidb
+        - kafka
+        - mysql
         example: tidb
         type: string
-      workerCount:
-        example: 2
+      id:
+        example: CLUSTER_ID_IN_TIEM__22
+        type: string
+      name:
+        example: my_sync_name
+        type: string
+      rules:
+        example:
+        - '*.*'
+        items:
+          type: string
+        type: array
+      startTS:
+        example: 415241823337054209
+        type: integer
+      status:
+        enum:
+        - Initial
+        - Normal
+        - Stopped
+        - Finished
+        - Error
+        - Failed
+        example: "1"
+        type: string
+      updateTime:
+        type: string
+    type: object
+  cluster.UpdateChangeFeedTaskResp:
+    properties:
+      status:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        example: 1
         type: integer
     type: object
   controller.CommonResult:
@@ -304,17 +508,6 @@ definitions:
       data:
         type: object
       message:
-        type: string
-    type: object
-  controller.Operator:
-    properties:
-      manualOperator:
-        type: boolean
-      operatorId:
-        type: string
-      operatorName:
-        type: string
-      tenantId:
         type: string
     type: object
   controller.Page:
@@ -360,93 +553,6 @@ definitions:
         type: number
       used:
         type: number
-    type: object
-  flowtask.FlowWorkDetailInfo:
-    properties:
-      clusterId:
-        type: string
-      clusterName:
-        type: string
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      flowWorkName:
-        type: string
-      id:
-        type: integer
-      inProcessFlowId:
-        type: integer
-      manualOperator:
-        type: boolean
-      operatorId:
-        type: string
-      operatorName:
-        type: string
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      taskName:
-        items:
-          type: string
-        type: array
-      tasks:
-        items:
-          $ref: '#/definitions/flowtask.FlowWorkTaskInfo'
-        type: array
-      tenantId:
-        type: string
-      updateTime:
-        type: string
-    type: object
-  flowtask.FlowWorkDisplayInfo:
-    properties:
-      clusterId:
-        type: string
-      clusterName:
-        type: string
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      flowWorkName:
-        type: string
-      id:
-        type: integer
-      inProcessFlowId:
-        type: integer
-      manualOperator:
-        type: boolean
-      operatorId:
-        type: string
-      operatorName:
-        type: string
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      tenantId:
-        type: string
-      updateTime:
-        type: string
-    type: object
-  flowtask.FlowWorkTaskInfo:
-    properties:
-      endTime:
-        type: string
-      id:
-        type: integer
-      result:
-        type: string
-      startTime:
-        type: string
-      taskName:
-        type: string
-      taskParameters:
-        type: string
-      taskStatus:
-        type: integer
     type: object
   hostresource.AllocHostsReq:
     properties:
@@ -630,105 +736,6 @@ definitions:
       userName:
         type: string
     type: object
-  importexport.DataExportReq:
-    properties:
-      accessKey:
-        type: string
-      bucketRegion:
-        type: string
-      bucketUrl:
-        type: string
-      clusterId:
-        type: string
-      comment:
-        type: string
-      endpointUrl:
-        type: string
-      fileType:
-        type: string
-      filter:
-        type: string
-      password:
-        type: string
-      secretAccessKey:
-        type: string
-      sql:
-        type: string
-      storageType:
-        type: string
-      userName:
-        type: string
-      zipName:
-        type: string
-    type: object
-  importexport.DataExportResp:
-    properties:
-      recordId:
-        type: integer
-    type: object
-  importexport.DataImportReq:
-    properties:
-      accessKey:
-        type: string
-      bucketUrl:
-        type: string
-      clusterId:
-        type: string
-      comment:
-        type: string
-      endpointUrl:
-        type: string
-      password:
-        type: string
-      recordId:
-        type: integer
-      secretAccessKey:
-        type: string
-      storageType:
-        type: string
-      userName:
-        type: string
-    type: object
-  importexport.DataImportResp:
-    properties:
-      recordId:
-        type: integer
-    type: object
-  importexport.DataTransportDeleteReq:
-    properties:
-      clusterId:
-        type: string
-    type: object
-  importexport.DataTransportInfo:
-    properties:
-      clusterId:
-        type: string
-      comment:
-        type: string
-      endTime:
-        type: string
-      filePath:
-        type: string
-      recordId:
-        type: integer
-      startTime:
-        type: string
-      status:
-        $ref: '#/definitions/controller.StatusInfo'
-      storageType:
-        type: string
-      transportType:
-        type: string
-      zipName:
-        type: string
-    type: object
-  importexport.DataTransportRecordQueryResp:
-    properties:
-      transportRecords:
-        items:
-          $ref: '#/definitions/importexport.DataTransportInfo'
-        type: array
-    type: object
   knowledge.ClusterComponent:
     properties:
       componentName:
@@ -776,6 +783,8 @@ definitions:
         items:
           type: string
         type: array
+      clusterPortConstraint:
+        $ref: '#/definitions/knowledge.ComponentPortConstraint'
       clusterVersion:
         $ref: '#/definitions/knowledge.ClusterVersion'
       componentSpecs:
@@ -922,141 +931,6 @@ definitions:
       totalNodeCount:
         type: integer
     type: object
-  management.ComponentInstance:
-    properties:
-      componentName:
-        type: string
-      componentType:
-        type: string
-      nodes:
-        items:
-          $ref: '#/definitions/management.ComponentNodeDisplayInfo'
-        type: array
-    type: object
-  management.ComponentNodeDisplayInfo:
-    properties:
-      cpuUsage:
-        $ref: '#/definitions/controller.Usage'
-      hostId:
-        type: string
-      ioUtil:
-        type: number
-      iops:
-        items:
-          type: number
-        type: array
-      memoryUsage:
-        $ref: '#/definitions/controller.Usage'
-      nodeId:
-        type: string
-      port:
-        type: integer
-      role:
-        $ref: '#/definitions/management.ComponentNodeRole'
-      spec:
-        $ref: '#/definitions/warehouse.SpecBaseInfo'
-      status:
-        type: string
-      storageUsage:
-        $ref: '#/definitions/controller.Usage'
-      version:
-        type: string
-      zone:
-        $ref: '#/definitions/warehouse.ZoneBaseInfo'
-    type: object
-  management.ComponentNodeRole:
-    properties:
-      roleCode:
-        type: string
-      roleName:
-        type: string
-    type: object
-  management.CreateClusterRsp:
-    properties:
-      clusterId:
-        type: string
-      clusterName:
-        type: string
-      clusterType:
-        type: string
-      clusterVersion:
-        type: string
-      createTime:
-        type: string
-      dbPassword:
-        type: string
-      deleteTime:
-        type: string
-      inProcessFlowId:
-        type: integer
-      recoverInfo:
-        $ref: '#/definitions/management.RecoverInfo'
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      tags:
-        items:
-          type: string
-        type: array
-      tls:
-        type: boolean
-      updateTime:
-        type: string
-    type: object
-  management.CreateReq:
-    properties:
-      clusterName:
-        type: string
-      clusterType:
-        type: string
-      clusterVersion:
-        type: string
-      cpuArchitecture:
-        type: string
-      dbPassword:
-        type: string
-      exclusive:
-        type: boolean
-      nodeDemandList:
-        items:
-          $ref: '#/definitions/management.ClusterNodeDemand'
-        type: array
-      recoverInfo:
-        $ref: '#/definitions/management.RecoverInfo'
-      region:
-        type: string
-      tags:
-        items:
-          type: string
-        type: array
-      tls:
-        type: boolean
-    type: object
-  management.DeleteClusterRsp:
-    properties:
-      clusterId:
-        type: string
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      inProcessFlowId:
-        type: integer
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      updateTime:
-        type: string
-    type: object
-  management.DeleteReq:
-    properties:
-      autoBackup:
-        type: boolean
-      clearBackupData:
-        type: boolean
-    type: object
   management.DescribeDashboardRsp:
     properties:
       clusterId:
@@ -1077,71 +951,6 @@ definitions:
       grafanaUrl:
         example: http://127.0.0.1:3000
         type: string
-    type: object
-  management.DetailClusterRsp:
-    properties:
-      backupFileUsage:
-        $ref: '#/definitions/controller.Usage'
-      clusterId:
-        type: string
-      clusterName:
-        type: string
-      clusterType:
-        type: string
-      clusterVersion:
-        type: string
-      components:
-        items:
-          $ref: '#/definitions/management.ComponentInstance'
-        type: array
-      cpuUsage:
-        $ref: '#/definitions/controller.Usage'
-      createTime:
-        type: string
-      dbPassword:
-        type: string
-      deleteTime:
-        type: string
-      diskUsage:
-        $ref: '#/definitions/controller.Usage'
-      extranetConnectAddresses:
-        items:
-          type: string
-        type: array
-      inProcessFlowId:
-        type: integer
-      intranetConnectAddresses:
-        items:
-          type: string
-        type: array
-      maintainTaskCron:
-        type: string
-      memoryUsage:
-        $ref: '#/definitions/controller.Usage'
-      portList:
-        items:
-          type: integer
-        type: array
-      recoverInfo:
-        $ref: '#/definitions/management.RecoverInfo'
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      storageUsage:
-        $ref: '#/definitions/controller.Usage'
-      tags:
-        items:
-          type: string
-        type: array
-      tls:
-        type: boolean
-      updateTime:
-        type: string
-      whitelist:
-        items:
-          type: string
-        type: array
     type: object
   management.DistributionItem:
     properties:
@@ -1209,50 +1018,6 @@ definitions:
       updateTime:
         type: string
     type: object
-  management.ScaleInClusterRsp:
-    properties:
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      inProcessFlowId:
-        type: integer
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      updateTime:
-        type: string
-    type: object
-  management.ScaleInReq:
-    properties:
-      componentType:
-        type: string
-      nodeId:
-        type: string
-    type: object
-  management.ScaleOutClusterRsp:
-    properties:
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      inProcessFlowId:
-        type: integer
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      updateTime:
-        type: string
-    type: object
-  management.ScaleOutReq:
-    properties:
-      nodeDemandList:
-        items:
-          $ref: '#/definitions/management.ClusterNodeDemand'
-        type: array
-    type: object
   management.ServiceCapabilityIndex:
     properties:
       description:
@@ -1281,23 +1046,6 @@ definitions:
       zoneCode:
         type: string
     type: object
-  management.StopClusterRsp:
-    properties:
-      clusterId:
-        type: string
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      inProcessFlowId:
-        type: integer
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      updateTime:
-        type: string
-    type: object
   management.TakeoverReq:
     properties:
       clusterNames:
@@ -1319,6 +1067,113 @@ definitions:
       tiupUserPassword:
         example: password
         type: string
+    type: object
+  message.DataExportReq:
+    properties:
+      accessKey:
+        type: string
+      bucketRegion:
+        type: string
+      bucketUrl:
+        type: string
+      clusterId:
+        type: string
+      comment:
+        type: string
+      endpointUrl:
+        type: string
+      fileType:
+        type: string
+      filter:
+        type: string
+      password:
+        type: string
+      secretAccessKey:
+        type: string
+      sql:
+        type: string
+      storageType:
+        type: string
+      userName:
+        type: string
+      zipName:
+        type: string
+    type: object
+  message.DataExportResp:
+    properties:
+      recordId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  message.DataImportReq:
+    properties:
+      accessKey:
+        type: string
+      bucketUrl:
+        type: string
+      clusterId:
+        type: string
+      comment:
+        type: string
+      endpointUrl:
+        type: string
+      password:
+        type: string
+      recordId:
+        type: string
+      secretAccessKey:
+        type: string
+      storageType:
+        type: string
+      userName:
+        type: string
+    type: object
+  message.DataImportResp:
+    properties:
+      recordId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  message.DeleteImportExportRecordReq:
+    properties:
+      recordId:
+        type: string
+    type: object
+  message.DeleteImportExportRecordResp:
+    properties:
+      recordId:
+        type: string
+    type: object
+  message.QueryDataImportExportRecordsResp:
+    properties:
+      transportRecords:
+        items:
+          $ref: '#/definitions/structs.DataImportExportRecordInfo'
+        type: array
+    type: object
+  message.QueryWorkFlowDetailResp:
+    properties:
+      info:
+        $ref: '#/definitions/structs.WorkFlowInfo'
+      nodeNames:
+        items:
+          type: string
+        type: array
+      nodes:
+        items:
+          $ref: '#/definitions/structs.WorkFlowNodeInfo'
+        type: array
+    type: object
+  message.QueryWorkFlowsResp:
+    properties:
+      workFlows:
+        items:
+          $ref: '#/definitions/structs.WorkFlowInfo'
+        type: array
     type: object
   parameter.InspectParamsResp:
     properties:
@@ -1355,6 +1210,9 @@ definitions:
         example: binlog cache size
         type: string
       hasReboot:
+        enum:
+        - 0
+        - 1
         example: 0
         type: integer
       name:
@@ -1373,6 +1231,10 @@ definitions:
       realValue:
         $ref: '#/definitions/parameter.ParamRealValue'
       type:
+        enum:
+        - 0
+        - 1
+        - 2
         example: 0
         type: integer
       unit:
@@ -1385,13 +1247,16 @@ definitions:
   parameter.ParamInstanceRealValue:
     properties:
       instance:
+        example: 172.16.10.2
         type: string
       value:
+        example: "2"
         type: string
     type: object
   parameter.ParamRealValue:
     properties:
       cluster:
+        example: "1"
         type: string
       instances:
         items:
@@ -1402,21 +1267,59 @@ definitions:
     properties:
       clusterId:
         type: string
-      status:
+      createTime:
         type: string
-      taskId:
+      deleteTime:
+        type: string
+      inProcessFlowId:
         type: integer
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      updateTime:
+        type: string
     type: object
   parameter.UpdateParam:
     properties:
+      componentType:
+        example: TiDB
+        type: string
+      hasReboot:
+        enum:
+        - 0
+        - 1
+        example: 0
+        type: integer
+      name:
+        example: binlog_cache
+        type: string
       paramId:
         example: 1
         type: integer
       realValue:
         $ref: '#/definitions/parameter.ParamRealValue'
+      source:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        example: 0
+        type: integer
+      type:
+        enum:
+        - 0
+        - 1
+        - 2
+        example: 0
+        type: integer
     type: object
   parameter.UpdateParamsReq:
     properties:
+      needReboot:
+        example: false
+        type: boolean
       params:
         items:
           $ref: '#/definitions/parameter.UpdateParam'
@@ -1427,15 +1330,30 @@ definitions:
       clusterId:
         example: "123"
         type: string
+      needReboot:
+        example: false
+        type: boolean
     type: object
   paramgroup.ApplyParamGroupResp:
     properties:
       clusterId:
         example: "123"
         type: string
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      inProcessFlowId:
+        type: integer
       paramGroupId:
         example: 1
         type: integer
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      updateTime:
+        type: string
     type: object
   paramgroup.CommonParamGroupResp:
     properties:
@@ -1467,12 +1385,21 @@ definitions:
   paramgroup.CreateParamGroupReq:
     properties:
       dbType:
+        enum:
+        - 1
+        - 2
         example: 1
         type: integer
       groupType:
+        enum:
+        - 1
+        - 2
         example: 1
         type: integer
       hasDefault:
+        enum:
+        - 1
+        - 2
         example: 1
         type: integer
       name:
@@ -1489,7 +1416,7 @@ definitions:
         example: 8C16G
         type: string
       version:
-        example: v5.0
+        example: "5.0"
         type: string
     type: object
   paramgroup.ParamDetail:
@@ -1507,6 +1434,9 @@ definitions:
         example: binlog cache size
         type: string
       hasReboot:
+        enum:
+        - 0
+        - 1
         example: 0
         type: integer
       name:
@@ -1525,7 +1455,19 @@ definitions:
         items:
           type: string
         type: array
+      source:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        example: 0
+        type: integer
       type:
+        enum:
+        - 0
+        - 1
+        - 2
         example: 0
         type: integer
       unit:
@@ -1541,12 +1483,21 @@ definitions:
         example: 1636698675
         type: integer
       dbType:
-        example: 0
+        enum:
+        - 1
+        - 2
+        example: 1
         type: integer
       groupType:
+        enum:
+        - 1
+        - 2
         example: 0
         type: integer
       hasDefault:
+        enum:
+        - 1
+        - 2
         example: 1
         type: integer
       name:
@@ -1569,7 +1520,7 @@ definitions:
         example: 1636698675
         type: integer
       version:
-        example: v5.0
+        example: "5.0"
         type: string
     type: object
   paramgroup.UpdateParamGroupReq:
@@ -1589,6 +1540,282 @@ definitions:
         type: string
       version:
         example: v5.0
+        type: string
+    type: object
+  structs.BackupRecord:
+    properties:
+      backupMethod:
+        type: string
+      backupMode:
+        type: string
+      backupTso:
+        type: integer
+      backupType:
+        type: string
+      clusterId:
+        type: string
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      endTime:
+        type: string
+      filePath:
+        type: string
+      id:
+        type: string
+      size:
+        type: number
+      startTime:
+        type: string
+      status:
+        type: string
+      updateTime:
+        type: string
+    type: object
+  structs.BackupStrategy:
+    properties:
+      backupDate:
+        type: string
+      clusterId:
+        type: string
+      period:
+        type: string
+    type: object
+  structs.ClusterInfo:
+    properties:
+      alertUrl:
+        example: http://127.0.0.1:9093
+        type: string
+      backupFileUsage:
+        $ref: '#/definitions/structs.Usage'
+      clusterId:
+        type: string
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      copies:
+        description: The number of copies of the newly created cluster data, consistent
+          with the number of copies set in PD
+        type: integer
+      cpuArchitecture:
+        description: X86/X86_64/ARM
+        type: string
+      cpuUsage:
+        $ref: '#/definitions/structs.Usage'
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      exclusive:
+        description: Whether the newly created cluster is exclusive to physical resources,
+          when exclusive, a host will only deploy instances of the same cluster, which
+          may result in poor resource utilization
+        type: boolean
+      extranetConnectAddresses:
+        items:
+          type: string
+        type: array
+      grafanaUrl:
+        example: http://127.0.0.1:3000
+        type: string
+      intranetConnectAddresses:
+        items:
+          type: string
+        type: array
+      maintainStatus:
+        type: string
+      maintainWindow:
+        type: string
+      memoryUsage:
+        $ref: '#/definitions/structs.Usage'
+      portList:
+        items:
+          type: integer
+        type: array
+      role:
+        type: string
+      status:
+        type: string
+      storageUsage:
+        $ref: '#/definitions/structs.Usage'
+      tags:
+        items:
+          type: string
+        type: array
+      tls:
+        type: boolean
+      updateTime:
+        type: string
+      userId:
+        type: string
+      whitelist:
+        items:
+          type: string
+        type: array
+    type: object
+  structs.ClusterInstanceInfo:
+    properties:
+      addresses:
+        items:
+          type: string
+        type: array
+      cpuUsage:
+        $ref: '#/definitions/structs.Usage'
+      hostID:
+        type: string
+      id:
+        type: string
+      ioUtil:
+        type: number
+      iops:
+        items:
+          type: number
+        type: array
+      memoryUsage:
+        $ref: '#/definitions/structs.Usage'
+      ports:
+        items:
+          type: string
+        type: array
+      role:
+        type: string
+      spec:
+        $ref: '#/definitions/structs.ProductSpecInfo'
+        description: ??
+      status:
+        type: string
+      storageUsage:
+        $ref: '#/definitions/structs.Usage'
+      type:
+        type: string
+      version:
+        type: string
+      zone:
+        $ref: '#/definitions/structs.ZoneInfo'
+        description: ??
+    type: object
+  structs.ClusterResourceParameter:
+    properties:
+      compute:
+        items:
+          $ref: '#/definitions/structs.ClusterResourceParameterCompute'
+        type: array
+    type: object
+  structs.ClusterResourceParameterCompute:
+    properties:
+      componentType:
+        description: TiDB/TiKV/PD/TiFlash/TiCDC/DM-Master/DM-Worker
+        type: string
+      resource:
+        items:
+          $ref: '#/definitions/structs.ClusterResourceParameterComputeResource'
+        type: array
+      totalNodeCount:
+        type: integer
+    type: object
+  structs.ClusterResourceParameterComputeResource:
+    properties:
+      count:
+        type: integer
+      diskCapacity:
+        type: integer
+      diskType:
+        description: NVMeSSD/SSD/SATA
+        type: string
+      specCode:
+        description: 4C8G/8C16G ?
+        type: string
+      zoneCode:
+        type: string
+    type: object
+  structs.DataImportExportRecordInfo:
+    properties:
+      clusterId:
+        type: string
+      comment:
+        type: string
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      endTime:
+        type: string
+      filePath:
+        type: string
+      recordId:
+        type: string
+      startTime:
+        type: string
+      status:
+        type: string
+      storageType:
+        type: string
+      transportType:
+        type: string
+      updateTime:
+        type: string
+      zipName:
+        type: string
+    type: object
+  structs.ProductSpecInfo:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  structs.Usage:
+    properties:
+      total:
+        type: number
+      usageRate:
+        type: number
+      used:
+        type: number
+    type: object
+  structs.WorkFlowInfo:
+    properties:
+      BizId:
+        type: string
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      flowWorkName:
+        type: string
+      id:
+        type: string
+      status:
+        type: string
+      updateTime:
+        type: string
+    type: object
+  structs.WorkFlowNodeInfo:
+    properties:
+      endTime:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      parameters:
+        type: string
+      result:
+        type: string
+      startTime:
+        type: string
+      status:
+        type: string
+    type: object
+  structs.ZoneInfo:
+    properties:
+      id:
+        type: string
+      name:
         type: string
     type: object
   warehouse.DomainResource:
@@ -1619,13 +1846,6 @@ definitions:
           $ref: '#/definitions/warehouse.Node'
         type: array
     type: object
-  warehouse.SpecBaseInfo:
-    properties:
-      specCode:
-        type: string
-      specName:
-        type: string
-    type: object
   warehouse.Stocks:
     properties:
       freeCpuCores:
@@ -1638,13 +1858,6 @@ definitions:
         type: integer
       freeMemory:
         type: integer
-    type: object
-  warehouse.ZoneBaseInfo:
-    properties:
-      zoneCode:
-        type: string
-      zoneName:
-        type: string
     type: object
 host: localhost:4116
 info:
@@ -1665,20 +1878,25 @@ paths:
       description: query backup records of a cluster
       parameters:
       - in: query
+        name: backupId
+        type: string
+      - in: query
         name: clusterId
         type: string
       - in: query
         name: endTime
-        type: integer
-      - in: query
+        type: string
+      - description: Current page location
+        in: query
         name: page
         type: integer
-      - in: query
+      - description: Number of this request
+        in: query
         name: pageSize
         type: integer
       - in: query
         name: startTime
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -1689,9 +1907,7 @@ paths:
             - $ref: '#/definitions/controller.ResultWithPage'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/backuprestore.BackupRecord'
-                  type: array
+                  $ref: '#/definitions/cluster.QueryBackupRecordsResp'
               type: object
         "401":
           description: Unauthorized
@@ -1710,46 +1926,7 @@ paths:
       summary: query backup records of a cluster
       tags:
       - cluster backup
-    post:
-      consumes:
-      - application/json
-      description: backup
-      parameters:
-      - description: backup request
-        in: body
-        name: backupReq
-        required: true
-        schema:
-          $ref: '#/definitions/backuprestore.BackupReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/backuprestore.BackupRecord'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: backup
-      tags:
-      - cluster backup
+    post: {}
   /backups/{backupId}:
     delete:
       consumes:
@@ -1766,7 +1943,7 @@ paths:
         name: backupDeleteReq
         required: true
         schema:
-          $ref: '#/definitions/backuprestore.BackupDeleteReq'
+          $ref: '#/definitions/cluster.DeleteBackupDataReq'
       produces:
       - application/json
       responses:
@@ -1777,7 +1954,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  type: integer
+                  $ref: '#/definitions/cluster.DeleteBackupDataResp'
               type: object
         "401":
           description: Unauthorized
@@ -1826,7 +2003,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/changefeed.ChangeFeedTaskDetail'
+                    $ref: '#/definitions/cluster.QueryChangeFeedTaskResp'
                   type: array
               type: object
         "401":
@@ -1856,7 +2033,7 @@ paths:
         name: changeFeedTask
         required: true
         schema:
-          $ref: '#/definitions/changefeed.ChangeFeedTask'
+          $ref: '#/definitions/cluster.CreateChangeFeedTaskReq'
       produces:
       - application/json
       responses:
@@ -1867,12 +2044,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  allOf:
-                  - $ref: '#/definitions/changefeed.ChangeFeedTask'
-                  - properties:
-                      downstream:
-                        $ref: '#/definitions/changefeed.MysqlDownstream'
-                    type: object
+                  $ref: '#/definitions/cluster.CreateChangeFeedTaskResp'
               type: object
         "401":
           description: Unauthorized
@@ -1912,7 +2084,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/changefeed.ChangeFeedTaskDetail'
+                  $ref: '#/definitions/cluster.DeleteChangeFeedTaskResp'
               type: object
         "401":
           description: Unauthorized
@@ -1952,7 +2124,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/changefeed.ChangeFeedTaskDetail'
+                  $ref: '#/definitions/cluster.DetailChangeFeedTaskResp'
               type: object
         "401":
           description: Unauthorized
@@ -1992,7 +2164,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/changefeed.ChangeFeedTaskDetail'
+                  $ref: '#/definitions/cluster.PauseChangeFeedTaskResp'
               type: object
         "401":
           description: Unauthorized
@@ -2032,12 +2204,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  allOf:
-                  - $ref: '#/definitions/changefeed.ChangeFeedTaskDetail'
-                  - properties:
-                      downstream:
-                        $ref: '#/definitions/changefeed.TiDBDownstream'
-                    type: object
+                  $ref: '#/definitions/cluster.ResumeChangeFeedTaskResp'
               type: object
         "401":
           description: Unauthorized
@@ -2072,7 +2239,7 @@ paths:
         name: task
         required: true
         schema:
-          $ref: '#/definitions/changefeed.ChangeFeedTask'
+          $ref: '#/definitions/cluster.UpdateChangeFeedTaskReq'
       produces:
       - application/json
       responses:
@@ -2083,12 +2250,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  allOf:
-                  - $ref: '#/definitions/changefeed.ChangeFeedTaskDetail'
-                  - properties:
-                      downstream:
-                        $ref: '#/definitions/changefeed.KafkaDownstream'
-                    type: object
+                  $ref: '#/definitions/cluster.UpdateChangeFeedTaskResp'
               type: object
         "401":
           description: Unauthorized
@@ -2175,7 +2337,7 @@ paths:
         name: createReq
         required: true
         schema:
-          $ref: '#/definitions/management.CreateReq'
+          $ref: '#/definitions/cluster.CreateClusterReq'
       produces:
       - application/json
       responses:
@@ -2186,7 +2348,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.CreateClusterRsp'
+                  $ref: '#/definitions/cluster.CreateClusterResp'
               type: object
         "401":
           description: Unauthorized
@@ -2220,7 +2382,7 @@ paths:
         in: body
         name: deleteReq
         schema:
-          $ref: '#/definitions/management.DeleteReq'
+          $ref: '#/definitions/cluster.DeleteClusterReq'
       produces:
       - application/json
       responses:
@@ -2231,7 +2393,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.DeleteClusterRsp'
+                  $ref: '#/definitions/cluster.DeleteClusterResp'
               type: object
         "401":
           description: Unauthorized
@@ -2270,7 +2432,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.DetailClusterRsp'
+                  $ref: '#/definitions/cluster.QueryClusterDetailResp'
               type: object
         "401":
           description: Unauthorized
@@ -2558,7 +2720,7 @@ paths:
         name: scaleInReq
         required: true
         schema:
-          $ref: '#/definitions/management.ScaleInReq'
+          $ref: '#/definitions/cluster.ScaleInClusterReq'
       produces:
       - application/json
       responses:
@@ -2569,7 +2731,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.ScaleInClusterRsp'
+                  $ref: '#/definitions/cluster.ScaleInClusterResp'
               type: object
         "401":
           description: Unauthorized
@@ -2604,7 +2766,7 @@ paths:
         name: scaleOutReq
         required: true
         schema:
-          $ref: '#/definitions/management.ScaleOutReq'
+          $ref: '#/definitions/cluster.ScaleOutClusterReq'
       produces:
       - application/json
       responses:
@@ -2615,7 +2777,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.ScaleOutClusterRsp'
+                  $ref: '#/definitions/cluster.ScaleOutClusterResp'
               type: object
         "401":
           description: Unauthorized
@@ -2655,7 +2817,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.StopClusterRsp'
+                  $ref: '#/definitions/cluster.StopClusterResp'
               type: object
         "401":
           description: Unauthorized
@@ -2685,12 +2847,12 @@ paths:
         name: clusterId
         required: true
         type: string
-      - description: 备份策略信息
+      - description: backup strategy request
         in: body
         name: updateReq
         required: true
         schema:
-          $ref: '#/definitions/backuprestore.BackupStrategyUpdateReq'
+          $ref: '#/definitions/cluster.SaveBackupStrategyReq'
       produces:
       - application/json
       responses:
@@ -2701,7 +2863,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/backuprestore.BackupStrategy'
+                  $ref: '#/definitions/cluster.SaveBackupStrategyResp'
               type: object
         "401":
           description: Unauthorized
@@ -2741,7 +2903,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/backuprestore.BackupStrategy'
+                  $ref: '#/definitions/cluster.GetBackupStrategyResp'
               type: object
         "401":
           description: Unauthorized
@@ -2760,6 +2922,47 @@ paths:
       summary: show the backup strategy of a cluster
       tags:
       - cluster backup
+  /clusters/clone:
+    post:
+      consumes:
+      - application/json
+      description: clone a cluster
+      parameters:
+      - description: clone cluster request
+        in: body
+        name: cloneClusterReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.CloneClusterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.CloneClusterResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: clone a cluster
+      tags:
+      - cluster
   /clusters/export:
     post:
       consumes:
@@ -2771,7 +2974,7 @@ paths:
         name: dataExport
         required: true
         schema:
-          $ref: '#/definitions/importexport.DataExportReq'
+          $ref: '#/definitions/message.DataExportReq'
       produces:
       - application/json
       responses:
@@ -2782,7 +2985,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/importexport.DataExportResp'
+                  $ref: '#/definitions/message.DataExportResp'
               type: object
         "401":
           description: Unauthorized
@@ -2812,7 +3015,7 @@ paths:
         name: dataImport
         required: true
         schema:
-          $ref: '#/definitions/importexport.DataImportReq'
+          $ref: '#/definitions/message.DataImportReq'
       produces:
       - application/json
       responses:
@@ -2823,7 +3026,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/importexport.DataImportResp'
+                  $ref: '#/definitions/message.DataImportResp'
               type: object
         "401":
           description: Unauthorized
@@ -2853,7 +3056,7 @@ paths:
         name: createReq
         required: true
         schema:
-          $ref: '#/definitions/management.CreateReq'
+          $ref: '#/definitions/cluster.CreateClusterReq'
       produces:
       - application/json
       responses:
@@ -2979,10 +3182,12 @@ paths:
       - in: query
         name: endTime
         type: integer
-      - in: query
+      - description: Current page location
+        in: query
         name: page
         type: integer
-      - in: query
+      - description: Number of this request
+        in: query
         name: pageSize
         type: integer
       - in: query
@@ -2990,7 +3195,7 @@ paths:
         type: boolean
       - in: query
         name: recordId
-        type: integer
+        type: string
       - in: query
         name: startTime
         type: integer
@@ -3004,7 +3209,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/importexport.DataTransportRecordQueryResp'
+                  $ref: '#/definitions/message.QueryDataImportExportRecordsResp'
               type: object
         "401":
           description: Unauthorized
@@ -3039,7 +3244,7 @@ paths:
         name: DataTransportDeleteReq
         required: true
         schema:
-          $ref: '#/definitions/importexport.DataTransportDeleteReq'
+          $ref: '#/definitions/message.DeleteImportExportRecordReq'
       produces:
       - application/json
       responses:
@@ -3050,7 +3255,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  type: integer
+                  $ref: '#/definitions/message.DeleteImportExportRecordResp'
               type: object
         "401":
           description: Unauthorized
@@ -3069,98 +3274,6 @@ paths:
       summary: delete data transport record
       tags:
       - cluster data transport
-  /flowworks/:
-    get:
-      consumes:
-      - application/json
-      description: query flow works
-      parameters:
-      - in: query
-        name: clusterId
-        type: string
-      - in: query
-        name: keyword
-        type: string
-      - in: query
-        name: page
-        type: integer
-      - in: query
-        name: pageSize
-        type: integer
-      - in: query
-        name: status
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.ResultWithPage'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/flowtask.FlowWorkDisplayInfo'
-                  type: array
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: query flow works
-      tags:
-      - task
-  /flowworks/{flowWorkId}:
-    get:
-      consumes:
-      - application/json
-      description: show details of a flow work
-      parameters:
-      - description: flow work id
-        in: path
-        name: flowWorkId
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/flowtask.FlowWorkDetailInfo'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: show details of a flow work
-      tags:
-      - task
   /knowledges/:
     get:
       consumes:
@@ -3271,11 +3384,19 @@ paths:
       - application/json
       description: query param group
       parameters:
-      - example: 0
+      - enum:
+        - 0
+        - 1
+        - 2
+        example: 0
         in: query
         name: dbType
         type: integer
-      - example: 0
+      - enum:
+        - 0
+        - 1
+        - 2
+        example: 0
         in: query
         name: hasDefault
         type: integer
@@ -3297,7 +3418,7 @@ paths:
         in: query
         name: spec
         type: string
-      - example: v5.0
+      - example: "5.0"
         in: query
         name: version
         type: string
@@ -4066,6 +4187,98 @@ paths:
       summary: user profile
       tags:
       - platform
+  /workflow/:
+    get:
+      consumes:
+      - application/json
+      description: query flow works
+      parameters:
+      - in: query
+        name: bizId
+        type: string
+      - in: query
+        name: flowName
+        type: string
+      - description: Current page location
+        in: query
+        name: page
+        type: integer
+      - description: Number of this request
+        in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryWorkFlowsResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query flow works
+      tags:
+      - task
+  /workflow/{workFlowId}:
+    get:
+      consumes:
+      - application/json
+      description: show details of a flow work
+      parameters:
+      - description: flow work id
+        in: path
+        name: workFlowId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryWorkFlowDetailResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: show details of a flow work
+      tags:
+      - task
 securityDefinitions:
   ApiKeyAuth:
     in: header

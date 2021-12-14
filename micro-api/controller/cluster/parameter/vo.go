@@ -21,13 +21,13 @@ import (
 )
 
 type ParamRealValue struct {
-	Cluster   string                    `json:"cluster"`
+	Cluster   string                    `json:"cluster" example:"1"`
 	Instances []*ParamInstanceRealValue `json:"instances"`
 }
 
 type ParamInstanceRealValue struct {
-	Instance string `json:"instance"`
-	Value    string `json:"value"`
+	Instance string `json:"instance" example:"172.16.10.2"`
+	Value    string `json:"value" example:"2"`
 }
 
 type ParamItem struct {

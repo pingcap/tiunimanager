@@ -15,3 +15,32 @@
 
 package models
 
+import (
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/stretchr/testify/assert"
+	"os"
+	"testing"
+)
+
+func TestGetReaderWriter(t *testing.T) {
+	assert.NotEmpty(t, GetBRReaderWriter())
+	assert.NotEmpty(t, GetChangeFeedReaderWriter())
+	assert.NotEmpty(t, GetWorkFlowReaderWriter())
+	assert.NotEmpty(t, GetImportExportReaderWriter())
+}
+
+func TestMain(m *testing.M) {
+	var testFilePath string
+	framework.InitBaseFrameworkForUt(framework.ClusterService,
+		func(d *framework.BaseFramework) error {
+			testFilePath = d.GetDataDir()
+			os.MkdirAll(testFilePath, 0755)
+
+			return Open(d, false)
+		},
+	)
+	code := m.Run()
+	os.RemoveAll(testFilePath)
+
+	os.Exit(code)
+}

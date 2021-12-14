@@ -137,7 +137,7 @@ func (c ClusterRepoAdapter) Persist(ctx context.Context, aggregation *domain.Clu
 func (c ClusterRepoAdapter) PersistStatus(ctx context.Context, aggregation *domain.ClusterAggregation) error {
 	if aggregation.StatusModified || aggregation.FlowModified {
 		if aggregation.Cluster.Status == domain.ClusterStatusDeleted {
-			_, err := client.DBClient.DeleteCluster(ctx,  &dbpb.DBDeleteClusterRequest{
+			_, err := client.DBClient.DeleteCluster(ctx, &dbpb.DBDeleteClusterRequest{
 				ClusterId: aggregation.Cluster.Id,
 			})
 			return err
@@ -203,8 +203,8 @@ func persisClusterTopologyConfig(ctx context.Context, aggregation *domain.Cluste
 // @Parameter aggregation
 // @return error
 func persistClusterComponents(ctx context.Context, aggregation *domain.ClusterAggregation) error {
-	if len(aggregation.AddedClusterComponents) > 0  {
-		toCreate := make([]*domain.ComponentInstance, 0 )
+	if len(aggregation.AddedClusterComponents) > 0 {
+		toCreate := make([]*domain.ComponentInstance, 0)
 
 		for _, g := range aggregation.AddedClusterComponents {
 			for _, c := range g.Nodes {
@@ -215,8 +215,8 @@ func persistClusterComponents(ctx context.Context, aggregation *domain.ClusterAg
 		}
 		if len(toCreate) >= 0 {
 			request := &dbpb.DBCreateInstanceRequest{
-				ClusterId: aggregation.Cluster.Id,
-				TenantId: aggregation.Cluster.TenantId,
+				ClusterId:          aggregation.Cluster.Id,
+				TenantId:           aggregation.Cluster.TenantId,
 				ComponentInstances: batchConvertComponentToDTOs(toCreate),
 			}
 
@@ -231,7 +231,7 @@ func persistClusterComponents(ctx context.Context, aggregation *domain.ClusterAg
 	// Delete instance which status is ClusterStatusDeleted
 	for _, instance := range aggregation.CurrentComponentInstances {
 		if instance.Status == domain.ClusterStatusDeleted {
-			request := &dbpb.DBDeleteInstanceRequest {
+			request := &dbpb.DBDeleteInstanceRequest{
 				Id: instance.ID,
 			}
 			_, err := client.DBClient.DeleteInstance(ctx, request)
@@ -265,8 +265,8 @@ func persistClusterBaseInfo(ctx context.Context, aggregation *domain.ClusterAggr
 
 	if aggregation.DemandsModified {
 		var demands string
-		if len(aggregation.AddedComponentDemand) > 0 {
-			bytes, err := json.Marshal(aggregation.AddedComponentDemand)
+		if len(aggregation.CurrentComponentDemand) > 0 {
+			bytes, err := json.Marshal(aggregation.CurrentComponentDemand)
 			if err != nil {
 				return err
 			}
@@ -274,8 +274,8 @@ func persistClusterBaseInfo(ctx context.Context, aggregation *domain.ClusterAggr
 		}
 		resp, err := client.DBClient.UpdateClusterDemand(ctx, &dbpb.DBUpdateDemandRequest{
 			ClusterId: cluster.Id,
-			Demands: demands,
-			TenantId: cluster.TenantId,
+			Demands:   demands,
+			TenantId:  cluster.TenantId,
 		})
 		if err != nil {
 			return err
@@ -497,8 +497,8 @@ func (t TaskRepoAdapter) Load(ctx context.Context, id uint) (flowWork *domain.Fl
 
 		return &domain.FlowWorkAggregation{
 			FlowWork: flowEntity,
-			Tasks: ParseTaskDTOInBatch(resp.FlowWithTasks.Tasks),
-			Define: domain.FlowWorkDefineMap[flowEntity.FlowName],
+			Tasks:    ParseTaskDTOInBatch(resp.FlowWithTasks.Tasks),
+			Define:   domain.FlowWorkDefineMap[flowEntity.FlowName],
 		}, nil
 	}
 }
@@ -595,22 +595,22 @@ func parseInstancesFromDTO(dto []*dbpb.DBComponentInstanceDTO) []*domain.Compone
 	componentInstances := make([]*domain.ComponentInstance, 0, len(dto))
 	for _, item := range dto {
 		instance := &domain.ComponentInstance{
-			ID: item.Id,
-			Code: item.Code,
-			TenantId: item.TenantId,
-			Status: domain.ClusterStatus(item.Status),
-			ClusterId: item.ClusterId,
-			ComponentType: &knowledge.ClusterComponent{ComponentType: item.ComponentType},
-			Role: item.Role,
-			Version: &knowledge.ClusterVersion{Code: item.Version},
-			HostId: item.HostId,
-			Host: item.Host,
-			DiskId: item.DiskId,
+			ID:             item.Id,
+			Code:           item.Code,
+			TenantId:       item.TenantId,
+			Status:         domain.ClusterStatus(item.Status),
+			ClusterId:      item.ClusterId,
+			ComponentType:  &knowledge.ClusterComponent{ComponentType: item.ComponentType},
+			Role:           item.Role,
+			Version:        &knowledge.ClusterVersion{Code: item.Version},
+			HostId:         item.HostId,
+			Host:           item.Host,
+			DiskId:         item.DiskId,
 			AllocRequestId: item.AllocRequestId,
-			DiskPath: item.DiskPath,
+			DiskPath:       item.DiskPath,
 			Compute: &resource.ComputeRequirement{
 				CpuCores: item.CpuCores,
-				Memory: item.Memory,
+				Memory:   item.Memory,
 			},
 		}
 		instance.DeserializePortInfo(item.PortInfo)
@@ -662,23 +662,23 @@ func batchConvertComponentToDTOs(components []*domain.ComponentInstance) (dtoLis
 }
 
 func convertComponentToDTO(component *domain.ComponentInstance) (dto *dbpb.DBComponentInstanceDTO) {
-	dto = &dbpb.DBComponentInstanceDTO {
-		Id:       component.ID,
-		Code:     component.Code,
-		TenantId: component.TenantId,
-		Status: int32(component.Status),
-		ClusterId: component.ClusterId,
+	dto = &dbpb.DBComponentInstanceDTO{
+		Id:            component.ID,
+		Code:          component.Code,
+		TenantId:      component.TenantId,
+		Status:        int32(component.Status),
+		ClusterId:     component.ClusterId,
 		ComponentType: component.ComponentType.ComponentType,
-		Role: component.Role,
-		Version: component.Version.Code,
+		Role:          component.Role,
+		Version:       component.Version.Code,
 
-		HostId: component.HostId,
-		Host: component.Host,
-		CpuCores: component.Compute.CpuCores,
-		Memory: component.Compute.Memory,
-		DiskId: component.DiskId,
-		DiskPath: component.DiskPath,
-		PortInfo: component.SerializePortInfo(),
+		HostId:         component.HostId,
+		Host:           component.Host,
+		CpuCores:       component.Compute.CpuCores,
+		Memory:         component.Compute.Memory,
+		DiskId:         component.DiskId,
+		DiskPath:       component.DiskPath,
+		PortInfo:       component.SerializePortInfo(),
 		AllocRequestId: component.AllocRequestId,
 	}
 

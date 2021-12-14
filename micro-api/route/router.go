@@ -98,8 +98,11 @@ func Route(g *gin.Engine) {
 			cluster.GET("/:clusterId/monitor", clusterApi.DescribeMonitor)
 
 			// Scale cluster
-			cluster.POST("/:clusterId/scale-out", clusterApi.ScaleOut)
-			cluster.POST("/:clusterId/scale-in", clusterApi.ScaleIn)
+			cluster.POST("/scale-out", clusterApi.ScaleOut)
+			cluster.POST("/scale-in", clusterApi.ScaleIn)
+
+			// Clone cluster
+			cluster.POST("/clone", clusterApi.Clone)
 
 			// Params
 			cluster.GET("/:clusterId/params", parameterApi.QueryParams)
@@ -107,14 +110,14 @@ func Route(g *gin.Engine) {
 			cluster.POST("/:clusterId/params/inspect", parameterApi.InspectParams)
 
 			// Backup Strategy
-			cluster.GET("/:clusterId/strategy", backuprestore.QueryBackupStrategy)
+			cluster.GET("/:clusterId/strategy", backuprestore.GetBackupStrategy)
 			cluster.PUT("/:clusterId/strategy", backuprestore.SaveBackupStrategy)
 			// cluster.DELETE("/:clusterId/strategy", instanceapi.DeleteBackupStrategy)
 
 			//Import and Export
 			cluster.POST("/import", importexport.ImportData)
 			cluster.POST("/export", importexport.ExportData)
-			cluster.GET("/transport", importexport.DescribeDataTransport)
+			cluster.GET("/transport", importexport.QueryDataTransport)
 			cluster.DELETE("/transport/:recordId", importexport.DeleteDataTransportRecord)
 		}
 
@@ -127,10 +130,10 @@ func Route(g *gin.Engine) {
 		{
 			backup.Use(interceptor.VerifyIdentity)
 			backup.Use(interceptor.AuditLog())
+
 			backup.POST("/", backuprestore.Backup)
-			backup.GET("/", backuprestore.QueryBackup)
+			backup.GET("/", backuprestore.QueryBackupRecords)
 			backup.DELETE("/:backupId", backuprestore.DeleteBackup)
-			//backup.GET("/:backupId", instanceapi.DetailsBackup)
 		}
 
 		changeFeeds := apiV1.Group("/changefeeds")
@@ -149,12 +152,12 @@ func Route(g *gin.Engine) {
 			changeFeeds.GET("/", changefeed2.Query)
 		}
 
-		flowworks := apiV1.Group("/flowworks")
+		flowworks := apiV1.Group("/workflow")
 		{
 			flowworks.Use(interceptor.VerifyIdentity)
 			flowworks.Use(interceptor.AuditLog())
 			flowworks.GET("/", flowtaskApi.Query)
-			flowworks.GET("/:flowWorkId", flowtaskApi.Detail)
+			flowworks.GET("/:workFlowId", flowtaskApi.Detail)
 		}
 
 		host := apiV1.Group("/resources")

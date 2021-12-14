@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -32,13 +31,7 @@ func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
 	os.MkdirAll(testFilePath, 0755)
 
-
 	logins := framework.LogForkFile(common.LogFileSystem)
-
-	defer func() {
-		os.RemoveAll(testFilePath)
-		os.Remove(testFilePath)
-	}()
 
 	framework.InitBaseFrameworkForUt(framework.ClusterService,
 		func(d *framework.BaseFramework) error {
@@ -56,6 +49,8 @@ func TestMain(m *testing.M) {
 			return nil
 		},
 	)
-
-	os.Exit(m.Run())
+	code := m.Run()
+	os.RemoveAll("testdata/")
+	os.RemoveAll("logs/")
+	os.Exit(code)
 }

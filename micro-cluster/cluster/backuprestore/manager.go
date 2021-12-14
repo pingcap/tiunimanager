@@ -40,7 +40,9 @@ var once sync.Once
 
 func GetBRService() BRService {
 	once.Do(func() {
-		brService = NewBRManager()
+		if brService == nil {
+			brService = NewBRManager()
+		}
 	})
 	return brService
 }

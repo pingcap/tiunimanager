@@ -75,6 +75,7 @@ func (p *database) initTables() {
 	p.addTable(new(management.Cluster))
 	p.addTable(new(management.ClusterInstance))
 	p.addTable(new(management.ClusterRelation))
+	p.addTable(new(management.ClusterTopologySnapshot))
 	p.addTable(new(importexport.DataTransportRecord))
 	p.addTable(new(backuprestore.BackupRecord))
 	p.addTable(new(backuprestore.BackupStrategy))
@@ -90,6 +91,7 @@ func (p *database) initReaderWriters() {
 	defaultDb.importExportReaderWriter = importexport.NewImportExportReadWrite(defaultDb.base)
 	defaultDb.brReaderWriter = backuprestore.NewBRReadWrite(defaultDb.base)
 	defaultDb.configReaderWriter = config.NewConfigReadWrite(defaultDb.base)
+	defaultDb.clusterReaderWriter = management.NewClusterReadWrite(defaultDb.base)
 }
 
 func (p *database) initSystemData() {

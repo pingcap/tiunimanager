@@ -130,11 +130,21 @@ func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 		return err
 	}
 	framework.LogWithContext(context.Context).Infof(
-		"set cluster[%s] online successfully", clusterMeta.Cluster.Name)
+		"set cluster[%s]  status into running successfully", clusterMeta.Cluster.Name)
 	return nil
 }
 
-func clusterFail(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+func setClusterOffline(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	if err := clusterMeta.UpdateClusterStatus(context.Context, constants.ClusterStopped); err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"update cluster[%s] status into stopped error: %s", clusterMeta.Cluster.Name, err.Error())
+		return err
+	}
+	return nil
+}
+
+func revertResourceAfterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	allocID := context.GetData(ContextAllocResource)
 	if allocID != nil {
 		request := &resourceType.RecycleRequest{
@@ -156,24 +166,23 @@ func clusterFail(node *workflowModel.WorkFlowNode, context *workflow.FlowContext
 	return nil
 }
 
-func emptyEnd(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	// do nothing
-	return nil
-}
-
 // maintenanceEnd
 // @Description: use for maintenance flow, clear maintenance status
 // @Parameter node
 // @Parameter context
 // @return error
-func maintenanceEnd(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+func endMaintenance(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
-	if err := clusterMeta.UpdateClusterMaintenanceStatus(context.Context, constants.ClusterMaintenanceNone); err != nil {
-		framework.LogWithContext(context.Context).Errorf(
-			"set cluster[%s] maintenance status error: %s", clusterMeta.Cluster.Name, err.Error())
-		return err
+	return clusterMeta.EndMaintenance(context, clusterMeta.Cluster.MaintenanceStatus)
+}
+
+func persistCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	err := clusterMeta.UpdateMeta(context)
+	if err != nil {
+		framework.LogWithContext(context).Errorf("persist cluster error, clusterId = %s, workflowId = %s", clusterMeta.Cluster.ID, node.ParentID)
 	}
-	return nil
+	return err
 }
 
 func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
@@ -254,6 +263,11 @@ func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	}
 	framework.LogWithContext(context.Context).Infof("get destroy cluster task id: %d", taskId)
 	return nil
+}
+
+func deleteCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	return clusterMeta.Delete(context)
 }
 
 func freedResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {

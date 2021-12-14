@@ -251,16 +251,6 @@ func (p *ClusterMeta) UpdateClusterStatus(ctx context.Context, status constants.
 	return nil
 }
 
-// UpdateClusterMaintenanceStatus
-// @Description update cluster maintenance status
-// @Return		error
-func (p *ClusterMeta) UpdateClusterMaintenanceStatus(ctx context.Context, status constants.ClusterMaintenanceStatus) error {
-	p.Cluster.MaintenanceStatus = status
-	// TODO: write db
-	framework.LogWithContext(ctx).Infof("update cluster[%s] maintenance status into %s", p.Cluster.Name, status)
-	return nil
-}
-
 // UpdateInstancesStatus
 // @Description update cluster Instances status
 // @Return		error
@@ -362,32 +352,35 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context) *ClusterMeta {
 	return nil
 }
 
-// TryMaintenance
-// @Description: try to change maintenance status to target status with former status validation
+// StartMaintenance
+// @Description: try to start a maintenance
 // @Receiver p
 // @Parameter ctx
 // @Parameter maintenanceStatus
 // @return error
-func (p *ClusterMeta) TryMaintenance(ctx context.Context, maintenanceStatus constants.ClusterMaintenanceStatus) error {
-	// check Maintenance status
-	if true {
+func (p *ClusterMeta) StartMaintenance(ctx context.Context, maintenanceStatus constants.ClusterMaintenanceStatus) error {
+	// deleting will end all maintenance
+	err := models.GetClusterReaderWriter().SetMaintenanceStatus(ctx, p.Cluster.ID, maintenanceStatus)
+
+	if err == nil {
 		p.Cluster.MaintenanceStatus = maintenanceStatus
-		return nil
-	} else {
-		return framework.NewTiEMError(common.TIEM_TASK_CONFLICT, "// todo")
 	}
+	return err
 }
 
-func (p *ClusterMeta) GetDeployConfig() string {
-	return ""
-}
+// EndMaintenance
+// @Description: clear maintenance status after maintenance finished or failed
+// @Receiver p
+// @Parameter ctx
+// @Parameter maintenanceStatus
+// @return error
+func (p *ClusterMeta) EndMaintenance(ctx context.Context, originStatus constants.ClusterMaintenanceStatus) error {
+	err := models.GetClusterReaderWriter().ClearMaintenanceStatus(ctx, p.Cluster.ID, originStatus)
 
-func (p *ClusterMeta) GetScaleInConfig() (string, error) {
-	return "", nil
-}
-
-func (p *ClusterMeta) GetScaleOutConfig() (string, error) {
-	return "", nil
+	if err == nil {
+		p.Cluster.MaintenanceStatus = constants.ClusterMaintenanceNone
+	}
+	return err
 }
 
 type ComponentAddress struct {
@@ -429,6 +422,30 @@ func (p *ClusterMeta) GetClientAddresses() []ComponentAddress {
 func (p *ClusterMeta) GetMonitorAddresses() []ComponentAddress {
 	// todo
 	return nil
+}
+
+// UpdateMeta
+// @Description: update cluster meta, include cluster and all instances
+// @Receiver p
+// @Parameter ctx
+// @return error
+func (p *ClusterMeta) UpdateMeta(ctx context.Context) error {
+	instances := make([]*management.ClusterInstance, 0)
+	if p.Instances != nil {
+		for _, v := range p.Instances {
+			instances = append(instances, v...)
+		}
+	}
+	return models.GetClusterReaderWriter().UpdateMeta(ctx, p.Cluster, instances)
+}
+
+// Delete
+// @Description: delete cluster
+// @Receiver p
+// @Parameter ctx
+// @return error
+func (p *ClusterMeta) Delete(ctx context.Context) error {
+	return models.GetClusterReaderWriter().Delete(ctx, p.Cluster.ID)
 }
 
 func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {

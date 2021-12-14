@@ -188,7 +188,7 @@ func TestGormClusterReadWrite_GetMeta(t *testing.T) {
 
 func TestGormClusterReadWrite_UpdateBaseInfo(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
-		err := testRW.UpdateBaseInfo(context.TODO(), &Cluster{
+		err := testRW.UpdateClusterInfo(context.TODO(), &Cluster{
 			Entity:common.Entity{
 				ID: "whatever",
 			},
@@ -196,7 +196,7 @@ func TestGormClusterReadWrite_UpdateBaseInfo(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, libCommon.TIEM_CLUSTER_NOT_FOUND, err.(framework.TiEMError).GetCode())
 
-		err = testRW.UpdateBaseInfo(context.TODO(), &Cluster{})
+		err = testRW.UpdateClusterInfo(context.TODO(), &Cluster{})
 		assert.Error(t, err)
 		assert.Equal(t, libCommon.TIEM_PARAMETER_INVALID, err.(framework.TiEMError).GetCode())
 

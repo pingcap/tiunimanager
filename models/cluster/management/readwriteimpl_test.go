@@ -27,6 +27,7 @@ import (
 
 func TestGormClusterReadWrite_MaintenanceStatus(t *testing.T) {
 	got, err := testRW.Create(context.TODO(), &Cluster{
+		Name: "test39907",
 		Entity: common.Entity{
 			TenantId: "111",
 		},
@@ -66,6 +67,7 @@ func TestGormClusterReadWrite_MaintenanceStatus(t *testing.T) {
 func TestGormClusterReadWrite_Create(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		got, err := testRW.Create(context.TODO(), &Cluster{
+			Name: "test1",
 			Entity: common.Entity{
 				TenantId: "111",
 				Status:   string(constants.ClusterRunning),
@@ -82,6 +84,7 @@ func TestGormClusterReadWrite_Create(t *testing.T) {
 	})
 	t.Run("default", func(t *testing.T) {
 		got, err := testRW.Create(context.TODO(), &Cluster{
+			Name: "test32413",
 			Entity: common.Entity{
 				TenantId: "111",
 			},
@@ -113,6 +116,7 @@ func TestGormClusterReadWrite_CreateRelation(t *testing.T) {
 
 func TestGormClusterReadWrite_Delete(t *testing.T) {
 	cluster := &Cluster{
+		Name: "test32431",
 		Entity: common.Entity{
 			TenantId: "111",
 		},
@@ -166,6 +170,7 @@ func TestGormClusterReadWrite_DeleteRelation(t *testing.T) {
 
 func TestGormClusterReadWrite_GetMeta(t *testing.T) {
 	got, _ := testRW.Create(context.TODO(), &Cluster{
+		Name: "test2131243",
 		Entity: common.Entity{
 			TenantId: "111",
 		},
@@ -205,6 +210,7 @@ func TestGormClusterReadWrite_UpdateBaseInfo(t *testing.T) {
 
 func TestGormClusterReadWrite_UpdateInstance(t *testing.T) {
 	got, _ := testRW.Create(context.TODO(), &Cluster{
+		Name: "test9845",
 		Entity: common.Entity{
 			TenantId: "111",
 		},
@@ -249,6 +255,7 @@ func TestGormClusterReadWrite_UpdateInstance(t *testing.T) {
 func TestGormClusterReadWrite_UpdateStatus(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		got, err := testRW.Create(context.TODO(), &Cluster{
+			Name: "test342546",
 			Entity: common.Entity{
 				TenantId: "111",
 			},

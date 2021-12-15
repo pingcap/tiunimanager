@@ -31,6 +31,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func mockFileHostProvider(rw resource_models.ReaderWriter) *FileHostProvider {
+	hostProvider := new(FileHostProvider)
+	hostProvider.SetResourceReaderWriter(rw)
+	return hostProvider
+}
+
 func genHostInfo(hostName string) *structs.HostInfo {
 	host := structs.HostInfo{
 		IP:       "192.168.56.11",
@@ -102,7 +108,8 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
-	hostprovider := NewFileHostProvider(mockClient)
+
+	hostprovider := mockFileHostProvider(mockClient)
 
 	var hosts []structs.HostInfo
 	host := genHostInfo("TEST_HOST1")
@@ -128,7 +135,7 @@ func Test_ImportHosts_Failed(t *testing.T) {
 			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
-	hostprovider := NewFileHostProvider(mockClient)
+	hostprovider := mockFileHostProvider(mockClient)
 
 	var hosts []structs.HostInfo
 	host := genHostInfo("TEST_HOST2")
@@ -158,7 +165,7 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
-	hostprovider := NewFileHostProvider(mockClient)
+	hostprovider := mockFileHostProvider(mockClient)
 
 	filter := &structs.HostFilter{
 		HostID: fake_hostId,
@@ -190,7 +197,7 @@ func Test_DeleteHosts_Succeed(t *testing.T) {
 			return framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
-	hostprovider := NewFileHostProvider(mockClient)
+	hostprovider := mockFileHostProvider(mockClient)
 
 	var hostIds []string
 	hostIds = append(hostIds, fake_hostId1)
@@ -217,7 +224,7 @@ func Test_UpdateHostReserved_Succeed(t *testing.T) {
 			return framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
-	hostprovider := NewFileHostProvider(mockClient)
+	hostprovider := mockFileHostProvider(mockClient)
 
 	var hostIds []string
 	hostIds = append(hostIds, fake_hostId1)
@@ -246,7 +253,7 @@ func Test_UpdateHostStatus_Succeed(t *testing.T) {
 			return framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
-	hostprovider := NewFileHostProvider(mockClient)
+	hostprovider := mockFileHostProvider(mockClient)
 
 	var hostIds []string
 	hostIds = append(hostIds, fake_hostId1)
@@ -294,7 +301,7 @@ func Test_GetHierarchy_Succeed(t *testing.T) {
 			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
-	hostprovider := NewFileHostProvider(mockClient)
+	hostprovider := mockFileHostProvider(mockClient)
 
 	filter := structs.HostFilter{
 		Arch: string(constants.ArchX8664),
@@ -333,7 +340,7 @@ func Test_GetStocks_Succeed(t *testing.T) {
 			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
-	hostprovider := NewFileHostProvider(mockClient)
+	hostprovider := mockFileHostProvider(mockClient)
 
 	location := structs.Location{Region: "TEST_Region1"}
 

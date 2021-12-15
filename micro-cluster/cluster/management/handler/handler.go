@@ -116,7 +116,7 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 	return nil
 }
 
-func (p *ClusterMeta) generateAllocRequirements(instances []*management.ClusterInstance) []resource.AllocRequirement {
+func (p *ClusterMeta) GenerateInstanceResourceRequirements(instances []*management.ClusterInstance) []resource.AllocRequirement {
 	requirements := make([]resource.AllocRequirement, 0)
 	for _, instance := range instances {
 		portRange := knowledge.GetComponentPortRange(p.Cluster.Type, p.Cluster.Version, instance.Type)
@@ -154,7 +154,7 @@ func (p *ClusterMeta) generateAllocRequirements(instances []*management.ClusterI
 	return requirements
 }
 
-func (p *ClusterMeta) generateAllocMonitoredPortRequirements() []resource.AllocRequirement {
+func (p *ClusterMeta) GenerateGlobalMonitoredPortRequirements() []resource.AllocRequirement {
 	requirements := make([]resource.AllocRequirement, 0)
 
 	portRange := knowledge.GetClusterPortRange(p.Cluster.Type, p.Cluster.Version)
@@ -181,11 +181,12 @@ func (p *ClusterMeta) generateAllocMonitoredPortRequirements() []resource.AllocR
 	return requirements
 }
 
-func (p *ClusterMeta) applyGlobalPortResource(resource *resource.BatchAllocResponse) {
-
+func (p *ClusterMeta) ApplyGlobalPortResource(nodeExporterPort, blackboxExporterPort int32) {
+	p.NodeExporterPort = nodeExporterPort
+	p.BlackboxExporterPort = blackboxExporterPort
 }
 
-func (p *ClusterMeta) applyInstanceResource(resource *resource.BatchAllocResponse) {
+func (p *ClusterMeta) ApplyInstanceResource(resource *resource.BatchAllocResponse) {
 
 }
 
@@ -214,7 +215,7 @@ func (p *ClusterMeta) AllocInstanceResource(ctx context.Context) (string, error)
 					HolderId:  p.Cluster.ID,
 					RequestId: requestID,
 				},
-				Requires: p.generateAllocRequirements(instances),
+				Requires: p.GenerateInstanceResourceRequirements(instances),
 			},
 		},
 	}
@@ -240,7 +241,7 @@ func (p *ClusterMeta) AllocInstanceResource(ctx context.Context) (string, error)
 					HolderId:  p.Cluster.ID,
 					RequestId: requestID,
 				},
-				Requires: p.generateAllocMonitoredPortRequirements(),
+				Requires: p.GenerateGlobalMonitoredPortRequirements(),
 			},
 		},
 	}

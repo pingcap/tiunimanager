@@ -27,6 +27,7 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 
 	// Alloc resource for new instances
 	allocID, err := clusterMeta.AllocInstanceResource(context.Context)
+
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster[%s] alloc resource error: %s", clusterMeta.Cluster.Name, err.Error())
@@ -160,7 +161,7 @@ func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 	return nil
 }
 
-// setClusterOnline
+// setClusterOffline
 // @Description: set cluster running status to constants.Stopped
 func setClusterOffline(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
@@ -172,7 +173,7 @@ func setClusterOffline(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 	return nil
 }
 
-// setClusterOnline
+// revertResourceAfterFailure
 // @Description: revert allocated resource after creating, scaling out
 func revertResourceAfterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	allocID := context.GetData(ContextAllocId)
@@ -196,7 +197,7 @@ func revertResourceAfterFailure(node *workflowModel.WorkFlowNode, context *workf
 	return nil
 }
 
-// maintenanceEnd
+// endMaintenance
 // @Description: clear maintenance status after maintenance finished or failed
 func endMaintenance(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)

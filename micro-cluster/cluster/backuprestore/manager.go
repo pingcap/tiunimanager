@@ -82,7 +82,7 @@ func NewBRManager() *BRManager {
 	return mgr
 }
 
-func (mgr *BRManager) BackupCluster(ctx context.Context, request *cluster.BackupClusterDataReq) (*cluster.BackupClusterDataResp, error) {
+func (mgr *BRManager) BackupCluster(ctx context.Context, request *cluster.BackupClusterDataReq) (resp *cluster.BackupClusterDataResp, backupErr error) {
 	framework.LogWithContext(ctx).Infof("Begin BackupCluster, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End BackupCluster")
 
@@ -112,6 +112,13 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request *cluster.Backup
 		framework.LogWithContext(ctx).Errorf("start maintenance failed, %s", err.Error())
 		return nil, fmt.Errorf("start maintenance failed, %s", err.Error())
 	}
+	defer func() {
+		if backupErr != nil {
+			if endErr := meta.EndMaintenance(ctx, meta.Cluster.MaintenanceStatus); endErr != nil {
+				framework.LogWithContext(ctx).Warnf("end maintenance failed, %s", err.Error())
+			}
+		}
+	}()
 
 	//todo: only support FULL Physics backup now
 	record := &backuprestore.BackupRecord{
@@ -134,6 +141,13 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request *cluster.Backup
 		framework.LogWithContext(ctx).Errorf("save backup record failed, %s", err.Error())
 		return nil, err
 	}
+	defer func() {
+		if backupErr != nil {
+			if delErr := brRW.DeleteBackupRecord(ctx, recordCreate.ID); delErr != nil {
+				framework.LogWithContext(ctx).Warnf("delete backup record %+v failed, %s", recordCreate, err.Error())
+			}
+		}
+	}()
 
 	flowManager := workflow.GetWorkFlowService()
 	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.FlowBackupCluster)
@@ -157,7 +171,7 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request *cluster.Backup
 	}, nil
 }
 
-func (mgr *BRManager) RestoreExistCluster(ctx context.Context, request *cluster.RestoreExistClusterReq) (*cluster.RestoreExistClusterResp, error) {
+func (mgr *BRManager) RestoreExistCluster(ctx context.Context, request *cluster.RestoreExistClusterReq) (resp *cluster.RestoreExistClusterResp, restoreErr error) {
 	framework.LogWithContext(ctx).Infof("Begin RestoreExistCluster, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End RestoreExistCluster")
 

@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
 	"net/http"
 	"strconv"
 	"time"
@@ -69,6 +70,7 @@ type ClusterServiceHandler struct {
 	parameterGroupManager   *parametergroup.Manager
 	clusterParameterManager *clusterParameter.Manager
 	clusterManager          *clusterManager.Manager
+	systemConfigManager     *config.SystemConfigManager
 	brManager               backuprestore.BRService
 	importexportManager     importexport.ImportExportService
 }
@@ -152,6 +154,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.parameterGroupManager = parameterGroupManager.NewManager()
 	handler.clusterParameterManager = clusterParameter.NewManager()
 	handler.clusterManager = clusterManager.NewClusterManager()
+	handler.systemConfigManager = config.NewSystemConfigManager()
 	handler.brManager = backuprestore.GetBRService()
 	handler.importexportManager = importexport.GetImportExportService()
 
@@ -540,6 +543,20 @@ func (c ClusterServiceHandler) DeleteDataTransportRecord(ctx context.Context, re
 
 	if handleRequest(ctx, request, response, deleteReq) {
 		result, err := c.importexportManager.DeleteDataTransportRecord(ctx, &deleteReq)
+		handleResponse(ctx, response, err, *result, nil)
+	}
+
+	return nil
+}
+
+func (c *ClusterServiceHandler) GetSystemConfig(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "GetSystemConfig", int(response.GetCode()))
+	framework.LogWithContext(ctx).Info("get system config")
+	getReq := message.GetSystemConfigReq{}
+
+	if handleRequest(ctx, request, response, getReq) {
+		result, err := c.systemConfigManager.GetSystemConfig(ctx, &getReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 

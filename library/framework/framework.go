@@ -332,7 +332,6 @@ func (b *BaseFramework) prometheusBoot() {
 		SetToCurrentTime()
 
 	http.Handle("/metrics", promhttp.Handler())
-	// 启动web服务，监听8085端口
 	go func() {
 		metricsPort := b.GetClientArgs().MetricsPort
 		if metricsPort <= 0 {

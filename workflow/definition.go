@@ -19,6 +19,7 @@ package workflow
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/workflow"
 )
@@ -45,7 +46,8 @@ func (define *WorkFlowDefine) getInstance(ctx context.Context, bizId string, dat
 			Name:  define.FlowName,
 			BizID: bizId,
 			Entity: common.Entity{
-				Status: constants.WorkFlowStatusInitializing,
+				Status:   constants.WorkFlowStatusInitializing,
+				TenantId: framework.GetTenantIDFromContext(ctx),
 			},
 		},
 		Nodes:   make([]*workflow.WorkFlowNode, 0, 4),

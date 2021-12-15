@@ -26,7 +26,7 @@ import (
 
 type Cluster struct {
 	common.Entity
-	Name              string                             `gorm:"not null;size:64;comment:'user name of the cluster''"`
+	Name              string                             `gorm:"not null;size:64;uniqueIndex;comment:'user name of the cluster''"`
 	DBUser            string                             `gorm:"not null;size:64;comment:'user name of the database''"`
 	DBPassword        string                             `gorm:"not null;size:64;comment:'user password of the database''"`
 	Type              string                             `gorm:"not null;size:16;comment:'type of the cluster, eg. TiDB、TiDB Migration';"`
@@ -41,6 +41,7 @@ type Cluster struct {
 	Region            string                             `gorm:"comment: region location"`
 	CpuArchitecture   constants.ArchType                 `gorm:"not null;type:varchar(64);comment:'user name of the cluster''"`
 	MaintenanceStatus constants.ClusterMaintenanceStatus `gorm:"not null;type:varchar(64);comment:'user name of the cluster''"`
+	MaintainWindow    string                             `gorm:"not null;type:varchar(64);comment:'maintain window''"`
 }
 
 func (t *Cluster) BeforeSave(tx *gorm.DB) (err error) {

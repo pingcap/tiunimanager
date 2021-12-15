@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func Contain(target interface{}, list interface{}) bool {
+func Contain(list interface{}, target interface{}) bool {
 	if reflect.TypeOf(list).Kind() == reflect.Slice || reflect.TypeOf(list).Kind() == reflect.Array {
 		listValue := reflect.ValueOf(list)
 		for i := 0; i < listValue.Len(); i++ {

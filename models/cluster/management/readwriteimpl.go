@@ -25,15 +25,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type GormClusterReadWrite struct {
+type ClusterReadWrite struct {
 	dbCommon.GormDB
 }
 
-func (g *GormClusterReadWrite) Create(ctx context.Context, cluster *Cluster) (*Cluster, error) {
+func (g *ClusterReadWrite) Create(ctx context.Context, cluster *Cluster) (*Cluster, error) {
 	return cluster, g.DB(ctx).Create(cluster).Error
 }
 
-func (g *GormClusterReadWrite) Delete(ctx context.Context, clusterID string) (err error) {
+func (g *ClusterReadWrite) Delete(ctx context.Context, clusterID string) (err error) {
 	got, err := g.Get(ctx, clusterID)
 	if err != nil {
 		return
@@ -42,7 +42,7 @@ func (g *GormClusterReadWrite) Delete(ctx context.Context, clusterID string) (er
 	return dbCommon.WrapDBError(err)
 }
 
-func (g *GormClusterReadWrite) Get(ctx context.Context, clusterID string) (*Cluster, error) {
+func (g *ClusterReadWrite) Get(ctx context.Context, clusterID string) (*Cluster, error) {
 	if "" == clusterID {
 		errInfo := fmt.Sprint("get cluster failed : empty clusterID")
 		framework.LogWithContext(ctx).Error(errInfo)
@@ -63,7 +63,7 @@ func (g *GormClusterReadWrite) Get(ctx context.Context, clusterID string) (*Clus
 
 }
 
-func (g *GormClusterReadWrite) GetMeta(ctx context.Context, clusterID string) (cluster *Cluster, instances []*ClusterInstance, err error) {
+func (g *ClusterReadWrite) GetMeta(ctx context.Context, clusterID string) (cluster *Cluster, instances []*ClusterInstance, err error) {
 	cluster, err = g.Get(ctx, clusterID)
 
 	if err != nil {
@@ -79,7 +79,24 @@ func (g *GormClusterReadWrite) GetMeta(ctx context.Context, clusterID string) (c
 
 }
 
-func (g *GormClusterReadWrite) UpdateInstance(ctx context.Context, instances ...*ClusterInstance) error {
+func (g *ClusterReadWrite) UpdateMeta(ctx context.Context, cluster *Cluster, instances []*ClusterInstance) error {
+	return g.DB(ctx).Transaction(func(tx *gorm.DB) error {
+		err := g.UpdateClusterInfo(ctx, cluster)
+		if err == nil {
+			err = g.UpdateInstance(ctx, instances...)
+		}
+
+		if err != nil {
+			msg := fmt.Sprintf("cluster update meta failed, clusterId = %s", cluster.ID)
+			framework.LogWithContext(ctx).Error(msg)
+			tx.Rollback()
+			return framework.WrapError(common.TIEM_UNRECOGNIZED_ERROR, "", err)
+		}
+		return nil
+	})
+}
+
+func (g *ClusterReadWrite) UpdateInstance(ctx context.Context, instances ...*ClusterInstance) error {
 	return g.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		toCreate := make([]*ClusterInstance, 0)
 
@@ -105,25 +122,24 @@ func (g *GormClusterReadWrite) UpdateInstance(ctx context.Context, instances ...
 	})
 }
 
-func (g *GormClusterReadWrite) UpdateBaseInfo(ctx context.Context, template *Cluster) error {
+func (g *ClusterReadWrite) UpdateClusterInfo(ctx context.Context, template *Cluster) error {
 	if template == nil {
 		errInfo := fmt.Sprint("update cluster base info failed : empty template")
 		framework.LogWithContext(ctx).Error(errInfo)
 		return framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, errInfo)
 	}
 
-	_, err := g.Get(ctx, template.ID)
+	cluster, err := g.Get(ctx, template.ID)
 
 	if err != nil {
 		err = dbCommon.WrapDBError(err)
 		return err
 	}
-
-	err = g.DB(ctx).Save(template).Error
+	err = g.DB(ctx).Model(cluster).Omit("status", "maintenance_status").Updates(template).Error
 	return dbCommon.WrapDBError(err)
 }
 
-func (g *GormClusterReadWrite) UpdateStatus(ctx context.Context, clusterID string, status constants.ClusterRunningStatus) error {
+func (g *ClusterReadWrite) UpdateStatus(ctx context.Context, clusterID string, status constants.ClusterRunningStatus) error {
 	cluster, err := g.Get(ctx, clusterID)
 
 	if err != nil {
@@ -136,15 +152,15 @@ func (g *GormClusterReadWrite) UpdateStatus(ctx context.Context, clusterID strin
 	return dbCommon.WrapDBError(err)
 }
 
-func (g *GormClusterReadWrite) SetMaintenanceStatus(ctx context.Context, clusterID string, targetStatus constants.ClusterMaintenanceStatus) error {
+func (g *ClusterReadWrite) SetMaintenanceStatus(ctx context.Context, clusterID string, targetStatus constants.ClusterMaintenanceStatus) error {
 	cluster, err := g.Get(ctx, clusterID)
 
 	if err != nil {
 		return err
 	}
 
-	if cluster.MaintenanceStatus != constants.ClusterMaintenanceNone {
-		errInfo := fmt.Sprintf("set cluster maintenance status conflicted : current maintenance = %s, clusterID = %s", cluster.MaintenanceStatus, clusterID)
+	if cluster.MaintenanceStatus != constants.ClusterMaintenanceNone && targetStatus != constants.ClusterMaintenanceDeleting {
+		errInfo := fmt.Sprintf("set cluster maintenance status conflicted : current maintenance = %s, target maintenance = %s, clusterID = %s", cluster.MaintenanceStatus, targetStatus, clusterID)
 		framework.LogWithContext(ctx).Error(errInfo)
 		return framework.NewTiEMError(common.TIEM_CLUSTER_MAINTENANCE_CONFLICT, errInfo)
 	}
@@ -155,7 +171,7 @@ func (g *GormClusterReadWrite) SetMaintenanceStatus(ctx context.Context, cluster
 	return dbCommon.WrapDBError(err)
 }
 
-func (g *GormClusterReadWrite) ClearMaintenanceStatus(ctx context.Context, clusterID string, originalStatus constants.ClusterMaintenanceStatus) error {
+func (g *ClusterReadWrite) ClearMaintenanceStatus(ctx context.Context, clusterID string, originalStatus constants.ClusterMaintenanceStatus) error {
 	cluster, err := g.Get(ctx, clusterID)
 
 	if err != nil {
@@ -174,18 +190,18 @@ func (g *GormClusterReadWrite) ClearMaintenanceStatus(ctx context.Context, clust
 	return dbCommon.WrapDBError(err)
 }
 
-func (g *GormClusterReadWrite) CreateRelation(ctx context.Context, relation *ClusterRelation) error {
+func (g *ClusterReadWrite) CreateRelation(ctx context.Context, relation *ClusterRelation) error {
 	err := g.DB(ctx).Create(relation).Error
 	return dbCommon.WrapDBError(err)
 }
 
-func (g *GormClusterReadWrite) DeleteRelation(ctx context.Context, relationID uint) error {
+func (g *ClusterReadWrite) DeleteRelation(ctx context.Context, relationID uint) error {
 	relation := &ClusterRelation{}
 	err := g.DB(ctx).First(relation, "id = ?", relationID).Delete(relation).Error
 	return dbCommon.WrapDBError(err)
 }
 
-func (g *GormClusterReadWrite) CreateClusterTopologySnapshot(ctx context.Context, snapshot ClusterTopologySnapshot) error {
+func (g *ClusterReadWrite) CreateClusterTopologySnapshot(ctx context.Context, snapshot ClusterTopologySnapshot) error {
 	if snapshot.ClusterID == "" || snapshot.TenantID == "" || snapshot.Config == "" {
 		errInfo := fmt.Sprintf("CreateClusterTopologySnapshot failed : parameter invalid, ClusterID = %s, TenantID = %s, config = %s", snapshot.ClusterID, snapshot.TenantID, snapshot.Config)
 		framework.LogWithContext(ctx).Error(errInfo)
@@ -195,7 +211,7 @@ func (g *GormClusterReadWrite) CreateClusterTopologySnapshot(ctx context.Context
 	return dbCommon.WrapDBError(err)
 }
 
-func (g *GormClusterReadWrite) GetLatestClusterTopologySnapshot(ctx context.Context, clusterID string) (snapshot ClusterTopologySnapshot, err error) {
+func (g *ClusterReadWrite) GetLatestClusterTopologySnapshot(ctx context.Context, clusterID string) (snapshot ClusterTopologySnapshot, err error) {
 	if "" == clusterID {
 		errInfo := fmt.Sprint("get latest cluster topology snapshot failed : empty clusterID")
 		framework.LogWithContext(ctx).Error(errInfo)
@@ -208,8 +224,8 @@ func (g *GormClusterReadWrite) GetLatestClusterTopologySnapshot(ctx context.Cont
 	return
 }
 
-func NewGormClusterReadWrite(db *gorm.DB) *GormClusterReadWrite {
-	return &GormClusterReadWrite{
+func NewClusterReadWrite(db *gorm.DB) *ClusterReadWrite {
+	return &ClusterReadWrite{
 		dbCommon.WrapDB(db),
 	}
 }

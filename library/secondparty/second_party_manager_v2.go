@@ -64,6 +64,8 @@ type SecondPartyService interface {
 		workFlowNodeID string) (string, error)
 	ClusterReload(ctx context.Context, cmdReloadConfigReq CmdReloadConfigReq, workFlowNodeID string) (
 		operationID string, err error)
+	ClusterExec(ctx context.Context, cmdClusterExecReq CmdClusterExecReq, workFlowNodeID string) (
+		operationID string, err error)
 	Dumpling(ctx context.Context, timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error)
 	Lightning(ctx context.Context, timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error)
 	Transfer(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string, collectorYaml string,
@@ -76,6 +78,7 @@ type SecondPartyService interface {
 	ShowRestoreInfo(ctx context.Context, cluster ClusterFacade) CmdShowRestoreInfoResp
 	GetOperationStatus(ctx context.Context, operationID string) (resp GetOperationStatusResp, err error)
 	GetOperationStatusByWorkFlowNodeID(ctx context.Context, workFlowNodeID string) (resp GetOperationStatusResp, err error)
+	SetClusterDbPassword(ctx context.Context, req ClusterSetDbPswReq, workFlowNodeID string) error
 }
 
 type SecondPartyManager struct {

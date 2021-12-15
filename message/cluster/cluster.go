@@ -31,13 +31,13 @@ import (
 //CreateClusterReq Message for creating a new cluster
 type CreateClusterReq struct {
 	structs.CreateClusterParameter
-	ResourceParameter []structs.ClusterResourceParameter `json:"resourceParameters"`
+	ResourceParameter structs.ClusterResourceInfo `json:"resourceParameters" form:"resourceParameters"`
 }
 
 // CreateClusterResp Reply message for creating a new cluster
 type CreateClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
-	ClusterID                     string `json:"clusterId"`
+	structs.AsyncTaskWorkFlowInfo
+	ClusterID string `json:"clusterId"`
 }
 
 // DeleteClusterReq Message for delete a new cluster
@@ -49,8 +49,8 @@ type DeleteClusterReq struct {
 
 // DeleteClusterResp Reply message for delete a new cluster
 type DeleteClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
-	ClusterID                     string `json:"clusterID"`
+	structs.AsyncTaskWorkFlowInfo
+	ClusterID string `json:"clusterID"`
 }
 
 // StopClusterReq Message for stop a new cluster
@@ -60,8 +60,8 @@ type StopClusterReq struct {
 
 // StopClusterResp Reply message for stop a new cluster
 type StopClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
-	ClusterID                     string `json:"clusterId"`
+	structs.AsyncTaskWorkFlowInfo
+	ClusterID string `json:"clusterId"`
 }
 
 // RestartClusterReq Message for restart a new cluster
@@ -71,14 +71,14 @@ type RestartClusterReq struct {
 
 // RestartClusterResp Reply message for restart a new cluster
 type RestartClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowId"`
-	ClusterID                     string `json:"clusterId"`
+	structs.AsyncTaskWorkFlowInfo
+	ClusterID string `json:"clusterId"`
 }
 
 // ScaleInClusterReq Message for delete an instance in the cluster
 type ScaleInClusterReq struct {
 	ClusterID  string `json:"clusterId" form:"clusterId"`
-	InstanceID string `json:"instanceId"`
+	InstanceID string `json:"instanceId"  form:"instanceId"`
 }
 
 // ScaleInClusterResp Reply message for delete an instance in the cluster
@@ -90,7 +90,7 @@ type ScaleInClusterResp struct {
 // ScaleOutClusterReq Message for cluster expansion operation
 type ScaleOutClusterReq struct {
 	ClusterID string `json:"clusterId" form:"clusterId"`
-	structs.ClusterResourceParameter
+	structs.ClusterResourceInfo
 }
 
 // ScaleOutClusterResp Reply message for cluster expansion operation
@@ -102,7 +102,8 @@ type ScaleOutClusterResp struct {
 //RestoreNewClusterReq Restore to a new cluster message using the backup file
 type RestoreNewClusterReq struct {
 	structs.CreateClusterParameter
-	ResourceParameter []structs.ClusterResourceParameter `json:"resourceParameters"`
+	BackupID          string                      `json:"backupId"`
+	ResourceParameter structs.ClusterResourceInfo `json:"resourceParameters"`
 }
 
 //RestoreNewClusterResp Restore to a new cluster using the backup file Reply Message
@@ -201,7 +202,7 @@ type QueryClustersReq struct {
 
 // QueryClusterResp Query the cluster list to reply to messages
 type QueryClusterResp struct {
-	Info []structs.ClusterInfo `json:"clusters"`
+	Clusters []structs.ClusterInfo `json:"clusters"`
 }
 
 // QueryClusterDetailReq Query cluster detail messages
@@ -213,6 +214,7 @@ type QueryClusterDetailReq struct {
 type QueryClusterDetailResp struct {
 	Info structs.ClusterInfo `json:"info"`
 	structs.ClusterTopologyInfo
+	structs.ClusterResourceInfo
 }
 
 // QueryMonitorInfoReq Message to query the monitoring address information of a cluster
@@ -227,13 +229,13 @@ type QueryMonitorInfoResp struct {
 	GrafanaUrl string `json:"grafanaUrl" example:"http://127.0.0.1:3000"`
 }
 
-// QueryDashboardInfoReq Message to query the dashboard address information of a cluster
-type QueryDashboardInfoReq struct {
+// GetDashboardInfoReq Message to query the dashboard address information of a cluster
+type GetDashboardInfoReq struct {
 	ClusterID string `json:"clusterId" example:"abc"`
 }
 
-// QueryDashboardInfoResp Reply message for querying the dashboard address information of the cluster
-type QueryDashboardInfoResp struct {
+// GetDashboardInfoResp Reply message for querying the dashboard address information of the cluster
+type GetDashboardInfoResp struct {
 	ClusterID string `json:"clusterId" example:"abc"`
 	Url       string `json:"url" example:"http://127.0.0.1:9093"`
 	Token     string `json:"token"`

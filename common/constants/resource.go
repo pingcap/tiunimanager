@@ -23,6 +23,11 @@
 
 package constants
 
+import (
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+)
+
 type ArchType string
 
 //Definition of host architecture names
@@ -33,22 +38,29 @@ const (
 	ArchArm64 ArchType = "ARM64"
 )
 
-//Constants for importing host information
-//TODO It is recommended to move to the resource module in api-server
-const (
-	ImportHostTemplateFileName string = "hostInfo_template.xlsx"
-	ImportHostTemplateFilePath string = "./etc"
-)
+func ValidArchType(arch string) error {
+	if arch == string(ArchX86) || arch == string(ArchX8664) || arch == string(ArchArm) || arch == string(ArchArm64) {
+		return nil
+	}
+	return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_ARCH, "valid arch type: [%s|%s|%s|%s]",
+		string(ArchX86), string(ArchX8664), string(ArchArm), string(ArchArm64))
+}
 
 type HostStatus string
 
 //Definition of host status
 const (
 	HostWhatever HostStatus = "Whatever"
-	HostOnline              = "Online"
-	HostOffline             = "Offline"
-	HostDeleted             = "Deleted"
+	HostOnline   HostStatus = "Online"
+	HostOffline  HostStatus = "Offline"
+	HostDeleted  HostStatus = "Deleted"
 )
+
+func (s HostStatus) IsValidStatus() bool {
+	return (s == HostOnline ||
+		s == HostOffline ||
+		s == HostDeleted)
+}
 
 type HostLoadStatus string
 
@@ -63,6 +75,15 @@ const (
 	HostLoadExclusive      HostLoadStatus = "Exclusive"
 )
 
+func (s HostLoadStatus) IsValidLoadStatus() bool {
+	return (s == HostLoadLoadLess ||
+		s == HostLoadInUsed ||
+		s == HostLoadExhaust ||
+		s == HostLoadComputeExhaust ||
+		s == HostLoadDiskExhaust ||
+		s == HostLoadExclusive)
+}
+
 type DiskType string
 
 //Definition of disk type
@@ -71,6 +92,14 @@ const (
 	SSD     DiskType = "SSD"
 	SATA    DiskType = "SATA"
 )
+
+func ValidDiskType(diskType string) error {
+	if diskType == string(NVMeSSD) || diskType == string(SSD) || diskType == string(SATA) {
+		return nil
+	}
+	return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_PURPOSE, "valid disk type: [%s|%s|%s]",
+		string(NVMeSSD), string(SSD), string(SATA))
+}
 
 type DiskStatus string
 
@@ -84,6 +113,26 @@ const (
 	DiskError          DiskStatus = "Error"
 )
 
+func (s DiskStatus) IsValidStatus() bool {
+	return (s == DiskAvailable ||
+		s == DiskReserved ||
+		s == DiskInUsed ||
+		s == DiskExhaust ||
+		s == DiskError)
+}
+
+func (s DiskStatus) IsInused() bool {
+	return s == DiskInUsed
+}
+
+func (s DiskStatus) IsExhaust() bool {
+	return s == DiskExhaust
+}
+
+func (s DiskStatus) IsAvailable() bool {
+	return s == DiskAvailable
+}
+
 type PurposeType string
 
 //Types of purpose available
@@ -92,6 +141,14 @@ const (
 	PurposeStorage  PurposeType = "Storage"
 	PurposeSchedule PurposeType = "Schedule"
 )
+
+func ValidPurposeType(p string) error {
+	if p == string(PurposeCompute) || p == string(PurposeStorage) || p == string(PurposeSchedule) {
+		return nil
+	}
+	return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_PURPOSE, "valid purpose name: [%s|%s|%s]",
+		string(PurposeCompute), string(PurposeStorage), string(PurposeSchedule))
+}
 
 type ResourceLabelCategory int8
 
@@ -104,12 +161,13 @@ const (
 	DiskPerf    ResourceLabelCategory = 3
 )
 
-type FailureDomain int32
+type HierarchyTreeNodeLevel int32
 
 //TODO It is recommended to move to the resource module in cluster-server
+
 const (
-	ROOT             FailureDomain = iota
-	stockRegionLevel               = 1
+	ROOT HierarchyTreeNodeLevel = iota
+	REGION
 	ZONE
 	RACK
 	HOST

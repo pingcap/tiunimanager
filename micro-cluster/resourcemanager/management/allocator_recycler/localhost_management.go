@@ -19,7 +19,8 @@ package allocrecycle
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/structs"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
+	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/resource"
 )
 
@@ -27,9 +28,9 @@ type LocalHostManagement struct {
 	rw resource.ReaderWriter
 }
 
-func NewLocalHostManagement(rw resource.ReaderWriter) structs.AllocatorRecycler {
+func NewLocalHostManagement() structs.AllocatorRecycler {
 	localManagement := new(LocalHostManagement)
-	localManagement.rw = rw
+	localManagement.rw = models.GetResourceReaderWriter()
 	return localManagement
 }
 

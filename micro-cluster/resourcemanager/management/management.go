@@ -18,10 +18,10 @@ package management
 
 import (
 	"context"
+	"sync"
 
 	allocrecycle "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/allocator_recycler"
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/structs"
-	"github.com/pingcap-inc/tiem/models/resource"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 )
 
 type Management struct {
@@ -29,8 +29,21 @@ type Management struct {
 	// cloudManage allocrecycle.AllocatorRecycler
 }
 
-func (m *Management) InitManagement(rw resource.ReaderWriter) {
-	m.localHostManage = allocrecycle.NewLocalHostManagement(rw)
+var management *Management
+var once sync.Once
+
+func GetManagement() *Management {
+	once.Do(func() {
+		if management == nil {
+			management = new(Management)
+			management.InitManagement()
+		}
+	})
+	return management
+}
+
+func (m *Management) InitManagement() {
+	m.localHostManage = allocrecycle.NewLocalHostManagement()
 }
 
 func (m *Management) GetAllocatorRecycler() structs.AllocatorRecycler {

@@ -160,6 +160,7 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 	}
 	node := &workflow.WorkFlowNode{
 		Entity: common2.Entity{
+			TenantId: flow.Flow.TenantId,
 			Status: constants.WorkFlowStatusInitializing,
 		},
 		Name:       nodeDefine.Name,

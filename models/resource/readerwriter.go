@@ -19,7 +19,7 @@ import (
 	"context"
 
 	"github.com/pingcap-inc/tiem/common/structs"
-	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/structs"
+	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 )
 

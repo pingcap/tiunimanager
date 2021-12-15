@@ -127,9 +127,15 @@ var once sync.Once
 
 func GetWorkFlowService() WorkFlowService {
 	once.Do(func() {
-		workflowService = &WorkFlowManager{}
+		if workflowService == nil {
+			workflowService = &WorkFlowManager{}
+		}
 	})
 	return workflowService
+}
+
+func MockWorkFlowService(service WorkFlowService) {
+	workflowService = service
 }
 
 func (mgr *WorkFlowManager) RegisterWorkFlow(ctx context.Context, flowName string, flowDefine *WorkFlowDefine) {

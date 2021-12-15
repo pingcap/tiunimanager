@@ -22,7 +22,7 @@ const (
 	contextDataTransportRecordKey string = "transportRecord"
 )
 
-type ImportInfo struct {
+type importInfo struct {
 	ClusterId   string
 	UserName    string
 	Password    string
@@ -32,7 +32,7 @@ type ImportInfo struct {
 	ConfigPath  string
 }
 
-type ExportInfo struct {
+type exportInfo struct {
 	ClusterId   string
 	UserName    string
 	Password    string

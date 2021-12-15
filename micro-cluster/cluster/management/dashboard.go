@@ -32,13 +32,13 @@ import (
 	"time"
 )
 
-type LoginRequest struct {
+type loginRequest struct {
 	Type     int    `json:"type"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-type LoginResponse struct {
+type loginResponse struct {
 	Token  string    `json:"token"`
 	Expire time.Time `json:"expire"`
 }
@@ -80,7 +80,7 @@ func getDashboardUrlFromCluser(meta *handler.ClusterMeta) string {
 
 func getLoginToken(ctx context.Context, dashboardUrl, userName, password string) (string, error) {
 	url := fmt.Sprintf("%s%s", dashboardUrl, loginUrlSuffix)
-	body := &LoginRequest{
+	body := &loginRequest{
 		Username: userName,
 		Password: password,
 	}
@@ -93,7 +93,7 @@ func getLoginToken(ctx context.Context, dashboardUrl, userName, password string)
 	if err != nil {
 		return "", err
 	}
-	var loginResp LoginResponse
+	var loginResp loginResponse
 	err = json.Unmarshal(data, &loginResp)
 	if err != nil {
 		return "", err

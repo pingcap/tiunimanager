@@ -36,7 +36,7 @@ func TestExecutor_buildDataImportConfig(t *testing.T) {
 
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(contextClusterMetaKey, &handler.ClusterMeta{})
-	flowContext.SetData(contextDataTransportRecordKey, &ImportInfo{ConfigPath: "./testdata"})
+	flowContext.SetData(contextDataTransportRecordKey, &importInfo{ConfigPath: "./testdata"})
 	err := buildDataImportConfig(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
 }
@@ -50,7 +50,7 @@ func TestExecutor_importDataToCluster(t *testing.T) {
 	secondparty.Manager = mockTiupManager
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(contextDataTransportRecordKey, &ImportInfo{ConfigPath: "./testdata"})
+	flowContext.SetData(contextDataTransportRecordKey, &importInfo{ConfigPath: "./testdata"})
 	err := importDataToCluster(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
 }
@@ -64,7 +64,7 @@ func TestExecutor_updateDataImportRecord(t *testing.T) {
 	models.SetImportExportReaderWriter(mockImportExportRW)
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(contextDataTransportRecordKey, &ImportInfo{RecordId: "record-xxx"})
+	flowContext.SetData(contextDataTransportRecordKey, &importInfo{RecordId: "record-xxx"})
 	err := updateDataImportRecord(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
 }
@@ -78,7 +78,7 @@ func TestExecutor_updateDataExportRecord(t *testing.T) {
 	models.SetImportExportReaderWriter(mockImportExportRW)
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(contextDataTransportRecordKey, &ExportInfo{RecordId: "record-xxx"})
+	flowContext.SetData(contextDataTransportRecordKey, &exportInfo{RecordId: "record-xxx"})
 	err := updateDataExportRecord(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
 }
@@ -92,7 +92,7 @@ func TestExecutor_importDataFailed(t *testing.T) {
 	models.SetImportExportReaderWriter(mockImportExportRW)
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(contextDataTransportRecordKey, &ImportInfo{RecordId: "record-xxx"})
+	flowContext.SetData(contextDataTransportRecordKey, &importInfo{RecordId: "record-xxx"})
 	err := importDataFailed(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
 }
@@ -106,7 +106,7 @@ func TestExecutor_exportDataFailed(t *testing.T) {
 	models.SetImportExportReaderWriter(mockImportExportRW)
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(contextDataTransportRecordKey, &ExportInfo{RecordId: "record-xxx"})
+	flowContext.SetData(contextDataTransportRecordKey, &exportInfo{RecordId: "record-xxx"})
 	err := exportDataFailed(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
 }
@@ -123,7 +123,7 @@ func TestExecutor_exportDataFromCluster(t *testing.T) {
 	defer os.RemoveAll("./testdata")
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(contextDataTransportRecordKey, &ExportInfo{
+	flowContext.SetData(contextDataTransportRecordKey, &exportInfo{
 		StorageType: "nfs",
 		FileType:    "csv",
 		FilePath:    "./testdata",

@@ -35,6 +35,7 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	context.SetData(ContextAllocId, allocID)
 	framework.LogWithContext(context.Context).Infof(
 		"cluster[%s] alloc resource request id: %s", clusterMeta.Cluster.Name, allocID)
+
 	return nil
 }
 

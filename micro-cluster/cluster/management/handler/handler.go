@@ -49,25 +49,25 @@ type ClusterMeta struct {
 // @return error
 func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClusterParameter) error {
 	p.Cluster = &management.Cluster{
-		Entity: dbCommon.Entity {
+		Entity: dbCommon.Entity{
 			TenantId: framework.GetTenantIDFromContext(ctx),
-			Status: string(constants.ClusterInitializing),
+			Status:   string(constants.ClusterInitializing),
 		},
-		Name: param.Name,
-		DBUser: param.DBUser,
-		DBPassword: param.DBPassword,
-		Type: param.Type,
-		Version: param.Version,
-		TLS: param.TLS,
-		Tags: param.Tags,
-		OwnerId: framework.GetUserIDFromContext(ctx),
+		Name:              param.Name,
+		DBUser:            param.DBUser,
+		DBPassword:        param.DBPassword,
+		Type:              param.Type,
+		Version:           param.Version,
+		TLS:               param.TLS,
+		Tags:              param.Tags,
+		OwnerId:           framework.GetUserIDFromContext(ctx),
 		ParameterGroupID:  param.ParameterGroupID,
 		Copies:            param.Copies,
 		Exclusive:         param.Exclusive,
 		Region:            param.Region,
-		CpuArchitecture: constants.ArchType(param.CpuArchitecture),
+		CpuArchitecture:   constants.ArchType(param.CpuArchitecture),
 		MaintenanceStatus: constants.ClusterMaintenanceNone,
-		MaintainWindow: "",
+		MaintainWindow:    "",
 	}
 	_, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
 	if err == nil {
@@ -97,7 +97,7 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 				instance := &management.ClusterInstance{
 					Entity: dbCommon.Entity{
 						TenantId: p.Cluster.TenantId,
-						Status: string(constants.ClusterInitializing),
+						Status:   string(constants.ClusterInitializing),
 					},
 					Type:         compute.Type,
 					Version:      p.Cluster.Version,
@@ -504,7 +504,7 @@ func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
 		}
 	}
 	return &ClusterMeta{
-		Cluster: cluster,
+		Cluster:   cluster,
 		Instances: instancesMap,
 	}, nil
 }

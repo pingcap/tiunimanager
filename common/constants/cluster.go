@@ -59,7 +59,7 @@ const (
 	ClusterMaintenanceUpgrading                    ClusterMaintenanceStatus = "Upgrading"
 	ClusterMaintenanceSwitching                    ClusterMaintenanceStatus = "Switching"
 	ClusterMaintenanceModifyParameterAndRestarting ClusterMaintenanceStatus = "ModifyParameterRestarting"
-	ClusterMaintenanceNone                        ClusterMaintenanceStatus = ""
+	ClusterMaintenanceNone                         ClusterMaintenanceStatus = ""
 )
 
 const (

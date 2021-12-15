@@ -201,8 +201,8 @@ func Delete(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param tidb body cluster.TiDBDownstream true "tidb"
-// @Param tidb body cluster.MysqlDownstream true "mysql"
-// @Param tidb body cluster.KafkaDownstream true "kafka"
+// @Param mysql body cluster.MysqlDownstream true "mysql"
+// @Param kafka body cluster.KafkaDownstream true "kafka"
 // @Success 200 {object} controller.CommonResult
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult

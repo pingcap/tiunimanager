@@ -46,7 +46,7 @@ func TestMain(m *testing.M) {
 
 	framework.InitBaseFrameworkForUt(framework.ClusterService,
 		func(d *framework.BaseFramework) error {
-			dbFile := testFilePath + constants.DBDirPrefix + constants.SqliteFileName
+			dbFile := testFilePath + constants.DBDirPrefix + constants.DatabaseFileName
 			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 
 			if err != nil || db.Error != nil {

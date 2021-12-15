@@ -36,6 +36,7 @@ import (
 var secondMicro3 *SecondMicro
 var dbConnParam3 DbConnParam
 var req ClusterEditConfigReq
+var manager *SecondPartyManager
 
 func init() {
 	secondMicro3 = &SecondMicro{}
@@ -182,5 +183,39 @@ func Test_execShowWarningsThruSQL(t *testing.T) {
 	err = execShowWarningsThruSQL(context.TODO(), db)
 	if err != nil {
 		t.Errorf("err not nil")
+	}
+}
+
+func TestSecondMicro_SetClusterDbPassword_v1(t *testing.T) {
+	//invalid password length
+	req := ClusterSetDbPswReq{
+		DbConnParameter: DbConnParam{
+			Username: "root",
+			Password: "121345",
+			IP: "127.0.0.1",
+			Port: "4321",
+		},
+	}
+	err := manager.SetClusterDbPassword(context.TODO(), req, "11")
+	fmt.Println(err)
+	if err == nil {
+		t.Error("err nil")
+	}
+}
+
+func TestSecondMicro_SetClusterDbPassword_v2(t *testing.T) {
+	//normal
+	req := ClusterSetDbPswReq{
+		DbConnParameter: DbConnParam{
+			Username: "root",
+			Password: "12345678",
+			IP: "127.0.0.1",
+			Port: "4321",
+		},
+	}
+	err := manager.SetClusterDbPassword(context.TODO(), req, "22")
+	fmt.Println(err)
+	if err == nil {
+		t.Error("err nil")
 	}
 }

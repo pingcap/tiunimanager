@@ -13,4 +13,18 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package performance
+package handler
+
+import (
+	"github.com/pingcap-inc/tiem/library/knowledge"
+	"github.com/pingcap-inc/tiem/models"
+	"os"
+	"testing"
+)
+
+func TestMain(m *testing.M) {
+	knowledge.LoadKnowledge()
+	models.MockDB()
+
+	os.Exit(m.Run())
+}

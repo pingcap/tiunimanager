@@ -56,7 +56,7 @@ type database struct {
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
-	dbFile := fw.GetDataDir() + common.DBDirPrefix + common.SqliteFileName
+	dbFile := fw.GetDataDir() + common.DBDirPrefix + common.DatabaseFileName
 	logins := framework.LogForkFile(common.LogFileSystem)
 	// todo tidb?
 	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
@@ -127,6 +127,7 @@ func (p *database) initReaderWriters() {
 	defaultDb.clusterParameterReaderWriter = parameter.NewClusterParameterReadWrite(defaultDb.base)
 	defaultDb.configReaderWriter = config.NewConfigReadWrite(defaultDb.base)
 	defaultDb.secondPartyOperationReaderWriter = secondparty.NewGormSecondPartyOperationReadWrite(defaultDb.base)
+	defaultDb.clusterReaderWriter = management.NewClusterReadWrite(defaultDb.base)
 }
 
 func (p *database) initSystemData() {

@@ -23,23 +23,24 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
-	"github.com/pingcap-inc/tiem/models/resource"
+	"github.com/pingcap-inc/tiem/models"
 )
 
 var resourceManager *ResourceManager
 
-func NewMockResourceManager(rw resource.ReaderWriter) *ResourceManager {
+func NewMockResourceManager() *ResourceManager {
 
 	m := new(ResourceManager)
 	m.resourcePool = new(resourcepool.ResourcePool)
 	m.management = new(management.Management)
-	m.resourcePool.InitResourcePool(rw)
-	m.management.InitManagement(rw)
+	m.resourcePool.InitResourcePool()
+	m.management.InitManagement()
 	return m
 }
 
 func TestMain(m *testing.M) {
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
-	resourceManager = NewMockResourceManager(nil)
+	models.MockDB()
+	resourceManager = NewMockResourceManager()
 	os.Exit(m.Run())
 }

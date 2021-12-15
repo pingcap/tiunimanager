@@ -26,7 +26,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/common"
 
 	"github.com/pingcap-inc/tiem/library/framework"
-	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/structs"
+	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	"github.com/pingcap-inc/tiem/models/resource/management"
 	"github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	"github.com/stretchr/testify/assert"

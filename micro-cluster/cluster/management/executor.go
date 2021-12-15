@@ -269,9 +269,8 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
 
-	//todo: get from meta
-	tidbServerHost := ""
-	tidbServerPort := 0
+	tidbServerHost := clusterMeta.GetClusterConnectAddresses()[0].IP
+	tidbServerPort := clusterMeta.GetClusterConnectAddresses()[0].Port
 	req := secondparty.ClusterSetDbPswReq{
 		DbConnParameter: secondparty.DbConnParam{
 			Username: "root", //todo: replace admin account

@@ -28,7 +28,6 @@ import (
 const (
 	ContextClusterMeta   = "ClusterMeta"
 	ContextTopology      = "Topology"
-	ContextAllocId       = "AllocResource"
 	ContextAllocResource = "AllocResource"
 	ContextInstanceID    = "InstanceID"
 )

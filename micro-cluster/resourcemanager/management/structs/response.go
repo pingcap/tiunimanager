@@ -52,6 +52,7 @@ type Compute struct {
 
 type AllocRsp struct {
 	Results []Compute
+	Applicant
 }
 
 type BatchAllocResponse struct {

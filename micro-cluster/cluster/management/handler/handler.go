@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"context"
 	"github.com/pingcap-inc/tiem/common/constants"
+	newConstants "github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -52,7 +53,6 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 			Status:   string(constants.ClusterInitializing),
 		},
 		Name:              param.Name,
-		DBUser:            param.DBUser,
 		DBPassword:        param.DBPassword,
 		Type:              param.Type,
 		Version:           param.Version,
@@ -66,6 +66,12 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 		CpuArchitecture:   constants.ArchType(param.CpuArchitecture),
 		MaintenanceStatus: constants.ClusterMaintenanceNone,
 		MaintainWindow:    "",
+	}
+	// default user
+	if len(param.DBUser) == 0 {
+		p.Cluster.DBUser = "root"
+	} else {
+		p.Cluster.DBUser = param.DBUser
 	}
 	_, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
 	if err == nil {
@@ -217,15 +223,6 @@ func (p *ClusterMeta) GetInstanceByStatus(ctx context.Context, status constants.
 	return instances
 }
 
-// FreedInstanceResource
-// @Description return host ip, port and disk for all existing instance
-// @Return
-// @Return		error
-func (p *ClusterMeta) FreedInstanceResource(ctx context.Context) error {
-	// todo
-	return nil
-}
-
 // GenerateTopologyConfig
 // @Description generate yaml config based on cluster topology
 // @Return		yaml config
@@ -366,7 +363,17 @@ type ComponentAddress struct {
 // @Receiver p
 // @return []ComponentAddress
 func (p *ClusterMeta) GetClusterConnectAddresses() []ComponentAddress {
-	// got all tidb instances, then get connect addresses
+	instances := p.Instances[string(newConstants.ComponentIDTiDB)]
+	address := make([]ComponentAddress, 0)
+
+	for _, instance := range instances {
+		if instance.Status == string(constants.ClusterInstanceRunning) {
+			address = append(address, ComponentAddress{
+				IP:   instance.HostIP[0],
+				Port: int(instance.Ports[0]),
+			})
+		}
+	}
 	return nil
 }
 

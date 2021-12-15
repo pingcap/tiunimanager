@@ -385,11 +385,19 @@ func deleteCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 	return clusterMeta.Delete(context)
 }
 
-// freedResource
+// freedClusterResource
 // @Description: freed resource
-func freedResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+func freedClusterResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
-	err := clusterMeta.FreedInstanceResource(context)
+	request := &structs.RecycleRequest{
+		RecycleReqs: []structs.RecycleRequire{
+			{
+				RecycleType: structs.RecycleHolder,
+				HolderID:    clusterMeta.Cluster.ID,
+			},
+		},
+	}
+	err := resourceManagement.GetManagement().GetAllocatorRecycler().RecycleResources(context, request)
 
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -415,7 +423,7 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	tidbServerPort := clusterMeta.GetClusterConnectAddresses()[0].Port
 	req := secondparty.ClusterSetDbPswReq{
 		DbConnParameter: secondparty.DbConnParam{
-			Username: "root", //todo: replace admin account
+			Username: cluster.DBUser,
 			Password: cluster.DBPassword,
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),

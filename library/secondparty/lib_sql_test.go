@@ -34,12 +34,14 @@ import (
 )
 
 var secondMicro3 *SecondMicro
+var secondPartyManager3 *SecondPartyManager
 var dbConnParam3 DbConnParam
 var req ClusterEditConfigReq
 var manager *SecondPartyManager
 
 func init() {
 	secondMicro3 = &SecondMicro{}
+	secondPartyManager2 = &SecondPartyManager{}
 	dbConnParam3 = DbConnParam{
 		Username: "root",
 		IP:       "127.0.0.1",
@@ -47,7 +49,7 @@ func init() {
 	}
 }
 
-func TestSecondMicro_EditClusterConfig_v1(t *testing.T) {
+func TestSecondMicro_EditClusterConfig_Deprecated_v1(t *testing.T) {
 	req = ClusterEditConfigReq{
 		DbConnParameter: dbConnParam3,
 		ComponentConfigs: []ClusterComponentConfig{
@@ -64,7 +66,7 @@ func TestSecondMicro_EditClusterConfig_v1(t *testing.T) {
 	}
 }
 
-func TestSecondMicro_EditClusterConfig_v2(t *testing.T) {
+func TestSecondMicro_EditClusterConfig_Deprecated_v2(t *testing.T) {
 	req = ClusterEditConfigReq{
 		DbConnParameter: dbConnParam3,
 		ComponentConfigs: []ClusterComponentConfig{
@@ -82,7 +84,7 @@ func TestSecondMicro_EditClusterConfig_v2(t *testing.T) {
 	}
 }
 
-func TestSecondMicro_EditClusterConfig_v3(t *testing.T) {
+func TestSecondMicro_EditClusterConfig_Deprecated_v3(t *testing.T) {
 	req = ClusterEditConfigReq{
 		DbConnParameter: dbConnParam3,
 		ComponentConfigs: []ClusterComponentConfig{
@@ -99,7 +101,7 @@ func TestSecondMicro_EditClusterConfig_v3(t *testing.T) {
 	}
 }
 
-func TestSecondMicro_EditClusterConfig_v4(t *testing.T) {
+func TestSecondMicro_EditClusterConfig_Deprecated_v4(t *testing.T) {
 	req = ClusterEditConfigReq{
 		DbConnParameter: dbConnParam3,
 		ComponentConfigs: []ClusterComponentConfig{
@@ -116,7 +118,7 @@ func TestSecondMicro_EditClusterConfig_v4(t *testing.T) {
 	}
 }
 
-func TestSecondMicro_EditClusterConfig_v5(t *testing.T) {
+func TestSecondMicro_EditClusterConfig_Deprecated_v5(t *testing.T) {
 	req = ClusterEditConfigReq{
 		DbConnParameter: dbConnParam3,
 		ComponentConfigs: []ClusterComponentConfig{
@@ -133,7 +135,7 @@ func TestSecondMicro_EditClusterConfig_v5(t *testing.T) {
 	}
 }
 
-func TestSecondMicro_EditClusterConfig_v6(t *testing.T) {
+func TestSecondMicro_EditClusterConfig_Deprecated_v6(t *testing.T) {
 	req = ClusterEditConfigReq{
 		DbConnParameter: dbConnParam3,
 		ComponentConfigs: []ClusterComponentConfig{
@@ -145,6 +147,109 @@ func TestSecondMicro_EditClusterConfig_v6(t *testing.T) {
 		},
 	}
 	err := secondMicro3.EditClusterConfig(context.TODO(), req, 0)
+	if err == nil || !strings.Contains(err.Error(), "not support") {
+		t.Errorf("err nil or err(%s) not contain not support", err.Error())
+	}
+}
+
+func TestSecondMicro_EditClusterConfig_v1(t *testing.T) {
+	req = ClusterEditConfigReq{
+		DbConnParameter: dbConnParam3,
+		ComponentConfigs: []ClusterComponentConfig{
+			{
+				TiDBClusterComponent: spec.TiDBClusterComponent_TiKV,
+				ConfigKey:            "split.qps-threshold",
+				ConfigValue:          "1000",
+			},
+		},
+	}
+	err := secondPartyManager3.EditClusterConfig(context.TODO(), req, TestWorkFlowNodeID)
+	if err == nil {
+		t.Error("err nil")
+	}
+}
+
+func TestSecondMicro_EditClusterConfig_v2(t *testing.T) {
+	req = ClusterEditConfigReq{
+		DbConnParameter: dbConnParam3,
+		ComponentConfigs: []ClusterComponentConfig{
+			{
+				InstanceAddr:         "127.0.0.1:10020",
+				TiDBClusterComponent: spec.TiDBClusterComponent_TiKV,
+				ConfigKey:            "split.qps-threshold",
+				ConfigValue:          "3000",
+			},
+		},
+	}
+	err := secondPartyManager3.EditClusterConfig(context.TODO(), req, TestWorkFlowNodeID)
+	if err == nil {
+		t.Error("err nil")
+	}
+}
+
+func TestSecondMicro_EditClusterConfig_v3(t *testing.T) {
+	req = ClusterEditConfigReq{
+		DbConnParameter: dbConnParam3,
+		ComponentConfigs: []ClusterComponentConfig{
+			{
+				TiDBClusterComponent: spec.TiDBClusterComponent_TiKV,
+				ConfigKey:            "log-level",
+				ConfigValue:          "'warn'",
+			},
+		},
+	}
+	err := secondPartyManager3.EditClusterConfig(context.TODO(), req, TestWorkFlowNodeID)
+	if err == nil {
+		t.Error("err nil")
+	}
+}
+
+func TestSecondMicro_EditClusterConfig_v4(t *testing.T) {
+	req = ClusterEditConfigReq{
+		DbConnParameter: dbConnParam3,
+		ComponentConfigs: []ClusterComponentConfig{
+			{
+				TiDBClusterComponent: spec.TiDBClusterComponent_PD,
+				ConfigKey:            "log.level",
+				ConfigValue:          "'info'",
+			},
+		},
+	}
+	err := secondPartyManager3.EditClusterConfig(context.TODO(), req, TestWorkFlowNodeID)
+	if err == nil {
+		t.Error("err nil")
+	}
+}
+
+func TestSecondMicro_EditClusterConfig_v5(t *testing.T) {
+	req = ClusterEditConfigReq{
+		DbConnParameter: dbConnParam3,
+		ComponentConfigs: []ClusterComponentConfig{
+			{
+				TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+				ConfigKey:            "tidb_slow_log_threshold",
+				ConfigValue:          "200",
+			},
+		},
+	}
+	err := secondPartyManager3.EditClusterConfig(context.TODO(), req, TestWorkFlowNodeID)
+	if err == nil {
+		t.Error("err nil")
+	}
+}
+
+func TestSecondMicro_EditClusterConfig_v6(t *testing.T) {
+	req = ClusterEditConfigReq{
+		DbConnParameter: dbConnParam3,
+		ComponentConfigs: []ClusterComponentConfig{
+			{
+				TiDBClusterComponent: spec.TiDBClusterComponent_TiFlash,
+				ConfigKey:            "tidb_slow_log_threshold",
+				ConfigValue:          "200",
+			},
+		},
+	}
+	err := secondPartyManager3.EditClusterConfig(context.TODO(), req, TestWorkFlowNodeID)
 	if err == nil || !strings.Contains(err.Error(), "not support") {
 		t.Errorf("err nil or err(%s) not contain not support", err.Error())
 	}
@@ -192,8 +297,8 @@ func TestSecondMicro_SetClusterDbPassword_v1(t *testing.T) {
 		DbConnParameter: DbConnParam{
 			Username: "root",
 			Password: "121345",
-			IP: "127.0.0.1",
-			Port: "4321",
+			IP:       "127.0.0.1",
+			Port:     "4321",
 		},
 	}
 	err := manager.SetClusterDbPassword(context.TODO(), req, "11")
@@ -209,8 +314,8 @@ func TestSecondMicro_SetClusterDbPassword_v2(t *testing.T) {
 		DbConnParameter: DbConnParam{
 			Username: "root",
 			Password: "12345678",
-			IP: "127.0.0.1",
-			Port: "4321",
+			IP:       "127.0.0.1",
+			Port:     "4321",
 		},
 	}
 	err := manager.SetClusterDbPassword(context.TODO(), req, "22")

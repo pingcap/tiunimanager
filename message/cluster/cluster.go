@@ -263,8 +263,8 @@ type QueryClusterParametersReq struct {
 }
 
 type QueryClusterParametersResp struct {
-	ParameterGroupId string                         `json:"parameterGroupId"`
-	Params           []structs.ClusterParameterInfo `json:"params"`
+	ParamGroupId string                         `json:"paramGroupId"`
+	Params       []structs.ClusterParameterInfo `json:"params"`
 }
 
 type UpdateClusterParametersReq struct {
@@ -274,8 +274,8 @@ type UpdateClusterParametersReq struct {
 }
 
 type UpdateClusterParametersResp struct {
-	ClusterID                     string `json:"clusterId" example:"1"`
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
+	ClusterID string `json:"clusterId" example:"1"`
+	structs.AsyncTaskWorkFlowInfo
 }
 
 type InspectClusterParametersReq struct {
@@ -283,10 +283,10 @@ type InspectClusterParametersReq struct {
 }
 
 type InspectClusterParametersResp struct {
-	ParamID       int64                      `json:"paramId" example:"1"`
-	Name          string                     `json:"name" example:"binlog_cache"`
-	ComponentType string                     `json:"componentType" example:"tidb"`
-	Instance      string                     `json:"instance" example:"172.16.5.23"`
-	RealValue     structs.ParameterRealValue `json:"realValue"`
-	InspectValue  string                     `json:"inspectValue" example:"1"`
+	ParamID      int64                      `json:"paramId" example:"1"`
+	Name         string                     `json:"name" example:"binlog_cache"`
+	InstanceType string                     `json:"instanceType" example:"tidb"`
+	Instance     string                     `json:"instance" example:"172.16.5.23"`
+	RealValue    structs.ParameterRealValue `json:"realValue"`
+	InspectValue string                     `json:"inspectValue" example:"1"`
 }

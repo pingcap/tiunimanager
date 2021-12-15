@@ -54,9 +54,25 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 		return resp, page, framework.WrapError(common.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, "failed to query cluster parameter", err)
 	}
 
-	resp = cluster.QueryClusterParametersResp{ParameterGroupId: pgId}
+	resp = cluster.QueryClusterParametersResp{ParamGroupId: pgId}
 	resp.Params = make([]structs.ClusterParameterInfo, len(params))
 	for i, param := range params {
+		// convert range
+		ranges := make([]string, 0)
+		if len(param.Range) > 0 {
+			err = json.Unmarshal([]byte(param.Range), &ranges)
+			if err != nil {
+				return resp, page, framework.WrapError(common.TIEM_CONVERT_OBJ_FAILED, "failed to convert parameter range", err)
+			}
+		}
+		// convert realValue
+		realValue := structs.ParameterRealValue{}
+		if len(param.RealValue) > 0 {
+			err = json.Unmarshal([]byte(param.RealValue), &realValue)
+			if err != nil {
+				return resp, page, framework.WrapError(common.TIEM_CONVERT_OBJ_FAILED, "failed to convert parameter realValue", err)
+			}
+		}
 		resp.Params[i] = structs.ClusterParameterInfo{
 			ParamId:        param.ID,
 			Category:       param.Category,
@@ -65,16 +81,16 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 			SystemVariable: param.SystemVariable,
 			Type:           param.Type,
 			Unit:           param.Unit,
-			//Range:          param.Range,
-			HasReboot:    param.HasReboot,
-			HasApply:     param.HasApply,
-			UpdateSource: param.UpdateSource,
-			DefaultValue: param.DefaultValue,
-			//RealValue:      param.RealValue,
-			Description: param.Description,
-			Note:        param.Note,
-			CreatedAt:   param.CreatedAt.Unix(),
-			UpdatedAt:   param.UpdatedAt.Unix(),
+			Range:          ranges,
+			HasReboot:      param.HasReboot,
+			HasApply:       param.HasApply,
+			UpdateSource:   param.UpdateSource,
+			DefaultValue:   param.DefaultValue,
+			RealValue:      realValue,
+			Description:    param.Description,
+			Note:           param.Note,
+			CreatedAt:      param.CreatedAt.Unix(),
+			UpdatedAt:      param.UpdatedAt.Unix(),
 		}
 	}
 

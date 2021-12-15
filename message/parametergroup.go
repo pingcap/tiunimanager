@@ -30,8 +30,8 @@ import (
 type QueryParameterGroupReq struct {
 	structs.PageRequest
 	Name           string `json:"name" form:"name" example:"default"`
-	DBType         int    `json:"dbType" form:"dbType" example:"0"`
-	HasDefault     int    `json:"hasDefault" form:"hasDefault" example:"0"`
+	DBType         int    `json:"dbType" form:"dbType" example:"0" enums:"0,1,2"`
+	HasDefault     int    `json:"hasDefault" form:"hasDefault" example:"0" enums:"0,1,2"`
 	ClusterVersion string `json:"clusterVersion" form:"clusterVersion" example:"v5.0"`
 	ClusterSpec    string `json:"clusterSpec" form:"clusterSpec" example:"8C16G"`
 	HasDetail      bool   `json:"hasDetail" form:"hasDetail" example:"false"`
@@ -51,11 +51,11 @@ type DetailParameterGroupResp struct {
 
 type CreateParameterGroupReq struct {
 	Name           string                                      `json:"name" example:"8C16GV4_default"`
-	DBType         int                                         `json:"dbType" example:"1"`
-	HasDefault     int                                         `json:"hasDefault" example:"1"`
+	DBType         int                                         `json:"dbType" example:"1" enums:"1,2"`
+	HasDefault     int                                         `json:"hasDefault" example:"1" enums:"1,2"`
 	ClusterVersion string                                      `json:"clusterVersion" example:"v5.0"`
 	ClusterSpec    string                                      `json:"clusterSpec" example:"8C16G"`
-	GroupType      int                                         `json:"groupType" example:"1"`
+	GroupType      int                                         `json:"groupType" example:"1" enums:"1,2"`
 	Note           string                                      `json:"note" example:"default param group"`
 	Params         []structs.ParameterGroupParameterSampleInfo `json:"params"`
 }
@@ -102,18 +102,18 @@ type ApplyParameterGroupReq struct {
 }
 
 type ApplyParameterGroupResp struct {
-	ParamGroupID                  string `json:"paramGroupId" example:"1"`
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowId"`
+	ParamGroupID string `json:"paramGroupId" example:"1"`
+	structs.AsyncTaskWorkFlowInfo
 }
 
 type ParameterGroupInfo struct {
 	ParamGroupID   string                                `json:"paramGroupId" example:"1"`
 	Name           string                                `json:"name" example:"default"`
-	DBType         int                                   `json:"dbType" example:"0"`
-	HasDefault     int                                   `json:"hasDefault" example:"1"`
+	DBType         int                                   `json:"dbType" example:"1" enums:"1,2"`
+	HasDefault     int                                   `json:"hasDefault" example:"1" enums:"1,2"`
 	ClusterVersion string                                `json:"clusterVersion" example:"v5.0"`
 	ClusterSpec    string                                `json:"clusterSpec" example:"8C16G"`
-	GroupType      int                                   `json:"groupType" example:"0"`
+	GroupType      int                                   `json:"groupType" example:"0" enums:"1,2"`
 	Note           string                                `json:"note" example:"default param group"`
 	CreatedAt      int64                                 `json:"createTime" example:"1636698675"`
 	UpdatedAt      int64                                 `json:"updateTime" example:"1636698675"`

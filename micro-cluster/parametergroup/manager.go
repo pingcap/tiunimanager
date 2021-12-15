@@ -150,6 +150,7 @@ func (m *Manager) DeleteParameterGroup(ctx context.Context, req message.DeletePa
 		return
 	}
 
+	// default parameter group not be deleted.
 	if pg.HasDefault == int(DEFAULT) {
 		return resp, framework.WrapError(common.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL, common.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL.Explain(), err)
 	}
@@ -242,6 +243,8 @@ func (m *Manager) CopyParameterGroup(ctx context.Context, req message.CopyParame
 	pg.ID = ""
 	pg.Name = req.Name
 	pg.Note = req.Note
+	// copy parameter group HasDefault values is 2
+	pg.HasDefault = int(CUSTOM)
 	parameterGroup, err := models.GetParameterGroupReaderWriter().CreateParameterGroup(ctx, pg, pgm)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("copy parameter group convert resp err: %v", err)

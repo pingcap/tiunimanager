@@ -191,3 +191,23 @@ func Delete(c *gin.Context) {
 			controller.DefaultTimeout)
 	}
 }
+
+
+// Downstream
+// @Summary unused, just display downstream config
+// @Description show display config
+// @Tags change feed
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tidb body cluster.TiDBDownstream true "tidb"
+// @Param tidb body cluster.MysqlDownstream true "mysql"
+// @Param tidb body cluster.KafkaDownstream true "kafka"
+// @Success 200 {object} controller.CommonResult
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /downstream/ [delete]
+func Downstream(c *gin.Context) {
+}
+

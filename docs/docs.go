@@ -2446,6 +2446,81 @@ var doc = `{
                 }
             }
         },
+        "/downstream/": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "show display config",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "change feed"
+                ],
+                "summary": "unused, just display downstream config",
+                "parameters": [
+                    {
+                        "description": "tidb",
+                        "name": "tidb",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.TiDBDownstream"
+                        }
+                    },
+                    {
+                        "description": "mysql",
+                        "name": "tidb",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.MysqlDownstream"
+                        }
+                    },
+                    {
+                        "description": "kafka",
+                        "name": "tidb",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.KafkaDownstream"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/knowledges/": {
             "get": {
                 "security": [
@@ -4372,6 +4447,19 @@ var doc = `{
                 }
             }
         },
+        "cluster.Dispatcher": {
+            "type": "object",
+            "properties": {
+                "dispatcher": {
+                    "type": "string",
+                    "example": "ts"
+                },
+                "matcher": {
+                    "type": "string",
+                    "example": "test1.*"
+                }
+            }
+        },
         "cluster.GetBackupStrategyResp": {
             "type": "object",
             "properties": {
@@ -4421,6 +4509,104 @@ var doc = `{
                 },
                 "realValue": {
                     "$ref": "#/definitions/structs.ParameterRealValue"
+                }
+            }
+        },
+        "cluster.KafkaDownstream": {
+            "type": "object",
+            "properties": {
+                "clientId": {
+                    "type": "string",
+                    "example": "213"
+                },
+                "dispatchers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/cluster.Dispatcher"
+                    }
+                },
+                "ip": {
+                    "type": "string",
+                    "example": "127.0.0.1"
+                },
+                "maxBatchSize": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "maxMessageBytes": {
+                    "type": "integer",
+                    "example": 16
+                },
+                "partitions": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "port": {
+                    "type": "integer",
+                    "example": 9001
+                },
+                "protocol": {
+                    "type": "string",
+                    "enum": [
+                        "default",
+                        "canal",
+                        "avro",
+                        "maxwell"
+                    ],
+                    "example": "default"
+                },
+                "replicationFactor": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "tls": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "topicName": {
+                    "type": "string",
+                    "example": "my_topic"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "2.4.0"
+                }
+            }
+        },
+        "cluster.MysqlDownstream": {
+            "type": "object",
+            "properties": {
+                "concurrentThreads": {
+                    "type": "integer",
+                    "example": 7
+                },
+                "ip": {
+                    "type": "string",
+                    "example": "127.0.0.1"
+                },
+                "maxTxnRow": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "password": {
+                    "type": "string",
+                    "example": "my_password"
+                },
+                "port": {
+                    "type": "integer",
+                    "example": 8001
+                },
+                "tls": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "username": {
+                    "type": "string",
+                    "example": "root"
+                },
+                "workerCount": {
+                    "type": "integer",
+                    "example": 2
                 }
             }
         },
@@ -4764,6 +4950,47 @@ var doc = `{
                 "workFlowId": {
                     "description": "Asynchronous task workflow ID",
                     "type": "string"
+                }
+            }
+        },
+        "cluster.TiDBDownstream": {
+            "type": "object",
+            "properties": {
+                "concurrentThreads": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "ip": {
+                    "type": "string",
+                    "example": "127.0.0.1"
+                },
+                "maxTxnRow": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "password": {
+                    "type": "string",
+                    "example": "my_password"
+                },
+                "port": {
+                    "type": "integer",
+                    "example": 4534
+                },
+                "targetClusterId": {
+                    "type": "string",
+                    "example": "CLUSTER_ID_IN_TIEM__22"
+                },
+                "tls": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "username": {
+                    "type": "string",
+                    "example": "tidb"
+                },
+                "workerCount": {
+                    "type": "integer",
+                    "example": 2
                 }
             }
         },

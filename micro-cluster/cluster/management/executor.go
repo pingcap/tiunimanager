@@ -125,6 +125,20 @@ func freeInstanceResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 	return nil
 }
 
+// setClusterFailure
+// @Description: set cluster running status to constants.ClusterFailure
+func setClusterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	if err := clusterMeta.UpdateClusterStatus(context.Context, constants.ClusterFailure); err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"update cluster[%s] instances status into failure error: %s", clusterMeta.Cluster.Name, err.Error())
+		return err
+	}
+	framework.LogWithContext(context.Context).Infof(
+		"set cluster[%s] status into failure successfully", clusterMeta.Cluster.Name)
+	return nil
+}
+
 // setClusterOnline
 // @Description: set cluster running status to constants.ClusterRunning
 func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {

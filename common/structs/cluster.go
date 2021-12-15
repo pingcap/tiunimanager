@@ -168,6 +168,12 @@ type ProductUpgradeVersionConfigDiffItem struct {
 	Description  string `json:"description"`
 }
 
+type ClusterUpgradeVersionConfigItem struct {
+	Name         string `json:"name"`
+	InstanceType string `json:"instanceType"`
+	Value        string `json:"value"`
+}
+
 type ClusterInstanceParameterValue struct {
 	ID    string `json:"instanceId"`
 	Value string `json:"value"`

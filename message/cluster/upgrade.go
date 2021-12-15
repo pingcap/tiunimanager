@@ -6,22 +6,23 @@
  *                                                                            *
  * http://www.apache.org/licenses/LICENSE-2.0                                 *
  *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ *                                                                            *
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: request
+ * @File: upgrade
  * @Description:
  * @Author: shenhaibo@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/3
+ * @Date: 2021/12/15
 *******************************************************************************/
 
-package upgrade
+package cluster
 
 import "github.com/pingcap-inc/tiem/common/structs"
 
@@ -29,43 +30,25 @@ type QueryUpgradePathReq struct {
 	ClusterID string `json:"ClusterId"`
 }
 
-type Path struct {
-	Type     string   `json:"type"`
-	Versions []string `json:"versions"`
-}
-
 type QueryUpgradePathRsp struct {
-	Paths []*Path
+	Paths []*structs.ProductUpgradePathItem
 }
 
 type QueryUpgradeVersionDiffInfoReq struct {
-	ClusterID string `json:"ClusterId"`
+	ClusterID string `json:"clusterId"`
 	Version   string `json:"version"`
 }
 
-type ConfigDiffInfo struct {
-	Name         string `json:"name"`
-	InstanceType string `json:"instanceType"`
-	CurrentVal   string `json:"currentVal"`
-	SuggestVal   string `json:"suggestVal"`
-	Range        string `json:"range"`
-	Description  string `json:"description"`
-}
-
-type QueryUpgradeVersionDiffInfoRsp struct {
-	ConfigDiffInfos []*ConfigDiffInfo
+type QueryUpgradeVersionDiffInfoResp struct {
+	ConfigDiffInfos []*structs.ProductUpgradeVersionConfigDiffItem `json:"configDiffInfos"`
 }
 
 type ClusterUpgradeReq struct {
 	ClusterID     string `json:"ClusterId"`
 	TargetVersion string `json:"targetVersion"`
-	Parameters    []struct {
-		Name         string `json:"name"`
-		InstanceType string `json:"instanceType"`
-		Value        string `json:"value"`
-	}
+	Configs       []*structs.ClusterUpgradeVersionConfigItem
 }
 
-type ClusterUpgradeRsp struct {
+type ClusterUpgradeResp struct {
 	structs.AsyncTaskWorkFlowInfo
 }

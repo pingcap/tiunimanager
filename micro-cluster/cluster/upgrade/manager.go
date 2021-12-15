@@ -26,9 +26,11 @@ package upgrade
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/message/cluster"
 
-	"github.com/pingcap-inc/tiem/apimodels/cluster/upgrade"
+	"github.com/pingcap-inc/tiem/common/structs"
+
+	"github.com/pingcap-inc/tiem/library/secondparty"
 
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 
@@ -44,18 +46,18 @@ func NewManager() *Manager {
 	return &Manager{}
 }
 
-func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) ([]*upgrade.Path, error) {
+func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) ([]*structs.ProductUpgradePathItem, error) {
 	cluster, err := domain.GetClusterDetail(ctx, clusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to query update path, %s", err.Error())
-		return []*upgrade.Path{}, framework.WrapError(common.TIEM_UPGRADE_QUERY_PATH_FAILED, "failed to query upgrade path", err)
+		return []*structs.ProductUpgradePathItem{}, framework.WrapError(common.TIEM_UPGRADE_QUERY_PATH_FAILED, "failed to query upgrade path", err)
 	}
 
 	version := cluster.Cluster.ClusterVersion
 	productUpgradePaths, err := models.GetUpgradeReaderWriter().QueryBySrcVersion(ctx, version.Name)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to query update path, %s", err.Error())
-		return []*upgrade.Path{}, framework.WrapError(common.TIEM_UPGRADE_QUERY_PATH_FAILED, "failed to query upgrade path", err)
+		return []*structs.ProductUpgradePathItem{}, framework.WrapError(common.TIEM_UPGRADE_QUERY_PATH_FAILED, "failed to query upgrade path", err)
 	}
 
 	pathMap := make(map[string][]string)
@@ -67,9 +69,9 @@ func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) 
 		}
 	}
 
-	var paths []*upgrade.Path
+	var paths []*structs.ProductUpgradePathItem
 	for k, v := range pathMap {
-		path := upgrade.Path{
+		path := structs.ProductUpgradePathItem{
 			Type:     k,
 			Versions: v,
 		}
@@ -79,23 +81,23 @@ func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) 
 	return paths, nil
 }
 
-func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID string, version string) ([]*upgrade.ConfigDiffInfo, error) {
+func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID string, version string) ([]*structs.ProductUpgradeVersionConfigDiffItem, error) {
 	cluster, err := domain.GetClusterDetail(ctx, clusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to query upgrade version diff, %s", err.Error())
-		return []*upgrade.ConfigDiffInfo{}, framework.WrapError(common.TIEM_UPGRADE_QUERY_VERSION_DIFF_FAILED, "failed to query upgrade version diff", err)
+		return []*structs.ProductUpgradeVersionConfigDiffItem{}, framework.WrapError(common.TIEM_UPGRADE_QUERY_VERSION_DIFF_FAILED, "failed to query upgrade version diff", err)
 	}
 
 	srcVersion := cluster.Cluster.ClusterVersion.Name
 	// TODO: get params for clusterID and dst version and check the diffs
 	framework.LogWithContext(ctx).Infof("TODO: get params for current cluster(%s:%s) and dst version(%s) and get get diffs", clusterID, srcVersion, version)
 
-	var configDiffInfos []*upgrade.ConfigDiffInfo
+	var configDiffInfos []*structs.ProductUpgradeVersionConfigDiffItem
 
 	return configDiffInfos, nil
 }
 
-func (p *Manager) ClusterUpgrade(ctx context.Context, req *upgrade.ClusterUpgradeReq) (string, error) {
+func (p *Manager) ClusterUpgrade(ctx context.Context, req *cluster.ClusterUpgradeReq) (string, error) {
 	cluster, err := domain.GetClusterDetail(ctx, req.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to query upgrade version diff, %s", err.Error())

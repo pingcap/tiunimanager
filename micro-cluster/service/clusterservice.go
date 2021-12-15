@@ -39,7 +39,6 @@ import (
 
 	upgradeManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/upgrade"
 
-	"github.com/pingcap-inc/tiem/apimodels/cluster/upgrade"
 	"github.com/pingcap-inc/tiem/library/util/convert"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 
@@ -547,7 +546,7 @@ func (handler *ClusterServiceHandler) UpdateProductUpgradePath(ctx context.Conte
 }
 
 func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := upgrade.QueryUpgradePathReq{}
+	request := cluster.QueryUpgradePathReq{}
 
 	if handleRequest(ctx, req, resp, request) {
 		result, err := handler.upgradeManager.QueryProductUpdatePath(ctx, request.ClusterID)
@@ -558,7 +557,7 @@ func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Contex
 }
 
 func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := upgrade.QueryUpgradeVersionDiffInfoReq{}
+	request := cluster.QueryUpgradeVersionDiffInfoReq{}
 
 	if handleRequest(ctx, req, resp, request) {
 		result, err := handler.upgradeManager.QueryUpgradeVersionDiffInfo(ctx, request.ClusterID, request.Version)
@@ -569,7 +568,7 @@ func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Co
 }
 
 func (handler *ClusterServiceHandler) ClusterUpgrade(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := upgrade.ClusterUpgradeReq{}
+	request := cluster.ClusterUpgradeReq{}
 
 	if handleRequest(ctx, req, resp, request) {
 		result, err := handler.upgradeManager.ClusterUpgrade(ctx, &request)

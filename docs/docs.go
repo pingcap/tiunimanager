@@ -1892,12 +1892,19 @@ var doc = `{
                 "summary": "query params of a cluster",
                 "parameters": [
                     {
+                        "type": "string",
+                        "name": "clusterId",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
+                        "description": "Current page location",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "Number of this request",
                         "name": "pageSize",
                         "in": "query"
                     },
@@ -1923,7 +1930,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/parameter.ListParamsResp"
+                                                "$ref": "#/definitions/cluster.QueryClusterParametersResp"
                                             }
                                         }
                                     }
@@ -1975,7 +1982,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/parameter.UpdateParamsReq"
+                            "$ref": "#/definitions/cluster.UpdateClusterParametersReq"
                         }
                     },
                     {
@@ -1998,7 +2005,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/parameter.ParamUpdateRsp"
+                                            "$ref": "#/definitions/cluster.UpdateClusterParametersResp"
                                         }
                                     }
                                 }
@@ -2065,7 +2072,10 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/parameter.InspectParamsResp"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/cluster.InspectClusterParametersResp"
+                                            }
                                         }
                                     }
                                 }
@@ -2560,22 +2570,12 @@ var doc = `{
                 "summary": "query param group",
                 "parameters": [
                     {
-                        "enum": [
-                            0,
-                            1,
-                            2
-                        ],
                         "type": "integer",
                         "example": 0,
                         "name": "dbType",
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            0,
-                            1,
-                            2
-                        ],
                         "type": "integer",
                         "example": 0,
                         "name": "hasDefault",
@@ -2595,11 +2595,13 @@ var doc = `{
                     },
                     {
                         "type": "integer",
+                        "description": "Current page location",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "Number of this request",
                         "name": "pageSize",
                         "in": "query"
                     },
@@ -2611,7 +2613,7 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "example": "5.0",
+                        "example": "v5.0",
                         "name": "version",
                         "in": "query"
                     }
@@ -2630,7 +2632,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/paramgroup.QueryParamGroupResp"
+                                                "$ref": "#/definitions/message.QueryParameterGroupResp"
                                             }
                                         }
                                     }
@@ -2682,7 +2684,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/paramgroup.CreateParamGroupReq"
+                            "$ref": "#/definitions/message.CreateParameterGroupReq"
                         }
                     }
                 ],
@@ -2698,7 +2700,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/paramgroup.CommonParamGroupResp"
+                                            "$ref": "#/definitions/message.CreateParameterGroupResp"
                                         }
                                     }
                                 }
@@ -2765,7 +2767,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/paramgroup.QueryParamGroupResp"
+                                            "$ref": "#/definitions/message.DetailParameterGroupResp"
                                         }
                                     }
                                 }
@@ -2816,7 +2818,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/paramgroup.UpdateParamGroupReq"
+                            "$ref": "#/definitions/message.UpdateParameterGroupReq"
                         }
                     }
                 ],
@@ -2832,7 +2834,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/paramgroup.CommonParamGroupResp"
+                                            "$ref": "#/definitions/message.UpdateParameterGroupResp"
                                         }
                                     }
                                 }
@@ -2897,7 +2899,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/paramgroup.CommonParamGroupResp"
+                                            "$ref": "#/definitions/message.DeleteParameterGroupResp"
                                         }
                                     }
                                 }
@@ -2950,7 +2952,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/paramgroup.ApplyParamGroupReq"
+                            "$ref": "#/definitions/message.ApplyParameterGroupReq"
                         }
                     }
                 ],
@@ -2966,7 +2968,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/paramgroup.ApplyParamGroupResp"
+                                            "$ref": "#/definitions/message.ApplyParameterGroupResp"
                                         }
                                     }
                                 }
@@ -3019,7 +3021,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/paramgroup.CopyParamGroupReq"
+                            "$ref": "#/definitions/message.CopyParameterGroupReq"
                         }
                     }
                 ],
@@ -3035,7 +3037,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/paramgroup.CommonParamGroupResp"
+                                            "$ref": "#/definitions/message.CopyParameterGroupResp"
                                         }
                                     }
                                 }
@@ -4472,6 +4474,34 @@ var doc = `{
                 }
             }
         },
+        "cluster.InspectClusterParametersResp": {
+            "type": "object",
+            "properties": {
+                "componentType": {
+                    "type": "string",
+                    "example": "tidb"
+                },
+                "inspectValue": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "instance": {
+                    "type": "string",
+                    "example": "172.16.5.23"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "binlog_cache"
+                },
+                "paramId": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "realValue": {
+                    "$ref": "#/definitions/structs.ParameterRealValue"
+                }
+            }
+        },
         "cluster.PauseChangeFeedTaskResp": {
             "type": "object",
             "properties": {
@@ -4593,6 +4623,64 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/structs.ClusterInstanceInfo"
                     }
+                }
+            }
+        },
+        "cluster.QueryClusterParametersResp": {
+            "type": "object",
+            "properties": {
+                "componentType": {
+                    "type": "string",
+                    "example": "tidb"
+                },
+                "createTime": {
+                    "type": "integer",
+                    "example": 1636698675
+                },
+                "defaultValue": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "binlog cache size"
+                },
+                "hasReboot": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "name": {
+                    "type": "string",
+                    "example": "binlog_size"
+                },
+                "paramId": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "range": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "1",
+                        " 1000"
+                    ]
+                },
+                "realValue": {
+                    "$ref": "#/definitions/structs.ParameterRealValue"
+                },
+                "type": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "mb"
+                },
+                "updateTime": {
+                    "type": "integer",
+                    "example": 1636698675
                 }
             }
         },
@@ -4831,6 +4919,36 @@ var doc = `{
                         5
                     ],
                     "example": 1
+                }
+            }
+        },
+        "cluster.UpdateClusterParametersReq": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "params": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ClusterParameterSampleInfo"
+                    }
+                },
+                "reboot": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "cluster.UpdateClusterParametersResp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
                 }
             }
         },
@@ -5523,6 +5641,108 @@ var doc = `{
                 }
             }
         },
+        "message.ApplyParameterGroupReq": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string",
+                    "example": "123"
+                },
+                "paramGroupId": {
+                    "type": "string",
+                    "example": "123"
+                },
+                "reboot": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "message.ApplyParameterGroupResp": {
+            "type": "object",
+            "properties": {
+                "paramGroupId": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
+        "message.CopyParameterGroupReq": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "8C16GV4_copy"
+                },
+                "note": {
+                    "type": "string",
+                    "example": "copy param group"
+                },
+                "paramGroupId": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.CopyParameterGroupResp": {
+            "type": "object",
+            "properties": {
+                "paramGroupId": {
+                    "type": "string",
+                    "example": "1"
+                }
+            }
+        },
+        "message.CreateParameterGroupReq": {
+            "type": "object",
+            "properties": {
+                "dbType": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "groupType": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "hasDefault": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "8C16GV4_default"
+                },
+                "note": {
+                    "type": "string",
+                    "example": "default param group"
+                },
+                "params": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ParameterGroupParameterSampleInfo"
+                    }
+                },
+                "spec": {
+                    "type": "string",
+                    "example": "8C16G"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "v5.0"
+                }
+            }
+        },
+        "message.CreateParameterGroupResp": {
+            "type": "object",
+            "properties": {
+                "paramGroupId": {
+                    "type": "string",
+                    "example": "1"
+                }
+            }
+        },
         "message.DataExportReq": {
             "type": "object",
             "properties": {
@@ -5645,6 +5865,66 @@ var doc = `{
                 }
             }
         },
+        "message.DeleteParameterGroupResp": {
+            "type": "object",
+            "properties": {
+                "paramGroupId": {
+                    "type": "string",
+                    "example": "1"
+                }
+            }
+        },
+        "message.DetailParameterGroupResp": {
+            "type": "object",
+            "properties": {
+                "createTime": {
+                    "type": "integer",
+                    "example": 1636698675
+                },
+                "dbType": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "groupType": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "hasDefault": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "default"
+                },
+                "note": {
+                    "type": "string",
+                    "example": "default param group"
+                },
+                "paramGroupId": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "params": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ParameterGroupParameterInfo"
+                    }
+                },
+                "spec": {
+                    "type": "string",
+                    "example": "8C16G"
+                },
+                "updateTime": {
+                    "type": "integer",
+                    "example": 1636698675
+                },
+                "version": {
+                    "type": "string",
+                    "example": "v5.0"
+                }
+            }
+        },
         "message.QueryDataImportExportRecordsResp": {
             "type": "object",
             "properties": {
@@ -5653,6 +5933,57 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/structs.DataImportExportRecordInfo"
                     }
+                }
+            }
+        },
+        "message.QueryParameterGroupResp": {
+            "type": "object",
+            "properties": {
+                "createTime": {
+                    "type": "integer",
+                    "example": 1636698675
+                },
+                "dbType": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "groupType": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "hasDefault": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "default"
+                },
+                "note": {
+                    "type": "string",
+                    "example": "default param group"
+                },
+                "paramGroupId": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "params": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ParameterGroupParameterInfo"
+                    }
+                },
+                "spec": {
+                    "type": "string",
+                    "example": "8C16G"
+                },
+                "updateTime": {
+                    "type": "integer",
+                    "example": 1636698675
+                },
+                "version": {
+                    "type": "string",
+                    "example": "v5.0"
                 }
             }
         },
@@ -5687,493 +6018,7 @@ var doc = `{
                 }
             }
         },
-        "parameter.InspectParamsResp": {
-            "type": "object",
-            "properties": {
-                "componentType": {
-                    "type": "string",
-                    "example": "tidb"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "inspectValue": {
-                    "type": "string",
-                    "example": "1"
-                },
-                "instance": {
-                    "type": "string",
-                    "example": "172.16.5.23"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "binlog_cache"
-                },
-                "realValue": {
-                    "$ref": "#/definitions/parameter.ParamRealValue"
-                }
-            }
-        },
-        "parameter.ListParamsResp": {
-            "type": "object",
-            "properties": {
-                "componentType": {
-                    "type": "string",
-                    "example": "tidb"
-                },
-                "createTime": {
-                    "type": "integer",
-                    "example": 1636698675
-                },
-                "defaultValue": {
-                    "type": "string",
-                    "example": "1"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "binlog cache size"
-                },
-                "hasReboot": {
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1
-                    ],
-                    "example": 0
-                },
-                "name": {
-                    "type": "string",
-                    "example": "binlog_size"
-                },
-                "paramId": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "range": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "1",
-                        " 1000"
-                    ]
-                },
-                "realValue": {
-                    "$ref": "#/definitions/parameter.ParamRealValue"
-                },
-                "type": {
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1,
-                        2
-                    ],
-                    "example": 0
-                },
-                "unit": {
-                    "type": "string",
-                    "example": "mb"
-                },
-                "updateTime": {
-                    "type": "integer",
-                    "example": 1636698675
-                }
-            }
-        },
-        "parameter.ParamInstanceRealValue": {
-            "type": "object",
-            "properties": {
-                "instance": {
-                    "type": "string",
-                    "example": "172.16.10.2"
-                },
-                "value": {
-                    "type": "string",
-                    "example": "2"
-                }
-            }
-        },
-        "parameter.ParamRealValue": {
-            "type": "object",
-            "properties": {
-                "cluster": {
-                    "type": "string",
-                    "example": "1"
-                },
-                "instances": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/parameter.ParamInstanceRealValue"
-                    }
-                }
-            }
-        },
-        "parameter.ParamUpdateRsp": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "createTime": {
-                    "type": "string"
-                },
-                "deleteTime": {
-                    "type": "string"
-                },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "updateTime": {
-                    "type": "string"
-                }
-            }
-        },
-        "parameter.UpdateParam": {
-            "type": "object",
-            "properties": {
-                "componentType": {
-                    "type": "string",
-                    "example": "TiDB"
-                },
-                "hasReboot": {
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1
-                    ],
-                    "example": 0
-                },
-                "name": {
-                    "type": "string",
-                    "example": "binlog_cache"
-                },
-                "paramId": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "realValue": {
-                    "$ref": "#/definitions/parameter.ParamRealValue"
-                },
-                "source": {
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1,
-                        2,
-                        3
-                    ],
-                    "example": 0
-                },
-                "type": {
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1,
-                        2
-                    ],
-                    "example": 0
-                }
-            }
-        },
-        "parameter.UpdateParamsReq": {
-            "type": "object",
-            "properties": {
-                "needReboot": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "params": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/parameter.UpdateParam"
-                    }
-                }
-            }
-        },
-        "paramgroup.ApplyParamGroupReq": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string",
-                    "example": "123"
-                },
-                "needReboot": {
-                    "type": "boolean",
-                    "example": false
-                }
-            }
-        },
-        "paramgroup.ApplyParamGroupResp": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string",
-                    "example": "123"
-                },
-                "createTime": {
-                    "type": "string"
-                },
-                "deleteTime": {
-                    "type": "string"
-                },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "paramGroupId": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "updateTime": {
-                    "type": "string"
-                }
-            }
-        },
-        "paramgroup.CommonParamGroupResp": {
-            "type": "object",
-            "properties": {
-                "paramGroupId": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "paramgroup.CopyParamGroupReq": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "example": "8C16GV4_copy"
-                },
-                "note": {
-                    "type": "string",
-                    "example": "copy param group"
-                }
-            }
-        },
-        "paramgroup.CreateAndUpdateParam": {
-            "type": "object",
-            "properties": {
-                "defaultValue": {
-                    "type": "string",
-                    "example": "1"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "binlog cache size"
-                },
-                "paramId": {
-                    "type": "integer",
-                    "example": 123
-                }
-            }
-        },
-        "paramgroup.CreateParamGroupReq": {
-            "type": "object",
-            "properties": {
-                "dbType": {
-                    "type": "integer",
-                    "enum": [
-                        1,
-                        2
-                    ],
-                    "example": 1
-                },
-                "groupType": {
-                    "type": "integer",
-                    "enum": [
-                        1,
-                        2
-                    ],
-                    "example": 1
-                },
-                "hasDefault": {
-                    "type": "integer",
-                    "enum": [
-                        1,
-                        2
-                    ],
-                    "example": 1
-                },
-                "name": {
-                    "type": "string",
-                    "example": "8C16GV4_default"
-                },
-                "note": {
-                    "type": "string",
-                    "example": "default param group"
-                },
-                "params": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/paramgroup.CreateAndUpdateParam"
-                    }
-                },
-                "spec": {
-                    "type": "string",
-                    "example": "8C16G"
-                },
-                "version": {
-                    "type": "string",
-                    "example": "5.0"
-                }
-            }
-        },
-        "paramgroup.ParamDetail": {
-            "type": "object",
-            "properties": {
-                "componentType": {
-                    "type": "string",
-                    "example": "tidb"
-                },
-                "createTime": {
-                    "type": "integer",
-                    "example": 1636698675
-                },
-                "defaultValue": {
-                    "type": "string",
-                    "example": "1"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "binlog cache size"
-                },
-                "hasReboot": {
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1
-                    ],
-                    "example": 0
-                },
-                "name": {
-                    "type": "string",
-                    "example": "binlog_size"
-                },
-                "note": {
-                    "type": "string",
-                    "example": "binlog cache size"
-                },
-                "paramId": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "range": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "1",
-                        " 1000"
-                    ]
-                },
-                "source": {
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1,
-                        2,
-                        3
-                    ],
-                    "example": 0
-                },
-                "type": {
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1,
-                        2
-                    ],
-                    "example": 0
-                },
-                "unit": {
-                    "type": "string",
-                    "example": "mb"
-                },
-                "updateTime": {
-                    "type": "integer",
-                    "example": 1636698675
-                }
-            }
-        },
-        "paramgroup.QueryParamGroupResp": {
-            "type": "object",
-            "properties": {
-                "createTime": {
-                    "type": "integer",
-                    "example": 1636698675
-                },
-                "dbType": {
-                    "type": "integer",
-                    "enum": [
-                        1,
-                        2
-                    ],
-                    "example": 1
-                },
-                "groupType": {
-                    "type": "integer",
-                    "enum": [
-                        1,
-                        2
-                    ],
-                    "example": 0
-                },
-                "hasDefault": {
-                    "type": "integer",
-                    "enum": [
-                        1,
-                        2
-                    ],
-                    "example": 1
-                },
-                "name": {
-                    "type": "string",
-                    "example": "default"
-                },
-                "note": {
-                    "type": "string",
-                    "example": "default param group"
-                },
-                "paramGroupId": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "params": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/paramgroup.ParamDetail"
-                    }
-                },
-                "spec": {
-                    "type": "string",
-                    "example": "8C16G"
-                },
-                "updateTime": {
-                    "type": "integer",
-                    "example": 1636698675
-                },
-                "version": {
-                    "type": "string",
-                    "example": "5.0"
-                }
-            }
-        },
-        "paramgroup.UpdateParamGroupReq": {
+        "message.UpdateParameterGroupReq": {
             "type": "object",
             "properties": {
                 "name": {
@@ -6184,10 +6029,13 @@ var doc = `{
                     "type": "string",
                     "example": "default param group"
                 },
+                "paramGroupId": {
+                    "type": "string"
+                },
                 "params": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/paramgroup.CreateAndUpdateParam"
+                        "$ref": "#/definitions/structs.ParameterGroupParameterSampleInfo"
                     }
                 },
                 "spec": {
@@ -6197,6 +6045,15 @@ var doc = `{
                 "version": {
                     "type": "string",
                     "example": "v5.0"
+                }
+            }
+        },
+        "message.UpdateParameterGroupResp": {
+            "type": "object",
+            "properties": {
+                "paramGroupId": {
+                    "type": "string",
+                    "example": "1"
                 }
             }
         },
@@ -6435,6 +6292,66 @@ var doc = `{
                 }
             }
         },
+        "structs.ClusterInstanceParameterValue": {
+            "type": "object",
+            "properties": {
+                "instanceId": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.ClusterParameterSampleInfo": {
+            "type": "object",
+            "properties": {
+                "componentType": {
+                    "type": "string",
+                    "example": "TiDB"
+                },
+                "hasReboot": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "example": 0
+                },
+                "name": {
+                    "type": "string",
+                    "example": "binlog_cache"
+                },
+                "paramId": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "realValue": {
+                    "$ref": "#/definitions/structs.ParameterRealValue"
+                },
+                "source": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3
+                    ],
+                    "example": 0
+                },
+                "type": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                    ],
+                    "example": 0
+                }
+            }
+        },
         "structs.ClusterResourceInfo": {
             "type": "object",
             "properties": {
@@ -6527,6 +6444,96 @@ var doc = `{
                 },
                 "zipName": {
                     "type": "string"
+                }
+            }
+        },
+        "structs.ParameterGroupParameterInfo": {
+            "type": "object",
+            "properties": {
+                "componentType": {
+                    "type": "string",
+                    "example": "tidb"
+                },
+                "createTime": {
+                    "type": "integer",
+                    "example": 1636698675
+                },
+                "defaultValue": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "binlog cache size"
+                },
+                "hasReboot": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "name": {
+                    "type": "string",
+                    "example": "binlog_size"
+                },
+                "note": {
+                    "type": "string",
+                    "example": "binlog cache size"
+                },
+                "paramId": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "range": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "1",
+                        " 1000"
+                    ]
+                },
+                "type": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "mb"
+                },
+                "updateTime": {
+                    "type": "integer",
+                    "example": 1636698675
+                }
+            }
+        },
+        "structs.ParameterGroupParameterSampleInfo": {
+            "type": "object",
+            "properties": {
+                "defaultValue": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "binlog cache size"
+                },
+                "paramId": {
+                    "type": "string",
+                    "example": "123"
+                }
+            }
+        },
+        "structs.ParameterRealValue": {
+            "type": "object",
+            "properties": {
+                "clusterValue": {
+                    "type": "string"
+                },
+                "instanceValue": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ClusterInstanceParameterValue"
+                    }
                 }
             }
         },

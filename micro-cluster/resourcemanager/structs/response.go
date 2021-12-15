@@ -14,55 +14,46 @@
  *                                                                            *
  ******************************************************************************/
 
-package hostresource
+package structs
 
-import (
-	"github.com/pingcap-inc/tiem/micro-api/controller"
-)
+import "github.com/pingcap-inc/tiem/common/structs"
 
-type HostQuery struct {
-	controller.PageRequest
-	Purpose string `json:"purpose" form:"purpose"`
-	Status  int    `json:"status" form:"status"`
-	Stat    int    `json:"loadStat" form:"loadStat"`
+type ComputeResource struct {
+	CpuCores int32
+	Memory   int32
 }
 
-type ExcelField int
-
-const (
-	HOSTNAME_FIELD ExcelField = iota
-	IP_FILED
-	USERNAME_FIELD
-	PASSWD_FIELD
-	REGION_FIELD
-	ZONE_FIELD
-	RACK_FIELD
-	ARCH_FIELD
-	OS_FIELD
-	KERNEL_FIELD
-	CPU_FIELD
-	MEM_FIELD
-	NIC_FIELD
-	CLUSTER_TYPE_FIELD
-	PURPOSE_FIELD
-	DISKTYPE_FIELD
-	DISKS_FIELD
-)
-
-type UpdateHostReq struct {
-	Status   *int32 `json:"status"`
-	Reserved *bool  `json:"reserved"`
+type DiskResource struct {
+	DiskId   string
+	DiskName string
+	Path     string
+	Type     string
+	Capacity int32
 }
 
-type Allocation struct {
-	FailureDomain string `json:"failureDomain"`
-	CpuCores      int32  `json:"cpuCores"`
-	Memory        int32  `json:"memory"`
-	Count         int32  `json:"count"`
+type PortResource struct {
+	Start int32
+	End   int32
+	Ports []int32
 }
 
-type AllocHostsReq struct {
-	PdReq   []Allocation `json:"pdReq"`
-	TidbReq []Allocation `json:"tidbReq"`
-	TikvReq []Allocation `json:"tikvReq"`
+type Compute struct {
+	Reqseq     int32
+	Location   structs.Location
+	HostId     string
+	HostName   string
+	HostIp     string
+	UserName   string
+	Passwd     string
+	ComputeRes ComputeRequirement
+	DiskRes    DiskResource
+	PortRes    []PortResource
+}
+
+type AllocRsp struct {
+	Results []Compute
+}
+
+type BatchAllocResponse struct {
+	BatchResults []*AllocRsp
 }

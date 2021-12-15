@@ -11,22 +11,31 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
-package resource
+package resourcepool
 
 import (
-	"os"
-	"testing"
+	"time"
 
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"gorm.io/gorm"
 )
 
-var resourceManager *ResourceManager
+type Disk struct {
+	ID        string         `json:"diskId" gorm:"primaryKey"`
+	HostID    string         `json:"omitempty" gorm:"not null"`
+	Name      string         `json:"name" gorm:"not null;size:255"`         // [sda/sdb/nvmep0...]
+	Capacity  int32          `json:"capacity"`                              // Disk size, Unit: GB
+	Path      string         `json:"path" gorm:"size:255;not null"`         // Disk mount path: [/data1]
+	Type      string         `json:"type" gorm:"not null"`                  // Disk type: [NVMeSSD/SSD/SATA]
+	Status    string         `json:"status" gorm:"index;default:Available"` // Disk Status
+	CreatedAt time.Time      `json:"-" gorm:"autoCreateTime;<-:create;->;"`
+	UpdatedAt time.Time      `json:"-" gorm:"autoUpdateTime"`
+	DeletedAt gorm.DeletedAt `json:"-"`
+}
 
-func TestMain(m *testing.M) {
-	framework.InitBaseFrameworkForUt(framework.ClusterService)
-	resourceManager = NewResourceManager()
-	os.Exit(m.Run())
+func (d *Disk) BeforeCreate(tx *gorm.DB) (err error) {
+	d.ID = uuidutil.GenerateID()
+	return nil
 }

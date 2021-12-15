@@ -14,19 +14,32 @@
  *                                                                            *
  ******************************************************************************/
 
-package resource
+package hostresource
 
-import (
-	"os"
-	"testing"
+type ExcelField int
 
-	"github.com/pingcap-inc/tiem/library/framework"
+const (
+	HOSTNAME_FIELD ExcelField = iota
+	IP_FILED
+	USERNAME_FIELD
+	PASSWD_FIELD
+	REGION_FIELD
+	ZONE_FIELD
+	RACK_FIELD
+	ARCH_FIELD
+	OS_FIELD
+	KERNEL_FIELD
+	CPU_FIELD
+	MEM_FIELD
+	NIC_FIELD
+	CLUSTER_TYPE_FIELD
+	PURPOSE_FIELD
+	DISKTYPE_FIELD
+	DISKS_FIELD
 )
 
-var resourceManager *ResourceManager
-
-func TestMain(m *testing.M) {
-	framework.InitBaseFrameworkForUt(framework.ClusterService)
-	resourceManager = NewResourceManager()
-	os.Exit(m.Run())
-}
+//Constants for importing host information
+const (
+	ImportHostTemplateFileName string = "hostInfo_template.xlsx"
+	ImportHostTemplateFilePath string = "./etc"
+)

@@ -23,6 +23,31 @@
 
 package structs
 
+import (
+	"fmt"
+	"strings"
+
+	"github.com/pingcap-inc/tiem/common/constants"
+)
+
+func GenDomainCodeByName(pre string, name string) string {
+	return fmt.Sprintf("%s,%s", pre, name)
+}
+
+func GetDomainNameFromCode(failureDomain string) string {
+	pos := strings.LastIndex(failureDomain, ",")
+	return failureDomain[pos+1:]
+}
+
+func GetDomainPrefixFromCode(failureDomain string) string {
+	pos := strings.LastIndex(failureDomain, ",")
+	if pos == -1 {
+		// No found ","
+		return failureDomain
+	}
+	return failureDomain[:pos]
+}
+
 type DiskInfo struct {
 	ID       string `json:"diskId"`
 	HostId   string `json:"hostId,omitempty"`
@@ -31,7 +56,6 @@ type DiskInfo struct {
 	Path     string `json:"path"`     // Disk mount path: [/data1]
 	Type     string `json:"type"`     // Disk type: [nvme-ssd/ssd/sata]
 	Status   string `json:"status"`   // Disk Status, 0 for available, 1 for inused
-	UsedBy   string `json:"usedBy,omitempty"`
 }
 
 type HostInfo struct {
@@ -63,4 +87,88 @@ type HostInfo struct {
 	CreatedAt    int64      `json:"createTime"`
 	UpdatedAt    int64      `json:"updateTime"`
 	Disks        []DiskInfo `json:"disks"`
+}
+
+func (h *HostInfo) GetPurposes() []string {
+	return strings.Split(h.Purpose, ",")
+}
+
+func (h *HostInfo) GetSpecString() string {
+	return fmt.Sprintf("%dC%dG", h.CpuCores, h.Memory)
+}
+
+func (h *HostInfo) AddTraits(p string) (err error) {
+	if trait, err := GetTraitByName(p); err == nil {
+		h.Traits = h.Traits | trait
+	} else {
+		return err
+	}
+	return nil
+}
+
+func (h HostInfo) IsExhaust() (stat constants.HostLoadStatus, isExhaust bool) {
+	diskExaust := true
+	for _, disk := range h.Disks {
+		if disk.Status == string(constants.DiskAvailable) {
+			diskExaust = false
+			break
+		}
+	}
+	computeExaust := (h.FreeCpuCores == 0 || h.FreeMemory == 0)
+	if diskExaust && computeExaust {
+		return constants.HostLoadExhaust, true
+	} else if computeExaust {
+		return constants.HostLoadComputeExhaust, true
+	} else if diskExaust {
+		return constants.HostLoadDiskExhaust, true
+	} else {
+		return constants.HostLoadStatusWhatever, false
+	}
+}
+
+func (h HostInfo) IsLoadless() bool {
+	diskLoadless := true
+	for _, disk := range h.Disks {
+		if disk.Status == string(constants.DiskExhaust) || disk.Status == string(constants.DiskInUsed) {
+			diskLoadless = false
+			break
+		}
+	}
+	return diskLoadless && h.FreeCpuCores == h.CpuCores && h.FreeMemory == h.Memory
+}
+
+type Location struct {
+	Region string `json:"Region"`
+	Zone   string `json:"Zone"`
+	Rack   string `json:"Rack"`
+	HostIp string `json:"HostIp"`
+}
+
+type HostFilter struct {
+	HostID  string `json:"hostId" form:"hostId"`
+	Purpose string `json:"purpose" form:"purpose"`
+	Status  string `json:"status" form:"status"`
+	Stat    string `json:"loadStat" form:"loadStat"`
+	Arch    string `json:"arch" form:"arch"`
+}
+
+type DiskFilter struct {
+	DiskType   string `json:"DiskType"`
+	DiskStatus string `json:"DiskStatus"`
+	Capacity   int32  `json:"Capacity"`
+}
+
+type HierarchyTreeNode struct {
+	Code     string               `json:"Code"`
+	Name     string               `json:"Name"`
+	Prefix   string               `json:"Prefix"`
+	SubNodes []*HierarchyTreeNode `json:"SubNodes"`
+}
+
+type Stocks struct {
+	FreeHostCount    int32 `json:"freeHostCount"`
+	FreeCpuCores     int32 `json:"freeCpuCores"`
+	FreeMemory       int32 `json:"freeMemory"`
+	FreeDiskCount    int32 `json:"freeDiskCount"`
+	FreeDiskCapacity int32 `json:"freeDiskCapacity"`
 }

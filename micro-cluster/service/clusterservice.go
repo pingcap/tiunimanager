@@ -36,6 +36,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
 	parameterGroupManager "github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager"
 	"github.com/pingcap-inc/tiem/workflow"
 
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
@@ -61,6 +62,7 @@ var BizErrorResponseStatus = &clusterpb.ResponseStatusDTO{Code: 500}
 
 type ClusterServiceHandler struct {
 	resourceManager         *resource.ResourceManager
+	resourceManager2        *resourcemanager.ResourceManager
 	authManager             *user.AuthManager
 	tenantManager           *user.TenantManager
 	userManager             *user.UserManager
@@ -153,6 +155,9 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.clusterManager = clusterManager.NewClusterManager()
 	handler.brManager = backuprestore.GetBRService()
 	handler.importexportManager = importexport.GetImportExportService()
+
+	// This will be removed after cluster refactor completed.
+	handler.resourceManager2 = resourcemanager.NewResourceManager()
 
 	return handler
 }
@@ -892,38 +897,6 @@ func (p *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *cluster
 	return nil
 }
 
-func (clusterManager *ClusterServiceHandler) ImportHost(ctx context.Context, in *clusterpb.ImportHostRequest, out *clusterpb.ImportHostResponse) error {
-	return clusterManager.resourceManager.ImportHost(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) ImportHostsInBatch(ctx context.Context, in *clusterpb.ImportHostsInBatchRequest, out *clusterpb.ImportHostsInBatchResponse) error {
-	return clusterManager.resourceManager.ImportHostsInBatch(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) RemoveHost(ctx context.Context, in *clusterpb.RemoveHostRequest, out *clusterpb.RemoveHostResponse) error {
-	return clusterManager.resourceManager.RemoveHost(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) RemoveHostsInBatch(ctx context.Context, in *clusterpb.RemoveHostsInBatchRequest, out *clusterpb.RemoveHostsInBatchResponse) error {
-	return clusterManager.resourceManager.RemoveHostsInBatch(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) ListHost(ctx context.Context, in *clusterpb.ListHostsRequest, out *clusterpb.ListHostsResponse) error {
-	return clusterManager.resourceManager.ListHost(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) CheckDetails(ctx context.Context, in *clusterpb.CheckDetailsRequest, out *clusterpb.CheckDetailsResponse) error {
-	return clusterManager.resourceManager.CheckDetails(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) AllocHosts(ctx context.Context, in *clusterpb.AllocHostsRequest, out *clusterpb.AllocHostResponse) error {
-	return clusterManager.resourceManager.AllocHosts(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) GetFailureDomain(ctx context.Context, in *clusterpb.GetFailureDomainRequest, out *clusterpb.GetFailureDomainResponse) error {
-	return clusterManager.resourceManager.GetFailureDomain(ctx, in, out)
-}
-
 func (clusterManager *ClusterServiceHandler) AllocResourcesInBatch(ctx context.Context, in *clusterpb.BatchAllocRequest, out *clusterpb.BatchAllocResponse) error {
 	return clusterManager.resourceManager.AllocResourcesInBatch(ctx, in, out)
 }
@@ -932,18 +905,99 @@ func (clusterManager *ClusterServiceHandler) RecycleResources(ctx context.Contex
 	return clusterManager.resourceManager.RecycleResources(ctx, in, out)
 }
 
-func (clusterManager *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, in *clusterpb.UpdateHostStatusRequest, out *clusterpb.UpdateHostStatusResponse) error {
-	return clusterManager.resourceManager.UpdateHostStatus(ctx, in, out)
+func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	reqStruct := message.ImportHostsReq{}
+
+	if handleRequest(ctx, request, response, reqStruct) {
+		hostIds, err := handler.resourceManager2.ImportHosts(ctx, reqStruct.Hosts)
+		var rsp message.ImportHostsResp
+		rsp.HostIDS = hostIds
+		handleResponse(ctx, response, err, rsp, nil)
+	}
+
+	return nil
 }
 
-func (clusterManager *ClusterServiceHandler) ReserveHost(ctx context.Context, in *clusterpb.ReserveHostRequest, out *clusterpb.ReserveHostResponse) error {
-	return clusterManager.resourceManager.ReserveHost(ctx, in, out)
+func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	reqStruct := message.DeleteHostsReq{}
+
+	if handleRequest(ctx, request, response, reqStruct) {
+		err := handler.resourceManager2.DeleteHosts(ctx, reqStruct.HostIDs)
+		var rsp message.DeleteHostsResp
+		handleResponse(ctx, response, err, rsp, nil)
+	}
+
+	return nil
 }
 
-func (clusterManager *ClusterServiceHandler) GetHierarchy(ctx context.Context, in *clusterpb.GetHierarchyRequest, out *clusterpb.GetHierarchyResponse) error {
-	return clusterManager.resourceManager.GetHierarchy(ctx, in, out)
+func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	reqStruct := message.QueryHostsReq{}
+
+	if handleRequest(ctx, request, response, reqStruct) {
+		filter := reqStruct.GetHostFilter()
+		page := reqStruct.GetPage()
+
+		hosts, err := handler.resourceManager2.QueryHosts(ctx, filter, page)
+		var rsp message.QueryHostsResp
+		rsp.Hosts = hosts
+		handleResponse(ctx, response, err, rsp, nil)
+	}
+
+	return nil
 }
 
-func (clusterManager *ClusterServiceHandler) GetStocks(ctx context.Context, in *clusterpb.GetStocksRequest, out *clusterpb.GetStocksResponse) error {
-	return clusterManager.resourceManager.GetStocks(ctx, in, out)
+func (handler *ClusterServiceHandler) UpdateHostReserved(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	reqStruct := message.UpdateHostReservedReq{}
+
+	if handleRequest(ctx, request, response, reqStruct) {
+		err := handler.resourceManager2.UpdateHostReserved(ctx, reqStruct.HostIDs, reqStruct.Reserved)
+		var rsp message.UpdateHostReservedResp
+		handleResponse(ctx, response, err, rsp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	reqStruct := message.UpdateHostStatusReq{}
+
+	if handleRequest(ctx, request, response, reqStruct) {
+		err := handler.resourceManager2.UpdateHostStatus(ctx, reqStruct.HostIDs, reqStruct.Status)
+		var rsp message.UpdateHostStatusResp
+		handleResponse(ctx, response, err, rsp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) GetHierarchy(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	reqStruct := message.GetHierarchyReq{}
+
+	if handleRequest(ctx, request, response, reqStruct) {
+		filter := reqStruct.GetHostFilter()
+
+		root, err := handler.resourceManager2.GetHierarchy(ctx, filter, reqStruct.Level, reqStruct.Depth)
+		var rsp message.GetHierarchyResp
+		rsp.Root = *root
+		handleResponse(ctx, response, err, rsp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) GetStocks(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	reqStruct := message.GetStocksReq{}
+
+	if handleRequest(ctx, request, response, reqStruct) {
+		location := reqStruct.GetLocation()
+		hostFilter := reqStruct.GetHostFilter()
+		diskFilter := reqStruct.GetDiskFilter()
+
+		stocks, err := handler.resourceManager2.GetStocks(ctx, location, hostFilter, diskFilter)
+		var rsp message.GetStocksResp
+		rsp.Stocks = *stocks
+		handleResponse(ctx, response, err, rsp, nil)
+	}
+
+	return nil
 }

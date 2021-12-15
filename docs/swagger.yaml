@@ -666,172 +666,6 @@ definitions:
       used:
         type: number
     type: object
-  hostresource.AllocHostsReq:
-    properties:
-      pdReq:
-        items:
-          $ref: '#/definitions/hostresource.Allocation'
-        type: array
-      tidbReq:
-        items:
-          $ref: '#/definitions/hostresource.Allocation'
-        type: array
-      tikvReq:
-        items:
-          $ref: '#/definitions/hostresource.Allocation'
-        type: array
-    type: object
-  hostresource.AllocHostsRsp:
-    properties:
-      pdHosts:
-        items:
-          $ref: '#/definitions/hostresource.AllocateRsp'
-        type: array
-      tidbHosts:
-        items:
-          $ref: '#/definitions/hostresource.AllocateRsp'
-        type: array
-      tikvHosts:
-        items:
-          $ref: '#/definitions/hostresource.AllocateRsp'
-        type: array
-    type: object
-  hostresource.AllocateRsp:
-    properties:
-      cpuCore:
-        type: integer
-      disk:
-        $ref: '#/definitions/hostresource.DiskInfo'
-      hostName:
-        type: string
-      ip:
-        type: string
-      memory:
-        type: integer
-      passwd:
-        type: string
-      userName:
-        type: string
-    type: object
-  hostresource.Allocation:
-    properties:
-      count:
-        type: integer
-      cpuCores:
-        type: integer
-      failureDomain:
-        type: string
-      memory:
-        type: integer
-    type: object
-  hostresource.DiskInfo:
-    properties:
-      capacity:
-        description: 'Disk size, Unit: GB'
-        type: integer
-      diskId:
-        type: string
-      hostId:
-        type: string
-      name:
-        description: '[sda/sdb/nvmep0...]'
-        type: string
-      path:
-        description: 'Disk mount path: [/data1]'
-        type: string
-      status:
-        description: Disk Status, 0 for available, 1 for inused
-        type: integer
-      type:
-        description: 'Disk type: [nvme-ssd/ssd/sata]'
-        type: string
-      usedBy:
-        type: string
-    type: object
-  hostresource.HostInfo:
-    properties:
-      arch:
-        description: x86 or arm64
-        type: string
-      az:
-        type: string
-      clusterType:
-        description: What cluster is the host used for? [database/datamigration]
-        type: string
-      cpuCores:
-        description: Host cpu cores spec, init while importing
-        type: integer
-      createTime:
-        type: integer
-      diskType:
-        description: Disk type of this host [sata/ssd/nvme_ssd]
-        type: string
-      disks:
-        items:
-          $ref: '#/definitions/hostresource.DiskInfo'
-        type: array
-      freeCpuCores:
-        description: Unused CpuCore, used for allocation
-        type: integer
-      freeMemory:
-        description: Unused memory size, Unit:GB, used for allocation
-        type: integer
-      hostId:
-        type: string
-      hostName:
-        type: string
-      ip:
-        type: string
-      kernel:
-        type: string
-      loadStat:
-        description: Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
-        type: integer
-      memory:
-        description: Host memroy, init while importing
-        type: integer
-      nic:
-        description: 'Host network type: 1GE or 10GE'
-        type: string
-      os:
-        type: string
-      passwd:
-        type: string
-      purpose:
-        description: What Purpose is the host used for? [compute/storage/general]
-        type: string
-      rack:
-        type: string
-      region:
-        type: string
-      reserved:
-        description: Whether this host is reserved - will not be allocated
-        type: boolean
-      spec:
-        description: Host Spec, init while importing
-        type: string
-      status:
-        description: Host Status, 0 for Online, 1 for offline
-        type: integer
-      sysLabels:
-        items:
-          type: string
-        type: array
-      traits:
-        description: Traits of labels
-        type: integer
-      updateTime:
-        type: integer
-      userName:
-        type: string
-    type: object
-  hostresource.UpdateHostReq:
-    properties:
-      reserved:
-        type: boolean
-      status:
-        type: integer
-    type: object
   identification.LoginInfo:
     properties:
       userName:
@@ -1310,6 +1144,15 @@ definitions:
         description: Asynchronous task workflow ID
         type: string
     type: object
+  message.DeleteHostsReq:
+    properties:
+      hostIds:
+        items:
+          type: string
+        type: array
+    type: object
+  message.DeleteHostsResp:
+    type: object
   message.DeleteImportExportRecordReq:
     properties:
       recordId:
@@ -1363,11 +1206,35 @@ definitions:
         example: v5.0
         type: string
     type: object
+  message.GetHierarchyResp:
+    properties:
+      root:
+        $ref: '#/definitions/structs.HierarchyTreeNode'
+    type: object
+  message.GetStocksResp:
+    properties:
+      stocks:
+        $ref: '#/definitions/structs.Stocks'
+    type: object
+  message.ImportHostsResp:
+    properties:
+      hostIds:
+        items:
+          type: string
+        type: array
+    type: object
   message.QueryDataImportExportRecordsResp:
     properties:
       transportRecords:
         items:
           $ref: '#/definitions/structs.DataImportExportRecordInfo'
+        type: array
+    type: object
+  message.QueryHostsResp:
+    properties:
+      hosts:
+        items:
+          $ref: '#/definitions/structs.HostInfo'
         type: array
     type: object
   message.QueryParameterGroupResp:
@@ -1426,6 +1293,28 @@ definitions:
         items:
           $ref: '#/definitions/structs.WorkFlowInfo'
         type: array
+    type: object
+  message.UpdateHostReservedReq:
+    properties:
+      hostIds:
+        items:
+          type: string
+        type: array
+      reserved:
+        type: boolean
+    type: object
+  message.UpdateHostReservedResp:
+    type: object
+  message.UpdateHostStatusReq:
+    properties:
+      hostIds:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+    type: object
+  message.UpdateHostStatusResp:
     type: object
   message.UpdateParameterGroupReq:
     properties:
@@ -1717,6 +1606,118 @@ definitions:
       zipName:
         type: string
     type: object
+  structs.DiskInfo:
+    properties:
+      capacity:
+        description: 'Disk size, Unit: GB'
+        type: integer
+      diskId:
+        type: string
+      hostId:
+        type: string
+      name:
+        description: '[sda/sdb/nvmep0...]'
+        type: string
+      path:
+        description: 'Disk mount path: [/data1]'
+        type: string
+      status:
+        description: Disk Status, 0 for available, 1 for inused
+        type: string
+      type:
+        description: 'Disk type: [nvme-ssd/ssd/sata]'
+        type: string
+    type: object
+  structs.HierarchyTreeNode:
+    properties:
+      Code:
+        type: string
+      Name:
+        type: string
+      Prefix:
+        type: string
+      SubNodes:
+        items:
+          $ref: '#/definitions/structs.HierarchyTreeNode'
+        type: array
+    type: object
+  structs.HostInfo:
+    properties:
+      arch:
+        description: x86 or arm64
+        type: string
+      az:
+        type: string
+      clusterType:
+        description: What cluster is the host used for? [database/data migration]
+        type: string
+      cpuCores:
+        description: Host cpu cores spec, init while importing
+        type: integer
+      createTime:
+        type: integer
+      diskType:
+        description: Disk type of this host [sata/ssd/nvme_ssd]
+        type: string
+      disks:
+        items:
+          $ref: '#/definitions/structs.DiskInfo'
+        type: array
+      freeCpuCores:
+        description: Unused CpuCore, used for allocation
+        type: integer
+      freeMemory:
+        description: Unused memory size, Unit:GB, used for allocation
+        type: integer
+      hostId:
+        type: string
+      hostName:
+        type: string
+      ip:
+        type: string
+      kernel:
+        type: string
+      loadStat:
+        description: Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
+        type: string
+      memory:
+        description: Host memory, init while importing
+        type: integer
+      nic:
+        description: 'Host network type: 1GE or 10GE'
+        type: string
+      os:
+        type: string
+      passwd:
+        type: string
+      purpose:
+        description: What Purpose is the host used for? [compute/storage/general]
+        type: string
+      rack:
+        type: string
+      region:
+        type: string
+      reserved:
+        description: Whether this host is reserved - will not be allocated
+        type: boolean
+      spec:
+        description: Host Spec, init while importing
+        type: string
+      status:
+        description: Host Status, 0 for Online, 1 for offline
+        type: string
+      sysLabels:
+        items:
+          type: string
+        type: array
+      traits:
+        description: Traits of labels
+        type: integer
+      updateTime:
+        type: integer
+      userName:
+        type: string
+    type: object
   structs.ParameterGroupParameterInfo:
     properties:
       componentType:
@@ -1788,6 +1789,19 @@ definitions:
       name:
         type: string
     type: object
+  structs.Stocks:
+    properties:
+      freeCpuCores:
+        type: integer
+      freeDiskCapacity:
+        type: integer
+      freeDiskCount:
+        type: integer
+      freeHostCount:
+        type: integer
+      freeMemory:
+        type: integer
+    type: object
   structs.Usage:
     properties:
       total:
@@ -1837,47 +1851,6 @@ definitions:
         type: string
       name:
         type: string
-    type: object
-  warehouse.DomainResource:
-    properties:
-      count:
-        type: integer
-      purpose:
-        type: string
-      specCode:
-        type: string
-      specName:
-        type: string
-      zoneCode:
-        type: string
-      zoneName:
-        type: string
-    type: object
-  warehouse.Node:
-    properties:
-      Code:
-        type: string
-      Name:
-        type: string
-      Prefix:
-        type: string
-      SubNodes:
-        items:
-          $ref: '#/definitions/warehouse.Node'
-        type: array
-    type: object
-  warehouse.Stocks:
-    properties:
-      freeCpuCores:
-        type: integer
-      freeDiskCapacity:
-        type: integer
-      freeDiskCount:
-        type: integer
-      freeHostCount:
-        type: integer
-      freeMemory:
-        type: integer
     type: object
 host: localhost:4116
 info:
@@ -3754,68 +3727,6 @@ paths:
       summary: copy a param group
       tags:
       - param group
-  /resources/allochosts:
-    post:
-      consumes:
-      - application/json
-      description: should be used in testing env
-      parameters:
-      - description: location and spec of hosts
-        in: body
-        name: Alloc
-        required: true
-        schema:
-          $ref: '#/definitions/hostresource.AllocHostsReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/hostresource.AllocHostsRsp'
-              type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Alloc host/disk resources for creating tidb cluster
-      tags:
-      - resource
-  /resources/failuredomains:
-    get:
-      consumes:
-      - application/json
-      description: get resource info in each failure domain
-      parameters:
-      - description: failure domain type of dc/zone/rack
-        enum:
-        - 1
-        - 2
-        - 3
-        in: query
-        name: failureDomainType
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/warehouse.DomainResource'
-                  type: array
-              type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Show the resources on failure domain view
-      tags:
-      - resource
   /resources/hierarchy:
     get:
       consumes:
@@ -3823,23 +3734,27 @@ paths:
       description: get resource hierarchy-tree
       parameters:
       - in: query
-        name: Arch
+        name: Depth
+        type: integer
+      - description: '[1:Region, 2:Zone, 3:Rack, 4:Host]'
+        in: query
+        name: Level
+        type: integer
+      - in: query
+        name: arch
         type: string
-      - description: failure domain type of region/zone/rack/host
-        enum:
-        - 1
-        - 2
-        - 3
-        - 4
-        in: query
-        name: level
-        required: true
-        type: integer
-      - description: hierarchy depth
-        in: query
-        name: depth
-        required: true
-        type: integer
+      - in: query
+        name: hostId
+        type: string
+      - in: query
+        name: loadStat
+        type: string
+      - in: query
+        name: purpose
+        type: string
+      - in: query
+        name: status
+        type: string
       produces:
       - application/json
       responses:
@@ -3850,25 +3765,25 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/warehouse.Node'
+                  $ref: '#/definitions/message.GetHierarchyResp'
               type: object
       security:
       - ApiKeyAuth: []
       summary: Show the resources hierarchy
       tags:
       - resource
-  /resources/host:
-    post:
+  /resources/host-reserved:
+    put:
       consumes:
       - application/json
-      description: import one host by json
+      description: update host reserved by a list
       parameters:
-      - description: Host information
+      - description: do update in host list
         in: body
-        name: host
+        name: updateReq
         required: true
         schema:
-          $ref: '#/definitions/hostresource.HostInfo'
+          $ref: '#/definitions/message.UpdateHostReservedReq'
       produces:
       - application/json
       responses:
@@ -3879,26 +3794,63 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  type: string
+                  $ref: '#/definitions/message.UpdateHostReservedResp'
               type: object
       security:
       - ApiKeyAuth: []
-      summary: Import a host to TiEM System
+      summary: Update host reserved
+      tags:
+      - resource
+  /resources/host-status:
+    put:
+      consumes:
+      - application/json
+      description: update host status by a list
+      parameters:
+      - description: do update in host list
+        in: body
+        name: updateReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateHostStatusReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateHostStatusResp'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update host status
       tags:
       - resource
   /resources/hosts:
     get:
       consumes:
       - application/json
-      description: get hosts lit
+      description: get hosts list
       parameters:
       - in: query
-        name: loadStat
-        type: integer
+        name: arch
+        type: string
       - in: query
+        name: hostId
+        type: string
+      - in: query
+        name: loadStat
+        type: string
+      - description: Current page location
+        in: query
         name: page
         type: integer
-      - in: query
+      - description: Number of this request
+        in: query
         name: pageSize
         type: integer
       - in: query
@@ -3906,7 +3858,7 @@ paths:
         type: string
       - in: query
         name: status
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -3917,9 +3869,7 @@ paths:
             - $ref: '#/definitions/controller.ResultWithPage'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/hostresource.HostInfo'
-                  type: array
+                  $ref: '#/definitions/message.QueryHostsResp'
               type: object
       security:
       - ApiKeyAuth: []
@@ -3951,9 +3901,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  items:
-                    type: string
-                  type: array
+                  $ref: '#/definitions/message.ImportHostsResp'
               type: object
       security:
       - ApiKeyAuth: []
@@ -3988,9 +3936,7 @@ paths:
         name: hostIds
         required: true
         schema:
-          items:
-            type: string
-          type: array
+          $ref: '#/definitions/message.DeleteHostsReq'
       produces:
       - application/json
       responses:
@@ -4001,102 +3947,11 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  type: string
+                  $ref: '#/definitions/message.DeleteHostsResp'
               type: object
       security:
       - ApiKeyAuth: []
       summary: Remove a batch of hosts
-      tags:
-      - resource
-    put:
-      consumes:
-      - application/json
-      description: update host status by a list
-      parameters:
-      - collectionFormat: multi
-        description: host id array
-        in: query
-        items:
-          type: string
-        name: id
-        required: true
-        type: array
-      - description: do update in host list
-        in: body
-        name: updateReq
-        required: true
-        schema:
-          $ref: '#/definitions/hostresource.UpdateHostReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  type: string
-              type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Update host status
-      tags:
-      - resource
-  /resources/hosts/{hostId}:
-    delete:
-      consumes:
-      - application/json
-      description: remove a host by id
-      parameters:
-      - description: host id
-        in: path
-        name: hostId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  type: string
-              type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Remove a host
-      tags:
-      - resource
-    get:
-      consumes:
-      - application/json
-      description: get one host by id
-      parameters:
-      - description: host ID
-        in: path
-        name: hostId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/hostresource.HostInfo'
-              type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Show a host
       tags:
       - resource
   /resources/stocks:
@@ -4106,26 +3961,17 @@ paths:
       description: get resource stocks in specified conditions
       parameters:
       - in: query
-        name: Arch
-        type: string
-      - in: query
         name: Capacity
         type: integer
       - in: query
         name: DiskStatus
-        type: integer
+        type: string
       - in: query
         name: DiskType
         type: string
       - in: query
         name: HostIp
         type: string
-      - in: query
-        name: HostStatus
-        type: integer
-      - in: query
-        name: LoadStat
-        type: integer
       - in: query
         name: Rack
         type: string
@@ -4134,6 +3980,21 @@ paths:
         type: string
       - in: query
         name: Zone
+        type: string
+      - in: query
+        name: arch
+        type: string
+      - in: query
+        name: hostId
+        type: string
+      - in: query
+        name: loadStat
+        type: string
+      - in: query
+        name: purpose
+        type: string
+      - in: query
+        name: status
         type: string
       produces:
       - application/json
@@ -4145,7 +4006,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/warehouse.Stocks'
+                  $ref: '#/definitions/message.GetStocksResp'
               type: object
       security:
       - ApiKeyAuth: []

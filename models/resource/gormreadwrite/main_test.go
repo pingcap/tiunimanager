@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -15,41 +14,44 @@
  *                                                                            *
  ******************************************************************************/
 
-package hostresource
+package gormreadwrite
 
-type DemoHostInfo struct {
-	HostId   string `json:"hostId"`
-	HostName string `json:"hostName"`
-	HostIp   string `json:"hostIp"`
-}
+import (
+	"context"
+	"os"
+	"testing"
 
-type ImportHostRsp struct {
-	HostId string `json:"hostId"`
-}
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"github.com/pingcap-inc/tiem/models/resource"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+)
 
-type ImportHostsRsp struct {
-	HostIds []string `json:"hostIds"`
-}
-type ListHostRsp struct {
-	Hosts []HostInfo `json:"hosts"`
-}
+var GormRW resource.ReaderWriter
+var MetaDB *gorm.DB
 
-type HostDetailsRsp struct {
-	Host HostInfo `json:"host"`
-}
+func TestMain(m *testing.M) {
+	testFilePath := "testdata/" + uuidutil.ShortId()
+	os.MkdirAll(testFilePath, 0755)
+	dbFile := testFilePath + "/test.db"
 
-type AllocateRsp struct {
-	HostName string   `json:"hostName"`
-	Ip       string   `json:"ip"`
-	UserName string   `json:"userName"`
-	Passwd   string   `json:"passwd"`
-	CpuCores int32    `json:"cpuCore"`
-	Memory   int32    `json:"memory"`
-	Disk     DiskInfo `json:"disk"`
-}
+	defer func() {
+		os.RemoveAll(testFilePath)
+		os.Remove(testFilePath)
+	}()
 
-type AllocHostsRsp struct {
-	PdHosts   []AllocateRsp `json:"pdHosts"`
-	TidbHosts []AllocateRsp `json:"tidbHosts"`
-	TikvHosts []AllocateRsp `json:"tikvHosts"`
+	framework.InitBaseFrameworkForUt(framework.MetaDBService,
+		func(d *framework.BaseFramework) error {
+			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+			if err != nil || db.Error != nil {
+				return err
+			}
+			MetaDB = db
+			GormRW = NewGormResourceReadWrite(db)
+			GormRW.InitTables(context.Background())
+			return nil
+		},
+	)
+	os.Exit(m.Run())
 }

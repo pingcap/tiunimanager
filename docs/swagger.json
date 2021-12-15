@@ -3120,113 +3120,6 @@
                 }
             }
         },
-        "/resources/allochosts": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "should be used in testing env",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "Alloc host/disk resources for creating tidb cluster",
-                "parameters": [
-                    {
-                        "description": "location and spec of hosts",
-                        "name": "Alloc",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/hostresource.AllocHostsReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/hostresource.AllocHostsRsp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/resources/failuredomains": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "get resource info in each failure domain",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "Show the resources on failure domain view",
-                "parameters": [
-                    {
-                        "enum": [
-                            1,
-                            2,
-                            3
-                        ],
-                        "type": "integer",
-                        "description": "failure domain type of dc/zone/rack",
-                        "name": "failureDomainType",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/warehouse.DomainResource"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
         "/resources/hierarchy": {
             "get": {
                 "security": [
@@ -3247,29 +3140,40 @@
                 "summary": "Show the resources hierarchy",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "Arch",
+                        "type": "integer",
+                        "name": "Depth",
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            1,
-                            2,
-                            3,
-                            4
-                        ],
                         "type": "integer",
-                        "description": "failure domain type of region/zone/rack/host",
-                        "name": "level",
-                        "in": "query",
-                        "required": true
+                        "description": "[1:Region, 2:Zone, 3:Rack, 4:Host]",
+                        "name": "Level",
+                        "in": "query"
                     },
                     {
-                        "type": "integer",
-                        "description": "hierarchy depth",
-                        "name": "depth",
-                        "in": "query",
-                        "required": true
+                        "type": "string",
+                        "name": "arch",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "loadStat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "purpose",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -3284,7 +3188,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/warehouse.Node"
+                                            "$ref": "#/definitions/message.GetHierarchyResp"
                                         }
                                     }
                                 }
@@ -3294,14 +3198,14 @@
                 }
             }
         },
-        "/resources/host": {
-            "post": {
+        "/resources/host-reserved": {
+            "put": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "import one host by json",
+                "description": "update host reserved by a list",
                 "consumes": [
                     "application/json"
                 ],
@@ -3311,15 +3215,15 @@
                 "tags": [
                     "resource"
                 ],
-                "summary": "Import a host to TiEM System",
+                "summary": "Update host reserved",
                 "parameters": [
                     {
-                        "description": "Host information",
-                        "name": "host",
+                        "description": "do update in host list",
+                        "name": "updateReq",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/hostresource.HostInfo"
+                            "$ref": "#/definitions/message.UpdateHostReservedReq"
                         }
                     }
                 ],
@@ -3335,7 +3239,58 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "string"
+                                            "$ref": "#/definitions/message.UpdateHostReservedResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/host-status": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "update host status by a list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Update host status",
+                "parameters": [
+                    {
+                        "description": "do update in host list",
+                        "name": "updateReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UpdateHostStatusReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UpdateHostStatusResp"
                                         }
                                     }
                                 }
@@ -3352,7 +3307,7 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "get hosts lit",
+                "description": "get hosts list",
                 "consumes": [
                     "application/json"
                 ],
@@ -3365,17 +3320,29 @@
                 "summary": "Show all hosts list in TiEM",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
+                        "name": "arch",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "loadStat",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "Current page location",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "Number of this request",
                         "name": "pageSize",
                         "in": "query"
                     },
@@ -3385,7 +3352,7 @@
                         "in": "query"
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "name": "status",
                         "in": "query"
                     }
@@ -3402,10 +3369,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/hostresource.HostInfo"
-                                            }
+                                            "$ref": "#/definitions/message.QueryHostsResp"
                                         }
                                     }
                                 }
@@ -3459,10 +3423,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
+                                            "$ref": "#/definitions/message.ImportHostsResp"
                                         }
                                     }
                                 }
@@ -3501,66 +3462,6 @@
             }
         },
         "/resources/hosts/": {
-            "put": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "update host status by a list",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "Update host status",
-                "parameters": [
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "description": "host id array",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "description": "do update in host list",
-                        "name": "updateReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/hostresource.UpdateHostReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
             "delete": {
                 "security": [
                     {
@@ -3585,10 +3486,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/message.DeleteHostsReq"
                         }
                     }
                 ],
@@ -3604,103 +3502,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/resources/hosts/{hostId}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "get one host by id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "Show a host",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "host ID",
-                        "name": "hostId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/hostresource.HostInfo"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "remove a host by id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "Remove a host",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "host id",
-                        "name": "hostId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
+                                            "$ref": "#/definitions/message.DeleteHostsResp"
                                         }
                                     }
                                 }
@@ -3730,17 +3532,12 @@
                 "summary": "Show the resources stocks",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "Arch",
-                        "in": "query"
-                    },
-                    {
                         "type": "integer",
                         "name": "Capacity",
                         "in": "query"
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "name": "DiskStatus",
                         "in": "query"
                     },
@@ -3752,16 +3549,6 @@
                     {
                         "type": "string",
                         "name": "HostIp",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "HostStatus",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "LoadStat",
                         "in": "query"
                     },
                     {
@@ -3778,6 +3565,31 @@
                         "type": "string",
                         "name": "Zone",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "arch",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "loadStat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "purpose",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -3792,7 +3604,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/warehouse.Stocks"
+                                            "$ref": "#/definitions/message.GetStocksResp"
                                         }
                                     }
                                 }
@@ -5061,249 +4873,6 @@
                 }
             }
         },
-        "hostresource.AllocHostsReq": {
-            "type": "object",
-            "properties": {
-                "pdReq": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/hostresource.Allocation"
-                    }
-                },
-                "tidbReq": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/hostresource.Allocation"
-                    }
-                },
-                "tikvReq": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/hostresource.Allocation"
-                    }
-                }
-            }
-        },
-        "hostresource.AllocHostsRsp": {
-            "type": "object",
-            "properties": {
-                "pdHosts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/hostresource.AllocateRsp"
-                    }
-                },
-                "tidbHosts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/hostresource.AllocateRsp"
-                    }
-                },
-                "tikvHosts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/hostresource.AllocateRsp"
-                    }
-                }
-            }
-        },
-        "hostresource.AllocateRsp": {
-            "type": "object",
-            "properties": {
-                "cpuCore": {
-                    "type": "integer"
-                },
-                "disk": {
-                    "$ref": "#/definitions/hostresource.DiskInfo"
-                },
-                "hostName": {
-                    "type": "string"
-                },
-                "ip": {
-                    "type": "string"
-                },
-                "memory": {
-                    "type": "integer"
-                },
-                "passwd": {
-                    "type": "string"
-                },
-                "userName": {
-                    "type": "string"
-                }
-            }
-        },
-        "hostresource.Allocation": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "cpuCores": {
-                    "type": "integer"
-                },
-                "failureDomain": {
-                    "type": "string"
-                },
-                "memory": {
-                    "type": "integer"
-                }
-            }
-        },
-        "hostresource.DiskInfo": {
-            "type": "object",
-            "properties": {
-                "capacity": {
-                    "description": "Disk size, Unit: GB",
-                    "type": "integer"
-                },
-                "diskId": {
-                    "type": "string"
-                },
-                "hostId": {
-                    "type": "string"
-                },
-                "name": {
-                    "description": "[sda/sdb/nvmep0...]",
-                    "type": "string"
-                },
-                "path": {
-                    "description": "Disk mount path: [/data1]",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "Disk Status, 0 for available, 1 for inused",
-                    "type": "integer"
-                },
-                "type": {
-                    "description": "Disk type: [nvme-ssd/ssd/sata]",
-                    "type": "string"
-                },
-                "usedBy": {
-                    "type": "string"
-                }
-            }
-        },
-        "hostresource.HostInfo": {
-            "type": "object",
-            "properties": {
-                "arch": {
-                    "description": "x86 or arm64",
-                    "type": "string"
-                },
-                "az": {
-                    "type": "string"
-                },
-                "clusterType": {
-                    "description": "What cluster is the host used for? [database/datamigration]",
-                    "type": "string"
-                },
-                "cpuCores": {
-                    "description": "Host cpu cores spec, init while importing",
-                    "type": "integer"
-                },
-                "createTime": {
-                    "type": "integer"
-                },
-                "diskType": {
-                    "description": "Disk type of this host [sata/ssd/nvme_ssd]",
-                    "type": "string"
-                },
-                "disks": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/hostresource.DiskInfo"
-                    }
-                },
-                "freeCpuCores": {
-                    "description": "Unused CpuCore, used for allocation",
-                    "type": "integer"
-                },
-                "freeMemory": {
-                    "description": "Unused memory size, Unit:GB, used for allocation",
-                    "type": "integer"
-                },
-                "hostId": {
-                    "type": "string"
-                },
-                "hostName": {
-                    "type": "string"
-                },
-                "ip": {
-                    "type": "string"
-                },
-                "kernel": {
-                    "type": "string"
-                },
-                "loadStat": {
-                    "description": "Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust",
-                    "type": "integer"
-                },
-                "memory": {
-                    "description": "Host memroy, init while importing",
-                    "type": "integer"
-                },
-                "nic": {
-                    "description": "Host network type: 1GE or 10GE",
-                    "type": "string"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "passwd": {
-                    "type": "string"
-                },
-                "purpose": {
-                    "description": "What Purpose is the host used for? [compute/storage/general]",
-                    "type": "string"
-                },
-                "rack": {
-                    "type": "string"
-                },
-                "region": {
-                    "type": "string"
-                },
-                "reserved": {
-                    "description": "Whether this host is reserved - will not be allocated",
-                    "type": "boolean"
-                },
-                "spec": {
-                    "description": "Host Spec, init while importing",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "Host Status, 0 for Online, 1 for offline",
-                    "type": "integer"
-                },
-                "sysLabels": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "traits": {
-                    "description": "Traits of labels",
-                    "type": "integer"
-                },
-                "updateTime": {
-                    "type": "integer"
-                },
-                "userName": {
-                    "type": "string"
-                }
-            }
-        },
-        "hostresource.UpdateHostReq": {
-            "type": "object",
-            "properties": {
-                "reserved": {
-                    "type": "boolean"
-                },
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
         "identification.LoginInfo": {
             "type": "object",
             "properties": {
@@ -6019,6 +5588,20 @@
                 }
             }
         },
+        "message.DeleteHostsReq": {
+            "type": "object",
+            "properties": {
+                "hostIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "message.DeleteHostsResp": {
+            "type": "object"
+        },
         "message.DeleteImportExportRecordReq": {
             "type": "object",
             "properties": {
@@ -6095,6 +5678,33 @@
                 }
             }
         },
+        "message.GetHierarchyResp": {
+            "type": "object",
+            "properties": {
+                "root": {
+                    "$ref": "#/definitions/structs.HierarchyTreeNode"
+                }
+            }
+        },
+        "message.GetStocksResp": {
+            "type": "object",
+            "properties": {
+                "stocks": {
+                    "$ref": "#/definitions/structs.Stocks"
+                }
+            }
+        },
+        "message.ImportHostsResp": {
+            "type": "object",
+            "properties": {
+                "hostIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "message.QueryDataImportExportRecordsResp": {
             "type": "object",
             "properties": {
@@ -6102,6 +5712,17 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.DataImportExportRecordInfo"
+                    }
+                }
+            }
+        },
+        "message.QueryHostsResp": {
+            "type": "object",
+            "properties": {
+                "hosts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.HostInfo"
                     }
                 }
             }
@@ -6187,6 +5808,40 @@
                     }
                 }
             }
+        },
+        "message.UpdateHostReservedReq": {
+            "type": "object",
+            "properties": {
+                "hostIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "reserved": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "message.UpdateHostReservedResp": {
+            "type": "object"
+        },
+        "message.UpdateHostStatusReq": {
+            "type": "object",
+            "properties": {
+                "hostIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.UpdateHostStatusResp": {
+            "type": "object"
         },
         "message.UpdateParameterGroupReq": {
             "type": "object",
@@ -6610,6 +6265,166 @@
                 }
             }
         },
+        "structs.DiskInfo": {
+            "type": "object",
+            "properties": {
+                "capacity": {
+                    "description": "Disk size, Unit: GB",
+                    "type": "integer"
+                },
+                "diskId": {
+                    "type": "string"
+                },
+                "hostId": {
+                    "type": "string"
+                },
+                "name": {
+                    "description": "[sda/sdb/nvmep0...]",
+                    "type": "string"
+                },
+                "path": {
+                    "description": "Disk mount path: [/data1]",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Disk Status, 0 for available, 1 for inused",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Disk type: [nvme-ssd/ssd/sata]",
+                    "type": "string"
+                }
+            }
+        },
+        "structs.HierarchyTreeNode": {
+            "type": "object",
+            "properties": {
+                "Code": {
+                    "type": "string"
+                },
+                "Name": {
+                    "type": "string"
+                },
+                "Prefix": {
+                    "type": "string"
+                },
+                "SubNodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.HierarchyTreeNode"
+                    }
+                }
+            }
+        },
+        "structs.HostInfo": {
+            "type": "object",
+            "properties": {
+                "arch": {
+                    "description": "x86 or arm64",
+                    "type": "string"
+                },
+                "az": {
+                    "type": "string"
+                },
+                "clusterType": {
+                    "description": "What cluster is the host used for? [database/data migration]",
+                    "type": "string"
+                },
+                "cpuCores": {
+                    "description": "Host cpu cores spec, init while importing",
+                    "type": "integer"
+                },
+                "createTime": {
+                    "type": "integer"
+                },
+                "diskType": {
+                    "description": "Disk type of this host [sata/ssd/nvme_ssd]",
+                    "type": "string"
+                },
+                "disks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.DiskInfo"
+                    }
+                },
+                "freeCpuCores": {
+                    "description": "Unused CpuCore, used for allocation",
+                    "type": "integer"
+                },
+                "freeMemory": {
+                    "description": "Unused memory size, Unit:GB, used for allocation",
+                    "type": "integer"
+                },
+                "hostId": {
+                    "type": "string"
+                },
+                "hostName": {
+                    "type": "string"
+                },
+                "ip": {
+                    "type": "string"
+                },
+                "kernel": {
+                    "type": "string"
+                },
+                "loadStat": {
+                    "description": "Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust",
+                    "type": "string"
+                },
+                "memory": {
+                    "description": "Host memory, init while importing",
+                    "type": "integer"
+                },
+                "nic": {
+                    "description": "Host network type: 1GE or 10GE",
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "passwd": {
+                    "type": "string"
+                },
+                "purpose": {
+                    "description": "What Purpose is the host used for? [compute/storage/general]",
+                    "type": "string"
+                },
+                "rack": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "reserved": {
+                    "description": "Whether this host is reserved - will not be allocated",
+                    "type": "boolean"
+                },
+                "spec": {
+                    "description": "Host Spec, init while importing",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Host Status, 0 for Online, 1 for offline",
+                    "type": "string"
+                },
+                "sysLabels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "traits": {
+                    "description": "Traits of labels",
+                    "type": "integer"
+                },
+                "updateTime": {
+                    "type": "integer"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
         "structs.ParameterGroupParameterInfo": {
             "type": "object",
             "properties": {
@@ -6711,6 +6526,26 @@
                 }
             }
         },
+        "structs.Stocks": {
+            "type": "object",
+            "properties": {
+                "freeCpuCores": {
+                    "type": "integer"
+                },
+                "freeDiskCapacity": {
+                    "type": "integer"
+                },
+                "freeDiskCount": {
+                    "type": "integer"
+                },
+                "freeHostCount": {
+                    "type": "integer"
+                },
+                "freeMemory": {
+                    "type": "integer"
+                }
+            }
+        },
         "structs.Usage": {
             "type": "object",
             "properties": {
@@ -6785,69 +6620,6 @@
                 },
                 "name": {
                     "type": "string"
-                }
-            }
-        },
-        "warehouse.DomainResource": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "purpose": {
-                    "type": "string"
-                },
-                "specCode": {
-                    "type": "string"
-                },
-                "specName": {
-                    "type": "string"
-                },
-                "zoneCode": {
-                    "type": "string"
-                },
-                "zoneName": {
-                    "type": "string"
-                }
-            }
-        },
-        "warehouse.Node": {
-            "type": "object",
-            "properties": {
-                "Code": {
-                    "type": "string"
-                },
-                "Name": {
-                    "type": "string"
-                },
-                "Prefix": {
-                    "type": "string"
-                },
-                "SubNodes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/warehouse.Node"
-                    }
-                }
-            }
-        },
-        "warehouse.Stocks": {
-            "type": "object",
-            "properties": {
-                "freeCpuCores": {
-                    "type": "integer"
-                },
-                "freeDiskCapacity": {
-                    "type": "integer"
-                },
-                "freeDiskCount": {
-                    "type": "integer"
-                },
-                "freeHostCount": {
-                    "type": "integer"
-                },
-                "freeMemory": {
-                    "type": "integer"
                 }
             }
         }

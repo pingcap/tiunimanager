@@ -3,7 +3,6 @@ syntax = "proto3";
 import "common.proto";
 import "softwarespec.proto";
 import "mng_auth.proto";
-import "mng_host.proto";
 import "mng_allocation.proto";
 option go_package = "./clusterpb/;clusterpb";
 
@@ -44,20 +43,16 @@ service ClusterService {
     rpc VerifyIdentity(VerifyIdentityRequest) returns (VerifyIdentityResponse);
 
     // host manager module
-    rpc ImportHost(ImportHostRequest) returns (ImportHostResponse);
-    rpc ImportHostsInBatch(ImportHostsInBatchRequest) returns (ImportHostsInBatchResponse);
-    rpc RemoveHost(RemoveHostRequest) returns (RemoveHostResponse);
-    rpc RemoveHostsInBatch(RemoveHostsInBatchRequest) returns (RemoveHostsInBatchResponse);
-    rpc ListHost(ListHostsRequest) returns (ListHostsResponse);
-    rpc CheckDetails(CheckDetailsRequest) returns (CheckDetailsResponse);
-    rpc AllocHosts(AllocHostsRequest) returns (AllocHostResponse);
-    rpc GetFailureDomain(GetFailureDomainRequest) returns (GetFailureDomainResponse);
     rpc AllocResourcesInBatch(BatchAllocRequest) returns (BatchAllocResponse);
     rpc RecycleResources(RecycleRequest) returns (RecycleResponse);
-    rpc UpdateHostStatus(UpdateHostStatusRequest) returns (UpdateHostStatusResponse);
-    rpc ReserveHost(ReserveHostRequest) returns (ReserveHostResponse);
-    rpc GetHierarchy(GetHierarchyRequest) returns (GetHierarchyResponse);
-    rpc GetStocks(GetStocksRequest) returns (GetStocksResponse);
+
+    rpc ImportHosts(RpcRequest) returns (RpcResponse);
+    rpc DeleteHosts(RpcRequest) returns (RpcResponse);
+    rpc QueryHosts(RpcRequest) returns (RpcResponse);
+    rpc UpdateHostReserved(RpcRequest) returns (RpcResponse);
+    rpc UpdateHostStatus(RpcRequest) returns (RpcResponse);
+    rpc GetHierarchy(RpcRequest) returns (RpcResponse);
+    rpc GetStocks(RpcRequest) returns (RpcResponse);
 
     // task manager
     rpc ListFlows(RpcRequest) returns (RpcResponse);

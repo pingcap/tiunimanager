@@ -69,7 +69,7 @@ type ClusterServiceHandler struct {
 	clusterParameterManager *clusterParameter.Manager
 	clusterManager          *clusterManager.Manager
 	brManager               backuprestore.BRService
-	importexportService     importexport.ImportExportService
+	importexportManager     importexport.ImportExportService
 }
 
 func handleRequest(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse, requestBody interface{}) bool {

@@ -60,7 +60,7 @@ type TiDBCfg struct {
 	PDAddr     string `toml:"pd-addr"`
 }
 
-func NewDataImportConfig(meta *handler.ClusterMeta, info *ImportInfo) *DataImportConfig {
+func NewDataImportConfig(meta *handler.ClusterMeta, info *importInfo) *DataImportConfig {
 	if meta == nil {
 		return nil
 	}

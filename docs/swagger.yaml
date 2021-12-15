@@ -57,11 +57,8 @@ definitions:
     type: object
   cluster.CloneClusterReq:
     properties:
-      backupId:
-        type: string
       cloneStrategy:
-        description: specify clone strategy, include empty, snapshot and sync, default
-          empty(option)
+        description: specify clone strategy, include empty, snapshot and sync, default empty(option)
         type: string
       clusterName:
         type: string
@@ -70,8 +67,7 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent
-          with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -79,17 +75,16 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources,
-          when exclusive, a host will only deploy instances of the same cluster, which
-          may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
         type: boolean
       paramGroupId:
         description: specify cloned cluster parameter group id(option)
         type: integer
+      parameterGroupID:
+        type: string
       region:
         description: The Region where the cluster is located
         type: string
@@ -163,8 +158,6 @@ definitions:
     type: object
   cluster.CreateClusterReq:
     properties:
-      backupId:
-        type: string
       clusterName:
         type: string
       clusterType:
@@ -172,8 +165,7 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent
-          with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -181,21 +173,18 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources,
-          when exclusive, a host will only deploy instances of the same cluster, which
-          may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
         type: boolean
+      parameterGroupID:
+        type: string
       region:
         description: The Region where the cluster is located
         type: string
       resourceParameters:
-        items:
-          $ref: '#/definitions/structs.ClusterResourceParameter'
-        type: array
+        $ref: '#/definitions/structs.ClusterResourceInfo'
       tags:
         items:
           type: string
@@ -427,6 +416,10 @@ definitions:
     properties:
       info:
         $ref: '#/definitions/structs.ClusterInfo'
+      instanceResource:
+        items:
+          $ref: '#/definitions/structs.ClusterResourceParameterCompute'
+        type: array
       topology:
         items:
           $ref: '#/definitions/structs.ClusterInstanceInfo'
@@ -474,6 +467,21 @@ definitions:
         example: 1636698675
         type: integer
     type: object
+  cluster.QueryClusterResp:
+    properties:
+      clusters:
+        items:
+          $ref: '#/definitions/structs.ClusterInfo'
+        type: array
+    type: object
+  cluster.RestartClusterResp:
+    properties:
+      clusterId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
   cluster.ResumeChangeFeedTaskResp:
     properties:
       status:
@@ -515,7 +523,7 @@ definitions:
     properties:
       clusterId:
         type: string
-      compute:
+      instanceResource:
         items:
           $ref: '#/definitions/structs.ClusterResourceParameterCompute'
         type: array
@@ -532,6 +540,38 @@ definitions:
     properties:
       clusterId:
         type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  cluster.TakeoverClusterReq:
+    properties:
+      TiUPIp:
+        example: 172.16.4.147
+        type: string
+      TiUPPath:
+        example: .tiup/
+        type: string
+      TiUPPort:
+        example: 22
+        type: integer
+      TiUPUserName:
+        example: root
+        type: string
+      TiUPUserPassword:
+        example: password
+        type: string
+      clusterNames:
+        items:
+          type: string
+        type: array
+    type: object
+  cluster.TakeoverClusterResp:
+    properties:
+      clusters:
+        items:
+          $ref: '#/definitions/structs.ClusterInfo'
+        type: array
       workFlowId:
         description: Asynchronous task workflow ID
         type: string
@@ -656,15 +696,6 @@ definitions:
         type: string
       updateTime:
         type: string
-    type: object
-  controller.Usage:
-    properties:
-      total:
-        type: number
-      usageRate:
-        type: number
-      used:
-        type: number
     type: object
   identification.LoginInfo:
     properties:
@@ -807,65 +838,6 @@ definitions:
         example: 10
         type: integer
     type: object
-  management.ClusterDisplayInfo:
-    properties:
-      backupFileUsage:
-        $ref: '#/definitions/controller.Usage'
-      clusterId:
-        type: string
-      clusterName:
-        type: string
-      clusterType:
-        type: string
-      clusterVersion:
-        type: string
-      cpuUsage:
-        $ref: '#/definitions/controller.Usage'
-      createTime:
-        type: string
-      dbPassword:
-        type: string
-      deleteTime:
-        type: string
-      diskUsage:
-        $ref: '#/definitions/controller.Usage'
-      extranetConnectAddresses:
-        items:
-          type: string
-        type: array
-      inProcessFlowId:
-        type: integer
-      intranetConnectAddresses:
-        items:
-          type: string
-        type: array
-      memoryUsage:
-        $ref: '#/definitions/controller.Usage'
-      portList:
-        items:
-          type: integer
-        type: array
-      recoverInfo:
-        $ref: '#/definitions/management.RecoverInfo'
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      storageUsage:
-        $ref: '#/definitions/controller.Usage'
-      tags:
-        items:
-          type: string
-        type: array
-      tls:
-        type: boolean
-      updateTime:
-        type: string
-      whitelist:
-        items:
-          type: string
-        type: array
-    type: object
   management.ClusterNodeDemand:
     properties:
       componentType:
@@ -938,23 +910,6 @@ definitions:
       sourceClusterId:
         type: string
     type: object
-  management.RestartClusterRsp:
-    properties:
-      clusterId:
-        type: string
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      inProcessFlowId:
-        type: integer
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      updateTime:
-        type: string
-    type: object
   management.ServiceCapabilityIndex:
     properties:
       description:
@@ -981,28 +936,6 @@ definitions:
       specCode:
         type: string
       zoneCode:
-        type: string
-    type: object
-  management.TakeoverReq:
-    properties:
-      clusterNames:
-        items:
-          type: string
-        type: array
-      tiupIp:
-        example: 172.16.4.147
-        type: string
-      tiupPath:
-        example: .tiup/
-        type: string
-      tiupPort:
-        example: 22
-        type: integer
-      tiupUserName:
-        example: root
-        type: string
-      tiupUserPassword:
-        example: password
         type: string
     type: object
   message.ApplyParameterGroupReq:
@@ -1399,8 +1332,7 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent
-          with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -1409,12 +1341,13 @@ definitions:
         $ref: '#/definitions/structs.Usage'
       createTime:
         type: string
+      dbUser:
+        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
+        type: string
       deleteTime:
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources,
-          when exclusive, a host will only deploy instances of the same cluster, which
-          may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
         type: boolean
       extranetConnectAddresses:
         items:
@@ -1543,9 +1476,9 @@ definitions:
         example: 0
         type: integer
     type: object
-  structs.ClusterResourceParameter:
+  structs.ClusterResourceInfo:
     properties:
-      compute:
+      instanceResource:
         items:
           $ref: '#/definitions/structs.ClusterResourceParameterCompute'
         type: array
@@ -2322,10 +2255,12 @@ paths:
       - in: query
         name: clusterType
         type: string
-      - in: query
+      - description: Current page location
+        in: query
         name: page
         type: integer
-      - in: query
+      - description: Number of this request
+        in: query
         name: pageSize
         type: integer
       produces:
@@ -2338,9 +2273,7 @@ paths:
             - $ref: '#/definitions/controller.ResultWithPage'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/management.ClusterDisplayInfo'
-                  type: array
+                  $ref: '#/definitions/cluster.QueryClusterResp'
               type: object
         "401":
           description: Unauthorized
@@ -2724,7 +2657,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.RestartClusterRsp'
+                  $ref: '#/definitions/cluster.RestartClusterResp'
               type: object
         "401":
           description: Unauthorized
@@ -3177,7 +3110,7 @@ paths:
         name: takeoverReq
         required: true
         schema:
-          $ref: '#/definitions/management.TakeoverReq'
+          $ref: '#/definitions/cluster.TakeoverClusterReq'
       produces:
       - application/json
       responses:
@@ -3188,9 +3121,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/management.ClusterDisplayInfo'
-                  type: array
+                  $ref: '#/definitions/cluster.TakeoverClusterResp'
               type: object
         "401":
           description: Unauthorized

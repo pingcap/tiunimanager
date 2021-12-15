@@ -17,13 +17,13 @@ package resourcemanager
 
 import (
 	"context"
+	"sync"
 
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
+	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
-	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/structs"
-	"github.com/pingcap-inc/tiem/models"
 )
 
 type ResourceManager struct {
@@ -31,13 +31,23 @@ type ResourceManager struct {
 	management   *management.Management
 }
 
+var manager *ResourceManager
+var once sync.Once
+
 func NewResourceManager() *ResourceManager {
-	m := new(ResourceManager)
-	m.resourcePool = new(resourcepool.ResourcePool)
-	m.management = new(management.Management)
-	m.resourcePool.InitResourcePool(models.GetResourceReaderWriter())
-	m.management.InitManagement(models.GetResourceReaderWriter())
-	return m
+	once.Do(func() {
+		if manager == nil {
+			manager = new(ResourceManager)
+			manager.InitResourceManager()
+		}
+	})
+
+	return manager
+}
+
+func (m *ResourceManager) InitResourceManager() {
+	m.resourcePool = resourcepool.GetResourcePool()
+	m.management = management.GetManagement()
 }
 
 func (m *ResourceManager) GetResourcePool() *resourcepool.ResourcePool {

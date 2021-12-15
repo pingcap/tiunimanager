@@ -807,11 +807,13 @@ var doc = `{
                     },
                     {
                         "type": "integer",
+                        "description": "Current page location",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "Number of this request",
                         "name": "pageSize",
                         "in": "query"
                     }
@@ -828,10 +830,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/management.ClusterDisplayInfo"
-                                            }
+                                            "$ref": "#/definitions/cluster.QueryClusterResp"
                                         }
                                     }
                                 }
@@ -1448,7 +1447,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/management.TakeoverReq"
+                            "$ref": "#/definitions/cluster.TakeoverClusterReq"
                         }
                     }
                 ],
@@ -1464,10 +1463,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/management.ClusterDisplayInfo"
-                                            }
+                                            "$ref": "#/definitions/cluster.TakeoverClusterResp"
                                         }
                                     }
                                 }
@@ -2212,7 +2208,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/management.RestartClusterRsp"
+                                            "$ref": "#/definitions/cluster.RestartClusterResp"
                                         }
                                     }
                                 }
@@ -4033,9 +4029,6 @@ var doc = `{
         "cluster.CloneClusterReq": {
             "type": "object",
             "properties": {
-                "backupId": {
-                    "type": "string"
-                },
                 "cloneStrategy": {
                     "description": "specify clone strategy, include empty, snapshot and sync, default empty(option)",
                     "type": "string"
@@ -4071,6 +4064,9 @@ var doc = `{
                 "paramGroupId": {
                     "description": "specify cloned cluster parameter group id(option)",
                     "type": "integer"
+                },
+                "parameterGroupID": {
+                    "type": "string"
                 },
                 "region": {
                     "description": "The Region where the cluster is located",
@@ -4175,9 +4171,6 @@ var doc = `{
         "cluster.CreateClusterReq": {
             "type": "object",
             "properties": {
-                "backupId": {
-                    "type": "string"
-                },
                 "clusterName": {
                     "type": "string"
                 },
@@ -4206,15 +4199,15 @@ var doc = `{
                     "description": "Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization",
                     "type": "boolean"
                 },
+                "parameterGroupID": {
+                    "type": "string"
+                },
                 "region": {
                     "description": "The Region where the cluster is located",
                     "type": "string"
                 },
                 "resourceParameters": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.ClusterResourceParameter"
-                    }
+                    "$ref": "#/definitions/structs.ClusterResourceInfo"
                 },
                 "tags": {
                     "type": "array",
@@ -4541,6 +4534,12 @@ var doc = `{
                 "info": {
                     "$ref": "#/definitions/structs.ClusterInfo"
                 },
+                "instanceResource": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
+                    }
+                },
                 "topology": {
                     "type": "array",
                     "items": {
@@ -4607,6 +4606,29 @@ var doc = `{
                 }
             }
         },
+        "cluster.QueryClusterResp": {
+            "type": "object",
+            "properties": {
+                "clusters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ClusterInfo"
+                    }
+                }
+            }
+        },
+        "cluster.RestartClusterResp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
         "cluster.ResumeChangeFeedTaskResp": {
             "type": "object",
             "properties": {
@@ -4667,7 +4689,7 @@ var doc = `{
                 "clusterId": {
                     "type": "string"
                 },
-                "compute": {
+                "instanceResource": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
@@ -4692,6 +4714,52 @@ var doc = `{
             "properties": {
                 "clusterId": {
                     "type": "string"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
+        "cluster.TakeoverClusterReq": {
+            "type": "object",
+            "properties": {
+                "TiUPIp": {
+                    "type": "string",
+                    "example": "172.16.4.147"
+                },
+                "TiUPPath": {
+                    "type": "string",
+                    "example": ".tiup/"
+                },
+                "TiUPPort": {
+                    "type": "integer",
+                    "example": 22
+                },
+                "TiUPUserName": {
+                    "type": "string",
+                    "example": "root"
+                },
+                "TiUPUserPassword": {
+                    "type": "string",
+                    "example": "password"
+                },
+                "clusterNames": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "cluster.TakeoverClusterResp": {
+            "type": "object",
+            "properties": {
+                "clusters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ClusterInfo"
+                    }
                 },
                 "workFlowId": {
                     "description": "Asynchronous task workflow ID",
@@ -4871,20 +4939,6 @@ var doc = `{
                 },
                 "updateTime": {
                     "type": "string"
-                }
-            }
-        },
-        "controller.Usage": {
-            "type": "object",
-            "properties": {
-                "total": {
-                    "type": "number"
-                },
-                "usageRate": {
-                    "type": "number"
-                },
-                "used": {
-                    "type": "number"
                 }
             }
         },
@@ -5100,95 +5154,6 @@ var doc = `{
                 }
             }
         },
-        "management.ClusterDisplayInfo": {
-            "type": "object",
-            "properties": {
-                "backupFileUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "clusterId": {
-                    "type": "string"
-                },
-                "clusterName": {
-                    "type": "string"
-                },
-                "clusterType": {
-                    "type": "string"
-                },
-                "clusterVersion": {
-                    "type": "string"
-                },
-                "cpuUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "createTime": {
-                    "type": "string"
-                },
-                "dbPassword": {
-                    "type": "string"
-                },
-                "deleteTime": {
-                    "type": "string"
-                },
-                "diskUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "extranetConnectAddresses": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "intranetConnectAddresses": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "memoryUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "portList": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "recoverInfo": {
-                    "$ref": "#/definitions/management.RecoverInfo"
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "storageUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "tls": {
-                    "type": "boolean"
-                },
-                "updateTime": {
-                    "type": "string"
-                },
-                "whitelist": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
         "management.ClusterNodeDemand": {
             "type": "object",
             "properties": {
@@ -5298,32 +5263,6 @@ var doc = `{
                 }
             }
         },
-        "management.RestartClusterRsp": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "createTime": {
-                    "type": "string"
-                },
-                "deleteTime": {
-                    "type": "string"
-                },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "updateTime": {
-                    "type": "string"
-                }
-            }
-        },
         "management.ServiceCapabilityIndex": {
             "type": "object",
             "properties": {
@@ -5364,37 +5303,6 @@ var doc = `{
                 },
                 "zoneCode": {
                     "type": "string"
-                }
-            }
-        },
-        "management.TakeoverReq": {
-            "type": "object",
-            "properties": {
-                "clusterNames": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "tiupIp": {
-                    "type": "string",
-                    "example": "172.16.4.147"
-                },
-                "tiupPath": {
-                    "type": "string",
-                    "example": ".tiup/"
-                },
-                "tiupPort": {
-                    "type": "integer",
-                    "example": 22
-                },
-                "tiupUserName": {
-                    "type": "string",
-                    "example": "root"
-                },
-                "tiupUserPassword": {
-                    "type": "string",
-                    "example": "password"
                 }
             }
         },
@@ -5994,6 +5902,10 @@ var doc = `{
                 "createTime": {
                     "type": "string"
                 },
+                "dbUser": {
+                    "description": "The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
+                    "type": "string"
+                },
                 "deleteTime": {
                     "type": "string"
                 },
@@ -6185,10 +6097,10 @@ var doc = `{
                 }
             }
         },
-        "structs.ClusterResourceParameter": {
+        "structs.ClusterResourceInfo": {
             "type": "object",
             "properties": {
-                "compute": {
+                "instanceResource": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"

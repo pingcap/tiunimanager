@@ -28,7 +28,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/util/convert"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	management2 "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 	clusterManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/management"
@@ -354,7 +353,7 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb
 
 	request := cluster.CreateClusterReq{}
 
-	if handleRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, &request) {
 		result, err := c.clusterManager.CreateCluster(ctx, request)
 
 		handleResponse(ctx, resp, err, result, nil)
@@ -369,7 +368,7 @@ func (handler *ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *
 
 	request := cluster.ScaleOutClusterReq{}
 
-	if handleRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, &request) {
 		result, err := handler.clusterManager.ScaleOut(ctx, request)
 
 		handleResponse(ctx, resp, err, result, nil)
@@ -384,7 +383,7 @@ func (handler *ClusterServiceHandler) ScaleInCluster(ctx context.Context, req *c
 
 	request := cluster.ScaleInClusterReq{}
 
-	if handleRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, &request) {
 		result, err := handler.clusterManager.ScaleIn(ctx, request)
 
 		handleResponse(ctx, resp, err, result, nil)
@@ -399,7 +398,7 @@ func (handler *ClusterServiceHandler) CloneCluster(ctx context.Context, req *clu
 
 	request := cluster.CloneClusterReq{}
 
-	if handleRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, &request) {
 		result, err := handler.clusterManager.Clone(ctx, &request)
 
 		handleResponse(ctx, resp, err, *result, nil)
@@ -408,54 +407,27 @@ func (handler *ClusterServiceHandler) CloneCluster(ctx context.Context, req *clu
 	return nil
 }
 
-func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *clusterpb.ClusterTakeoverReqDTO, resp *clusterpb.ClusterTakeoverRespDTO) (err error) {
-	framework.LogWithContext(ctx).Info("takeover clusters")
-	clusters, err := domain.TakeoverClusters(ctx, req.Operator, req)
-	if err != nil {
-		framework.LogWithContext(ctx).Info(err)
-		return nil
-	} else {
-		resp.RespStatus = SuccessResponseStatus
-		resp.Clusters = make([]*clusterpb.ClusterDisplayDTO, len(clusters))
-
-		return nil
-	}
+func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+	// todo takeover
+	return nil
 }
 
 func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
-	framework.LogWithContext(ctx).Info("query cluster")
-	request := &management2.QueryReq{}
-	err = json.Unmarshal([]byte(req.Request), request)
-	if err != nil {
-		resp.Code = int32(common.TIEM_PARAMETER_INVALID)
-		resp.Message = err.Error()
-		return
-	}
-	clusters, total, err := domain.ListCluster(ctx, request)
-	if err != nil {
-		resp.Code = int32(err.(framework.TiEMError).GetCode())
-		resp.Message = err.(framework.TiEMError).GetMsg()
-	} else {
-		response := make([]management2.ClusterDisplayInfo, 0)
+	start := time.Now()
+	defer handleMetrics(start, "QueryCluster", int(resp.GetCode()))
 
-		for _, cluster := range clusters {
-			response = append(response, cluster.ExtractDisplayInfo())
-		}
-		body, err := json.Marshal(response)
-		if err != nil {
-			resp.Code = int32(common.TIEM_PARAMETER_INVALID)
-			resp.Message = err.Error()
-		} else {
-			resp.Code = int32(common.TIEM_SUCCESS)
-			resp.Response = string(body)
-			resp.Page = &clusterpb.RpcPage{
-				Page:     int32(request.Page),
-				PageSize: int32(request.PageSize),
-				Total:    int32(total),
-			}
-		}
+	request := cluster.QueryClustersReq{}
+
+	if handleRequest(ctx, req, resp, &request) {
+		result, total, err := c.clusterManager.QueryCluster(ctx, request)
+		handleResponse(ctx, resp, err, result, &clusterpb.RpcPage{
+			Page:     int32(request.Page),
+			PageSize: int32(request.PageSize),
+			Total:    int32(total),
+		})
 	}
-	return
+
+	return nil
 }
 
 func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
@@ -464,7 +436,7 @@ func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb
 
 	request := cluster.DeleteClusterReq{}
 
-	if handleRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, &request) {
 		result, err := c.clusterManager.DeleteCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
@@ -478,7 +450,7 @@ func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterp
 
 	request := cluster.RestartClusterReq{}
 
-	if handleRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, &request) {
 		result, err := c.clusterManager.RestartCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
@@ -492,7 +464,7 @@ func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.R
 
 	request := cluster.StopClusterReq{}
 
-	if handleRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, &request) {
 		result, err := c.clusterManager.StopCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
@@ -501,32 +473,17 @@ func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.R
 }
 
 func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
-	framework.LogWithContext(ctx).Info("detail cluster")
+	start := time.Now()
+	defer handleMetrics(start, "DetailCluster", int(resp.GetCode()))
 
-	request := &management2.DetailReq{}
-	err = json.Unmarshal([]byte(req.Request), request)
-	if err != nil {
-		resp.Code = int32(common.TIEM_PARAMETER_INVALID)
-		resp.Message = err.Error()
-		return
+	request := cluster.QueryClusterDetailReq{}
+
+	if handleRequest(ctx, req, resp, &request) {
+		result, err := c.clusterManager.DetailCluster(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
 	}
 
-	cluster, err := domain.GetClusterDetail(ctx, request.ClusterID)
-
-	if err != nil {
-		resp.Code = int32(err.(framework.TiEMError).GetCode())
-		resp.Message = err.(framework.TiEMError).GetMsg()
-	} else {
-		response, err := domain.ExtractClusterInfo(cluster)
-		if err != nil {
-			resp.Code = int32(common.TIEM_PARAMETER_INVALID)
-			resp.Message = err.Error()
-		} else {
-			resp.Code = int32(common.TIEM_SUCCESS)
-			resp.Response = response
-		}
-	}
-	return
+	return nil
 }
 
 func (c ClusterServiceHandler) ExportData(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {

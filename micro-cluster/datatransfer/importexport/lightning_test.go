@@ -23,7 +23,7 @@ import (
 
 func TestNewDataImportConfig(t *testing.T) {
 	meta := &handler.ClusterMeta{}
-	info := &ImportInfo{
+	info := &importInfo{
 		ClusterId:   "test-cls",
 		UserName:    "root",
 		Password:    "root",

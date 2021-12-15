@@ -116,15 +116,9 @@ func Preview(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/ [get]
 func Query(c *gin.Context) {
-	// query clusters
 	var request cluster.QueryClustersReq
-	if err := c.ShouldBindQuery(&request); err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
 
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &request); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &request); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.QueryCluster, cluster.QueryClusterResp{},
 			requestBody,
 			controller.DefaultTimeout)

@@ -105,7 +105,7 @@ func HandleJsonRequestFromBody(c *gin.Context,
 	return HandleRequest(c,
 		req,
 		func(c *gin.Context, req interface{}) error {
-			err := c.ShouldBindBodyWith(&req, binding.JSON)
+			err := c.ShouldBindBodyWith(req, binding.JSON)
 			if err != nil {
 				return err
 			}

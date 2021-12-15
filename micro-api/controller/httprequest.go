@@ -17,12 +17,13 @@ package controller
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"net/http"
 )
 
 // HandleJsonRequestWithBuiltReq
@@ -32,12 +33,50 @@ import (
 // @Parameter c
 // @Parameter req
 // @Parameter appenders append request data out of http body, such as id in path
-// @return err
+// @return bool
 // @return requestBody
 func HandleJsonRequestWithBuiltReq(c *gin.Context, req interface{}) (string, bool) {
 	return HandleRequest(c,
 		req,
 		func(c *gin.Context, req interface{}) error {
+			return nil
+		},
+		func(req interface{}) error {
+			return validator.New().Struct(req)
+		},
+		func(req interface{}) ([]byte, error) {
+			return json.Marshal(req)
+		},
+	)
+}
+
+// HandleJsonRequestFromQuery
+// @Description: handle common json request from query
+// build request using c.ShouldBindQuery(req, binding.JSON)
+// validate request using validator.New().Struct(req)
+// serialize request using json.Marshal(req)
+// @Parameter c
+// @Parameter req
+// @Parameter appenders append request data out of http body, such as id in path
+// @return ok
+// @return requestBody
+func HandleJsonRequestFromQuery(c *gin.Context,
+	req interface{},
+	appenders ...func(c *gin.Context, req interface{}) error,
+) (requestBody string, ok bool) {
+	return HandleRequest(c,
+		req,
+		func(c *gin.Context, req interface{}) error {
+			err := c.ShouldBindQuery(req)
+			if err != nil {
+				return err
+			}
+			for _, appender := range appenders {
+				err = appender(c, req)
+				if err != nil {
+					return err
+				}
+			}
 			return nil
 		},
 		func(req interface{}) error {
@@ -66,7 +105,7 @@ func HandleJsonRequestFromBody(c *gin.Context,
 	return HandleRequest(c,
 		req,
 		func(c *gin.Context, req interface{}) error {
-			err := c.ShouldBindBodyWith(&req, binding.JSON)
+			err := c.ShouldBindBodyWith(req, binding.JSON)
 			if err != nil {
 				return err
 			}

@@ -73,6 +73,7 @@ const (
 	OperationType_ClusterEditGlobalConfig   OperationType = "cluster edit global config"
 	OperationType_ClusterEditInstanceConfig OperationType = "cluster edit instance config"
 	OperationType_ClusterReload             OperationType = "cluster reload"
+	OperationType_ClusterExec               OperationType = "cluster exec"
 	OperationType_Transfer                  OperationType = "transfer"
 	OperationType_Dumpling                  OperationType = "dumpling"
 	OperationType_Lightning                 OperationType = "lightning"

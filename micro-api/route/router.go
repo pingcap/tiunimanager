@@ -94,7 +94,7 @@ func Route(g *gin.Engine) {
 			cluster.POST("/:clusterId/restart", clusterApi.Restart)
 			cluster.POST("/:clusterId/stop", clusterApi.Stop)
 			cluster.POST("/restore", backuprestore.Restore)
-			cluster.GET("/:clusterId/dashboard", clusterApi.DescribeDashboard)
+			cluster.GET("/:clusterId/dashboard", clusterApi.GetDashboardInfo)
 			cluster.GET("/:clusterId/monitor", clusterApi.DescribeMonitor)
 
 			// Scale cluster
@@ -164,22 +164,14 @@ func Route(g *gin.Engine) {
 		{
 			host.Use(interceptor.VerifyIdentity)
 			host.Use(interceptor.AuditLog())
-			host.POST("host", resourceApi.ImportHost)
 			host.POST("hosts", resourceApi.ImportHosts)
-			host.GET("hosts", resourceApi.ListHost)
-			host.GET("hosts/:hostId", resourceApi.HostDetails)
-			host.DELETE("hosts/:hostId", resourceApi.RemoveHost)
+			host.GET("hosts", resourceApi.QueryHosts)
 			host.DELETE("hosts", resourceApi.RemoveHosts)
-
 			host.GET("hosts-template", resourceApi.DownloadHostTemplateFile)
-
-			host.GET("failuredomains", warehouseApi.GetFailureDomain)
 			host.GET("hierarchy", warehouseApi.GetHierarchy)
 			host.GET("stocks", warehouseApi.GetStocks)
-
-			host.PUT("hosts", resourceApi.UpdateHost)
-			// Add allochosts API for debugging, not release.
-			host.POST("allochosts", resourceApi.AllocHosts)
+			host.PUT("host-reserved", resourceApi.UpdateHostReserved)
+			host.PUT("host-status", resourceApi.UpdateHostStatus)
 		}
 
 		log := apiV1.Group("/logs")

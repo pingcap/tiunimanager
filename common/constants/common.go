@@ -23,6 +23,11 @@
 
 package constants
 
+import (
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+)
+
 //System log-related constants
 const (
 	LogFileSystem      string = "system"
@@ -36,7 +41,7 @@ const (
 // Enterprise Manager database constants
 const (
 	DBDirPrefix    string = "/"
-	SqliteFileName string = "em.db"
+	DatabaseFileName string = "em.db"
 )
 
 // Enterprise Manager Certificates constants
@@ -63,6 +68,13 @@ const (
 	EMProductIDDataMigration     EMProductIDType = "DataMigration"
 	EMProductIDEnterpriseManager EMProductIDType = "EnterpriseManager"
 )
+
+func ValidProductID(p string) error {
+	if p == string(EMProductIDTiDB) || p == string(EMProductIDDataMigration) || p == string(EMProductIDEnterpriseManager) {
+		return nil
+	}
+	return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_PRODUCT_NAME, "valid product name: [%s|%s|%s]", string(EMProductIDTiDB), string(EMProductIDDataMigration), string(EMProductIDEnterpriseManager))
+}
 
 type EMProductComponentIDType string
 

@@ -40,9 +40,15 @@ var once sync.Once
 
 func GetBRService() BRService {
 	once.Do(func() {
-		brService = NewBRManager()
+		if brService == nil {
+			brService = NewBRManager()
+		}
 	})
 	return brService
+}
+
+func MockBRService(service BRService) {
+	brService = service
 }
 
 type BRManager struct {
@@ -96,11 +102,15 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request *cluster.Backup
 		return nil, fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStoragePath, err.Error())
 	}
 
-	meta, err := handler.Get(ctx, request.ClusterID)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
-		return nil, fmt.Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
-	}
+	meta := &handler.ClusterMeta{} //todo: get meta
+	/*
+		meta, err := handler.Get(ctx, request.ClusterID)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
+			return nil, fmt.Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
+		}
+	*/
+	//todo: update cluster status
 
 	//todo: only support FULL Physics backup now
 	record := &backuprestore.BackupRecord{

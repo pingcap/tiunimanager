@@ -89,6 +89,5 @@ func (auto *autoBackupHandler) doBackup(strategy *backuprestore.BackupStrategy) 
 	})
 	if err != nil {
 		framework.Log().Errorf("do backup for cluster %s failed, %s", strategy.ClusterID, err.Error())
-		return
 	}
 }

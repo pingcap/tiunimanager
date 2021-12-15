@@ -268,6 +268,13 @@ type CmdReloadConfigReq struct {
 	Flags         []string
 }
 
+type CmdClusterExecReq struct {
+	TiUPComponent TiUPComponentTypeStr
+	InstanceName  string
+	TimeoutS      int
+	Flags         []string
+}
+
 type ApiEditConfigReq struct {
 	TiDBClusterComponent spec.TiDBClusterComponent
 	InstanceHost         string
@@ -295,4 +302,12 @@ type GetOperationStatusResp struct {
 	Status   secondparty.OperationStatus
 	Result   string
 	ErrorStr string
+}
+
+type ClusterSetDbPswReq struct {
+	DbConnParameter  DbConnParam
+}
+
+type ClusterSetDbPswResp struct {
+	Message string
 }

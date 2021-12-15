@@ -28,7 +28,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/util/convert"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	management2 "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 	clusterManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/management"
@@ -36,6 +35,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
 	parameterGroupManager "github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager"
 	"github.com/pingcap-inc/tiem/workflow"
 
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
@@ -61,6 +61,7 @@ var BizErrorResponseStatus = &clusterpb.ResponseStatusDTO{Code: 500}
 
 type ClusterServiceHandler struct {
 	resourceManager         *resource.ResourceManager
+	resourceManager2        *resourcemanager.ResourceManager
 	authManager             *user.AuthManager
 	tenantManager           *user.TenantManager
 	userManager             *user.UserManager
@@ -68,6 +69,8 @@ type ClusterServiceHandler struct {
 	parameterGroupManager   *parametergroup.Manager
 	clusterParameterManager *clusterParameter.Manager
 	clusterManager          *clusterManager.Manager
+	brManager               backuprestore.BRService
+	importexportManager     importexport.ImportExportService
 }
 
 func handleRequest(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse, requestBody interface{}) bool {
@@ -149,8 +152,12 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.parameterGroupManager = parameterGroupManager.NewManager()
 	handler.clusterParameterManager = clusterParameter.NewManager()
 	handler.clusterManager = clusterManager.NewClusterManager()
+	handler.brManager = backuprestore.GetBRService()
+	handler.importexportManager = importexport.GetImportExportService()
 
-	domain.InitFlowMap()
+	// This will be removed after cluster refactor completed.
+	handler.resourceManager2 = resourcemanager.NewResourceManager()
+
 	return handler
 }
 
@@ -346,7 +353,7 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb
 
 	request := cluster.CreateClusterReq{}
 
-	if handleRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, &request) {
 		result, err := c.clusterManager.CreateCluster(ctx, request)
 
 		handleResponse(ctx, resp, err, result, nil)
@@ -361,7 +368,7 @@ func (handler *ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *
 
 	request := cluster.ScaleOutClusterReq{}
 
-	if handleRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, &request) {
 		result, err := handler.clusterManager.ScaleOut(ctx, request)
 
 		handleResponse(ctx, resp, err, result, nil)
@@ -376,7 +383,7 @@ func (handler *ClusterServiceHandler) ScaleInCluster(ctx context.Context, req *c
 
 	request := cluster.ScaleInClusterReq{}
 
-	if handleRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, &request) {
 		result, err := handler.clusterManager.ScaleIn(ctx, request)
 
 		handleResponse(ctx, resp, err, result, nil)
@@ -391,7 +398,7 @@ func (handler *ClusterServiceHandler) CloneCluster(ctx context.Context, req *clu
 
 	request := cluster.CloneClusterReq{}
 
-	if handleRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, &request) {
 		result, err := handler.clusterManager.Clone(ctx, request)
 
 		handleResponse(ctx, resp, err, result, nil)
@@ -400,54 +407,27 @@ func (handler *ClusterServiceHandler) CloneCluster(ctx context.Context, req *clu
 	return nil
 }
 
-func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *clusterpb.ClusterTakeoverReqDTO, resp *clusterpb.ClusterTakeoverRespDTO) (err error) {
-	framework.LogWithContext(ctx).Info("takeover clusters")
-	clusters, err := domain.TakeoverClusters(ctx, req.Operator, req)
-	if err != nil {
-		framework.LogWithContext(ctx).Info(err)
-		return nil
-	} else {
-		resp.RespStatus = SuccessResponseStatus
-		resp.Clusters = make([]*clusterpb.ClusterDisplayDTO, len(clusters))
-
-		return nil
-	}
+func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+	// todo takeover
+	return nil
 }
 
 func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
-	framework.LogWithContext(ctx).Info("query cluster")
-	request := &management2.QueryReq{}
-	err = json.Unmarshal([]byte(req.Request), request)
-	if err != nil {
-		resp.Code = int32(common.TIEM_PARAMETER_INVALID)
-		resp.Message = err.Error()
-		return
-	}
-	clusters, total, err := domain.ListCluster(ctx, request)
-	if err != nil {
-		resp.Code = int32(err.(framework.TiEMError).GetCode())
-		resp.Message = err.(framework.TiEMError).GetMsg()
-	} else {
-		response := make([]management2.ClusterDisplayInfo, 0)
+	start := time.Now()
+	defer handleMetrics(start, "QueryCluster", int(resp.GetCode()))
 
-		for _, cluster := range clusters {
-			response = append(response, cluster.ExtractDisplayInfo())
-		}
-		body, err := json.Marshal(response)
-		if err != nil {
-			resp.Code = int32(common.TIEM_PARAMETER_INVALID)
-			resp.Message = err.Error()
-		} else {
-			resp.Code = int32(common.TIEM_SUCCESS)
-			resp.Response = string(body)
-			resp.Page = &clusterpb.RpcPage{
-				Page:     int32(request.Page),
-				PageSize: int32(request.PageSize),
-				Total:    int32(total),
-			}
-		}
+	request := cluster.QueryClustersReq{}
+
+	if handleRequest(ctx, req, resp, &request) {
+		result, total, err := c.clusterManager.QueryCluster(ctx, request)
+		handleResponse(ctx, resp, err, result, &clusterpb.RpcPage{
+			Page:     int32(request.Page),
+			PageSize: int32(request.PageSize),
+			Total:    int32(total),
+		})
 	}
-	return
+
+	return nil
 }
 
 func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
@@ -456,7 +436,7 @@ func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb
 
 	request := cluster.DeleteClusterReq{}
 
-	if handleRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, &request) {
 		result, err := c.clusterManager.DeleteCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
@@ -470,7 +450,7 @@ func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterp
 
 	request := cluster.RestartClusterReq{}
 
-	if handleRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, &request) {
 		result, err := c.clusterManager.RestartCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
@@ -484,7 +464,7 @@ func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.R
 
 	request := cluster.StopClusterReq{}
 
-	if handleRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, &request) {
 		result, err := c.clusterManager.StopCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
@@ -493,32 +473,17 @@ func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.R
 }
 
 func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
-	framework.LogWithContext(ctx).Info("detail cluster")
+	start := time.Now()
+	defer handleMetrics(start, "DetailCluster", int(resp.GetCode()))
 
-	request := &management2.DetailReq{}
-	err = json.Unmarshal([]byte(req.Request), request)
-	if err != nil {
-		resp.Code = int32(common.TIEM_PARAMETER_INVALID)
-		resp.Message = err.Error()
-		return
+	request := cluster.QueryClusterDetailReq{}
+
+	if handleRequest(ctx, req, resp, &request) {
+		result, err := c.clusterManager.DetailCluster(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
 	}
 
-	cluster, err := domain.GetClusterDetail(ctx, request.ClusterID)
-
-	if err != nil {
-		resp.Code = int32(err.(framework.TiEMError).GetCode())
-		resp.Message = err.(framework.TiEMError).GetMsg()
-	} else {
-		response, err := domain.ExtractClusterInfo(cluster)
-		if err != nil {
-			resp.Code = int32(common.TIEM_PARAMETER_INVALID)
-			resp.Message = err.Error()
-		} else {
-			resp.Code = int32(common.TIEM_SUCCESS)
-			resp.Response = response
-		}
-	}
-	return
+	return nil
 }
 
 func (c ClusterServiceHandler) ExportData(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
@@ -528,8 +493,7 @@ func (c ClusterServiceHandler) ExportData(ctx context.Context, request *clusterp
 	exportReq := message.DataExportReq{}
 
 	if handleRequest(ctx, request, response, exportReq) {
-		manager := importexport.GetImportExportService()
-		result, err := manager.ExportData(ctx, &exportReq)
+		result, err := c.importexportManager.ExportData(ctx, &exportReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
@@ -543,8 +507,7 @@ func (c ClusterServiceHandler) ImportData(ctx context.Context, request *clusterp
 	importReq := message.DataImportReq{}
 
 	if handleRequest(ctx, request, response, importReq) {
-		manager := importexport.GetImportExportService()
-		result, err := manager.ImportData(ctx, &importReq)
+		result, err := c.importexportManager.ImportData(ctx, &importReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
@@ -558,8 +521,7 @@ func (c ClusterServiceHandler) QueryDataTransport(ctx context.Context, request *
 	queryReq := message.QueryDataImportExportRecordsReq{}
 
 	if handleRequest(ctx, request, response, queryReq) {
-		manager := importexport.GetImportExportService()
-		result, page, err := manager.QueryDataTransportRecords(ctx, &queryReq)
+		result, page, err := c.importexportManager.QueryDataTransportRecords(ctx, &queryReq)
 		handleResponse(ctx, response, err, *result, &clusterpb.RpcPage{
 			Page:     int32(page.Page),
 			PageSize: int32(page.PageSize),
@@ -577,8 +539,7 @@ func (c ClusterServiceHandler) DeleteDataTransportRecord(ctx context.Context, re
 	deleteReq := message.DeleteImportExportRecordReq{}
 
 	if handleRequest(ctx, request, response, deleteReq) {
-		manager := importexport.GetImportExportService()
-		result, err := manager.DeleteDataTransportRecord(ctx, &deleteReq)
+		result, err := c.importexportManager.DeleteDataTransportRecord(ctx, &deleteReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
@@ -592,8 +553,7 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 	backupReq := cluster.BackupClusterDataReq{}
 
 	if handleRequest(ctx, request, response, backupReq) {
-		manager := backuprestore.GetBRService()
-		result, err := manager.BackupCluster(ctx, &backupReq)
+		result, err := c.brManager.BackupCluster(ctx, &backupReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
@@ -629,8 +589,7 @@ func (c ClusterServiceHandler) DeleteBackupRecords(ctx context.Context, request 
 	deleteReq := cluster.DeleteBackupDataReq{}
 
 	if handleRequest(ctx, request, response, deleteReq) {
-		manager := backuprestore.GetBRService()
-		result, err := manager.DeleteBackupRecords(ctx, &deleteReq)
+		result, err := c.brManager.DeleteBackupRecords(ctx, &deleteReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
@@ -644,8 +603,7 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 	saveReq := cluster.SaveBackupStrategyReq{}
 
 	if handleRequest(ctx, request, response, saveReq) {
-		manager := backuprestore.GetBRService()
-		result, err := manager.SaveBackupStrategy(ctx, &saveReq)
+		result, err := c.brManager.SaveBackupStrategy(ctx, &saveReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
@@ -659,8 +617,7 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 	getReq := cluster.GetBackupStrategyReq{}
 
 	if handleRequest(ctx, request, response, getReq) {
-		manager := backuprestore.GetBRService()
-		result, err := manager.GetBackupStrategy(ctx, &getReq)
+		result, err := c.brManager.GetBackupStrategy(ctx, &getReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
@@ -674,8 +631,7 @@ func (c ClusterServiceHandler) QueryBackupRecords(ctx context.Context, request *
 	queryReq := cluster.QueryBackupRecordsReq{}
 
 	if handleRequest(ctx, request, response, queryReq) {
-		manager := backuprestore.GetBRService()
-		result, page, err := manager.QueryClusterBackupRecords(ctx, &queryReq)
+		result, page, err := c.brManager.QueryClusterBackupRecords(ctx, &queryReq)
 		handleResponse(ctx, response, err, *result, &clusterpb.RpcPage{
 			Page:     int32(page.Page),
 			PageSize: int32(page.PageSize),
@@ -719,19 +675,18 @@ func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clus
 	return err
 }
 
-func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *clusterpb.DescribeDashboardRequest, response *clusterpb.DescribeDashboardResponse) (err error) {
+func (c ClusterServiceHandler) GetDashboardInfo(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "DescribeDashboard", int(response.GetStatus().GetCode()))
-	info, err := domain.DescribeDashboard(ctx, request.Operator, request.ClusterId)
-	if err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_DASHBOARD_NOT_FOUND), Message: common.TIEM_DASHBOARD_NOT_FOUND.Explain()}
-	} else {
-		response.Status = SuccessResponseStatus
-		response.ClusterId = info.ClusterId
-		response.Url = info.Url
-		response.Token = info.Token
+	defer handleMetrics(start, "DescribeDashboard", int(response.GetCode()))
+	framework.LogWithContext(ctx).Info("get cluster dashboard info")
+	dashboardReq := cluster.GetDashboardInfoReq{}
+
+	if handleRequest(ctx, request, response, dashboardReq) {
+		result, err := c.clusterManager.GetClusterDashboardInfo(ctx, &dashboardReq)
+		handleResponse(ctx, response, err, *result, nil)
 	}
+
+	return nil
 
 	return nil
 }
@@ -899,38 +854,6 @@ func (p *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *cluster
 	return nil
 }
 
-func (clusterManager *ClusterServiceHandler) ImportHost(ctx context.Context, in *clusterpb.ImportHostRequest, out *clusterpb.ImportHostResponse) error {
-	return clusterManager.resourceManager.ImportHost(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) ImportHostsInBatch(ctx context.Context, in *clusterpb.ImportHostsInBatchRequest, out *clusterpb.ImportHostsInBatchResponse) error {
-	return clusterManager.resourceManager.ImportHostsInBatch(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) RemoveHost(ctx context.Context, in *clusterpb.RemoveHostRequest, out *clusterpb.RemoveHostResponse) error {
-	return clusterManager.resourceManager.RemoveHost(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) RemoveHostsInBatch(ctx context.Context, in *clusterpb.RemoveHostsInBatchRequest, out *clusterpb.RemoveHostsInBatchResponse) error {
-	return clusterManager.resourceManager.RemoveHostsInBatch(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) ListHost(ctx context.Context, in *clusterpb.ListHostsRequest, out *clusterpb.ListHostsResponse) error {
-	return clusterManager.resourceManager.ListHost(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) CheckDetails(ctx context.Context, in *clusterpb.CheckDetailsRequest, out *clusterpb.CheckDetailsResponse) error {
-	return clusterManager.resourceManager.CheckDetails(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) AllocHosts(ctx context.Context, in *clusterpb.AllocHostsRequest, out *clusterpb.AllocHostResponse) error {
-	return clusterManager.resourceManager.AllocHosts(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) GetFailureDomain(ctx context.Context, in *clusterpb.GetFailureDomainRequest, out *clusterpb.GetFailureDomainResponse) error {
-	return clusterManager.resourceManager.GetFailureDomain(ctx, in, out)
-}
-
 func (clusterManager *ClusterServiceHandler) AllocResourcesInBatch(ctx context.Context, in *clusterpb.BatchAllocRequest, out *clusterpb.BatchAllocResponse) error {
 	return clusterManager.resourceManager.AllocResourcesInBatch(ctx, in, out)
 }
@@ -939,18 +862,99 @@ func (clusterManager *ClusterServiceHandler) RecycleResources(ctx context.Contex
 	return clusterManager.resourceManager.RecycleResources(ctx, in, out)
 }
 
-func (clusterManager *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, in *clusterpb.UpdateHostStatusRequest, out *clusterpb.UpdateHostStatusResponse) error {
-	return clusterManager.resourceManager.UpdateHostStatus(ctx, in, out)
+func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	reqStruct := message.ImportHostsReq{}
+
+	if handleRequest(ctx, request, response, reqStruct) {
+		hostIds, err := handler.resourceManager2.ImportHosts(ctx, reqStruct.Hosts)
+		var rsp message.ImportHostsResp
+		rsp.HostIDS = hostIds
+		handleResponse(ctx, response, err, rsp, nil)
+	}
+
+	return nil
 }
 
-func (clusterManager *ClusterServiceHandler) ReserveHost(ctx context.Context, in *clusterpb.ReserveHostRequest, out *clusterpb.ReserveHostResponse) error {
-	return clusterManager.resourceManager.ReserveHost(ctx, in, out)
+func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	reqStruct := message.DeleteHostsReq{}
+
+	if handleRequest(ctx, request, response, reqStruct) {
+		err := handler.resourceManager2.DeleteHosts(ctx, reqStruct.HostIDs)
+		var rsp message.DeleteHostsResp
+		handleResponse(ctx, response, err, rsp, nil)
+	}
+
+	return nil
 }
 
-func (clusterManager *ClusterServiceHandler) GetHierarchy(ctx context.Context, in *clusterpb.GetHierarchyRequest, out *clusterpb.GetHierarchyResponse) error {
-	return clusterManager.resourceManager.GetHierarchy(ctx, in, out)
+func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	reqStruct := message.QueryHostsReq{}
+
+	if handleRequest(ctx, request, response, reqStruct) {
+		filter := reqStruct.GetHostFilter()
+		page := reqStruct.GetPage()
+
+		hosts, err := handler.resourceManager2.QueryHosts(ctx, filter, page)
+		var rsp message.QueryHostsResp
+		rsp.Hosts = hosts
+		handleResponse(ctx, response, err, rsp, nil)
+	}
+
+	return nil
 }
 
-func (clusterManager *ClusterServiceHandler) GetStocks(ctx context.Context, in *clusterpb.GetStocksRequest, out *clusterpb.GetStocksResponse) error {
-	return clusterManager.resourceManager.GetStocks(ctx, in, out)
+func (handler *ClusterServiceHandler) UpdateHostReserved(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	reqStruct := message.UpdateHostReservedReq{}
+
+	if handleRequest(ctx, request, response, reqStruct) {
+		err := handler.resourceManager2.UpdateHostReserved(ctx, reqStruct.HostIDs, reqStruct.Reserved)
+		var rsp message.UpdateHostReservedResp
+		handleResponse(ctx, response, err, rsp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	reqStruct := message.UpdateHostStatusReq{}
+
+	if handleRequest(ctx, request, response, reqStruct) {
+		err := handler.resourceManager2.UpdateHostStatus(ctx, reqStruct.HostIDs, reqStruct.Status)
+		var rsp message.UpdateHostStatusResp
+		handleResponse(ctx, response, err, rsp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) GetHierarchy(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	reqStruct := message.GetHierarchyReq{}
+
+	if handleRequest(ctx, request, response, reqStruct) {
+		filter := reqStruct.GetHostFilter()
+
+		root, err := handler.resourceManager2.GetHierarchy(ctx, filter, reqStruct.Level, reqStruct.Depth)
+		var rsp message.GetHierarchyResp
+		rsp.Root = *root
+		handleResponse(ctx, response, err, rsp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) GetStocks(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	reqStruct := message.GetStocksReq{}
+
+	if handleRequest(ctx, request, response, reqStruct) {
+		location := reqStruct.GetLocation()
+		hostFilter := reqStruct.GetHostFilter()
+		diskFilter := reqStruct.GetDiskFilter()
+
+		stocks, err := handler.resourceManager2.GetStocks(ctx, location, hostFilter, diskFilter)
+		var rsp message.GetStocksResp
+		rsp.Stocks = *stocks
+		handleResponse(ctx, response, err, rsp, nil)
+	}
+
+	return nil
 }

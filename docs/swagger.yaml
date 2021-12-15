@@ -3369,13 +3369,13 @@ paths:
           $ref: '#/definitions/cluster.TiDBDownstream'
       - description: mysql
         in: body
-        name: tidb
+        name: mysql
         required: true
         schema:
           $ref: '#/definitions/cluster.MysqlDownstream'
       - description: kafka
         in: body
-        name: tidb
+        name: kafka
         required: true
         schema:
           $ref: '#/definitions/cluster.KafkaDownstream'

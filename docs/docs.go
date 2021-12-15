@@ -2476,7 +2476,7 @@ var doc = `{
                     },
                     {
                         "description": "mysql",
-                        "name": "tidb",
+                        "name": "mysql",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -2485,7 +2485,7 @@ var doc = `{
                     },
                     {
                         "description": "kafka",
-                        "name": "tidb",
+                        "name": "kafka",
                         "in": "body",
                         "required": true,
                         "schema": {

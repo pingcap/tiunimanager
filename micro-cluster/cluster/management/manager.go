@@ -17,7 +17,9 @@ package management
 
 import (
 	"context"
+	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
@@ -178,7 +180,18 @@ var stopClusterFlow = workflow.WorkFlowDefine{
 
 func (p *Manager) StopCluster(ctx context.Context, req cluster.StopClusterReq) (resp cluster.StopClusterResp, err error) {
 	meta, err := handler.Get(ctx, req.ClusterID)
-	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceStopping, createClusterFlow.FlowName)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get cluster failed, clusterId = %s", req.ClusterID)
+		return
+	}
+
+	if meta.Cluster.Status != string(constants.ClusterRunning) {
+		errMsg := fmt.Sprintf("cannot stop cluster [%s] under status [%s]", meta.Cluster.Name, meta.Cluster.Status)
+		framework.LogWithContext(ctx).Error(errMsg)
+		err = framework.NewTiEMError(common.TIEM_TASK_CONFLICT, errMsg)
+		return
+	}
+	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceStopping, stopClusterFlow.FlowName)
 
 	resp.ClusterID = meta.Cluster.ID
 	resp.WorkFlowID = flowID
@@ -198,6 +211,11 @@ var deleteClusterFlow = workflow.WorkFlowDefine{
 
 func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterReq) (resp cluster.DeleteClusterResp, err error) {
 	meta, err := handler.Get(ctx, req.ClusterID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get cluster failed, clusterId = %s", req.ClusterID)
+		return
+	}
+
 	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceDeleting, deleteClusterFlow.FlowName)
 
 	resp.ClusterID = meta.Cluster.ID
@@ -217,6 +235,17 @@ var restartClusterFlow = workflow.WorkFlowDefine{
 
 func (p *Manager) RestartCluster(ctx context.Context, req cluster.RestartClusterReq) (resp cluster.RestartClusterResp, err error) {
 	meta, err := handler.Get(ctx, req.ClusterID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get cluster failed, clusterId = %s", req.ClusterID)
+		return
+	}
+
+	if meta.Cluster.Status != string(constants.ClusterStopped) && meta.Cluster.Status != string(constants.ClusterRunning) {
+		errMsg := fmt.Sprintf("cannot restart cluster [%s] under status [%s]", meta.Cluster.Name, meta.Cluster.Status)
+		framework.LogWithContext(ctx).Error(errMsg)
+		err = framework.NewTiEMError(common.TIEM_TASK_CONFLICT, errMsg)
+		return
+	}
 	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceRestarting, restartClusterFlow.FlowName)
 
 	resp.ClusterID = meta.Cluster.ID

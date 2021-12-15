@@ -42,9 +42,15 @@ type ImportExportManager struct{}
 
 func GetImportExportService() ImportExportService {
 	once.Do(func() {
-		dataTransportService = NewImportExportManager()
+		if dataTransportService == nil {
+			dataTransportService = NewImportExportManager()
+		}
 	})
 	return dataTransportService
+}
+
+func MockImportExportService(service ImportExportService) {
+	dataTransportService = service
 }
 
 func NewImportExportManager() *ImportExportManager {
@@ -120,17 +126,16 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request *message
 		return nil, fmt.Errorf("create data transport record failed, %s", err.Error())
 	}
 
-	info := &ExportInfo{
-		ClusterId:    request.ClusterID,
-		UserName:     request.UserName,
-		Password:     request.Password,
-		FileType:     request.FileType,
-		RecordId:     recordCreate.ID,
-		FilePath:     mgr.getDataExportFilePath(request, exportDir, false),
-		Filter:       request.Filter,
-		Sql:          request.Sql,
-		StorageType:  request.StorageType,
-		BucketRegion: request.BucketRegion,
+	info := &exportInfo{
+		ClusterId:   request.ClusterID,
+		UserName:    request.UserName,
+		Password:    request.Password,
+		FileType:    request.FileType,
+		RecordId:    recordCreate.ID,
+		FilePath:    mgr.getDataExportFilePath(request, exportDir, false),
+		Filter:      request.Filter,
+		Sql:         request.Sql,
+		StorageType: request.StorageType,
 	}
 
 	flowManager := workflow.GetWorkFlowService()
@@ -175,7 +180,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request *message
 	}
 
 	rw := models.GetImportExportReaderWriter()
-	var info *ImportInfo
+	var info *importInfo
 	importTime := time.Now()
 	importPrefix, _ := filepath.Abs(importPathConfig.ConfigValue)
 	importDir := filepath.Join(importPrefix, request.ClusterID, fmt.Sprintf("%s_%s", importTime.Format("2006-01-02_15:04:05"), request.StorageType))
@@ -215,7 +220,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request *message
 			return nil, fmt.Errorf("create data transport record failed, %s", err.Error())
 		}
 
-		info = &ImportInfo{
+		info = &importInfo{
 			ClusterId:   request.ClusterID,
 			UserName:    request.UserName,
 			Password:    request.Password,
@@ -256,7 +261,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request *message
 			framework.LogWithContext(ctx).Errorf("create data transport record failed, %s", err.Error())
 			return nil, fmt.Errorf("create data transport record failed, %s", err.Error())
 		}
-		info = &ImportInfo{
+		info = &importInfo{
 			ClusterId:   request.ClusterID,
 			UserName:    request.UserName,
 			Password:    request.Password,
@@ -488,10 +493,7 @@ func (mgr *ImportExportManager) importDataPreCheck(ctx context.Context, request 
 func (mgr *ImportExportManager) checkFilePathExists(path string) bool {
 	_, err := os.Stat(path)
 	if err != nil {
-		if os.IsExist(err) {
-			return true
-		}
-		return false
+		return os.IsExist(err)
 	}
 	return true
 }
@@ -507,10 +509,7 @@ func (mgr *ImportExportManager) checkExportParamSupportReimport(request *message
 }
 
 func (mgr *ImportExportManager) checkImportParamSupportReimport(request *message.DataImportReq) bool {
-	if common.NfsStorageType == request.StorageType {
-		return true
-	}
-	return false
+	return common.NfsStorageType == request.StorageType
 }
 
 func (mgr *ImportExportManager) getDataExportFilePath(request *message.DataExportReq, exportDir string, persist bool) string {

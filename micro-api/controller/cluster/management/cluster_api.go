@@ -286,7 +286,7 @@ func Takeover(c *gin.Context) {
 	}
 }
 
-// DescribeDashboard dashboard
+// GetDashboardInfo dashboard
 // @Summary dashboard
 // @Description dashboard
 // @Tags cluster
@@ -294,39 +294,18 @@ func Takeover(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param clusterId path string true "cluster id"
-// @Success 200 {object} controller.CommonResult{data=DescribeDashboardRsp}
+// @Success 200 {object} controller.CommonResult{data=cluster.GetDashboardInfoResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/dashboard [get]
-func DescribeDashboard(c *gin.Context) {
-	var status *clusterpb.ResponseStatusDTO
-	start := time.Now()
-	defer interceptor.HandleMetrics(start, "DescribeDashboard", int(status.GetCode()))
-
-	operator := controller.GetOperator(c)
-	reqDTO := &clusterpb.DescribeDashboardRequest{
-		Operator:  operator.ConvertToDTO(),
-		ClusterId: c.Param("clusterId"),
-	}
-	respDTO, err := client.ClusterClient.DescribeDashboard(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
-
-	if err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-	} else {
-		status = respDTO.GetStatus()
-		if int32(common.TIEM_SUCCESS) == status.GetCode() {
-			result := controller.BuildCommonResult(int(status.Code), status.Message, DescribeDashboardRsp{
-				ClusterId: respDTO.GetClusterId(),
-				Url:       respDTO.GetUrl(),
-				Token:     respDTO.GetToken(),
-			})
-
-			c.JSON(http.StatusOK, result)
-		} else {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		}
+func GetDashboardInfo(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, cluster.GetDashboardInfoReq{
+		ClusterID: c.Param("clusterId"),
+	}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.GetDashboardInfo, &cluster.GetDashboardInfoResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
 }
 

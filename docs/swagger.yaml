@@ -36,6 +36,25 @@ definitions:
       tls:
         type: boolean
     type: object
+  cluster.BackupClusterDataReq:
+    properties:
+      backupMode:
+        description: auto,manual
+        type: string
+      backupType:
+        description: full,incr
+        type: string
+      clusterId:
+        type: string
+    type: object
+  cluster.BackupClusterDataResp:
+    properties:
+      backupId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
   cluster.CloneClusterReq:
     properties:
       backupId:
@@ -297,6 +316,37 @@ definitions:
       strategy:
         $ref: '#/definitions/structs.BackupStrategy'
     type: object
+  cluster.GetDashboardInfoResp:
+    properties:
+      clusterId:
+        example: abc
+        type: string
+      token:
+        type: string
+      url:
+        example: http://127.0.0.1:9093
+        type: string
+    type: object
+  cluster.InspectClusterParametersResp:
+    properties:
+      componentType:
+        example: tidb
+        type: string
+      inspectValue:
+        example: "1"
+        type: string
+      instance:
+        example: 172.16.5.23
+        type: string
+      name:
+        example: binlog_cache
+        type: string
+      paramId:
+        example: 1
+        type: integer
+      realValue:
+        $ref: '#/definitions/structs.ParameterRealValue'
+    type: object
   cluster.PauseChangeFeedTaskResp:
     properties:
       status:
@@ -381,6 +431,48 @@ definitions:
         items:
           $ref: '#/definitions/structs.ClusterInstanceInfo'
         type: array
+    type: object
+  cluster.QueryClusterParametersResp:
+    properties:
+      componentType:
+        example: tidb
+        type: string
+      createTime:
+        example: 1636698675
+        type: integer
+      defaultValue:
+        example: "1"
+        type: string
+      description:
+        example: binlog cache size
+        type: string
+      hasReboot:
+        example: 0
+        type: integer
+      name:
+        example: binlog_size
+        type: string
+      paramId:
+        example: 1
+        type: integer
+      range:
+        example:
+        - "1"
+        - ' 1000'
+        items:
+          type: string
+        type: array
+      realValue:
+        $ref: '#/definitions/structs.ParameterRealValue'
+      type:
+        example: 0
+        type: integer
+      unit:
+        example: mb
+        type: string
+      updateTime:
+        example: 1636698675
+        type: integer
     type: object
   cluster.ResumeChangeFeedTaskResp:
     properties:
@@ -500,6 +592,26 @@ definitions:
         - 5
         example: 1
         type: integer
+    type: object
+  cluster.UpdateClusterParametersReq:
+    properties:
+      clusterId:
+        type: string
+      params:
+        items:
+          $ref: '#/definitions/structs.ClusterParameterSampleInfo'
+        type: array
+      reboot:
+        type: boolean
+    type: object
+  cluster.UpdateClusterParametersResp:
+    properties:
+      clusterId:
+        example: "1"
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
     type: object
   controller.CommonResult:
     properties:
@@ -931,15 +1043,6 @@ definitions:
       totalNodeCount:
         type: integer
     type: object
-  management.DescribeDashboardRsp:
-    properties:
-      clusterId:
-        type: string
-      token:
-        type: string
-      url:
-        type: string
-    type: object
   management.DescribeMonitorRsp:
     properties:
       alertUrl:
@@ -1068,11 +1171,80 @@ definitions:
         example: password
         type: string
     type: object
+  message.ApplyParameterGroupReq:
+    properties:
+      clusterId:
+        example: "123"
+        type: string
+      paramGroupId:
+        example: "123"
+        type: string
+      reboot:
+        type: boolean
+    type: object
+  message.ApplyParameterGroupResp:
+    properties:
+      paramGroupId:
+        example: "1"
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  message.CopyParameterGroupReq:
+    properties:
+      name:
+        example: 8C16GV4_copy
+        type: string
+      note:
+        example: copy param group
+        type: string
+      paramGroupId:
+        type: string
+    type: object
+  message.CopyParameterGroupResp:
+    properties:
+      paramGroupId:
+        example: "1"
+        type: string
+    type: object
+  message.CreateParameterGroupReq:
+    properties:
+      dbType:
+        example: 1
+        type: integer
+      groupType:
+        example: 1
+        type: integer
+      hasDefault:
+        example: 1
+        type: integer
+      name:
+        example: 8C16GV4_default
+        type: string
+      note:
+        example: default param group
+        type: string
+      params:
+        items:
+          $ref: '#/definitions/structs.ParameterGroupParameterSampleInfo'
+        type: array
+      spec:
+        example: 8C16G
+        type: string
+      version:
+        example: v5.0
+        type: string
+    type: object
+  message.CreateParameterGroupResp:
+    properties:
+      paramGroupId:
+        example: "1"
+        type: string
+    type: object
   message.DataExportReq:
     properties:
       accessKey:
-        type: string
-      bucketRegion:
         type: string
       bucketUrl:
         type: string
@@ -1148,12 +1320,92 @@ definitions:
       recordId:
         type: string
     type: object
+  message.DeleteParameterGroupResp:
+    properties:
+      paramGroupId:
+        example: "1"
+        type: string
+    type: object
+  message.DetailParameterGroupResp:
+    properties:
+      createTime:
+        example: 1636698675
+        type: integer
+      dbType:
+        example: 0
+        type: integer
+      groupType:
+        example: 0
+        type: integer
+      hasDefault:
+        example: 1
+        type: integer
+      name:
+        example: default
+        type: string
+      note:
+        example: default param group
+        type: string
+      paramGroupId:
+        example: "1"
+        type: string
+      params:
+        items:
+          $ref: '#/definitions/structs.ParameterGroupParameterInfo'
+        type: array
+      spec:
+        example: 8C16G
+        type: string
+      updateTime:
+        example: 1636698675
+        type: integer
+      version:
+        example: v5.0
+        type: string
+    type: object
   message.QueryDataImportExportRecordsResp:
     properties:
       transportRecords:
         items:
           $ref: '#/definitions/structs.DataImportExportRecordInfo'
         type: array
+    type: object
+  message.QueryParameterGroupResp:
+    properties:
+      createTime:
+        example: 1636698675
+        type: integer
+      dbType:
+        example: 0
+        type: integer
+      groupType:
+        example: 0
+        type: integer
+      hasDefault:
+        example: 1
+        type: integer
+      name:
+        example: default
+        type: string
+      note:
+        example: default param group
+        type: string
+      paramGroupId:
+        example: "1"
+        type: string
+      params:
+        items:
+          $ref: '#/definitions/structs.ParameterGroupParameterInfo'
+        type: array
+      spec:
+        example: 8C16G
+        type: string
+      updateTime:
+        example: 1636698675
+        type: integer
+      version:
+        example: v5.0
+        type: string
     type: object
   message.QueryWorkFlowDetailResp:
     properties:
@@ -1175,355 +1427,7 @@ definitions:
           $ref: '#/definitions/structs.WorkFlowInfo'
         type: array
     type: object
-  parameter.InspectParamsResp:
-    properties:
-      componentType:
-        example: tidb
-        type: string
-      id:
-        example: 1
-        type: integer
-      inspectValue:
-        example: "1"
-        type: string
-      instance:
-        example: 172.16.5.23
-        type: string
-      name:
-        example: binlog_cache
-        type: string
-      realValue:
-        $ref: '#/definitions/parameter.ParamRealValue'
-    type: object
-  parameter.ListParamsResp:
-    properties:
-      componentType:
-        example: tidb
-        type: string
-      createTime:
-        example: 1636698675
-        type: integer
-      defaultValue:
-        example: "1"
-        type: string
-      description:
-        example: binlog cache size
-        type: string
-      hasReboot:
-        enum:
-        - 0
-        - 1
-        example: 0
-        type: integer
-      name:
-        example: binlog_size
-        type: string
-      paramId:
-        example: 1
-        type: integer
-      range:
-        example:
-        - "1"
-        - ' 1000'
-        items:
-          type: string
-        type: array
-      realValue:
-        $ref: '#/definitions/parameter.ParamRealValue'
-      type:
-        enum:
-        - 0
-        - 1
-        - 2
-        example: 0
-        type: integer
-      unit:
-        example: mb
-        type: string
-      updateTime:
-        example: 1636698675
-        type: integer
-    type: object
-  parameter.ParamInstanceRealValue:
-    properties:
-      instance:
-        example: 172.16.10.2
-        type: string
-      value:
-        example: "2"
-        type: string
-    type: object
-  parameter.ParamRealValue:
-    properties:
-      cluster:
-        example: "1"
-        type: string
-      instances:
-        items:
-          $ref: '#/definitions/parameter.ParamInstanceRealValue'
-        type: array
-    type: object
-  parameter.ParamUpdateRsp:
-    properties:
-      clusterId:
-        type: string
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      inProcessFlowId:
-        type: integer
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      updateTime:
-        type: string
-    type: object
-  parameter.UpdateParam:
-    properties:
-      componentType:
-        example: TiDB
-        type: string
-      hasReboot:
-        enum:
-        - 0
-        - 1
-        example: 0
-        type: integer
-      name:
-        example: binlog_cache
-        type: string
-      paramId:
-        example: 1
-        type: integer
-      realValue:
-        $ref: '#/definitions/parameter.ParamRealValue'
-      source:
-        enum:
-        - 0
-        - 1
-        - 2
-        - 3
-        example: 0
-        type: integer
-      type:
-        enum:
-        - 0
-        - 1
-        - 2
-        example: 0
-        type: integer
-    type: object
-  parameter.UpdateParamsReq:
-    properties:
-      needReboot:
-        example: false
-        type: boolean
-      params:
-        items:
-          $ref: '#/definitions/parameter.UpdateParam'
-        type: array
-    type: object
-  paramgroup.ApplyParamGroupReq:
-    properties:
-      clusterId:
-        example: "123"
-        type: string
-      needReboot:
-        example: false
-        type: boolean
-    type: object
-  paramgroup.ApplyParamGroupResp:
-    properties:
-      clusterId:
-        example: "123"
-        type: string
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      inProcessFlowId:
-        type: integer
-      paramGroupId:
-        example: 1
-        type: integer
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      updateTime:
-        type: string
-    type: object
-  paramgroup.CommonParamGroupResp:
-    properties:
-      paramGroupId:
-        example: 1
-        type: integer
-    type: object
-  paramgroup.CopyParamGroupReq:
-    properties:
-      name:
-        example: 8C16GV4_copy
-        type: string
-      note:
-        example: copy param group
-        type: string
-    type: object
-  paramgroup.CreateAndUpdateParam:
-    properties:
-      defaultValue:
-        example: "1"
-        type: string
-      description:
-        example: binlog cache size
-        type: string
-      paramId:
-        example: 123
-        type: integer
-    type: object
-  paramgroup.CreateParamGroupReq:
-    properties:
-      dbType:
-        enum:
-        - 1
-        - 2
-        example: 1
-        type: integer
-      groupType:
-        enum:
-        - 1
-        - 2
-        example: 1
-        type: integer
-      hasDefault:
-        enum:
-        - 1
-        - 2
-        example: 1
-        type: integer
-      name:
-        example: 8C16GV4_default
-        type: string
-      note:
-        example: default param group
-        type: string
-      params:
-        items:
-          $ref: '#/definitions/paramgroup.CreateAndUpdateParam'
-        type: array
-      spec:
-        example: 8C16G
-        type: string
-      version:
-        example: "5.0"
-        type: string
-    type: object
-  paramgroup.ParamDetail:
-    properties:
-      componentType:
-        example: tidb
-        type: string
-      createTime:
-        example: 1636698675
-        type: integer
-      defaultValue:
-        example: "1"
-        type: string
-      description:
-        example: binlog cache size
-        type: string
-      hasReboot:
-        enum:
-        - 0
-        - 1
-        example: 0
-        type: integer
-      name:
-        example: binlog_size
-        type: string
-      note:
-        example: binlog cache size
-        type: string
-      paramId:
-        example: 1
-        type: integer
-      range:
-        example:
-        - "1"
-        - ' 1000'
-        items:
-          type: string
-        type: array
-      source:
-        enum:
-        - 0
-        - 1
-        - 2
-        - 3
-        example: 0
-        type: integer
-      type:
-        enum:
-        - 0
-        - 1
-        - 2
-        example: 0
-        type: integer
-      unit:
-        example: mb
-        type: string
-      updateTime:
-        example: 1636698675
-        type: integer
-    type: object
-  paramgroup.QueryParamGroupResp:
-    properties:
-      createTime:
-        example: 1636698675
-        type: integer
-      dbType:
-        enum:
-        - 1
-        - 2
-        example: 1
-        type: integer
-      groupType:
-        enum:
-        - 1
-        - 2
-        example: 0
-        type: integer
-      hasDefault:
-        enum:
-        - 1
-        - 2
-        example: 1
-        type: integer
-      name:
-        example: default
-        type: string
-      note:
-        example: default param group
-        type: string
-      paramGroupId:
-        example: 1
-        type: integer
-      params:
-        items:
-          $ref: '#/definitions/paramgroup.ParamDetail'
-        type: array
-      spec:
-        example: 8C16G
-        type: string
-      updateTime:
-        example: 1636698675
-        type: integer
-      version:
-        example: "5.0"
-        type: string
-    type: object
-  paramgroup.UpdateParamGroupReq:
+  message.UpdateParameterGroupReq:
     properties:
       name:
         example: 8C16GV4_default
@@ -1531,15 +1435,23 @@ definitions:
       note:
         example: default param group
         type: string
+      paramGroupId:
+        type: string
       params:
         items:
-          $ref: '#/definitions/paramgroup.CreateAndUpdateParam'
+          $ref: '#/definitions/structs.ParameterGroupParameterSampleInfo'
         type: array
       spec:
         example: 8C16G
         type: string
       version:
         example: v5.0
+        type: string
+    type: object
+  message.UpdateParameterGroupResp:
+    properties:
+      paramGroupId:
+        example: "1"
         type: string
     type: object
   structs.BackupRecord:
@@ -1698,6 +1610,50 @@ definitions:
         $ref: '#/definitions/structs.ZoneInfo'
         description: ??
     type: object
+  structs.ClusterInstanceParameterValue:
+    properties:
+      instanceId:
+        type: string
+      value:
+        type: string
+    type: object
+  structs.ClusterParameterSampleInfo:
+    properties:
+      componentType:
+        example: TiDB
+        type: string
+      hasReboot:
+        enum:
+        - 0
+        - 1
+        example: 0
+        type: integer
+      name:
+        example: binlog_cache
+        type: string
+      paramId:
+        example: 1
+        type: integer
+      realValue:
+        $ref: '#/definitions/structs.ParameterRealValue'
+      source:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        example: 0
+        type: integer
+      type:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        example: 0
+        type: integer
+    type: object
   structs.ClusterResourceParameter:
     properties:
       compute:
@@ -1760,6 +1716,70 @@ definitions:
         type: string
       zipName:
         type: string
+    type: object
+  structs.ParameterGroupParameterInfo:
+    properties:
+      componentType:
+        example: tidb
+        type: string
+      createTime:
+        example: 1636698675
+        type: integer
+      defaultValue:
+        example: "1"
+        type: string
+      description:
+        example: binlog cache size
+        type: string
+      hasReboot:
+        example: 0
+        type: integer
+      name:
+        example: binlog_size
+        type: string
+      note:
+        example: binlog cache size
+        type: string
+      paramId:
+        example: "1"
+        type: string
+      range:
+        example:
+        - "1"
+        - ' 1000'
+        items:
+          type: string
+        type: array
+      type:
+        example: 0
+        type: integer
+      unit:
+        example: mb
+        type: string
+      updateTime:
+        example: 1636698675
+        type: integer
+    type: object
+  structs.ParameterGroupParameterSampleInfo:
+    properties:
+      defaultValue:
+        example: "1"
+        type: string
+      description:
+        example: binlog cache size
+        type: string
+      paramId:
+        example: "123"
+        type: string
+    type: object
+  structs.ParameterRealValue:
+    properties:
+      clusterValue:
+        type: string
+      instanceValue:
+        items:
+          $ref: '#/definitions/structs.ClusterInstanceParameterValue'
+        type: array
     type: object
   structs.ProductSpecInfo:
     properties:
@@ -1926,7 +1946,46 @@ paths:
       summary: query backup records of a cluster
       tags:
       - cluster backup
-    post: {}
+    post:
+      consumes:
+      - application/json
+      description: backup
+      parameters:
+      - description: backup request
+        in: body
+        name: backupReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.BackupClusterDataReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.BackupClusterDataResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: backup
+      tags:
+      - cluster backup
   /backups/{backupId}:
     delete:
       consumes:
@@ -2472,7 +2531,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.DescribeDashboardRsp'
+                  $ref: '#/definitions/cluster.GetDashboardInfoResp'
               type: object
         "401":
           description: Unauthorized
@@ -2538,9 +2597,14 @@ paths:
       description: query params of a cluster
       parameters:
       - in: query
+        name: clusterId
+        type: string
+      - description: Current page location
+        in: query
         name: page
         type: integer
-      - in: query
+      - description: Number of this request
+        in: query
         name: pageSize
         type: integer
       - description: clusterId
@@ -2559,7 +2623,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/parameter.ListParamsResp'
+                    $ref: '#/definitions/cluster.QueryClusterParametersResp'
                   type: array
               type: object
         "401":
@@ -2589,7 +2653,7 @@ paths:
         name: updateReq
         required: true
         schema:
-          $ref: '#/definitions/parameter.UpdateParamsReq'
+          $ref: '#/definitions/cluster.UpdateClusterParametersReq'
       - description: clusterId
         in: path
         name: clusterId
@@ -2605,7 +2669,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/parameter.ParamUpdateRsp'
+                  $ref: '#/definitions/cluster.UpdateClusterParametersResp'
               type: object
         "401":
           description: Unauthorized
@@ -2645,7 +2709,9 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/parameter.InspectParamsResp'
+                  items:
+                    $ref: '#/definitions/cluster.InspectClusterParametersResp'
+                  type: array
               type: object
         "401":
           description: Unauthorized
@@ -2702,98 +2768,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: restart a cluster
-      tags:
-      - cluster
-  /clusters/{clusterId}/scale-in:
-    post:
-      consumes:
-      - application/json
-      description: scale in a cluster
-      parameters:
-      - description: cluster id
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      - description: scale in request
-        in: body
-        name: scaleInReq
-        required: true
-        schema:
-          $ref: '#/definitions/cluster.ScaleInClusterReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.ScaleInClusterResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: scale in a cluster
-      tags:
-      - cluster
-  /clusters/{clusterId}/scale-out:
-    post:
-      consumes:
-      - application/json
-      description: scale out a cluster
-      parameters:
-      - description: cluster id
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      - description: scale out request
-        in: body
-        name: scaleOutReq
-        required: true
-        schema:
-          $ref: '#/definitions/cluster.ScaleOutClusterReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.ScaleOutClusterResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: scale out a cluster
       tags:
       - cluster
   /clusters/{clusterId}/stop:
@@ -3127,6 +3101,98 @@ paths:
       summary: restore a new cluster by backup record
       tags:
       - cluster
+  /clusters/scale-in:
+    post:
+      consumes:
+      - application/json
+      description: scale in a cluster
+      parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: scale in request
+        in: body
+        name: scaleInReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.ScaleInClusterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.ScaleInClusterResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: scale in a cluster
+      tags:
+      - cluster
+  /clusters/scale-out:
+    post:
+      consumes:
+      - application/json
+      description: scale out a cluster
+      parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: scale out request
+        in: body
+        name: scaleOutReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.ScaleOutClusterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.ScaleOutClusterResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: scale out a cluster
+      tags:
+      - cluster
   /clusters/takeover:
     post:
       consumes:
@@ -3384,19 +3450,11 @@ paths:
       - application/json
       description: query param group
       parameters:
-      - enum:
-        - 0
-        - 1
-        - 2
-        example: 0
+      - example: 0
         in: query
         name: dbType
         type: integer
-      - enum:
-        - 0
-        - 1
-        - 2
-        example: 0
+      - example: 0
         in: query
         name: hasDefault
         type: integer
@@ -3408,17 +3466,19 @@ paths:
         in: query
         name: name
         type: string
-      - in: query
+      - description: Current page location
+        in: query
         name: page
         type: integer
-      - in: query
+      - description: Number of this request
+        in: query
         name: pageSize
         type: integer
       - example: 8C16G
         in: query
         name: spec
         type: string
-      - example: "5.0"
+      - example: v5.0
         in: query
         name: version
         type: string
@@ -3433,7 +3493,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/paramgroup.QueryParamGroupResp'
+                    $ref: '#/definitions/message.QueryParameterGroupResp'
                   type: array
               type: object
         "401":
@@ -3463,7 +3523,7 @@ paths:
         name: createReq
         required: true
         schema:
-          $ref: '#/definitions/paramgroup.CreateParamGroupReq'
+          $ref: '#/definitions/message.CreateParameterGroupReq'
       produces:
       - application/json
       responses:
@@ -3474,7 +3534,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/paramgroup.CommonParamGroupResp'
+                  $ref: '#/definitions/message.CreateParameterGroupResp'
               type: object
         "401":
           description: Unauthorized
@@ -3514,7 +3574,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/paramgroup.CommonParamGroupResp'
+                  $ref: '#/definitions/message.DeleteParameterGroupResp'
               type: object
         "401":
           description: Unauthorized
@@ -3553,7 +3613,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/paramgroup.QueryParamGroupResp'
+                  $ref: '#/definitions/message.DetailParameterGroupResp'
               type: object
         "401":
           description: Unauthorized
@@ -3582,7 +3642,7 @@ paths:
         name: updateReq
         required: true
         schema:
-          $ref: '#/definitions/paramgroup.UpdateParamGroupReq'
+          $ref: '#/definitions/message.UpdateParameterGroupReq'
       produces:
       - application/json
       responses:
@@ -3593,7 +3653,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/paramgroup.CommonParamGroupResp'
+                  $ref: '#/definitions/message.UpdateParameterGroupResp'
               type: object
         "401":
           description: Unauthorized
@@ -3623,7 +3683,7 @@ paths:
         name: applyReq
         required: true
         schema:
-          $ref: '#/definitions/paramgroup.ApplyParamGroupReq'
+          $ref: '#/definitions/message.ApplyParameterGroupReq'
       produces:
       - application/json
       responses:
@@ -3634,7 +3694,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/paramgroup.ApplyParamGroupResp'
+                  $ref: '#/definitions/message.ApplyParameterGroupResp'
               type: object
         "401":
           description: Unauthorized
@@ -3664,7 +3724,7 @@ paths:
         name: copyReq
         required: true
         schema:
-          $ref: '#/definitions/paramgroup.CopyParamGroupReq'
+          $ref: '#/definitions/message.CopyParameterGroupReq'
       produces:
       - application/json
       responses:
@@ -3675,7 +3735,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/paramgroup.CommonParamGroupResp'
+                  $ref: '#/definitions/message.CopyParameterGroupResp'
               type: object
         "401":
           description: Unauthorized

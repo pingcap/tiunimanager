@@ -224,3 +224,7 @@ func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterRe
 func (p *Manager) RestartCluster(ctx context.Context, req cluster.RestartClusterReq) (resp cluster.RestartClusterResp, err error) {
 	return
 }
+
+func (manager *Manager) GetClusterDashboardInfo(ctx context.Context, request *cluster.GetDashboardInfoReq) (*cluster.GetDashboardInfoResp, error) {
+	return GetDashboardInfo(ctx, request)
+}

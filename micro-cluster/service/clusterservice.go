@@ -68,6 +68,8 @@ type ClusterServiceHandler struct {
 	parameterGroupManager   *parametergroup.Manager
 	clusterParameterManager *clusterParameter.Manager
 	clusterManager          *clusterManager.Manager
+	brManager               backuprestore.BRService
+	importexportService     importexport.ImportExportService
 }
 
 func handleRequest(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse, requestBody interface{}) bool {
@@ -149,8 +151,9 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.parameterGroupManager = parameterGroupManager.NewManager()
 	handler.clusterParameterManager = clusterParameter.NewManager()
 	handler.clusterManager = clusterManager.NewClusterManager()
+	handler.brManager = backuprestore.GetBRService()
+	handler.importexportService = importexport.GetImportExportService()
 
-	domain.InitFlowMap()
 	return handler
 }
 
@@ -592,8 +595,7 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 	backupReq := cluster.BackupClusterDataReq{}
 
 	if handleRequest(ctx, request, response, backupReq) {
-		manager := backuprestore.GetBRService()
-		result, err := manager.BackupCluster(ctx, &backupReq)
+		result, err := c.brManager.BackupCluster(ctx, &backupReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
@@ -629,8 +631,7 @@ func (c ClusterServiceHandler) DeleteBackupRecords(ctx context.Context, request 
 	deleteReq := cluster.DeleteBackupDataReq{}
 
 	if handleRequest(ctx, request, response, deleteReq) {
-		manager := backuprestore.GetBRService()
-		result, err := manager.DeleteBackupRecords(ctx, &deleteReq)
+		result, err := c.brManager.DeleteBackupRecords(ctx, &deleteReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
@@ -644,8 +645,7 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 	saveReq := cluster.SaveBackupStrategyReq{}
 
 	if handleRequest(ctx, request, response, saveReq) {
-		manager := backuprestore.GetBRService()
-		result, err := manager.SaveBackupStrategy(ctx, &saveReq)
+		result, err := c.brManager.SaveBackupStrategy(ctx, &saveReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
@@ -659,8 +659,7 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 	getReq := cluster.GetBackupStrategyReq{}
 
 	if handleRequest(ctx, request, response, getReq) {
-		manager := backuprestore.GetBRService()
-		result, err := manager.GetBackupStrategy(ctx, &getReq)
+		result, err := c.brManager.GetBackupStrategy(ctx, &getReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
@@ -674,8 +673,7 @@ func (c ClusterServiceHandler) QueryBackupRecords(ctx context.Context, request *
 	queryReq := cluster.QueryBackupRecordsReq{}
 
 	if handleRequest(ctx, request, response, queryReq) {
-		manager := backuprestore.GetBRService()
-		result, page, err := manager.QueryClusterBackupRecords(ctx, &queryReq)
+		result, page, err := c.brManager.QueryClusterBackupRecords(ctx, &queryReq)
 		handleResponse(ctx, response, err, *result, &clusterpb.RpcPage{
 			Page:     int32(page.Page),
 			PageSize: int32(page.PageSize),
@@ -719,19 +717,18 @@ func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clus
 	return err
 }
 
-func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *clusterpb.DescribeDashboardRequest, response *clusterpb.DescribeDashboardResponse) (err error) {
+func (c ClusterServiceHandler) GetDashboardInfo(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "DescribeDashboard", int(response.GetStatus().GetCode()))
-	info, err := domain.DescribeDashboard(ctx, request.Operator, request.ClusterId)
-	if err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_DASHBOARD_NOT_FOUND), Message: common.TIEM_DASHBOARD_NOT_FOUND.Explain()}
-	} else {
-		response.Status = SuccessResponseStatus
-		response.ClusterId = info.ClusterId
-		response.Url = info.Url
-		response.Token = info.Token
+	defer handleMetrics(start, "DescribeDashboard", int(response.GetCode()))
+	framework.LogWithContext(ctx).Info("get cluster dashboard info")
+	dashboardReq := cluster.GetDashboardInfoReq{}
+
+	if handleRequest(ctx, request, response, dashboardReq) {
+		result, err := c.clusterManager.GetClusterDashboardInfo(ctx, &dashboardReq)
+		handleResponse(ctx, response, err, *result, nil)
 	}
+
+	return nil
 
 	return nil
 }

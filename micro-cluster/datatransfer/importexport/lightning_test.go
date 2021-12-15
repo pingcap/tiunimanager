@@ -13,39 +13,25 @@
  *  limitations under the License.                                            *
  ******************************************************************************/
 
-package config
+package importexport
 
 import (
-	"context"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
-	dbCommon "github.com/pingcap-inc/tiem/models/common"
-	"gorm.io/gorm"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-type ConfigReadWrite struct {
-	dbCommon.GormDB
-}
-
-func NewConfigReadWrite(db *gorm.DB) *ConfigReadWrite {
-	m := &ConfigReadWrite{
-		dbCommon.WrapDB(db),
+func TestNewDataImportConfig(t *testing.T) {
+	meta := &handler.ClusterMeta{}
+	info := &importInfo{
+		ClusterId:   "test-cls",
+		UserName:    "root",
+		Password:    "root",
+		FilePath:    "/home/em/import",
+		RecordId:    "",
+		StorageType: "s3",
+		ConfigPath:  "/home/em/import",
 	}
-	return m
-}
-
-func (m *ConfigReadWrite) CreateConfig(ctx context.Context, cfg *SystemConfig) (*SystemConfig, error) {
-	return cfg, m.DB(ctx).Create(cfg).Error
-}
-
-func (m *ConfigReadWrite) GetConfig(ctx context.Context, configKey string) (config *SystemConfig, err error) {
-	if "" == configKey {
-		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
-	}
-	config = &SystemConfig{}
-	err = m.DB(ctx).First(config, "config_key = ?", configKey).Error
-	if err != nil {
-		return nil, err
-	}
-	return config, err
+	config := NewDataImportConfig(meta, info)
+	assert.NotNil(t, config)
 }

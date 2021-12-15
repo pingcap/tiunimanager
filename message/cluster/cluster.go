@@ -227,13 +227,13 @@ type QueryMonitorInfoResp struct {
 	GrafanaUrl string `json:"grafanaUrl" example:"http://127.0.0.1:3000"`
 }
 
-// QueryDashboardInfoReq Message to query the dashboard address information of a cluster
-type QueryDashboardInfoReq struct {
+// GetDashboardInfoReq Message to query the dashboard address information of a cluster
+type GetDashboardInfoReq struct {
 	ClusterID string `json:"clusterId" example:"abc"`
 }
 
-// QueryDashboardInfoResp Reply message for querying the dashboard address information of the cluster
-type QueryDashboardInfoResp struct {
+// GetDashboardInfoResp Reply message for querying the dashboard address information of the cluster
+type GetDashboardInfoResp struct {
 	ClusterID string `json:"clusterId" example:"abc"`
 	Url       string `json:"url" example:"http://127.0.0.1:9093"`
 	Token     string `json:"token"`

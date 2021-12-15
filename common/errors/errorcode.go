@@ -134,11 +134,11 @@ var explanationContainer = map[TIEM_ERROR_CODE]ErrorCodeExplanation{
 	// system error
 	TIEM_METADB_SERVER_CALL_ERROR:  {TIEM_METADB_SERVER_CALL_ERROR, "call metadb-Server failed", 500},
 	TIEM_CLUSTER_SERVER_CALL_ERROR: {TIEM_CLUSTER_SERVER_CALL_ERROR, "call cluster-Server failed", 500},
-	TIEM_PARAMETER_INVALID:         {TIEM_PARAMETER_INVALID, "parameter is invalid", 500},
+	TIEM_PARAMETER_INVALID:         {TIEM_PARAMETER_INVALID, "parameter is invalid", 400},
 	TIEM_UNRECOGNIZED_ERROR:        {TIEM_UNRECOGNIZED_ERROR, "unrecognized error", 500},
 
 	// cluster management
-	TIEM_CLUSTER_NOT_FOUND:           {TIEM_CLUSTER_NOT_FOUND, "cluster not found", 500},
+	TIEM_CLUSTER_NOT_FOUND:           {TIEM_CLUSTER_NOT_FOUND, "cluster not found", 404},
 	TIEM_TAKEOVER_SSH_CONNECT_ERROR:  {TIEM_TAKEOVER_SSH_CONNECT_ERROR, "ssh connect failed", 500},
 	TIEM_TAKEOVER_SFTP_ERROR:         {TIEM_TAKEOVER_SFTP_ERROR, "sftp failed", 500},
 	TIEM_CLUSTER_RESOURCE_NOT_ENOUGH: {TIEM_CLUSTER_RESOURCE_NOT_ENOUGH, "no enough resource for cluster", 500},

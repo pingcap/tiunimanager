@@ -163,7 +163,7 @@ var explanationContainer = map[TIEM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_PARAMETER_INVALID:         {TIEM_PARAMETER_INVALID, "parameter is invalid", 500},
 	TIEM_UNRECOGNIZED_ERROR:        {TIEM_UNRECOGNIZED_ERROR, "unrecognized error", 500},
 	TIEM_MARSHAL_ERROR:             {TIEM_MARSHAL_ERROR, "marshal error", 500},
-	TIEM_UNMARSHAL_ERROR:           {TIEM_UNMARSHAL_ERROR, "UNmarshal error", 500},
+	TIEM_UNMARSHAL_ERROR:           {TIEM_UNMARSHAL_ERROR, "unmarshal error", 500},
 
 	TIEM_TASK_TIMEOUT:          {TIEM_TASK_TIMEOUT, "task timeout", 500},
 	TIEM_FLOW_NOT_FOUND:        {TIEM_FLOW_NOT_FOUND, "flow not found", 500},

@@ -13,18 +13,36 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package management
+package switchover
 
 import (
-	"github.com/pingcap-inc/tiem/common/constants"
-	"gorm.io/gorm"
+	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
 
-// ClusterRelation Cluster relationship, the system will establish a master-slave relationship
-type ClusterRelation struct {
-	gorm.Model
-	RelationType         constants.ClusterRelationType `gorm:"not null;size:32"`
-	SubjectClusterID     string                        `gorm:"not null;size:32"`
-	ObjectClusterID      string                        `gorm:"not null;size:32"`
-	SyncChangeFeedTaskId string                        `gorm:"not null;size:32"`
+// Switchover master/slave switchover
+// @Summary master/slave switchover
+// @Description master/slave switchover
+// @Tags switchover
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param masterSlaveClusterSwitchoverReq body cluster.MasterSlaveClusterSwitchoverReq true "switchover request"
+// @Success 200 {object} controller.CommonResult{data=cluster.MasterSlaveClusterSwitchoverResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /switchover [post]
+func Switchover(c *gin.Context) {
+	var req cluster.MasterSlaveClusterSwitchoverReq
+
+	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
+
+	if err == nil {
+		controller.InvokeRpcMethod(c, client.ClusterClient.MasterSlaveSwitchover, &cluster.MasterSlaveClusterSwitchoverResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
 }

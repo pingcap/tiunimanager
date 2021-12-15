@@ -13,18 +13,23 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package management
+package constants
 
 import (
-	"github.com/pingcap-inc/tiem/common/constants"
-	"gorm.io/gorm"
+	"time"
 )
 
-// ClusterRelation Cluster relationship, the system will establish a master-slave relationship
-type ClusterRelation struct {
-	gorm.Model
-	RelationType         constants.ClusterRelationType `gorm:"not null;size:32"`
-	SubjectClusterID     string                        `gorm:"not null;size:32"`
-	ObjectClusterID      string                        `gorm:"not null;size:32"`
-	SyncChangeFeedTaskId string                        `gorm:"not null;size:32"`
-}
+const SwitchoverCheckClusterReadWriteHealthRetriesCount = 3
+const SwitchoverCheckClusterReadWriteHealthRetryWait = 500 * time.Millisecond
+
+const SwitchoverCheckMasterSlaveMaxLagTime = 30 * time.Second
+const SwitchoverCheckMasterSlaveMaxLagTimeRetriesCount = 3
+const SwitchoverCheckMasterSlaveMaxLagTimeRetryWait = 3000 * time.Millisecond
+
+const SwitchoverCheckSyncChangeFeedTaskHealthTimeInterval = 500 * time.Millisecond
+const SwitchoverCheckSyncChangeFeedTaskHealthRetriesCount = 3
+const SwitchoverCheckSyncChangeFeedTaskHealthRetryWait = 500 * time.Millisecond
+
+const SwitchoverCheckSyncChangeFeedTaskCaughtUpRetriesCount = 3
+const SwitchoverCheckSyncChangeFeedTaskCaughtUpRetryWait = 1000 * time.Millisecond
+const SwitchoverCheckSyncChangeFeedTaskCaughtUpMaxLagTime = 1000 * time.Millisecond

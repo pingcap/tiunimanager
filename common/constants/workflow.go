@@ -50,4 +50,8 @@ const (
 	WorkFlowBuildLogConfig      = "BuildLogConfig"
 	WorkFlowScaleOutCluster     = "ScaleOutCluster"
 	WorkFlowScaleInCluster      = "ScaleInCluster"
+
+	WorkFlowMasterSlaveSwitchoverNormal                     = "SwitchoverNormal"
+	WorkFlowMasterSlaveSwitchoverForce                      = "SwitchoverForce"
+	WorkFlowMasterSlaveSwitchoverForceWithMasterUnavailable = "SwitchoverForceWithMasterUnavailable"
 )

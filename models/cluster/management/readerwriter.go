@@ -17,11 +17,11 @@ package management
 
 import (
 	"context"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 )
 
 type ReaderWriter interface {
-
 	Create(ctx context.Context, cluster *Cluster) (*Cluster, error)
 	Delete(ctx context.Context, clusterID string) (err error)
 	Get(ctx context.Context, clusterID string) (*Cluster, error)
@@ -54,6 +54,16 @@ type ReaderWriter interface {
 	//  @return error
 	//
 	UpdateStatus(ctx context.Context, clusterID string, status constants.ClusterRunningStatus) error
+
+	//
+	// UpdateReadOnlyFlag
+	//  @Description:
+	//  @param ctx
+	//  @param clusterID
+	//  @param readOnlyFlag
+	//  @return error
+	//
+	UpdateReadOnlyFlag(ctx context.Context, clusterID string, readOnlyFlag bool) error
 
 	//
 	// SetMaintenanceStatus

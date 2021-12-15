@@ -59,6 +59,7 @@ require (
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v2 v2.4.0
+	gorm.io/driver/mysql v1.2.1 // indirect
 	gorm.io/driver/sqlite v1.1.4
-	gorm.io/gorm v1.22.2
+	gorm.io/gorm v1.22.4
 )

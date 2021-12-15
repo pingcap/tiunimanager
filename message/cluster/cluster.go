@@ -84,19 +84,19 @@ type ScaleInClusterReq struct {
 // ScaleInClusterResp Reply message for delete an instance in the cluster
 type ScaleInClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
-	ClusterID                     string `json:"clusterId"`
+	ClusterID string `json:"clusterId"`
 }
 
 // ScaleOutClusterReq Message for cluster expansion operation
 type ScaleOutClusterReq struct {
-	ClusterID                        string `json:"clusterId" form:"clusterId"`
+	ClusterID string `json:"clusterId" form:"clusterId"`
 	structs.ClusterResourceParameter
 }
 
 // ScaleOutClusterResp Reply message for cluster expansion operation
 type ScaleOutClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
-	ClusterID                     string `json:"clusterId"`
+	ClusterID string `json:"clusterId"`
 }
 
 //RestoreNewClusterReq Restore to a new cluster message using the backup file
@@ -133,12 +133,14 @@ type CloneClusterReq struct {
 // CloneClusterResp Reply message for clone a new cluster
 type CloneClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
-	ClusterID                     string `json:"clusterId"`
+	ClusterID string `json:"clusterId"`
 }
 
 // MasterSlaveClusterSwitchoverReq Master and slave cluster switchover messages
 type MasterSlaveClusterSwitchoverReq struct {
+	// Master
 	SourceClusterID string `json:"sourceClusterID"`
+	// Slave
 	TargetClusterID string `json:"targetClusterID"`
 	Force           bool   `json:"force"`
 }

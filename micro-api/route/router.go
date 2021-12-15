@@ -24,6 +24,7 @@ import (
 	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
 	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
+	switchoverApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/switchover"
 	paramGroupApi "github.com/pingcap-inc/tiem/micro-api/controller/param/paramgroup"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
@@ -150,6 +151,14 @@ func Route(g *gin.Engine) {
 
 			changeFeeds.GET("/:changeFeedTaskId", changefeed2.Detail)
 			changeFeeds.GET("/", changefeed2.Query)
+		}
+
+		switchover := apiV1.Group("/switchover")
+		{
+			switchover.Use(interceptor.VerifyIdentity)
+			switchover.Use(interceptor.AuditLog())
+
+			switchover.POST("/", switchoverApi.Switchover)
 		}
 
 		flowworks := apiV1.Group("/workflow")

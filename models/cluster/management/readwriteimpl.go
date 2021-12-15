@@ -18,6 +18,7 @@ package management
 import (
 	"context"
 	"fmt"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -83,7 +84,7 @@ func (g *GormClusterReadWrite) UpdateInstance(ctx context.Context, instances ...
 	return g.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		toCreate := make([]*ClusterInstance, 0)
 
-		for _,instance := range instances {
+		for _, instance := range instances {
 			if instance.ID == "" {
 				toCreate = append(toCreate, instance)
 			} else {
@@ -94,7 +95,7 @@ func (g *GormClusterReadWrite) UpdateInstance(ctx context.Context, instances ...
 				}
 			}
 		}
-		if len(toCreate) > 0{
+		if len(toCreate) > 0 {
 			err := tx.CreateInBatches(toCreate, len(toCreate)).Error
 			if err != nil {
 				err = dbCommon.WrapDBError(err)
@@ -131,6 +132,19 @@ func (g *GormClusterReadWrite) UpdateStatus(ctx context.Context, clusterID strin
 	}
 
 	cluster.Status = string(status)
+
+	err = g.DB(ctx).Save(cluster).Error
+	return dbCommon.WrapDBError(err)
+}
+
+func (g *GormClusterReadWrite) UpdateReadOnlyFlag(ctx context.Context, clusterID string, readOnlyFlag bool) error {
+	cluster, err := g.Get(ctx, clusterID)
+
+	if err != nil {
+		return err
+	}
+
+	cluster.ReadOnlyFlag = readOnlyFlag
 
 	err = g.DB(ctx).Save(cluster).Error
 	return dbCommon.WrapDBError(err)
@@ -208,7 +222,7 @@ func (g *GormClusterReadWrite) GetLatestClusterTopologySnapshot(ctx context.Cont
 	return
 }
 
-func NewGormClusterReadWrite(db *gorm.DB) *GormClusterReadWrite{
+func NewGormClusterReadWrite(db *gorm.DB) *GormClusterReadWrite {
 	return &GormClusterReadWrite{
 		dbCommon.WrapDB(db),
 	}

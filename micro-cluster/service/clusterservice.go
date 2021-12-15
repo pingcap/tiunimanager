@@ -20,18 +20,21 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	management2 "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 	clusterManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/management"
+	switchoverManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/switchover"
 	"github.com/pingcap-inc/tiem/micro-cluster/datatransfer/importexport"
 
-	"github.com/pingcap-inc/tiem/workflow"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/pingcap-inc/tiem/workflow"
 
 	"github.com/pingcap-inc/tiem/library/util/convert"
 
@@ -62,6 +65,7 @@ type ClusterServiceHandler struct {
 	tenantManager     *user.TenantManager
 	userManager       *user.UserManager
 	changeFeedManager *changeFeedManager.Manager
+	switchoverManager *switchoverManager.Manager
 	clusterManager    *clusterManager.Manager
 }
 
@@ -142,9 +146,25 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.authManager = user.NewAuthManager(handler.userManager, adapt.MicroMetaDbRepo{})
 	handler.changeFeedManager = changeFeedManager.NewManager()
 	handler.clusterManager = clusterManager.NewClusterManager()
+	handler.switchoverManager = switchoverManager.GetManager()
 
 	domain.InitFlowMap()
 	return handler
+}
+
+func (handler *ClusterServiceHandler) MasterSlaveSwitchover(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "MasterSlaveSwitchover", int(response.GetCode()))
+
+	framework.LogWithContext(ctx).Info("master/slave switchover")
+	reqBody := cluster.MasterSlaveClusterSwitchoverReq{}
+
+	if handleRequest(ctx, request, response, reqBody) {
+		result, err := handler.switchoverManager.Switchover(ctx, &reqBody)
+		handleResponse(ctx, response, err, result, nil)
+	}
+
+	return nil
 }
 
 func (handler *ClusterServiceHandler) SetResourceManager(resourceManager *resource.ResourceManager) {

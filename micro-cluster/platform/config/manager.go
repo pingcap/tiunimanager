@@ -35,7 +35,7 @@ func (mgr *SystemConfigManager) GetSystemConfig(ctx context.Context, request *me
 		return nil, err
 	}
 	return &message.GetSystemConfigResp{
-		structs.SystemConfig{
+		SystemConfig: structs.SystemConfig{
 			ConfigKey:   config.ConfigKey,
 			ConfigValue: config.ConfigValue,
 		},

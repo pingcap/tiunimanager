@@ -66,7 +66,7 @@ func (m *GormSecondPartyOperationReadWrite) Update(ctx context.Context, updateTe
 		return framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "id is nil for %+v", updateTemplate)
 	}
 
-	return m.DB(ctx).Omit(Column_Type, Column_WorkFlowNodeID).
+	return m.DB(ctx).Omit(ColumnType, ColumnWorkFlowNodeID).
 		Save(updateTemplate).Error
 }
 
@@ -93,7 +93,7 @@ func (m *GormSecondPartyOperationReadWrite) QueryByWorkFlowNodeID(ctx context.Co
 
 	var secondPartyOperations []SecondPartyOperation
 	err = m.DB(ctx).Model(&SecondPartyOperation{}).
-		Where(fmt.Sprintf("%s = ?", Column_WorkFlowNodeID), workFlowNodeID).
+		Where(fmt.Sprintf("%s = ?", ColumnWorkFlowNodeID), workFlowNodeID).
 		Find(&secondPartyOperations).Error
 
 	if err != nil {
@@ -104,15 +104,15 @@ func (m *GormSecondPartyOperationReadWrite) QueryByWorkFlowNodeID(ctx context.Co
 	errStatStr := ""
 	processingCt := 0
 	for _, operation := range secondPartyOperations {
-		if operation.Status == OperationStatus_Finished {
+		if operation.Status == OperationStatusFinished {
 			return &operation, nil
 		}
-		if operation.Status == OperationStatus_Error {
+		if operation.Status == OperationStatusError {
 			errStatStr = operation.ErrorStr
 			errCt++
 			continue
 		}
-		if operation.Status == OperationStatus_Processing {
+		if operation.Status == OperationStatusProcessing {
 			processingCt++
 			continue
 		}
@@ -123,14 +123,14 @@ func (m *GormSecondPartyOperationReadWrite) QueryByWorkFlowNodeID(ctx context.Co
 	}
 	secondPartyOperation = &SecondPartyOperation{}
 	if errCt >= len(secondPartyOperations) {
-		secondPartyOperation.Status = OperationStatus_Error
+		secondPartyOperation.Status = OperationStatusError
 		secondPartyOperation.ErrorStr = errStatStr
 		return
 	} else {
 		if processingCt > 0 {
-			secondPartyOperation.Status = OperationStatus_Processing
+			secondPartyOperation.Status = OperationStatusProcessing
 		} else {
-			secondPartyOperation.Status = OperationStatus_Init
+			secondPartyOperation.Status = OperationStatusInit
 		}
 		return
 	}

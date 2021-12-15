@@ -195,12 +195,12 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 				flow.handleTaskError(node, nodeDefine)
 				return false
 			}
-			if resp.Status == secondparty2.OperationStatus_Error {
+			if resp.Status == secondparty2.OperationStatusError {
 				node.Fail(framework.NewTiEMError(common.TIEM_TASK_FAILED, resp.ErrorStr))
 				flow.handleTaskError(node, nodeDefine)
 				return false
 			}
-			if resp.Status == secondparty2.OperationStatus_Finished {
+			if resp.Status == secondparty2.OperationStatusFinished {
 				node.Success(resp.Result)
 				return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
 			}

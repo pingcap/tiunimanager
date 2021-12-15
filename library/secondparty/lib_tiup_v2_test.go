@@ -58,7 +58,7 @@ func TestSecondPartyManager_ClusterDeploy_Fail(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterDeploy, TestWorkFlowNodeID).Return(nil, expectedErr)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeClusterDeploy, TestWorkFlowNodeID).Return(nil, expectedErr)
 
 	operationID, err := secondPartyManager1.ClusterDeploy(context.TODO(), ClusterComponentTypeStr, "test-tidb", "v1", "", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != "" || err == nil {
@@ -75,7 +75,7 @@ func TestSecondPartyManager_ClusterDeploy_Success(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterDeploy, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeClusterDeploy, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	operationID, err := secondPartyManager1.ClusterDeploy(context.TODO(), ClusterComponentTypeStr, "test-tidb", "v1", "", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
@@ -104,7 +104,7 @@ func TestSecondPartyManager_ClusterStart_Fail(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterStart, TestWorkFlowNodeID).Return(nil, expectedErr)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeClusterStart, TestWorkFlowNodeID).Return(nil, expectedErr)
 
 	operationID, err := secondPartyManager1.ClusterStart(context.TODO(), ClusterComponentTypeStr, "test-tidb", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != "" || err == nil {
@@ -120,7 +120,7 @@ func TestSecondPartyManager_ClusterStart_Success(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterStart, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeClusterStart, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	operationID, err := secondPartyManager1.ClusterStart(context.TODO(), ClusterComponentTypeStr, "test-tidb", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
@@ -134,7 +134,7 @@ func TestSecondPartyManager_ClusterRestart_Fail(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterRestart, TestWorkFlowNodeID).Return(nil, expectedErr)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeClusterRestart, TestWorkFlowNodeID).Return(nil, expectedErr)
 
 	operationID, err := secondPartyManager1.ClusterRestart(context.TODO(), ClusterComponentTypeStr, "test-tidb", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != "" || err == nil {
@@ -151,7 +151,7 @@ func TestSecondPartyManager_ClusterRestart_Success(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterRestart, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeClusterRestart, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	operationID, err := secondPartyManager1.ClusterRestart(context.TODO(), ClusterComponentTypeStr, "test-tidb", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
@@ -165,7 +165,7 @@ func TestSecondPartyManager_ClusterStop_Fail(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterStop, TestWorkFlowNodeID).Return(nil, expectedErr)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeClusterStop, TestWorkFlowNodeID).Return(nil, expectedErr)
 
 	operationID, err := secondPartyManager1.ClusterStop(context.TODO(), ClusterComponentTypeStr, "test-tidb", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != "" || err == nil {
@@ -182,7 +182,7 @@ func TestSecondPartyManager_ClusterStop_Success(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterStop, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeClusterStop, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	operationID, err := secondPartyManager1.ClusterStop(context.TODO(), ClusterComponentTypeStr, "test-tidb", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
@@ -196,7 +196,7 @@ func TestSecondPartyManager_ClusterDestroy_Fail(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterDestroy, TestWorkFlowNodeID).Return(nil, expectedErr)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeClusterDestroy, TestWorkFlowNodeID).Return(nil, expectedErr)
 
 	operationID, err := secondPartyManager1.ClusterDestroy(context.TODO(), ClusterComponentTypeStr, "test-tidb", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != "" || err == nil {
@@ -212,7 +212,7 @@ func TestSecondPartyManager_ClusterDestroy_Success(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterDestroy, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeClusterDestroy, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	operationID, err := secondPartyManager1.ClusterDestroy(context.TODO(), ClusterComponentTypeStr, "test-tidb", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
@@ -226,7 +226,7 @@ func TestSecondPartyManager_Transfer_Fail(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_Transfer, TestWorkFlowNodeID).Return(nil, expectedErr)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeTransfer, TestWorkFlowNodeID).Return(nil, expectedErr)
 
 	operationID, err := secondPartyManager1.Transfer(context.TODO(), TiEMComponentTypeStr, "test-tidb", "test-yaml", "/remote/path", 0, []string{"-N", "test-host"}, TestWorkFlowNodeID)
 	if operationID != "" || err == nil {
@@ -243,7 +243,7 @@ func TestSecondPartyManager_ClusterTransfer_Success(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_Transfer, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeTransfer, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	operationID, err := secondPartyManager1.Transfer(context.TODO(), TiEMComponentTypeStr, "test-tidb", "test-yaml", "/remote/path", 0, []string{"-N", "test-host"}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
@@ -257,7 +257,7 @@ func TestSecondPartyManager_ClusterUpgrade_Fail(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterUpgrade, TestWorkFlowNodeID).Return(nil, expectedErr)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeClusterUpgrade, TestWorkFlowNodeID).Return(nil, expectedErr)
 
 	operationID, err := secondPartyManager1.ClusterUpgrade(context.TODO(), ClusterComponentTypeStr, "test-tidb", "v1", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != "" || err == nil {
@@ -274,7 +274,7 @@ func TestSecondPartyManager_ClusterUpgrade_Success(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterUpgrade, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeClusterUpgrade, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	operationID, err := secondPartyManager1.ClusterUpgrade(context.TODO(), ClusterComponentTypeStr, "test-tidb", "v1", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
@@ -328,7 +328,7 @@ func TestSecondPartyManager_ClusterEditGlobalConfig_Fail(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterEditGlobalConfig, TestWorkFlowNodeID).Return(nil, expectedErr)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeClusterEditGlobalConfig, TestWorkFlowNodeID).Return(nil, expectedErr)
 
 	operationID, err := secondPartyManager1.ClusterEditGlobalConfig(context.TODO(), cmdEditGlobalConfigReq, TestWorkFlowNodeID)
 	if operationID != "" || err == nil {
@@ -358,7 +358,7 @@ func TestSecondPartyManager_ClusterEditGlobalConfig_Success(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterEditGlobalConfig, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeClusterEditGlobalConfig, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	operationID, err := secondPartyManager1.ClusterEditGlobalConfig(context.TODO(), cmdEditGlobalConfigReq, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err == nil {
@@ -438,7 +438,7 @@ func TestSecondPartyManager_ClusterEditInstanceConfig_Fail(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterEditInstanceConfig, TestWorkFlowNodeID).Return(nil, expectedErr)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeClusterEditInstanceConfig, TestWorkFlowNodeID).Return(nil, expectedErr)
 
 	operationID, err := secondPartyManager1.ClusterEditInstanceConfig(context.TODO(), cmdEditInstanceConfigReq, TestWorkFlowNodeID)
 	if operationID != "" || err == nil {
@@ -467,7 +467,7 @@ func TestSecondPartyManager_ClusterEditInstanceConfig_Success(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterEditInstanceConfig, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeClusterEditInstanceConfig, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	operationID, err := secondPartyManager1.ClusterEditInstanceConfig(context.TODO(), cmdEditInstanceConfigReq, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err == nil {
@@ -596,7 +596,7 @@ func TestSecondPartyManager_ClusterReload_Fail(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterReload, TestWorkFlowNodeID).Return(nil, expectedErr)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeClusterReload, TestWorkFlowNodeID).Return(nil, expectedErr)
 
 	cmdReloadConfigReq := CmdReloadConfigReq{
 		TiUPComponent: ClusterComponentTypeStr,
@@ -619,7 +619,7 @@ func TestSecondPartyManager_ClusterReload_Success(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterReload, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeClusterReload, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	cmdReloadConfigReq := CmdReloadConfigReq{
 		TiUPComponent: ClusterComponentTypeStr,
@@ -639,7 +639,7 @@ func TestSecondPartyManager_ClusterDumpling_Fail(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_Dumpling, TestWorkFlowNodeID).Return(nil, expectedErr)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeDumpling, TestWorkFlowNodeID).Return(nil, expectedErr)
 
 	operationID, err := secondPartyManager1.Dumpling(context.TODO(), 0, []string{}, TestWorkFlowNodeID)
 	if operationID != "" || err == nil {
@@ -656,7 +656,7 @@ func TestSecondPartyManager_ClusterDumpling_Success(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_Dumpling, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeDumpling, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	operationID, err := secondPartyManager1.Dumpling(context.TODO(), 0, []string{}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
@@ -670,7 +670,7 @@ func TestSecondPartyManager_ClusterLightning_Fail(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_Lightning, TestWorkFlowNodeID).Return(nil, expectedErr)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeLightning, TestWorkFlowNodeID).Return(nil, expectedErr)
 
 	operationID, err := secondPartyManager1.Lightning(context.TODO(), 0, []string{}, TestWorkFlowNodeID)
 	if operationID != "" || err == nil {
@@ -687,7 +687,7 @@ func TestSecondPartyManager_ClusterLightning_Success(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_Lightning, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeLightning, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	operationID, err := secondPartyManager1.Lightning(context.TODO(), 0, []string{}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
@@ -729,7 +729,7 @@ func TestSecondPartyManager_GetOperationStatus_Fail(t *testing.T) {
 func TestSecondPartyManager_ClusterGetTaskStatus_Success(t *testing.T) {
 	secondPartyOperation := secondparty.SecondPartyOperation{
 		ID:     TestOperationID,
-		Status: secondparty.OperationStatus_Finished,
+		Status: secondparty.OperationStatusFinished,
 	}
 
 	mockCtl := gomock.NewController(t)
@@ -738,8 +738,8 @@ func TestSecondPartyManager_ClusterGetTaskStatus_Success(t *testing.T) {
 	mockReaderWriter.EXPECT().Get(context.Background(), TestOperationID).Return(&secondPartyOperation, nil)
 
 	resp, err := secondPartyManager1.GetOperationStatus(context.TODO(), TestOperationID)
-	if resp.Status != secondparty.OperationStatus_Finished || err != nil {
-		t.Errorf("case: find secondparty operation by id successfully. operationStatus(expected: %v, actual: %v), err(expected: %v, actual: %v)", secondparty.OperationStatus_Finished, resp.Status, nil, err)
+	if resp.Status != secondparty.OperationStatusFinished || err != nil {
+		t.Errorf("case: find secondparty operation by id successfully. operationStatus(expected: %v, actual: %v), err(expected: %v, actual: %v)", secondparty.OperationStatusFinished, resp.Status, nil, err)
 	}
 }
 
@@ -760,7 +760,7 @@ func TestSecondPartyManager_ClusterGetTaskStatusByBizID_Fail(t *testing.T) {
 func TestSecondPartyManager_ClusterGetTaskStatusByBizID_Success(t *testing.T) {
 	secondPartyOperation := secondparty.SecondPartyOperation{
 		ID:     TestOperationID,
-		Status: secondparty.OperationStatus_Finished,
+		Status: secondparty.OperationStatusFinished,
 	}
 
 	mockCtl := gomock.NewController(t)
@@ -769,8 +769,8 @@ func TestSecondPartyManager_ClusterGetTaskStatusByBizID_Success(t *testing.T) {
 	mockReaderWriter.EXPECT().QueryByWorkFlowNodeID(context.Background(), TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	resp, err := secondPartyManager1.GetOperationStatusByWorkFlowNodeID(context.TODO(), TestWorkFlowNodeID)
-	if resp.Status != secondparty.OperationStatus_Finished || err != nil {
-		t.Errorf("case: find secondparty operation by id successfully. operationStatus(expected: %v, actual: %v), err(expected: %v, actual: %v)", secondparty.OperationStatus_Finished, resp.Status, nil, err)
+	if resp.Status != secondparty.OperationStatusFinished || err != nil {
+		t.Errorf("case: find secondparty operation by id successfully. operationStatus(expected: %v, actual: %v), err(expected: %v, actual: %v)", secondparty.OperationStatusFinished, resp.Status, nil, err)
 	}
 }
 

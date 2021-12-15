@@ -60,13 +60,13 @@ func (manager *SecondPartyManager) operationStatusMapSyncer() {
 				if oldv.stat.Status == v.Status {
 					assert(oldv.stat == v)
 				} else {
-					assert(oldv.stat.Status == secondparty.OperationStatus_Processing)
+					assert(oldv.stat.Status == secondparty.OperationStatusProcessing)
 					manager.syncedOperationStatusMap[v.OperationID] = OperationStatusMapValue{
 						validFlag: true,
 						stat:      v,
 						readct:    0,
 					}
-					assert(v.Status == secondparty.OperationStatus_Finished || v.Status == secondparty.OperationStatus_Error)
+					assert(v.Status == secondparty.OperationStatusFinished || v.Status == secondparty.OperationStatusError)
 					needDbUpdate = append(needDbUpdate, v)
 				}
 			} else {
@@ -118,10 +118,10 @@ func (manager *SecondPartyManager) syncOperationStatusMap() {
 		if consumedFlag {
 			v := manager.operationStatusMap[statm.OperationID]
 			if v.validFlag {
-				assert(v.stat.Status == secondparty.OperationStatus_Processing)
-				assert(statm.Status == secondparty.OperationStatus_Finished || statm.Status == secondparty.OperationStatus_Error)
+				assert(v.stat.Status == secondparty.OperationStatusProcessing)
+				assert(statm.Status == secondparty.OperationStatusFinished || statm.Status == secondparty.OperationStatusError)
 			} else {
-				assert(statm.Status == secondparty.OperationStatus_Processing)
+				assert(statm.Status == secondparty.OperationStatusProcessing)
 			}
 			manager.operationStatusMap[statm.OperationID] = OperationStatusMapValue{
 				validFlag: true,
@@ -135,14 +135,14 @@ func (manager *SecondPartyManager) syncOperationStatusMap() {
 }
 
 /**
-1. delete all OperationStatus_Finished and OperationStatus_Error operations which have been read before from the memory
+1. delete all OperationStatusFinished and OperationStatusError operations which have been read before from the memory
 2. put all the rest OperationStatusMember into the result list
 3. increment the read count of rest OperationStatusMember
 */
 func (manager *SecondPartyManager) getAllValidOperationStatus() (ret []OperationStatusMember) {
 	var needDeleteOperationList []string
 	for k, v := range manager.operationStatusMap {
-		if v.readct > 0 && (v.stat.Status == secondparty.OperationStatus_Finished || v.stat.Status == secondparty.OperationStatus_Error) {
+		if v.readct > 0 && (v.stat.Status == secondparty.OperationStatusFinished || v.stat.Status == secondparty.OperationStatusError) {
 			needDeleteOperationList = append(needDeleteOperationList, k)
 		}
 	}

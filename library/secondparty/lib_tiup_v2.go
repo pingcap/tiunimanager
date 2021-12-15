@@ -47,7 +47,7 @@ func (manager *SecondPartyManager) ClusterDeploy(ctx context.Context, tiUPCompon
 		"tiupcomponent: %s, instancename: %s, version: %s, configstryaml: %s, timeout: %d, flags: %v, workflownodeid: "+
 		"%s", string(tiUPComponent), instanceName, version, configStrYaml, timeoutS, flags, workFlowNodeID)
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
-		secondparty.OperationType_ClusterDeploy, workFlowNodeID)
+		secondparty.OperationTypeClusterDeploy, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
@@ -70,7 +70,7 @@ func (manager *SecondPartyManager) startTiUPDeployOperation(ctx context.Context,
 	if err != nil {
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: operationID,
-			Status:      secondparty.OperationStatus_Error,
+			Status:      secondparty.OperationStatusError,
 			Result:      "",
 			ErrorStr:    fmt.Sprintln(err),
 		}
@@ -93,7 +93,7 @@ func (manager *SecondPartyManager) ClusterScaleOut(ctx context.Context, tiUPComp
 		"tiupcomponent: %s, instancename: %s, configstryaml: %s, timeout: %d, flags: %v, workflownodeid: %s",
 		string(tiUPComponent), instanceName, configStrYaml, timeoutS, flags, workFlowNodeID)
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
-		secondparty.OperationType_ClusterScaleOut, workFlowNodeID)
+		secondparty.OperationTypeClusterScaleOut, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
@@ -115,7 +115,7 @@ func (manager *SecondPartyManager) startTiUPScaleOutOperation(ctx context.Contex
 	if err != nil {
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: operationID,
-			Status:      secondparty.OperationStatus_Error,
+			Status:      secondparty.OperationStatusError,
 			Result:      "",
 			ErrorStr:    fmt.Sprintln(err),
 		}
@@ -138,7 +138,7 @@ func (manager *SecondPartyManager) ClusterScaleIn(ctx context.Context, tiUPCompo
 		"tiupcomponent: %s, instancename: %s, nodeid: %s, timeout: %d, flags: %v, workflownodeid: %s",
 		string(tiUPComponent), instanceName, nodeId, timeoutS, flags, workFlowNodeID)
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
-		secondparty.OperationType_ClusterScaleIn, workFlowNodeID)
+		secondparty.OperationTypeClusterScaleIn, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
@@ -170,7 +170,7 @@ func (manager *SecondPartyManager) ClusterStart(ctx context.Context, tiUPCompone
 		"tiupComponent: %s, instancename: %s, timeout: %d, flags: %v, workflownodeid: %s", string(tiUPComponent),
 		instanceName, timeoutS, flags, workFlowNodeID)
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
-		secondparty.OperationType_ClusterStart, workFlowNodeID)
+		secondparty.OperationTypeClusterStart, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
@@ -202,7 +202,7 @@ func (manager *SecondPartyManager) ClusterRestart(ctx context.Context, tiUPCompo
 		"tiupcomponent: %s, instancename: %s, timeout: %d, flags: %v, workflownodeid: %s", string(tiUPComponent),
 		instanceName, timeoutS, flags, workFlowNodeID)
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
-		secondparty.OperationType_ClusterRestart, workFlowNodeID)
+		secondparty.OperationTypeClusterRestart, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
@@ -234,7 +234,7 @@ func (manager *SecondPartyManager) ClusterStop(ctx context.Context, tiUPComponen
 		"tiupComponent: %s, instancename: %s, timeout: %d, flags: %v, workflownodeid: %s", string(tiUPComponent),
 		instanceName, timeoutS, flags, workFlowNodeID)
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
-		secondparty.OperationType_ClusterStop, workFlowNodeID)
+		secondparty.OperationTypeClusterStop, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
@@ -314,7 +314,7 @@ func (manager *SecondPartyManager) ClusterDestroy(ctx context.Context, tiUPCompo
 		"tiupComponent: %s, instancename: %s, timeout: %d, flags: %v, workflownodeid: %s", string(tiUPComponent),
 		instanceName, timeoutS, flags, workFlowNodeID)
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
-		secondparty.OperationType_ClusterDestroy, workFlowNodeID)
+		secondparty.OperationTypeClusterDestroy, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
@@ -397,7 +397,7 @@ func (manager *SecondPartyManager) ClusterUpgrade(ctx context.Context, tiUPCompo
 		string(tiUPComponent), instanceName,
 		version, timeoutS, flags, workFlowNodeID)
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
-		secondparty.OperationType_ClusterUpgrade, workFlowNodeID)
+		secondparty.OperationTypeClusterUpgrade, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
@@ -475,7 +475,7 @@ func (manager *SecondPartyManager) ClusterEditGlobalConfig(ctx context.Context,
 		cmdEditGlobalConfigReq, workFlowNodeID)
 
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
-		secondparty.OperationType_ClusterEditGlobalConfig, workFlowNodeID)
+		secondparty.OperationTypeClusterEditGlobalConfig, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
@@ -490,7 +490,7 @@ func (manager *SecondPartyManager) ClusterEditGlobalConfig(ctx context.Context,
 		framework.LogWithContext(ctx).Errorf("check orignal config error: %+v", err)
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: secondPartyOperation.ID,
-			Status:      secondparty.OperationStatus_Error,
+			Status:      secondparty.OperationStatusError,
 			Result:      "",
 			ErrorStr:    fmt.Sprintln(err),
 		}
@@ -566,7 +566,7 @@ func (manager *SecondPartyManager) ClusterEditInstanceConfig(ctx context.Context
 	framework.LogWithContext(ctx).Infof("clustereditinstanceConfig cmdeditinstanceconfigreq: %v, "+
 		"workflownodeid: %s", cmdEditInstanceConfigReq, workFlowNodeID)
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
-		secondparty.OperationType_ClusterEditInstanceConfig, workFlowNodeID)
+		secondparty.OperationTypeClusterEditInstanceConfig, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
@@ -581,7 +581,7 @@ func (manager *SecondPartyManager) ClusterEditInstanceConfig(ctx context.Context
 		framework.LogWithContext(ctx).Errorf("check orignal config error: %+v", err)
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: secondPartyOperation.ID,
-			Status:      secondparty.OperationStatus_Error,
+			Status:      secondparty.OperationStatusError,
 			Result:      "",
 			ErrorStr:    fmt.Sprintln(err),
 		}
@@ -736,7 +736,7 @@ func (manager *SecondPartyManager) startTiUPEditConfigOperation(ctx context.Cont
 			req.NewTopo, err)
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: operationID,
-			Status:      secondparty.OperationStatus_Error,
+			Status:      secondparty.OperationStatusError,
 			Result:      "",
 			ErrorStr:    fmt.Sprintf("startTiUPeditconfigoperation marshal new config(%+v) error: %+v", req.NewTopo, err),
 		}
@@ -747,7 +747,7 @@ func (manager *SecondPartyManager) startTiUPEditConfigOperation(ctx context.Cont
 	if err != nil {
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: operationID,
-			Status:      secondparty.OperationStatus_Error,
+			Status:      secondparty.OperationStatusError,
 			Result:      "",
 			ErrorStr:    fmt.Sprintln(err),
 		}
@@ -768,7 +768,7 @@ func (manager *SecondPartyManager) ClusterReload(ctx context.Context, cmdReloadC
 	framework.LogWithContext(ctx).Infof("clusterreload cmdreloadconfigreq: %v, workflownodeid: %s",
 		cmdReloadConfigReq, workFlowNodeID)
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
-		secondparty.OperationType_ClusterReload, workFlowNodeID)
+		secondparty.OperationTypeClusterReload, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
@@ -792,7 +792,7 @@ func (manager *SecondPartyManager) Dumpling(ctx context.Context, timeoutS int, f
 	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("dumpling, timeouts: %d, "+
 		"flags: %v, workflownodeid: %s", timeoutS, flags, workFlowNodeID)
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
-		secondparty.OperationType_Dumpling, workFlowNodeID)
+		secondparty.OperationTypeDumpling, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
@@ -820,7 +820,7 @@ func (manager *SecondPartyManager) Lightning(ctx context.Context, timeoutS int, 
 	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("lightning, timeouts: %d, "+
 		"flags: %v, workflownodeid: %s", timeoutS, flags, workFlowNodeID)
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
-		secondparty.OperationType_Lightning, workFlowNodeID)
+		secondparty.OperationTypeLightning, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
@@ -850,7 +850,7 @@ func (manager *SecondPartyManager) Transfer(ctx context.Context, tiUPComponent T
 		"instancename: %s, collectoryaml: %s, remotepath: %s, timeouts: %d, flags: %v, workflownodeid: %s",
 		string(tiUPComponent), instanceName, collectorYaml, remotePath, timeoutS, flags, workFlowNodeID)
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
-		secondparty.OperationType_Transfer, workFlowNodeID)
+		secondparty.OperationTypeTransfer, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
@@ -873,7 +873,7 @@ func (manager *SecondPartyManager) startTiUPTransferOperation(ctx context.Contex
 	if err != nil {
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: operationID,
-			Status:      secondparty.OperationStatus_Error,
+			Status:      secondparty.OperationStatusError,
 			Result:      "",
 			ErrorStr:    fmt.Sprintln(err),
 		}
@@ -896,7 +896,7 @@ func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, opera
 		tiUPPath, tiUPArgs, TimeoutS))
 	manager.operationStatusCh <- OperationStatusMember{
 		OperationID: operationID,
-		Status:      secondparty.OperationStatus_Processing,
+		Status:      secondparty.OperationStatusProcessing,
 		Result:      "",
 		ErrorStr:    "",
 	}
@@ -922,7 +922,7 @@ func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, opera
 			logInFunc.Errorf("cmd start err: %+v, errStr: %s", err, stderr.String())
 			manager.operationStatusCh <- OperationStatusMember{
 				OperationID: operationID,
-				Status:      secondparty.OperationStatus_Error,
+				Status:      secondparty.OperationStatusError,
 				Result:      "",
 				ErrorStr:    fmt.Sprintf("cmd start err: %+v, errStr: %s", err, stderr.String()),
 			}
@@ -933,7 +933,7 @@ func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, opera
 			logInFunc.Info("operation finished, time cost", time.Since(t0))
 			manager.operationStatusCh <- OperationStatusMember{
 				OperationID: operationID,
-				Status:      secondparty.OperationStatus_Finished,
+				Status:      secondparty.OperationStatusFinished,
 				Result:      "",
 				ErrorStr:    "",
 			}
@@ -954,7 +954,7 @@ func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, opera
 				time.Since(t0))
 			manager.operationStatusCh <- OperationStatusMember{
 				OperationID: operationID,
-				Status:      secondparty.OperationStatus_Error,
+				Status:      secondparty.OperationStatusError,
 				Result:      "",
 				ErrorStr: fmt.Sprintf("cmd wait return with err: %+v, errStr: %s, time cost: %v", err,
 					stderr.String(), time.Since(t0)),

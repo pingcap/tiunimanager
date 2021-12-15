@@ -51,7 +51,7 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 	offset := (req.Page - 1) * req.PageSize
 	pgId, params, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, offset, req.PageSize)
 	if err != nil {
-		return resp, page, framework.WrapError(common.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, "failed to query cluster parameter", err)
+		return resp, page, framework.WrapError(common.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, common.TIEM_CLUSTER_PARAMETER_QUERY_ERROR.Explain(), err)
 	}
 
 	resp = cluster.QueryClusterParametersResp{ParamGroupId: pgId}
@@ -62,7 +62,8 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 		if len(param.Range) > 0 {
 			err = json.Unmarshal([]byte(param.Range), &ranges)
 			if err != nil {
-				return resp, page, framework.WrapError(common.TIEM_CONVERT_OBJ_FAILED, "failed to convert parameter range", err)
+				framework.LogWithContext(ctx).Errorf("failed to convert parameter range. req: %v, err: %v", req, err)
+				return resp, page, framework.WrapError(common.TIEM_CONVERT_OBJ_FAILED, common.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
 			}
 		}
 		// convert realValue
@@ -70,7 +71,8 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 		if len(param.RealValue) > 0 {
 			err = json.Unmarshal([]byte(param.RealValue), &realValue)
 			if err != nil {
-				return resp, page, framework.WrapError(common.TIEM_CONVERT_OBJ_FAILED, "failed to convert parameter realValue", err)
+				framework.LogWithContext(ctx).Errorf("failed to convert parameter realValue. req: %v, err: %v", req, err)
+				return resp, page, framework.WrapError(common.TIEM_CONVERT_OBJ_FAILED, common.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
 			}
 		}
 		resp.Params[i] = structs.ClusterParameterInfo{
@@ -107,7 +109,8 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 	for i, param := range req.Params {
 		b, err := json.Marshal(param.RealValue)
 		if err != nil {
-			return cluster.UpdateClusterParametersResp{}, err
+			framework.LogWithContext(ctx).Errorf("failed to convert parameter realValue. req: %v, err: %v", req, err)
+			return resp, framework.WrapError(common.TIEM_CONVERT_OBJ_FAILED, common.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
 		}
 		params[i] = &parameter.ClusterParameterMapping{
 			ClusterID:   req.ClusterID,
@@ -117,7 +120,8 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 	}
 	err = models.GetClusterParameterReaderWriter().UpdateClusterParameter(ctx, req.ClusterID, params)
 	if err != nil {
-		return cluster.UpdateClusterParametersResp{}, err
+		framework.LogWithContext(ctx).Errorf("update cluster parameter req: %v, err: %v", req, err)
+		return resp, framework.WrapError(common.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, common.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR.Explain(), err)
 	}
 	resp = cluster.UpdateClusterParametersResp{ClusterID: req.ClusterID}
 	return resp, nil

@@ -111,13 +111,25 @@ func (m *Manager) CreateParameterGroup(ctx context.Context, req message.CreatePa
 	parameterGroup, err := models.GetParameterGroupReaderWriter().CreateParameterGroup(ctx, pg, pgm)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create parameter group req: %v, err: %v", req, err)
-		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_CREATE_ERROR, "failed to create parameter group", err)
+		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_CREATE_ERROR, common.TIEM_PARAMETER_GROUP_CREATE_ERROR.Explain(), err)
 	}
 	resp = message.CreateParameterGroupResp{ParamGroupID: parameterGroup.ID}
 	return resp, nil
 }
 
 func (m *Manager) UpdateParameterGroup(ctx context.Context, req message.UpdateParameterGroupReq) (resp message.UpdateParameterGroupResp, err error) {
+	group, _, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID)
+	if err != nil || group.ID == "" {
+		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
+		err = framework.WrapError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR, common.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
+		return
+	}
+
+	// default parameter group not be modify.
+	if group.HasDefault == int(DEFAULT) {
+		return resp, framework.WrapError(common.TIEM_DEFAULT_PARAM_GROUP_NOT_MODIFY, common.TIEM_DEFAULT_PARAM_GROUP_NOT_MODIFY.Explain(), err)
+	}
+
 	pg := &parametergroup.ParameterGroup{
 		ID:             req.ParamGroupID,
 		Name:           req.Name,
@@ -136,7 +148,7 @@ func (m *Manager) UpdateParameterGroup(ctx context.Context, req message.UpdatePa
 	err = models.GetParameterGroupReaderWriter().UpdateParameterGroup(ctx, pg, pgm)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("update parameter group invoke metadb err: %v", err)
-		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_UPDATE_ERROR, "failed to update parameter group", err)
+		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_UPDATE_ERROR, common.TIEM_PARAMETER_GROUP_UPDATE_ERROR.Explain(), err)
 	}
 	resp = message.UpdateParameterGroupResp{ParamGroupID: req.ParamGroupID}
 	return resp, nil
@@ -146,7 +158,7 @@ func (m *Manager) DeleteParameterGroup(ctx context.Context, req message.DeletePa
 	pg, _, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID)
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		err = framework.WrapError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR, "failed to detail parameter group", err)
+		err = framework.WrapError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR, common.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
 		return
 	}
 
@@ -157,7 +169,7 @@ func (m *Manager) DeleteParameterGroup(ctx context.Context, req message.DeletePa
 	err = models.GetParameterGroupReaderWriter().DeleteParameterGroup(ctx, pg.ID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("delete parameter group invoke metadb err: %v", err)
-		err = framework.WrapError(common.TIEM_PARAMETER_GROUP_DELETE_ERROR, "failed to delete parameter group", err)
+		err = framework.WrapError(common.TIEM_PARAMETER_GROUP_DELETE_ERROR, common.TIEM_PARAMETER_GROUP_DELETE_ERROR.Explain(), err)
 		return
 	}
 	resp = message.DeleteParameterGroupResp{ParamGroupID: pg.ID}
@@ -169,7 +181,7 @@ func (m *Manager) QueryParameterGroup(ctx context.Context, req message.QueryPara
 	pgs, total, err := models.GetParameterGroupReaderWriter().QueryParameterGroup(ctx, req.Name, req.ClusterSpec, req.ClusterVersion, req.DBType, req.HasDefault, offset, req.PageSize)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("query parameter group req: %v, err: %v", req, err)
-		return resp, page, framework.WrapError(common.TIEM_PARAMETER_GROUP_QUERY_ERROR, "failed to query parameter group", err)
+		return resp, page, framework.WrapError(common.TIEM_PARAMETER_GROUP_QUERY_ERROR, common.TIEM_PARAMETER_GROUP_QUERY_ERROR.Explain(), err)
 	}
 
 	resp = make([]message.QueryParameterGroupResp, len(pgs))
@@ -180,13 +192,15 @@ func (m *Manager) QueryParameterGroup(ctx context.Context, req message.QueryPara
 		if req.HasDetail {
 			pgm, err := models.GetParameterGroupReaderWriter().QueryParametersByGroupId(ctx, pg.ID)
 			if err != nil {
-				return resp, page, framework.WrapError(common.TIEM_PARAMETER_QUERY_ERROR, "failed to query parameter list", err)
+				framework.LogWithContext(ctx).Errorf("query parameter group req: %v, err: %v", req, err)
+				return resp, page, framework.WrapError(common.TIEM_PARAMETER_QUERY_ERROR, common.TIEM_PARAMETER_QUERY_ERROR.Explain(), err)
 			}
 			params := make([]structs.ParameterGroupParameterInfo, len(pgm))
 			for j, param := range pgm {
 				pgi, err := convertParameterGroupParameterInfo(param)
 				if err != nil {
-					return resp, page, framework.WrapError(common.TIEM_CONVERT_OBJ_FAILED, "failed to convert parameter group relation parameter", err)
+					framework.LogWithContext(ctx).Errorf("failed to convert parameter group. req: %v, err: %v", req, err)
+					return resp, page, framework.WrapError(common.TIEM_CONVERT_OBJ_FAILED, common.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
 				}
 				params[j] = pgi
 			}
@@ -206,7 +220,7 @@ func (m *Manager) DetailParameterGroup(ctx context.Context, req message.DetailPa
 	pg, pgm, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR, "failed to detail parameter group", err)
+		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR, common.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
 	}
 	resp = message.DetailParameterGroupResp{ParameterGroupInfo: convertParameterGroupInfo(pg)}
 
@@ -214,7 +228,7 @@ func (m *Manager) DetailParameterGroup(ctx context.Context, req message.DetailPa
 	for i, param := range pgm {
 		pgi, err := convertParameterGroupParameterInfo(param)
 		if err != nil {
-			return resp, framework.WrapError(common.TIEM_CONVERT_OBJ_FAILED, "failed to convert parameter group relation parameter", err)
+			return resp, framework.WrapError(common.TIEM_CONVERT_OBJ_FAILED, common.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
 		}
 		params[i] = pgi
 	}
@@ -227,7 +241,7 @@ func (m *Manager) CopyParameterGroup(ctx context.Context, req message.CopyParame
 	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID)
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR, "failed to detail parameter group", err)
+		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR, common.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
 	}
 
 	pgm := make([]*parametergroup.ParameterGroupMapping, len(params))
@@ -248,7 +262,7 @@ func (m *Manager) CopyParameterGroup(ctx context.Context, req message.CopyParame
 	parameterGroup, err := models.GetParameterGroupReaderWriter().CreateParameterGroup(ctx, pg, pgm)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("copy parameter group convert resp err: %v", err)
-		return
+		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_COPY_ERROR, common.TIEM_PARAMETER_GROUP_COPY_ERROR.Explain(), err)
 	}
 	resp = message.CopyParameterGroupResp{ParamGroupID: parameterGroup.ID}
 	return resp, nil
@@ -259,7 +273,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId)
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR, "failed to detail parameter group", err)
+		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR, common.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
 	}
 
 	pgs := make([]*parameter.ClusterParameterMapping, len(params))
@@ -278,7 +292,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 	err = models.GetClusterParameterReaderWriter().ApplyClusterParameter(ctx, req.ParamGroupId, req.ClusterID, pgs)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("apply parameter group convert resp err: %v", err)
-		return
+		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_APPLY_ERROR, common.TIEM_PARAMETER_GROUP_APPLY_ERROR.Explain(), err)
 	}
 	resp = message.ApplyParameterGroupResp{ParamGroupID: req.ParamGroupId}
 	return resp, nil

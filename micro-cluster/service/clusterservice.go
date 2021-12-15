@@ -69,7 +69,7 @@ type ClusterServiceHandler struct {
 	clusterParameterManager *clusterParameter.Manager
 	clusterManager          *clusterManager.Manager
 	brManager               backuprestore.BRService
-	importexportService     importexport.ImportExportService
+	importexportManager     importexport.ImportExportService
 }
 
 func handleRequest(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse, requestBody interface{}) bool {
@@ -152,7 +152,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.clusterParameterManager = clusterParameter.NewManager()
 	handler.clusterManager = clusterManager.NewClusterManager()
 	handler.brManager = backuprestore.GetBRService()
-	handler.importexportService = importexport.GetImportExportService()
+	handler.importexportManager = importexport.GetImportExportService()
 
 	return handler
 }
@@ -531,8 +531,7 @@ func (c ClusterServiceHandler) ExportData(ctx context.Context, request *clusterp
 	exportReq := message.DataExportReq{}
 
 	if handleRequest(ctx, request, response, exportReq) {
-		manager := importexport.GetImportExportService()
-		result, err := manager.ExportData(ctx, &exportReq)
+		result, err := c.importexportManager.ExportData(ctx, &exportReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
@@ -546,8 +545,7 @@ func (c ClusterServiceHandler) ImportData(ctx context.Context, request *clusterp
 	importReq := message.DataImportReq{}
 
 	if handleRequest(ctx, request, response, importReq) {
-		manager := importexport.GetImportExportService()
-		result, err := manager.ImportData(ctx, &importReq)
+		result, err := c.importexportManager.ImportData(ctx, &importReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
@@ -561,8 +559,7 @@ func (c ClusterServiceHandler) QueryDataTransport(ctx context.Context, request *
 	queryReq := message.QueryDataImportExportRecordsReq{}
 
 	if handleRequest(ctx, request, response, queryReq) {
-		manager := importexport.GetImportExportService()
-		result, page, err := manager.QueryDataTransportRecords(ctx, &queryReq)
+		result, page, err := c.importexportManager.QueryDataTransportRecords(ctx, &queryReq)
 		handleResponse(ctx, response, err, *result, &clusterpb.RpcPage{
 			Page:     int32(page.Page),
 			PageSize: int32(page.PageSize),
@@ -580,8 +577,7 @@ func (c ClusterServiceHandler) DeleteDataTransportRecord(ctx context.Context, re
 	deleteReq := message.DeleteImportExportRecordReq{}
 
 	if handleRequest(ctx, request, response, deleteReq) {
-		manager := importexport.GetImportExportService()
-		result, err := manager.DeleteDataTransportRecord(ctx, &deleteReq)
+		result, err := c.importexportManager.DeleteDataTransportRecord(ctx, &deleteReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 

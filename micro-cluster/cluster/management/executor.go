@@ -16,7 +16,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
+	resourceStructs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
 	"strconv"
@@ -33,10 +33,10 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	globalRequirement, err := clusterMeta.GenerateGlobalPortRequirements(context)
 	instanceRequirement, instances, err := clusterMeta.GenerateInstanceResourceRequirements(context)
 	
-	batchReq := &structs.BatchAllocRequest {
-		BatchRequests: []structs.AllocReq {
+	batchReq := &resourceStructs.BatchAllocRequest {
+		BatchRequests: []resourceStructs.AllocReq {
 			{
-				Applicant: structs.Applicant {
+				Applicant: resourceStructs.Applicant {
 					HolderId: clusterMeta.Cluster.ID,
 					RequestId: instanceAllocId,
 					TakeoverOperation: false,
@@ -47,8 +47,8 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	}
 
 	if len(globalRequirement) > 0 {
-		batchReq.BatchRequests = append(batchReq.BatchRequests, structs.AllocReq {
-			Applicant: structs.Applicant {
+		batchReq.BatchRequests = append(batchReq.BatchRequests, resourceStructs.AllocReq {
+			Applicant: resourceStructs.Applicant {
 				HolderId: clusterMeta.Cluster.ID,
 				RequestId: globalAllocId,
 				TakeoverOperation: false,
@@ -159,24 +159,24 @@ func freeInstanceResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 
 	instance, err := clusterMeta.DeleteInstance(context.Context, instanceID)
 	// recycle instance resource
-	request := &structs.RecycleRequest{
-		RecycleReqs: []structs.RecycleRequire{
+	request := &resourceStructs.RecycleRequest{
+		RecycleReqs: []resourceStructs.RecycleRequire{
 			{
-				RecycleType: structs.RecycleHost,
+				RecycleType: resourceStructs.RecycleHost,
 				HolderID:    instance.ClusterID,
 				HostID:      instance.HostID,
-				ComputeReq: structs.ComputeRequirement{
-					ComputeResource: structs.ComputeResource{
+				ComputeReq: resourceStructs.ComputeRequirement{
+					ComputeResource: resourceStructs.ComputeResource{
 						CpuCores: int32(instance.CpuCores),
 						Memory:   int32(instance.Memory),
 					},
 				},
-				DiskReq: []structs.DiskResource{
+				DiskReq: []resourceStructs.DiskResource{
 					{
 						DiskId: instance.DiskID,
 					},
 				},
-				PortReq: []structs.PortResource{
+				PortReq: []resourceStructs.PortResource{
 					{
 						Ports: instance.Ports,
 					},
@@ -245,17 +245,17 @@ func setClusterOffline(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 // revertResourceAfterFailure
 // @Description: revert allocated resource after creating, scaling out
 func revertResourceAfterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	resource := context.GetData(ContextAllocResource).(*structs.BatchAllocResponse)
+	resource := context.GetData(ContextAllocResource).(*resourceStructs.BatchAllocResponse)
 
 	if resource != nil && len(resource.BatchResults) > 0 {
-		request := &structs.RecycleRequest{
-			RecycleReqs: []structs.RecycleRequire{},
+		request := &resourceStructs.RecycleRequest{
+			RecycleReqs: []resourceStructs.RecycleRequire{},
 		}
 
 		for _, v := range resource.BatchResults {
-			request.RecycleReqs = append(request.RecycleReqs, structs.RecycleRequire{
-				RecycleType: structs.RecycleOperate,
-				RequestID: v.RequestId,
+			request.RecycleReqs = append(request.RecycleReqs, resourceStructs.RecycleRequire{
+				RecycleType: resourceStructs.RecycleOperate,
+				RequestID:   v.RequestId,
 			})
 		}
 
@@ -389,10 +389,10 @@ func deleteCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 // @Description: freed resource
 func freedClusterResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
-	request := &structs.RecycleRequest{
-		RecycleReqs: []structs.RecycleRequire{
+	request := &resourceStructs.RecycleRequest{
+		RecycleReqs: []resourceStructs.RecycleRequire{
 			{
-				RecycleType: structs.RecycleHolder,
+				RecycleType: resourceStructs.RecycleHolder,
 				HolderID:    clusterMeta.Cluster.ID,
 			},
 		},

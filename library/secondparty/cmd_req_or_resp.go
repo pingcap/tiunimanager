@@ -268,6 +268,13 @@ type CmdReloadConfigReq struct {
 	Flags         []string
 }
 
+type CmdClusterExecReq struct {
+	TiUPComponent TiUPComponentTypeStr
+	InstanceName  string
+	TimeoutS      int
+	Flags         []string
+}
+
 type ApiEditConfigReq struct {
 	TiDBClusterComponent spec.TiDBClusterComponent
 	InstanceHost         string

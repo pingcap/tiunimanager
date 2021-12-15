@@ -122,7 +122,73 @@ var doc = `{
                     }
                 }
             },
-            "post": {}
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "backup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster backup"
+                ],
+                "summary": "backup",
+                "parameters": [
+                    {
+                        "description": "backup request",
+                        "name": "backupReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.BackupClusterDataReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.BackupClusterDataResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
         },
         "/backups/{backupId}": {
             "delete": {
@@ -1781,7 +1847,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/management.DescribeDashboardRsp"
+                                            "$ref": "#/definitions/cluster.GetDashboardInfoResp"
                                         }
                                     }
                                 }
@@ -3936,6 +4002,34 @@ var doc = `{
                 }
             }
         },
+        "cluster.BackupClusterDataReq": {
+            "type": "object",
+            "properties": {
+                "backupMode": {
+                    "description": "auto,manual",
+                    "type": "string"
+                },
+                "backupType": {
+                    "description": "full,incr",
+                    "type": "string"
+                },
+                "clusterId": {
+                    "type": "string"
+                }
+            }
+        },
+        "cluster.BackupClusterDataResp": {
+            "type": "object",
+            "properties": {
+                "backupId": {
+                    "type": "string"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
         "cluster.CloneClusterReq": {
             "type": "object",
             "properties": {
@@ -4290,6 +4384,22 @@ var doc = `{
             "properties": {
                 "strategy": {
                     "$ref": "#/definitions/structs.BackupStrategy"
+                }
+            }
+        },
+        "cluster.GetDashboardInfoResp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string",
+                    "example": "abc"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string",
+                    "example": "http://127.0.0.1:9093"
                 }
             }
         },
@@ -5096,20 +5206,6 @@ var doc = `{
                 }
             }
         },
-        "management.DescribeDashboardRsp": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "token": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
         "management.DescribeMonitorRsp": {
             "type": "object",
             "properties": {
@@ -5408,9 +5504,6 @@ var doc = `{
             "type": "object",
             "properties": {
                 "accessKey": {
-                    "type": "string"
-                },
-                "bucketRegion": {
                     "type": "string"
                 },
                 "bucketUrl": {

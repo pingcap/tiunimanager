@@ -168,12 +168,20 @@ func GetImportExportReaderWriter() importexport.ReaderWriter {
 	return defaultDb.importExportReaderWriter
 }
 
+func SetImportExportReaderWriter(rw importexport.ReaderWriter) {
+	defaultDb.importExportReaderWriter = rw
+}
+
 func GetBRReaderWriter() backuprestore.ReaderWriter {
 	return defaultDb.brReaderWriter
 }
 
 func GetResourceReaderWriter() resource.ReaderWriter {
 	return defaultDb.resourceReaderWriter
+}
+
+func SetBRReaderWriter(rw backuprestore.ReaderWriter) {
+	defaultDb.brReaderWriter = rw
 }
 
 func GetClusterReaderWriter() management.ReaderWriter {

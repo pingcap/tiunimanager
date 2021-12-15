@@ -36,6 +36,25 @@ definitions:
       tls:
         type: boolean
     type: object
+  cluster.BackupClusterDataReq:
+    properties:
+      backupMode:
+        description: auto,manual
+        type: string
+      backupType:
+        description: full,incr
+        type: string
+      clusterId:
+        type: string
+    type: object
+  cluster.BackupClusterDataResp:
+    properties:
+      backupId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
   cluster.CloneClusterReq:
     properties:
       backupId:
@@ -296,6 +315,17 @@ definitions:
     properties:
       strategy:
         $ref: '#/definitions/structs.BackupStrategy'
+    type: object
+  cluster.GetDashboardInfoResp:
+    properties:
+      clusterId:
+        example: abc
+        type: string
+      token:
+        type: string
+      url:
+        example: http://127.0.0.1:9093
+        type: string
     type: object
   cluster.InspectClusterParametersResp:
     properties:
@@ -847,15 +877,6 @@ definitions:
       totalNodeCount:
         type: integer
     type: object
-  management.DescribeDashboardRsp:
-    properties:
-      clusterId:
-        type: string
-      token:
-        type: string
-      url:
-        type: string
-    type: object
   management.DescribeMonitorRsp:
     properties:
       alertUrl:
@@ -1058,8 +1079,6 @@ definitions:
   message.DataExportReq:
     properties:
       accessKey:
-        type: string
-      bucketRegion:
         type: string
       bucketUrl:
         type: string
@@ -1900,7 +1919,46 @@ paths:
       summary: query backup records of a cluster
       tags:
       - cluster backup
-    post: {}
+    post:
+      consumes:
+      - application/json
+      description: backup
+      parameters:
+      - description: backup request
+        in: body
+        name: backupReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.BackupClusterDataReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.BackupClusterDataResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: backup
+      tags:
+      - cluster backup
   /backups/{backupId}:
     delete:
       consumes:
@@ -2446,7 +2504,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.DescribeDashboardRsp'
+                  $ref: '#/definitions/cluster.GetDashboardInfoResp'
               type: object
         "401":
           description: Unauthorized

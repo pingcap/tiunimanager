@@ -60,30 +60,7 @@ type TiDBCfg struct {
 	PDAddr     string `toml:"pd-addr"`
 }
 
-type ImportInfo struct {
-	ClusterId   string
-	UserName    string
-	Password    string
-	FilePath    string
-	RecordId    string
-	StorageType string
-	ConfigPath  string
-}
-
-type ExportInfo struct {
-	ClusterId    string
-	UserName     string
-	Password     string
-	FileType     string
-	RecordId     string
-	FilePath     string
-	Filter       string
-	Sql          string
-	StorageType  string
-	BucketRegion string
-}
-
-func NewDataImportConfig(meta *handler.ClusterMeta, info *ImportInfo) *DataImportConfig {
+func NewDataImportConfig(meta *handler.ClusterMeta, info *importInfo) *DataImportConfig {
 	if meta == nil {
 		return nil
 	}

@@ -124,7 +124,7 @@ func (m *BRReadWrite) GetBackupStrategy(ctx context.Context, clusterId string) (
 
 	strategy = &BackupStrategy{}
 	err = m.DB(ctx).First(strategy, "cluster_id = ?", clusterId).Error
-	if err != nil {
+	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, framework.SimpleError(common.TIEM_BACKUP_STRATEGY_NOT_FOUND)
 	}
 	return strategy, err

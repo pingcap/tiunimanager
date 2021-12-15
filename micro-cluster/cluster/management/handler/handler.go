@@ -443,11 +443,11 @@ func (p *ClusterMeta) GetClusterStatusAddress() []ComponentAddress {
 	return nil
 }
 
-// GetClientAddresses
-// @Description: communication address for TiDB Servers to connect.
+// GetPDClientAddresses
+// @Description: communication address for PD Servers to connect.
 // @Receiver p
 // @return []ComponentAddress
-func (p *ClusterMeta) GetClientAddresses() []ComponentAddress {
+func (p *ClusterMeta) GetPDClientAddresses() []ComponentAddress {
 	// todo
 	return nil
 }

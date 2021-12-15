@@ -27,7 +27,6 @@ import (
 	"context"
 	"errors"
 
-	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
 
 	"github.com/pingcap-inc/tiem/library/spec"
@@ -587,10 +586,6 @@ func TestSecondPartyManager_startTiupEditInstanceConfigTask(t *testing.T) {
 }
 
 func TestSecondPartyManager_ClusterReload_Fail(t *testing.T) {
-	var req dbPb.CreateTiupOperatorRecordRequest
-	req.Type = dbPb.TiupTaskType_Reload
-	req.BizID = TestWorkFlowNodeID
-
 	expectedErr := errors.New("fail create second party operation")
 
 	mockCtl := gomock.NewController(t)
@@ -628,6 +623,49 @@ func TestSecondPartyManager_ClusterReload_Success(t *testing.T) {
 		Flags:         []string{},
 	}
 	operationID, err := secondPartyManager1.ClusterReload(context.TODO(), cmdReloadConfigReq, TestWorkFlowNodeID)
+	if operationID != TestOperationID || err != nil {
+		t.Errorf("case: create secondparty operation successfully. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", TestOperationID, operationID, nil, err)
+	}
+}
+
+func TestSecondPartyManager_ClusterExec_Fail(t *testing.T) {
+	expectedErr := errors.New("fail create second party operation")
+
+	mockCtl := gomock.NewController(t)
+	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
+	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterExec, TestWorkFlowNodeID).Return(nil, expectedErr)
+
+	req := CmdClusterExecReq{
+		TiUPComponent: ClusterComponentTypeStr,
+		InstanceName:  "test-tidb",
+		TimeoutS:      0,
+		Flags:         []string{},
+	}
+	operationID, err := secondPartyManager1.ClusterExec(context.TODO(), req, TestWorkFlowNodeID)
+	if operationID != "" || err == nil {
+		t.Errorf("case: fail create second party operation intentionally. taskid(expected: %s, actual: %s), err(expected: %v, actual: %v)", "", operationID, expectedErr, err)
+	}
+}
+
+func TestSecondPartyManager_ClusterExec_Success(t *testing.T) {
+
+	secondPartyOperation := secondparty.SecondPartyOperation{
+		ID: TestOperationID,
+	}
+
+	mockCtl := gomock.NewController(t)
+	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
+	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterExec, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+
+	req := CmdClusterExecReq{
+		TiUPComponent: ClusterComponentTypeStr,
+		InstanceName:  "test-tidb",
+		TimeoutS:      0,
+		Flags:         []string{},
+	}
+	operationID, err := secondPartyManager1.ClusterExec(context.TODO(), req, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
 		t.Errorf("case: create secondparty operation successfully. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", TestOperationID, operationID, nil, err)
 	}

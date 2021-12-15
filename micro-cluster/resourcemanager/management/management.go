@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -15,41 +14,32 @@
  *                                                                            *
  ******************************************************************************/
 
-package hostresource
+package management
 
-type DemoHostInfo struct {
-	HostId   string `json:"hostId"`
-	HostName string `json:"hostName"`
-	HostIp   string `json:"hostIp"`
+import (
+	"context"
+
+	allocrecycle "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/allocator_recycler"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/structs"
+	"github.com/pingcap-inc/tiem/models/resource"
+)
+
+type Management struct {
+	localHostManage structs.AllocatorRecycler
+	// cloudManage allocrecycle.AllocatorRecycler
 }
 
-type ImportHostRsp struct {
-	HostId string `json:"hostId"`
+func (m *Management) InitManagement(rw resource.ReaderWriter) {
+	m.localHostManage = allocrecycle.NewLocalHostManagement(rw)
 }
 
-type ImportHostsRsp struct {
-	HostIds []string `json:"hostIds"`
-}
-type ListHostRsp struct {
-	Hosts []HostInfo `json:"hosts"`
+func (m *Management) GetAllocatorRecycler() structs.AllocatorRecycler {
+	return m.localHostManage
 }
 
-type HostDetailsRsp struct {
-	Host HostInfo `json:"host"`
+func (m *Management) AllocResources(ctx context.Context, batchReq *structs.BatchAllocRequest) (results *structs.BatchAllocResponse, err error) {
+	return m.localHostManage.AllocResources(ctx, batchReq)
 }
-
-type AllocateRsp struct {
-	HostName string   `json:"hostName"`
-	Ip       string   `json:"ip"`
-	UserName string   `json:"userName"`
-	Passwd   string   `json:"passwd"`
-	CpuCores int32    `json:"cpuCore"`
-	Memory   int32    `json:"memory"`
-	Disk     DiskInfo `json:"disk"`
-}
-
-type AllocHostsRsp struct {
-	PdHosts   []AllocateRsp `json:"pdHosts"`
-	TidbHosts []AllocateRsp `json:"tidbHosts"`
-	TikvHosts []AllocateRsp `json:"tikvHosts"`
+func (m *Management) RecycleResources(ctx context.Context, request *structs.RecycleRequest) (err error) {
+	return m.localHostManage.RecycleResources(ctx, request)
 }

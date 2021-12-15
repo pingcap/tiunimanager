@@ -11,6 +11,35 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
+ *                                                                            *
  ******************************************************************************/
 
-package management
+package allocrecycle
+
+import (
+	"context"
+
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/structs"
+	"github.com/pingcap-inc/tiem/models/resource"
+)
+
+type LocalHostManagement struct {
+	rw resource.ReaderWriter
+}
+
+func NewLocalHostManagement(rw resource.ReaderWriter) structs.AllocatorRecycler {
+	localManagement := new(LocalHostManagement)
+	localManagement.rw = rw
+	return localManagement
+}
+
+func (m *LocalHostManagement) SetResourceReaderWriter(rw resource.ReaderWriter) {
+	m.rw = rw
+}
+
+func (m *LocalHostManagement) AllocResources(ctx context.Context, batchReq *structs.BatchAllocRequest) (results *structs.BatchAllocResponse, err error) {
+	return m.rw.AllocResources(ctx, batchReq)
+}
+func (m *LocalHostManagement) RecycleResources(ctx context.Context, request *structs.RecycleRequest) (err error) {
+	return m.rw.RecycleResources(ctx, request)
+}

@@ -11,58 +11,23 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
-package hostresource
+package hostprovider
 
 import (
-	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"context"
+
+	"github.com/pingcap-inc/tiem/common/structs"
 )
 
-type HostQuery struct {
-	controller.PageRequest
-	Purpose string `json:"purpose" form:"purpose"`
-	Status  int    `json:"status" form:"status"`
-	Stat    int    `json:"loadStat" form:"loadStat"`
-}
+type HostProvider interface {
+	ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error)
+	DeleteHosts(ctx context.Context, hostIds []string) (err error)
+	QueryHosts(ctx context.Context, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, err error)
+	UpdateHostStatus(ctx context.Context, hostId []string, status string) (err error)
+	UpdateHostReserved(ctx context.Context, hostId []string, reserved bool) (err error)
 
-type ExcelField int
-
-const (
-	HOSTNAME_FIELD ExcelField = iota
-	IP_FILED
-	USERNAME_FIELD
-	PASSWD_FIELD
-	REGION_FIELD
-	ZONE_FIELD
-	RACK_FIELD
-	ARCH_FIELD
-	OS_FIELD
-	KERNEL_FIELD
-	CPU_FIELD
-	MEM_FIELD
-	NIC_FIELD
-	CLUSTER_TYPE_FIELD
-	PURPOSE_FIELD
-	DISKTYPE_FIELD
-	DISKS_FIELD
-)
-
-type UpdateHostReq struct {
-	Status   *int32 `json:"status"`
-	Reserved *bool  `json:"reserved"`
-}
-
-type Allocation struct {
-	FailureDomain string `json:"failureDomain"`
-	CpuCores      int32  `json:"cpuCores"`
-	Memory        int32  `json:"memory"`
-	Count         int32  `json:"count"`
-}
-
-type AllocHostsReq struct {
-	PdReq   []Allocation `json:"pdReq"`
-	TidbReq []Allocation `json:"tidbReq"`
-	TikvReq []Allocation `json:"tikvReq"`
+	GetHierarchy(ctx context.Context, filter *structs.HostFilter, level int, depth int) (root *structs.HierarchyTreeNode, err error)
+	GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (*structs.Stocks, error)
 }

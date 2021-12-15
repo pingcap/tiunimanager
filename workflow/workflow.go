@@ -127,15 +127,20 @@ var once sync.Once
 
 func GetWorkFlowService() WorkFlowService {
 	once.Do(func() {
-		workflowService = &WorkFlowManager{}
+		if workflowService == nil {
+			workflowService = &WorkFlowManager{}
+		}
 	})
 	return workflowService
+}
+
+func MockWorkFlowService(service WorkFlowService) {
+	workflowService = service
 }
 
 func (mgr *WorkFlowManager) RegisterWorkFlow(ctx context.Context, flowName string, flowDefine *WorkFlowDefine) {
 	mgr.flowDefineMap.Store(flowName, flowDefine)
 	framework.LogWithContext(ctx).Infof("Register WorkFlow %s success, definition: %+v", flowDefine.FlowName, flowDefine)
-	return
 }
 
 func (mgr *WorkFlowManager) GetWorkFlowDefine(ctx context.Context, flowName string) (*WorkFlowDefine, error) {
@@ -215,7 +220,6 @@ func (mgr *WorkFlowManager) DetailWorkFlow(ctx context.Context, flowId string) (
 
 func (mgr *WorkFlowManager) AddContext(flow *WorkFlowAggregation, key string, value interface{}) {
 	flow.addContext(key, value)
-	return
 }
 
 func (mgr *WorkFlowManager) AsyncStart(ctx context.Context, flow *WorkFlowAggregation) error {
@@ -239,5 +243,4 @@ func (mgr *WorkFlowManager) Destroy(ctx context.Context, flow *WorkFlowAggregati
 func (mgr *WorkFlowManager) Complete(ctx context.Context, flow *WorkFlowAggregation, success bool) {
 	framework.LogWithContext(ctx).Infof("Begin complete workflow name %s, workflowId %s, bizId: %s", flow.Flow.Name, flow.Flow.ID, flow.Flow.BizID)
 	flow.complete(success)
-	return
 }

@@ -122,7 +122,73 @@ var doc = `{
                     }
                 }
             },
-            "post": {}
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "backup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster backup"
+                ],
+                "summary": "backup",
+                "parameters": [
+                    {
+                        "description": "backup request",
+                        "name": "backupReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.BackupClusterDataReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.BackupClusterDataResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
         },
         "/backups/{backupId}": {
             "delete": {
@@ -741,13 +807,11 @@ var doc = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Current page location",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "Number of this request",
                         "name": "pageSize",
                         "in": "query"
                     }
@@ -764,7 +828,10 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/cluster.QueryClusterResp"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/management.ClusterDisplayInfo"
+                                            }
                                         }
                                     }
                                 }
@@ -1381,7 +1448,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/cluster.TakeoverClusterReq"
+                            "$ref": "#/definitions/management.TakeoverReq"
                         }
                     }
                 ],
@@ -1397,7 +1464,10 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/cluster.TakeoverClusterResp"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/management.ClusterDisplayInfo"
+                                            }
                                         }
                                     }
                                 }
@@ -1777,7 +1847,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/management.DescribeDashboardRsp"
+                                            "$ref": "#/definitions/cluster.GetDashboardInfoResp"
                                         }
                                     }
                                 }
@@ -2142,7 +2212,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/cluster.RestartClusterResp"
+                                            "$ref": "#/definitions/management.RestartClusterRsp"
                                         }
                                     }
                                 }
@@ -3065,113 +3135,6 @@ var doc = `{
                 }
             }
         },
-        "/resources/allochosts": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "should be used in testing env",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "Alloc host/disk resources for creating tidb cluster",
-                "parameters": [
-                    {
-                        "description": "location and spec of hosts",
-                        "name": "Alloc",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/hostresource.AllocHostsReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/hostresource.AllocHostsRsp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/resources/failuredomains": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "get resource info in each failure domain",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "Show the resources on failure domain view",
-                "parameters": [
-                    {
-                        "enum": [
-                            1,
-                            2,
-                            3
-                        ],
-                        "type": "integer",
-                        "description": "failure domain type of dc/zone/rack",
-                        "name": "failureDomainType",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/warehouse.DomainResource"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
         "/resources/hierarchy": {
             "get": {
                 "security": [
@@ -3192,29 +3155,40 @@ var doc = `{
                 "summary": "Show the resources hierarchy",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "Arch",
+                        "type": "integer",
+                        "name": "Depth",
                         "in": "query"
                     },
                     {
-                        "enum": [
-                            1,
-                            2,
-                            3,
-                            4
-                        ],
                         "type": "integer",
-                        "description": "failure domain type of region/zone/rack/host",
-                        "name": "level",
-                        "in": "query",
-                        "required": true
+                        "description": "[1:Region, 2:Zone, 3:Rack, 4:Host]",
+                        "name": "Level",
+                        "in": "query"
                     },
                     {
-                        "type": "integer",
-                        "description": "hierarchy depth",
-                        "name": "depth",
-                        "in": "query",
-                        "required": true
+                        "type": "string",
+                        "name": "arch",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "loadStat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "purpose",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -3229,7 +3203,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/warehouse.Node"
+                                            "$ref": "#/definitions/message.GetHierarchyResp"
                                         }
                                     }
                                 }
@@ -3239,14 +3213,14 @@ var doc = `{
                 }
             }
         },
-        "/resources/host": {
-            "post": {
+        "/resources/host-reserved": {
+            "put": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "import one host by json",
+                "description": "update host reserved by a list",
                 "consumes": [
                     "application/json"
                 ],
@@ -3256,15 +3230,15 @@ var doc = `{
                 "tags": [
                     "resource"
                 ],
-                "summary": "Import a host to TiEM System",
+                "summary": "Update host reserved",
                 "parameters": [
                     {
-                        "description": "Host information",
-                        "name": "host",
+                        "description": "do update in host list",
+                        "name": "updateReq",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/hostresource.HostInfo"
+                            "$ref": "#/definitions/message.UpdateHostReservedReq"
                         }
                     }
                 ],
@@ -3280,7 +3254,58 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "string"
+                                            "$ref": "#/definitions/message.UpdateHostReservedResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/host-status": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "update host status by a list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Update host status",
+                "parameters": [
+                    {
+                        "description": "do update in host list",
+                        "name": "updateReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UpdateHostStatusReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UpdateHostStatusResp"
                                         }
                                     }
                                 }
@@ -3297,7 +3322,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "get hosts lit",
+                "description": "get hosts list",
                 "consumes": [
                     "application/json"
                 ],
@@ -3310,17 +3335,29 @@ var doc = `{
                 "summary": "Show all hosts list in TiEM",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
+                        "name": "arch",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "loadStat",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "Current page location",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "Number of this request",
                         "name": "pageSize",
                         "in": "query"
                     },
@@ -3330,7 +3367,7 @@ var doc = `{
                         "in": "query"
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "name": "status",
                         "in": "query"
                     }
@@ -3347,10 +3384,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/hostresource.HostInfo"
-                                            }
+                                            "$ref": "#/definitions/message.QueryHostsResp"
                                         }
                                     }
                                 }
@@ -3404,10 +3438,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
+                                            "$ref": "#/definitions/message.ImportHostsResp"
                                         }
                                     }
                                 }
@@ -3446,66 +3477,6 @@ var doc = `{
             }
         },
         "/resources/hosts/": {
-            "put": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "update host status by a list",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "Update host status",
-                "parameters": [
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "multi",
-                        "description": "host id array",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "description": "do update in host list",
-                        "name": "updateReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/hostresource.UpdateHostReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
             "delete": {
                 "security": [
                     {
@@ -3530,10 +3501,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/message.DeleteHostsReq"
                         }
                     }
                 ],
@@ -3549,103 +3517,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/resources/hosts/{hostId}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "get one host by id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "Show a host",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "host ID",
-                        "name": "hostId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/hostresource.HostInfo"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "remove a host by id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "Remove a host",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "host id",
-                        "name": "hostId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
+                                            "$ref": "#/definitions/message.DeleteHostsResp"
                                         }
                                     }
                                 }
@@ -3675,17 +3547,12 @@ var doc = `{
                 "summary": "Show the resources stocks",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "Arch",
-                        "in": "query"
-                    },
-                    {
                         "type": "integer",
                         "name": "Capacity",
                         "in": "query"
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "name": "DiskStatus",
                         "in": "query"
                     },
@@ -3697,16 +3564,6 @@ var doc = `{
                     {
                         "type": "string",
                         "name": "HostIp",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "HostStatus",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "LoadStat",
                         "in": "query"
                     },
                     {
@@ -3723,6 +3580,31 @@ var doc = `{
                         "type": "string",
                         "name": "Zone",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "arch",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "loadStat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "purpose",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -3737,7 +3619,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/warehouse.Stocks"
+                                            "$ref": "#/definitions/message.GetStocksResp"
                                         }
                                     }
                                 }
@@ -4120,9 +4002,40 @@ var doc = `{
                 }
             }
         },
+        "cluster.BackupClusterDataReq": {
+            "type": "object",
+            "properties": {
+                "backupMode": {
+                    "description": "auto,manual",
+                    "type": "string"
+                },
+                "backupType": {
+                    "description": "full,incr",
+                    "type": "string"
+                },
+                "clusterId": {
+                    "type": "string"
+                }
+            }
+        },
+        "cluster.BackupClusterDataResp": {
+            "type": "object",
+            "properties": {
+                "backupId": {
+                    "type": "string"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
         "cluster.CloneClusterReq": {
             "type": "object",
             "properties": {
+                "backupId": {
+                    "type": "string"
+                },
                 "cloneStrategy": {
                     "description": "specify clone strategy, include empty, snapshot and sync, default empty(option)",
                     "type": "string"
@@ -4158,9 +4071,6 @@ var doc = `{
                 "paramGroupId": {
                     "description": "specify cloned cluster parameter group id(option)",
                     "type": "integer"
-                },
-                "parameterGroupID": {
-                    "type": "string"
                 },
                 "region": {
                     "description": "The Region where the cluster is located",
@@ -4265,6 +4175,9 @@ var doc = `{
         "cluster.CreateClusterReq": {
             "type": "object",
             "properties": {
+                "backupId": {
+                    "type": "string"
+                },
                 "clusterName": {
                     "type": "string"
                 },
@@ -4293,15 +4206,15 @@ var doc = `{
                     "description": "Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization",
                     "type": "boolean"
                 },
-                "parameterGroupID": {
-                    "type": "string"
-                },
                 "region": {
                     "description": "The Region where the cluster is located",
                     "type": "string"
                 },
                 "resourceParameters": {
-                    "$ref": "#/definitions/structs.ClusterResourceInfo"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ClusterResourceParameter"
+                    }
                 },
                 "tags": {
                     "type": "array",
@@ -4474,6 +4387,22 @@ var doc = `{
                 }
             }
         },
+        "cluster.GetDashboardInfoResp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string",
+                    "example": "abc"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string",
+                    "example": "http://127.0.0.1:9093"
+                }
+            }
+        },
         "cluster.InspectClusterParametersResp": {
             "type": "object",
             "properties": {
@@ -4612,12 +4541,6 @@ var doc = `{
                 "info": {
                     "$ref": "#/definitions/structs.ClusterInfo"
                 },
-                "instanceResource": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
-                    }
-                },
                 "topology": {
                     "type": "array",
                     "items": {
@@ -4684,29 +4607,6 @@ var doc = `{
                 }
             }
         },
-        "cluster.QueryClusterResp": {
-            "type": "object",
-            "properties": {
-                "clusters": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.ClusterInfo"
-                    }
-                }
-            }
-        },
-        "cluster.RestartClusterResp": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "workFlowId": {
-                    "description": "Asynchronous task workflow ID",
-                    "type": "string"
-                }
-            }
-        },
         "cluster.ResumeChangeFeedTaskResp": {
             "type": "object",
             "properties": {
@@ -4767,7 +4667,7 @@ var doc = `{
                 "clusterId": {
                     "type": "string"
                 },
-                "instanceResource": {
+                "compute": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
@@ -4792,52 +4692,6 @@ var doc = `{
             "properties": {
                 "clusterId": {
                     "type": "string"
-                },
-                "workFlowId": {
-                    "description": "Asynchronous task workflow ID",
-                    "type": "string"
-                }
-            }
-        },
-        "cluster.TakeoverClusterReq": {
-            "type": "object",
-            "properties": {
-                "TiUPIp": {
-                    "type": "string",
-                    "example": "172.16.4.147"
-                },
-                "TiUPPath": {
-                    "type": "string",
-                    "example": ".tiup/"
-                },
-                "TiUPPort": {
-                    "type": "integer",
-                    "example": 22
-                },
-                "TiUPUserName": {
-                    "type": "string",
-                    "example": "root"
-                },
-                "TiUPUserPassword": {
-                    "type": "string",
-                    "example": "password"
-                },
-                "clusterNames": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "cluster.TakeoverClusterResp": {
-            "type": "object",
-            "properties": {
-                "clusters": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.ClusterInfo"
-                    }
                 },
                 "workFlowId": {
                     "description": "Asynchronous task workflow ID",
@@ -5020,246 +4874,17 @@ var doc = `{
                 }
             }
         },
-        "hostresource.AllocHostsReq": {
+        "controller.Usage": {
             "type": "object",
             "properties": {
-                "pdReq": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/hostresource.Allocation"
-                    }
+                "total": {
+                    "type": "number"
                 },
-                "tidbReq": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/hostresource.Allocation"
-                    }
+                "usageRate": {
+                    "type": "number"
                 },
-                "tikvReq": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/hostresource.Allocation"
-                    }
-                }
-            }
-        },
-        "hostresource.AllocHostsRsp": {
-            "type": "object",
-            "properties": {
-                "pdHosts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/hostresource.AllocateRsp"
-                    }
-                },
-                "tidbHosts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/hostresource.AllocateRsp"
-                    }
-                },
-                "tikvHosts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/hostresource.AllocateRsp"
-                    }
-                }
-            }
-        },
-        "hostresource.AllocateRsp": {
-            "type": "object",
-            "properties": {
-                "cpuCore": {
-                    "type": "integer"
-                },
-                "disk": {
-                    "$ref": "#/definitions/hostresource.DiskInfo"
-                },
-                "hostName": {
-                    "type": "string"
-                },
-                "ip": {
-                    "type": "string"
-                },
-                "memory": {
-                    "type": "integer"
-                },
-                "passwd": {
-                    "type": "string"
-                },
-                "userName": {
-                    "type": "string"
-                }
-            }
-        },
-        "hostresource.Allocation": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "cpuCores": {
-                    "type": "integer"
-                },
-                "failureDomain": {
-                    "type": "string"
-                },
-                "memory": {
-                    "type": "integer"
-                }
-            }
-        },
-        "hostresource.DiskInfo": {
-            "type": "object",
-            "properties": {
-                "capacity": {
-                    "description": "Disk size, Unit: GB",
-                    "type": "integer"
-                },
-                "diskId": {
-                    "type": "string"
-                },
-                "hostId": {
-                    "type": "string"
-                },
-                "name": {
-                    "description": "[sda/sdb/nvmep0...]",
-                    "type": "string"
-                },
-                "path": {
-                    "description": "Disk mount path: [/data1]",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "Disk Status, 0 for available, 1 for inused",
-                    "type": "integer"
-                },
-                "type": {
-                    "description": "Disk type: [nvme-ssd/ssd/sata]",
-                    "type": "string"
-                },
-                "usedBy": {
-                    "type": "string"
-                }
-            }
-        },
-        "hostresource.HostInfo": {
-            "type": "object",
-            "properties": {
-                "arch": {
-                    "description": "x86 or arm64",
-                    "type": "string"
-                },
-                "az": {
-                    "type": "string"
-                },
-                "clusterType": {
-                    "description": "What cluster is the host used for? [database/datamigration]",
-                    "type": "string"
-                },
-                "cpuCores": {
-                    "description": "Host cpu cores spec, init while importing",
-                    "type": "integer"
-                },
-                "createTime": {
-                    "type": "integer"
-                },
-                "diskType": {
-                    "description": "Disk type of this host [sata/ssd/nvme_ssd]",
-                    "type": "string"
-                },
-                "disks": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/hostresource.DiskInfo"
-                    }
-                },
-                "freeCpuCores": {
-                    "description": "Unused CpuCore, used for allocation",
-                    "type": "integer"
-                },
-                "freeMemory": {
-                    "description": "Unused memory size, Unit:GB, used for allocation",
-                    "type": "integer"
-                },
-                "hostId": {
-                    "type": "string"
-                },
-                "hostName": {
-                    "type": "string"
-                },
-                "ip": {
-                    "type": "string"
-                },
-                "kernel": {
-                    "type": "string"
-                },
-                "loadStat": {
-                    "description": "Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust",
-                    "type": "integer"
-                },
-                "memory": {
-                    "description": "Host memroy, init while importing",
-                    "type": "integer"
-                },
-                "nic": {
-                    "description": "Host network type: 1GE or 10GE",
-                    "type": "string"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "passwd": {
-                    "type": "string"
-                },
-                "purpose": {
-                    "description": "What Purpose is the host used for? [compute/storage/general]",
-                    "type": "string"
-                },
-                "rack": {
-                    "type": "string"
-                },
-                "region": {
-                    "type": "string"
-                },
-                "reserved": {
-                    "description": "Whether this host is reserved - will not be allocated",
-                    "type": "boolean"
-                },
-                "spec": {
-                    "description": "Host Spec, init while importing",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "Host Status, 0 for Online, 1 for offline",
-                    "type": "integer"
-                },
-                "sysLabels": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "traits": {
-                    "description": "Traits of labels",
-                    "type": "integer"
-                },
-                "updateTime": {
-                    "type": "integer"
-                },
-                "userName": {
-                    "type": "string"
-                }
-            }
-        },
-        "hostresource.UpdateHostReq": {
-            "type": "object",
-            "properties": {
-                "reserved": {
-                    "type": "boolean"
-                },
-                "status": {
-                    "type": "integer"
+                "used": {
+                    "type": "number"
                 }
             }
         },
@@ -5475,6 +5100,95 @@ var doc = `{
                 }
             }
         },
+        "management.ClusterDisplayInfo": {
+            "type": "object",
+            "properties": {
+                "backupFileUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
+                "clusterId": {
+                    "type": "string"
+                },
+                "clusterName": {
+                    "type": "string"
+                },
+                "clusterType": {
+                    "type": "string"
+                },
+                "clusterVersion": {
+                    "type": "string"
+                },
+                "cpuUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "dbPassword": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "diskUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
+                "extranetConnectAddresses": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
+                "intranetConnectAddresses": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "memoryUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
+                "portList": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "recoverInfo": {
+                    "$ref": "#/definitions/management.RecoverInfo"
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
+                    "type": "string"
+                },
+                "storageUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tls": {
+                    "type": "boolean"
+                },
+                "updateTime": {
+                    "type": "string"
+                },
+                "whitelist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "management.ClusterNodeDemand": {
             "type": "object",
             "properties": {
@@ -5489,20 +5203,6 @@ var doc = `{
                 },
                 "totalNodeCount": {
                     "type": "integer"
-                }
-            }
-        },
-        "management.DescribeDashboardRsp": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "token": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
                 }
             }
         },
@@ -5598,6 +5298,32 @@ var doc = `{
                 }
             }
         },
+        "management.RestartClusterRsp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
         "management.ServiceCapabilityIndex": {
             "type": "object",
             "properties": {
@@ -5638,6 +5364,37 @@ var doc = `{
                 },
                 "zoneCode": {
                     "type": "string"
+                }
+            }
+        },
+        "management.TakeoverReq": {
+            "type": "object",
+            "properties": {
+                "clusterNames": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tiupIp": {
+                    "type": "string",
+                    "example": "172.16.4.147"
+                },
+                "tiupPath": {
+                    "type": "string",
+                    "example": ".tiup/"
+                },
+                "tiupPort": {
+                    "type": "integer",
+                    "example": 22
+                },
+                "tiupUserName": {
+                    "type": "string",
+                    "example": "root"
+                },
+                "tiupUserPassword": {
+                    "type": "string",
+                    "example": "password"
                 }
             }
         },
@@ -5749,9 +5506,6 @@ var doc = `{
                 "accessKey": {
                     "type": "string"
                 },
-                "bucketRegion": {
-                    "type": "string"
-                },
                 "bucketUrl": {
                     "type": "string"
                 },
@@ -5849,6 +5603,20 @@ var doc = `{
                 }
             }
         },
+        "message.DeleteHostsReq": {
+            "type": "object",
+            "properties": {
+                "hostIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "message.DeleteHostsResp": {
+            "type": "object"
+        },
         "message.DeleteImportExportRecordReq": {
             "type": "object",
             "properties": {
@@ -5925,6 +5693,33 @@ var doc = `{
                 }
             }
         },
+        "message.GetHierarchyResp": {
+            "type": "object",
+            "properties": {
+                "root": {
+                    "$ref": "#/definitions/structs.HierarchyTreeNode"
+                }
+            }
+        },
+        "message.GetStocksResp": {
+            "type": "object",
+            "properties": {
+                "stocks": {
+                    "$ref": "#/definitions/structs.Stocks"
+                }
+            }
+        },
+        "message.ImportHostsResp": {
+            "type": "object",
+            "properties": {
+                "hostIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "message.QueryDataImportExportRecordsResp": {
             "type": "object",
             "properties": {
@@ -5932,6 +5727,17 @@ var doc = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.DataImportExportRecordInfo"
+                    }
+                }
+            }
+        },
+        "message.QueryHostsResp": {
+            "type": "object",
+            "properties": {
+                "hosts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.HostInfo"
                     }
                 }
             }
@@ -6017,6 +5823,40 @@ var doc = `{
                     }
                 }
             }
+        },
+        "message.UpdateHostReservedReq": {
+            "type": "object",
+            "properties": {
+                "hostIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "reserved": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "message.UpdateHostReservedResp": {
+            "type": "object"
+        },
+        "message.UpdateHostStatusReq": {
+            "type": "object",
+            "properties": {
+                "hostIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.UpdateHostStatusResp": {
+            "type": "object"
         },
         "message.UpdateParameterGroupReq": {
             "type": "object",
@@ -6152,13 +5992,6 @@ var doc = `{
                     "$ref": "#/definitions/structs.Usage"
                 },
                 "createTime": {
-                    "type": "string"
-                },
-                "dbPassword": {
-                    "type": "string"
-                },
-                "dbUser": {
-                    "description": "The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
                     "type": "string"
                 },
                 "deleteTime": {
@@ -6352,10 +6185,10 @@ var doc = `{
                 }
             }
         },
-        "structs.ClusterResourceInfo": {
+        "structs.ClusterResourceParameter": {
             "type": "object",
             "properties": {
-                "instanceResource": {
+                "compute": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
@@ -6443,6 +6276,166 @@ var doc = `{
                     "type": "string"
                 },
                 "zipName": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.DiskInfo": {
+            "type": "object",
+            "properties": {
+                "capacity": {
+                    "description": "Disk size, Unit: GB",
+                    "type": "integer"
+                },
+                "diskId": {
+                    "type": "string"
+                },
+                "hostId": {
+                    "type": "string"
+                },
+                "name": {
+                    "description": "[sda/sdb/nvmep0...]",
+                    "type": "string"
+                },
+                "path": {
+                    "description": "Disk mount path: [/data1]",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Disk Status, 0 for available, 1 for inused",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Disk type: [nvme-ssd/ssd/sata]",
+                    "type": "string"
+                }
+            }
+        },
+        "structs.HierarchyTreeNode": {
+            "type": "object",
+            "properties": {
+                "Code": {
+                    "type": "string"
+                },
+                "Name": {
+                    "type": "string"
+                },
+                "Prefix": {
+                    "type": "string"
+                },
+                "SubNodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.HierarchyTreeNode"
+                    }
+                }
+            }
+        },
+        "structs.HostInfo": {
+            "type": "object",
+            "properties": {
+                "arch": {
+                    "description": "x86 or arm64",
+                    "type": "string"
+                },
+                "az": {
+                    "type": "string"
+                },
+                "clusterType": {
+                    "description": "What cluster is the host used for? [database/data migration]",
+                    "type": "string"
+                },
+                "cpuCores": {
+                    "description": "Host cpu cores spec, init while importing",
+                    "type": "integer"
+                },
+                "createTime": {
+                    "type": "integer"
+                },
+                "diskType": {
+                    "description": "Disk type of this host [sata/ssd/nvme_ssd]",
+                    "type": "string"
+                },
+                "disks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.DiskInfo"
+                    }
+                },
+                "freeCpuCores": {
+                    "description": "Unused CpuCore, used for allocation",
+                    "type": "integer"
+                },
+                "freeMemory": {
+                    "description": "Unused memory size, Unit:GB, used for allocation",
+                    "type": "integer"
+                },
+                "hostId": {
+                    "type": "string"
+                },
+                "hostName": {
+                    "type": "string"
+                },
+                "ip": {
+                    "type": "string"
+                },
+                "kernel": {
+                    "type": "string"
+                },
+                "loadStat": {
+                    "description": "Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust",
+                    "type": "string"
+                },
+                "memory": {
+                    "description": "Host memory, init while importing",
+                    "type": "integer"
+                },
+                "nic": {
+                    "description": "Host network type: 1GE or 10GE",
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "passwd": {
+                    "type": "string"
+                },
+                "purpose": {
+                    "description": "What Purpose is the host used for? [compute/storage/general]",
+                    "type": "string"
+                },
+                "rack": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "reserved": {
+                    "description": "Whether this host is reserved - will not be allocated",
+                    "type": "boolean"
+                },
+                "spec": {
+                    "description": "Host Spec, init while importing",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Host Status, 0 for Online, 1 for offline",
+                    "type": "string"
+                },
+                "sysLabels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "traits": {
+                    "description": "Traits of labels",
+                    "type": "integer"
+                },
+                "updateTime": {
+                    "type": "integer"
+                },
+                "userName": {
                     "type": "string"
                 }
             }
@@ -6548,6 +6541,26 @@ var doc = `{
                 }
             }
         },
+        "structs.Stocks": {
+            "type": "object",
+            "properties": {
+                "freeCpuCores": {
+                    "type": "integer"
+                },
+                "freeDiskCapacity": {
+                    "type": "integer"
+                },
+                "freeDiskCount": {
+                    "type": "integer"
+                },
+                "freeHostCount": {
+                    "type": "integer"
+                },
+                "freeMemory": {
+                    "type": "integer"
+                }
+            }
+        },
         "structs.Usage": {
             "type": "object",
             "properties": {
@@ -6622,69 +6635,6 @@ var doc = `{
                 },
                 "name": {
                     "type": "string"
-                }
-            }
-        },
-        "warehouse.DomainResource": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "purpose": {
-                    "type": "string"
-                },
-                "specCode": {
-                    "type": "string"
-                },
-                "specName": {
-                    "type": "string"
-                },
-                "zoneCode": {
-                    "type": "string"
-                },
-                "zoneName": {
-                    "type": "string"
-                }
-            }
-        },
-        "warehouse.Node": {
-            "type": "object",
-            "properties": {
-                "Code": {
-                    "type": "string"
-                },
-                "Name": {
-                    "type": "string"
-                },
-                "Prefix": {
-                    "type": "string"
-                },
-                "SubNodes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/warehouse.Node"
-                    }
-                }
-            }
-        },
-        "warehouse.Stocks": {
-            "type": "object",
-            "properties": {
-                "freeCpuCores": {
-                    "type": "integer"
-                },
-                "freeDiskCapacity": {
-                    "type": "integer"
-                },
-                "freeDiskCount": {
-                    "type": "integer"
-                },
-                "freeHostCount": {
-                    "type": "integer"
-                },
-                "freeMemory": {
-                    "type": "integer"
                 }
             }
         }

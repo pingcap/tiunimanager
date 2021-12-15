@@ -64,6 +64,8 @@ type SecondPartyService interface {
 		workFlowNodeID string) (string, error)
 	ClusterReload(ctx context.Context, cmdReloadConfigReq CmdReloadConfigReq, workFlowNodeID string) (
 		operationID string, err error)
+	ClusterExec(ctx context.Context, cmdClusterExecReq CmdClusterExecReq, workFlowNodeID string) (
+		operationID string, err error)
 	Dumpling(ctx context.Context, timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error)
 	Lightning(ctx context.Context, timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error)
 	Transfer(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string, collectorYaml string,

@@ -14,44 +14,46 @@
  *                                                                            *
  ******************************************************************************/
 
-package warehouse
+package structs
 
-type ZoneHostStockRsp struct {
-	AvailableStocks map[string][]ZoneHostStock
+import "github.com/pingcap-inc/tiem/common/structs"
+
+type ComputeResource struct {
+	CpuCores int32
+	Memory   int32
 }
 
-type DomainResource struct {
-	ZoneName string `json:"zoneName"`
-	ZoneCode string `json:"zoneCode"`
-	Purpose  string `json:"purpose"`
-	SpecName string `json:"specName"`
-	SpecCode string `json:"specCode"`
-	Count    int32  `json:"count"`
+type DiskResource struct {
+	DiskId   string
+	DiskName string
+	Path     string
+	Type     string
+	Capacity int32
 }
 
-type DomainResourceRsp struct {
-	Resources []DomainResource `json:"resources"`
+type PortResource struct {
+	Start int32
+	End   int32
+	Ports []int32
 }
 
-type Node struct {
-	Code     string `json:"Code"`
-	Prefix   string `json:"Prefix"`
-	Name     string `json:"Name"`
-	SubNodes []Node `json:"SubNodes"`
+type Compute struct {
+	Reqseq     int32
+	Location   structs.Location
+	HostId     string
+	HostName   string
+	HostIp     string
+	UserName   string
+	Passwd     string
+	ComputeRes ComputeRequirement
+	DiskRes    DiskResource
+	PortRes    []PortResource
 }
 
-type GetHierarchyRsp struct {
-	Root Node `json:"Root"`
+type AllocRsp struct {
+	Results []Compute
 }
 
-type Stocks struct {
-	FreeHostCount    int32 `json:"freeHostCount"`
-	FreeCpuCores     int32 `json:"freeCpuCores"`
-	FreeMemory       int32 `json:"freeMemory"`
-	FreeDiskCount    int32 `json:"freeDiskCount"`
-	FreeDiskCapacity int32 `json:"freeDiskCapacity"`
-}
-
-type GetStocksRsp struct {
-	Stocks Stocks `json:"stocks"`
+type BatchAllocResponse struct {
+	BatchResults []*AllocRsp
 }

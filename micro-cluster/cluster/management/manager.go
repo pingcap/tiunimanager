@@ -275,3 +275,7 @@ func (p *Manager) QueryCluster(ctx context.Context, req cluster.QueryClustersReq
 func (p *Manager) DetailCluster(ctx context.Context, req cluster.QueryClusterDetailReq) (resp cluster.QueryClusterDetailResp, err error) {
 	return
 }
+
+func (manager *Manager) GetClusterDashboardInfo(ctx context.Context, request *cluster.GetDashboardInfoReq) (*cluster.GetDashboardInfoResp, error) {
+	return GetDashboardInfo(ctx, request)
+}

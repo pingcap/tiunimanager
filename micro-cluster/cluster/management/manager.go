@@ -102,6 +102,14 @@ func (p *Manager) ScaleOut(ctx context.Context, request cluster.ScaleOutClusterR
 		return response, err
 	}
 
+	// When scale out TiFlash, Judge whether enable-placement-rules is true
+	err = handler.ScaleOutPreCheck(ctx, clusterMeta, request.Compute)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"check cluster[%s] scale out error: %s", clusterMeta.Cluster.Name, err.Error())
+		return response, err
+	}
+
 	// Add instance into cluster topology
 	if err = clusterMeta.AddInstances(ctx, request.Compute); err != nil {
 		framework.LogWithContext(ctx).Errorf(
@@ -148,10 +156,19 @@ func (p *Manager) ScaleIn(ctx context.Context, request cluster.ScaleInClusterReq
 	}
 
 	// Judge whether the instance exists
-	_, err = clusterMeta.GetInstance(ctx, request.InstanceID)
+	instance, err := clusterMeta.GetInstance(ctx, request.InstanceID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"cluster[%s] has no instance[%s]", clusterMeta.Cluster.Name, request.InstanceID)
+		return response, err
+	}
+
+	// When scale in TiFlash, ensure the number of remaining TiFlash instances is
+	// greater than or equal to the maximum number of copies of all data tables
+	err = handler.ScaleInPreCheck(ctx, clusterMeta, instance)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"check cluster[%s] scale in error: %s", clusterMeta.Cluster.Name, err.Error())
 		return response, err
 	}
 

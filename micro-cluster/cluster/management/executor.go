@@ -68,7 +68,7 @@ func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 			"cluster[%s] scale out error: %s", clusterMeta.Cluster.Name, err.Error())
 		return err
 	}
-	framework.LogWithContext(context.Context).Infof("get scale out cluster task id: %d", taskId)
+	framework.LogWithContext(context.Context).Infof("get scale out cluster task id: %s", taskId)
 	return nil
 }
 
@@ -99,7 +99,7 @@ func scaleInCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 			"cluster[%s] scale in error: %s", clusterMeta.Cluster.Name, err.Error())
 		return err
 	}
-	framework.LogWithContext(context.Context).Infof("get scale in cluster task id: %d", taskId)
+	framework.LogWithContext(context.Context).Infof("get scale in cluster task id: %s", taskId)
 	return nil
 }
 
@@ -155,7 +155,7 @@ func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 		}
 	}
 	if err := clusterMeta.UpdateInstancesStatus(context.Context,
-		constants.ClusterInitializing, constants.ClusterRunning); err != nil {
+		constants.ClusterInstanceInitializing, constants.ClusterInstanceRunning); err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"update cluster[%s] instances status into running error: %s", clusterMeta.Cluster.Name, err.Error())
 		return err
@@ -218,7 +218,7 @@ func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 			"cluster[%s] deploy error: %s", clusterMeta.Cluster.Name, err.Error())
 		return err
 	}
-	framework.LogWithContext(context.Context).Infof("get deploy cluster task id: %d", taskId)
+	framework.LogWithContext(context.Context).Infof("get deploy cluster task id: %s", taskId)
 	return nil
 }
 
@@ -236,7 +236,7 @@ func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 			"cluster[%s] start error: %s", clusterMeta.Cluster.Name, err.Error())
 		return err
 	}
-	framework.LogWithContext(context.Context).Infof("get start cluster task id: %d", taskId)
+	framework.LogWithContext(context.Context).Infof("get start cluster task id: %s", taskId)
 	return nil
 }
 
@@ -333,7 +333,7 @@ func stopCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext
 			"cluster[%s] stop error: %s", clusterMeta.Cluster.Name, err.Error())
 		return err
 	}
-	framework.LogWithContext(context.Context).Infof("get stop cluster task id: %d", taskId)
+	framework.LogWithContext(context.Context).Infof("get stop cluster task id: %s", taskId)
 	return nil
 }
 
@@ -352,7 +352,7 @@ func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 			"cluster[%s] destroy error: %s", clusterMeta.Cluster.Name, err.Error())
 		return err
 	}
-	framework.LogWithContext(context.Context).Infof("get destroy cluster task id: %d", taskId)
+	framework.LogWithContext(context.Context).Infof("get destroy cluster task id: %s", taskId)
 	return nil
 }
 

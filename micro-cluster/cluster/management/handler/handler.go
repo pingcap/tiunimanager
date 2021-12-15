@@ -28,6 +28,7 @@ import (
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
+	modelsCommon "github.com/pingcap-inc/tiem/models/common"
 	"strconv"
 	"strings"
 	"text/template"
@@ -49,7 +50,11 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 		return framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "cluster resource parameter is empty!")
 	}
 
-	if p.Instances == nil {
+	if p.Cluster == nil {
+		return framework.NewTiEMError(common.TIEM_UNRECOGNIZED_ERROR, "cluster in meta is nil!")
+	}
+
+	if len(p.Instances) == 0 {
 		p.Instances = make(map[string][]*management.ClusterInstance)
 	}
 
@@ -57,6 +62,9 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 		for _, item := range compute.Resource {
 			for i := 0; i < item.Count; i++ {
 				instance := &management.ClusterInstance{
+					Entity: modelsCommon.Entity{
+						Status: string(constants.ClusterInstanceInitializing),
+					},
 					Type:         compute.Type,
 					Version:      p.Cluster.Version,
 					ClusterID:    p.Cluster.ID,
@@ -66,7 +74,6 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 					DiskType:     item.DiskType,
 					DiskCapacity: int32(item.DiskCapacity),
 				}
-				instance.Status = string(constants.ClusterInitializing)
 				p.Instances[compute.Type] = append(p.Instances[compute.Type], instance)
 			}
 		}
@@ -149,7 +156,7 @@ func (p *ClusterMeta) AllocInstanceResource(ctx context.Context) (string, error)
 	instances := make([]*management.ClusterInstance, 0)
 	for _, components := range p.Instances {
 		for _, instance := range components {
-			if instance.Status != string(constants.ClusterInitializing) {
+			if instance.Status != string(constants.ClusterInstanceInitializing) {
 				continue
 			}
 			instances = append(instances, instance)
@@ -265,7 +272,7 @@ func (p *ClusterMeta) UpdateClusterMaintenanceStatus(ctx context.Context, status
 // @Description update cluster Instances status
 // @Return		error
 func (p *ClusterMeta) UpdateInstancesStatus(ctx context.Context,
-	originStatus constants.ClusterRunningStatus, status constants.ClusterRunningStatus) error {
+	originStatus constants.ClusterInstanceRunningStatus, status constants.ClusterInstanceRunningStatus) error {
 	for _, components := range p.Instances {
 		for _, instance := range components {
 			if instance.Status == string(originStatus) {

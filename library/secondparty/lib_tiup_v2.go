@@ -968,3 +968,7 @@ func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, opera
 	}()
 	return exitCh
 }
+
+func (manager *SecondPartyManager) ClusterComponentCtl(ctx context.Context, str TiUPComponentTypeStr, clusterVersion string, component spec.TiDBClusterComponent, flags []string) (string, error) {
+	return "", nil
+}

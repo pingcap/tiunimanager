@@ -34,8 +34,8 @@ func NewConfigReadWrite(db *gorm.DB) *ConfigReadWrite {
 	return m
 }
 
-func (m *ConfigReadWrite) CreateConfig(ctx context.Context, config *SystemConfig) (*SystemConfig, error) {
-	return config, m.DB(ctx).Create(config).Error
+func (m *ConfigReadWrite) CreateConfig(ctx context.Context, cfg *SystemConfig) (*SystemConfig, error) {
+	return cfg, m.DB(ctx).Create(cfg).Error
 }
 
 func (m *ConfigReadWrite) GetConfig(ctx context.Context, configKey string) (config *SystemConfig, err error) {

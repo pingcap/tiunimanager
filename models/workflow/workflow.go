@@ -25,7 +25,7 @@ type WorkFlow struct {
 	common.Entity
 	Name    string `gorm:"default:null;comment:'name of the workflow'"`
 	BizID   string `gorm:"default:null;<-:create"`
-	Context string `gorm"default:null;not null"`
+	Context string `gorm:"default:null"`
 }
 
 func (flow *WorkFlow) Finished() bool {

@@ -14,44 +14,32 @@
  *                                                                            *
  ******************************************************************************/
 
-package warehouse
+package resourcemanager
 
-type ZoneHostStockRsp struct {
-	AvailableStocks map[string][]ZoneHostStock
+import (
+	"os"
+	"testing"
+
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
+	"github.com/pingcap-inc/tiem/models/resource"
+)
+
+var resourceManager *ResourceManager
+
+func NewMockResourceManager(rw resource.ReaderWriter) *ResourceManager {
+
+	m := new(ResourceManager)
+	m.resourcePool = new(resourcepool.ResourcePool)
+	m.management = new(management.Management)
+	m.resourcePool.InitResourcePool(rw)
+	m.management.InitManagement(rw)
+	return m
 }
 
-type DomainResource struct {
-	ZoneName string `json:"zoneName"`
-	ZoneCode string `json:"zoneCode"`
-	Purpose  string `json:"purpose"`
-	SpecName string `json:"specName"`
-	SpecCode string `json:"specCode"`
-	Count    int32  `json:"count"`
-}
-
-type DomainResourceRsp struct {
-	Resources []DomainResource `json:"resources"`
-}
-
-type Node struct {
-	Code     string `json:"Code"`
-	Prefix   string `json:"Prefix"`
-	Name     string `json:"Name"`
-	SubNodes []Node `json:"SubNodes"`
-}
-
-type GetHierarchyRsp struct {
-	Root Node `json:"Root"`
-}
-
-type Stocks struct {
-	FreeHostCount    int32 `json:"freeHostCount"`
-	FreeCpuCores     int32 `json:"freeCpuCores"`
-	FreeMemory       int32 `json:"freeMemory"`
-	FreeDiskCount    int32 `json:"freeDiskCount"`
-	FreeDiskCapacity int32 `json:"freeDiskCapacity"`
-}
-
-type GetStocksRsp struct {
-	Stocks Stocks `json:"stocks"`
+func TestMain(m *testing.M) {
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	resourceManager = NewMockResourceManager(nil)
+	os.Exit(m.Run())
 }

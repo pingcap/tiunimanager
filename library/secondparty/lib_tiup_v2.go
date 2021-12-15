@@ -787,6 +787,30 @@ func (manager *SecondPartyManager) startTiUPReloadOperation(ctx context.Context,
 	}()
 }
 
+func (manager *SecondPartyManager) ClusterExec(ctx context.Context, cmdClusterExecReq CmdClusterExecReq,
+	workFlowNodeID string) (operationID string, err error) {
+	framework.LogWithContext(ctx).Infof("clusterexec cmdclusterexecreq: %v, workflownodeid: %s",
+		cmdClusterExecReq, workFlowNodeID)
+	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
+		secondparty.OperationTypeClusterExec, workFlowNodeID)
+	if secondPartyOperation == nil || err != nil {
+		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
+		return "", err
+	}
+	manager.startTiUPExecOperation(ctx, secondPartyOperation.ID, &cmdClusterExecReq)
+	return secondPartyOperation.ID, nil
+}
+
+func (manager *SecondPartyManager) startTiUPExecOperation(ctx context.Context, operationID string, req *CmdClusterExecReq) {
+	go func() {
+		var args []string
+		args = append(args, string(req.TiUPComponent), "exec", req.InstanceName)
+		args = append(args, req.Flags...)
+		args = append(args, "--yes")
+		<-manager.startTiUPOperation(ctx, operationID, manager.TiUPBinPath, args, req.TimeoutS)
+	}()
+}
+
 func (manager *SecondPartyManager) Dumpling(ctx context.Context, timeoutS int, flags []string, workFlowNodeID string) (
 	operationID string, err error) {
 	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("dumpling, timeouts: %d, "+

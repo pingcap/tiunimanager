@@ -13,4 +13,21 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package resourcepool
+package hostprovider
+
+import (
+	"context"
+
+	"github.com/pingcap-inc/tiem/common/structs"
+)
+
+type HostProvider interface {
+	ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error)
+	DeleteHosts(ctx context.Context, hostIds []string) (err error)
+	QueryHosts(ctx context.Context, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, err error)
+	UpdateHostStatus(ctx context.Context, hostId []string, status string) (err error)
+	UpdateHostReserved(ctx context.Context, hostId []string, reserved bool) (err error)
+
+	GetHierarchy(ctx context.Context, filter *structs.HostFilter, level int, depth int) (root *structs.HierarchyTreeNode, err error)
+	GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (*structs.Stocks, error)
+}

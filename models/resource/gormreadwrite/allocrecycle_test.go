@@ -24,6 +24,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
+
 	"github.com/pingcap-inc/tiem/library/framework"
 	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/structs"
 	"github.com/pingcap-inc/tiem/models/resource/management"
@@ -368,6 +369,16 @@ func newRequirementForRequest(cpuCores, memory int32, needDisk bool, diskcap int
 	return &require
 }
 
+func newLocation(regionName, zoneName, rackName, hostIp string) *structs.Location {
+	var location structs.Location
+	location.Region = regionName
+	location.Zone = zoneName
+	location.Rack = rackName
+	location.HostIp = hostIp
+
+	return &location
+}
+
 func TestAllocResources_3RequestsInBatch_SpecifyHost_Strategy(t *testing.T) {
 	id1, _ := createTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "474.111.111.127",
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 17, 64, 3)
@@ -621,5 +632,204 @@ func Test_AllocResources_ClusterPorts_Strategy(t *testing.T) {
 	assert.Equal(t, 0, len(usedPorts2))
 
 	err = GormRW.Delete(context.TODO(), ids)
+	assert.Nil(t, err)
+}
+
+func TestAllocResources_Host_Recycle_Strategy(t *testing.T) {
+	id1, _ := createTestHost("Test_Region37", "Test_Region37,Zone41", "Test_Region37,Zone41,3-1", "HostName1", "437.111.111.127",
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 32, 64, 3)
+
+	loc1 := newLocation("Test_Region37", "Zone41", "", "437.111.111.127")
+	require1 := newRequirementForRequest(4, 8, true, 256, string(constants.SSD), 10000, 10015, 5)
+
+	var test_req resource_structs.AllocReq
+	test_req.Applicant.HolderId = "TestCluster11"
+	test_req.Applicant.RequestId = "TestRequestID11"
+	test_req.Requires = append(test_req.Requires, resource_structs.AllocRequirement{
+		Location: *loc1,
+		Strategy: resource_structs.UserSpecifyHost,
+		Require:  *require1,
+		Count:    1,
+	})
+
+	loc2 := newLocation("Test_Region37", "Zone41", "", "437.111.111.127")
+	require2 := newRequirementForRequest(16, 16, true, 256, string(constants.SSD), 10000, 10015, 5)
+
+	var test_req2 resource_structs.AllocReq
+	test_req2.Applicant.HolderId = "TestCluster12"
+	test_req2.Applicant.RequestId = "TestRequestID12"
+	test_req2.Requires = append(test_req2.Requires, resource_structs.AllocRequirement{
+		Location: *loc2,
+		Strategy: resource_structs.UserSpecifyHost,
+		Require:  *require2,
+		Count:    1,
+	})
+
+	loc3 := newLocation("Test_Region37", "Zone41", "", "437.111.111.127")
+	require3 := newRequirementForRequest(8, 32, true, 256, string(constants.SSD), 10000, 10015, 5)
+
+	var test_req3 resource_structs.AllocReq
+	test_req3.Applicant.HolderId = "TestCluster11"
+	test_req3.Applicant.RequestId = "TestRequestID13"
+	test_req3.Requires = append(test_req3.Requires, resource_structs.AllocRequirement{
+		Location: *loc3,
+		Strategy: resource_structs.UserSpecifyHost,
+		Require:  *require3,
+		Count:    1,
+	})
+
+	var batchReq resource_structs.BatchAllocRequest
+	batchReq.BatchRequests = append(batchReq.BatchRequests, test_req)
+	batchReq.BatchRequests = append(batchReq.BatchRequests, test_req2)
+	batchReq.BatchRequests = append(batchReq.BatchRequests, test_req3)
+	assert.Equal(t, 3, len(batchReq.BatchRequests))
+
+	rsp, err := GormRW.AllocResources(context.TODO(), &batchReq)
+	assert.Nil(t, err)
+	assert.Equal(t, 3, len(rsp.BatchResults))
+	assert.True(t, len(rsp.BatchResults[0].Results) == 1 && len(rsp.BatchResults[1].Results) == 1 && len(rsp.BatchResults[2].Results) == 1)
+	assert.Equal(t, int32(10008), rsp.BatchResults[1].Results[0].PortRes[0].Ports[3])
+
+	assert.True(t, rsp.BatchResults[0].Results[0].HostIp == "437.111.111.127" && rsp.BatchResults[1].Results[0].HostIp == "437.111.111.127" && rsp.BatchResults[2].Results[0].HostIp == "437.111.111.127")
+	var host resourcepool.Host
+	MetaDB.First(&host, "IP = ?", "437.111.111.127")
+	assert.Equal(t, int32(32-4-16-8), host.FreeCpuCores)
+	assert.Equal(t, int32(64-8-16-32), host.FreeMemory)
+	assert.True(t, host.Stat == string(constants.HostLoadInUsed))
+
+	//var usedPorts []int32
+	var usedPorts []management.UsedPort
+	MetaDB.Order("port").Model(&management.UsedPort{}).Where("host_id = ?", host.ID).Scan(&usedPorts)
+	assert.Equal(t, 15, len(usedPorts))
+	for i := 0; i < 15; i++ {
+		assert.Equal(t, int32(10000+i), usedPorts[i].Port)
+	}
+
+	type UsedCompute struct {
+		TotalCpuCores int
+		TotalMemory   int
+		HolderId      string
+	}
+	var usedCompute []UsedCompute
+	MetaDB.Model(&management.UsedCompute{}).Select("sum(cpu_cores) as TotalCpuCores, sum(memory) as TotalMemory, holder_id").Group("holder_id").Having("holder_id == ? or holder_id == ?", "TestCluster11", "TestCluster12").Order("holder_id").Scan(&usedCompute)
+	assert.Equal(t, 2, len(usedCompute))
+	assert.True(t, usedCompute[0].TotalCpuCores == 12 && usedCompute[0].TotalMemory == 40 && usedCompute[0].HolderId == "TestCluster11")
+	assert.True(t, usedCompute[1].TotalCpuCores == 16 && usedCompute[1].TotalMemory == 16 && usedCompute[1].HolderId == "TestCluster12")
+
+	diskId1 := rsp.BatchResults[0].Results[0].DiskRes.DiskId // used by cluster1
+	diskId2 := rsp.BatchResults[1].Results[0].DiskRes.DiskId // used by cluster2
+	diskId3 := rsp.BatchResults[2].Results[0].DiskRes.DiskId // used by cluster3
+	var disks []resourcepool.Disk
+	MetaDB.Model(&resourcepool.Disk{}).Where("id = ? or id = ? or id = ?", diskId1, diskId2, diskId3).Scan(&disks)
+
+	assert.Equal(t, string(constants.DiskExhaust), disks[0].Status)
+	assert.Equal(t, string(constants.DiskExhaust), disks[1].Status)
+	assert.Equal(t, string(constants.DiskExhaust), disks[2].Status)
+
+	// recycle part 1
+	var request resource_structs.RecycleRequest
+	var recycleRequire resource_structs.RecycleRequire
+	recycleRequire.HostID = id1[0]
+	recycleRequire.HolderID = "TestCluster11"
+	recycleRequire.ComputeReq.CpuCores = 4
+	recycleRequire.ComputeReq.Memory = 8
+	recycleRequire.DiskReq = append(recycleRequire.DiskReq, resource_structs.DiskResource{
+		DiskId: diskId1,
+	})
+	recycleRequire.PortReq = append(recycleRequire.PortReq, resource_structs.PortResource{
+		Ports: []int32{10000, 10001, 10002},
+	})
+	recycleRequire.RecycleType = resource_structs.RecycleHost
+	request.RecycleReqs = append(request.RecycleReqs, recycleRequire)
+	err = GormRW.RecycleResources(context.TODO(), &request)
+	assert.Nil(t, err)
+	var host2 resourcepool.Host
+	MetaDB.First(&host2, "IP = ?", "437.111.111.127")
+	assert.Equal(t, int32(32-16-8), host2.FreeCpuCores)
+	assert.Equal(t, int32(64-16-32), host2.FreeMemory)
+	var usedCompute2 []UsedCompute
+	MetaDB.Model(&management.UsedCompute{}).Select("sum(cpu_cores) as TotalCpuCores, sum(memory) as TotalMemory, holder_id").Group("holder_id").Having("holder_id == ? or holder_id == ?", "TestCluster11", "TestCluster12").Order("holder_id").Scan(&usedCompute2)
+	assert.Equal(t, 2, len(usedCompute2))
+	assert.True(t, usedCompute2[0].TotalCpuCores == 8 && usedCompute2[0].TotalMemory == 32 && usedCompute2[0].HolderId == "TestCluster11")
+	assert.True(t, usedCompute2[1].TotalCpuCores == 16 && usedCompute2[1].TotalMemory == 16 && usedCompute2[1].HolderId == "TestCluster12")
+	var usedPorts2 []management.UsedPort
+	MetaDB.Order("port").Model(&management.UsedPort{}).Where("host_id = ?", host.ID).Scan(&usedPorts2)
+	assert.Equal(t, 12, len(usedPorts2))
+	for i := 3; i < 15; i++ {
+		assert.Equal(t, int32(10000+i), usedPorts2[i-3].Port)
+	}
+	var disk1 resourcepool.Disk
+	MetaDB.Model(&resourcepool.Disk{}).Where("id = ?", diskId1).Scan(&disk1)
+	assert.Equal(t, string(constants.DiskAvailable), disk1.Status)
+
+	// recycle part 2
+	var request2 resource_structs.RecycleRequest
+	var recycleRequire2 resource_structs.RecycleRequire
+	recycleRequire2.HostID = id1[0]
+	recycleRequire2.HolderID = "TestCluster11"
+	recycleRequire2.ComputeReq.CpuCores = 8
+	recycleRequire2.ComputeReq.Memory = 32
+	recycleRequire2.DiskReq = append(recycleRequire2.DiskReq, resource_structs.DiskResource{
+		DiskId: diskId3,
+	})
+
+	recycleRequire2.PortReq = append(recycleRequire2.PortReq, resource_structs.PortResource{
+		Ports: []int32{10003, 10004, 10010, 10011, 10012, 10013, 10014},
+	})
+	recycleRequire2.RecycleType = resource_structs.RecycleHost
+	request2.RecycleReqs = append(request2.RecycleReqs, recycleRequire2)
+	err = GormRW.RecycleResources(context.TODO(), &request2)
+	assert.Nil(t, err)
+	var host3 resourcepool.Host
+	MetaDB.First(&host3, "IP = ?", "437.111.111.127")
+	assert.Equal(t, int32(32-16), host3.FreeCpuCores)
+	assert.Equal(t, int32(64-16), host3.FreeMemory)
+	var usedCompute3 []UsedCompute
+	MetaDB.Model(&management.UsedCompute{}).Select("sum(cpu_cores) as TotalCpuCores, sum(memory) as TotalMemory, holder_id").Group("holder_id").Having("holder_id == ? or holder_id == ?", "TestCluster11", "TestCluster12").Order("holder_id").Scan(&usedCompute3)
+	assert.Equal(t, 1, len(usedCompute3))
+	assert.True(t, usedCompute3[0].TotalCpuCores == 16 && usedCompute3[0].TotalMemory == 16 && usedCompute3[0].HolderId == "TestCluster12")
+	var usedPorts3 []management.UsedPort
+	MetaDB.Order("port").Model(&management.UsedPort{}).Where("host_id = ?", host.ID).Scan(&usedPorts3)
+	assert.Equal(t, 5, len(usedPorts3))
+	for i := 5; i < 10; i++ {
+		assert.Equal(t, int32(10000+i), usedPorts3[i-5].Port)
+	}
+	var disk2 resourcepool.Disk
+	MetaDB.Model(&resourcepool.Disk{}).Where("id = ?", diskId3).Scan(&disk2)
+	assert.Equal(t, string(constants.DiskAvailable), disk2.Status)
+
+	// recycle all
+	var request3 resource_structs.RecycleRequest
+	var recycleRequire3 resource_structs.RecycleRequire
+	recycleRequire3.HostID = id1[0]
+	recycleRequire3.HolderID = "TestCluster12"
+	recycleRequire3.ComputeReq.CpuCores = 16
+	recycleRequire3.ComputeReq.Memory = 16
+	recycleRequire3.DiskReq = append(recycleRequire3.DiskReq, resource_structs.DiskResource{
+		DiskId: diskId2,
+	})
+	recycleRequire3.PortReq = append(recycleRequire3.PortReq, resource_structs.PortResource{
+		Ports: []int32{10005, 10006, 10007, 10008, 10009},
+	})
+	recycleRequire3.RecycleType = resource_structs.RecycleHost
+	request3.RecycleReqs = append(request3.RecycleReqs, recycleRequire3)
+	err = GormRW.RecycleResources(context.TODO(), &request3)
+	assert.Nil(t, err)
+	var host4 resourcepool.Host
+	MetaDB.First(&host4, "IP = ?", "437.111.111.127")
+	assert.Equal(t, int32(32), host4.FreeCpuCores)
+	assert.Equal(t, int32(64), host4.FreeMemory)
+	//assert.Equal(t, int32(resource.HOST_LOADLESS), host4.Stat)
+	var usedCompute4 []UsedCompute
+	MetaDB.Model(&management.UsedCompute{}).Select("sum(cpu_cores) as TotalCpuCores, sum(memory) as TotalMemory, holder_id").Group("holder_id").Having("holder_id == ? or holder_id == ?", "TestCluster11", "TestCluster12").Order("holder_id").Scan(&usedCompute4)
+	assert.Equal(t, 0, len(usedCompute4))
+	var usedPorts4 []management.UsedPort
+	MetaDB.Order("port").Model(&management.UsedPort{}).Where("host_id = ?", host.ID).Scan(&usedPorts4)
+	assert.Equal(t, 0, len(usedPorts4))
+	var disk3 resourcepool.Disk
+	MetaDB.Model(&resourcepool.Disk{}).Where("id = ?", diskId2).Scan(&disk3)
+	assert.Equal(t, string(constants.DiskAvailable), disk3.Status)
+
+	err = GormRW.Delete(context.TODO(), id1)
 	assert.Nil(t, err)
 }

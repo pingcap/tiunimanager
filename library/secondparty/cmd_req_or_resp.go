@@ -303,3 +303,11 @@ type GetOperationStatusResp struct {
 	Result   string
 	ErrorStr string
 }
+
+type ClusterSetDbPswReq struct {
+	DbConnParameter  DbConnParam
+}
+
+type ClusterSetDbPswResp struct {
+	Message string
+}

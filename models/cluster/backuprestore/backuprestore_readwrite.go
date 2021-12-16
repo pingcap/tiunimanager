@@ -81,7 +81,7 @@ func (m *BRReadWrite) GetBackupRecord(ctx context.Context, backupId string) (rec
 
 func (m *BRReadWrite) QueryBackupRecords(ctx context.Context, clusterId, backupId, backupMode string, startTime, endTime time.Time, page int, pageSize int) (records []*BackupRecord, total int64, err error) {
 	records = make([]*BackupRecord, pageSize)
-	query := m.DB(ctx).Model(BackupRecord{})
+	query := m.DB(ctx).Model(BackupRecord{}).Where("deleted_at is null")
 	if backupId != "" {
 		query = query.Where("id = ?", backupId)
 	}

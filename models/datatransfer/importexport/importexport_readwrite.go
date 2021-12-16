@@ -67,9 +67,9 @@ func (m *ImportExportReadWrite) GetDataTransportRecord(ctx context.Context, reco
 	return record, err
 }
 
-func (m *ImportExportReadWrite) QueryDataTransportRecords(ctx context.Context, recordId, clusterId string, reImport bool, startTime, endTime time.Time, page int, pageSize int) (records []*DataTransportRecord, total int64, err error) {
+func (m *ImportExportReadWrite) QueryDataTransportRecords(ctx context.Context, recordId string, clusterId string, reImport bool, startTime, endTime time.Time, page int, pageSize int) (records []*DataTransportRecord, total int64, err error) {
 	records = make([]*DataTransportRecord, pageSize)
-	query := m.DB(ctx).Model(DataTransportRecord{})
+	query := m.DB(ctx).Model(DataTransportRecord{}).Where("deleted_at is null")
 	if recordId != "" {
 		query = query.Where("id = ?", recordId)
 	}

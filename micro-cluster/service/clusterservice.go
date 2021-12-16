@@ -463,6 +463,7 @@ func (c ClusterServiceHandler) QueryDataTransport(ctx context.Context, request *
 	queryReq := message.QueryDataImportExportRecordsReq{}
 
 	if handleRequest(ctx, request, response, &queryReq) {
+		framework.LogWithContext(ctx).Infof("queryReq: %+v", queryReq)
 		result, page, err := c.importexportManager.QueryDataTransportRecords(ctx, &queryReq)
 		handleResponse(ctx, response, err, *result, &clusterpb.RpcPage{
 			Page:     int32(page.Page),

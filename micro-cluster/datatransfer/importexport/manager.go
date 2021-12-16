@@ -315,7 +315,7 @@ func (mgr *ImportExportManager) QueryDataTransportRecords(ctx context.Context, r
 
 	rw := models.GetImportExportReaderWriter()
 	framework.LogWithContext(ctx).Infof("request: %+v", request)
-	records, total, err := rw.QueryDataTransportRecords(ctx, request.RecordID, request.ClusterID, request.ReImport, time.Unix(request.StartTime, 0), time.Unix(request.EndTime, 0), request.Page, request.PageSize)
+	records, total, err := rw.QueryDataTransportRecords(ctx, request.RecordID, request.ClusterID, request.ReImport, request.StartTime, request.EndTime, request.Page, request.PageSize)
 	if err != nil {
 		return nil, nil, err
 	}

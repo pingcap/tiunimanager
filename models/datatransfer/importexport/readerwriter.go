@@ -63,7 +63,7 @@ type ReaderWriter interface {
 	// @return []*DataTransportRecord
 	// @Return total
 	// @Return error
-	QueryDataTransportRecords(ctx context.Context, recordId string, clusterId string, reImport bool, startTime, endTime time.Time, page int, pageSize int) (records []*DataTransportRecord, total int64, err error)
+	QueryDataTransportRecords(ctx context.Context, recordId string, clusterId string, reImport bool, startTime, endTime int64, page int, pageSize int) (records []*DataTransportRecord, total int64, err error)
 
 	// DeleteDataTransportRecord
 	// @Description: delete data transport record by id

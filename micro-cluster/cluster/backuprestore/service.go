@@ -29,7 +29,7 @@ type BRService interface {
 	// @Parameter request
 	// @Return *cluster.BackupClusterDataResp
 	// @Return error
-	BackupCluster(ctx context.Context, request *cluster.BackupClusterDataReq) (*cluster.BackupClusterDataResp, error)
+	BackupCluster(ctx context.Context, request *cluster.BackupClusterDataReq) (resp *cluster.BackupClusterDataResp, backupErr error)
 
 	// RestoreNewCluster
 	// @Description: restore a new cluster by backup record
@@ -47,7 +47,7 @@ type BRService interface {
 	// @Parameter request
 	// @Return *cluster.RestoreExistClusterResp
 	// @Return error
-	RestoreExistCluster(ctx context.Context, request *cluster.RestoreExistClusterReq) (*cluster.RestoreExistClusterResp, error)
+	RestoreExistCluster(ctx context.Context, request *cluster.RestoreExistClusterReq) (resp *cluster.RestoreExistClusterResp, restoreErr error)
 
 	// QueryClusterBackupRecords
 	// @Description: query backup records of cluster

@@ -15,11 +15,11 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: lib_api_test
- * @Description:
- * @Author: shenhaibo@pingcap.com
+ * @File: lib_api_deprecated_test.go
+ * @Description: test tidb component uses api to update parameters
+ * @Author: jiangxunyu@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/15
+ * @Date: 2021/12/2 16:50
 *******************************************************************************/
 
 package secondparty
@@ -33,7 +33,13 @@ import (
 	"testing"
 )
 
-func TestSecondMicro_ApiEditConfig(t *testing.T) {
+var secondMicro4 *SecondMicro
+
+func init() {
+	secondMicro4 = &SecondMicro{}
+}
+
+func TestSecondMicro_ApiEditConfig_Deprecated(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write(nil)
@@ -149,7 +155,7 @@ func TestSecondMicro_ApiEditConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			hasSuc, err := secondPartyManager3.ApiEditConfig(context.TODO(), tt.args.req)
+			hasSuc, err := secondMicro3.ApiEditConfig(context.TODO(), tt.args.req)
 			if err != nil {
 				if tt.wantErr {
 					return

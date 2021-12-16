@@ -18,6 +18,8 @@ package handler
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -26,7 +28,6 @@ import (
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestClusterMeta_BuildCluster(t *testing.T) {

@@ -58,7 +58,8 @@ definitions:
   cluster.CloneClusterReq:
     properties:
       cloneStrategy:
-        description: specify clone strategy, include empty, snapshot and sync, default empty(option)
+        description: specify clone strategy, include empty, snapshot and sync, default
+          empty(option)
         type: string
       clusterName:
         type: string
@@ -67,7 +68,8 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent
+          with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -75,14 +77,14 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster,
+          default is the root user, which is not valid for Data Migration clusters
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources,
+          when exclusive, a host will only deploy instances of the same cluster, which
+          may result in poor resource utilization
         type: boolean
-      paramGroupId:
-        description: specify cloned cluster parameter group id(option)
-        type: integer
       parameterGroupID:
         type: string
       region:
@@ -165,7 +167,8 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent
+          with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -173,10 +176,13 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster,
+          default is the root user, which is not valid for Data Migration clusters
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources,
+          when exclusive, a host will only deploy instances of the same cluster, which
+          may result in poor resource utilization
         type: boolean
       parameterGroupID:
         type: string
@@ -327,14 +333,14 @@ definitions:
     type: object
   cluster.InspectClusterParametersResp:
     properties:
-      componentType:
-        example: tidb
-        type: string
       inspectValue:
         example: "1"
         type: string
       instance:
         example: 172.16.5.23
+        type: string
+      instanceType:
+        example: tidb
         type: string
       name:
         example: binlog_cache
@@ -508,45 +514,12 @@ definitions:
     type: object
   cluster.QueryClusterParametersResp:
     properties:
-      componentType:
-        example: tidb
+      paramGroupId:
         type: string
-      createTime:
-        example: 1636698675
-        type: integer
-      defaultValue:
-        example: "1"
-        type: string
-      description:
-        example: binlog cache size
-        type: string
-      hasReboot:
-        example: 0
-        type: integer
-      name:
-        example: binlog_size
-        type: string
-      paramId:
-        example: 1
-        type: integer
-      range:
-        example:
-        - "1"
-        - ' 1000'
+      params:
         items:
-          type: string
+          $ref: '#/definitions/structs.ClusterParameterInfo'
         type: array
-      realValue:
-        $ref: '#/definitions/structs.ParameterRealValue'
-      type:
-        example: 0
-        type: integer
-      unit:
-        example: mb
-        type: string
-      updateTime:
-        example: 1636698675
-        type: integer
     type: object
   cluster.QueryClusterResp:
     properties:
@@ -1062,8 +1035,11 @@ definitions:
     type: object
   message.ApplyParameterGroupResp:
     properties:
+      clusterId:
+        example: "123"
+        type: string
       paramGroupId:
-        example: "1"
+        example: "123"
         type: string
       workFlowId:
         description: Asynchronous task workflow ID
@@ -1088,13 +1064,28 @@ definitions:
     type: object
   message.CreateParameterGroupReq:
     properties:
+      clusterSpec:
+        example: 8C16G
+        type: string
+      clusterVersion:
+        example: v5.0
+        type: string
       dbType:
+        enum:
+        - 1
+        - 2
         example: 1
         type: integer
       groupType:
+        enum:
+        - 1
+        - 2
         example: 1
         type: integer
       hasDefault:
+        enum:
+        - 1
+        - 2
         example: 1
         type: integer
       name:
@@ -1107,12 +1098,6 @@ definitions:
         items:
           $ref: '#/definitions/structs.ParameterGroupParameterSampleInfo'
         type: array
-      spec:
-        example: 8C16G
-        type: string
-      version:
-        example: v5.0
-        type: string
     type: object
   message.CreateParameterGroupResp:
     properties:
@@ -1215,16 +1200,31 @@ definitions:
     type: object
   message.DetailParameterGroupResp:
     properties:
+      clusterSpec:
+        example: 8C16G
+        type: string
+      clusterVersion:
+        example: v5.0
+        type: string
       createTime:
         example: 1636698675
         type: integer
       dbType:
-        example: 0
+        enum:
+        - 1
+        - 2
+        example: 1
         type: integer
       groupType:
+        enum:
+        - 1
+        - 2
         example: 0
         type: integer
       hasDefault:
+        enum:
+        - 1
+        - 2
         example: 1
         type: integer
       name:
@@ -1240,15 +1240,9 @@ definitions:
         items:
           $ref: '#/definitions/structs.ParameterGroupParameterInfo'
         type: array
-      spec:
-        example: 8C16G
-        type: string
       updateTime:
         example: 1636698675
         type: integer
-      version:
-        example: v5.0
-        type: string
     type: object
   message.GetHierarchyResp:
     properties:
@@ -1283,16 +1277,31 @@ definitions:
     type: object
   message.QueryParameterGroupResp:
     properties:
+      clusterSpec:
+        example: 8C16G
+        type: string
+      clusterVersion:
+        example: v5.0
+        type: string
       createTime:
         example: 1636698675
         type: integer
       dbType:
-        example: 0
+        enum:
+        - 1
+        - 2
+        example: 1
         type: integer
       groupType:
+        enum:
+        - 1
+        - 2
         example: 0
         type: integer
       hasDefault:
+        enum:
+        - 1
+        - 2
         example: 1
         type: integer
       name:
@@ -1308,15 +1317,9 @@ definitions:
         items:
           $ref: '#/definitions/structs.ParameterGroupParameterInfo'
         type: array
-      spec:
-        example: 8C16G
-        type: string
       updateTime:
         example: 1636698675
         type: integer
-      version:
-        example: v5.0
-        type: string
     type: object
   message.QueryWorkFlowDetailResp:
     properties:
@@ -1362,6 +1365,12 @@ definitions:
     type: object
   message.UpdateParameterGroupReq:
     properties:
+      clusterSpec:
+        example: 8C16G
+        type: string
+      clusterVersion:
+        example: v5.0
+        type: string
       name:
         example: 8C16GV4_default
         type: string
@@ -1374,12 +1383,6 @@ definitions:
         items:
           $ref: '#/definitions/structs.ParameterGroupParameterSampleInfo'
         type: array
-      spec:
-        example: 8C16G
-        type: string
-      version:
-        example: v5.0
-        type: string
     type: object
   message.UpdateParameterGroupResp:
     properties:
@@ -1443,7 +1446,8 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent
+          with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -1453,12 +1457,15 @@ definitions:
       createTime:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster,
+          default is the root user, which is not valid for Data Migration clusters
         type: string
       deleteTime:
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources,
+          when exclusive, a host will only deploy instances of the same cluster, which
+          may result in poor resource utilization
         type: boolean
       extranetConnectAddresses:
         items:
@@ -1550,26 +1557,57 @@ definitions:
       value:
         type: string
     type: object
-  structs.ClusterParameterSampleInfo:
+  structs.ClusterParameterInfo:
     properties:
-      componentType:
-        example: TiDB
+      category:
+        example: basic
         type: string
-      hasReboot:
-        enum:
-        - 0
-        - 1
-        example: 0
+      createTime:
+        example: 1636698675
         type: integer
-      name:
-        example: binlog_cache
+      defaultValue:
+        example: "1"
         type: string
-      paramId:
+      description:
+        example: binlog cache size
+        type: string
+      has_apply:
         example: 1
         type: integer
+      hasReboot:
+        example: 0
+        type: integer
+      instanceType:
+        example: tidb
+        type: string
+      name:
+        example: binlog_size
+        type: string
+      note:
+        example: binlog cache size
+        type: string
+      paramId:
+        example: "1"
+        type: string
+      range:
+        example:
+        - "1"
+        - ' 1000'
+        items:
+          type: string
+        type: array
       realValue:
         $ref: '#/definitions/structs.ParameterRealValue'
-      source:
+      systemVariable:
+        example: log.log_level
+        type: string
+      type:
+        example: 0
+        type: integer
+      unit:
+        example: mb
+        type: string
+      updateSource:
         enum:
         - 0
         - 1
@@ -1577,6 +1615,32 @@ definitions:
         - 3
         example: 0
         type: integer
+      updateTime:
+        example: 1636698675
+        type: integer
+    type: object
+  structs.ClusterParameterSampleInfo:
+    properties:
+      hasApply:
+        enum:
+        - 0
+        - 1
+        example: 1
+        type: integer
+      instanceType:
+        example: TiDB
+        type: string
+      name:
+        example: log_level
+        type: string
+      paramId:
+        example: "1"
+        type: string
+      realValue:
+        $ref: '#/definitions/structs.ParameterRealValue'
+      systemVariable:
+        example: log.binlog_cache
+        type: string
       type:
         enum:
         - 0
@@ -1584,6 +1648,14 @@ definitions:
         - 2
         - 3
         - 4
+        example: 0
+        type: integer
+      updateSource:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
         example: 0
         type: integer
     type: object
@@ -1764,8 +1836,8 @@ definitions:
     type: object
   structs.ParameterGroupParameterInfo:
     properties:
-      componentType:
-        example: tidb
+      category:
+        example: basic
         type: string
       createTime:
         example: 1636698675
@@ -1776,9 +1848,21 @@ definitions:
       description:
         example: binlog cache size
         type: string
+      hasApply:
+        enum:
+        - 0
+        - 1
+        example: 1
+        type: integer
       hasReboot:
+        enum:
+        - 0
+        - 1
         example: 0
         type: integer
+      instanceType:
+        example: tidb
+        type: string
       name:
         example: binlog_size
         type: string
@@ -1795,12 +1879,29 @@ definitions:
         items:
           type: string
         type: array
+      systemVariable:
+        example: log.log_level
+        type: string
       type:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
         example: 0
         type: integer
       unit:
         example: mb
         type: string
+      updateSource:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        example: 0
+        type: integer
       updateTime:
         example: 1636698675
         type: integer
@@ -2623,7 +2724,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: query params of a cluster
+      description: query parameters of a cluster
       parameters:
       - in: query
         name: clusterId
@@ -2651,9 +2752,7 @@ paths:
             - $ref: '#/definitions/controller.ResultWithPage'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/cluster.QueryClusterParametersResp'
-                  type: array
+                  $ref: '#/definitions/cluster.QueryClusterParametersResp'
               type: object
         "401":
           description: Unauthorized
@@ -2669,13 +2768,13 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: query params of a cluster
+      summary: query parameters of a cluster
       tags:
-      - cluster params
+      - cluster parameters
     put:
       consumes:
       - application/json
-      description: submit params
+      description: submit parameters
       parameters:
       - description: update params request
         in: body
@@ -2714,14 +2813,14 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: submit params
+      summary: submit parameters
       tags:
       - cluster params
   /clusters/{clusterId}/params/inspect:
     post:
       consumes:
       - application/json
-      description: inspect params
+      description: inspect parameters
       parameters:
       - description: clusterId
         in: path
@@ -2756,7 +2855,7 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: inspect params
+      summary: inspect parameters
       tags:
       - cluster params
   /clusters/{clusterId}/restart:
@@ -2797,6 +2896,98 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: restart a cluster
+      tags:
+      - cluster
+  /clusters/{clusterId}/scale-in:
+    post:
+      consumes:
+      - application/json
+      description: scale in a cluster
+      parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: scale in request
+        in: body
+        name: scaleInReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.ScaleInClusterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.ScaleInClusterResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: scale in a cluster
+      tags:
+      - cluster
+  /clusters/{clusterId}/scale-out:
+    post:
+      consumes:
+      - application/json
+      description: scale out a cluster
+      parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: scale out request
+        in: body
+        name: scaleOutReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.ScaleOutClusterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.ScaleOutClusterResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: scale out a cluster
       tags:
       - cluster
   /clusters/{clusterId}/stop:
@@ -3130,98 +3321,6 @@ paths:
       summary: restore a new cluster by backup record
       tags:
       - cluster
-  /clusters/scale-in:
-    post:
-      consumes:
-      - application/json
-      description: scale in a cluster
-      parameters:
-      - description: cluster id
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      - description: scale in request
-        in: body
-        name: scaleInReq
-        required: true
-        schema:
-          $ref: '#/definitions/cluster.ScaleInClusterReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.ScaleInClusterResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: scale in a cluster
-      tags:
-      - cluster
-  /clusters/scale-out:
-    post:
-      consumes:
-      - application/json
-      description: scale out a cluster
-      parameters:
-      - description: cluster id
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      - description: scale out request
-        in: body
-        name: scaleOutReq
-        required: true
-        schema:
-          $ref: '#/definitions/cluster.ScaleOutClusterReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.ScaleOutClusterResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: scale out a cluster
-      tags:
-      - cluster
   /clusters/takeover:
     post:
       consumes:
@@ -3523,13 +3622,29 @@ paths:
     get:
       consumes:
       - application/json
-      description: query param group
+      description: query parameter group
       parameters:
-      - example: 0
+      - example: 8C16G
+        in: query
+        name: clusterSpec
+        type: string
+      - example: v5.0
+        in: query
+        name: clusterVersion
+        type: string
+      - enum:
+        - 0
+        - 1
+        - 2
+        example: 0
         in: query
         name: dbType
         type: integer
-      - example: 0
+      - enum:
+        - 0
+        - 1
+        - 2
+        example: 0
         in: query
         name: hasDefault
         type: integer
@@ -3549,14 +3664,6 @@ paths:
         in: query
         name: pageSize
         type: integer
-      - example: 8C16G
-        in: query
-        name: spec
-        type: string
-      - example: v5.0
-        in: query
-        name: version
-        type: string
       produces:
       - application/json
       responses:
@@ -3585,13 +3692,13 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: query param group
+      summary: query parameter group
       tags:
-      - param group
+      - parameter group
     post:
       consumes:
       - application/json
-      description: create a param group
+      description: create a parameter group
       parameters:
       - description: create request
         in: body
@@ -3625,16 +3732,16 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: create a param group
+      summary: create a parameter group
       tags:
-      - param group
+      - parameter group
   /param-groups/{paramGroupId}:
     delete:
       consumes:
       - application/json
-      description: delete a param group
+      description: delete a parameter group
       parameters:
-      - description: param group id
+      - description: parameter group id
         in: path
         name: paramGroupId
         required: true
@@ -3665,15 +3772,15 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: delete a param group
+      summary: delete a parameter group
       tags:
-      - param group
+      - parameter group
     get:
       consumes:
       - application/json
-      description: show details of a param group
+      description: show details of a parameter group
       parameters:
-      - description: param group id
+      - description: parameter group id
         in: path
         name: paramGroupId
         required: true
@@ -3704,15 +3811,20 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: show details of a param group
+      summary: show details of a parameter group
       tags:
-      - param group
+      - parameter group
     put:
       consumes:
       - application/json
-      description: update a param group
+      description: update a parameter group
       parameters:
-      - description: update param group request
+      - description: parameter group id
+        in: path
+        name: paramGroupId
+        required: true
+        type: string
+      - description: update parameter group request
         in: body
         name: updateReq
         required: true
@@ -3744,16 +3856,21 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: update a param group
+      summary: update a parameter group
       tags:
-      - param group
+      - parameter group
   /param-groups/{paramGroupId}/apply:
     post:
       consumes:
       - application/json
-      description: apply a param group
+      description: apply a parameter group
       parameters:
-      - description: apply param group request
+      - description: parameter group id
+        in: path
+        name: paramGroupId
+        required: true
+        type: string
+      - description: apply parameter group request
         in: body
         name: applyReq
         required: true
@@ -3785,16 +3902,21 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: apply a param group
+      summary: apply a parameter group
       tags:
-      - param group
+      - parameter group
   /param-groups/{paramGroupId}/copy:
     post:
       consumes:
       - application/json
-      description: copy a param group
+      description: copy a parameter group
       parameters:
-      - description: copy param group request
+      - description: parameter group id
+        in: path
+        name: paramGroupId
+        required: true
+        type: string
+      - description: copy parameter group request
         in: body
         name: copyReq
         required: true
@@ -3826,9 +3948,9 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: copy a param group
+      summary: copy a parameter group
       tags:
-      - param group
+      - parameter group
   /resources/hierarchy:
     get:
       consumes:

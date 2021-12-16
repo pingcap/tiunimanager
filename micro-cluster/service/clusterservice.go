@@ -20,13 +20,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/util/convert"
+	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
+
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
@@ -165,160 +164,100 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 }
 
 func (handler *ClusterServiceHandler) CreateParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := message.CreateParameterGroupReq{}
+	request := &message.CreateParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.parameterGroupManager.CreateParameterGroup(ctx, request)
+		result, err := handler.parameterGroupManager.CreateParameterGroup(ctx, *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
 }
 
 func (handler *ClusterServiceHandler) UpdateParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := message.UpdateParameterGroupReq{}
+	request := &message.UpdateParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.parameterGroupManager.UpdateParameterGroup(ctx, request)
+		result, err := handler.parameterGroupManager.UpdateParameterGroup(ctx, *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
 }
 
 func (handler *ClusterServiceHandler) DeleteParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := message.DeleteParameterGroupReq{}
+	request := &message.DeleteParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.parameterGroupManager.DeleteParameterGroup(ctx, request)
+		result, err := handler.parameterGroupManager.DeleteParameterGroup(ctx, *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
 }
 
 func (handler *ClusterServiceHandler) QueryParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := message.QueryParameterGroupReq{}
+	request := &message.QueryParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, page, err := handler.parameterGroupManager.QueryParameterGroup(ctx, request)
-		handleResponse(ctx, resp, err, result, &page)
+		result, page, err := handler.parameterGroupManager.QueryParameterGroup(ctx, *request)
+		handleResponse(ctx, resp, err, result, page)
 	}
 	return nil
 }
 
 func (handler *ClusterServiceHandler) DetailParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := message.DetailParameterGroupReq{}
+	request := &message.DetailParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.parameterGroupManager.DetailParameterGroup(ctx, request)
+		result, err := handler.parameterGroupManager.DetailParameterGroup(ctx, *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
 }
 
 func (handler *ClusterServiceHandler) ApplyParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	reqData := req.GetRequest()
-	request := message.ApplyParameterGroupReq{}
-
-	err := json.Unmarshal([]byte(reqData), req)
-	if err != nil {
-		handleResponse(ctx, resp, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil, nil)
-		return nil
-	}
-
-	// query params list by param group id
-	pgDetail, err := handler.parameterGroupManager.DetailParameterGroup(ctx, message.DetailParameterGroupReq{ID: request.ID})
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("apply param group err: %v", err)
-		handleResponse(ctx, resp, framework.SimpleError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR), nil, nil)
-		return err
-	}
-
-	params := make([]*parametergroup.ApplyParam, len(pgDetail.Params))
-	err = convert.ConvertObj(pgDetail.Params, &params)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("apply param group convert obj err: %v", err)
-		handleResponse(ctx, resp, framework.SimpleError(common.TIEM_CONVERT_OBJ_FAILED), nil, nil)
-		return nil
-	}
-	// Convert the default value of the parameter group to the real value of the modified parameter
-	for i, param := range pgDetail.Params {
-		params[i].RealValue.Cluster = param.DefaultValue
-	}
-	modifyParam := &parametergroup.ModifyParam{Reboot: request.Reboot, Params: params}
-	clusterAggregation, err := domain.ModifyParameters(ctx, nil, request.ClusterID, modifyParam)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("apply param group modify parameters err: %v", err)
-		handleResponse(ctx, resp, framework.SimpleError(common.TIEM_MODIFY_PARAM_FAILED), nil, nil)
-		return nil
-	}
+	request := &message.ApplyParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.parameterGroupManager.ApplyParameterGroup(ctx, request)
-		result.WorkFlowID = clusterAggregation.CurrentWorkFlow.BizId
-		result.AsyncTaskWorkFlowInfo = structs.AsyncTaskWorkFlowInfo{WorkFlowID: strconv.Itoa(int(clusterAggregation.CurrentWorkFlow.Id))}
+		result, err := handler.clusterParameterManager.ApplyParameterGroup(ctx, *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
 }
 
 func (handler *ClusterServiceHandler) CopyParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := message.CopyParameterGroupReq{}
+	request := &message.CopyParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.parameterGroupManager.CopyParameterGroup(ctx, request)
+		result, err := handler.parameterGroupManager.CopyParameterGroup(ctx, *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
 }
 
 func (handler *ClusterServiceHandler) QueryClusterParameters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := cluster.QueryClusterParametersReq{}
+	request := &cluster.QueryClusterParametersReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterParameterManager.QueryClusterParameters(ctx, request)
-		handleResponse(ctx, resp, err, result, nil)
+		result, page, err := handler.clusterParameterManager.QueryClusterParameters(ctx, *request)
+		handleResponse(ctx, resp, err, result, page)
 	}
 	return nil
 }
 
 func (handler *ClusterServiceHandler) UpdateClusterParameters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	reqData := req.GetRequest()
-	request := cluster.UpdateClusterParametersReq{}
+	request := &cluster.UpdateClusterParametersReq{}
 
-	err := json.Unmarshal([]byte(reqData), req)
-	if err != nil {
-		handleResponse(ctx, resp, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil, nil)
-		return nil
-	}
-
-	params := make([]*parametergroup.ApplyParam, len(request.Params))
-	err = convert.ConvertObj(request.Params, &params)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("update cluster params convert obj err: %v", err)
-		handleResponse(ctx, resp, framework.SimpleError(common.TIEM_CONVERT_OBJ_FAILED), nil, nil)
-		return err
-	}
-
-	modifyParam := &parametergroup.ModifyParam{Reboot: request.Reboot, Params: params}
-	clusterAggregation, err := domain.ModifyParameters(ctx, nil, request.ClusterID, modifyParam)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("update cluster params modify parameters err: %v", err)
-		handleResponse(ctx, resp, framework.SimpleError(common.TIEM_MODIFY_PARAM_FAILED), nil, nil)
-		return nil
-	}
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterParameterManager.UpdateClusterParameters(ctx, request)
-		result.WorkFlowID = clusterAggregation.CurrentWorkFlow.BizId
-		result.AsyncTaskWorkFlowInfo = structs.AsyncTaskWorkFlowInfo{WorkFlowID: strconv.Itoa(int(clusterAggregation.CurrentWorkFlow.Id))}
+		result, err := handler.clusterParameterManager.UpdateClusterParameters(ctx, *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
 }
 
 func (handler *ClusterServiceHandler) InspectClusterParameters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := cluster.InspectClusterParametersReq{}
+	request := &cluster.InspectClusterParametersReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterParameterManager.InspectClusterParams(ctx, request)
+		result, err := handler.clusterParameterManager.InspectClusterParameters(ctx, *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil

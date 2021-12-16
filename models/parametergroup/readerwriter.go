@@ -66,7 +66,7 @@ type ReaderWriter interface {
 	// @return groups
 	// @return total
 	// @return err
-	QueryParameterGroup(ctx context.Context, name, clusterSpec, clusterVersion string, dbType, hasDefault int32, offset, size int) (groups []*ParameterGroup, total int64, err error)
+	QueryParameterGroup(ctx context.Context, name, clusterSpec, clusterVersion string, dbType, hasDefault int, offset, size int) (groups []*ParameterGroup, total int64, err error)
 
 	// GetParameterGroup
 	// @Description: get parameter group by id

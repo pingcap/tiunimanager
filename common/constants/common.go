@@ -40,7 +40,7 @@ const (
 
 // Enterprise Manager database constants
 const (
-	DBDirPrefix    string = "/"
+	DBDirPrefix      string = "/"
 	DatabaseFileName string = "em.db"
 )
 

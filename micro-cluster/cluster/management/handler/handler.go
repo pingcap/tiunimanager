@@ -184,7 +184,7 @@ func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) ([]res
 					PortCnt: int32(portRange.Count),
 				},
 			},
-			DiskReq:    resource.DiskRequirement{NeedDisk: false},
+			DiskReq: resource.DiskRequirement{NeedDisk: false},
 			ComputeReq: resource.ComputeRequirement{
 				ComputeResource: resource.ComputeResource{},
 			},
@@ -214,7 +214,7 @@ func (p *ClusterMeta) ApplyInstanceResource(resource *resource.AllocRsp, instanc
 	}
 }
 
-func (p *ClusterMeta) GetInstanceByStatus(ctx context.Context, status constants.ClusterInstanceRunningStatus) []*management.ClusterInstance{
+func (p *ClusterMeta) GetInstanceByStatus(ctx context.Context, status constants.ClusterInstanceRunningStatus) []*management.ClusterInstance {
 	instances := make([]*management.ClusterInstance, 0)
 	for _, components := range p.Instances {
 		for _, instance := range components {
@@ -520,6 +520,24 @@ func (p *ClusterMeta) GetMonitorAddresses() []ComponentAddress {
 		}
 	}
 	return nil
+}
+
+type TiDBUserInfo struct {
+	ClusterID string
+	UserName  string
+	Password  string
+}
+
+// GetClusterUserNamePasswd
+// @Description: get tidb cluster username and password
+// @Receiver p
+// @return []TiDBUserInfo
+func (p *ClusterMeta) GetClusterUserNamePasswd() *TiDBUserInfo {
+	return &TiDBUserInfo{
+		ClusterID: p.Cluster.ID,
+		UserName:  p.Cluster.DBUser,
+		Password:  p.Cluster.DBPassword,
+	}
 }
 
 // UpdateMeta

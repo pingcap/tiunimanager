@@ -212,7 +212,7 @@ func (mgr *FileManager) UnzipDir(ctx context.Context, zipFile string, dir string
 	for _, f := range r.File {
 		func() {
 			path := dir + string(filepath.Separator) + f.Name
-			if filepath.Dir(path) != dir {
+			if !strings.HasPrefix(path, dir) {
 				framework.LogWithContext(ctx).Errorf("file %s in zip file invalid, may cause path crossing", f.Name)
 				unzipErr = fmt.Errorf("file %s in zip file invalid, may cause path crossing", f.Name)
 				return

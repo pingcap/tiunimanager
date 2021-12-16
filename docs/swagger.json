@@ -6491,7 +6491,14 @@
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "Initializing",
+                        "Processing",
+                        "Finished",
+                        "Error",
+                        "Canceled"
+                    ]
                 },
                 "updateTime": {
                     "type": "string"
@@ -6520,7 +6527,14 @@
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "Initializing",
+                        "Processing",
+                        "Finished",
+                        "Error",
+                        "Canceled"
+                    ]
                 }
             }
         },

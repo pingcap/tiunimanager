@@ -1770,6 +1770,12 @@ definitions:
       id:
         type: string
       status:
+        enum:
+        - Initializing
+        - Processing
+        - Finished
+        - Error
+        - Canceled
         type: string
       updateTime:
         type: string
@@ -1789,6 +1795,12 @@ definitions:
       startTime:
         type: string
       status:
+        enum:
+        - Initializing
+        - Processing
+        - Finished
+        - Error
+        - Canceled
         type: string
     type: object
   structs.ZoneInfo:

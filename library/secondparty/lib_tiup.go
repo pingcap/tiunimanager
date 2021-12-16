@@ -39,6 +39,7 @@ const (
 	DMComponentTypeStr      TiUPComponentTypeStr = "dm"
 	TiEMComponentTypeStr    TiUPComponentTypeStr = "tiem"
 	CtlComponentTypeStr     TiUPComponentTypeStr = "ctl"
+	CTLComponentTypeStr     TiUPComponentTypeStr = "ctl"
 )
 
 func (secondMicro *SecondMicro) MicroSrvTiupDeploy(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {

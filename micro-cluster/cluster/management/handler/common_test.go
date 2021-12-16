@@ -13,34 +13,33 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-/*******************************************************************************
- * @File: workflow.go
- * @Description:
- * @Author: duanbing@pingcap.com
- * @Version: 1.0.0
- * @Date: 2021/12/4
-*******************************************************************************/
+package handler
 
-package structs
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
-import "time"
+func TestContain(t *testing.T) {
+	ports := []int{4000, 4001, 4002}
+	got := Contain(ports, 4000)
+	assert.Equal(t, got, true)
 
-type WorkFlowInfo struct {
-	ID         string    `json:"id"`
-	Name       string    `json:"flowWorkName"`
-	BizID      string    `json:"BizId"`
-	Status     string    `json:"status" enums:"Initializing,Processing,Finished,Error,Canceled"`
-	CreateTime time.Time `json:"createTime"`
-	UpdateTime time.Time `json:"updateTime"`
-	DeleteTime time.Time `json:"deleteTime"`
+	got = Contain(ports, 4003)
+	assert.Equal(t, got, false)
+
+	hosts := []string{"127.0.0.1", "127.0.0.2"}
+	got = Contain(hosts, "127.0.0.1")
+	assert.Equal(t, got, true)
+
+	got = Contain(hosts, "127.0.0.3")
+	assert.Equal(t, got, false)
 }
 
-type WorkFlowNodeInfo struct {
-	ID         string    `json:"id"`
-	Name       string    `json:"name"`
-	Parameters string    `json:"parameters"`
-	Result     string    `json:"result"`
-	Status     string    `json:"status" enums:"Initializing,Processing,Finished,Error,Canceled"`
-	StartTime  time.Time `json:"startTime"`
-	EndTime    time.Time `json:"endTime"`
+func TestScaleOutPreCheck(t *testing.T) {
+
+}
+
+func TestWaitWorkflow(t *testing.T) {
+	//TODO: test WaitWorkflow
 }

@@ -118,7 +118,7 @@ func QueryBackupRecords(c *gin.Context) {
 	var request cluster.QueryBackupRecordsReq
 
 	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &request); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryBackupRecords, cluster.QueryBackupRecordsResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryBackupRecords, &cluster.QueryBackupRecordsResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

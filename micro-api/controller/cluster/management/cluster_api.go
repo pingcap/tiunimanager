@@ -260,7 +260,7 @@ func Takeover(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/dashboard [get]
 func GetDashboardInfo(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, cluster.GetDashboardInfoReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.GetDashboardInfoReq{
 		ClusterID: c.Param("clusterId"),
 	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.GetDashboardInfo, &cluster.GetDashboardInfoResp{},

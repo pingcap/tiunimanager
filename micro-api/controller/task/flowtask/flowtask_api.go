@@ -40,7 +40,7 @@ func Query(c *gin.Context) {
 	var request message.QueryWorkFlowsReq
 
 	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &request); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.ListFlows, message.QueryWorkFlowsResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.ListFlows, &message.QueryWorkFlowsResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

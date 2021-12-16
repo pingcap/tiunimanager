@@ -223,6 +223,12 @@ func TestClusterMeta_IsComponentRequired(t *testing.T) {
 }
 
 func TestClusterMeta_DeleteInstance(t *testing.T)  {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(rw)
+	rw.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil)
+
 	meta := &ClusterMeta {
 		Cluster: &management.Cluster{
 			Entity: common.Entity{

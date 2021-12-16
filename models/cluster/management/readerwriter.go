@@ -27,14 +27,14 @@ type ReaderWriter interface {
 	GetMeta(ctx context.Context, clusterID string) (*Cluster, []*ClusterInstance, error)
 
 	//
-    // UpdateMeta
-    // @Description: update cluster and instances, use Update and UpdateInstance
-    // @param ctx
-    // @param cluster
-    // @param instances[]*ClusterInstance
-    // @return error
-    //
-	UpdateMeta(ctx context.Context, cluster *Cluster, instances[]*ClusterInstance) error
+	// UpdateMeta
+	// @Description: update cluster and instances, use Update and UpdateInstance
+	// @param ctx
+	// @param cluster
+	// @param instances[]*ClusterInstance
+	// @return error
+	//
+	UpdateMeta(ctx context.Context, cluster *Cluster, instances []*ClusterInstance) error
 	//
 	// UpdateInstance update cluster instances
 	//  @Description:

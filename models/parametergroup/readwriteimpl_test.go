@@ -371,8 +371,8 @@ func TestParameterGroupReadWrite_QueryParameterGroup(t *testing.T) {
 		name       string
 		spec       string
 		version    string
-		dbType     int32
-		hasDefault int32
+		dbType     int
+		hasDefault int
 		offset     int
 		size       int
 	}

@@ -305,7 +305,7 @@ type GetOperationStatusResp struct {
 }
 
 type ClusterSetDbPswReq struct {
-	DbConnParameter  DbConnParam
+	DbConnParameter DbConnParam
 }
 
 type ClusterSetDbPswResp struct {

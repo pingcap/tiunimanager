@@ -27,10 +27,10 @@ import (
 )
 
 const (
-	ContextClusterMeta   = "ClusterMeta"
-	ContextTopology      = "Topology"
-	ContextAllocResource = "AllocResource"
-	ContextInstanceID    = "InstanceID"
+	ContextClusterMeta       = "ClusterMeta"
+	ContextTopology          = "Topology"
+	ContextAllocResource     = "AllocResource"
+	ContextInstanceID        = "InstanceID"
 	ContextSourceClusterMeta = "SourceClusterMeta"
 	ContextCloneStrategy     = "CloneStrategy"
 	ContextBackupID          = "BackupID"

@@ -18,6 +18,11 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"reflect"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -25,10 +30,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
-	"reflect"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type Replication struct {
@@ -36,7 +37,7 @@ type Replication struct {
 	EnablePlacementRules string `json:"enable-placement-rules"`
 }
 
-func Contain(list interface{}, target interface{}, ) bool {
+func Contain(list interface{}, target interface{}) bool {
 	if reflect.TypeOf(list).Kind() == reflect.Slice || reflect.TypeOf(list).Kind() == reflect.Array {
 		listValue := reflect.ValueOf(list)
 		for i := 0; i < listValue.Len(); i++ {
@@ -73,7 +74,7 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 			}
 
 			config, err := secondparty.Manager.ClusterComponentCtl(ctx, secondparty.CTLComponentTypeStr,
-				meta.Cluster.Version, spec.ComponentPD, []string{"-u", pdID, "config", "show", "replication"})
+				meta.Cluster.Version, spec.ComponentPD, []string{"-u", pdID, "config", "show", "replication"}, 0)
 			if err != nil {
 				return err
 			}
@@ -114,7 +115,7 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 		}
 
 		config, err := secondparty.Manager.ClusterComponentCtl(ctx, secondparty.CTLComponentTypeStr,
-			meta.Cluster.Version, spec.ComponentPD, []string{"-u", pdID, "config", "placement-rules", "show"})
+			meta.Cluster.Version, spec.ComponentPD, []string{"-u", pdID, "config", "placement-rules", "show"}, 0)
 		if err != nil {
 			return err
 		}

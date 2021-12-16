@@ -194,26 +194,32 @@ type ParameterRealValue struct {
 }
 
 type ClusterParameterSampleInfo struct {
-	ParamId       int64              `json:"paramId" example:"1"`
-	Name          string             `json:"name" example:"binlog_cache"`
-	ComponentType string             `json:"componentType" example:"TiDB"`
-	HasReboot     int32              `json:"hasReboot" example:"0" enums:"0,1"`
-	Source        int32              `json:"source" example:"0" enums:"0,1,2,3"`
-	Type          int32              `json:"type" example:"0" enums:"0,1,2,3,4"`
-	RealValue     ParameterRealValue `json:"realValue"`
+	ParamId        string             `json:"paramId" example:"1"`
+	Name           string             `json:"name" example:"log_level"`
+	InstanceType   string             `json:"instanceType" example:"TiDB"`
+	UpdateSource   int                `json:"updateSource" example:"0" enums:"0,1,2,3"`
+	SystemVariable string             `json:"systemVariable" example:"log.binlog_cache"`
+	Type           int                `json:"type" example:"0" enums:"0,1,2,3,4"`
+	HasApply       int                `json:"hasApply" example:"1" enums:"0,1"`
+	RealValue      ParameterRealValue `json:"realValue"`
 }
 
 type ClusterParameterInfo struct {
-	ParamId       int64              `json:"paramId" example:"1"`
-	Name          string             `json:"name" example:"binlog_size"`
-	ComponentType string             `json:"componentType" example:"tidb"`
-	Type          int32              `json:"type" example:"0"`
-	Unit          string             `json:"unit" example:"mb"`
-	Range         []string           `json:"range" example:"1, 1000"`
-	HasReboot     int32              `json:"hasReboot" example:"0"`
-	DefaultValue  string             `json:"defaultValue" example:"1"`
-	RealValue     ParameterRealValue `json:"realValue"`
-	Description   string             `json:"description" example:"binlog cache size"`
-	CreatedAt     int64              `json:"createTime" example:"1636698675"`
-	UpdatedAt     int64              `json:"updateTime" example:"1636698675"`
+	ParamId        string             `json:"paramId" example:"1"`
+	Category       string             `json:"category" example:"basic"`
+	Name           string             `json:"name" example:"binlog_size"`
+	InstanceType   string             `json:"instanceType" example:"tidb"`
+	SystemVariable string             `json:"systemVariable" example:"log.log_level"`
+	Type           int                `json:"type" example:"0"`
+	Unit           string             `json:"unit" example:"mb"`
+	Range          []string           `json:"range" example:"1, 1000"`
+	HasReboot      int                `json:"hasReboot" example:"0"`
+	HasApply       int                `json:"has_apply" example:"1"`
+	UpdateSource   int                `json:"updateSource" example:"0" enums:"0,1,2,3"`
+	DefaultValue   string             `json:"defaultValue" example:"1"`
+	RealValue      ParameterRealValue `json:"realValue"`
+	Description    string             `json:"description" example:"binlog cache size"`
+	Note           string             `json:"note" example:"binlog cache size"`
+	CreatedAt      int64              `json:"createTime" example:"1636698675"`
+	UpdatedAt      int64              `json:"updateTime" example:"1636698675"`
 }

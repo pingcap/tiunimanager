@@ -13,18 +13,52 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package management
+/*******************************************************************************
+ * @File: common.go
+ * @Description:
+ * @Author: jiangxunyu@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/15 18:08
+*******************************************************************************/
 
-import (
-	"github.com/pingcap-inc/tiem/library/knowledge"
-	"github.com/pingcap-inc/tiem/models"
-	"os"
-	"testing"
+package parameter
+
+import "github.com/pingcap-inc/tiem/common/structs"
+
+const (
+	contextClusterMeta         = "ClusterMeta"
+	contextModifyParameters    = "ModifyParameters"
+	contextApplyParameterInfo  = "ApplyParameterInfo"
+	contextUpdateParameterInfo = "UpdateParameterInfo"
 )
 
-func TestMain(m *testing.M) {
-	knowledge.LoadKnowledge()
-	models.MockDB()
+type UpdateParameterSource int
 
-	os.Exit(m.Run())
+const (
+	TiUP UpdateParameterSource = iota
+	SQL
+	TiupAndSql
+	API
+)
+
+type ParameterValueType int
+
+const (
+	Integer ParameterValueType = iota
+	String
+	Boolean
+	Float
+	Array
+)
+
+type ApplyParameterType int
+
+const (
+	ModifyApply ApplyParameterType = iota
+	DirectApply
+)
+
+type ModifyParameter struct {
+	Reboot bool
+	Params []structs.ClusterParameterSampleInfo
 }

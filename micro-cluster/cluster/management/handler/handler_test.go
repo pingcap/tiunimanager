@@ -18,6 +18,9 @@ package handler
 import (
 	"context"
 	"errors"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -26,8 +29,7 @@ import (
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
+
 )
 
 func TestClusterMeta_BuildCluster(t *testing.T) {
@@ -36,14 +38,14 @@ func TestClusterMeta_BuildCluster(t *testing.T) {
 	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(rw)
 
-	params := structs.CreateClusterParameter {
-		Name: "aaa",
-		DBUser: "user",
+	params := structs.CreateClusterParameter{
+		Name:       "aaa",
+		DBUser:     "user",
 		DBPassword: "password",
-		Type: "type",
-		Version: "version",
-		TLS: false,
-		Tags: []string{"t1", "t2"},
+		Type:       "type",
+		Version:    "version",
+		TLS:        false,
+		Tags:       []string{"t1", "t2"},
 	}
 	meta := &ClusterMeta{}
 
@@ -61,7 +63,7 @@ func TestClusterMeta_BuildCluster(t *testing.T) {
 }
 
 func TestClusterMeta_AddInstances(t *testing.T) {
-	meta := &ClusterMeta {
+	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "111",
@@ -82,12 +84,12 @@ func TestClusterMeta_AddInstances(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		err := meta.AddInstances(context.TODO(), []structs.ClusterResourceParameterCompute{
 			{"TiDB", 2, []structs.ClusterResourceParameterComputeResource{
-				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1 },
-				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1 },
+				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
 			}},
 			{"TiKV", 2, []structs.ClusterResourceParameterComputeResource{
-				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1 },
-				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1 },
+				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
 			}},
 		})
 		assert.NoError(t, err)
@@ -108,7 +110,7 @@ func TestClusterMeta_AddInstances(t *testing.T) {
 
 func TestClusterMeta_GenerateTopologyConfig(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		meta := &ClusterMeta {
+		meta := &ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "111",
@@ -123,7 +125,7 @@ func TestClusterMeta_GenerateTopologyConfig(t *testing.T) {
 						},
 						HostIP: []string{"127.0.0.1"},
 						Ports: []int32{
-							1,2,3,4,5,6,
+							1, 2, 3, 4, 5, 6,
 						},
 						// todo render
 					},
@@ -161,7 +163,7 @@ func TestClusterMeta_UpdateClusterStatus(t *testing.T) {
 	rw.EXPECT().UpdateStatus(gomock.Any(), "222", gomock.Any()).Return(nil)
 	rw.EXPECT().UpdateStatus(gomock.Any(), "", gomock.Any()).Return(errors.New("empty"))
 
-	meta := &ClusterMeta {
+	meta := &ClusterMeta{
 		Cluster: &management.Cluster{},
 	}
 	t.Run("normal", func(t *testing.T) {
@@ -179,7 +181,7 @@ func TestClusterMeta_UpdateClusterStatus(t *testing.T) {
 }
 
 func TestClusterMeta_GetInstance(t *testing.T) {
-	meta := &ClusterMeta {
+	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "111",
@@ -190,11 +192,11 @@ func TestClusterMeta_GetInstance(t *testing.T) {
 			"TiDB": {
 				{
 					Entity: common.Entity{
-						ID: "tidb1111",
+						ID:     "tidb1111",
 						Status: string(constants.ClusterRunning),
 					},
 					HostIP: []string{"127.0.0.1"},
-					Ports: []int32{111},
+					Ports:  []int32{111},
 				},
 			},
 		},
@@ -222,7 +224,7 @@ func TestClusterMeta_GetInstance(t *testing.T) {
 func TestClusterMeta_IsComponentRequired(t *testing.T) {
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
-			Type: "TiDB",
+			Type:    "TiDB",
 			Version: "v4.0.12",
 		},
 	}
@@ -230,9 +232,9 @@ func TestClusterMeta_IsComponentRequired(t *testing.T) {
 	assert.False(t, meta.IsComponentRequired(context.TODO(), "TiFlash"))
 }
 
-func TestClusterMeta_DeleteInstance(t *testing.T)  {
+func TestClusterMeta_DeleteInstance(t *testing.T) {
 
-	meta := &ClusterMeta {
+	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "111",
@@ -243,11 +245,11 @@ func TestClusterMeta_DeleteInstance(t *testing.T)  {
 			"TiDB": {
 				{
 					Entity: common.Entity{
-						ID: "tidb1111",
+						ID:     "tidb1111",
 						Status: string(constants.ClusterRunning),
 					},
 					HostIP: []string{"127.0.0.1"},
-					Ports: []int32{111},
+					Ports:  []int32{111},
 				},
 			},
 		},
@@ -280,7 +282,7 @@ func TestClusterMeta_StartMaintenance(t *testing.T) {
 	rw.EXPECT().SetMaintenanceStatus(gomock.Any(), "111", constants.ClusterMaintenanceScaleIn).Return(nil)
 	rw.EXPECT().SetMaintenanceStatus(gomock.Any(), "111", constants.ClusterMaintenanceStopping).Return(errors.New("conflicted"))
 
-	meta := &ClusterMeta {
+	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "111",
@@ -309,7 +311,7 @@ func TestClusterMeta_EndMaintenance(t *testing.T) {
 	rw.EXPECT().ClearMaintenanceStatus(gomock.Any(), "111", constants.ClusterMaintenanceScaleIn).Return(nil)
 	rw.EXPECT().ClearMaintenanceStatus(gomock.Any(), "111", constants.ClusterMaintenanceStopping).Return(errors.New("conflicted"))
 
-	meta := &ClusterMeta {
+	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "111",
@@ -337,7 +339,7 @@ func TestClusterMeta_UpdateMeta(t *testing.T) {
 
 	rw.EXPECT().UpdateMeta(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
-	meta := &ClusterMeta {
+	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "111",
@@ -348,29 +350,29 @@ func TestClusterMeta_UpdateMeta(t *testing.T) {
 			"TiDB": {
 				{
 					Entity: common.Entity{
-						ID: "tidb1111",
+						ID:     "tidb1111",
 						Status: string(constants.ClusterRunning),
 					},
 					HostIP: []string{"127.0.0.1"},
-					Ports: []int32{111},
+					Ports:  []int32{111},
 				},
 				{
 					Entity: common.Entity{
-						ID: "tidb2222",
+						ID:     "tidb2222",
 						Status: string(constants.ClusterRunning),
 					},
 					HostIP: []string{"127.0.0.1"},
-					Ports: []int32{111},
+					Ports:  []int32{111},
 				},
 			},
 			"TiKV": {
 				{
 					Entity: common.Entity{
-						ID: "tikv",
+						ID:     "tikv",
 						Status: string(constants.ClusterRunning),
 					},
 					HostIP: []string{"127.0.0.1"},
-					Ports: []int32{111},
+					Ports:  []int32{111},
 				},
 			},
 		},
@@ -392,7 +394,7 @@ func TestClusterMeta_Delete(t *testing.T) {
 	rw.EXPECT().Delete(gomock.Any(), "111").Return(nil)
 	rw.EXPECT().Delete(gomock.Any(), "").Return(errors.New("empty"))
 
-	meta := &ClusterMeta {
+	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "111",
@@ -428,30 +430,30 @@ func TestClusterMeta_Get(t *testing.T) {
 	}, []*management.ClusterInstance{
 		{
 			Entity: common.Entity{
-				ID: "111111",
+				ID:     "111111",
 				Status: string(constants.ClusterRunning),
 			},
-			Type: "TiDB",
+			Type:   "TiDB",
 			HostIP: []string{"127.0.0.1"},
-			Ports: []int32{111},
+			Ports:  []int32{111},
 		},
 		{
 			Entity: common.Entity{
-				ID: "222222",
+				ID:     "222222",
 				Status: string(constants.ClusterRunning),
 			},
-			Type: "TiDB",
+			Type:   "TiDB",
 			HostIP: []string{"127.0.0.1"},
-			Ports: []int32{111},
+			Ports:  []int32{111},
 		},
 		{
 			Entity: common.Entity{
-				ID: "333333",
+				ID:     "333333",
 				Status: string(constants.ClusterRunning),
 			},
-			Type: "TiKV",
+			Type:   "TiKV",
 			HostIP: []string{"127.0.0.1"},
-			Ports: []int32{111},
+			Ports:  []int32{111},
 		},
 	}, nil)
 
@@ -470,6 +472,7 @@ func TestClusterMeta_Get(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
 
 func TestClusterMeta_Display(t *testing.T) {
 	meta := &ClusterMeta {

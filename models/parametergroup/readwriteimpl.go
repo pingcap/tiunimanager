@@ -142,7 +142,7 @@ func (m ParameterGroupReadWrite) UpdateParameterGroup(ctx context.Context, pg *P
 	return
 }
 
-func (m ParameterGroupReadWrite) QueryParameterGroup(ctx context.Context, name, clusterSpec, clusterVersion string, dbType, hasDefault int32, offset, size int) (groups []*ParameterGroup, total int64, err error) {
+func (m ParameterGroupReadWrite) QueryParameterGroup(ctx context.Context, name, clusterSpec, clusterVersion string, dbType, hasDefault int, offset, size int) (groups []*ParameterGroup, total int64, err error) {
 	log := framework.LogWithContext(ctx)
 
 	query := m.DB(ctx).Model(&ParameterGroup{})

@@ -15,7 +15,7 @@
 
 /*******************************************************************************
  * @File: manager
- * @Description:
+ * @Description: cluster parameter service implements
  * @Author: jiangxunyu@pingcap.com
  * @Version: 1.0.0
  * @Date: 2021/12/10 10:01
@@ -25,67 +25,201 @@ package parameter
 
 import (
 	"context"
+	"encoding/json"
+	"sync"
 
-	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/message"
+
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/workflow"
+
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+
+	"github.com/pingcap-inc/tiem/common/structs"
+
+	"github.com/pingcap-inc/tiem/library/common"
+
+	"github.com/pingcap-inc/tiem/models"
+
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/util/convert"
 	"github.com/pingcap-inc/tiem/message/cluster"
 )
 
 type Manager struct{}
 
+var manager *Manager
+var once sync.Once
+
 func NewManager() *Manager {
-	return &Manager{}
+	once.Do(func() {
+		if manager == nil {
+			workflowManager := workflow.GetWorkFlowService()
+			workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowModifyParameters, &modifyParametersDefine)
+
+			manager = &Manager{}
+		}
+	})
+	return manager
 }
 
-func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryClusterParametersReq) (resp []cluster.QueryClusterParametersResp, err error) {
-	var dbReq *dbpb.DBFindParamsByClusterIdRequest
-	err = convert.ConvertObj(req, &dbReq)
+var modifyParametersDefine = workflow.WorkFlowDefine{
+	FlowName: constants.FlowModifyParameters,
+	TaskNodes: map[string]*workflow.NodeDefine{
+		"start":       {"modifyParameter", "modifyDone", "fail", workflow.SyncFuncNode, modifyParameters},
+		"modifyDone":  {"refreshParameter", "refreshDone", "fail", workflow.SyncFuncNode, refreshParameter},
+		"refreshDone": {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
+		"onlineDone":  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistUpdateParameter)},
+		"fail":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure)},
+	},
+}
+
+var applyParametersDefine = workflow.WorkFlowDefine{
+	FlowName: constants.FlowModifyParameters,
+	TaskNodes: map[string]*workflow.NodeDefine{
+		"start":       {"modifyParameter", "modifyDone", "fail", workflow.SyncFuncNode, modifyParameters},
+		"modifyDone":  {"refreshParameter", "refreshDone", "fail", workflow.SyncFuncNode, refreshParameter},
+		"refreshDone": {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
+		"onlineDone":  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistApplyParameter)},
+		"fail":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure)},
+	},
+}
+
+func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryClusterParametersReq) (resp cluster.QueryClusterParametersResp, page *clusterpb.RpcPage, err error) {
+	offset := (req.Page - 1) * req.PageSize
+	pgId, params, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, offset, req.PageSize)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("list cluster params req: %v, err: %v", req, err)
-		return
+		return resp, page, framework.WrapError(common.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, common.TIEM_CLUSTER_PARAMETER_QUERY_ERROR.Explain(), err)
 	}
 
-	_, err = client.DBClient.FindParamsByClusterId(ctx, dbReq)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("list cluster param invoke metadb err: %v", err)
-		return
+	resp = cluster.QueryClusterParametersResp{ParamGroupId: pgId}
+	resp.Params = make([]structs.ClusterParameterInfo, len(params))
+	for i, param := range params {
+		// convert range
+		ranges := make([]string, 0)
+		if len(param.Range) > 0 {
+			err = json.Unmarshal([]byte(param.Range), &ranges)
+			if err != nil {
+				framework.LogWithContext(ctx).Errorf("failed to convert parameter range. req: %v, err: %v", req, err)
+				return resp, page, framework.WrapError(common.TIEM_CONVERT_OBJ_FAILED, common.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
+			}
+		}
+		// convert realValue
+		realValue := structs.ParameterRealValue{}
+		if len(param.RealValue) > 0 {
+			err = json.Unmarshal([]byte(param.RealValue), &realValue)
+			if err != nil {
+				framework.LogWithContext(ctx).Errorf("failed to convert parameter realValue. req: %v, err: %v", req, err)
+				return resp, page, framework.WrapError(common.TIEM_CONVERT_OBJ_FAILED, common.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
+			}
+		}
+		resp.Params[i] = structs.ClusterParameterInfo{
+			ParamId:        param.ID,
+			Category:       param.Category,
+			Name:           param.Name,
+			InstanceType:   param.InstanceType,
+			SystemVariable: param.SystemVariable,
+			Type:           param.Type,
+			Unit:           param.Unit,
+			Range:          ranges,
+			HasReboot:      param.HasReboot,
+			HasApply:       param.HasApply,
+			UpdateSource:   param.UpdateSource,
+			DefaultValue:   param.DefaultValue,
+			RealValue:      realValue,
+			Description:    param.Description,
+			Note:           param.Note,
+			CreatedAt:      param.CreatedAt.Unix(),
+			UpdatedAt:      param.UpdatedAt.Unix(),
+		}
 	}
 
-	//resp.Page = convertPage(dbRsp.Page)
-	//resp.RespStatus = convertRespStatus(dbRsp.Status)
-	//resp.ID = dbRsp.ID
-	//if dbRsp.Params != nil {
-	//	ps := make([]*clusterpb.ClusterParamDTO, len(dbRsp.Params))
-	//	err = convert.ConvertObj(dbRsp.Params, &ps)
-	//	if err != nil {
-	//		framework.LogWithContext(ctx).Errorf("list cluster params convert resp err: %v", err)
-	//		return err
-	//	}
-	//	resp.Params = ps
-	//}
-	return resp, nil
+	page = &clusterpb.RpcPage{
+		Page:     int32(req.Page),
+		PageSize: int32(req.PageSize),
+		Total:    int32(total),
+	}
+	return resp, page, nil
 }
 
 func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.UpdateClusterParametersReq) (resp cluster.UpdateClusterParametersResp, err error) {
-	var dbReq *dbpb.DBUpdateClusterParamsRequest
-	err = convert.ConvertObj(req, &dbReq)
+	// Get cluster info and topology from db based by clusterID
+	clusterMeta, err := handler.Get(ctx, req.ClusterID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("update cluster params req: %v, err: %v", req, err)
+		framework.LogWithContext(ctx).Errorf("load cluser[%s] meta from db error: %s", req.ClusterID, err.Error())
 		return
 	}
 
-	dbRsp, err := client.DBClient.UpdateClusterParams(ctx, dbReq)
+	data := make(map[string]interface{})
+	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: req.Params}
+	data[contextUpdateParameterInfo] = &req
+	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("update cluster param invoke metadb err: %v", err)
+		framework.LogWithContext(ctx).Errorf("cluster [%s] update cluster parameters aync maintenance workflow error: %s", req.ClusterID, err.Error())
 		return
 	}
-	resp.ClusterID = dbRsp.ClusterId
+
+	resp = cluster.UpdateClusterParametersResp{
+		ClusterID: req.ClusterID,
+		AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
+			WorkFlowID: workflowID,
+		},
+	}
 	return resp, nil
 }
 
-func (m *Manager) InspectClusterParams(ctx context.Context, req cluster.InspectClusterParametersReq) (resp cluster.InspectClusterParametersResp, err error) {
+func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyParameterGroupReq) (resp message.ApplyParameterGroupResp, err error) {
+	// Get cluster info and topology from db based by clusterID
+	clusterMeta, err := handler.Get(ctx, req.ClusterID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("load cluser[%s] meta from db error: %s", req.ClusterID, err.Error())
+		return
+	}
+
+	// Detail parameter group by id
+	_, pgm, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("detail parameter group [%s] from db error: %s", req.ParamGroupId, err.Error())
+		return resp, framework.SimpleError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR)
+	}
+
+	// Constructing clusterParameter.ModifyParameter objects
+	params := make([]structs.ClusterParameterSampleInfo, len(pgm))
+	for i, param := range pgm {
+		params[i] = structs.ClusterParameterSampleInfo{
+			ParamId:        param.ID,
+			Name:           param.Name,
+			InstanceType:   param.InstanceType,
+			UpdateSource:   param.UpdateSource,
+			SystemVariable: param.SystemVariable,
+			Type:           param.Type,
+			HasApply:       param.HasApply,
+			RealValue:      structs.ParameterRealValue{ClusterValue: param.DefaultValue},
+		}
+	}
+
+	// Get modify parameters
+	data := make(map[string]interface{})
+	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: params}
+	data[contextApplyParameterInfo] = &req
+	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, applyParametersDefine.FlowName)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("cluster [%s] update cluster parameters aync maintenance workflow error: %s", req.ClusterID, err.Error())
+		return
+	}
+
+	resp = message.ApplyParameterGroupResp{
+		ClusterID:    req.ClusterID,
+		ParamGroupID: req.ParamGroupId,
+		AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
+			WorkFlowID: workflowID,
+		},
+	}
+	return resp, nil
+}
+
+func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.InspectClusterParametersReq) (resp cluster.InspectClusterParametersResp, err error) {
 	// todo: Reliance on parameter source query implementation
 	return
 }

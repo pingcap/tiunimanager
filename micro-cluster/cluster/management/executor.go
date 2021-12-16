@@ -31,8 +31,15 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	instanceAllocId := uuidutil.GenerateID()
 
 	globalRequirement, err := clusterMeta.GenerateGlobalPortRequirements(context)
+	if err != nil {
+		framework.LogWithContext(context).Errorf("generate global port requirements failed, clusterId = %s", clusterMeta.Cluster.ID)
+		return err
+	}
 	instanceRequirement, instances, err := clusterMeta.GenerateInstanceResourceRequirements(context)
-	
+	if err != nil {
+		framework.LogWithContext(context).Errorf("generate instance resource requirements failed, clusterId = %s", clusterMeta.Cluster.ID)
+		return err
+	}
 	batchReq := &resourceStructs.BatchAllocRequest {
 		BatchRequests: []resourceStructs.AllocReq {
 			{
@@ -114,7 +121,7 @@ func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 			"cluster[%s] scale out error: %s", clusterMeta.Cluster.Name, err.Error())
 		return err
 	}
-	framework.LogWithContext(context.Context).Infof("get scale out cluster task id: %d", taskId)
+	framework.LogWithContext(context.Context).Infof("get scale out cluster task id: %s", taskId)
 	return nil
 }
 
@@ -147,7 +154,7 @@ func scaleInCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 			"cluster[%s] scale in error: %s", clusterMeta.Cluster.Name, err.Error())
 		return err
 	}
-	framework.LogWithContext(context.Context).Infof("get scale in cluster task id: %d", taskId)
+	framework.LogWithContext(context.Context).Infof("get scale in cluster task id: %s", taskId)
 	return nil
 }
 
@@ -305,7 +312,7 @@ func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 			"cluster[%s] deploy error: %s", clusterMeta.Cluster.Name, err.Error())
 		return err
 	}
-	framework.LogWithContext(context.Context).Infof("get deploy cluster task id: %d", taskId)
+	framework.LogWithContext(context.Context).Infof("get deploy cluster task id: %s", taskId)
 	return nil
 }
 

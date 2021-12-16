@@ -245,18 +245,18 @@ func TestClusterMeta_DeleteInstance(t *testing.T)  {
 	}
 
 	t.Run("normal", func(t *testing.T) {
-		err := meta.DeleteInstance(context.TODO(), "127.0.0.1:111")
+		_, err := meta.DeleteInstance(context.TODO(), "127.0.0.1:111")
 		assert.NoError(t, err)
 	})
 
 	t.Run("error", func(t *testing.T) {
-		err := meta.DeleteInstance(context.TODO(), "127.0.0.1:222")
+		_, err := meta.DeleteInstance(context.TODO(), "127.0.0.1:222")
 		assert.Error(t, err)
-		err = meta.DeleteInstance(context.TODO(), "127.0.0.2:111")
+		_, err = meta.DeleteInstance(context.TODO(), "127.0.0.2:111")
 		assert.Error(t, err)
-		err = meta.DeleteInstance(context.TODO(), "127.0.0.1:ss")
+		_, err = meta.DeleteInstance(context.TODO(), "127.0.0.1:ss")
 		assert.Error(t, err)
-		err = meta.DeleteInstance(context.TODO(), "127.0.0.:111")
+		_, err = meta.DeleteInstance(context.TODO(), "127.0.0.:111")
 		assert.Error(t, err)
 	})
 

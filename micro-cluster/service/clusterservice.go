@@ -24,6 +24,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
+
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/message/cluster"
@@ -73,12 +75,13 @@ type ClusterServiceHandler struct {
 	clusterParameterManager *clusterParameter.Manager
 	clusterManager          *clusterManager.Manager
 	upgradeManager          *upgradeManager.Manager
+	systemConfigManager     *config.SystemConfigManager
 	brManager               backuprestore.BRService
 	importexportManager     importexport.ImportExportService
 }
 
 func handleRequest(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse, requestBody interface{}) bool {
-	err := json.Unmarshal([]byte(req.GetRequest()), &requestBody)
+	err := json.Unmarshal([]byte(req.GetRequest()), requestBody)
 	if err != nil {
 		errMsg := fmt.Sprintf("unmarshal request error, request = %s, err = %s", req.GetRequest(), err.Error())
 		handleResponse(ctx, resp, framework.NewTiEMErrorf(common.TIEM_UNMARSHAL_ERROR, errMsg), nil, nil)
@@ -156,6 +159,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.parameterGroupManager = parameterGroupManager.NewManager()
 	handler.clusterParameterManager = clusterParameter.NewManager()
 	handler.clusterManager = clusterManager.NewClusterManager()
+	handler.systemConfigManager = config.NewSystemConfigManager()
 	handler.brManager = backuprestore.GetBRService()
 	handler.importexportManager = importexport.GetImportExportService()
 
@@ -403,9 +407,9 @@ func (handler *ClusterServiceHandler) CloneCluster(ctx context.Context, req *clu
 	request := cluster.CloneClusterReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, err := handler.clusterManager.Clone(ctx, &request)
+		result, err := handler.clusterManager.Clone(ctx, request)
 
-		handleResponse(ctx, resp, err, *result, nil)
+		handleResponse(ctx, resp, err, result, nil)
 	}
 
 	return nil
@@ -589,6 +593,20 @@ func (c ClusterServiceHandler) DeleteDataTransportRecord(ctx context.Context, re
 
 	if handleRequest(ctx, request, response, deleteReq) {
 		result, err := c.importexportManager.DeleteDataTransportRecord(ctx, &deleteReq)
+		handleResponse(ctx, response, err, *result, nil)
+	}
+
+	return nil
+}
+
+func (c *ClusterServiceHandler) GetSystemConfig(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "GetSystemConfig", int(response.GetCode()))
+	framework.LogWithContext(ctx).Info("get system config")
+	getReq := message.GetSystemConfigReq{}
+
+	if handleRequest(ctx, request, response, getReq) {
+		result, err := c.systemConfigManager.GetSystemConfig(ctx, &getReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
@@ -914,10 +932,12 @@ func (clusterManager *ClusterServiceHandler) RecycleResources(ctx context.Contex
 func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	reqStruct := message.ImportHostsReq{}
 
-	if handleRequest(ctx, request, response, reqStruct) {
+	if handleRequest(ctx, request, response, &reqStruct) {
 		hostIds, err := handler.resourceManager2.ImportHosts(ctx, reqStruct.Hosts)
 		var rsp message.ImportHostsResp
-		rsp.HostIDS = hostIds
+		if err == nil {
+			rsp.HostIDS = hostIds
+		}
 		handleResponse(ctx, response, err, rsp, nil)
 	}
 
@@ -927,7 +947,7 @@ func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *
 func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	reqStruct := message.DeleteHostsReq{}
 
-	if handleRequest(ctx, request, response, reqStruct) {
+	if handleRequest(ctx, request, response, &reqStruct) {
 		err := handler.resourceManager2.DeleteHosts(ctx, reqStruct.HostIDs)
 		var rsp message.DeleteHostsResp
 		handleResponse(ctx, response, err, rsp, nil)
@@ -939,13 +959,15 @@ func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, request *
 func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	reqStruct := message.QueryHostsReq{}
 
-	if handleRequest(ctx, request, response, reqStruct) {
+	if handleRequest(ctx, request, response, &reqStruct) {
 		filter := reqStruct.GetHostFilter()
 		page := reqStruct.GetPage()
 
 		hosts, err := handler.resourceManager2.QueryHosts(ctx, filter, page)
 		var rsp message.QueryHostsResp
-		rsp.Hosts = hosts
+		if err == nil {
+			rsp.Hosts = hosts
+		}
 		handleResponse(ctx, response, err, rsp, nil)
 	}
 
@@ -955,7 +977,7 @@ func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, request *c
 func (handler *ClusterServiceHandler) UpdateHostReserved(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	reqStruct := message.UpdateHostReservedReq{}
 
-	if handleRequest(ctx, request, response, reqStruct) {
+	if handleRequest(ctx, request, response, &reqStruct) {
 		err := handler.resourceManager2.UpdateHostReserved(ctx, reqStruct.HostIDs, reqStruct.Reserved)
 		var rsp message.UpdateHostReservedResp
 		handleResponse(ctx, response, err, rsp, nil)
@@ -967,7 +989,7 @@ func (handler *ClusterServiceHandler) UpdateHostReserved(ctx context.Context, re
 func (handler *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	reqStruct := message.UpdateHostStatusReq{}
 
-	if handleRequest(ctx, request, response, reqStruct) {
+	if handleRequest(ctx, request, response, &reqStruct) {
 		err := handler.resourceManager2.UpdateHostStatus(ctx, reqStruct.HostIDs, reqStruct.Status)
 		var rsp message.UpdateHostStatusResp
 		handleResponse(ctx, response, err, rsp, nil)
@@ -979,12 +1001,14 @@ func (handler *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, requ
 func (handler *ClusterServiceHandler) GetHierarchy(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	reqStruct := message.GetHierarchyReq{}
 
-	if handleRequest(ctx, request, response, reqStruct) {
+	if handleRequest(ctx, request, response, &reqStruct) {
 		filter := reqStruct.GetHostFilter()
 
 		root, err := handler.resourceManager2.GetHierarchy(ctx, filter, reqStruct.Level, reqStruct.Depth)
 		var rsp message.GetHierarchyResp
-		rsp.Root = *root
+		if err == nil {
+			rsp.Root = *root
+		}
 		handleResponse(ctx, response, err, rsp, nil)
 	}
 
@@ -994,14 +1018,16 @@ func (handler *ClusterServiceHandler) GetHierarchy(ctx context.Context, request 
 func (handler *ClusterServiceHandler) GetStocks(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	reqStruct := message.GetStocksReq{}
 
-	if handleRequest(ctx, request, response, reqStruct) {
+	if handleRequest(ctx, request, response, &reqStruct) {
 		location := reqStruct.GetLocation()
 		hostFilter := reqStruct.GetHostFilter()
 		diskFilter := reqStruct.GetDiskFilter()
 
 		stocks, err := handler.resourceManager2.GetStocks(ctx, location, hostFilter, diskFilter)
 		var rsp message.GetStocksResp
-		rsp.Stocks = *stocks
+		if err == nil {
+			rsp.Stocks = *stocks
+		}
 		handleResponse(ctx, response, err, rsp, nil)
 	}
 

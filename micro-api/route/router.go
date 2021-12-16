@@ -99,8 +99,8 @@ func Route(g *gin.Engine) {
 			cluster.GET("/:clusterId/monitor", clusterApi.DescribeMonitor)
 
 			// Scale cluster
-			cluster.POST("/scale-out", clusterApi.ScaleOut)
-			cluster.POST("/scale-in", clusterApi.ScaleIn)
+			cluster.POST("/:clusterId/scale-out", clusterApi.ScaleOut)
+			cluster.POST("/:clusterId/scale-in", clusterApi.ScaleIn)
 
 			// Clone cluster
 			cluster.POST("/clone", clusterApi.Clone)

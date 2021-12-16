@@ -1,10 +1,17 @@
-/*******************************************************************************
- * @File: handler_test
- * @Description:
- * @Author: wangyaozheng@pingcap.com
- * @Version: 1.0.0
- * @Date: 2021/12/9
-*******************************************************************************/
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ ******************************************************************************/
 
 package handler
 
@@ -223,6 +230,7 @@ func TestClusterMeta_IsComponentRequired(t *testing.T) {
 }
 
 func TestClusterMeta_DeleteInstance(t *testing.T)  {
+
 	meta := &ClusterMeta {
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -245,18 +253,18 @@ func TestClusterMeta_DeleteInstance(t *testing.T)  {
 	}
 
 	t.Run("normal", func(t *testing.T) {
-		err := meta.DeleteInstance(context.TODO(), "127.0.0.1:111")
+		_, err := meta.DeleteInstance(context.TODO(), "127.0.0.1:111")
 		assert.NoError(t, err)
 	})
 
 	t.Run("error", func(t *testing.T) {
-		err := meta.DeleteInstance(context.TODO(), "127.0.0.1:222")
+		_, err := meta.DeleteInstance(context.TODO(), "127.0.0.1:222")
 		assert.Error(t, err)
-		err = meta.DeleteInstance(context.TODO(), "127.0.0.2:111")
+		_, err = meta.DeleteInstance(context.TODO(), "127.0.0.2:111")
 		assert.Error(t, err)
-		err = meta.DeleteInstance(context.TODO(), "127.0.0.1:ss")
+		_, err = meta.DeleteInstance(context.TODO(), "127.0.0.1:ss")
 		assert.Error(t, err)
-		err = meta.DeleteInstance(context.TODO(), "127.0.0.:111")
+		_, err = meta.DeleteInstance(context.TODO(), "127.0.0.:111")
 		assert.Error(t, err)
 	})
 

@@ -13,14 +13,31 @@
  *  limitations under the License.                                            *
  ******************************************************************************/
 
-package service
+package config
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/framework"
-	log "github.com/sirupsen/logrus"
+	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/models"
 )
 
-func getLoggerWithContext(ctx context.Context) *log.Entry {
-	return framework.LogWithContext(ctx)
+type SystemConfigManager struct{}
+
+func NewSystemConfigManager() *SystemConfigManager {
+	return &SystemConfigManager{}
+}
+
+func (mgr *SystemConfigManager) GetSystemConfig(ctx context.Context, request *message.GetSystemConfigReq) (*message.GetSystemConfigResp, error) {
+	configRW := models.GetConfigReaderWriter()
+	config, err := configRW.GetConfig(ctx, request.ConfigKey)
+	if err != nil {
+		return nil, err
+	}
+	return &message.GetSystemConfigResp{
+		SystemConfig: structs.SystemConfig{
+			ConfigKey:   config.ConfigKey,
+			ConfigValue: config.ConfigValue,
+		},
+	}, nil
 }

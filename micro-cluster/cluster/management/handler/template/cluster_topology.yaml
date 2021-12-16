@@ -23,23 +23,28 @@ monitored:
 {{ if and (eq $key "TiDB") (len $instances) }}
 tidb_servers:
   {{ range $instances }}
+  {{ if eq .Status "Initializing" }}
   - host: {{ index .HostIP 0 }}
     port: {{ index .Ports 0 }}
     status_port: {{ index .Ports 1 }}
     deploy_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/tidb-deploy
   {{ end }}
+  {{ end }}
 {{ else if and (eq $key "TiKV") (len $instances) }}
 tikv_servers:
   {{ range $instances }}
+  {{ if eq .Status "Initializing" }}
   - host: {{ index .HostIP 0 }}
     port: {{ index .Ports 0 }}
     status_port: {{ index .Ports 1 }}
     deploy_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/tikv-deploy
     data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/tikv-data
   {{ end }}
+  {{ end }}
 {{ else if and (eq $key "TiFlash") (len $instances) }}
 tiflash_servers:
   {{ range $instances }}
+  {{ if eq .Status "Initializing" }}
   - host: {{ index .HostIP 0 }}
     tcp_port: {{ index .Ports 0 }}
     http_port: {{ index .Ports 1 }}
@@ -50,22 +55,27 @@ tiflash_servers:
     deploy_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/tiflash-deploy
     data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/tiflash-data
   {{ end }}
+  {{ end }}
 {{ else if and (eq $key "TiCDC") (len $instances) }}
 cdc_servers:
   {{ range $instances }}
+  {{ if eq .Status "Initializing" }}
   - host: {{ index .HostIP 0 }}
     port: {{ index .Ports 0 }}
     deploy_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/cdc-deploy
     data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/cdc-data
   {{ end }}
+  {{ end }}
 {{ else if and (eq $key "PD") (len $instances) }}
 pd_servers:
   {{ range $instances }}
+  {{ if eq .Status "Initializing" }}
   - host: {{ index .HostIP 0 }}
     client_port: {{ index .Ports 0 }}
     peer_port: {{ index .Ports 1 }}
     deploy_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/pd-deploy
     data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/pd-data
+  {{ end }}
   {{ end }}
 {{ if eq $.Cluster.Status "Initializing" }}
 {{ $instance := index $instances 0 }}

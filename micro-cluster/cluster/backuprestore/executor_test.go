@@ -28,6 +28,7 @@ import (
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockbr"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockmanagement"
 	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"
@@ -127,6 +128,10 @@ func TestExecutor_backupFail(t *testing.T) {
 	brRW.EXPECT().UpdateBackupRecord(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetBRReaderWriter(brRW)
 
+	clusterRW := mockmanagement.NewMockReaderWriter(ctrl)
+	clusterRW.EXPECT().ClearMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	models.SetClusterReaderWriter(clusterRW)
+
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(contextBackupRecordKey, &backuprestore.BackupRecord{
 		Entity: common.Entity{
@@ -163,6 +168,13 @@ func TestExecutor_restoreFail(t *testing.T) {
 }
 
 func TestExecutor_defaultEnd(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clusterRW := mockmanagement.NewMockReaderWriter(ctrl)
+	clusterRW.EXPECT().ClearMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	models.SetClusterReaderWriter(clusterRW)
+
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(contextBackupRecordKey, &backuprestore.BackupRecord{
 		Entity: common.Entity{

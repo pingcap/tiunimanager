@@ -300,6 +300,15 @@ definitions:
         example: 415241823337054209
         type: integer
     type: object
+  cluster.Dispatcher:
+    properties:
+      dispatcher:
+        example: ts
+        type: string
+      matcher:
+        example: test1.*
+        type: string
+    type: object
   cluster.GetBackupStrategyResp:
     properties:
       strategy:
@@ -335,6 +344,78 @@ definitions:
         type: integer
       realValue:
         $ref: '#/definitions/structs.ParameterRealValue'
+    type: object
+  cluster.KafkaDownstream:
+    properties:
+      clientId:
+        example: "213"
+        type: string
+      dispatchers:
+        items:
+          $ref: '#/definitions/cluster.Dispatcher'
+        type: array
+      ip:
+        example: 127.0.0.1
+        type: string
+      maxBatchSize:
+        example: 5
+        type: integer
+      maxMessageBytes:
+        example: 16
+        type: integer
+      partitions:
+        example: 1
+        type: integer
+      port:
+        example: 9001
+        type: integer
+      protocol:
+        enum:
+        - default
+        - canal
+        - avro
+        - maxwell
+        example: default
+        type: string
+      replicationFactor:
+        example: 1
+        type: integer
+      tls:
+        example: false
+        type: boolean
+      topicName:
+        example: my_topic
+        type: string
+      version:
+        example: 2.4.0
+        type: string
+    type: object
+  cluster.MysqlDownstream:
+    properties:
+      concurrentThreads:
+        example: 7
+        type: integer
+      ip:
+        example: 127.0.0.1
+        type: string
+      maxTxnRow:
+        example: 5
+        type: integer
+      password:
+        example: my_password
+        type: string
+      port:
+        example: 8001
+        type: integer
+      tls:
+        example: false
+        type: boolean
+      username:
+        example: root
+        type: string
+      workerCount:
+        example: 2
+        type: integer
     type: object
   cluster.PauseChangeFeedTaskResp:
     properties:
@@ -575,6 +656,36 @@ definitions:
       workFlowId:
         description: Asynchronous task workflow ID
         type: string
+    type: object
+  cluster.TiDBDownstream:
+    properties:
+      concurrentThreads:
+        example: 5
+        type: integer
+      ip:
+        example: 127.0.0.1
+        type: string
+      maxTxnRow:
+        example: 4
+        type: integer
+      password:
+        example: my_password
+        type: string
+      port:
+        example: 4534
+        type: integer
+      targetClusterId:
+        example: CLUSTER_ID_IN_TIEM__22
+        type: string
+      tls:
+        example: false
+        type: boolean
+      username:
+        example: tidb
+        type: string
+      workerCount:
+        example: 2
+        type: integer
     type: object
   cluster.UpdateChangeFeedTaskReq:
     properties:
@@ -1757,6 +1868,12 @@ definitions:
       id:
         type: string
       status:
+        enum:
+        - Initializing
+        - Processing
+        - Finished
+        - Error
+        - Canceled
         type: string
       updateTime:
         type: string
@@ -1776,6 +1893,12 @@ definitions:
       startTime:
         type: string
       status:
+        enum:
+        - Initializing
+        - Processing
+        - Finished
+        - Error
+        - Canceled
         type: string
     type: object
   structs.ZoneInfo:
@@ -3244,6 +3367,54 @@ paths:
       summary: delete data transport record
       tags:
       - cluster data transport
+  /downstream/:
+    delete:
+      consumes:
+      - application/json
+      description: show display config
+      parameters:
+      - description: tidb
+        in: body
+        name: tidb
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.TiDBDownstream'
+      - description: mysql
+        in: body
+        name: mysql
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.MysqlDownstream'
+      - description: kafka
+        in: body
+        name: kafka
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.KafkaDownstream'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: unused, just display downstream config
+      tags:
+      - change feed
   /knowledges/:
     get:
       consumes:

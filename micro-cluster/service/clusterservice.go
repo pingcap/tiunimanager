@@ -24,6 +24,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/pingcap-inc/tiem/common/structs"
+
+	"github.com/pingcap-inc/tiem/library/util/convert"
+
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
@@ -210,46 +214,32 @@ func (handler *ClusterServiceHandler) DetailParameterGroup(ctx context.Context, 
 }
 
 func (handler *ClusterServiceHandler) ApplyParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	//reqData := req.GetRequest()
 	request := &message.ApplyParameterGroupReq{}
 
-	//err := json.Unmarshal([]byte(reqData), req)
-	//if err != nil {
-	//	handleResponse(ctx, resp, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil, nil)
-	//	return nil
-	//}
-	//
-	//// query params list by param group id
-	//pgDetail, err := handler.parameterGroupManager.DetailParameterGroup(ctx, message.DetailParameterGroupReq{ParamGroupID: request.ParamGroupId})
-	//if err != nil {
-	//	framework.LogWithContext(ctx).Errorf("apply param group err: %v", err)
-	//	handleResponse(ctx, resp, framework.SimpleError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR), nil, nil)
-	//	return err
-	//}
-	//
-	//params := make([]*parametergroup.ApplyParam, len(pgDetail.Params))
-	//err = convert.ConvertObj(pgDetail.Params, &params)
-	//if err != nil {
-	//	framework.LogWithContext(ctx).Errorf("apply param group convert obj err: %v", err)
-	//	handleResponse(ctx, resp, framework.SimpleError(common.TIEM_CONVERT_OBJ_FAILED), nil, nil)
-	//	return nil
-	//}
-	//// Convert the default value of the parameter group to the real value of the modified parameter
-	//for i, param := range pgDetail.Params {
-	//	params[i].RealValue.ClusterValue = param.DefaultValue
-	//}
-	//modifyParam := &parametergroup.ModifyParam{Reboot: request.Reboot, Params: params}
-	//clusterAggregation, err := domain.ModifyParameters(ctx, nil, request.ClusterID, modifyParam)
-	//if err != nil {
-	//	framework.LogWithContext(ctx).Errorf("apply param group modify parameters err: %v", err)
-	//	handleResponse(ctx, resp, framework.SimpleError(common.TIEM_MODIFY_PARAM_FAILED), nil, nil)
-	//	return nil
-	//}
-
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.parameterGroupManager.ApplyParameterGroup(ctx, *request)
-		//result.WorkFlowID = clusterAggregation.CurrentWorkFlow.BizId
-		//result.AsyncTaskWorkFlowInfo = structs.AsyncTaskWorkFlowInfo{WorkFlowID: strconv.Itoa(int(clusterAggregation.CurrentWorkFlow.Id))}
+		// Detail parameter group by id
+		pgDetail, err := handler.parameterGroupManager.DetailParameterGroup(ctx, message.DetailParameterGroupReq{ParamGroupID: request.ParamGroupId})
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("apply param group err: %v", err)
+			handleResponse(ctx, resp, framework.SimpleError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR), nil, nil)
+			return nil
+		}
+
+		// Constructing clusterParameter.ModifyParameter objects
+		params := make([]structs.ClusterParameterSampleInfo, len(pgDetail.Params))
+		err = convert.ConvertObj(pgDetail.Params, &params)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("apply param group convert obj err: %v", err)
+			handleResponse(ctx, resp, framework.SimpleError(common.TIEM_CONVERT_OBJ_FAILED), nil, nil)
+			return nil
+		}
+		// Convert the default value of the parameter group to the real value of the modified parameter
+		for i, param := range pgDetail.Params {
+			params[i].RealValue.ClusterValue = param.DefaultValue
+		}
+		modifyParameter := clusterParameter.ModifyParameter{Reboot: request.Reboot, Params: params}
+
+		result, err := handler.clusterParameterManager.ApplyParameterGroup(ctx, *request, modifyParameter)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
@@ -276,34 +266,10 @@ func (handler *ClusterServiceHandler) QueryClusterParameters(ctx context.Context
 }
 
 func (handler *ClusterServiceHandler) UpdateClusterParameters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	//reqData := req.GetRequest()
 	request := &cluster.UpdateClusterParametersReq{}
 
-	//err := json.Unmarshal([]byte(reqData), req)
-	//if err != nil {
-	//	handleResponse(ctx, resp, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil, nil)
-	//	return nil
-	//}
-	//
-	//params := make([]*parametergroup.ApplyParam, len(request.Params))
-	//err = convert.ConvertObj(request.Params, &params)
-	//if err != nil {
-	//	framework.LogWithContext(ctx).Errorf("update cluster params convert obj err: %v", err)
-	//	handleResponse(ctx, resp, framework.SimpleError(common.TIEM_CONVERT_OBJ_FAILED), nil, nil)
-	//	return err
-	//}
-	//
-	//modifyParam := &parametergroup.ModifyParam{Reboot: request.Reboot, Params: params}
-	//clusterAggregation, err := domain.ModifyParameters(ctx, nil, request.ClusterID, modifyParam)
-	//if err != nil {
-	//	framework.LogWithContext(ctx).Errorf("update cluster params modify parameters err: %v", err)
-	//	handleResponse(ctx, resp, framework.SimpleError(common.TIEM_MODIFY_PARAM_FAILED), nil, nil)
-	//	return nil
-	//}
 	if handleRequest(ctx, req, resp, request) {
 		result, err := handler.clusterParameterManager.UpdateClusterParameters(ctx, *request)
-		//result.WorkFlowID = clusterAggregation.CurrentWorkFlow.BizId
-		//result.AsyncTaskWorkFlowInfo = structs.AsyncTaskWorkFlowInfo{WorkFlowID: strconv.Itoa(int(clusterAggregation.CurrentWorkFlow.Id))}
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil

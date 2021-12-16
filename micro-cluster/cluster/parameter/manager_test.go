@@ -25,41 +25,25 @@ package parameter
 
 import (
 	"context"
-	"os"
 	"testing"
 
+	"github.com/asim/go-micro/v3/errors"
+	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
+
 	"github.com/alecthomas/assert"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/message/cluster"
-
-	"github.com/pingcap-inc/tiem/models/parametergroup"
-
-	"github.com/pingcap-inc/tiem/models/cluster/parameter"
-
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockclusterparameter"
-
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/cluster/management"
+	"github.com/pingcap-inc/tiem/models/cluster/parameter"
+	"github.com/pingcap-inc/tiem/models/parametergroup"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockclusterparameter"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
+	"github.com/pingcap-inc/tiem/workflow"
 )
-
-var manager = NewManager()
-
-func TestMain(m *testing.M) {
-	var testFilePath string
-	framework.InitBaseFrameworkForUt(framework.ClusterService,
-		func(d *framework.BaseFramework) error {
-			testFilePath = d.GetDataDir()
-			os.MkdirAll(testFilePath, 0755)
-
-			return models.Open(d, false)
-		},
-	)
-	code := m.Run()
-	os.RemoveAll(testFilePath)
-
-	os.Exit(code)
-}
 
 func TestManager_QueryClusterParameters(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -87,7 +71,7 @@ func TestManager_QueryClusterParameters(t *testing.T) {
 			}, 1, nil
 		})
 
-	resp, page, err := manager.QueryClusterParameters(context.TODO(), cluster.QueryClusterParametersReq{
+	resp, page, err := mockManager.QueryClusterParameters(context.TODO(), cluster.QueryClusterParametersReq{
 		ClusterID:   "1",
 		PageRequest: structs.PageRequest{Page: 1, PageSize: 10},
 	})
@@ -102,24 +86,38 @@ func TestManager_UpdateClusterParameters(t *testing.T) {
 
 	clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
 	models.SetClusterParameterReaderWriter(clusterParameterRW)
-
-	clusterParameterRW.EXPECT().UpdateClusterParameter(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, clusterId string, params []*parameter.ClusterParameterMapping) (err error) {
-			return nil
+	clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterManagementRW)
+	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+	workflow.MockWorkFlowService(workflowService)
+	configRW := mockconfig.NewMockReaderWriter(ctrl)
+	models.SetConfigReaderWriter(configRW)
+	//clusterParameterRW.EXPECT().UpdateClusterParameter(gomock.Any(), gomock.Any(), gomock.Any()).
+	//	DoAndReturn(func(ctx context.Context, clusterId string, params []*parameter.ClusterParameterMapping) (err error) {
+	//		return nil
+	//	})
+	clusterManagementRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, clusterID string) (*management.Cluster, []*management.ClusterInstance, error) {
+			return mockCluster(), mockClusterInstances(), nil
 		})
+	clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, bizId string, flowName string) (*workflow.WorkFlowAggregation, error) {
+			return mockWorkFlowAggregation(), nil
+		})
+	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).AnyTimes()
+	configRW.EXPECT().CreateConfig(gomock.Any(), gomock.Any()).AnyTimes()
 
-	resp, err := manager.UpdateClusterParameters(context.TODO(), cluster.UpdateClusterParametersReq{
+	resp, err := mockManager.UpdateClusterParameters(context.TODO(), cluster.UpdateClusterParametersReq{
 		ClusterID: "1",
 		Params: []structs.ClusterParameterSampleInfo{
 			{
-				ParamId:       "1",
-				Name:          "param1",
-				ComponentType: "TiKV",
-				HasReboot:     0,
-				HasApply:      1,
-				UpdateSource:  1,
-				Type:          1,
-				RealValue:     structs.ParameterRealValue{},
+				ParamId:      "1",
+				Name:         "param1",
+				InstanceType: "TiKV",
+				UpdateSource: 1,
+				Type:         1,
+				RealValue:    structs.ParameterRealValue{},
 			},
 		},
 		Reboot: false,
@@ -128,8 +126,92 @@ func TestManager_UpdateClusterParameters(t *testing.T) {
 	assert.NotEmpty(t, resp)
 }
 
+func TestManager_ApplyParameterGroup_Success(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterManagementRW)
+	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+	workflow.MockWorkFlowService(workflowService)
+	configRW := mockconfig.NewMockReaderWriter(ctrl)
+	models.SetConfigReaderWriter(configRW)
+
+	//parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any()).
+	//	DoAndReturn(func(ctx context.Context, parameterGroupId string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+	//		return &parametergroup.ParameterGroup{
+	//				ID:             "1",
+	//				Name:           "test_parameter_group",
+	//				ParentID:       "",
+	//				ClusterSpec:    "8C16G",
+	//				HasDefault:     1,
+	//				DBType:         1,
+	//				GroupType:      1,
+	//				ClusterVersion: "5.0",
+	//				Note:           "test parameter group",
+	//				CreatedAt:      time.Time{},
+	//				UpdatedAt:      time.Time{},
+	//			}, []*parametergroup.ParamDetail{
+	//				{
+	//					Parameter:    parametergroup.Parameter{ID: "1"},
+	//					DefaultValue: "10",
+	//					Note:         "param 1",
+	//				},
+	//			}, nil
+	//	})
+	//clusterParameterRW.EXPECT().ApplyClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+	//	DoAndReturn(func(ctx context.Context, parameterGroupId string, clusterId string, param []*parameter.ClusterParameterMapping) error {
+	//		return nil
+	//	})
+
+	clusterManagementRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, clusterID string) (*management.Cluster, []*management.ClusterInstance, error) {
+			return mockCluster(), mockClusterInstances(), nil
+		})
+	clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, bizId string, flowName string) (*workflow.WorkFlowAggregation, error) {
+			return mockWorkFlowAggregation(), nil
+		})
+	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).AnyTimes()
+	configRW.EXPECT().CreateConfig(gomock.Any(), gomock.Any()).AnyTimes()
+
+	resp, err := mockManager.ApplyParameterGroup(context.TODO(), message.ApplyParameterGroupReq{
+		ParamGroupId: "1",
+		ClusterID:    "1",
+		Reboot:       false,
+	}, ModifyParameter{
+		Reboot: false,
+		Params: nil,
+	})
+	assert.NotEmpty(t, resp)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, resp.ParamGroupID)
+}
+
+func TestManager_ApplyParameterGroup_Failed(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterManagementRW)
+	clusterManagementRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, clusterID string) (*management.Cluster, []*management.ClusterInstance, error) {
+			return nil, nil, errors.Parse("cluster id is null")
+		})
+	_, err := mockManager.ApplyParameterGroup(context.TODO(), message.ApplyParameterGroupReq{
+		ParamGroupId: "",
+		ClusterID:    "",
+		Reboot:       false,
+	}, ModifyParameter{
+		Reboot: false,
+		Params: nil,
+	})
+	assert.Error(t, err)
+}
+
 func TestManager_InspectClusterParameters(t *testing.T) {
-	parameters, err := manager.InspectClusterParameters(context.TODO(), cluster.InspectClusterParametersReq{ClusterID: "1"})
+	parameters, err := mockManager.InspectClusterParameters(context.TODO(), cluster.InspectClusterParametersReq{ClusterID: "1"})
 	assert.NoError(t, err)
 	assert.NotEmpty(t, parameters)
 }

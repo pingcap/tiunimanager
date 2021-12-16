@@ -29,10 +29,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pingcap-inc/tiem/models/cluster/parameter"
-
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockclusterparameter"
-
 	"github.com/pingcap-inc/tiem/models/parametergroup"
 
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockparametergroup"
@@ -293,85 +289,4 @@ func TestManager_CopyParameterGroup(t *testing.T) {
 	assert.NotEmpty(t, resp)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, resp.ParamGroupID)
-}
-
-func TestManager_ApplyParameterGroup_Success(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
-	models.SetParameterGroupReaderWriter(parameterGroupRW)
-	clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
-	models.SetClusterParameterReaderWriter(clusterParameterRW)
-	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, parameterGroupId string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
-			return &parametergroup.ParameterGroup{
-					ID:             "1",
-					Name:           "test_parameter_group",
-					ParentID:       "",
-					ClusterSpec:    "8C16G",
-					HasDefault:     1,
-					DBType:         1,
-					GroupType:      1,
-					ClusterVersion: "5.0",
-					Note:           "test parameter group",
-					CreatedAt:      time.Time{},
-					UpdatedAt:      time.Time{},
-				}, []*parametergroup.ParamDetail{
-					{
-						Parameter:    parametergroup.Parameter{ID: "1"},
-						DefaultValue: "10",
-						Note:         "param 1",
-					},
-				}, nil
-		})
-	clusterParameterRW.EXPECT().ApplyClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, parameterGroupId string, clusterId string, param []*parameter.ClusterParameterMapping) error {
-			return nil
-		})
-
-	resp, err := manager.ApplyParameterGroup(context.TODO(), message.ApplyParameterGroupReq{
-		ParamGroupId: "1",
-		ClusterID:    "1",
-		Reboot:       false,
-	})
-	assert.NotEmpty(t, resp)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, resp.ParamGroupID)
-}
-
-func TestManager_ApplyParameterGroup_Failed(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
-	models.SetParameterGroupReaderWriter(parameterGroupRW)
-	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, parameterGroupId string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
-			return &parametergroup.ParameterGroup{
-					ID:             "",
-					Name:           "test_parameter_group",
-					ParentID:       "",
-					ClusterSpec:    "8C16G",
-					HasDefault:     1,
-					DBType:         1,
-					GroupType:      1,
-					ClusterVersion: "5.0",
-					Note:           "test parameter group",
-					CreatedAt:      time.Time{},
-					UpdatedAt:      time.Time{},
-				}, []*parametergroup.ParamDetail{
-					{
-						Parameter:    parametergroup.Parameter{ID: "1"},
-						DefaultValue: "10",
-						Note:         "param 1",
-					},
-				}, nil
-		})
-	_, err := manager.ApplyParameterGroup(context.TODO(), message.ApplyParameterGroupReq{
-		ParamGroupId: "",
-		ClusterID:    "",
-		Reboot:       false,
-	})
-	assert.Error(t, err)
 }

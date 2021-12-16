@@ -29,8 +29,6 @@ import (
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
-	"github.com/pingcap-inc/tiem/models/cluster/parameter"
-
 	"github.com/pingcap-inc/tiem/models/parametergroup"
 
 	"github.com/pingcap-inc/tiem/models"
@@ -49,45 +47,12 @@ func NewManager() *Manager {
 	return &Manager{}
 }
 
-type ParamGroupType int32
+type ParamGroupType int
 
 const (
 	DEFAULT ParamGroupType = 1
 	CUSTOM  ParamGroupType = 2
 )
-
-type ParamSource int32
-
-const (
-	TiUP ParamSource = iota
-	SQL
-	TiupAndSql
-	API
-)
-
-type ParamValueType int32
-
-const (
-	Integer ParamValueType = iota
-	String
-	Boolean
-	Float
-)
-
-type ModifyParam struct {
-	Reboot bool
-	Params []*ApplyParam
-}
-
-type ApplyParam struct {
-	ParameterId  string
-	Name         string
-	InstanceType string
-	HasReboot    int
-	UpdateSource int
-	Type         int
-	RealValue    structs.ParameterRealValue
-}
 
 func (m *Manager) CreateParameterGroup(ctx context.Context, req message.CreateParameterGroupReq) (resp message.CreateParameterGroupResp, err error) {
 	pg := &parametergroup.ParameterGroup{
@@ -265,36 +230,6 @@ func (m *Manager) CopyParameterGroup(ctx context.Context, req message.CopyParame
 		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_COPY_ERROR, common.TIEM_PARAMETER_GROUP_COPY_ERROR.Explain(), err)
 	}
 	resp = message.CopyParameterGroupResp{ParamGroupID: parameterGroup.ID}
-	return resp, nil
-}
-
-func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyParameterGroupReq) (resp message.ApplyParameterGroupResp, err error) {
-	// get parameter group by id
-	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId)
-	if err != nil || pg.ID == "" {
-		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR, common.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
-	}
-
-	pgs := make([]*parameter.ClusterParameterMapping, len(params))
-	for i, param := range params {
-		realValue := structs.ParameterRealValue{ClusterValue: param.DefaultValue}
-		b, err := json.Marshal(realValue)
-		if err != nil {
-			return message.ApplyParameterGroupResp{}, err
-		}
-		pgs[i] = &parameter.ClusterParameterMapping{
-			ClusterID:   req.ClusterID,
-			ParameterID: param.ID,
-			RealValue:   string(b),
-		}
-	}
-	err = models.GetClusterParameterReaderWriter().ApplyClusterParameter(ctx, req.ParamGroupId, req.ClusterID, pgs)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("apply parameter group convert resp err: %v", err)
-		return resp, framework.WrapError(common.TIEM_PARAMETER_GROUP_APPLY_ERROR, common.TIEM_PARAMETER_GROUP_APPLY_ERROR.Explain(), err)
-	}
-	resp = message.ApplyParameterGroupResp{ParamGroupID: req.ParamGroupId}
 	return resp, nil
 }
 

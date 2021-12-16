@@ -26,10 +26,16 @@ package parameter
 import (
 	"context"
 	"encoding/json"
+	"sync"
+
+	"github.com/pingcap-inc/tiem/message"
+
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/workflow"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-
-	"github.com/pingcap-inc/tiem/models/cluster/parameter"
 
 	"github.com/pingcap-inc/tiem/common/structs"
 
@@ -43,8 +49,41 @@ import (
 
 type Manager struct{}
 
+var manager *Manager
+var once sync.Once
+
 func NewManager() *Manager {
-	return &Manager{}
+	once.Do(func() {
+		if manager == nil {
+			workflowManager := workflow.GetWorkFlowService()
+			workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowModifyParameters, &modifyParametersDefine)
+
+			manager = &Manager{}
+		}
+	})
+	return manager
+}
+
+var modifyParametersDefine = workflow.WorkFlowDefine{
+	FlowName: constants.FlowModifyParameters,
+	TaskNodes: map[string]*workflow.NodeDefine{
+		"start":       {"modifyParameter", "modifyDone", "fail", workflow.SyncFuncNode, modifyParameters},
+		"modifyDone":  {"refreshParameter", "refreshDone", "fail", workflow.SyncFuncNode, refreshParameter},
+		"refreshDone": {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
+		"onlineDone":  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistUpdateParameter)},
+		"fail":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure)},
+	},
+}
+
+var applyParametersDefine = workflow.WorkFlowDefine{
+	FlowName: constants.FlowModifyParameters,
+	TaskNodes: map[string]*workflow.NodeDefine{
+		"start":       {"modifyParameter", "modifyDone", "fail", workflow.SyncFuncNode, modifyParameters},
+		"modifyDone":  {"refreshParameter", "refreshDone", "fail", workflow.SyncFuncNode, refreshParameter},
+		"refreshDone": {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
+		"onlineDone":  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistApplyParameter)},
+		"fail":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure)},
+	},
 }
 
 func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryClusterParametersReq) (resp cluster.QueryClusterParametersResp, page *clusterpb.RpcPage, err error) {
@@ -105,25 +144,56 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 }
 
 func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.UpdateClusterParametersReq) (resp cluster.UpdateClusterParametersResp, err error) {
-	params := make([]*parameter.ClusterParameterMapping, len(req.Params))
-	for i, param := range req.Params {
-		b, err := json.Marshal(param.RealValue)
-		if err != nil {
-			framework.LogWithContext(ctx).Errorf("failed to convert parameter realValue. req: %v, err: %v", req, err)
-			return resp, framework.WrapError(common.TIEM_CONVERT_OBJ_FAILED, common.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
-		}
-		params[i] = &parameter.ClusterParameterMapping{
-			ClusterID:   req.ClusterID,
-			ParameterID: param.ParamId,
-			RealValue:   string(b),
-		}
-	}
-	err = models.GetClusterParameterReaderWriter().UpdateClusterParameter(ctx, req.ClusterID, params)
+	// Get cluster info and topology from db based by clusterID
+	clusterMeta, err := handler.Get(ctx, req.ClusterID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("update cluster parameter req: %v, err: %v", req, err)
-		return resp, framework.WrapError(common.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, common.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR.Explain(), err)
+		framework.LogWithContext(ctx).Errorf("load cluser[%s] meta from db error: %s", req.ClusterID, err.Error())
+		return
 	}
-	resp = cluster.UpdateClusterParametersResp{ClusterID: req.ClusterID}
+
+	data := make(map[string]interface{})
+	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: req.Params}
+	data[contextUpdateParameterInfo] = &req
+	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("cluster [%s] update cluster parameters aync maintenance workflow error: %s", req.ClusterID, err.Error())
+		return
+	}
+
+	resp = cluster.UpdateClusterParametersResp{
+		ClusterID: req.ClusterID,
+		AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
+			WorkFlowID: workflowID,
+		},
+	}
+	return resp, nil
+}
+
+func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyParameterGroupReq, modifyParameter ModifyParameter) (resp message.ApplyParameterGroupResp, err error) {
+	// Get cluster info and topology from db based by clusterID
+	clusterMeta, err := handler.Get(ctx, req.ClusterID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("load cluser[%s] meta from db error: %s", req.ClusterID, err.Error())
+		return
+	}
+
+	// Get modify parameters
+	data := make(map[string]interface{})
+	data[contextModifyParameters] = &modifyParameter
+	data[contextApplyParameterInfo] = &req
+	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, applyParametersDefine.FlowName)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("cluster [%s] update cluster parameters aync maintenance workflow error: %s", req.ClusterID, err.Error())
+		return
+	}
+
+	resp = message.ApplyParameterGroupResp{
+		ClusterID:    req.ClusterID,
+		ParamGroupID: req.ParamGroupId,
+		AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
+			WorkFlowID: workflowID,
+		},
+	}
 	return resp, nil
 }
 

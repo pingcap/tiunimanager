@@ -102,7 +102,8 @@ type ApplyParameterGroupReq struct {
 }
 
 type ApplyParameterGroupResp struct {
-	ParamGroupID string `json:"paramGroupId" example:"1"`
+	ClusterID    string `json:"clusterId" example:"123"`
+	ParamGroupID string `json:"paramGroupId" example:"123"`
 	structs.AsyncTaskWorkFlowInfo
 }
 

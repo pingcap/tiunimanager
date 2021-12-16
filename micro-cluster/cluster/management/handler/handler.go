@@ -18,6 +18,10 @@ package handler
 import (
 	"bytes"
 	"context"
+	"strconv"
+	"strings"
+	"text/template"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -29,9 +33,6 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
-	"strconv"
-	"strings"
-	"text/template"
 )
 
 type ClusterMeta struct {
@@ -441,6 +442,15 @@ func (p *ClusterMeta) GetClusterConnectAddresses() []ComponentAddress {
 // @return []ComponentAddress
 func (p *ClusterMeta) GetClusterStatusAddress() []ComponentAddress {
 	//
+	return nil
+}
+
+// GetTiKVStatusAddress
+// @Description: TiKV Server status information reporting.
+// @Receiver p
+// @return []ComponentAddress
+func (p *ClusterMeta) GetTiKVStatusAddress() []ComponentAddress {
+	// todo
 	return nil
 }
 

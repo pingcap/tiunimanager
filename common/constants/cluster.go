@@ -52,7 +52,7 @@ const (
 	ClusterMaintenanceDeleting                     ClusterMaintenanceStatus = "Deleting"
 	ClusterMaintenanceStopping                     ClusterMaintenanceStatus = "Stopping"
 	ClusterMaintenanceRestarting                   ClusterMaintenanceStatus = "Restarting"
-	ClusterMaintenanceBackingUp                    ClusterMaintenanceStatus = "BackingUp"
+	ClusterMaintenanceBackUp                       ClusterMaintenanceStatus = "BackUp"
 	ClusterMaintenanceRestore                      ClusterMaintenanceStatus = "Restore"
 	ClusterMaintenanceScaleIn                      ClusterMaintenanceStatus = "ScaleIn"
 	ClusterMaintenanceScaleOut                     ClusterMaintenanceStatus = "ScaleOut"
@@ -77,6 +77,7 @@ const (
 	FlowBuildLogConfig      = "BuildLogConfig"
 	FlowScaleOutCluster     = "ScaleOutCluster"
 	FlowScaleInCluster      = "ScaleInCluster"
+	FlowCloneCluster        = "CloneCluster"
 )
 
 type ClusterInstanceRunningStatus string
@@ -126,9 +127,9 @@ type ClusterCloneStrategy string
 
 // Definition cluster clone strategy
 const (
-	EmptyDataClone ClusterCloneStrategy = "Empty"
-	SnapShotClone  ClusterCloneStrategy = "Snapshot"
-	SyncDataClone  ClusterCloneStrategy = "Sync"
+	ClusterTopologyClone ClusterCloneStrategy = "TopologyClone"
+	SnapShotClone        ClusterCloneStrategy = "Snapshot"
+	TiCDCSyncClone       ClusterCloneStrategy = "TiCDCSync"
 )
 
 type BackupType string

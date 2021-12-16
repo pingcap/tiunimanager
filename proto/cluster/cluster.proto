@@ -54,7 +54,7 @@ service ClusterService {
     rpc GetHierarchy(RpcRequest) returns (RpcResponse);
     rpc GetStocks(RpcRequest) returns (RpcResponse);
 
-    // task manager
+    // workflow
     rpc ListFlows(RpcRequest) returns (RpcResponse);
     rpc DetailFlow(RpcRequest) returns (RpcResponse);
 
@@ -77,6 +77,9 @@ service ClusterService {
     rpc DeleteChangeFeedTask(RpcRequest) returns (RpcResponse);
     rpc UpdateChangeFeedTask(RpcRequest) returns (RpcResponse);
     rpc QueryChangeFeedTasks(RpcRequest) returns (RpcResponse);
+
+    // system config
+    rpc GetSystemConfig(RpcRequest) returns (RpcResponse);
 }
 
 message ClusterCreateReqDTO {

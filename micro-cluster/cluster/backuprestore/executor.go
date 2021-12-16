@@ -145,9 +145,8 @@ func defaultEnd(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin defaultEnd")
 	defer framework.LogWithContext(ctx).Info("end defaultEnd")
 
-	//todo: update cluster status
-
-	return nil
+	clusterMeta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
+	return clusterMeta.EndMaintenance(ctx, clusterMeta.Cluster.MaintenanceStatus)
 }
 
 func backupFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
@@ -164,15 +163,14 @@ func backupFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 		return err
 	}
 
-	//todo: update cluster status
-
-	return nil
+	return defaultEnd(node, ctx)
 }
 
 func restoreFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin restoreFail")
 	defer framework.LogWithContext(ctx).Info("end restoreFail")
 
+	//todo: need update cluster maintaence status?
 	return nil
 }
 

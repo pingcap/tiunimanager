@@ -26,6 +26,7 @@ package secondparty
 import (
 	"context"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/spec"
 	"sync"
 
 	"github.com/pingcap-inc/tiem/models"
@@ -78,6 +79,9 @@ type SecondPartyService interface {
 	ShowRestoreInfo(ctx context.Context, cluster ClusterFacade) CmdShowRestoreInfoResp
 	GetOperationStatus(ctx context.Context, operationID string) (resp GetOperationStatusResp, err error)
 	GetOperationStatusByWorkFlowNodeID(ctx context.Context, workFlowNodeID string) (resp GetOperationStatusResp, err error)
+	ClusterComponentCtl(ctx context.Context, str TiUPComponentTypeStr, clusterVersion string, component spec.TiDBClusterComponent, flags []string) (string, error)
+	ApiEditConfig(ctx context.Context, apiEditConfigReq ApiEditConfigReq) (bool, error)
+	EditClusterConfig(ctx context.Context, req ClusterEditConfigReq, workFlowNodeID string) error
 	SetClusterDbPassword(ctx context.Context, req ClusterSetDbPswReq, workFlowNodeID string) error
 }
 

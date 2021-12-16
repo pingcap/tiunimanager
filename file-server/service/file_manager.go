@@ -22,6 +22,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"golang.org/x/net/context"
 	"io"
 	"io/ioutil"
@@ -56,38 +57,38 @@ func InitFileManager() *FileManager {
 }
 
 func (mgr *FileManager) UploadFile(ctx context.Context, r *http.Request, uploadPath string) error {
-	getLoggerWithContext(ctx).Infof("begin UploadFile: uploadPath %s", uploadPath)
-	defer getLoggerWithContext(ctx).Info("end UploadFile")
+	framework.LogWithContext(ctx).Infof("begin UploadFile: uploadPath %s", uploadPath)
+	defer framework.LogWithContext(ctx).Info("end UploadFile")
 	if !mgr.checkUploadCnt() {
-		getLoggerWithContext(ctx).Errorf("upload goroutine reach max, %d", maxUploadNum)
+		framework.LogWithContext(ctx).Errorf("upload goroutine reach max, %d", maxUploadNum)
 		return fmt.Errorf("upload goroutine reach max, %d", maxUploadNum)
 	}
 	mgr.addUploadCnt()
 	defer mgr.reduceUploadCnt()
 
 	if err := r.ParseMultipartForm(mgr.maxFileSize); err != nil {
-		getLoggerWithContext(ctx).Errorf("could not parse multipart form: %s", err.Error())
+		framework.LogWithContext(ctx).Errorf("could not parse multipart form: %s", err.Error())
 		return fmt.Errorf("could not parse multipart form: %s", err.Error())
 	}
 
 	// parse and validate file and post parameters
 	file, fileHeader, err := r.FormFile("file")
 	if err != nil {
-		getLoggerWithContext(ctx).Errorf("form file failed, %s", err.Error())
+		framework.LogWithContext(ctx).Errorf("form file failed, %s", err.Error())
 		return err
 	}
 	defer file.Close()
 	// Get and print out file size
 	fileSize := fileHeader.Size
-	getLoggerWithContext(ctx).Infof("File size bytes: %d", fileSize)
+	framework.LogWithContext(ctx).Infof("File size bytes: %d", fileSize)
 	// validate file size
 	if fileSize > mgr.maxFileSize {
-		getLoggerWithContext(ctx).Errorf("file size %d GB reach max upload file size %d GB", fileSize/bytes.GB, mgr.maxFileSize/bytes.GB)
+		framework.LogWithContext(ctx).Errorf("file size %d GB reach max upload file size %d GB", fileSize/bytes.GB, mgr.maxFileSize/bytes.GB)
 		return fmt.Errorf("file size %d GB reach max upload file size %d GB", fileSize/bytes.GB, mgr.maxFileSize/bytes.GB)
 	}
 	fileBytes, err := ioutil.ReadAll(file)
 	if err != nil {
-		getLoggerWithContext(ctx).Errorf("ioutil.ReadAll failed, %s", err.Error())
+		framework.LogWithContext(ctx).Errorf("ioutil.ReadAll failed, %s", err.Error())
 		return err
 	}
 
@@ -97,45 +98,45 @@ func (mgr *FileManager) UploadFile(ctx context.Context, r *http.Request, uploadP
 	case "application/zip":
 		break
 	default:
-		getLoggerWithContext(ctx).Errorf("invalid file type %s, not xxx.zip", detectedFileType)
+		framework.LogWithContext(ctx).Errorf("invalid file type %s, not xxx.zip", detectedFileType)
 		return errors.New("invalid file type, not .zip")
 	}
 	newPath := filepath.Join(uploadPath, common.DefaultZipName)
-	getLoggerWithContext(ctx).Infof("FileType: %s, File: %s", detectedFileType, newPath)
+	framework.LogWithContext(ctx).Infof("FileType: %s, File: %s", detectedFileType, newPath)
 
 	// write file
 	err = os.RemoveAll(uploadPath)
 	if err != nil {
-		getLoggerWithContext(ctx).Errorf("remove dir %s failed, %s", uploadPath, err.Error())
+		framework.LogWithContext(ctx).Errorf("remove dir %s failed, %s", uploadPath, err.Error())
 		return err
 	}
 	err = os.MkdirAll(uploadPath, os.ModePerm)
 	if err != nil {
-		getLoggerWithContext(ctx).Errorf("make dir %s failed, %s", uploadPath, err.Error())
+		framework.LogWithContext(ctx).Errorf("make dir %s failed, %s", uploadPath, err.Error())
 		return err
 	}
 	newFile, err := os.Create(newPath)
 	if err != nil {
-		getLoggerWithContext(ctx).Errorf("create new file %s failed, %s", newPath, err.Error())
+		framework.LogWithContext(ctx).Errorf("create new file %s failed, %s", newPath, err.Error())
 		return err
 	}
 	defer newFile.Close() // idempotent, okay to call twice
 	if _, err = newFile.Write(fileBytes); err != nil {
-		getLoggerWithContext(ctx).Errorf("write new file failed %s", err.Error())
+		framework.LogWithContext(ctx).Errorf("write new file failed %s", err.Error())
 		return err
 	}
 	if err = newFile.Close(); err != nil {
-		getLoggerWithContext(ctx).Errorf("close file failed %s", err.Error())
+		framework.LogWithContext(ctx).Errorf("close file failed %s", err.Error())
 		return err
 	}
 	return nil
 }
 
 func (mgr *FileManager) DownloadFile(ctx context.Context, c *gin.Context, filePath string) error {
-	getLoggerWithContext(ctx).Infof("begin DownloadFile: filePath %s", filePath)
-	defer getLoggerWithContext(ctx).Info("end DownloadFile")
+	framework.LogWithContext(ctx).Infof("begin DownloadFile: filePath %s", filePath)
+	defer framework.LogWithContext(ctx).Info("end DownloadFile")
 	if !mgr.checkDownloadCnt() {
-		getLoggerWithContext(ctx).Errorf("download goroutine reach max, %d", maxDownloadNum)
+		framework.LogWithContext(ctx).Errorf("download goroutine reach max, %d", maxDownloadNum)
 		return fmt.Errorf("download goroutine reach max, %d", maxDownloadNum)
 	}
 	mgr.addDownloadCnt()
@@ -143,11 +144,11 @@ func (mgr *FileManager) DownloadFile(ctx context.Context, c *gin.Context, filePa
 
 	info, err := os.Stat(filePath)
 	if err != nil && !os.IsExist(err) {
-		getLoggerWithContext(ctx).Errorf("stat file failed, %s", err.Error())
+		framework.LogWithContext(ctx).Errorf("stat file failed, %s", err.Error())
 		return err
 	}
 	if info.Size() > mgr.maxFileSize {
-		getLoggerWithContext(ctx).Errorf("file size %d GB reach max download file size %d GB", info.Size()/bytes.GB, mgr.maxFileSize/bytes.GB)
+		framework.LogWithContext(ctx).Errorf("file size %d GB reach max download file size %d GB", info.Size()/bytes.GB, mgr.maxFileSize/bytes.GB)
 		return fmt.Errorf("file size %d GB reach max download file size %d GB", info.Size()/bytes.GB, mgr.maxFileSize/bytes.GB)
 	}
 
@@ -161,8 +162,8 @@ func (mgr *FileManager) DownloadFile(ctx context.Context, c *gin.Context, filePa
 }
 
 func (mgr *FileManager) ZipDir(ctx context.Context, dir string, zipFile string) error {
-	getLoggerWithContext(ctx).Infof("begin zipDir: dir[%s] to file[%s]", dir, zipFile)
-	defer getLoggerWithContext(ctx).Info("end zipDir")
+	framework.LogWithContext(ctx).Infof("begin zipDir: dir[%s] to file[%s]", dir, zipFile)
+	defer framework.LogWithContext(ctx).Info("end zipDir")
 	fz, err := os.Create(zipFile)
 	if err != nil {
 		return fmt.Errorf("create zip file failed, %s", err.Error())
@@ -192,7 +193,7 @@ func (mgr *FileManager) ZipDir(ctx context.Context, dir string, zipFile string) 
 		return nil
 	})
 	if err != nil {
-		getLoggerWithContext(ctx).Errorf("filepath walk failed, %s", err.Error())
+		framework.LogWithContext(ctx).Errorf("filepath walk failed, %s", err.Error())
 		return err
 	}
 
@@ -200,8 +201,8 @@ func (mgr *FileManager) ZipDir(ctx context.Context, dir string, zipFile string) 
 }
 
 func (mgr *FileManager) UnzipDir(ctx context.Context, zipFile string, dir string) error {
-	getLoggerWithContext(ctx).Infof("begin unzipDir: file[%s] to dir[%s]", zipFile, dir)
-	defer getLoggerWithContext(ctx).Info("end unzipDir")
+	framework.LogWithContext(ctx).Infof("begin unzipDir: file[%s] to dir[%s]", zipFile, dir)
+	defer framework.LogWithContext(ctx).Info("end unzipDir")
 	r, err := zip.OpenReader(zipFile)
 	if err != nil {
 		return fmt.Errorf("open zip file failed: %s", err.Error())
@@ -212,19 +213,19 @@ func (mgr *FileManager) UnzipDir(ctx context.Context, zipFile string, dir string
 		func() {
 			path := dir + string(filepath.Separator) + f.Name
 			if err := os.MkdirAll(filepath.Dir(path), 0750); err != nil {
-				getLoggerWithContext(ctx).Errorf("make filepath failed: %s", err.Error())
+				framework.LogWithContext(ctx).Errorf("make filepath failed: %s", err.Error())
 				return
 			}
 			fDest, err := os.Create(path)
 			if err != nil {
-				getLoggerWithContext(ctx).Errorf("unzip create failed: %s", err.Error())
+				framework.LogWithContext(ctx).Errorf("unzip create failed: %s", err.Error())
 				return
 			}
 			defer fDest.Close()
 
 			fSrc, err := f.Open()
 			if err != nil {
-				getLoggerWithContext(ctx).Errorf("unzip open failed: %s", err.Error())
+				framework.LogWithContext(ctx).Errorf("unzip open failed: %s", err.Error())
 				return
 			}
 			defer fSrc.Close()
@@ -235,7 +236,7 @@ func (mgr *FileManager) UnzipDir(ctx context.Context, zipFile string, dir string
 					if err == io.EOF {
 						break
 					}
-					getLoggerWithContext(ctx).Errorf("unzip copy failed: %s", err.Error())
+					framework.LogWithContext(ctx).Errorf("unzip copy failed: %s", err.Error())
 					return
 				}
 			}

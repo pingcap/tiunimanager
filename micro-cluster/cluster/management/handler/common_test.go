@@ -13,22 +13,33 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-/*******************************************************************************
- * @File: platform.go
- * @Description:
- * @Author: duanbing@pingcap.com
- * @Version: 1.0.0
- * @Date: 2021/12/4
-*******************************************************************************/
+package handler
 
-package message
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
-import "github.com/pingcap-inc/tiem/common/structs"
+func TestContain(t *testing.T) {
+	ports := []int{4000, 4001, 4002}
+	got := Contain(ports, 4000)
+	assert.Equal(t, got, true)
 
-type GetSystemConfigReq struct {
-	ConfigKey string `json:"configKey" form:"configKey"`
+	got = Contain(ports, 4003)
+	assert.Equal(t, got, false)
+
+	hosts := []string{"127.0.0.1", "127.0.0.2"}
+	got = Contain(hosts, "127.0.0.1")
+	assert.Equal(t, got, true)
+
+	got = Contain(hosts, "127.0.0.3")
+	assert.Equal(t, got, false)
 }
 
-type GetSystemConfigResp struct {
-	structs.SystemConfig
+func TestScaleOutPreCheck(t *testing.T) {
+
+}
+
+func TestWaitWorkflow(t *testing.T) {
+	//TODO: test WaitWorkflow
 }

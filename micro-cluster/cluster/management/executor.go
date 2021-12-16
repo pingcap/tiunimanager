@@ -1,10 +1,17 @@
-/*******************************************************************************
- * @File: executor
- * @Description:
- * @Author: wangyaozheng@pingcap.com
- * @Version: 1.0.0
- * @Date: 2021/12/9
-*******************************************************************************/
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ ******************************************************************************/
 
 package management
 
@@ -14,12 +21,15 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
 	resourceStructs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
 	"strconv"
+	"time"
 )
 
 // prepareResource
@@ -71,7 +81,7 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		return err
 	}
 	context.SetData(ContextAllocResource, allocResponse)
-	
+
 	for _, resourceResult := range allocResponse.BatchResults {
 		switch resourceResult.RequestId {
 		case globalAllocId:
@@ -202,6 +212,34 @@ func freeInstanceResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 	return nil
 }
 
+func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*handler.ClusterMeta)
+	cloneStrategy := context.GetData(ContextCloneStrategy).(string)
+
+	if cloneStrategy == string(constants.ClusterTopologyClone) {
+		return nil
+	}
+	backupResponse, err := backuprestore.GetBRService().BackupCluster(context.Context,
+		&cluster.BackupClusterDataReq{
+			ClusterID:  sourceClusterMeta.Cluster.ID,
+			BackupMode: string(constants.BackupModeManual),
+		})
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"do backup for cluster[%s] error: %s", sourceClusterMeta.Cluster.Name, err.Error())
+		return err
+	}
+
+	if err = handler.WaitWorkflow(backupResponse.WorkFlowID, 10*time.Second); err != nil {
+		framework.LogWithContext(context.Context).Errorf("backup workflow error: %s", err)
+		return err
+	}
+
+	context.SetData(ContextBackupID, backupResponse.BackupID)
+
+	return nil
+}
+
 // setClusterFailure
 // @Description: set cluster running status to constants.ClusterFailure
 func setClusterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
@@ -273,7 +311,7 @@ func revertResourceAfterFailure(node *workflowModel.WorkFlowNode, context *workf
 			return err
 		}
 	}
-	
+
 	return nil
 }
 
@@ -332,7 +370,75 @@ func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 			"cluster[%s] start error: %s", clusterMeta.Cluster.Name, err.Error())
 		return err
 	}
-	framework.LogWithContext(context.Context).Infof("get start cluster task id: %d", taskId)
+	framework.LogWithContext(context.Context).Infof("get start cluster task id: %s", taskId)
+	return nil
+}
+
+func syncBackupStrategy(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*handler.ClusterMeta)
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+
+	sourceStrategyRes, err := backuprestore.GetBRService().GetBackupStrategy(context.Context,
+		&cluster.GetBackupStrategyReq{
+			ClusterID: sourceClusterMeta.Cluster.ID,
+		})
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"get cluster[%s] backup strategy error: %s", sourceClusterMeta.Cluster.Name, err.Error())
+		return err
+	}
+
+	_, err = backuprestore.GetBRService().SaveBackupStrategy(context.Context,
+		&cluster.SaveBackupStrategyReq{
+			ClusterID: clusterMeta.Cluster.ID,
+			Strategy:  sourceStrategyRes.Strategy,
+		})
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"save cluster[%s] backup strategy error: %s", clusterMeta.Cluster.Name, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	return nil
+}
+
+func syncSystemVariables(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	//TODO: sync system variables
+	return nil
+}
+
+func restoreCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	cloneStrategy := context.GetData(ContextCloneStrategy).(string)
+	backupID := context.GetData(ContextBackupID).(string)
+
+	if cloneStrategy == string(constants.ClusterTopologyClone) {
+		return nil
+	}
+	restoreResponse, err := backuprestore.GetBRService().RestoreExistCluster(context.Context,
+		&cluster.RestoreExistClusterReq{
+			ClusterID:  clusterMeta.Cluster.ID,
+			BackupID: backupID,
+		})
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"do restore for cluster[%s] by backup id[%s] error: %s", clusterMeta.Cluster.Name, backupID, err.Error())
+		return err
+	}
+
+	if err = handler.WaitWorkflow(restoreResponse.WorkFlowID, 10*time.Second); err != nil {
+		framework.LogWithContext(context.Context).Errorf("restore workflow error: %s", err)
+		return err
+	}
+
+	return nil
+}
+
+func syncIncrData(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	return nil
 }
 
@@ -360,7 +466,7 @@ func stopCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext
 			"cluster[%s] stop error: %s", clusterMeta.Cluster.Name, err.Error())
 		return err
 	}
-	framework.LogWithContext(context.Context).Infof("get stop cluster task id: %d", taskId)
+	framework.LogWithContext(context.Context).Infof("get stop cluster task id: %s", taskId)
 	return nil
 }
 
@@ -381,7 +487,7 @@ func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 			"cluster[%s] destroy error: %s", clusterMeta.Cluster.Name, err.Error())
 		return err
 	}
-	framework.LogWithContext(context.Context).Infof("get destroy cluster task id: %d", taskId)
+	framework.LogWithContext(context.Context).Infof("get destroy cluster task id: %s", taskId)
 	return nil
 }
 

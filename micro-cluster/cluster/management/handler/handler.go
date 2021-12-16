@@ -18,6 +18,10 @@ package handler
 import (
 	"bytes"
 	"context"
+	"strconv"
+	"strings"
+	"text/template"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	newConstants "github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -28,9 +32,6 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
-	"strconv"
-	"strings"
-	"text/template"
 )
 
 type ClusterMeta struct {
@@ -451,6 +452,7 @@ type ComponentAddress struct {
 // @Receiver p
 // @return []ComponentAddress
 func (p *ClusterMeta) GetClusterConnectAddresses() []ComponentAddress {
+	// got all tidb instances, then get connect addresses
 	instances := p.Instances[string(newConstants.ComponentIDTiDB)]
 	address := make([]ComponentAddress, 0)
 
@@ -462,7 +464,7 @@ func (p *ClusterMeta) GetClusterConnectAddresses() []ComponentAddress {
 			})
 		}
 	}
-	return nil
+	return address
 }
 
 // GetClusterStatusAddress
@@ -481,7 +483,26 @@ func (p *ClusterMeta) GetClusterStatusAddress() []ComponentAddress {
 			})
 		}
 	}
-	return nil
+	return address
+}
+
+// GetTiKVStatusAddress
+// @Description: TiKV Server status information reporting.
+// @Receiver p
+// @return []ComponentAddress
+func (p *ClusterMeta) GetTiKVStatusAddress() []ComponentAddress {
+	instances := p.Instances[string(newConstants.ComponentIDTiKV)]
+	address := make([]ComponentAddress, 0)
+
+	for _, instance := range instances {
+		if instance.Status == string(constants.ClusterInstanceRunning) {
+			address = append(address, ComponentAddress{
+				IP:   instance.HostIP[0],
+				Port: int(instance.Ports[1]),
+			})
+		}
+	}
+	return address
 }
 
 // GetPDClientAddresses
@@ -500,7 +521,7 @@ func (p *ClusterMeta) GetPDClientAddresses() []ComponentAddress {
 			})
 		}
 	}
-	return nil
+	return address
 }
 
 // GetMonitorAddresses

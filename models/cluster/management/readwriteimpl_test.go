@@ -194,7 +194,7 @@ func TestGormClusterReadWrite_GetMeta(t *testing.T) {
 func TestGormClusterReadWrite_UpdateBaseInfo(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
 		err := testRW.UpdateClusterInfo(context.TODO(), &Cluster{
-			Entity:common.Entity{
+			Entity: common.Entity{
 				ID: "whatever",
 			},
 		})

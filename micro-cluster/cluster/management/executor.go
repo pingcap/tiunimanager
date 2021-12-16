@@ -50,12 +50,12 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		framework.LogWithContext(context).Errorf("generate instance resource requirements failed, clusterId = %s", clusterMeta.Cluster.ID)
 		return err
 	}
-	batchReq := &resourceStructs.BatchAllocRequest {
-		BatchRequests: []resourceStructs.AllocReq {
+	batchReq := &resourceStructs.BatchAllocRequest{
+		BatchRequests: []resourceStructs.AllocReq{
 			{
-				Applicant: resourceStructs.Applicant {
-					HolderId: clusterMeta.Cluster.ID,
-					RequestId: instanceAllocId,
+				Applicant: resourceStructs.Applicant{
+					HolderId:          clusterMeta.Cluster.ID,
+					RequestId:         instanceAllocId,
 					TakeoverOperation: false,
 				},
 				Requires: instanceRequirement,
@@ -64,10 +64,10 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	}
 
 	if len(globalRequirement) > 0 {
-		batchReq.BatchRequests = append(batchReq.BatchRequests, resourceStructs.AllocReq {
-			Applicant: resourceStructs.Applicant {
-				HolderId: clusterMeta.Cluster.ID,
-				RequestId: globalAllocId,
+		batchReq.BatchRequests = append(batchReq.BatchRequests, resourceStructs.AllocReq{
+			Applicant: resourceStructs.Applicant{
+				HolderId:          clusterMeta.Cluster.ID,
+				RequestId:         globalAllocId,
 				TakeoverOperation: false,
 			},
 			Requires: globalRequirement,
@@ -421,8 +421,8 @@ func restoreCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	}
 	restoreResponse, err := backuprestore.GetBRService().RestoreExistCluster(context.Context,
 		&cluster.RestoreExistClusterReq{
-			ClusterID:  clusterMeta.Cluster.ID,
-			BackupID: backupID,
+			ClusterID: clusterMeta.Cluster.ID,
+			BackupID:  backupID,
 		})
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(

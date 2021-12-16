@@ -29,12 +29,12 @@ import (
 
 type QueryParameterGroupReq struct {
 	structs.PageRequest
-	Name       string `json:"name" form:"name" example:"default"`
-	DBType     int32  `json:"dbType" form:"dbType" example:"0"`
-	HasDefault int32  `json:"hasDefault" form:"hasDefault" example:"0"`
-	Version    string `json:"version" form:"version" example:"v5.0"`
-	Spec       string `json:"spec" form:"spec" example:"8C16G"`
-	HasDetail  bool   `json:"hasDetail" form:"hasDetail" example:"false"`
+	Name           string `json:"name" form:"name" example:"default"`
+	DBType         int    `json:"dbType" form:"dbType" example:"0" enums:"0,1,2"`
+	HasDefault     int    `json:"hasDefault" form:"hasDefault" example:"0" enums:"0,1,2"`
+	ClusterVersion string `json:"clusterVersion" form:"clusterVersion" example:"v5.0"`
+	ClusterSpec    string `json:"clusterSpec" form:"clusterSpec" example:"8C16G"`
+	HasDetail      bool   `json:"hasDetail" form:"hasDetail" example:"false"`
 }
 
 type QueryParameterGroupResp struct {
@@ -42,7 +42,7 @@ type QueryParameterGroupResp struct {
 }
 
 type DetailParameterGroupReq struct {
-	ID string `json:"paramGroupId"`
+	ParamGroupID string `json:"paramGroupId"`
 }
 
 type DetailParameterGroupResp struct {
@@ -50,14 +50,14 @@ type DetailParameterGroupResp struct {
 }
 
 type CreateParameterGroupReq struct {
-	Name       string                                      `json:"name" example:"8C16GV4_default"`
-	DBType     int32                                       `json:"dbType" example:"1"`
-	HasDefault int32                                       `json:"hasDefault" example:"1"`
-	Version    string                                      `json:"version" example:"v5.0"`
-	Spec       string                                      `json:"spec" example:"8C16G"`
-	GroupType  int32                                       `json:"groupType" example:"1"`
-	Note       string                                      `json:"note" example:"default param group"`
-	Params     []structs.ParameterGroupParameterSampleInfo `json:"params"`
+	Name           string                                      `json:"name" example:"8C16GV4_default"`
+	DBType         int                                         `json:"dbType" example:"1" enums:"1,2"`
+	HasDefault     int                                         `json:"hasDefault" example:"1" enums:"1,2"`
+	ClusterVersion string                                      `json:"clusterVersion" example:"v5.0"`
+	ClusterSpec    string                                      `json:"clusterSpec" example:"8C16G"`
+	GroupType      int                                         `json:"groupType" example:"1" enums:"1,2"`
+	Note           string                                      `json:"note" example:"default param group"`
+	Params         []structs.ParameterGroupParameterSampleInfo `json:"params"`
 }
 
 type CreateParameterGroupResp struct {
@@ -65,7 +65,7 @@ type CreateParameterGroupResp struct {
 }
 
 type DeleteParameterGroupReq struct {
-	ID string `json:"paramGroupId" example:"1"`
+	ParamGroupID string `json:"paramGroupId" example:"1"`
 }
 
 type DeleteParameterGroupResp struct {
@@ -73,12 +73,12 @@ type DeleteParameterGroupResp struct {
 }
 
 type UpdateParameterGroupReq struct {
-	ID      string                                      `json:"paramGroupId"`
-	Name    string                                      `json:"name" example:"8C16GV4_default"`
-	Version string                                      `json:"version" example:"v5.0"`
-	Spec    string                                      `json:"spec" example:"8C16G"`
-	Note    string                                      `json:"note" example:"default param group"`
-	Params  []structs.ParameterGroupParameterSampleInfo `json:"params"`
+	ParamGroupID   string                                      `json:"paramGroupId"`
+	Name           string                                      `json:"name" example:"8C16GV4_default"`
+	ClusterVersion string                                      `json:"clusterVersion" example:"v5.0"`
+	ClusterSpec    string                                      `json:"clusterSpec" example:"8C16G"`
+	Note           string                                      `json:"note" example:"default param group"`
+	Params         []structs.ParameterGroupParameterSampleInfo `json:"params"`
 }
 
 type UpdateParameterGroupResp struct {
@@ -86,9 +86,9 @@ type UpdateParameterGroupResp struct {
 }
 
 type CopyParameterGroupReq struct {
-	ID   string `json:"paramGroupId"`
-	Name string `json:"name" example:"8C16GV4_copy"`
-	Note string `json:"note" example:"copy param group"`
+	ParamGroupID string `json:"paramGroupId"`
+	Name         string `json:"name" example:"8C16GV4_copy"`
+	Note         string `json:"note" example:"copy param group"`
 }
 
 type CopyParameterGroupResp struct {
@@ -96,26 +96,27 @@ type CopyParameterGroupResp struct {
 }
 
 type ApplyParameterGroupReq struct {
-	ID        string `json:"paramGroupId" example:"123"`
-	ClusterID string `json:"clusterId" example:"123"`
-	Reboot    bool   `json:"reboot"`
+	ParamGroupId string `json:"paramGroupId" example:"123"`
+	ClusterID    string `json:"clusterId" example:"123"`
+	Reboot       bool   `json:"reboot"`
 }
 
 type ApplyParameterGroupResp struct {
-	ParamGroupId                  string `json:"paramGroupId" example:"1"`
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowId"`
+	ClusterID    string `json:"clusterId" example:"123"`
+	ParamGroupID string `json:"paramGroupId" example:"123"`
+	structs.AsyncTaskWorkFlowInfo
 }
 
 type ParameterGroupInfo struct {
-	ParamGroupID string                                `json:"paramGroupId" example:"1"`
-	Name         string                                `json:"name" example:"default"`
-	DBType       int32                                 `json:"dbType" example:"0"`
-	HasDefault   int32                                 `json:"hasDefault" example:"1"`
-	Version      string                                `json:"version" example:"v5.0"`
-	Spec         string                                `json:"spec" example:"8C16G"`
-	GroupType    int32                                 `json:"groupType" example:"0"`
-	Note         string                                `json:"note" example:"default param group"`
-	CreatedAt    int64                                 `json:"createTime" example:"1636698675"`
-	UpdatedAt    int64                                 `json:"updateTime" example:"1636698675"`
-	Params       []structs.ParameterGroupParameterInfo `json:"params"`
+	ParamGroupID   string                                `json:"paramGroupId" example:"1"`
+	Name           string                                `json:"name" example:"default"`
+	DBType         int                                   `json:"dbType" example:"1" enums:"1,2"`
+	HasDefault     int                                   `json:"hasDefault" example:"1" enums:"1,2"`
+	ClusterVersion string                                `json:"clusterVersion" example:"v5.0"`
+	ClusterSpec    string                                `json:"clusterSpec" example:"8C16G"`
+	GroupType      int                                   `json:"groupType" example:"0" enums:"1,2"`
+	Note           string                                `json:"note" example:"default param group"`
+	CreatedAt      int64                                 `json:"createTime" example:"1636698675"`
+	UpdatedAt      int64                                 `json:"updateTime" example:"1636698675"`
+	Params         []structs.ParameterGroupParameterInfo `json:"params"`
 }

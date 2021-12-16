@@ -41,7 +41,7 @@ type Cluster struct {
 	Region            string                             `gorm:"comment: region location"`
 	CpuArchitecture   constants.ArchType                 `gorm:"not null;type:varchar(64);comment:'user name of the cluster''"`
 	MaintenanceStatus constants.ClusterMaintenanceStatus `gorm:"not null;type:varchar(64);comment:'user name of the cluster''"`
-	MaintainWindow    string    						 `gorm:"not null;type:varchar(64);comment:'maintain window''"`
+	MaintainWindow    string                             `gorm:"not null;type:varchar(64);comment:'maintain window''"`
 }
 
 func (t *Cluster) BeforeSave(tx *gorm.DB) (err error) {

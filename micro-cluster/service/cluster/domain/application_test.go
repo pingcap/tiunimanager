@@ -23,10 +23,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pingcap-inc/tiem/common/structs"
-
-	"github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
-
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
@@ -601,30 +597,30 @@ func TestModifyParameters(t *testing.T) {
 		Id:       "testoperator",
 		Name:     "testoperator",
 		TenantId: "testoperator",
-	}, "testCluster", &parametergroup.ModifyParam{Reboot: false, Params: []*parametergroup.ApplyParam{
+	}, "testCluster", &ModifyParam{NeedReboot: false, Params: []*ApplyParam{
 		{
-			ParameterId:  "1",
-			Name:         "test_param_1",
-			InstanceType: "TiDB",
-			HasReboot:    1,
-			UpdateSource: 0,
-			RealValue:    structs.ParameterRealValue{ClusterValue: "1"},
+			ParamId:       1,
+			Name:          "test_param_1",
+			ComponentType: "TiDB",
+			HasReboot:     1,
+			Source:        0,
+			RealValue:     clusterpb.ParamRealValueDTO{Cluster: "1"},
 		},
 		{
-			ParameterId:  "2",
-			Name:         "test_param_2",
-			InstanceType: "TiKV",
-			HasReboot:    1,
-			UpdateSource: 0,
-			RealValue:    structs.ParameterRealValue{ClusterValue: "2"},
+			ParamId:       2,
+			Name:          "test_param_2",
+			ComponentType: "TiKV",
+			HasReboot:     1,
+			Source:        0,
+			RealValue:     clusterpb.ParamRealValueDTO{Cluster: "2"},
 		},
 		{
-			ParameterId:  "3",
-			Name:         "test_param_3",
-			InstanceType: "PD",
-			HasReboot:    1,
-			UpdateSource: 3,
-			RealValue:    structs.ParameterRealValue{ClusterValue: "3"},
+			ParamId:       3,
+			Name:          "test_param_3",
+			ComponentType: "PD",
+			HasReboot:     1,
+			Source:        3,
+			RealValue:     clusterpb.ParamRealValueDTO{Cluster: "3"},
 		},
 	}})
 	assert.NoError(t, err)
@@ -684,48 +680,48 @@ func Test_modifyParameters(t *testing.T) {
 		}
 		modifyCtx := NewFlowContext(context.TODO())
 		modifyCtx.SetData(contextClusterKey, defaultCluster())
-		modifyCtx.SetData(contextModifyParamsKey, &parametergroup.ModifyParam{
-			Reboot: false,
-			Params: []*parametergroup.ApplyParam{
+		modifyCtx.SetData(contextModifyParamsKey, &ModifyParam{
+			NeedReboot: false,
+			Params: []*ApplyParam{
 				{
-					ParameterId:  "1",
-					Name:         "test_param_1",
-					InstanceType: "TiDB",
-					HasReboot:    1,
-					UpdateSource: 0,
-					RealValue:    structs.ParameterRealValue{ClusterValue: "1"},
+					ParamId:       1,
+					Name:          "test_param_1",
+					ComponentType: "TiDB",
+					HasReboot:     1,
+					Source:        0,
+					RealValue:     clusterpb.ParamRealValueDTO{Cluster: "1"},
 				},
 				{
-					ParameterId:  "2",
-					Name:         "test_param_2",
-					InstanceType: "TiKV",
-					HasReboot:    1,
-					UpdateSource: 0,
-					RealValue:    structs.ParameterRealValue{ClusterValue: "2"},
+					ParamId:       2,
+					Name:          "test_param_2",
+					ComponentType: "TiKV",
+					HasReboot:     1,
+					Source:        0,
+					RealValue:     clusterpb.ParamRealValueDTO{Cluster: "2"},
 				},
 				{
-					ParameterId:  "3",
-					Name:         "test_param_3",
-					InstanceType: "PD",
-					HasReboot:    0,
-					UpdateSource: 3,
-					RealValue:    structs.ParameterRealValue{ClusterValue: "3"},
+					ParamId:       3,
+					Name:          "test_param_3",
+					ComponentType: "PD",
+					HasReboot:     0,
+					Source:        3,
+					RealValue:     clusterpb.ParamRealValueDTO{Cluster: "3"},
 				},
 				{
-					ParameterId:  "4",
-					Name:         "test_param_4",
-					InstanceType: "TiDB",
-					HasReboot:    0,
-					UpdateSource: 3,
-					RealValue:    structs.ParameterRealValue{ClusterValue: "4"},
+					ParamId:       4,
+					Name:          "test_param_4",
+					ComponentType: "TiDB",
+					HasReboot:     0,
+					Source:        3,
+					RealValue:     clusterpb.ParamRealValueDTO{Cluster: "4"},
 				},
 				{
-					ParameterId:  "5",
-					Name:         "test_param_5",
-					InstanceType: "TiDB",
-					HasReboot:    0,
-					UpdateSource: 1,
-					RealValue:    structs.ParameterRealValue{ClusterValue: "5"},
+					ParamId:       5,
+					Name:          "test_param_5",
+					ComponentType: "TiDB",
+					HasReboot:     0,
+					Source:        1,
+					RealValue:     clusterpb.ParamRealValueDTO{Cluster: "5"},
 				},
 			},
 		})
@@ -759,16 +755,16 @@ func Test_refreshParameter(t *testing.T) {
 				ClusterName: "test-tidb",
 			},
 		})
-		refreshCtx.SetData(contextModifyParamsKey, &parametergroup.ModifyParam{
-			Reboot: true,
-			Params: []*parametergroup.ApplyParam{
+		refreshCtx.SetData(contextModifyParamsKey, &ModifyParam{
+			NeedReboot: true,
+			Params: []*ApplyParam{
 				{
-					ParameterId:  "1",
-					Name:         "test_param_1",
-					InstanceType: "TiDB",
-					HasReboot:    1,
-					UpdateSource: 0,
-					RealValue:    structs.ParameterRealValue{ClusterValue: "1"},
+					ParamId:       1,
+					Name:          "test_param_1",
+					ComponentType: "TiDB",
+					HasReboot:     1,
+					Source:        0,
+					RealValue:     clusterpb.ParamRealValueDTO{Cluster: "1"},
 				},
 			},
 		})

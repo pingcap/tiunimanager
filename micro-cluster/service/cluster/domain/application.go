@@ -27,8 +27,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
-
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 
@@ -467,7 +465,7 @@ func GetClusterDetail(ctx ctx.Context, clusterId string) (*ClusterAggregation, e
 	return cluster, err
 }
 
-func ModifyParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string, modifyParam *parametergroup.ModifyParam) (*ClusterAggregation, error) {
+func ModifyParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string, modifyParam *ModifyParam) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
 	b, err := json.Marshal(modifyParam.Params)
@@ -858,34 +856,34 @@ func syncTopology(task *TaskEntity, context *FlowContext) bool {
 func modifyParameters(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 
-	modifyParam := context.GetData(contextModifyParamsKey).(*parametergroup.ModifyParam)
-	getLoggerWithContext(context).Debugf("got modify need reboot: %v, params size: %d", modifyParam.Reboot, len(modifyParam.Params))
+	modifyParam := context.GetData(contextModifyParamsKey).(*ModifyParam)
+	getLoggerWithContext(context).Debugf("got modify need reboot: %v, params size: %d", modifyParam.NeedReboot, len(modifyParam.Params))
 
 	// grouping by parameter source
-	paramContainer := make(map[interface{}][]*parametergroup.ApplyParam, 0)
+	paramContainer := make(map[interface{}][]*ApplyParam, 0)
 	for i, param := range modifyParam.Params {
 		// if source is 2, then insert tiup and sql respectively
-		getLoggerWithContext(context).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.ClusterValue)
-		if param.UpdateSource == int(parametergroup.TiupAndSql) {
-			putParamContainer(paramContainer, int32(parametergroup.TiUP), param)
-			putParamContainer(paramContainer, int32(parametergroup.SQL), param)
+		getLoggerWithContext(context).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.Cluster)
+		if param.Source == int32(TiupAndSql) {
+			putParamContainer(paramContainer, int32(TiUP), param)
+			putParamContainer(paramContainer, int32(SQL), param)
 		} else {
-			putParamContainer(paramContainer, param.UpdateSource, param)
+			putParamContainer(paramContainer, param.Source, param)
 		}
 	}
 
 	for source, params := range paramContainer {
 		getLoggerWithContext(context).Debugf("loop current param container source: %v, params size: %d", source, len(params))
-		switch source.(int) {
-		case int(parametergroup.TiUP):
+		switch source.(int32) {
+		case int32(TiUP):
 			if !tiupEditConfig(context, task, params, clusterAggregation) {
 				return false
 			}
-		case int(parametergroup.SQL):
+		case int32(SQL):
 			if !sqlEditConfig(context, task, params, clusterAggregation) {
 				return false
 			}
-		case int(parametergroup.API):
+		case int32(API):
 			if !apiEditConfig(context, task, params, clusterAggregation) {
 				return false
 			}
@@ -895,16 +893,16 @@ func modifyParameters(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
-func sqlEditConfig(context *FlowContext, task *TaskEntity, params []*parametergroup.ApplyParam, clusterAggregation *ClusterAggregation) bool {
+func sqlEditConfig(context *FlowContext, task *TaskEntity, params []*ApplyParam, clusterAggregation *ClusterAggregation) bool {
 	topo := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 	tidbServer := topo.TiDBServers[rand.Intn(len(topo.TiDBServers))]
 	configs := make([]secondparty.ClusterComponentConfig, len(params))
 	for i, param := range params {
 		configs[i] = secondparty.ClusterComponentConfig{
-			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.InstanceType)),
+			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.ComponentType)),
 			// todo: should be replaced with the system variable corresponding to the parameter
 			ConfigKey:   param.Name,
-			ConfigValue: param.RealValue.ClusterValue,
+			ConfigValue: param.RealValue.Cluster,
 		}
 	}
 	req := secondparty.ClusterEditConfigReq{
@@ -925,11 +923,11 @@ func sqlEditConfig(context *FlowContext, task *TaskEntity, params []*parametergr
 	return true
 }
 
-func apiEditConfig(context *FlowContext, task *TaskEntity, params []*parametergroup.ApplyParam, clusterAggregation *ClusterAggregation) bool {
-	compContainer := make(map[interface{}][]*parametergroup.ApplyParam, 0)
+func apiEditConfig(context *FlowContext, task *TaskEntity, params []*ApplyParam, clusterAggregation *ClusterAggregation) bool {
+	compContainer := make(map[interface{}][]*ApplyParam, 0)
 	for i, param := range params {
-		getLoggerWithContext(context).Debugf("loop %d api componet type: %v, param name: %v", i, param.InstanceType, param.Name)
-		putParamContainer(compContainer, param.InstanceType, param)
+		getLoggerWithContext(context).Debugf("loop %d api componet type: %v, param name: %v", i, param.ComponentType, param.Name)
+		putParamContainer(compContainer, param.ComponentType, param)
 	}
 	if len(compContainer) > 0 {
 		for comp, params := range compContainer {
@@ -979,7 +977,7 @@ func apiEditConfig(context *FlowContext, task *TaskEntity, params []*parametergr
 	return true
 }
 
-func tiupEditConfig(context *FlowContext, task *TaskEntity, params []*parametergroup.ApplyParam, clusterAggregation *ClusterAggregation) bool {
+func tiupEditConfig(context *FlowContext, task *TaskEntity, params []*ApplyParam, clusterAggregation *ClusterAggregation) bool {
 	configs := make([]secondparty.GlobalComponentConfig, len(params))
 	for i, param := range params {
 		cm := map[string]interface{}{}
@@ -990,7 +988,7 @@ func tiupEditConfig(context *FlowContext, task *TaskEntity, params []*parameterg
 		}
 		cm[param.Name] = clusterValue
 		configs[i] = secondparty.GlobalComponentConfig{
-			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.InstanceType)),
+			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.ComponentType)),
 			ConfigMap:            cm,
 		}
 	}
@@ -1013,38 +1011,38 @@ func tiupEditConfig(context *FlowContext, task *TaskEntity, params []*parameterg
 	return getTaskStatusByTaskId(context, task)
 }
 
-func convertRealParamType(context *FlowContext, param *parametergroup.ApplyParam) (interface{}, error) {
+func convertRealParamType(context *FlowContext, param *ApplyParam) (interface{}, error) {
 	switch param.Type {
-	case int(parametergroup.Integer):
-		c, err := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)
+	case int32(Integer):
+		c, err := strconv.ParseInt(param.RealValue.Cluster, 0, 64)
 		if err != nil {
 			getLoggerWithContext(context).Errorf("strconv realvalue type int fail, err = %s", err.Error())
 			return nil, err
 		}
 		return c, nil
-	case int(parametergroup.Boolean):
-		c, err := strconv.ParseBool(param.RealValue.ClusterValue)
+	case int32(Boolean):
+		c, err := strconv.ParseBool(param.RealValue.Cluster)
 		if err != nil {
 			getLoggerWithContext(context).Errorf("strconv realvalue type bool fail, err = %s", err.Error())
 			return nil, err
 		}
 		return c, nil
-	case int(parametergroup.Float):
-		c, err := strconv.ParseFloat(param.RealValue.ClusterValue, 64)
+	case int32(Float):
+		c, err := strconv.ParseFloat(param.RealValue.Cluster, 64)
 		if err != nil {
 			getLoggerWithContext(context).Errorf("strconv realvalue type float fail, err = %s", err.Error())
 			return nil, err
 		}
 		return c, nil
 	default:
-		return param.RealValue.ClusterValue, nil
+		return param.RealValue.Cluster, nil
 	}
 }
 
-func putParamContainer(paramContainer map[interface{}][]*parametergroup.ApplyParam, key interface{}, param *parametergroup.ApplyParam) {
+func putParamContainer(paramContainer map[interface{}][]*ApplyParam, key interface{}, param *ApplyParam) {
 	params := paramContainer[key]
 	if params == nil {
-		paramContainer[key] = []*parametergroup.ApplyParam{param}
+		paramContainer[key] = []*ApplyParam{param}
 	} else {
 		params = append(params, param)
 		paramContainer[key] = params
@@ -1055,11 +1053,11 @@ func refreshParameter(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 
-	modifyParam := context.GetData(contextModifyParamsKey).(*parametergroup.ModifyParam)
-	getLoggerWithContext(context).Debugf("got modify need reboot: %v, params size: %d", modifyParam.Reboot, len(modifyParam.Params))
+	modifyParam := context.GetData(contextModifyParamsKey).(*ModifyParam)
+	getLoggerWithContext(context).Debugf("got modify need reboot: %v, params size: %d", modifyParam.NeedReboot, len(modifyParam.Params))
 
 	// need tiup reload config
-	if modifyParam.Reboot {
+	if modifyParam.NeedReboot {
 		req := secondparty.CmdReloadConfigReq{
 			TiUPComponent: secondparty.ClusterComponentTypeStr,
 			InstanceName:  cluster.ClusterName,

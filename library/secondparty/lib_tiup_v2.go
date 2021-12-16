@@ -397,35 +397,14 @@ func (manager *SecondPartyManager) ClusterShowConfig(ctx context.Context, req *C
 	args = append(args, req.InstanceName)
 	args = append(args, req.Flags...)
 
-	logInFunc := framework.LogWithContext(ctx)
-	logInFunc.Info("operation start processing:", fmt.Sprintf("tiuppath:%s tiupargs:%v timeouts:%d",
-		manager.TiUPBinPath, args, req.TimeoutS))
-	var cmd *exec.Cmd
-	var cancelFp context.CancelFunc
-	if req.TimeoutS != 0 {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(req.TimeoutS)*time.Second)
-		cancelFp = cancel
-		cmd = exec.CommandContext(ctx, manager.TiUPBinPath, args...)
-	} else {
-		cmd = exec.Command(manager.TiUPBinPath, args...)
-		cancelFp = func() {}
-	}
-	defer cancelFp()
-	cmd.SysProcAttr = genSysProcAttr()
-	var out, stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	var data []byte
-	if data, err = cmd.Output(); err != nil {
-		logInFunc.Errorf("cmd start err: %+v, errstr: %s", err, stderr.String())
-		err = fmt.Errorf("cmd start err: %+v, errstr: %s", err, stderr.String())
-		return
+	topoStr, err := manager.startSyncTiUPOperation(ctx, args, req.TimeoutS)
+	if err != nil {
+		return nil, err
 	}
 
-	topoStr := string(data)
 	topo := &spec2.Specification{}
 	if err = yaml.UnmarshalStrict([]byte(topoStr), topo); err != nil {
-		logInFunc.Errorf("parse original config(%s) error: %+v", topoStr, err)
+		framework.LogWithContext(ctx).Errorf("parse original config(%s) error: %+v", topoStr, err)
 		return
 	}
 
@@ -905,8 +884,7 @@ func (manager *SecondPartyManager) startSyncTiUPOperation(ctx context.Context, a
 	}
 	defer cancelFp()
 	cmd.SysProcAttr = genSysProcAttr()
-	var out, stderr bytes.Buffer
-	cmd.Stdout = &out
+	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	data, err := cmd.Output()
 	if err != nil {

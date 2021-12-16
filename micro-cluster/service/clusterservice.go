@@ -341,9 +341,9 @@ func (handler *ClusterServiceHandler) CloneCluster(ctx context.Context, req *clu
 	request := cluster.CloneClusterReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, err := handler.clusterManager.Clone(ctx, &request)
+		result, err := handler.clusterManager.Clone(ctx, request)
 
-		handleResponse(ctx, resp, err, *result, nil)
+		handleResponse(ctx, resp, err, result, nil)
 	}
 
 	return nil

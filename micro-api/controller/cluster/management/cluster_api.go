@@ -34,6 +34,8 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
 
+const ParamClusterID = "clusterId"
+
 // Create create a cluster
 // @Summary create a cluster
 // @Description create a cluster
@@ -324,12 +326,14 @@ func DescribeMonitor(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters/scale-out [post]
+// @Router /clusters/{clusterId}/scale-out [post]
 func ScaleOut(c *gin.Context) {
-	var request cluster.ScaleOutClusterReq
-
 	// handle scale out request and call rpc method
-	if body, ok := controller.HandleJsonRequestFromBody(c, &request); ok {
+	if body, ok := controller.HandleJsonRequestFromBody(c, &cluster.ScaleOutClusterReq{},
+		func(c *gin.Context, req interface{}) error {
+			req.(*cluster.ScaleOutClusterReq).ClusterID = c.Param(ParamClusterID)
+			return nil
+		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.ScaleOutCluster,
 			&cluster.ScaleOutClusterResp{}, body, controller.DefaultTimeout)
 	}
@@ -348,12 +352,14 @@ func ScaleOut(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters/scale-in [post]
+// @Router /clusters/{clusterId}/scale-in [post]
 func ScaleIn(c *gin.Context) {
-	var request cluster.ScaleInClusterReq
-
 	// handle scale in request and call rpc method
-	if body, ok := controller.HandleJsonRequestFromBody(c, &request); ok {
+	if body, ok := controller.HandleJsonRequestFromBody(c, &cluster.ScaleInClusterReq{},
+		func(c *gin.Context, req interface{}) error {
+			req.(*cluster.ScaleInClusterReq).ClusterID = c.Param(ParamClusterID)
+			return nil
+		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.ScaleInCluster,
 			&cluster.ScaleInClusterResp{}, body, controller.DefaultTimeout)
 	}
@@ -373,10 +379,8 @@ func ScaleIn(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/clone [post]
 func Clone(c *gin.Context) {
-	var request cluster.CloneClusterReq
-
 	// handle clone cluster request and call rpc method
-	if body, ok := controller.HandleJsonRequestFromBody(c, &request); ok {
+	if body, ok := controller.HandleJsonRequestFromBody(c, &cluster.CloneClusterReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CloneCluster,
 			&cluster.CloneClusterResp{}, body, controller.DefaultTimeout)
 	}

@@ -13,58 +13,33 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package common
+package handler
 
 import (
-	"context"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"time"
-
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
-	"gorm.io/gorm"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-type Entity struct {
-	ID        string    `gorm:"primarykey"`
-	CreatedAt time.Time `gorm:"<-:create"`
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+func TestContain(t *testing.T) {
+	ports := []int{4000, 4001, 4002}
+	got := Contain(ports, 4000)
+	assert.Equal(t, got, true)
 
-	TenantId string `gorm:"default:null;not null;<-:create"`
-	Status   string `gorm:"not null;"`
+	got = Contain(ports, 4003)
+	assert.Equal(t, got, false)
+
+	hosts := []string{"127.0.0.1", "127.0.0.2"}
+	got = Contain(hosts, "127.0.0.1")
+	assert.Equal(t, got, true)
+
+	got = Contain(hosts, "127.0.0.3")
+	assert.Equal(t, got, false)
 }
 
-func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
-	e.ID = uuidutil.GenerateID()
-	return nil
+func TestScaleOutPreCheck(t *testing.T) {
+
 }
 
-type GormDB struct {
-	db *gorm.DB
-}
-
-func WrapDB(db *gorm.DB) GormDB {
-	return GormDB{db: db}
-}
-
-func (m *GormDB) DB(ctx context.Context) *gorm.DB {
-	return m.db.WithContext(ctx)
-}
-
-// WrapDBError
-// @Description:
-// @Parameter err
-// @return error is nil or TiEMError
-func WrapDBError(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	switch err.(type) {
-	case framework.TiEMError:
-		return err
-	default:
-		return framework.NewTiEMErrorf(common.TIEM_UNRECOGNIZED_ERROR, err.Error())
-	}
+func TestWaitWorkflow(t *testing.T) {
+	//TODO: test WaitWorkflow
 }

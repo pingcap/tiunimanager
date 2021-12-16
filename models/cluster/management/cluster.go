@@ -27,7 +27,7 @@ import (
 type Cluster struct {
 	common.Entity
 	Name              string                             `gorm:"not null;size:64;uniqueIndex;comment:'user name of the cluster''"`
-	DBUser            string                             `gorm:"not null;size:64;comment:'user name of the database''"`
+	DBUser            string                             `gorm:"not null;size:64;default:root;comment:'user name of the database''"`
 	DBPassword        string                             `gorm:"not null;size:64;comment:'user password of the database''"`
 	Type              string                             `gorm:"not null;size:16;comment:'type of the cluster, eg. TiDB、TiDB Migration';"`
 	Version           string                             `gorm:"not null;size:64;comment:'version of the cluster'"`

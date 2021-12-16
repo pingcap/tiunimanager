@@ -28,6 +28,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/pingcap-inc/tiem/common/constants"
+
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -64,6 +66,8 @@ func mockClusterMeta() *handler.ClusterMeta {
 		Cluster: mockCluster(),
 		Instances: map[string][]*management.ClusterInstance{
 			"TiDB": mockClusterInstances(),
+			"TiKV": mockClusterInstances(),
+			"PD":   mockClusterInstances(),
 		},
 		NodeExporterPort:     9091,
 		BlackboxExporterPort: 9092,
@@ -95,7 +99,7 @@ func mockCluster() *management.Cluster {
 func mockClusterInstances() []*management.ClusterInstance {
 	return []*management.ClusterInstance{
 		{
-			Entity:       common.Entity{ID: "123", TenantId: "1", Status: "1"},
+			Entity:       common.Entity{ID: "123", TenantId: "1", Status: string(constants.ClusterInstanceRunning)},
 			Type:         "0",
 			Version:      "5.0",
 			ClusterID:    "123",

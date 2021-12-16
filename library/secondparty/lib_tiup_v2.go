@@ -344,48 +344,13 @@ func (manager *SecondPartyManager) ClusterDisplay(ctx context.Context, tiUPCompo
 	instanceName string, timeoutS int, flags []string) (resp *CmdDisplayResp, err error) {
 	framework.LogWithContext(ctx).Infof("clusterdisplay tiupcomponent: %s,  instanceName: %s, "+
 		"timeouts: %d, flags: %v", string(tiUPComponent), instanceName, timeoutS, flags)
-	var req CmdDisplayReq
-	req.TiUPComponent = tiUPComponent
-	req.InstanceName = instanceName
-	req.TimeoutS = timeoutS
-	req.TiUPPath = manager.TiUPBinPath
-	req.Flags = flags
-	cmdDisplayResp, err := manager.startTiUPDisplayOperation(ctx, &req)
-	return &cmdDisplayResp, err
-}
-
-func (manager *SecondPartyManager) startTiUPDisplayOperation(ctx context.Context, req *CmdDisplayReq) (resp CmdDisplayResp,
-	err error) {
 	var args []string
-	args = append(args, string(req.TiUPComponent), "display")
-	args = append(args, req.InstanceName)
-	args = append(args, req.Flags...)
-
-	logInFunc := framework.LogWithContext(ctx)
-	logInFunc.Info("operation starts processing:", fmt.Sprintf("tiuppath:%s tiupargs:%v timeouts:%d",
-		req.TiUPPath, args, req.TimeoutS))
-	var cmd *exec.Cmd
-	var cancelFp context.CancelFunc
-	if req.TimeoutS != 0 {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(req.TimeoutS)*time.Second)
-		cancelFp = cancel
-		cmd = exec.CommandContext(ctx, req.TiUPPath, args...)
-	} else {
-		cmd = exec.Command(req.TiUPPath, args...)
-		cancelFp = func() {}
-	}
-	defer cancelFp()
-	cmd.SysProcAttr = genSysProcAttr()
-	var out, stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	var data []byte
-	if data, err = cmd.Output(); err != nil {
-		logInFunc.Errorf("cmd start err: %+v, errstr: %s", err, stderr.String())
-		err = fmt.Errorf("cmd start err: %+v, errstr: %s", err, stderr.String())
-		return
-	}
-	resp.DisplayRespString = string(data)
+	args = append(args, string(tiUPComponent), "display")
+	args = append(args, instanceName)
+	args = append(args, flags...)
+	result, err := manager.startSyncTiUPOperation(ctx, args, timeoutS)
+	resp = &CmdDisplayResp{}
+	resp.DisplayRespString = result
 	return
 }
 
@@ -432,35 +397,14 @@ func (manager *SecondPartyManager) ClusterShowConfig(ctx context.Context, req *C
 	args = append(args, req.InstanceName)
 	args = append(args, req.Flags...)
 
-	logInFunc := framework.LogWithContext(ctx)
-	logInFunc.Info("operation start processing:", fmt.Sprintf("tiuppath:%s tiupargs:%v timeouts:%d",
-		manager.TiUPBinPath, args, req.TimeoutS))
-	var cmd *exec.Cmd
-	var cancelFp context.CancelFunc
-	if req.TimeoutS != 0 {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(req.TimeoutS)*time.Second)
-		cancelFp = cancel
-		cmd = exec.CommandContext(ctx, manager.TiUPBinPath, args...)
-	} else {
-		cmd = exec.Command(manager.TiUPBinPath, args...)
-		cancelFp = func() {}
-	}
-	defer cancelFp()
-	cmd.SysProcAttr = genSysProcAttr()
-	var out, stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	var data []byte
-	if data, err = cmd.Output(); err != nil {
-		logInFunc.Errorf("cmd start err: %+v, errstr: %s", err, stderr.String())
-		err = fmt.Errorf("cmd start err: %+v, errstr: %s", err, stderr.String())
-		return
+	topoStr, err := manager.startSyncTiUPOperation(ctx, args, req.TimeoutS)
+	if err != nil {
+		return nil, err
 	}
 
-	topoStr := string(data)
 	topo := &spec2.Specification{}
 	if err = yaml.UnmarshalStrict([]byte(topoStr), topo); err != nil {
-		logInFunc.Errorf("parse original config(%s) error: %+v", topoStr, err)
+		framework.LogWithContext(ctx).Errorf("parse original config(%s) error: %+v", topoStr, err)
 		return
 	}
 
@@ -910,6 +854,45 @@ func (manager *SecondPartyManager) startTiUPTransferOperation(ctx context.Contex
 		args = append(args, "--yes")
 		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
 	}()
+}
+
+func (manager *SecondPartyManager) ClusterComponentCtl(ctx context.Context, str TiUPComponentTypeStr,
+	clusterVersion string, component spec.TiDBClusterComponent, flags []string, timeoutS int) (string, error) {
+	framework.LogWithContext(ctx).Infof("clustercomponentctl tiupcomponent: %s,  clusterversion: %s. "+
+		"component: %s, flags: %v", string(str), clusterVersion, string(component), flags)
+	var args []string
+	args = append(args, fmt.Sprintf("%s:%s", string(str), clusterVersion))
+	args = append(args, string(component))
+	args = append(args, flags...)
+	return manager.startSyncTiUPOperation(ctx, args, timeoutS)
+}
+
+func (manager *SecondPartyManager) startSyncTiUPOperation(ctx context.Context, args []string,
+	timeoutS int) (result string, err error) {
+	logInFunc := framework.LogWithContext(ctx)
+	logInFunc.Info("operation starts processing:", fmt.Sprintf("tiuppath:%s tiupargs:%v timeouts:%d",
+		manager.TiUPBinPath, args, timeoutS))
+	var cmd *exec.Cmd
+	var cancelFp context.CancelFunc
+	if timeoutS != 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutS)*time.Second)
+		cancelFp = cancel
+		cmd = exec.CommandContext(ctx, manager.TiUPBinPath, args...)
+	} else {
+		cmd = exec.Command(manager.TiUPBinPath, args...)
+		cancelFp = func() {}
+	}
+	defer cancelFp()
+	cmd.SysProcAttr = genSysProcAttr()
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	data, err := cmd.Output()
+	if err != nil {
+		logInFunc.Errorf("cmd start err: %+v, errstr: %s", err, stderr.String())
+		err = fmt.Errorf("cmd start err: %+v, errstr: %s", err, stderr.String())
+		return "", err
+	}
+	return string(data), nil
 }
 
 func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, operationID string, tiUPPath string,

@@ -49,7 +49,7 @@ func (mgr *DirManager) GetImportPath(ctx context.Context, clusterId string) (str
 		return "", fmt.Errorf("marshal request error: %s", err.Error())
 	}
 
-	rpcResp, err := client.ClusterClient.QueryDataTransport(ctx, &clusterpb.RpcRequest{Request: string(body)}, controller.DefaultTimeout)
+	rpcResp, err := client.ClusterClient.GetSystemConfig(ctx, &clusterpb.RpcRequest{Request: string(body)}, controller.DefaultTimeout)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call cluster service api failed %s", err.Error())
 		return "", fmt.Errorf("call cluster service api failed %s", err.Error())

@@ -18,13 +18,14 @@ package management
 import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
-	resourceType "github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
+	resourceStructs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
 	"strconv"
@@ -36,17 +37,63 @@ import (
 func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
-	// Alloc resource for new instances
-	allocID, err := clusterMeta.AllocInstanceResource(context.Context)
+	globalAllocId := uuidutil.GenerateID()
+	instanceAllocId := uuidutil.GenerateID()
 
+	globalRequirement, err := clusterMeta.GenerateGlobalPortRequirements(context)
+	if err != nil {
+		framework.LogWithContext(context).Errorf("generate global port requirements failed, clusterId = %s", clusterMeta.Cluster.ID)
+		return err
+	}
+	instanceRequirement, instances, err := clusterMeta.GenerateInstanceResourceRequirements(context)
+	if err != nil {
+		framework.LogWithContext(context).Errorf("generate instance resource requirements failed, clusterId = %s", clusterMeta.Cluster.ID)
+		return err
+	}
+	batchReq := &resourceStructs.BatchAllocRequest {
+		BatchRequests: []resourceStructs.AllocReq {
+			{
+				Applicant: resourceStructs.Applicant {
+					HolderId: clusterMeta.Cluster.ID,
+					RequestId: instanceAllocId,
+					TakeoverOperation: false,
+				},
+				Requires: instanceRequirement,
+			},
+		},
+	}
+
+	if len(globalRequirement) > 0 {
+		batchReq.BatchRequests = append(batchReq.BatchRequests, resourceStructs.AllocReq {
+			Applicant: resourceStructs.Applicant {
+				HolderId: clusterMeta.Cluster.ID,
+				RequestId: globalAllocId,
+				TakeoverOperation: false,
+			},
+			Requires: globalRequirement,
+		})
+	}
+
+	allocResponse, err := resourceManagement.GetManagement().GetAllocatorRecycler().AllocResources(context, batchReq)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster[%s] alloc resource error: %s", clusterMeta.Cluster.Name, err.Error())
 		return err
 	}
-	context.SetData(ContextAllocId, allocID)
-	framework.LogWithContext(context.Context).Infof(
-		"cluster[%s] alloc resource request id: %s", clusterMeta.Cluster.Name, allocID)
+	context.SetData(ContextAllocResource, allocResponse)
+
+	for _, resourceResult := range allocResponse.BatchResults {
+		switch resourceResult.RequestId {
+		case globalAllocId:
+			ports := resourceResult.Results[0].PortRes[0]
+			clusterMeta.ApplyGlobalPortResource(ports.Ports[0], ports.Ports[1])
+		case instanceAllocId:
+			clusterMeta.ApplyInstanceResource(resourceResult, instances)
+		default:
+			framework.LogWithContext(context).Errorf("unexpected request id in allocResponse, %v", resourceResult.Applicant)
+			continue
+		}
+	}
 
 	return nil
 }
@@ -122,12 +169,40 @@ func scaleInCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 }
 
 // freeInstanceResource
-// @Description: todo
+// @Description: free instance resource
 func freeInstanceResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	instanceID := context.GetData(ContextInstanceID).(string)
 
-	err := clusterMeta.DeleteInstance(context.Context, instanceID)
+	instance, err := clusterMeta.DeleteInstance(context.Context, instanceID)
+	// recycle instance resource
+	request := &resourceStructs.RecycleRequest{
+		RecycleReqs: []resourceStructs.RecycleRequire{
+			{
+				RecycleType: resourceStructs.RecycleHost,
+				HolderID:    instance.ClusterID,
+				HostID:      instance.HostID,
+				ComputeReq: resourceStructs.ComputeRequirement{
+					ComputeResource: resourceStructs.ComputeResource{
+						CpuCores: int32(instance.CpuCores),
+						Memory:   int32(instance.Memory),
+					},
+				},
+				DiskReq: []resourceStructs.DiskResource{
+					{
+						DiskId: instance.DiskID,
+					},
+				},
+				PortReq: []resourceStructs.PortResource{
+					{
+						Ports: instance.Ports,
+					},
+				},
+			},
+		},
+	}
+	err = resourceManagement.GetManagement().GetAllocatorRecycler().RecycleResources(context, request)
+
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster[%s] delete instance[%s] error: %s", clusterMeta.Cluster.Name, instanceID, err.Error())
@@ -215,24 +290,28 @@ func setClusterOffline(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 // revertResourceAfterFailure
 // @Description: revert allocated resource after creating, scaling out
 func revertResourceAfterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	allocID := context.GetData(ContextAllocId)
-	if allocID != nil {
-		request := &resourceType.RecycleRequest{
-			RecycleReqs: []resourceType.RecycleRequire{
-				{
-					RecycleType: resourceType.RecycleOperate,
-					RequestID:   allocID.(string),
-				},
-			},
+	resource := context.GetData(ContextAllocResource).(*resourceStructs.BatchAllocResponse)
+
+	if resource != nil && len(resource.BatchResults) > 0 {
+		request := &resourceStructs.RecycleRequest{
+			RecycleReqs: []resourceStructs.RecycleRequire{},
 		}
-		resourceManager := resourceManagement.NewResourceManager()
-		err := resourceManager.RecycleResources(context.Context, request)
+
+		for _, v := range resource.BatchResults {
+			request.RecycleReqs = append(request.RecycleReqs, resourceStructs.RecycleRequire{
+				RecycleType: resourceStructs.RecycleOperate,
+				RequestID:   v.RequestId,
+			})
+		}
+
+		err := resourceManagement.GetManagement().GetAllocatorRecycler().RecycleResources(context.Context, request)
 		if err != nil {
 			framework.LogWithContext(context.Context).Errorf(
-				"recycle request id[%s] resources error, %s", allocID.(string), err.Error())
+				"recycle resources error, %s", err.Error())
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -419,11 +498,19 @@ func deleteCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 	return clusterMeta.Delete(context)
 }
 
-// freedResource
+// freedClusterResource
 // @Description: freed resource
-func freedResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+func freedClusterResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
-	err := clusterMeta.FreedInstanceResource(context)
+	request := &resourceStructs.RecycleRequest{
+		RecycleReqs: []resourceStructs.RecycleRequire{
+			{
+				RecycleType: resourceStructs.RecycleHolder,
+				HolderID:    clusterMeta.Cluster.ID,
+			},
+		},
+	}
+	err := resourceManagement.GetManagement().GetAllocatorRecycler().RecycleResources(context, request)
 
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -449,7 +536,7 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	tidbServerPort := clusterMeta.GetClusterConnectAddresses()[0].Port
 	req := secondparty.ClusterSetDbPswReq{
 		DbConnParameter: secondparty.DbConnParam{
-			Username: "root", //todo: replace admin account
+			Username: cluster.DBUser,
 			Password: cluster.DBPassword,
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),

@@ -19,13 +19,12 @@ import (
 	"bytes"
 	"context"
 	"github.com/pingcap-inc/tiem/common/constants"
+	newConstants "github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
-	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
+	resource "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
@@ -54,7 +53,6 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 			Status:   string(constants.ClusterInitializing),
 		},
 		Name:              param.Name,
-		DBUser:            param.DBUser,
 		DBPassword:        param.DBPassword,
 		Type:              param.Type,
 		Version:           param.Version,
@@ -68,6 +66,12 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 		CpuArchitecture:   constants.ArchType(param.CpuArchitecture),
 		MaintenanceStatus: constants.ClusterMaintenanceNone,
 		MaintainWindow:    "",
+	}
+	// default user
+	if len(param.DBUser) == 0 {
+		p.Cluster.DBUser = "root"
+	} else {
+		p.Cluster.DBUser = param.DBUser
 	}
 	_, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
 	if err == nil {
@@ -108,7 +112,7 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 					ClusterID:    p.Cluster.ID,
 					CpuCores:     int8(knowledge.ParseCpu(item.Spec)),
 					Memory:       int8(knowledge.ParseMemory(item.Spec)),
-					Zone:         resource.GetDomainNameFromCode(item.Zone),
+					Zone:         structs.GetDomainNameFromCode(item.Zone),
 					DiskType:     item.DiskType,
 					DiskCapacity: int32(item.DiskCapacity),
 				}
@@ -120,12 +124,13 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 	return nil
 }
 
-func (p *ClusterMeta) GenerateInstanceResourceRequirements(instances []*management.ClusterInstance) []resource.AllocRequirement {
+func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance, error) {
+	instances := p.GetInstanceByStatus(ctx, constants.ClusterInstanceInitializing)
 	requirements := make([]resource.AllocRequirement, 0)
 	for _, instance := range instances {
 		portRange := knowledge.GetComponentPortRange(p.Cluster.Type, p.Cluster.Version, instance.Type)
 		requirements = append(requirements, resource.AllocRequirement{
-			Location: resource.Location{
+			Location: structs.Location{
 				Region: p.Cluster.Region,
 				Zone:   instance.Zone,
 			},
@@ -144,8 +149,10 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(instances []*manageme
 					DiskType: instance.DiskType,
 				},
 				ComputeReq: resource.ComputeRequirement{
-					CpuCores: int32(instance.CpuCores),
-					Memory:   int32(instance.Memory),
+					ComputeResource: resource.ComputeResource{
+						CpuCores: int32(instance.CpuCores),
+						Memory:   int32(instance.Memory),
+					},
 				},
 			},
 			Count: 1,
@@ -155,15 +162,20 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(instances []*manageme
 			Strategy: resource.RandomRack,
 		})
 	}
-	return requirements
+	return requirements, instances, nil
 }
 
-func (p *ClusterMeta) GenerateGlobalMonitoredPortRequirements() []resource.AllocRequirement {
+func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) ([]resource.AllocRequirement, error) {
 	requirements := make([]resource.AllocRequirement, 0)
+
+	if p.Cluster.Status != string(constants.ClusterInitializing) {
+		framework.LogWithContext(ctx).Infof("cluster [%s] is not initializing, no need to alloc global port resource", p.Cluster.Name)
+		return requirements, nil
+	}
 
 	portRange := knowledge.GetClusterPortRange(p.Cluster.Type, p.Cluster.Version)
 	requirements = append(requirements, resource.AllocRequirement{
-		Location: resource.Location{Region: p.Cluster.Region},
+		Location: structs.Location{Region: p.Cluster.Region},
 		Require: resource.Requirement{
 			PortReq: []resource.PortRequirement{
 				{
@@ -173,7 +185,9 @@ func (p *ClusterMeta) GenerateGlobalMonitoredPortRequirements() []resource.Alloc
 				},
 			},
 			DiskReq:    resource.DiskRequirement{NeedDisk: false},
-			ComputeReq: resource.ComputeRequirement{CpuCores: 0, Memory: 0},
+			ComputeReq: resource.ComputeRequirement{
+				ComputeResource: resource.ComputeResource{},
+			},
 		},
 		Count: 1,
 		HostFilter: resource.Filter{
@@ -182,7 +196,7 @@ func (p *ClusterMeta) GenerateGlobalMonitoredPortRequirements() []resource.Alloc
 		Strategy: resource.ClusterPorts,
 	})
 
-	return requirements
+	return requirements, nil
 }
 
 func (p *ClusterMeta) ApplyGlobalPortResource(nodeExporterPort, blackboxExporterPort int32) {
@@ -190,85 +204,27 @@ func (p *ClusterMeta) ApplyGlobalPortResource(nodeExporterPort, blackboxExporter
 	p.BlackboxExporterPort = blackboxExporterPort
 }
 
-func (p *ClusterMeta) ApplyInstanceResource(resource *resource.BatchAllocResponse) {
-
+func (p *ClusterMeta) ApplyInstanceResource(resource *resource.AllocRsp, instances []*management.ClusterInstance) {
+	for i, instance := range instances {
+		instance.HostID = resource.Results[i].HostId
+		instance.HostIP = append(instance.HostIP, resource.Results[i].HostIp)
+		instance.Ports = resource.Results[i].PortRes[0].Ports
+		instance.DiskID = resource.Results[i].DiskRes.DiskId
+		instance.DiskPath = resource.Results[i].DiskRes.Path
+	}
 }
 
-// AllocInstanceResource
-// @Description alloc host ip, port and disk for all new instances
-// @Return		alloc request id
-// @Return		error
-func (p *ClusterMeta) AllocInstanceResource(ctx context.Context) (string, error) {
-	requestID := uuidutil.GenerateID()
+func (p *ClusterMeta) GetInstanceByStatus(ctx context.Context, status constants.ClusterInstanceRunningStatus) []*management.ClusterInstance{
 	instances := make([]*management.ClusterInstance, 0)
 	for _, components := range p.Instances {
 		for _, instance := range components {
-			if instance.Status != string(constants.ClusterInstanceInitializing) {
+			if instance.Status != string(status) {
 				continue
 			}
 			instances = append(instances, instance)
 		}
 	}
-
-	// Alloc instances resource
-	resourceManager := resourceManagement.NewResourceManager()
-	request := &resource.BatchAllocRequest{
-		BatchRequests: []resource.AllocReq{
-			{
-				Applicant: resource.Applicant{
-					HolderId:  p.Cluster.ID,
-					RequestId: requestID,
-				},
-				Requires: p.GenerateInstanceResourceRequirements(instances),
-			},
-		},
-	}
-	response, err := resourceManager.AllocResources(ctx, request)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf(
-			"cluster[%s] alloc instances resource error: %s", p.Cluster.Name, err.Error())
-		return "", err
-	}
-	for i, instance := range instances {
-		instance.HostID = response.BatchResults[0].Results[i].HostId
-		instance.HostIP = append(instance.HostIP, response.BatchResults[0].Results[i].HostIp)
-		instance.Ports = response.BatchResults[0].Results[i].PortRes[0].Ports
-		instance.DiskID = response.BatchResults[0].Results[i].DiskRes.DiskId
-		instance.DiskPath = response.BatchResults[0].Results[i].DiskRes.Path
-	}
-
-	// Alloc monitored ports resource
-	request = &resource.BatchAllocRequest{
-		BatchRequests: []resource.AllocReq{
-			{
-				Applicant: resource.Applicant{
-					HolderId:  p.Cluster.ID,
-					RequestId: requestID,
-				},
-				Requires: p.GenerateGlobalMonitoredPortRequirements(),
-			},
-		},
-	}
-	response, err = resourceManager.AllocResources(ctx, request)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf(
-			"cluster[%s] alloc monitored ports resource error: %s", p.Cluster.Name, err.Error())
-		return "", err
-	}
-
-	p.NodeExporterPort = response.BatchResults[0].Results[0].PortRes[0].Ports[0]
-	p.BlackboxExporterPort = response.BatchResults[0].Results[0].PortRes[0].Ports[1]
-
-	return requestID, nil
-}
-
-// FreedInstanceResource
-// @Description return host ip, port and disk for all existing instance
-// @Return
-// @Return		error
-func (p *ClusterMeta) FreedInstanceResource(ctx context.Context) error {
-	// todo
-	return nil
+	return instances
 }
 
 // GenerateTopologyConfig
@@ -347,41 +303,18 @@ func (p *ClusterMeta) IsComponentRequired(ctx context.Context, componentType str
 // @Description delete instance from cluster topology based on instance id
 // @Parameter	instance id (format: ip:port)
 // @Return		error
-func (p *ClusterMeta) DeleteInstance(ctx context.Context, instanceAddress string) error {
+func (p *ClusterMeta) DeleteInstance(ctx context.Context, instanceAddress string) (*management.ClusterInstance, error) {
 	instance, err := p.GetInstance(ctx, instanceAddress)
 	if err != nil {
-		return err
+		framework.LogWithContext(ctx).Errorf("get instance error, err : %s", err.Error())
+		return instance, err
 	}
-	// recycle instance resource
-	request := &resource.RecycleRequest{
-		RecycleReqs: []resource.RecycleRequire{
-			{
-				RecycleType: resource.RecycleHost,
-				HolderID:    instance.ClusterID,
-				HostID:      instance.HostID,
-				ComputeReq: resource.ComputeRequirement{
-					CpuCores: int32(instance.CpuCores),
-					Memory:   int32(instance.Memory),
-				},
-				DiskReq: resource.DiskResource{
-					DiskId: instance.DiskID,
-				},
-				PortReq: []resource.PortResource{
-					{
-						Ports: instance.Ports,
-					},
-				},
-			},
-		},
-	}
-	resourceManager := resourceManagement.NewResourceManager()
-	err = resourceManager.RecycleResources(ctx, request)
-	if err != nil {
-		return err
-	}
-
-	//TODO: delete from db
-	return nil
+	// todo remove from cluster meta
+	//err = models.GetClusterReaderWriter().Delete(ctx, instance.ID)
+	//if err != nil {
+	//	framework.LogWithContext(ctx).Errorf("delete instance failed, err : %s", err.Error())
+	//}
+	return instance, err
 }
 
 // CloneMeta
@@ -518,7 +451,17 @@ type ComponentAddress struct {
 // @Receiver p
 // @return []ComponentAddress
 func (p *ClusterMeta) GetClusterConnectAddresses() []ComponentAddress {
-	// got all tidb instances, then get connect addresses
+	instances := p.Instances[string(newConstants.ComponentIDTiDB)]
+	address := make([]ComponentAddress, 0)
+
+	for _, instance := range instances {
+		if instance.Status == string(constants.ClusterInstanceRunning) {
+			address = append(address, ComponentAddress{
+				IP:   instance.HostIP[0],
+				Port: int(instance.Ports[0]),
+			})
+		}
+	}
 	return nil
 }
 

@@ -49,6 +49,7 @@ func (rw *GormResourceReadWrite) allocForSingleRequest(ctx context.Context, tx *
 	log := framework.LogWithContext(ctx)
 	var choosedHosts []string
 	results = new(resource_structs.AllocRsp)
+	results.Applicant = req.Applicant
 	for i, require := range req.Requires {
 		switch resource_structs.AllocStrategy(require.Strategy) {
 		case resource_structs.RandomRack:

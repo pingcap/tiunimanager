@@ -40,8 +40,6 @@ func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
 	return nil
 }
 
-var split = []byte("_")
-
 type GormDB struct {
 	db *gorm.DB
 }

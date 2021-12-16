@@ -157,6 +157,27 @@ func TestGormClusterReadWrite_Delete(t *testing.T) {
 	})
 }
 
+func TestGormClusterReadWrite_DeleteInstance(t *testing.T) {
+	instance := &ClusterInstance{
+		Entity: common.Entity{
+			TenantId: "abc",
+		},
+		Type:      "TiDB",
+		Version:   "v5.0.0",
+		ClusterID: "testCluster",
+	}
+	t.Run("normal", func(t *testing.T) {
+		err := testRW.DB(context.TODO()).Create(instance).Error
+		assert.NoError(t, err)
+		err = testRW.DeleteInstance(context.TODO(), instance.ID)
+		assert.NoError(t, err)
+	})
+	t.Run("not found", func(t *testing.T) {
+		err := testRW.DeleteInstance(context.TODO(), "testInstance")
+		assert.Error(t, err)
+	})
+}
+
 func TestGormClusterReadWrite_DeleteRelation(t *testing.T) {
 	relation := &ClusterRelation{
 		ObjectClusterID:  "111",

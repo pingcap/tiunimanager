@@ -258,16 +258,20 @@ func setClusterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 // @Description: set cluster running status to constants.ClusterRunning
 func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
-	if clusterMeta.Cluster.Status == string(constants.ClusterInitializing) {
-		if err := clusterMeta.UpdateClusterStatus(context.Context, constants.ClusterRunning); err != nil {
-			framework.LogWithContext(context.Context).Errorf(
-				"update cluster[%s] status into running error: %s", clusterMeta.Cluster.Name, err.Error())
-			return err
+
+	// set instances status into running
+	for _, component := range clusterMeta.Instances {
+		for _, instance := range component {
+			if instance.Status != string(constants.ClusterInstanceRunning) {
+				instance.Status = string(constants.ClusterInstanceRunning)
+			}
 		}
 	}
+
+	// set cluster status into running
 	if err := clusterMeta.UpdateClusterStatus(context.Context, constants.ClusterRunning); err != nil {
 		framework.LogWithContext(context.Context).Errorf(
-			"update cluster[%s] instances status into running error: %s", clusterMeta.Cluster.Name, err.Error())
+			"update cluster[%s] status into running error: %s", clusterMeta.Cluster.Name, err.Error())
 		return err
 	}
 	framework.LogWithContext(context.Context).Infof(
@@ -279,6 +283,17 @@ func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 // @Description: set cluster running status to constants.Stopped
 func setClusterOffline(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+
+	// if instance status is running, set instances status into stopped
+	for _, component := range clusterMeta.Instances {
+		for _, instance := range component {
+			if instance.Status == string(constants.ClusterInstanceRunning) {
+				instance.Status = string(constants.ClusterStopped)
+			}
+		}
+	}
+
+	// set cluster status into stopped
 	if err := clusterMeta.UpdateClusterStatus(context.Context, constants.ClusterStopped); err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"update cluster[%s] status into stopped error: %s", clusterMeta.Cluster.Name, err.Error())

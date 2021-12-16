@@ -17,7 +17,9 @@ package handler
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -32,8 +34,9 @@ import (
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 )
 
-type Replication struct {
-	Replicas             int    `json:"count"`
+const CheckMaxReplicaCmd = "SELECT MAX(replica_count) as MaxReplicaCount FROM information_schema.tiflash_replica;"
+
+type PlacementRules struct {
 	EnablePlacementRules string `json:"enable-placement-rules"`
 }
 
@@ -78,7 +81,7 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 			if err != nil {
 				return err
 			}
-			replication := &Replication{}
+			replication := &PlacementRules{}
 			if err = json.Unmarshal([]byte(config), replication); err != nil {
 				return framework.WrapError(common.TIEM_UNMARSHAL_ERROR, "", err)
 			}
@@ -104,35 +107,24 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 		return framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter is invalid!")
 	}
 
-	if instance.Type == string(constants.ComponentIDTiFlash) {
-		var pdID string
-		for componentType, instances := range meta.Instances {
-			if componentType == string(constants.ComponentIDPD) {
-				pdID = strings.Join([]string{instances[0].HostIP[0],
-					strconv.Itoa(int(instances[0].Ports[0]))}, ":")
-				break
-			}
-		}
-
-		config, err := secondparty.Manager.ClusterComponentCtl(ctx, secondparty.CTLComponentTypeStr,
-			meta.Cluster.Version, spec.ComponentPD, []string{"-u", pdID, "config", "placement-rules", "show"}, 0)
-		if err != nil {
-			return err
-		}
-		replications := make([]Replication, 0)
-		if err = json.Unmarshal([]byte(config), replications); err != nil {
-			return framework.WrapError(common.TIEM_UNMARSHAL_ERROR, "", err)
-		}
-		maxReplicas := 0
-		for _, replica := range replications {
-			if replica.Replicas > maxReplicas {
-				maxReplicas = replica.Replicas
-			}
-		}
-		if len(meta.Instances[string(constants.ComponentIDTiFlash)])-1 < maxReplicas {
-			return framework.NewTiEMError(common.TIEM_CHECK_TIFLASH_MAX_REPLICAS_ERROR,
-				"the number of remaining TiFlash instances is less than the maximum copies of data tables")
-		}
+	address := meta.GetClusterConnectAddresses()
+	if len(address) <= 0 {
+		return framework.NewTiEMError(common.TIEM_NOT_FOUND_TIDB_ERROR, "component TiDB not found!")
+	}
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql",
+		meta.Cluster.DBUser, meta.Cluster.DBPassword, address[0].IP, address[0].Port))
+	if err != nil {
+		return framework.WrapError(common.TIEM_CONNECT_DB_ERROR, "", err)
+	}
+	defer db.Close()
+	MaxReplicaCount := 0
+	err = db.QueryRow(CheckMaxReplicaCmd).Scan(&MaxReplicaCount)
+	if err != nil {
+		return framework.WrapError(common.TIEM_SCAN_MAX_REPLICA_COUNT_ERROR, "", err)
+	}
+	if len(meta.Instances[string(constants.ComponentIDTiFlash)])-1 < MaxReplicaCount {
+		return framework.NewTiEMError(common.TIEM_CHECK_TIFLASH_MAX_REPLICAS_ERROR,
+			"the number of remaining TiFlash instances is less than the maximum copies of data tables")
 	}
 	return nil
 }

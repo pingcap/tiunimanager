@@ -308,10 +308,9 @@ var deleteClusterFlow = workflow.WorkFlowDefine{
 	FlowName: constants.FlowDeleteCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":              {"destroyCluster", "destroyClusterDone", "fail", workflow.PollingNode, destroyCluster},
-		"destroyClusterDone": {"deleteCluster", "deleteClusterDone", "fail", workflow.SyncFuncNode, deleteCluster},
-		"deleteClusterDone":  {"freedClusterResource", "freedResourceDone", "fail", workflow.SyncFuncNode, freedClusterResource},
-		"freedResourceDone":  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistCluster)},
-		"fail":               {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure)},
+		"destroyClusterDone": {"freedClusterResource", "freedResourceDone", "fail", workflow.SyncFuncNode, freedClusterResource},
+		"freedResourceDone":  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(deleteCluster)},
+		"fail":               {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 

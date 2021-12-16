@@ -82,7 +82,7 @@ func QueryDataTransport(c *gin.Context) {
 	var request message.QueryDataImportExportRecordsReq
 
 	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &request); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryDataTransport, message.QueryDataImportExportRecordsResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryDataTransport, &message.QueryDataImportExportRecordsResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

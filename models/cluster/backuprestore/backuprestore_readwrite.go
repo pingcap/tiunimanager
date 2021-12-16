@@ -79,9 +79,9 @@ func (m *BRReadWrite) GetBackupRecord(ctx context.Context, backupId string) (rec
 	return record, err
 }
 
-func (m *BRReadWrite) QueryBackupRecords(ctx context.Context, clusterId, backupId, backupMode string, startTime, endTime time.Time, page int, pageSize int) (records []*BackupRecord, total int64, err error) {
+func (m *BRReadWrite) QueryBackupRecords(ctx context.Context, clusterId, backupId, backupMode string, startTime, endTime int64, page int, pageSize int) (records []*BackupRecord, total int64, err error) {
 	records = make([]*BackupRecord, pageSize)
-	query := m.DB(ctx).Model(BackupRecord{})
+	query := m.DB(ctx).Model(&BackupRecord{}).Where("deleted_at is null")
 	if backupId != "" {
 		query = query.Where("id = ?", backupId)
 	}
@@ -91,10 +91,10 @@ func (m *BRReadWrite) QueryBackupRecords(ctx context.Context, clusterId, backupI
 	if clusterId != "" {
 		query = query.Where("cluster_id = ?", clusterId)
 	}
-	if !startTime.IsZero() {
+	if startTime > 0 {
 		query = query.Where("start_time >= ?", startTime)
 	}
-	if !endTime.IsZero() {
+	if endTime > 0 {
 		query = query.Where("end_time <= ?", endTime)
 	}
 	err = query.Order("id desc").Count(&total).Offset(pageSize * (page - 1)).Limit(pageSize).Find(&records).Error
@@ -131,7 +131,7 @@ func (m *BRReadWrite) GetBackupStrategy(ctx context.Context, clusterId string) (
 }
 
 func (m *BRReadWrite) QueryBackupStrategy(ctx context.Context, weekDay string, startHour uint32) (strategies []*BackupStrategy, err error) {
-	query := m.DB(ctx).Model(BackupStrategy{})
+	query := m.DB(ctx).Model(&BackupStrategy{})
 	if weekDay != "" {
 		query = query.Where("backup_date like '%" + weekDay + "%'")
 	}

@@ -434,7 +434,7 @@ func (c ClusterServiceHandler) ExportData(ctx context.Context, request *clusterp
 	framework.LogWithContext(ctx).Info("export data")
 	exportReq := message.DataExportReq{}
 
-	if handleRequest(ctx, request, response, exportReq) {
+	if handleRequest(ctx, request, response, &exportReq) {
 		result, err := c.importexportManager.ExportData(ctx, &exportReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
@@ -448,7 +448,7 @@ func (c ClusterServiceHandler) ImportData(ctx context.Context, request *clusterp
 	framework.LogWithContext(ctx).Info("import data")
 	importReq := message.DataImportReq{}
 
-	if handleRequest(ctx, request, response, importReq) {
+	if handleRequest(ctx, request, response, &importReq) {
 		result, err := c.importexportManager.ImportData(ctx, &importReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
@@ -462,7 +462,7 @@ func (c ClusterServiceHandler) QueryDataTransport(ctx context.Context, request *
 	framework.LogWithContext(ctx).Info("query data transport")
 	queryReq := message.QueryDataImportExportRecordsReq{}
 
-	if handleRequest(ctx, request, response, queryReq) {
+	if handleRequest(ctx, request, response, &queryReq) {
 		result, page, err := c.importexportManager.QueryDataTransportRecords(ctx, &queryReq)
 		handleResponse(ctx, response, err, *result, &clusterpb.RpcPage{
 			Page:     int32(page.Page),
@@ -480,7 +480,7 @@ func (c ClusterServiceHandler) DeleteDataTransportRecord(ctx context.Context, re
 	framework.LogWithContext(ctx).Info("delete data transport record")
 	deleteReq := message.DeleteImportExportRecordReq{}
 
-	if handleRequest(ctx, request, response, deleteReq) {
+	if handleRequest(ctx, request, response, &deleteReq) {
 		result, err := c.importexportManager.DeleteDataTransportRecord(ctx, &deleteReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
@@ -494,7 +494,7 @@ func (c *ClusterServiceHandler) GetSystemConfig(ctx context.Context, request *cl
 	framework.LogWithContext(ctx).Info("get system config")
 	getReq := message.GetSystemConfigReq{}
 
-	if handleRequest(ctx, request, response, getReq) {
+	if handleRequest(ctx, request, response, &getReq) {
 		result, err := c.systemConfigManager.GetSystemConfig(ctx, &getReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
@@ -508,7 +508,7 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 	framework.LogWithContext(ctx).Info("create backup")
 	backupReq := cluster.BackupClusterDataReq{}
 
-	if handleRequest(ctx, request, response, backupReq) {
+	if handleRequest(ctx, request, response, &backupReq) {
 		result, err := c.brManager.BackupCluster(ctx, &backupReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
@@ -544,7 +544,7 @@ func (c ClusterServiceHandler) DeleteBackupRecords(ctx context.Context, request 
 	framework.LogWithContext(ctx).Info("delete backup records")
 	deleteReq := cluster.DeleteBackupDataReq{}
 
-	if handleRequest(ctx, request, response, deleteReq) {
+	if handleRequest(ctx, request, response, &deleteReq) {
 		result, err := c.brManager.DeleteBackupRecords(ctx, &deleteReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
@@ -558,7 +558,7 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 	framework.LogWithContext(ctx).Info("save backup strategy")
 	saveReq := cluster.SaveBackupStrategyReq{}
 
-	if handleRequest(ctx, request, response, saveReq) {
+	if handleRequest(ctx, request, response, &saveReq) {
 		result, err := c.brManager.SaveBackupStrategy(ctx, &saveReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
@@ -572,7 +572,7 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 	framework.LogWithContext(ctx).Info("get backup strategy")
 	getReq := cluster.GetBackupStrategyReq{}
 
-	if handleRequest(ctx, request, response, getReq) {
+	if handleRequest(ctx, request, response, &getReq) {
 		result, err := c.brManager.GetBackupStrategy(ctx, &getReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
@@ -586,7 +586,7 @@ func (c ClusterServiceHandler) QueryBackupRecords(ctx context.Context, request *
 	framework.LogWithContext(ctx).Info("query backup records")
 	queryReq := cluster.QueryBackupRecordsReq{}
 
-	if handleRequest(ctx, request, response, queryReq) {
+	if handleRequest(ctx, request, response, &queryReq) {
 		result, page, err := c.brManager.QueryClusterBackupRecords(ctx, &queryReq)
 		handleResponse(ctx, response, err, *result, &clusterpb.RpcPage{
 			Page:     int32(page.Page),
@@ -637,12 +637,10 @@ func (c ClusterServiceHandler) GetDashboardInfo(ctx context.Context, request *cl
 	framework.LogWithContext(ctx).Info("get cluster dashboard info")
 	dashboardReq := cluster.GetDashboardInfoReq{}
 
-	if handleRequest(ctx, request, response, dashboardReq) {
+	if handleRequest(ctx, request, response, &dashboardReq) {
 		result, err := c.clusterManager.GetClusterDashboardInfo(ctx, &dashboardReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
-
-	return nil
 
 	return nil
 }

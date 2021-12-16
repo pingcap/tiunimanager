@@ -120,7 +120,7 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request *cluster.Backup
 		}
 	}()
 
-	//todo: only support FULL Physics backup now
+	//todo: only support full physics backup now
 	record := &backuprestore.BackupRecord{
 		Entity: dbModel.Entity{
 			TenantId: meta.Cluster.TenantId,
@@ -214,7 +214,7 @@ func (mgr *BRManager) QueryClusterBackupRecords(ctx context.Context, request *cl
 	defer framework.LogWithContext(ctx).Infof("End QueryClusterBackupRecords")
 
 	brRW := models.GetBRReaderWriter()
-	records, total, err := brRW.QueryBackupRecords(ctx, request.ClusterID, request.BackupID, "", time.Unix(0, 0), time.Unix(0, 0), request.Page, request.PageSize)
+	records, total, err := brRW.QueryBackupRecords(ctx, request.ClusterID, request.BackupID, "", request.StartTime.Unix(), request.EndTime.Unix(), request.Page, request.PageSize)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("query cluster backup records %+v failed %s", request, err.Error())
 		return nil, nil, err
@@ -251,7 +251,7 @@ func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request *cluster.
 
 	brRW := models.GetBRReaderWriter()
 	for page, pageSize := 1, 100; ; page++ {
-		records, _, err := brRW.QueryBackupRecords(ctx, request.ClusterID, request.BackupID, request.BackupMode, time.Unix(0, 0), time.Unix(0, 0), page, pageSize)
+		records, _, err := brRW.QueryBackupRecords(ctx, request.ClusterID, request.BackupID, request.BackupMode, 0, 0, page, pageSize)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("query backup records of request %+v, failed, %s", request, err.Error())
 			return nil, fmt.Errorf("query backup records of request %+v, failed, %s", request, err.Error())

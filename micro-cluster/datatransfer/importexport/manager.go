@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
@@ -194,7 +193,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request *message
 	importPrefix, _ := filepath.Abs(importPathConfig.ConfigValue)
 	importDir := filepath.Join(importPrefix, request.ClusterID, fmt.Sprintf("%s_%s", importTime.Format("2006-01-02_15:04:05"), request.StorageType))
 	if request.RecordId == "" {
-		if common.NfsStorageType == request.StorageType {
+		if string(constants.StorageTypeNFS) == request.StorageType {
 			err = os.Rename(filepath.Join(importPrefix, request.ClusterID, "temp"), importDir)
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("find import dir failed, %s", err.Error())
@@ -362,7 +361,7 @@ func (mgr *ImportExportManager) DeleteDataTransportRecord(ctx context.Context, r
 		return nil, err
 	}
 
-	if common.S3StorageType != record.StorageType {
+	if string(constants.StorageTypeS3) != record.StorageType {
 		filePath := filepath.Dir(record.FilePath)
 		_ = os.RemoveAll(filePath)
 		framework.LogWithContext(ctx).Infof("remove file path %s, record: %+v", filePath, record.ID)
@@ -516,7 +515,7 @@ func (mgr *ImportExportManager) checkFilePathExists(path string) bool {
 }
 
 func (mgr *ImportExportManager) checkExportParamSupportReimport(request *message.DataExportReq) bool {
-	if common.S3StorageType == request.StorageType {
+	if string(constants.StorageTypeS3) == request.StorageType {
 		return false
 	}
 	if request.Filter == "" && request.Sql != "" && FileTypeCSV == request.FileType {
@@ -526,12 +525,12 @@ func (mgr *ImportExportManager) checkExportParamSupportReimport(request *message
 }
 
 func (mgr *ImportExportManager) checkImportParamSupportReimport(request *message.DataImportReq) bool {
-	return common.NfsStorageType == request.StorageType
+	return string(constants.StorageTypeNFS) == request.StorageType
 }
 
 func (mgr *ImportExportManager) getDataExportFilePath(request *message.DataExportReq, exportDir string, persist bool) string {
 	var filePath string
-	if common.S3StorageType == request.StorageType {
+	if string(constants.StorageTypeS3) == request.StorageType {
 		if persist {
 			filePath = fmt.Sprintf("%s?&endpoint=%s", request.BucketUrl, request.EndpointUrl)
 		} else {
@@ -545,7 +544,7 @@ func (mgr *ImportExportManager) getDataExportFilePath(request *message.DataExpor
 
 func (mgr *ImportExportManager) getDataImportFilePath(request *message.DataImportReq, importDir string, persist bool) string {
 	var filePath string
-	if common.S3StorageType == request.StorageType {
+	if string(constants.StorageTypeS3) == request.StorageType {
 		if persist {
 			filePath = fmt.Sprintf("%s?&endpoint=%s", request.BucketUrl, request.EndpointUrl)
 		} else {

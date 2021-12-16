@@ -24,7 +24,6 @@ import (
 	"github.com/pingcap-inc/tiem/file-server/service"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
 	"net/http"
@@ -50,7 +49,7 @@ func UploadImportFile(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
-	err = service.FileMgr.UnzipDir(ctx, filepath.Join(uploadPath, common.DefaultZipName), filepath.Join(uploadPath, "data"))
+	err = service.FileMgr.UnzipDir(ctx, filepath.Join(uploadPath, constants.DefaultZipName), filepath.Join(uploadPath, "data"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return

@@ -68,5 +68,12 @@ func (mgr *DirManager) GetImportPath(ctx context.Context, clusterId string) (str
 		framework.LogWithContext(ctx).Errorf("import dir %s is not vaild", importPath)
 		return "", fmt.Errorf("import dir %s is not vaild", importPath)
 	}
+
+	importClusterPath := filepath.Join(importAbsDir, clusterId)
+	if filepath.Dir(importClusterPath) != importAbsDir {
+		framework.LogWithContext(ctx).Errorf("clusterId %s invaild, may cause path crossing", clusterId)
+		return "", fmt.Errorf("clusterId %s invaild, may cause path crossing", clusterId)
+	}
+
 	return fmt.Sprintf("%s/%s/temp", importAbsDir, clusterId), nil
 }

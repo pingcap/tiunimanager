@@ -16,8 +16,9 @@
 package importexport
 
 import (
+	"context"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 )
 
@@ -60,26 +61,47 @@ type TiDBCfg struct {
 	PDAddr     string `toml:"pd-addr"`
 }
 
-func NewDataImportConfig(meta *handler.ClusterMeta, info *importInfo) *DataImportConfig {
-	if meta == nil {
+func NewDataImportConfig(ctx context.Context, meta *handler.ClusterMeta, info *importInfo) *DataImportConfig {
+	if meta == nil || meta.Cluster == nil {
+		framework.LogWithContext(ctx).Errorf("input meta is invalid!")
 		return nil
 	}
-	//todo: get from meta
-	tidbServerHost := ""
-	pdServerHost := ""
-	tidbServerPort := 0
-	tidbStatusPort := 0
-	pdClientPort := 0
+	tidbAddress := meta.GetClusterConnectAddresses()
+	if len(tidbAddress) == 0 {
+		framework.LogWithContext(ctx).Errorf("get tidb address from meta failed, empty address")
+		return nil
+	}
+	framework.LogWithContext(ctx).Infof("get cluster %s tidb address from meta, %+v", meta.Cluster.ID, tidbAddress)
+	pdAddress := meta.GetPDClientAddresses()
+	if len(pdAddress) == 0 {
+		framework.LogWithContext(ctx).Errorf("get pd address from meta failed, empty address")
+		return nil
+	}
+	framework.LogWithContext(ctx).Infof("get cluster %s pd address from meta, %+v", meta.Cluster.ID, pdAddress)
+	tidbStatusAddress := meta.GetClusterStatusAddress()
+	if len(tidbStatusAddress) == 0 {
+		framework.LogWithContext(ctx).Errorf("get tidb status address from meta failed, empty address")
+		return nil
+	}
+	framework.LogWithContext(ctx).Infof("get cluster %s tidb status address from meta, %+v", meta.Cluster.ID, tidbStatusAddress)
 
-	if tidbServerPort == 0 {
-		tidbServerPort = common.DefaultTidbPort
-	}
-	if tidbStatusPort == 0 {
-		tidbStatusPort = common.DefaultTidbStatusPort
-	}
-	if pdClientPort == 0 {
-		pdClientPort = common.DefaultPDClientPort
-	}
+	tidbServerHost := tidbAddress[0].IP
+	tidbServerPort := tidbAddress[0].Port
+	tidbStatusPort := tidbStatusAddress[0].Port
+	pdServerHost := pdAddress[0].IP
+	pdClientPort := pdAddress[0].Port
+
+	/*
+		if tidbServerPort == 0 {
+			tidbServerPort = constants.DefaultTiDBPort
+		}
+		if tidbStatusPort == 0 {
+			tidbStatusPort = constants.DefaultTiDBStatusPort
+		}
+		if pdClientPort == 0 {
+			pdClientPort = constants.DefaultPDClientPort
+		}
+	*/
 
 	/*
 	 * todo: sorted-kv-dir and data-source-dir in the same disk, may slow down import performance,

@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
@@ -39,7 +38,7 @@ func buildDataImportConfig(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
 	info := ctx.GetData(contextDataTransportRecordKey).(*importInfo)
 
-	config := NewDataImportConfig(meta, info)
+	config := NewDataImportConfig(ctx, meta, info)
 	if config == nil {
 		framework.LogWithContext(ctx).Errorf("convert toml config failed, cluster: %s", meta.Cluster.ID)
 		return fmt.Errorf("convert toml config failed, cluster: %s", meta.Cluster.ID)
@@ -98,17 +97,23 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	framework.LogWithContext(ctx).Info("begin exportDataFromCluster")
 	defer framework.LogWithContext(ctx).Info("end exportDataFromCluster")
 
-	//meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
+	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
 	info := ctx.GetData(contextDataTransportRecordKey).(*exportInfo)
 
-	//todo: get from meta
-	tidbHost := ""
-	tidbPort := 4000
-	if tidbPort == 0 {
-		tidbPort = constants.DefaultTiDBPort
+	tidbServers := meta.GetClusterConnectAddresses()
+	if len(tidbServers) == 0 {
+		framework.LogWithContext(ctx).Error("get tidb servers from meta result empty")
+		return fmt.Errorf("get tidb servers from meta result empty")
 	}
-
-	if common.NfsStorageType == info.StorageType {
+	framework.LogWithContext(ctx).Infof("get cluster %s tidb address from meta, %+v", meta.Cluster.ID, tidbServers)
+	tidbHost := tidbServers[0].IP
+	tidbPort := tidbServers[0].Port
+	/*
+		if tidbPort == 0 {
+			tidbPort = constants.DefaultTiDBPort
+		}
+	*/
+	if string(constants.StorageTypeNFS) == info.StorageType {
 		if err := cleanDataTransportDir(ctx, info.FilePath); err != nil {
 			framework.LogWithContext(ctx).Errorf("clean export directory failed, %s", err.Error())
 			return fmt.Errorf("clean export directory failed, %s", err.Error())
@@ -116,7 +121,6 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	}
 
 	//tiup dumpling -u root -P 4000 --host 127.0.0.1 --filetype sql -t 8 -o /tmp/test -r 200000 -F 256MiB --filter "user*"
-	//todo: replace root password
 	cmd := []string{"-u", info.UserName,
 		"-p", info.Password,
 		"-P", strconv.Itoa(tidbPort),

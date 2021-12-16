@@ -78,6 +78,12 @@ func ValidProductID(p string) error {
 
 type EMProductComponentIDType string
 
+var ParasiteComponentIDs = []EMProductComponentIDType{
+	ComponentIDGrafana,
+	ComponentIDPrometheus,
+	ComponentIDAlertManger,
+}
+
 //Definition of product component ID provided by Enterprise manager
 const (
 	ComponentIDTiDB    EMProductComponentIDType = "TiDB"

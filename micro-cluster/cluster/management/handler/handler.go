@@ -104,7 +104,7 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 	for _, compute := range computes {
 		for _, item := range compute.Resource {
 			for i := 0; i < item.Count; i++ {
-				instance := &management.ClusterInstance{
+				instance := &management.ClusterInstance {
 					Entity: dbCommon.Entity{
 						TenantId: p.Cluster.TenantId,
 						Status:   string(constants.ClusterInstanceInitializing),
@@ -126,10 +126,33 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 	return nil
 }
 
+func (p *ClusterMeta) AddDefaultInstances(ctx context.Context) error {
+	if string(newConstants.EMProductIDTiDB) == p.Cluster.Type {
+		for _, t := range newConstants.ParasiteComponentIDs {
+			instance := &management.ClusterInstance{
+				Entity: dbCommon.Entity {
+					TenantId: p.Cluster.TenantId,
+					Status:   string(constants.ClusterInstanceInitializing),
+				},
+				Type:      string(t),
+				Version:   p.Cluster.Version,
+				ClusterID: p.Cluster.ID,
+			}
+			p.Instances[string(t)] = append(p.Instances[string(t)], instance)
+		}
+
+	}
+
+	return nil
+}
+
 func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance, error) {
 	instances := p.GetInstanceByStatus(ctx, constants.ClusterInstanceInitializing)
 	requirements := make([]resource.AllocRequirement, 0)
-	for _, instance := range instances {
+	for k, instance := range instances {
+		if Contain(newConstants.ParasiteComponentIDs, newConstants.EMProductComponentIDType(k)) {
+			continue
+		}
 		portRange := knowledge.GetComponentPortRange(p.Cluster.Type, p.Cluster.Version, instance.Type)
 		requirements = append(requirements, resource.AllocRequirement{
 			Location: structs.Location{
@@ -213,6 +236,28 @@ func (p *ClusterMeta) ApplyInstanceResource(resource *resource.AllocRsp, instanc
 		instance.Ports = resource.Results[i].PortRes[0].Ports
 		instance.DiskID = resource.Results[i].DiskRes.DiskId
 		instance.DiskPath = resource.Results[i].DiskRes.Path
+	}
+	if p.Cluster.Status == string(constants.ClusterInstanceInitializing) {
+		pd := p.Instances[string(newConstants.ComponentIDPD)][0]
+		for _, t := range newConstants.ParasiteComponentIDs {
+			instance := p.Instances[string(t)][0]
+			instance.HostID = pd.HostID
+			instance.HostIP = pd.HostIP
+			instance.DiskID = pd.DiskID
+			instance.DiskPath = pd.DiskPath
+			switch t {
+			case newConstants.ComponentIDGrafana:
+				instance.Ports = pd.Ports[3:4]
+				continue
+			case newConstants.ComponentIDPrometheus:
+				instance.Ports = pd.Ports[2:3]
+				continue
+			case newConstants.ComponentIDAlertManger:
+				instance.Ports = pd.Ports[4:6]
+				continue
+			default:
+			}
+		}
 	}
 }
 
@@ -640,8 +685,8 @@ func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
 
 func (p *ClusterMeta) DisplayClusterInfo(ctx context.Context) structs.ClusterInfo {
 	cluster := p.Cluster
-	clusterInfo := &structs.ClusterInfo {
-		ID: cluster.ID,
+	clusterInfo := &structs.ClusterInfo{
+		ID:              cluster.ID,
 		UserID:          cluster.OwnerId,
 		Name:            cluster.Name,
 		Type:            cluster.Type,
@@ -653,25 +698,27 @@ func (p *ClusterMeta) DisplayClusterInfo(ctx context.Context) structs.ClusterInf
 		Copies:          cluster.Copies,
 		Exclusive:       cluster.Exclusive,
 		CpuArchitecture: string(cluster.CpuArchitecture),
-		MaintainStatus: string(cluster.MaintenanceStatus),
+		MaintainStatus:  string(cluster.MaintenanceStatus),
+		Whitelist:       []string{},
 		MaintainWindow:  cluster.MaintainWindow,
-		CreateTime: cluster.CreatedAt,
-		UpdateTime: cluster.UpdatedAt,
+		CreateTime:      cluster.CreatedAt,
+		UpdateTime:      cluster.UpdatedAt,
 	}
 
 	// component address
 	address := p.GetClusterConnectAddresses()
 	for _, a := range address {
 		clusterInfo.IntranetConnectAddresses = append(clusterInfo.IntranetConnectAddresses, fmt.Sprintf("%s:%d", a.IP, a.Port))
-		clusterInfo.ExtranetConnectAddresses = append(clusterInfo.IntranetConnectAddresses, fmt.Sprintf("%s:%d", a.IP, a.Port))
 	}
+	clusterInfo.ExtranetConnectAddresses = clusterInfo.IntranetConnectAddresses
+
 	clusterInfo.AlertUrl = fmt.Sprintf(fmt.Sprintf("%s:%d", p.GetAlertManagerAddresses().IP, p.GetAlertManagerAddresses().Port))
 	clusterInfo.GrafanaUrl = fmt.Sprintf(fmt.Sprintf("%s:%d", p.GetGrafanaAddresses().IP, p.GetGrafanaAddresses().Port))
 
 	mockUsage := func() structs.Usage {
-		return structs.Usage {
-			Total: 100,
-			Used: 50,
+		return structs.Usage{
+			Total:     100,
+			Used:      50,
 			UsageRate: 0.5,
 		}
 	}
@@ -692,28 +739,30 @@ func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterT
 	}
 
 	for k, v := range p.Instances {
-		instanceResource := structs.ClusterResourceParameterCompute {
-			Type: k,
+		if !Contain(newConstants.ParasiteComponentIDs, newConstants.EMProductComponentIDType(k)) {
+			continue
+		}
+		instanceResource := structs.ClusterResourceParameterCompute{
+			Type:  k,
 			Count: 0,
-
 		}
 		for _, instance := range v {
 			// append topology
-			instanceInfo := structs.ClusterInstanceInfo {
-				ID: instance.ID,
-				Type: instance.Type,
-				Role: instance.Role,
-				Version: instance.Version,
-				Status: instance.Status,
-				HostID: instance.HostID,
+			instanceInfo := structs.ClusterInstanceInfo{
+				ID:        instance.ID,
+				Type:      instance.Type,
+				Role:      instance.Role,
+				Version:   instance.Version,
+				Status:    instance.Status,
+				HostID:    instance.HostID,
 				Addresses: instance.HostIP,
-				Ports: instance.Ports,
-				Spec: structs.ProductSpecInfo {
-					ID: knowledge.GenSpecCode(int32(instance.CpuCores), int32(instance.Memory)),
+				Ports:     instance.Ports,
+				Spec: structs.ProductSpecInfo{
+					ID:   knowledge.GenSpecCode(int32(instance.CpuCores), int32(instance.Memory)),
 					Name: knowledge.GenSpecCode(int32(instance.CpuCores), int32(instance.Memory)),
 				},
-				Zone: structs.ZoneInfo {
-					ID: instance.Zone,
+				Zone: structs.ZoneInfo{
+					ID:   instance.Zone,
 					Name: instance.Zone,
 				},
 			}

@@ -98,7 +98,6 @@ type ClusterInfo struct {
 	IntranetConnectAddresses []string  `json:"intranetConnectAddresses"`
 	ExtranetConnectAddresses []string  `json:"extranetConnectAddresses"`
 	Whitelist                []string  `json:"whitelist"`
-	PortList                 []int     `json:"portList"`
 	CpuUsage                 Usage     `json:"cpuUsage"`
 	MemoryUsage              Usage     `json:"memoryUsage"`
 	StorageUsage             Usage     `json:"storageUsage"`

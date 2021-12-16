@@ -259,6 +259,9 @@ func (p *Manager) CreateCluster(ctx context.Context, req cluster.CreateClusterRe
 	if err = meta.AddInstances(ctx, req.ResourceParameter.InstanceResource); err != nil {
 		return
 	}
+	if err = meta.AddDefaultInstances(ctx); err != nil {
+		return
+	}
 
 	data := map[string]interface{}{
 		ContextClusterMeta: meta,

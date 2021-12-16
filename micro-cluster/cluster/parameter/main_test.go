@@ -171,6 +171,16 @@ func mockModifyParameter() *ModifyParameter {
 				Type:           0,
 				RealValue:      structs.ParameterRealValue{ClusterValue: "5"},
 			},
+			{
+				ParamId:        "6",
+				Name:           "test_param_6",
+				InstanceType:   "TiKV",
+				UpdateSource:   3,
+				HasApply:       1,
+				SystemVariable: "",
+				Type:           0,
+				RealValue:      structs.ParameterRealValue{ClusterValue: "2"},
+			},
 		},
 	}
 }

@@ -27,6 +27,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockparametergroup"
+
 	"github.com/asim/go-micro/v3/errors"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
 
@@ -92,10 +94,7 @@ func TestManager_UpdateClusterParameters(t *testing.T) {
 	workflow.MockWorkFlowService(workflowService)
 	configRW := mockconfig.NewMockReaderWriter(ctrl)
 	models.SetConfigReaderWriter(configRW)
-	//clusterParameterRW.EXPECT().UpdateClusterParameter(gomock.Any(), gomock.Any(), gomock.Any()).
-	//	DoAndReturn(func(ctx context.Context, clusterId string, params []*parameter.ClusterParameterMapping) (err error) {
-	//		return nil
-	//	})
+
 	clusterManagementRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).
 		DoAndReturn(func(ctx context.Context, clusterID string) (*management.Cluster, []*management.ClusterInstance, error) {
 			return mockCluster(), mockClusterInstances(), nil
@@ -129,7 +128,8 @@ func TestManager_UpdateClusterParameters(t *testing.T) {
 func TestManager_ApplyParameterGroup_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-
+	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+	models.SetParameterGroupReaderWriter(parameterGroupRW)
 	clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterManagementRW)
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
@@ -137,33 +137,24 @@ func TestManager_ApplyParameterGroup_Success(t *testing.T) {
 	configRW := mockconfig.NewMockReaderWriter(ctrl)
 	models.SetConfigReaderWriter(configRW)
 
-	//parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any()).
-	//	DoAndReturn(func(ctx context.Context, parameterGroupId string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
-	//		return &parametergroup.ParameterGroup{
-	//				ID:             "1",
-	//				Name:           "test_parameter_group",
-	//				ParentID:       "",
-	//				ClusterSpec:    "8C16G",
-	//				HasDefault:     1,
-	//				DBType:         1,
-	//				GroupType:      1,
-	//				ClusterVersion: "5.0",
-	//				Note:           "test parameter group",
-	//				CreatedAt:      time.Time{},
-	//				UpdatedAt:      time.Time{},
-	//			}, []*parametergroup.ParamDetail{
-	//				{
-	//					Parameter:    parametergroup.Parameter{ID: "1"},
-	//					DefaultValue: "10",
-	//					Note:         "param 1",
-	//				},
-	//			}, nil
-	//	})
-	//clusterParameterRW.EXPECT().ApplyClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-	//	DoAndReturn(func(ctx context.Context, parameterGroupId string, clusterId string, param []*parameter.ClusterParameterMapping) error {
-	//		return nil
-	//	})
-
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+			return &parametergroup.ParameterGroup{ID: "1"}, []*parametergroup.ParamDetail{
+				{
+					Parameter: parametergroup.Parameter{
+						ID:             "1",
+						Name:           "param1",
+						InstanceType:   "TiDB",
+						SystemVariable: "",
+						Type:           0,
+						HasApply:       1,
+						UpdateSource:   0,
+					},
+					DefaultValue: "1",
+					Note:         "param1",
+				},
+			}, nil
+		})
 	clusterManagementRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).
 		DoAndReturn(func(ctx context.Context, clusterID string) (*management.Cluster, []*management.ClusterInstance, error) {
 			return mockCluster(), mockClusterInstances(), nil
@@ -180,9 +171,6 @@ func TestManager_ApplyParameterGroup_Success(t *testing.T) {
 		ParamGroupId: "1",
 		ClusterID:    "1",
 		Reboot:       false,
-	}, ModifyParameter{
-		Reboot: false,
-		Params: nil,
 	})
 	assert.NotEmpty(t, resp)
 	assert.NoError(t, err)
@@ -203,9 +191,6 @@ func TestManager_ApplyParameterGroup_Failed(t *testing.T) {
 		ParamGroupId: "",
 		ClusterID:    "",
 		Reboot:       false,
-	}, ModifyParameter{
-		Reboot: false,
-		Params: nil,
 	})
 	assert.Error(t, err)
 }

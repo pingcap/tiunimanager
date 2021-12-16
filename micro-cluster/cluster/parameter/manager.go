@@ -169,7 +169,7 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 	return resp, nil
 }
 
-func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyParameterGroupReq, modifyParameter ModifyParameter) (resp message.ApplyParameterGroupResp, err error) {
+func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyParameterGroupReq) (resp message.ApplyParameterGroupResp, err error) {
 	// Get cluster info and topology from db based by clusterID
 	clusterMeta, err := handler.Get(ctx, req.ClusterID)
 	if err != nil {
@@ -177,9 +177,31 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 		return
 	}
 
+	// Detail parameter group by id
+	_, pgm, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("detail parameter group [%s] from db error: %s", req.ParamGroupId, err.Error())
+		return resp, framework.SimpleError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR)
+	}
+
+	// Constructing clusterParameter.ModifyParameter objects
+	params := make([]structs.ClusterParameterSampleInfo, len(pgm))
+	for i, param := range pgm {
+		params[i] = structs.ClusterParameterSampleInfo{
+			ParamId:        param.ID,
+			Name:           param.Name,
+			InstanceType:   param.InstanceType,
+			UpdateSource:   param.UpdateSource,
+			SystemVariable: param.SystemVariable,
+			Type:           param.Type,
+			HasApply:       param.HasApply,
+			RealValue:      structs.ParameterRealValue{ClusterValue: param.DefaultValue},
+		}
+	}
+
 	// Get modify parameters
 	data := make(map[string]interface{})
-	data[contextModifyParameters] = &modifyParameter
+	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: params}
 	data[contextApplyParameterInfo] = &req
 	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, applyParametersDefine.FlowName)
 	if err != nil {

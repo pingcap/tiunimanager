@@ -411,7 +411,7 @@ func convertRealParameterType(ctx *workflow.FlowContext, param structs.ClusterPa
 		}
 		return c, nil
 	case int(Array):
-		c := make([]interface{}, 0)
+		var c interface{}
 		err := json.Unmarshal([]byte(param.RealValue.ClusterValue), &c)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("strconv realvalue type array fail, err = %s", err.Error())

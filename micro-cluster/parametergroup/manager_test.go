@@ -105,12 +105,17 @@ func TestManager_CreateParameterGroup(t *testing.T) {
 	assert.NotEmpty(t, resp.ParamGroupID)
 }
 
-func TestManager_UpdateParameterGroup(t *testing.T) {
+func TestManager_UpdateParameterGroup_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
 	models.SetParameterGroupReaderWriter(parameterGroupRW)
+
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+			return &parametergroup.ParameterGroup{ID: "1"}, nil, nil
+		})
 	parameterGroupRW.EXPECT().UpdateParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
 		DoAndReturn(func(ctx context.Context, pg *parametergroup.ParameterGroup, pgm []*parametergroup.ParameterGroupMapping) error {
 			return nil
@@ -134,6 +139,62 @@ func TestManager_UpdateParameterGroup(t *testing.T) {
 	assert.NotEmpty(t, resp.ParamGroupID)
 }
 
+func TestManager_UpdateParameterGroup_Error1(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+	models.SetParameterGroupReaderWriter(parameterGroupRW)
+
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+			return &parametergroup.ParameterGroup{ID: "1", HasDefault: 1}, nil, nil
+		})
+	_, err := manager.UpdateParameterGroup(context.TODO(), message.UpdateParameterGroupReq{
+		ParamGroupID:   "1",
+		Name:           "test_parameter_group",
+		ClusterVersion: "5.0",
+		ClusterSpec:    "8C16G",
+		Note:           "test parameter group",
+		Params: []structs.ParameterGroupParameterSampleInfo{
+			{
+				ID:           "1",
+				DefaultValue: "10",
+				Note:         "test param",
+			},
+		},
+	})
+	assert.Error(t, err)
+}
+
+func TestManager_UpdateParameterGroup_Error2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+	models.SetParameterGroupReaderWriter(parameterGroupRW)
+
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+			return &parametergroup.ParameterGroup{ID: "", HasDefault: 1}, nil, nil
+		})
+	_, err := manager.UpdateParameterGroup(context.TODO(), message.UpdateParameterGroupReq{
+		ParamGroupID:   "1",
+		Name:           "test_parameter_group",
+		ClusterVersion: "5.0",
+		ClusterSpec:    "8C16G",
+		Note:           "test parameter group",
+		Params: []structs.ParameterGroupParameterSampleInfo{
+			{
+				ID:           "1",
+				DefaultValue: "10",
+				Note:         "test param",
+			},
+		},
+	})
+	assert.Error(t, err)
+}
+
 func TestManager_DeleteParameterGroup_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -154,7 +215,7 @@ func TestManager_DeleteParameterGroup_Success(t *testing.T) {
 	assert.NotEmpty(t, resp.ParamGroupID)
 }
 
-func TestManager_DeleteParameterGroup_Failed(t *testing.T) {
+func TestManager_DeleteParameterGroup_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -232,7 +293,13 @@ func TestManager_DetailParameterGroup(t *testing.T) {
 	models.SetParameterGroupReaderWriter(parameterGroupRW)
 	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any()).
 		DoAndReturn(func(ctx context.Context, parameterGroupId string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
-			return &parametergroup.ParameterGroup{ID: "1"}, nil, nil
+			return &parametergroup.ParameterGroup{ID: "1"}, []*parametergroup.ParamDetail{
+				{
+					Parameter:    parametergroup.Parameter{ID: "1"},
+					DefaultValue: "10",
+					Note:         "param1",
+				},
+			}, nil
 		})
 	resp, err := manager.DetailParameterGroup(context.TODO(), message.DetailParameterGroupReq{ParamGroupID: "1"})
 	assert.NotEmpty(t, resp)

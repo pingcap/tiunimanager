@@ -20,14 +20,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/pingcap-inc/tiem/common/structs"
-
-	"github.com/pingcap-inc/tiem/library/util/convert"
+	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
 
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/message/cluster"
@@ -220,29 +217,7 @@ func (handler *ClusterServiceHandler) ApplyParameterGroup(ctx context.Context, r
 	request := &message.ApplyParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		// Detail parameter group by id
-		pgDetail, err := handler.parameterGroupManager.DetailParameterGroup(ctx, message.DetailParameterGroupReq{ParamGroupID: request.ParamGroupId})
-		if err != nil {
-			framework.LogWithContext(ctx).Errorf("apply param group err: %v", err)
-			handleResponse(ctx, resp, framework.SimpleError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR), nil, nil)
-			return nil
-		}
-
-		// Constructing clusterParameter.ModifyParameter objects
-		params := make([]structs.ClusterParameterSampleInfo, len(pgDetail.Params))
-		err = convert.ConvertObj(pgDetail.Params, &params)
-		if err != nil {
-			framework.LogWithContext(ctx).Errorf("apply param group convert obj err: %v", err)
-			handleResponse(ctx, resp, framework.SimpleError(common.TIEM_CONVERT_OBJ_FAILED), nil, nil)
-			return nil
-		}
-		// Convert the default value of the parameter group to the real value of the modified parameter
-		for i, param := range pgDetail.Params {
-			params[i].RealValue.ClusterValue = param.DefaultValue
-		}
-		modifyParameter := clusterParameter.ModifyParameter{Reboot: request.Reboot, Params: params}
-
-		result, err := handler.clusterParameterManager.ApplyParameterGroup(ctx, *request, modifyParameter)
+		result, err := handler.clusterParameterManager.ApplyParameterGroup(ctx, *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil

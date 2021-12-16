@@ -433,7 +433,8 @@ type ComponentAddress struct {
 // @return []ComponentAddress
 func (p *ClusterMeta) GetClusterConnectAddresses() []ComponentAddress {
 	// got all tidb instances, then get connect addresses
-	return nil
+	// todo
+	return []ComponentAddress{{}}
 }
 
 // GetClusterStatusAddress
@@ -441,8 +442,8 @@ func (p *ClusterMeta) GetClusterConnectAddresses() []ComponentAddress {
 // @Receiver p
 // @return []ComponentAddress
 func (p *ClusterMeta) GetClusterStatusAddress() []ComponentAddress {
-	//
-	return nil
+	// todo
+	return []ComponentAddress{{}}
 }
 
 // GetTiKVStatusAddress
@@ -451,7 +452,7 @@ func (p *ClusterMeta) GetClusterStatusAddress() []ComponentAddress {
 // @return []ComponentAddress
 func (p *ClusterMeta) GetTiKVStatusAddress() []ComponentAddress {
 	// todo
-	return nil
+	return []ComponentAddress{{}}
 }
 
 // GetPDClientAddresses
@@ -460,7 +461,7 @@ func (p *ClusterMeta) GetTiKVStatusAddress() []ComponentAddress {
 // @return []ComponentAddress
 func (p *ClusterMeta) GetPDClientAddresses() []ComponentAddress {
 	// todo
-	return nil
+	return []ComponentAddress{{}}
 }
 
 // GetMonitorAddresses

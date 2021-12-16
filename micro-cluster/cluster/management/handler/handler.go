@@ -307,14 +307,13 @@ func (p *ClusterMeta) DeleteInstance(ctx context.Context, instanceAddress string
 	instance, err := p.GetInstance(ctx, instanceAddress)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get instance error, err : %s", err.Error())
-		return instance, err
+		return nil, err
 	}
-	// todo remove from cluster meta
-	//err = models.GetClusterReaderWriter().Delete(ctx, instance.ID)
-	//if err != nil {
-	//	framework.LogWithContext(ctx).Errorf("delete instance failed, err : %s", err.Error())
-	//}
-	return instance, err
+
+	if err = models.GetClusterReaderWriter().DeleteInstance(ctx, instance.ID); err != nil {
+		return nil, err
+	}
+	return instance, nil
 }
 
 // CloneMeta

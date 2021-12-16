@@ -42,6 +42,19 @@ func (g *ClusterReadWrite) Delete(ctx context.Context, clusterID string) (err er
 	return dbCommon.WrapDBError(err)
 }
 
+func (g *ClusterReadWrite) DeleteInstance(ctx context.Context, ID string) error {
+	instance := &ClusterInstance{}
+	err := g.DB(ctx).First(instance, "id = ?", ID).Error
+	if err != nil {
+		return framework.WrapError(common.TIEM_INSTANCE_NOT_FOUND, "", err)
+	}
+	err = g.DB(ctx).Delete(instance).Error
+	if err != nil {
+		return framework.WrapError(common.TIEM_DELETE_INSTANCE_ERROR, "", err)
+	}
+	return nil
+}
+
 func (g *ClusterReadWrite) Get(ctx context.Context, clusterID string) (*Cluster, error) {
 	if "" == clusterID {
 		errInfo := fmt.Sprint("get cluster failed : empty clusterID")

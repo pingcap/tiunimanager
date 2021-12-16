@@ -27,10 +27,10 @@ import (
 )
 
 const (
-	ContextClusterMeta   = "ClusterMeta"
-	ContextTopology      = "Topology"
-	ContextAllocResource = "AllocResource"
-	ContextInstanceID    = "InstanceID"
+	ContextClusterMeta       = "ClusterMeta"
+	ContextTopology          = "Topology"
+	ContextAllocResource     = "AllocResource"
+	ContextInstanceID        = "InstanceID"
 	ContextSourceClusterMeta = "SourceClusterMeta"
 	ContextCloneStrategy     = "CloneStrategy"
 	ContextBackupID          = "BackupID"
@@ -55,12 +55,13 @@ func NewClusterManager() *Manager {
 var scaleOutDefine = workflow.WorkFlowDefine{
 	FlowName: constants.FlowScaleOutCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":        {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
-		"resourceDone": {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
-		"configDone":   {"scaleOutCluster", "scaleOutDone", "fail", workflow.PollingNode, scaleOutCluster},
-		"scaleOutDone": {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
-		"onlineDone":   {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistCluster)},
-		"fail":         {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure, revertResourceAfterFailure)},
+		"start":            {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
+		"resourceDone":     {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
+		"configDone":       {"scaleOutCluster", "scaleOutDone", "fail", workflow.PollingNode, scaleOutCluster},
+		"scaleOutDone":     {"syncTopology", "syncTopologyDone", "fail", workflow.SyncFuncNode, syncTopology},
+		"syncTopologyDone": {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
+		"onlineDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistCluster)},
+		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure, revertResourceAfterFailure)},
 	},
 }
 

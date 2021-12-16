@@ -25,6 +25,7 @@ type ReaderWriter interface {
 	Delete(ctx context.Context, clusterID string) (err error)
 	Get(ctx context.Context, clusterID string) (*Cluster, error)
 	GetMeta(ctx context.Context, clusterID string) (*Cluster, []*ClusterInstance, error)
+	DeleteInstance(ctx context.Context, ID string) error
 
 	//
     // UpdateMeta

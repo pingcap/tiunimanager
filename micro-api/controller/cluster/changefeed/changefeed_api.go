@@ -192,7 +192,6 @@ func Delete(c *gin.Context) {
 	}
 }
 
-
 // Downstream
 // @Summary unused, just display downstream config
 // @Description show display config
@@ -210,4 +209,3 @@ func Delete(c *gin.Context) {
 // @Router /downstream/ [delete]
 func Downstream(c *gin.Context) {
 }
-

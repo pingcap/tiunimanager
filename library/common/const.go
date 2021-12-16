@@ -40,7 +40,7 @@ const (
 	CertDirPrefix string = "/cert/"
 	DBDirPrefix   string = "/"
 
-	SqliteFileName string = "tiem.sqlite.db"
+	SqliteFileName   string = "tiem.sqlite.db"
 	DatabaseFileName string = "em.db"
 
 	CrtFileName string = "server.crt"

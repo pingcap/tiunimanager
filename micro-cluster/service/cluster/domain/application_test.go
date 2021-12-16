@@ -23,8 +23,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
-
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
@@ -599,7 +597,7 @@ func TestModifyParameters(t *testing.T) {
 		Id:       "testoperator",
 		Name:     "testoperator",
 		TenantId: "testoperator",
-	}, "testCluster", &parametergroup.ModifyParam{Reboot: false, Params: []*parametergroup.ApplyParam{
+	}, "testCluster", &ModifyParam{NeedReboot: false, Params: []*ApplyParam{
 		{
 			ParamId:       1,
 			Name:          "test_param_1",
@@ -682,9 +680,9 @@ func Test_modifyParameters(t *testing.T) {
 		}
 		modifyCtx := NewFlowContext(context.TODO())
 		modifyCtx.SetData(contextClusterKey, defaultCluster())
-		modifyCtx.SetData(contextModifyParamsKey, &parametergroup.ModifyParam{
-			Reboot: false,
-			Params: []*parametergroup.ApplyParam{
+		modifyCtx.SetData(contextModifyParamsKey, &ModifyParam{
+			NeedReboot: false,
+			Params: []*ApplyParam{
 				{
 					ParamId:       1,
 					Name:          "test_param_1",
@@ -757,9 +755,9 @@ func Test_refreshParameter(t *testing.T) {
 				ClusterName: "test-tidb",
 			},
 		})
-		refreshCtx.SetData(contextModifyParamsKey, &parametergroup.ModifyParam{
-			Reboot: true,
-			Params: []*parametergroup.ApplyParam{
+		refreshCtx.SetData(contextModifyParamsKey, &ModifyParam{
+			NeedReboot: true,
+			Params: []*ApplyParam{
 				{
 					ParamId:       1,
 					Name:          "test_param_1",

@@ -17,9 +17,10 @@
 package management
 
 import (
-	"github.com/pingcap-inc/tiem/message/cluster"
 	"net/http"
 	"time"
+
+	"github.com/pingcap-inc/tiem/message/cluster"
 
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 
@@ -85,7 +86,7 @@ func Preview(c *gin.Context) {
 	//		stockCheckResult = append(stockCheckResult, StockCheckItem{
 	//			Region:           req.Region,
 	//			CpuArchitecture:  req.CpuArchitecture,
-	//			Component:        *knowledge.ClusterComponentFromCode(group.ComponentType),
+	//			Component:        *knowledge.ClusterComponentFromCode(group.InstanceType),
 	//			DistributionItem: node,
 	//			// todo stock
 	//			Enough: true,

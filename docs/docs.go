@@ -1269,158 +1269,6 @@ var doc = `{
                 }
             }
         },
-        "/clusters/scale-in": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "scale in a cluster",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster"
-                ],
-                "summary": "scale in a cluster",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "cluster id",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "scale in request",
-                        "name": "scaleInReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/cluster.ScaleInClusterReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/cluster.ScaleInClusterResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/clusters/scale-out": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "scale out a cluster",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster"
-                ],
-                "summary": "scale out a cluster",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "cluster id",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "scale out request",
-                        "name": "scaleOutReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/cluster.ScaleOutClusterReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/cluster.ScaleOutClusterResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
         "/clusters/takeover": {
             "post": {
                 "security": [
@@ -1944,7 +1792,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "query params of a cluster",
+                "description": "query parameters of a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -1952,9 +1800,9 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "cluster params"
+                    "cluster parameters"
                 ],
-                "summary": "query params of a cluster",
+                "summary": "query parameters of a cluster",
                 "parameters": [
                     {
                         "type": "string",
@@ -1993,10 +1841,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/cluster.QueryClusterParametersResp"
-                                            }
+                                            "$ref": "#/definitions/cluster.QueryClusterParametersResp"
                                         }
                                     }
                                 }
@@ -2029,7 +1874,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "submit params",
+                "description": "submit parameters",
                 "consumes": [
                     "application/json"
                 ],
@@ -2039,7 +1884,7 @@ var doc = `{
                 "tags": [
                     "cluster params"
                 ],
-                "summary": "submit params",
+                "summary": "submit parameters",
                 "parameters": [
                     {
                         "description": "update params request",
@@ -2105,7 +1950,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "inspect params",
+                "description": "inspect parameters",
                 "consumes": [
                     "application/json"
                 ],
@@ -2115,7 +1960,7 @@ var doc = `{
                 "tags": [
                     "cluster params"
                 ],
-                "summary": "inspect params",
+                "summary": "inspect parameters",
                 "parameters": [
                     {
                         "type": "string",
@@ -2208,6 +2053,158 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/cluster.RestartClusterResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/clusters/{clusterId}/scale-in": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "scale in a cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "scale in a cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "scale in request",
+                        "name": "scaleInReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.ScaleInClusterReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.ScaleInClusterResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/clusters/{clusterId}/scale-out": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "scale out a cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "scale out a cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "scale out request",
+                        "name": "scaleOutReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.ScaleOutClusterReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.ScaleOutClusterResp"
                                         }
                                     }
                                 }
@@ -2697,7 +2694,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "query param group",
+                "description": "query parameter group",
                 "consumes": [
                     "application/json"
                 ],
@@ -2705,17 +2702,39 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "param group"
+                    "parameter group"
                 ],
-                "summary": "query param group",
+                "summary": "query parameter group",
                 "parameters": [
                     {
+                        "type": "string",
+                        "example": "8C16G",
+                        "name": "clusterSpec",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "v5.0",
+                        "name": "clusterVersion",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            0,
+                            1,
+                            2
+                        ],
                         "type": "integer",
                         "example": 0,
                         "name": "dbType",
                         "in": "query"
                     },
                     {
+                        "enum": [
+                            0,
+                            1,
+                            2
+                        ],
                         "type": "integer",
                         "example": 0,
                         "name": "hasDefault",
@@ -2743,18 +2762,6 @@ var doc = `{
                         "type": "integer",
                         "description": "Number of this request",
                         "name": "pageSize",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "8C16G",
-                        "name": "spec",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "v5.0",
-                        "name": "version",
                         "in": "query"
                     }
                 ],
@@ -2806,7 +2813,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "create a param group",
+                "description": "create a parameter group",
                 "consumes": [
                     "application/json"
                 ],
@@ -2814,9 +2821,9 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "param group"
+                    "parameter group"
                 ],
-                "summary": "create a param group",
+                "summary": "create a parameter group",
                 "parameters": [
                     {
                         "description": "create request",
@@ -2875,7 +2882,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "show details of a param group",
+                "description": "show details of a parameter group",
                 "consumes": [
                     "application/json"
                 ],
@@ -2883,13 +2890,13 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "param group"
+                    "parameter group"
                 ],
-                "summary": "show details of a param group",
+                "summary": "show details of a parameter group",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "param group id",
+                        "description": "parameter group id",
                         "name": "paramGroupId",
                         "in": "path",
                         "required": true
@@ -2940,7 +2947,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "update a param group",
+                "description": "update a parameter group",
                 "consumes": [
                     "application/json"
                 ],
@@ -2948,12 +2955,19 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "param group"
+                    "parameter group"
                 ],
-                "summary": "update a param group",
+                "summary": "update a parameter group",
                 "parameters": [
                     {
-                        "description": "update param group request",
+                        "type": "string",
+                        "description": "parameter group id",
+                        "name": "paramGroupId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "update parameter group request",
                         "name": "updateReq",
                         "in": "body",
                         "required": true,
@@ -3007,7 +3021,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "delete a param group",
+                "description": "delete a parameter group",
                 "consumes": [
                     "application/json"
                 ],
@@ -3015,13 +3029,13 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "param group"
+                    "parameter group"
                 ],
-                "summary": "delete a param group",
+                "summary": "delete a parameter group",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "param group id",
+                        "description": "parameter group id",
                         "name": "paramGroupId",
                         "in": "path",
                         "required": true
@@ -3074,7 +3088,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "apply a param group",
+                "description": "apply a parameter group",
                 "consumes": [
                     "application/json"
                 ],
@@ -3082,12 +3096,19 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "param group"
+                    "parameter group"
                 ],
-                "summary": "apply a param group",
+                "summary": "apply a parameter group",
                 "parameters": [
                     {
-                        "description": "apply param group request",
+                        "type": "string",
+                        "description": "parameter group id",
+                        "name": "paramGroupId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "apply parameter group request",
                         "name": "applyReq",
                         "in": "body",
                         "required": true,
@@ -3143,7 +3164,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "copy a param group",
+                "description": "copy a parameter group",
                 "consumes": [
                     "application/json"
                 ],
@@ -3151,12 +3172,19 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "param group"
+                    "parameter group"
                 ],
-                "summary": "copy a param group",
+                "summary": "copy a parameter group",
                 "parameters": [
                     {
-                        "description": "copy param group request",
+                        "type": "string",
+                        "description": "parameter group id",
+                        "name": "paramGroupId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "copy parameter group request",
                         "name": "copyReq",
                         "in": "body",
                         "required": true,
@@ -4135,10 +4163,6 @@ var doc = `{
                     "description": "Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization",
                     "type": "boolean"
                 },
-                "paramGroupId": {
-                    "description": "specify cloned cluster parameter group id(option)",
-                    "type": "integer"
-                },
                 "parameterGroupID": {
                     "type": "string"
                 },
@@ -4486,10 +4510,6 @@ var doc = `{
         "cluster.InspectClusterParametersResp": {
             "type": "object",
             "properties": {
-                "componentType": {
-                    "type": "string",
-                    "example": "tidb"
-                },
                 "inspectValue": {
                     "type": "string",
                     "example": "1"
@@ -4497,6 +4517,10 @@ var doc = `{
                 "instance": {
                     "type": "string",
                     "example": "172.16.5.23"
+                },
+                "instanceType": {
+                    "type": "string",
+                    "example": "tidb"
                 },
                 "name": {
                     "type": "string",
@@ -4736,58 +4760,14 @@ var doc = `{
         "cluster.QueryClusterParametersResp": {
             "type": "object",
             "properties": {
-                "componentType": {
-                    "type": "string",
-                    "example": "tidb"
+                "paramGroupId": {
+                    "type": "string"
                 },
-                "createTime": {
-                    "type": "integer",
-                    "example": 1636698675
-                },
-                "defaultValue": {
-                    "type": "string",
-                    "example": "1"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "binlog cache size"
-                },
-                "hasReboot": {
-                    "type": "integer",
-                    "example": 0
-                },
-                "name": {
-                    "type": "string",
-                    "example": "binlog_size"
-                },
-                "paramId": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "range": {
+                "params": {
                     "type": "array",
                     "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "1",
-                        " 1000"
-                    ]
-                },
-                "realValue": {
-                    "$ref": "#/definitions/structs.ParameterRealValue"
-                },
-                "type": {
-                    "type": "integer",
-                    "example": 0
-                },
-                "unit": {
-                    "type": "string",
-                    "example": "mb"
-                },
-                "updateTime": {
-                    "type": "integer",
-                    "example": 1636698675
+                        "$ref": "#/definitions/structs.ClusterParameterInfo"
+                    }
                 }
             }
         },
@@ -5551,9 +5531,13 @@ var doc = `{
         "message.ApplyParameterGroupResp": {
             "type": "object",
             "properties": {
+                "clusterId": {
+                    "type": "string",
+                    "example": "123"
+                },
                 "paramGroupId": {
                     "type": "string",
-                    "example": "1"
+                    "example": "123"
                 },
                 "workFlowId": {
                     "description": "Asynchronous task workflow ID",
@@ -5589,16 +5573,36 @@ var doc = `{
         "message.CreateParameterGroupReq": {
             "type": "object",
             "properties": {
+                "clusterSpec": {
+                    "type": "string",
+                    "example": "8C16G"
+                },
+                "clusterVersion": {
+                    "type": "string",
+                    "example": "v5.0"
+                },
                 "dbType": {
                     "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ],
                     "example": 1
                 },
                 "groupType": {
                     "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ],
                     "example": 1
                 },
                 "hasDefault": {
                     "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ],
                     "example": 1
                 },
                 "name": {
@@ -5614,14 +5618,6 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/structs.ParameterGroupParameterSampleInfo"
                     }
-                },
-                "spec": {
-                    "type": "string",
-                    "example": "8C16G"
-                },
-                "version": {
-                    "type": "string",
-                    "example": "v5.0"
                 }
             }
         },
@@ -5779,20 +5775,40 @@ var doc = `{
         "message.DetailParameterGroupResp": {
             "type": "object",
             "properties": {
+                "clusterSpec": {
+                    "type": "string",
+                    "example": "8C16G"
+                },
+                "clusterVersion": {
+                    "type": "string",
+                    "example": "v5.0"
+                },
                 "createTime": {
                     "type": "integer",
                     "example": 1636698675
                 },
                 "dbType": {
                     "type": "integer",
-                    "example": 0
+                    "enum": [
+                        1,
+                        2
+                    ],
+                    "example": 1
                 },
                 "groupType": {
                     "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ],
                     "example": 0
                 },
                 "hasDefault": {
                     "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ],
                     "example": 1
                 },
                 "name": {
@@ -5813,17 +5829,9 @@ var doc = `{
                         "$ref": "#/definitions/structs.ParameterGroupParameterInfo"
                     }
                 },
-                "spec": {
-                    "type": "string",
-                    "example": "8C16G"
-                },
                 "updateTime": {
                     "type": "integer",
                     "example": 1636698675
-                },
-                "version": {
-                    "type": "string",
-                    "example": "v5.0"
                 }
             }
         },
@@ -5879,20 +5887,40 @@ var doc = `{
         "message.QueryParameterGroupResp": {
             "type": "object",
             "properties": {
+                "clusterSpec": {
+                    "type": "string",
+                    "example": "8C16G"
+                },
+                "clusterVersion": {
+                    "type": "string",
+                    "example": "v5.0"
+                },
                 "createTime": {
                     "type": "integer",
                     "example": 1636698675
                 },
                 "dbType": {
                     "type": "integer",
-                    "example": 0
+                    "enum": [
+                        1,
+                        2
+                    ],
+                    "example": 1
                 },
                 "groupType": {
                     "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ],
                     "example": 0
                 },
                 "hasDefault": {
                     "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ],
                     "example": 1
                 },
                 "name": {
@@ -5913,17 +5941,9 @@ var doc = `{
                         "$ref": "#/definitions/structs.ParameterGroupParameterInfo"
                     }
                 },
-                "spec": {
-                    "type": "string",
-                    "example": "8C16G"
-                },
                 "updateTime": {
                     "type": "integer",
                     "example": 1636698675
-                },
-                "version": {
-                    "type": "string",
-                    "example": "v5.0"
                 }
             }
         },
@@ -5995,6 +6015,14 @@ var doc = `{
         "message.UpdateParameterGroupReq": {
             "type": "object",
             "properties": {
+                "clusterSpec": {
+                    "type": "string",
+                    "example": "8C16G"
+                },
+                "clusterVersion": {
+                    "type": "string",
+                    "example": "v5.0"
+                },
                 "name": {
                     "type": "string",
                     "example": "8C16GV4_default"
@@ -6011,14 +6039,6 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/structs.ParameterGroupParameterSampleInfo"
                     }
-                },
-                "spec": {
-                    "type": "string",
-                    "example": "8C16G"
-                },
-                "version": {
-                    "type": "string",
-                    "example": "v5.0"
                 }
             }
         },
@@ -6274,33 +6294,75 @@ var doc = `{
                 }
             }
         },
-        "structs.ClusterParameterSampleInfo": {
+        "structs.ClusterParameterInfo": {
             "type": "object",
             "properties": {
-                "componentType": {
+                "category": {
                     "type": "string",
-                    "example": "TiDB"
+                    "example": "basic"
+                },
+                "createTime": {
+                    "type": "integer",
+                    "example": 1636698675
+                },
+                "defaultValue": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "binlog cache size"
                 },
                 "hasReboot": {
                     "type": "integer",
-                    "enum": [
-                        0,
-                        1
-                    ],
                     "example": 0
+                },
+                "has_apply": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "instanceType": {
+                    "type": "string",
+                    "example": "tidb"
                 },
                 "name": {
                     "type": "string",
-                    "example": "binlog_cache"
+                    "example": "binlog_size"
+                },
+                "note": {
+                    "type": "string",
+                    "example": "binlog cache size"
                 },
                 "paramId": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "1"
+                },
+                "range": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "1",
+                        " 1000"
+                    ]
                 },
                 "realValue": {
                     "$ref": "#/definitions/structs.ParameterRealValue"
                 },
-                "source": {
+                "systemVariable": {
+                    "type": "string",
+                    "example": "log.log_level"
+                },
+                "type": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "mb"
+                },
+                "updateSource": {
                     "type": "integer",
                     "enum": [
                         0,
@@ -6310,6 +6372,42 @@ var doc = `{
                     ],
                     "example": 0
                 },
+                "updateTime": {
+                    "type": "integer",
+                    "example": 1636698675
+                }
+            }
+        },
+        "structs.ClusterParameterSampleInfo": {
+            "type": "object",
+            "properties": {
+                "hasApply": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "example": 1
+                },
+                "instanceType": {
+                    "type": "string",
+                    "example": "TiDB"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "log_level"
+                },
+                "paramId": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "realValue": {
+                    "$ref": "#/definitions/structs.ParameterRealValue"
+                },
+                "systemVariable": {
+                    "type": "string",
+                    "example": "log.binlog_cache"
+                },
                 "type": {
                     "type": "integer",
                     "enum": [
@@ -6318,6 +6416,16 @@ var doc = `{
                         2,
                         3,
                         4
+                    ],
+                    "example": 0
+                },
+                "updateSource": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3
                     ],
                     "example": 0
                 }
@@ -6581,9 +6689,9 @@ var doc = `{
         "structs.ParameterGroupParameterInfo": {
             "type": "object",
             "properties": {
-                "componentType": {
+                "category": {
                     "type": "string",
-                    "example": "tidb"
+                    "example": "basic"
                 },
                 "createTime": {
                     "type": "integer",
@@ -6597,9 +6705,25 @@ var doc = `{
                     "type": "string",
                     "example": "binlog cache size"
                 },
+                "hasApply": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "example": 1
+                },
                 "hasReboot": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
                     "example": 0
+                },
+                "instanceType": {
+                    "type": "string",
+                    "example": "tidb"
                 },
                 "name": {
                     "type": "string",
@@ -6623,13 +6747,34 @@ var doc = `{
                         " 1000"
                     ]
                 },
+                "systemVariable": {
+                    "type": "string",
+                    "example": "log.log_level"
+                },
                 "type": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                    ],
                     "example": 0
                 },
                 "unit": {
                     "type": "string",
                     "example": "mb"
+                },
+                "updateSource": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3
+                    ],
+                    "example": 0
                 },
                 "updateTime": {
                     "type": "integer",

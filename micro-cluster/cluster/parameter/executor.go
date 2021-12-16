@@ -229,11 +229,11 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 				return err
 			}
 		case int(SQL):
-			if err := sqlEditConfig(ctx, params); err != nil {
+			if err := sqlEditConfig(ctx, node, params); err != nil {
 				return err
 			}
 		case int(API):
-			if err := apiEditConfig(ctx, params); err != nil {
+			if err := apiEditConfig(ctx, node, params); err != nil {
 				return err
 			}
 		}
@@ -246,7 +246,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 // @Parameter ctx
 // @Parameter params
 // @return error
-func sqlEditConfig(ctx *workflow.FlowContext, params []structs.ClusterParameterSampleInfo) error {
+func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, params []structs.ClusterParameterSampleInfo) error {
 	configs := make([]secondparty.ClusterComponentConfig, len(params))
 	for i, param := range params {
 		configKey := param.Name
@@ -272,7 +272,7 @@ func sqlEditConfig(ctx *workflow.FlowContext, params []structs.ClusterParameterS
 		},
 		ComponentConfigs: configs,
 	}
-	err := secondparty.SecondParty.EditClusterConfig(ctx, req, 1)
+	err := secondparty.Manager.EditClusterConfig(ctx, req, node.ID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call secondparty sql edit cluster config err = %s", err.Error())
 		return err
@@ -285,7 +285,7 @@ func sqlEditConfig(ctx *workflow.FlowContext, params []structs.ClusterParameterS
 // @Parameter ctx
 // @Parameter params
 // @return error
-func apiEditConfig(ctx *workflow.FlowContext, params []structs.ClusterParameterSampleInfo) error {
+func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, params []structs.ClusterParameterSampleInfo) error {
 	compContainer := make(map[interface{}][]structs.ClusterParameterSampleInfo, 0)
 	for i, param := range params {
 		framework.LogWithContext(ctx).Debugf("loop %d api componet type: %v, param name: %v", i, param.InstanceType, param.Name)
@@ -324,7 +324,7 @@ func apiEditConfig(ctx *workflow.FlowContext, params []structs.ClusterParameterS
 				servers[server.IP] = uint(server.Port)
 			}
 			for host, port := range servers {
-				hasSuc, err := secondparty.SecondParty.ApiEditConfig(ctx, secondparty.ApiEditConfigReq{
+				hasSuc, err := secondparty.Manager.ApiEditConfig(ctx, secondparty.ApiEditConfigReq{
 					TiDBClusterComponent: spec2.TiDBClusterComponent(compStr),
 					InstanceHost:         host,
 					InstancePort:         port,

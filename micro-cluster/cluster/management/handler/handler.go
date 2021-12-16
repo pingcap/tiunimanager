@@ -455,7 +455,7 @@ func (p *ClusterMeta) GetClusterConnectAddresses() []ComponentAddress {
 	address := make([]ComponentAddress, 0)
 
 	for _, instance := range instances {
-		if instance.Status == string(constants.ClusterInstanceRunning) {
+		if instance.Status == string(constants.ClusterInstanceRunning) || instance.Status == string(constants.ClusterInstanceInitializing) {
 			address = append(address, ComponentAddress{
 				IP:   instance.HostIP[0],
 				Port: int(instance.Ports[0]),

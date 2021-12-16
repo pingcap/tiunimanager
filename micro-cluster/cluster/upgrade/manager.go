@@ -26,6 +26,10 @@ package upgrade
 import (
 	"context"
 
+	"github.com/pingcap-inc/tiem/common/constants"
+
+	"github.com/pingcap-inc/tiem/workflow"
+
 	"github.com/pingcap-inc/tiem/message/cluster"
 
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -43,17 +47,31 @@ type Manager struct {
 }
 
 func NewManager() *Manager {
+	workflowManager := workflow.GetWorkFlowService()
+
+	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowInPlaceUpgradeCluster, &inPlaceUpgradeDefine)
+
 	return &Manager{}
 }
 
+var inPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
+	FlowName: constants.FlowInPlaceUpgradeCluster,
+	TaskNodes: map[string]*workflow.NodeDefine{
+		"start":          {"editConfig", "editConfigDone", "fail", workflow.SyncFuncNode, editConfig},
+		"editConfigDone": {"clusterUpgrade", "upgradeDone", "fail", workflow.PollingNode, upgradeCluster},
+		"upgradeDone":    {"end", "", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistCluster)},
+		"fail":           {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure)},
+	},
+}
+
 func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) ([]*structs.ProductUpgradePathItem, error) {
-	cluster, err := domain.GetClusterDetail(ctx, clusterID)
+	clusterDetail, err := domain.GetClusterDetail(ctx, clusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to query update path, %s", err.Error())
 		return []*structs.ProductUpgradePathItem{}, framework.WrapError(common.TIEM_UPGRADE_QUERY_PATH_FAILED, "failed to query upgrade path", err)
 	}
 
-	version := cluster.Cluster.ClusterVersion
+	version := clusterDetail.Cluster.ClusterVersion
 	productUpgradePaths, err := models.GetUpgradeReaderWriter().QueryBySrcVersion(ctx, version.Name)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to query update path, %s", err.Error())
@@ -82,13 +100,13 @@ func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) 
 }
 
 func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID string, version string) ([]*structs.ProductUpgradeVersionConfigDiffItem, error) {
-	cluster, err := domain.GetClusterDetail(ctx, clusterID)
+	clusterDetail, err := domain.GetClusterDetail(ctx, clusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to query upgrade version diff, %s", err.Error())
 		return []*structs.ProductUpgradeVersionConfigDiffItem{}, framework.WrapError(common.TIEM_UPGRADE_QUERY_VERSION_DIFF_FAILED, "failed to query upgrade version diff", err)
 	}
 
-	srcVersion := cluster.Cluster.ClusterVersion.Name
+	srcVersion := clusterDetail.Cluster.ClusterVersion.Name
 	// TODO: get params for clusterID and dst version and check the diffs
 	framework.LogWithContext(ctx).Infof("TODO: get params for current cluster(%s:%s) and dst version(%s) and get get diffs", clusterID, srcVersion, version)
 
@@ -98,7 +116,7 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 }
 
 func (p *Manager) ClusterUpgrade(ctx context.Context, req *cluster.ClusterUpgradeReq) (string, error) {
-	cluster, err := domain.GetClusterDetail(ctx, req.ClusterID)
+	clusterDetail, err := domain.GetClusterDetail(ctx, req.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to query upgrade version diff, %s", err.Error())
 		return "", framework.WrapError(common.TIEM_UPGRADE_FAILED, "failed to query upgrade version diff", err)
@@ -107,8 +125,9 @@ func (p *Manager) ClusterUpgrade(ctx context.Context, req *cluster.ClusterUpgrad
 	// TODO: get param for dst version, use parameters to apply it, and do upgrade cluster
 	framework.LogWithContext(ctx).Infof("TODO: get param for dst version, use parameters to apply it, and do upgrade cluster")
 
+	// TODO: change the logic below
 	_, err = secondparty.Manager.ClusterUpgrade(
-		ctx, secondparty.ClusterComponentTypeStr, cluster.Cluster.ClusterName, req.TargetVersion, 0, []string{}, "WorkflowID",
+		ctx, secondparty.ClusterComponentTypeStr, clusterDetail.Cluster.ClusterName, req.TargetVersion, 0, []string{}, "WorkflowID",
 	)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to upgrade cluster, %s", err.Error())
@@ -116,4 +135,15 @@ func (p *Manager) ClusterUpgrade(ctx context.Context, req *cluster.ClusterUpgrad
 	}
 
 	return "WorkflowID", nil
+}
+
+// InPlaceUpgradeCluster
+// @Description: See inPlaceUpgradeClusterFlow
+// @Receiver p
+// @Parameter ctx
+// @Parameter req
+// @return resp
+// @return err
+func (p *Manager) InPlaceUpgradeCluster(ctx context.Context, req *cluster.ClusterUpgradeReq) (resp cluster.ClusterUpgradeResp, err error) {
+	return cluster.ClusterUpgradeResp{}, nil
 }

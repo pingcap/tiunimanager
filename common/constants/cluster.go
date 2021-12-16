@@ -63,21 +63,22 @@ const (
 )
 
 const (
-	FlowCreateCluster       = "CreateCluster"
-	FlowDeleteCluster       = "DeleteCluster"
-	FlowBackupCluster       = "BackupCluster"
-	FlowRestoreNewCluster   = "RestoreNewCluster"
-	FlowRestoreExistCluster = "RestoreExistCluster"
-	FlowModifyParameters    = "ModifyParameters"
-	FlowExportData          = "ExportData"
-	FlowImportData          = "ImportData"
-	FlowRestartCluster      = "RestartCluster"
-	FlowStopCluster         = "StopCluster"
-	FlowTakeoverCluster     = "TakeoverCluster"
-	FlowBuildLogConfig      = "BuildLogConfig"
-	FlowScaleOutCluster     = "ScaleOutCluster"
-	FlowScaleInCluster      = "ScaleInCluster"
-	FlowCloneCluster        = "CloneCluster"
+	FlowCreateCluster         = "CreateCluster"
+	FlowDeleteCluster         = "DeleteCluster"
+	FlowBackupCluster         = "BackupCluster"
+	FlowRestoreNewCluster     = "RestoreNewCluster"
+	FlowRestoreExistCluster   = "RestoreExistCluster"
+	FlowModifyParameters      = "ModifyParameters"
+	FlowExportData            = "ExportData"
+	FlowImportData            = "ImportData"
+	FlowRestartCluster        = "RestartCluster"
+	FlowStopCluster           = "StopCluster"
+	FlowTakeoverCluster       = "TakeoverCluster"
+	FlowBuildLogConfig        = "BuildLogConfig"
+	FlowScaleOutCluster       = "ScaleOutCluster"
+	FlowScaleInCluster        = "ScaleInCluster"
+	FlowCloneCluster          = "CloneCluster"
+	FlowInPlaceUpgradeCluster = "InPlaceUpgradeCluster"
 )
 
 type ClusterInstanceRunningStatus string

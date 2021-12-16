@@ -252,7 +252,7 @@ func (mgr *FileManager) UnzipDir(ctx context.Context, zipFile string, dir string
 			}
 		}()
 	}
-	return nil
+	return
 }
 
 func (mgr *FileManager) addUploadCnt() {

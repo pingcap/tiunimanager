@@ -62,6 +62,10 @@ func (mgr *DirManager) GetImportPath(ctx context.Context, clusterId string) (str
 	}
 
 	importPath := resp.ConfigValue
+	if importPath == "" {
+		framework.LogWithContext(ctx).Error("import path is empty")
+		return "", fmt.Errorf("import path is empty")
+	}
 	framework.LogWithContext(ctx).Infof("get configKey %s, configValue %s success", constants.ConfigKeyImportShareStoragePath, importPath)
 	importAbsDir, err := filepath.Abs(importPath)
 	if err != nil {

@@ -75,6 +75,7 @@ type SecondPartyService interface {
 	BackUp(ctx context.Context, cluster ClusterFacade, storage BrStorage, workFlowNodeID string) (operationID string,
 		err error)
 	ShowBackUpInfo(ctx context.Context, cluster ClusterFacade) CmdShowBackUpInfoResp
+	ShowBackUpInfoThruMetaDB(ctx context.Context, operationID string) (resp CmdBrResp, err error)
 	Restore(ctx context.Context, cluster ClusterFacade, storage BrStorage, workFlowNodeID string) (operationID string,
 		err error)
 	ShowRestoreInfo(ctx context.Context, cluster ClusterFacade) CmdShowRestoreInfoResp

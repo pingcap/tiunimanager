@@ -58,7 +58,7 @@ func Contain(list interface{}, target interface{}, ) bool {
 // @Return		error
 func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs.ClusterResourceParameterCompute) error {
 	if len(computes) <= 0 || meta == nil {
-		return framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "cluster resource parameter is empty!")
+		return framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter is invalid!")
 	}
 
 	for _, component := range computes {
@@ -83,7 +83,7 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 			}
 			if replication.EnablePlacementRules == "false" {
 				return framework.NewTiEMError(common.TIEM_CHECK_PLACEMENT_RULES_ERROR,
-					"enable-placement-rules is false, can not scale out TiFlash")
+					"enable-placement-rules is false, can not scale out TiFlash, please check it!")
 			}
 			break
 		}
@@ -100,7 +100,7 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 // @Return		error
 func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *management.ClusterInstance) error {
 	if meta == nil || instance == nil {
-		return framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter is nil!")
+		return framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter is invalid!")
 	}
 
 	if instance.Type == string(constants.ComponentIDTiFlash) {

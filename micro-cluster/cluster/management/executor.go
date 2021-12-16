@@ -295,16 +295,6 @@ func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	return nil
 }
 
-func saveClusterMeta(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
-	if err := clusterMeta.Save(context.Context); err != nil {
-		framework.LogWithContext(context.Context).Errorf(
-			"save cluster[%s] meta into db error: %s", clusterMeta.Cluster.Name, err.Error())
-		return err
-	}
-	return nil
-}
-
 func syncBackupStrategy(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*handler.ClusterMeta)
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)

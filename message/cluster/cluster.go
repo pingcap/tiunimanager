@@ -125,7 +125,6 @@ type RestoreExistClusterResp struct {
 // CloneClusterReq Message for clone a new cluster
 type CloneClusterReq struct {
 	structs.CreateClusterParameter
-	ParamGroupID    int64  `json:"paramGroupId"`    // specify cloned cluster parameter group id(option)
 	CloneStrategy   string `json:"cloneStrategy"`   // specify clone strategy, include empty, snapshot and sync, default empty(option)
 	SourceClusterID string `json:"sourceClusterId"` // specify source cluster id(require)
 }

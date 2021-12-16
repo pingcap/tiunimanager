@@ -84,11 +84,11 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 // @Return		error
 func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.ClusterResourceParameterCompute) error {
 	if len(computes) <= 0 {
-		return framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "cluster resource parameter is empty!")
+		return framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter is invalid!")
 	}
 
 	if p.Cluster == nil {
-		return framework.NewTiEMError(common.TIEM_UNRECOGNIZED_ERROR, "cluster in meta is nil!")
+		return framework.NewTiEMError(common.TIEM_UNRECOGNIZED_ERROR, "cluster is nil!")
 	}
 
 	if len(p.Instances) == 0 {
@@ -116,7 +116,7 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 			}
 		}
 	}
-	framework.LogWithContext(ctx).Infof("add new instances into cluster[%s] topology", p.Cluster.Name)
+	framework.LogWithContext(ctx).Infof("add new instances into cluster[%s] topology", p.Cluster.ID)
 	return nil
 }
 
@@ -317,11 +317,11 @@ func (p *ClusterMeta) UpdateClusterStatus(ctx context.Context, status constants.
 func (p *ClusterMeta) GetInstance(ctx context.Context, instanceAddress string) (*management.ClusterInstance, error) {
 	host := strings.Split(instanceAddress, ":")
 	if len(host) != 2 {
-		return nil, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter format is wrong")
+		return nil, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter format is invalid")
 	}
 	port, err := strconv.ParseInt(host[1], 10, 32)
 	if err != nil {
-		return nil, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter format is wrong")
+		return nil, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter format is invalid")
 	}
 
 	for _, components := range p.Instances {
@@ -390,19 +390,28 @@ func (p *ClusterMeta) DeleteInstance(ctx context.Context, instanceAddress string
 // @Parameter ctx
 // @return *ClusterMeta
 func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClusterParameter) (*ClusterMeta, error) {
+	meta := &ClusterMeta{}
 	// clone cluster info
-	cluster := &management.Cluster{
-		Name:            parameter.Name,            // user specify (required)
-		DBUser:          parameter.DBUser,          // user specify (required)
-		DBPassword:      parameter.DBPassword,      // user specify (required)
-		Region:          parameter.Region,          // user specify (required)
-		Type:            p.Cluster.Type,            // user not specify
-		Version:         p.Cluster.Version,         // user specify (option)
-		Tags:            p.Cluster.Tags,            // user specify (option)
-		TLS:             p.Cluster.TLS,             // user specify (option)
-		Copies:          p.Cluster.Copies,          // user specify (option)
-		Exclusive:       p.Cluster.Exclusive,       // user specify (option)
-		CpuArchitecture: p.Cluster.CpuArchitecture, // user specify (option)
+	meta.Cluster = &management.Cluster{
+		Entity: dbCommon.Entity{
+			TenantId: framework.GetTenantIDFromContext(ctx),
+			Status:   string(constants.ClusterInitializing),
+		},
+		Name:              parameter.Name,       // user specify (required)
+		DBUser:            parameter.DBUser,     // user specify (required)
+		DBPassword:        parameter.DBPassword, // user specify (required)
+		Region:            parameter.Region,     // user specify (required)
+		Type:              p.Cluster.Type,       // user not specify
+		Version:           p.Cluster.Version,    // user specify (option)
+		Tags:              p.Cluster.Tags,       // user specify (option)
+		TLS:               p.Cluster.TLS,        // user specify (option)
+		OwnerId:           framework.GetUserIDFromContext(ctx),
+		ParameterGroupID:  p.Cluster.ParameterGroupID, // user specify (option)
+		Copies:            p.Cluster.Copies,           // user specify (option)
+		Exclusive:         p.Cluster.Exclusive,        // user specify (option)
+		CpuArchitecture:   p.Cluster.CpuArchitecture,  // user specify (option)
+		MaintenanceStatus: constants.ClusterMaintenanceNone,
+		MaintainWindow:    p.Cluster.MaintainWindow,
 	}
 	// if user specify cluster version
 	if len(parameter.Version) > 0 {
@@ -410,40 +419,52 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 			return nil, framework.NewTiEMError(common.TIEM_CHECK_CLUSTER_VERSION_ERROR,
 				"the specified cluster version is less than source cluster version")
 		}
-		cluster.Version = parameter.Version
+		meta.Cluster.Version = parameter.Version
 	}
 	// if user specify cluster tags
 	if len(parameter.Tags) > 0 {
-		cluster.Tags = parameter.Tags
+		meta.Cluster.Tags = parameter.Tags
 	}
 	// if user specify tls
 	if parameter.TLS != p.Cluster.TLS {
-		cluster.TLS = parameter.TLS
+		meta.Cluster.TLS = parameter.TLS
+	}
+	// if user specify parameter group id
+	if len(parameter.ParameterGroupID) > 0 {
+		meta.Cluster.ParameterGroupID = parameter.ParameterGroupID
 	}
 	// if user specify copies
 	if parameter.Copies > 0 {
-		cluster.Copies = parameter.Copies
+		meta.Cluster.Copies = parameter.Copies
 	}
 	// if user specify exclusive
 	if parameter.Exclusive != p.Cluster.Exclusive {
-		cluster.Exclusive = parameter.Exclusive
+		meta.Cluster.Exclusive = parameter.Exclusive
 	}
 	// if user specify cpu arch
 	if len(parameter.CpuArchitecture) > 0 {
-		cluster.CpuArchitecture = constants.ArchType(parameter.CpuArchitecture)
+		meta.Cluster.CpuArchitecture = constants.ArchType(parameter.CpuArchitecture)
 	}
-	cluster.Status = string(constants.ClusterInitializing)
 
-	meta := &ClusterMeta{
-		Cluster: cluster,
+	// write cluster into db
+	_, err := models.GetClusterReaderWriter().Create(ctx, meta.Cluster)
+	if err != nil {
+		return nil, err
 	}
+
+	// clone instances
 	meta.Instances = make(map[string][]*management.ClusterInstance)
 	for componentType, components := range p.Instances {
 		for _, instance := range components {
 			newInstance := &management.ClusterInstance{
+				Entity: dbCommon.Entity{
+					TenantId: p.Cluster.TenantId,
+					Status:   string(constants.ClusterInstanceInitializing),
+				},
 				Type:         instance.Type,
+				ClusterID:    meta.Cluster.ID,
 				Zone:         instance.Zone,
-				Version:      cluster.Version,
+				Version:      meta.Cluster.Version,
 				CpuCores:     instance.CpuCores,
 				Memory:       instance.Memory,
 				DiskType:     instance.DiskType,
@@ -454,14 +475,6 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 	}
 
 	return meta, nil
-}
-
-// Save
-// @Description save cluster meta into db
-// @Return		error
-func (p *ClusterMeta) Save(ctx context.Context) error {
-	//TODO: write cluster meta into db
-	return nil
 }
 
 // StartMaintenance

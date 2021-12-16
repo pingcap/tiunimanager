@@ -57,8 +57,8 @@ func (mgr *DirManager) GetImportPath(ctx context.Context, clusterId string) (str
 	var resp message.GetSystemConfigResp
 	err = json.Unmarshal([]byte(rpcResp.Response), &resp)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("unmarshal response error: %s", err.Error())
-		return "", fmt.Errorf("unmarshal response error: %s", err.Error())
+		framework.LogWithContext(ctx).Errorf("unmarshal get system config rpc response error: %s", err.Error())
+		return "", fmt.Errorf("unmarshal get system config rpc response error: %s", err.Error())
 	}
 
 	importPath := resp.ConfigValue

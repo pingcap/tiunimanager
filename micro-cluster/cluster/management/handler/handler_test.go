@@ -27,6 +27,7 @@ import (
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestClusterMeta_BuildCluster(t *testing.T) {
@@ -467,5 +468,125 @@ func TestClusterMeta_Get(t *testing.T) {
 	t.Run("error", func(t *testing.T) {
 		_, err := Get(context.TODO(), "222")
 		assert.Error(t, err)
+	})
+}
+
+func TestClusterMeta_Display(t *testing.T) {
+	meta := &ClusterMeta {
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "2145635758",
+				TenantId: "324567",
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+			Name: "koojdafij",
+			DBUser: "kodjsfn",
+			Type: "TiDB",
+			Version: "v5.0.0",
+			Tags: []string{"111","333"},
+			OwnerId: "436534636u",
+			ParameterGroupID: "352467890",
+			Copies: 4,
+			Region: "Region1",
+			CpuArchitecture: "x86_64",
+			MaintenanceStatus: constants.ClusterMaintenanceCreating,
+		},
+		Instances: map[string][]*management.ClusterInstance {
+			"TiDB": {
+				{
+					Zone: "zone1",
+					CpuCores: 4,
+					Memory: 8,
+					Type: "TiDB",
+					Version: "v5.0.0",
+					HostIP: []string{"127.0.0.1"},
+				},
+				{
+					Zone: "zone1",
+					CpuCores: 3,
+					Memory: 7,
+					Type: "TiDB",
+					Version: "v5.0.0",
+					HostIP: []string{"127.0.0.1"},
+				},
+				{
+					Zone: "zone2",
+					CpuCores: 4,
+					Memory: 8,
+					Type: "TiDB",
+					Version: "v5.0.0",
+					HostIP: []string{"127.0.0.1"},
+				},
+				{
+					Zone: "zone1",
+					CpuCores: 4,
+					Memory: 8,
+					Type: "TiDB",
+					Version: "v5.0.0",
+					HostIP: []string{"127.0.0.1"},
+				},
+			},
+			"TiKV": {
+				{
+					Zone: "zone1",
+					CpuCores: 4,
+					Memory: 8,
+					Type: "TiKV",
+					Version: "v5.0.0",
+					HostIP: []string{"127.0.0.1"},
+				},
+				{
+					Zone: "zone1",
+					CpuCores: 3,
+					Memory: 7,
+					Type: "TiKV",
+					Version: "v5.0.0",
+					HostIP: []string{"127.0.0.1"},
+				},
+				{
+					Zone: "zone2",
+					CpuCores: 4,
+					Memory: 8,
+					Type: "TiKV",
+					Version: "v5.0.0",
+					HostIP: []string{"127.0.0.1"},
+				},
+				{
+					Zone: "zone1",
+					CpuCores: 4,
+					Memory: 8,
+					Type: "TiKV",
+					Version: "v5.0.0",
+					HostIP: []string{"127.0.0.1"},
+				},
+			},
+		},
+	}
+
+	t.Run("cluster", func(t *testing.T) {
+		cluster := meta.DisplayClusterInfo(context.TODO())
+		assert.Equal(t, meta.Cluster.ID, cluster.ID)
+		assert.Equal(t, meta.Cluster.Name, cluster.Name)
+		assert.Equal(t, meta.Cluster.Version, cluster.Version)
+		assert.Equal(t, meta.Cluster.Type, cluster.Type)
+		assert.Equal(t, meta.Cluster.OwnerId, cluster.UserID)
+		assert.Equal(t, cluster.ExtranetConnectAddresses, cluster.IntranetConnectAddresses)
+		assert.Equal(t, string(meta.Cluster.CpuArchitecture), cluster.CpuArchitecture)
+		assert.Equal(t, string(meta.Cluster.MaintenanceStatus), cluster.MaintainStatus)
+		assert.Equal(t, meta.Cluster.Copies, cluster.Copies)
+	})
+	t.Run("instance", func(t *testing.T) {
+		topology, resource := meta.DisplayInstanceInfo(context.TODO())
+		assert.Equal(t, 8, len(topology.Topology))
+		assert.Equal(t, topology.Topology[1].Type, topology.Topology[0].Type)
+		assert.NotEqual(t, topology.Topology[3].Type, topology.Topology[4].Type)
+
+		assert.Equal(t, 2, len(resource.InstanceResource))
+		assert.Equal(t, 4, resource.InstanceResource[0].Count)
+		assert.NotEqual(t, resource.InstanceResource[0].Type, resource.InstanceResource[1].Type)
+		assert.Equal(t, 3, len(resource.InstanceResource[1].Resource))
+		assert.Equal(t, 2, resource.InstanceResource[0].Resource[0].Count)
+		assert.Equal(t, 1, resource.InstanceResource[1].Resource[1].Count)
 	})
 }

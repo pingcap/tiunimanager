@@ -18,6 +18,7 @@ package handler
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	newConstants "github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -503,6 +504,34 @@ func (p *ClusterMeta) GetPDClientAddresses() []ComponentAddress {
 	return nil
 }
 
+func (p *ClusterMeta) GetGrafanaAddresses() ComponentAddress {
+	instances := p.Instances[string(newConstants.ComponentIDGrafana)]
+
+	for _, instance := range instances {
+		if instance.Status == string(constants.ClusterInstanceRunning) {
+			return ComponentAddress{
+				IP:   instance.HostIP[0],
+				Port: int(instance.Ports[0]),
+			}
+		}
+	}
+	return ComponentAddress{}
+}
+
+func (p *ClusterMeta) GetAlertManagerAddresses() ComponentAddress {
+	instances := p.Instances[string(newConstants.ComponentIDAlertManger)]
+
+	for _, instance := range instances {
+		if instance.Status == string(constants.ClusterInstanceRunning) {
+			return ComponentAddress{
+				IP:   instance.HostIP[0],
+				Port: int(instance.Ports[0]),
+			}
+		}
+	}
+	return ComponentAddress{}
+}
+
 // GetMonitorAddresses
 // @Description: Prometheus Service communication port
 // @Receiver p
@@ -568,4 +597,110 @@ func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
 		Cluster:   cluster,
 		Instances: instancesMap,
 	}, nil
+}
+
+func (p *ClusterMeta) DisplayClusterInfo(ctx context.Context) structs.ClusterInfo {
+	cluster := p.Cluster
+	clusterInfo := &structs.ClusterInfo {
+		ID: cluster.ID,
+		UserID:          cluster.OwnerId,
+		Name:            cluster.Name,
+		Type:            cluster.Type,
+		Version:         cluster.Version,
+		DBUser:          cluster.DBUser,
+		Tags:            cluster.Tags,
+		TLS:             cluster.TLS,
+		Status:          cluster.Status,
+		Copies:          cluster.Copies,
+		Exclusive:       cluster.Exclusive,
+		CpuArchitecture: string(cluster.CpuArchitecture),
+		MaintainStatus: string(cluster.MaintenanceStatus),
+		MaintainWindow:  cluster.MaintainWindow,
+		CreateTime: cluster.CreatedAt,
+		UpdateTime: cluster.UpdatedAt,
+	}
+
+	// component address
+	address := p.GetClusterConnectAddresses()
+	for _, a := range address {
+		clusterInfo.IntranetConnectAddresses = append(clusterInfo.IntranetConnectAddresses, fmt.Sprintf("%s:%d", a.IP, a.Port))
+		clusterInfo.ExtranetConnectAddresses = append(clusterInfo.IntranetConnectAddresses, fmt.Sprintf("%s:%d", a.IP, a.Port))
+	}
+	clusterInfo.AlertUrl = fmt.Sprintf(fmt.Sprintf("%s:%d", p.GetAlertManagerAddresses().IP, p.GetAlertManagerAddresses().Port))
+	clusterInfo.GrafanaUrl = fmt.Sprintf(fmt.Sprintf("%s:%d", p.GetGrafanaAddresses().IP, p.GetGrafanaAddresses().Port))
+
+	mockUsage := func() structs.Usage {
+		return structs.Usage {
+			Total: 100,
+			Used: 50,
+			UsageRate: 0.5,
+		}
+	}
+	clusterInfo.CpuUsage = mockUsage()
+	clusterInfo.MemoryUsage = mockUsage()
+	clusterInfo.StorageUsage = mockUsage()
+	clusterInfo.BackupSpaceUsage = mockUsage()
+
+	return *clusterInfo
+}
+
+func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterTopologyInfo, structs.ClusterResourceInfo) {
+	topologyInfo := new(structs.ClusterTopologyInfo)
+	resourceInfo := new(structs.ClusterResourceInfo)
+
+	if len(p.Instances) == 0 {
+		return *topologyInfo, *resourceInfo
+	}
+
+	for k, v := range p.Instances {
+		instanceResource := structs.ClusterResourceParameterCompute {
+			Type: k,
+			Count: 0,
+
+		}
+		for _, instance := range v {
+			// append topology
+			instanceInfo := structs.ClusterInstanceInfo {
+				ID: instance.ID,
+				Type: instance.Type,
+				Role: instance.Role,
+				Version: instance.Version,
+				Status: instance.Status,
+				HostID: instance.HostID,
+				Addresses: instance.HostIP,
+				Ports: instance.Ports,
+				Spec: structs.ProductSpecInfo {
+					ID: knowledge.GenSpecCode(int32(instance.CpuCores), int32(instance.Memory)),
+					Name: knowledge.GenSpecCode(int32(instance.CpuCores), int32(instance.Memory)),
+				},
+				Zone: structs.ZoneInfo {
+					ID: instance.Zone,
+					Name: instance.Zone,
+				},
+			}
+			topologyInfo.Topology = append(topologyInfo.Topology, instanceInfo)
+
+			spec := knowledge.GenSpecCode(int32(instance.CpuCores), int32(instance.Memory))
+
+			newResourceSpec := true
+			for i, resource := range instanceResource.Resource {
+				if resource.Equal(instance.Zone, spec, instance.DiskType, int(instance.DiskCapacity)) {
+					newResourceSpec = false
+					instanceResource.Resource[i].Count = resource.Count + 1
+				}
+			}
+			if newResourceSpec {
+				instanceResource.Resource = append(instanceResource.Resource, structs.ClusterResourceParameterComputeResource{
+					Zone:         instance.Zone,
+					Spec:         spec,
+					DiskType:     instance.DiskType,
+					DiskCapacity: int(instance.DiskCapacity),
+					Count:        1,
+				})
+			}
+			instanceResource.Count = instanceResource.Count + 1
+		}
+		resourceInfo.InstanceResource = append(resourceInfo.InstanceResource, instanceResource)
+	}
+	return *topologyInfo, *resourceInfo
 }

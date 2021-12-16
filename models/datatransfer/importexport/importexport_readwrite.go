@@ -80,6 +80,7 @@ func (m *ImportExportReadWrite) QueryDataTransportRecords(ctx context.Context, r
 		query = query.Where("re_import_support = ?", reImport)
 	}
 	if !startTime.IsZero() {
+		framework.LogWithContext(ctx).Infof("start_time: %+v", startTime)
 		query = query.Where("start_time >= ?", startTime)
 	}
 	if !endTime.IsZero() {

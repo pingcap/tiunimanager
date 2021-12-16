@@ -470,7 +470,17 @@ func (p *ClusterMeta) GetClusterConnectAddresses() []ComponentAddress {
 // @Receiver p
 // @return []ComponentAddress
 func (p *ClusterMeta) GetClusterStatusAddress() []ComponentAddress {
-	//
+	instances := p.Instances[string(newConstants.ComponentIDTiDB)]
+	address := make([]ComponentAddress, 0)
+
+	for _, instance := range instances {
+		if instance.Status == string(constants.ClusterInstanceRunning) {
+			address = append(address, ComponentAddress{
+				IP:   instance.HostIP[0],
+				Port: int(instance.Ports[1]),
+			})
+		}
+	}
 	return nil
 }
 
@@ -479,7 +489,17 @@ func (p *ClusterMeta) GetClusterStatusAddress() []ComponentAddress {
 // @Receiver p
 // @return []ComponentAddress
 func (p *ClusterMeta) GetPDClientAddresses() []ComponentAddress {
-	// todo
+	instances := p.Instances[string(newConstants.ComponentIDPD)]
+	address := make([]ComponentAddress, 0)
+
+	for _, instance := range instances {
+		if instance.Status == string(constants.ClusterInstanceRunning) {
+			address = append(address, ComponentAddress{
+				IP:   instance.HostIP[0],
+				Port: int(instance.Ports[0]),
+			})
+		}
+	}
 	return nil
 }
 
@@ -488,7 +508,17 @@ func (p *ClusterMeta) GetPDClientAddresses() []ComponentAddress {
 // @Receiver p
 // @return []ComponentAddress
 func (p *ClusterMeta) GetMonitorAddresses() []ComponentAddress {
-	// todo
+	instances := p.Instances[string(newConstants.ComponentIDPrometheus)]
+	address := make([]ComponentAddress, 0)
+
+	for _, instance := range instances {
+		if instance.Status == string(constants.ClusterInstanceRunning) {
+			address = append(address, ComponentAddress{
+				IP:   instance.HostIP[0],
+				Port: int(instance.Ports[0]),
+			})
+		}
+	}
 	return nil
 }
 

@@ -29,7 +29,7 @@ type ImportExportService interface {
 	// @Parameter request
 	// @Return *message.DataExportResp
 	// @Return error
-	ExportData(ctx context.Context, request *message.DataExportReq) (*message.DataExportResp, error)
+	ExportData(ctx context.Context, request *message.DataExportReq) (resp *message.DataExportResp, exportErr error)
 
 	// ImportData
 	// @Description: import data
@@ -38,7 +38,7 @@ type ImportExportService interface {
 	// @Parameter request
 	// @Return *message.DataImportResp
 	// @Return error
-	ImportData(ctx context.Context, request *message.DataImportReq) (*message.DataImportResp, error)
+	ImportData(ctx context.Context, request *message.DataImportReq) (resp *message.DataImportResp, importErr error)
 
 	// QueryDataTransportRecords
 	// @Description: query data import & export records by condition

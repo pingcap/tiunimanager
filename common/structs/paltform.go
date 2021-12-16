@@ -82,3 +82,9 @@ type ZoneDetail struct {
 	VendorID   string //The value of the VendorID is similar to AWS
 	VendorName string //The value of the Name is similar to AWS
 }
+
+// SystemConfig system config of platform
+type SystemConfig struct {
+	ConfigKey   string
+	ConfigValue string
+}

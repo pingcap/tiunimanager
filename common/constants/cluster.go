@@ -52,7 +52,7 @@ const (
 	ClusterMaintenanceDeleting                     ClusterMaintenanceStatus = "Deleting"
 	ClusterMaintenanceStopping                     ClusterMaintenanceStatus = "Stopping"
 	ClusterMaintenanceRestarting                   ClusterMaintenanceStatus = "Restarting"
-	ClusterMaintenanceBackingUp                    ClusterMaintenanceStatus = "BackingUp"
+	ClusterMaintenanceBackUp                       ClusterMaintenanceStatus = "BackUp"
 	ClusterMaintenanceRestore                      ClusterMaintenanceStatus = "Restore"
 	ClusterMaintenanceScaleIn                      ClusterMaintenanceStatus = "ScaleIn"
 	ClusterMaintenanceScaleOut                     ClusterMaintenanceStatus = "ScaleOut"

@@ -22,3 +22,13 @@
 *******************************************************************************/
 
 package message
+
+import "github.com/pingcap-inc/tiem/common/structs"
+
+type GetSystemConfigReq struct {
+	ConfigKey string `json:"configKey" form:"configKey"`
+}
+
+type GetSystemConfigResp struct {
+	structs.SystemConfig
+}

@@ -17,15 +17,11 @@
 package backuprestore
 
 import (
-	"encoding/json"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-api/interceptor"
-	"net/http"
-	"time"
-
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/message/cluster"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -47,21 +43,11 @@ import (
 // @Failure 500 {object} controller.CommonResult
 // @Router /backups/ [post]
 func Backup(c *gin.Context) {
-	var request cluster.BackupClusterDataReq
-	if err := c.ShouldBindQuery(&request); err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &cluster.BackupClusterDataReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateBackup, &cluster.BackupClusterDataResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
-
-	body, err := json.Marshal(request)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	controller.InvokeRpcMethod(c, client.ClusterClient.CreateBackup, &cluster.BackupClusterDataResp{}, string(body), controller.DefaultTimeout)
 }
 
 // GetBackupStrategy show the backup strategy of a cluster
@@ -78,16 +64,15 @@ func Backup(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/strategy/ [get]
 func GetBackupStrategy(c *gin.Context) {
-	var request cluster.GetBackupStrategyReq
-	request.ClusterID = c.Param("clusterId")
-	body, err := json.Marshal(request)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	req := cluster.GetBackupStrategyReq{
+		ClusterID: c.Param("clusterId"),
 	}
 
-	controller.InvokeRpcMethod(c, client.ClusterClient.GetBackupStrategy, &cluster.GetBackupStrategyResp{}, string(body), controller.DefaultTimeout)
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.GetBackupStrategy, &cluster.GetBackupStrategyResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
 }
 
 // SaveBackupStrategy save the backup strategy of a cluster
@@ -105,22 +90,15 @@ func GetBackupStrategy(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/strategy [put]
 func SaveBackupStrategy(c *gin.Context) {
-	var request cluster.SaveBackupStrategyReq
-	if err := c.ShouldBindQuery(&request); err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	req := cluster.SaveBackupStrategyReq{
+		ClusterID: c.Param("clusterId"),
 	}
 
-	request.ClusterID = c.Param("clusterId")
-	body, err := json.Marshal(request)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.SaveBackupStrategy, &cluster.SaveBackupStrategyResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
-
-	controller.InvokeRpcMethod(c, client.ClusterClient.SaveBackupStrategy, &cluster.SaveBackupStrategyResp{}, string(body), controller.DefaultTimeout)
 }
 
 // QueryBackupRecords
@@ -138,20 +116,12 @@ func SaveBackupStrategy(c *gin.Context) {
 // @Router /backups/ [get]
 func QueryBackupRecords(c *gin.Context) {
 	var request cluster.QueryBackupRecordsReq
-	if err := c.ShouldBindQuery(&request); err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
 
-	body, err := json.Marshal(request)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &request); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryBackupRecords, cluster.QueryBackupRecordsResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
-
-	controller.InvokeRpcMethod(c, client.ClusterClient.QueryBackupRecords, &cluster.QueryBackupRecordsResp{}, string(body), controller.DefaultTimeout)
 }
 
 // DeleteBackup
@@ -169,22 +139,15 @@ func QueryBackupRecords(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /backups/{backupId} [delete]
 func DeleteBackup(c *gin.Context) {
-	var request cluster.DeleteBackupDataReq
-	if err := c.ShouldBindQuery(&request); err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	req := cluster.DeleteBackupDataReq{
+		ClusterID: c.Param("clusterId"),
 	}
 
-	request.BackupID = c.Param("backupId")
-	body, err := json.Marshal(request)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteBackupRecords, &cluster.DeleteBackupDataResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
-
-	controller.InvokeRpcMethod(c, client.ClusterClient.DeleteBackupRecords, &cluster.DeleteBackupDataResp{}, string(body), controller.DefaultTimeout)
 }
 
 // Restore
@@ -202,9 +165,6 @@ func DeleteBackup(c *gin.Context) {
 // @Router /clusters/restore [post]
 func Restore(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
-	start := time.Now()
-	defer interceptor.HandleMetrics(start, "Restore", int(status.GetCode()))
-
 	var req RestoreReq
 	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}

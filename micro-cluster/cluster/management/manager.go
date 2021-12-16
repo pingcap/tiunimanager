@@ -297,7 +297,7 @@ func (p *Manager) StopCluster(ctx context.Context, req cluster.StopClusterReq) (
 	data := map[string]interface{}{
 		ContextClusterMeta: meta,
 	}
-	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceStopping, createClusterFlow.FlowName, data)
+	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceStopping, stopClusterFlow.FlowName, data)
 
 	resp.ClusterID = meta.Cluster.ID
 	resp.WorkFlowID = flowID

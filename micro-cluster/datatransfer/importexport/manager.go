@@ -389,7 +389,7 @@ func (mgr *ImportExportManager) exportDataPreCheck(ctx context.Context, request 
 		}
 	*/
 
-	if FileTypeCSV != request.FileType && FileTypeSQL != request.FileType {
+	if fileTypeCSV != request.FileType && fileTypeSQL != request.FileType {
 		return fmt.Errorf("invalid param fileType %s", request.FileType)
 	}
 	if request.ZipName == "" {
@@ -511,7 +511,7 @@ func (mgr *ImportExportManager) checkExportParamSupportReimport(request *message
 	if string(constants.StorageTypeS3) == request.StorageType {
 		return false
 	}
-	if request.Filter == "" && request.Sql != "" && FileTypeCSV == request.FileType {
+	if request.Filter == "" && request.Sql != "" && fileTypeCSV == request.FileType {
 		return false
 	}
 	return true

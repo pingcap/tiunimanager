@@ -31,15 +31,6 @@ type BRService interface {
 	// @Return error
 	BackupCluster(ctx context.Context, request cluster.BackupClusterDataReq) (resp cluster.BackupClusterDataResp, backupErr error)
 
-	// RestoreNewCluster
-	// @Description: restore a new cluster by backup record
-	// @Receiver m
-	// @Parameter ctx
-	// @Parameter request
-	// @Return cluster.RestoreNewClusterResp
-	// @Return error
-	//RestoreNewCluster(ctx context.Context, request cluster.RestoreNewClusterReq) (cluster.RestoreNewClusterResp, error) // todo: move to cluster manager
-
 	// RestoreExistCluster
 	// @Description: restore exist cluster by backup record
 	// @Receiver m

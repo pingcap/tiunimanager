@@ -17,15 +17,9 @@
 package backuprestore
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"net/http"
-
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
 
@@ -153,48 +147,16 @@ func DeleteBackup(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param request body RestoreReq true "restore request"
-// @Success 200 {object} controller.CommonResult{data=controller.StatusInfo}
+// @Param request body cluster.RestoreNewClusterReq true "restore request"
+// @Success 200 {object} controller.CommonResult{data=cluster.RestoreNewClusterResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/restore [post]
 func Restore(c *gin.Context) {
-	var status *clusterpb.ResponseStatusDTO
-	var req RestoreReq
-	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		_ = c.Error(err)
-		return
-	}
-
-	operator := controller.GetOperator(c)
-
-	baseInfo, commonDemand, demand := req.ConvertToDTO()
-
-	reqDTO := &clusterpb.RecoverRequest{
-		Operator:     operator.ConvertToDTO(),
-		Cluster:      baseInfo,
-		Demands:      demand,
-		CommonDemand: commonDemand,
-	}
-
-	respDTO, err := client.ClusterClient.RecoverCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
-
-	if err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-	} else {
-		status = respDTO.GetRespStatus()
-		if common.TIEM_SUCCESS.Equal(status.GetCode()) {
-			result := controller.BuildCommonResult(int(status.Code), status.Message, RecoverClusterRsp{
-				ClusterId:       respDTO.GetClusterId(),
-				ClusterBaseInfo: *ParseClusterBaseInfoFromDTO(respDTO.GetBaseInfo()),
-				StatusInfo:      *ParseStatusFromDTO(respDTO.GetClusterStatus()),
-			})
-			c.JSON(http.StatusOK, result)
-		} else {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		}
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &cluster.RestoreNewClusterReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.RestoreNewCluster, &cluster.RestoreNewClusterResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
 }

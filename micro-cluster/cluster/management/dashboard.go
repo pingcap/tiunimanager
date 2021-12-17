@@ -69,7 +69,7 @@ func GetDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) 
 	return resp, nil
 }
 
-func getDashboardUrlFromCluster(ctx context.Context, meta *handler.ClusterMeta) string {
+func getDashboardUrlFromCluster(ctx context.Context, meta *handler.ClusterMeta) (string, error) {
 	pdAddress := meta.GetPDClientAddresses()
 	if len(pdAddress) == 0 {
 		framework.LogWithContext(ctx).Errorf("get pd address from meta failed, empty address")

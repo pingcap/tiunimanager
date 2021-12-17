@@ -253,12 +253,12 @@ func (p *ClusterMeta) GenerateTopologyConfig(ctx context.Context) (string, error
 // @Description update cluster status
 // @Return		error
 func (p *ClusterMeta) UpdateClusterStatus(ctx context.Context, status constants.ClusterRunningStatus) error {
-	p.Cluster.Status = string(status)
 	err := models.GetClusterReaderWriter().UpdateStatus(ctx, p.Cluster.ID, status)
 
 	if err != nil {
 		framework.LogWithContext(ctx).Infof("update cluster[%s] status into %s failed", p.Cluster.Name, status)
 	} else {
+		p.Cluster.Status = string(status)
 		framework.LogWithContext(ctx).Errorf("update cluster[%s] status into %s succeed", p.Cluster.Name, status)
 	}
 	return err

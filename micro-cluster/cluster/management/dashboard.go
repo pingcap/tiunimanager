@@ -54,7 +54,7 @@ func GetDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) 
 	tidbUserInfo := meta.GetClusterUserNamePasswd()
 	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta, %+v", meta.Cluster.ID, tidbUserInfo)
 
-	url, err := getDashboardUrlFromCluser(ctx, meta)
+	url, err := getDashboardUrlFromCluster(ctx, meta)
 	if err != nil {
 		return resp, err
 	}
@@ -69,7 +69,7 @@ func GetDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) 
 	return resp, nil
 }
 
-func getDashboardUrlFromCluser(ctx context.Context, meta *handler.ClusterMeta) (string, error) {
+func getDashboardUrlFromCluster(ctx context.Context, meta *handler.ClusterMeta) (string, error) {
 	pdAddress := meta.GetPDClientAddresses()
 	if len(pdAddress) == 0 {
 		framework.LogWithContext(ctx).Errorf("get pd address from meta failed, empty address")

@@ -60,11 +60,9 @@ func Query(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /workflow/{workFlowId} [get]
 func Detail(c *gin.Context) {
-	req := message.QueryWorkFlowDetailReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.QueryWorkFlowDetailReq{
 		WorkFlowID: c.Param("workFlowId"),
-	}
-
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DetailFlow, &message.QueryWorkFlowDetailResp{},
 			requestBody,
 			controller.DefaultTimeout)

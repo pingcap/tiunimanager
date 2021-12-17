@@ -709,6 +709,7 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 	detailReq := &message.QueryWorkFlowDetailReq{}
 	err := json.Unmarshal([]byte(reqData), detailReq)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("json unmarshal request failed %s", err.Error())
 		handleResponse(ctx, response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil, nil)
 		return nil
 	}
@@ -716,6 +717,7 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 	manager := workflow.GetWorkFlowService()
 	flowDetail, err := manager.DetailWorkFlow(ctx, detailReq.WorkFlowID)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("call detail workflow failed %s", err.Error())
 		handleResponse(ctx, response, framework.NewTiEMError(common.TIEM_DETAIL_WORKFLOW_FAILED, err.Error()), nil, nil)
 		return nil
 	}

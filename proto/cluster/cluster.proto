@@ -26,7 +26,7 @@ service ClusterService {
 
     rpc QueryBackupRecords(RpcRequest) returns (RpcResponse);
     rpc CreateBackup(RpcRequest) returns (RpcResponse);
-    rpc RecoverCluster(RecoverRequest) returns (RecoverResponse);
+    rpc RestoreNewCluster(RpcRequest) returns (RpcResponse);
     rpc DeleteBackupRecords(RpcRequest) returns (RpcResponse);
     rpc SaveBackupStrategy(RpcRequest) returns (RpcResponse);
     rpc GetBackupStrategy(RpcRequest) returns (RpcResponse);

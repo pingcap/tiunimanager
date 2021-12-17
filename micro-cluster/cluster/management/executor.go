@@ -16,6 +16,7 @@
 package management
 
 import (
+	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -247,6 +248,36 @@ func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	}
 
 	context.SetData(ContextBackupID, backupResponse.BackupID)
+
+	return nil
+}
+
+func restoreNewCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	backupID := context.GetData(ContextBackupID).(string)
+
+	restoreResponse, err := backuprestore.GetBRService().RestoreExistCluster(context.Context,
+		cluster.RestoreExistClusterReq{
+			ClusterID: clusterMeta.Cluster.ID,
+			BackupID:  backupID,
+		})
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf("do restore for cluster %s by backup id %s error: %s", clusterMeta.Cluster.ID, backupID, err.Error())
+		return fmt.Errorf("do restore for cluster %s by backup id %s error: %s", clusterMeta.Cluster.ID, backupID, err.Error())
+	}
+
+	context.SetData(ContextWorkflowID, restoreResponse.WorkFlowID)
+
+	return nil
+}
+
+func waitWorkFlow(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	workflowId := context.GetData(ContextWorkflowID).(string)
+
+	if err := handler.WaitWorkflow(workflowId, 30*24*time.Hour); err != nil {
+		framework.LogWithContext(context.Context).Errorf("wait workflow %s error: %s", workflowId, err.Error())
+		return fmt.Errorf("wait workflow %s error: %s", workflowId, err.Error())
+	}
 
 	return nil
 }

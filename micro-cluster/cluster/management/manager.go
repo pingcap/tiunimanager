@@ -34,6 +34,7 @@ const (
 	ContextSourceClusterMeta = "SourceClusterMeta"
 	ContextCloneStrategy     = "CloneStrategy"
 	ContextBackupID          = "BackupID"
+	ContextWorkflowID        = "WorkflowID"
 )
 
 type Manager struct{}
@@ -44,6 +45,7 @@ func NewClusterManager() *Manager {
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowScaleOutCluster, &scaleOutDefine)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowScaleInCluster, &scaleInDefine)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowCreateCluster, &createClusterFlow)
+	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowRestoreNewCluster, &restoreNewClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowDeleteCluster, &deleteClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowRestartCluster, &restartClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowStopCluster, &stopClusterFlow)
@@ -267,6 +269,57 @@ func (p *Manager) CreateCluster(ctx context.Context, req cluster.CreateClusterRe
 		ContextClusterMeta: meta,
 	}
 	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceCreating, createClusterFlow.FlowName, data)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"cluster %s async maintenance error: %s", meta.Cluster.ID, err.Error())
+		return
+	}
+
+	resp.ClusterID = meta.Cluster.ID
+	resp.WorkFlowID = flowID
+	return
+}
+
+var restoreNewClusterFlow = workflow.WorkFlowDefine{
+	FlowName: constants.FlowRestoreNewCluster,
+	TaskNodes: map[string]*workflow.NodeDefine{
+		"start":            {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
+		"resourceDone":     {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
+		"configDone":       {"deployCluster", "deployDone", "fail", workflow.PollingNode, deployCluster},
+		"deployDone":       {"startupCluster", "startupDone", "fail", workflow.PollingNode, startCluster},
+		"startupDone":      {"initAccount", "initDone", "fail", workflow.SyncFuncNode, initDatabaseAccount},
+		"initDone":         {"syncTopology", "syncTopologyDone", "fail", workflow.SyncFuncNode, syncTopology},
+		"syncTopologyDone": {"restoreData", "restoreDone", "fail", workflow.SyncFuncNode, restoreNewCluster},
+		"restoreDone":      {"waitWorkFlow", "waitDone", "fail", workflow.SyncFuncNode, waitWorkFlow},
+		"waitDone":         {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
+		"onlineDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistCluster)},
+		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure, revertResourceAfterFailure)},
+	},
+}
+
+// RestoreNewCluster
+// @Description: restore a new cluster by backup record
+// @Receiver m
+// @Parameter ctx
+// @Parameter request
+// @Return cluster.RestoreNewClusterResp
+// @Return error
+func (p *Manager) RestoreNewCluster(ctx context.Context, req cluster.RestoreNewClusterReq) (resp cluster.RestoreNewClusterResp, err error) {
+	meta := &handler.ClusterMeta{}
+	if err = meta.BuildCluster(ctx, req.CreateClusterParameter); err != nil {
+		framework.LogWithContext(ctx).Errorf("build cluser %s error: %s", req.Name, err.Error())
+		return
+	}
+	if err = meta.AddInstances(ctx, req.ResourceParameter.InstanceResource); err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"add instances into cluster %s topology error: %s", meta.Cluster.ID, err.Error())
+		return
+	}
+
+	data := map[string]interface{}{
+		ContextClusterMeta: meta,
+	}
+	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceRestore, createClusterFlow.FlowName, data)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"cluster %s async maintenance error: %s", meta.Cluster.ID, err.Error())

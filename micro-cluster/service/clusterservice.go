@@ -297,7 +297,20 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb
 
 	if handleRequest(ctx, req, resp, &request) {
 		result, err := c.clusterManager.CreateCluster(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
 
+	return nil
+}
+
+func (c ClusterServiceHandler) RestoreNewCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+	start := time.Now()
+	defer handleMetrics(start, "RestoreNewCluster", int(resp.GetCode()))
+
+	request := cluster.RestoreNewClusterReq{}
+
+	if handleRequest(ctx, req, resp, &request) {
+		result, err := c.clusterManager.RestoreNewCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 

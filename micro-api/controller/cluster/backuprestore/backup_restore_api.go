@@ -64,11 +64,9 @@ func Backup(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/strategy/ [get]
 func GetBackupStrategy(c *gin.Context) {
-	req := cluster.GetBackupStrategyReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.GetBackupStrategyReq{
 		ClusterID: c.Param("clusterId"),
-	}
-
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.GetBackupStrategy, &cluster.GetBackupStrategyResp{},
 			requestBody,
 			controller.DefaultTimeout)

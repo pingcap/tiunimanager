@@ -255,12 +255,12 @@ func (p *ClusterMeta) GenerateTopologyConfig(ctx context.Context) (string, error
 // @Description update cluster status
 // @Return		error
 func (p *ClusterMeta) UpdateClusterStatus(ctx context.Context, status constants.ClusterRunningStatus) error {
-	p.Cluster.Status = string(status)
 	err := models.GetClusterReaderWriter().UpdateStatus(ctx, p.Cluster.ID, status)
 
 	if err != nil {
 		framework.LogWithContext(ctx).Infof("update cluster[%s] status into %s failed", p.Cluster.Name, status)
 	} else {
+		p.Cluster.Status = string(status)
 		framework.LogWithContext(ctx).Errorf("update cluster[%s] status into %s succeed", p.Cluster.Name, status)
 	}
 	return err
@@ -307,23 +307,24 @@ func (p *ClusterMeta) IsComponentRequired(ctx context.Context, componentType str
 func (p *ClusterMeta) DeleteInstance(ctx context.Context, instanceAddress string) (*management.ClusterInstance, error) {
 	instance, err := p.GetInstance(ctx, instanceAddress)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("get instance error, err : %s", err.Error())
+		//TODO modify instanceAddress to instanceID
+		framework.LogWithContext(ctx).Errorf("get instanceaddr %s, error %s", instanceAddress, err.Error())
 		return nil, err
 	}
-	// delete instance from cluster topology
-	for componentType, components := range p.Instances {
-		for index, item := range components {
-			if item.ID == instance.ID {
-				components = append(components[:index], components[index+1:]...)
-				p.Instances[componentType] = components
+	if err = models.GetClusterReaderWriter().DeleteInstance(ctx, instance.ID); err == nil {
+		// delete instance from cluster topology
+		for componentType, components := range p.Instances {
+			for index, item := range components {
+				if item.ID == instance.ID {
+					components = append(components[:index], components[index+1:]...)
+					p.Instances[componentType] = components
+				}
 			}
 		}
+	} else {
+		framework.LogWithContext(ctx).Errorf("delete instance %s from database failed, error: %s", instance.ID, err.Error())
 	}
-
-	if err = models.GetClusterReaderWriter().DeleteInstance(ctx, instance.ID); err != nil {
-		return nil, err
-	}
-	return instance, nil
+	return instance, err
 }
 
 // CloneMeta

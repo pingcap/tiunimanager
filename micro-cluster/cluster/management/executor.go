@@ -175,6 +175,9 @@ func freeInstanceResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 	instanceID := context.GetData(ContextInstanceID).(string)
 
 	instance, err := clusterMeta.DeleteInstance(context.Context, instanceID)
+	if err != nil {
+		return err // clusterMeta already output logs
+	}
 	// recycle instance resource
 	request := &resourceStructs.RecycleRequest{
 		RecycleReqs: []resourceStructs.RecycleRequire{
@@ -201,11 +204,12 @@ func freeInstanceResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 			},
 		},
 	}
+
 	err = resourceManagement.GetManagement().GetAllocatorRecycler().RecycleResources(context, request)
 
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
-			"cluster[%s] delete instance[%s] error: %s", clusterMeta.Cluster.Name, instanceID, err.Error())
+			"clusterid: %s delete instanceid: %s error: %s, clustername: %s", clusterMeta.Cluster.ID, instanceID, err.Error(), clusterMeta.Cluster.Name)
 		return err
 	}
 
@@ -231,7 +235,7 @@ func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	}
 
 	if err = handler.WaitWorkflow(backupResponse.WorkFlowID, 10*time.Second); err != nil {
-		framework.LogWithContext(context.Context).Errorf("backup workflow error: %s", err)
+		framework.LogWithContext(context.Context).Errorf("wait backup workflow %s, error %s", backupResponse.WorkFlowID, err)
 		return err
 	}
 

@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
+	"github.com/pingcap-inc/tiem/micro-cluster/service/user/adapt"
 	"net/http"
 	"strconv"
 	"time"
@@ -29,12 +31,10 @@ import (
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
-	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 	clusterManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/management"
 	clusterParameter "github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
 	"github.com/pingcap-inc/tiem/micro-cluster/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
-	parameterGroupManager "github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager"
 	"github.com/pingcap-inc/tiem/workflow"
 
@@ -44,20 +44,16 @@ import (
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
-	"github.com/pingcap-inc/tiem/micro-cluster/service/user/adapt"
 	user "github.com/pingcap-inc/tiem/micro-cluster/service/user/application"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	userDomain "github.com/pingcap-inc/tiem/micro-cluster/service/user/domain"
 
-	log "github.com/sirupsen/logrus"
+	logs "github.com/sirupsen/logrus"
 )
 
-var TiEMClusterServiceName = "go.micro.tiem.cluster"
-
 var SuccessResponseStatus = &clusterpb.ResponseStatusDTO{Code: 0}
-var BizErrorResponseStatus = &clusterpb.ResponseStatusDTO{Code: 500}
 
 type ClusterServiceHandler struct {
 	resourceManager         *resource.ResourceManager
@@ -65,7 +61,7 @@ type ClusterServiceHandler struct {
 	authManager             *user.AuthManager
 	tenantManager           *user.TenantManager
 	userManager             *user.UserManager
-	changeFeedManager       *changeFeedManager.Manager
+	changeFeedManager       *changefeed.Manager
 	parameterGroupManager   *parametergroup.Manager
 	clusterParameterManager *clusterParameter.Manager
 	clusterManager          *clusterManager.Manager
@@ -112,166 +108,7 @@ func handleResponse(ctx context.Context, resp *clusterpb.RpcResponse, err error,
 	}
 }
 
-func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := cluster.CreateChangeFeedTaskReq{}
-
-	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.changeFeedManager.Create(ctx, request)
-		handleResponse(ctx, resp, err, result, nil)
-	}
-
-	return nil
-}
-
-func (handler *ClusterServiceHandler) PauseChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	panic("implement me")
-}
-
-func (handler *ClusterServiceHandler) ResumeChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	panic("implement me")
-}
-
-func (handler *ClusterServiceHandler) DeleteChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	panic("implement me")
-}
-
-func (handler *ClusterServiceHandler) UpdateChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	panic("implement me")
-}
-
-func (handler *ClusterServiceHandler) QueryChangeFeedTasks(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	panic("implement me")
-}
-
-func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandler {
-	handler := new(ClusterServiceHandler)
-	handler.SetResourceManager(resource.NewResourceManager())
-	handler.userManager = user.NewUserManager(adapt.MicroMetaDbRepo{})
-	handler.tenantManager = user.NewTenantManager(adapt.MicroMetaDbRepo{})
-	handler.authManager = user.NewAuthManager(handler.userManager, adapt.MicroMetaDbRepo{})
-	handler.changeFeedManager = changeFeedManager.NewManager()
-	handler.parameterGroupManager = parameterGroupManager.NewManager()
-	handler.clusterParameterManager = clusterParameter.NewManager()
-	handler.clusterManager = clusterManager.NewClusterManager()
-	handler.systemConfigManager = config.NewSystemConfigManager()
-	handler.brManager = backuprestore.GetBRService()
-	handler.importexportManager = importexport.GetImportExportService()
-
-	// This will be removed after cluster refactor completed.
-	handler.resourceManager2 = resourcemanager.NewResourceManager()
-
-	return handler
-}
-
-func (handler *ClusterServiceHandler) CreateParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := &message.CreateParameterGroupReq{}
-
-	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.parameterGroupManager.CreateParameterGroup(ctx, *request)
-		handleResponse(ctx, resp, err, result, nil)
-	}
-	return nil
-}
-
-func (handler *ClusterServiceHandler) UpdateParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := &message.UpdateParameterGroupReq{}
-
-	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.parameterGroupManager.UpdateParameterGroup(ctx, *request)
-		handleResponse(ctx, resp, err, result, nil)
-	}
-	return nil
-}
-
-func (handler *ClusterServiceHandler) DeleteParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := &message.DeleteParameterGroupReq{}
-
-	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.parameterGroupManager.DeleteParameterGroup(ctx, *request)
-		handleResponse(ctx, resp, err, result, nil)
-	}
-	return nil
-}
-
-func (handler *ClusterServiceHandler) QueryParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := &message.QueryParameterGroupReq{}
-
-	if handleRequest(ctx, req, resp, request) {
-		result, page, err := handler.parameterGroupManager.QueryParameterGroup(ctx, *request)
-		handleResponse(ctx, resp, err, result, page)
-	}
-	return nil
-}
-
-func (handler *ClusterServiceHandler) DetailParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := &message.DetailParameterGroupReq{}
-
-	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.parameterGroupManager.DetailParameterGroup(ctx, *request)
-		handleResponse(ctx, resp, err, result, nil)
-	}
-	return nil
-}
-
-func (handler *ClusterServiceHandler) ApplyParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := &message.ApplyParameterGroupReq{}
-
-	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterParameterManager.ApplyParameterGroup(ctx, *request)
-		handleResponse(ctx, resp, err, result, nil)
-	}
-	return nil
-}
-
-func (handler *ClusterServiceHandler) CopyParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := &message.CopyParameterGroupReq{}
-
-	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.parameterGroupManager.CopyParameterGroup(ctx, *request)
-		handleResponse(ctx, resp, err, result, nil)
-	}
-	return nil
-}
-
-func (handler *ClusterServiceHandler) QueryClusterParameters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := &cluster.QueryClusterParametersReq{}
-
-	if handleRequest(ctx, req, resp, request) {
-		result, page, err := handler.clusterParameterManager.QueryClusterParameters(ctx, *request)
-		handleResponse(ctx, resp, err, result, page)
-	}
-	return nil
-}
-
-func (handler *ClusterServiceHandler) UpdateClusterParameters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := &cluster.UpdateClusterParametersReq{}
-
-	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterParameterManager.UpdateClusterParameters(ctx, *request)
-		handleResponse(ctx, resp, err, result, nil)
-	}
-	return nil
-}
-
-func (handler *ClusterServiceHandler) InspectClusterParameters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := &cluster.InspectClusterParametersReq{}
-
-	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterParameterManager.InspectClusterParameters(ctx, *request)
-		handleResponse(ctx, resp, err, result, nil)
-	}
-	return nil
-}
-
-func (handler *ClusterServiceHandler) SetResourceManager(resourceManager *resource.ResourceManager) {
-	handler.resourceManager = resourceManager
-}
-
-func (handler *ClusterServiceHandler) ResourceManager() *resource.ResourceManager {
-	return handler.resourceManager
-}
-
-func getLoggerWithContext(ctx context.Context) *log.Entry {
+func getLoggerWithContext(ctx context.Context) *logs.Entry {
 	return framework.LogWithContext(ctx)
 }
 
@@ -289,14 +126,222 @@ func handleMetrics(start time.Time, funcName string, code int) {
 		Inc()
 }
 
-func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandler {
+	handler := new(ClusterServiceHandler)
+	handler.SetResourceManager(resource.NewResourceManager())
+	handler.userManager = user.NewUserManager(adapt.MicroMetaDbRepo{})
+	handler.tenantManager = user.NewTenantManager(adapt.MicroMetaDbRepo{})
+	handler.authManager = user.NewAuthManager(handler.userManager, adapt.MicroMetaDbRepo{})
+	handler.changeFeedManager = changefeed.NewManager()
+	handler.parameterGroupManager = parametergroup.NewManager()
+	handler.clusterParameterManager = clusterParameter.NewManager()
+	handler.clusterManager = clusterManager.NewClusterManager()
+	handler.systemConfigManager = config.NewSystemConfigManager()
+	handler.brManager = backuprestore.GetBRService()
+	handler.importexportManager = importexport.GetImportExportService()
+
+	// This will be removed after cluster refactor completed.
+	handler.resourceManager2 = resourcemanager.NewResourceManager()
+
+	return handler
+}
+
+func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "CreateChangeFeedTask", int(resp.GetCode()))
+
+	request := cluster.CreateChangeFeedTaskReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.changeFeedManager.Create(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) PauseChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+
+	start := time.Now()
+	defer handleMetrics(start, "PauseChangeFeedTask", int(response.GetCode()))
+	panic("implement me")
+}
+
+func (handler *ClusterServiceHandler) ResumeChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+
+	start := time.Now()
+	defer handleMetrics(start, "ResumeChangeFeedTask", int(response.GetCode()))
+	panic("implement me")
+}
+
+func (handler *ClusterServiceHandler) DeleteChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+
+	start := time.Now()
+	defer handleMetrics(start, "DeleteChangeFeedTask", int(response.GetCode()))
+	panic("implement me")
+}
+
+func (handler *ClusterServiceHandler) UpdateChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+
+	start := time.Now()
+	defer handleMetrics(start, "UpdateChangeFeedTask", int(response.GetCode()))
+	panic("implement me")
+}
+
+func (handler *ClusterServiceHandler) QueryChangeFeedTasks(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "QueryChangeFeedTasks", int(response.GetCode()))
+	panic("implement me")
+}
+
+func (handler *ClusterServiceHandler) CreateParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+
+	start := time.Now()
+	defer handleMetrics(start, "CreateParameterGroup", int(resp.GetCode()))
+
+	request := message.CreateParameterGroupReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.parameterGroupManager.CreateParameterGroup(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) UpdateParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "UpdateParameterGroup", int(resp.GetCode()))
+	request := message.UpdateParameterGroupReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.parameterGroupManager.UpdateParameterGroup(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) DeleteParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+
+	start := time.Now()
+	defer handleMetrics(start, "DeleteParameterGroup", int(resp.GetCode()))
+	request := message.DeleteParameterGroupReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.parameterGroupManager.DeleteParameterGroup(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) QueryParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+
+	start := time.Now()
+	defer handleMetrics(start, "QueryParameterGroup", int(resp.GetCode()))
+
+	request := message.QueryParameterGroupReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, page, err := handler.parameterGroupManager.QueryParameterGroup(ctx, request)
+		handleResponse(ctx, resp, err, result, page)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) DetailParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+
+	start := time.Now()
+	defer handleMetrics(start, "DetailParameterGroup", int(resp.GetCode()))
+
+	request := message.DetailParameterGroupReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.parameterGroupManager.DetailParameterGroup(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) ApplyParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+
+	start := time.Now()
+	defer handleMetrics(start, "ApplyParameterGroup", int(resp.GetCode()))
+	request := message.ApplyParameterGroupReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.clusterParameterManager.ApplyParameterGroup(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) CopyParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+
+	start := time.Now()
+	defer handleMetrics(start, "CopyParameterGroup", int(resp.GetCode()))
+	request := message.CopyParameterGroupReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.parameterGroupManager.CopyParameterGroup(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) QueryClusterParameters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+
+	start := time.Now()
+	defer handleMetrics(start, "QueryClusterParameters", int(resp.GetCode()))
+	request := cluster.QueryClusterParametersReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, page, err := handler.clusterParameterManager.QueryClusterParameters(ctx, request)
+		handleResponse(ctx, resp, err, result, page)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) UpdateClusterParameters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+
+	start := time.Now()
+	defer handleMetrics(start, "UpdateClusterParameters", int(resp.GetCode()))
+	request := cluster.UpdateClusterParametersReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.clusterParameterManager.UpdateClusterParameters(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) InspectClusterParameters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+
+	start := time.Now()
+	defer handleMetrics(start, "InspectClusterParameters", int(resp.GetCode()))
+	request := cluster.InspectClusterParametersReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.clusterParameterManager.InspectClusterParameters(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) SetResourceManager(resourceManager *resource.ResourceManager) {
+	handler.resourceManager = resourceManager
+}
+
+func (handler *ClusterServiceHandler) ResourceManager() *resource.ResourceManager {
+	return handler.resourceManager
+}
+
+func (handler ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "CreateCluster", int(resp.GetCode()))
 
 	request := cluster.CreateClusterReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, err := c.clusterManager.CreateCluster(ctx, request)
+		result, err := handler.clusterManager.CreateCluster(ctx, request)
 
 		handleResponse(ctx, resp, err, result, nil)
 	}
@@ -349,19 +394,22 @@ func (handler *ClusterServiceHandler) CloneCluster(ctx context.Context, req *clu
 	return nil
 }
 
-func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+func (handler ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+
+	start := time.Now()
+	defer handleMetrics(start, "TakeoverClusters", int(resp.GetCode()))
 	// todo takeover
 	return nil
 }
 
-func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+func (handler ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "QueryCluster", int(resp.GetCode()))
 
 	request := cluster.QueryClustersReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, total, err := c.clusterManager.QueryCluster(ctx, request)
+		result, total, err := handler.clusterManager.QueryCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, &clusterpb.RpcPage{
 			Page:     int32(request.Page),
 			PageSize: int32(request.PageSize),
@@ -372,98 +420,98 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.
 	return nil
 }
 
-func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+func (handler ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "DeleteCluster", int(resp.GetCode()))
 
 	request := cluster.DeleteClusterReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, err := c.clusterManager.DeleteCluster(ctx, request)
+		result, err := handler.clusterManager.DeleteCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
 	return nil
 }
 
-func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+func (handler ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "RestartCluster", int(resp.GetCode()))
 
 	request := cluster.RestartClusterReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, err := c.clusterManager.RestartCluster(ctx, request)
+		result, err := handler.clusterManager.RestartCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
 	return nil
 }
 
-func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+func (handler ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "StopCluster", int(resp.GetCode()))
 
 	request := cluster.StopClusterReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, err := c.clusterManager.StopCluster(ctx, request)
+		result, err := handler.clusterManager.StopCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
 	return nil
 }
 
-func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+func (handler ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "DetailCluster", int(resp.GetCode()))
 
 	request := cluster.QueryClusterDetailReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, err := c.clusterManager.DetailCluster(ctx, request)
+		result, err := handler.clusterManager.DetailCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
 	return nil
 }
 
-func (c ClusterServiceHandler) ExportData(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler ClusterServiceHandler) ExportData(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "ExportData", int(response.GetCode()))
 	framework.LogWithContext(ctx).Info("export data")
 	exportReq := message.DataExportReq{}
 
 	if handleRequest(ctx, request, response, &exportReq) {
-		result, err := c.importexportManager.ExportData(ctx, &exportReq)
+		result, err := handler.importexportManager.ExportData(ctx, &exportReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
 	return nil
 }
 
-func (c ClusterServiceHandler) ImportData(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler ClusterServiceHandler) ImportData(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "ImportData", int(response.GetCode()))
 	framework.LogWithContext(ctx).Info("import data")
 	importReq := message.DataImportReq{}
 
 	if handleRequest(ctx, request, response, &importReq) {
-		result, err := c.importexportManager.ImportData(ctx, &importReq)
+		result, err := handler.importexportManager.ImportData(ctx, &importReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
 	return nil
 }
 
-func (c ClusterServiceHandler) QueryDataTransport(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler ClusterServiceHandler) QueryDataTransport(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "QueryDataTransport", int(response.GetCode()))
 	framework.LogWithContext(ctx).Info("query data transport")
 	queryReq := message.QueryDataImportExportRecordsReq{}
 
 	if handleRequest(ctx, request, response, &queryReq) {
-		result, page, err := c.importexportManager.QueryDataTransportRecords(ctx, &queryReq)
+		result, page, err := handler.importexportManager.QueryDataTransportRecords(ctx, &queryReq)
 		handleResponse(ctx, response, err, *result, &clusterpb.RpcPage{
 			Page:     int32(page.Page),
 			PageSize: int32(page.PageSize),
@@ -474,49 +522,49 @@ func (c ClusterServiceHandler) QueryDataTransport(ctx context.Context, request *
 	return nil
 }
 
-func (c ClusterServiceHandler) DeleteDataTransportRecord(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler ClusterServiceHandler) DeleteDataTransportRecord(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "DeleteDataTransportRecord", int(response.GetCode()))
 	framework.LogWithContext(ctx).Info("delete data transport record")
 	deleteReq := message.DeleteImportExportRecordReq{}
 
 	if handleRequest(ctx, request, response, &deleteReq) {
-		result, err := c.importexportManager.DeleteDataTransportRecord(ctx, &deleteReq)
+		result, err := handler.importexportManager.DeleteDataTransportRecord(ctx, &deleteReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
 	return nil
 }
 
-func (c *ClusterServiceHandler) GetSystemConfig(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler *ClusterServiceHandler) GetSystemConfig(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "GetSystemConfig", int(response.GetCode()))
 	framework.LogWithContext(ctx).Info("get system config")
 	getReq := message.GetSystemConfigReq{}
 
 	if handleRequest(ctx, request, response, &getReq) {
-		result, err := c.systemConfigManager.GetSystemConfig(ctx, &getReq)
+		result, err := handler.systemConfigManager.GetSystemConfig(ctx, &getReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
 	return nil
 }
 
-func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler ClusterServiceHandler) CreateBackup(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "CreateBackup", int(response.GetCode()))
 	framework.LogWithContext(ctx).Info("create backup")
 	backupReq := cluster.BackupClusterDataReq{}
 
 	if handleRequest(ctx, request, response, &backupReq) {
-		result, err := c.brManager.BackupCluster(ctx, &backupReq)
+		result, err := handler.brManager.BackupCluster(ctx, &backupReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
 	return nil
 }
 
-func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterpb.RecoverRequest, resp *clusterpb.RecoverResponse) (err error) {
+func (handler ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterpb.RecoverRequest, resp *clusterpb.RecoverResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "RecoverCluster", int(resp.GetRespStatus().GetCode()))
 	if err = domain.RecoverPreCheck(ctx, req); err != nil {
@@ -538,56 +586,56 @@ func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterp
 	return nil
 }
 
-func (c ClusterServiceHandler) DeleteBackupRecords(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler ClusterServiceHandler) DeleteBackupRecords(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "DeleteBackupRecord", int(response.GetCode()))
 	framework.LogWithContext(ctx).Info("delete backup records")
 	deleteReq := cluster.DeleteBackupDataReq{}
 
 	if handleRequest(ctx, request, response, &deleteReq) {
-		result, err := c.brManager.DeleteBackupRecords(ctx, &deleteReq)
+		result, err := handler.brManager.DeleteBackupRecords(ctx, &deleteReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
 	return nil
 }
 
-func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "SaveBackupStrategy", int(response.GetCode()))
 	framework.LogWithContext(ctx).Info("save backup strategy")
 	saveReq := cluster.SaveBackupStrategyReq{}
 
 	if handleRequest(ctx, request, response, &saveReq) {
-		result, err := c.brManager.SaveBackupStrategy(ctx, &saveReq)
+		result, err := handler.brManager.SaveBackupStrategy(ctx, &saveReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
 	return nil
 }
 
-func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "GetBackupStrategy", int(response.GetCode()))
 	framework.LogWithContext(ctx).Info("get backup strategy")
 	getReq := cluster.GetBackupStrategyReq{}
 
 	if handleRequest(ctx, request, response, &getReq) {
-		result, err := c.brManager.GetBackupStrategy(ctx, &getReq)
+		result, err := handler.brManager.GetBackupStrategy(ctx, &getReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
 	return nil
 }
 
-func (c ClusterServiceHandler) QueryBackupRecords(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) (err error) {
+func (handler ClusterServiceHandler) QueryBackupRecords(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "QueryBackupRecords", int(response.GetCode()))
 	framework.LogWithContext(ctx).Info("query backup records")
 	queryReq := cluster.QueryBackupRecordsReq{}
 
 	if handleRequest(ctx, request, response, &queryReq) {
-		result, page, err := c.brManager.QueryClusterBackupRecords(ctx, &queryReq)
+		result, page, err := handler.brManager.QueryClusterBackupRecords(ctx, &queryReq)
 		handleResponse(ctx, response, err, *result, &clusterpb.RpcPage{
 			Page:     int32(page.Page),
 			PageSize: int32(page.PageSize),
@@ -598,7 +646,7 @@ func (c ClusterServiceHandler) QueryBackupRecords(ctx context.Context, request *
 	return nil
 }
 
-func (c ClusterServiceHandler) QueryParameters(ctx context.Context, request *clusterpb.QueryClusterParametersRequest, response *clusterpb.QueryClusterParametersResponse) (err error) {
+func (handler ClusterServiceHandler) QueryParameters(ctx context.Context, request *clusterpb.QueryClusterParametersRequest, response *clusterpb.QueryClusterParametersResponse) error {
 
 	content, err := domain.GetParameters(ctx, request.Operator, request.ClusterId)
 
@@ -614,7 +662,7 @@ func (c ClusterServiceHandler) QueryParameters(ctx context.Context, request *clu
 	}
 }
 
-func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clusterpb.SaveClusterParametersRequest, response *clusterpb.SaveClusterParametersResponse) (err error) {
+func (handler ClusterServiceHandler) SaveParameters(ctx context.Context, request *clusterpb.SaveClusterParametersRequest, response *clusterpb.SaveClusterParametersResponse) error {
 
 	//clusterAggregation, err := domain.ModifyParameters(ctx, request.Operator, request.ClusterId, request.ParametersJson)
 	//
@@ -628,24 +676,24 @@ func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clus
 	//	}
 	//	return nil
 	//}
-	return err
+	return nil
 }
 
-func (c ClusterServiceHandler) GetDashboardInfo(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) (err error) {
+func (handler ClusterServiceHandler) GetDashboardInfo(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "DescribeDashboard", int(response.GetCode()))
 	framework.LogWithContext(ctx).Info("get cluster dashboard info")
 	dashboardReq := cluster.GetDashboardInfoReq{}
 
 	if handleRequest(ctx, request, response, &dashboardReq) {
-		result, err := c.clusterManager.GetClusterDashboardInfo(ctx, &dashboardReq)
+		result, err := handler.clusterManager.GetClusterDashboardInfo(ctx, &dashboardReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
 	return nil
 }
 
-func (c ClusterServiceHandler) DescribeMonitor(ctx context.Context, request *clusterpb.DescribeMonitorRequest, response *clusterpb.DescribeMonitorResponse) (err error) {
+func (handler ClusterServiceHandler) DescribeMonitor(ctx context.Context, request *clusterpb.DescribeMonitorRequest, response *clusterpb.DescribeMonitorResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "DescribeMonitor", int(response.GetStatus().GetCode()))
 	monitor, err := domain.DescribeMonitor(ctx, request.Operator, request.ClusterId)
@@ -662,7 +710,11 @@ func (c ClusterServiceHandler) DescribeMonitor(ctx context.Context, request *clu
 	return nil
 }
 
-func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+
+	start := time.Now()
+	defer handleMetrics(start, "ListFlows", int(response.GetCode()))
+
 	framework.LogWithContext(ctx).Info("list flows")
 	reqData := request.GetRequest()
 
@@ -702,8 +754,10 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb
 	return nil
 }
 
-func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler *ClusterServiceHandler) DetailFlow(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	framework.LogWithContext(ctx).Info("detail flow")
+	start := time.Now()
+	defer handleMetrics(start, "DetailFlow", int(response.GetCode()))
 	reqData := request.GetRequest()
 
 	detailReq := &message.QueryWorkFlowDetailReq{}
@@ -741,10 +795,10 @@ var ManageSuccessResponseStatus = &clusterpb.ManagerResponseStatus{
 	Code: 0,
 }
 
-func (p *ClusterServiceHandler) Login(ctx context.Context, req *clusterpb.LoginRequest, resp *clusterpb.LoginResponse) error {
+func (handler *ClusterServiceHandler) Login(ctx context.Context, req *clusterpb.LoginRequest, resp *clusterpb.LoginResponse) error {
 	log := framework.LogWithContext(ctx).WithField("fp", "ClusterServiceHandler.Login")
 	log.Debug("req:", req)
-	token, err := p.authManager.Login(ctx, req.GetAccountName(), req.GetPassword())
+	token, err := handler.authManager.Login(ctx, req.GetAccountName(), req.GetPassword())
 
 	if err != nil {
 		resp.Status = &clusterpb.ManagerResponseStatus{
@@ -762,8 +816,8 @@ func (p *ClusterServiceHandler) Login(ctx context.Context, req *clusterpb.LoginR
 
 }
 
-func (p *ClusterServiceHandler) Logout(ctx context.Context, req *clusterpb.LogoutRequest, resp *clusterpb.LogoutResponse) error {
-	accountName, err := p.authManager.Logout(ctx, req.TokenString)
+func (handler *ClusterServiceHandler) Logout(ctx context.Context, req *clusterpb.LogoutRequest, resp *clusterpb.LogoutResponse) error {
+	accountName, err := handler.authManager.Logout(ctx, req.TokenString)
 	if err != nil {
 		resp.Status = &clusterpb.ManagerResponseStatus{
 			Code:    http.StatusInternalServerError,
@@ -778,8 +832,8 @@ func (p *ClusterServiceHandler) Logout(ctx context.Context, req *clusterpb.Logou
 
 }
 
-func (p *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *clusterpb.VerifyIdentityRequest, resp *clusterpb.VerifyIdentityResponse) error {
-	tenantId, accountId, accountName, err := p.authManager.Accessible(ctx, req.GetAuthType(), req.GetPath(), req.GetTokenString())
+func (handler *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *clusterpb.VerifyIdentityRequest, resp *clusterpb.VerifyIdentityResponse) error {
+	tenantId, accountId, accountName, err := handler.authManager.Accessible(ctx, req.GetAuthType(), req.GetPath(), req.GetTokenString())
 
 	if err != nil {
 		if _, ok := err.(*userDomain.UnauthorizedError); ok {
@@ -808,15 +862,17 @@ func (p *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *cluster
 	return nil
 }
 
-func (clusterManager *ClusterServiceHandler) AllocResourcesInBatch(ctx context.Context, in *clusterpb.BatchAllocRequest, out *clusterpb.BatchAllocResponse) error {
-	return clusterManager.resourceManager.AllocResourcesInBatch(ctx, in, out)
+func (handler *ClusterServiceHandler) AllocResourcesInBatch(ctx context.Context, in *clusterpb.BatchAllocRequest, out *clusterpb.BatchAllocResponse) error {
+	return handler.resourceManager.AllocResourcesInBatch(ctx, in, out)
 }
 
-func (clusterManager *ClusterServiceHandler) RecycleResources(ctx context.Context, in *clusterpb.RecycleRequest, out *clusterpb.RecycleResponse) error {
-	return clusterManager.resourceManager.RecycleResources(ctx, in, out)
+func (handler *ClusterServiceHandler) RecycleResources(ctx context.Context, in *clusterpb.RecycleRequest, out *clusterpb.RecycleResponse) error {
+	return handler.resourceManager.RecycleResources(ctx, in, out)
 }
 
 func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "ImportHosts", int(response.GetCode()))
 	reqStruct := message.ImportHostsReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
@@ -832,6 +888,9 @@ func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *
 }
 
 func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+
+	start := time.Now()
+	defer handleMetrics(start, "DeleteHosts", int(response.GetCode()))
 	reqStruct := message.DeleteHostsReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
@@ -844,6 +903,9 @@ func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, request *
 }
 
 func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+
+	start := time.Now()
+	defer handleMetrics(start, "QueryHosts", int(response.GetCode()))
 	reqStruct := message.QueryHostsReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
@@ -862,6 +924,9 @@ func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, request *c
 }
 
 func (handler *ClusterServiceHandler) UpdateHostReserved(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+
+	start := time.Now()
+	defer handleMetrics(start, "UpdateHostReserved", int(response.GetCode()))
 	reqStruct := message.UpdateHostReservedReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
@@ -874,6 +939,8 @@ func (handler *ClusterServiceHandler) UpdateHostReserved(ctx context.Context, re
 }
 
 func (handler *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "UpdateHostStatus", int(response.GetCode()))
 	reqStruct := message.UpdateHostStatusReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
@@ -886,6 +953,9 @@ func (handler *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, requ
 }
 
 func (handler *ClusterServiceHandler) GetHierarchy(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+
+	start := time.Now()
+	defer handleMetrics(start, "GetHierarchy", int(response.GetCode()))
 	reqStruct := message.GetHierarchyReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
@@ -903,6 +973,8 @@ func (handler *ClusterServiceHandler) GetHierarchy(ctx context.Context, request 
 }
 
 func (handler *ClusterServiceHandler) GetStocks(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "GetStocks", int(response.GetCode()))
 	reqStruct := message.GetStocksReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {

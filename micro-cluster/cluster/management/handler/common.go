@@ -35,6 +35,7 @@ import (
 )
 
 const CheckMaxReplicaCmd = "SELECT MAX(replica_count) as max_replica_count FROM information_schema.tiflash_replica;"
+const DefaultTiupTimeOut = 360
 
 type PlacementRules struct {
 	EnablePlacementRules string `json:"enable-placement-rules"`
@@ -77,13 +78,14 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 			}
 
 			config, err := secondparty.Manager.ClusterComponentCtl(ctx, secondparty.CTLComponentTypeStr,
-				meta.Cluster.Version, spec.ComponentPD, []string{"-u", pdID, "config", "show", "replication"}, 0)
+				meta.Cluster.Version, spec.ComponentPD, []string{"-u", pdID, "config", "show", "replication"}, DefaultTiupTimeOut)
 			if err != nil {
 				return err
 			}
 			replication := &PlacementRules{}
 			if err = json.Unmarshal([]byte(config), replication); err != nil {
-				return framework.WrapError(common.TIEM_UNMARSHAL_ERROR, "", err)
+				return framework.WrapError(common.TIEM_UNMARSHAL_ERROR,
+					fmt.Sprintf("parse placement rules error: %s", err.Error()), err)
 			}
 			if replication.EnablePlacementRules == "false" {
 				return framework.NewTiEMError(common.TIEM_CHECK_PLACEMENT_RULES_ERROR,
@@ -115,18 +117,20 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql",
 			meta.Cluster.DBUser, meta.Cluster.DBPassword, address[0].IP, address[0].Port))
 		if err != nil {
-			return framework.WrapError(common.TIEM_CONNECT_DB_ERROR, "", err)
+			return framework.WrapError(common.TIEM_CONNECT_DB_ERROR, err.Error(), err)
 		}
 		defer db.Close()
-		MaxReplicaCount := 0
+		var MaxReplicaCount sql.NullInt64
 		err = db.QueryRow(CheckMaxReplicaCmd).Scan(&MaxReplicaCount)
 		if err != nil {
-			return framework.WrapError(common.TIEM_SCAN_MAX_REPLICA_COUNT_ERROR, "", err)
+			return framework.WrapError(common.TIEM_SCAN_MAX_REPLICA_COUNT_ERROR, err.Error(), err)
 		}
-		framework.LogWithContext(ctx).Infof("TiFlash max replicas: %d", MaxReplicaCount)
-		if len(meta.Instances[string(constants.ComponentIDTiFlash)])-1 < MaxReplicaCount {
-			return framework.NewTiEMError(common.TIEM_CHECK_TIFLASH_MAX_REPLICAS_ERROR,
-				"the number of remaining TiFlash instances is less than the maximum copies of data tables")
+		if MaxReplicaCount.Valid {
+			framework.LogWithContext(ctx).Infof("TiFlash max replicas: %d", MaxReplicaCount.Int64)
+			if len(meta.Instances[string(constants.ComponentIDTiFlash)])-1 < int(MaxReplicaCount.Int64) {
+				return framework.NewTiEMError(common.TIEM_CHECK_TIFLASH_MAX_REPLICAS_ERROR,
+					"the number of remaining TiFlash instances is less than the maximum copies of data tables")
+			}
 		}
 	}
 

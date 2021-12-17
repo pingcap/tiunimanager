@@ -48,7 +48,9 @@ func GetDashboardInfo(ctx context.Context, request *cluster.GetDashboardInfoReq)
 	meta, err := handler.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get cluster %s meta failed: %s", request.ClusterID, err.Error())
-		return nil, err
+		return &cluster.GetDashboardInfoResp{
+			ClusterID: request.ClusterID,
+		}, err
 	}
 
 	tidbUserInfo := meta.GetClusterUserNamePasswd()
@@ -56,20 +58,22 @@ func GetDashboardInfo(ctx context.Context, request *cluster.GetDashboardInfoReq)
 
 	url, err := getDashboardUrlFromCluser(ctx, meta)
 	if err != nil {
-		return nil, err
+		return &cluster.GetDashboardInfoResp{
+			ClusterID: request.ClusterID,
+		}, err
 	}
 	token, err := getLoginToken(ctx, url, tidbUserInfo.UserName, tidbUserInfo.Password)
 	if err != nil {
-		return nil, err
+		return &cluster.GetDashboardInfoResp{
+			ClusterID: request.ClusterID,
+		}, err
 	}
 
-	dashboard := &cluster.GetDashboardInfoResp{
+	return &cluster.GetDashboardInfoResp{
 		ClusterID: request.ClusterID,
 		Url:       url,
 		Token:     token,
-	}
-
-	return dashboard, nil
+	}, nil
 }
 
 func getDashboardUrlFromCluser(ctx context.Context, meta *handler.ClusterMeta) (string, error) {

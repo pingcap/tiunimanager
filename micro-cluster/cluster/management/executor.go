@@ -220,7 +220,7 @@ func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		return nil
 	}
 	backupResponse, err := backuprestore.GetBRService().BackupCluster(context.Context,
-		&cluster.BackupClusterDataReq{
+		cluster.BackupClusterDataReq{
 			ClusterID:  sourceClusterMeta.Cluster.ID,
 			BackupMode: string(constants.BackupModeManual),
 		})
@@ -394,7 +394,7 @@ func syncBackupStrategy(node *workflowModel.WorkFlowNode, context *workflow.Flow
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
 	sourceStrategyRes, err := backuprestore.GetBRService().GetBackupStrategy(context.Context,
-		&cluster.GetBackupStrategyReq{
+		cluster.GetBackupStrategyReq{
 			ClusterID: sourceClusterMeta.Cluster.ID,
 		})
 	if err != nil {
@@ -404,7 +404,7 @@ func syncBackupStrategy(node *workflowModel.WorkFlowNode, context *workflow.Flow
 	}
 
 	_, err = backuprestore.GetBRService().SaveBackupStrategy(context.Context,
-		&cluster.SaveBackupStrategyReq{
+		cluster.SaveBackupStrategyReq{
 			ClusterID: clusterMeta.Cluster.ID,
 			Strategy:  sourceStrategyRes.Strategy,
 		})
@@ -435,7 +435,7 @@ func restoreCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 		return nil
 	}
 	restoreResponse, err := backuprestore.GetBRService().RestoreExistCluster(context.Context,
-		&cluster.RestoreExistClusterReq{
+		cluster.RestoreExistClusterReq{
 			ClusterID: clusterMeta.Cluster.ID,
 			BackupID:  backupID,
 		})

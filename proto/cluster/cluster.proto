@@ -42,10 +42,7 @@ service ClusterService {
     rpc Logout(LogoutRequest) returns (LogoutResponse);
     rpc VerifyIdentity(VerifyIdentityRequest) returns (VerifyIdentityResponse);
 
-    // host manager module
-    rpc AllocResourcesInBatch(BatchAllocRequest) returns (BatchAllocResponse);
-    rpc RecycleResources(RecycleRequest) returns (RecycleResponse);
-
+    // resource manager module
     rpc ImportHosts(RpcRequest) returns (RpcResponse);
     rpc DeleteHosts(RpcRequest) returns (RpcResponse);
     rpc QueryHosts(RpcRequest) returns (RpcResponse);

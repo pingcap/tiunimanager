@@ -43,7 +43,6 @@ import (
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/adapt"
 	user "github.com/pingcap-inc/tiem/micro-cluster/service/user/application"
 
@@ -60,8 +59,7 @@ var SuccessResponseStatus = &clusterpb.ResponseStatusDTO{Code: 0}
 var BizErrorResponseStatus = &clusterpb.ResponseStatusDTO{Code: 500}
 
 type ClusterServiceHandler struct {
-	resourceManager         *resource.ResourceManager
-	resourceManager2        *resourcemanager.ResourceManager
+	resourceManager         *resourcemanager.ResourceManager
 	authManager             *user.AuthManager
 	tenantManager           *user.TenantManager
 	userManager             *user.UserManager
@@ -145,7 +143,7 @@ func (handler *ClusterServiceHandler) QueryChangeFeedTasks(ctx context.Context, 
 
 func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandler {
 	handler := new(ClusterServiceHandler)
-	handler.SetResourceManager(resource.NewResourceManager())
+	handler.resourceManager = resourcemanager.NewResourceManager()
 	handler.userManager = user.NewUserManager(adapt.MicroMetaDbRepo{})
 	handler.tenantManager = user.NewTenantManager(adapt.MicroMetaDbRepo{})
 	handler.authManager = user.NewAuthManager(handler.userManager, adapt.MicroMetaDbRepo{})
@@ -156,9 +154,6 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.systemConfigManager = config.NewSystemConfigManager()
 	handler.brManager = backuprestore.GetBRService()
 	handler.importexportManager = importexport.GetImportExportService()
-
-	// This will be removed after cluster refactor completed.
-	handler.resourceManager2 = resourcemanager.NewResourceManager()
 
 	return handler
 }
@@ -261,14 +256,6 @@ func (handler *ClusterServiceHandler) InspectClusterParameters(ctx context.Conte
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
-}
-
-func (handler *ClusterServiceHandler) SetResourceManager(resourceManager *resource.ResourceManager) {
-	handler.resourceManager = resourceManager
-}
-
-func (handler *ClusterServiceHandler) ResourceManager() *resource.ResourceManager {
-	return handler.resourceManager
 }
 
 func getLoggerWithContext(ctx context.Context) *log.Entry {
@@ -810,19 +797,11 @@ func (p *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *cluster
 	return nil
 }
 
-func (clusterManager *ClusterServiceHandler) AllocResourcesInBatch(ctx context.Context, in *clusterpb.BatchAllocRequest, out *clusterpb.BatchAllocResponse) error {
-	return clusterManager.resourceManager.AllocResourcesInBatch(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) RecycleResources(ctx context.Context, in *clusterpb.RecycleRequest, out *clusterpb.RecycleResponse) error {
-	return clusterManager.resourceManager.RecycleResources(ctx, in, out)
-}
-
 func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	reqStruct := message.ImportHostsReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
-		hostIds, err := handler.resourceManager2.ImportHosts(ctx, reqStruct.Hosts)
+		hostIds, err := handler.resourceManager.ImportHosts(ctx, reqStruct.Hosts)
 		var rsp message.ImportHostsResp
 		if err == nil {
 			rsp.HostIDS = hostIds
@@ -837,7 +816,7 @@ func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, request *
 	reqStruct := message.DeleteHostsReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
-		err := handler.resourceManager2.DeleteHosts(ctx, reqStruct.HostIDs)
+		err := handler.resourceManager.DeleteHosts(ctx, reqStruct.HostIDs)
 		var rsp message.DeleteHostsResp
 		handleResponse(ctx, response, err, rsp, nil)
 	}
@@ -852,7 +831,7 @@ func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, request *c
 		filter := reqStruct.GetHostFilter()
 		page := reqStruct.GetPage()
 
-		hosts, err := handler.resourceManager2.QueryHosts(ctx, filter, page)
+		hosts, err := handler.resourceManager.QueryHosts(ctx, filter, page)
 		var rsp message.QueryHostsResp
 		if err == nil {
 			rsp.Hosts = hosts
@@ -867,7 +846,7 @@ func (handler *ClusterServiceHandler) UpdateHostReserved(ctx context.Context, re
 	reqStruct := message.UpdateHostReservedReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
-		err := handler.resourceManager2.UpdateHostReserved(ctx, reqStruct.HostIDs, reqStruct.Reserved)
+		err := handler.resourceManager.UpdateHostReserved(ctx, reqStruct.HostIDs, reqStruct.Reserved)
 		var rsp message.UpdateHostReservedResp
 		handleResponse(ctx, response, err, rsp, nil)
 	}
@@ -879,7 +858,7 @@ func (handler *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, requ
 	reqStruct := message.UpdateHostStatusReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
-		err := handler.resourceManager2.UpdateHostStatus(ctx, reqStruct.HostIDs, reqStruct.Status)
+		err := handler.resourceManager.UpdateHostStatus(ctx, reqStruct.HostIDs, reqStruct.Status)
 		var rsp message.UpdateHostStatusResp
 		handleResponse(ctx, response, err, rsp, nil)
 	}
@@ -893,7 +872,7 @@ func (handler *ClusterServiceHandler) GetHierarchy(ctx context.Context, request 
 	if handleRequest(ctx, request, response, &reqStruct) {
 		filter := reqStruct.GetHostFilter()
 
-		root, err := handler.resourceManager2.GetHierarchy(ctx, filter, reqStruct.Level, reqStruct.Depth)
+		root, err := handler.resourceManager.GetHierarchy(ctx, filter, reqStruct.Level, reqStruct.Depth)
 		var rsp message.GetHierarchyResp
 		if err == nil {
 			rsp.Root = *root
@@ -912,7 +891,7 @@ func (handler *ClusterServiceHandler) GetStocks(ctx context.Context, request *cl
 		hostFilter := reqStruct.GetHostFilter()
 		diskFilter := reqStruct.GetDiskFilter()
 
-		stocks, err := handler.resourceManager2.GetStocks(ctx, location, hostFilter, diskFilter)
+		stocks, err := handler.resourceManager.GetStocks(ctx, location, hostFilter, diskFilter)
 		var rsp message.GetStocksResp
 		if err == nil {
 			rsp.Stocks = *stocks

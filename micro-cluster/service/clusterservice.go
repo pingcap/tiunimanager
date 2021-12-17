@@ -420,8 +420,7 @@ func (handler ClusterServiceHandler) QueryCluster(ctx context.Context, req *clus
 	return nil
 }
 
-
-func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+func (handler *ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "DeleteCluster", int(resp.GetCode()))
 
@@ -435,7 +434,7 @@ func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb
 	return nil
 }
 
-func (handler ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+func (handler *ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "RestartCluster", int(resp.GetCode()))
 
@@ -477,42 +476,42 @@ func (handler ClusterServiceHandler) DetailCluster(ctx context.Context, req *clu
 	return nil
 }
 
-func (handler ClusterServiceHandler) ExportData(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler *ClusterServiceHandler) ExportData(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "ExportData", int(response.GetCode()))
 	framework.LogWithContext(ctx).Info("export data")
 	exportReq := message.DataExportReq{}
 
 	if handleRequest(ctx, request, response, &exportReq) {
-		result, err := c.importexportManager.ExportData(ctx, exportReq)
+		result, err := handler.importexportManager.ExportData(ctx, exportReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
 	return nil
 }
 
-func (handler ClusterServiceHandler) ImportData(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler *ClusterServiceHandler) ImportData(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "ImportData", int(response.GetCode()))
 	framework.LogWithContext(ctx).Info("import data")
 	importReq := message.DataImportReq{}
 
 	if handleRequest(ctx, request, response, &importReq) {
-		result, err := c.importexportManager.ImportData(ctx, importReq)
+		result, err := handler.importexportManager.ImportData(ctx, importReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
 	return nil
 }
 
-func (handler ClusterServiceHandler) QueryDataTransport(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler *ClusterServiceHandler) QueryDataTransport(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "QueryDataTransport", int(response.GetCode()))
 	framework.LogWithContext(ctx).Info("query data transport")
 	queryReq := message.QueryDataImportExportRecordsReq{}
 
 	if handleRequest(ctx, request, response, &queryReq) {
-		result, page, err := c.importexportManager.QueryDataTransportRecords(ctx, queryReq)
+		result, page, err := handler.importexportManager.QueryDataTransportRecords(ctx, queryReq)
 		handleResponse(ctx, response, err, result, &clusterpb.RpcPage{
 			Page:     int32(page.Page),
 			PageSize: int32(page.PageSize),
@@ -523,14 +522,14 @@ func (handler ClusterServiceHandler) QueryDataTransport(ctx context.Context, req
 	return nil
 }
 
-func (handler ClusterServiceHandler) DeleteDataTransportRecord(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler *ClusterServiceHandler) DeleteDataTransportRecord(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "DeleteDataTransportRecord", int(response.GetCode()))
 	framework.LogWithContext(ctx).Info("delete data transport record")
 	deleteReq := message.DeleteImportExportRecordReq{}
 
 	if handleRequest(ctx, request, response, &deleteReq) {
-		result, err := c.importexportManager.DeleteDataTransportRecord(ctx, deleteReq)
+		result, err := handler.importexportManager.DeleteDataTransportRecord(ctx, deleteReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -544,21 +543,21 @@ func (handler *ClusterServiceHandler) GetSystemConfig(ctx context.Context, reque
 	getReq := message.GetSystemConfigReq{}
 
 	if handleRequest(ctx, request, response, &getReq) {
-		result, err := c.systemConfigManager.GetSystemConfig(ctx, getReq)
+		result, err := handler.systemConfigManager.GetSystemConfig(ctx, getReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
 	return nil
 }
 
-func (handler ClusterServiceHandler) CreateBackup(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler *ClusterServiceHandler) CreateBackup(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "CreateBackup", int(response.GetCode()))
 	framework.LogWithContext(ctx).Info("create backup")
 	backupReq := cluster.BackupClusterDataReq{}
 
 	if handleRequest(ctx, request, response, &backupReq) {
-		result, err := c.brManager.BackupCluster(ctx, backupReq)
+		result, err := handler.brManager.BackupCluster(ctx, backupReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -594,7 +593,7 @@ func (handler ClusterServiceHandler) DeleteBackupRecords(ctx context.Context, re
 	deleteReq := cluster.DeleteBackupDataReq{}
 
 	if handleRequest(ctx, request, response, &deleteReq) {
-		result, err := c.brManager.DeleteBackupRecords(ctx, deleteReq)
+		result, err := handler.brManager.DeleteBackupRecords(ctx, deleteReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -608,7 +607,7 @@ func (handler ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, req
 	saveReq := cluster.SaveBackupStrategyReq{}
 
 	if handleRequest(ctx, request, response, &saveReq) {
-		result, err := c.brManager.SaveBackupStrategy(ctx, saveReq)
+		result, err := handler.brManager.SaveBackupStrategy(ctx, saveReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -622,7 +621,7 @@ func (handler ClusterServiceHandler) GetBackupStrategy(ctx context.Context, requ
 	getReq := cluster.GetBackupStrategyReq{}
 
 	if handleRequest(ctx, request, response, &getReq) {
-		result, err := c.brManager.GetBackupStrategy(ctx, getReq)
+		result, err := handler.brManager.GetBackupStrategy(ctx, getReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -636,7 +635,7 @@ func (handler ClusterServiceHandler) QueryBackupRecords(ctx context.Context, req
 	queryReq := cluster.QueryBackupRecordsReq{}
 
 	if handleRequest(ctx, request, response, &queryReq) {
-		result, page, err := c.brManager.QueryClusterBackupRecords(ctx, queryReq)
+		result, page, err := handler.brManager.QueryClusterBackupRecords(ctx, queryReq)
 		handleResponse(ctx, response, err, result, &clusterpb.RpcPage{
 			Page:     int32(page.Page),
 			PageSize: int32(page.PageSize),
@@ -687,7 +686,7 @@ func (handler ClusterServiceHandler) GetDashboardInfo(ctx context.Context, reque
 	dashboardReq := cluster.GetDashboardInfoReq{}
 
 	if handleRequest(ctx, request, response, &dashboardReq) {
-		result, err := c.clusterManager.GetClusterDashboardInfo(ctx, dashboardReq)
+		result, err := handler.clusterManager.GetClusterDashboardInfo(ctx, dashboardReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 

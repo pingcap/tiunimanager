@@ -46,7 +46,7 @@ func TestImportExportManager_DeleteDataTransportRecord(t *testing.T) {
 	models.SetImportExportReaderWriter(mockImportExportRW)
 
 	service := GetImportExportService()
-	_, err := service.DeleteDataTransportRecord(context.TODO(), &message.DeleteImportExportRecordReq{RecordID: "record-xxx"})
+	_, err := service.DeleteDataTransportRecord(context.TODO(), message.DeleteImportExportRecordReq{RecordID: "record-xxx"})
 	assert.Nil(t, err)
 }
 
@@ -66,6 +66,6 @@ func TestImportExportManager_QueryDataTransportRecords(t *testing.T) {
 	models.SetImportExportReaderWriter(mockImportExportRW)
 
 	service := GetImportExportService()
-	_, _, err := service.QueryDataTransportRecords(context.TODO(), &message.QueryDataImportExportRecordsReq{RecordID: "record-xxx"})
+	_, _, err := service.QueryDataTransportRecords(context.TODO(), message.QueryDataImportExportRecordsReq{RecordID: "record-xxx"})
 	assert.Nil(t, err)
 }

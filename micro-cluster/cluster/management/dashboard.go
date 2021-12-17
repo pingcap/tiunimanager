@@ -44,11 +44,11 @@ type loginResponse struct {
 
 const loginUrlSuffix string = "api/user/login"
 
-func GetDashboardInfo(ctx context.Context, request *cluster.GetDashboardInfoReq) (*cluster.GetDashboardInfoResp, error) {
+func GetDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) (resp cluster.GetDashboardInfoResp, err error) {
 	meta, err := handler.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get cluster %s meta failed: %s", request.ClusterID, err.Error())
-		return nil, err
+		return resp, err
 	}
 
 	tidbUserInfo := meta.GetClusterUserNamePasswd()
@@ -56,20 +56,17 @@ func GetDashboardInfo(ctx context.Context, request *cluster.GetDashboardInfoReq)
 
 	url, err := getDashboardUrlFromCluser(ctx, meta)
 	if err != nil {
-		return nil, err
+		return resp, err
 	}
 	token, err := getLoginToken(ctx, url, tidbUserInfo.UserName, tidbUserInfo.Password)
 	if err != nil {
-		return nil, err
+		return resp, err
 	}
 
-	dashboard := &cluster.GetDashboardInfoResp{
-		ClusterID: request.ClusterID,
-		Url:       url,
-		Token:     token,
-	}
-
-	return dashboard, nil
+	resp.ClusterID = request.ClusterID
+	resp.Url = url
+	resp.Token = token
+	return resp, nil
 }
 
 func getDashboardUrlFromCluser(ctx context.Context, meta *handler.ClusterMeta) (string, error) {

@@ -61,7 +61,7 @@ func QueryParameters(c *gin.Context) {
 // UpdateParameters update parameters
 // @Summary submit parameters
 // @Description submit parameters
-// @Tags cluster params
+// @Tags cluster parameters
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
@@ -91,7 +91,7 @@ func UpdateParameters(c *gin.Context) {
 // InspectParameters inspect parameters
 // @Summary inspect parameters
 // @Description inspect parameters
-// @Tags cluster params
+// @Tags cluster parameters
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth

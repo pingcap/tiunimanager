@@ -61,16 +61,16 @@ type Framework interface {
 	StopService() error
 }
 
-/*func GetRootLogger() *RootLogger {
+func GetRootLogger() *RootLogger {
 	if Current != nil {
 		return Current.GetRootLogger()
 	} else {
 		return DefaultRootLogger()
 	}
-}*/
+}
 
 func Log() *log.Entry {
-	return Current.GetRootLogger().defaultLogEntry
+	return GetRootLogger().defaultLogEntry
 }
 
 func LogWithContext(ctx context.Context) *log.Entry {

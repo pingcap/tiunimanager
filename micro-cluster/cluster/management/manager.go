@@ -17,9 +17,7 @@ package management
 
 import (
 	"context"
-	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
@@ -296,13 +294,6 @@ func (p *Manager) StopCluster(ctx context.Context, req cluster.StopClusterReq) (
 		return
 	}
 
-	if meta.Cluster.Status != string(constants.ClusterRunning) {
-		errMsg := fmt.Sprintf("cannot stop cluster %s under status %s", meta.Cluster.ID, meta.Cluster.Status)
-		framework.LogWithContext(ctx).Error(errMsg)
-		err = framework.NewTiEMError(common.TIEM_TASK_CONFLICT, errMsg)
-		return
-	}
-
 	data := map[string]interface{}{
 		ContextClusterMeta: meta,
 	}
@@ -368,13 +359,7 @@ func (p *Manager) RestartCluster(ctx context.Context, req cluster.RestartCluster
 			"load cluser %s meta from db error: %s", req.ClusterID, err.Error())
 		return
 	}
-
-	if meta.Cluster.Status != string(constants.ClusterStopped) && meta.Cluster.Status != string(constants.ClusterRunning) {
-		errMsg := fmt.Sprintf("cannot restart cluster %s under status %s", meta.Cluster.ID, meta.Cluster.Status)
-		framework.LogWithContext(ctx).Error(errMsg)
-		err = framework.NewTiEMError(common.TIEM_TASK_CONFLICT, errMsg)
-		return
-	}
+	
 	data := map[string]interface{}{
 		ContextClusterMeta: meta,
 	}

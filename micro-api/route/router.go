@@ -177,7 +177,7 @@ func Route(g *gin.Engine) {
 		log := apiV1.Group("/logs")
 		{
 			log.Use(interceptor.VerifyIdentity)
-			log.GET("/tidb/:clusterId", logApi.SearchTiDBLog)
+			log.GET("/tidb/:clusterId", logApi.QueryClusterLog)
 		}
 
 		paramGroups := apiV1.Group("/param-groups")

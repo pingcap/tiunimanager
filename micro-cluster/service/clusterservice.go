@@ -24,12 +24,15 @@ import (
 	"strconv"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
 
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
+	clusterLog "github.com/pingcap-inc/tiem/micro-cluster/cluster/log"
 	clusterManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/management"
 	clusterParameter "github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
 	"github.com/pingcap-inc/tiem/micro-cluster/datatransfer/importexport"
@@ -50,8 +53,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	userDomain "github.com/pingcap-inc/tiem/micro-cluster/service/user/domain"
-
-	log "github.com/sirupsen/logrus"
 )
 
 var TiEMClusterServiceName = "go.micro.tiem.cluster"
@@ -72,6 +73,7 @@ type ClusterServiceHandler struct {
 	systemConfigManager     *config.SystemConfigManager
 	brManager               backuprestore.BRService
 	importexportManager     importexport.ImportExportService
+	clusterLogManager       *clusterLog.Manager
 }
 
 func handleRequest(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse, requestBody interface{}) bool {
@@ -156,6 +158,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.systemConfigManager = config.NewSystemConfigManager()
 	handler.brManager = backuprestore.GetBRService()
 	handler.importexportManager = importexport.GetImportExportService()
+	handler.clusterLogManager = clusterLog.NewManager()
 
 	// This will be removed after cluster refactor completed.
 	handler.resourceManager2 = resourcemanager.NewResourceManager()
@@ -259,6 +262,16 @@ func (handler *ClusterServiceHandler) InspectClusterParameters(ctx context.Conte
 	if handleRequest(ctx, req, resp, request) {
 		result, err := handler.clusterParameterManager.InspectClusterParameters(ctx, *request)
 		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) QueryClusterLog(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	request := &cluster.QueryClusterLogReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, page, err := handler.clusterLogManager.QueryClusterLog(ctx, *request)
+		handleResponse(ctx, resp, err, result, page)
 	}
 	return nil
 }

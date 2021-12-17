@@ -139,11 +139,9 @@ func QueryBackupRecords(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /backups/{backupId} [delete]
 func DeleteBackup(c *gin.Context) {
-	req := cluster.DeleteBackupDataReq{
-		ClusterID: c.Param("clusterId"),
-	}
-
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.DeleteBackupDataReq{
+		BackupID: c.Param("backupId"),
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteBackupRecords, &cluster.DeleteBackupDataResp{},
 			requestBody,
 			controller.DefaultTimeout)

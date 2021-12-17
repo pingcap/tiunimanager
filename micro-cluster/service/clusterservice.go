@@ -104,7 +104,7 @@ func handleResponse(ctx context.Context, resp *clusterpb.RpcResponse, err error,
 
 	if err != nil {
 		if _, ok := err.(framework.TiEMError); !ok {
-			err = framework.WrapError(common.TIEM_UNRECOGNIZED_ERROR, "", err)
+			err = framework.WrapError(common.TIEM_UNRECOGNIZED_ERROR, err.Error(), err)
 		}
 		framework.LogWithContext(ctx).Error(err.Error())
 		resp.Code = int32(err.(framework.TiEMError).GetCode())

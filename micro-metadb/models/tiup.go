@@ -65,7 +65,7 @@ func CreateTiupTask(db *gorm.DB, ctx context.Context, taskType dbpb.TiupTaskType
 		ErrorStr: "",
 		BizID:    bizID,
 	}
-	log := framework.LogForkFile(common.LogFileLibTiUP).WithField("models", "CreateTiupTask").WithField("TiupTask", t)
+	log := framework.Current.GetRootLogger().ForkFile(common.LogFileLibTiUP).WithField("models", "CreateTiupTask").WithField("TiupTask", t)
 	log.Debug("entry")
 	err = db.Select("Type", "Status", "ErrorStr", "BizID").Create(&t).Error
 	id = t.ID
@@ -81,7 +81,7 @@ func UpdateTiupTaskStatus(db *gorm.DB, ctx context.Context, id uint64, taskStatu
 	t := TiupTask{
 		ID: id,
 	}
-	log := framework.LogForkFile(common.LogFileLibTiUP).WithField("models", "UpdateTiupTaskStatus").WithField("TiupTask", t)
+	log := framework.Current.GetRootLogger().ForkFile(common.LogFileLibTiUP).WithField("models", "UpdateTiupTaskStatus").WithField("TiupTask", t)
 	log.Debug("entry")
 	err := db.Model(&t).Updates(map[string]interface{}{"Status": taskStatus, "ErrorStr": errStr}).Error
 	if err != nil {
@@ -93,7 +93,7 @@ func UpdateTiupTaskStatus(db *gorm.DB, ctx context.Context, id uint64, taskStatu
 }
 
 func FindTiupTaskByID(db *gorm.DB, ctx context.Context, id uint64) (task TiupTask, err error) {
-	log := framework.LogForkFile(common.LogFileLibTiUP).WithField("models", "FindTiupTaskByID").WithField("id", id)
+	log := framework.Current.GetRootLogger().ForkFile(common.LogFileLibTiUP).WithField("models", "FindTiupTaskByID").WithField("id", id)
 	log.Debug("entry")
 	err = db.First(&task, id).Error
 	if err != nil {
@@ -105,7 +105,7 @@ func FindTiupTaskByID(db *gorm.DB, ctx context.Context, id uint64) (task TiupTas
 }
 
 func FindTiupTasksByBizID(db *gorm.DB, ctx context.Context, bizID uint64) (tasks []TiupTask, err error) {
-	log := framework.LogForkFile(common.LogFileLibTiUP).WithField("models", "FindTiupTasksByBizID").WithField("bizID", bizID)
+	log := framework.Current.GetRootLogger().ForkFile(common.LogFileLibTiUP).WithField("models", "FindTiupTasksByBizID").WithField("bizID", bizID)
 	log.Debug("entry")
 	err = db.Where(&TiupTask{BizID: bizID}).Find(&tasks).Error
 
@@ -139,7 +139,7 @@ func CreateTiupOperatorRecord(db *gorm.DB, ctx context.Context, taskType dbpb.Ti
 		ErrorStr: "",
 		BizID:    bizID,
 	}
-	log := framework.LogForkFile(common.LogFileLibTiUP).WithField("models", "CreateTiupOperatorRecord").WithField("TiupOperator", t)
+	log := framework.Current.GetRootLogger().ForkFile(common.LogFileLibTiUP).WithField("models", "CreateTiupOperatorRecord").WithField("TiupOperator", t)
 	log.Debug("entry")
 	err = db.Select("Type", "Status", "ErrorStr", "BizID").Create(&t).Error
 	id = t.ID
@@ -155,7 +155,7 @@ func UpdateTiupOperatorRecordStatus(db *gorm.DB, ctx context.Context, id uint64,
 	t := TiupOperator{
 		ID: id,
 	}
-	log := framework.LogForkFile(common.LogFileLibTiUP).WithField("models", "UpdateTiupOperatorRecordStatus").WithField("TiupOperator", t)
+	log := framework.Current.GetRootLogger().ForkFile(common.LogFileLibTiUP).WithField("models", "UpdateTiupOperatorRecordStatus").WithField("TiupOperator", t)
 	log.Debug("entry")
 	err := db.Model(&t).Updates(map[string]interface{}{"Status": taskStatus, "ErrorStr": errStr}).Error
 	if err != nil {
@@ -167,7 +167,7 @@ func UpdateTiupOperatorRecordStatus(db *gorm.DB, ctx context.Context, id uint64,
 }
 
 func FindTiupOperatorRecordByID(db *gorm.DB, ctx context.Context, id uint64) (task TiupTask, err error) {
-	log := framework.LogForkFile(common.LogFileLibTiUP).WithField("models", "FindTiupOperatorRecordByID").WithField("id", id)
+	log := framework.Current.GetRootLogger().ForkFile(common.LogFileLibTiUP).WithField("models", "FindTiupOperatorRecordByID").WithField("id", id)
 	log.Debug("entry")
 	err = db.First(&task, id).Error
 	if err != nil {
@@ -179,7 +179,7 @@ func FindTiupOperatorRecordByID(db *gorm.DB, ctx context.Context, id uint64) (ta
 }
 
 func FindTiupOperatorRecordsByBizID(db *gorm.DB, ctx context.Context, bizID string) (tasks []TiupTask, err error) {
-	log := framework.LogForkFile(common.LogFileLibTiUP).WithField("models", "FindTiupOperatorRecordsByBizID").WithField("bizID", bizID)
+	log := framework.Current.GetRootLogger().ForkFile(common.LogFileLibTiUP).WithField("models", "FindTiupOperatorRecordsByBizID").WithField("bizID", bizID)
 	log.Debug("entry")
 	err = db.Where(&TiupOperator{BizID: bizID}).Find(&tasks).Error
 

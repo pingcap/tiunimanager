@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -79,7 +78,7 @@ func GetIntegerWithDefault(key Key, value int) int {
 func UpdateLocalConfig(key Key, value interface{}, newVersion int) (bool, int) {
 	instance, err := GetInstance(key)
 	if err != nil {
-		Log().Error(err)
+		//TODO Log().Error(err)
 		return false, -1
 	}
 	if newVersion < instance.Version {

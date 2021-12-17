@@ -134,7 +134,7 @@ func serviceRegistry(f *framework.BaseFramework) {
 		for {
 			err := etcdClient.SetWithTtl(key, "{\"weight\":1, \"max_fails\":2, \"fail_timeout\":10}", 5)
 			if err != nil {
-				framework.LogForkFile(common.LogFileSystem).Errorf("regitry openapi-server failed! error: %v", err)
+				f.GetRootLogger().ForkFile(common.LogFileSystem).Errorf("regitry openapi-server failed! error: %v", err)
 			}
 			time.Sleep(time.Second * 3)
 		}

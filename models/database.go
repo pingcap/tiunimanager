@@ -55,7 +55,7 @@ type database struct {
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
 	dbFile := fw.GetDataDir() + common.DBDirPrefix + common.DatabaseFileName
-	logins := framework.LogForkFile(common.LogFileSystem)
+	logins := fw.GetRootLogger().ForkFile(common.LogFileSystem)
 	// todo tidb?
 	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 
@@ -137,7 +137,7 @@ func (p *database) initSystemData() {
 }
 
 func (p *database) addTable(gormModel interface{}) error {
-	log := framework.LogForkFile(common.LogFileSystem)
+	log := framework.Current.GetRootLogger().ForkFile(common.LogFileSystem)
 	if !p.base.Migrator().HasTable(gormModel) {
 		err := p.base.Migrator().CreateTable(gormModel)
 		if err != nil {

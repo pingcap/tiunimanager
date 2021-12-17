@@ -105,7 +105,7 @@ func (dao *DAOManager) Tables() map[string]interface{} {
 const StartTime = "StartTime"
 
 func (dao *DAOManager) InitMetrics() {
-	framework.LogForkFile(common.LogFileSystem).Infof("init sqlite metrics")
+	framework.Current.GetRootLogger().ForkFile(common.LogFileSystem).Infof("init sqlite metrics")
 
 	before := func(db *gorm.DB) {
 		db.InstanceSet(StartTime, time.Now())
@@ -164,7 +164,7 @@ func (dao *DAOManager) InitMetrics() {
 func (dao *DAOManager) InitDB(dataDir string) error {
 	var err error
 	dbFile := dataDir + common.DBDirPrefix + common.SqliteFileName
-	logins := framework.LogForkFile(common.LogFileSystem).WithField("database file path", dbFile)
+	logins := framework.Current.GetRootLogger().ForkFile(common.LogFileSystem).WithField("database file path", dbFile)
 	dao.db, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{
 		Logger: dao.daoLogger,
 	})
@@ -184,7 +184,7 @@ func (dao *DAOManager) InitDB(dataDir string) error {
 }
 
 func (dao *DAOManager) InitTables() error {
-	log := framework.LogForkFile(common.LogFileSystem)
+	log := framework.Current.GetRootLogger().ForkFile(common.LogFileSystem)
 
 	log.Info("start create TiEM system tables.")
 
@@ -226,7 +226,7 @@ func (dao *DAOManager) InitTables() error {
 
 func (dao *DAOManager) InitData() error {
 	err := dao.initSystemDefaultData()
-	innerLog := framework.LogForkFile(common.LogFileSystem)
+	innerLog := framework.Current.GetRootLogger().ForkFile(common.LogFileSystem)
 	if nil != err {
 		innerLog.Errorf("initialize TiEM system data failed, error: %v", err)
 	}
@@ -241,7 +241,7 @@ func (dao *DAOManager) InitData() error {
 }
 
 func (dao DAOManager) AddTable(tableName string, tableModel interface{}) error {
-	log := framework.LogForkFile(common.LogFileSystem)
+	log := framework.Current.GetRootLogger().ForkFile(common.LogFileSystem)
 	dao.tables[tableName] = tableModel
 	if !dao.db.Migrator().HasTable(dao.tables[tableName]) {
 		er := dao.db.Migrator().CreateTable(dao.tables[tableName])
@@ -258,7 +258,7 @@ Initial TiEM system default system account and tenant information
 */
 func (dao *DAOManager) initSystemDefaultData() error {
 	accountManager := dao.AccountManager()
-	log := framework.LogForkFile(common.LogFileSystem)
+	log := framework.Current.GetRootLogger().ForkFile(common.LogFileSystem)
 	rt, err := accountManager.AddTenant(context.TODO(), "TiEM system administration", 1, 0)
 	framework.AssertNoErr(err)
 	role1, err := accountManager.AddRole(context.TODO(), rt.ID, "administrators", "administrators", 0)
@@ -302,7 +302,7 @@ func (dao *DAOManager) initSystemDefaultData() error {
 
 func (dao *DAOManager) initSystemDefaultLabels() (err error) {
 	resourceManager := dao.ResourceManager()
-	log := framework.LogForkFile(common.LogFileSystem)
+	log := framework.Current.GetRootLogger().ForkFile(common.LogFileSystem)
 	err = resourceManager.InitSystemDefaultLabels(context.TODO())
 	if err != nil {
 		log.Debugf("init system default labels failed, %v\n", err)
@@ -313,7 +313,7 @@ func (dao *DAOManager) initSystemDefaultLabels() (err error) {
 }
 
 func (dao *DAOManager) InitResourceDataForDev(region, zone, rack, hostIp1, hostIp2, hostIp3 string) error {
-	log := framework.LogForkFile(common.LogFileSystem)
+	log := framework.Current.GetRootLogger().ForkFile(common.LogFileSystem)
 	zoneCode := resource.GenDomainCodeByName(region, zone)
 	rackCode := resource.GenDomainCodeByName(zoneCode, rack)
 	id1, err := dao.ResourceManager().CreateHost(context.TODO(), &resource.Host{
@@ -415,7 +415,7 @@ func (dao *DAOManager) InitResourceDataForDev(region, zone, rack, hostIp1, hostI
 }
 
 func (dao *DAOManager) initUser(tenantId string, name string) (string, error) {
-	log := framework.LogForkFile(common.LogFileSystem)
+	log := framework.Current.GetRootLogger().ForkFile(common.LogFileSystem)
 	accountManager := dao.AccountManager()
 
 	b := make([]byte, 16)

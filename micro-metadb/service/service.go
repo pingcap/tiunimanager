@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -38,7 +37,7 @@ func NewDBServiceHandler(dataDir string, fw *framework.BaseFramework) *DBService
 
 	dao.InitDB(dataDir)
 	if dao.Db().Migrator().HasTable(&models.Tenant{}) {
-		framework.LogForkFile(common.LogFileSystem).Info("data existed, skip initialization")
+		framework.Current.GetRootLogger().ForkFile(common.LogFileSystem).Info("data existed, skip initialization")
 		dao.InitMetrics()
 
 		return handler
@@ -63,12 +62,12 @@ func (handler *DBServiceHandler) HandleMetrics(start time.Time, funcName string,
 	duration := time.Since(start)
 	framework.Current.GetMetrics().MicroDurationHistogramMetric.With(prometheus.Labels{
 		metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
-		metrics.MethodLabel: funcName,
-		metrics.CodeLabel: strconv.Itoa(code)}).
+		metrics.MethodLabel:  funcName,
+		metrics.CodeLabel:    strconv.Itoa(code)}).
 		Observe(duration.Seconds())
 	framework.Current.GetMetrics().MicroRequestsCounterMetric.With(prometheus.Labels{
 		metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
-		metrics.MethodLabel: funcName,
-		metrics.CodeLabel: strconv.Itoa(code)}).
+		metrics.MethodLabel:  funcName,
+		metrics.CodeLabel:    strconv.Itoa(code)}).
 		Inc()
 }

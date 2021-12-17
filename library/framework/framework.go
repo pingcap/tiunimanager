@@ -61,26 +61,27 @@ type Framework interface {
 	StopService() error
 }
 
-func GetRootLogger() *RootLogger {
+/*func GetRootLogger() *RootLogger {
 	if Current != nil {
 		return Current.GetRootLogger()
 	} else {
 		return DefaultRootLogger()
 	}
-}
+}*/
 
 func Log() *log.Entry {
-	return GetRootLogger().defaultLogEntry
+	return Current.GetRootLogger().defaultLogEntry
 }
 
 func LogWithContext(ctx context.Context) *log.Entry {
 	id := GetTraceIDFromContext(ctx)
-	return GetRootLogger().defaultLogEntry.WithField(TiEM_X_TRACE_ID_KEY, id)
+	return Current.GetRootLogger().defaultLogEntry.WithField(TiEM_X_TRACE_ID_KEY, id)
 }
 
+/*
 func LogForkFile(fileName string) *log.Entry {
 	return GetRootLogger().ForkFile(fileName)
-}
+}*/
 
 type Opt func(d *BaseFramework) error
 type ServiceHandler func(service micro.Service) error
@@ -337,10 +338,10 @@ func (b *BaseFramework) prometheusBoot() {
 		if metricsPort <= 0 {
 			metricsPort = common.DefaultMetricsPort
 		}
-		LogForkFile(common.LogFileSystem).Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
+		//LogForkFile(common.LogFileSystem).Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
 		err := http.ListenAndServe(common.LocalAddress+":"+strconv.Itoa(metricsPort), nil)
 		if err != nil {
-			Log().Errorf("prometheus listen and serve error: %v", err)
+			//Log().Errorf("prometheus listen and serve error: %v", err)
 			panic("ListenAndServe: " + err.Error())
 		}
 	}()

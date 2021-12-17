@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -51,7 +50,7 @@ func AccessLog() gin.HandlerFunc {
 			dataLength = 0
 		}
 
-		entry := framework.LogForkFile(common.LogFileAccess).WithFields(log.Fields{
+		entry := framework.Current.GetRootLogger().ForkFile(common.LogFileAccess).WithFields(log.Fields{
 			"hostname":   hostname,
 			"statusCode": statusCode,
 			"latency":    latency, // time to process

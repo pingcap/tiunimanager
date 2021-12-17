@@ -38,17 +38,17 @@ type Tracer opentracing.Tracer
 //			metadata key $TiEM_X_TRACE_ID_KEY
 //    normal-ctx
 //			key traceIDCtxKey
-var TiEM_X_TRACE_ID_KEY = "EM-X-Trace-Id"
+var TiEM_X_TRACE_ID_KEY = "Em-X-Trace-Id"
 
 type traceIDCtxKeyType struct{}
 
 var traceIDCtxKey traceIDCtxKeyType
 
-const TiEM_X_USER_ID_KEY = "EM-X-User-Id"
+const TiEM_X_USER_ID_KEY = "Em-X-User-Id"
 
-const TiEM_X_USER_NAME_KEY = "EM-X-User-Name"
+const TiEM_X_USER_NAME_KEY = "Em-X-User-Name"
 
-const TiEM_X_TENANT_ID_KEY = "EM-X-Tenant-Id"
+const TiEM_X_TENANT_ID_KEY = "Em-X-Tenant-Id"
 
 func NewTracerFromArgs(args *ClientArgs) *Tracer {
 	jaegerTracer, _, err := NewJaegerTracer("em", args.TracerAddress)

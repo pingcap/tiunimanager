@@ -18,8 +18,6 @@ package handler
 import (
 	"bytes"
 	"context"
-	"strconv"
-	"strings"
 	"text/template"
 
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -268,22 +266,13 @@ func (p *ClusterMeta) UpdateClusterStatus(ctx context.Context, status constants.
 
 // GetInstance
 // @Description get instance based on instanceID
-// @Parameter	instance id (format: ip:port)
+// @Parameter	instance id
 // @Return		instance
 // @Return		error
-func (p *ClusterMeta) GetInstance(ctx context.Context, instanceAddress string) (*management.ClusterInstance, error) {
-	host := strings.Split(instanceAddress, ":")
-	if len(host) != 2 {
-		return nil, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter format is invalid")
-	}
-	port, err := strconv.ParseInt(host[1], 10, 32)
-	if err != nil {
-		return nil, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter format is invalid")
-	}
-
+func (p *ClusterMeta) GetInstance(ctx context.Context, instanceID string) (*management.ClusterInstance, error) {
 	for _, components := range p.Instances {
 		for _, instance := range components {
-			if Contain(instance.HostIP, host[0]) && Contain(instance.Ports, int32(port)) {
+			if instance.ID == instanceID {
 				return instance, nil
 			}
 		}
@@ -302,14 +291,20 @@ func (p *ClusterMeta) IsComponentRequired(ctx context.Context, componentType str
 
 // DeleteInstance
 // @Description delete instance from cluster topology based on instance id
-// @Parameter	instance id (format: ip:port)
+// @Parameter	instance id
 // @Return		error
-func (p *ClusterMeta) DeleteInstance(ctx context.Context, instanceAddress string) (*management.ClusterInstance, error) {
-	instance, err := p.GetInstance(ctx, instanceAddress)
+func (p *ClusterMeta) DeleteInstance(ctx context.Context, instanceID string) (*management.ClusterInstance, error) {
+	instance, err := p.GetInstance(ctx, instanceID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("get instance error, err : %s", err.Error())
+		framework.LogWithContext(ctx).Errorf(
+			"get instance %s error: %s", instanceID, err.Error())
 		return nil, err
 	}
+
+	if err = models.GetClusterReaderWriter().DeleteInstance(ctx, instance.ID); err != nil {
+		return nil, err
+	}
+
 	// delete instance from cluster topology
 	for componentType, components := range p.Instances {
 		for index, item := range components {
@@ -320,9 +315,6 @@ func (p *ClusterMeta) DeleteInstance(ctx context.Context, instanceAddress string
 		}
 	}
 
-	if err = models.GetClusterReaderWriter().DeleteInstance(ctx, instance.ID); err != nil {
-		return nil, err
-	}
 	return instance, nil
 }
 

@@ -25,11 +25,8 @@
 package parametergroup
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
@@ -49,13 +46,8 @@ import (
 // @Router /param-groups/ [get]
 func Query(c *gin.Context) {
 	var req message.QueryParameterGroupReq
-	err := c.ShouldBindQuery(&req)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(common.TIEM_PARAMETER_INVALID), err.Error()))
-		return
-	}
 
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &req); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &req); ok {
 		resp := make([]message.QueryParameterGroupResp, 0)
 		controller.InvokeRpcMethod(c, client.ClusterClient.QueryParameterGroup, &resp,
 			requestBody,

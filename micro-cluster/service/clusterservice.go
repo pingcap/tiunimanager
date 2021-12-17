@@ -24,12 +24,15 @@ import (
 	"strconv"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
 
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
+	clusterLog "github.com/pingcap-inc/tiem/micro-cluster/cluster/log"
 	clusterManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/management"
 	clusterParameter "github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
 	"github.com/pingcap-inc/tiem/micro-cluster/datatransfer/importexport"
@@ -50,8 +53,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	userDomain "github.com/pingcap-inc/tiem/micro-cluster/service/user/domain"
-
-	log "github.com/sirupsen/logrus"
 )
 
 var TiEMClusterServiceName = "go.micro.tiem.cluster"
@@ -72,6 +73,7 @@ type ClusterServiceHandler struct {
 	systemConfigManager     *config.SystemConfigManager
 	brManager               backuprestore.BRService
 	importexportManager     importexport.ImportExportService
+	clusterLogManager       *clusterLog.Manager
 }
 
 func handleRequest(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse, requestBody interface{}) bool {
@@ -156,6 +158,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.systemConfigManager = config.NewSystemConfigManager()
 	handler.brManager = backuprestore.GetBRService()
 	handler.importexportManager = importexport.GetImportExportService()
+	handler.clusterLogManager = clusterLog.NewManager()
 
 	// This will be removed after cluster refactor completed.
 	handler.resourceManager2 = resourcemanager.NewResourceManager()
@@ -259,6 +262,16 @@ func (handler *ClusterServiceHandler) InspectClusterParameters(ctx context.Conte
 	if handleRequest(ctx, req, resp, request) {
 		result, err := handler.clusterParameterManager.InspectClusterParameters(ctx, *request)
 		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) QueryClusterLog(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	request := &cluster.QueryClusterLogReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, page, err := handler.clusterLogManager.QueryClusterLog(ctx, *request)
+		handleResponse(ctx, resp, err, result, page)
 	}
 	return nil
 }
@@ -611,39 +624,6 @@ func (c ClusterServiceHandler) QueryBackupRecords(ctx context.Context, request *
 	return nil
 }
 
-func (c ClusterServiceHandler) QueryParameters(ctx context.Context, request *clusterpb.QueryClusterParametersRequest, response *clusterpb.QueryClusterParametersResponse) (err error) {
-
-	content, err := domain.GetParameters(ctx, request.Operator, request.ClusterId)
-
-	if err != nil {
-		framework.LogWithContext(ctx).Info(err)
-		return nil
-	} else {
-		response.Status = SuccessResponseStatus
-
-		response.ClusterId = request.ClusterId
-		response.ParametersJson = content
-		return nil
-	}
-}
-
-func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clusterpb.SaveClusterParametersRequest, response *clusterpb.SaveClusterParametersResponse) (err error) {
-
-	//clusterAggregation, err := domain.ModifyParameters(ctx, request.Operator, request.ClusterId, request.ParametersJson)
-	//
-	//if err != nil {
-	//	framework.LogWithContext(ctx).Info(err)
-	//	return nil
-	//} else {
-	//	response.ChangeFeedStatus = SuccessResponseStatus
-	//	response.DisplayInfo = &clusterpb.DisplayStatusDTO{
-	//		InProcessFlowId: int32(clusterAggregation.CurrentWorkFlow.Id),
-	//	}
-	//	return nil
-	//}
-	return err
-}
-
 func (c ClusterServiceHandler) GetDashboardInfo(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "DescribeDashboard", int(response.GetCode()))
@@ -658,20 +638,15 @@ func (c ClusterServiceHandler) GetDashboardInfo(ctx context.Context, request *cl
 	return nil
 }
 
-func (c ClusterServiceHandler) DescribeMonitor(ctx context.Context, request *clusterpb.DescribeMonitorRequest, response *clusterpb.DescribeMonitorResponse) (err error) {
+func (c ClusterServiceHandler) DescribeMonitor(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "DescribeMonitor", int(response.GetStatus().GetCode()))
-	monitor, err := domain.DescribeMonitor(ctx, request.Operator, request.ClusterId)
-	if err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_MONITOR_NOT_FOUND), Message: common.TIEM_MONITOR_NOT_FOUND.Explain()}
-	} else {
-		response.Status = SuccessResponseStatus
-		response.ClusterId = monitor.ClusterId
-		response.AlertUrl = monitor.AlertUrl
-		response.GrafanaUrl = monitor.GrafanaUrl
-	}
+	defer handleMetrics(start, "DescribeMonitor", int(resp.GetCode()))
+	request := &cluster.QueryMonitorInfoReq{}
 
+	if handleRequest(ctx, req, resp, request) {
+		result, err := c.clusterManager.GetMonitorInfo(ctx, *request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
 	return nil
 }
 

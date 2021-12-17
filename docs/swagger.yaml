@@ -483,6 +483,16 @@ definitions:
           $ref: '#/definitions/structs.ClusterInstanceInfo'
         type: array
     type: object
+  cluster.QueryClusterLogResp:
+    properties:
+      results:
+        items:
+          $ref: '#/definitions/structs.ClusterLogItem'
+        type: array
+      took:
+        example: 10
+        type: integer
+    type: object
   cluster.QueryClusterParametersResp:
     properties:
       paramGroupId:
@@ -498,6 +508,18 @@ definitions:
         items:
           $ref: '#/definitions/structs.ClusterInfo'
         type: array
+    type: object
+  cluster.QueryMonitorInfoResp:
+    properties:
+      alertUrl:
+        example: http://127.0.0.1:9093
+        type: string
+      clusterId:
+        example: abc
+        type: string
+      grafanaUrl:
+        example: http://127.0.0.1:3000
+        type: string
     type: object
   cluster.RestartClusterResp:
     properties:
@@ -884,61 +906,6 @@ definitions:
         type: integer
       portRangeStart:
         type: integer
-    type: object
-  log.SearchTiDBLogDetail:
-    properties:
-      clusterId:
-        example: abc
-        type: string
-      ext:
-        additionalProperties: true
-        type: object
-      id:
-        example: zvadfwf
-        type: string
-      index:
-        example: tiem-tidb-cluster-2021.09.23
-        type: string
-      ip:
-        example: 127.0.0.1
-        type: string
-      level:
-        example: warn
-        type: string
-      message:
-        example: tidb log
-        type: string
-      module:
-        example: tidb
-        type: string
-      sourceLine:
-        example: main.go:210
-        type: string
-      timestamp:
-        example: "2021-09-23 14:23:10"
-        type: string
-    type: object
-  log.SearchTiDBLogRsp:
-    properties:
-      results:
-        items:
-          $ref: '#/definitions/log.SearchTiDBLogDetail'
-        type: array
-      took:
-        example: 10
-        type: integer
-    type: object
-  management.DescribeMonitorRsp:
-    properties:
-      alertUrl:
-        example: http://127.0.0.1:9093
-        type: string
-      clusterId:
-        example: abc
-        type: string
-      grafanaUrl:
-        example: http://127.0.0.1:3000
-        type: string
     type: object
   management.PreviewClusterRsp:
     properties:
@@ -1543,6 +1510,39 @@ definitions:
       value:
         type: string
     type: object
+  structs.ClusterLogItem:
+    properties:
+      clusterId:
+        example: abc
+        type: string
+      ext:
+        additionalProperties: true
+        type: object
+      id:
+        example: zvadfwf
+        type: string
+      index:
+        example: tiem-tidb-cluster-2021.09.23
+        type: string
+      ip:
+        example: 127.0.0.1
+        type: string
+      level:
+        example: warn
+        type: string
+      message:
+        example: tidb log
+        type: string
+      module:
+        example: tidb
+        type: string
+      sourceLine:
+        example: main.go:210
+        type: string
+      timestamp:
+        example: "2021-09-23 14:23:10"
+        type: string
+    type: object
   structs.ClusterParameterInfo:
     properties:
       category:
@@ -1557,10 +1557,16 @@ definitions:
       description:
         example: binlog cache size
         type: string
-      has_apply:
+      hasApply:
+        enum:
+        - 0
+        - 1
         example: 1
         type: integer
       hasReboot:
+        enum:
+        - 0
+        - 1
         example: 0
         type: integer
       instanceType:
@@ -1588,6 +1594,12 @@ definitions:
         example: log.log_level
         type: string
       type:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
         example: 0
         type: integer
       unit:
@@ -2670,7 +2682,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: monitoring link
+      description: describe monitoring link
       parameters:
       - description: cluster id
         in: path
@@ -2687,7 +2699,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.DescribeMonitorRsp'
+                  $ref: '#/definitions/cluster.QueryMonitorInfoResp'
               type: object
         "401":
           description: Unauthorized
@@ -2703,7 +2715,7 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: monitoring link
+      summary: describe monitoring link
       tags:
       - cluster
   /clusters/{clusterId}/params:
@@ -2801,7 +2813,7 @@ paths:
       - ApiKeyAuth: []
       summary: submit parameters
       tags:
-      - cluster params
+      - cluster parameters
   /clusters/{clusterId}/params/inspect:
     post:
       consumes:
@@ -2843,7 +2855,7 @@ paths:
       - ApiKeyAuth: []
       summary: inspect parameters
       tags:
-      - cluster params
+      - cluster parameters
   /clusters/{clusterId}/restart:
     post:
       consumes:
@@ -3540,12 +3552,15 @@ paths:
     get:
       consumes:
       - application/json
-      description: search tidb log
+      description: search cluster log
       parameters:
       - description: clusterId
         in: path
         name: clusterId
         required: true
+        type: string
+      - in: query
+        name: clusterId
         type: string
       - example: "2021-12-01 12:00:00"
         in: query
@@ -3567,11 +3582,11 @@ paths:
         in: query
         name: module
         type: string
-      - example: 1
+      - description: Current page location
         in: query
         name: page
         type: integer
-      - example: 10
+      - description: Number of this request
         in: query
         name: pageSize
         type: integer
@@ -3589,7 +3604,7 @@ paths:
             - $ref: '#/definitions/controller.ResultWithPage'
             - properties:
                 data:
-                  $ref: '#/definitions/log.SearchTiDBLogRsp'
+                  $ref: '#/definitions/cluster.QueryClusterLogResp'
               type: object
         "401":
           description: Unauthorized
@@ -3601,7 +3616,7 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: search tidb log
+      summary: search cluster log
       tags:
       - logs
   /param-groups/:

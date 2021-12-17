@@ -17,11 +17,8 @@
 package parameter
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
@@ -44,14 +41,13 @@ const paramNameOfClusterId = "clusterId"
 // @Router /clusters/{clusterId}/params [get]
 func QueryParameters(c *gin.Context) {
 	var req cluster.QueryClusterParametersReq
-	err := c.ShouldBindQuery(&req)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(common.TIEM_PARAMETER_INVALID), err.Error()))
-		return
-	}
-	req.ClusterID = c.Param(paramNameOfClusterId)
 
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &req); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &req,
+		// append id in path to request
+		func(c *gin.Context, req interface{}) error {
+			req.(*cluster.QueryClusterParametersReq).ClusterID = c.Param(paramNameOfClusterId)
+			return nil
+		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.QueryClusterParameters, &cluster.QueryClusterParametersResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -61,7 +57,7 @@ func QueryParameters(c *gin.Context) {
 // UpdateParameters update parameters
 // @Summary submit parameters
 // @Description submit parameters
-// @Tags cluster params
+// @Tags cluster parameters
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
@@ -91,7 +87,7 @@ func UpdateParameters(c *gin.Context) {
 // InspectParameters inspect parameters
 // @Summary inspect parameters
 // @Description inspect parameters
-// @Tags cluster params
+// @Tags cluster parameters
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth

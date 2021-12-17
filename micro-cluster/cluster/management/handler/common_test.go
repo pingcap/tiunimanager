@@ -57,14 +57,14 @@ func TestScaleOutPreCheck(t *testing.T) {
 				Version: "v5.0.0",
 			},
 			Instances: map[string][]*management.ClusterInstance{
-			"PD": {
-				{
-					HostIP: []string{"127.0.0.1"},
-					Ports:  []int32{4000},
+				"PD": {
+					{
+						HostIP: []string{"127.0.0.1"},
+						Ports:  []int32{4000},
+					},
 				},
-			},
-		}}
-		computes := []structs.ClusterResourceParameterCompute {
+			}}
+		computes := []structs.ClusterResourceParameterCompute{
 			{
 				Type: "TiFlash",
 			},
@@ -89,7 +89,7 @@ func TestScaleOutPreCheck(t *testing.T) {
 					},
 				},
 			}}
-		computes := []structs.ClusterResourceParameterCompute {
+		computes := []structs.ClusterResourceParameterCompute{
 			{
 				Type: "TiFlash",
 			},

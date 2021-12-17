@@ -357,8 +357,10 @@ func (mgr *ImportExportManager) DeleteDataTransportRecord(ctx context.Context, r
 	rw := models.GetImportExportReaderWriter()
 	record, err := rw.GetDataTransportRecord(ctx, request.RecordID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("get data transport record %s failed %s", request.RecordID, err)
-		return nil, err
+		framework.LogWithContext(ctx).Warnf("get data transport record %s failed %s", request.RecordID, err)
+		return &message.DeleteImportExportRecordResp{
+			RecordID: request.RecordID,
+		}, nil
 	}
 
 	if string(constants.StorageTypeS3) != record.StorageType {
@@ -374,7 +376,9 @@ func (mgr *ImportExportManager) DeleteDataTransportRecord(ctx context.Context, r
 	}
 	framework.LogWithContext(ctx).Infof("delete transport record %+v success", record.ID)
 
-	return nil, nil
+	return &message.DeleteImportExportRecordResp{
+		RecordID: request.RecordID,
+	}, nil
 }
 
 func (mgr *ImportExportManager) exportDataPreCheck(ctx context.Context, request *message.DataExportReq) error {

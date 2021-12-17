@@ -45,7 +45,7 @@ func AuditLog() gin.HandlerFunc {
 				"operatorID":   visitor.AccountId,
 				"operatorName": visitor.AccountName,
 				"clientIP":     c.ClientIP(),
-				"operatorTime": time.Now(),
+				"operatorFinishTime": time.Now(),
 				"event":        c.Request.Method,
 				"operation":    path,
 				"status":       c.Writer.Status(),

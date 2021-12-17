@@ -319,6 +319,7 @@ func (p *Manager) RestoreNewCluster(ctx context.Context, req cluster.RestoreNewC
 
 	data := map[string]interface{}{
 		ContextClusterMeta: meta,
+		ContextBackupID:    req.BackupID,
 	}
 	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceRestore, createClusterFlow.FlowName, data)
 	if err != nil {

@@ -37,7 +37,7 @@ func (rw *GormResourceReadWrite) AllocResources(ctx context.Context, batchReq *r
 		result, err = rw.allocForSingleRequest(ctx, tx, &request)
 		if err != nil {
 			tx.Rollback()
-			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NOT_ALL_SUCCEED, "alloc resources in batch failed on request %d, %v", i, err)
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NOT_ALL_SUCCEED, "alloc resources in batch failed on %dth request with %d requires, request: %v, error: %v", i+1, len(request.Requires), request, err)
 		}
 		results.BatchResults = append(results.BatchResults, result)
 	}

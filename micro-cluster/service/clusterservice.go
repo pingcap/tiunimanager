@@ -611,39 +611,6 @@ func (c ClusterServiceHandler) QueryBackupRecords(ctx context.Context, request *
 	return nil
 }
 
-func (c ClusterServiceHandler) QueryParameters(ctx context.Context, request *clusterpb.QueryClusterParametersRequest, response *clusterpb.QueryClusterParametersResponse) (err error) {
-
-	content, err := domain.GetParameters(ctx, request.Operator, request.ClusterId)
-
-	if err != nil {
-		framework.LogWithContext(ctx).Info(err)
-		return nil
-	} else {
-		response.Status = SuccessResponseStatus
-
-		response.ClusterId = request.ClusterId
-		response.ParametersJson = content
-		return nil
-	}
-}
-
-func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clusterpb.SaveClusterParametersRequest, response *clusterpb.SaveClusterParametersResponse) (err error) {
-
-	//clusterAggregation, err := domain.ModifyParameters(ctx, request.Operator, request.ClusterId, request.ParametersJson)
-	//
-	//if err != nil {
-	//	framework.LogWithContext(ctx).Info(err)
-	//	return nil
-	//} else {
-	//	response.ChangeFeedStatus = SuccessResponseStatus
-	//	response.DisplayInfo = &clusterpb.DisplayStatusDTO{
-	//		InProcessFlowId: int32(clusterAggregation.CurrentWorkFlow.Id),
-	//	}
-	//	return nil
-	//}
-	return err
-}
-
 func (c ClusterServiceHandler) GetDashboardInfo(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "DescribeDashboard", int(response.GetCode()))
@@ -656,24 +623,17 @@ func (c ClusterServiceHandler) GetDashboardInfo(ctx context.Context, request *cl
 	}
 
 	return nil
-
-	return nil
 }
 
-func (c ClusterServiceHandler) DescribeMonitor(ctx context.Context, request *clusterpb.DescribeMonitorRequest, response *clusterpb.DescribeMonitorResponse) (err error) {
+func (c ClusterServiceHandler) DescribeMonitor(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "DescribeMonitor", int(response.GetStatus().GetCode()))
-	monitor, err := domain.DescribeMonitor(ctx, request.Operator, request.ClusterId)
-	if err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_MONITOR_NOT_FOUND), Message: common.TIEM_MONITOR_NOT_FOUND.Explain()}
-	} else {
-		response.Status = SuccessResponseStatus
-		response.ClusterId = monitor.ClusterId
-		response.AlertUrl = monitor.AlertUrl
-		response.GrafanaUrl = monitor.GrafanaUrl
-	}
+	defer handleMetrics(start, "DescribeMonitor", int(resp.GetCode()))
+	request := &cluster.QueryMonitorInfoReq{}
 
+	if handleRequest(ctx, req, resp, request) {
+		result, err := c.clusterManager.GetMonitorInfo(ctx, *request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
 	return nil
 }
 

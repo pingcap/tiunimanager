@@ -18,6 +18,7 @@ package management
 import (
 	"context"
 	"fmt"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -409,4 +410,39 @@ func (p *Manager) DetailCluster(ctx context.Context, req cluster.QueryClusterDet
 
 func (manager *Manager) GetClusterDashboardInfo(ctx context.Context, request *cluster.GetDashboardInfoReq) (*cluster.GetDashboardInfoResp, error) {
 	return GetDashboardInfo(ctx, request)
+}
+
+func (p *Manager) GetMonitorInfo(ctx context.Context, req cluster.QueryMonitorInfoReq) (resp cluster.QueryMonitorInfoResp, err error) {
+	// Get cluster info and topology from db based by clusterID
+	clusterMeta, err := handler.Get(ctx, req.ClusterID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("load cluser[%s] meta from db error: %s", req.ClusterID, err.Error())
+		return resp, framework.SimpleError(common.TIEM_CLUSTER_NOT_FOUND)
+	}
+
+	alertServers := clusterMeta.GetAlertManagerAddresses()
+	grafanaServers := clusterMeta.GetGrafanaAddresses()
+	if len(alertServers) <= 0 || len(grafanaServers) <= 0 {
+		framework.LogWithContext(ctx).Errorf("load cluser[%s] meta from db error: %s", req.ClusterID, err.Error())
+		return resp, framework.SimpleError(common.TIEM_CLUSTER_RESOURCE_NOT_ENOUGH)
+	}
+
+	alertPort := alertServers[0].Port
+	if alertPort == 0 {
+		alertPort = constants.DefaultAlertPort
+	}
+	grafanaPort := grafanaServers[0].Port
+	if grafanaPort == 0 {
+		grafanaPort = constants.DefaultGrafanaPort
+	}
+
+	alertUrl := fmt.Sprintf("http://%s:%d", alertServers[0].IP, alertPort)
+	grafanaUrl := fmt.Sprintf("http://%s:%d", grafanaServers[0].IP, grafanaPort)
+
+	resp = cluster.QueryMonitorInfoResp{
+		ClusterID:  clusterMeta.Cluster.ID,
+		AlertUrl:   alertUrl,
+		GrafanaUrl: grafanaUrl,
+	}
+	return resp, nil
 }

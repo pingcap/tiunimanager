@@ -33,11 +33,8 @@ service ClusterService {
     rpc SaveBackupStrategy(RpcRequest) returns (RpcResponse);
     rpc GetBackupStrategy(RpcRequest) returns (RpcResponse);
 
-    rpc QueryParameters(QueryClusterParametersRequest) returns (QueryClusterParametersResponse);
-    rpc SaveParameters(SaveClusterParametersRequest) returns (SaveClusterParametersResponse);
-
     rpc GetDashboardInfo(RpcRequest) returns (RpcResponse);
-    rpc DescribeMonitor(DescribeMonitorRequest) returns (DescribeMonitorResponse);
+    rpc DescribeMonitor(RpcRequest) returns (RpcResponse);
 
     // Auth manager module
     rpc Login(LoginRequest) returns (LoginResponse);

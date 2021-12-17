@@ -48,9 +48,8 @@ import (
 )
 
 const (
-	dateFormat = "2006-01-02 15:04:05"
-	//logIndexPrefix = "em-database-cluster-*"
-	logIndexPrefix = "tiem-tidb-cluster-*"
+	dateFormat     = "2006-01-02 15:04:05"
+	logIndexPrefix = "em-database-cluster-*"
 )
 
 type Manager struct{}

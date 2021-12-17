@@ -106,7 +106,7 @@ func handleResponse(ctx context.Context, resp *clusterpb.RpcResponse, err error,
 
 	if err != nil {
 		if _, ok := err.(framework.TiEMError); !ok {
-			err = framework.WrapError(common.TIEM_UNRECOGNIZED_ERROR, "", err)
+			err = framework.WrapError(common.TIEM_UNRECOGNIZED_ERROR, err.Error(), err)
 		}
 		framework.LogWithContext(ctx).Error(err.Error())
 		resp.Code = int32(err.(framework.TiEMError).GetCode())
@@ -385,7 +385,7 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.
 	return nil
 }
 
-func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "DeleteCluster", int(resp.GetCode()))
 
@@ -447,9 +447,9 @@ func (c ClusterServiceHandler) ExportData(ctx context.Context, request *clusterp
 	framework.LogWithContext(ctx).Info("export data")
 	exportReq := message.DataExportReq{}
 
-	if handleRequest(ctx, request, response, exportReq) {
-		result, err := c.importexportManager.ExportData(ctx, &exportReq)
-		handleResponse(ctx, response, err, *result, nil)
+	if handleRequest(ctx, request, response, &exportReq) {
+		result, err := c.importexportManager.ExportData(ctx, exportReq)
+		handleResponse(ctx, response, err, result, nil)
 	}
 
 	return nil
@@ -461,9 +461,9 @@ func (c ClusterServiceHandler) ImportData(ctx context.Context, request *clusterp
 	framework.LogWithContext(ctx).Info("import data")
 	importReq := message.DataImportReq{}
 
-	if handleRequest(ctx, request, response, importReq) {
-		result, err := c.importexportManager.ImportData(ctx, &importReq)
-		handleResponse(ctx, response, err, *result, nil)
+	if handleRequest(ctx, request, response, &importReq) {
+		result, err := c.importexportManager.ImportData(ctx, importReq)
+		handleResponse(ctx, response, err, result, nil)
 	}
 
 	return nil
@@ -475,9 +475,9 @@ func (c ClusterServiceHandler) QueryDataTransport(ctx context.Context, request *
 	framework.LogWithContext(ctx).Info("query data transport")
 	queryReq := message.QueryDataImportExportRecordsReq{}
 
-	if handleRequest(ctx, request, response, queryReq) {
-		result, page, err := c.importexportManager.QueryDataTransportRecords(ctx, &queryReq)
-		handleResponse(ctx, response, err, *result, &clusterpb.RpcPage{
+	if handleRequest(ctx, request, response, &queryReq) {
+		result, page, err := c.importexportManager.QueryDataTransportRecords(ctx, queryReq)
+		handleResponse(ctx, response, err, result, &clusterpb.RpcPage{
 			Page:     int32(page.Page),
 			PageSize: int32(page.PageSize),
 			Total:    int32(page.Total),
@@ -493,9 +493,9 @@ func (c ClusterServiceHandler) DeleteDataTransportRecord(ctx context.Context, re
 	framework.LogWithContext(ctx).Info("delete data transport record")
 	deleteReq := message.DeleteImportExportRecordReq{}
 
-	if handleRequest(ctx, request, response, deleteReq) {
-		result, err := c.importexportManager.DeleteDataTransportRecord(ctx, &deleteReq)
-		handleResponse(ctx, response, err, *result, nil)
+	if handleRequest(ctx, request, response, &deleteReq) {
+		result, err := c.importexportManager.DeleteDataTransportRecord(ctx, deleteReq)
+		handleResponse(ctx, response, err, result, nil)
 	}
 
 	return nil
@@ -507,9 +507,9 @@ func (c *ClusterServiceHandler) GetSystemConfig(ctx context.Context, request *cl
 	framework.LogWithContext(ctx).Info("get system config")
 	getReq := message.GetSystemConfigReq{}
 
-	if handleRequest(ctx, request, response, getReq) {
-		result, err := c.systemConfigManager.GetSystemConfig(ctx, &getReq)
-		handleResponse(ctx, response, err, *result, nil)
+	if handleRequest(ctx, request, response, &getReq) {
+		result, err := c.systemConfigManager.GetSystemConfig(ctx, getReq)
+		handleResponse(ctx, response, err, result, nil)
 	}
 
 	return nil
@@ -521,9 +521,9 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 	framework.LogWithContext(ctx).Info("create backup")
 	backupReq := cluster.BackupClusterDataReq{}
 
-	if handleRequest(ctx, request, response, backupReq) {
-		result, err := c.brManager.BackupCluster(ctx, &backupReq)
-		handleResponse(ctx, response, err, *result, nil)
+	if handleRequest(ctx, request, response, &backupReq) {
+		result, err := c.brManager.BackupCluster(ctx, backupReq)
+		handleResponse(ctx, response, err, result, nil)
 	}
 
 	return nil
@@ -557,9 +557,9 @@ func (c ClusterServiceHandler) DeleteBackupRecords(ctx context.Context, request 
 	framework.LogWithContext(ctx).Info("delete backup records")
 	deleteReq := cluster.DeleteBackupDataReq{}
 
-	if handleRequest(ctx, request, response, deleteReq) {
-		result, err := c.brManager.DeleteBackupRecords(ctx, &deleteReq)
-		handleResponse(ctx, response, err, *result, nil)
+	if handleRequest(ctx, request, response, &deleteReq) {
+		result, err := c.brManager.DeleteBackupRecords(ctx, deleteReq)
+		handleResponse(ctx, response, err, result, nil)
 	}
 
 	return nil
@@ -571,9 +571,9 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 	framework.LogWithContext(ctx).Info("save backup strategy")
 	saveReq := cluster.SaveBackupStrategyReq{}
 
-	if handleRequest(ctx, request, response, saveReq) {
-		result, err := c.brManager.SaveBackupStrategy(ctx, &saveReq)
-		handleResponse(ctx, response, err, *result, nil)
+	if handleRequest(ctx, request, response, &saveReq) {
+		result, err := c.brManager.SaveBackupStrategy(ctx, saveReq)
+		handleResponse(ctx, response, err, result, nil)
 	}
 
 	return nil
@@ -585,9 +585,9 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 	framework.LogWithContext(ctx).Info("get backup strategy")
 	getReq := cluster.GetBackupStrategyReq{}
 
-	if handleRequest(ctx, request, response, getReq) {
-		result, err := c.brManager.GetBackupStrategy(ctx, &getReq)
-		handleResponse(ctx, response, err, *result, nil)
+	if handleRequest(ctx, request, response, &getReq) {
+		result, err := c.brManager.GetBackupStrategy(ctx, getReq)
+		handleResponse(ctx, response, err, result, nil)
 	}
 
 	return nil
@@ -599,9 +599,9 @@ func (c ClusterServiceHandler) QueryBackupRecords(ctx context.Context, request *
 	framework.LogWithContext(ctx).Info("query backup records")
 	queryReq := cluster.QueryBackupRecordsReq{}
 
-	if handleRequest(ctx, request, response, queryReq) {
-		result, page, err := c.brManager.QueryClusterBackupRecords(ctx, &queryReq)
-		handleResponse(ctx, response, err, *result, &clusterpb.RpcPage{
+	if handleRequest(ctx, request, response, &queryReq) {
+		result, page, err := c.brManager.QueryClusterBackupRecords(ctx, queryReq)
+		handleResponse(ctx, response, err, result, &clusterpb.RpcPage{
 			Page:     int32(page.Page),
 			PageSize: int32(page.PageSize),
 			Total:    int32(page.Total),
@@ -617,9 +617,9 @@ func (c ClusterServiceHandler) GetDashboardInfo(ctx context.Context, request *cl
 	framework.LogWithContext(ctx).Info("get cluster dashboard info")
 	dashboardReq := cluster.GetDashboardInfoReq{}
 
-	if handleRequest(ctx, request, response, dashboardReq) {
-		result, err := c.clusterManager.GetClusterDashboardInfo(ctx, &dashboardReq)
-		handleResponse(ctx, response, err, *result, nil)
+	if handleRequest(ctx, request, response, &dashboardReq) {
+		result, err := c.clusterManager.GetClusterDashboardInfo(ctx, dashboardReq)
+		handleResponse(ctx, response, err, result, nil)
 	}
 
 	return nil
@@ -684,6 +684,7 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 	detailReq := &message.QueryWorkFlowDetailReq{}
 	err := json.Unmarshal([]byte(reqData), detailReq)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("json unmarshal request failed %s", err.Error())
 		handleResponse(ctx, response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil, nil)
 		return nil
 	}
@@ -691,6 +692,7 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 	manager := workflow.GetWorkFlowService()
 	flowDetail, err := manager.DetailWorkFlow(ctx, detailReq.WorkFlowID)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("call detail workflow failed %s", err.Error())
 		handleResponse(ctx, response, framework.NewTiEMError(common.TIEM_DETAIL_WORKFLOW_FAILED, err.Error()), nil, nil)
 		return nil
 	}

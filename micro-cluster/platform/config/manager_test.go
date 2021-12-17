@@ -39,7 +39,7 @@ func TestSystemConfigManager_GetSystemConfig(t *testing.T) {
 	models.SetConfigReaderWriter(configRW)
 
 	mgr := NewSystemConfigManager()
-	_, err := mgr.GetSystemConfig(context.TODO(), &message.GetSystemConfigReq{
+	_, err := mgr.GetSystemConfig(context.TODO(), message.GetSystemConfigReq{
 		ConfigKey: "key",
 	})
 	assert.Nil(t, err)

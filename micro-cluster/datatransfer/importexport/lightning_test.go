@@ -16,6 +16,7 @@
 package importexport
 
 import (
+	"context"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -32,6 +33,6 @@ func TestNewDataImportConfig(t *testing.T) {
 		StorageType: "s3",
 		ConfigPath:  "/home/em/import",
 	}
-	config := NewDataImportConfig(meta, info)
+	config := NewDataImportConfig(context.TODO(), meta, info)
 	assert.NotNil(t, config)
 }

@@ -20,11 +20,11 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/file-server/controller"
 	"github.com/pingcap-inc/tiem/file-server/service"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
 	"net/http"
@@ -50,7 +50,7 @@ func UploadImportFile(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
-	err = service.FileMgr.UnzipDir(ctx, filepath.Join(uploadPath, common.DefaultZipName), filepath.Join(uploadPath, "data"))
+	err = service.FileMgr.UnzipDir(ctx, filepath.Join(uploadPath, constants.DefaultZipName), filepath.Join(uploadPath, "data"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
@@ -65,6 +65,10 @@ func DownloadExportFile(c *gin.Context) {
 
 	request := &message.QueryDataImportExportRecordsReq{
 		RecordID: recordId,
+		PageRequest: structs.PageRequest{
+			Page:     1,
+			PageSize: 10,
+		},
 	}
 	if err := c.ShouldBindQuery(&request); err != nil {
 		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
@@ -87,6 +91,10 @@ func DownloadExportFile(c *gin.Context) {
 	err = json.Unmarshal([]byte(rpcResp.Response), &resp)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("json unmarshal response failed, %s", err.Error())))
+		return
+	}
+	if len(resp.Records) == 0 {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("can not found record %s", recordId)))
 		return
 	}
 	record := resp.Records[0]

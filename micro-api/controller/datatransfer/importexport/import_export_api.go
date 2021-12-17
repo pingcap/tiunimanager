@@ -82,7 +82,7 @@ func QueryDataTransport(c *gin.Context) {
 	var request message.QueryDataImportExportRecordsReq
 
 	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &request); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryDataTransport, message.QueryDataImportExportRecordsResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryDataTransport, &message.QueryDataImportExportRecordsResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -103,11 +103,9 @@ func QueryDataTransport(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/transport/{recordId} [delete]
 func DeleteDataTransportRecord(c *gin.Context) {
-	req := message.DeleteImportExportRecordReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.DeleteImportExportRecordReq{
 		RecordID: c.Param("recordId"),
-	}
-
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteDataTransportRecord, &message.DeleteImportExportRecordResp{},
 			requestBody,
 			controller.DefaultTimeout)

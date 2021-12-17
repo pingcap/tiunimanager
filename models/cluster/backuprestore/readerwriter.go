@@ -65,7 +65,7 @@ type ReaderWriter interface {
 	// @Return []*BackupRecord
 	// @Return total
 	// @Return error
-	QueryBackupRecords(ctx context.Context, clusterId, backupId, backupMode string, startTime, endTime time.Time, page int, pageSize int) (records []*BackupRecord, total int64, err error)
+	QueryBackupRecords(ctx context.Context, clusterId, backupId, backupMode string, startTime, endTime int64, page int, pageSize int) (records []*BackupRecord, total int64, err error)
 
 	// DeleteBackupRecord
 	// @Description: delete backup record by Id

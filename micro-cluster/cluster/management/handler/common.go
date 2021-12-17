@@ -118,15 +118,17 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 			return framework.WrapError(common.TIEM_CONNECT_DB_ERROR, "", err)
 		}
 		defer db.Close()
-		MaxReplicaCount := 0
+		var MaxReplicaCount sql.NullInt64
 		err = db.QueryRow(CheckMaxReplicaCmd).Scan(&MaxReplicaCount)
 		if err != nil {
 			return framework.WrapError(common.TIEM_SCAN_MAX_REPLICA_COUNT_ERROR, "", err)
 		}
-		framework.LogWithContext(ctx).Infof("TiFlash max replicas: %d", MaxReplicaCount)
-		if len(meta.Instances[string(constants.ComponentIDTiFlash)])-1 < MaxReplicaCount {
-			return framework.NewTiEMError(common.TIEM_CHECK_TIFLASH_MAX_REPLICAS_ERROR,
-				"the number of remaining TiFlash instances is less than the maximum copies of data tables")
+		if MaxReplicaCount.Valid {
+			framework.LogWithContext(ctx).Infof("TiFlash max replicas: %d", MaxReplicaCount.Int64)
+			if len(meta.Instances[string(constants.ComponentIDTiFlash)])-1 < int(MaxReplicaCount.Int64) {
+				return framework.NewTiEMError(common.TIEM_CHECK_TIFLASH_MAX_REPLICAS_ERROR,
+					"the number of remaining TiFlash instances is less than the maximum copies of data tables")
+			}
 		}
 	}
 

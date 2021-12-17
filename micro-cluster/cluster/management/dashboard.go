@@ -54,7 +54,10 @@ func GetDashboardInfo(ctx context.Context, request *cluster.GetDashboardInfoReq)
 	tidbUserInfo := meta.GetClusterUserNamePasswd()
 	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta, %+v", meta.Cluster.ID, tidbUserInfo)
 
-	url := getDashboardUrlFromCluser(ctx, meta)
+	url, err := getDashboardUrlFromCluser(ctx, meta)
+	if err != nil {
+		return nil, err
+	}
 	token, err := getLoginToken(ctx, url, tidbUserInfo.UserName, tidbUserInfo.Password)
 	if err != nil {
 		return nil, err
@@ -69,11 +72,11 @@ func GetDashboardInfo(ctx context.Context, request *cluster.GetDashboardInfoReq)
 	return dashboard, nil
 }
 
-func getDashboardUrlFromCluser(ctx context.Context, meta *handler.ClusterMeta) string {
+func getDashboardUrlFromCluser(ctx context.Context, meta *handler.ClusterMeta) (string, error) {
 	pdAddress := meta.GetPDClientAddresses()
 	if len(pdAddress) == 0 {
 		framework.LogWithContext(ctx).Errorf("get pd address from meta failed, empty address")
-		return ""
+		return "", fmt.Errorf("get pd address from meta failed, empty address")
 	}
 	framework.LogWithContext(ctx).Infof("get cluster %s tidb address from meta, %+v", meta.Cluster.ID, pdAddress)
 	pdNum := len(pdAddress)
@@ -84,7 +87,7 @@ func getDashboardUrlFromCluser(ctx context.Context, meta *handler.ClusterMeta) s
 			pdClientPort = constants.DefaultPDClientPort
 		}
 	*/
-	return fmt.Sprintf("http://%s:%d/dashboard/", pdServer.IP, pdClientPort)
+	return fmt.Sprintf("http://%s:%d/dashboard/", pdServer.IP, pdClientPort), nil
 }
 
 func getLoginToken(ctx context.Context, dashboardUrl, userName, password string) (string, error) {

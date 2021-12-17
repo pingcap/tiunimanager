@@ -85,7 +85,7 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 		framework.LogWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
 		return err
 	}
-	ctx.SetData("backupTaskId", backupTaskId)
+	ctx.SetData(contextBackupTiupTaskID, backupTaskId)
 	return nil
 }
 
@@ -95,12 +95,16 @@ func updateBackupRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) e
 
 	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
 	record := ctx.GetData(contextBackupRecordKey).(*backuprestore.BackupRecord)
+	backupTaskId := ctx.GetData(contextBackupTiupTaskID).(string)
 
-	//todo: show backup info and update backupTSO,size,endTime
-	size := uint64(0)
-	backupTSO := uint64(0)
+	resp, err := secondparty.Manager.ShowBackUpInfoThruMetaDB(ctx, backupTaskId)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("show backup info of backupId %s failed", backupTaskId)
+		return err
+	}
+
 	brRW := models.GetBRReaderWriter()
-	err := brRW.UpdateBackupRecord(ctx, record.ID, string(constants.ClusterBackupFinished), size, backupTSO, time.Now())
+	err = brRW.UpdateBackupRecord(ctx, record.ID, string(constants.ClusterBackupFinished), resp.Size, resp.BackupTS, time.Now())
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("update backup reocrd %s of cluster %s failed", record.ID, meta.Cluster.ID)
 		return err

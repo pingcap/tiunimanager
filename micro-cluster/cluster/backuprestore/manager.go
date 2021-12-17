@@ -310,6 +310,12 @@ func (mgr *BRManager) SaveBackupStrategy(ctx context.Context, request *cluster.S
 		return nil, err
 	}
 
+	meta, err := handler.Get(ctx, request.ClusterID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get cluster %s meta failed, %s", request.ClusterID, err.Error())
+		return nil, fmt.Errorf("get cluster %s meta failed, %s", request.ClusterID, err.Error())
+	}
+
 	period := strings.Split(request.Strategy.Period, "-")
 	starts := strings.Split(period[0], ":")
 	ends := strings.Split(period[1], ":")
@@ -319,7 +325,7 @@ func (mgr *BRManager) SaveBackupStrategy(ctx context.Context, request *cluster.S
 	brRW := models.GetBRReaderWriter()
 	strategy, err := brRW.CreateBackupStrategy(ctx, &backuprestore.BackupStrategy{
 		Entity: dbModel.Entity{
-			TenantId: "",
+			TenantId: meta.Cluster.TenantId,
 		},
 		ClusterID:  request.ClusterID,
 		BackupDate: request.Strategy.BackupDate,

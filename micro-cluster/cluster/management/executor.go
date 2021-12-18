@@ -16,6 +16,7 @@
 package management
 
 import (
+	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -129,7 +130,7 @@ func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		"scale out cluster %s, version %s, yamlConfig %s", cluster.ID, cluster.Version, yamlConfig)
 	taskId, err := secondparty.Manager.ClusterScaleOut(
 		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name,
-		yamlConfig, 0, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, node.ID)
+		yamlConfig, handler.DefaultTiupTimeOut, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, node.ID)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s scale out error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -163,7 +164,7 @@ func scaleInCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 		"scale in cluster %s, delete instance %s", clusterMeta.Cluster.ID, instanceID)
 	taskId, err := secondparty.Manager.ClusterScaleIn(
 		context.Context, secondparty.ClusterComponentTypeStr, clusterMeta.Cluster.Name,
-		strings.Join([]string{instance.HostIP[0], strconv.Itoa(int(instance.Ports[0]))}, ":"), 0, []string{"--yes"}, node.ID)
+		strings.Join([]string{instance.HostIP[0], strconv.Itoa(int(instance.Ports[0]))}, ":"), handler.DefaultTiupTimeOut, []string{"--yes"}, node.ID)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s scale in error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -231,7 +232,7 @@ func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		return nil
 	}
 	backupResponse, err := backuprestore.GetBRService().BackupCluster(context.Context,
-		&cluster.BackupClusterDataReq{
+		cluster.BackupClusterDataReq{
 			ClusterID:  sourceClusterMeta.Cluster.ID,
 			BackupMode: string(constants.BackupModeManual),
 		})
@@ -247,6 +248,36 @@ func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	}
 
 	context.SetData(ContextBackupID, backupResponse.BackupID)
+
+	return nil
+}
+
+func restoreNewCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	backupID := context.GetData(ContextBackupID).(string)
+
+	restoreResponse, err := backuprestore.GetBRService().RestoreExistCluster(context.Context,
+		cluster.RestoreExistClusterReq{
+			ClusterID: clusterMeta.Cluster.ID,
+			BackupID:  backupID,
+		})
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf("do restore for cluster %s by backup id %s error: %s", clusterMeta.Cluster.ID, backupID, err.Error())
+		return fmt.Errorf("do restore for cluster %s by backup id %s error: %s", clusterMeta.Cluster.ID, backupID, err.Error())
+	}
+
+	context.SetData(ContextWorkflowID, restoreResponse.WorkFlowID)
+
+	return nil
+}
+
+func waitWorkFlow(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	workflowId := context.GetData(ContextWorkflowID).(string)
+
+	if err := handler.WaitWorkflow(workflowId, 30*24*time.Hour); err != nil {
+		framework.LogWithContext(context.Context).Errorf("wait workflow %s error: %s", workflowId, err.Error())
+		return fmt.Errorf("wait workflow %s error: %s", workflowId, err.Error())
+	}
 
 	return nil
 }
@@ -371,7 +402,7 @@ func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 		"deploy cluster %s, version %s, yamlConfig %s", cluster.ID, cluster.Version, yamlConfig)
 	taskId, err := secondparty.Manager.ClusterDeploy(
 		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, cluster.Version,
-		yamlConfig, 0, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, node.ID)
+		yamlConfig, handler.DefaultTiupTimeOut, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, node.ID)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s deploy error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -391,7 +422,7 @@ func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	framework.LogWithContext(context.Context).Infof(
 		"start cluster %s, version %s", cluster.ID, cluster.Version)
 	taskId, err := secondparty.Manager.ClusterStart(
-		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, 0, []string{}, node.ID,
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, handler.DefaultTiupTimeOut, []string{}, node.ID,
 	)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -408,7 +439,7 @@ func syncBackupStrategy(node *workflowModel.WorkFlowNode, context *workflow.Flow
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
 	sourceStrategyRes, err := backuprestore.GetBRService().GetBackupStrategy(context.Context,
-		&cluster.GetBackupStrategyReq{
+		cluster.GetBackupStrategyReq{
 			ClusterID: sourceClusterMeta.Cluster.ID,
 		})
 	if err != nil {
@@ -418,7 +449,7 @@ func syncBackupStrategy(node *workflowModel.WorkFlowNode, context *workflow.Flow
 	}
 
 	_, err = backuprestore.GetBRService().SaveBackupStrategy(context.Context,
-		&cluster.SaveBackupStrategyReq{
+		cluster.SaveBackupStrategyReq{
 			ClusterID: clusterMeta.Cluster.ID,
 			Strategy:  sourceStrategyRes.Strategy,
 		})
@@ -449,7 +480,7 @@ func restoreCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 		return nil
 	}
 	restoreResponse, err := backuprestore.GetBRService().RestoreExistCluster(context.Context,
-		&cluster.RestoreExistClusterReq{
+		cluster.RestoreExistClusterReq{
 			ClusterID: clusterMeta.Cluster.ID,
 			BackupID:  backupID,
 		})
@@ -487,7 +518,7 @@ func stopCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext
 	framework.LogWithContext(context.Context).Infof(
 		"stop cluster %s, version = %s", cluster.ID, cluster.Version)
 	taskId, err := secondparty.Manager.ClusterStop(
-		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, 0, []string{}, node.ID,
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, handler.DefaultTiupTimeOut, []string{}, node.ID,
 	)
 
 	if err != nil {
@@ -509,7 +540,7 @@ func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	framework.LogWithContext(context.Context).Infof(
 		"destroy cluster %s, version %s", cluster.ID, cluster.Version)
 	taskId, err := secondparty.Manager.ClusterDestroy(
-		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, 0, []string{}, node.ID,
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, handler.DefaultTiupTimeOut, []string{}, node.ID,
 	)
 
 	if err != nil {

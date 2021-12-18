@@ -65,8 +65,9 @@ func importDataToCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) 
 
 	info := ctx.GetData(contextDataTransportRecordKey).(*importInfo)
 
+	framework.LogWithContext(ctx).Infof("begin do tiup tidb-lightning -config %s/tidb-lightning.toml, timeout: %d", info.ConfigPath, lightningTimeout)
 	//tiup tidb-lightning -config tidb-lightning.toml
-	importTaskId, err := secondparty.Manager.Lightning(ctx, 0,
+	importTaskId, err := secondparty.Manager.Lightning(ctx, lightningTimeout,
 		[]string{"-config", fmt.Sprintf("%s/tidb-lightning.toml", info.ConfigPath)},
 		node.ID)
 	if err != nil {
@@ -133,11 +134,11 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	if info.Filter != "" {
 		cmd = append(cmd, "--filter", info.Filter)
 	}
-	if FileTypeCSV == info.FileType && info.Filter == "" && info.Sql != "" {
+	if fileTypeCSV == info.FileType && info.Filter == "" && info.Sql != "" {
 		cmd = append(cmd, "--sql", info.Sql)
 	}
-	framework.LogWithContext(ctx).Infof("call tiupmgr dumpling api, cmd: %v", cmd)
-	exportTaskId, err := secondparty.Manager.Dumpling(ctx, 0, cmd, node.ID)
+	framework.LogWithContext(ctx).Infof("call tiupmgr dumpling api, cmd: %v, timeout: %d", cmd, dumplingTimeout)
+	exportTaskId, err := secondparty.Manager.Dumpling(ctx, dumplingTimeout, cmd, node.ID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call tiup dumpling api failed, %s", err.Error())
 		return fmt.Errorf("call tiup dumpling api failed, %s", err.Error())

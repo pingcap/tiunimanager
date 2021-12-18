@@ -16,8 +16,16 @@
 package importexport
 
 const (
-	FileTypeCSV                   string = "csv"
-	FileTypeSQL                   string = "sql"
+	fileTypeCSV string = "csv"
+	fileTypeSQL string = "sql"
+)
+
+const (
+	lightningTimeout int = 60 * 60 * 24 * 30 //one month
+	dumplingTimeout  int = 60 * 60 * 24 * 30 //one month
+)
+
+const (
 	contextClusterMetaKey         string = "clusterMeta"
 	contextDataTransportRecordKey string = "transportRecord"
 )

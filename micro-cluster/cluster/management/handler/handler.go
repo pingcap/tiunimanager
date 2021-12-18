@@ -253,12 +253,12 @@ func (p *ClusterMeta) GenerateTopologyConfig(ctx context.Context) (string, error
 // @Description update cluster status
 // @Return		error
 func (p *ClusterMeta) UpdateClusterStatus(ctx context.Context, status constants.ClusterRunningStatus) error {
-	p.Cluster.Status = string(status)
 	err := models.GetClusterReaderWriter().UpdateStatus(ctx, p.Cluster.ID, status)
 
 	if err != nil {
 		framework.LogWithContext(ctx).Infof("update cluster[%s] status into %s failed", p.Cluster.Name, status)
 	} else {
+		p.Cluster.Status = string(status)
 		framework.LogWithContext(ctx).Errorf("update cluster[%s] status into %s succeed", p.Cluster.Name, status)
 	}
 	return err
@@ -540,7 +540,45 @@ func (p *ClusterMeta) GetMonitorAddresses() []ComponentAddress {
 			})
 		}
 	}
-	return nil
+	return address
+}
+
+// GetGrafanaAddresses
+// @Description: Grafana Service communication port
+// @Receiver p
+// @return []ComponentAddress
+func (p *ClusterMeta) GetGrafanaAddresses() []ComponentAddress {
+	instances := p.Instances[string(newConstants.ComponentIDGrafana)]
+	address := make([]ComponentAddress, 0)
+
+	for _, instance := range instances {
+		if instance.Status == string(constants.ClusterInstanceRunning) {
+			address = append(address, ComponentAddress{
+				IP:   instance.HostIP[0],
+				Port: int(instance.Ports[0]),
+			})
+		}
+	}
+	return address
+}
+
+// GetAlertManagerAddresses
+// @Description: AlertManager Service communication port
+// @Receiver p
+// @return []ComponentAddress
+func (p *ClusterMeta) GetAlertManagerAddresses() []ComponentAddress {
+	instances := p.Instances[string(newConstants.ComponentIDAlertManger)]
+	address := make([]ComponentAddress, 0)
+
+	for _, instance := range instances {
+		if instance.Status == string(constants.ClusterInstanceRunning) {
+			address = append(address, ComponentAddress{
+				IP:   instance.HostIP[0],
+				Port: int(instance.Ports[0]),
+			})
+		}
+	}
+	return address
 }
 
 type TiDBUserInfo struct {

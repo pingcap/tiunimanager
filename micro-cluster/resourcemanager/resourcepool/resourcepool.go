@@ -50,6 +50,12 @@ func (p *ResourcePool) GetHostProvider() hostprovider.HostProvider {
 }
 
 func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error) {
+	for _, host := range hosts {
+		err = host.Verify()
+		if err != nil {
+			return nil, err
+		}
+	}
 	return p.hostProvider.ImportHosts(ctx, hosts)
 }
 

@@ -19,6 +19,7 @@ package sshclient
 import (
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -70,9 +71,12 @@ func (c *SSHClient) SetKeyPath(path string) {
 
 func (c *SSHClient) Connect() (err error) {
 	config := &ssh.ClientConfig{
-		Timeout:         c.sshTimeout,
-		User:            c.sshUser,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // Not Check SSH Server Key
+		Timeout: c.sshTimeout,
+		User:    c.sshUser,
+		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+			// Not Check SSH Server Key
+			return nil
+		},
 	}
 	if c.sshType == Passwd {
 		config.Auth = []ssh.AuthMethod{ssh.Password(c.sshPassword)}

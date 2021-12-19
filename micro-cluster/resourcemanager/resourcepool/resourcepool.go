@@ -20,11 +20,13 @@ import (
 	"sync"
 
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostinitiator"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
 )
 
 type ResourcePool struct {
-	hostProvider hostprovider.HostProvider
+	hostProvider  hostprovider.HostProvider
+	hostInitiator hostinitiator.HostInitiator
 	// cloudHostProvider hostprovider.HostProvider
 }
 
@@ -43,15 +45,20 @@ func GetResourcePool() *ResourcePool {
 
 func (p *ResourcePool) InitResourcePool() {
 	p.hostProvider = hostprovider.NewFileHostProvider()
+	p.hostInitiator = hostinitiator.NewFileHostInitiator()
 }
 
 func (p *ResourcePool) GetHostProvider() hostprovider.HostProvider {
 	return p.hostProvider
 }
 
+func (p *ResourcePool) SetHostInitiator(initiator hostinitiator.HostInitiator) {
+	p.hostInitiator = initiator
+}
+
 func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error) {
 	for _, host := range hosts {
-		err = host.Verify()
+		err = p.verify(ctx, &host)
 		if err != nil {
 			return nil, err
 		}
@@ -81,4 +88,38 @@ func (p *ResourcePool) GetHierarchy(ctx context.Context, filter *structs.HostFil
 
 func (p *ResourcePool) GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks *structs.Stocks, err error) {
 	return p.hostProvider.GetStocks(ctx, location, hostFilter, diskFilter)
+}
+
+func (p *ResourcePool) verify(ctx context.Context, h *structs.HostInfo) (err error) {
+	client, err := p.hostInitiator.VerifyConnect(ctx, h)
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	if err = p.hostInitiator.VerifyCpuMem(ctx, client, h); err != nil {
+		return err
+	}
+
+	if err = p.hostInitiator.VerifyDisks(ctx, client, h); err != nil {
+		return err
+	}
+
+	if err = p.hostInitiator.VerifyFS(ctx, client, h); err != nil {
+		return err
+	}
+
+	if err = p.hostInitiator.VerifySwap(ctx, client, h); err != nil {
+		return err
+	}
+
+	if err = p.hostInitiator.VerifyEnv(ctx, client, h); err != nil {
+		return err
+	}
+
+	if err = p.hostInitiator.VerifyOSEnv(ctx, client, h); err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -28,7 +28,6 @@ import (
 	"strings"
 
 	"github.com/pingcap-inc/tiem/common/constants"
-	sshclient "github.com/pingcap-inc/tiem/library/util/ssh"
 )
 
 func GenDomainCodeByName(pre string, name string) string {
@@ -136,64 +135,6 @@ func (h HostInfo) IsLoadless() bool {
 		}
 	}
 	return diskLoadless && h.FreeCpuCores == h.CpuCores && h.FreeMemory == h.Memory
-}
-
-func (h HostInfo) Verify() (err error) {
-	client := sshclient.NewSSHClient(h.IP, 22, sshclient.Passwd, h.UserName, h.Passwd)
-	if err = client.Connect(); err != nil {
-		return err
-	}
-	defer client.Close()
-
-	if err = h.verifyCpuMem(client); err != nil {
-		return err
-	}
-
-	if err = h.verifyDisks(client); err != nil {
-		return err
-	}
-
-	if err = h.verifyFS(client); err != nil {
-		return err
-	}
-
-	if err = h.verifySwap(client); err != nil {
-		return err
-	}
-
-	if err = h.verifyEnv(client); err != nil {
-		return err
-	}
-
-	if err = h.verifyOSEnv(client); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (h HostInfo) verifyCpuMem(c *sshclient.SSHClient) (err error) {
-	return nil
-}
-
-func (h HostInfo) verifyDisks(c *sshclient.SSHClient) (err error) {
-	return nil
-}
-
-func (h HostInfo) verifyFS(c *sshclient.SSHClient) (err error) {
-	return nil
-}
-
-func (h HostInfo) verifySwap(c *sshclient.SSHClient) (err error) {
-	return nil
-}
-
-func (h HostInfo) verifyEnv(c *sshclient.SSHClient) (err error) {
-	return nil
-}
-
-func (h HostInfo) verifyOSEnv(c *sshclient.SSHClient) (err error) {
-	return nil
 }
 
 type Location struct {

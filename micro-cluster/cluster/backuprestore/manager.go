@@ -375,26 +375,31 @@ func (mgr *BRManager) DeleteBackupStrategy(ctx context.Context, request cluster.
 func (mgr *BRManager) backupClusterPreCheck(ctx context.Context, request cluster.BackupClusterDataReq) error {
 	configRW := models.GetConfigReaderWriter()
 	storageTypeCfg, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupStorageType)
-	if err != nil {
+	if err != nil || storageTypeCfg.ConfigValue == "" {
 		return fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStorageType, err.Error())
 	}
-	_, err = configRW.GetConfig(ctx, constants.ConfigKeyBackupStoragePath)
-	if err != nil {
+	storagePathCfg, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupStoragePath)
+	if err != nil || storagePathCfg.ConfigValue == "" {
 		return fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStoragePath, err.Error())
 	}
-	if string(constants.StorageTypeS3) == storageTypeCfg.ConfigValue {
-		_, err = configRW.GetConfig(ctx, constants.ConfigKeyBackupS3Endpoint)
-		if err != nil {
+	switch storageTypeCfg.ConfigValue {
+	case string(constants.StorageTypeS3):
+		cfg, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupS3Endpoint)
+		if err != nil || cfg.ConfigValue == "" {
 			return fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupS3Endpoint, err.Error())
 		}
-		_, err = configRW.GetConfig(ctx, constants.ConfigKeyBackupS3AccessKey)
-		if err != nil {
+		cfg, err = configRW.GetConfig(ctx, constants.ConfigKeyBackupS3AccessKey)
+		if err != nil || cfg.ConfigValue == "" {
 			return fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupS3AccessKey, err.Error())
 		}
-		_, err = configRW.GetConfig(ctx, constants.ConfigKeyBackupS3SecretAccessKey)
-		if err != nil {
+		cfg, err = configRW.GetConfig(ctx, constants.ConfigKeyBackupS3SecretAccessKey)
+		if err != nil || cfg.ConfigValue == "" {
 			return fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupS3SecretAccessKey, err.Error())
 		}
+	case string(constants.StorageTypeNFS):
+		break
+	default:
+		return fmt.Errorf("conifg %s value %s is unknow", constants.ConfigKeyBackupStorageType, storageTypeCfg.ConfigValue)
 	}
 
 	if request.ClusterID == "" {

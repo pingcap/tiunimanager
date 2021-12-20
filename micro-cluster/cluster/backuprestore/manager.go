@@ -21,6 +21,7 @@ import (
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
@@ -262,8 +263,13 @@ func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request cluster.D
 	framework.LogWithContext(ctx).Infof("Begin DeleteBackupRecords, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End DeleteBackupRecords")
 
+	if request.ClusterID == "" {
+		framework.LogWithContext(ctx).Errorf("invalid param clusterId empty")
+		return resp, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "invalid param clusterId empty")
+	}
+
 	brRW := models.GetBRReaderWriter()
-	for page, pageSize := 1, 100; ; page++ {
+	for page, pageSize := 1, defaultPageSize; ; page++ {
 		records, _, err := brRW.QueryBackupRecords(ctx, request.ClusterID, request.BackupID, request.BackupMode, 0, 0, page, pageSize)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("query backup records of request %+v, failed, %s", request, err.Error())

@@ -23,6 +23,10 @@ const (
 )
 
 const (
+	defaultPageSize int = 10
+)
+
+const (
 	Sunday    string = "Sunday"
 	Monday    string = "Monday"
 	Tuesday   string = "Tuesday"

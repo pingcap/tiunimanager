@@ -45,8 +45,6 @@ const (
 
 	CrtFileName string = "server.crt"
 	KeyFileName string = "server.key"
-
-	LocalAddress string = "0.0.0.0"
 )
 
 const (
@@ -56,11 +54,6 @@ const (
 
 	LogFileAccess = "access"
 	LogFileAudit  = "audit"
-)
-
-const (
-	RegistryMicroServicePrefix = "/micro/registry/"
-	HttpProtocol               = "http://"
 )
 
 var (

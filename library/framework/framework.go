@@ -338,7 +338,7 @@ func (b *BaseFramework) prometheusBoot() {
 			metricsPort = common.DefaultMetricsPort
 		}
 		LogForkFile(common.LogFileSystem).Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
-		err := http.ListenAndServe(common.LocalAddress+":"+strconv.Itoa(metricsPort), nil)
+		err := http.ListenAndServe("0.0.0.0:"+strconv.Itoa(metricsPort), nil)
 		if err != nil {
 			Log().Errorf("prometheus listen and serve error: %v", err)
 			panic("ListenAndServe: " + err.Error())

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -26,16 +25,16 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/pingcap-inc/tiem/library/common"
-
 	"github.com/pingcap-inc/tiem/library/framework"
 
 	etcd "go.etcd.io/etcd/server/v3/embed"
 )
 
 const (
-	NamePrefix = "etcd"
-	DirPrefix  = "data_"
+	namePrefix   string = "etcd"
+	dirPrefix    string = "data_"
+	localAddress string = "0.0.0.0"
+	httpProtocol        = "http://"
 )
 
 type EmbedEtcdConfig struct {
@@ -79,11 +78,11 @@ func startEmbedEtcd(embedEtcdConfig *EmbedEtcdConfig) error {
 	// advertise peer urls, e.g.: 192.168.1.101:2380,192.168.1.102:2380,192.168.1.102:2380
 	cfg.APUrls = parsePeers([]string{embedEtcdConfig.PeerUrl})
 	// listen peer urls, e.g.: 0.0.0.0:2380
-	cfg.LPUrls = parsePeers([]string{common.LocalAddress + ":" + strings.Split(embedEtcdConfig.PeerUrl, ":")[1]})
+	cfg.LPUrls = parsePeers([]string{localAddress + ":" + strings.Split(embedEtcdConfig.PeerUrl, ":")[1]})
 	// advertise client urls, e.g.: 192.168.1.101:2379,192.168.1.102:2379,192.168.1.102:2379
 	cfg.ACUrls = parseClients(embedEtcdConfig.EtcdClientUrls)
 	// listen client urls, e.g.: 0.0.0.0:2379
-	cfg.LCUrls = parseClients([]string{common.LocalAddress + ":" + strings.Split(embedEtcdConfig.ClientUrl, ":")[1]})
+	cfg.LCUrls = parseClients([]string{localAddress + ":" + strings.Split(embedEtcdConfig.ClientUrl, ":")[1]})
 
 	cfg.InitialCluster = parseInitialCluster(embedEtcdConfig.EtcdPeerUrls)
 	log.Debugf("initial LPUrls: %v, ACUrls: %v, LCUrls: %v, InitialCluster: %v:",
@@ -142,9 +141,9 @@ func parseEtcdConfig() (*EmbedEtcdConfig, error) {
 		}
 	}
 	// set name
-	embedEtcdConfig.Name = NamePrefix + strconv.Itoa(embedEtcdConfig.Index)
+	embedEtcdConfig.Name = namePrefix + strconv.Itoa(embedEtcdConfig.Index)
 	// set dir
-	embedEtcdConfig.Dir = clientArgs.DataDir + "/" + NamePrefix + "/" + DirPrefix + embedEtcdConfig.Name
+	embedEtcdConfig.Dir = clientArgs.DataDir + "/" + namePrefix + "/" + dirPrefix + embedEtcdConfig.Name
 	return embedEtcdConfig, nil
 }
 
@@ -152,7 +151,7 @@ func parseEtcdConfig() (*EmbedEtcdConfig, error) {
 func parsePeers(eps []string) []url.URL {
 	urls := make([]url.URL, len(eps))
 	for i, ep := range eps {
-		u, err := url.Parse(common.HttpProtocol + ep)
+		u, err := url.Parse(httpProtocol + ep)
 		if err != nil {
 			return []url.URL{}
 		}
@@ -165,7 +164,7 @@ func parsePeers(eps []string) []url.URL {
 func parseClients(eps []string) []url.URL {
 	urls := make([]url.URL, len(eps))
 	for i, ep := range eps {
-		u, err := url.Parse(common.HttpProtocol + ep)
+		u, err := url.Parse(httpProtocol + ep)
 		if err != nil {
 			return []url.URL{}
 		}
@@ -178,7 +177,7 @@ func parseClients(eps []string) []url.URL {
 func parseInitialCluster(eps []string) string {
 	urls := ""
 	for i, ep := range eps {
-		urls += NamePrefix + strconv.Itoa(i) + "=" + common.HttpProtocol + ep
+		urls += namePrefix + strconv.Itoa(i) + "=" + httpProtocol + ep
 		if i+1 < len(eps) {
 			urls += ","
 		}

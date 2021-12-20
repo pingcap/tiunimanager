@@ -27,6 +27,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
+	"github.com/pingcap-inc/tiem/micro-cluster/registry"
 	clusterService "github.com/pingcap-inc/tiem/micro-cluster/service"
 	clusterAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/adapt"
 	"github.com/pingcap-inc/tiem/models"
@@ -40,6 +41,18 @@ func main() {
 		initAdapter,
 		initDatabase,
 		defaultPortForLocal,
+		func(b *framework.BaseFramework) error {
+			go func() {
+				// init embed etcd.
+				err := registry.InitEmbedEtcd(b)
+				if err != nil {
+					b.GetRootLogger().ForkFile(b.GetServiceMeta().ServiceName.ServerName()).
+						Errorf("init embed etcd failed, error: %v", err)
+					return
+				}
+			}()
+			return nil
+		},
 	)
 
 	f.PrepareService(func(service micro.Service) error {

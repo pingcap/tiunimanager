@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -21,8 +20,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-
-	"github.com/pingcap-inc/tiem/library/common"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 )
@@ -90,7 +87,7 @@ func TestParsePeers(t *testing.T) {
 				},
 				func(args []string, resp []url.URL) bool {
 					if len(args) > 0 && len(resp) > 0 {
-						u, err := url.Parse(common.HttpProtocol + args[0])
+						u, err := url.Parse(httpProtocol + args[0])
 						if err != nil {
 							return false
 						}
@@ -132,7 +129,7 @@ func TestParseClients(t *testing.T) {
 				},
 				func(args []string, resp []url.URL) bool {
 					if len(args) > 0 && len(resp) > 0 {
-						u, err := url.Parse(common.HttpProtocol + args[0])
+						u, err := url.Parse(httpProtocol + args[0])
 						if err != nil {
 							return false
 						}

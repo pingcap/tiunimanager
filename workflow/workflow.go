@@ -156,7 +156,10 @@ func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, fl
 	}
 
 	flow, err := createFlowWork(ctx, bizId, flowDefine.(*WorkFlowDefine))
-	return flow, framework.WrapError(common.TIEM_WORKFLOW_CREATE_FAILED, err.Error(), err)
+	if err != nil {
+		return nil, framework.WrapError(common.TIEM_WORKFLOW_CREATE_FAILED, err.Error(), err)
+	}
+	return flow, nil
 }
 
 func (mgr *WorkFlowManager) ListWorkFlows(ctx context.Context, request message.QueryWorkFlowsReq) (message.QueryWorkFlowsResp, structs.Page, error) {

@@ -369,14 +369,14 @@ func TestGormClusterReadWrite_ClusterTopologySnapshot(t *testing.T) {
 }
 
 func TestClusterReadWrite_QueryMetas(t *testing.T) {
-	cluster1 := mockCluster("test1", "TiDB", constants.ClusterRunning, []string{"tag1", "tag2"})
-	cluster2 := mockCluster("mytest2", "TiDB", constants.ClusterRunning, []string{"tag2", "tag1"})
-	cluster3 := mockCluster("3test", "TiDB", constants.ClusterRunning, []string{"tag1", "tag2"})
+	cluster1 := mockCluster("QueryMetas_test1", "TiDB", constants.ClusterRunning, []string{"tag1", "tag2"})
+	cluster2 := mockCluster("QueryMetas_test2", "TiDB", constants.ClusterInitializing, []string{"tag2", "tag1"})
+	cluster3 := mockCluster("3test_QueryMetas", "TiDB", constants.ClusterInitializing, []string{"tag1", "tag2"})
 
-	cluster4 := mockCluster("tes", "Other", constants.ClusterRunning, []string{"tag1", "tag2"})
-	cluster5 := mockCluster("test5", "TiDB", constants.ClusterRunning, []string{"tag121"})
-	cluster6 := mockCluster("test6", "TiDB", constants.ClusterRunning, []string{""})
-	cluster7 := mockCluster("test7", "TiDB", constants.ClusterStopped, []string{"tag1"})
+	cluster4 := mockCluster("tes_QueryMetas", "Other", constants.ClusterRunning, []string{"tag1", "tag2"})
+	cluster5 := mockCluster("QueryMetas_test5", "TiDB", constants.ClusterRunning, []string{"tag121"})
+	cluster6 := mockCluster("QueryMetas_test6", "TiDB", constants.ClusterRunning, []string{""})
+	cluster7 := mockCluster("QueryMetas_test7", "TiDB", constants.ClusterStopped, []string{"tag1"})
 
 	defer testRW.Delete(context.TODO(), cluster1)
 	defer testRW.Delete(context.TODO(), cluster2)
@@ -388,6 +388,7 @@ func TestClusterReadWrite_QueryMetas(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		results, page, err := testRW.QueryMetas(context.TODO(), Filters {
+			TenantId: "1919",
 			NameLike: "test",
 			Tag: "tag1",
 			Type: "TiDB",
@@ -407,6 +408,7 @@ func TestClusterReadWrite_QueryMetas(t *testing.T) {
 
 	t.Run("no result", func(t *testing.T) {
 		_, page, err := testRW.QueryMetas(context.TODO(), Filters {
+			TenantId: "1919",
 			NameLike: "whatever",
 			Tag: "tag1",
 			Type: "TiDB",
@@ -422,8 +424,24 @@ func TestClusterReadWrite_QueryMetas(t *testing.T) {
 		assert.Equal(t, 0, page.Total)
 	})
 
+	t.Run("error", func(t *testing.T) {
+		_, _, err := testRW.QueryMetas(context.TODO(), Filters {
+			NameLike: "whatever",
+			Tag: "tag1",
+			Type: "TiDB",
+			StatusFilters: []constants.ClusterRunningStatus{
+				constants.ClusterRunning,
+				constants.ClusterInitializing,
+			},
+		}, structs.PageRequest{
+			Page: 0,
+			PageSize: 5,
+		})
+		assert.Error(t, err)
+	})
 	t.Run("empty filter", func(t *testing.T) {
 		_, page, err := testRW.QueryMetas(context.TODO(), Filters {
+			TenantId: "1919",
 			NameLike: "",
 			Tag: "",
 			Type: "",
@@ -439,6 +457,7 @@ func TestClusterReadWrite_QueryMetas(t *testing.T) {
 
 	t.Run("page", func(t *testing.T) {
 		_, page, err := testRW.QueryMetas(context.TODO(), Filters {
+			TenantId: "1919",
 			NameLike: "",
 			Tag: "",
 			Type: "",
@@ -457,7 +476,7 @@ func mockCluster(name string, clusterType string, status constants.ClusterRunnin
 	got, _ := testRW.Create(context.TODO(), &Cluster {
 		Name: name,
 		Entity: common.Entity{
-			TenantId: "111",
+			TenantId: "1919",
 			Status: string(status),
 		},
 		Tags: tags,
@@ -465,8 +484,8 @@ func mockCluster(name string, clusterType string, status constants.ClusterRunnin
 	})
 
 	instances := []*ClusterInstance{
-		{Entity: common.Entity{TenantId: "111"}, ClusterID: got.ID, Type: "TiKV", Version: "v5.0.0"},
-		{Entity: common.Entity{TenantId: "111"}, ClusterID: got.ID, Type: "PD", Version: "v5.0.0"},
+		{Entity: common.Entity{TenantId: "1919"}, ClusterID: got.ID, Type: "TiKV", Version: "v5.0.0"},
+		{Entity: common.Entity{TenantId: "1919"}, ClusterID: got.ID, Type: "PD", Version: "v5.0.0"},
 	}
 	testRW.UpdateInstance(context.TODO(), instances...)
 	return got.ID

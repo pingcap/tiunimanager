@@ -94,11 +94,18 @@ func (g *ClusterReadWrite) GetMeta(ctx context.Context, clusterID string) (clust
 }
 
 func (g *ClusterReadWrite) QueryMetas(ctx context.Context, filters Filters, pageReq structs.PageRequest) ([]*Result, structs.Page, error) {
-	clusters := make([]*Cluster, 0)
 	page := structs.Page{
 		Page: pageReq.Page,
 		PageSize: pageReq.PageSize,
 	}
+
+	if len(filters.TenantId) == 0 {
+		err := framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "tenant id required in QueryMetas")
+		return nil, page, err
+	}
+
+	clusters := make([]*Cluster, 0)
+
 	total := int64(0)
 	query := g.DB(ctx).Table("clusters").Where("tenant_id = ?", filters.TenantId)
 	if len(filters.ClusterIDs) > 0 {

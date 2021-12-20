@@ -148,6 +148,8 @@ func (p *ClusterMeta) AddDefaultInstances(ctx context.Context) error {
 func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance, error) {
 	instances := p.GetInstanceByStatus(ctx, constants.ClusterInstanceInitializing)
 	requirements := make([]resource.AllocRequirement, 0)
+
+	allocInstances := make([]*management.ClusterInstance, 0)
 	for _, instance := range instances {
 		if Contain(newConstants.ParasiteComponentIDs, newConstants.EMProductComponentIDType(instance.Type)) {
 			continue
@@ -185,8 +187,9 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 			},
 			Strategy: resource.RandomRack,
 		})
+		allocInstances = append(allocInstances, instance)
 	}
-	return requirements, instances, nil
+	return requirements, allocInstances, nil
 }
 
 func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) ([]resource.AllocRequirement, error) {

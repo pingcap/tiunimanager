@@ -74,6 +74,14 @@ type PageRequest struct {
 	PageSize int `json:"pageSize" form:"pageSize"` //Number of this request
 }
 
+func (p PageRequest) GetOffset() int {
+	if p.Page == 0 {
+		p.Page = 1
+	}
+
+	return (p.Page - 1) * p.PageSize
+}
+
 // Calculate the Page's offset in DB query sql
 func (p *PageRequest) CalcOffset() (offset int) {
 	if p.Page > 1 {

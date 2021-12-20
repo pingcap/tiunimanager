@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
@@ -90,6 +91,63 @@ func (g *ClusterReadWrite) GetMeta(ctx context.Context, clusterID string) (clust
 	err = dbCommon.WrapDBError(err)
 	return
 
+}
+
+func (g *ClusterReadWrite) QueryMetas(ctx context.Context, filters Filters, pageReq structs.PageRequest) ([]*Result, structs.Page, error) {
+	clusters := make([]*Cluster, 0)
+	page := structs.Page{
+		Page: pageReq.Page,
+		PageSize: pageReq.PageSize,
+	}
+	total := int64(0)
+	query := g.DB(ctx).Table("clusters")
+	if len(filters.ClusterIDs) > 0 {
+		query = query.Where("id in ?", filters.ClusterIDs)
+	}
+	if filters.NameLike != "" {
+		query = query.Where("name like '%" + filters.NameLike + "%'")
+	}
+
+	if len(filters.Type) > 0 {
+		query = query.Where("type = ?", filters.Type)
+	}
+
+	if len(filters.StatusFilters) > 0 {
+		query = query.Where("status in ?", filters.StatusFilters)
+	}
+
+	if len(filters.Tag) > 0 {
+		query = query.Where("tag_info like '%\"" + filters.Tag + "\"%'")
+	}
+
+	query = query.Where("deleted_at is NULL")
+
+	err := query.Count(&total).Order("updated_at desc").Offset(pageReq.GetOffset()).Limit(pageReq.Page).Find(&clusters).Error
+	if err != nil {
+		err = framework.WrapError(common.TIEM_CLUSTER_NOT_FOUND, "", err)
+		return nil, page, err
+	} else {
+		page.Total = int(total)
+	}
+
+	results := make([]*Result, 0)
+
+	for _, c := range clusters {
+		instances := make([]*ClusterInstance, 0)
+
+		err = g.DB(ctx).Model(&ClusterInstance{}).Where("cluster_id = ?", c.ID).Find(&instances).Error
+
+		if err != nil {
+			err = framework.WrapError(common.TIEM_INSTANCE_NOT_FOUND, "", err)
+			return nil, page, err
+		}
+
+		results = append(results, &Result{
+			Cluster: c,
+			Instances: instances,
+		})
+	}
+	return results, page, nil
 }
 
 func (g *ClusterReadWrite) UpdateMeta(ctx context.Context, cluster *Cluster, instances []*ClusterInstance) error {

@@ -18,6 +18,7 @@ package management
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/structs"
 )
 
 type ReaderWriter interface {
@@ -25,6 +26,9 @@ type ReaderWriter interface {
 	Delete(ctx context.Context, clusterID string) (err error)
 	Get(ctx context.Context, clusterID string) (*Cluster, error)
 	GetMeta(ctx context.Context, clusterID string) (*Cluster, []*ClusterInstance, error)
+
+	QueryMetas(ctx context.Context, filters Filters, pageReq structs.PageRequest) ([]*Result, structs.Page, error)
+
 	DeleteInstance(ctx context.Context, ID string) error
 
 	//

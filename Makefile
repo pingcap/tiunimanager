@@ -293,6 +293,7 @@ mock:
 	mockgen -destination ./test/mockbr/mock_br.go -package mock_br_service -source ./micro-cluster/cluster/backuprestore/service.go
 	mockgen -destination ./test/mocksecondparty_v2/mock_secondparty.go -package mock_secondparty -source ./library/secondparty/second_party_manager_v2.go
 	mockgen -destination ./test/mockresource/mockinitiator/mock_initiator_interface.go -package mockinitiator -source ./micro-cluster/resourcemanager/resourcepool/hostinitiator/hostinitiator.go
+	mockgen -destination ./test/mockutil/mocksshclientexecutor/mock_ssh_client_interface.go -package mocksshclient -source ./library/util/ssh/ssh_client.go
 
 swag:
 	$(GO) install github.com/swaggo/swag/cmd/swag@v1.7.1

@@ -24,11 +24,11 @@ import (
 
 type HostInitiator interface {
 	VerifyConnect(ctx context.Context, h *structs.HostInfo) (client *sshclient.SSHClient, err error)
-	VerifyCpuMem(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) (err error)
-	VerifyDisks(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) (err error)
-	VerifyFS(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) (err error)
-	VerifySwap(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) (err error)
-	VerifyEnv(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) (err error)
-	VerifyOSEnv(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) (err error)
-	SetOffSwap(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) (err error)
+	VerifyCpuMem(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error)
+	VerifyDisks(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error)
+	VerifyFS(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error)
+	VerifySwap(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error)
+	VerifyEnv(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error)
+	VerifyOSEnv(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error)
+	SetOffSwap(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error)
 }

@@ -30,6 +30,12 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+type SSHClientExecutor interface {
+	Connect() (err error)
+	Close()
+	RunCommandsInSession(commands []string) (result string, err error)
+}
+
 type SSHType string
 
 const (

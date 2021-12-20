@@ -42,7 +42,7 @@ func (p *FileHostInitiator) VerifyConnect(ctx context.Context, h *structs.HostIn
 	return client, nil
 }
 
-func (p *FileHostInitiator) VerifyCpuMem(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) VerifyCpuMem(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error) {
 	getArchCmd := "lscpu | grep 'Architecture:' | awk '{print $2}'"
 	arch, err := c.RunCommandsInSession([]string{getArchCmd})
 	if err != nil {
@@ -80,27 +80,27 @@ func (p *FileHostInitiator) VerifyCpuMem(ctx context.Context, c *sshclient.SSHCl
 	return nil
 }
 
-func (p *FileHostInitiator) VerifyDisks(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) VerifyDisks(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error) {
 	return nil
 }
 
-func (p *FileHostInitiator) VerifyFS(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) VerifyFS(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error) {
 	return nil
 }
 
-func (p *FileHostInitiator) VerifySwap(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) VerifySwap(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error) {
 	return nil
 }
 
-func (p *FileHostInitiator) VerifyEnv(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) VerifyEnv(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error) {
 	return nil
 }
 
-func (p *FileHostInitiator) VerifyOSEnv(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) VerifyOSEnv(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error) {
 	return nil
 }
 
-func (p *FileHostInitiator) SetOffSwap(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) SetOffSwap(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error) {
 	changeConf := "echo 'vm.swappiness = 0'>> /etc/sysctl.conf"
 	flushCmd := "swapoff -a && swapon -a"
 	updateCmd := "sysctl -p"

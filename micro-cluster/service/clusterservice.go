@@ -570,7 +570,7 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 	backupReq := cluster.BackupClusterDataReq{}
 
 	if handleRequest(ctx, request, response, &backupReq) {
-		result, err := c.brManager.BackupCluster(ctx, backupReq)
+		result, err := c.brManager.BackupCluster(ctx, backupReq, true)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -773,8 +773,8 @@ var ManageSuccessResponseStatus = &clusterpb.ManagerResponseStatus{
 func (p *ClusterServiceHandler) Login(ctx context.Context, req *clusterpb.LoginRequest, resp *clusterpb.LoginResponse) error {
 	log := framework.LogWithContext(ctx).WithField("fp", "ClusterServiceHandler.Login")
 	/*
-	start := time.Now()
-	defer handleMetrics(start, "Login", int(resp.GetCode()))*/
+		start := time.Now()
+		defer handleMetrics(start, "Login", int(resp.GetCode()))*/
 	log.Debug("req:", req)
 	token, err := p.authManager.Login(ctx, req.GetAccountName(), req.GetPassword())
 

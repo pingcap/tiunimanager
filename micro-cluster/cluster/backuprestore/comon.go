@@ -16,9 +16,10 @@
 package backuprestore
 
 const (
-	contextClusterMetaKey   string = "clusterMeta"
-	contextBackupRecordKey  string = "backupRecord"
-	contextBackupTiupTaskID string = "backupTaskId"
+	contextClusterMetaKey             string = "clusterMeta"
+	contextBackupRecordKey            string = "backupRecord"
+	contextMaintenanceStatusChangeKey string = "maintenanceStatusChange"
+	contextBackupTiupTaskIDKey        string = "backupTaskId"
 )
 
 const (

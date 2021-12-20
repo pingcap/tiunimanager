@@ -421,8 +421,9 @@ func (mgr *ImportExportManager) exportDataPreCheck(ctx context.Context, request 
 			return fmt.Errorf("export dir %s is not vaild", exportPathConfig.ConfigValue)
 		}
 		if !mgr.checkFilePathExists(absPath) {
-			//return fmt.Errorf("export path %s not exist", absPath)
-			_ = os.MkdirAll(absPath, os.ModeDir)
+			if err = os.MkdirAll(absPath, os.ModeDir); err != nil {
+				return fmt.Errorf("make export path %s failed, %s", absPath, err.Error())
+			}
 		}
 	default:
 		return fmt.Errorf("invalid param storageType %s", request.StorageType)
@@ -452,8 +453,9 @@ func (mgr *ImportExportManager) importDataPreCheck(ctx context.Context, request 
 		return fmt.Errorf("import dir %s is not vaild", importPathConfig.ConfigValue)
 	}
 	if !mgr.checkFilePathExists(absPath) {
-		//return fmt.Errorf("import path %s not exist", absPath)
-		_ = os.MkdirAll(absPath, os.ModeDir)
+		if err = os.MkdirAll(absPath, os.ModeDir); err != nil {
+			return fmt.Errorf("make import path %s failed, %s", absPath, err.Error())
+		}
 	}
 
 	if request.RecordId == "" {

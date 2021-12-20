@@ -81,7 +81,7 @@ func (rw *GormResourceReadWrite) InitTables(ctx context.Context) error {
 		log.Errorf("create table UsedDisk failed, error: %v", err)
 		return err
 	}
-	newTable, err := rw.addTable(ctx, new(structs.Label))
+	newTable, err := rw.addTable(ctx, new(rp.Label))
 	if err != nil {
 		log.Errorf("create table Label failed, error: %v", err)
 		return err
@@ -97,7 +97,9 @@ func (rw *GormResourceReadWrite) InitTables(ctx context.Context) error {
 
 func (rw *GormResourceReadWrite) initSystemDefaultLabels(ctx context.Context) (err error) {
 	for _, v := range structs.DefaultLabelTypes {
-		err = rw.DB(ctx).Create(&v).Error
+		labelRecord := new(rp.Label)
+		labelRecord.ConstructLabelRecord(&v)
+		err = rw.DB(ctx).Create(labelRecord).Error
 		if err != nil {
 			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INIT_LABELS_ERROR, "init default label table failed, error: %v", err)
 		}

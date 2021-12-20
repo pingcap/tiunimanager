@@ -27,18 +27,20 @@ type BRService interface {
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
+	// @Parameter maintenanceStatusChange
 	// @Return cluster.BackupClusterDataResp
 	// @Return error
-	BackupCluster(ctx context.Context, request cluster.BackupClusterDataReq) (resp cluster.BackupClusterDataResp, backupErr error)
+	BackupCluster(ctx context.Context, request cluster.BackupClusterDataReq, maintenanceStatusChange bool) (resp cluster.BackupClusterDataResp, backupErr error)
 
 	// RestoreExistCluster
 	// @Description: restore exist cluster by backup record
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
+	// @Parameter maintenanceStatusChange
 	// @Return cluster.RestoreExistClusterResp
 	// @Return error
-	RestoreExistCluster(ctx context.Context, request cluster.RestoreExistClusterReq) (resp cluster.RestoreExistClusterResp, restoreErr error)
+	RestoreExistCluster(ctx context.Context, request cluster.RestoreExistClusterReq, maintenanceStatusChange bool) (resp cluster.RestoreExistClusterResp, restoreErr error)
 
 	// QueryClusterBackupRecords
 	// @Description: query backup records of cluster

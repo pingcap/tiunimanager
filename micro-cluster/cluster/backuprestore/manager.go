@@ -83,7 +83,7 @@ func NewBRManager() *BRManager {
 	return mgr
 }
 
-func (mgr *BRManager) BackupCluster(ctx context.Context, request cluster.BackupClusterDataReq) (resp cluster.BackupClusterDataResp, backupErr error) {
+func (mgr *BRManager) BackupCluster(ctx context.Context, request cluster.BackupClusterDataReq, maintenanceStatusChange bool) (resp cluster.BackupClusterDataResp, backupErr error) {
 	framework.LogWithContext(ctx).Infof("Begin BackupCluster, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End BackupCluster")
 
@@ -109,17 +109,19 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request cluster.BackupC
 		return resp, framework.WrapError(common.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
 	}
 
-	if err := meta.StartMaintenance(ctx, constants.ClusterMaintenanceBackUp); err != nil {
-		framework.LogWithContext(ctx).Errorf("start maintenance failed, %s", err.Error())
-		return resp, framework.WrapError(common.TIEM_CLUSTER_MAINTENANCE_CONFLICT, fmt.Sprintf("start maintenance failed, %s", err.Error()), err)
-	}
-	defer func() {
-		if backupErr != nil {
-			if endErr := meta.EndMaintenance(ctx, meta.Cluster.MaintenanceStatus); endErr != nil {
-				framework.LogWithContext(ctx).Warnf("end maintenance failed, %s", err.Error())
-			}
+	if maintenanceStatusChange {
+		if err := meta.StartMaintenance(ctx, constants.ClusterMaintenanceBackUp); err != nil {
+			framework.LogWithContext(ctx).Errorf("start maintenance failed, %s", err.Error())
+			return resp, framework.WrapError(common.TIEM_CLUSTER_MAINTENANCE_CONFLICT, fmt.Sprintf("start maintenance failed, %s", err.Error()), err)
 		}
-	}()
+		defer func() {
+			if backupErr != nil {
+				if endErr := meta.EndMaintenance(ctx, meta.Cluster.MaintenanceStatus); endErr != nil {
+					framework.LogWithContext(ctx).Warnf("end maintenance failed, %s", err.Error())
+				}
+			}
+		}()
+	}
 
 	//todo: only support full physics backup now
 	record := &backuprestore.BackupRecord{
@@ -159,6 +161,7 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request cluster.BackupC
 
 	flowManager.AddContext(flow, contextBackupRecordKey, recordCreate)
 	flowManager.AddContext(flow, contextClusterMetaKey, meta)
+	flowManager.AddContext(flow, contextMaintenanceStatusChangeKey, maintenanceStatusChange)
 	if err = flowManager.AsyncStart(ctx, flow); err != nil {
 		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
 		return resp, framework.WrapError(common.TIEM_WORKFLOW_START_FAILED, fmt.Sprintf("async start %s workflow failed, %s", constants.FlowBackupCluster, err.Error()), err)
@@ -170,7 +173,7 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request cluster.BackupC
 	return resp, nil
 }
 
-func (mgr *BRManager) RestoreExistCluster(ctx context.Context, request cluster.RestoreExistClusterReq) (resp cluster.RestoreExistClusterResp, restoreErr error) {
+func (mgr *BRManager) RestoreExistCluster(ctx context.Context, request cluster.RestoreExistClusterReq, maintenanceStatusChange bool) (resp cluster.RestoreExistClusterResp, restoreErr error) {
 	framework.LogWithContext(ctx).Infof("Begin RestoreExistCluster, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End RestoreExistCluster")
 
@@ -187,6 +190,20 @@ func (mgr *BRManager) RestoreExistCluster(ctx context.Context, request cluster.R
 		return resp, framework.WrapError(common.TIEM_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("get backup record %s failed, %s", request.BackupID, err.Error()), err)
 	}
 
+	if maintenanceStatusChange {
+		if err := meta.StartMaintenance(ctx, constants.ClusterMaintenanceRestore); err != nil {
+			framework.LogWithContext(ctx).Errorf("start maintenance failed, %s", err.Error())
+			return resp, fmt.Errorf("start maintenance failed, %s", err.Error())
+		}
+		defer func() {
+			if restoreErr != nil {
+				if endErr := meta.EndMaintenance(ctx, meta.Cluster.MaintenanceStatus); endErr != nil {
+					framework.LogWithContext(ctx).Warnf("end maintenance failed, %s", err.Error())
+				}
+			}
+		}()
+	}
+
 	flowManager := workflow.GetWorkFlowService()
 	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.FlowRestoreExistCluster)
 	if err != nil {
@@ -196,6 +213,7 @@ func (mgr *BRManager) RestoreExistCluster(ctx context.Context, request cluster.R
 
 	flowManager.AddContext(flow, contextBackupRecordKey, record)
 	flowManager.AddContext(flow, contextClusterMetaKey, meta)
+	flowManager.AddContext(flow, contextMaintenanceStatusChangeKey, maintenanceStatusChange)
 	if err = flowManager.AsyncStart(ctx, flow); err != nil {
 		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
 		return resp, framework.WrapError(common.TIEM_WORKFLOW_START_FAILED, fmt.Sprintf("async start %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error()), err)
@@ -245,8 +263,13 @@ func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request cluster.D
 	framework.LogWithContext(ctx).Infof("Begin DeleteBackupRecords, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End DeleteBackupRecords")
 
+	if request.ClusterID == "" {
+		framework.LogWithContext(ctx).Errorf("invalid param clusterId empty")
+		return resp, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "invalid param clusterId empty")
+	}
+
 	brRW := models.GetBRReaderWriter()
-	for page, pageSize := 1, 100; ; page++ {
+	for page, pageSize := 1, defaultPageSize; ; page++ {
 		records, _, err := brRW.QueryBackupRecords(ctx, request.ClusterID, request.BackupID, request.BackupMode, 0, 0, page, pageSize)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("query backup records of request %+v, failed, %s", request, err.Error())

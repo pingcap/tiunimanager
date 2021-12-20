@@ -251,16 +251,16 @@ func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 
 func backupBeforeDelete(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	meta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
-	_, err := backupSubProcess(context.Context, meta)
+	_, err := backupSubProcess(context.Context, meta, false)
 	return err
 }
 
-func backupSubProcess(ctx context.Context, meta *handler.ClusterMeta) (*cluster.BackupClusterDataResp, error) {
+func backupSubProcess(ctx context.Context, meta *handler.ClusterMeta, independenceMaintenance bool) (*cluster.BackupClusterDataResp, error) {
 	backupResponse, err := backuprestore.GetBRService().BackupCluster(ctx,
 		cluster.BackupClusterDataReq{
 			ClusterID:  meta.Cluster.ID,
 			BackupMode: string(constants.BackupModeManual),
-		}, true)
+		}, independenceMaintenance)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"do backup for cluster %s error: %s", meta.Cluster.ID, err.Error())
@@ -281,7 +281,7 @@ func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	if cloneStrategy == string(constants.ClusterTopologyClone) {
 		return nil
 	}
-	backupResponse, err := backupSubProcess(context.Context, sourceClusterMeta)
+	backupResponse, err := backupSubProcess(context.Context, sourceClusterMeta, true)
 
 	if err != nil {
 		return err

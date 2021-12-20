@@ -80,6 +80,7 @@ const (
 	TIEM_RESOURCE_CREATE_DISK_ERROR                TIEM_ERROR_CODE = 527
 	TIEM_RESOURCE_INVALID_LABEL_NAEM               TIEM_ERROR_CODE = 528
 	TIEM_RESOURCE_TEMPLATE_FILE_NOT_FOUND          TIEM_ERROR_CODE = 529
+	TIEM_RESOURCE_DECRYPT_PASSWD_ERROR             TIEM_ERROR_CODE = 530
 
 	TIEM_DASHBOARD_NOT_FOUND           TIEM_ERROR_CODE = 600
 	TIEM_EXPORT_PARAM_INVALID          TIEM_ERROR_CODE = 601
@@ -174,7 +175,7 @@ var explanationContainer = map[TIEM_ERROR_CODE]ErrorCodeExplanation{
 	// system error
 	TIEM_METADB_SERVER_CALL_ERROR:  {TIEM_METADB_SERVER_CALL_ERROR, "call metadb-Server failed", 500},
 	TIEM_CLUSTER_SERVER_CALL_ERROR: {TIEM_CLUSTER_SERVER_CALL_ERROR, "call cluster-Server failed", 500},
-	TIEM_PARAMETER_INVALID:         {TIEM_PARAMETER_INVALID, "parameter is invalid", 500},
+	TIEM_PARAMETER_INVALID:         {TIEM_PARAMETER_INVALID, "parameter is invalid", 400},
 	TIEM_UNRECOGNIZED_ERROR:        {TIEM_UNRECOGNIZED_ERROR, "unrecognized error", 500},
 	TIEM_MARSHAL_ERROR:             {TIEM_MARSHAL_ERROR, "marshal error", 500},
 	TIEM_UNMARSHAL_ERROR:           {TIEM_UNMARSHAL_ERROR, "unmarshal error", 500},
@@ -226,6 +227,7 @@ var explanationContainer = map[TIEM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_RESOURCE_TRAIT_NOT_FOUND:                  {TIEM_RESOURCE_TRAIT_NOT_FOUND, "trait not found by label name", 500},
 	TIEM_RESOURCE_INVALID_LOCATION:                 {TIEM_RESOURCE_INVALID_LOCATION, "invalid location", 500},
 	TIEM_RESOURCE_INVALID_ARCH:                     {TIEM_RESOURCE_INVALID_ARCH, "invalid arch", 500},
+	TIEM_RESOURCE_TEMPLATE_FILE_NOT_FOUND:          {TIEM_RESOURCE_TEMPLATE_FILE_NOT_FOUND, "resource template file is not existed", 500},
 
 	// tenant
 	TIEM_ACCOUNT_NOT_FOUND:       {TIEM_ACCOUNT_NOT_FOUND, "account not found", 500},

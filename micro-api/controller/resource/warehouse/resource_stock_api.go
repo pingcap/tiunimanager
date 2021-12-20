@@ -18,18 +18,22 @@ package warehouse
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
 
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/common/resource-type"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
+
+func setGinContextForInvalidParam(c *gin.Context, errmsg string) {
+	framework.LogWithContext(c).Error(errmsg)
+	c.JSON(common.TIEM_PARAMETER_INVALID.GetHttpCode(), controller.Fail(int(common.TIEM_PARAMETER_INVALID), errmsg))
+}
 
 // GetHierarchy godoc
 // @Summary Show the resources hierarchy
@@ -47,19 +51,19 @@ func GetHierarchy(c *gin.Context) {
 	requestBody, ok := controller.HandleJsonRequestFromQuery(c, &req)
 	if ok {
 		if err := constants.ValidArchType(req.Arch); err != nil {
-			c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), err.Error()))
+			setGinContextForInvalidParam(c, err.Error())
 			return
 		}
 
-		if req.Level > int(resource.HOST) || req.Level < int(resource.REGION) {
+		if req.Level > int(constants.HOST) || req.Level < int(constants.REGION) {
 			errmsg := fmt.Sprintf("Input domainType [%d] invalid, [1:Region, 2:Zone, 3:Rack, 4:Host]", req.Level)
-			c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), errmsg))
+			setGinContextForInvalidParam(c, errmsg)
 			return
 		}
 
-		if req.Depth < 0 || req.Depth+req.Level > int(resource.HOST) {
+		if req.Depth < 0 || req.Depth+req.Level > int(constants.HOST) {
 			errmsg := fmt.Sprintf("Input depth [%d] invalid or is not vaild(level+depth>4) where level is [%d]", req.Depth, req.Level)
-			c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), errmsg))
+			setGinContextForInvalidParam(c, errmsg)
 			return
 		}
 
@@ -85,7 +89,7 @@ func GetStocks(c *gin.Context) {
 	if ok {
 		if req.Arch != "" {
 			if err := constants.ValidArchType(req.Arch); err != nil {
-				c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), err.Error()))
+				setGinContextForInvalidParam(c, err.Error())
 				return
 			}
 		}
@@ -93,14 +97,14 @@ func GetStocks(c *gin.Context) {
 		if req.HostFilter.Status != "" {
 			if !constants.HostStatus(req.HostFilter.Status).IsValidStatus() {
 				errmsg := fmt.Sprintf("input host status %s is invalid for query", req.HostFilter.Status)
-				c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), errmsg))
+				setGinContextForInvalidParam(c, errmsg)
 				return
 			}
 		}
 		if req.HostFilter.Stat != "" {
 			if !constants.HostLoadStatus(req.HostFilter.Stat).IsValidLoadStatus() {
 				errmsg := fmt.Sprintf("input load stat %s is invalid for query", req.HostFilter.Stat)
-				c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), errmsg))
+				setGinContextForInvalidParam(c, errmsg)
 				return
 			}
 		}
@@ -108,21 +112,21 @@ func GetStocks(c *gin.Context) {
 		if req.DiskFilter.DiskStatus != "" {
 			if !constants.DiskStatus(req.DiskFilter.DiskStatus).IsValidStatus() {
 				errmsg := fmt.Sprintf("input disk status %s is invalid for query", req.DiskFilter.DiskStatus)
-				c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), errmsg))
+				setGinContextForInvalidParam(c, errmsg)
 				return
 			}
 		}
 
 		if req.DiskType != "" {
 			if err := constants.ValidDiskType(req.DiskType); err != nil {
-				c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), err.Error()))
+				setGinContextForInvalidParam(c, err.Error())
 				return
 			}
 		}
 
 		if req.Capacity < 0 {
 			errmsg := fmt.Sprintf("input disk capacity %d is invalid for query", req.Capacity)
-			c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), errmsg))
+			setGinContextForInvalidParam(c, errmsg)
 			return
 		}
 

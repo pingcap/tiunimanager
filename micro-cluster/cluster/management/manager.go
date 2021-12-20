@@ -602,18 +602,18 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 // @Parameter req
 // @return resp
 // @return err
-func (p *Manager) InPlaceUpgradeCluster(ctx context.Context, req *cluster.ClusterUpgradeReq) (resp *cluster.ClusterUpgradeResp, err error) {
+func (p *Manager) InPlaceUpgradeCluster(ctx context.Context, req *cluster.ClusterUpgradeReq) (*cluster.ClusterUpgradeResp, error) {
 	meta, err := handler.Get(ctx, req.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get cluster failed, clusterId = %s", req.ClusterID)
-		return
+		return &cluster.ClusterUpgradeResp{}, err
 	}
 
 	if meta.Cluster.Status != string(constants.ClusterRunning) {
 		errMsg := fmt.Sprintf("cannot upgrade cluster [%s] under status [%s]", meta.Cluster.Name, meta.Cluster.Status)
 		framework.LogWithContext(ctx).Error(errMsg)
 		err = framework.NewTiEMError(common.TIEM_TASK_CONFLICT, errMsg)
-		return
+		return &cluster.ClusterUpgradeResp{}, err
 	}
 
 	data := map[string]interface{}{
@@ -622,7 +622,8 @@ func (p *Manager) InPlaceUpgradeCluster(ctx context.Context, req *cluster.Cluste
 	}
 	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceUpgrading, inPlaceUpgradeClusterFlow.FlowName, data)
 
+	resp := &cluster.ClusterUpgradeResp{}
 	resp.WorkFlowID = flowID
 
-	return
+	return resp, err
 }

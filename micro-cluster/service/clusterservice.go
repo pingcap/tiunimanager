@@ -558,7 +558,7 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 	backupReq := cluster.BackupClusterDataReq{}
 
 	if handleRequest(ctx, request, response, &backupReq) {
-		result, err := c.brManager.BackupCluster(ctx, backupReq)
+		result, err := c.brManager.BackupCluster(ctx, backupReq, true)
 		handleResponse(ctx, response, err, result, nil)
 	}
 

@@ -17,9 +17,10 @@ package workflow
 
 import (
 	"context"
-	"fmt"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
 	"sync"
 )
@@ -57,24 +58,20 @@ type WorkFlowService interface {
 	// @Description: list workflows by condition
 	// @Receiver m
 	// @Parameter ctx
-	// @Parameter bizId
-	// @Parameter fuzzyName
-	// @Parameter status
-	// @Parameter page
-	// @Parameter pageSize
-	// @Return []*structs.WorkFlowInfo
+	// @Parameter request
+	// @Return message.QueryWorkFlowsResp
 	// @Return total
 	// @Return error
-	ListWorkFlows(ctx context.Context, bizId string, fuzzyName string, status string, page, pageSize int) ([]*structs.WorkFlowInfo, int64, error)
+	ListWorkFlows(ctx context.Context, request message.QueryWorkFlowsReq) (message.QueryWorkFlowsResp, structs.Page, error)
 
 	// DetailWorkFlow
 	// @Description: create new workflow
 	// @Receiver m
 	// @Parameter ctx
-	// @Parameter flowId
-	// @Return *WorkFlowDetail
+	// @Parameter request
+	// @Return message.QueryWorkFlowDetailResp
 	// @Return error
-	DetailWorkFlow(ctx context.Context, flowId string) (*WorkFlowDetail, error)
+	DetailWorkFlow(ctx context.Context, request message.QueryWorkFlowDetailReq) (message.QueryWorkFlowDetailResp, error)
 
 	// AddContext
 	// @Description: add flow context for workflow
@@ -147,7 +144,7 @@ func (mgr *WorkFlowManager) GetWorkFlowDefine(ctx context.Context, flowName stri
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
 		framework.LogWithContext(ctx).Errorf("WorkFlow %s not exist", flowName)
-		return nil, fmt.Errorf("%s workflow definion not exist", flowName)
+		return nil, framework.NewTiEMErrorf(common.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
 	}
 	return flowDefine.(*WorkFlowDefine), nil
 }
@@ -155,15 +152,22 @@ func (mgr *WorkFlowManager) GetWorkFlowDefine(ctx context.Context, flowName stri
 func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, flowName string) (*WorkFlowAggregation, error) {
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
-		return nil, fmt.Errorf("%s workflow definion not exist", flowName)
+		return nil, framework.NewTiEMErrorf(common.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
 	}
 
 	flow, err := createFlowWork(ctx, bizId, flowDefine.(*WorkFlowDefine))
-	return flow, err
+	if err != nil {
+		return nil, framework.WrapError(common.TIEM_WORKFLOW_CREATE_FAILED, err.Error(), err)
+	}
+	return flow, nil
 }
 
-func (mgr *WorkFlowManager) ListWorkFlows(ctx context.Context, bizId string, fuzzyName string, status string, page, pageSize int) ([]*structs.WorkFlowInfo, int64, error) {
-	flows, total, err := models.GetWorkFlowReaderWriter().QueryWorkFlows(ctx, bizId, fuzzyName, status, page, pageSize)
+func (mgr *WorkFlowManager) ListWorkFlows(ctx context.Context, request message.QueryWorkFlowsReq) (resp message.QueryWorkFlowsResp, page structs.Page, err error) {
+	flows, total, err := models.GetWorkFlowReaderWriter().QueryWorkFlows(ctx, request.BizID, request.FlowName, request.Status, request.Page, request.PageSize)
+	if err != nil {
+		return resp, page, framework.WrapError(common.TIEM_WORKFLOW_QUERY_FAILED, err.Error(), err)
+	}
+
 	flowInfos := make([]*structs.WorkFlowInfo, len(flows))
 	for index, flow := range flows {
 		flowInfos[index] = &structs.WorkFlowInfo{
@@ -176,22 +180,28 @@ func (mgr *WorkFlowManager) ListWorkFlows(ctx context.Context, bizId string, fuz
 			DeleteTime: flow.DeletedAt.Time,
 		}
 	}
-	return flowInfos, total, err
+	return message.QueryWorkFlowsResp{
+			WorkFlows: flowInfos,
+		}, structs.Page{
+			Page:     request.Page,
+			PageSize: request.PageSize,
+			Total:    int(total),
+		}, nil
 }
 
-func (mgr *WorkFlowManager) DetailWorkFlow(ctx context.Context, flowId string) (*WorkFlowDetail, error) {
-	flow, nodes, err := models.GetWorkFlowReaderWriter().QueryDetailWorkFlow(ctx, flowId)
+func (mgr *WorkFlowManager) DetailWorkFlow(ctx context.Context, request message.QueryWorkFlowDetailReq) (resp message.QueryWorkFlowDetailResp, err error) {
+	flow, nodes, err := models.GetWorkFlowReaderWriter().QueryDetailWorkFlow(ctx, request.WorkFlowID)
 	if err != nil {
-		return nil, err
+		return resp, framework.WrapError(common.TIEM_WORKFLOW_DETAIL_FAILED, err.Error(), err)
 	}
 
 	define, err := mgr.GetWorkFlowDefine(ctx, flow.Name)
 	if err != nil {
-		return nil, err
+		return resp, framework.WrapError(common.TIEM_WORKFLOW_DEFINE_NOT_FOUND, err.Error(), err)
 	}
 
-	detail := &WorkFlowDetail{
-		Flow: &structs.WorkFlowInfo{
+	resp = message.QueryWorkFlowDetailResp{
+		Info: &structs.WorkFlowInfo{
 			ID:         flow.ID,
 			Name:       flow.Name,
 			BizID:      flow.BizID,
@@ -200,11 +210,11 @@ func (mgr *WorkFlowManager) DetailWorkFlow(ctx context.Context, flowId string) (
 			UpdateTime: flow.UpdatedAt,
 			DeleteTime: flow.DeletedAt.Time,
 		},
-		Nodes:     make([]*structs.WorkFlowNodeInfo, len(nodes)),
+		NodeInfo:  make([]*structs.WorkFlowNodeInfo, len(nodes)),
 		NodeNames: define.getNodeNameList(),
 	}
 	for index, node := range nodes {
-		detail.Nodes[index] = &structs.WorkFlowNodeInfo{
+		resp.NodeInfo[index] = &structs.WorkFlowNodeInfo{
 			ID:         node.ID,
 			Name:       node.Name,
 			Parameters: node.Parameters,
@@ -215,7 +225,7 @@ func (mgr *WorkFlowManager) DetailWorkFlow(ctx context.Context, flowId string) (
 		}
 	}
 
-	return detail, nil
+	return resp, nil
 }
 
 func (mgr *WorkFlowManager) AddContext(flow *WorkFlowAggregation, key string, value interface{}) {

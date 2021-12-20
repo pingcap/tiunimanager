@@ -47,7 +47,7 @@ func (m *BRReadWrite) UpdateBackupRecord(ctx context.Context, backupId string, s
 	record := &BackupRecord{}
 	err = m.DB(ctx).First(record, "id = ?", backupId).Error
 	if err != nil {
-		return framework.SimpleError(common.TIEM_BACKUP_RECORD_NOT_FOUND)
+		return err
 	}
 
 	db := m.DB(ctx).Model(record)
@@ -74,7 +74,7 @@ func (m *BRReadWrite) GetBackupRecord(ctx context.Context, backupId string) (rec
 	record = &BackupRecord{}
 	err = m.DB(ctx).First(record, "id = ?", backupId).Error
 	if err != nil {
-		return nil, framework.SimpleError(common.TIEM_BACKUP_RECORD_NOT_FOUND)
+		return nil, err
 	}
 	return record, err
 }
@@ -125,7 +125,7 @@ func (m *BRReadWrite) GetBackupStrategy(ctx context.Context, clusterId string) (
 	strategy = &BackupStrategy{}
 	err = m.DB(ctx).First(strategy, "cluster_id = ?", clusterId).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
-		return nil, framework.SimpleError(common.TIEM_BACKUP_STRATEGY_NOT_FOUND)
+		return nil, err
 	}
 	return strategy, err
 }

@@ -23,15 +23,6 @@
 
 package constants
 
-// TiDB component default port
-const (
-	DefaultTiDBPort       int = 4000
-	DefaultTiDBStatusPort int = 10080
-	DefaultPDClientPort   int = 2379
-	DefaultAlertPort      int = 9093
-	DefaultGrafanaPort    int = 3000
-)
-
 type ClusterRunningStatus string
 
 //Definition of cluster running status information

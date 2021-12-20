@@ -120,6 +120,10 @@ func (m *Manager) StartCluster(name string, gOpt operator.Options, fn ...func(b 
 	}
 
 	log.Infof("Started cluster `%s` successfully", name)
+	if len(topo.BaseTopo().WebServers) > 0 {
+		webserver := topo.BaseTopo().WebServers[0]
+		log.Infof("WebServer URL: %s", fmt.Sprintf("http://%s:%d", webserver.Host, webserver.Port))
+	}
 	return nil
 }
 
@@ -213,5 +217,9 @@ func (m *Manager) RestartCluster(name string, gOpt operator.Options, skipConfirm
 	}
 
 	log.Infof("Restarted cluster `%s` successfully", name)
+	if len(topo.BaseTopo().WebServers) > 0 {
+		webserver := topo.BaseTopo().WebServers[0]
+		log.Infof("WebServer URL: %s", fmt.Sprintf("http://%s:%d", webserver.Host, webserver.Port))
+	}
 	return nil
 }

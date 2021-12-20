@@ -22,14 +22,14 @@ import (
 //
 // EMError
 // @Description: EM business error
-// Always get EMError from EMErrorBuilder.build(), limited to SimpleError, NewEMError, NewEMErrorf, WrapError, ErrorBuilder().build()
+// Always get EMError from EMErrorBuilder.build(), limited to Error, NewEMError, NewEMErrorf, WrapError, ErrorBuilder().build()
 type EMError struct {
 	code  EM_ERROR_CODE
 	msg   string
 	cause error
 }
 
-func SimpleError(code EM_ERROR_CODE) EMError {
+func Error(code EM_ERROR_CODE) EMError {
 	return ErrorBuilder().Code(code).Build()
 }
 
@@ -107,7 +107,6 @@ func (t EMErrorBuilder) Cause(cause error) EMErrorBuilder {
 // @Receiver t
 // @return EMError
 func (t EMErrorBuilder) Build() EMError {
-
 	return t.template
 }
 

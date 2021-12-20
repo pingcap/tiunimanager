@@ -77,8 +77,7 @@ func (m *Manager) Upgrade(name string, clusterVersion string, opt operator.Optio
 
 			// ignore monitor agents for instances marked as ignore_exporter
 			switch compName {
-			case spec.ComponentNodeExporter,
-				spec.ComponentBlackboxExporter:
+			case spec.ComponentNodeExporter:
 				if inst.IgnoreMonitorAgent() {
 					continue
 				}

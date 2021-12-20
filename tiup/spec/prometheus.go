@@ -222,7 +222,6 @@ func (i *MonitorInstance) InitConfig(
 	if monitoredOptions != nil {
 		for host := range uniqueHosts {
 			cfig.AddNodeExpoertor(host, uint64(monitoredOptions.NodeExporterPort))
-			cfig.AddBlackboxExporter(host, uint64(monitoredOptions.BlackboxExporterPort))
 		}
 	}
 

@@ -368,7 +368,6 @@ func buildMonitoredDeployTask(
 	// monitoring agents
 	for _, comp := range []string{
 		spec.ComponentNodeExporter,
-		spec.ComponentBlackboxExporter,
 	} {
 		version := m.bindVersion(comp, version)
 
@@ -472,15 +471,13 @@ func buildRefreshMonitoredConfigTasks(
 	}
 
 	ports := map[string]int{
-		spec.ComponentNodeExporter:     monitoredOptions.NodeExporterPort,
-		spec.ComponentBlackboxExporter: monitoredOptions.BlackboxExporterPort,
+		spec.ComponentNodeExporter: monitoredOptions.NodeExporterPort,
 	}
 
 	tasks := []*task.StepDisplay{}
 	// monitoring agents
 	for _, comp := range []string{
 		spec.ComponentNodeExporter,
-		spec.ComponentBlackboxExporter,
 	} {
 		for host, info := range uniqueHosts {
 			if noAgentHosts.Exist(host) {

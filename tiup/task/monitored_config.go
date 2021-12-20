@@ -48,8 +48,7 @@ type MonitoredConfig struct {
 // Execute implements the Task interface
 func (m *MonitoredConfig) Execute(ctx context.Context) error {
 	ports := map[string]int{
-		spec.ComponentNodeExporter:     m.options.NodeExporterPort,
-		spec.ComponentBlackboxExporter: m.options.BlackboxExporterPort,
+		spec.ComponentNodeExporter: m.options.NodeExporterPort,
 	}
 	// Copy to remote server
 	exec, found := ctxt.GetInner(ctx).GetExecutor(m.host)
@@ -75,10 +74,6 @@ func (m *MonitoredConfig) Execute(ctx context.Context) error {
 			NewNodeExporterScript(m.paths.Deploy, m.paths.Log).
 			WithPort(uint64(m.options.NodeExporterPort)).
 			WithNumaNode(m.options.NumaNode)
-	case spec.ComponentBlackboxExporter:
-		sh = scripts.
-			NewBlackboxExporterScript(m.paths.Deploy, m.paths.Log).
-			WithPort(uint64(m.options.BlackboxExporterPort))
 	default:
 		return fmt.Errorf("unknown monitored component %s", m.component)
 	}
@@ -104,11 +99,6 @@ func (m *MonitoredConfig) syncMonitoredSystemConfig(ctx context.Context, exec ct
 		WithCPUQuota(resource.CPUQuota).
 		WithIOReadBandwidthMax(resource.IOReadBandwidthMax).
 		WithIOWriteBandwidthMax(resource.IOWriteBandwidthMax)
-
-	// blackbox_exporter needs cap_net_raw to send ICMP ping packets
-	if comp == spec.ComponentBlackboxExporter {
-		systemCfg.GrantCapNetRaw = true
-	}
 
 	if err := systemCfg.ConfigToFile(sysCfg); err != nil {
 		return err

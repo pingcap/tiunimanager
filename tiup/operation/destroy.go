@@ -239,7 +239,6 @@ func DestroyMonitored(ctx context.Context, inst spec.Instance, options *cspec.Mo
 	}
 
 	delPaths = append(delPaths, fmt.Sprintf("/etc/systemd/system/%s-%d.service", spec.ComponentNodeExporter, options.NodeExporterPort))
-	delPaths = append(delPaths, fmt.Sprintf("/etc/systemd/system/%s-%d.service", spec.ComponentBlackboxExporter, options.BlackboxExporterPort))
 
 	c := module.ShellModuleConfig{
 		Command:  fmt.Sprintf("rm -rf %s;", strings.Join(delPaths, " ")),

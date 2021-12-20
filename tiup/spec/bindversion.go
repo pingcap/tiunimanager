@@ -7,7 +7,6 @@ func TiEMComponentVersion(comp, version string) string {
 	case ComponentAlertmanager,
 		ComponentGrafana,
 		ComponentPrometheus,
-		ComponentBlackboxExporter,
 		ComponentNodeExporter,
 		ComponentFilebeat,
 		ComponentTiEMTracerServer:

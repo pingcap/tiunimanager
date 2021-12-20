@@ -44,7 +44,6 @@ const (
 	ComponentKibana              = "kibana"         // kibana
 	ComponentFilebeat            = "filebeat"       // filebeat
 	ComponentNodeExporter        = "node-exporter"  // different with in tiup-cluster (node_exporter)
-	ComponentBlackboxExporter    = "blackbox-exporter"
 	ComponentGrafana             = "grafana"
 	ComponentAlertmanager        = "alertmanager"
 	ComponentPrometheus          = "prometheus"
@@ -286,7 +285,6 @@ func (s *Specification) portConflictsDetect() error {
 	// Port conflicts in monitored components
 	monitoredPortTypes := []string{
 		"NodeExporterPort",
-		"BlackboxExporterPort",
 	}
 	monitoredOpt := topoSpec.FieldByName(monitorOptionTypeName)
 	if monitoredOpt.IsZero() {

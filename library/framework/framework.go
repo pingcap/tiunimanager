@@ -111,6 +111,7 @@ type BaseFramework struct {
 func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFramework {
 	f := new(BaseFramework)
 
+	Current = f
 	f.args = &ClientArgs{
 		Host:               "127.0.0.1",
 		Port:               4116,
@@ -135,20 +136,18 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 		},
 	}
 
-	Current = f
-
 	return f
 }
 
 func InitBaseFrameworkFromArgs(serviceName ServiceNameEnum, opts ...Opt) *BaseFramework {
 	f := new(BaseFramework)
+	Current = f
 
 	f.acceptArgs()
 	f.parseArgs(serviceName)
 
 	f.initOpts = opts
 	f.Init()
-	Current = f
 
 	f.initEtcdClient()
 	f.initElasticsearchClient()

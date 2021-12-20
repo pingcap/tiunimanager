@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
@@ -48,7 +49,7 @@ func GetDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) 
 	meta, err := handler.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get cluster %s meta failed: %s", request.ClusterID, err.Error())
-		return resp, err
+		return resp, framework.WrapError(common.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("get cluster %s meta failed: %s", request.ClusterID, err.Error()), err)
 	}
 
 	tidbUserInfo := meta.GetClusterUserNamePasswd()
@@ -56,11 +57,11 @@ func GetDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) 
 
 	url, err := getDashboardUrlFromCluster(ctx, meta)
 	if err != nil {
-		return resp, err
+		return resp, framework.WrapError(common.TIEM_DASHBOARD_NOT_FOUND, fmt.Sprintf("find cluster %s dashboard failed: %s", request.ClusterID, err.Error()), err)
 	}
 	token, err := getLoginToken(ctx, url, tidbUserInfo.UserName, tidbUserInfo.Password)
 	if err != nil {
-		return resp, err
+		return resp, framework.WrapError(common.TIEM_DASHBOARD_NOT_FOUND, fmt.Sprintf("get cluster %s dashboard login token failed: %s", request.ClusterID, err.Error()), err)
 	}
 
 	resp.ClusterID = request.ClusterID
@@ -79,11 +80,7 @@ func getDashboardUrlFromCluster(ctx context.Context, meta *handler.ClusterMeta) 
 	pdNum := len(pdAddress)
 	pdServer := pdAddress[rand.Intn(pdNum)]
 	pdClientPort := pdServer.Port
-	/*
-		if pdClientPort == 0 {
-			pdClientPort = constants.DefaultPDClientPort
-		}
-	*/
+
 	return fmt.Sprintf("http://%s:%d/dashboard/", pdServer.IP, pdClientPort), nil
 }
 

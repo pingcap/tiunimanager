@@ -533,29 +533,35 @@ var inPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
 	},
 }
 
-func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) ([]*structs.ProductUpgradePathItem, error) {
-	clusterDetail, err := domain.GetClusterDetail(ctx, clusterID)
+func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) (*cluster.QueryUpgradePathRsp, error) {
+	c, err := models.GetClusterReaderWriter().Get(ctx, clusterID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("failed to query update path, %s", err.Error())
-		return []*structs.ProductUpgradePathItem{}, framework.WrapError(common.TIEM_UPGRADE_QUERY_PATH_FAILED, "failed to query upgrade path", err)
+		framework.LogWithContext(ctx).Errorf("failed to query update path while getcluster, %s", err.Error())
+		return &cluster.QueryUpgradePathRsp{}, framework.WrapError(common.TIEM_UPGRADE_QUERY_PATH_FAILED, "failed to query update path while getclusterdetail", err)
 	}
 
-	version := clusterDetail.Cluster.ClusterVersion
-	productUpgradePaths, err := models.GetUpgradeReaderWriter().QueryBySrcVersion(ctx, version.Name)
+	version := c.Version
+	framework.LogWithContext(ctx).Infof("query update path with version %s", version)
+	productUpgradePaths, err := models.GetUpgradeReaderWriter().QueryBySrcVersion(ctx, version)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to query update path, %s", err.Error())
-		return []*structs.ProductUpgradePathItem{}, framework.WrapError(common.TIEM_UPGRADE_QUERY_PATH_FAILED, "failed to query upgrade path", err)
+		return &cluster.QueryUpgradePathRsp{}, framework.WrapError(common.TIEM_UPGRADE_QUERY_PATH_FAILED, "failed to query upgrade path", err)
 	}
+	framework.LogWithContext(ctx).Infof("query update path with version %s result: %d", version, len(productUpgradePaths))
 
 	pathMap := make(map[string][]string)
 	for _, productUpgradePath := range productUpgradePaths {
+		framework.LogWithContext(ctx).Infof("loop type %s dstversion: %s", productUpgradePath.Type, productUpgradePath.DstVersion)
 		if versions, ok := pathMap[productUpgradePath.Type]; ok {
 			versions = append(versions, productUpgradePath.DstVersion)
+			pathMap[productUpgradePath.Type] = versions
 		} else {
 			versions = []string{productUpgradePath.DstVersion}
+			pathMap[productUpgradePath.Type] = versions
 		}
 	}
 
+	framework.LogWithContext(ctx).Infof("pathMap %v", pathMap)
 	var paths []*structs.ProductUpgradePathItem
 	for k, v := range pathMap {
 		path := structs.ProductUpgradePathItem{
@@ -564,8 +570,13 @@ func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) 
 		}
 		paths = append(paths, &path)
 	}
+	framework.LogWithContext(ctx).Infof("paths %d", len(paths))
 
-	return paths, nil
+	resp := &cluster.QueryUpgradePathRsp{
+		Paths: paths,
+	}
+
+	return resp, nil
 }
 
 func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID string, version string) ([]*structs.ProductUpgradeVersionConfigDiffItem, error) {

@@ -44,7 +44,7 @@ func (handler *ClusterServiceHandler) UpdateProductUpgradePath(ctx context.Conte
 }
 
 func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := cluster.QueryUpgradePathReq{}
+	request := &cluster.QueryUpgradePathReq{}
 
 	if handleRequest(ctx, req, resp, request) {
 		result, err := handler.clusterManager.QueryProductUpdatePath(ctx, request.ClusterID)
@@ -55,7 +55,7 @@ func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Contex
 }
 
 func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := cluster.QueryUpgradeVersionDiffInfoReq{}
+	request := &cluster.QueryUpgradeVersionDiffInfoReq{}
 
 	if handleRequest(ctx, req, resp, request) {
 		result, err := handler.clusterManager.QueryUpgradeVersionDiffInfo(ctx, request.ClusterID, request.Version)
@@ -66,10 +66,10 @@ func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Co
 }
 
 func (handler *ClusterServiceHandler) ClusterUpgrade(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := cluster.ClusterUpgradeReq{}
+	request := &cluster.ClusterUpgradeReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterManager.InPlaceUpgradeCluster(ctx, &request)
+		result, err := handler.clusterManager.InPlaceUpgradeCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 

@@ -36,7 +36,7 @@ type PrometheusSpec struct {
 	Imported              bool                   `yaml:"imported,omitempty"`
 	Patched               bool                   `yaml:"patched,omitempty"`
 	IgnoreExporter        bool                   `yaml:"ignore_exporter,omitempty"`
-	Port                  int                    `yaml:"port" default:"4129"`
+	Port                  int                    `yaml:"port" default:"4110"`
 	DeployDir             string                 `yaml:"deploy_dir,omitempty"`
 	DataDir               string                 `yaml:"data_dir,omitempty"`
 	LogDir                string                 `yaml:"log_dir,omitempty"`
@@ -59,7 +59,7 @@ type Remote struct {
 // ExternalAlertmanager configs prometheus to include alertmanagers not deployed in current cluster
 type ExternalAlertmanager struct {
 	Host    string `yaml:"host"`
-	WebPort int    `yaml:"web_port" default:"4131"`
+	WebPort int    `yaml:"web_port" default:"4112"`
 }
 
 // Role returns the component role of the instance

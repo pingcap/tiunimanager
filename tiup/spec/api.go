@@ -34,8 +34,8 @@ import (
 type APIServerSpec struct {
 	Host            string                 `yaml:"host"`
 	SSHPort         int                    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
-	Port            int                    `yaml:"port,omitempty" default:"4116"`
-	MetricsPort     int                    `yaml:"metrics_port,omitempty" default:"4123"`
+	Port            int                    `yaml:"port,omitempty" default:"4100"`
+	MetricsPort     int                    `yaml:"metrics_port,omitempty" default:"4103"`
 	DeployDir       string                 `yaml:"deploy_dir,omitempty"`
 	DataDir         string                 `yaml:"data_dir,omitempty"`
 	LogDir          string                 `yaml:"log_dir,omitempty"`

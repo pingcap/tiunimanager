@@ -31,16 +31,16 @@ import (
 type TracerServerSpec struct {
 	Host               string                 `yaml:"host"`
 	SSHPort            int                    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
-	ZipkinHostPort     int                    `yaml:"port,omitempty" default:"4133"`
-	QueryHTTPServePort int                    `yaml:"web_port,omitempty" default:"4134"`
-	ZipkinThriftPort   int                    `yaml:"zipkin_thrift_port,omitempty" default:"4135"`
-	CompactThriftPort  int                    `yaml:"compact_thrift_port,omitempty" default:"4136"`
-	BinaryThriftPort   int                    `yaml:"binary_thrift_port,omitempty" default:"4137"`
-	AgentServePort     int                    `yaml:"agent_serve_port,omitempty" default:"4138"`
-	JaegerThriftPort   int                    `yaml:"jaeger_thrift_port,omitempty" default:"4139"`
-	JaegerHostPort     int                    `yaml:"jaeger_host_port,omitempty" default:"4140"`
-	CollectorPort      int                    `yaml:"collector_port,omitempty" default:"4141"`
-	QueryGrpcServePort int                    `yaml:"grpc_serve_port,omitempty" default:"4142"`
+	ZipkinHostPort     int                    `yaml:"port,omitempty" default:"4114"`
+	QueryHTTPServePort int                    `yaml:"web_port,omitempty" default:"4115"`
+	ZipkinThriftPort   int                    `yaml:"zipkin_thrift_port,omitempty" default:"4116"`
+	CompactThriftPort  int                    `yaml:"compact_thrift_port,omitempty" default:"4117"`
+	BinaryThriftPort   int                    `yaml:"binary_thrift_port,omitempty" default:"4118"`
+	AgentServePort     int                    `yaml:"agent_serve_port,omitempty" default:"4119"`
+	JaegerThriftPort   int                    `yaml:"jaeger_thrift_port,omitempty" default:"4120"`
+	JaegerHostPort     int                    `yaml:"jaeger_host_port,omitempty" default:"4121"`
+	CollectorPort      int                    `yaml:"collector_port,omitempty" default:"4122"`
+	QueryGrpcServePort int                    `yaml:"grpc_serve_port,omitempty" default:"4123"`
 	DeployDir          string                 `yaml:"deploy_dir,omitempty"`
 	DataDir            string                 `yaml:"data_dir,omitempty"`
 	LogDir             string                 `yaml:"log_dir,omitempty"`

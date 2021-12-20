@@ -33,7 +33,7 @@ type NodeExporterScript struct {
 // NewNodeExporterScript returns a NodeExporterScript with given arguments
 func NewNodeExporterScript(deployDir, logDir string) *NodeExporterScript {
 	return &NodeExporterScript{
-		Port:      4125,
+		Port:      4124,
 		DeployDir: deployDir,
 		LogDir:    logDir,
 	}

@@ -39,7 +39,7 @@ func NewGrafanaConfig(ip, deployDir string) *GrafanaConfig {
 	return &GrafanaConfig{
 		DeployDir: deployDir,
 		IP:        ip,
-		Port:      4130,
+		Port:      4111,
 	}
 }
 

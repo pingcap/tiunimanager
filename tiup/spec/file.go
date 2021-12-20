@@ -34,8 +34,8 @@ import (
 type FileServerSpec struct {
 	Host            string                 `yaml:"host"`
 	SSHPort         int                    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
-	Port            int                    `yaml:"port,omitempty" default:"4118"`
-	MetricsPort     int                    `yaml:"metrics_port,omitempty" default:"4124"`
+	Port            int                    `yaml:"port,omitempty" default:"4102"`
+	MetricsPort     int                    `yaml:"metrics_port,omitempty" default:"4105"`
 	DeployDir       string                 `yaml:"deploy_dir,omitempty"`
 	DataDir         string                 `yaml:"data_dir,omitempty"`
 	LogDir          string                 `yaml:"log_dir,omitempty"`

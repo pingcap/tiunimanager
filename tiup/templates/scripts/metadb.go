@@ -42,10 +42,10 @@ type TiEMMetaDBScript struct {
 func NewTiEMMetaDBScript(ip, deployDir, dataDir, logDir, logLevel string) *TiEMMetaDBScript {
 	return &TiEMMetaDBScript{
 		Host:        ip,
-		Port:        4100,
-		ClientPort:  4101,
-		PeerPort:    4102,
-		MetricsPort: 4121,
+		Port:        4099,
+		ClientPort:  4106,
+		PeerPort:    4107,
+		MetricsPort: 4098,
 		DeployDir:   deployDir,
 		DataDir:     dataDir,
 		LogDir:      logDir,

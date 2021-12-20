@@ -32,10 +32,10 @@ import (
 type MetaDBServerSpec struct {
 	Host            string                 `yaml:"host"`
 	SSHPort         int                    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
-	Port            int                    `yaml:"port,omitempty" default:"4100"`
-	ClientPort      int                    `yaml:"registry_client_port,omitempty" default:"4101"`
-	PeerPort        int                    `yaml:"registry_peer_port,omitempty" default:"4102"`
-	MetricsPort     int                    `yaml:"metrics_port,omitempty" default:"4121"`
+	Port            int                    `yaml:"port,omitempty" default:"4099"`
+	ClientPort      int                    `yaml:"registry_client_port,omitempty" default:"4106"`
+	PeerPort        int                    `yaml:"registry_peer_port,omitempty" default:"4107"`
+	MetricsPort     int                    `yaml:"metrics_port,omitempty" default:"4098"`
 	DeployDir       string                 `yaml:"deploy_dir,omitempty"`
 	DataDir         string                 `yaml:"data_dir,omitempty"`
 	LogDir          string                 `yaml:"log_dir,omitempty"`

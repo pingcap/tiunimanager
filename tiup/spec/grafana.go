@@ -35,7 +35,7 @@ type GrafanaSpec struct {
 	Imported        bool                 `yaml:"imported,omitempty"`
 	Patched         bool                 `yaml:"patched,omitempty"`
 	IgnoreExporter  bool                 `yaml:"ignore_exporter,omitempty"`
-	Port            int                  `yaml:"port" default:"4130"`
+	Port            int                  `yaml:"port" default:"4111"`
 	DeployDir       string               `yaml:"deploy_dir,omitempty"`
 	DataDir         string               `yaml:"data_dir,omitempty"`
 	ResourceControl meta.ResourceControl `yaml:"resource_control,omitempty" validate:"resource_control:editable"`

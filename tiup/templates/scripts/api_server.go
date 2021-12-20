@@ -43,8 +43,8 @@ type TiEMAPIServerScript struct {
 func NewTiEMAPIServerScript(ip, deployDir, dataDir, logDir, logLevel string) *TiEMAPIServerScript {
 	return &TiEMAPIServerScript{
 		Host:        ip,
-		Port:        4116,
-		MetricsPort: 4123,
+		Port:        4100,
+		MetricsPort: 4103,
 		DeployDir:   deployDir,
 		DataDir:     dataDir,
 		LogDir:      logDir,

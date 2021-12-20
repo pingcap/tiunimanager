@@ -43,8 +43,8 @@ type TiEMFileServerScript struct {
 func NewTiEMFileServerScript(ip, deployDir, dataDir, logDir, logLevel string) *TiEMFileServerScript {
 	return &TiEMFileServerScript{
 		Host:        ip,
-		Port:        4116,
-		MetricsPort: 4123,
+		Port:        4102,
+		MetricsPort: 4105,
 		DeployDir:   deployDir,
 		DataDir:     dataDir,
 		LogDir:      logDir,

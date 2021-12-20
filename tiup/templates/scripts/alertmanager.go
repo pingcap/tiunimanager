@@ -37,8 +37,8 @@ type AlertManagerScript struct {
 func NewAlertManagerScript(ip, deployDir, dataDir, logDir string) *AlertManagerScript {
 	return &AlertManagerScript{
 		IP:          ip,
-		WebPort:     4131,
-		ClusterPort: 4132,
+		WebPort:     4112,
+		ClusterPort: 4113,
 		DeployDir:   deployDir,
 		DataDir:     dataDir,
 		LogDir:      logDir,

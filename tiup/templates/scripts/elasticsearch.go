@@ -35,7 +35,7 @@ type ElasticSearchScript struct {
 func NewElasticSearchScript(ip, deployDir, dataDir, logDir string) *ElasticSearchScript {
 	return &ElasticSearchScript{
 		Host:      ip,
-		Port:      4127,
+		Port:      4108,
 		DeployDir: deployDir,
 		DataDir:   dataDir,
 		LogDir:    logDir,

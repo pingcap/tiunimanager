@@ -33,7 +33,7 @@ type BlackboxExporterScript struct {
 // NewBlackboxExporterScript returns a BlackboxExporterScript with given arguments
 func NewBlackboxExporterScript(deployDir, logDir string) *BlackboxExporterScript {
 	return &BlackboxExporterScript{
-		Port:      4126,
+		Port:      4125,
 		DeployDir: deployDir,
 		LogDir:    logDir,
 	}

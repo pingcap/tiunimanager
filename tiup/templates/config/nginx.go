@@ -45,8 +45,8 @@ type NginxConfig struct {
 func NewNginxConfig(host, deployDir, logDir string) *NginxConfig {
 	return &NginxConfig{
 		IP:        host,
-		Port:      4120,
-		TlsPort:   4119,
+		Port:      80,
+		TlsPort:   443,
 		DeployDir: deployDir,
 		LogDir:    logDir,
 	}

@@ -38,7 +38,7 @@ type KibanaConfig struct {
 func NewKibanaConfig(host, deployDir, dataDir, logDir string) *KibanaConfig {
 	return &KibanaConfig{
 		IP:        host,
-		Port:      4128,
+		Port:      4109,
 		DeployDir: deployDir,
 		DataDir:   dataDir,
 		LogDir:    logDir,

@@ -34,7 +34,7 @@ func NewDatasourceConfig(cluster, ip string) *DatasourceConfig {
 	return &DatasourceConfig{
 		ClusterName: cluster,
 		IP:          ip,
-		Port:        4129,
+		Port:        4110,
 	}
 }
 

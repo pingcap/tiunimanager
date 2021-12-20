@@ -36,7 +36,7 @@ type PrometheusScript struct {
 func NewPrometheusScript(ip, deployDir, dataDir, logDir string) *PrometheusScript {
 	return &PrometheusScript{
 		IP:        ip,
-		Port:      4129,
+		Port:      4110,
 		DeployDir: deployDir,
 		DataDir:   dataDir,
 		LogDir:    logDir,

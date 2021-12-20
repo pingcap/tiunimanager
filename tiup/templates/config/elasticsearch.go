@@ -37,7 +37,7 @@ type ElasticSearchConfig struct {
 func NewElasticSearchConfig(host, deployDir, dataDir, logDir string) *ElasticSearchConfig {
 	return &ElasticSearchConfig{
 		IP:        host,
-		Port:      4127,
+		Port:      4108,
 		DeployDir: deployDir,
 		DataDir:   dataDir,
 		LogDir:    logDir,

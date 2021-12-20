@@ -39,8 +39,8 @@ type WebServerSpec struct {
 	Host            string               `yaml:"host"`
 	SSHPort         int                  `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
 	ServerName      string               `yaml:"server_name,omitempty" default:"localhost" validate:"server_name:editable"`
-	Port            int                  `yaml:"port,omitempty" default:"4120"`
-	TlsPort         int                  `yaml:"tls_port,omitempty" default:"4119"`
+	Port            int                  `yaml:"port,omitempty" default:"80"`
+	TlsPort         int                  `yaml:"tls_port,omitempty" default:"443"`
 	DeployDir       string               `yaml:"deploy_dir,omitempty"`
 	DataDir         string               `yaml:"data_dir,omitempty"`
 	LogDir          string               `yaml:"log_dir,omitempty"`

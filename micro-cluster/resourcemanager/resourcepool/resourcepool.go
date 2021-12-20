@@ -95,7 +95,11 @@ func (p *ResourcePool) verify(ctx context.Context, h *structs.HostInfo) (err err
 	if err != nil {
 		return err
 	}
-	defer client.Close()
+	defer func() {
+		if client != nil {
+			client.Close()
+		}
+	}()
 
 	if err = p.hostInitiator.VerifyCpuMem(ctx, client, h); err != nil {
 		return err

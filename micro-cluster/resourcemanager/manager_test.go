@@ -25,12 +25,14 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	sshclient "github.com/pingcap-inc/tiem/library/util/ssh"
 	allocrecycle "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/allocator_recycler"
 	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	host_provider "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
 	resource_models "github.com/pingcap-inc/tiem/models/resource"
 	resourcepool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	mock_resource "github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
+	mock_initiator "github.com/pingcap-inc/tiem/test/mockresource/mockinitiator"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -91,12 +93,39 @@ func genHostRspFromDB(hostId, hostName string) *resourcepool.Host {
 	return &host
 }
 
+func doMockInitiator(mockInitiator *mock_initiator.MockHostInitiator) {
+	mockInitiator.EXPECT().VerifyConnect(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) (*sshclient.SSHClient, error) {
+		return nil, nil
+	})
+	mockInitiator.EXPECT().VerifyCpuMem(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) error {
+		return nil
+	})
+	mockInitiator.EXPECT().VerifyDisks(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) error {
+		return nil
+	})
+	mockInitiator.EXPECT().VerifyFS(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) error {
+		return nil
+	})
+	mockInitiator.EXPECT().VerifySwap(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) error {
+		return nil
+	})
+	mockInitiator.EXPECT().VerifyEnv(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) error {
+		return nil
+	})
+	mockInitiator.EXPECT().VerifyOSEnv(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) error {
+		return nil
+	})
+	mockInitiator.EXPECT().SetOffSwap(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) error {
+		return nil
+	}).AnyTimes()
+}
 func Test_ImportHosts_Succeed(t *testing.T) {
 	fake_hostId := "xxxx-xxxx-yyyy-yyyy"
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockClient := mock_resource.NewMockReaderWriter(ctrl)
-	mockClient.EXPECT().Create(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []resourcepool.Host) ([]string, error) {
+	// Mock models readerwriter
+	ctrl1 := gomock.NewController(t)
+	defer ctrl1.Finish()
+	mockModels := mock_resource.NewMockReaderWriter(ctrl1)
+	mockModels.EXPECT().Create(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []resourcepool.Host) ([]string, error) {
 		if hosts[0].HostName == "TEST_HOST1" {
 			var hostIds []string
 			hostIds = append(hostIds, fake_hostId)
@@ -105,10 +134,19 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
+
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
 	file_hostprovider, ok := (hostprovider).(*(host_provider.FileHostProvider))
 	assert.True(t, ok)
-	file_hostprovider.SetResourceReaderWriter(mockClient)
+	file_hostprovider.SetResourceReaderWriter(mockModels)
+
+	// Mock host initiator
+	ctrl2 := gomock.NewController(t)
+	defer ctrl2.Finish()
+	mockInitiator := mock_initiator.NewMockHostInitiator(ctrl2)
+	doMockInitiator(mockInitiator)
+
+	resourceManager.GetResourcePool().SetHostInitiator(mockInitiator)
 
 	var hosts []structs.HostInfo
 	host := genHostInfo("TEST_HOST1")
@@ -138,6 +176,14 @@ func Test_ImportHosts_Failed(t *testing.T) {
 	file_hostprovider, ok := (hostprovider).(*(host_provider.FileHostProvider))
 	assert.True(t, ok)
 	file_hostprovider.SetResourceReaderWriter(mockClient)
+
+	// Mock host initiator
+	ctrl2 := gomock.NewController(t)
+	defer ctrl2.Finish()
+	mockInitiator := mock_initiator.NewMockHostInitiator(ctrl2)
+	doMockInitiator(mockInitiator)
+
+	resourceManager.GetResourcePool().SetHostInitiator(mockInitiator)
 
 	var hosts []structs.HostInfo
 	host := genHostInfo("TEST_HOST2")

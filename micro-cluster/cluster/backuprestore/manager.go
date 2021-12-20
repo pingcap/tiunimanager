@@ -21,6 +21,7 @@ import (
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
@@ -88,18 +89,18 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request cluster.BackupC
 
 	if err := mgr.backupClusterPreCheck(ctx, request); err != nil {
 		framework.LogWithContext(ctx).Errorf("backup cluster precheck failed: %s", err.Error())
-		return resp, err
+		return resp, framework.WrapError(common.TIEM_PARAMETER_INVALID, fmt.Sprintf("backup cluster precheck failed: %s", err.Error()), err)
 	}
 	configRW := models.GetConfigReaderWriter()
 	storageTypeConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupStorageType)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStorageType, err.Error())
-		return resp, fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStorageType, err.Error())
+		return resp, framework.WrapError(common.TIEM_BACKUP_SYSTEM_CONFIG_INVAILD, fmt.Sprintf("get conifg %s failed: %s", constants.ConfigKeyBackupStorageType, err.Error()), err)
 	}
 	storagePathConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupStoragePath)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStoragePath, err.Error())
-		return resp, fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStoragePath, err.Error())
+		return resp, framework.WrapError(common.TIEM_BACKUP_SYSTEM_CONFIG_INVAILD, fmt.Sprintf("get conifg %s failed: %s", constants.ConfigKeyBackupStoragePath, err.Error()), err)
 	}
 
 	meta, err := handler.Get(ctx, request.ClusterID)

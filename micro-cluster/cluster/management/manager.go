@@ -499,12 +499,14 @@ func (p *Manager) GetMonitorInfo(ctx context.Context, req cluster.QueryMonitorIn
 	}
 
 	alertPort := alertServers[0].Port
-	if alertPort == 0 {
-		alertPort = constants.DefaultAlertPort
+	if alertPort <= 0 {
+		framework.LogWithContext(ctx).Errorf("cluser[%s] alert port[%d] not available", req.ClusterID, alertPort)
+		return resp, framework.SimpleError(common.TIEM_CLUSTER_GET_CLUSTER_PORT_ERROR)
 	}
 	grafanaPort := grafanaServers[0].Port
-	if grafanaPort == 0 {
-		grafanaPort = constants.DefaultGrafanaPort
+	if grafanaPort <= 0 {
+		framework.LogWithContext(ctx).Errorf("cluser[%s] grafana port[%d] not available", req.ClusterID, grafanaPort)
+		return resp, framework.SimpleError(common.TIEM_CLUSTER_GET_CLUSTER_PORT_ERROR)
 	}
 
 	alertUrl := fmt.Sprintf("http://%s:%d", alertServers[0].IP, alertPort)

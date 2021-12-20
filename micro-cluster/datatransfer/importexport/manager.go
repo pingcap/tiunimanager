@@ -388,11 +388,9 @@ func (mgr *ImportExportManager) exportDataPreCheck(ctx context.Context, request 
 	if request.UserName == "" {
 		return fmt.Errorf("invalid param userName %s", request.UserName)
 	}
-	/*
-		if request.Password == "" {
-			return fmt.Errorf("invalid param password %s", request.Password)
-		}
-	*/
+	if request.Password == "" {
+		return fmt.Errorf("invalid param password %s", request.Password)
+	}
 
 	if fileTypeCSV != request.FileType && fileTypeSQL != request.FileType {
 		return fmt.Errorf("invalid param fileType %s", request.FileType)

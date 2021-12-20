@@ -477,51 +477,6 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb
 	return nil
 }
 
-func (handler *ClusterServiceHandler) CreateProductUpgradePath(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	panic("implement me")
-}
-
-func (handler *ClusterServiceHandler) DeleteProductUpgradePath(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	panic("implement me")
-}
-
-func (handler *ClusterServiceHandler) UpdateProductUpgradePath(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	panic("implement me")
-}
-
-func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := cluster.QueryUpgradePathReq{}
-
-	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterManager.QueryProductUpdatePath(ctx, request.ClusterID)
-		handleResponse(ctx, resp, err, result, nil)
-	}
-
-	return nil
-}
-
-func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := cluster.QueryUpgradeVersionDiffInfoReq{}
-
-	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterManager.QueryUpgradeVersionDiffInfo(ctx, request.ClusterID, request.Version)
-		handleResponse(ctx, resp, err, result, nil)
-	}
-
-	return nil
-}
-
-func (handler *ClusterServiceHandler) ClusterUpgrade(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	request := cluster.ClusterUpgradeReq{}
-
-	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterManager.InPlaceUpgradeCluster(ctx, &request)
-		handleResponse(ctx, resp, err, result, nil)
-	}
-
-	return nil
-}
-
 func (c ClusterServiceHandler) ExportData(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "ExportData", int(response.GetCode()))

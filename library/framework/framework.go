@@ -24,8 +24,6 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
 	prom "github.com/prometheus/client_golang/prometheus"
 
@@ -337,9 +335,9 @@ func (b *BaseFramework) prometheusBoot() {
 	go func() {
 		metricsPort := b.GetClientArgs().MetricsPort
 		if metricsPort <= 0 {
-			metricsPort = constants.DefaultMetricsPort
+			metricsPort = common.DefaultMetricsPort
 		}
-		LogForkFile(constants.LogFileSystem).Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
+		LogForkFile(common.LogFileSystem).Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
 		err := http.ListenAndServe("0.0.0.0:"+strconv.Itoa(metricsPort), nil)
 		if err != nil {
 			Log().Errorf("prometheus listen and serve error: %v", err)

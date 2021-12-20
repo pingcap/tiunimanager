@@ -18,7 +18,6 @@ package management
 import (
 	"context"
 	"fmt"
-
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -475,7 +474,7 @@ func asyncMaintenance(ctx context.Context, meta *handler.ClusterMeta,
 }
 
 func (p *Manager) QueryCluster(ctx context.Context, req cluster.QueryClustersReq) (resp cluster.QueryClusterResp, total int, err error) {
-	return
+	return handler.Query(ctx, req)
 }
 
 func (p *Manager) DetailCluster(ctx context.Context, req cluster.QueryClusterDetailReq) (resp cluster.QueryClusterDetailResp, err error) {

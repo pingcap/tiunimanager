@@ -19,6 +19,7 @@ import "github.com/pingcap-inc/tiem/common/constants"
 
 type Filters struct {
 	ClusterIDs    []string
+	TenantId      string
 	NameLike      string
 	Type          string
 	StatusFilters []constants.ClusterRunningStatus

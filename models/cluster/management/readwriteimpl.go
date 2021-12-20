@@ -100,7 +100,7 @@ func (g *ClusterReadWrite) QueryMetas(ctx context.Context, filters Filters, page
 		PageSize: pageReq.PageSize,
 	}
 	total := int64(0)
-	query := g.DB(ctx).Table("clusters")
+	query := g.DB(ctx).Table("clusters").Where("tenant_id = ?", filters.TenantId)
 	if len(filters.ClusterIDs) > 0 {
 		query = query.Where("id in ?", filters.ClusterIDs)
 	}

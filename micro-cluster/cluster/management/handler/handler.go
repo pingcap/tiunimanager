@@ -18,6 +18,7 @@ package handler
 import (
 	"bytes"
 	"context"
+	"github.com/pingcap-inc/tiem/message/cluster"
 	"text/template"
 
 	"fmt"
@@ -675,7 +676,10 @@ func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
 	if err != nil {
 		return nil, err
 	}
+	return buildMeta(cluster, instances), err
+}
 
+func buildMeta(cluster *management.Cluster, instances []*management.ClusterInstance) *ClusterMeta {
 	instancesMap := make(map[string][]*management.ClusterInstance)
 
 	if instances != nil && len(instances) > 0 {
@@ -690,7 +694,46 @@ func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
 	return &ClusterMeta{
 		Cluster:   cluster,
 		Instances: instancesMap,
-	}, nil
+	}
+}
+
+// Query
+// @Description: query cluster
+// @Parameter ctx
+// @Parameter req
+// @return resp
+// @return total
+// @return err
+func Query(ctx context.Context, req cluster.QueryClustersReq) (resp cluster.QueryClusterResp, total int, err error) {
+	filters := management.Filters {
+		TenantId: framework.GetTenantIDFromContext(ctx),
+		NameLike: req.Name,
+		Type: req.Type,
+		Tag: req.Tag,
+	}
+	if req.ClusterID != "" {
+		filters.ClusterIDs = []string{req.ClusterID}
+	}
+	if req.Status != "" {
+		filters.StatusFilters = []newConstants.ClusterRunningStatus{newConstants.ClusterRunningStatus(req.Status)}
+	}
+
+	result, page, err := models.GetClusterReaderWriter().QueryMetas(ctx, filters, req.PageRequest)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("query clusters failed, request = %v, errors = %s", req, err)
+		return
+	} else {
+		total = page.Total
+	}
+
+	// build cluster info
+	resp.Clusters = make([]structs.ClusterInfo, 0)
+	for _, v := range result {
+		meta := buildMeta(v.Cluster, v.Instances)
+		resp.Clusters = append(resp.Clusters, meta.DisplayClusterInfo(ctx))
+	}
+
+	return
 }
 
 func (p *ClusterMeta) DisplayClusterInfo(ctx context.Context) structs.ClusterInfo {

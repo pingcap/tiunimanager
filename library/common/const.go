@@ -51,7 +51,6 @@ const (
 
 const (
 	LogFileSystem      = "system"
-	LogFileSecondParty = "2nd"
 	LogFileLibTiUP     = "libTiUP"
 
 	LogFileAccess = "access"

@@ -18,6 +18,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"github.com/pingcap-inc/tiem/message/cluster"
 	"testing"
 	"time"
 
@@ -488,36 +489,39 @@ func TestClusterMeta_Get(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
-func GetClusterUserNamePasswd(t *testing.T) {
-	meta := &ClusterMeta {
-		Cluster: &management.Cluster{
-			Entity: common.Entity{
-				ID: "myid",
-				TenantId: "324567",
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
-			},
-			Name: "koojdafij",
-			DBUser: "myuser",
-			DBPassword: "mypassword",
-			Type: "TiDB",
-			Version: "v5.0.0",
-			Tags: []string{"111","333"},
-			OwnerId: "436534636u",
-			ParameterGroupID: "352467890",
-			Copies: 4,
-			Region: "Region1",
-			CpuArchitecture: "x86_64",
-			MaintenanceStatus: constants.ClusterMaintenanceCreating,
-		},
-		Instances: map[string][]*management.ClusterInstance {
-		},
-	}
-	user := meta.GetClusterUserNamePasswd()
 
-	assert.Equal(t, "myid", user.ClusterID)
-	assert.Equal(t, "myuser", user.UserName)
-	assert.Equal(t, "mypassword", user.Password)
+func GetClusterUserNamePasswd(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		meta := &ClusterMeta {
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "myid",
+					TenantId: "324567",
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				},
+				Name: "koojdafij",
+				DBUser: "myuser",
+				DBPassword: "mypassword",
+				Type: "TiDB",
+				Version: "v5.0.0",
+				Tags: []string{"111","333"},
+				OwnerId: "436534636u",
+				ParameterGroupID: "352467890",
+				Copies: 4,
+				Region: "Region1",
+				CpuArchitecture: "x86_64",
+				MaintenanceStatus: constants.ClusterMaintenanceCreating,
+			},
+			Instances: map[string][]*management.ClusterInstance {
+			},
+		}
+		user := meta.GetClusterUserNamePasswd()
+
+		assert.Equal(t, "myid", user.ClusterID)
+		assert.Equal(t, "myuser", user.UserName)
+		assert.Equal(t, "mypassword", user.Password)
+	})
 
 }
 
@@ -880,4 +884,116 @@ func TestClusterMeta_Display(t *testing.T) {
 		assert.Equal(t, 2, resource.InstanceResource[0].Resource[0].Count)
 		assert.Equal(t, 1, resource.InstanceResource[1].Resource[1].Count)
 	})
+}
+
+func TestClusterMeta_Query(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(rw)
+
+	rw.EXPECT().QueryMetas(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockResult("test"), structs.Page{
+		1,1,5,
+	}, nil)
+
+	resp , total, err := Query(context.TODO(), cluster.QueryClustersReq{
+		ClusterID: "111",
+		Name:      "111",
+		Type:      "TiDB",
+		Status: string(constants.ClusterRunning),
+		Tag: "t",
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, 5, total)
+	assert.Equal(t, 1, len(resp.Clusters))
+	assert.NotEmpty(t, resp.Clusters[0].AlertUrl)
+	assert.NotEmpty(t, resp.Clusters[0].GrafanaUrl)
+
+}
+
+func mockResult(name string) []*management.Result {
+	one := &management.Result{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "id",
+				TenantId: "324567",
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+			Name: name,
+			DBUser: "kodjsfn",
+			Type: "TiDB",
+			Version: "v5.0.0",
+			Tags: []string{"111","333"},
+			OwnerId: "436534636u",
+			ParameterGroupID: "352467890",
+			Copies: 4,
+			Region: "Region1",
+			CpuArchitecture: "x86_64",
+			MaintenanceStatus: constants.ClusterMaintenanceCreating,
+		},
+		Instances: []*management.ClusterInstance{
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone: "zone1",
+				CpuCores: 4,
+				Memory: 8,
+				Type: "TiDB",
+				Version: "v5.0.0",
+				Ports: []int32{1},
+				HostIP: []string{"127.0.0.1"},
+			},
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone: "zone1",
+				CpuCores: 4,
+				Memory: 8,
+				Type: "TiKV",
+				Version: "v5.0.0",
+				HostIP: []string{"127.0.0.1"},
+			},
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone: "zone1",
+				CpuCores: 4,
+				Memory: 8,
+				Type: "Grafana",
+				Version: "v5.0.0",
+				HostIP: []string{"127.4.5.6"},
+				Ports: []int32{888},
+
+			},
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone: "zone1",
+				CpuCores: 4,
+				Memory: 8,
+				Type: "AlertManger",
+				Version: "v5.0.0",
+				HostIP: []string{"127.0.0.1"},
+				Ports: []int32{999},
+			},
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone: "zone1",
+				CpuCores: 4,
+				Memory: 8,
+				Type: "Prometheus",
+				Version: "v5.0.0",
+				HostIP: []string{"127.0.0.1"},
+			},
+		},
+	}
+
+	return []*management.Result{one}
 }

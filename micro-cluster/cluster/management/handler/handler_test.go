@@ -203,7 +203,7 @@ func TestClusterMeta_GetInstance(t *testing.T) {
 	}
 
 	t.Run("normal", func(t *testing.T) {
-		instance, err := meta.GetInstance(context.TODO(), "127.0.0.1:111")
+		instance, err := meta.GetInstance(context.TODO(), "tidb1111")
 		assert.NoError(t, err)
 		assert.NotEmpty(t, instance)
 		assert.Equal(t, "tidb1111", instance.ID)
@@ -270,7 +270,7 @@ func TestClusterMeta_DeleteInstance(t *testing.T) {
 	}
 
 	t.Run("normal", func(t *testing.T) {
-		_, err := meta.DeleteInstance(context.TODO(), "127.0.0.1:111")
+		_, err := meta.DeleteInstance(context.TODO(), "tidb1111")
 		assert.NoError(t, err)
 		assert.Equal(t, len(meta.Instances["TiDB"]), 1)
 		assert.Equal(t, meta.Instances["TiDB"][0].ID, "tidb1112")
@@ -514,40 +514,61 @@ func TestClusterMeta_Display(t *testing.T) {
 		Instances: map[string][]*management.ClusterInstance {
 			"TiDB": {
 				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
 					Zone: "zone1",
 					CpuCores: 4,
 					Memory: 8,
 					Type: "TiDB",
 					Version: "v5.0.0",
+					Ports: []int32{1},
 					HostIP: []string{"127.0.0.1"},
 				},
 				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
 					Zone: "zone1",
 					CpuCores: 3,
 					Memory: 7,
 					Type: "TiDB",
 					Version: "v5.0.0",
+					Ports: []int32{1},
+
 					HostIP: []string{"127.0.0.1"},
 				},
 				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
 					Zone: "zone2",
 					CpuCores: 4,
 					Memory: 8,
 					Type: "TiDB",
 					Version: "v5.0.0",
+					Ports: []int32{1},
+
 					HostIP: []string{"127.0.0.1"},
 				},
 				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
 					Zone: "zone1",
 					CpuCores: 4,
 					Memory: 8,
 					Type: "TiDB",
 					Version: "v5.0.0",
+					Ports: []int32{1},
 					HostIP: []string{"127.0.0.1"},
 				},
 			},
 			"TiKV": {
 				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
 					Zone: "zone1",
 					CpuCores: 4,
 					Memory: 8,
@@ -556,6 +577,9 @@ func TestClusterMeta_Display(t *testing.T) {
 					HostIP: []string{"127.0.0.1"},
 				},
 				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
 					Zone: "zone1",
 					CpuCores: 3,
 					Memory: 7,
@@ -564,6 +588,9 @@ func TestClusterMeta_Display(t *testing.T) {
 					HostIP: []string{"127.0.0.1"},
 				},
 				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
 					Zone: "zone2",
 					CpuCores: 4,
 					Memory: 8,
@@ -572,10 +599,56 @@ func TestClusterMeta_Display(t *testing.T) {
 					HostIP: []string{"127.0.0.1"},
 				},
 				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
 					Zone: "zone1",
 					CpuCores: 4,
 					Memory: 8,
 					Type: "TiKV",
+					Version: "v5.0.0",
+					HostIP: []string{"127.0.0.1"},
+					Ports: []int32{1},
+				},
+			},
+			"Grafana": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone: "zone1",
+					CpuCores: 4,
+					Memory: 8,
+					Type: "Grafana",
+					Version: "v5.0.0",
+					HostIP: []string{"127.4.5.6"},
+					Ports: []int32{888},
+
+				},
+			},
+			"AlertManger": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone: "zone1",
+					CpuCores: 4,
+					Memory: 8,
+					Type: "AlertManger",
+					Version: "v5.0.0",
+					HostIP: []string{"127.0.0.1"},
+					Ports: []int32{999},
+				},
+			},
+			"Prometheus": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone: "zone1",
+					CpuCores: 4,
+					Memory: 8,
+					Type: "Prometheus",
 					Version: "v5.0.0",
 					HostIP: []string{"127.0.0.1"},
 				},
@@ -594,6 +667,9 @@ func TestClusterMeta_Display(t *testing.T) {
 		assert.Equal(t, string(meta.Cluster.CpuArchitecture), cluster.CpuArchitecture)
 		assert.Equal(t, string(meta.Cluster.MaintenanceStatus), cluster.MaintainStatus)
 		assert.Equal(t, meta.Cluster.Copies, cluster.Copies)
+		assert.Equal(t, "127.0.0.1:999", cluster.AlertUrl)
+		assert.Equal(t, "127.4.5.6:888", cluster.GrafanaUrl)
+
 	})
 	t.Run("instance", func(t *testing.T) {
 		topology, resource := meta.DisplayInstanceInfo(context.TODO())

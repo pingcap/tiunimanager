@@ -148,8 +148,8 @@ func (p *ClusterMeta) AddDefaultInstances(ctx context.Context) error {
 func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance, error) {
 	instances := p.GetInstanceByStatus(ctx, constants.ClusterInstanceInitializing)
 	requirements := make([]resource.AllocRequirement, 0)
-	for k, instance := range instances {
-		if Contain(newConstants.ParasiteComponentIDs, newConstants.EMProductComponentIDType(k)) {
+	for _, instance := range instances {
+		if Contain(newConstants.ParasiteComponentIDs, newConstants.EMProductComponentIDType(instance.Type)) {
 			continue
 		}
 		portRange := knowledge.GetComponentPortRange(p.Cluster.Type, p.Cluster.Version, instance.Type)
@@ -792,7 +792,7 @@ func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterT
 	}
 
 	for k, v := range p.Instances {
-		if !Contain(newConstants.ParasiteComponentIDs, newConstants.EMProductComponentIDType(k)) {
+		if Contain(newConstants.ParasiteComponentIDs, newConstants.EMProductComponentIDType(k)) {
 			continue
 		}
 		instanceResource := structs.ClusterResourceParameterCompute{

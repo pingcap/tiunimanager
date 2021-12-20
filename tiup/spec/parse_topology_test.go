@@ -264,11 +264,11 @@ tiem_metadb_servers:
 		ExpandRelativeDir(topo)
 		ExpandRelativeDir(topo) // should be idempotent
 
-		c.Assert(topo.MetaDBServers[0].DeployDir, check.Equals, "/home/tiem/deploy/metadb-server-4100")
-		c.Assert(topo.MetaDBServers[0].DataDir, check.Equals, "/home/tiem/deploy/metadb-server-4100/data")
+		c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiem/deploy/metadb-server-4100")
+		c.Assert(topo.ClusterServers[0].DataDir, check.Equals, "/home/tiem/deploy/metadb-server-4100/data")
 
-		c.Assert(topo.MetaDBServers[1].DeployDir, check.Equals, "/home/tiem/deploy/metadb-server-4100")
-		c.Assert(topo.MetaDBServers[1].DataDir, check.Equals, "/home/tiem/deploy/metadb-server-4100/data")
+		c.Assert(topo.ClusterServers[1].DeployDir, check.Equals, "/home/tiem/deploy/metadb-server-4100")
+		c.Assert(topo.ClusterServers[1].DataDir, check.Equals, "/home/tiem/deploy/metadb-server-4100/data")
 	})
 
 	// test global option overwrite
@@ -295,19 +295,19 @@ tiem_metadb_servers:
 
 		ExpandRelativeDir(topo)
 
-		c.Assert(topo.MetaDBServers[0].DeployDir, check.Equals, "/my-global-deploy/metadb-server-4100")
-		c.Assert(topo.MetaDBServers[0].DataDir, check.Equals, "/my-global-deploy/metadb-server-4100/my-local-data-tiflash")
-		c.Assert(topo.MetaDBServers[0].LogDir, check.Equals, "/my-global-deploy/metadb-server-4100/my-local-log-tiflash")
+		c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/my-global-deploy/metadb-server-4100")
+		c.Assert(topo.ClusterServers[0].DataDir, check.Equals, "/my-global-deploy/metadb-server-4100/my-local-data-tiflash")
+		c.Assert(topo.ClusterServers[0].LogDir, check.Equals, "/my-global-deploy/metadb-server-4100/my-local-log-tiflash")
 
-		c.Assert(topo.MetaDBServers[1].DeployDir, check.Equals, "/home/test/flash-deploy")
-		c.Assert(topo.MetaDBServers[1].DataDir, check.Equals, "/home/test/flash-deploy/data")
-		c.Assert(topo.MetaDBServers[3].DeployDir, check.Equals, "/home/test/flash-deploy")
-		c.Assert(topo.MetaDBServers[3].DataDir, check.Equals, "/home/test/flash-deploy/data")
+		c.Assert(topo.ClusterServers[1].DeployDir, check.Equals, "/home/test/flash-deploy")
+		c.Assert(topo.ClusterServers[1].DataDir, check.Equals, "/home/test/flash-deploy/data")
+		c.Assert(topo.ClusterServers[3].DeployDir, check.Equals, "/home/test/flash-deploy")
+		c.Assert(topo.ClusterServers[3].DataDir, check.Equals, "/home/test/flash-deploy/data")
 
-		c.Assert(topo.MetaDBServers[2].DeployDir, check.Equals, "/my-global-deploy/metadb-server-4100")
-		c.Assert(topo.MetaDBServers[2].DataDir, check.Equals, "/my-global-deploy/metadb-server-4100/data")
-		c.Assert(topo.MetaDBServers[4].DeployDir, check.Equals, "/my-global-deploy/metadb-server-4100")
-		c.Assert(topo.MetaDBServers[4].DataDir, check.Equals, "/my-global-deploy/metadb-server-4100/data")
+		c.Assert(topo.ClusterServers[2].DeployDir, check.Equals, "/my-global-deploy/metadb-server-4100")
+		c.Assert(topo.ClusterServers[2].DataDir, check.Equals, "/my-global-deploy/metadb-server-4100/data")
+		c.Assert(topo.ClusterServers[4].DeployDir, check.Equals, "/my-global-deploy/metadb-server-4100")
+		c.Assert(topo.ClusterServers[4].DataDir, check.Equals, "/my-global-deploy/metadb-server-4100/data")
 	})
 }
 

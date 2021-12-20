@@ -29,7 +29,7 @@ var _ = Suite(&metaSuiteDM{})
 func TestDefaultDataDir(t *testing.T) {
 	// Test with without global DataDir.
 	topo := new(Specification)
-	topo.MetaDBServers = append(topo.MetaDBServers, &MetaDBServerSpec{Host: "1.1.1.1", Port: 1111})
+	topo.ClusterServers = append(topo.ClusterServers, &ClusterServerSpec{Host: "1.1.1.1", Port: 1111})
 	topo.ClusterServers = append(topo.ClusterServers, &ClusterServerSpec{Host: "1.1.2.1", Port: 2221})
 	data, err := yaml.Marshal(topo)
 	assert.Nil(t, err)
@@ -39,7 +39,7 @@ func TestDefaultDataDir(t *testing.T) {
 	err = yaml.Unmarshal(data, topo)
 	assert.Nil(t, err)
 	assert.Equal(t, "data", topo.GlobalOptions.DataDir)
-	assert.Equal(t, "data", topo.MetaDBServers[0].DataDir)
+	assert.Equal(t, "data", topo.ClusterServers[0].DataDir)
 	assert.Equal(t, "data", topo.ClusterServers[0].DataDir)
 
 	// Can keep the default value.
@@ -49,14 +49,14 @@ func TestDefaultDataDir(t *testing.T) {
 	err = yaml.Unmarshal(data, topo)
 	assert.Nil(t, err)
 	assert.Equal(t, "data", topo.GlobalOptions.DataDir)
-	assert.Equal(t, "data", topo.MetaDBServers[0].DataDir)
+	assert.Equal(t, "data", topo.ClusterServers[0].DataDir)
 	assert.Equal(t, "data", topo.ClusterServers[0].DataDir)
 
 	// Test with global DataDir.
 	topo = new(Specification)
 	topo.GlobalOptions.DataDir = "/gloable_data"
-	topo.MetaDBServers = append(topo.MetaDBServers, &MetaDBServerSpec{Host: "1.1.1.1", Port: 1111})
-	topo.MetaDBServers = append(topo.MetaDBServers, &MetaDBServerSpec{Host: "1.1.1.2", Port: 1112, DataDir: "/my_data"})
+	topo.ClusterServers = append(topo.ClusterServers, &ClusterServerSpec{Host: "1.1.1.1", Port: 1111})
+	topo.ClusterServers = append(topo.ClusterServers, &ClusterServerSpec{Host: "1.1.1.2", Port: 1112, DataDir: "/my_data"})
 	topo.ClusterServers = append(topo.ClusterServers, &ClusterServerSpec{Host: "1.1.2.1", Port: 2221})
 	topo.ClusterServers = append(topo.ClusterServers, &ClusterServerSpec{Host: "1.1.2.2", Port: 2222, DataDir: "/my_data"})
 	data, err = yaml.Marshal(topo)
@@ -67,8 +67,8 @@ func TestDefaultDataDir(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, "/gloable_data", topo.GlobalOptions.DataDir)
-	assert.Equal(t, "/gloable_data/metadb-server-1111", topo.MetaDBServers[0].DataDir)
-	assert.Equal(t, "/my_data", topo.MetaDBServers[1].DataDir)
+	assert.Equal(t, "/gloable_data/metadb-server-1111", topo.ClusterServers[0].DataDir)
+	assert.Equal(t, "/my_data", topo.ClusterServers[1].DataDir)
 	assert.Equal(t, "/gloable_data/cluster-server-2221", topo.ClusterServers[0].DataDir)
 	assert.Equal(t, "/my_data", topo.ClusterServers[1].DataDir)
 }
@@ -94,8 +94,8 @@ tiem_cluster_servers:
 	assert.Equal(t, "test1", topo.GlobalOptions.User)
 
 	assert.Equal(t, 220, topo.GlobalOptions.SSHPort)
-	assert.Equal(t, 220, topo.MetaDBServers[0].SSHPort)
-	assert.Equal(t, "metadb-server-deploy", topo.MetaDBServers[0].DeployDir)
+	assert.Equal(t, 220, topo.ClusterServers[0].SSHPort)
+	assert.Equal(t, "metadb-server-deploy", topo.ClusterServers[0].DeployDir)
 
 	assert.Equal(t, 220, topo.ClusterServers[0].SSHPort)
 	assert.Equal(t, "test-deploy/cluster-server-4110", topo.ClusterServers[0].DeployDir)
@@ -303,7 +303,7 @@ tiem_cluster_servers:
 		err := ParseTopologyYaml(file, &topo)
 		assert.Nil(t, err)
 		ExpandRelativeDir(&topo)
-		assert.Equal(t, "/home/tiem/deploy/metadb-server-4100", topo.MetaDBServers[0].DeployDir)
+		assert.Equal(t, "/home/tiem/deploy/metadb-server-4100", topo.ClusterServers[0].DeployDir)
 		assert.Equal(t, "/home/tiem/deploy/cluster-server-4110", topo.ClusterServers[0].DeployDir)
 	})
 
@@ -320,9 +320,9 @@ tiem_metadb_servers:
 		assert.Nil(t, err)
 		ExpandRelativeDir(&topo)
 
-		assert.Equal(t, "/home/tiem/my-deploy", topo.MetaDBServers[0].DeployDir)
-		assert.Equal(t, "/home/tiem/my-deploy/my-data", topo.MetaDBServers[0].DataDir)
-		assert.Equal(t, "/home/tiem/my-deploy/my-log", topo.MetaDBServers[0].LogDir)
+		assert.Equal(t, "/home/tiem/my-deploy", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tiem/my-deploy/my-data", topo.ClusterServers[0].DataDir)
+		assert.Equal(t, "/home/tiem/my-deploy/my-log", topo.ClusterServers[0].LogDir)
 	})
 
 	// test global options, case 1
@@ -337,9 +337,9 @@ tiem_metadb_servers:
 		assert.Nil(t, err)
 		ExpandRelativeDir(&topo)
 
-		assert.Equal(t, "/home/tiem/my-deploy/metadb-server-4100", topo.MetaDBServers[0].DeployDir)
-		assert.Equal(t, "/home/tiem/my-deploy/metadb-server-4100/data", topo.MetaDBServers[0].DataDir)
-		assert.Equal(t, "", topo.MetaDBServers[0].LogDir)
+		assert.Equal(t, "/home/tiem/my-deploy/metadb-server-4100", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tiem/my-deploy/metadb-server-4100/data", topo.ClusterServers[0].DataDir)
+		assert.Equal(t, "", topo.ClusterServers[0].LogDir)
 	})
 
 	// test global options, case 2

@@ -22,6 +22,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	crypto "github.com/pingcap-inc/tiem/library/thirdparty/encrypt"
 	"github.com/pingcap-inc/tiem/library/util/bitmap"
 	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	mm "github.com/pingcap-inc/tiem/models/resource/management"
@@ -37,7 +38,7 @@ func (rw *GormResourceReadWrite) AllocResources(ctx context.Context, batchReq *r
 		result, err = rw.allocForSingleRequest(ctx, tx, &request)
 		if err != nil {
 			tx.Rollback()
-			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NOT_ALL_SUCCEED, "alloc resources in batch failed on request %d, %v", i, err)
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NOT_ALL_SUCCEED, "alloc resources in batch failed on %dth request with %d requires, request: %v, error: %v", i+1, len(request.Requires), request, err)
 		}
 		results.BatchResults = append(results.BatchResults, result)
 	}
@@ -98,6 +99,32 @@ type Resource struct {
 	Path     string
 	Capacity int
 	portRes  []*resource_structs.PortResource
+}
+
+func (resource *Resource) toCompute() (result *resource_structs.Compute, err error) {
+	result = &resource_structs.Compute{
+		HostId:   resource.HostId,
+		HostName: resource.HostName,
+		HostIp:   resource.Ip,
+		UserName: resource.UserName,
+		Passwd:   resource.Passwd,
+	}
+	result.ComputeRes.CpuCores = int32(resource.CpuCores)
+	result.ComputeRes.Memory = int32(resource.Memory)
+	result.DiskRes.DiskId = resource.DiskId
+	result.DiskRes.DiskName = resource.DiskName
+	result.DiskRes.Path = resource.Path
+	result.DiskRes.Capacity = int32(resource.Capacity)
+	for _, portRes := range resource.portRes {
+		result.PortRes = append(result.PortRes, *portRes)
+	}
+
+	result.Passwd, err = crypto.AesDecryptCFB(result.Passwd)
+	if err != nil {
+		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_DECRYPT_PASSWD_ERROR, "decrypt compute %v password failed, %v", *result, err)
+	}
+	return result, nil
+
 }
 
 func (rw *GormResourceReadWrite) allocResourceWithRR(tx *gorm.DB, applicant *resource_structs.Applicant, seq int, require *resource_structs.AllocRequirement, choosedHosts []string) (results []resource_structs.Compute, err error) {
@@ -199,25 +226,12 @@ func (rw *GormResourceReadWrite) allocResourceWithRR(tx *gorm.DB, applicant *res
 
 	// 4. make Results and Complete one Requirement
 	for _, resource := range resources {
-		result := resource_structs.Compute{
-			Reqseq:   int32(seq),
-			HostId:   resource.HostId,
-			HostName: resource.HostName,
-			HostIp:   resource.Ip,
-			UserName: resource.UserName,
-			Passwd:   resource.Passwd,
+		result, err := resource.toCompute()
+		if err != nil {
+			return nil, err
 		}
-		result.ComputeRes.CpuCores = int32(resource.CpuCores)
-		result.ComputeRes.Memory = int32(resource.Memory)
-		result.DiskRes.DiskId = resource.DiskId
-		result.DiskRes.DiskName = resource.DiskName
-		result.DiskRes.Path = resource.Path
-		result.DiskRes.Capacity = int32(resource.Capacity)
-		for _, portRes := range resource.portRes {
-			result.PortRes = append(result.PortRes, *portRes)
-		}
-
-		results = append(results, result)
+		result.Reqseq = int32(seq)
+		results = append(results, *result)
 	}
 	return
 }
@@ -328,25 +342,12 @@ func (rw *GormResourceReadWrite) allocResourceInHost(tx *gorm.DB, applicant *res
 
 	// 4. make Results and Complete one Requirement
 	for _, resource := range resources {
-		result := resource_structs.Compute{
-			Reqseq:   int32(seq),
-			HostId:   resource.HostId,
-			HostName: resource.HostName,
-			HostIp:   resource.Ip,
-			UserName: resource.UserName,
-			Passwd:   resource.Passwd,
+		result, err := resource.toCompute()
+		if err != nil {
+			return nil, err
 		}
-		result.ComputeRes.CpuCores = int32(resource.CpuCores)
-		result.ComputeRes.Memory = int32(resource.Memory)
-		result.DiskRes.DiskId = resource.DiskId
-		result.DiskRes.DiskName = resource.DiskName
-		result.DiskRes.Path = resource.Path
-		result.DiskRes.Capacity = int32(resource.Capacity)
-		for _, portRes := range resource.portRes {
-			result.PortRes = append(result.PortRes, *portRes)
-		}
-
-		results = append(results, result)
+		result.Reqseq = int32(seq)
+		results = append(results, *result)
 	}
 	return
 }

@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -32,6 +31,7 @@ import (
 
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/gin-gonic/gin"
@@ -39,6 +39,11 @@ import (
 
 	"github.com/pingcap-inc/tiem/message"
 )
+
+func setGinContextForInvalidParam(c *gin.Context, errmsg string) {
+	framework.LogWithContext(c).Error(errmsg)
+	c.JSON(common.TIEM_PARAMETER_INVALID.GetHttpCode(), controller.Fail(int(common.TIEM_PARAMETER_INVALID), errmsg))
+}
 
 func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 	xlsx, err := excelize.OpenReader(r)
@@ -149,19 +154,19 @@ func ImportHosts(c *gin.Context) {
 	reserved, err := strconv.ParseBool(reservedStr)
 	if err != nil {
 		errmsg := fmt.Sprintf("GetFormData Error: %v", err)
-		c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), errmsg))
+		setGinContextForInvalidParam(c, errmsg)
 		return
 	}
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
 		errmsg := fmt.Sprintf("GetFormFile Error: %v", err)
-		c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), errmsg))
+		setGinContextForInvalidParam(c, errmsg)
 		return
 	}
 	hosts, err := importExcelFile(file, reserved)
 	if err != nil {
 		errmsg := fmt.Sprintf("Import File Error: %v", err)
-		c.JSON(http.StatusInternalServerError, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), errmsg))
+		setGinContextForInvalidParam(c, errmsg)
 		return
 	}
 
@@ -231,7 +236,7 @@ func RemoveHosts(c *gin.Context) {
 	requestBody, ok := controller.HandleJsonRequestFromBody(c, &req)
 	if ok {
 		if str, dup := detectDuplicateElement(req.HostIDs); dup {
-			c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), str+" Is Duplicated in request"))
+			setGinContextForInvalidParam(c, str+" is duplicated in request")
 			return
 		}
 
@@ -258,7 +263,7 @@ func DownloadHostTemplateFile(c *gin.Context) {
 
 	_, err := os.Stat(filePath)
 	if err != nil && !os.IsExist(err) {
-		c.JSON(http.StatusInternalServerError, controller.Fail(common.TIEM_RESOURCE_TEMPLATE_FILE_NOT_FOUND.GetHttpCode(), err.Error()))
+		c.JSON(common.TIEM_RESOURCE_TEMPLATE_FILE_NOT_FOUND.GetHttpCode(), controller.Fail(int(common.TIEM_RESOURCE_TEMPLATE_FILE_NOT_FOUND), err.Error()))
 		return
 	}
 
@@ -286,7 +291,7 @@ func UpdateHostReserved(c *gin.Context) {
 	requestBody, ok := controller.HandleJsonRequestFromBody(c, &req)
 	if ok {
 		if str, dup := detectDuplicateElement(req.HostIDs); dup {
-			c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), str+" Is Duplicated in request"))
+			setGinContextForInvalidParam(c, str+" is duplicated in request")
 			return
 		}
 
@@ -312,13 +317,13 @@ func UpdateHostStatus(c *gin.Context) {
 	requestBody, ok := controller.HandleJsonRequestFromBody(c, &req)
 	if ok {
 		if str, dup := detectDuplicateElement(req.HostIDs); dup {
-			c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), str+" Is Duplicated in request"))
+			setGinContextForInvalidParam(c, str+" is duplicated in request")
 			return
 		}
 
 		if !constants.HostStatus(req.Status).IsValidStatus() {
 			errmsg := fmt.Sprintf("input status %s is invalid, [Online,Offline,Deleted]", req.Status)
-			c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), errmsg))
+			setGinContextForInvalidParam(c, errmsg)
 			return
 		}
 

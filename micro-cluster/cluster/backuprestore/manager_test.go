@@ -51,7 +51,7 @@ func TestBRManager_DeleteBackupRecords(t *testing.T) {
 	models.SetBRReaderWriter(brRW)
 
 	service := GetBRService()
-	_, err := service.DeleteBackupRecords(context.TODO(), &cluster.DeleteBackupDataReq{})
+	_, err := service.DeleteBackupRecords(context.TODO(), cluster.DeleteBackupDataReq{})
 	assert.Nil(t, err)
 }
 
@@ -69,7 +69,7 @@ func TestBRManager_GetBackupStrategy(t *testing.T) {
 	models.SetBRReaderWriter(brRW)
 
 	service := GetBRService()
-	resp, err := service.GetBackupStrategy(context.TODO(), &cluster.GetBackupStrategyReq{})
+	resp, err := service.GetBackupStrategy(context.TODO(), cluster.GetBackupStrategyReq{})
 	assert.Nil(t, err)
 	assert.Equal(t, "0:00-1:00", resp.Strategy.Period)
 }
@@ -83,7 +83,7 @@ func TestBRManager_DeleteBackupStrategy(t *testing.T) {
 	models.SetBRReaderWriter(brRW)
 
 	service := GetBRService()
-	_, err := service.DeleteBackupStrategy(context.TODO(), &cluster.DeleteBackupStrategyReq{})
+	_, err := service.DeleteBackupStrategy(context.TODO(), cluster.DeleteBackupStrategyReq{})
 	assert.Nil(t, err)
 }
 
@@ -96,7 +96,7 @@ func TestBRManager_SaveBackupStrategy(t *testing.T) {
 	models.SetBRReaderWriter(brRW)
 
 	service := GetBRService()
-	_, err := service.SaveBackupStrategy(context.TODO(), &cluster.SaveBackupStrategyReq{
+	_, err := service.SaveBackupStrategy(context.TODO(), cluster.SaveBackupStrategyReq{
 		ClusterID: "cls-xxxx",
 		Strategy: structs.BackupStrategy{
 			ClusterID:  "cls-xxxx",
@@ -123,7 +123,7 @@ func TestBRManager_QueryClusterBackupRecords(t *testing.T) {
 	models.SetBRReaderWriter(brRW)
 
 	service := GetBRService()
-	resp, _, err := service.QueryClusterBackupRecords(context.TODO(), &cluster.QueryBackupRecordsReq{})
+	resp, _, err := service.QueryClusterBackupRecords(context.TODO(), cluster.QueryBackupRecordsReq{})
 	assert.Nil(t, err)
 	assert.Equal(t, records[0].FilePath, resp.BackupRecords[0].FilePath)
 }

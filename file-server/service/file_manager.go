@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/labstack/gommon/bytes"
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"golang.org/x/net/context"
 	"io"
@@ -101,7 +101,7 @@ func (mgr *FileManager) UploadFile(ctx context.Context, r *http.Request, uploadP
 		framework.LogWithContext(ctx).Errorf("invalid file type %s, not xxx.zip", detectedFileType)
 		return errors.New("invalid file type, not .zip")
 	}
-	newPath := filepath.Join(uploadPath, common.DefaultZipName)
+	newPath := filepath.Join(uploadPath, constants.DefaultZipName)
 	framework.LogWithContext(ctx).Infof("FileType: %s, File: %s", detectedFileType, newPath)
 
 	// write file
@@ -200,7 +200,7 @@ func (mgr *FileManager) ZipDir(ctx context.Context, dir string, zipFile string) 
 	return nil
 }
 
-func (mgr *FileManager) UnzipDir(ctx context.Context, zipFile string, dir string) error {
+func (mgr *FileManager) UnzipDir(ctx context.Context, zipFile string, dir string) (unzipErr error) {
 	framework.LogWithContext(ctx).Infof("begin unzipDir: file[%s] to dir[%s]", zipFile, dir)
 	defer framework.LogWithContext(ctx).Info("end unzipDir")
 	r, err := zip.OpenReader(zipFile)
@@ -212,13 +212,21 @@ func (mgr *FileManager) UnzipDir(ctx context.Context, zipFile string, dir string
 	for _, f := range r.File {
 		func() {
 			path := dir + string(filepath.Separator) + f.Name
+			if !strings.HasPrefix(path, dir) {
+				framework.LogWithContext(ctx).Errorf("file %s in zip file invalid, may cause path crossing", f.Name)
+				unzipErr = fmt.Errorf("file %s in zip file invalid, may cause path crossing", f.Name)
+				return
+			}
+
 			if err := os.MkdirAll(filepath.Dir(path), 0750); err != nil {
 				framework.LogWithContext(ctx).Errorf("make filepath failed: %s", err.Error())
+				unzipErr = fmt.Errorf("make filepath failed: %s", err.Error())
 				return
 			}
 			fDest, err := os.Create(path)
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("unzip create failed: %s", err.Error())
+				unzipErr = fmt.Errorf("unzip create failed: %s", err.Error())
 				return
 			}
 			defer fDest.Close()
@@ -226,6 +234,7 @@ func (mgr *FileManager) UnzipDir(ctx context.Context, zipFile string, dir string
 			fSrc, err := f.Open()
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("unzip open failed: %s", err.Error())
+				unzipErr = fmt.Errorf("unzip open failed: %s", err.Error())
 				return
 			}
 			defer fSrc.Close()
@@ -237,19 +246,13 @@ func (mgr *FileManager) UnzipDir(ctx context.Context, zipFile string, dir string
 						break
 					}
 					framework.LogWithContext(ctx).Errorf("unzip copy failed: %s", err.Error())
+					unzipErr = fmt.Errorf("unzip copy failed: %s", err.Error())
 					return
 				}
 			}
-			/*
-				_, err = io.Copy(fDest, fSrc)
-				if err != nil {
-					getLogger().Errorf("unzip copy failed: %s", err.Error())
-					return
-				}
-			*/
 		}()
 	}
-	return nil
+	return
 }
 
 func (mgr *FileManager) addUploadCnt() {

@@ -21,7 +21,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
@@ -45,37 +44,47 @@ type loginResponse struct {
 
 const loginUrlSuffix string = "api/user/login"
 
-func GetDashboardInfo(ctx context.Context, request *cluster.GetDashboardInfoReq) (*cluster.GetDashboardInfoResp, error) {
+func GetDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) (resp cluster.GetDashboardInfoResp, err error) {
 	meta, err := handler.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get cluster %s meta failed: %s", request.ClusterID, err.Error())
-		return nil, err
+		return resp, err
 	}
 
-	url := getDashboardUrlFromCluser(meta)
-	token, err := getLoginToken(ctx, url, "root", "") //todo: get username passwd from meta
+	tidbUserInfo := meta.GetClusterUserNamePasswd()
+	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta, %+v", meta.Cluster.ID, tidbUserInfo)
+
+	url, err := getDashboardUrlFromCluster(ctx, meta)
 	if err != nil {
-		return nil, err
+		return resp, err
+	}
+	token, err := getLoginToken(ctx, url, tidbUserInfo.UserName, tidbUserInfo.Password)
+	if err != nil {
+		return resp, err
 	}
 
-	dashboard := &cluster.GetDashboardInfoResp{
-		ClusterID: request.ClusterID,
-		Url:       url,
-		Token:     token,
-	}
-
-	return dashboard, nil
+	resp.ClusterID = request.ClusterID
+	resp.Url = url
+	resp.Token = token
+	return resp, nil
 }
 
-func getDashboardUrlFromCluser(meta *handler.ClusterMeta) string {
-	instances := meta.GetPDClientAddresses()
-	pdNum := len(instances)
-	pdServer := instances[rand.Intn(pdNum)]
-	pdClientPort := pdServer.Port
-	if pdClientPort == 0 {
-		pdClientPort = common.DefaultPDClientPort
+func getDashboardUrlFromCluster(ctx context.Context, meta *handler.ClusterMeta) (string, error) {
+	pdAddress := meta.GetPDClientAddresses()
+	if len(pdAddress) == 0 {
+		framework.LogWithContext(ctx).Errorf("get pd address from meta failed, empty address")
+		return "", fmt.Errorf("get pd address from meta failed, empty address")
 	}
-	return fmt.Sprintf("http://%s:%d/dashboard/", pdServer.IP, pdClientPort)
+	framework.LogWithContext(ctx).Infof("get cluster %s tidb address from meta, %+v", meta.Cluster.ID, pdAddress)
+	pdNum := len(pdAddress)
+	pdServer := pdAddress[rand.Intn(pdNum)]
+	pdClientPort := pdServer.Port
+	/*
+		if pdClientPort == 0 {
+			pdClientPort = constants.DefaultPDClientPort
+		}
+	*/
+	return fmt.Sprintf("http://%s:%d/dashboard/", pdServer.IP, pdClientPort), nil
 }
 
 func getLoginToken(ctx context.Context, dashboardUrl, userName, password string) (string, error) {

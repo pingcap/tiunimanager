@@ -26,9 +26,13 @@ package secondparty
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/pingcap-inc/tiem/library/common"
 
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
@@ -98,6 +102,27 @@ func (manager *SecondPartyManager) ShowBackUpInfo(ctx context.Context, cluster C
 	showBackUpInfoReq.DbConnParameter = cluster.DbConnParameter
 	showBackUpInfoResp := manager.startBrShowBackUpInfoThruSQL(ctx, &showBackUpInfoReq)
 	return showBackUpInfoResp
+}
+
+func (manager *SecondPartyManager) ShowBackUpInfoThruMetaDB(ctx context.Context, operationID string) (resp CmdBrResp,
+	err error) {
+	logInFunc := framework.LogWithContext(ctx)
+	logInFunc.Infof("showbackupinfothrumetadb, operationID: %s", operationID)
+	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Get(ctx, operationID)
+	if err != nil {
+		logInFunc.Errorf("get backup operation info err = %s", err.Error())
+		return
+	}
+	if secondPartyOperation.Status == secondparty.OperationStatusError {
+		logInFunc.Errorf("backup cluster error, %s", secondPartyOperation.ErrorStr)
+		return resp, errors.New(secondPartyOperation.ErrorStr)
+	}
+	err = json.Unmarshal([]byte(secondPartyOperation.Result), &resp)
+	if err != nil {
+		logInFunc.Errorf("json unmarshal backup info for: %s, failed, %s", secondPartyOperation.Result, err.Error())
+		return resp, framework.NewTiEMErrorf(common.TIEM_UNMARSHAL_ERROR, err.Error())
+	}
+	return resp, nil
 }
 
 func (manager *SecondPartyManager) startBrShowBackUpInfoThruSQL(ctx context.Context,

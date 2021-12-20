@@ -27,71 +27,64 @@ type BRService interface {
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
-	// @Return *cluster.BackupClusterDataResp
+	// @Parameter maintenanceStatusChange
+	// @Return cluster.BackupClusterDataResp
 	// @Return error
-	BackupCluster(ctx context.Context, request *cluster.BackupClusterDataReq) (resp *cluster.BackupClusterDataResp, backupErr error)
-
-	// RestoreNewCluster
-	// @Description: restore a new cluster by backup record
-	// @Receiver m
-	// @Parameter ctx
-	// @Parameter request
-	// @Return *cluster.RestoreNewClusterResp
-	// @Return error
-	//RestoreNewCluster(ctx context.Context, request *cluster.RestoreNewClusterReq) (*cluster.RestoreNewClusterResp, error) // todo: move to cluster manager
+	BackupCluster(ctx context.Context, request cluster.BackupClusterDataReq, maintenanceStatusChange bool) (resp cluster.BackupClusterDataResp, backupErr error)
 
 	// RestoreExistCluster
 	// @Description: restore exist cluster by backup record
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
-	// @Return *cluster.RestoreExistClusterResp
+	// @Parameter maintenanceStatusChange
+	// @Return cluster.RestoreExistClusterResp
 	// @Return error
-	RestoreExistCluster(ctx context.Context, request *cluster.RestoreExistClusterReq) (resp *cluster.RestoreExistClusterResp, restoreErr error)
+	RestoreExistCluster(ctx context.Context, request cluster.RestoreExistClusterReq, maintenanceStatusChange bool) (resp cluster.RestoreExistClusterResp, restoreErr error)
 
 	// QueryClusterBackupRecords
 	// @Description: query backup records of cluster
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
-	// @Return *cluster.QueryBackupRecordsResp
-	// @Return *structs.Page
+	// @Return cluster.QueryBackupRecordsResp
+	// @Return structs.Page
 	// @Return error
-	QueryClusterBackupRecords(ctx context.Context, request *cluster.QueryBackupRecordsReq) (*cluster.QueryBackupRecordsResp, *structs.Page, error)
+	QueryClusterBackupRecords(ctx context.Context, request cluster.QueryBackupRecordsReq) (resp cluster.QueryBackupRecordsResp, page structs.Page, err error)
 
 	// DeleteBackupRecords
 	// @Description: delete backup records by condition
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
-	// @Return *cluster.QueryBackupRecordsResp
+	// @Return cluster.QueryBackupRecordsResp
 	// @Return error
-	DeleteBackupRecords(ctx context.Context, request *cluster.DeleteBackupDataReq) (*cluster.DeleteBackupDataResp, error)
+	DeleteBackupRecords(ctx context.Context, request cluster.DeleteBackupDataReq) (resp cluster.DeleteBackupDataResp, err error)
 
 	// SaveBackupStrategy
 	// @Description: save backup strategy of cluster
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
-	// @Return *cluster.SaveBackupStrategyResp
+	// @Return cluster.SaveBackupStrategyResp
 	// @Return error
-	SaveBackupStrategy(ctx context.Context, request *cluster.SaveBackupStrategyReq) (*cluster.SaveBackupStrategyResp, error)
+	SaveBackupStrategy(ctx context.Context, request cluster.SaveBackupStrategyReq) (resp cluster.SaveBackupStrategyResp, err error)
 
 	// GetBackupStrategy
 	// @Description: get backup strategy of cluster
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
-	// @Return *cluster.GetBackupStrategyResp
+	// @Return cluster.GetBackupStrategyResp
 	// @Return error
-	GetBackupStrategy(ctx context.Context, request *cluster.GetBackupStrategyReq) (*cluster.GetBackupStrategyResp, error)
+	GetBackupStrategy(ctx context.Context, request cluster.GetBackupStrategyReq) (resp cluster.GetBackupStrategyResp, err error)
 
 	// DeleteBackupStrategy
 	// @Description: save backup strategy of cluster
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
-	// @Return *cluster.UpdateBackupStrategyResp
+	// @Return cluster.UpdateBackupStrategyResp
 	// @Return error
-	DeleteBackupStrategy(ctx context.Context, request *cluster.DeleteBackupStrategyReq) (*cluster.DeleteBackupStrategyResp, error)
+	DeleteBackupStrategy(ctx context.Context, request cluster.DeleteBackupStrategyReq) (resp cluster.DeleteBackupStrategyResp, err error)
 }

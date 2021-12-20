@@ -28,16 +28,15 @@ func NewSystemConfigManager() *SystemConfigManager {
 	return &SystemConfigManager{}
 }
 
-func (mgr *SystemConfigManager) GetSystemConfig(ctx context.Context, request *message.GetSystemConfigReq) (*message.GetSystemConfigResp, error) {
+func (mgr *SystemConfigManager) GetSystemConfig(ctx context.Context, request message.GetSystemConfigReq) (resp message.GetSystemConfigResp, err error) {
 	configRW := models.GetConfigReaderWriter()
 	config, err := configRW.GetConfig(ctx, request.ConfigKey)
 	if err != nil {
-		return nil, err
+		return resp, err
 	}
-	return &message.GetSystemConfigResp{
-		SystemConfig: structs.SystemConfig{
-			ConfigKey:   config.ConfigKey,
-			ConfigValue: config.ConfigValue,
-		},
-	}, nil
+	resp.SystemConfig = structs.SystemConfig{
+		ConfigKey:   config.ConfigKey,
+		ConfigValue: config.ConfigValue,
+	}
+	return resp, nil
 }

@@ -25,16 +25,17 @@ type ReaderWriter interface {
 	Delete(ctx context.Context, clusterID string) (err error)
 	Get(ctx context.Context, clusterID string) (*Cluster, error)
 	GetMeta(ctx context.Context, clusterID string) (*Cluster, []*ClusterInstance, error)
+	DeleteInstance(ctx context.Context, ID string) error
 
 	//
-    // UpdateMeta
-    // @Description: update cluster and instances, use Update and UpdateInstance
-    // @param ctx
-    // @param cluster
-    // @param instances[]*ClusterInstance
-    // @return error
-    //
-	UpdateMeta(ctx context.Context, cluster *Cluster, instances[]*ClusterInstance) error
+	// UpdateMeta
+	// @Description: update cluster and instances, use Update and UpdateInstance
+	// @param ctx
+	// @param cluster
+	// @param instances[]*ClusterInstance
+	// @return error
+	//
+	UpdateMeta(ctx context.Context, cluster *Cluster, instances []*ClusterInstance) error
 	//
 	// UpdateInstance update cluster instances
 	//  @Description:

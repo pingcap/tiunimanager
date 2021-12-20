@@ -24,28 +24,24 @@ service ClusterService {
     rpc QueryDataTransport(RpcRequest) returns (RpcResponse);
     rpc DeleteDataTransportRecord(RpcRequest) returns (RpcResponse);
 
+    rpc QueryClusterLog(RpcRequest) returns (RpcResponse);
+
     rpc QueryBackupRecords(RpcRequest) returns (RpcResponse);
     rpc CreateBackup(RpcRequest) returns (RpcResponse);
-    rpc RecoverCluster(RecoverRequest) returns (RecoverResponse);
+    rpc RestoreNewCluster(RpcRequest) returns (RpcResponse);
     rpc DeleteBackupRecords(RpcRequest) returns (RpcResponse);
     rpc SaveBackupStrategy(RpcRequest) returns (RpcResponse);
     rpc GetBackupStrategy(RpcRequest) returns (RpcResponse);
 
-    rpc QueryParameters(QueryClusterParametersRequest) returns (QueryClusterParametersResponse);
-    rpc SaveParameters(SaveClusterParametersRequest) returns (SaveClusterParametersResponse);
-
     rpc GetDashboardInfo(RpcRequest) returns (RpcResponse);
-    rpc DescribeMonitor(DescribeMonitorRequest) returns (DescribeMonitorResponse);
+    rpc DescribeMonitor(RpcRequest) returns (RpcResponse);
 
     // Auth manager module
     rpc Login(LoginRequest) returns (LoginResponse);
     rpc Logout(LogoutRequest) returns (LogoutResponse);
     rpc VerifyIdentity(VerifyIdentityRequest) returns (VerifyIdentityResponse);
 
-    // host manager module
-    rpc AllocResourcesInBatch(BatchAllocRequest) returns (BatchAllocResponse);
-    rpc RecycleResources(RecycleRequest) returns (RecycleResponse);
-
+    // resource manager module
     rpc ImportHosts(RpcRequest) returns (RpcResponse);
     rpc DeleteHosts(RpcRequest) returns (RpcResponse);
     rpc QueryHosts(RpcRequest) returns (RpcResponse);

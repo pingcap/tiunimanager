@@ -118,7 +118,7 @@ func (manager *SecondPartyManager) SetClusterDbPassword(ctx context.Context, req
 	}
 	defer db.Close()
 
-	sqlCommand := fmt.Sprintf("ALTER USER '%s'@'%s' IDENTIFIED BY '%s'", req.DbConnParameter.Username, req.DbConnParameter.IP, req.DbConnParameter.Password)
+	sqlCommand := fmt.Sprintf("ALTER USER '%s'@'%s' IDENTIFIED BY '%s'", req.DbConnParameter.Username, "%", req.DbConnParameter.Password)
 	logInFunc.Infof("task start processing: %s, on %s:%s", sqlCommand, req.DbConnParameter.IP, req.DbConnParameter.Port)
 
 	err = execSetDbPswThruSQL(ctx, db, sqlCommand)

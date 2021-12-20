@@ -16,7 +16,7 @@
 
 /*******************************************************************************
  * @File: param_group_api.go
- * @Description: param group api
+ * @Description: parameter group api
  * @Author: jiangxunyu@pingcap.com
  * @Version: 1.0.0
  * @Date: 2021/11/17 10:24
@@ -31,10 +31,10 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
 
-// Query query param group
-// @Summary query param group
-// @Description query param group
-// @Tags param group
+// Query query parameter group
+// @Summary query parameter group
+// @Description query parameter group
+// @Tags parameter group
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
@@ -47,8 +47,9 @@ import (
 func Query(c *gin.Context) {
 	var req message.QueryParameterGroupReq
 
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, req); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryParameterGroup, &message.QueryParameterGroupResp{},
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &req); ok {
+		resp := make([]message.QueryParameterGroupResp, 0)
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryParameterGroup, &resp,
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -56,14 +57,14 @@ func Query(c *gin.Context) {
 
 const paramNameOfParameterGroupId = "paramGroupId"
 
-// Detail show details of a param group
-// @Summary show details of a param group
-// @Description show details of a param group
-// @Tags param group
+// Detail show details of a parameter group
+// @Summary show details of a parameter group
+// @Description show details of a parameter group
+// @Tags parameter group
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param paramGroupId path string true "param group id"
+// @Param paramGroupId path string true "parameter group id"
 // @Success 200 {object} controller.CommonResult{data=message.DetailParameterGroupResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -71,7 +72,7 @@ const paramNameOfParameterGroupId = "paramGroupId"
 // @Router /param-groups/{paramGroupId} [get]
 func Detail(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.DetailParameterGroupReq{
-		ID: c.Param(paramNameOfParameterGroupId),
+		ParamGroupID: c.Param(paramNameOfParameterGroupId),
 	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DetailParameterGroup, &message.DetailParameterGroupResp{},
 			requestBody,
@@ -79,10 +80,10 @@ func Detail(c *gin.Context) {
 	}
 }
 
-// Create create a param group
-// @Summary create a param group
-// @Description create a param group
-// @Tags param group
+// Create create a parameter group
+// @Summary create a parameter group
+// @Description create a parameter group
+// @Tags parameter group
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -95,21 +96,21 @@ func Detail(c *gin.Context) {
 func Create(c *gin.Context) {
 	var req message.CreateParameterGroupReq
 
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, req); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateParameterGroup, &message.CreateParameterGroupResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
 }
 
-// Delete delete a param group
-// @Summary delete a param group
-// @Description delete a param group
-// @Tags param group
+// Delete delete a parameter group
+// @Summary delete a parameter group
+// @Description delete a parameter group
+// @Tags parameter group
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param paramGroupId path string true "param group id"
+// @Param paramGroupId path string true "parameter group id"
 // @Success 200 {object} controller.CommonResult{data=message.DeleteParameterGroupResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -117,7 +118,7 @@ func Create(c *gin.Context) {
 // @Router /param-groups/{paramGroupId} [delete]
 func Delete(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.DeleteParameterGroupReq{
-		ID: c.Param(paramNameOfParameterGroupId),
+		ParamGroupID: c.Param(paramNameOfParameterGroupId),
 	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteParameterGroup, &message.DeleteParameterGroupResp{},
 			requestBody,
@@ -125,14 +126,15 @@ func Delete(c *gin.Context) {
 	}
 }
 
-// Update update a param group
-// @Summary update a param group
-// @Description update a param group
-// @Tags param group
+// Update update a parameter group
+// @Summary update a parameter group
+// @Description update a parameter group
+// @Tags parameter group
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param updateReq body message.UpdateParameterGroupReq true "update param group request"
+// @Param paramGroupId path string true "parameter group id"
+// @Param updateReq body message.UpdateParameterGroupReq true "update parameter group request"
 // @Success 200 {object} controller.CommonResult{data=message.UpdateParameterGroupResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -142,10 +144,10 @@ func Update(c *gin.Context) {
 	var req message.UpdateParameterGroupReq
 
 	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
-		req,
+		&req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
-			req.(*message.UpdateParameterGroupReq).ID = c.Param(paramNameOfParameterGroupId)
+			req.(*message.UpdateParameterGroupReq).ParamGroupID = c.Param(paramNameOfParameterGroupId)
 			return nil
 		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateParameterGroup, &message.UpdateParameterGroupResp{},
@@ -154,14 +156,15 @@ func Update(c *gin.Context) {
 	}
 }
 
-// Copy copy a param group
-// @Summary copy a param group
-// @Description copy a param group
-// @Tags param group
+// Copy copy a parameter group
+// @Summary copy a parameter group
+// @Description copy a parameter group
+// @Tags parameter group
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param copyReq body message.CopyParameterGroupReq true "copy param group request"
+// @Param paramGroupId path string true "parameter group id"
+// @Param copyReq body message.CopyParameterGroupReq true "copy parameter group request"
 // @Success 200 {object} controller.CommonResult{data=message.CopyParameterGroupResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -171,10 +174,10 @@ func Copy(c *gin.Context) {
 	var req message.CopyParameterGroupReq
 
 	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
-		req,
+		&req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
-			req.(*message.CopyParameterGroupReq).ID = c.Param(paramNameOfParameterGroupId)
+			req.(*message.CopyParameterGroupReq).ParamGroupID = c.Param(paramNameOfParameterGroupId)
 			return nil
 		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CopyParameterGroup, &message.CopyParameterGroupResp{},
@@ -183,14 +186,15 @@ func Copy(c *gin.Context) {
 	}
 }
 
-// Apply apply a param group
-// @Summary apply a param group
-// @Description apply a param group
-// @Tags param group
+// Apply apply a parameter group
+// @Summary apply a parameter group
+// @Description apply a parameter group
+// @Tags parameter group
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param applyReq body message.ApplyParameterGroupReq true "apply param group request"
+// @Param paramGroupId path string true "parameter group id"
+// @Param applyReq body message.ApplyParameterGroupReq true "apply parameter group request"
 // @Success 200 {object} controller.CommonResult{data=message.ApplyParameterGroupResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -200,10 +204,10 @@ func Apply(c *gin.Context) {
 	var req message.ApplyParameterGroupReq
 
 	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
-		req,
+		&req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
-			req.(*message.ApplyParameterGroupReq).ID = c.Param(paramNameOfParameterGroupId)
+			req.(*message.ApplyParameterGroupReq).ParamGroupId = c.Param(paramNameOfParameterGroupId)
 			return nil
 		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.ApplyParameterGroup, &message.ApplyParameterGroupResp{},

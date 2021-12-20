@@ -44,7 +44,7 @@ prepare:
 	@if [ -f "$(CURDIR)/$(PROTOC_PKG)" ]; then unzip -o $(PROTOC_PKG) -d $(GOPATH) bin/protoc; fi
 	@if [ -f "$(CURDIR)/$(PROTOC_PKG)" ]; then unzip -o $(PROTOC_PKG) -d $(GOPATH) 'include/*'; fi
 	@if [ -f "$(CURDIR)/$(PROTOC_PKG)" ]; then rm -rf $(PROTOC_PKG); fi
-	@cp -r micro-cluster/service/cluster/adapt/template ./
+	@cp -r micro-cluster/cluster/management/handler/template ./
 
 # generate protobuf files
 proto:
@@ -285,6 +285,8 @@ mock:
 	mockgen -destination ./test/mockmodels/mockresource/mock_resource_interface.go -package mockresource -source ./models/resource/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockconfig/mock_config_interface.go -package mockconfig -source ./models/platform/config/readerwriter.go
 	mockgen -destination ./test/mockmodels/mocksecondparty/mock_secondparty_interface.go -package mocksecondparty -source ./models/workflow/secondparty/readerwriter.go
+	mockgen -destination ./test/mockmodels/mockparametergroup/mock_parametergroup_interface.go -package mockparametergroup -source ./models/parametergroup/readerwriter.go
+	mockgen -destination ./test/mockmodels/mockclusterparameter/mock_clusterparameter_interface.go -package mockclusterparameter -source ./models/cluster/parameter/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockclustermanagement/mock_cluster_management_interface.go -package mockclustermanagement -source ./models/cluster/management/readerwriter.go
 
 	mockgen -destination ./test/mockworkflow/mock_workflow.go -package mock_workflow_service -source ./workflow/workflow.go

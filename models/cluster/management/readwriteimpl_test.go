@@ -34,6 +34,7 @@ func TestGormClusterReadWrite_MaintenanceStatus(t *testing.T) {
 		Tags: []string{"tag1", "tag2"},
 	})
 	defer testRW.Delete(context.TODO(), got.ID)
+
 	assert.NoError(t, err)
 	assert.Equal(t, constants.ClusterMaintenanceNone, got.MaintenanceStatus)
 
@@ -124,6 +125,15 @@ func TestGormClusterReadWrite_Delete(t *testing.T) {
 	}
 	got, _ := testRW.Create(context.TODO(), cluster)
 	defer testRW.Delete(context.TODO(), got.ID)
+	cluster2 := &Cluster{
+		Name: "tesfasfdsaf",
+		Entity: common.Entity{
+			TenantId: "111",
+		},
+		Tags: []string{"tag1", "tag2"},
+	}
+	got2, _ := testRW.Create(context.TODO(), cluster2)
+	defer testRW.Delete(context.TODO(), got2.ID)
 
 	t.Run("normal", func(t *testing.T) {
 		err := testRW.DB(context.TODO()).Where("id = ?", cluster.ID).First(cluster).Error
@@ -132,6 +142,8 @@ func TestGormClusterReadWrite_Delete(t *testing.T) {
 		assert.NoError(t, err)
 		err = testRW.DB(context.TODO()).Where("id = ?", cluster.ID).First(cluster).Error
 		assert.Error(t, err)
+
+		assert.NoError(t, testRW.DB(context.TODO()).Where("id = ?", cluster2.ID).First(cluster2).Error)
 	})
 
 	t.Run("not found", func(t *testing.T) {
@@ -142,6 +154,27 @@ func TestGormClusterReadWrite_Delete(t *testing.T) {
 		err = testRW.Delete(context.TODO(), "")
 		assert.Error(t, err)
 		assert.Equal(t, libCommon.TIEM_PARAMETER_INVALID, err.(framework.TiEMError).GetCode())
+	})
+}
+
+func TestGormClusterReadWrite_DeleteInstance(t *testing.T) {
+	instance := &ClusterInstance{
+		Entity: common.Entity{
+			TenantId: "abc",
+		},
+		Type:      "TiDB",
+		Version:   "v5.0.0",
+		ClusterID: "testCluster",
+	}
+	t.Run("normal", func(t *testing.T) {
+		err := testRW.DB(context.TODO()).Create(instance).Error
+		assert.NoError(t, err)
+		err = testRW.DeleteInstance(context.TODO(), instance.ID)
+		assert.NoError(t, err)
+	})
+	t.Run("not found", func(t *testing.T) {
+		err := testRW.DeleteInstance(context.TODO(), "testInstance")
+		assert.Error(t, err)
 	})
 }
 
@@ -194,7 +227,7 @@ func TestGormClusterReadWrite_GetMeta(t *testing.T) {
 func TestGormClusterReadWrite_UpdateBaseInfo(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
 		err := testRW.UpdateClusterInfo(context.TODO(), &Cluster{
-			Entity:common.Entity{
+			Entity: common.Entity{
 				ID: "whatever",
 			},
 		})

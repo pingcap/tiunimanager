@@ -67,9 +67,9 @@ func (m *ImportExportReadWrite) GetDataTransportRecord(ctx context.Context, reco
 	return record, err
 }
 
-func (m *ImportExportReadWrite) QueryDataTransportRecords(ctx context.Context, recordId, clusterId string, reImport bool, startTime, endTime time.Time, page int, pageSize int) (records []*DataTransportRecord, total int64, err error) {
+func (m *ImportExportReadWrite) QueryDataTransportRecords(ctx context.Context, recordId string, clusterId string, reImport bool, startTime, endTime int64, page int, pageSize int) (records []*DataTransportRecord, total int64, err error) {
 	records = make([]*DataTransportRecord, pageSize)
-	query := m.DB(ctx).Model(DataTransportRecord{})
+	query := m.DB(ctx).Model(&DataTransportRecord{}).Where("deleted_at is null")
 	if recordId != "" {
 		query = query.Where("id = ?", recordId)
 	}
@@ -79,13 +79,13 @@ func (m *ImportExportReadWrite) QueryDataTransportRecords(ctx context.Context, r
 	if reImport {
 		query = query.Where("re_import_support = ?", reImport)
 	}
-	if !startTime.IsZero() {
+	if startTime > 0 {
 		query = query.Where("start_time >= ?", startTime)
 	}
-	if !endTime.IsZero() {
+	if endTime > 0 {
 		query = query.Where("end_time <= ?", endTime)
 	}
-	err = query.Order("id desc").Count(&total).Offset(pageSize * (page - 1)).Limit(pageSize).Find(&records).Error
+	err = query.Order("created_at desc").Count(&total).Offset(pageSize * (page - 1)).Limit(pageSize).Find(&records).Error
 	return records, total, err
 }
 

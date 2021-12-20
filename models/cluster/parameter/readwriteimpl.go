@@ -124,7 +124,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	c := management.Cluster{
 		Entity: dbCommon.Entity{ID: clusterId},
 	}
-	err = m.DB(ctx).Debug().Model(&c).Update("parameter_group_id", parameterGroupId).Error
+	err = m.DB(ctx).Model(&c).Update("parameter_group_id", parameterGroupId).Error
 	if err != nil {
 		log.Errorf("apply param group err: %v", err.Error())
 		tx.Rollback()

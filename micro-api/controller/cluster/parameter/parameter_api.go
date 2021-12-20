@@ -23,36 +23,41 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
 
-// QueryParams query params of a cluster
-// @Summary query params of a cluster
-// @Description query params of a cluster
-// @Tags cluster params
+const paramNameOfClusterId = "clusterId"
+
+// QueryParameters query parameters of a cluster
+// @Summary query parameters of a cluster
+// @Description query parameters of a cluster
+// @Tags cluster parameters
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
 // @Param queryReq query cluster.QueryClusterParametersReq false "page" default(1)
 // @Param clusterId path string true "clusterId"
-// @Success 200 {object} controller.ResultWithPage{data=[]cluster.QueryClusterParametersResp}
+// @Success 200 {object} controller.ResultWithPage{data=cluster.QueryClusterParametersResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/params [get]
-func QueryParams(c *gin.Context) {
+func QueryParameters(c *gin.Context) {
 	var req cluster.QueryClusterParametersReq
 
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, req); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryClusterParameters, make([][]cluster.QueryClusterParametersResp, 0),
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &req,
+		// append id in path to request
+		func(c *gin.Context, req interface{}) error {
+			req.(*cluster.QueryClusterParametersReq).ClusterID = c.Param(paramNameOfClusterId)
+			return nil
+		}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryClusterParameters, &cluster.QueryClusterParametersResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
 }
 
-const paramNameOfClusterId = "clusterId"
-
-// UpdateParams update params
-// @Summary submit params
-// @Description submit params
-// @Tags cluster params
+// UpdateParameters update parameters
+// @Summary submit parameters
+// @Description submit parameters
+// @Tags cluster parameters
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
@@ -63,11 +68,11 @@ const paramNameOfClusterId = "clusterId"
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/params [put]
-func UpdateParams(c *gin.Context) {
+func UpdateParameters(c *gin.Context) {
 	var req cluster.UpdateClusterParametersReq
 
 	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
-		req,
+		&req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
 			req.(*cluster.UpdateClusterParametersReq).ClusterID = c.Param(paramNameOfClusterId)
@@ -79,10 +84,10 @@ func UpdateParams(c *gin.Context) {
 	}
 }
 
-// InspectParams inspect params
-// @Summary inspect params
-// @Description inspect params
-// @Tags cluster params
+// InspectParameters inspect parameters
+// @Summary inspect parameters
+// @Description inspect parameters
+// @Tags cluster parameters
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
@@ -92,8 +97,8 @@ func UpdateParams(c *gin.Context) {
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/params/inspect [post]
-func InspectParams(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, cluster.InspectClusterParametersReq{
+func InspectParameters(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.InspectClusterParametersReq{
 		ClusterID: c.Param(paramNameOfClusterId),
 	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.InspectClusterParameters, &cluster.InspectClusterParametersResp{},

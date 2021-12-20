@@ -21,6 +21,7 @@ import (
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
@@ -82,45 +83,47 @@ func NewBRManager() *BRManager {
 	return mgr
 }
 
-func (mgr *BRManager) BackupCluster(ctx context.Context, request *cluster.BackupClusterDataReq) (resp *cluster.BackupClusterDataResp, backupErr error) {
+func (mgr *BRManager) BackupCluster(ctx context.Context, request cluster.BackupClusterDataReq, maintenanceStatusChange bool) (resp cluster.BackupClusterDataResp, backupErr error) {
 	framework.LogWithContext(ctx).Infof("Begin BackupCluster, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End BackupCluster")
 
 	if err := mgr.backupClusterPreCheck(ctx, request); err != nil {
 		framework.LogWithContext(ctx).Errorf("backup cluster precheck failed: %s", err.Error())
-		return nil, err
+		return resp, err
 	}
 	configRW := models.GetConfigReaderWriter()
 	storageTypeConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupStorageType)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStorageType, err.Error())
-		return nil, fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStorageType, err.Error())
+		return resp, fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStorageType, err.Error())
 	}
 	storagePathConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupStoragePath)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStoragePath, err.Error())
-		return nil, fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStoragePath, err.Error())
+		return resp, fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStoragePath, err.Error())
 	}
 
 	meta, err := handler.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
-		return nil, fmt.Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
+		return resp, fmt.Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
 	}
 
-	if err := meta.StartMaintenance(ctx, constants.ClusterMaintenanceBackUp); err != nil {
-		framework.LogWithContext(ctx).Errorf("start maintenance failed, %s", err.Error())
-		return nil, fmt.Errorf("start maintenance failed, %s", err.Error())
-	}
-	defer func() {
-		if backupErr != nil {
-			if endErr := meta.EndMaintenance(ctx, meta.Cluster.MaintenanceStatus); endErr != nil {
-				framework.LogWithContext(ctx).Warnf("end maintenance failed, %s", err.Error())
-			}
+	if maintenanceStatusChange {
+		if err := meta.StartMaintenance(ctx, constants.ClusterMaintenanceBackUp); err != nil {
+			framework.LogWithContext(ctx).Errorf("start maintenance failed, %s", err.Error())
+			return resp, fmt.Errorf("start maintenance failed, %s", err.Error())
 		}
-	}()
+		defer func() {
+			if backupErr != nil {
+				if endErr := meta.EndMaintenance(ctx, meta.Cluster.MaintenanceStatus); endErr != nil {
+					framework.LogWithContext(ctx).Warnf("end maintenance failed, %s", err.Error())
+				}
+			}
+		}()
+	}
 
-	//todo: only support FULL Physics backup now
+	//todo: only support full physics backup now
 	record := &backuprestore.BackupRecord{
 		Entity: dbModel.Entity{
 			TenantId: meta.Cluster.TenantId,
@@ -139,7 +142,7 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request *cluster.Backup
 	recordCreate, err := brRW.CreateBackupRecord(ctx, record)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("save backup record failed, %s", err.Error())
-		return nil, err
+		return resp, err
 	}
 	defer func() {
 		if backupErr != nil {
@@ -153,74 +156,85 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request *cluster.Backup
 	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.FlowBackupCluster)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
-		return nil, fmt.Errorf("create %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
+		return resp, fmt.Errorf("create %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
 	}
 
 	flowManager.AddContext(flow, contextBackupRecordKey, recordCreate)
 	flowManager.AddContext(flow, contextClusterMetaKey, meta)
+	flowManager.AddContext(flow, contextMaintenanceStatusChangeKey, maintenanceStatusChange)
 	if err = flowManager.AsyncStart(ctx, flow); err != nil {
 		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
-		return nil, fmt.Errorf("async start %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
+		return resp, fmt.Errorf("async start %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
 	}
 
-	return &cluster.BackupClusterDataResp{
-		AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
-			WorkFlowID: flow.Flow.ID,
-		},
-		BackupID: recordCreate.ID,
-	}, nil
+	resp.WorkFlowID = flow.Flow.ID
+	resp.BackupID = recordCreate.ID
+
+	return resp, nil
 }
 
-func (mgr *BRManager) RestoreExistCluster(ctx context.Context, request *cluster.RestoreExistClusterReq) (resp *cluster.RestoreExistClusterResp, restoreErr error) {
+func (mgr *BRManager) RestoreExistCluster(ctx context.Context, request cluster.RestoreExistClusterReq, maintenanceStatusChange bool) (resp cluster.RestoreExistClusterResp, restoreErr error) {
 	framework.LogWithContext(ctx).Infof("Begin RestoreExistCluster, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End RestoreExistCluster")
 
 	meta, err := handler.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
-		return nil, fmt.Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
+		return resp, fmt.Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
 	}
 
 	brRW := models.GetBRReaderWriter()
 	record, err := brRW.GetBackupRecord(ctx, request.BackupID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get backup record %s failed, %s", request.BackupID, err.Error())
-		return nil, fmt.Errorf("get backup record %s failed, %s", request.BackupID, err.Error())
+		return resp, fmt.Errorf("get backup record %s failed, %s", request.BackupID, err.Error())
+	}
+
+	if maintenanceStatusChange {
+		if err := meta.StartMaintenance(ctx, constants.ClusterMaintenanceRestore); err != nil {
+			framework.LogWithContext(ctx).Errorf("start maintenance failed, %s", err.Error())
+			return resp, fmt.Errorf("start maintenance failed, %s", err.Error())
+		}
+		defer func() {
+			if restoreErr != nil {
+				if endErr := meta.EndMaintenance(ctx, meta.Cluster.MaintenanceStatus); endErr != nil {
+					framework.LogWithContext(ctx).Warnf("end maintenance failed, %s", err.Error())
+				}
+			}
+		}()
 	}
 
 	flowManager := workflow.GetWorkFlowService()
 	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.FlowRestoreExistCluster)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
-		return nil, fmt.Errorf("create %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
+		return resp, fmt.Errorf("create %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
 	}
 
 	flowManager.AddContext(flow, contextBackupRecordKey, record)
 	flowManager.AddContext(flow, contextClusterMetaKey, meta)
+	flowManager.AddContext(flow, contextMaintenanceStatusChangeKey, maintenanceStatusChange)
 	if err = flowManager.AsyncStart(ctx, flow); err != nil {
 		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
-		return nil, fmt.Errorf("async start %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
+		return resp, fmt.Errorf("async start %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
 	}
 
-	return &cluster.RestoreExistClusterResp{
-		AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
-			WorkFlowID: flow.Flow.ID,
-		},
-	}, nil
+	resp.WorkFlowID = flow.Flow.ID
+	return resp, nil
 }
 
-func (mgr *BRManager) QueryClusterBackupRecords(ctx context.Context, request *cluster.QueryBackupRecordsReq) (*cluster.QueryBackupRecordsResp, *structs.Page, error) {
+func (mgr *BRManager) QueryClusterBackupRecords(ctx context.Context, request cluster.QueryBackupRecordsReq) (resp cluster.QueryBackupRecordsResp, page structs.Page, err error) {
 	framework.LogWithContext(ctx).Infof("Begin QueryClusterBackupRecords, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End QueryClusterBackupRecords")
 
 	brRW := models.GetBRReaderWriter()
-	records, total, err := brRW.QueryBackupRecords(ctx, request.ClusterID, request.BackupID, "", time.Unix(0, 0), time.Unix(0, 0), request.Page, request.PageSize)
+	records, total, err := brRW.QueryBackupRecords(ctx, request.ClusterID, request.BackupID, "", request.StartTime.Unix(), request.EndTime.Unix(), request.Page, request.PageSize)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("query cluster backup records %+v failed %s", request, err.Error())
-		return nil, nil, err
+		return resp, page, err
 	}
 
-	response := &cluster.QueryBackupRecordsResp{
+	response := cluster.QueryBackupRecordsResp{
 		BackupRecords: make([]*structs.BackupRecord, len(records)),
 	}
 	for index, record := range records {
@@ -242,19 +256,24 @@ func (mgr *BRManager) QueryClusterBackupRecords(ctx context.Context, request *cl
 		}
 	}
 
-	return response, &structs.Page{Page: request.Page, PageSize: request.PageSize, Total: int(total)}, nil
+	return response, structs.Page{Page: request.Page, PageSize: request.PageSize, Total: int(total)}, nil
 }
 
-func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request *cluster.DeleteBackupDataReq) (*cluster.DeleteBackupDataResp, error) {
+func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request cluster.DeleteBackupDataReq) (resp cluster.DeleteBackupDataResp, err error) {
 	framework.LogWithContext(ctx).Infof("Begin DeleteBackupRecords, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End DeleteBackupRecords")
 
+	if request.ClusterID == "" {
+		framework.LogWithContext(ctx).Errorf("invalid param clusterId empty")
+		return resp, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "invalid param clusterId empty")
+	}
+
 	brRW := models.GetBRReaderWriter()
-	for page, pageSize := 1, 100; ; page++ {
-		records, _, err := brRW.QueryBackupRecords(ctx, request.ClusterID, request.BackupID, request.BackupMode, time.Unix(0, 0), time.Unix(0, 0), page, pageSize)
+	for page, pageSize := 1, defaultPageSize; ; page++ {
+		records, _, err := brRW.QueryBackupRecords(ctx, request.ClusterID, request.BackupID, request.BackupMode, 0, 0, page, pageSize)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("query backup records of request %+v, failed, %s", request, err.Error())
-			return nil, fmt.Errorf("query backup records of request %+v, failed, %s", request, err.Error())
+			return resp, fmt.Errorf("query backup records of request %+v, failed, %s", request, err.Error())
 		}
 		if len(records) == 0 {
 			break
@@ -266,22 +285,22 @@ func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request *cluster.
 				err = os.RemoveAll(filePath)
 				if err != nil {
 					framework.LogWithContext(ctx).Errorf("remove backup filePath %s failed, %s", filePath, err.Error())
-					return nil, fmt.Errorf("remove backup filePath %s failed, %s", filePath, err.Error())
+					return resp, fmt.Errorf("remove backup filePath %s failed, %s", filePath, err.Error())
 				}
 			}
 
 			err = brRW.DeleteBackupRecord(ctx, record.ID)
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("delete backup record %s failed, %s", record.ID, err.Error())
-				return nil, fmt.Errorf("delete backup record %s failed, %s", record.ID, err.Error())
+				return resp, fmt.Errorf("delete backup record %s failed, %s", record.ID, err.Error())
 			}
 		}
 	}
 
-	return &cluster.DeleteBackupDataResp{}, nil
+	return resp, nil
 }
 
-func (mgr *BRManager) GetBackupStrategy(ctx context.Context, request *cluster.GetBackupStrategyReq) (*cluster.GetBackupStrategyResp, error) {
+func (mgr *BRManager) GetBackupStrategy(ctx context.Context, request cluster.GetBackupStrategyReq) (resp cluster.GetBackupStrategyResp, err error) {
 	framework.LogWithContext(ctx).Infof("Begin QueryBackupStrategy, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End QueryBackupStrategy")
 
@@ -289,25 +308,30 @@ func (mgr *BRManager) GetBackupStrategy(ctx context.Context, request *cluster.Ge
 	strategy, err := brRW.GetBackupStrategy(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get backup strategy of cluster %s failed %s", request.ClusterID, err.Error())
-		return nil, err
+		return resp, err
 	}
 
-	return &cluster.GetBackupStrategyResp{
-		Strategy: structs.BackupStrategy{
-			ClusterID:  strategy.ClusterID,
-			BackupDate: strategy.BackupDate,
-			Period:     fmt.Sprintf("%d:00-%d:00", strategy.StartHour, strategy.EndHour),
-		},
-	}, nil
+	resp.Strategy = structs.BackupStrategy{
+		ClusterID:  strategy.ClusterID,
+		BackupDate: strategy.BackupDate,
+		Period:     fmt.Sprintf("%d:00-%d:00", strategy.StartHour, strategy.EndHour),
+	}
+	return resp, nil
 }
 
-func (mgr *BRManager) SaveBackupStrategy(ctx context.Context, request *cluster.SaveBackupStrategyReq) (*cluster.SaveBackupStrategyResp, error) {
+func (mgr *BRManager) SaveBackupStrategy(ctx context.Context, request cluster.SaveBackupStrategyReq) (resp cluster.SaveBackupStrategyResp, err error) {
 	framework.LogWithContext(ctx).Infof("Begin SaveBackupStrategy, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End SaveBackupStrategy")
 
-	if err := mgr.saveBackupStrategyPreCheck(ctx, request); err != nil {
+	if err = mgr.saveBackupStrategyPreCheck(ctx, request); err != nil {
 		framework.LogWithContext(ctx).Errorf("save backup strategy precheck failed, %s", err.Error())
-		return nil, err
+		return resp, err
+	}
+
+	meta, err := handler.Get(ctx, request.ClusterID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get cluster %s meta failed, %s", request.ClusterID, err.Error())
+		return resp, fmt.Errorf("get cluster %s meta failed, %s", request.ClusterID, err.Error())
 	}
 
 	period := strings.Split(request.Strategy.Period, "-")
@@ -319,7 +343,7 @@ func (mgr *BRManager) SaveBackupStrategy(ctx context.Context, request *cluster.S
 	brRW := models.GetBRReaderWriter()
 	strategy, err := brRW.CreateBackupStrategy(ctx, &backuprestore.BackupStrategy{
 		Entity: dbModel.Entity{
-			TenantId: "",
+			TenantId: meta.Cluster.TenantId,
 		},
 		ClusterID:  request.ClusterID,
 		BackupDate: request.Strategy.BackupDate,
@@ -328,27 +352,27 @@ func (mgr *BRManager) SaveBackupStrategy(ctx context.Context, request *cluster.S
 	})
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create backup strategy %+v failed %s", strategy, err.Error())
-		return nil, err
+		return resp, err
 	}
 
-	return &cluster.SaveBackupStrategyResp{}, nil
+	return resp, nil
 }
 
-func (mgr *BRManager) DeleteBackupStrategy(ctx context.Context, request *cluster.DeleteBackupStrategyReq) (*cluster.DeleteBackupStrategyResp, error) {
+func (mgr *BRManager) DeleteBackupStrategy(ctx context.Context, request cluster.DeleteBackupStrategyReq) (resp cluster.DeleteBackupStrategyResp, err error) {
 	framework.LogWithContext(ctx).Infof("Begin DeleteBackupStrategy, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End DeleteBackupStrategy")
 
 	brRW := models.GetBRReaderWriter()
-	err := brRW.DeleteBackupStrategy(ctx, request.ClusterID)
+	err = brRW.DeleteBackupStrategy(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("delete cluster %s backup strategy failed %s", request.ClusterID, err.Error())
-		return nil, err
+		return resp, err
 	}
 
-	return &cluster.DeleteBackupStrategyResp{}, nil
+	return resp, nil
 }
 
-func (mgr *BRManager) backupClusterPreCheck(ctx context.Context, request *cluster.BackupClusterDataReq) error {
+func (mgr *BRManager) backupClusterPreCheck(ctx context.Context, request cluster.BackupClusterDataReq) error {
 	configRW := models.GetConfigReaderWriter()
 	storageTypeCfg, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupStorageType)
 	if err != nil {
@@ -384,10 +408,7 @@ func (mgr *BRManager) backupClusterPreCheck(ctx context.Context, request *cluste
 	return nil
 }
 
-func (mgr *BRManager) saveBackupStrategyPreCheck(ctx context.Context, request *cluster.SaveBackupStrategyReq) error {
-	if request == nil {
-		return fmt.Errorf("empty save backup strategy request")
-	}
+func (mgr *BRManager) saveBackupStrategyPreCheck(ctx context.Context, request cluster.SaveBackupStrategyReq) error {
 	period := strings.Split(request.Strategy.Period, "-")
 	if len(period) != 2 {
 		return fmt.Errorf("invalid param period, %s", request.Strategy.Period)

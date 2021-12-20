@@ -27,35 +27,35 @@ type ImportExportService interface {
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
-	// @Return *message.DataExportResp
+	// @Return message.DataExportResp
 	// @Return error
-	ExportData(ctx context.Context, request *message.DataExportReq) (resp *message.DataExportResp, exportErr error)
+	ExportData(ctx context.Context, request message.DataExportReq) (resp message.DataExportResp, exportErr error)
 
 	// ImportData
 	// @Description: import data
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
-	// @Return *message.DataImportResp
+	// @Return message.DataImportResp
 	// @Return error
-	ImportData(ctx context.Context, request *message.DataImportReq) (resp *message.DataImportResp, importErr error)
+	ImportData(ctx context.Context, request message.DataImportReq) (resp message.DataImportResp, importErr error)
 
 	// QueryDataTransportRecords
 	// @Description: query data import & export records by condition
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
-	// @Return *message.QueryDataImportExportRecordsResp
-	// @Return *structs.Page
+	// @Return message.QueryDataImportExportRecordsResp
+	// @Return structs.Page
 	// @Return error
-	QueryDataTransportRecords(ctx context.Context, request *message.QueryDataImportExportRecordsReq) (*message.QueryDataImportExportRecordsResp, *structs.Page, error)
+	QueryDataTransportRecords(ctx context.Context, request message.QueryDataImportExportRecordsReq) (resp message.QueryDataImportExportRecordsResp, page structs.Page, err error)
 
 	// DeleteDataTransportRecord
 	// @Description: delete data import & export records by condition
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
-	// @Return *message.DeleteImportExportRecordResp
+	// @Return message.DeleteImportExportRecordResp
 	// @Return error
-	DeleteDataTransportRecord(ctx context.Context, request *message.DeleteImportExportRecordReq) (*message.DeleteImportExportRecordResp, error)
+	DeleteDataTransportRecord(ctx context.Context, request message.DeleteImportExportRecordReq) (reps message.DeleteImportExportRecordResp, err error)
 }

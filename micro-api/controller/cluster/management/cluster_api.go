@@ -18,14 +18,6 @@ package management
 
 import (
 	"github.com/pingcap-inc/tiem/message/cluster"
-	"net/http"
-	"time"
-
-	"github.com/pingcap-inc/tiem/micro-api/interceptor"
-
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/pingcap-inc/tiem/library/client"
 
@@ -85,7 +77,7 @@ func Preview(c *gin.Context) {
 	//		stockCheckResult = append(stockCheckResult, StockCheckItem{
 	//			Region:           req.Region,
 	//			CpuArchitecture:  req.CpuArchitecture,
-	//			Component:        *knowledge.ClusterComponentFromCode(group.ComponentType),
+	//			Component:        *knowledge.ClusterComponentFromCode(group.InstanceType),
 	//			DistributionItem: node,
 	//			// todo stock
 	//			Enough: true,
@@ -259,7 +251,7 @@ func Takeover(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/dashboard [get]
 func GetDashboardInfo(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, cluster.GetDashboardInfoReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.GetDashboardInfoReq{
 		ClusterID: c.Param("clusterId"),
 	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.GetDashboardInfo, &cluster.GetDashboardInfoResp{},
@@ -268,48 +260,28 @@ func GetDashboardInfo(c *gin.Context) {
 	}
 }
 
-// DescribeMonitor monitoring link
-// @Summary monitoring link
-// @Description monitoring link
+// DescribeMonitor describe monitoring link
+// @Summary describe monitoring link
+// @Description describe monitoring link
 // @Tags cluster
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
 // @Param clusterId path string true "cluster id"
-// @Success 200 {object} controller.CommonResult{data=DescribeMonitorRsp}
+// @Success 200 {object} controller.CommonResult{data=cluster.QueryMonitorInfoResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/monitor [get]
 func DescribeMonitor(c *gin.Context) {
-	var status *clusterpb.ResponseStatusDTO
-	start := time.Now()
-	defer interceptor.HandleMetrics(start, "DescribeMonitor", int(status.GetCode()))
-	operator := controller.GetOperator(c)
-	reqDTO := &clusterpb.DescribeMonitorRequest{
-		Operator:  operator.ConvertToDTO(),
-		ClusterId: c.Param("clusterId"),
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.QueryMonitorInfoReq{
+		ClusterID: c.Param(ParamClusterID),
+	}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.GetDashboardInfo, &cluster.QueryMonitorInfoResp{},
+			requestBody,
+			controller.DefaultTimeout,
+		)
 	}
-	respDTO, err := client.ClusterClient.DescribeMonitor(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
-
-	if err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
-		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		return
-	}
-
-	status = respDTO.GetStatus()
-	if int32(common.TIEM_SUCCESS) != status.GetCode() {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		return
-	}
-
-	result := controller.BuildCommonResult(int(status.Code), status.Message, DescribeMonitorRsp{
-		ClusterId:  respDTO.GetClusterId(),
-		AlertUrl:   respDTO.GetAlertUrl(),
-		GrafanaUrl: respDTO.GetGrafanaUrl(),
-	})
-	c.JSON(http.StatusOK, result)
 }
 
 // ScaleOut scale out a cluster

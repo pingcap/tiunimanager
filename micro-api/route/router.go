@@ -106,9 +106,9 @@ func Route(g *gin.Engine) {
 			cluster.POST("/clone", clusterApi.Clone)
 
 			// Params
-			cluster.GET("/:clusterId/params", parameterApi.QueryParams)
-			cluster.PUT("/:clusterId/params", parameterApi.UpdateParams)
-			//cluster.POST("/:clusterId/params/inspect", parameterApi.InspectParams)
+			cluster.GET("/:clusterId/params", parameterApi.QueryParameters)
+			cluster.PUT("/:clusterId/params", parameterApi.UpdateParameters)
+			//cluster.POST("/:clusterId/params/inspect", parameterApi.InspectParameters)
 
 			// Backup Strategy
 			cluster.GET("/:clusterId/strategy", backuprestore.GetBackupStrategy)
@@ -183,7 +183,7 @@ func Route(g *gin.Engine) {
 		log := apiV1.Group("/logs")
 		{
 			log.Use(interceptor.VerifyIdentity)
-			log.GET("/tidb/:clusterId", logApi.SearchTiDBLog)
+			log.GET("/tidb/:clusterId", logApi.QueryClusterLog)
 		}
 
 		paramGroups := apiV1.Group("/param-groups")

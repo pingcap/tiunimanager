@@ -36,7 +36,7 @@ type CreateClusterReq struct {
 // CreateClusterResp Reply message for creating a new cluster
 type CreateClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
-	ClusterID                     string `json:"clusterId"`
+	ClusterID string `json:"clusterId"`
 }
 
 // DeleteClusterReq Message for delete a new cluster
@@ -49,7 +49,7 @@ type DeleteClusterReq struct {
 // DeleteClusterResp Reply message for delete a new cluster
 type DeleteClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
-	ClusterID                     string `json:"clusterID"`
+	ClusterID string `json:"clusterID"`
 }
 
 // StopClusterReq Message for stop a new cluster
@@ -60,7 +60,7 @@ type StopClusterReq struct {
 // StopClusterResp Reply message for stop a new cluster
 type StopClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
-	ClusterID                     string `json:"clusterId"`
+	ClusterID string `json:"clusterId"`
 }
 
 // RestartClusterReq Message for restart a new cluster
@@ -71,7 +71,7 @@ type RestartClusterReq struct {
 // RestartClusterResp Reply message for restart a new cluster
 type RestartClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
-	ClusterID                     string `json:"clusterId"`
+	ClusterID string `json:"clusterId"`
 }
 
 // ScaleInClusterReq Message for delete an instance in the cluster
@@ -88,7 +88,7 @@ type ScaleInClusterResp struct {
 
 // ScaleOutClusterReq Message for cluster expansion operation
 type ScaleOutClusterReq struct {
-	ClusterID                        string `json:"clusterId" form:"clusterId"`
+	ClusterID string `json:"clusterId" form:"clusterId"`
 	structs.ClusterResourceInfo
 }
 
@@ -159,7 +159,6 @@ type TakeoverClusterReq struct {
 
 // TakeoverClusterResp Reply message for takeover a cluster
 type TakeoverClusterResp struct {
-
 	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
 	Clusters                      []structs.ClusterInfo `json:"clusters"`
 }
@@ -239,7 +238,8 @@ type QueryClusterParametersReq struct {
 }
 
 type QueryClusterParametersResp struct {
-	structs.ClusterParameterInfo
+	ParamGroupId string                         `json:"paramGroupId"`
+	Params       []structs.ClusterParameterInfo `json:"params"`
 }
 
 type UpdateClusterParametersReq struct {
@@ -249,8 +249,8 @@ type UpdateClusterParametersReq struct {
 }
 
 type UpdateClusterParametersResp struct {
-	ClusterID                     string `json:"clusterId" example:"1"`
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
+	ClusterID string `json:"clusterId" example:"1"`
+	structs.AsyncTaskWorkFlowInfo
 }
 
 type InspectClusterParametersReq struct {
@@ -258,10 +258,10 @@ type InspectClusterParametersReq struct {
 }
 
 type InspectClusterParametersResp struct {
-	ParamId       int64                      `json:"paramId" example:"1"`
-	Name          string                     `json:"name" example:"binlog_cache"`
-	ComponentType string                     `json:"componentType" example:"tidb"`
-	Instance      string                     `json:"instance" example:"172.16.5.23"`
-	RealValue     structs.ParameterRealValue `json:"realValue"`
-	InspectValue  string                     `json:"inspectValue" example:"1"`
+	ParamID      int64                      `json:"paramId" example:"1"`
+	Name         string                     `json:"name" example:"binlog_cache"`
+	InstanceType string                     `json:"instanceType" example:"tidb"`
+	Instance     string                     `json:"instance" example:"172.16.5.23"`
+	RealValue    structs.ParameterRealValue `json:"realValue"`
+	InspectValue string                     `json:"inspectValue" example:"1"`
 }

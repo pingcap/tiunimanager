@@ -21,6 +21,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/pingcap-inc/tiem/common/constants"
+
 	"github.com/gin-contrib/cors"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
@@ -147,7 +149,7 @@ func loadKnowledge(f *framework.BaseFramework) error {
 
 func defaultPortForLocal(f *framework.BaseFramework) error {
 	if f.GetServiceMeta().ServicePort <= 0 {
-		f.GetServiceMeta().ServicePort = common.DefaultMicroApiPort
+		f.GetServiceMeta().ServicePort = constants.DefaultMicroApiPort
 	}
 	return nil
 }

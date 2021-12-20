@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pingcap-inc/tiem/common/constants"
+
 	"github.com/pingcap-inc/tiem/file-server/service"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
@@ -101,7 +103,7 @@ func serviceRegistry(f *framework.BaseFramework) {
 
 func defaultPortForLocal(f *framework.BaseFramework) error {
 	if f.GetServiceMeta().ServicePort <= 0 {
-		f.GetServiceMeta().ServicePort = common.DefaultMicroFilePort
+		f.GetServiceMeta().ServicePort = constants.DefaultMicroFilePort
 	}
 	return nil
 }

@@ -17,7 +17,6 @@ package workflow
 
 import (
 	"context"
-	"fmt"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -145,7 +144,7 @@ func (mgr *WorkFlowManager) GetWorkFlowDefine(ctx context.Context, flowName stri
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
 		framework.LogWithContext(ctx).Errorf("WorkFlow %s not exist", flowName)
-		return nil, fmt.Errorf("%s workflow definion not exist", flowName)
+		return nil, framework.NewTiEMErrorf(common.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
 	}
 	return flowDefine.(*WorkFlowDefine), nil
 }
@@ -153,11 +152,11 @@ func (mgr *WorkFlowManager) GetWorkFlowDefine(ctx context.Context, flowName stri
 func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, flowName string) (*WorkFlowAggregation, error) {
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
-		return nil, fmt.Errorf("%s workflow definion not exist", flowName)
+		return nil, framework.NewTiEMErrorf(common.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
 	}
 
 	flow, err := createFlowWork(ctx, bizId, flowDefine.(*WorkFlowDefine))
-	return flow, err
+	return flow, framework.WrapError(common.TIEM_WORKFLOW_CREATE_FAILED, err.Error(), err)
 }
 
 func (mgr *WorkFlowManager) ListWorkFlows(ctx context.Context, request message.QueryWorkFlowsReq) (message.QueryWorkFlowsResp, structs.Page, error) {

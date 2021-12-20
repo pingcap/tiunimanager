@@ -162,8 +162,12 @@ func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, fl
 	return flow, nil
 }
 
-func (mgr *WorkFlowManager) ListWorkFlows(ctx context.Context, request message.QueryWorkFlowsReq) (message.QueryWorkFlowsResp, structs.Page, error) {
+func (mgr *WorkFlowManager) ListWorkFlows(ctx context.Context, request message.QueryWorkFlowsReq) (resp message.QueryWorkFlowsResp, page structs.Page, err error) {
 	flows, total, err := models.GetWorkFlowReaderWriter().QueryWorkFlows(ctx, request.BizID, request.FlowName, request.Status, request.Page, request.PageSize)
+	if err != nil {
+		return resp, page, framework.WrapError(common.TIEM_WORKFLOW_QUERY_FAILED, err.Error(), err)
+	}
+
 	flowInfos := make([]*structs.WorkFlowInfo, len(flows))
 	for index, flow := range flows {
 		flowInfos[index] = &structs.WorkFlowInfo{
@@ -182,7 +186,7 @@ func (mgr *WorkFlowManager) ListWorkFlows(ctx context.Context, request message.Q
 			Page:     request.Page,
 			PageSize: request.PageSize,
 			Total:    int(total),
-		}, framework.WrapError(common.TIEM_WORKFLOW_QUERY_FAILED, err.Error(), err)
+		}, nil
 }
 
 func (mgr *WorkFlowManager) DetailWorkFlow(ctx context.Context, request message.QueryWorkFlowDetailReq) (resp message.QueryWorkFlowDetailResp, err error) {

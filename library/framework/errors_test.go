@@ -65,8 +65,8 @@ func TestError(t *testing.T) {
 	te := WrapError(common.TIEM_BACKUP_RECORD_CREATE_FAILED, "backup", cause)
 	assert.Equal(t, fmt.Sprintf("[%d]backup, cause:cause", common.TIEM_BACKUP_RECORD_CREATE_FAILED), te.Error())
 
-	t2 := SimpleError(common.TIEM_BACKUP_RECORD_CREATE_FAILED)
-	assert.Equal(t, fmt.Sprintf("[%d]backup process failed", common.TIEM_BACKUP_RECORD_CREATE_FAILED), t2.Error())
+	t2 := SimpleError(common.TIEM_BACKUP_RECORD_QUERY_FAILED)
+	assert.Equal(t, fmt.Sprintf("[%d]query backup record failed", common.TIEM_BACKUP_RECORD_QUERY_FAILED), t2.Error())
 }
 
 func TestErrorBuilder(t *testing.T) {

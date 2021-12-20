@@ -47,7 +47,8 @@ func Test_VerifyCpuMem_Succeed(t *testing.T) {
 	}).Times(3)
 
 	fileInitiator := NewFileHostInitiator()
-	err := fileInitiator.VerifyCpuMem(context.TODO(), mockClient, &structs.HostInfo{Arch: "x86_64", CpuCores: 32, Memory: 8})
+	fileInitiator.SetSSHClient(mockClient)
+	err := fileInitiator.VerifyCpuMem(context.TODO(), &structs.HostInfo{Arch: "x86_64", CpuCores: 32, Memory: 8})
 	assert.Nil(t, err)
 }
 
@@ -64,7 +65,8 @@ func Test_VerifyCpuMem_Failed(t *testing.T) {
 	}).Times(1)
 
 	fileInitiator := NewFileHostInitiator()
-	err := fileInitiator.VerifyCpuMem(context.TODO(), mockClient, &structs.HostInfo{Arch: "x86_64", CpuCores: 32, Memory: 8})
+	fileInitiator.SetSSHClient(mockClient)
+	err := fileInitiator.VerifyCpuMem(context.TODO(), &structs.HostInfo{Arch: "x86_64", CpuCores: 32, Memory: 8})
 	assert.NotNil(t, err)
 }
 
@@ -75,7 +77,8 @@ func Test_VerifyDisks(t *testing.T) {
 	mockClient.EXPECT().RunCommandsInSession(gomock.Any()).Return("", nil).AnyTimes()
 
 	fileInitiator := NewFileHostInitiator()
-	err := fileInitiator.VerifyDisks(context.TODO(), mockClient, &structs.HostInfo{})
+	fileInitiator.SetSSHClient(mockClient)
+	err := fileInitiator.VerifyDisks(context.TODO(), &structs.HostInfo{})
 	assert.Nil(t, err)
 }
 
@@ -86,7 +89,8 @@ func Test_VerifyFS(t *testing.T) {
 	mockClient.EXPECT().RunCommandsInSession(gomock.Any()).Return("", nil).AnyTimes()
 
 	fileInitiator := NewFileHostInitiator()
-	err := fileInitiator.VerifyFS(context.TODO(), mockClient, &structs.HostInfo{})
+	fileInitiator.SetSSHClient(mockClient)
+	err := fileInitiator.VerifyFS(context.TODO(), &structs.HostInfo{})
 	assert.Nil(t, err)
 }
 
@@ -97,7 +101,8 @@ func Test_VerifySwap(t *testing.T) {
 	mockClient.EXPECT().RunCommandsInSession(gomock.Any()).Return("", nil).AnyTimes()
 
 	fileInitiator := NewFileHostInitiator()
-	err := fileInitiator.VerifySwap(context.TODO(), mockClient, &structs.HostInfo{})
+	fileInitiator.SetSSHClient(mockClient)
+	err := fileInitiator.VerifySwap(context.TODO(), &structs.HostInfo{})
 	assert.Nil(t, err)
 }
 
@@ -108,7 +113,8 @@ func Test_VerifyEnv(t *testing.T) {
 	mockClient.EXPECT().RunCommandsInSession(gomock.Any()).Return("", nil).AnyTimes()
 
 	fileInitiator := NewFileHostInitiator()
-	err := fileInitiator.VerifyEnv(context.TODO(), mockClient, &structs.HostInfo{})
+	fileInitiator.SetSSHClient(mockClient)
+	err := fileInitiator.VerifyEnv(context.TODO(), &structs.HostInfo{})
 	assert.Nil(t, err)
 }
 
@@ -119,7 +125,8 @@ func Test_VerifyOSEnv(t *testing.T) {
 	mockClient.EXPECT().RunCommandsInSession(gomock.Any()).Return("", nil).AnyTimes()
 
 	fileInitiator := NewFileHostInitiator()
-	err := fileInitiator.VerifyOSEnv(context.TODO(), mockClient, &structs.HostInfo{})
+	fileInitiator.SetSSHClient(mockClient)
+	err := fileInitiator.VerifyOSEnv(context.TODO(), &structs.HostInfo{})
 	assert.Nil(t, err)
 }
 
@@ -130,6 +137,7 @@ func Test_SetOffSwap(t *testing.T) {
 	mockClient.EXPECT().RunCommandsInSession(gomock.Any()).Return("", nil).AnyTimes()
 
 	fileInitiator := NewFileHostInitiator()
-	err := fileInitiator.SetOffSwap(context.TODO(), mockClient, &structs.HostInfo{})
+	fileInitiator.SetSSHClient(mockClient)
+	err := fileInitiator.SetOffSwap(context.TODO(), &structs.HostInfo{})
 	assert.Nil(t, err)
 }

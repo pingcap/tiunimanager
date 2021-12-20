@@ -19,16 +19,18 @@ import (
 	"context"
 
 	"github.com/pingcap-inc/tiem/common/structs"
-	sshclient "github.com/pingcap-inc/tiem/library/util/ssh"
 )
 
 type HostInitiator interface {
-	VerifyConnect(ctx context.Context, h *structs.HostInfo) (client *sshclient.SSHClient, err error)
-	VerifyCpuMem(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error)
-	VerifyDisks(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error)
-	VerifyFS(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error)
-	VerifySwap(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error)
-	VerifyEnv(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error)
-	VerifyOSEnv(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error)
-	SetOffSwap(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error)
+	VerifyConnect(ctx context.Context, h *structs.HostInfo) (err error)
+	CloseSSHConnect()
+	VerifyCpuMem(ctx context.Context, h *structs.HostInfo) (err error)
+	VerifyDisks(ctx context.Context, h *structs.HostInfo) (err error)
+	VerifyFS(ctx context.Context, h *structs.HostInfo) (err error)
+	VerifySwap(ctx context.Context, h *structs.HostInfo) (err error)
+	VerifyEnv(ctx context.Context, h *structs.HostInfo) (err error)
+	VerifyOSEnv(ctx context.Context, h *structs.HostInfo) (err error)
+	SetOffSwap(ctx context.Context, h *structs.HostInfo) (err error)
+
+	InstallSoftware(ctx context.Context, h *structs.HostInfo) (err error)
 }

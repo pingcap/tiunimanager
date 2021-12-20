@@ -91,37 +91,33 @@ func (p *ResourcePool) GetStocks(ctx context.Context, location *structs.Location
 }
 
 func (p *ResourcePool) verify(ctx context.Context, h *structs.HostInfo) (err error) {
-	client, err := p.hostInitiator.VerifyConnect(ctx, h)
+	err = p.hostInitiator.VerifyConnect(ctx, h)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if client != nil {
-			client.Close()
-		}
-	}()
+	defer p.hostInitiator.CloseSSHConnect()
 
-	if err = p.hostInitiator.VerifyCpuMem(ctx, client, h); err != nil {
+	if err = p.hostInitiator.VerifyCpuMem(ctx, h); err != nil {
 		return err
 	}
 
-	if err = p.hostInitiator.VerifyDisks(ctx, client, h); err != nil {
+	if err = p.hostInitiator.VerifyDisks(ctx, h); err != nil {
 		return err
 	}
 
-	if err = p.hostInitiator.VerifyFS(ctx, client, h); err != nil {
+	if err = p.hostInitiator.VerifyFS(ctx, h); err != nil {
 		return err
 	}
 
-	if err = p.hostInitiator.VerifySwap(ctx, client, h); err != nil {
+	if err = p.hostInitiator.VerifySwap(ctx, h); err != nil {
 		return err
 	}
 
-	if err = p.hostInitiator.VerifyEnv(ctx, client, h); err != nil {
+	if err = p.hostInitiator.VerifyEnv(ctx, h); err != nil {
 		return err
 	}
 
-	if err = p.hostInitiator.VerifyOSEnv(ctx, client, h); err != nil {
+	if err = p.hostInitiator.VerifyOSEnv(ctx, h); err != nil {
 		return err
 	}
 

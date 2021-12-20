@@ -23,10 +23,13 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/secondparty"
 	sshclient "github.com/pingcap-inc/tiem/library/util/ssh"
 )
 
 type FileHostInitiator struct {
+	sshClient       sshclient.SSHClientExecutor
+	secondPartyServ secondparty.SecondPartyService
 }
 
 func NewFileHostInitiator() *FileHostInitiator {
@@ -34,17 +37,31 @@ func NewFileHostInitiator() *FileHostInitiator {
 	return hostInitiator
 }
 
-func (p *FileHostInitiator) VerifyConnect(ctx context.Context, h *structs.HostInfo) (client *sshclient.SSHClient, err error) {
-	client = sshclient.NewSSHClient(h.IP, 22, sshclient.Passwd, h.UserName, h.Passwd)
-	if err = client.Connect(); err != nil {
-		return nil, err
-	}
-	return client, nil
+func (p *FileHostInitiator) SetSSHClient(c sshclient.SSHClientExecutor) {
+	p.sshClient = c
 }
 
-func (p *FileHostInitiator) VerifyCpuMem(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) SetSecondPartyServ(s secondparty.SecondPartyService) {
+	p.secondPartyServ = s
+}
+
+func (p *FileHostInitiator) VerifyConnect(ctx context.Context, h *structs.HostInfo) (err error) {
+	p.sshClient = sshclient.NewSSHClient(h.IP, 22, sshclient.Passwd, h.UserName, h.Passwd)
+	if err = p.sshClient.Connect(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *FileHostInitiator) CloseSSHConnect() {
+	if p.sshClient != nil {
+		p.sshClient.Close()
+	}
+}
+
+func (p *FileHostInitiator) VerifyCpuMem(ctx context.Context, h *structs.HostInfo) (err error) {
 	getArchCmd := "lscpu | grep 'Architecture:' | awk '{print $2}'"
-	arch, err := c.RunCommandsInSession([]string{getArchCmd})
+	arch, err := p.sshClient.RunCommandsInSession([]string{getArchCmd})
 	if err != nil {
 		return err
 	}
@@ -53,7 +70,7 @@ func (p *FileHostInitiator) VerifyCpuMem(ctx context.Context, c sshclient.SSHCli
 	}
 
 	getCpuCoresCmd := "lscpu | grep 'CPU(s):' | awk '{print $2}'"
-	cpuCoreStr, err := c.RunCommandsInSession([]string{getCpuCoresCmd})
+	cpuCoreStr, err := p.sshClient.RunCommandsInSession([]string{getCpuCoresCmd})
 	if err != nil {
 		return err
 	}
@@ -66,7 +83,7 @@ func (p *FileHostInitiator) VerifyCpuMem(ctx context.Context, c sshclient.SSHCli
 	}
 
 	getMemCmd := "free -g | grep 'Mem:' | awk '{print $2}'"
-	memStr, err := c.RunCommandsInSession([]string{getMemCmd})
+	memStr, err := p.sshClient.RunCommandsInSession([]string{getMemCmd})
 	if err != nil {
 		return err
 	}
@@ -80,34 +97,38 @@ func (p *FileHostInitiator) VerifyCpuMem(ctx context.Context, c sshclient.SSHCli
 	return nil
 }
 
-func (p *FileHostInitiator) VerifyDisks(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) VerifyDisks(ctx context.Context, h *structs.HostInfo) (err error) {
 	return nil
 }
 
-func (p *FileHostInitiator) VerifyFS(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) VerifyFS(ctx context.Context, h *structs.HostInfo) (err error) {
 	return nil
 }
 
-func (p *FileHostInitiator) VerifySwap(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) VerifySwap(ctx context.Context, h *structs.HostInfo) (err error) {
 	return nil
 }
 
-func (p *FileHostInitiator) VerifyEnv(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) VerifyEnv(ctx context.Context, h *structs.HostInfo) (err error) {
 	return nil
 }
 
-func (p *FileHostInitiator) VerifyOSEnv(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) VerifyOSEnv(ctx context.Context, h *structs.HostInfo) (err error) {
 	return nil
 }
 
-func (p *FileHostInitiator) SetOffSwap(ctx context.Context, c sshclient.SSHClientExecutor, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) SetOffSwap(ctx context.Context, h *structs.HostInfo) (err error) {
 	changeConf := "echo 'vm.swappiness = 0'>> /etc/sysctl.conf"
 	flushCmd := "swapoff -a && swapon -a"
 	updateCmd := "sysctl -p"
-	result, err := c.RunCommandsInSession([]string{changeConf, flushCmd, updateCmd})
+	result, err := p.sshClient.RunCommandsInSession([]string{changeConf, flushCmd, updateCmd})
 	if err != nil {
 		return err
 	}
 	framework.LogWithContext(ctx).Infof("host %s [%s] set off swap, %v", h.HostName, h.IP, result)
+	return nil
+}
+
+func (p *FileHostInitiator) InstallSoftware(ctx context.Context, h *structs.HostInfo) (err error) {
 	return nil
 }

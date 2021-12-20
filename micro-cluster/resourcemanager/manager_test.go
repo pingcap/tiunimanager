@@ -25,7 +25,6 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
-	sshclient "github.com/pingcap-inc/tiem/library/util/ssh"
 	allocrecycle "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/allocator_recycler"
 	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	host_provider "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
@@ -94,28 +93,29 @@ func genHostRspFromDB(hostId, hostName string) *resourcepool.Host {
 }
 
 func doMockInitiator(mockInitiator *mock_initiator.MockHostInitiator) {
-	mockInitiator.EXPECT().VerifyConnect(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) (*sshclient.SSHClient, error) {
-		return nil, nil
-	})
-	mockInitiator.EXPECT().VerifyCpuMem(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) error {
+	mockInitiator.EXPECT().VerifyConnect(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
 		return nil
 	})
-	mockInitiator.EXPECT().VerifyDisks(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) error {
+	mockInitiator.EXPECT().CloseSSHConnect().Return()
+	mockInitiator.EXPECT().VerifyCpuMem(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
 		return nil
 	})
-	mockInitiator.EXPECT().VerifyFS(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) error {
+	mockInitiator.EXPECT().VerifyDisks(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
 		return nil
 	})
-	mockInitiator.EXPECT().VerifySwap(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) error {
+	mockInitiator.EXPECT().VerifyFS(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
 		return nil
 	})
-	mockInitiator.EXPECT().VerifyEnv(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) error {
+	mockInitiator.EXPECT().VerifySwap(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
 		return nil
 	})
-	mockInitiator.EXPECT().VerifyOSEnv(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) error {
+	mockInitiator.EXPECT().VerifyEnv(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
 		return nil
 	})
-	mockInitiator.EXPECT().SetOffSwap(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, c *sshclient.SSHClient, h *structs.HostInfo) error {
+	mockInitiator.EXPECT().VerifyOSEnv(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
+		return nil
+	})
+	mockInitiator.EXPECT().SetOffSwap(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
 		return nil
 	}).AnyTimes()
 }

@@ -38,8 +38,6 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager"
 	"github.com/pingcap-inc/tiem/workflow"
 
-	upgradeManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/upgrade"
-
 	"github.com/pingcap-inc/tiem/library/util/convert"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 
@@ -74,7 +72,6 @@ type ClusterServiceHandler struct {
 	parameterGroupManager   *parametergroup.Manager
 	clusterParameterManager *clusterParameter.Manager
 	clusterManager          *clusterManager.Manager
-	upgradeManager          *upgradeManager.Manager
 	systemConfigManager     *config.SystemConfigManager
 	brManager               backuprestore.BRService
 	importexportManager     importexport.ImportExportService
@@ -160,7 +157,6 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.clusterParameterManager = clusterParameter.NewManager()
 	handler.clusterManager = clusterManager.NewClusterManager()
 	handler.systemConfigManager = config.NewSystemConfigManager()
-	handler.upgradeManager = upgradeManager.NewManager()
 	handler.brManager = backuprestore.GetBRService()
 	handler.importexportManager = importexport.GetImportExportService()
 
@@ -511,7 +507,7 @@ func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Contex
 	request := cluster.QueryUpgradePathReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.upgradeManager.QueryProductUpdatePath(ctx, request.ClusterID)
+		result, err := handler.clusterManager.QueryProductUpdatePath(ctx, request.ClusterID)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -522,7 +518,7 @@ func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Co
 	request := cluster.QueryUpgradeVersionDiffInfoReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.upgradeManager.QueryUpgradeVersionDiffInfo(ctx, request.ClusterID, request.Version)
+		result, err := handler.clusterManager.QueryUpgradeVersionDiffInfo(ctx, request.ClusterID, request.Version)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -533,7 +529,7 @@ func (handler *ClusterServiceHandler) ClusterUpgrade(ctx context.Context, req *c
 	request := cluster.ClusterUpgradeReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.upgradeManager.ClusterUpgrade(ctx, &request)
+		result, err := handler.clusterManager.InPlaceUpgradeCluster(ctx, &request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 

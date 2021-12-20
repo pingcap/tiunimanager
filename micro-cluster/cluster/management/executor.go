@@ -16,6 +16,9 @@
 package management
 
 import (
+	"strconv"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -28,8 +31,6 @@ import (
 	resourceStructs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
-	"strconv"
-	"time"
 )
 
 // prepareResource
@@ -50,12 +51,12 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		framework.LogWithContext(context).Errorf("generate instance resource requirements failed, clusterId = %s", clusterMeta.Cluster.ID)
 		return err
 	}
-	batchReq := &resourceStructs.BatchAllocRequest {
-		BatchRequests: []resourceStructs.AllocReq {
+	batchReq := &resourceStructs.BatchAllocRequest{
+		BatchRequests: []resourceStructs.AllocReq{
 			{
-				Applicant: resourceStructs.Applicant {
-					HolderId: clusterMeta.Cluster.ID,
-					RequestId: instanceAllocId,
+				Applicant: resourceStructs.Applicant{
+					HolderId:          clusterMeta.Cluster.ID,
+					RequestId:         instanceAllocId,
 					TakeoverOperation: false,
 				},
 				Requires: instanceRequirement,
@@ -64,10 +65,10 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	}
 
 	if len(globalRequirement) > 0 {
-		batchReq.BatchRequests = append(batchReq.BatchRequests, resourceStructs.AllocReq {
-			Applicant: resourceStructs.Applicant {
-				HolderId: clusterMeta.Cluster.ID,
-				RequestId: globalAllocId,
+		batchReq.BatchRequests = append(batchReq.BatchRequests, resourceStructs.AllocReq{
+			Applicant: resourceStructs.Applicant{
+				HolderId:          clusterMeta.Cluster.ID,
+				RequestId:         globalAllocId,
 				TakeoverOperation: false,
 			},
 			Requires: globalRequirement,
@@ -421,8 +422,8 @@ func restoreCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	}
 	restoreResponse, err := backuprestore.GetBRService().RestoreExistCluster(context.Context,
 		&cluster.RestoreExistClusterReq{
-			ClusterID:  clusterMeta.Cluster.ID,
-			BackupID: backupID,
+			ClusterID: clusterMeta.Cluster.ID,
+			BackupID:  backupID,
 		})
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -551,5 +552,40 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	framework.LogWithContext(context.Context).Infof(
 		"cluster[%s] init database account succeed", clusterMeta.Cluster.Name)
 
+	return nil
+}
+
+// editConfig
+// @Description: edit the cluster config
+func editConfig(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	cluster := clusterMeta.Cluster
+
+	framework.LogWithContext(context.Context).Infof(
+		"edit cluster[%s], version = %s", cluster.Name, cluster.Version)
+	// todo: call edit config
+
+	return nil
+}
+
+// upgradeCluster
+// @Description: upgrade the cluster
+func upgradeCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	cluster := clusterMeta.Cluster
+	version := context.GetData(ContextUpgradeVersion).(string)
+
+	framework.LogWithContext(context.Context).Infof(
+		"upgrade cluster[%s], version = %s", cluster.Name, cluster.Version)
+	taskId, err := secondparty.Manager.ClusterUpgrade(
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, version, 3600, []string{}, node.ID,
+	)
+
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster[%s] upgrade error: %s", clusterMeta.Cluster.Name, err.Error())
+		return err
+	}
+	framework.LogWithContext(context.Context).Infof("get upgrade cluster task id: %s", taskId)
 	return nil
 }

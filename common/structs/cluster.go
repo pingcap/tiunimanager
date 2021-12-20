@@ -209,11 +209,11 @@ type ClusterParameterInfo struct {
 	Name           string             `json:"name" example:"binlog_size"`
 	InstanceType   string             `json:"instanceType" example:"tidb"`
 	SystemVariable string             `json:"systemVariable" example:"log.log_level"`
-	Type           int                `json:"type" example:"0"`
+	Type           int                `json:"type" example:"0" enums:"0,1,2,3,4"`
 	Unit           string             `json:"unit" example:"mb"`
 	Range          []string           `json:"range" example:"1, 1000"`
-	HasReboot      int                `json:"hasReboot" example:"0"`
-	HasApply       int                `json:"has_apply" example:"1"`
+	HasReboot      int                `json:"hasReboot" example:"0" enums:"0,1"`
+	HasApply       int                `json:"hasApply" example:"1" enums:"0,1"`
 	UpdateSource   int                `json:"updateSource" example:"0" enums:"0,1,2,3"`
 	DefaultValue   string             `json:"defaultValue" example:"1"`
 	RealValue      ParameterRealValue `json:"realValue"`

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -12,25 +11,30 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
+
+/*******************************************************************************
+ * @File: common.go
+ * @Description: cluster log common object
+ * @Author: jiangxunyu@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/17 14:09
+*******************************************************************************/
 
 package log
 
-import (
-	"time"
-)
+import "time"
 
-type ElasticSearchVo struct {
+type ElasticSearchResult struct {
 	Took     int      `json:"took"`
 	TimedOut bool     `json:"timed_out"`
 	Hits     HitsInfo `json:"hits"`
 }
 
 type HitsInfo struct {
-	Total    HitsTotal    `json:"total"`
-	MaxScore float64      `json:"max_score"`
-	Hits     []HitsDetail `json:"hits"`
+	Total    HitsTotal  `json:"total"`
+	MaxScore float64    `json:"max_score"`
+	Hits     []HitsItem `json:"hits"`
 }
 
 type HitsTotal struct {
@@ -38,39 +42,30 @@ type HitsTotal struct {
 	Relation string `json:"relation"`
 }
 
-type HitsDetail struct {
+type HitsItem struct {
 	Index  string                 `json:"_index"`
 	Id     string                 `json:"_id"`
 	Score  float64                `json:"_score"`
 	Source map[string]interface{} `json:"_source"`
 }
 
-type SearchTiDBLogSourceDetail struct {
+type SearchClusterLogSourceItem struct {
 	Tidb      map[string]interface{} `json:"tidb"`
-	Log       LogDetail              `json:"log"`
+	Log       LogItem                `json:"log"`
 	Ip        string                 `json:"ip"`
 	ClusterId string                 `json:"clusterId"`
 	Message   string                 `json:"message"`
-	Fileset   FilesetDetail          `json:"fileset"`
+	Fileset   FilesetItem            `json:"fileset"`
 	Type      string                 `json:"type"`
 	Timestamp time.Time              `json:"@timestamp"`
 }
 
-type LogDetail struct {
-	Offset int          `json:"offset"`
-	Level  string       `json:"level"`
-	Logger string       `json:"logger"`
-	Origin OriginDetail `json:"origin"`
+type LogItem struct {
+	Offset int    `json:"offset"`
+	Level  string `json:"level"`
+	Logger string `json:"logger"`
 }
 
-type OriginDetail struct {
-	File FileDetail `json:"file"`
-}
-
-type FileDetail struct {
-	Line string `json:"line"`
-}
-
-type FilesetDetail struct {
+type FilesetItem struct {
 	Name string `json:"name"`
 }

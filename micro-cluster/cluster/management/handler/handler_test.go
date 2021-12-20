@@ -233,6 +233,12 @@ func TestClusterMeta_IsComponentRequired(t *testing.T) {
 }
 
 func TestClusterMeta_DeleteInstance(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(rw)
+
+	rw.EXPECT().DeleteInstance(gomock.Any(), gomock.Any()).Return(nil)
 
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
@@ -251,6 +257,14 @@ func TestClusterMeta_DeleteInstance(t *testing.T) {
 					HostIP: []string{"127.0.0.1"},
 					Ports:  []int32{111},
 				},
+				{
+					Entity: common.Entity{
+						ID:     "tidb1112",
+						Status: string(constants.ClusterRunning),
+					},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{112},
+				},
 			},
 		},
 	}
@@ -258,6 +272,8 @@ func TestClusterMeta_DeleteInstance(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		_, err := meta.DeleteInstance(context.TODO(), "127.0.0.1:111")
 		assert.NoError(t, err)
+		assert.Equal(t, len(meta.Instances["TiDB"]), 1)
+		assert.Equal(t, meta.Instances["TiDB"][0].ID, "tidb1112")
 	})
 
 	t.Run("error", func(t *testing.T) {

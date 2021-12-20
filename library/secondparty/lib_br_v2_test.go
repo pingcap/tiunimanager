@@ -26,7 +26,12 @@ package secondparty
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 	"testing"
+
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
@@ -140,6 +145,51 @@ func TestSecondPartyManager_ShowBackUpInfo_Fail(t *testing.T) {
 	resp := secondPartyManager2.ShowBackUpInfo(context.TODO(), clusterFacade)
 	if resp.Destination == "" && resp.ErrorStr == "" {
 		t.Errorf("case: show backup info. either Destination(%s) or ErrorStr(%s) should have zero value", resp.Destination, resp.ErrorStr)
+	}
+}
+
+func TestSecondPartyManager_ShowBackUpInfoThruMetaDB_Fail1(t *testing.T) {
+	mockCtl := gomock.NewController(t)
+	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
+	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
+	mockReaderWriter.EXPECT().Get(context.Background(), TestOperationID).Return(nil, errors.New("get from metadb error"))
+	_, err := secondPartyManager2.ShowBackUpInfoThruMetaDB(context.TODO(), TestOperationID)
+	if err == nil || err.Error() != "get from metadb error" {
+		t.Errorf("fail1")
+	}
+
+	secondPartyOperation := secondparty.SecondPartyOperation{
+		ID:       TestOperationID,
+		Status:   secondparty.OperationStatus_Error,
+		ErrorStr: "backup cluster error",
+	}
+	mockCtl = gomock.NewController(t)
+	mockReaderWriter = mocksecondparty.NewMockReaderWriter(mockCtl)
+	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
+	mockReaderWriter.EXPECT().Get(context.Background(), TestOperationID).Return(&secondPartyOperation, nil)
+	_, err = secondPartyManager2.ShowBackUpInfoThruMetaDB(context.TODO(), TestOperationID)
+	if err == nil || !strings.Contains(err.Error(), "backup cluster error") {
+		t.Errorf("fail2: %s", err.Error())
+	}
+
+	secondPartyOperation = secondparty.SecondPartyOperation{
+		ID:       TestOperationID,
+		Status:   secondparty.OperationStatus_Finished,
+		ErrorStr: "",
+		Result:   "invalidjson",
+	}
+	mockReaderWriter.EXPECT().Get(context.Background(), TestOperationID).Return(&secondPartyOperation, nil)
+	_, err = secondPartyManager2.ShowBackUpInfoThruMetaDB(context.TODO(), TestOperationID)
+	if err == nil || err.(framework.TiEMError).GetCode() != common.TIEM_UNMARSHAL_ERROR {
+		t.Errorf("fail3")
+	}
+
+	secondPartyOperation.Result = "{\n\t\"Destination\": \"path\",\n\t\"Size\":1,\n\t\"BackupTS\":2,\n\t\"QueueTime\":\"time\",\n\t\"ExecutionTime\":\"time\"\n}"
+	mockReaderWriter.EXPECT().Get(context.Background(), TestOperationID).Return(&secondPartyOperation, nil)
+	resp, err := secondPartyManager2.ShowBackUpInfoThruMetaDB(context.TODO(), TestOperationID)
+	fmt.Printf("ummarshal: %+v\n", resp)
+	if err != nil {
+		t.Errorf("fail4")
 	}
 }
 

@@ -444,11 +444,9 @@ func (mgr *ImportExportManager) importDataPreCheck(ctx context.Context, request 
 	if request.UserName == "" {
 		return fmt.Errorf("invalid param userName %s", request.UserName)
 	}
-	/*
-		if request.Password == "" {
-			return fmt.Errorf("invalid param password %s", request.Password)
-		}
-	*/
+	if request.Password == "" {
+		return fmt.Errorf("invalid param password %s", request.Password)
+	}
 	absPath, err := filepath.Abs(importPathConfig.ConfigValue)
 	if err != nil {
 		return fmt.Errorf("import dir %s is not vaild", importPathConfig.ConfigValue)

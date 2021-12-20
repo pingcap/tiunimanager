@@ -570,34 +570,6 @@ func (p *ClusterMeta) GetPDClientAddresses() []ComponentAddress {
 	return address
 }
 
-func (p *ClusterMeta) GetGrafanaAddresses() ComponentAddress {
-	instances := p.Instances[string(newConstants.ComponentIDGrafana)]
-
-	for _, instance := range instances {
-		if instance.Status == string(constants.ClusterInstanceRunning) {
-			return ComponentAddress{
-				IP:   instance.HostIP[0],
-				Port: int(instance.Ports[0]),
-			}
-		}
-	}
-	return ComponentAddress{}
-}
-
-func (p *ClusterMeta) GetAlertManagerAddresses() ComponentAddress {
-	instances := p.Instances[string(newConstants.ComponentIDAlertManger)]
-
-	for _, instance := range instances {
-		if instance.Status == string(constants.ClusterInstanceRunning) {
-			return ComponentAddress{
-				IP:   instance.HostIP[0],
-				Port: int(instance.Ports[0]),
-			}
-		}
-	}
-	return ComponentAddress{}
-}
-
 // GetMonitorAddresses
 // @Description: Prometheus Service communication port
 // @Receiver p
@@ -750,8 +722,8 @@ func (p *ClusterMeta) DisplayClusterInfo(ctx context.Context) structs.ClusterInf
 	}
 	clusterInfo.ExtranetConnectAddresses = clusterInfo.IntranetConnectAddresses
 
-	clusterInfo.AlertUrl = fmt.Sprintf(fmt.Sprintf("%s:%d", p.GetAlertManagerAddresses().IP, p.GetAlertManagerAddresses().Port))
-	clusterInfo.GrafanaUrl = fmt.Sprintf(fmt.Sprintf("%s:%d", p.GetGrafanaAddresses().IP, p.GetGrafanaAddresses().Port))
+	clusterInfo.AlertUrl = fmt.Sprintf(fmt.Sprintf("%s:%d", p.GetAlertManagerAddresses()[0].IP, p.GetAlertManagerAddresses()[0].Port))
+	clusterInfo.GrafanaUrl = fmt.Sprintf(fmt.Sprintf("%s:%d", p.GetGrafanaAddresses()[0].IP, p.GetGrafanaAddresses()[0].Port))
 
 	mockUsage := func() structs.Usage {
 		return structs.Usage{

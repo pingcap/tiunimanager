@@ -47,7 +47,7 @@ func (m *ImportExportReadWrite) UpdateDataTransportRecord(ctx context.Context, r
 	record := &DataTransportRecord{}
 	err = m.DB(ctx).First(record, "id = ?", recordId).Error
 	if err != nil {
-		return framework.SimpleError(common.TIEM_TRANSPORT_RECORD_NOT_FOUND)
+		return err
 	}
 
 	return m.DB(ctx).Model(record).
@@ -62,7 +62,7 @@ func (m *ImportExportReadWrite) GetDataTransportRecord(ctx context.Context, reco
 	record = &DataTransportRecord{}
 	err = m.DB(ctx).First(record, "id = ?", recordId).Error
 	if err != nil {
-		return nil, framework.SimpleError(common.TIEM_TRANSPORT_RECORD_NOT_FOUND)
+		return nil, err
 	}
 	return record, err
 }

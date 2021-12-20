@@ -79,12 +79,14 @@ func (p *FileHostProvider) UpdateHostReserved(ctx context.Context, hostIds []str
 	return p.rw.UpdateHostReserved(ctx, hostIds, reserved)
 }
 
+// Trim the whole depth tree by specified level and depth
 func (p *FileHostProvider) trimTree(root *structs.HierarchyTreeNode, level constants.HierarchyTreeNodeLevel, depth int) *structs.HierarchyTreeNode {
 	newRoot := structs.HierarchyTreeNode{
 		Code: "root",
 	}
 	levelNodes := root.SubNodes
 
+	// get to the specified level, and put all nodes in that level to newRoot.Subnodes[]
 	for l := constants.REGION; l < level; l++ {
 		var subnodes []*structs.HierarchyTreeNode
 		for _, node := range levelNodes {
@@ -95,6 +97,7 @@ func (p *FileHostProvider) trimTree(root *structs.HierarchyTreeNode, level const
 	newRoot.SubNodes = levelNodes
 
 	leafNodes := levelNodes
+	// get to the specified depth from level, and set all nodes' subNode[] in that depth level to nil
 	for d := 0; d < depth; d++ {
 		var subnodes []*structs.HierarchyTreeNode
 		for _, node := range leafNodes {
@@ -109,6 +112,9 @@ func (p *FileHostProvider) trimTree(root *structs.HierarchyTreeNode, level const
 	return &newRoot
 }
 
+// Add child node to parent subNodes[], and RETURN:
+//    - If parent node doest not existed, return new parent node
+//    - If parent node already existed, return nil
 func (p *FileHostProvider) addSubNode(current map[string]*structs.HierarchyTreeNode, code string, subNode *structs.HierarchyTreeNode) (parent *structs.HierarchyTreeNode) {
 	if parent, ok := current[code]; ok {
 		parent.SubNodes = append(parent.SubNodes, subNode)
@@ -125,6 +131,7 @@ func (p *FileHostProvider) addSubNode(current map[string]*structs.HierarchyTreeN
 	}
 }
 
+// Build the hierarchy tree from 'host' node up to 'root'
 func (p *FileHostProvider) buildHierarchy(Items []resource.HostItem) *structs.HierarchyTreeNode {
 	root := structs.HierarchyTreeNode{
 		Code: "root",
@@ -165,9 +172,11 @@ func (p *FileHostProvider) GetHierarchy(ctx context.Context, filter *structs.Hos
 		log.Errorf("get host items on hostFilter %v failed, %v", *filter, err)
 		return nil, err
 	}
+	// build the whole depth tree (root-region-zone-rack-host) using the items
 	wholeTree := p.buildHierarchy(items)
 	var root *structs.HierarchyTreeNode
 	if wholeTree.SubNodes != nil {
+		// trim the whole depth tree by level and depth, eg. trimed tree: root-zone-rack (level = 2, depth = 1)
 		root = p.trimTree(wholeTree, constants.HierarchyTreeNodeLevel(level), depth)
 	} else {
 		root = wholeTree

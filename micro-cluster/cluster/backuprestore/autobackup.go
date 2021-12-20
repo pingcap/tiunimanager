@@ -86,7 +86,7 @@ func (auto *autoBackupHandler) doBackup(strategy *backuprestore.BackupStrategy) 
 	_, err := GetBRService().BackupCluster(framework.NewMicroCtxFromGinCtx(&gin.Context{}), cluster.BackupClusterDataReq{
 		ClusterID:  strategy.ClusterID,
 		BackupMode: string(constants.BackupModeAuto),
-	})
+	}, true)
 	if err != nil {
 		framework.Log().Errorf("do backup for cluster %s failed, %s", strategy.ClusterID, err.Error())
 	}

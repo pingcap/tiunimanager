@@ -96,7 +96,7 @@ func (m *ResourceManager) UpdateHostReserved(ctx context.Context, hostIds []stri
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("update %d hosts %v to reserved (%v) failed from db service: %v", len(hostIds), hostIds, reserved, err)
 	} else {
-		framework.LogWithContext(ctx).Infof("update %d hosts[%v] to reserved (%v) succeed from db service.", len(hostIds), hostIds, reserved)
+		framework.LogWithContext(ctx).Infof("update %d hosts %v to reserved (%v) succeed from db service.", len(hostIds), hostIds, reserved)
 	}
 
 	return
@@ -107,7 +107,7 @@ func (m *ResourceManager) UpdateHostStatus(ctx context.Context, hostIds []string
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("update %d hosts %v to status %s failed from db service: %v", len(hostIds), hostIds, status, err)
 	} else {
-		framework.LogWithContext(ctx).Infof("update %d hosts[%v] to status %s succeed from db service.", len(hostIds), hostIds, status)
+		framework.LogWithContext(ctx).Infof("update %d hosts %v to status %s succeed from db service.", len(hostIds), hostIds, status)
 	}
 
 	return

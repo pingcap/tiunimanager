@@ -260,7 +260,7 @@ func backupSubProcess(ctx context.Context, meta *handler.ClusterMeta) (*cluster.
 		cluster.BackupClusterDataReq{
 			ClusterID:  meta.Cluster.ID,
 			BackupMode: string(constants.BackupModeManual),
-		})
+		}, true)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"do backup for cluster %s error: %s", meta.Cluster.ID, err.Error())
@@ -299,7 +299,7 @@ func restoreNewCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 		cluster.RestoreExistClusterReq{
 			ClusterID: clusterMeta.Cluster.ID,
 			BackupID:  backupID,
-		})
+		}, false)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf("do restore for cluster %s by backup id %s error: %s", clusterMeta.Cluster.ID, backupID, err.Error())
 		return fmt.Errorf("do restore for cluster %s by backup id %s error: %s", clusterMeta.Cluster.ID, backupID, err.Error())
@@ -522,7 +522,7 @@ func restoreCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 		cluster.RestoreExistClusterReq{
 			ClusterID: clusterMeta.Cluster.ID,
 			BackupID:  backupID,
-		})
+		}, false)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"do restore for cluster %s by backup id %s error: %s", clusterMeta.Cluster.ID, backupID, err.Error())

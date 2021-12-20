@@ -376,25 +376,25 @@ func (mgr *BRManager) backupClusterPreCheck(ctx context.Context, request cluster
 	configRW := models.GetConfigReaderWriter()
 	storageTypeCfg, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupStorageType)
 	if err != nil || storageTypeCfg.ConfigValue == "" {
-		return fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStorageType, err.Error())
+		return fmt.Errorf("get and check conifg %s failed", constants.ConfigKeyBackupStorageType)
 	}
 	storagePathCfg, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupStoragePath)
 	if err != nil || storagePathCfg.ConfigValue == "" {
-		return fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStoragePath, err.Error())
+		return fmt.Errorf("get and check conifg %s failed", constants.ConfigKeyBackupStoragePath)
 	}
 	switch storageTypeCfg.ConfigValue {
 	case string(constants.StorageTypeS3):
 		cfg, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupS3Endpoint)
 		if err != nil || cfg.ConfigValue == "" {
-			return fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupS3Endpoint, err.Error())
+			return fmt.Errorf("get and check conifg %s failed", constants.ConfigKeyBackupS3Endpoint)
 		}
 		cfg, err = configRW.GetConfig(ctx, constants.ConfigKeyBackupS3AccessKey)
 		if err != nil || cfg.ConfigValue == "" {
-			return fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupS3AccessKey, err.Error())
+			return fmt.Errorf("get and check conifg %s failed", constants.ConfigKeyBackupS3AccessKey)
 		}
 		cfg, err = configRW.GetConfig(ctx, constants.ConfigKeyBackupS3SecretAccessKey)
 		if err != nil || cfg.ConfigValue == "" {
-			return fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupS3SecretAccessKey, err.Error())
+			return fmt.Errorf("get and check conifg %s failed", constants.ConfigKeyBackupS3SecretAccessKey)
 		}
 	case string(constants.StorageTypeNFS):
 		break

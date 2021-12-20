@@ -34,6 +34,8 @@ type ClusterServerSpec struct {
 	SSHPort         int                    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
 	Port            int                    `yaml:"port,omitempty" default:"4101"`
 	MetricsPort     int                    `yaml:"metrics_port,omitempty" default:"4104"`
+	ClientPort      int                    `yaml:"registry_client_port,omitempty" default:"4106"`
+	PeerPort        int                    `yaml:"registry_peer_port,omitempty" default:"4107"`
 	DeployDir       string                 `yaml:"deploy_dir,omitempty"`
 	DataDir         string                 `yaml:"data_dir,omitempty"`
 	LogDir          string                 `yaml:"log_dir,omitempty"`
@@ -120,6 +122,8 @@ func (c *ClusterServerComponent) Instances() []Instance {
 				Ports: []int{
 					s.Port,
 					s.MetricsPort,
+					s.ClientPort,
+					s.PeerPort,
 				},
 				Dirs: []string{
 					s.DeployDir,
@@ -166,7 +170,10 @@ func (i *ClusterServerInstance) InitConfig(
 	).
 		WithPort(spec.Port).
 		WithMetricsPort(spec.MetricsPort).
+		WithPeerPort(spec.PeerPort).
+		WithClientPort(spec.ClientPort).
 		WithRegistry(i.topo.RegistryEndpoints()).
+		WithElasticsearch(i.topo.ElasticSearchEndpoints()).
 		WithTracer(i.topo.TracerEndpoints())
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_cluster-server_%s_%d.sh", i.GetHost(), i.GetPort()))
@@ -178,6 +185,13 @@ func (i *ClusterServerInstance) InitConfig(
 		return err
 	}
 	if _, _, err := e.Execute(ctx, "chmod +x "+dst, false); err != nil {
+		return err
+	}
+
+	// TODO: support user specified certificates
+	if _, _, err := e.Execute(ctx,
+		fmt.Sprintf("cp -r %s/bin/cert %s/", paths.Deploy, paths.Deploy),
+		false); err != nil {
 		return err
 	}
 
@@ -209,7 +223,10 @@ func (i *ClusterServerInstance) ScaleConfig(
 	).
 		WithPort(spec.Port).
 		WithMetricsPort(spec.MetricsPort).
+		WithPeerPort(spec.PeerPort).
+		WithClientPort(spec.ClientPort).
 		WithRegistry(i.topo.RegistryEndpoints()).
+		WithElasticsearch(i.topo.ElasticSearchEndpoints()).
 		WithTracer(i.topo.TracerEndpoints())
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_cluster-server_%s_%d.sh", i.GetHost(), i.GetPort()))

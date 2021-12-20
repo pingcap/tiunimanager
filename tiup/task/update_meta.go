@@ -37,15 +37,6 @@ func (u *UpdateMeta) Execute(ctx context.Context) error {
 	deleted := set.NewStringSet(u.deletedNodeIDs...)
 	topo := u.metadata.Topology
 
-	metadbServers := make([]*spec.MetaDBServerSpec, 0)
-	for i, instance := range (&spec.MetaDBComponent{Topology: topo}).Instances() {
-		if deleted.Exist(instance.ID()) {
-			continue
-		}
-		metadbServers = append(metadbServers, topo.MetaDBServers[i])
-	}
-	topo.MetaDBServers = metadbServers
-
 	clsServers := make([]*spec.ClusterServerSpec, 0)
 	for i, instance := range (&spec.ClusterServerComponent{Topology: topo}).Instances() {
 		if deleted.Exist(instance.ID()) {

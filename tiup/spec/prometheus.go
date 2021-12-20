@@ -187,14 +187,6 @@ func (i *MonitorInstance) InitConfig(
 	cfig := config.NewPrometheusConfig(clusterName)
 	uniqueHosts := set.NewStringSet()
 
-	if servers, found := topoHasField("MetaDBServers"); found {
-		for i := 0; i < servers.Len(); i++ {
-			srv := servers.Index(i).Interface().(*MetaDBServerSpec)
-			uniqueHosts.Insert(srv.Host)
-			cfig.AddMetaDB(srv.Host, uint64(srv.MetricsPort))
-		}
-	}
-
 	if servers, found := topoHasField("ClusterServers"); found {
 		for i := 0; i < servers.Len(); i++ {
 			srv := servers.Index(i).Interface().(*ClusterServerSpec)

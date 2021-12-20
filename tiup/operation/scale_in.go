@@ -64,8 +64,8 @@ func ScaleInCluster(
 	}
 
 	// Cannot delete all MetaDB servers
-	if len(deletedDiff[spec.ComponentTiEMMetaDBServer]) == len(cluster.MetaDBServers) {
-		return errors.New("cannot delete all MetaDB servers")
+	if len(deletedDiff[spec.ComponentTiEMClusterServer]) == len(cluster.ClusterServers) {
+		return errors.New("cannot delete all Cluster servers")
 	}
 
 	// Cannot delete all API servers

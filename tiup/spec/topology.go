@@ -35,7 +35,6 @@ const (
 
 // Component names and roles
 const (
-	ComponentTiEMMetaDBServer    = "metadb-server"  // tiem-metadb
 	ComponentTiEMClusterServer   = "cluster-server" // tiem-cluster
 	ComponentTiEMAPIServer       = "openapi-server" // tiem-api
 	ComponentTiEMFileServer      = "file-server"    // tiem-file
@@ -95,7 +94,6 @@ type BaseTopo struct {
 type Specification struct {
 	GlobalOptions        GlobalOptions          `yaml:"global,omitempty" validate:"global:editable"`
 	MonitoredOptions     *spec.MonitoredOptions `yaml:"monitored,omitempty" validate:"monitored:editable"`
-	MetaDBServers        []*MetaDBServerSpec    `yaml:"tiem_metadb_servers"`
 	ClusterServers       []*ClusterServerSpec   `yaml:"tiem_cluster_servers"`
 	APIServers           []*APIServerSpec       `yaml:"tiem_api_servers"`
 	FileServers          []*FileServerSpec      `yaml:"tiem_file_servers"`
@@ -498,7 +496,7 @@ func (s *Specification) CountDir(targetHost, dirPrefix string) int {
 // RegistryEndpoints return the list of registry endpoints in the specification
 func (s *Specification) RegistryEndpoints() []string {
 	result := make([]string, 0)
-	for _, inst := range s.MetaDBServers {
+	for _, inst := range s.ClusterServers {
 		result = append(result, fmt.Sprintf("%s:%d", inst.Host, inst.ClientPort))
 	}
 	return result
@@ -608,17 +606,6 @@ func (s *Specification) TiEMLogPaths() map[string]*config.LogPathInfo {
 		result[host.Host].AuditLogs.Insert(fmt.Sprintf("%s/logs/audit.log", host.DataDir))
 	}
 
-	for _, host := range s.MetaDBServers {
-		if _, ok := result[host.Host]; !ok {
-			result[host.Host] = &config.LogPathInfo{
-				GeneralLogs: set.NewStringSet(),
-				AuditLogs:   set.NewStringSet(),
-			}
-		}
-		result[host.Host].GeneralLogs.Insert(fmt.Sprintf("%s/logs/*-server.log", host.DataDir))
-		result[host.Host].AuditLogs.Insert(fmt.Sprintf("%s/logs/audit.log", host.DataDir))
-	}
-
 	for _, host := range s.ClusterServers {
 		if _, ok := result[host.Host]; !ok {
 			result[host.Host] = &config.LogPathInfo{
@@ -712,7 +699,6 @@ func (s *Specification) Merge(that Topology) Topology {
 	return &Specification{
 		GlobalOptions:        s.GlobalOptions,
 		MonitoredOptions:     s.MonitoredOptions,
-		MetaDBServers:        append(s.MetaDBServers, spec.MetaDBServers...),
 		ClusterServers:       append(s.ClusterServers, spec.ClusterServers...),
 		APIServers:           append(s.APIServers, spec.APIServers...),
 		FileServers:          append(s.FileServers, spec.FileServers...),

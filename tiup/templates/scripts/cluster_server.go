@@ -25,17 +25,18 @@ import (
 
 // TiEMClusterServerScript represent the data to generate TiEMClusterServer config
 type TiEMClusterServerScript struct {
-	Host              string
-	Port              int
-	ClientPort        int
-	PeerPort          int
-	MetricsPort       int
-	DeployDir         string
-	DataDir           string
-	LogDir            string
-	LogLevel          string
-	RegistryEndpoints string
-	TracerAddress     string
+	Host                 string
+	Port                 int
+	ClientPort           int
+	PeerPort             int
+	MetricsPort          int
+	DeployDir            string
+	DataDir              string
+	LogDir               string
+	LogLevel             string
+	RegistryEndpoints    string
+	ElasticsearchAddress string
+	TracerAddress        string
 }
 
 // NewTiEMClusterServerScript returns a TiEMClusterServerScript with given arguments
@@ -44,6 +45,8 @@ func NewTiEMClusterServerScript(ip, deployDir, dataDir, logDir, logLevel string)
 		Host:        ip,
 		Port:        4101,
 		MetricsPort: 4104,
+		ClientPort:  4106,
+		PeerPort:    4107,
 		DeployDir:   deployDir,
 		DataDir:     dataDir,
 		LogDir:      logDir,
@@ -63,9 +66,27 @@ func (c *TiEMClusterServerScript) WithMetricsPort(port int) *TiEMClusterServerSc
 	return c
 }
 
+// WithClientPort set ClientPort field of TiEMMetaDBScript
+func (c *TiEMClusterServerScript) WithClientPort(port int) *TiEMClusterServerScript {
+	c.ClientPort = port
+	return c
+}
+
+// WithPeerPort set PeerPort field of TiEMMetaDBScript
+func (c *TiEMClusterServerScript) WithPeerPort(port int) *TiEMClusterServerScript {
+	c.PeerPort = port
+	return c
+}
+
 // WithRegistry set RegistryEndpoints
 func (c *TiEMClusterServerScript) WithRegistry(addr []string) *TiEMClusterServerScript {
 	c.RegistryEndpoints = strings.Join(addr, ",")
+	return c
+}
+
+// WithElasticsearch set ElasticsearchAddress
+func (c *TiEMClusterServerScript) WithElasticsearch(addr []string) *TiEMClusterServerScript {
+	c.ElasticsearchAddress = strings.Join(addr, ",")
 	return c
 }
 

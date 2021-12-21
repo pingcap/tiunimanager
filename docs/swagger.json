@@ -1791,11 +1791,6 @@
                 "summary": "query parameters of a cluster",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "clusterId",
-                        "in": "query"
-                    },
-                    {
                         "type": "integer",
                         "description": "Current page location",
                         "name": "page",
@@ -2589,11 +2584,6 @@
                         "name": "clusterId",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "clusterId",
-                        "in": "query"
                     },
                     {
                         "type": "string",
@@ -4280,9 +4270,6 @@
         "cluster.DeleteBackupDataReq": {
             "type": "object",
             "properties": {
-                "backupId": {
-                    "type": "string"
-                },
                 "backupMode": {
                     "type": "string"
                 },
@@ -4323,9 +4310,6 @@
                 },
                 "clearBackupData": {
                     "type": "boolean"
-                },
-                "clusterID": {
-                    "type": "string"
                 }
             }
         },
@@ -4860,9 +4844,6 @@
         "cluster.SaveBackupStrategyReq": {
             "type": "object",
             "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
                 "strategy": {
                     "$ref": "#/definitions/structs.BackupStrategy"
                 }
@@ -4874,9 +4855,6 @@
         "cluster.ScaleInClusterReq": {
             "type": "object",
             "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
                 "instanceId": {
                     "type": "string"
                 }
@@ -4897,9 +4875,6 @@
         "cluster.ScaleOutClusterReq": {
             "type": "object",
             "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
                 "instanceResource": {
                     "type": "array",
                     "items": {
@@ -5099,9 +5074,6 @@
         "cluster.UpdateClusterParametersReq": {
             "type": "object",
             "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
                 "params": {
                     "type": "array",
                     "items": {
@@ -5434,10 +5406,6 @@
                     "type": "string",
                     "example": "123"
                 },
-                "paramGroupId": {
-                    "type": "string",
-                    "example": "123"
-                },
                 "reboot": {
                     "type": "boolean"
                 }
@@ -5470,9 +5438,6 @@
                 "note": {
                     "type": "string",
                     "example": "copy param group"
-                },
-                "paramGroupId": {
-                    "type": "string"
                 }
             }
         },
@@ -5663,12 +5628,7 @@
             "type": "object"
         },
         "message.DeleteImportExportRecordReq": {
-            "type": "object",
-            "properties": {
-                "recordId": {
-                    "type": "string"
-                }
-            }
+            "type": "object"
         },
         "message.DeleteImportExportRecordResp": {
             "type": "object",
@@ -5945,9 +5905,6 @@
                 "note": {
                     "type": "string",
                     "example": "default param group"
-                },
-                "paramGroupId": {
-                    "type": "string"
                 },
                 "params": {
                     "type": "array",

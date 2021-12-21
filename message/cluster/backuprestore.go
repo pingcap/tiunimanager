@@ -78,7 +78,7 @@ type SaveBackupStrategyResp struct {
 
 // GetBackupStrategyReq Query messages for cluster backup strategy
 type GetBackupStrategyReq struct {
-	ClusterID string `json:"clusterId" form:"clusterId"`
+	ClusterID string `json:"clusterId" form:"clusterId" swaggerignore:"true"`
 }
 
 // GetBackupStrategyResp Query backup strategy reply message

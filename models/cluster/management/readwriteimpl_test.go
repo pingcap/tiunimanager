@@ -87,7 +87,7 @@ func TestGormClusterReadWrite_Create(t *testing.T) {
 	})
 	t.Run("duplicated name", func(t *testing.T) {
 		got1, _ := testRW.Create(context.TODO(), &Cluster{
-			Name: "test1",
+			Name: "test duplicated name",
 			Entity: common.Entity{
 				TenantId: "111",
 				Status:   string(constants.ClusterRunning),
@@ -97,7 +97,7 @@ func TestGormClusterReadWrite_Create(t *testing.T) {
 		defer testRW.Delete(context.TODO(), got1.ID)
 
 		_, err := testRW.Create(context.TODO(), &Cluster{
-			Name: "test1",
+			Name: "test duplicated name",
 			Entity: common.Entity{
 				TenantId: "111",
 				Status:   string(constants.ClusterRunning),

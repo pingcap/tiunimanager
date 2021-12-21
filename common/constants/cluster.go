@@ -50,6 +50,7 @@ const (
 	ClusterMaintenanceUpgrading                    ClusterMaintenanceStatus = "Upgrading"
 	ClusterMaintenanceSwitching                    ClusterMaintenanceStatus = "Switching"
 	ClusterMaintenanceModifyParameterAndRestarting ClusterMaintenanceStatus = "ModifyParameterRestarting"
+	ClusterMaintenanceTakeover                 	   ClusterMaintenanceStatus = "Takeover"
 	ClusterMaintenanceNone                         ClusterMaintenanceStatus = ""
 )
 
@@ -64,7 +65,7 @@ const (
 	FlowImportData          = "ImportData"
 	FlowRestartCluster      = "RestartCluster"
 	FlowStopCluster         = "StopCluster"
-	FlowTakeoverCluster     = "TakeoverCluster"
+	FlowTakeoverCluster     = "BuildForTakeover"
 	FlowBuildLogConfig      = "BuildLogConfig"
 	FlowScaleOutCluster     = "ScaleOutCluster"
 	FlowScaleInCluster      = "ScaleInCluster"

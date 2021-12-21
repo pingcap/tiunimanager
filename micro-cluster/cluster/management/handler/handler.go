@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"context"
 	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"text/template"
 
 	"fmt"
@@ -81,6 +82,34 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 		framework.LogWithContext(ctx).Errorf("create cluster [%s] failed, err : %s", p.Cluster.Name, err.Error())
 	}
 	return err
+}
+
+var TagTakeover = "takeover"
+
+func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string) error {
+	p.Cluster = &management.Cluster {
+		Entity: dbCommon.Entity{
+			TenantId: framework.GetTenantIDFromContext(ctx),
+			Status:   string(constants.ClusterInitializing),
+		},
+		Name:              name,
+		Tags:              []string{TagTakeover},
+		OwnerId:           framework.GetUserIDFromContext(ctx),
+		MaintainWindow:    "",
+	}
+
+	_, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
+	if err == nil {
+		framework.LogWithContext(ctx).Infof("takeover cluster [%s] succeed", p.Cluster.Name)
+	} else {
+		framework.LogWithContext(ctx).Errorf("takeover cluster [%s] failed, err : %s", p.Cluster.Name, err.Error())
+	}
+	return err
+}
+
+func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, spec *spec.Specification) ([]*management.ClusterInstance, error) {
+
+	return nil, nil
 }
 
 // AddInstances

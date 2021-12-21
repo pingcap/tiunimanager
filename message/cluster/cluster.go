@@ -184,8 +184,8 @@ type TakeoverClusterReq struct {
 
 // TakeoverClusterResp Reply message for takeover a cluster
 type TakeoverClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
-	Clusters                      []structs.ClusterInfo `json:"clusters"`
+	Clusters     map[string]string `json:"clusters"`
+	FailedErrors map[string]string `json:"failed"`
 }
 
 // QueryClustersReq Query cluster list messages

@@ -4974,14 +4974,16 @@
             "type": "object",
             "properties": {
                 "clusters": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.ClusterInfo"
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
                     }
                 },
-                "workFlowId": {
-                    "description": "Asynchronous task workflow ID",
-                    "type": "string"
+                "failed": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 }
             }
         },

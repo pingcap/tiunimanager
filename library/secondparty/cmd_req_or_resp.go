@@ -16,7 +16,7 @@
 package secondparty
 
 import (
-	"github.com/pingcap-inc/tiem/library/spec"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
 	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
 )
@@ -223,12 +223,12 @@ type CmdShowConfigResp struct {
 }
 
 type GlobalComponentConfig struct {
-	TiDBClusterComponent spec.TiDBClusterComponent
+	TiDBClusterComponent constants.EMProductComponentIDType
 	ConfigMap            map[string]interface{}
 }
 
 type ClusterComponentConfig struct {
-	TiDBClusterComponent spec.TiDBClusterComponent
+	TiDBClusterComponent constants.EMProductComponentIDType
 	InstanceAddr         string
 	ConfigKey            string
 	ConfigValue          string
@@ -245,7 +245,7 @@ type CmdEditGlobalConfigReq struct {
 type CmdEditInstanceConfigReq struct {
 	TiUPComponent        TiUPComponentTypeStr
 	InstanceName         string
-	TiDBClusterComponent spec.TiDBClusterComponent
+	TiDBClusterComponent constants.EMProductComponentIDType
 	Host                 string
 	Port                 int
 	ConfigMap            map[string]interface{}
@@ -276,7 +276,7 @@ type CmdClusterExecReq struct {
 }
 
 type ApiEditConfigReq struct {
-	TiDBClusterComponent spec.TiDBClusterComponent
+	TiDBClusterComponent constants.EMProductComponentIDType
 	InstanceHost         string
 	InstancePort         uint
 	Headers              map[string]string

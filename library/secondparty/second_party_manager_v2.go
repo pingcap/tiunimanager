@@ -28,7 +28,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/pingcap-inc/tiem/library/spec"
+	"github.com/pingcap-inc/tiem/common/constants"
 
 	"github.com/pingcap-inc/tiem/models"
 
@@ -85,7 +85,7 @@ type SecondPartyService interface {
 	EditClusterConfig(ctx context.Context, req ClusterEditConfigReq, workFlowNodeID string) error
 	SetClusterDbPassword(ctx context.Context, req ClusterSetDbPswReq, workFlowNodeID string) error
 	ClusterComponentCtl(ctx context.Context, str TiUPComponentTypeStr, clusterVersion string,
-		component spec.TiDBClusterComponent, flags []string, timeoutS int) (string, error)
+		component constants.EMProductComponentIDType, flags []string, timeoutS int) (string, error)
 }
 
 type SecondPartyManager struct {

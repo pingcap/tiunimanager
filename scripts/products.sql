@@ -333,65 +333,65 @@ CREATE TABLE IF NOT EXISTS `product_components`
 );
 
 INSERT INTO product_components
-VALUES ('TiDB', 'TiDB', '5.0.0', 'Compute Engine', 'Online', 'Compute', 10000, 10020, 2, 1, 10240, datetime('now'),
+VALUES ('tidb', 'TiDB', '5.0.0', 'Compute Engine', 'Online', 'Compute', 10000, 10020, 2, 1, 10240, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('TiKV', 'TiDB', '5.0.0', 'Storage Engine', 'Online', 'Storage', 10020, 10040, 2, 1, 10240, datetime('now'),
+VALUES ('tikv', 'TiDB', '5.0.0', 'Storage Engine', 'Online', 'Storage', 10020, 10040, 2, 1, 10240, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('TiFlash', 'TiDB', '5.0.0', 'Column Storage Engine', 'Online', 'Storage', 10120, 10180, 6, 1, 10240,
+VALUES ('tiflash', 'TiDB', '5.0.0', 'Column Storage Engine', 'Online', 'Storage', 10120, 10180, 6, 1, 10240,
         datetime('now'), datetime('now'));
 INSERT INTO product_components
-VALUES ('PD', 'TiDB', '5.0.0', 'Schedule Engine', 'Online', 'Schedule', 10040, 10120, 8, 1, 7, datetime('now'),
+VALUES ('pd', 'TiDB', '5.0.0', 'Schedule Engine', 'Online', 'Schedule', 10040, 10120, 8, 1, 7, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('TiCDC', 'TiDB', '5.0.0', 'CDC', 'Online', 'Schedule', 10180, 10200, 2, 1, 512, datetime('now'),
+VALUES ('cdc', 'TiDB', '5.0.0', 'CDC', 'Online', 'Schedule', 10180, 10200, 2, 1, 512, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('Grafana', 'TiDB', '5.0.0', 'Monitor GUI', 'Online', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
+VALUES ('grafana', 'TiDB', '5.0.0', 'Monitor GUI', 'Online', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('Prometheus', 'TiDB', '5.0.0', 'Monitor', 'Online', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
+VALUES ('prometheus', 'TiDB', '5.0.0', 'Monitor', 'Online', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('AlertManger', 'TiDB', '5.0.0', 'Alert', 'Online', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
+VALUES ('alertmanager', 'TiDB', '5.0.0', 'Alert', 'Online', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('NodeExporter', 'TiDB', '5.0.0', 'NodeExporter', 'Online', 'Schedule', 11000, 12000, 2, 1, 1,
+VALUES ('node_exporter', 'TiDB', '5.0.0', 'NodeExporter', 'Online', 'Schedule', 11000, 12000, 2, 1, 1,
         datetime('now'), datetime('now'));
 INSERT INTO product_components
-VALUES ('BlackboxExporter', 'TiDB', '5.0.0', 'BlackboxExporter', 'Online', 'Schedule', 11000, 12000, 1, 1, 1,
+VALUES ('blackbox_exporter', 'TiDB', '5.0.0', 'BlackboxExporter', 'Online', 'Schedule', 11000, 12000, 1, 1, 1,
         datetime('now'), datetime('now'));
 
 INSERT INTO product_components
-VALUES ('TiDB', 'TiDB', '5.1.0', 'Compute Engine', 'Online', 'Compute', 10000, 10020, 2, 1, 10240, datetime('now'),
+VALUES ('tidb', 'TiDB', '5.1.0', 'Compute Engine', 'Online', 'Compute', 10000, 10020, 2, 1, 10240, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('TiKV', 'TiDB', '5.1.0', 'Storage Engine', 'Online', 'Storage', 10020, 10040, 2, 1, 10240, datetime('now'),
+VALUES ('tikv', 'TiDB', '5.1.0', 'Storage Engine', 'Online', 'Storage', 10020, 10040, 2, 1, 10240, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('TiFlash', 'TiDB', '5.1.0', 'Column Storage Engine', 'Online', 'Storage', 10120, 10180, 6, 1, 10240,
+VALUES ('tiflash', 'TiDB', '5.1.0', 'Column Storage Engine', 'Online', 'Storage', 10120, 10180, 6, 1, 10240,
         datetime('now'), datetime('now'));
 INSERT INTO product_components
-VALUES ('PD', 'TiDB', '5.1.0', 'Schedule Engine', 'Online', 'Schedule', 10040, 10120, 8, 1, 7, datetime('now'),
+VALUES ('pd', 'TiDB', '5.1.0', 'Schedule Engine', 'Online', 'Schedule', 10040, 10120, 8, 1, 7, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('TiCDC', 'TiDB', '5.1.0', 'CDC', 'Online', 'Schedule', 10180, 10200, 2, 1, 512, datetime('now'),
+VALUES ('cdc', 'TiDB', '5.1.0', 'CDC', 'Online', 'Schedule', 10180, 10200, 2, 1, 512, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('Grafana', 'TiDB', '5.1.0', 'Monitor GUI', 'Online', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
+VALUES ('grafana', 'TiDB', '5.1.0', 'Monitor GUI', 'Online', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('Prometheus', 'TiDB', '5.1.0', 'Monitor', 'Online', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
+VALUES ('prometheus', 'TiDB', '5.1.0', 'Monitor', 'Online', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('AlertManger', 'TiDB', '5.1.0', 'Alert', 'Online', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
+VALUES ('alertmanager', 'TiDB', '5.1.0', 'Alert', 'Online', 'Schedule', 10040, 10120, 1, 1, 1, datetime('now'),
         datetime('now'));
 INSERT INTO product_components
-VALUES ('NodeExporter', 'TiDB', '5.1.0', 'NodeExporter', 'Online', 'Schedule', 11000, 12000, 2, 1, 1,
+VALUES ('node_exporter', 'TiDB', '5.1.0', 'NodeExporter', 'Online', 'Schedule', 11000, 12000, 2, 1, 1,
         datetime('now'), datetime('now'));
 INSERT INTO product_components
-VALUES ('BlackboxExporter', 'TiDB', '5.1.0', 'BlackboxExporter', 'Online', 'Schedule', 11000, 12000, 1, 1, 1,
+VALUES ('blackbox_exporter', 'TiDB', '5.1.0', 'BlackboxExporter', 'Online', 'Schedule', 11000, 12000, 1, 1, 1,
         datetime('now'), datetime('now'));
 
 INSERT INTO product_components
@@ -401,12 +401,12 @@ INSERT INTO product_components
 VALUES ('openapi-server', 'EnterpriseManager', '1.0.0', 'openapi-server', 'Online', 'Storage', 10000, 10400, 2, 1,
         1, datetime('now'), datetime('now'));
 INSERT INTO product_components
-VALUES ('Grafana', 'EnterpriseManager', '1.0.0', 'Monitor GUI', 'Online', 'Schedule', 10000, 10400, 2, 1, 1,
+VALUES ('grafana', 'EnterpriseManager', '1.0.0', 'Monitor GUI', 'Online', 'Schedule', 10000, 10400, 2, 1, 1,
         datetime('now'), datetime('now'));
 INSERT INTO product_components
-VALUES ('Prometheus', 'EnterpriseManager', '1.0.0', 'Monitor', 'Online', 'Schedule', 10000, 10400, 2, 1, 1,
+VALUES ('prometheus', 'EnterpriseManager', '1.0.0', 'Monitor', 'Online', 'Schedule', 10000, 10400, 2, 1, 1,
         datetime('now'), datetime('now'));
 INSERT INTO product_components
-VALUES ('AlertManger', 'EnterpriseManager', '1.0.0', 'Alert GUI', 'Online', 'Schedule', 10000, 10400, 2, 1, 1,
+VALUES ('alertmanager', 'EnterpriseManager', '1.0.0', 'Alert GUI', 'Online', 'Schedule', 10000, 10400, 2, 1, 1,
         datetime('now'), datetime('now'));
 

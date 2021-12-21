@@ -27,12 +27,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pingcap-inc/tiem/common/constants"
+
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-
-	spec2 "github.com/pingcap-inc/tiem/library/spec"
 
 	resourceType "github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -899,7 +899,7 @@ func sqlEditConfig(context *FlowContext, task *TaskEntity, params []*ApplyParam,
 	configs := make([]secondparty.ClusterComponentConfig, len(params))
 	for i, param := range params {
 		configs[i] = secondparty.ClusterComponentConfig{
-			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.ComponentType)),
+			TiDBClusterComponent: constants.EMProductComponentIDType(strings.ToLower(param.ComponentType)),
 			// todo: should be replaced with the system variable corresponding to the parameter
 			ConfigKey:   param.Name,
 			ConfigValue: param.RealValue.Cluster,
@@ -960,7 +960,7 @@ func apiEditConfig(context *FlowContext, task *TaskEntity, params []*ApplyParam,
 			}
 			for host, port := range servers {
 				hasSuc, err := secondparty.SecondParty.ApiEditConfig(context, secondparty.ApiEditConfigReq{
-					TiDBClusterComponent: spec2.TiDBClusterComponent(compStr),
+					TiDBClusterComponent: constants.EMProductComponentIDType(compStr),
 					InstanceHost:         host,
 					InstancePort:         port,
 					Headers:              map[string]string{},
@@ -988,7 +988,7 @@ func tiupEditConfig(context *FlowContext, task *TaskEntity, params []*ApplyParam
 		}
 		cm[param.Name] = clusterValue
 		configs[i] = secondparty.GlobalComponentConfig{
-			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.ComponentType)),
+			TiDBClusterComponent: constants.EMProductComponentIDType(strings.ToLower(param.ComponentType)),
 			ConfigMap:            cm,
 		}
 	}

@@ -26,6 +26,7 @@ package constants
 import (
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap/tiup/pkg/cluster/spec"
 )
 
 //System log-related constants
@@ -86,17 +87,17 @@ var ParasiteComponentIDs = []EMProductComponentIDType{
 
 //Definition of product component ID provided by Enterprise manager
 const (
-	ComponentIDTiDB    EMProductComponentIDType = "TiDB"
-	ComponentIDTiKV    EMProductComponentIDType = "TiKV"
-	ComponentIDPD      EMProductComponentIDType = "PD"
-	ComponentIDTiFlash EMProductComponentIDType = "TiFlash"
-	ComponentIDTiCDC   EMProductComponentIDType = "CDC"
+	ComponentIDTiDB    EMProductComponentIDType = spec.ComponentTiDB
+	ComponentIDTiKV    EMProductComponentIDType = spec.ComponentTiKV
+	ComponentIDPD      EMProductComponentIDType = spec.ComponentPD
+	ComponentIDTiFlash EMProductComponentIDType = spec.ComponentTiFlash
+	ComponentIDTiCDC   EMProductComponentIDType = spec.ComponentCDC
 
-	ComponentIDGrafana          EMProductComponentIDType = "Grafana"
-	ComponentIDPrometheus       EMProductComponentIDType = "Prometheus"
-	ComponentIDAlertManger      EMProductComponentIDType = "AlertManger"
-	ComponentIDNodeExporter     EMProductComponentIDType = "NodeExporter"
-	ComponentIDBlackboxExporter EMProductComponentIDType = "BlackboxExporter"
+	ComponentIDGrafana          EMProductComponentIDType = spec.ComponentGrafana
+	ComponentIDPrometheus       EMProductComponentIDType = spec.ComponentPrometheus
+	ComponentIDAlertManager     EMProductComponentIDType = spec.ComponentAlertmanager
+	ComponentIDNodeExporter     EMProductComponentIDType = spec.ComponentNodeExporter
+	ComponentIDBlackboxExporter EMProductComponentIDType = spec.ComponentBlackboxExporter
 
 	ComponentIDClusterServer EMProductComponentIDType = "cluster-server"
 	ComponentIDOpenAPIServer EMProductComponentIDType = "openapi-server"

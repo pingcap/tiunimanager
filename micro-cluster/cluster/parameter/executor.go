@@ -47,7 +47,6 @@ import (
 	secondparty2 "github.com/pingcap-inc/tiem/models/workflow/secondparty"
 
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	spec2 "github.com/pingcap-inc/tiem/library/spec"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
@@ -254,7 +253,7 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 			configKey = param.SystemVariable
 		}
 		configs[i] = secondparty.ClusterComponentConfig{
-			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.InstanceType)),
+			TiDBClusterComponent: constants.EMProductComponentIDType(strings.ToLower(param.InstanceType)),
 			ConfigKey:            configKey,
 			ConfigValue:          param.RealValue.ClusterValue,
 		}
@@ -325,7 +324,7 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 			}
 			for host, port := range servers {
 				hasSuc, err := secondparty.Manager.ApiEditConfig(ctx, secondparty.ApiEditConfigReq{
-					TiDBClusterComponent: spec2.TiDBClusterComponent(compStr),
+					TiDBClusterComponent: constants.EMProductComponentIDType(compStr),
 					InstanceHost:         host,
 					InstancePort:         port,
 					Headers:              map[string]string{},
@@ -359,7 +358,7 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 		}
 		cm[param.Name] = clusterValue
 		configs[i] = secondparty.GlobalComponentConfig{
-			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.InstanceType)),
+			TiDBClusterComponent: constants.EMProductComponentIDType(strings.ToLower(param.InstanceType)),
 			ConfigMap:            cm,
 		}
 	}

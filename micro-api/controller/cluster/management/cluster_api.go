@@ -102,6 +102,7 @@ func Preview(c *gin.Context) {
 			})
 		}
 	}
+	resp.StockCheckResult = stockCheckResult
 	c.JSON(http.StatusOK, controller.Success(resp))
 }
 

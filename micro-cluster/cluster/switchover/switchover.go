@@ -140,7 +140,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 	if err != nil {
 		return resp, err
 	}
-	if req.Force {
+	if req.Force { // A -> B
 		err = mgr.checkClusterReadWriteHealth(ctx, oldMasterId)
 		if err == nil { // A rw-able
 			framework.LogWithContext(ctx).Infof("checkClusterReadWriteHealth on oldMasterId %s success", oldMasterId)
@@ -166,7 +166,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 				// A unavailable & B unavailable
 				framework.LogWithContext(ctx).Errorf("checkClusterReadWriteHealth on oldSlaveId %s failed err:%s", oldSlaveId, err)
 				flowName = "" // end
-				return resp, framework.NewTiEMErrorf(common.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED, "master/slave switchover failed: %s", "slave is unavailable")
+				return resp, framework.NewTiEMErrorf(common.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED, "master/slave switchover failed: %s", "master and slave are both unavailable")
 			}
 		}
 	}
@@ -376,7 +376,7 @@ func (m *Manager) getOldSyncChangeFeedTaskId(ctx context.Context, reqJson, logNa
 		framework.LogWithContext(ctx).Infof(
 			"%s getRelation req:%s success", funcName, reqJson)
 	}
-	return relation.SyncChangeFeedTaskId, nil
+	return relation.SyncChangeFeedTaskID, nil
 }
 
 func (m *Manager) checkSyncChangeFeedTaskHealth(ctx context.Context, reqJson, logName, syncChangeFeedTaskId string) error {

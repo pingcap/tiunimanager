@@ -26,5 +26,5 @@ type ClusterRelation struct {
 	RelationType         constants.ClusterRelationType `gorm:"not null;size:32"`
 	SubjectClusterID     string                        `gorm:"not null;size:32"`
 	ObjectClusterID      string                        `gorm:"not null;size:32"`
-	SyncChangeFeedTaskId string                        `gorm:"not null;size:32"`
+	SyncChangeFeedTaskID string                        `gorm:"not null;size:32"`
 }

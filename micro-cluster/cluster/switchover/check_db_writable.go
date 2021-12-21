@@ -19,12 +19,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
-var databaseName = "EmPrivateDB"
+var databaseName = constants.SwitchoverExclusiveDBNameForReadWriteHealthTest
 
 type CheckWritable struct {
 	gorm.Model

@@ -23,6 +23,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/spec"
 	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
@@ -41,6 +42,9 @@ const (
 	CtlComponentTypeStr     TiUPComponentTypeStr = "ctl"
 	CTLComponentTypeStr     TiUPComponentTypeStr = "ctl"
 )
+
+var topologyTmpFilePrefix = fmt.Sprintf("%s-topology", common.TiEM)
+var collectorTmpFilePrefix = fmt.Sprintf("%s-collector", common.TiEM)
 
 func (secondMicro *SecondMicro) MicroSrvTiupDeploy(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
 	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupdeploy tiupcomponent: %s, instancename: %s, version: %s, configstryaml: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, version, configStrYaml, timeoutS, flags, bizID)
@@ -67,7 +71,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupDeploy(ctx context.Context, tiupComp
 }
 
 func (secondMicro *SecondMicro) startNewTiupDeployTask(ctx context.Context, taskID uint64, req *CmdDeployReq) {
-	topologyTmpFilePath, err := newTmpFileWithContent("tiem-topology", []byte(req.ConfigStrYaml))
+	topologyTmpFilePath, err := newTmpFileWithContent(topologyTmpFilePrefix, []byte(req.ConfigStrYaml))
 	if err != nil {
 		secondMicro.taskStatusCh <- TaskStatusMember{
 			TaskID:   taskID,
@@ -111,7 +115,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupScaleOut(ctx context.Context, tiupCo
 }
 
 func (secondMicro *SecondMicro) startNewTiupScaleOutTask(ctx context.Context, taskID uint64, req *CmdScaleOutReq) {
-	topologyTmpFilePath, err := newTmpFileWithContent("tiem-topology", []byte(req.ConfigStrYaml))
+	topologyTmpFilePath, err := newTmpFileWithContent(topologyTmpFilePrefix, []byte(req.ConfigStrYaml))
 	if err != nil {
 		secondMicro.taskStatusCh <- TaskStatusMember{
 			TaskID:   taskID,
@@ -463,7 +467,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupTransfer(ctx context.Context, tiupCo
 }
 
 func (secondMicro *SecondMicro) startNewTiupTransferTask(ctx context.Context, taskID uint64, req *CmdTransferReq) {
-	collectorTmpFilePath, err := newTmpFileWithContent("tiem-collector", []byte(req.CollectorYaml))
+	collectorTmpFilePath, err := newTmpFileWithContent(collectorTmpFilePrefix, []byte(req.CollectorYaml))
 	if err != nil {
 		secondMicro.taskStatusCh <- TaskStatusMember{
 			TaskID:   taskID,

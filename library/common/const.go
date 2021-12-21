@@ -31,7 +31,7 @@ const (
 )
 
 const (
-	TiEM          string = "tiem"
+	TiEM          string = "em"
 	LogDirPrefix  string = "/logs/"
 	CertDirPrefix string = "/cert/"
 	DBDirPrefix   string = "/"

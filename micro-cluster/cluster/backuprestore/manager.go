@@ -341,7 +341,7 @@ func (mgr *BRManager) SaveBackupStrategy(ctx context.Context, request cluster.Sa
 	endHour, _ := strconv.Atoi(ends[0])
 
 	brRW := models.GetBRReaderWriter()
-	strategy, err := brRW.CreateBackupStrategy(ctx, &backuprestore.BackupStrategy{
+	strategy, err := brRW.SaveBackupStrategy(ctx, &backuprestore.BackupStrategy{
 		Entity: dbModel.Entity{
 			TenantId: meta.Cluster.TenantId,
 		},
@@ -351,8 +351,8 @@ func (mgr *BRManager) SaveBackupStrategy(ctx context.Context, request cluster.Sa
 		EndHour:    uint32(endHour),
 	})
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("create backup strategy %+v failed %s", strategy, err.Error())
-		return resp, framework.WrapError(common.TIEM_BACKUP_STRATEGY_SAVE_FAILED, fmt.Sprintf("create backup strategy %+v failed %s", strategy, err.Error()), err)
+		framework.LogWithContext(ctx).Errorf("save backup strategy %+v failed %s", strategy, err.Error())
+		return resp, framework.WrapError(common.TIEM_BACKUP_STRATEGY_SAVE_FAILED, fmt.Sprintf("save backup strategy %+v failed %s", strategy, err.Error()), err)
 	}
 
 	return resp, nil

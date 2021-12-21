@@ -263,9 +263,9 @@ func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request cluster.D
 	framework.LogWithContext(ctx).Infof("Begin DeleteBackupRecords, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End DeleteBackupRecords")
 
-	if request.ClusterID == "" {
-		framework.LogWithContext(ctx).Errorf("invalid param clusterId empty")
-		return resp, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "invalid param clusterId empty")
+	if request.ClusterID == "" && request.BackupID == "" {
+		framework.LogWithContext(ctx).Errorf("invalid param clusterId and backupId empty")
+		return resp, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "invalid param clusterId and backupId empty")
 	}
 
 	brRW := models.GetBRReaderWriter()

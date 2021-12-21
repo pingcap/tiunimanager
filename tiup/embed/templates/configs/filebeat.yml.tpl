@@ -3,8 +3,8 @@ setup:
     enabled: false
   template:
     enabled: true
-    name: "${indexPrefix:tiem}"
-    pattern: "${indexPrefix:tiem}-*"
+    name: "${indexPrefix:em}"
+    pattern: "${indexPrefix:em}-*"
     overwrite: true
 setup.template.append_fields:
   - name: msg
@@ -70,15 +70,15 @@ filebeat:
 output.elasticsearch:
   hosts: "${esAddress:{{.ElasticSearchHost}}}"
   indices:
-    - index: "${indexPrefix:tiem}-system-logs-%{+yyyy.MM.dd}"
+    - index: "${indexPrefix:em}-system-logs-%{+yyyy.MM.dd}"
       when.equals:
         type: "logs"
-    - index: "${indexPrefix:tiem}-system-audit-%{+yyyy.MM.dd}"
+    - index: "${indexPrefix:em}-system-audit-%{+yyyy.MM.dd}"
       when.equals:
         type: "audit"
-    - index: "${indexPrefix:tiem}-tidb-cluster-%{+yyyy.MM.dd}"
+    - index: "${indexPrefix:em}-database-cluster-%{+yyyy.MM.dd}"
       when.equals:
         type: "tidb"
-    - index: "${indexPrefix:tiem}-tidb-slowlog-%{+yyyy.MM.dd}"
+    - index: "${indexPrefix:em}-database-slowlog-%{+yyyy.MM.dd}"
       when.equals:
         type: "tidb_slowlog"

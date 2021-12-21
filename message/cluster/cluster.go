@@ -229,7 +229,7 @@ type QueryMonitorInfoResp struct {
 
 // GetDashboardInfoReq Message to query the dashboard address information of a cluster
 type GetDashboardInfoReq struct {
-	ClusterID string `json:"clusterId" example:"abc"`
+	ClusterID string `json:"clusterId" example:"abc" swaggerignore:"true"`
 }
 
 // GetDashboardInfoResp Reply message for querying the dashboard address information of the cluster

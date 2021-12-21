@@ -53,11 +53,11 @@ const (
 
 // micro service default port
 const (
-	DefaultMicroMetaDBPort  int = 4100
-	DefaultMicroClusterPort int = 4110
-	DefaultMicroApiPort     int = 4116
-	DefaultMicroFilePort    int = 4118
-	DefaultMetricsPort      int = 4121
+	DefaultMicroMetaDBPort  int = 4099
+	DefaultMicroClusterPort int = 4101
+	DefaultMicroApiPort     int = 4100
+	DefaultMicroFilePort    int = 4102
+	DefaultMetricsPort      int = 4103
 )
 
 type EMProductIDType string

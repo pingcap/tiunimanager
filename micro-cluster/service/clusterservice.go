@@ -638,9 +638,9 @@ func (c ClusterServiceHandler) GetDashboardInfo(ctx context.Context, request *cl
 	return nil
 }
 
-func (c ClusterServiceHandler) DescribeMonitor(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+func (c ClusterServiceHandler) GetMonitorInfo(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "DescribeMonitor", int(resp.GetCode()))
+	defer handleMetrics(start, "GetMonitorInfo", int(resp.GetCode()))
 	request := &cluster.QueryMonitorInfoReq{}
 
 	if handleRequest(ctx, req, resp, request) {

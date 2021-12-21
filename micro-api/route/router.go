@@ -95,7 +95,7 @@ func Route(g *gin.Engine) {
 			cluster.POST("/:clusterId/stop", clusterApi.Stop)
 			cluster.POST("/restore", backuprestore.Restore)
 			cluster.GET("/:clusterId/dashboard", clusterApi.GetDashboardInfo)
-			cluster.GET("/:clusterId/monitor", clusterApi.DescribeMonitor)
+			cluster.GET("/:clusterId/monitor", clusterApi.GetMonitorInfo)
 
 			// Scale cluster
 			cluster.POST("/:clusterId/scale-out", clusterApi.ScaleOut)

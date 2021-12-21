@@ -34,6 +34,8 @@ type FileHostInitiator struct {
 
 func NewFileHostInitiator() *FileHostInitiator {
 	hostInitiator := new(FileHostInitiator)
+	hostInitiator.sshClient = nil
+	hostInitiator.secondPartyServ = secondparty.Manager
 	return hostInitiator
 }
 
@@ -45,7 +47,51 @@ func (p *FileHostInitiator) SetSecondPartyServ(s secondparty.SecondPartyService)
 	p.secondPartyServ = s
 }
 
-func (p *FileHostInitiator) VerifyConnect(ctx context.Context, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (err error) {
+	err = p.verifyConnect(ctx, h)
+	if err != nil {
+		return err
+	}
+	defer p.closeSSHConnect()
+
+	if err = p.verifyCpuMem(ctx, h); err != nil {
+		return err
+	}
+
+	if err = p.verifyDisks(ctx, h); err != nil {
+		return err
+	}
+
+	if err = p.verifyFS(ctx, h); err != nil {
+		return err
+	}
+
+	if err = p.verifySwap(ctx, h); err != nil {
+		return err
+	}
+
+	if err = p.verifyEnv(ctx, h); err != nil {
+		return err
+	}
+
+	if err = p.verifyOSEnv(ctx, h); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *FileHostInitiator) InstallSoftware(ctx context.Context, hosts []structs.HostInfo) (err error) {
+	if err = p.installFileBeat(ctx, hosts); err != nil {
+		return err
+	}
+	if err = p.installTcpDump(ctx, hosts); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *FileHostInitiator) verifyConnect(ctx context.Context, h *structs.HostInfo) (err error) {
 	p.sshClient = sshclient.NewSSHClient(h.IP, 22, sshclient.Passwd, h.UserName, h.Passwd)
 	if err = p.sshClient.Connect(); err != nil {
 		return err
@@ -53,13 +99,13 @@ func (p *FileHostInitiator) VerifyConnect(ctx context.Context, h *structs.HostIn
 	return nil
 }
 
-func (p *FileHostInitiator) CloseSSHConnect() {
+func (p *FileHostInitiator) closeSSHConnect() {
 	if p.sshClient != nil {
 		p.sshClient.Close()
 	}
 }
 
-func (p *FileHostInitiator) VerifyCpuMem(ctx context.Context, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) verifyCpuMem(ctx context.Context, h *structs.HostInfo) (err error) {
 	getArchCmd := "lscpu | grep 'Architecture:' | awk '{print $2}'"
 	arch, err := p.sshClient.RunCommandsInSession([]string{getArchCmd})
 	if err != nil {
@@ -97,27 +143,27 @@ func (p *FileHostInitiator) VerifyCpuMem(ctx context.Context, h *structs.HostInf
 	return nil
 }
 
-func (p *FileHostInitiator) VerifyDisks(ctx context.Context, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) verifyDisks(ctx context.Context, h *structs.HostInfo) (err error) {
 	return nil
 }
 
-func (p *FileHostInitiator) VerifyFS(ctx context.Context, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) verifyFS(ctx context.Context, h *structs.HostInfo) (err error) {
 	return nil
 }
 
-func (p *FileHostInitiator) VerifySwap(ctx context.Context, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) verifySwap(ctx context.Context, h *structs.HostInfo) (err error) {
 	return nil
 }
 
-func (p *FileHostInitiator) VerifyEnv(ctx context.Context, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) verifyEnv(ctx context.Context, h *structs.HostInfo) (err error) {
 	return nil
 }
 
-func (p *FileHostInitiator) VerifyOSEnv(ctx context.Context, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) verifyOSEnv(ctx context.Context, h *structs.HostInfo) (err error) {
 	return nil
 }
 
-func (p *FileHostInitiator) SetOffSwap(ctx context.Context, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) setOffSwap(ctx context.Context, h *structs.HostInfo) (err error) {
 	changeConf := "echo 'vm.swappiness = 0'>> /etc/sysctl.conf"
 	flushCmd := "swapoff -a && swapon -a"
 	updateCmd := "sysctl -p"
@@ -129,6 +175,10 @@ func (p *FileHostInitiator) SetOffSwap(ctx context.Context, h *structs.HostInfo)
 	return nil
 }
 
-func (p *FileHostInitiator) InstallSoftware(ctx context.Context, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) installFileBeat(ctx context.Context, hosts []structs.HostInfo) (err error) {
+	return nil
+}
+
+func (p *FileHostInitiator) installTcpDump(ctx context.Context, hosts []structs.HostInfo) (err error) {
 	return nil
 }

@@ -93,31 +93,12 @@ func genHostRspFromDB(hostId, hostName string) *resourcepool.Host {
 }
 
 func doMockInitiator(mockInitiator *mock_initiator.MockHostInitiator) {
-	mockInitiator.EXPECT().VerifyConnect(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
+	mockInitiator.EXPECT().Verify(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
 		return nil
 	})
-	mockInitiator.EXPECT().CloseSSHConnect().Return()
-	mockInitiator.EXPECT().VerifyCpuMem(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
+	mockInitiator.EXPECT().InstallSoftware(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []structs.HostInfo) error {
 		return nil
 	})
-	mockInitiator.EXPECT().VerifyDisks(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
-		return nil
-	})
-	mockInitiator.EXPECT().VerifyFS(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
-		return nil
-	})
-	mockInitiator.EXPECT().VerifySwap(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
-		return nil
-	})
-	mockInitiator.EXPECT().VerifyEnv(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
-		return nil
-	})
-	mockInitiator.EXPECT().VerifyOSEnv(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
-		return nil
-	})
-	mockInitiator.EXPECT().SetOffSwap(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
-		return nil
-	}).AnyTimes()
 }
 func Test_ImportHosts_Succeed(t *testing.T) {
 	fake_hostId := "xxxx-xxxx-yyyy-yyyy"

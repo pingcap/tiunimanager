@@ -58,10 +58,13 @@ func (p *ResourcePool) SetHostInitiator(initiator hostinitiator.HostInitiator) {
 
 func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error) {
 	for _, host := range hosts {
-		err = p.verify(ctx, &host)
+		err = p.hostInitiator.Verify(ctx, &host)
 		if err != nil {
 			return nil, err
 		}
+	}
+	if err = p.hostInitiator.InstallSoftware(ctx, hosts); err != nil {
+		return nil, err
 	}
 	return p.hostProvider.ImportHosts(ctx, hosts)
 }
@@ -88,38 +91,4 @@ func (p *ResourcePool) GetHierarchy(ctx context.Context, filter *structs.HostFil
 
 func (p *ResourcePool) GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks *structs.Stocks, err error) {
 	return p.hostProvider.GetStocks(ctx, location, hostFilter, diskFilter)
-}
-
-func (p *ResourcePool) verify(ctx context.Context, h *structs.HostInfo) (err error) {
-	err = p.hostInitiator.VerifyConnect(ctx, h)
-	if err != nil {
-		return err
-	}
-	defer p.hostInitiator.CloseSSHConnect()
-
-	if err = p.hostInitiator.VerifyCpuMem(ctx, h); err != nil {
-		return err
-	}
-
-	if err = p.hostInitiator.VerifyDisks(ctx, h); err != nil {
-		return err
-	}
-
-	if err = p.hostInitiator.VerifyFS(ctx, h); err != nil {
-		return err
-	}
-
-	if err = p.hostInitiator.VerifySwap(ctx, h); err != nil {
-		return err
-	}
-
-	if err = p.hostInitiator.VerifyEnv(ctx, h); err != nil {
-		return err
-	}
-
-	if err = p.hostInitiator.VerifyOSEnv(ctx, h); err != nil {
-		return err
-	}
-
-	return nil
 }

@@ -48,7 +48,7 @@ func Test_VerifyCpuMem_Succeed(t *testing.T) {
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
-	err := fileInitiator.VerifyCpuMem(context.TODO(), &structs.HostInfo{Arch: "x86_64", CpuCores: 32, Memory: 8})
+	err := fileInitiator.verifyCpuMem(context.TODO(), &structs.HostInfo{Arch: "x86_64", CpuCores: 32, Memory: 8})
 	assert.Nil(t, err)
 }
 
@@ -66,7 +66,7 @@ func Test_VerifyCpuMem_Failed(t *testing.T) {
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
-	err := fileInitiator.VerifyCpuMem(context.TODO(), &structs.HostInfo{Arch: "x86_64", CpuCores: 32, Memory: 8})
+	err := fileInitiator.verifyCpuMem(context.TODO(), &structs.HostInfo{Arch: "x86_64", CpuCores: 32, Memory: 8})
 	assert.NotNil(t, err)
 }
 
@@ -78,7 +78,7 @@ func Test_VerifyDisks(t *testing.T) {
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
-	err := fileInitiator.VerifyDisks(context.TODO(), &structs.HostInfo{})
+	err := fileInitiator.verifyDisks(context.TODO(), &structs.HostInfo{})
 	assert.Nil(t, err)
 }
 
@@ -90,7 +90,7 @@ func Test_VerifyFS(t *testing.T) {
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
-	err := fileInitiator.VerifyFS(context.TODO(), &structs.HostInfo{})
+	err := fileInitiator.verifyFS(context.TODO(), &structs.HostInfo{})
 	assert.Nil(t, err)
 }
 
@@ -102,7 +102,7 @@ func Test_VerifySwap(t *testing.T) {
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
-	err := fileInitiator.VerifySwap(context.TODO(), &structs.HostInfo{})
+	err := fileInitiator.verifySwap(context.TODO(), &structs.HostInfo{})
 	assert.Nil(t, err)
 }
 
@@ -114,7 +114,7 @@ func Test_VerifyEnv(t *testing.T) {
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
-	err := fileInitiator.VerifyEnv(context.TODO(), &structs.HostInfo{})
+	err := fileInitiator.verifyEnv(context.TODO(), &structs.HostInfo{})
 	assert.Nil(t, err)
 }
 
@@ -126,7 +126,7 @@ func Test_VerifyOSEnv(t *testing.T) {
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
-	err := fileInitiator.VerifyOSEnv(context.TODO(), &structs.HostInfo{})
+	err := fileInitiator.verifyOSEnv(context.TODO(), &structs.HostInfo{})
 	assert.Nil(t, err)
 }
 
@@ -138,6 +138,6 @@ func Test_SetOffSwap(t *testing.T) {
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
-	err := fileInitiator.SetOffSwap(context.TODO(), &structs.HostInfo{})
+	err := fileInitiator.setOffSwap(context.TODO(), &structs.HostInfo{})
 	assert.Nil(t, err)
 }

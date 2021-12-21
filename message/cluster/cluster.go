@@ -41,7 +41,7 @@ type CreateClusterResp struct {
 
 // DeleteClusterReq Message for delete a new cluster
 type DeleteClusterReq struct {
-	ClusterID       string `json:"clusterID"`
+	ClusterID       string `json:"clusterID" swaggerignore:"true"`
 	AutoBackup      bool   `json:"autoBackup" form:"autoBackup"`
 	ClearBackupData bool   `json:"clearBackupData" form:"clearBackupData"`
 }
@@ -76,7 +76,7 @@ type RestartClusterResp struct {
 
 // ScaleInClusterReq Message for delete an instance in the cluster
 type ScaleInClusterReq struct {
-	ClusterID  string `json:"clusterId" form:"clusterId"`
+	ClusterID  string `json:"clusterId" form:"clusterId" swaggerignore:"true"`
 	InstanceID string `json:"instanceId"  form:"instanceId"`
 }
 
@@ -88,7 +88,7 @@ type ScaleInClusterResp struct {
 
 // ScaleOutClusterReq Message for cluster expansion operation
 type ScaleOutClusterReq struct {
-	ClusterID string `json:"clusterId" form:"clusterId"`
+	ClusterID string `json:"clusterId" form:"clusterId" swaggerignore:"true"`
 	structs.ClusterResourceInfo
 }
 
@@ -241,7 +241,7 @@ type GetDashboardInfoResp struct {
 
 //QueryClusterLogReq Messages that query cluster log information can be filtered based on query criteria
 type QueryClusterLogReq struct {
-	ClusterID string `json:"clusterId"`
+	ClusterID string `json:"clusterId" swaggerignore:"true"`
 	Module    string `form:"module" example:"tidb"`
 	Level     string `form:"level" example:"warn"`
 	Ip        string `form:"ip" example:"127.0.0.1"`
@@ -258,7 +258,7 @@ type QueryClusterLogResp struct {
 }
 
 type QueryClusterParametersReq struct {
-	ClusterID string `json:"clusterId"`
+	ClusterID string `json:"clusterId" swaggerignore:"true"`
 	structs.PageRequest
 }
 
@@ -268,7 +268,7 @@ type QueryClusterParametersResp struct {
 }
 
 type UpdateClusterParametersReq struct {
-	ClusterID string                               `json:"clusterId"`
+	ClusterID string                               `json:"clusterId" swaggerignore:"true"`
 	Params    []structs.ClusterParameterSampleInfo `json:"params"`
 	Reboot    bool                                 `json:"reboot"`
 }

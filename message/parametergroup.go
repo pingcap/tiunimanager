@@ -73,7 +73,7 @@ type DeleteParameterGroupResp struct {
 }
 
 type UpdateParameterGroupReq struct {
-	ParamGroupID   string                                      `json:"paramGroupId"`
+	ParamGroupID   string                                      `json:"paramGroupId" swaggerignore:"true"`
 	Name           string                                      `json:"name" example:"8C16GV4_default"`
 	ClusterVersion string                                      `json:"clusterVersion" example:"v5.0"`
 	ClusterSpec    string                                      `json:"clusterSpec" example:"8C16G"`
@@ -86,7 +86,7 @@ type UpdateParameterGroupResp struct {
 }
 
 type CopyParameterGroupReq struct {
-	ParamGroupID string `json:"paramGroupId"`
+	ParamGroupID string `json:"paramGroupId" swaggerignore:"true"`
 	Name         string `json:"name" example:"8C16GV4_copy"`
 	Note         string `json:"note" example:"copy param group"`
 }
@@ -96,7 +96,7 @@ type CopyParameterGroupResp struct {
 }
 
 type ApplyParameterGroupReq struct {
-	ParamGroupId string `json:"paramGroupId" example:"123"`
+	ParamGroupId string `json:"paramGroupId" example:"123" swaggerignore:"true"`
 	ClusterID    string `json:"clusterId" example:"123"`
 	Reboot       bool   `json:"reboot"`
 }

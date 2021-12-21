@@ -118,7 +118,7 @@ func (m *BRReadWrite) UpdateBackupStrategy(ctx context.Context, strategy *Backup
 	columnMap["backup_date"] = strategy.BackupDate
 	columnMap["start_hour"] = strategy.StartHour
 	columnMap["end_hour"] = strategy.EndHour
-	return m.DB(ctx).Model(strategy).Where("cluster_id = ?", strategy.ClusterID).Updates(strategy).Error
+	return m.DB(ctx).Model(strategy).Where("cluster_id = ?", strategy.ClusterID).Updates(columnMap).Error
 }
 
 func (m *BRReadWrite) SaveBackupStrategy(ctx context.Context, strategy *BackupStrategy) (*BackupStrategy, error) {
@@ -164,5 +164,5 @@ func (m *BRReadWrite) DeleteBackupStrategy(ctx context.Context, clusterId string
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 	strategy := &BackupStrategy{}
-	return m.DB(ctx).First(strategy, "cluster_id = ?", clusterId).Delete(strategy).Error
+	return m.DB(ctx).First(strategy, "cluster_id = ?", clusterId).Unscoped().Delete(strategy).Error
 }

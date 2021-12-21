@@ -267,11 +267,11 @@ func restoreNewCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 }
 
 func waitWorkFlow(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	workflowId := context.GetData(ContextWorkflowID).(string)
+	workflowID := context.GetData(ContextWorkflowID).(string)
 
-	if err := handler.WaitWorkflow(workflowId, 30*24*time.Hour); err != nil {
-		framework.LogWithContext(context.Context).Errorf("wait workflow %s error: %s", workflowId, err.Error())
-		return fmt.Errorf("wait workflow %s error: %s", workflowId, err.Error())
+	if err := handler.WaitWorkflow(context.Context, workflowID, 30*time.Second, 30*24*time.Hour); err != nil {
+		framework.LogWithContext(context.Context).Errorf("wait workflow %s error: %s", workflowID, err.Error())
+		return err
 	}
 
 	return nil
@@ -484,11 +484,7 @@ func restoreCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 			"do restore for cluster %s by backup id %s error: %s", clusterMeta.Cluster.ID, backupID, err.Error())
 		return err
 	}
-
-	if err = handler.WaitWorkflow(restoreResponse.WorkFlowID, 10*time.Second); err != nil {
-		framework.LogWithContext(context.Context).Errorf("restore workflow error: %s", err)
-		return err
-	}
+	context.SetData(ContextWorkflowID, restoreResponse.WorkFlowID)
 
 	return nil
 }

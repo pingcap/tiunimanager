@@ -24,6 +24,7 @@ import (
 	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestContain(t *testing.T) {
@@ -108,5 +109,7 @@ func TestScaleOutPreCheck(t *testing.T) {
 }
 
 func TestWaitWorkflow(t *testing.T) {
+	err := WaitWorkflow("111", 10*time.Second)
+	assert.Error(t, err)
 	//TODO: test WaitWorkflow
 }

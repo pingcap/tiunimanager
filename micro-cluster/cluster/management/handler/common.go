@@ -20,6 +20,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/workflow"
 	"reflect"
 	"strconv"
 	"strings"
@@ -137,6 +139,34 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 	return nil
 }
 
-func WaitWorkflow(workflowID string, interval time.Duration) error {
+// WaitWorkflow
+// @Description wait workflow done
+// @Parameter	workflowID
+// @Parameter	timeout
+// @Return		error
+func WaitWorkflow(ctx context.Context, workflowID string, interval, timeout time.Duration) error {
+	index := int(timeout.Seconds() / interval.Seconds())
+	ticker := time.NewTicker(interval)
+	for range ticker.C {
+		response, err := workflow.GetWorkFlowService().DetailWorkFlow(ctx,
+			message.QueryWorkFlowDetailReq{WorkFlowID: workflowID})
+		if err != nil {
+			return err
+		}
+		if response.Info.Status == constants.WorkFlowStatusFinished {
+			framework.LogWithContext(ctx).Infof("workflow %s runs successfully!", workflowID)
+			return nil
+		} else if response.Info.Status == constants.WorkFlowStatusError {
+			framework.LogWithContext(ctx).Errorf("workflow %s runs failed!", workflowID)
+			return framework.NewTiEMError(common.TIEM_WAIT_WORKFLOW_RUN_ERROR,
+				fmt.Sprintf("wait workflow %s, which runs failed!", workflowID))
+		}
+		index -= 1
+		if index == 0 {
+			return framework.NewTiEMError(common.TIEM_WAIT_WORKFLOW_TIMEOUT_ERROR,
+				fmt.Sprintf("wait workflow %s timeout", workflowID))
+		}
+	}
+
 	return nil
 }

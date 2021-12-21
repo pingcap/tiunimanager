@@ -467,21 +467,21 @@ func openSftpClient(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.C
 	client, err := ssh.Dial("tcp", net.JoinHostPort(req.TiUPIp, strconv.Itoa(req.TiUPPort)), &conf)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("connect error, error: %s", err.Error())
-		return nil, nil, framework.WrapError(common.TIEM_TAKEOVER_SSH_CONNECT_ERROR, "ssh dial error", err)
+		return nil, nil, errors.WrapError(errors.TIEM_TAKEOVER_SSH_CONNECT_ERROR, "ssh dial error", err)
 	}
 
 	sftpClient, err := sftp.NewClient(client)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("new sftp client failed, error: %s", err.Error())
 		client.Close()
-		return nil, nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "new sftp client failed", err)
+		return nil, nil, errors.WrapError(errors.TIEM_TAKEOVER_SFTP_ERROR, "new sftp client failed", err)
 	}
 	return client, sftpClient, nil
 }
 
 func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) (resp cluster.TakeoverClusterResp, err error) {
 	if len(req.ClusterNames) == 0 {
-		err = framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "cluster names required")
+		err = errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster names required")
 		return
 	}
 

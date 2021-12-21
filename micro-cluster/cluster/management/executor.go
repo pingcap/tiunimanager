@@ -722,14 +722,14 @@ func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 	remoteFile, err := sftpClient.Open(remoteFileName)
 	if err != nil {
 		framework.LogWithContext(context).Errorf("fetch topology failed, error: %s", err.Error())
-		return framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "fetch topology failed", err)
+		return errors.WrapError(errors.TIEM_TAKEOVER_SFTP_ERROR, "fetch topology failed", err)
 	}
 	defer remoteFile.Close()
 
 	dataByte, err := ioutil.ReadAll(remoteFile)
 	if err != nil {
 		framework.LogWithContext(context).Errorf("fetch topology failed, error: %s", err.Error())
-		return framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "read remote file error", err)
+		return errors.WrapError(errors.TIEM_TAKEOVER_SFTP_ERROR, "read remote file error", err)
 	}
 	context.SetData(ContextTopologyConfig, dataByte)
 	return nil
@@ -742,7 +742,7 @@ func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workfl
 	metadata := &spec.ClusterMeta{}
 	err := yaml.Unmarshal(dataByte, metadata)
 	if err != nil {
-		err = framework.WrapError(common.TIEM_UNMARSHAL_ERROR, "rebuild topology config failed", err)
+		err = errors.WrapError(errors.TIEM_UNMARSHAL_ERROR, "rebuild topology config failed", err)
 		return err
 	}
 

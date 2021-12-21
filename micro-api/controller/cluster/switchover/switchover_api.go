@@ -38,9 +38,7 @@ import (
 func Switchover(c *gin.Context) {
 	var req cluster.MasterSlaveClusterSwitchoverReq
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
-
-	if err == nil {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, req); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.MasterSlaveSwitchover, &cluster.MasterSlaveClusterSwitchoverResp{},
 			requestBody,
 			controller.DefaultTimeout)

@@ -18,6 +18,7 @@ package handler
 import (
 	"bytes"
 	"context"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"text/template"
 
@@ -25,7 +26,6 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	newConstants "github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	resource "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
@@ -89,11 +89,11 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 // @Return		error
 func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.ClusterResourceParameterCompute) error {
 	if len(computes) <= 0 {
-		return framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter is invalid!")
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "parameter is invalid!")
 	}
 
 	if p.Cluster == nil {
-		return framework.NewTiEMError(common.TIEM_UNRECOGNIZED_ERROR, "cluster is nil!")
+		return errors.NewError(errors.TIEM_UNRECOGNIZED_ERROR, "cluster is nil!")
 	}
 
 	if len(p.Instances) == 0 {
@@ -282,17 +282,17 @@ func (p *ClusterMeta) GetInstanceByStatus(ctx context.Context, status constants.
 // @Return		error
 func (p *ClusterMeta) GenerateTopologyConfig(ctx context.Context) (string, error) {
 	if p.Cluster == nil || len(p.Instances) == 0 {
-		return "", framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "cluster topology is empty, please check it!")
+		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster topology is empty, please check it!")
 	}
 
 	t, err := template.New("cluster_topology.yaml").ParseFiles("template/cluster_topology.yaml")
 	if err != nil {
-		return "", framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, err.Error())
+		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
 	}
 
 	topology := new(bytes.Buffer)
 	if err = t.Execute(topology, p); err != nil {
-		return "", framework.NewTiEMError(common.TIEM_UNRECOGNIZED_ERROR, err.Error())
+		return "", errors.NewError(errors.TIEM_UNRECOGNIZED_ERROR, err.Error())
 	}
 	framework.LogWithContext(ctx).Infof("generate topology config: %s", topology.String())
 
@@ -327,7 +327,7 @@ func (p *ClusterMeta) GetInstance(ctx context.Context, instanceID string) (*mana
 			}
 		}
 	}
-	return nil, framework.NewTiEMError(common.TIEM_INSTANCE_NOT_FOUND, "instance not found")
+	return nil, errors.NewError(errors.TIEM_INSTANCE_NOT_FOUND, "instance not found")
 }
 
 // IsComponentRequired
@@ -400,7 +400,7 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 	// if user specify cluster version
 	if len(parameter.Version) > 0 {
 		if parameter.Version < p.Cluster.Version {
-			return nil, framework.NewTiEMError(common.TIEM_CHECK_CLUSTER_VERSION_ERROR,
+			return nil, errors.NewError(errors.TIEM_CHECK_CLUSTER_VERSION_ERROR,
 				"the specified cluster version is less than source cluster version")
 		}
 		meta.Cluster.Version = parameter.Version

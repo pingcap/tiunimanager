@@ -114,7 +114,20 @@ func (m *BRReadWrite) CreateBackupStrategy(ctx context.Context, strategy *Backup
 }
 
 func (m *BRReadWrite) UpdateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (err error) {
-	return m.DB(ctx).Model(strategy).Save(strategy).Error
+	columnMap := make(map[string]interface{})
+	columnMap["backup_date"] = strategy.BackupDate
+	columnMap["start_hour"] = strategy.StartHour
+	columnMap["end_hour"] = strategy.EndHour
+	return m.DB(ctx).Model(strategy).Where("cluster_id = ?", strategy.ClusterID).Updates(strategy).Error
+}
+
+func (m *BRReadWrite) SaveBackupStrategy(ctx context.Context, strategy *BackupStrategy) (*BackupStrategy, error) {
+	existStrategy, err := m.GetBackupStrategy(ctx, strategy.ClusterID)
+	if err != nil || existStrategy.ID == "" {
+		return m.CreateBackupStrategy(ctx, strategy)
+	} else {
+		return strategy, m.UpdateBackupStrategy(ctx, strategy)
+	}
 }
 
 func (m *BRReadWrite) GetBackupStrategy(ctx context.Context, clusterId string) (strategy *BackupStrategy, err error) {
@@ -127,7 +140,7 @@ func (m *BRReadWrite) GetBackupStrategy(ctx context.Context, clusterId string) (
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
-	return strategy, err
+	return strategy, nil
 }
 
 func (m *BRReadWrite) QueryBackupStrategy(ctx context.Context, weekDay string, startHour uint32) (strategies []*BackupStrategy, err error) {

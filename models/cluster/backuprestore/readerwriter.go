@@ -84,6 +84,15 @@ type ReaderWriter interface {
 	// @Return error
 	CreateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (*BackupStrategy, error)
 
+	// SaveBackupStrategy
+	// @Description: create new backup strategy or update exist backup strategy
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter strategy
+	// @Return *BackupStrategy
+	// @Return error
+	SaveBackupStrategy(ctx context.Context, strategy *BackupStrategy) (*BackupStrategy, error)
+
 	// UpdateBackupStrategy
 	// @Description: update backup strategy
 	// @Receiver m

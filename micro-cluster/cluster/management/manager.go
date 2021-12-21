@@ -39,6 +39,7 @@ const (
 	ContextCloneStrategy     = "CloneStrategy"
 	ContextBackupID          = "BackupID"
 	ContextUpgradeVersion    = "UpgradeVersion"
+	ContextUpgradeWay        = "UpgradeWay"
 	ContextWorkflowID        = "WorkflowID"
 )
 
@@ -54,7 +55,8 @@ func NewClusterManager() *Manager {
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowDeleteCluster, &deleteClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowRestartCluster, &restartClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowStopCluster, &stopClusterFlow)
-	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowInPlaceUpgradeCluster, &inPlaceUpgradeClusterFlow)
+	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowOnlineInPlaceUpgradeCluster, &onlineInPlaceUpgradeClusterFlow)
+	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowOfflineInPlaceUpgradeCluster, &offlineInPlaceUpgradeClusterFlow)
 
 	return &Manager{}
 }
@@ -523,13 +525,25 @@ func (p *Manager) GetMonitorInfo(ctx context.Context, req cluster.QueryMonitorIn
 	return resp, nil
 }
 
-var inPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
-	FlowName: constants.FlowInPlaceUpgradeCluster,
+var onlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
+	FlowName: constants.FlowOnlineInPlaceUpgradeCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":          {"editConfig", "editConfigDone", "fail", workflow.SyncFuncNode, editConfig},
 		"editConfigDone": {"clusterUpgrade", "upgradeDone", "fail", workflow.PollingNode, upgradeCluster},
 		"upgradeDone":    {"end", "", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistCluster)},
 		"fail":           {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure)},
+	},
+}
+
+var offlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
+	FlowName: constants.FlowOfflineInPlaceUpgradeCluster,
+	TaskNodes: map[string]*workflow.NodeDefine{
+		"start":            {"editConfig", "editConfigDone", "fail", workflow.SyncFuncNode, editConfig},
+		"editConfigDone":   {"clusterStop", "stopClusterDone", "fail", workflow.PollingNode, stopCluster},
+		"stopClusterDone":  {"clusterUpgrade", "upgradeDone", "fail", workflow.PollingNode, upgradeCluster},
+		"upgradeDone":      {"clusterStart", "startClusterDone", "fail", workflow.SyncFuncNode, startCluster},
+		"startClusterDone": {"end", "", "fail", workflow.PollingNode, workflow.CompositeExecutor(endMaintenance, persistCluster)},
+		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure)},
 	},
 }
 
@@ -596,7 +610,7 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 }
 
 // InPlaceUpgradeCluster
-// @Description: See inPlaceUpgradeClusterFlow
+// @Description: See onlineInPlaceUpgradeClusterFlow
 // @Receiver p
 // @Parameter ctx
 // @Parameter req
@@ -619,8 +633,14 @@ func (p *Manager) InPlaceUpgradeCluster(ctx context.Context, req *cluster.Cluste
 	data := map[string]interface{}{
 		ContextClusterMeta:    meta,
 		ContextUpgradeVersion: req.TargetVersion,
+		ContextUpgradeWay:     req.UpgradeWay,
 	}
-	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceUpgrading, inPlaceUpgradeClusterFlow.FlowName, data)
+	var flowID string
+	if req.UpgradeWay == cluster.UpgradeWayOnline {
+		flowID, err = asyncMaintenance(ctx, meta, constants.ClusterMaintenanceUpgrading, onlineInPlaceUpgradeClusterFlow.FlowName, data)
+	} else {
+		flowID, err = asyncMaintenance(ctx, meta, constants.ClusterMaintenanceUpgrading, offlineInPlaceUpgradeClusterFlow.FlowName, data)
+	}
 
 	resp := &cluster.ClusterUpgradeResp{}
 	resp.WorkFlowID = flowID

@@ -635,13 +635,19 @@ func editConfig(node *workflowModel.WorkFlowNode, context *workflow.FlowContext)
 // @Description: upgrade the cluster
 func upgradeCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
-	cluster := clusterMeta.Cluster
+	clusterInfo := clusterMeta.Cluster
 	version := context.GetData(ContextUpgradeVersion).(string)
+	way := context.GetData(ContextUpgradeWay).(string)
 
 	framework.LogWithContext(context.Context).Infof(
-		"upgrade cluster[%s], version = %s", cluster.Name, cluster.Version)
+		"upgrade cluster[%s], version = %s, way: %s", clusterInfo.Name, clusterInfo.Version, way)
+	var args []string
+	if way == string(cluster.UpgradeWayOffline) {
+		args = append(args, "--offline")
+	}
+	args = append(args, "BACKUP")
 	taskId, err := secondparty.Manager.ClusterUpgrade(
-		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, version, 3600, []string{}, node.ID,
+		context.Context, secondparty.ClusterComponentTypeStr, clusterInfo.Name, version, 3600, args, node.ID,
 	)
 
 	if err != nil {

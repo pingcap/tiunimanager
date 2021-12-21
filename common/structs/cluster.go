@@ -41,13 +41,6 @@ func (p *ClusterResourceParameterComputeResource) Equal(zone, spec, diskType str
 		p.Spec == spec
 }
 
-func (p *ClusterResourceParameterComputeResource) EqualOther(other ClusterResourceParameterComputeResource) bool {
-	return p.Zone == other.Zone  &&
-		p.DiskType == other.DiskType  &&
-		p.DiskCapacity == other.DiskCapacity  &&
-		p.Spec == other.Spec
-}
-
 //ClusterResourceParameterCompute Component resource parameters when creating a cluster, including: compute resources, storage resources
 type ClusterResourceParameterCompute struct {
 	Type     string                                    `json:"componentType"` //TiDB/TiKV/PD/TiFlash/TiCDC/DM-Master/DM-Worker

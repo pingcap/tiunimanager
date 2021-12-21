@@ -23,8 +23,8 @@ import (
 	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
+	emerr "github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	tsoLib "github.com/pingcap-inc/tiem/library/util/tso"
 	"github.com/pingcap-inc/tiem/message/cluster"
@@ -153,7 +153,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 				// A rw-able & B unavailable
 				framework.LogWithContext(ctx).Errorf("checkClusterReadWriteHealth on oldSlaveId %s failed err:%s", oldSlaveId, err)
 				flowName = "" // end
-				return resp, framework.NewTiEMErrorf(common.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED, "master/slave switchover failed: %s", "slave is unavailable")
+				return resp, emerr.NewEMErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED, "master/slave switchover failed: %s", "slave is unavailable")
 			}
 		} else {
 			framework.LogWithContext(ctx).Errorf("checkClusterReadWriteHealth on oldMasterId %s failed err:%s", oldMasterId, err)
@@ -166,7 +166,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 				// A unavailable & B unavailable
 				framework.LogWithContext(ctx).Errorf("checkClusterReadWriteHealth on oldSlaveId %s failed err:%s", oldSlaveId, err)
 				flowName = "" // end
-				return resp, framework.NewTiEMErrorf(common.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED, "master/slave switchover failed: %s", "master and slave are both unavailable")
+				return resp, emerr.NewEMErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED, "master/slave switchover failed: %s", "master and slave are both unavailable")
 			}
 		}
 	}
@@ -174,7 +174,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 	flow, err := flowManager.CreateWorkFlow(ctx, oldMasterId, flowName)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", flowName, err.Error())
-		return resp, framework.NewTiEMErrorf(common.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
+		return resp, emerr.NewEMErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
 			"create %s workflow failed: %s", flowName, err.Error())
 	}
 
@@ -182,7 +182,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 	flowManager.AddContext(flow, wfContextOldSyncChangeFeedTaskIDKey, oldSyncChangeFeedTaskId)
 	if err = flowManager.AsyncStart(ctx, flow); err != nil {
 		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", flowName, err.Error())
-		return nil, framework.NewTiEMErrorf(common.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
+		return nil, emerr.NewEMErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
 			"async start %s workflow failed, %s", flowName, err.Error())
 	}
 
@@ -371,7 +371,7 @@ func (m *Manager) getOldSyncChangeFeedTaskId(ctx context.Context, reqJson, logNa
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"%s getRelation req:%s err:%s", funcName, reqJson, err)
-		return "", framework.NewTiEMErrorf(common.TIEM_MASTER_SLAVE_SWITCHOVER_NOT_FOUND, "master/slave relation not found: %s", err)
+		return "", emerr.NewEMErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_NOT_FOUND, "master/slave relation not found: %s", err)
 	} else {
 		framework.LogWithContext(ctx).Infof(
 			"%s getRelation req:%s success", funcName, reqJson)

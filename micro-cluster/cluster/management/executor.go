@@ -16,6 +16,7 @@
 package management
 
 import (
+	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -224,6 +225,55 @@ func freeInstanceResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 	return nil
 }
 
+func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	meta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	_, err := backuprestore.GetBRService().DeleteBackupStrategy(context.Context, cluster.DeleteBackupStrategyReq{
+		ClusterID: meta.Cluster.ID,
+	})
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"delete backup strategy for cluster %s error: %s", meta.Cluster.ID, err.Error())
+		return err
+	}
+
+	_, err = backuprestore.GetBRService().DeleteBackupRecords(context.Context, cluster.DeleteBackupDataReq {
+		ClusterID:  meta.Cluster.ID,
+		BackupMode: string(constants.BackupModeAuto),
+	})
+
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"delete auto backup data for cluster %s error: %s", meta.Cluster.ID, err.Error())
+		return err
+	}
+	return nil
+}
+
+func backupBeforeDelete(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	meta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	_, err := backupSubProcess(context.Context, meta, false)
+	return err
+}
+
+func backupSubProcess(ctx context.Context, meta *handler.ClusterMeta, independenceMaintenance bool) (*cluster.BackupClusterDataResp, error) {
+	backupResponse, err := backuprestore.GetBRService().BackupCluster(ctx,
+		cluster.BackupClusterDataReq{
+			ClusterID:  meta.Cluster.ID,
+			BackupMode: string(constants.BackupModeManual),
+		}, independenceMaintenance)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"do backup for cluster %s error: %s", meta.Cluster.ID, err.Error())
+		return nil, err
+	}
+
+	if err = handler.WaitWorkflow(backupResponse.WorkFlowID, 10 * time.Second); err != nil {
+		framework.LogWithContext(ctx).Errorf("backup workflow error: %s", err)
+		return nil, err
+	}
+	return &backupResponse, nil
+}
+
 func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*handler.ClusterMeta)
 	cloneStrategy := context.GetData(ContextCloneStrategy).(string)
@@ -231,22 +281,11 @@ func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	if cloneStrategy == string(constants.ClusterTopologyClone) {
 		return nil
 	}
-	backupResponse, err := backuprestore.GetBRService().BackupCluster(context.Context,
-		cluster.BackupClusterDataReq{
-			ClusterID:  sourceClusterMeta.Cluster.ID,
-			BackupMode: string(constants.BackupModeManual),
-		}, true)
+	backupResponse, err := backupSubProcess(context.Context, sourceClusterMeta, true)
+
 	if err != nil {
-		framework.LogWithContext(context.Context).Errorf(
-			"do backup for cluster %s error: %s", sourceClusterMeta.Cluster.ID, err.Error())
 		return err
 	}
-
-	if err = handler.WaitWorkflow(backupResponse.WorkFlowID, 10*time.Second); err != nil {
-		framework.LogWithContext(context.Context).Errorf("backup workflow error: %s", err)
-		return err
-	}
-
 	context.SetData(ContextBackupID, backupResponse.BackupID)
 
 	return nil

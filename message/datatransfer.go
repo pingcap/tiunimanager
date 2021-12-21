@@ -80,7 +80,7 @@ type QueryDataImportExportRecordsResp struct {
 }
 
 type DeleteImportExportRecordReq struct {
-	RecordID string `json:"recordId" form:"recordId"`
+	RecordID string `json:"recordId" form:"recordId" swaggerignore:"true"`
 }
 
 type DeleteImportExportRecordResp struct {

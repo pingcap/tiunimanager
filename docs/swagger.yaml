@@ -29,8 +29,7 @@ definitions:
   cluster.CloneClusterReq:
     properties:
       cloneStrategy:
-        description: specify clone strategy, include empty, snapshot and sync, default
-          empty(option)
+        description: specify clone strategy, include empty, snapshot and sync, default empty(option)
         type: string
       clusterName:
         type: string
@@ -39,8 +38,7 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent
-          with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -48,13 +46,10 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources,
-          when exclusive, a host will only deploy instances of the same cluster, which
-          may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
         type: boolean
       parameterGroupID:
         type: string
@@ -138,8 +133,7 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent
-          with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -147,13 +141,10 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources,
-          when exclusive, a host will only deploy instances of the same cluster, which
-          may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
         type: boolean
       parameterGroupID:
         type: string
@@ -179,8 +170,6 @@ definitions:
     type: object
   cluster.DeleteBackupDataReq:
     properties:
-      backupId:
-        type: string
       backupMode:
         type: string
       clusterId:
@@ -210,8 +199,6 @@ definitions:
         type: boolean
       clearBackupData:
         type: boolean
-      clusterID:
-        type: string
     type: object
   cluster.DeleteClusterResp:
     properties:
@@ -540,8 +527,7 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent
-          with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -549,13 +535,10 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources,
-          when exclusive, a host will only deploy instances of the same cluster, which
-          may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
         type: boolean
       parameterGroupID:
         type: string
@@ -594,8 +577,6 @@ definitions:
     type: object
   cluster.SaveBackupStrategyReq:
     properties:
-      clusterId:
-        type: string
       strategy:
         $ref: '#/definitions/structs.BackupStrategy'
     type: object
@@ -603,8 +584,6 @@ definitions:
     type: object
   cluster.ScaleInClusterReq:
     properties:
-      clusterId:
-        type: string
       instanceId:
         type: string
     type: object
@@ -618,8 +597,6 @@ definitions:
     type: object
   cluster.ScaleOutClusterReq:
     properties:
-      clusterId:
-        type: string
       instanceResource:
         items:
           $ref: '#/definitions/structs.ClusterResourceParameterCompute'
@@ -762,8 +739,6 @@ definitions:
     type: object
   cluster.UpdateClusterParametersReq:
     properties:
-      clusterId:
-        type: string
       params:
         items:
           $ref: '#/definitions/structs.ClusterParameterSampleInfo'
@@ -980,9 +955,6 @@ definitions:
       clusterId:
         example: "123"
         type: string
-      paramGroupId:
-        example: "123"
-        type: string
       reboot:
         type: boolean
     type: object
@@ -1005,8 +977,6 @@ definitions:
         type: string
       note:
         example: copy param group
-        type: string
-      paramGroupId:
         type: string
     type: object
   message.CopyParameterGroupResp:
@@ -1136,9 +1106,6 @@ definitions:
   message.DeleteHostsResp:
     type: object
   message.DeleteImportExportRecordReq:
-    properties:
-      recordId:
-        type: string
     type: object
   message.DeleteImportExportRecordResp:
     properties:
@@ -1330,8 +1297,6 @@ definitions:
       note:
         example: default param group
         type: string
-      paramGroupId:
-        type: string
       params:
         items:
           $ref: '#/definitions/structs.ParameterGroupParameterSampleInfo'
@@ -1399,8 +1364,7 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent
-          with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -1410,15 +1374,12 @@ definitions:
       createTime:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
         type: string
       deleteTime:
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources,
-          when exclusive, a host will only deploy instances of the same cluster, which
-          may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
         type: boolean
       extranetConnectAddresses:
         items:
@@ -1437,10 +1398,6 @@ definitions:
         type: string
       memoryUsage:
         $ref: '#/definitions/structs.Usage'
-      portList:
-        items:
-          type: integer
-        type: array
       role:
         type: string
       status:
@@ -1484,7 +1441,7 @@ definitions:
         $ref: '#/definitions/structs.Usage'
       ports:
         items:
-          type: string
+          type: integer
         type: array
       role:
         type: string
@@ -2724,9 +2681,6 @@ paths:
       - application/json
       description: query parameters of a cluster
       parameters:
-      - in: query
-        name: clusterId
-        type: string
       - description: Current page location
         in: query
         name: page
@@ -3558,9 +3512,6 @@ paths:
         in: path
         name: clusterId
         required: true
-        type: string
-      - in: query
-        name: clusterId
         type: string
       - example: "2021-12-01 12:00:00"
         in: query

@@ -45,7 +45,7 @@ type BackupClusterDataResp struct {
 type DeleteBackupDataReq struct {
 	ClusterID  string `json:"clusterId"`
 	BackupMode string `json:"backupMode"`
-	BackupID   string `json:"backupId"`
+	BackupID   string `json:"backupId" swaggerignore:"true"`
 }
 
 // DeleteBackupDataResp Delete a backup file reply message
@@ -68,7 +68,7 @@ type QueryBackupRecordsResp struct {
 
 // SaveBackupStrategyReq Request to update backup data strategy
 type SaveBackupStrategyReq struct {
-	ClusterID string                 `json:"clusterId"`
+	ClusterID string                 `json:"clusterId" swaggerignore:"true"`
 	Strategy  structs.BackupStrategy `json:"strategy"`
 }
 

@@ -17,6 +17,9 @@ package models
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/models/user/account"
+	"github.com/pingcap-inc/tiem/models/user/identification"
+	"github.com/pingcap-inc/tiem/models/user/tenant"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -51,6 +54,9 @@ type database struct {
 	configReaderWriter               config.ReaderWriter
 	secondPartyOperationReaderWriter secondparty.ReaderWriter
 	resourceReaderWriter             resource.ReaderWriter
+	tenantReaderWriter               tenant.ReaderWriter
+	accountReaderWriter              account.ReaderWriter
+	tokenReaderWriter                identification.ReaderWriter
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
@@ -101,7 +107,9 @@ func (p *database) initTables() (err error) {
 	p.addTable(new(parametergroup.ParameterGroup))
 	p.addTable(new(parametergroup.ParameterGroupMapping))
 	p.addTable(new(parameter.ClusterParameterMapping))
-
+	p.addTable(new(account.Account))
+	p.addTable(new(tenant.Tenant))
+	p.addTable(new(identification.Token))
 	// init tables for resource manager
 	err = p.resourceReaderWriter.InitTables(context.TODO())
 	if err != nil {
@@ -124,6 +132,9 @@ func (p *database) initReaderWriters() {
 	defaultDb.configReaderWriter = config.NewConfigReadWrite(defaultDb.base)
 	defaultDb.secondPartyOperationReaderWriter = secondparty.NewGormSecondPartyOperationReadWrite(defaultDb.base)
 	defaultDb.clusterReaderWriter = management.NewClusterReadWrite(defaultDb.base)
+	defaultDb.tenantReaderWriter = tenant.NewTenantReadWrite(defaultDb.base)
+	defaultDb.accountReaderWriter = account.NewAccountReadWrite(defaultDb.base)
+	defaultDb.tokenReaderWriter = identification.NewTokenReadWrite(defaultDb.base)
 }
 
 func (p *database) initSystemData() {
@@ -223,6 +234,29 @@ func GetClusterParameterReaderWriter() parameter.ReaderWriter {
 
 func SetClusterParameterReaderWriter(rw parameter.ReaderWriter) {
 	defaultDb.clusterParameterReaderWriter = rw
+}
+
+func GetAccountReaderWriter() account.ReaderWriter {
+	return defaultDb.accountReaderWriter
+}
+
+func SetAccountReaderWriter(rw account.ReaderWriter) {
+	defaultDb.accountReaderWriter = rw
+}
+
+func GetTenantReaderWriter() tenant.ReaderWriter {
+	return defaultDb.tenantReaderWriter
+}
+
+func SetTenantReaderWriter(rw tenant.ReaderWriter) {
+	defaultDb.tenantReaderWriter = rw
+}
+func GetTokenReaderWriter() identification.ReaderWriter {
+	return defaultDb.tokenReaderWriter
+}
+
+func SetTokenReaderWriter(rw identification.ReaderWriter) {
+	defaultDb.tokenReaderWriter = rw
 }
 
 func MockDB() {

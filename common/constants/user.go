@@ -46,3 +46,24 @@ const (
 	TokenStatusNormal     TokenStatus = "Normal"
 	TokenStatusDeactivate TokenStatus = "Deactivate"
 )
+
+type CommonStatus int
+
+const (
+	Valid              CommonStatus = 0
+	Invalid            CommonStatus = 1
+	Deleted            CommonStatus = 2
+	UnrecognizedStatus CommonStatus = -1
+)
+
+func (s CommonStatus) IsValid() bool {
+	return s == Valid
+}
+
+type TenantType int
+
+const (
+	SystemManagement  TenantType = 0
+	InstanceWorkspace TenantType = 1
+	PluginAccess      TenantType = 2
+)

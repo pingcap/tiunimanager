@@ -254,7 +254,7 @@ func (p *ClusterMeta) ApplyInstanceResource(resource *resource.AllocRsp, instanc
 			case newConstants.ComponentIDPrometheus:
 				instance.Ports = pd.Ports[2:3]
 				continue
-			case newConstants.ComponentIDAlertManger:
+			case newConstants.ComponentIDAlertManager:
 				instance.Ports = pd.Ports[4:6]
 				continue
 			default:

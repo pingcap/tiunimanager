@@ -67,6 +67,6 @@ func WrapDBError(err error) error {
 	case framework.TiEMError:
 		return err
 	default:
-		return errors.NewError(errors.TIEM_UNRECOGNIZED_ERROR, err.Error())
+		return errors.NewError(errors.TIEM_SQL_ERROR, err.Error())
 	}
 }

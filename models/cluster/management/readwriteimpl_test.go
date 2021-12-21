@@ -18,6 +18,7 @@ package management
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	libCommon "github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -83,6 +84,28 @@ func TestGormClusterReadWrite_Create(t *testing.T) {
 		assert.NotEmpty(t, got.UpdatedAt)
 		assert.Equal(t, 2, len(got.Tags))
 		assert.Equal(t, string(constants.ClusterRunning), got.Status)
+	})
+	t.Run("duplicated name", func(t *testing.T) {
+		got1, _ := testRW.Create(context.TODO(), &Cluster{
+			Name: "test1",
+			Entity: common.Entity{
+				TenantId: "111",
+				Status:   string(constants.ClusterRunning),
+			},
+			Tags: []string{"tag1", "tag2"},
+		})
+		defer testRW.Delete(context.TODO(), got1.ID)
+
+		_, err := testRW.Create(context.TODO(), &Cluster{
+			Name: "test1",
+			Entity: common.Entity{
+				TenantId: "111",
+				Status:   string(constants.ClusterRunning),
+			},
+			Tags: []string{"tag1", "tag2"},
+		})
+		assert.Error(t, err)
+		assert.Equal(t, errors.TIEM_DUPLICATED_NAME, err.(errors.EMError).GetCode())
 	})
 	t.Run("default", func(t *testing.T) {
 		got, err := testRW.Create(context.TODO(), &Cluster{

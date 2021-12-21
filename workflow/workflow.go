@@ -125,10 +125,14 @@ var once sync.Once
 func GetWorkFlowService() WorkFlowService {
 	once.Do(func() {
 		if workflowService == nil {
-			workflowService = &WorkFlowManager{}
+			workflowService = NewWorkFlowManager()
 		}
 	})
 	return workflowService
+}
+
+func NewWorkFlowManager() WorkFlowService {
+	return &WorkFlowManager{}
 }
 
 func MockWorkFlowService(service WorkFlowService) {

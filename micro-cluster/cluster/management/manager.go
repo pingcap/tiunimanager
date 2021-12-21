@@ -19,7 +19,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
@@ -55,6 +55,7 @@ func NewClusterManager() *Manager {
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowDeleteCluster, &deleteClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowRestartCluster, &restartClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowStopCluster, &stopClusterFlow)
+	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowCloneCluster, &cloneDefine)
 
 	return &Manager{}
 }
@@ -67,8 +68,8 @@ var scaleOutDefine = workflow.WorkFlowDefine{
 		"configDone":       {"scaleOutCluster", "scaleOutDone", "fail", workflow.PollingNode, scaleOutCluster},
 		"scaleOutDone":     {"syncTopology", "syncTopologyDone", "fail", workflow.SyncFuncNode, syncTopology},
 		"syncTopologyDone": {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
-		"onlineDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistCluster)},
-		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure, revertResourceAfterFailure)},
+		"onlineDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
+		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
 	},
 }
 
@@ -123,8 +124,8 @@ var scaleInDefine = workflow.WorkFlowDefine{
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":       {"scaleInCluster", "scaleInDone", "fail", workflow.PollingNode, scaleInCluster},
 		"scaleInDone": {"freeInstanceResource", "freeDone", "fail", workflow.SyncFuncNode, freeInstanceResource},
-		"freeDone":    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistCluster)},
-		"fail":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure, revertResourceAfterFailure)},
+		"freeDone":    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
+		"fail":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
 	},
 }
 
@@ -180,19 +181,21 @@ func (p *Manager) ScaleIn(ctx context.Context, request cluster.ScaleInClusterReq
 var cloneDefine = workflow.WorkFlowDefine{
 	FlowName: constants.FlowCloneCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":                   {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
-		"resourceDone":            {"backupSourceCluster", "backupDone", "fail", workflow.SyncFuncNode, backupSourceCluster},
-		"backupDone":              {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
-		"configDone":              {"deployCluster", "deployDone", "fail", workflow.PollingNode, deployCluster},
-		"deployDone":              {"startCluster", "startDone", "fail", workflow.PollingNode, startCluster},
-		"startDone":               {"syncBackupStrategy", "syncBackupStrategyDone", "fail", workflow.SyncFuncNode, syncBackupStrategy},
-		"syncBackupStrategyDone":  {"syncParameters", "syncParametersDone", "fail", workflow.SyncFuncNode, syncParameters},
-		"syncParametersDone":      {"syncSystemVariables", "syncSystemVariablesDone", "fail", workflow.SyncFuncNode, syncSystemVariables},
-		"syncSystemVariablesDone": {"restoreCluster", "restoreClusterDone", "fail", workflow.SyncFuncNode, restoreCluster},
-		"restoreClusterDone":      {"syncIncrData", "syncIncrDataDone", "fail", workflow.SyncFuncNode, syncIncrData},
-		"syncIncrDataDone":        {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
-		"onlineDone":              {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistCluster)},
-		"fail":                    {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure, revertResourceAfterFailure)},
+		"start":                  {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
+		"resourceDone":           {"backupSourceCluster", "backupDone", "fail", workflow.SyncFuncNode, backupSourceCluster},
+		"backupDone":             {"waitBackup", "waitBackupDone", "fail", workflow.SyncFuncNode, waitWorkFlow},
+		"waitBackupDone":         {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
+		"configDone":             {"deployCluster", "deployDone", "fail", workflow.PollingNode, deployCluster},
+		"deployDone":             {"startCluster", "startDone", "fail", workflow.PollingNode, startCluster},
+		"startDone":              {"syncBackupStrategy", "syncBackupStrategyDone", "fail", workflow.SyncFuncNode, syncBackupStrategy},
+		"syncBackupStrategyDone": {"syncParameters", "syncParametersDone", "fail", workflow.SyncFuncNode, syncParameters},
+		"syncParametersDone":     {"waitSyncParam", "waitSyncParamDone", "fail", workflow.SyncFuncNode, waitWorkFlow},
+		"waitSyncParamDone":      {"restoreCluster", "restoreClusterDone", "fail", workflow.SyncFuncNode, restoreCluster},
+		"restoreClusterDone":     {"waitRestore", "waitRestoreDone", "fail", workflow.SyncFuncNode, waitWorkFlow},
+		"waitRestoreDone":        {"syncIncrData", "syncIncrDataDone", "fail", workflow.SyncFuncNode, syncIncrData},
+		"syncIncrDataDone":       {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
+		"onlineDone":             {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
+		"fail":                   {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
 	},
 }
 
@@ -578,30 +581,35 @@ func (manager *Manager) GetClusterDashboardInfo(ctx context.Context, request clu
 	return GetDashboardInfo(ctx, request)
 }
 
-func (p *Manager) GetMonitorInfo(ctx context.Context, req cluster.QueryMonitorInfoReq) (resp cluster.QueryMonitorInfoResp, err error) {
+func (p *Manager) GetMonitorInfo(ctx context.Context, req cluster.QueryMonitorInfoReq) (cluster.QueryMonitorInfoResp, error) {
+	resp := cluster.QueryMonitorInfoResp{}
 	// Get cluster info and topology from db based by clusterID
 	clusterMeta, err := handler.Get(ctx, req.ClusterID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("load cluser[%s] meta from db error: %s", req.ClusterID, err.Error())
-		return resp, framework.SimpleError(common.TIEM_CLUSTER_NOT_FOUND)
+		framework.LogWithContext(ctx).Errorf(
+			"load cluser %s meta from db error: %s", req.ClusterID, err.Error())
+		return resp, err
 	}
 
 	alertServers := clusterMeta.GetAlertManagerAddresses()
 	grafanaServers := clusterMeta.GetGrafanaAddresses()
 	if len(alertServers) <= 0 || len(grafanaServers) <= 0 {
-		framework.LogWithContext(ctx).Errorf("load cluser[%s] alert server or grafana server not available", req.ClusterID)
-		return resp, framework.SimpleError(common.TIEM_CLUSTER_RESOURCE_NOT_ENOUGH)
+		errMsg := fmt.Sprintf("cluster %s alert server or grafana server not available", clusterMeta.Cluster.ID)
+		framework.LogWithContext(ctx).Errorf(errMsg)
+		return resp, errors.NewError(errors.TIEM_CLUSTER_RESOURCE_NOT_ENOUGH, errMsg)
 	}
 
 	alertPort := alertServers[0].Port
 	if alertPort <= 0 {
-		framework.LogWithContext(ctx).Errorf("cluser[%s] alert port[%d] not available", req.ClusterID, alertPort)
-		return resp, framework.SimpleError(common.TIEM_CLUSTER_GET_CLUSTER_PORT_ERROR)
+		errMsg := fmt.Sprintf("cluster %s alert port %d not available", clusterMeta.Cluster.ID, alertPort)
+		framework.LogWithContext(ctx).Errorf(errMsg)
+		return resp, errors.NewError(errors.TIEM_CLUSTER_GET_CLUSTER_PORT_ERROR, errMsg)
 	}
 	grafanaPort := grafanaServers[0].Port
 	if grafanaPort <= 0 {
-		framework.LogWithContext(ctx).Errorf("cluser[%s] grafana port[%d] not available", req.ClusterID, grafanaPort)
-		return resp, framework.SimpleError(common.TIEM_CLUSTER_GET_CLUSTER_PORT_ERROR)
+		errMsg := fmt.Sprintf("cluster %s grafana port %d not available", clusterMeta.Cluster.ID, grafanaPort)
+		framework.LogWithContext(ctx).Errorf(errMsg)
+		return resp, errors.NewError(errors.TIEM_CLUSTER_GET_CLUSTER_PORT_ERROR, errMsg)
 	}
 
 	alertUrl := fmt.Sprintf("http://%s:%d", alertServers[0].IP, alertPort)

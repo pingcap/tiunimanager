@@ -28,7 +28,7 @@ import (
 )
 
 type QueryWorkFlowDetailReq struct {
-	WorkFlowID string `json:"workFlowId"`
+	WorkFlowID string `json:"workFlowId" swaggerignore:"true"`
 }
 
 type QueryWorkFlowDetailResp struct {
@@ -45,5 +45,5 @@ type QueryWorkFlowsReq struct {
 }
 
 type QueryWorkFlowsResp struct {
-	WorkFlows []*structs.WorkFlowInfo
+	WorkFlows []*structs.WorkFlowInfo `json:"workFlows" form:"workFlows"`
 }

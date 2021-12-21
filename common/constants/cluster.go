@@ -153,7 +153,7 @@ const (
 )
 
 const (
-	DefaultBackupStoragePath       string = "em/backup"
+	DefaultBackupStoragePath       string = "nfs/em/backup"
 	DefaultBackupS3AccessKey       string = "minioadmin"
 	DefaultBackupS3SecretAccessKey string = "minioadmin"
 	DefaultBackupS3Endpoint        string = "http://minio.pingcap.net:9000"

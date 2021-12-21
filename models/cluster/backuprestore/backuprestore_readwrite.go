@@ -97,7 +97,7 @@ func (m *BRReadWrite) QueryBackupRecords(ctx context.Context, clusterId, backupI
 	if endTime > 0 {
 		query = query.Where("end_time <= ?", endTime)
 	}
-	err = query.Order("id desc").Count(&total).Offset(pageSize * (page - 1)).Limit(pageSize).Find(&records).Error
+	err = query.Order("created_at desc").Count(&total).Offset(pageSize * (page - 1)).Limit(pageSize).Find(&records).Error
 	return records, total, err
 }
 

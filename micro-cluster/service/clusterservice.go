@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -86,7 +87,7 @@ func handleResponse(ctx context.Context, resp *clusterpb.RpcResponse, err error,
 		data, getDataError := json.Marshal(responseData)
 		if getDataError != nil {
 			// deal with err uniformly later
-			err = framework.WrapError(common.TIEM_MARSHAL_ERROR, fmt.Sprintf("marshal request data error, data = %v", responseData), getDataError)
+			err = errors.WrapError(errors.TIEM_MARSHAL_ERROR, fmt.Sprintf("marshal request data error, data = %v", responseData), getDataError)
 		} else {
 			// handle data and page
 			resp.Code = int32(common.TIEM_SUCCESS)
@@ -99,12 +100,23 @@ func handleResponse(ctx context.Context, resp *clusterpb.RpcResponse, err error,
 	}
 
 	if err != nil {
-		if _, ok := err.(framework.TiEMError); !ok {
-			err = framework.WrapError(common.TIEM_UNRECOGNIZED_ERROR, err.Error(), err)
+		if finalError, ok := err.(framework.TiEMError); ok {
+			framework.LogWithContext(ctx).Errorf("rpc method failed with error, %s", err.Error())
+			resp.Code = int32(finalError.GetCode())
+			resp.Message = finalError.GetMsg()
+			return
 		}
-		framework.LogWithContext(ctx).Error(err.Error())
-		resp.Code = int32(err.(framework.TiEMError).GetCode())
-		resp.Message = err.(framework.TiEMError).GetMsg()
+		if finalError, ok := err.(errors.EMError); ok {
+			framework.LogWithContext(ctx).Errorf("rpc method failed with error, %s", err.Error())
+			resp.Code = int32(finalError.GetCode())
+			resp.Message = finalError.GetMsg()
+			return
+		} else {
+			resp.Code = int32(errors.TIEM_UNRECOGNIZED_ERROR)
+			resp.Message = err.Error()
+		}
+
+		return
 	}
 }
 

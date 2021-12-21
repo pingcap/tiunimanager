@@ -27,8 +27,8 @@ import "time"
 
 type WorkFlowInfo struct {
 	ID         string    `json:"id"`
-	Name       string    `json:"flowWorkName"`
-	BizID      string    `json:"BizId"`
+	Name       string    `json:"name"`
+	BizID      string    `json:"bizId"`
 	Status     string    `json:"status" enums:"Initializing,Processing,Finished,Error,Canceled"`
 	CreateTime time.Time `json:"createTime"`
 	UpdateTime time.Time `json:"updateTime"`

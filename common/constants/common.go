@@ -82,7 +82,7 @@ type EMProductComponentIDType string
 var ParasiteComponentIDs = []EMProductComponentIDType{
 	ComponentIDGrafana,
 	ComponentIDPrometheus,
-	ComponentIDAlertManger,
+	ComponentIDAlertManager,
 }
 
 //Definition of product component ID provided by Enterprise manager

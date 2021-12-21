@@ -58,15 +58,3 @@ const (
 	StatusValid   = "valid"
 	StatusInvalid = "invalid"
 )
-
-//type DeploymentPackage struct {
-//	ID          string         `gorm:"primaryKey;"`
-//	ProductID   string         `gorm:"not null;size:64;comment:'TiDB/DM/TiEM'"`
-//	Version     string         `gorm:"not null;size:64;comment:'installed version, separated by comma, no space'"`
-//	Platforms   string         `gorm:"not null;size:64;comment:'supported platforms, separated by comma, no space'"`
-//	Url         string         `gorm:"not null"`
-//	Description string         `gorm:"size:64;comment:'description'"`
-//	CreatedAt   time.Time      `gorm:"autoCreateTime;<-:create;->;"`
-//	UpdatedAt   time.Time      `gorm:"autoUpdateTime"`
-//	DeletedAt   gorm.DeletedAt `gorm:"index"`
-//}

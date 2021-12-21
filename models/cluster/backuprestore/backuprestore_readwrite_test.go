@@ -197,6 +197,25 @@ func TestBRReadWrite_GetBackupStrategy(t *testing.T) {
 	assert.Equal(t, strategyCreate.BackupDate, strategyGet.BackupDate)
 }
 
+func TestBRReadWrite_SaveBackupStrategy(t *testing.T) {
+	strategy := &BackupStrategy{
+		Entity: common.Entity{
+			TenantId: "tenantId",
+			Status:   "BackupInitStatus",
+		},
+		ClusterID:  "clusterIdGet",
+		BackupDate: "Monday,Friday",
+		StartHour:  11,
+		EndHour:    12,
+	}
+	strategySave, errCreate := rw.SaveBackupStrategy(context.TODO(), strategy)
+	assert.NoError(t, errCreate)
+
+	strategyGet, errGet := rw.GetBackupStrategy(context.TODO(), strategySave.ClusterID)
+	assert.NoError(t, errGet)
+	assert.Equal(t, strategySave.BackupDate, strategyGet.BackupDate)
+}
+
 func TestBRReadWrite_QueryBackupStrategy(t *testing.T) {
 	strategy := &BackupStrategy{
 		Entity: common.Entity{

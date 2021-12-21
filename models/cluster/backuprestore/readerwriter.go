@@ -76,13 +76,22 @@ type ReaderWriter interface {
 	DeleteBackupRecord(ctx context.Context, backupId string) (err error)
 
 	// CreateBackupStrategy
-	// @Description: create new backup record
+	// @Description: create new backup strategy
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter strategy
 	// @Return *BackupStrategy
 	// @Return error
 	CreateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (*BackupStrategy, error)
+
+	// SaveBackupStrategy
+	// @Description: create new backup strategy or update exist backup strategy
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter strategy
+	// @Return *BackupStrategy
+	// @Return error
+	SaveBackupStrategy(ctx context.Context, strategy *BackupStrategy) (*BackupStrategy, error)
 
 	// UpdateBackupStrategy
 	// @Description: update backup strategy

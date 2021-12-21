@@ -341,7 +341,8 @@ func (mgr *BRManager) SaveBackupStrategy(ctx context.Context, request cluster.Sa
 	endHour, _ := strconv.Atoi(ends[0])
 
 	brRW := models.GetBRReaderWriter()
-	strategy, err := brRW.CreateBackupStrategy(ctx, &backuprestore.BackupStrategy{
+
+	strategy, err := brRW.SaveBackupStrategy(ctx, &backuprestore.BackupStrategy{
 		Entity: dbModel.Entity{
 			TenantId: meta.Cluster.TenantId,
 		},

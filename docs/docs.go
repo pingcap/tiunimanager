@@ -1173,7 +1173,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/management.PreviewClusterRsp"
+                                            "$ref": "#/definitions/cluster.PreviewClusterResp"
                                         }
                                     }
                                 }
@@ -4596,6 +4596,38 @@ var doc = `{
                 }
             }
         },
+        "cluster.PreviewClusterResp": {
+            "type": "object",
+            "properties": {
+                "capabilityIndexes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.Index"
+                    }
+                },
+                "clusterName": {
+                    "type": "string"
+                },
+                "clusterType": {
+                    "type": "string"
+                },
+                "clusterVersion": {
+                    "type": "string"
+                },
+                "cpuArchitecture": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "stockCheckResult": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ResourceStockCheckResult"
+                    }
+                }
+            }
+        },
         "cluster.QueryBackupRecordsResp": {
             "type": "object",
             "properties": {
@@ -5307,110 +5339,6 @@ var doc = `{
                 },
                 "portRangeStart": {
                     "type": "integer"
-                }
-            }
-        },
-        "management.PreviewClusterRsp": {
-            "type": "object",
-            "properties": {
-                "capabilityIndexes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/management.ServiceCapabilityIndex"
-                    }
-                },
-                "clusterName": {
-                    "type": "string"
-                },
-                "clusterType": {
-                    "type": "string"
-                },
-                "clusterVersion": {
-                    "type": "string"
-                },
-                "cpuArchitecture": {
-                    "type": "string"
-                },
-                "dbPassword": {
-                    "type": "string"
-                },
-                "exclusive": {
-                    "type": "boolean"
-                },
-                "recoverInfo": {
-                    "$ref": "#/definitions/management.RecoverInfo"
-                },
-                "region": {
-                    "type": "string"
-                },
-                "stockCheckResult": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/management.StockCheckItem"
-                    }
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "tls": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "management.RecoverInfo": {
-            "type": "object",
-            "properties": {
-                "backupRecordId": {
-                    "type": "integer"
-                },
-                "sourceClusterId": {
-                    "type": "string"
-                }
-            }
-        },
-        "management.ServiceCapabilityIndex": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "unit": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "object"
-                }
-            }
-        },
-        "management.StockCheckItem": {
-            "type": "object",
-            "properties": {
-                "component": {
-                    "$ref": "#/definitions/knowledge.ClusterComponent"
-                },
-                "count": {
-                    "type": "integer"
-                },
-                "cpuArchitecture": {
-                    "type": "string"
-                },
-                "enough": {
-                    "type": "boolean"
-                },
-                "region": {
-                    "type": "string"
-                },
-                "specCode": {
-                    "type": "string"
-                },
-                "zoneCode": {
-                    "type": "string"
                 }
             }
         },
@@ -6627,6 +6555,23 @@ var doc = `{
                 }
             }
         },
+        "structs.Index": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "object"
+                }
+            }
+        },
         "structs.ParameterGroupParameterInfo": {
             "type": "object",
             "properties": {
@@ -6761,6 +6706,37 @@ var doc = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.ResourceStockCheckResult": {
+            "type": "object",
+            "properties": {
+                "componentName": {
+                    "type": "string"
+                },
+                "componentType": {
+                    "type": "string"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "diskCapacity": {
+                    "type": "integer"
+                },
+                "diskType": {
+                    "description": "NVMeSSD/SSD/SATA",
+                    "type": "string"
+                },
+                "enough": {
+                    "type": "boolean"
+                },
+                "specCode": {
+                    "description": "4C8G/8C16G ?",
+                    "type": "string"
+                },
+                "zoneCode": {
                     "type": "string"
                 }
             }

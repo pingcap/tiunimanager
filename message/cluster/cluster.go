@@ -290,3 +290,15 @@ type InspectClusterParametersResp struct {
 	RealValue    structs.ParameterRealValue `json:"realValue"`
 	InspectValue string                     `json:"inspectValue" example:"1"`
 }
+
+type PreviewClusterResp struct {
+	Region          string `json:"region" form:"region"`
+	CpuArchitecture string `json:"cpuArchitecture" form:"cpuArchitecture"`
+	ClusterType     string `json:"clusterType"`
+	ClusterVersion  string `json:"clusterVersion"`
+
+	ClusterName string `json:"clusterName"`
+
+	StockCheckResult  []structs.ResourceStockCheckResult `json:"stockCheckResult"`
+	CapabilityIndexes []structs.Index      `json:"capabilityIndexes"`
+}

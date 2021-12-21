@@ -394,6 +394,27 @@ definitions:
         example: 1
         type: integer
     type: object
+  cluster.PreviewClusterResp:
+    properties:
+      capabilityIndexes:
+        items:
+          $ref: '#/definitions/structs.Index'
+        type: array
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      cpuArchitecture:
+        type: string
+      region:
+        type: string
+      stockCheckResult:
+        items:
+          $ref: '#/definitions/structs.ResourceStockCheckResult'
+        type: array
+    type: object
   cluster.QueryBackupRecordsResp:
     properties:
       backupRecords:
@@ -881,74 +902,6 @@ definitions:
         type: integer
       portRangeStart:
         type: integer
-    type: object
-  management.PreviewClusterRsp:
-    properties:
-      capabilityIndexes:
-        items:
-          $ref: '#/definitions/management.ServiceCapabilityIndex'
-        type: array
-      clusterName:
-        type: string
-      clusterType:
-        type: string
-      clusterVersion:
-        type: string
-      cpuArchitecture:
-        type: string
-      dbPassword:
-        type: string
-      exclusive:
-        type: boolean
-      recoverInfo:
-        $ref: '#/definitions/management.RecoverInfo'
-      region:
-        type: string
-      stockCheckResult:
-        items:
-          $ref: '#/definitions/management.StockCheckItem'
-        type: array
-      tags:
-        items:
-          type: string
-        type: array
-      tls:
-        type: boolean
-    type: object
-  management.RecoverInfo:
-    properties:
-      backupRecordId:
-        type: integer
-      sourceClusterId:
-        type: string
-    type: object
-  management.ServiceCapabilityIndex:
-    properties:
-      description:
-        type: string
-      name:
-        type: string
-      unit:
-        type: string
-      value:
-        type: object
-    type: object
-  management.StockCheckItem:
-    properties:
-      component:
-        $ref: '#/definitions/knowledge.ClusterComponent'
-      count:
-        type: integer
-      cpuArchitecture:
-        type: string
-      enough:
-        type: boolean
-      region:
-        type: string
-      specCode:
-        type: string
-      zoneCode:
-        type: string
     type: object
   message.ApplyParameterGroupReq:
     properties:
@@ -1789,6 +1742,17 @@ definitions:
       userName:
         type: string
     type: object
+  structs.Index:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      unit:
+        type: string
+      value:
+        type: object
+    type: object
   structs.ParameterGroupParameterInfo:
     properties:
       category:
@@ -1887,6 +1851,27 @@ definitions:
       id:
         type: string
       name:
+        type: string
+    type: object
+  structs.ResourceStockCheckResult:
+    properties:
+      componentName:
+        type: string
+      componentType:
+        type: string
+      count:
+        type: integer
+      diskCapacity:
+        type: integer
+      diskType:
+        description: NVMeSSD/SSD/SATA
+        type: string
+      enough:
+        type: boolean
+      specCode:
+        description: 4C8G/8C16G ?
+        type: string
+      zoneCode:
         type: string
     type: object
   structs.Stocks:
@@ -3213,7 +3198,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.PreviewClusterRsp'
+                  $ref: '#/definitions/cluster.PreviewClusterResp'
               type: object
         "401":
           description: Unauthorized

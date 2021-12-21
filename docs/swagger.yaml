@@ -2007,7 +2007,7 @@ paths:
         type: string
       - in: query
         name: endTime
-        type: string
+        type: integer
       - description: Current page location
         in: query
         name: page
@@ -2018,7 +2018,7 @@ paths:
         type: integer
       - in: query
         name: startTime
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -4363,7 +4363,7 @@ paths:
         in: path
         name: workFlowId
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:

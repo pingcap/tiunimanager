@@ -25,7 +25,6 @@ package cluster
 
 import (
 	"github.com/pingcap-inc/tiem/common/structs"
-	"time"
 )
 
 // BackupClusterDataReq Requests for manual data backup
@@ -54,10 +53,10 @@ type DeleteBackupDataResp struct {
 
 // QueryBackupRecordsReq Query the list of backup files over time based on cluster ID
 type QueryBackupRecordsReq struct {
-	BackupID  string    `json:"backupId"`
-	ClusterID string    `json:"clusterId" form:"clusterId"`
-	StartTime time.Time `json:"startTime" form:"startTime"`
-	EndTime   time.Time `json:"endTime" form:"endTime"`
+	BackupID  string `json:"backupId"`
+	ClusterID string `json:"clusterId" form:"clusterId"`
+	StartTime int64  `json:"startTime" form:"startTime"`
+	EndTime   int64  `json:"endTime" form:"endTime"`
 	structs.PageRequest
 }
 

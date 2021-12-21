@@ -60,7 +60,7 @@ var doc = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "integer",
                         "name": "endTime",
                         "in": "query"
                     },
@@ -77,7 +77,7 @@ var doc = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "integer",
                         "name": "startTime",
                         "in": "query"
                     }
@@ -3991,7 +3991,7 @@ var doc = `{
                 "summary": "show details of a flow work",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "flow work id",
                         "name": "workFlowId",
                         "in": "path",

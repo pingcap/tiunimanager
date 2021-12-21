@@ -239,7 +239,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 // QueryProductComponentProperty Query the properties of a product component,For creating, expanding and shrinking clusters only
 func (p *ProductReadWriter) QueryProductComponentProperty(ctx context.Context, productID, productVersion string, productStatus constants.ProductComponentStatus) (property []structs.ProductComponentProperty, er error) {
 	if "" == productID || "" == productVersion {
-		//TODO wait for SimpleError modify
+		//TODO wait for Error modify
 		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 	var info structs.ProductComponentProperty

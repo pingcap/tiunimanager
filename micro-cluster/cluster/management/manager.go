@@ -18,7 +18,6 @@ package management
 import (
 	"context"
 	"fmt"
-
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -267,6 +266,9 @@ func (p *Manager) CreateCluster(ctx context.Context, req cluster.CreateClusterRe
 			"add instances into cluster %s topology error: %s", meta.Cluster.ID, err.Error())
 		return
 	}
+	if err = meta.AddDefaultInstances(ctx); err != nil {
+		return
+	}
 
 	data := map[string]interface{}{
 		ContextClusterMeta: meta,
@@ -373,7 +375,9 @@ var deleteClusterFlow = workflow.WorkFlowDefine{
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":              {"destroyCluster", "destroyClusterDone", "fail", workflow.PollingNode, destroyCluster},
 		"destroyClusterDone": {"freedClusterResource", "freedResourceDone", "fail", workflow.SyncFuncNode, freedClusterResource},
-		"freedResourceDone":  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(deleteCluster)},
+		"freedResourceDone":  {"backupBeforeDelete", "backupDone", "fail", workflow.SyncFuncNode, backupBeforeDelete},
+		"backupDone":         {"clearBackupData", "clearDone", "fail", workflow.SyncFuncNode, clearBackupData},
+		"clearDone":          {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(deleteCluster)},
 		"fail":               {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
@@ -474,10 +478,18 @@ func asyncMaintenance(ctx context.Context, meta *handler.ClusterMeta,
 }
 
 func (p *Manager) QueryCluster(ctx context.Context, req cluster.QueryClustersReq) (resp cluster.QueryClusterResp, total int, err error) {
-	return
+	return handler.Query(ctx, req)
 }
 
 func (p *Manager) DetailCluster(ctx context.Context, req cluster.QueryClusterDetailReq) (resp cluster.QueryClusterDetailResp, err error) {
+	meta, err := handler.Get(ctx, req.ClusterID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get cluster failed, clusterId = %s", req.ClusterID)
+		return
+	}
+
+	resp.Info = meta.DisplayClusterInfo(ctx)
+	resp.ClusterTopologyInfo, resp.ClusterResourceInfo = meta.DisplayInstanceInfo(ctx)
 	return
 }
 

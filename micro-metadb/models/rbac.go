@@ -27,6 +27,7 @@ type Account struct {
 	Entity
 
 	Name      string `gorm:"default:null;not null"`
+
 	Salt      string `gorm:"default:null;not null;<-:create"`
 	FinalHash string `gorm:"default:null;not null"`
 }

@@ -13,37 +13,20 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-/*******************************************************************************
- * @File: workflow.go
- * @Description:
- * @Author: duanbing@pingcap.com
- * @Version: 1.0.0
- * @Date: 2021/12/4
-*******************************************************************************/
+package management
 
-package message
+import "github.com/pingcap-inc/tiem/common/constants"
 
-import (
-	"github.com/pingcap-inc/tiem/common/structs"
-)
-
-type QueryWorkFlowDetailReq struct {
-	WorkFlowID string `json:"workFlowId" swaggerignore:"true"`
+type Filters struct {
+	ClusterIDs    []string
+	TenantId      string
+	NameLike      string
+	Type          string
+	StatusFilters []constants.ClusterRunningStatus
+	Tag           string
 }
 
-type QueryWorkFlowDetailResp struct {
-	Info      *structs.WorkFlowInfo       `json:"info"`
-	NodeInfo  []*structs.WorkFlowNodeInfo `json:"nodes"`
-	NodeNames []string                    `json:"nodeNames"`
-}
-
-type QueryWorkFlowsReq struct {
-	structs.PageRequest
-	Status   string `json:"status" form:"status"`
-	FlowName string `json:"flowName" form:"flowName"`
-	BizID    string `json:"bizId" form:"bizId"`
-}
-
-type QueryWorkFlowsResp struct {
-	WorkFlows []*structs.WorkFlowInfo `json:"workFlows" form:"workFlows"`
+type Result struct {
+	Cluster *Cluster
+	Instances []*ClusterInstance
 }

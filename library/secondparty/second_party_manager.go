@@ -69,8 +69,7 @@ type SecondMicro struct {
 }
 
 func (secondMicro *SecondMicro) MicroInit() {
-	logger = framework.LogForkFile(common.LogFileSecondParty)
-	framework.Log().Infof("microinit secondmicro: %+v", secondMicro)
+	framework.LogForkFile(common.LogFileSystem).Infof("microinit secondmicro: %+v", secondMicro)
 	secondMicro.syncedTaskStatusMap = make(map[uint64]TaskStatusMapValue)
 	secondMicro.taskStatusCh = make(chan TaskStatusMember, 1024)
 	secondMicro.taskStatusMap = make(map[uint64]TaskStatusMapValue)

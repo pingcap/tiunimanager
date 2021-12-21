@@ -1805,11 +1805,6 @@ var doc = `{
                 "summary": "query parameters of a cluster",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "clusterId",
-                        "in": "query"
-                    },
-                    {
                         "type": "integer",
                         "description": "Current page location",
                         "name": "page",
@@ -2603,11 +2598,6 @@ var doc = `{
                         "name": "clusterId",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "clusterId",
-                        "in": "query"
                     },
                     {
                         "type": "string",
@@ -4294,9 +4284,6 @@ var doc = `{
         "cluster.DeleteBackupDataReq": {
             "type": "object",
             "properties": {
-                "backupId": {
-                    "type": "string"
-                },
                 "backupMode": {
                     "type": "string"
                 },
@@ -4337,9 +4324,6 @@ var doc = `{
                 },
                 "clearBackupData": {
                     "type": "boolean"
-                },
-                "clusterID": {
-                    "type": "string"
                 }
             }
         },
@@ -4874,9 +4858,6 @@ var doc = `{
         "cluster.SaveBackupStrategyReq": {
             "type": "object",
             "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
                 "strategy": {
                     "$ref": "#/definitions/structs.BackupStrategy"
                 }
@@ -4888,9 +4869,6 @@ var doc = `{
         "cluster.ScaleInClusterReq": {
             "type": "object",
             "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
                 "instanceId": {
                     "type": "string"
                 }
@@ -4911,9 +4889,6 @@ var doc = `{
         "cluster.ScaleOutClusterReq": {
             "type": "object",
             "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
                 "instanceResource": {
                     "type": "array",
                     "items": {
@@ -5113,9 +5088,6 @@ var doc = `{
         "cluster.UpdateClusterParametersReq": {
             "type": "object",
             "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
                 "params": {
                     "type": "array",
                     "items": {
@@ -5448,10 +5420,6 @@ var doc = `{
                     "type": "string",
                     "example": "123"
                 },
-                "paramGroupId": {
-                    "type": "string",
-                    "example": "123"
-                },
                 "reboot": {
                     "type": "boolean"
                 }
@@ -5484,9 +5452,6 @@ var doc = `{
                 "note": {
                     "type": "string",
                     "example": "copy param group"
-                },
-                "paramGroupId": {
-                    "type": "string"
                 }
             }
         },
@@ -5677,12 +5642,7 @@ var doc = `{
             "type": "object"
         },
         "message.DeleteImportExportRecordReq": {
-            "type": "object",
-            "properties": {
-                "recordId": {
-                    "type": "string"
-                }
-            }
+            "type": "object"
         },
         "message.DeleteImportExportRecordResp": {
             "type": "object",
@@ -5960,9 +5920,6 @@ var doc = `{
                     "type": "string",
                     "example": "default param group"
                 },
-                "paramGroupId": {
-                    "type": "string"
-                },
                 "params": {
                     "type": "array",
                     "items": {
@@ -6113,12 +6070,6 @@ var doc = `{
                 "memoryUsage": {
                     "$ref": "#/definitions/structs.Usage"
                 },
-                "portList": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
                 "role": {
                     "type": "string"
                 },
@@ -6184,7 +6135,7 @@ var doc = `{
                 "ports": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "type": "integer"
                     }
                 },
                 "role": {
@@ -6850,7 +6801,7 @@ var doc = `{
         "structs.WorkFlowInfo": {
             "type": "object",
             "properties": {
-                "BizId": {
+                "bizId": {
                     "type": "string"
                 },
                 "createTime": {
@@ -6859,10 +6810,10 @@ var doc = `{
                 "deleteTime": {
                     "type": "string"
                 },
-                "flowWorkName": {
+                "id": {
                     "type": "string"
                 },
-                "id": {
+                "name": {
                     "type": "string"
                 },
                 "status": {

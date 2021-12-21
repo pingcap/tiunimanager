@@ -21,6 +21,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/pingcap-inc/tiem/common/constants"
+
 	"github.com/gin-contrib/cors"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
@@ -128,7 +130,7 @@ func corsConfig() cors.Config {
 func serviceRegistry(f *framework.BaseFramework) {
 	etcdClient := etcd_clientv2.InitEtcdClient(f.GetServiceMeta().RegistryAddress)
 	address := f.GetClientArgs().Host + f.GetServiceMeta().GetServiceAddress()
-	key := common.RegistryMicroServicePrefix + f.GetServiceMeta().ServiceName.ServerName() + "/" + address
+	key := "/micro/registry/" + f.GetServiceMeta().ServiceName.ServerName() + "/" + address
 	// Register openapi-server every TTL-2 seconds, default TTL is 5s
 	go func() {
 		for {
@@ -147,7 +149,7 @@ func loadKnowledge(f *framework.BaseFramework) error {
 
 func defaultPortForLocal(f *framework.BaseFramework) error {
 	if f.GetServiceMeta().ServicePort <= 0 {
-		f.GetServiceMeta().ServicePort = common.DefaultMicroApiPort
+		f.GetServiceMeta().ServicePort = constants.DefaultMicroApiPort
 	}
 	return nil
 }

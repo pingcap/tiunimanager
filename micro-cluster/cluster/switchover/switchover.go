@@ -47,8 +47,8 @@ var mgrOnceRegisterWorkFlow sync.Once
 func GetManager() *Manager {
 	mgrOnceRegisterWorkFlow.Do(func() {
 		flowManager := workflow.GetWorkFlowService()
-		flowManager.RegisterWorkFlow(context.TODO(), constants.WorkFlowMasterSlaveSwitchoverNormal, &workflow.WorkFlowDefine{
-			FlowName: constants.WorkFlowMasterSlaveSwitchoverNormal,
+		flowManager.RegisterWorkFlow(context.TODO(), constants.FlowMasterSlaveSwitchoverNormal, &workflow.WorkFlowDefine{
+			FlowName: constants.FlowMasterSlaveSwitchoverNormal,
 			TaskNodes: map[string]*workflow.NodeDefine{
 				"start": {
 					"checkHealthStatus", "checkSyncChangeFeedTaskMaxLagTime", "fail", workflow.SyncFuncNode, wfStepCheckOldSyncChangeFeedTaskHealth},
@@ -78,8 +78,8 @@ func GetManager() *Manager {
 					"fail", "", "", workflow.SyncFuncNode, wfStepFail},
 			},
 		})
-		flowManager.RegisterWorkFlow(context.TODO(), constants.WorkFlowMasterSlaveSwitchoverForce, &workflow.WorkFlowDefine{
-			FlowName: constants.WorkFlowMasterSlaveSwitchoverForce,
+		flowManager.RegisterWorkFlow(context.TODO(), constants.FlowMasterSlaveSwitchoverForce, &workflow.WorkFlowDefine{
+			FlowName: constants.FlowMasterSlaveSwitchoverForce,
 			TaskNodes: map[string]*workflow.NodeDefine{
 				"start": {
 					"setOldMasterReadOnly", "pauseOldSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfStepSetOldMasterReadOnly},
@@ -103,9 +103,9 @@ func GetManager() *Manager {
 					"fail", "", "", workflow.SyncFuncNode, wfStepFail},
 			},
 		})
-		flowManager.RegisterWorkFlow(context.TODO(), constants.WorkFlowMasterSlaveSwitchoverForceWithMasterUnavailable,
+		flowManager.RegisterWorkFlow(context.TODO(), constants.FlowMasterSlaveSwitchoverForceWithMasterUnavailable,
 			&workflow.WorkFlowDefine{
-				FlowName: constants.WorkFlowMasterSlaveSwitchoverForceWithMasterUnavailable,
+				FlowName: constants.FlowMasterSlaveSwitchoverForceWithMasterUnavailable,
 				TaskNodes: map[string]*workflow.NodeDefine{
 					"start": {
 						"setOldMasterReadOnly", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfStepSetOldMasterReadOnly},
@@ -126,7 +126,7 @@ func GetManager() *Manager {
 func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveClusterSwitchoverReq) (resp *cluster.MasterSlaveClusterSwitchoverResp, err error) {
 	framework.LogWithContext(ctx).Info("Manager.Switchover")
 
-	flowName := constants.WorkFlowMasterSlaveSwitchoverNormal
+	flowName := constants.FlowMasterSlaveSwitchoverNormal
 	reqJsonBs, err := json.Marshal(req)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("req marshal to json failed err:%s", err)
@@ -148,7 +148,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 			if err == nil {
 				// A&B rw-able
 				framework.LogWithContext(ctx).Infof("checkClusterReadWriteHealth on oldSlaveId %s success", oldSlaveId)
-				flowName = constants.WorkFlowMasterSlaveSwitchoverForce
+				flowName = constants.FlowMasterSlaveSwitchoverForce
 			} else {
 				// A rw-able & B unavailable
 				framework.LogWithContext(ctx).Errorf("checkClusterReadWriteHealth on oldSlaveId %s failed err:%s", oldSlaveId, err)
@@ -161,7 +161,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 			if err == nil {
 				// A unavailable & B rw-able
 				framework.LogWithContext(ctx).Infof("checkClusterReadWriteHealth on oldSlaveId %s success", oldSlaveId)
-				flowName = constants.WorkFlowMasterSlaveSwitchoverForceWithMasterUnavailable
+				flowName = constants.FlowMasterSlaveSwitchoverForceWithMasterUnavailable
 			} else {
 				// A unavailable & B unavailable
 				framework.LogWithContext(ctx).Errorf("checkClusterReadWriteHealth on oldSlaveId %s failed err:%s", oldSlaveId, err)
@@ -235,15 +235,17 @@ func (p *Manager) clusterGetMysqlUserNameAndPwd(ctx context.Context, clusterID s
 
 // addr: ip:port
 func (p *Manager) clusterGetOneConnectAddresses(ctx context.Context, clusterID string) (string, error) {
+	panic("NIY")
 	m, err := handler.Get(ctx, clusterID)
-	s := m.GetConnectAddresses()
+	_ = m
+	s := "" // m.GetConnectAddresses()
 	if err != nil {
 		return "", err
 	}
 	if len(s) == 0 {
 		return "", fmt.Errorf("no connect address available")
 	}
-	return s[0], nil
+	return "", nil
 }
 
 // addr: ip:port

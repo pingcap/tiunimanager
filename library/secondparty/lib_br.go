@@ -19,9 +19,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"strings"
 	"time"
+
+	"github.com/pingcap-inc/tiem/library/framework"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pingcap-inc/tiem/library/client"
@@ -283,7 +284,7 @@ func (secondMicro *SecondMicro) startNewBrTaskThruSQL(ctx context.Context, taskI
 		defer db.Close()
 		t0 := time.Now()
 		resp := CmdBrResp{}
-		err = db.QueryRow(brSQLCmd).Scan(&resp.Destination, &resp.Size, &resp.BackupTS, &resp.Queue_time, &resp.Execution_Time)
+		err = db.QueryRow(brSQLCmd).Scan(&resp.Destination, &resp.Size, &resp.BackupTS, &resp.QueueTime, &resp.ExecutionTime)
 		if err != nil {
 			logInFunc.Error("query sql cmd err", err)
 			secondMicro.taskStatusCh <- TaskStatusMember{

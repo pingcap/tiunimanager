@@ -33,25 +33,3 @@ const (
 	WorkFlowStatusError        = "Error"
 	WorkFlowStatusCanceled     = "Canceled"
 )
-
-// Definition workflow name
-const (
-	WorkFlowCreateCluster       = "CreateCluster"
-	WorkFlowDeleteCluster       = "DeleteCluster"
-	WorkFlowBackupCluster       = "BackupCluster"
-	WorkFlowRestoreNewCluster   = "RestoreNewCluster"
-	WorkFlowRestoreExistCluster = "RestoreExistCluster"
-	WorkFlowModifyParameters    = "ModifyParameters"
-	WorkFlowExportData          = "ExportData"
-	WorkFlowImportData          = "ImportData"
-	WorkFlowRestartCluster      = "RestartCluster"
-	WorkFlowStopCluster         = "StopCluster"
-	WorkFlowTakeoverCluster     = "TakeoverCluster"
-	WorkFlowBuildLogConfig      = "BuildLogConfig"
-	WorkFlowScaleOutCluster     = "ScaleOutCluster"
-	WorkFlowScaleInCluster      = "ScaleInCluster"
-
-	WorkFlowMasterSlaveSwitchoverNormal                     = "SwitchoverNormal"
-	WorkFlowMasterSlaveSwitchoverForce                      = "SwitchoverForce"
-	WorkFlowMasterSlaveSwitchoverForceWithMasterUnavailable = "SwitchoverForceWithMasterUnavailable"
-)

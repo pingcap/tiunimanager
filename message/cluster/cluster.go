@@ -24,33 +24,32 @@
 package cluster
 
 import (
-	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 )
 
 //CreateClusterReq Message for creating a new cluster
 type CreateClusterReq struct {
 	structs.CreateClusterParameter
-	ResourceParameter []structs.ClusterResourceParameter `json:"resourceParameters"`
+	ResourceParameter structs.ClusterResourceInfo `json:"resourceParameters" form:"resourceParameters"`
 }
 
 // CreateClusterResp Reply message for creating a new cluster
 type CreateClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
-	ClusterID                     string `json:"clusterId"`
+	structs.AsyncTaskWorkFlowInfo
+	ClusterID string `json:"clusterId"`
 }
 
 // DeleteClusterReq Message for delete a new cluster
 type DeleteClusterReq struct {
-	ClusterID       string `json:"clusterID"`
+	ClusterID       string `json:"clusterID" swaggerignore:"true"`
 	AutoBackup      bool   `json:"autoBackup" form:"autoBackup"`
 	ClearBackupData bool   `json:"clearBackupData" form:"clearBackupData"`
 }
 
 // DeleteClusterResp Reply message for delete a new cluster
 type DeleteClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
-	ClusterID                     string `json:"clusterID"`
+	structs.AsyncTaskWorkFlowInfo
+	ClusterID string `json:"clusterID"`
 }
 
 // StopClusterReq Message for stop a new cluster
@@ -60,8 +59,8 @@ type StopClusterReq struct {
 
 // StopClusterResp Reply message for stop a new cluster
 type StopClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
-	ClusterID                     string `json:"clusterId"`
+	structs.AsyncTaskWorkFlowInfo
+	ClusterID string `json:"clusterId"`
 }
 
 // RestartClusterReq Message for restart a new cluster
@@ -71,14 +70,14 @@ type RestartClusterReq struct {
 
 // RestartClusterResp Reply message for restart a new cluster
 type RestartClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowId"`
-	ClusterID                     string `json:"clusterId"`
+	structs.AsyncTaskWorkFlowInfo
+	ClusterID string `json:"clusterId"`
 }
 
 // ScaleInClusterReq Message for delete an instance in the cluster
 type ScaleInClusterReq struct {
-	ClusterID  string `json:"clusterId" form:"clusterId"`
-	InstanceID string `json:"instanceId"`
+	ClusterID  string `json:"clusterId" form:"clusterId" swaggerignore:"true"`
+	InstanceID string `json:"instanceId"  form:"instanceId"`
 }
 
 // ScaleInClusterResp Reply message for delete an instance in the cluster
@@ -89,8 +88,8 @@ type ScaleInClusterResp struct {
 
 // ScaleOutClusterReq Message for cluster expansion operation
 type ScaleOutClusterReq struct {
-	ClusterID string `json:"clusterId" form:"clusterId"`
-	structs.ClusterResourceParameter
+	ClusterID string `json:"clusterId" form:"clusterId" swaggerignore:"true"`
+	structs.ClusterResourceInfo
 }
 
 // ScaleOutClusterResp Reply message for cluster expansion operation
@@ -102,7 +101,8 @@ type ScaleOutClusterResp struct {
 //RestoreNewClusterReq Restore to a new cluster message using the backup file
 type RestoreNewClusterReq struct {
 	structs.CreateClusterParameter
-	ResourceParameter []structs.ClusterResourceParameter `json:"resourceParameters"`
+	BackupID          string                      `json:"backupId"`
+	ResourceParameter structs.ClusterResourceInfo `json:"resourceParameters"`
 }
 
 //RestoreNewClusterResp Restore to a new cluster using the backup file Reply Message
@@ -125,9 +125,8 @@ type RestoreExistClusterResp struct {
 // CloneClusterReq Message for clone a new cluster
 type CloneClusterReq struct {
 	structs.CreateClusterParameter
-	ParamGroupID    int64                          `json:"paramGroupId"`    // specify cloned cluster parameter group id(option)
-	CloneStrategy   constants.ClusterCloneStrategy `json:"cloneStrategy"`   // specify clone strategy, include empty, snapshot and sync, default empty(option)
-	SourceClusterID string                         `json:"sourceClusterId"` // specify source cluster id(require)
+	CloneStrategy   string `json:"cloneStrategy"`   // specify clone strategy, include empty, snapshot and sync, default empty(option)
+	SourceClusterID string `json:"sourceClusterId"` // specify source cluster id(require)
 }
 
 // CloneClusterResp Reply message for clone a new cluster
@@ -203,7 +202,7 @@ type QueryClustersReq struct {
 
 // QueryClusterResp Query the cluster list to reply to messages
 type QueryClusterResp struct {
-	Info []structs.ClusterInfo `json:"clusters"`
+	Clusters []structs.ClusterInfo `json:"clusters"`
 }
 
 // QueryClusterDetailReq Query cluster detail messages
@@ -215,6 +214,7 @@ type QueryClusterDetailReq struct {
 type QueryClusterDetailResp struct {
 	Info structs.ClusterInfo `json:"info"`
 	structs.ClusterTopologyInfo
+	structs.ClusterResourceInfo
 }
 
 // QueryMonitorInfoReq Message to query the monitoring address information of a cluster
@@ -229,13 +229,13 @@ type QueryMonitorInfoResp struct {
 	GrafanaUrl string `json:"grafanaUrl" example:"http://127.0.0.1:3000"`
 }
 
-// QueryDashboardInfoReq Message to query the dashboard address information of a cluster
-type QueryDashboardInfoReq struct {
-	ClusterID string `json:"clusterId" example:"abc"`
+// GetDashboardInfoReq Message to query the dashboard address information of a cluster
+type GetDashboardInfoReq struct {
+	ClusterID string `json:"clusterId" example:"abc" swaggerignore:"true"`
 }
 
-// QueryDashboardInfoResp Reply message for querying the dashboard address information of the cluster
-type QueryDashboardInfoResp struct {
+// GetDashboardInfoResp Reply message for querying the dashboard address information of the cluster
+type GetDashboardInfoResp struct {
 	ClusterID string `json:"clusterId" example:"abc"`
 	Url       string `json:"url" example:"http://127.0.0.1:9093"`
 	Token     string `json:"token"`
@@ -243,7 +243,7 @@ type QueryDashboardInfoResp struct {
 
 //QueryClusterLogReq Messages that query cluster log information can be filtered based on query criteria
 type QueryClusterLogReq struct {
-	ClusterID string `json:"clusterId"`
+	ClusterID string `json:"clusterId" swaggerignore:"true"`
 	Module    string `form:"module" example:"tidb"`
 	Level     string `form:"level" example:"warn"`
 	Ip        string `form:"ip" example:"127.0.0.1"`
@@ -260,20 +260,35 @@ type QueryClusterLogResp struct {
 }
 
 type QueryClusterParametersReq struct {
-	ClusterID string `json:"clusterID"`
+	ClusterID string `json:"clusterId" swaggerignore:"true"`
 	structs.PageRequest
 }
 
 type QueryClusterParametersResp struct {
-	Parameters []structs.ClusterParameterInfo `json:"parameters"`
+	ParamGroupId string                         `json:"paramGroupId"`
+	Params       []structs.ClusterParameterInfo `json:"params"`
 }
 
 type UpdateClusterParametersReq struct {
-	Params []structs.ClusterParameterSampleInfo `json:"params"`
-	Reboot bool                                 `json:"reboot"`
+	ClusterID string                               `json:"clusterId" swaggerignore:"true"`
+	Params    []structs.ClusterParameterSampleInfo `json:"params"`
+	Reboot    bool                                 `json:"reboot"`
 }
 
 type UpdateClusterParametersResp struct {
-	ClusterID                     string `json:"clusterId" example:"1"`
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
+	ClusterID string `json:"clusterId" example:"1"`
+	structs.AsyncTaskWorkFlowInfo
+}
+
+type InspectClusterParametersReq struct {
+	ClusterID string `json:"clusterId"`
+}
+
+type InspectClusterParametersResp struct {
+	ParamID      int64                      `json:"paramId" example:"1"`
+	Name         string                     `json:"name" example:"binlog_cache"`
+	InstanceType string                     `json:"instanceType" example:"tidb"`
+	Instance     string                     `json:"instance" example:"172.16.5.23"`
+	RealValue    structs.ParameterRealValue `json:"realValue"`
+	InspectValue string                     `json:"inspectValue" example:"1"`
 }

@@ -26,29 +26,34 @@ package secondparty
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/pingcap-inc/tiem/library/common"
+
+	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
+
 	"github.com/pingcap-inc/tiem/library/framework"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/pingcap-inc/tiem/library/client"
-	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 )
 
-func (manager *SecondPartyManager) BackUp(ctx context.Context, cluster ClusterFacade, storage BrStorage, bizID string) (taskID uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvbackup, clusterfacade: %v, storage: %v, bizid: %s", cluster, storage, bizID)
-	var req dbPb.CreateTiupOperatorRecordRequest
-	req.Type = dbPb.TiupTaskType_Backup
-	req.BizID = bizID
-	rsp, err := client.DBClient.CreateTiupOperatorRecord(context.Background(), &req)
-	if rsp == nil || err != nil || rsp.ErrCode != 0 {
-		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
-		return 0, err
+func (manager *SecondPartyManager) BackUp(ctx context.Context, cluster ClusterFacade, storage BrStorage,
+	workFlowNodeID string) (operationID string,
+	err error) {
+	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("backup, clusterfacade: "+
+		"%v, storage: %v", cluster, storage)
+	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
+		secondparty.OperationType_Backup, workFlowNodeID)
+	if secondPartyOperation == nil || err != nil {
+		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
+		return "", err
 	} else {
 		var backupReq CmdBackUpReq
-		backupReq.TaskID = rsp.Id
 		backupReq.DbConnParameter = cluster.DbConnParameter
 		backupReq.DbName = cluster.DbName
 		backupReq.TableName = cluster.TableName
@@ -56,12 +61,13 @@ func (manager *SecondPartyManager) BackUp(ctx context.Context, cluster ClusterFa
 		backupReq.RateLimitM = cluster.RateLimitM
 		backupReq.Concurrency = cluster.Concurrency
 		backupReq.CheckSum = cluster.CheckSum
-		manager.startNewBrBackUpTaskThruSQL(ctx, backupReq.TaskID, &backupReq)
-		return rsp.Id, nil
+		manager.startBrBackUpTaskThruSQL(ctx, secondPartyOperation.ID, &backupReq)
+		return secondPartyOperation.ID, nil
 	}
 }
 
-func (manager *SecondPartyManager) startNewBrBackUpTaskThruSQL(ctx context.Context, taskID uint64, req *CmdBackUpReq) {
+func (manager *SecondPartyManager) startBrBackUpTaskThruSQL(ctx context.Context, operationID string,
+	req *CmdBackUpReq) {
 	go func() {
 		var args []string
 		args = append(args, "BACKUP")
@@ -86,23 +92,46 @@ func (manager *SecondPartyManager) startNewBrBackUpTaskThruSQL(ctx context.Conte
 			args = append(args, "CHECKSUM", "=", req.CheckSum)
 		}
 		args = append(args, req.Flags...)
-		<-manager.startNewBrTaskThruSQL(ctx, taskID, &req.DbConnParameter, strings.Join(args, " "))
+		<-manager.startBrTaskThruSQL(ctx, operationID, &req.DbConnParameter, strings.Join(args, " "))
 	}()
 }
 
 func (manager *SecondPartyManager) ShowBackUpInfo(ctx context.Context, cluster ClusterFacade) CmdShowBackUpInfoResp {
-	framework.LogWithContext(ctx).Infof("microsrvshowbackupinfo, clusterfacade: %v", cluster)
+	framework.LogWithContext(ctx).Infof("showbackupinfo, clusterfacade: %v", cluster)
 	var showBackUpInfoReq CmdShowBackUpInfoReq
 	showBackUpInfoReq.DbConnParameter = cluster.DbConnParameter
-	showBackUpInfoResp := manager.startNewBrShowBackUpInfoThruSQL(ctx, &showBackUpInfoReq)
+	showBackUpInfoResp := manager.startBrShowBackUpInfoThruSQL(ctx, &showBackUpInfoReq)
 	return showBackUpInfoResp
 }
 
-func (manager *SecondPartyManager) startNewBrShowBackUpInfoThruSQL(ctx context.Context, req *CmdShowBackUpInfoReq) (resp CmdShowBackUpInfoResp) {
+func (manager *SecondPartyManager) ShowBackUpInfoThruMetaDB(ctx context.Context, operationID string) (resp CmdBrResp,
+	err error) {
+	logInFunc := framework.LogWithContext(ctx)
+	logInFunc.Infof("showbackupinfothrumetadb, operationID: %s", operationID)
+	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Get(ctx, operationID)
+	if err != nil {
+		logInFunc.Errorf("get backup operation info err = %s", err.Error())
+		return
+	}
+	if secondPartyOperation.Status == secondparty.OperationStatus_Error {
+		logInFunc.Errorf("backup cluster error, %s", secondPartyOperation.ErrorStr)
+		return resp, errors.New(secondPartyOperation.ErrorStr)
+	}
+	err = json.Unmarshal([]byte(secondPartyOperation.Result), &resp)
+	if err != nil {
+		logInFunc.Errorf("json unmarshal backup info for: %s, failed, %s", secondPartyOperation.Result, err.Error())
+		return resp, framework.NewTiEMErrorf(common.TIEM_UNMARSHAL_ERROR, err.Error())
+	}
+	return resp, nil
+}
+
+func (manager *SecondPartyManager) startBrShowBackUpInfoThruSQL(ctx context.Context,
+	req *CmdShowBackUpInfoReq) (resp CmdShowBackUpInfoResp) {
 	brSQLCmd := "SHOW BACKUPS"
 	dbConnParam := req.DbConnParameter
-	framework.LogWithContext(ctx).Info("task start processing:", fmt.Sprintf("brSQLCmd:%s", brSQLCmd))
-	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.IP, dbConnParam.Port))
+	framework.LogWithContext(ctx).Info("task start processing:", fmt.Sprintf("brsqlcmd:%s", brSQLCmd))
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username,
+		dbConnParam.Password, dbConnParam.IP, dbConnParam.Port))
 	if err != nil {
 		resp.ErrorStr = err.Error()
 		return
@@ -113,18 +142,17 @@ func (manager *SecondPartyManager) startNewBrShowBackUpInfoThruSQL(ctx context.C
 	return
 }
 
-func (manager *SecondPartyManager) Restore(ctx context.Context, cluster ClusterFacade, storage BrStorage, bizID string) (taskID uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvrestore, clusterfacade: %v, storage: %v, bizid: %s", cluster, storage, bizID)
-	var req dbPb.CreateTiupOperatorRecordRequest
-	req.Type = dbPb.TiupTaskType_Restore
-	req.BizID = bizID
-	rsp, err := client.DBClient.CreateTiupOperatorRecord(context.Background(), &req)
-	if rsp == nil || err != nil || rsp.ErrCode != 0 {
-		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
-		return 0, err
+func (manager *SecondPartyManager) Restore(ctx context.Context, cluster ClusterFacade, storage BrStorage,
+	workFlowNodeID string) (operationID string, err error) {
+	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("restore, "+
+		"clusterfacade: %v, storage: %v", cluster, storage)
+	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
+		secondparty.OperationType_Restore, workFlowNodeID)
+	if secondPartyOperation == nil || err != nil {
+		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
+		return "", err
 	} else {
 		var restoreReq CmdRestoreReq
-		restoreReq.TaskID = rsp.Id
 		restoreReq.DbConnParameter = cluster.DbConnParameter
 		restoreReq.DbName = cluster.DbName
 		restoreReq.TableName = cluster.TableName
@@ -132,12 +160,13 @@ func (manager *SecondPartyManager) Restore(ctx context.Context, cluster ClusterF
 		restoreReq.RateLimitM = cluster.RateLimitM
 		restoreReq.Concurrency = cluster.Concurrency
 		restoreReq.CheckSum = cluster.CheckSum
-		manager.startNewBrRestoreTaskThruSQL(ctx, restoreReq.TaskID, &restoreReq)
-		return rsp.Id, nil
+		manager.startBrRestoreTaskThruSQL(ctx, secondPartyOperation.ID, &restoreReq)
+		return secondPartyOperation.ID, nil
 	}
 }
 
-func (manager *SecondPartyManager) startNewBrRestoreTaskThruSQL(ctx context.Context, taskID uint64, req *CmdRestoreReq) {
+func (manager *SecondPartyManager) startBrRestoreTaskThruSQL(ctx context.Context, operationID string,
+	req *CmdRestoreReq) {
 	go func() {
 		var args []string
 		args = append(args, "RESTORE")
@@ -162,22 +191,23 @@ func (manager *SecondPartyManager) startNewBrRestoreTaskThruSQL(ctx context.Cont
 			args = append(args, "CHECKSUM", "=", req.CheckSum)
 		}
 		args = append(args, req.Flags...)
-		<-manager.startNewBrTaskThruSQL(ctx, taskID, &req.DbConnParameter, strings.Join(args, " "))
+		<-manager.startBrTaskThruSQL(ctx, operationID, &req.DbConnParameter, strings.Join(args, " "))
 	}()
 }
 
 func (manager *SecondPartyManager) ShowRestoreInfo(ctx context.Context, cluster ClusterFacade) CmdShowRestoreInfoResp {
-	framework.LogWithContext(ctx).Infof("microsrvshowrestoreinfo, clusterfacade: %v", cluster)
+	framework.LogWithContext(ctx).Infof("showrestoreinfo, clusterfacade: %v", cluster)
 	var showRestoreInfoReq CmdShowRestoreInfoReq
 	showRestoreInfoReq.DbConnParameter = cluster.DbConnParameter
-	showRestoreInfoResp := manager.startNewBrShowRestoreInfoThruSQL(ctx, &showRestoreInfoReq)
+	showRestoreInfoResp := manager.startBrShowRestoreInfoThruSQL(ctx, &showRestoreInfoReq)
 	return showRestoreInfoResp
 }
 
-func (manager *SecondPartyManager) startNewBrShowRestoreInfoThruSQL(ctx context.Context, req *CmdShowRestoreInfoReq) (resp CmdShowRestoreInfoResp) {
+func (manager *SecondPartyManager) startBrShowRestoreInfoThruSQL(ctx context.Context,
+	req *CmdShowRestoreInfoReq) (resp CmdShowRestoreInfoResp) {
 	brSQLCmd := "SHOW RESTORES"
 	dbConnParam := req.DbConnParameter
-	framework.LogWithContext(ctx).Infof("task start processing: brSQLCmd:%s", brSQLCmd)
+	framework.LogWithContext(ctx).Infof("operation starts processing: brSQLCmd:%s", brSQLCmd)
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.IP, dbConnParam.Port))
 	if err != nil {
 		resp.ErrorStr = err.Error()
@@ -189,46 +219,53 @@ func (manager *SecondPartyManager) startNewBrShowRestoreInfoThruSQL(ctx context.
 	return
 }
 
-func (manager *SecondPartyManager) startNewBrTaskThruSQL(ctx context.Context, taskID uint64, dbConnParam *DbConnParam, brSQLCmd string) (exitCh chan struct{}) {
+func (manager *SecondPartyManager) startBrTaskThruSQL(ctx context.Context, operationID string,
+	dbConnParam *DbConnParam, brSQLCmd string) (exitCh chan struct{}) {
 	exitCh = make(chan struct{})
-	logInFunc := framework.LogWithContext(ctx).WithField("task", taskID)
-	logInFunc.Infof("task start processing: brSQLCmd:%s", brSQLCmd)
-	manager.taskStatusCh <- TaskStatusMember{
-		TaskID:   taskID,
-		Status:   TaskStatusProcessing,
-		ErrorStr: "",
+	logInFunc := framework.LogWithContext(ctx).WithField("task", operationID)
+	logInFunc.Infof("operation starts processing: brsqlcmd:%s", brSQLCmd)
+	manager.operationStatusCh <- OperationStatusMember{
+		OperationID: operationID,
+		Status:      secondparty.OperationStatus_Processing,
+		Result:      "",
+		ErrorStr:    "",
 	}
 	go func() {
 		defer close(exitCh)
 
-		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.IP, dbConnParam.Port))
+		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username,
+			dbConnParam.Password, dbConnParam.IP, dbConnParam.Port))
 		if err != nil {
-			manager.taskStatusCh <- TaskStatusMember{
-				TaskID:   taskID,
-				Status:   TaskStatusError,
-				ErrorStr: fmt.Sprintln(err),
+			manager.operationStatusCh <- OperationStatusMember{
+				OperationID: operationID,
+				Status:      secondparty.OperationStatus_Error,
+				Result:      "",
+				ErrorStr:    fmt.Sprintln(err),
 			}
 			return
 		}
 		defer db.Close()
 		t0 := time.Now()
 		resp := CmdBrResp{}
-		err = db.QueryRow(brSQLCmd).Scan(&resp.Destination, &resp.Size, &resp.BackupTS, &resp.Queue_time, &resp.Execution_Time)
+		err = db.QueryRow(brSQLCmd).Scan(&resp.Destination, &resp.Size, &resp.BackupTS, &resp.QueueTime,
+			&resp.ExecutionTime)
 		if err != nil {
 			logInFunc.Error("query sql cmd err", err)
-			manager.taskStatusCh <- TaskStatusMember{
-				TaskID:   taskID,
-				Status:   TaskStatusError,
-				ErrorStr: fmt.Sprintln(err),
+			manager.operationStatusCh <- OperationStatusMember{
+				OperationID: operationID,
+				Status:      secondparty.OperationStatus_Error,
+				Result:      "",
+				ErrorStr:    fmt.Sprintln(err),
 			}
 			return
 		}
 		successFp := func() {
-			logInFunc.Info("task finished, time cost", time.Since(t0))
-			manager.taskStatusCh <- TaskStatusMember{
-				TaskID:   taskID,
-				Status:   TaskStatusFinished,
-				ErrorStr: string(jsonMustMarshal(&resp)),
+			logInFunc.Info("operation finished, time cost", time.Since(t0))
+			manager.operationStatusCh <- OperationStatusMember{
+				OperationID: operationID,
+				Status:      secondparty.OperationStatus_Finished,
+				Result:      string(jsonMustMarshal(&resp)),
+				ErrorStr:    string(jsonMustMarshal(&resp)), //deprecated
 			}
 		}
 		logInFunc.Info("sql cmd return successfully")

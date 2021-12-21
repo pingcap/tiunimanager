@@ -7,11 +7,13 @@ require (
 	github.com/BurntSushi/toml v0.4.1
 	github.com/DATA-DOG/go-sqlmock v1.3.3
 	github.com/HdrHistogram/hdrhistogram-go v1.1.1 // indirect
+	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/asim/go-micro/plugins/registry/etcd/v3 v3.0.0-20210812172626-c7195aae9817
 	github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3 v3.0.0-20210812172626-c7195aae9817
 	github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3 v3.0.0-20210812172626-c7195aae9817
 	github.com/asim/go-micro/v3 v3.5.2
+	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/elastic/go-elasticsearch/v7 v7.15.0
 	github.com/gin-contrib/cors v1.3.1
@@ -21,7 +23,7 @@ require (
 	github.com/go-playground/validator/v10 v10.4.1
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang/mock v1.6.0
-	github.com/golang/protobuf v1.5.2
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0
 	github.com/labstack/gommon v0.3.0
 	github.com/lithammer/shortuuid v3.0.0+incompatible

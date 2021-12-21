@@ -19,6 +19,7 @@ import (
 	"context"
 
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/structs"
 )
 
 type ReaderWriter interface {
@@ -27,6 +28,19 @@ type ReaderWriter interface {
 	Get(ctx context.Context, clusterID string) (*Cluster, error)
 	GetMeta(ctx context.Context, clusterID string) (*Cluster, []*ClusterInstance, error)
 
+	QueryMetas(ctx context.Context, filters Filters, pageReq structs.PageRequest) ([]*Result, structs.Page, error)
+
+	DeleteInstance(ctx context.Context, ID string) error
+
+	//
+	// UpdateMeta
+	// @Description: update cluster and instances, use Update and UpdateInstance
+	// @param ctx
+	// @param cluster
+	// @param instances[]*ClusterInstance
+	// @return error
+	//
+	UpdateMeta(ctx context.Context, cluster *Cluster, instances []*ClusterInstance) error
 	//
 	// UpdateInstance update cluster instances
 	//  @Description:
@@ -37,17 +51,18 @@ type ReaderWriter interface {
 	UpdateInstance(ctx context.Context, instances ...*ClusterInstance) error
 
 	//
-	// UpdateBaseInfo update cluster base info
-	//  @Description:
-	//  @param ctx
-	//  @param template
-	//  @return error
+	// UpdateClusterInfo
+	// @Description:  update cluster base info, excluding Status, MaintenanceStatus
+	// please update status with specific method, UpdateStatus, SetMaintenanceStatus, ClearMaintenanceStatus
+	// @param ctx
+	// @param template
+	// @return error
 	//
-	UpdateBaseInfo(ctx context.Context, template *Cluster) error
+	UpdateClusterInfo(ctx context.Context, template *Cluster) error
 
 	//
 	// UpdateStatus
-	//  @Description:
+	//  @Description: update cluster status
 	//  @param ctx
 	//  @param clusterID
 	//  @param status
@@ -67,7 +82,8 @@ type ReaderWriter interface {
 
 	//
 	// SetMaintenanceStatus
-	//  @Description:
+	//  @Description: set maintenance status to targetStatus,
+	//  (current MaintenanceStatus == constants.ClusterMaintenanceNone) is a precondition
 	//  @param ctx
 	//  @param clusterID
 	//  @param targetStatus
@@ -77,11 +93,12 @@ type ReaderWriter interface {
 
 	//
 	// ClearMaintenanceStatus
-	//  @Description:
-	//  @param ctx
-	//  @param clusterID
-	//  @param originalStatus
-	//  @return error
+	// @Description: set maintenance status to constant.ClusterMaintenanceNone
+	// (current MaintenanceStatus == originalStatus) is a precondition
+	// @param ctx
+	// @param clusterID
+	// @param originalStatus
+	// @return error
 	//
 	ClearMaintenanceStatus(ctx context.Context, clusterID string, originalStatus constants.ClusterMaintenanceStatus) error
 

@@ -23,15 +23,6 @@
 
 package constants
 
-// TiDB component default port
-const (
-	DefaultTiDBPort       int = 4000
-	DefaultTiDBStatusPort int = 10080
-	DefaultPDClientPort   int = 2379
-	DefaultAlertPort      int = 9093
-	DefaultGrafanaPort    int = 3000
-)
-
 type ClusterRunningStatus string
 
 //Definition of cluster running status information
@@ -52,30 +43,59 @@ const (
 	ClusterMaintenanceDeleting                     ClusterMaintenanceStatus = "Deleting"
 	ClusterMaintenanceStopping                     ClusterMaintenanceStatus = "Stopping"
 	ClusterMaintenanceRestarting                   ClusterMaintenanceStatus = "Restarting"
-	ClusterMaintenanceBackingUp                    ClusterMaintenanceStatus = "BackingUp"
+	ClusterMaintenanceBackUp                       ClusterMaintenanceStatus = "BackUp"
 	ClusterMaintenanceRestore                      ClusterMaintenanceStatus = "Restore"
 	ClusterMaintenanceScaleIn                      ClusterMaintenanceStatus = "ScaleIn"
 	ClusterMaintenanceScaleOut                     ClusterMaintenanceStatus = "ScaleOut"
 	ClusterMaintenanceUpgrading                    ClusterMaintenanceStatus = "Upgrading"
 	ClusterMaintenanceSwitching                    ClusterMaintenanceStatus = "Switching"
 	ClusterMaintenanceModifyParameterAndRestarting ClusterMaintenanceStatus = "ModifyParameterRestarting"
-	ClusterMaintenanceNone                    	   ClusterMaintenanceStatus = ""
+	ClusterMaintenanceNone                         ClusterMaintenanceStatus = ""
 )
 
 const (
-	FlowCreateCluster    = "CreateCluster"
-	FlowDeleteCluster    = "DeleteCluster"
-	FlowBackupCluster    = "BackupCluster"
-	FlowRecoverCluster   = "RecoverCluster"
-	FlowModifyParameters = "ModifyParameters"
-	FlowExportData       = "ExportData"
-	FlowImportData       = "ImportData"
-	FlowRestartCluster   = "RestartCluster"
-	FlowStopCluster      = "StopCluster"
-	FlowTakeoverCluster  = "TakeoverCluster"
-	FlowBuildLogConfig   = "BuildLogConfig"
-	FlowScaleOutCluster  = "ScaleOutCluster"
-	FlowScaleInCluster   = "ScaleInCluster"
+	FlowCreateCluster       = "CreateCluster"
+	FlowDeleteCluster       = "DeleteCluster"
+	FlowBackupCluster       = "BackupCluster"
+	FlowRestoreNewCluster   = "RestoreNewCluster"
+	FlowRestoreExistCluster = "RestoreExistCluster"
+	FlowModifyParameters    = "ModifyParameters"
+	FlowExportData          = "ExportData"
+	FlowImportData          = "ImportData"
+	FlowRestartCluster      = "RestartCluster"
+	FlowStopCluster         = "StopCluster"
+	FlowTakeoverCluster     = "TakeoverCluster"
+	FlowBuildLogConfig      = "BuildLogConfig"
+	FlowScaleOutCluster     = "ScaleOutCluster"
+	FlowScaleInCluster      = "ScaleInCluster"
+	FlowCloneCluster        = "CloneCluster"
+
+	FlowMasterSlaveSwitchoverNormal                     = "SwitchoverNormal"
+	FlowMasterSlaveSwitchoverForce                      = "SwitchoverForce"
+	FlowMasterSlaveSwitchoverForceWithMasterUnavailable = "SwitchoverForceWithMasterUnavailable"
+)
+
+type ClusterInstanceRunningStatus string
+
+//Definition of cluster instance running status information
+const (
+	ClusterInstanceInitializing ClusterInstanceRunningStatus = "Initializing"
+	ClusterInstanceStopped      ClusterInstanceRunningStatus = "Stopped"
+	ClusterInstanceRunning      ClusterInstanceRunningStatus = "Running"
+	ClusterInstanceRecovering   ClusterInstanceRunningStatus = "Recovering"
+	ClusterInstanceFailure      ClusterInstanceRunningStatus = "Failure"
+)
+
+type ClusterInstanceMaintenanceStatus string
+
+// Definition cluster instance maintenance status information
+const (
+	ClusterInstanceMaintenanceCreating                     ClusterInstanceMaintenanceStatus = "Creating"
+	ClusterInstanceMaintenanceDeleting                     ClusterInstanceMaintenanceStatus = "Deleting"
+	ClusterInstanceMaintenanceStopping                     ClusterInstanceMaintenanceStatus = "Stopping"
+	ClusterInstanceMaintenanceRestarting                   ClusterInstanceMaintenanceStatus = "Restarting"
+	ClusterInstanceMaintenanceUpgrading                    ClusterInstanceMaintenanceStatus = "Upgrading"
+	ClusterInstanceMaintenanceModifyParameterAndRestarting ClusterInstanceMaintenanceStatus = "ModifyParameterRestarting"
 )
 
 type ClusterBackupStatus string
@@ -102,9 +122,9 @@ type ClusterCloneStrategy string
 
 // Definition cluster clone strategy
 const (
-	EmptyDataClone ClusterCloneStrategy = "Empty"
-	SnapShotClone  ClusterCloneStrategy = "Snapshot"
-	SyncDataClone  ClusterCloneStrategy = "Sync"
+	ClusterTopologyClone ClusterCloneStrategy = "TopologyClone"
+	SnapShotClone        ClusterCloneStrategy = "Snapshot"
+	TiCDCSyncClone       ClusterCloneStrategy = "TiCDCSync"
 )
 
 type BackupType string
@@ -133,4 +153,11 @@ const (
 	StorageTypeLocal StorageType = "local"
 	StorageTypeS3    StorageType = "s3"
 	StorageTypeNFS   StorageType = "nfs"
+)
+
+const (
+	DefaultBackupStoragePath       string = "em/backup"
+	DefaultBackupS3AccessKey       string = "minioadmin"
+	DefaultBackupS3SecretAccessKey string = "minioadmin"
+	DefaultBackupS3Endpoint        string = "http://minio.pingcap.net:9000"
 )

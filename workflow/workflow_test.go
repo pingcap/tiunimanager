@@ -19,6 +19,8 @@ import (
 	"context"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockworkflow"
@@ -36,6 +38,9 @@ var doSuccess = func(node *wfModel.WorkFlowNode, context *FlowContext) error {
 	return nil
 }
 var doFail = func(node *wfModel.WorkFlowNode, context *FlowContext) error {
+	return nil
+}
+var defaultSuccess = func(node *wfModel.WorkFlowNode, context *FlowContext) error {
 	return nil
 }
 
@@ -82,7 +87,7 @@ func TestFlowManager_Start(t *testing.T) {
 			TaskNodes: map[string]*NodeDefine{
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
-				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
+				"nodeName2Done": {"end", "", "", SyncFuncNode, CompositeExecutor(doFail, defaultSuccess)},
 				"fail":          {"fail", "", "", SyncFuncNode, doFail},
 			},
 		})
@@ -201,7 +206,7 @@ func TestFlowManager_ListWorkFlows(t *testing.T) {
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
 	manager := GetWorkFlowService()
-	_, _, err := manager.ListWorkFlows(context.TODO(), "", "", "", 1, 10)
+	_, _, err := manager.ListWorkFlows(context.TODO(), message.QueryWorkFlowsReq{PageRequest: structs.PageRequest{Page: 1, PageSize: 10}})
 	assert.NoError(t, err)
 }
 
@@ -226,7 +231,8 @@ func TestFlowManager_DetailWorkFlow(t *testing.T) {
 				"fail":          {"fail", "", "", SyncFuncNode, doFail},
 			},
 		})
-	_, err := manager.DetailWorkFlow(context.TODO(), "")
+
+	_, err := manager.DetailWorkFlow(context.TODO(), message.QueryWorkFlowDetailReq{WorkFlowID: "flowId"})
 	assert.NoError(t, err)
 }
 

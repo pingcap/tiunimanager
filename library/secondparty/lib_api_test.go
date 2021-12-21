@@ -15,11 +15,11 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: lib_api_test.go
- * @Description: test tidb component uses api to update parameters
- * @Author: jiangxunyu@pingcap.com
+ * @File: lib_api_test
+ * @Description:
+ * @Author: shenhaibo@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/2 16:50
+ * @Date: 2021/12/15
 *******************************************************************************/
 
 package secondparty
@@ -32,12 +32,6 @@ import (
 	"strings"
 	"testing"
 )
-
-var secondMicro4 *SecondMicro
-
-func init() {
-	secondMicro4 = &SecondMicro{}
-}
 
 func TestSecondMicro_ApiEditConfig(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -155,7 +149,7 @@ func TestSecondMicro_ApiEditConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			hasSuc, err := secondMicro3.ApiEditConfig(context.TODO(), tt.args.req)
+			hasSuc, err := secondPartyManager3.ApiEditConfig(context.TODO(), tt.args.req)
 			if err != nil {
 				if tt.wantErr {
 					return

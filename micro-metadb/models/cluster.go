@@ -352,6 +352,7 @@ func (m *DAOClusterManager) ListClusters(ctx context.Context, clusterId, cluster
 	if clusterId != "" {
 		query = query.Where("id = ?", clusterId)
 	}
+
 	if clusterName != "" {
 		query = query.Where("name like '%" + clusterName + "%'")
 	}

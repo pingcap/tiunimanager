@@ -18,6 +18,7 @@ package management
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/structs"
 	libCommon "github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/common"
@@ -27,12 +28,14 @@ import (
 
 func TestGormClusterReadWrite_MaintenanceStatus(t *testing.T) {
 	got, err := testRW.Create(context.TODO(), &Cluster{
+		Name: "test39907",
 		Entity: common.Entity{
 			TenantId: "111",
 		},
 		Tags: []string{"tag1", "tag2"},
 	})
 	defer testRW.Delete(context.TODO(), got.ID)
+
 	assert.NoError(t, err)
 	assert.Equal(t, constants.ClusterMaintenanceNone, got.MaintenanceStatus)
 
@@ -66,9 +69,10 @@ func TestGormClusterReadWrite_MaintenanceStatus(t *testing.T) {
 func TestGormClusterReadWrite_Create(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		got, err := testRW.Create(context.TODO(), &Cluster{
+			Name: "test1",
 			Entity: common.Entity{
 				TenantId: "111",
-				Status: string(constants.ClusterRunning),
+				Status:   string(constants.ClusterRunning),
 			},
 			Tags: []string{"tag1", "tag2"},
 		})
@@ -82,6 +86,7 @@ func TestGormClusterReadWrite_Create(t *testing.T) {
 	})
 	t.Run("default", func(t *testing.T) {
 		got, err := testRW.Create(context.TODO(), &Cluster{
+			Name: "test32413",
 			Entity: common.Entity{
 				TenantId: "111",
 			},
@@ -99,9 +104,9 @@ func TestGormClusterReadWrite_Create(t *testing.T) {
 func TestGormClusterReadWrite_CreateRelation(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		relation := &ClusterRelation{
-			ObjectClusterID: "111",
+			ObjectClusterID:  "111",
 			SubjectClusterID: "222",
-			RelationType: constants.ClusterRelationCloneFrom,
+			RelationType:     constants.ClusterRelationCloneFrom,
 		}
 		err := testRW.CreateRelation(context.TODO(), relation)
 
@@ -113,13 +118,23 @@ func TestGormClusterReadWrite_CreateRelation(t *testing.T) {
 
 func TestGormClusterReadWrite_Delete(t *testing.T) {
 	cluster := &Cluster{
+		Name: "test32431",
 		Entity: common.Entity{
 			TenantId: "111",
 		},
 		Tags: []string{"tag1", "tag2"},
 	}
-	got, _ := testRW.Create(context.TODO(),cluster)
+	got, _ := testRW.Create(context.TODO(), cluster)
 	defer testRW.Delete(context.TODO(), got.ID)
+	cluster2 := &Cluster{
+		Name: "tesfasfdsaf",
+		Entity: common.Entity{
+			TenantId: "111",
+		},
+		Tags: []string{"tag1", "tag2"},
+	}
+	got2, _ := testRW.Create(context.TODO(), cluster2)
+	defer testRW.Delete(context.TODO(), got2.ID)
 
 	t.Run("normal", func(t *testing.T) {
 		err := testRW.DB(context.TODO()).Where("id = ?", cluster.ID).First(cluster).Error
@@ -128,6 +143,8 @@ func TestGormClusterReadWrite_Delete(t *testing.T) {
 		assert.NoError(t, err)
 		err = testRW.DB(context.TODO()).Where("id = ?", cluster.ID).First(cluster).Error
 		assert.Error(t, err)
+
+		assert.NoError(t, testRW.DB(context.TODO()).Where("id = ?", cluster2.ID).First(cluster2).Error)
 	})
 
 	t.Run("not found", func(t *testing.T) {
@@ -141,13 +158,34 @@ func TestGormClusterReadWrite_Delete(t *testing.T) {
 	})
 }
 
+func TestGormClusterReadWrite_DeleteInstance(t *testing.T) {
+	instance := &ClusterInstance{
+		Entity: common.Entity{
+			TenantId: "abc",
+		},
+		Type:      "TiDB",
+		Version:   "v5.0.0",
+		ClusterID: "testCluster",
+	}
+	t.Run("normal", func(t *testing.T) {
+		err := testRW.DB(context.TODO()).Create(instance).Error
+		assert.NoError(t, err)
+		err = testRW.DeleteInstance(context.TODO(), instance.ID)
+		assert.NoError(t, err)
+	})
+	t.Run("not found", func(t *testing.T) {
+		err := testRW.DeleteInstance(context.TODO(), "testInstance")
+		assert.Error(t, err)
+	})
+}
+
 func TestGormClusterReadWrite_DeleteRelation(t *testing.T) {
 	relation := &ClusterRelation{
-		ObjectClusterID: "111",
+		ObjectClusterID:  "111",
 		SubjectClusterID: "222",
-		RelationType: constants.ClusterRelationCloneFrom,
+		RelationType:     constants.ClusterRelationCloneFrom,
 	}
-	testRW.CreateRelation(context.TODO(),relation)
+	testRW.CreateRelation(context.TODO(), relation)
 
 	t.Run("normal", func(t *testing.T) {
 		err := testRW.DB(context.TODO()).Where("id = ?", relation.ID).First(relation).Error
@@ -166,6 +204,7 @@ func TestGormClusterReadWrite_DeleteRelation(t *testing.T) {
 
 func TestGormClusterReadWrite_GetMeta(t *testing.T) {
 	got, _ := testRW.Create(context.TODO(), &Cluster{
+		Name: "test2131243",
 		Entity: common.Entity{
 			TenantId: "111",
 		},
@@ -188,15 +227,15 @@ func TestGormClusterReadWrite_GetMeta(t *testing.T) {
 
 func TestGormClusterReadWrite_UpdateBaseInfo(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
-		err := testRW.UpdateBaseInfo(context.TODO(), &Cluster{
-			Entity:common.Entity{
+		err := testRW.UpdateClusterInfo(context.TODO(), &Cluster{
+			Entity: common.Entity{
 				ID: "whatever",
 			},
 		})
 		assert.Error(t, err)
 		assert.Equal(t, libCommon.TIEM_CLUSTER_NOT_FOUND, err.(framework.TiEMError).GetCode())
 
-		err = testRW.UpdateBaseInfo(context.TODO(), &Cluster{})
+		err = testRW.UpdateClusterInfo(context.TODO(), &Cluster{})
 		assert.Error(t, err)
 		assert.Equal(t, libCommon.TIEM_PARAMETER_INVALID, err.(framework.TiEMError).GetCode())
 
@@ -205,6 +244,7 @@ func TestGormClusterReadWrite_UpdateBaseInfo(t *testing.T) {
 
 func TestGormClusterReadWrite_UpdateInstance(t *testing.T) {
 	got, _ := testRW.Create(context.TODO(), &Cluster{
+		Name: "test9845",
 		Entity: common.Entity{
 			TenantId: "111",
 		},
@@ -249,6 +289,7 @@ func TestGormClusterReadWrite_UpdateInstance(t *testing.T) {
 func TestGormClusterReadWrite_UpdateStatus(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		got, err := testRW.Create(context.TODO(), &Cluster{
+			Name: "test342546",
 			Entity: common.Entity{
 				TenantId: "111",
 			},
@@ -306,7 +347,7 @@ func TestGormClusterReadWrite_ClusterTopologySnapshot(t *testing.T) {
 		assert.Error(t, err)
 	})
 	t.Run("latest", func(t *testing.T) {
-		err := testRW.CreateClusterTopologySnapshot(context.TODO(), ClusterTopologySnapshot {
+		err := testRW.CreateClusterTopologySnapshot(context.TODO(), ClusterTopologySnapshot{
 			TenantID: "tenant111", ClusterID: "cluster111", Config: "content111",
 		})
 		assert.NoError(t, err)
@@ -325,4 +366,127 @@ func TestGormClusterReadWrite_ClusterTopologySnapshot(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "content_modified", s.Config)
 	})
+}
+
+func TestClusterReadWrite_QueryMetas(t *testing.T) {
+	cluster1 := mockCluster("QueryMetas_test1", "TiDB", constants.ClusterRunning, []string{"tag1", "tag2"})
+	cluster2 := mockCluster("QueryMetas_test2", "TiDB", constants.ClusterInitializing, []string{"tag2", "tag1"})
+	cluster3 := mockCluster("3test_QueryMetas", "TiDB", constants.ClusterInitializing, []string{"tag1", "tag2"})
+
+	cluster4 := mockCluster("tes_QueryMetas", "Other", constants.ClusterRunning, []string{"tag1", "tag2"})
+	cluster5 := mockCluster("QueryMetas_test5", "TiDB", constants.ClusterRunning, []string{"tag121"})
+	cluster6 := mockCluster("QueryMetas_test6", "TiDB", constants.ClusterRunning, []string{""})
+	cluster7 := mockCluster("QueryMetas_test7", "TiDB", constants.ClusterStopped, []string{"tag1"})
+
+	defer testRW.Delete(context.TODO(), cluster1)
+	defer testRW.Delete(context.TODO(), cluster2)
+	defer testRW.Delete(context.TODO(), cluster3)
+	defer testRW.Delete(context.TODO(), cluster4)
+	defer testRW.Delete(context.TODO(), cluster5)
+	defer testRW.Delete(context.TODO(), cluster6)
+	defer testRW.Delete(context.TODO(), cluster7)
+
+	t.Run("normal", func(t *testing.T) {
+		results, page, err := testRW.QueryMetas(context.TODO(), Filters {
+			TenantId: "1919",
+			NameLike: "test",
+			Tag: "tag1",
+			Type: "TiDB",
+			StatusFilters: []constants.ClusterRunningStatus{
+				constants.ClusterRunning,
+				constants.ClusterInitializing,
+			},
+		}, structs.PageRequest{
+			Page: 1,
+			PageSize: 2,
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, 3, page.Total)
+		assert.Equal(t, cluster3, results[0].Cluster.ID)
+		assert.Equal(t, 2, len(results[0].Instances))
+	})
+
+	t.Run("no result", func(t *testing.T) {
+		_, page, err := testRW.QueryMetas(context.TODO(), Filters {
+			TenantId: "1919",
+			NameLike: "whatever",
+			Tag: "tag1",
+			Type: "TiDB",
+			StatusFilters: []constants.ClusterRunningStatus{
+				constants.ClusterRunning,
+				constants.ClusterInitializing,
+			},
+		}, structs.PageRequest{
+			Page: 0,
+			PageSize: 5,
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, 0, page.Total)
+	})
+
+	t.Run("error", func(t *testing.T) {
+		_, _, err := testRW.QueryMetas(context.TODO(), Filters {
+			NameLike: "whatever",
+			Tag: "tag1",
+			Type: "TiDB",
+			StatusFilters: []constants.ClusterRunningStatus{
+				constants.ClusterRunning,
+				constants.ClusterInitializing,
+			},
+		}, structs.PageRequest{
+			Page: 0,
+			PageSize: 5,
+		})
+		assert.Error(t, err)
+	})
+	t.Run("empty filter", func(t *testing.T) {
+		_, page, err := testRW.QueryMetas(context.TODO(), Filters {
+			TenantId: "1919",
+			NameLike: "",
+			Tag: "",
+			Type: "",
+			StatusFilters: []constants.ClusterRunningStatus{
+			},
+		}, structs.PageRequest{
+			Page: 0,
+			PageSize: 5,
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, 7, page.Total)
+	})
+
+	t.Run("page", func(t *testing.T) {
+		_, page, err := testRW.QueryMetas(context.TODO(), Filters {
+			TenantId: "1919",
+			NameLike: "",
+			Tag: "",
+			Type: "",
+			StatusFilters: []constants.ClusterRunningStatus{
+			},
+		}, structs.PageRequest{
+			Page: 5,
+			PageSize: 5,
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, 7, page.Total)
+	})
+}
+
+func mockCluster(name string, clusterType string, status constants.ClusterRunningStatus, tags []string) string {
+	got, _ := testRW.Create(context.TODO(), &Cluster {
+		Name: name,
+		Entity: common.Entity{
+			TenantId: "1919",
+			Status: string(status),
+		},
+		Tags: tags,
+		Type: clusterType,
+	})
+
+	instances := []*ClusterInstance{
+		{Entity: common.Entity{TenantId: "1919"}, ClusterID: got.ID, Type: "TiKV", Version: "v5.0.0"},
+		{Entity: common.Entity{TenantId: "1919"}, ClusterID: got.ID, Type: "PD", Version: "v5.0.0"},
+	}
+	testRW.UpdateInstance(context.TODO(), instances...)
+	return got.ID
 }

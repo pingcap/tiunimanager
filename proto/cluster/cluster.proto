@@ -3,9 +3,7 @@ syntax = "proto3";
 import "common.proto";
 import "softwarespec.proto";
 import "mng_auth.proto";
-import "mng_host.proto";
 import "mng_allocation.proto";
-import "param.proto";
 option go_package = "./clusterpb/;clusterpb";
 
 service ClusterService {
@@ -16,7 +14,7 @@ service ClusterService {
     rpc DetailCluster(RpcRequest) returns (RpcResponse);
     rpc RestartCluster(RpcRequest) returns (RpcResponse);
     rpc StopCluster(RpcRequest) returns (RpcResponse);
-    rpc TakeoverClusters(ClusterTakeoverReqDTO) returns (ClusterTakeoverRespDTO);
+    rpc TakeoverClusters(RpcRequest) returns (RpcResponse);
     rpc ScaleOutCluster(RpcRequest) returns (RpcResponse);
     rpc ScaleInCluster(RpcRequest) returns (RpcResponse);
     rpc CloneCluster(RpcRequest) returns (RpcResponse);
@@ -26,55 +24,47 @@ service ClusterService {
     rpc QueryDataTransport(RpcRequest) returns (RpcResponse);
     rpc DeleteDataTransportRecord(RpcRequest) returns (RpcResponse);
 
+    rpc QueryClusterLog(RpcRequest) returns (RpcResponse);
+
     rpc QueryBackupRecords(RpcRequest) returns (RpcResponse);
     rpc CreateBackup(RpcRequest) returns (RpcResponse);
-    rpc RecoverCluster(RecoverRequest) returns (RecoverResponse);
+    rpc RestoreNewCluster(RpcRequest) returns (RpcResponse);
     rpc DeleteBackupRecords(RpcRequest) returns (RpcResponse);
     rpc SaveBackupStrategy(RpcRequest) returns (RpcResponse);
     rpc GetBackupStrategy(RpcRequest) returns (RpcResponse);
 
-    rpc QueryParameters(QueryClusterParametersRequest) returns (QueryClusterParametersResponse);
-    rpc SaveParameters(SaveClusterParametersRequest) returns (SaveClusterParametersResponse);
-
-    rpc DescribeDashboard(DescribeDashboardRequest) returns (DescribeDashboardResponse);
-    rpc DescribeMonitor(DescribeMonitorRequest) returns (DescribeMonitorResponse);
+    rpc GetDashboardInfo(RpcRequest) returns (RpcResponse);
+    rpc DescribeMonitor(RpcRequest) returns (RpcResponse);
 
     // Auth manager module
     rpc Login(LoginRequest) returns (LoginResponse);
     rpc Logout(LogoutRequest) returns (LogoutResponse);
     rpc VerifyIdentity(VerifyIdentityRequest) returns (VerifyIdentityResponse);
 
-    // host manager module
-    rpc ImportHost(ImportHostRequest) returns (ImportHostResponse);
-    rpc ImportHostsInBatch(ImportHostsInBatchRequest) returns (ImportHostsInBatchResponse);
-    rpc RemoveHost(RemoveHostRequest) returns (RemoveHostResponse);
-    rpc RemoveHostsInBatch(RemoveHostsInBatchRequest) returns (RemoveHostsInBatchResponse);
-    rpc ListHost(ListHostsRequest) returns (ListHostsResponse);
-    rpc CheckDetails(CheckDetailsRequest) returns (CheckDetailsResponse);
-    rpc AllocHosts(AllocHostsRequest) returns (AllocHostResponse);
-    rpc GetFailureDomain(GetFailureDomainRequest) returns (GetFailureDomainResponse);
-    rpc AllocResourcesInBatch(BatchAllocRequest) returns (BatchAllocResponse);
-    rpc RecycleResources(RecycleRequest) returns (RecycleResponse);
-    rpc UpdateHostStatus(UpdateHostStatusRequest) returns (UpdateHostStatusResponse);
-    rpc ReserveHost(ReserveHostRequest) returns (ReserveHostResponse);
-    rpc GetHierarchy(GetHierarchyRequest) returns (GetHierarchyResponse);
-    rpc GetStocks(GetStocksRequest) returns (GetStocksResponse);
+    // resource manager module
+    rpc ImportHosts(RpcRequest) returns (RpcResponse);
+    rpc DeleteHosts(RpcRequest) returns (RpcResponse);
+    rpc QueryHosts(RpcRequest) returns (RpcResponse);
+    rpc UpdateHostReserved(RpcRequest) returns (RpcResponse);
+    rpc UpdateHostStatus(RpcRequest) returns (RpcResponse);
+    rpc GetHierarchy(RpcRequest) returns (RpcResponse);
+    rpc GetStocks(RpcRequest) returns (RpcResponse);
 
-    // task manager
+    // workflow
     rpc ListFlows(RpcRequest) returns (RpcResponse);
     rpc DetailFlow(RpcRequest) returns (RpcResponse);
 
-    // Param Group & Cluster Params
-    rpc CreateParamGroup(CreateParamGroupRequest) returns (CreateParamGroupResponse);
-    rpc UpdateParamGroup(UpdateParamGroupRequest) returns (UpdateParamGroupResponse);
-    rpc DeleteParamGroup(DeleteParamGroupRequest) returns (DeleteParamGroupResponse);
-    rpc ListParamGroup(ListParamGroupRequest) returns (ListParamGroupResponse);
-    rpc DetailParamGroup(DetailParamGroupRequest) returns (DetailParamGroupResponse);
-    rpc ApplyParamGroup(ApplyParamGroupRequest) returns (ApplyParamGroupResponse);
-    rpc CopyParamGroup(CopyParamGroupRequest) returns (CopyParamGroupResponse);
-    rpc ListClusterParams(ListClusterParamsRequest) returns (ListClusterParamsResponse);
-    rpc UpdateClusterParams(UpdateClusterParamsRequest) returns (UpdateClusterParamsResponse);
-    rpc InspectClusterParams(InspectClusterParamsRequest) returns (InspectClusterParamsResponse);
+    // Parameter Group & Cluster Parameters
+    rpc CreateParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc UpdateParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc DeleteParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc QueryParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc DetailParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc ApplyParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc CopyParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc QueryClusterParameters(RpcRequest) returns (RpcResponse);
+    rpc UpdateClusterParameters(RpcRequest) returns (RpcResponse);
+    rpc InspectClusterParameters(RpcRequest) returns (RpcResponse);
 
     // change feed task
     rpc CreateChangeFeedTask(RpcRequest) returns (RpcResponse);
@@ -86,6 +76,9 @@ service ClusterService {
 
     // switchover
     rpc MasterSlaveSwitchover(RpcRequest) returns (RpcResponse);
+    
+    // system config
+    rpc GetSystemConfig(RpcRequest) returns (RpcResponse);
 }
 
 message ClusterCreateReqDTO {

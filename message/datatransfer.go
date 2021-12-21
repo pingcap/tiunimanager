@@ -38,7 +38,6 @@ type DataExportReq struct {
 	ZipName         string `json:"zipName"`
 	EndpointUrl     string `json:"endpointUrl"`
 	BucketUrl       string `json:"bucketUrl"`
-	BucketRegion    string `json:"bucketRegion"`
 	AccessKey       string `json:"accessKey"`
 	SecretAccessKey string `json:"secretAccessKey"`
 	Comment         string `json:"comment"`
@@ -81,7 +80,7 @@ type QueryDataImportExportRecordsResp struct {
 }
 
 type DeleteImportExportRecordReq struct {
-	RecordID string `json:"recordId" form:"recordId"`
+	RecordID string `json:"recordId" form:"recordId" swaggerignore:"true"`
 }
 
 type DeleteImportExportRecordResp struct {

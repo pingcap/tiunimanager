@@ -17,13 +17,10 @@
 package importexport
 
 import (
-	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	"net/http"
 )
 
 // ExportData
@@ -40,22 +37,11 @@ import (
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/export [post]
 func ExportData(c *gin.Context) {
-	var request message.DataExportReq
-
-	if err := c.ShouldBindQuery(&request); err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.DataExportReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.ExportData, &message.DataExportResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
-
-	body, err := json.Marshal(request)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	controller.InvokeRpcMethod(c, client.ClusterClient.ExportData, &message.DataExportResp{}, string(body), controller.DefaultTimeout)
 }
 
 // ImportData
@@ -72,22 +58,11 @@ func ExportData(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/import [post]
 func ImportData(c *gin.Context) {
-	var request message.DataImportReq
-
-	if err := c.ShouldBindQuery(&request); err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.DataImportReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.ImportData, &message.DataImportResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
-
-	body, err := json.Marshal(request)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	controller.InvokeRpcMethod(c, client.ClusterClient.ImportData, &message.DataImportResp{}, string(body), controller.DefaultTimeout)
 }
 
 // QueryDataTransport
@@ -106,20 +81,11 @@ func ImportData(c *gin.Context) {
 func QueryDataTransport(c *gin.Context) {
 	var request message.QueryDataImportExportRecordsReq
 
-	if err := c.ShouldBindQuery(&request); err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &request); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryDataTransport, &message.QueryDataImportExportRecordsResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
-
-	body, err := json.Marshal(request)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	controller.InvokeRpcMethod(c, client.ClusterClient.QueryDataTransport, &message.QueryDataImportExportRecordsResp{}, string(body), controller.DefaultTimeout)
 }
 
 // DeleteDataTransportRecord
@@ -137,21 +103,11 @@ func QueryDataTransport(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/transport/{recordId} [delete]
 func DeleteDataTransportRecord(c *gin.Context) {
-	var request message.DeleteImportExportRecordReq
-
-	if err := c.ShouldBindQuery(&request); err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.DeleteImportExportRecordReq{
+		RecordID: c.Param("recordId"),
+	}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteDataTransportRecord, &message.DeleteImportExportRecordResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
-
-	request.RecordID = c.Param("recordId")
-	body, err := json.Marshal(request)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	controller.InvokeRpcMethod(c, client.ClusterClient.DeleteDataTransportRecord, &message.DeleteImportExportRecordResp{}, string(body), controller.DefaultTimeout)
 }

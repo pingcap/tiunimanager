@@ -25,7 +25,7 @@ import (
 	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
 	switchoverApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/switchover"
-	paramGroupApi "github.com/pingcap-inc/tiem/micro-api/controller/param/paramgroup"
+	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-api/controller/platform/specs"
@@ -95,7 +95,7 @@ func Route(g *gin.Engine) {
 			cluster.POST("/:clusterId/restart", clusterApi.Restart)
 			cluster.POST("/:clusterId/stop", clusterApi.Stop)
 			cluster.POST("/restore", backuprestore.Restore)
-			cluster.GET("/:clusterId/dashboard", clusterApi.DescribeDashboard)
+			cluster.GET("/:clusterId/dashboard", clusterApi.GetDashboardInfo)
 			cluster.GET("/:clusterId/monitor", clusterApi.DescribeMonitor)
 
 			// Scale cluster
@@ -106,14 +106,13 @@ func Route(g *gin.Engine) {
 			cluster.POST("/clone", clusterApi.Clone)
 
 			// Params
-			cluster.GET("/:clusterId/params", parameterApi.QueryParams)
-			cluster.PUT("/:clusterId/params", parameterApi.UpdateParams)
-			cluster.POST("/:clusterId/params/inspect", parameterApi.InspectParams)
+			cluster.GET("/:clusterId/params", parameterApi.QueryParameters)
+			cluster.PUT("/:clusterId/params", parameterApi.UpdateParameters)
+			//cluster.POST("/:clusterId/params/inspect", parameterApi.InspectParameters)
 
 			// Backup Strategy
 			cluster.GET("/:clusterId/strategy", backuprestore.GetBackupStrategy)
 			cluster.PUT("/:clusterId/strategy", backuprestore.SaveBackupStrategy)
-			// cluster.DELETE("/:clusterId/strategy", instanceapi.DeleteBackupStrategy)
 
 			//Import and Export
 			cluster.POST("/import", importexport.ImportData)
@@ -173,41 +172,33 @@ func Route(g *gin.Engine) {
 		{
 			host.Use(interceptor.VerifyIdentity)
 			host.Use(interceptor.AuditLog())
-			host.POST("host", resourceApi.ImportHost)
 			host.POST("hosts", resourceApi.ImportHosts)
-			host.GET("hosts", resourceApi.ListHost)
-			host.GET("hosts/:hostId", resourceApi.HostDetails)
-			host.DELETE("hosts/:hostId", resourceApi.RemoveHost)
+			host.GET("hosts", resourceApi.QueryHosts)
 			host.DELETE("hosts", resourceApi.RemoveHosts)
-
 			host.GET("hosts-template", resourceApi.DownloadHostTemplateFile)
-
-			host.GET("failuredomains", warehouseApi.GetFailureDomain)
 			host.GET("hierarchy", warehouseApi.GetHierarchy)
 			host.GET("stocks", warehouseApi.GetStocks)
-
-			host.PUT("hosts", resourceApi.UpdateHost)
-			// Add allochosts API for debugging, not release.
-			host.POST("allochosts", resourceApi.AllocHosts)
+			host.PUT("host-reserved", resourceApi.UpdateHostReserved)
+			host.PUT("host-status", resourceApi.UpdateHostStatus)
 		}
 
 		log := apiV1.Group("/logs")
 		{
 			log.Use(interceptor.VerifyIdentity)
-			log.GET("/tidb/:clusterId", logApi.SearchTiDBLog)
+			log.GET("/tidb/:clusterId", logApi.QueryClusterLog)
 		}
 
 		paramGroups := apiV1.Group("/param-groups")
 		{
 			paramGroups.Use(interceptor.VerifyIdentity)
 			paramGroups.Use(interceptor.AuditLog())
-			paramGroups.GET("/", paramGroupApi.Query)
-			paramGroups.GET("/:paramGroupId", paramGroupApi.Detail)
-			paramGroups.POST("/", paramGroupApi.Create)
-			paramGroups.PUT("/:paramGroupId", paramGroupApi.Update)
-			paramGroups.DELETE("/:paramGroupId", paramGroupApi.Delete)
-			paramGroups.POST("/:paramGroupId/copy", paramGroupApi.Copy)
-			paramGroups.POST("/:paramGroupId/apply", paramGroupApi.Apply)
+			paramGroups.GET("/", parametergroup.Query)
+			paramGroups.GET("/:paramGroupId", parametergroup.Detail)
+			paramGroups.POST("/", parametergroup.Create)
+			paramGroups.PUT("/:paramGroupId", parametergroup.Update)
+			paramGroups.DELETE("/:paramGroupId", parametergroup.Delete)
+			paramGroups.POST("/:paramGroupId/copy", parametergroup.Copy)
+			paramGroups.POST("/:paramGroupId/apply", parametergroup.Apply)
 		}
 	}
 

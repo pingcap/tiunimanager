@@ -29,13 +29,14 @@ import (
 
 type QueryHostsReq struct {
 	structs.PageRequest
-	Filter struct {
-		HostID  string `json:"hostId"`
-		Purpose string `json:"purpose" form:"purpose"`
-		Status  string `json:"status" form:"status"`
-		Stat    int    `json:"loadStat" form:"loadStat"`
-		Arch    string `json:"Arch"`
-	} `json:"Filter"`
+	structs.HostFilter
+}
+
+func (req *QueryHostsReq) GetHostFilter() *structs.HostFilter {
+	return &(req.HostFilter)
+}
+func (req *QueryHostsReq) GetPage() *structs.PageRequest {
+	return &(req.PageRequest)
 }
 
 type QueryHostsResp struct {
@@ -43,25 +44,23 @@ type QueryHostsResp struct {
 }
 
 type ImportHostsReq struct {
+	Hosts []structs.HostInfo `json:"hosts"`
 }
 
 type ImportHostsResp struct {
+	HostIDS []string `json:"hostIds"`
 }
 
 type DeleteHostsReq struct {
-	HostID []string `json:"hostIds"`
+	HostIDs []string `json:"hostIds"`
 }
 
 type DeleteHostsResp struct {
-	Hosts struct {
-		HostID string `json:"hostId"`
-		Status string `json:"status"`
-	} `json:"hosts"`
 }
 
 type UpdateHostReservedReq struct {
 	HostIDs  []string `json:"hostIds"`
-	Reserved *bool    `json:"reserved"`
+	Reserved bool     `json:"reserved"`
 }
 
 type UpdateHostReservedResp struct {
@@ -69,60 +68,44 @@ type UpdateHostReservedResp struct {
 
 type UpdateHostStatusReq struct {
 	HostIDs []string `json:"hostIds"`
-	Status  *int32   `json:"status"`
+	Status  string   `json:"status"`
 }
 
 type UpdateHostStatusResp struct {
 }
 
 type GetHierarchyReq struct {
-	Filter struct {
-		Arch string `json:"Arch"`
-	} `json:"Filter"`
-	Level int32 `json:"Level"`
-	Depth int32 `json:"Depth"`
+	structs.HostFilter
+	Level int `json:"Level"` // [1:Region, 2:Zone, 3:Rack, 4:Host]
+	Depth int `json:"Depth"`
 }
 
-type HierarchyTreeNode struct {
-	Code     string `json:"Code"`
-	Name     string `json:"Name"`
-	Prefix   string `json:"Prefix"`
-	SubNodes []HierarchyTreeNode
+func (req *GetHierarchyReq) GetHostFilter() *structs.HostFilter {
+	return &(req.HostFilter)
 }
 
-type GetHierarchyRsp struct {
-	Root HierarchyTreeNode `json:"root"`
+type GetHierarchyResp struct {
+	Root structs.HierarchyTreeNode `json:"root"`
 }
 
 type GetStocksReq struct {
-	StockCondition struct {
-		StockLocation struct {
-			Region string `json:"Region"`
-			Zone   string `json:"Zone"`
-			Rack   string `json:"Rack"`
-			HostIp string `json:"HostIp"`
-		}
-		StockHostCondition struct {
-			Arch       string `json:"Arch"`
-			HostStatus int32  `json:"HostStatus"`
-			LoadStat   int32  `json:"LoadStat"`
-		}
-		StockDiskCondition struct {
-			DiskType   string `json:"DiskType"`
-			DiskStatus int32  `json:"DiskStatus"`
-			Capacity   int32  `json:"Capacity"`
-		}
-	} `json:"stockCondition"`
+	structs.Location
+	structs.HostFilter
+	structs.DiskFilter
+}
+
+func (req *GetStocksReq) GetLocation() *structs.Location {
+	return &(req.Location)
+}
+func (req *GetStocksReq) GetHostFilter() *structs.HostFilter {
+	return &(req.HostFilter)
+}
+func (req *GetStocksReq) GetDiskFilter() *structs.DiskFilter {
+	return &(req.DiskFilter)
 }
 
 type GetStocksResp struct {
-	Stocks struct {
-		FreeHostCount    int32 `json:"freeHostCount"`
-		FreeCpuCores     int32 `json:"freeCpuCores"`
-		FreeMemory       int32 `json:"freeMemory"`
-		FreeDiskCount    int32 `json:"freeDiskCount"`
-		FreeDiskCapacity int32 `json:"freeDiskCapacity"`
-	} `json:"stocks"`
+	Stocks structs.Stocks `json:"stocks"`
 }
 
 type DownloadHostTemplateFileReq struct {

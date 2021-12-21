@@ -15,11 +15,11 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: lib_api.go
- * @Description: tidb component uses api to update parameters
- * @Author: jiangxunyu@pingcap.com
+ * @File: lib_api
+ * @Description:
+ * @Author: shenhaibo@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/2 13:51
+ * @Date: 2021/12/15
 *******************************************************************************/
 
 package secondparty
@@ -30,11 +30,9 @@ import (
 	"fmt"
 	"net/http"
 
-	util "github.com/pingcap-inc/tiem/library/util/http"
-
-	"github.com/pingcap-inc/tiem/library/spec"
-
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/spec"
+	util "github.com/pingcap-inc/tiem/library/util/http"
 )
 
 const (
@@ -43,7 +41,7 @@ const (
 	TiDBApiUrl = "/settings"
 )
 
-func (secondMicro *SecondMicro) ApiEditConfig(ctx context.Context, apiEditConfigReq ApiEditConfigReq) (bool, error) {
+func (manager *SecondPartyManager) ApiEditConfig(ctx context.Context, apiEditConfigReq ApiEditConfigReq) (bool, error) {
 	framework.LogWithContext(ctx).Infof("micro srv api edit config, api req: %v", apiEditConfigReq)
 	switch apiEditConfigReq.TiDBClusterComponent {
 	case spec.TiDBClusterComponent_TiDB:

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -25,7 +24,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	log "github.com/sirupsen/logrus"
 )
@@ -37,39 +36,34 @@ func AccessLog() gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
-		path := c.Request.URL.Path
 		start := time.Now()
 		c.Next()
 		stop := time.Since(start)
+		remoteIP, _ := c.RemoteIP()
 		latency := int(math.Ceil(float64(stop.Nanoseconds()) / 1000000.0))
-		statusCode := c.Writer.Status()
-		clientIP := c.ClientIP()
-		clientUserAgent := c.Request.UserAgent()
-		referer := c.Request.Referer()
-		dataLength := c.Writer.Size()
-		if dataLength < 0 {
-			dataLength = 0
-		}
-
-		entry := framework.LogForkFile(common.LogFileAccess).WithFields(log.Fields{
-			"hostname":   hostname,
-			"statusCode": statusCode,
-			"latency":    latency, // time to process
-			"clientIP":   clientIP,
-			"method":     c.Request.Method,
-			"path":       path,
-			"referer":    referer,
-			"dataLength": dataLength,
-			"userAgent":  clientUserAgent,
-		})
+		entry := framework.LogForkFile(constants.LogFileAccess).WithFields(
+			log.Fields{
+				"hostname":   hostname,
+				"clientIP":   c.ClientIP(),
+				"remoteIP":   remoteIP,
+				"status":     c.Writer.Status(),
+				"latency":    latency, // time to process
+				"method":     c.Request.Method,
+				"path":       c.Request.URL.Path,
+				"dataLength": c.Writer.Size(),
+				"referer":    c.Request.Referer(),
+				"userAgent":  c.Request.UserAgent(),
+			})
 
 		if len(c.Errors) > 0 {
 			entry.Error(c.Errors.ByType(gin.ErrorTypePrivate).String())
 		} else {
-			msg := fmt.Sprintf("%s - %s \"%s %s\" %d %d \"%s\" \"%s\" (%dms)", clientIP, hostname, c.Request.Method, path, statusCode, dataLength, referer, clientUserAgent, latency)
-			if statusCode >= http.StatusInternalServerError {
+			msg := fmt.Sprintf("%s - %s \"%s %s\" %d %d \"%s\" \"%s\" (%dms)",
+				c.ClientIP(), hostname, c.Request.Method, c.Request.URL.Path, c.Writer.Status(), c.Writer.Size(),
+				c.Request.Referer(), c.Request.UserAgent(), latency)
+			if c.Writer.Status() >= http.StatusInternalServerError {
 				entry.Error(msg)
-			} else if statusCode >= http.StatusBadRequest {
+			} else if c.Writer.Status() >= http.StatusBadRequest {
 				entry.Warn(msg)
 			} else {
 				entry.Info(msg)

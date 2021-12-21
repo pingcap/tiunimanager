@@ -38,9 +38,7 @@ import (
 func Create(c *gin.Context) {
 	var req cluster.CreateChangeFeedTaskReq
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
-
-	if err == nil {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, req); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &cluster.CreateChangeFeedTaskResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -63,9 +61,7 @@ func Create(c *gin.Context) {
 func Query(c *gin.Context) {
 	var req cluster.QueryChangeFeedTaskReq
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
-
-	if err == nil {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, req); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.QueryChangeFeedTasks, make([][]cluster.QueryChangeFeedTaskResp, 0),
 			requestBody,
 			controller.DefaultTimeout)
@@ -88,11 +84,9 @@ const paramNameOfChangeFeedTaskId = "changeFeedTaskId"
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/ [get]
 func Detail(c *gin.Context) {
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &cluster.DetailChangeFeedTaskReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, cluster.DetailChangeFeedTaskReq{
 		ID: c.Param(paramNameOfChangeFeedTaskId),
-	})
-
-	if err == nil {
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &cluster.DetailChangeFeedTaskResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -113,11 +107,9 @@ func Detail(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/pause [post]
 func Pause(c *gin.Context) {
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &cluster.PauseChangeFeedTaskReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, cluster.PauseChangeFeedTaskReq{
 		ID: c.Param(paramNameOfChangeFeedTaskId),
-	})
-
-	if err == nil {
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &cluster.PauseChangeFeedTaskResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -138,11 +130,9 @@ func Pause(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/resume [post]
 func Resume(c *gin.Context) {
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &cluster.ResumeChangeFeedTaskReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, cluster.ResumeChangeFeedTaskReq{
 		Id: c.Param(paramNameOfChangeFeedTaskId),
-	})
-
-	if err == nil {
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &cluster.ResumeChangeFeedTaskResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -166,15 +156,13 @@ func Resume(c *gin.Context) {
 func Update(c *gin.Context) {
 	var req cluster.UpdateChangeFeedTaskReq
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c,
-		&req,
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
+		req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
 			req.(*cluster.UpdateChangeFeedTaskReq).Id = c.Param(paramNameOfChangeFeedTaskId)
 			return nil
-		})
-
-	if err == nil {
+		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &cluster.UpdateChangeFeedTaskResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -195,14 +183,29 @@ func Update(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId} [delete]
 func Delete(c *gin.Context) {
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &cluster.DeleteChangeFeedTaskReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, cluster.DeleteChangeFeedTaskReq{
 		ID: c.Param(paramNameOfChangeFeedTaskId),
-	})
-
-	if err == nil {
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &cluster.DeleteChangeFeedTaskResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
+}
 
+// Downstream
+// @Summary unused, just display downstream config
+// @Description show display config
+// @Tags change feed
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tidb body cluster.TiDBDownstream true "tidb"
+// @Param mysql body cluster.MysqlDownstream true "mysql"
+// @Param kafka body cluster.KafkaDownstream true "kafka"
+// @Success 200 {object} controller.CommonResult
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /downstream/ [delete]
+func Downstream(c *gin.Context) {
 }

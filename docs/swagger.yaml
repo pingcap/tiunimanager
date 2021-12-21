@@ -7,39 +7,27 @@ definitions:
       userName:
         type: string
     type: object
-  backuprestore.RestoreReq:
+  cluster.BackupClusterDataReq:
     properties:
-      clusterName:
+      backupMode:
+        description: auto,manual
         type: string
-      clusterType:
+      backupType:
+        description: full,incr
         type: string
-      clusterVersion:
+      clusterId:
         type: string
-      cpuArchitecture:
-        type: string
-      dbPassword:
-        type: string
-      exclusive:
-        type: boolean
-      nodeDemandList:
-        items:
-          $ref: '#/definitions/management.ClusterNodeDemand'
-        type: array
-      recoverInfo:
-        $ref: '#/definitions/management.RecoverInfo'
-      region:
-        type: string
-      tags:
-        items:
-          type: string
-        type: array
-      tls:
-        type: boolean
     type: object
-  cluster.CloneClusterReq:
+  cluster.BackupClusterDataResp:
     properties:
       backupId:
         type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  cluster.CloneClusterReq:
+    properties:
       cloneStrategy:
         description: specify clone strategy, include empty, snapshot and sync, default
           empty(option)
@@ -68,9 +56,8 @@ definitions:
           when exclusive, a host will only deploy instances of the same cluster, which
           may result in poor resource utilization
         type: boolean
-      paramGroupId:
-        description: specify cloned cluster parameter group id(option)
-        type: integer
+      parameterGroupID:
+        type: string
       region:
         description: The Region where the cluster is located
         type: string
@@ -144,8 +131,6 @@ definitions:
     type: object
   cluster.CreateClusterReq:
     properties:
-      backupId:
-        type: string
       clusterName:
         type: string
       clusterType:
@@ -170,13 +155,13 @@ definitions:
           when exclusive, a host will only deploy instances of the same cluster, which
           may result in poor resource utilization
         type: boolean
+      parameterGroupID:
+        type: string
       region:
         description: The Region where the cluster is located
         type: string
       resourceParameters:
-        items:
-          $ref: '#/definitions/structs.ClusterResourceParameter'
-        type: array
+        $ref: '#/definitions/structs.ClusterResourceInfo'
       tags:
         items:
           type: string
@@ -194,8 +179,6 @@ definitions:
     type: object
   cluster.DeleteBackupDataReq:
     properties:
-      backupId:
-        type: string
       backupMode:
         type: string
       clusterId:
@@ -225,8 +208,6 @@ definitions:
         type: boolean
       clearBackupData:
         type: boolean
-      clusterID:
-        type: string
     type: object
   cluster.DeleteClusterResp:
     properties:
@@ -292,10 +273,122 @@ definitions:
         example: 415241823337054209
         type: integer
     type: object
+  cluster.Dispatcher:
+    properties:
+      dispatcher:
+        example: ts
+        type: string
+      matcher:
+        example: test1.*
+        type: string
+    type: object
   cluster.GetBackupStrategyResp:
     properties:
       strategy:
         $ref: '#/definitions/structs.BackupStrategy'
+    type: object
+  cluster.GetDashboardInfoResp:
+    properties:
+      clusterId:
+        example: abc
+        type: string
+      token:
+        type: string
+      url:
+        example: http://127.0.0.1:9093
+        type: string
+    type: object
+  cluster.InspectClusterParametersResp:
+    properties:
+      inspectValue:
+        example: "1"
+        type: string
+      instance:
+        example: 172.16.5.23
+        type: string
+      instanceType:
+        example: tidb
+        type: string
+      name:
+        example: binlog_cache
+        type: string
+      paramId:
+        example: 1
+        type: integer
+      realValue:
+        $ref: '#/definitions/structs.ParameterRealValue'
+    type: object
+  cluster.KafkaDownstream:
+    properties:
+      clientId:
+        example: "213"
+        type: string
+      dispatchers:
+        items:
+          $ref: '#/definitions/cluster.Dispatcher'
+        type: array
+      ip:
+        example: 127.0.0.1
+        type: string
+      maxBatchSize:
+        example: 5
+        type: integer
+      maxMessageBytes:
+        example: 16
+        type: integer
+      partitions:
+        example: 1
+        type: integer
+      port:
+        example: 9001
+        type: integer
+      protocol:
+        enum:
+        - default
+        - canal
+        - avro
+        - maxwell
+        example: default
+        type: string
+      replicationFactor:
+        example: 1
+        type: integer
+      tls:
+        example: false
+        type: boolean
+      topicName:
+        example: my_topic
+        type: string
+      version:
+        example: 2.4.0
+        type: string
+    type: object
+  cluster.MysqlDownstream:
+    properties:
+      concurrentThreads:
+        example: 7
+        type: integer
+      ip:
+        example: 127.0.0.1
+        type: string
+      maxTxnRow:
+        example: 5
+        type: integer
+      password:
+        example: my_password
+        type: string
+      port:
+        example: 8001
+        type: integer
+      tls:
+        example: false
+        type: boolean
+      username:
+        example: root
+        type: string
+      workerCount:
+        example: 2
+        type: integer
     type: object
   cluster.PauseChangeFeedTaskResp:
     properties:
@@ -377,10 +470,110 @@ definitions:
     properties:
       info:
         $ref: '#/definitions/structs.ClusterInfo'
+      instanceResource:
+        items:
+          $ref: '#/definitions/structs.ClusterResourceParameterCompute'
+        type: array
       topology:
         items:
           $ref: '#/definitions/structs.ClusterInstanceInfo'
         type: array
+    type: object
+  cluster.QueryClusterLogResp:
+    properties:
+      results:
+        items:
+          $ref: '#/definitions/structs.ClusterLogItem'
+        type: array
+      took:
+        example: 10
+        type: integer
+    type: object
+  cluster.QueryClusterParametersResp:
+    properties:
+      paramGroupId:
+        type: string
+      params:
+        items:
+          $ref: '#/definitions/structs.ClusterParameterInfo'
+        type: array
+    type: object
+  cluster.QueryClusterResp:
+    properties:
+      clusters:
+        items:
+          $ref: '#/definitions/structs.ClusterInfo'
+        type: array
+    type: object
+  cluster.QueryMonitorInfoResp:
+    properties:
+      alertUrl:
+        example: http://127.0.0.1:9093
+        type: string
+      clusterId:
+        example: abc
+        type: string
+      grafanaUrl:
+        example: http://127.0.0.1:3000
+        type: string
+    type: object
+  cluster.RestartClusterResp:
+    properties:
+      clusterId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  cluster.RestoreNewClusterReq:
+    properties:
+      backupId:
+        type: string
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      copies:
+        description: The number of copies of the newly created cluster data, consistent
+          with the number of copies set in PD
+        type: integer
+      cpuArchitecture:
+        description: X86/X86_64/ARM
+        type: string
+      dbPassword:
+        type: string
+      dbUser:
+        description: The username and password for the newly created database cluster,
+          default is the root user, which is not valid for Data Migration clusters
+        type: string
+      exclusive:
+        description: Whether the newly created cluster is exclusive to physical resources,
+          when exclusive, a host will only deploy instances of the same cluster, which
+          may result in poor resource utilization
+        type: boolean
+      parameterGroupID:
+        type: string
+      region:
+        description: The Region where the cluster is located
+        type: string
+      resourceParameters:
+        $ref: '#/definitions/structs.ClusterResourceInfo'
+      tags:
+        items:
+          type: string
+        type: array
+      tls:
+        type: boolean
+    type: object
+  cluster.RestoreNewClusterResp:
+    properties:
+      clusterID:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
     type: object
   cluster.ResumeChangeFeedTaskResp:
     properties:
@@ -397,8 +590,6 @@ definitions:
     type: object
   cluster.SaveBackupStrategyReq:
     properties:
-      clusterId:
-        type: string
       strategy:
         $ref: '#/definitions/structs.BackupStrategy'
     type: object
@@ -406,8 +597,6 @@ definitions:
     type: object
   cluster.ScaleInClusterReq:
     properties:
-      clusterId:
-        type: string
       instanceId:
         type: string
     type: object
@@ -421,9 +610,7 @@ definitions:
     type: object
   cluster.ScaleOutClusterReq:
     properties:
-      clusterId:
-        type: string
-      compute:
+      instanceResource:
         items:
           $ref: '#/definitions/structs.ClusterResourceParameterCompute'
         type: array
@@ -443,6 +630,68 @@ definitions:
       workFlowId:
         description: Asynchronous task workflow ID
         type: string
+    type: object
+  cluster.TakeoverClusterReq:
+    properties:
+      TiUPIp:
+        example: 172.16.4.147
+        type: string
+      TiUPPath:
+        example: .tiup/
+        type: string
+      TiUPPort:
+        example: 22
+        type: integer
+      TiUPUserName:
+        example: root
+        type: string
+      TiUPUserPassword:
+        example: password
+        type: string
+      clusterNames:
+        items:
+          type: string
+        type: array
+    type: object
+  cluster.TakeoverClusterResp:
+    properties:
+      clusters:
+        items:
+          $ref: '#/definitions/structs.ClusterInfo'
+        type: array
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  cluster.TiDBDownstream:
+    properties:
+      concurrentThreads:
+        example: 5
+        type: integer
+      ip:
+        example: 127.0.0.1
+        type: string
+      maxTxnRow:
+        example: 4
+        type: integer
+      password:
+        example: my_password
+        type: string
+      port:
+        example: 4534
+        type: integer
+      targetClusterId:
+        example: CLUSTER_ID_IN_TIEM__22
+        type: string
+      tls:
+        example: false
+        type: boolean
+      username:
+        example: tidb
+        type: string
+      workerCount:
+        example: 2
+        type: integer
     type: object
   cluster.UpdateChangeFeedTaskReq:
     properties:
@@ -501,6 +750,24 @@ definitions:
         example: 1
         type: integer
     type: object
+  cluster.UpdateClusterParametersReq:
+    properties:
+      params:
+        items:
+          $ref: '#/definitions/structs.ClusterParameterSampleInfo'
+        type: array
+      reboot:
+        type: boolean
+    type: object
+  cluster.UpdateClusterParametersResp:
+    properties:
+      clusterId:
+        example: "1"
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
   controller.CommonResult:
     properties:
       code:
@@ -529,196 +796,6 @@ definitions:
         type: string
       page:
         $ref: '#/definitions/controller.Page'
-    type: object
-  controller.StatusInfo:
-    properties:
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      inProcessFlowId:
-        type: integer
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      updateTime:
-        type: string
-    type: object
-  controller.Usage:
-    properties:
-      total:
-        type: number
-      usageRate:
-        type: number
-      used:
-        type: number
-    type: object
-  hostresource.AllocHostsReq:
-    properties:
-      pdReq:
-        items:
-          $ref: '#/definitions/hostresource.Allocation'
-        type: array
-      tidbReq:
-        items:
-          $ref: '#/definitions/hostresource.Allocation'
-        type: array
-      tikvReq:
-        items:
-          $ref: '#/definitions/hostresource.Allocation'
-        type: array
-    type: object
-  hostresource.AllocHostsRsp:
-    properties:
-      pdHosts:
-        items:
-          $ref: '#/definitions/hostresource.AllocateRsp'
-        type: array
-      tidbHosts:
-        items:
-          $ref: '#/definitions/hostresource.AllocateRsp'
-        type: array
-      tikvHosts:
-        items:
-          $ref: '#/definitions/hostresource.AllocateRsp'
-        type: array
-    type: object
-  hostresource.AllocateRsp:
-    properties:
-      cpuCore:
-        type: integer
-      disk:
-        $ref: '#/definitions/hostresource.DiskInfo'
-      hostName:
-        type: string
-      ip:
-        type: string
-      memory:
-        type: integer
-      passwd:
-        type: string
-      userName:
-        type: string
-    type: object
-  hostresource.Allocation:
-    properties:
-      count:
-        type: integer
-      cpuCores:
-        type: integer
-      failureDomain:
-        type: string
-      memory:
-        type: integer
-    type: object
-  hostresource.DiskInfo:
-    properties:
-      capacity:
-        description: 'Disk size, Unit: GB'
-        type: integer
-      diskId:
-        type: string
-      hostId:
-        type: string
-      name:
-        description: '[sda/sdb/nvmep0...]'
-        type: string
-      path:
-        description: 'Disk mount path: [/data1]'
-        type: string
-      status:
-        description: Disk Status, 0 for available, 1 for inused
-        type: integer
-      type:
-        description: 'Disk type: [nvme-ssd/ssd/sata]'
-        type: string
-      usedBy:
-        type: string
-    type: object
-  hostresource.HostInfo:
-    properties:
-      arch:
-        description: x86 or arm64
-        type: string
-      az:
-        type: string
-      clusterType:
-        description: What cluster is the host used for? [database/datamigration]
-        type: string
-      cpuCores:
-        description: Host cpu cores spec, init while importing
-        type: integer
-      createTime:
-        type: integer
-      diskType:
-        description: Disk type of this host [sata/ssd/nvme_ssd]
-        type: string
-      disks:
-        items:
-          $ref: '#/definitions/hostresource.DiskInfo'
-        type: array
-      freeCpuCores:
-        description: Unused CpuCore, used for allocation
-        type: integer
-      freeMemory:
-        description: Unused memory size, Unit:GB, used for allocation
-        type: integer
-      hostId:
-        type: string
-      hostName:
-        type: string
-      ip:
-        type: string
-      kernel:
-        type: string
-      loadStat:
-        description: Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
-        type: integer
-      memory:
-        description: Host memroy, init while importing
-        type: integer
-      nic:
-        description: 'Host network type: 1GE or 10GE'
-        type: string
-      os:
-        type: string
-      passwd:
-        type: string
-      purpose:
-        description: What Purpose is the host used for? [compute/storage/general]
-        type: string
-      rack:
-        type: string
-      region:
-        type: string
-      reserved:
-        description: Whether this host is reserved - will not be allocated
-        type: boolean
-      spec:
-        description: Host Spec, init while importing
-        type: string
-      status:
-        description: Host Status, 0 for Online, 1 for offline
-        type: integer
-      sysLabels:
-        items:
-          type: string
-        type: array
-      traits:
-        description: Traits of labels
-        type: integer
-      updateTime:
-        type: integer
-      userName:
-        type: string
-    type: object
-  hostresource.UpdateHostReq:
-    properties:
-      reserved:
-        type: boolean
-      status:
-        type: integer
     type: object
   identification.LoginInfo:
     properties:
@@ -818,149 +895,6 @@ definitions:
       portRangeStart:
         type: integer
     type: object
-  log.SearchTiDBLogDetail:
-    properties:
-      clusterId:
-        example: abc
-        type: string
-      ext:
-        additionalProperties: true
-        type: object
-      id:
-        example: zvadfwf
-        type: string
-      index:
-        example: tiem-tidb-cluster-2021.09.23
-        type: string
-      ip:
-        example: 127.0.0.1
-        type: string
-      level:
-        example: warn
-        type: string
-      message:
-        example: tidb log
-        type: string
-      module:
-        example: tidb
-        type: string
-      sourceLine:
-        example: main.go:210
-        type: string
-      timestamp:
-        example: "2021-09-23 14:23:10"
-        type: string
-    type: object
-  log.SearchTiDBLogRsp:
-    properties:
-      results:
-        items:
-          $ref: '#/definitions/log.SearchTiDBLogDetail'
-        type: array
-      took:
-        example: 10
-        type: integer
-    type: object
-  management.ClusterDisplayInfo:
-    properties:
-      backupFileUsage:
-        $ref: '#/definitions/controller.Usage'
-      clusterId:
-        type: string
-      clusterName:
-        type: string
-      clusterType:
-        type: string
-      clusterVersion:
-        type: string
-      cpuUsage:
-        $ref: '#/definitions/controller.Usage'
-      createTime:
-        type: string
-      dbPassword:
-        type: string
-      deleteTime:
-        type: string
-      diskUsage:
-        $ref: '#/definitions/controller.Usage'
-      extranetConnectAddresses:
-        items:
-          type: string
-        type: array
-      inProcessFlowId:
-        type: integer
-      intranetConnectAddresses:
-        items:
-          type: string
-        type: array
-      memoryUsage:
-        $ref: '#/definitions/controller.Usage'
-      portList:
-        items:
-          type: integer
-        type: array
-      recoverInfo:
-        $ref: '#/definitions/management.RecoverInfo'
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      storageUsage:
-        $ref: '#/definitions/controller.Usage'
-      tags:
-        items:
-          type: string
-        type: array
-      tls:
-        type: boolean
-      updateTime:
-        type: string
-      whitelist:
-        items:
-          type: string
-        type: array
-    type: object
-  management.ClusterNodeDemand:
-    properties:
-      componentType:
-        type: string
-      distributionItems:
-        items:
-          $ref: '#/definitions/management.DistributionItem'
-        type: array
-      totalNodeCount:
-        type: integer
-    type: object
-  management.DescribeDashboardRsp:
-    properties:
-      clusterId:
-        type: string
-      token:
-        type: string
-      url:
-        type: string
-    type: object
-  management.DescribeMonitorRsp:
-    properties:
-      alertUrl:
-        example: http://127.0.0.1:9093
-        type: string
-      clusterId:
-        example: abc
-        type: string
-      grafanaUrl:
-        example: http://127.0.0.1:3000
-        type: string
-    type: object
-  management.DistributionItem:
-    properties:
-      count:
-        type: integer
-      specCode:
-        type: string
-      zoneCode:
-        type: string
-    type: object
   management.PreviewClusterRsp:
     properties:
       capabilityIndexes:
@@ -1001,23 +935,6 @@ definitions:
       sourceClusterId:
         type: string
     type: object
-  management.RestartClusterRsp:
-    properties:
-      clusterId:
-        type: string
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      inProcessFlowId:
-        type: integer
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      updateTime:
-        type: string
-    type: object
   management.ServiceCapabilityIndex:
     properties:
       description:
@@ -1046,33 +963,87 @@ definitions:
       zoneCode:
         type: string
     type: object
-  management.TakeoverReq:
+  message.ApplyParameterGroupReq:
     properties:
-      clusterNames:
-        items:
-          type: string
-        type: array
-      tiupIp:
-        example: 172.16.4.147
+      clusterId:
+        example: "123"
         type: string
-      tiupPath:
-        example: .tiup/
+      reboot:
+        type: boolean
+    type: object
+  message.ApplyParameterGroupResp:
+    properties:
+      clusterId:
+        example: "123"
         type: string
-      tiupPort:
-        example: 22
+      paramGroupId:
+        example: "123"
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  message.CopyParameterGroupReq:
+    properties:
+      name:
+        example: 8C16GV4_copy
+        type: string
+      note:
+        example: copy param group
+        type: string
+    type: object
+  message.CopyParameterGroupResp:
+    properties:
+      paramGroupId:
+        example: "1"
+        type: string
+    type: object
+  message.CreateParameterGroupReq:
+    properties:
+      clusterSpec:
+        example: 8C16G
+        type: string
+      clusterVersion:
+        example: v5.0
+        type: string
+      dbType:
+        enum:
+        - 1
+        - 2
+        example: 1
         type: integer
-      tiupUserName:
-        example: root
+      groupType:
+        enum:
+        - 1
+        - 2
+        example: 1
+        type: integer
+      hasDefault:
+        enum:
+        - 1
+        - 2
+        example: 1
+        type: integer
+      name:
+        example: 8C16GV4_default
         type: string
-      tiupUserPassword:
-        example: password
+      note:
+        example: default param group
+        type: string
+      params:
+        items:
+          $ref: '#/definitions/structs.ParameterGroupParameterSampleInfo'
+        type: array
+    type: object
+  message.CreateParameterGroupResp:
+    properties:
+      paramGroupId:
+        example: "1"
         type: string
     type: object
   message.DataExportReq:
     properties:
       accessKey:
-        type: string
-      bucketRegion:
         type: string
       bucketUrl:
         type: string
@@ -1138,347 +1109,36 @@ definitions:
         description: Asynchronous task workflow ID
         type: string
     type: object
-  message.DeleteImportExportRecordReq:
+  message.DeleteHostsReq:
     properties:
-      recordId:
-        type: string
+      hostIds:
+        items:
+          type: string
+        type: array
+    type: object
+  message.DeleteHostsResp:
+    type: object
+  message.DeleteImportExportRecordReq:
     type: object
   message.DeleteImportExportRecordResp:
     properties:
       recordId:
         type: string
     type: object
-  message.QueryDataImportExportRecordsResp:
-    properties:
-      transportRecords:
-        items:
-          $ref: '#/definitions/structs.DataImportExportRecordInfo'
-        type: array
-    type: object
-  message.QueryWorkFlowDetailResp:
-    properties:
-      info:
-        $ref: '#/definitions/structs.WorkFlowInfo'
-      nodeNames:
-        items:
-          type: string
-        type: array
-      nodes:
-        items:
-          $ref: '#/definitions/structs.WorkFlowNodeInfo'
-        type: array
-    type: object
-  message.QueryWorkFlowsResp:
-    properties:
-      workFlows:
-        items:
-          $ref: '#/definitions/structs.WorkFlowInfo'
-        type: array
-    type: object
-  parameter.InspectParamsResp:
-    properties:
-      componentType:
-        example: tidb
-        type: string
-      id:
-        example: 1
-        type: integer
-      inspectValue:
-        example: "1"
-        type: string
-      instance:
-        example: 172.16.5.23
-        type: string
-      name:
-        example: binlog_cache
-        type: string
-      realValue:
-        $ref: '#/definitions/parameter.ParamRealValue'
-    type: object
-  parameter.ListParamsResp:
-    properties:
-      componentType:
-        example: tidb
-        type: string
-      createTime:
-        example: 1636698675
-        type: integer
-      defaultValue:
-        example: "1"
-        type: string
-      description:
-        example: binlog cache size
-        type: string
-      hasReboot:
-        enum:
-        - 0
-        - 1
-        example: 0
-        type: integer
-      name:
-        example: binlog_size
-        type: string
-      paramId:
-        example: 1
-        type: integer
-      range:
-        example:
-        - "1"
-        - ' 1000'
-        items:
-          type: string
-        type: array
-      realValue:
-        $ref: '#/definitions/parameter.ParamRealValue'
-      type:
-        enum:
-        - 0
-        - 1
-        - 2
-        example: 0
-        type: integer
-      unit:
-        example: mb
-        type: string
-      updateTime:
-        example: 1636698675
-        type: integer
-    type: object
-  parameter.ParamInstanceRealValue:
-    properties:
-      instance:
-        example: 172.16.10.2
-        type: string
-      value:
-        example: "2"
-        type: string
-    type: object
-  parameter.ParamRealValue:
-    properties:
-      cluster:
-        example: "1"
-        type: string
-      instances:
-        items:
-          $ref: '#/definitions/parameter.ParamInstanceRealValue'
-        type: array
-    type: object
-  parameter.ParamUpdateRsp:
-    properties:
-      clusterId:
-        type: string
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      inProcessFlowId:
-        type: integer
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      updateTime:
-        type: string
-    type: object
-  parameter.UpdateParam:
-    properties:
-      componentType:
-        example: TiDB
-        type: string
-      hasReboot:
-        enum:
-        - 0
-        - 1
-        example: 0
-        type: integer
-      name:
-        example: binlog_cache
-        type: string
-      paramId:
-        example: 1
-        type: integer
-      realValue:
-        $ref: '#/definitions/parameter.ParamRealValue'
-      source:
-        enum:
-        - 0
-        - 1
-        - 2
-        - 3
-        example: 0
-        type: integer
-      type:
-        enum:
-        - 0
-        - 1
-        - 2
-        example: 0
-        type: integer
-    type: object
-  parameter.UpdateParamsReq:
-    properties:
-      needReboot:
-        example: false
-        type: boolean
-      params:
-        items:
-          $ref: '#/definitions/parameter.UpdateParam'
-        type: array
-    type: object
-  paramgroup.ApplyParamGroupReq:
-    properties:
-      clusterId:
-        example: "123"
-        type: string
-      needReboot:
-        example: false
-        type: boolean
-    type: object
-  paramgroup.ApplyParamGroupResp:
-    properties:
-      clusterId:
-        example: "123"
-        type: string
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      inProcessFlowId:
-        type: integer
-      paramGroupId:
-        example: 1
-        type: integer
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      updateTime:
-        type: string
-    type: object
-  paramgroup.CommonParamGroupResp:
+  message.DeleteParameterGroupResp:
     properties:
       paramGroupId:
-        example: 1
-        type: integer
-    type: object
-  paramgroup.CopyParamGroupReq:
-    properties:
-      name:
-        example: 8C16GV4_copy
-        type: string
-      note:
-        example: copy param group
-        type: string
-    type: object
-  paramgroup.CreateAndUpdateParam:
-    properties:
-      defaultValue:
         example: "1"
         type: string
-      description:
-        example: binlog cache size
-        type: string
-      paramId:
-        example: 123
-        type: integer
     type: object
-  paramgroup.CreateParamGroupReq:
+  message.DetailParameterGroupResp:
     properties:
-      dbType:
-        enum:
-        - 1
-        - 2
-        example: 1
-        type: integer
-      groupType:
-        enum:
-        - 1
-        - 2
-        example: 1
-        type: integer
-      hasDefault:
-        enum:
-        - 1
-        - 2
-        example: 1
-        type: integer
-      name:
-        example: 8C16GV4_default
-        type: string
-      note:
-        example: default param group
-        type: string
-      params:
-        items:
-          $ref: '#/definitions/paramgroup.CreateAndUpdateParam'
-        type: array
-      spec:
+      clusterSpec:
         example: 8C16G
         type: string
-      version:
-        example: "5.0"
+      clusterVersion:
+        example: v5.0
         type: string
-    type: object
-  paramgroup.ParamDetail:
-    properties:
-      componentType:
-        example: tidb
-        type: string
-      createTime:
-        example: 1636698675
-        type: integer
-      defaultValue:
-        example: "1"
-        type: string
-      description:
-        example: binlog cache size
-        type: string
-      hasReboot:
-        enum:
-        - 0
-        - 1
-        example: 0
-        type: integer
-      name:
-        example: binlog_size
-        type: string
-      note:
-        example: binlog cache size
-        type: string
-      paramId:
-        example: 1
-        type: integer
-      range:
-        example:
-        - "1"
-        - ' 1000'
-        items:
-          type: string
-        type: array
-      source:
-        enum:
-        - 0
-        - 1
-        - 2
-        - 3
-        example: 0
-        type: integer
-      type:
-        enum:
-        - 0
-        - 1
-        - 2
-        example: 0
-        type: integer
-      unit:
-        example: mb
-        type: string
-      updateTime:
-        example: 1636698675
-        type: integer
-    type: object
-  paramgroup.QueryParamGroupResp:
-    properties:
       createTime:
         example: 1636698675
         type: integer
@@ -1507,24 +1167,143 @@ definitions:
         example: default param group
         type: string
       paramGroupId:
-        example: 1
-        type: integer
+        example: "1"
+        type: string
       params:
         items:
-          $ref: '#/definitions/paramgroup.ParamDetail'
+          $ref: '#/definitions/structs.ParameterGroupParameterInfo'
         type: array
-      spec:
-        example: 8C16G
-        type: string
       updateTime:
         example: 1636698675
         type: integer
-      version:
-        example: "5.0"
+    type: object
+  message.GetHierarchyResp:
+    properties:
+      root:
+        $ref: '#/definitions/structs.HierarchyTreeNode'
+    type: object
+  message.GetStocksResp:
+    properties:
+      stocks:
+        $ref: '#/definitions/structs.Stocks'
+    type: object
+  message.ImportHostsResp:
+    properties:
+      hostIds:
+        items:
+          type: string
+        type: array
+    type: object
+  message.QueryDataImportExportRecordsResp:
+    properties:
+      transportRecords:
+        items:
+          $ref: '#/definitions/structs.DataImportExportRecordInfo'
+        type: array
+    type: object
+  message.QueryHostsResp:
+    properties:
+      hosts:
+        items:
+          $ref: '#/definitions/structs.HostInfo'
+        type: array
+    type: object
+  message.QueryParameterGroupResp:
+    properties:
+      clusterSpec:
+        example: 8C16G
+        type: string
+      clusterVersion:
+        example: v5.0
+        type: string
+      createTime:
+        example: 1636698675
+        type: integer
+      dbType:
+        enum:
+        - 1
+        - 2
+        example: 1
+        type: integer
+      groupType:
+        enum:
+        - 1
+        - 2
+        example: 0
+        type: integer
+      hasDefault:
+        enum:
+        - 1
+        - 2
+        example: 1
+        type: integer
+      name:
+        example: default
+        type: string
+      note:
+        example: default param group
+        type: string
+      paramGroupId:
+        example: "1"
+        type: string
+      params:
+        items:
+          $ref: '#/definitions/structs.ParameterGroupParameterInfo'
+        type: array
+      updateTime:
+        example: 1636698675
+        type: integer
+    type: object
+  message.QueryWorkFlowDetailResp:
+    properties:
+      info:
+        $ref: '#/definitions/structs.WorkFlowInfo'
+      nodeNames:
+        items:
+          type: string
+        type: array
+      nodes:
+        items:
+          $ref: '#/definitions/structs.WorkFlowNodeInfo'
+        type: array
+    type: object
+  message.QueryWorkFlowsResp:
+    properties:
+      workFlows:
+        items:
+          $ref: '#/definitions/structs.WorkFlowInfo'
+        type: array
+    type: object
+  message.UpdateHostReservedReq:
+    properties:
+      hostIds:
+        items:
+          type: string
+        type: array
+      reserved:
+        type: boolean
+    type: object
+  message.UpdateHostReservedResp:
+    type: object
+  message.UpdateHostStatusReq:
+    properties:
+      hostIds:
+        items:
+          type: string
+        type: array
+      status:
         type: string
     type: object
-  paramgroup.UpdateParamGroupReq:
+  message.UpdateHostStatusResp:
+    type: object
+  message.UpdateParameterGroupReq:
     properties:
+      clusterSpec:
+        example: 8C16G
+        type: string
+      clusterVersion:
+        example: v5.0
+        type: string
       name:
         example: 8C16GV4_default
         type: string
@@ -1533,13 +1312,13 @@ definitions:
         type: string
       params:
         items:
-          $ref: '#/definitions/paramgroup.CreateAndUpdateParam'
+          $ref: '#/definitions/structs.ParameterGroupParameterSampleInfo'
         type: array
-      spec:
-        example: 8C16G
-        type: string
-      version:
-        example: v5.0
+    type: object
+  message.UpdateParameterGroupResp:
+    properties:
+      paramGroupId:
+        example: "1"
         type: string
     type: object
   structs.BackupRecord:
@@ -1608,6 +1387,10 @@ definitions:
         $ref: '#/definitions/structs.Usage'
       createTime:
         type: string
+      dbUser:
+        description: The username and password for the newly created database cluster,
+          default is the root user, which is not valid for Data Migration clusters
+        type: string
       deleteTime:
         type: string
       exclusive:
@@ -1632,10 +1415,6 @@ definitions:
         type: string
       memoryUsage:
         $ref: '#/definitions/structs.Usage'
-      portList:
-        items:
-          type: integer
-        type: array
       role:
         type: string
       status:
@@ -1679,7 +1458,7 @@ definitions:
         $ref: '#/definitions/structs.Usage'
       ports:
         items:
-          type: string
+          type: integer
         type: array
       role:
         type: string
@@ -1698,9 +1477,163 @@ definitions:
         $ref: '#/definitions/structs.ZoneInfo'
         description: ??
     type: object
-  structs.ClusterResourceParameter:
+  structs.ClusterInstanceParameterValue:
     properties:
-      compute:
+      instanceId:
+        type: string
+      value:
+        type: string
+    type: object
+  structs.ClusterLogItem:
+    properties:
+      clusterId:
+        example: abc
+        type: string
+      ext:
+        additionalProperties: true
+        type: object
+      id:
+        example: zvadfwf
+        type: string
+      index:
+        example: tiem-tidb-cluster-2021.09.23
+        type: string
+      ip:
+        example: 127.0.0.1
+        type: string
+      level:
+        example: warn
+        type: string
+      message:
+        example: tidb log
+        type: string
+      module:
+        example: tidb
+        type: string
+      sourceLine:
+        example: main.go:210
+        type: string
+      timestamp:
+        example: "2021-09-23 14:23:10"
+        type: string
+    type: object
+  structs.ClusterParameterInfo:
+    properties:
+      category:
+        example: basic
+        type: string
+      createTime:
+        example: 1636698675
+        type: integer
+      defaultValue:
+        example: "1"
+        type: string
+      description:
+        example: binlog cache size
+        type: string
+      hasApply:
+        enum:
+        - 0
+        - 1
+        example: 1
+        type: integer
+      hasReboot:
+        enum:
+        - 0
+        - 1
+        example: 0
+        type: integer
+      instanceType:
+        example: tidb
+        type: string
+      name:
+        example: binlog_size
+        type: string
+      note:
+        example: binlog cache size
+        type: string
+      paramId:
+        example: "1"
+        type: string
+      range:
+        example:
+        - "1"
+        - ' 1000'
+        items:
+          type: string
+        type: array
+      realValue:
+        $ref: '#/definitions/structs.ParameterRealValue'
+      systemVariable:
+        example: log.log_level
+        type: string
+      type:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        example: 0
+        type: integer
+      unit:
+        example: mb
+        type: string
+      updateSource:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        example: 0
+        type: integer
+      updateTime:
+        example: 1636698675
+        type: integer
+    type: object
+  structs.ClusterParameterSampleInfo:
+    properties:
+      hasApply:
+        enum:
+        - 0
+        - 1
+        example: 1
+        type: integer
+      instanceType:
+        example: TiDB
+        type: string
+      name:
+        example: log_level
+        type: string
+      paramId:
+        example: "1"
+        type: string
+      realValue:
+        $ref: '#/definitions/structs.ParameterRealValue'
+      systemVariable:
+        example: log.binlog_cache
+        type: string
+      type:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        example: 0
+        type: integer
+      updateSource:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        example: 0
+        type: integer
+    type: object
+  structs.ClusterResourceInfo:
+    properties:
+      instanceResource:
         items:
           $ref: '#/definitions/structs.ClusterResourceParameterCompute'
         type: array
@@ -1761,12 +1694,230 @@ definitions:
       zipName:
         type: string
     type: object
+  structs.DiskInfo:
+    properties:
+      capacity:
+        description: 'Disk size, Unit: GB'
+        type: integer
+      diskId:
+        type: string
+      hostId:
+        type: string
+      name:
+        description: '[sda/sdb/nvmep0...]'
+        type: string
+      path:
+        description: 'Disk mount path: [/data1]'
+        type: string
+      status:
+        description: Disk Status, 0 for available, 1 for inused
+        type: string
+      type:
+        description: 'Disk type: [nvme-ssd/ssd/sata]'
+        type: string
+    type: object
+  structs.HierarchyTreeNode:
+    properties:
+      Code:
+        type: string
+      Name:
+        type: string
+      Prefix:
+        type: string
+      SubNodes:
+        items:
+          $ref: '#/definitions/structs.HierarchyTreeNode'
+        type: array
+    type: object
+  structs.HostInfo:
+    properties:
+      arch:
+        description: x86 or arm64
+        type: string
+      az:
+        type: string
+      clusterType:
+        description: What cluster is the host used for? [database/data migration]
+        type: string
+      cpuCores:
+        description: Host cpu cores spec, init while importing
+        type: integer
+      createTime:
+        type: integer
+      diskType:
+        description: Disk type of this host [sata/ssd/nvme_ssd]
+        type: string
+      disks:
+        items:
+          $ref: '#/definitions/structs.DiskInfo'
+        type: array
+      freeCpuCores:
+        description: Unused CpuCore, used for allocation
+        type: integer
+      freeMemory:
+        description: Unused memory size, Unit:GB, used for allocation
+        type: integer
+      hostId:
+        type: string
+      hostName:
+        type: string
+      ip:
+        type: string
+      kernel:
+        type: string
+      loadStat:
+        description: Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
+        type: string
+      memory:
+        description: Host memory, init while importing
+        type: integer
+      nic:
+        description: 'Host network type: 1GE or 10GE'
+        type: string
+      os:
+        type: string
+      passwd:
+        type: string
+      purpose:
+        description: What Purpose is the host used for? [compute/storage/general]
+        type: string
+      rack:
+        type: string
+      region:
+        type: string
+      reserved:
+        description: Whether this host is reserved - will not be allocated
+        type: boolean
+      spec:
+        description: Host Spec, init while importing
+        type: string
+      status:
+        description: Host Status, 0 for Online, 1 for offline
+        type: string
+      sysLabels:
+        items:
+          type: string
+        type: array
+      traits:
+        description: Traits of labels
+        type: integer
+      updateTime:
+        type: integer
+      userName:
+        type: string
+    type: object
+  structs.ParameterGroupParameterInfo:
+    properties:
+      category:
+        example: basic
+        type: string
+      createTime:
+        example: 1636698675
+        type: integer
+      defaultValue:
+        example: "1"
+        type: string
+      description:
+        example: binlog cache size
+        type: string
+      hasApply:
+        enum:
+        - 0
+        - 1
+        example: 1
+        type: integer
+      hasReboot:
+        enum:
+        - 0
+        - 1
+        example: 0
+        type: integer
+      instanceType:
+        example: tidb
+        type: string
+      name:
+        example: binlog_size
+        type: string
+      note:
+        example: binlog cache size
+        type: string
+      paramId:
+        example: "1"
+        type: string
+      range:
+        example:
+        - "1"
+        - ' 1000'
+        items:
+          type: string
+        type: array
+      systemVariable:
+        example: log.log_level
+        type: string
+      type:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        example: 0
+        type: integer
+      unit:
+        example: mb
+        type: string
+      updateSource:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        example: 0
+        type: integer
+      updateTime:
+        example: 1636698675
+        type: integer
+    type: object
+  structs.ParameterGroupParameterSampleInfo:
+    properties:
+      defaultValue:
+        example: "1"
+        type: string
+      description:
+        example: binlog cache size
+        type: string
+      paramId:
+        example: "123"
+        type: string
+    type: object
+  structs.ParameterRealValue:
+    properties:
+      clusterValue:
+        type: string
+      instanceValue:
+        items:
+          $ref: '#/definitions/structs.ClusterInstanceParameterValue'
+        type: array
+    type: object
   structs.ProductSpecInfo:
     properties:
       id:
         type: string
       name:
         type: string
+    type: object
+  structs.Stocks:
+    properties:
+      freeCpuCores:
+        type: integer
+      freeDiskCapacity:
+        type: integer
+      freeDiskCount:
+        type: integer
+      freeHostCount:
+        type: integer
+      freeMemory:
+        type: integer
     type: object
   structs.Usage:
     properties:
@@ -1779,17 +1930,23 @@ definitions:
     type: object
   structs.WorkFlowInfo:
     properties:
-      BizId:
+      bizId:
         type: string
       createTime:
         type: string
       deleteTime:
         type: string
-      flowWorkName:
-        type: string
       id:
         type: string
+      name:
+        type: string
       status:
+        enum:
+        - Initializing
+        - Processing
+        - Finished
+        - Error
+        - Canceled
         type: string
       updateTime:
         type: string
@@ -1809,6 +1966,12 @@ definitions:
       startTime:
         type: string
       status:
+        enum:
+        - Initializing
+        - Processing
+        - Finished
+        - Error
+        - Canceled
         type: string
     type: object
   structs.ZoneInfo:
@@ -1817,47 +1980,6 @@ definitions:
         type: string
       name:
         type: string
-    type: object
-  warehouse.DomainResource:
-    properties:
-      count:
-        type: integer
-      purpose:
-        type: string
-      specCode:
-        type: string
-      specName:
-        type: string
-      zoneCode:
-        type: string
-      zoneName:
-        type: string
-    type: object
-  warehouse.Node:
-    properties:
-      Code:
-        type: string
-      Name:
-        type: string
-      Prefix:
-        type: string
-      SubNodes:
-        items:
-          $ref: '#/definitions/warehouse.Node'
-        type: array
-    type: object
-  warehouse.Stocks:
-    properties:
-      freeCpuCores:
-        type: integer
-      freeDiskCapacity:
-        type: integer
-      freeDiskCount:
-        type: integer
-      freeHostCount:
-        type: integer
-      freeMemory:
-        type: integer
     type: object
 host: localhost:4116
 info:
@@ -1885,7 +2007,7 @@ paths:
         type: string
       - in: query
         name: endTime
-        type: string
+        type: integer
       - description: Current page location
         in: query
         name: page
@@ -1896,7 +2018,7 @@ paths:
         type: integer
       - in: query
         name: startTime
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -1926,7 +2048,46 @@ paths:
       summary: query backup records of a cluster
       tags:
       - cluster backup
-    post: {}
+    post:
+      consumes:
+      - application/json
+      description: backup
+      parameters:
+      - description: backup request
+        in: body
+        name: backupReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.BackupClusterDataReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.BackupClusterDataResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: backup
+      tags:
+      - cluster backup
   /backups/{backupId}:
     delete:
       consumes:
@@ -2290,10 +2451,12 @@ paths:
       - in: query
         name: clusterType
         type: string
-      - in: query
+      - description: Current page location
+        in: query
         name: page
         type: integer
-      - in: query
+      - description: Number of this request
+        in: query
         name: pageSize
         type: integer
       produces:
@@ -2306,9 +2469,7 @@ paths:
             - $ref: '#/definitions/controller.ResultWithPage'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/management.ClusterDisplayInfo'
-                  type: array
+                  $ref: '#/definitions/cluster.QueryClusterResp'
               type: object
         "401":
           description: Unauthorized
@@ -2472,7 +2633,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.DescribeDashboardRsp'
+                  $ref: '#/definitions/cluster.GetDashboardInfoResp'
               type: object
         "401":
           description: Unauthorized
@@ -2495,7 +2656,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: monitoring link
+      description: describe monitoring link
       parameters:
       - description: cluster id
         in: path
@@ -2512,7 +2673,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.DescribeMonitorRsp'
+                  $ref: '#/definitions/cluster.QueryMonitorInfoResp'
               type: object
         "401":
           description: Unauthorized
@@ -2528,19 +2689,21 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: monitoring link
+      summary: describe monitoring link
       tags:
       - cluster
   /clusters/{clusterId}/params:
     get:
       consumes:
       - application/json
-      description: query params of a cluster
+      description: query parameters of a cluster
       parameters:
-      - in: query
+      - description: Current page location
+        in: query
         name: page
         type: integer
-      - in: query
+      - description: Number of this request
+        in: query
         name: pageSize
         type: integer
       - description: clusterId
@@ -2558,8 +2721,93 @@ paths:
             - $ref: '#/definitions/controller.ResultWithPage'
             - properties:
                 data:
+                  $ref: '#/definitions/cluster.QueryClusterParametersResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query parameters of a cluster
+      tags:
+      - cluster parameters
+    put:
+      consumes:
+      - application/json
+      description: submit parameters
+      parameters:
+      - description: update params request
+        in: body
+        name: updateReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.UpdateClusterParametersReq'
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.UpdateClusterParametersResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: submit parameters
+      tags:
+      - cluster parameters
+  /clusters/{clusterId}/params/inspect:
+    post:
+      consumes:
+      - application/json
+      description: inspect parameters
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
                   items:
-                    $ref: '#/definitions/parameter.ListParamsResp'
+                    $ref: '#/definitions/cluster.InspectClusterParametersResp'
                   type: array
               type: object
         "401":
@@ -2576,94 +2824,9 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: query params of a cluster
+      summary: inspect parameters
       tags:
-      - cluster params
-    put:
-      consumes:
-      - application/json
-      description: submit params
-      parameters:
-      - description: update params request
-        in: body
-        name: updateReq
-        required: true
-        schema:
-          $ref: '#/definitions/parameter.UpdateParamsReq'
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/parameter.ParamUpdateRsp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: submit params
-      tags:
-      - cluster params
-  /clusters/{clusterId}/params/inspect:
-    post:
-      consumes:
-      - application/json
-      description: inspect params
-      parameters:
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/parameter.InspectParamsResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: inspect params
-      tags:
-      - cluster params
+      - cluster parameters
   /clusters/{clusterId}/restart:
     post:
       consumes:
@@ -2685,7 +2848,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.RestartClusterRsp'
+                  $ref: '#/definitions/cluster.RestartClusterResp'
               type: object
         "401":
           description: Unauthorized
@@ -3097,7 +3260,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/backuprestore.RestoreReq'
+          $ref: '#/definitions/cluster.RestoreNewClusterReq'
       produces:
       - application/json
       responses:
@@ -3108,7 +3271,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/controller.StatusInfo'
+                  $ref: '#/definitions/cluster.RestoreNewClusterResp'
               type: object
         "401":
           description: Unauthorized
@@ -3138,7 +3301,7 @@ paths:
         name: takeoverReq
         required: true
         schema:
-          $ref: '#/definitions/management.TakeoverReq'
+          $ref: '#/definitions/cluster.TakeoverClusterReq'
       produces:
       - application/json
       responses:
@@ -3149,9 +3312,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/management.ClusterDisplayInfo'
-                  type: array
+                  $ref: '#/definitions/cluster.TakeoverClusterResp'
               type: object
         "401":
           description: Unauthorized
@@ -3274,6 +3435,54 @@ paths:
       summary: delete data transport record
       tags:
       - cluster data transport
+  /downstream/:
+    delete:
+      consumes:
+      - application/json
+      description: show display config
+      parameters:
+      - description: tidb
+        in: body
+        name: tidb
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.TiDBDownstream'
+      - description: mysql
+        in: body
+        name: mysql
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.MysqlDownstream'
+      - description: kafka
+        in: body
+        name: kafka
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.KafkaDownstream'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: unused, just display downstream config
+      tags:
+      - change feed
   /knowledges/:
     get:
       consumes:
@@ -3314,7 +3523,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: search tidb log
+      description: search cluster log
       parameters:
       - description: clusterId
         in: path
@@ -3341,11 +3550,11 @@ paths:
         in: query
         name: module
         type: string
-      - example: 1
+      - description: Current page location
         in: query
         name: page
         type: integer
-      - example: 10
+      - description: Number of this request
         in: query
         name: pageSize
         type: integer
@@ -3363,7 +3572,7 @@ paths:
             - $ref: '#/definitions/controller.ResultWithPage'
             - properties:
                 data:
-                  $ref: '#/definitions/log.SearchTiDBLogRsp'
+                  $ref: '#/definitions/cluster.QueryClusterLogResp'
               type: object
         "401":
           description: Unauthorized
@@ -3375,15 +3584,23 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: search tidb log
+      summary: search cluster log
       tags:
       - logs
   /param-groups/:
     get:
       consumes:
       - application/json
-      description: query param group
+      description: query parameter group
       parameters:
+      - example: 8C16G
+        in: query
+        name: clusterSpec
+        type: string
+      - example: v5.0
+        in: query
+        name: clusterVersion
+        type: string
       - enum:
         - 0
         - 1
@@ -3408,20 +3625,14 @@ paths:
         in: query
         name: name
         type: string
-      - in: query
+      - description: Current page location
+        in: query
         name: page
         type: integer
-      - in: query
+      - description: Number of this request
+        in: query
         name: pageSize
         type: integer
-      - example: 8C16G
-        in: query
-        name: spec
-        type: string
-      - example: "5.0"
-        in: query
-        name: version
-        type: string
       produces:
       - application/json
       responses:
@@ -3433,7 +3644,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/paramgroup.QueryParamGroupResp'
+                    $ref: '#/definitions/message.QueryParameterGroupResp'
                   type: array
               type: object
         "401":
@@ -3450,20 +3661,20 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: query param group
+      summary: query parameter group
       tags:
-      - param group
+      - parameter group
     post:
       consumes:
       - application/json
-      description: create a param group
+      description: create a parameter group
       parameters:
       - description: create request
         in: body
         name: createReq
         required: true
         schema:
-          $ref: '#/definitions/paramgroup.CreateParamGroupReq'
+          $ref: '#/definitions/message.CreateParameterGroupReq'
       produces:
       - application/json
       responses:
@@ -3474,7 +3685,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/paramgroup.CommonParamGroupResp'
+                  $ref: '#/definitions/message.CreateParameterGroupResp'
               type: object
         "401":
           description: Unauthorized
@@ -3490,16 +3701,16 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: create a param group
+      summary: create a parameter group
       tags:
-      - param group
+      - parameter group
   /param-groups/{paramGroupId}:
     delete:
       consumes:
       - application/json
-      description: delete a param group
+      description: delete a parameter group
       parameters:
-      - description: param group id
+      - description: parameter group id
         in: path
         name: paramGroupId
         required: true
@@ -3514,7 +3725,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/paramgroup.CommonParamGroupResp'
+                  $ref: '#/definitions/message.DeleteParameterGroupResp'
               type: object
         "401":
           description: Unauthorized
@@ -3530,15 +3741,15 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: delete a param group
+      summary: delete a parameter group
       tags:
-      - param group
+      - parameter group
     get:
       consumes:
       - application/json
-      description: show details of a param group
+      description: show details of a parameter group
       parameters:
-      - description: param group id
+      - description: parameter group id
         in: path
         name: paramGroupId
         required: true
@@ -3553,7 +3764,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/paramgroup.QueryParamGroupResp'
+                  $ref: '#/definitions/message.DetailParameterGroupResp'
               type: object
         "401":
           description: Unauthorized
@@ -3569,20 +3780,25 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: show details of a param group
+      summary: show details of a parameter group
       tags:
-      - param group
+      - parameter group
     put:
       consumes:
       - application/json
-      description: update a param group
+      description: update a parameter group
       parameters:
-      - description: update param group request
+      - description: parameter group id
+        in: path
+        name: paramGroupId
+        required: true
+        type: string
+      - description: update parameter group request
         in: body
         name: updateReq
         required: true
         schema:
-          $ref: '#/definitions/paramgroup.UpdateParamGroupReq'
+          $ref: '#/definitions/message.UpdateParameterGroupReq'
       produces:
       - application/json
       responses:
@@ -3593,7 +3809,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/paramgroup.CommonParamGroupResp'
+                  $ref: '#/definitions/message.UpdateParameterGroupResp'
               type: object
         "401":
           description: Unauthorized
@@ -3609,21 +3825,26 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: update a param group
+      summary: update a parameter group
       tags:
-      - param group
+      - parameter group
   /param-groups/{paramGroupId}/apply:
     post:
       consumes:
       - application/json
-      description: apply a param group
+      description: apply a parameter group
       parameters:
-      - description: apply param group request
+      - description: parameter group id
+        in: path
+        name: paramGroupId
+        required: true
+        type: string
+      - description: apply parameter group request
         in: body
         name: applyReq
         required: true
         schema:
-          $ref: '#/definitions/paramgroup.ApplyParamGroupReq'
+          $ref: '#/definitions/message.ApplyParameterGroupReq'
       produces:
       - application/json
       responses:
@@ -3634,7 +3855,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/paramgroup.ApplyParamGroupResp'
+                  $ref: '#/definitions/message.ApplyParameterGroupResp'
               type: object
         "401":
           description: Unauthorized
@@ -3650,21 +3871,26 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: apply a param group
+      summary: apply a parameter group
       tags:
-      - param group
+      - parameter group
   /param-groups/{paramGroupId}/copy:
     post:
       consumes:
       - application/json
-      description: copy a param group
+      description: copy a parameter group
       parameters:
-      - description: copy param group request
+      - description: parameter group id
+        in: path
+        name: paramGroupId
+        required: true
+        type: string
+      - description: copy parameter group request
         in: body
         name: copyReq
         required: true
         schema:
-          $ref: '#/definitions/paramgroup.CopyParamGroupReq'
+          $ref: '#/definitions/message.CopyParameterGroupReq'
       produces:
       - application/json
       responses:
@@ -3675,7 +3901,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/paramgroup.CommonParamGroupResp'
+                  $ref: '#/definitions/message.CopyParameterGroupResp'
               type: object
         "401":
           description: Unauthorized
@@ -3691,71 +3917,9 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: copy a param group
+      summary: copy a parameter group
       tags:
-      - param group
-  /resources/allochosts:
-    post:
-      consumes:
-      - application/json
-      description: should be used in testing env
-      parameters:
-      - description: location and spec of hosts
-        in: body
-        name: Alloc
-        required: true
-        schema:
-          $ref: '#/definitions/hostresource.AllocHostsReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/hostresource.AllocHostsRsp'
-              type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Alloc host/disk resources for creating tidb cluster
-      tags:
-      - resource
-  /resources/failuredomains:
-    get:
-      consumes:
-      - application/json
-      description: get resource info in each failure domain
-      parameters:
-      - description: failure domain type of dc/zone/rack
-        enum:
-        - 1
-        - 2
-        - 3
-        in: query
-        name: failureDomainType
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/warehouse.DomainResource'
-                  type: array
-              type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Show the resources on failure domain view
-      tags:
-      - resource
+      - parameter group
   /resources/hierarchy:
     get:
       consumes:
@@ -3763,23 +3927,27 @@ paths:
       description: get resource hierarchy-tree
       parameters:
       - in: query
-        name: Arch
+        name: Depth
+        type: integer
+      - description: '[1:Region, 2:Zone, 3:Rack, 4:Host]'
+        in: query
+        name: Level
+        type: integer
+      - in: query
+        name: arch
         type: string
-      - description: failure domain type of region/zone/rack/host
-        enum:
-        - 1
-        - 2
-        - 3
-        - 4
-        in: query
-        name: level
-        required: true
-        type: integer
-      - description: hierarchy depth
-        in: query
-        name: depth
-        required: true
-        type: integer
+      - in: query
+        name: hostId
+        type: string
+      - in: query
+        name: loadStat
+        type: string
+      - in: query
+        name: purpose
+        type: string
+      - in: query
+        name: status
+        type: string
       produces:
       - application/json
       responses:
@@ -3790,25 +3958,25 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/warehouse.Node'
+                  $ref: '#/definitions/message.GetHierarchyResp'
               type: object
       security:
       - ApiKeyAuth: []
       summary: Show the resources hierarchy
       tags:
       - resource
-  /resources/host:
-    post:
+  /resources/host-reserved:
+    put:
       consumes:
       - application/json
-      description: import one host by json
+      description: update host reserved by a list
       parameters:
-      - description: Host information
+      - description: do update in host list
         in: body
-        name: host
+        name: updateReq
         required: true
         schema:
-          $ref: '#/definitions/hostresource.HostInfo'
+          $ref: '#/definitions/message.UpdateHostReservedReq'
       produces:
       - application/json
       responses:
@@ -3819,26 +3987,63 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  type: string
+                  $ref: '#/definitions/message.UpdateHostReservedResp'
               type: object
       security:
       - ApiKeyAuth: []
-      summary: Import a host to TiEM System
+      summary: Update host reserved
+      tags:
+      - resource
+  /resources/host-status:
+    put:
+      consumes:
+      - application/json
+      description: update host status by a list
+      parameters:
+      - description: do update in host list
+        in: body
+        name: updateReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateHostStatusReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateHostStatusResp'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update host status
       tags:
       - resource
   /resources/hosts:
     get:
       consumes:
       - application/json
-      description: get hosts lit
+      description: get hosts list
       parameters:
       - in: query
-        name: loadStat
-        type: integer
+        name: arch
+        type: string
       - in: query
+        name: hostId
+        type: string
+      - in: query
+        name: loadStat
+        type: string
+      - description: Current page location
+        in: query
         name: page
         type: integer
-      - in: query
+      - description: Number of this request
+        in: query
         name: pageSize
         type: integer
       - in: query
@@ -3846,7 +4051,7 @@ paths:
         type: string
       - in: query
         name: status
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -3857,9 +4062,7 @@ paths:
             - $ref: '#/definitions/controller.ResultWithPage'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/hostresource.HostInfo'
-                  type: array
+                  $ref: '#/definitions/message.QueryHostsResp'
               type: object
       security:
       - ApiKeyAuth: []
@@ -3891,9 +4094,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  items:
-                    type: string
-                  type: array
+                  $ref: '#/definitions/message.ImportHostsResp'
               type: object
       security:
       - ApiKeyAuth: []
@@ -3928,9 +4129,7 @@ paths:
         name: hostIds
         required: true
         schema:
-          items:
-            type: string
-          type: array
+          $ref: '#/definitions/message.DeleteHostsReq'
       produces:
       - application/json
       responses:
@@ -3941,102 +4140,11 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  type: string
+                  $ref: '#/definitions/message.DeleteHostsResp'
               type: object
       security:
       - ApiKeyAuth: []
       summary: Remove a batch of hosts
-      tags:
-      - resource
-    put:
-      consumes:
-      - application/json
-      description: update host status by a list
-      parameters:
-      - collectionFormat: multi
-        description: host id array
-        in: query
-        items:
-          type: string
-        name: id
-        required: true
-        type: array
-      - description: do update in host list
-        in: body
-        name: updateReq
-        required: true
-        schema:
-          $ref: '#/definitions/hostresource.UpdateHostReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  type: string
-              type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Update host status
-      tags:
-      - resource
-  /resources/hosts/{hostId}:
-    delete:
-      consumes:
-      - application/json
-      description: remove a host by id
-      parameters:
-      - description: host id
-        in: path
-        name: hostId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  type: string
-              type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Remove a host
-      tags:
-      - resource
-    get:
-      consumes:
-      - application/json
-      description: get one host by id
-      parameters:
-      - description: host ID
-        in: path
-        name: hostId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/hostresource.HostInfo'
-              type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Show a host
       tags:
       - resource
   /resources/stocks:
@@ -4046,26 +4154,17 @@ paths:
       description: get resource stocks in specified conditions
       parameters:
       - in: query
-        name: Arch
-        type: string
-      - in: query
         name: Capacity
         type: integer
       - in: query
         name: DiskStatus
-        type: integer
+        type: string
       - in: query
         name: DiskType
         type: string
       - in: query
         name: HostIp
         type: string
-      - in: query
-        name: HostStatus
-        type: integer
-      - in: query
-        name: LoadStat
-        type: integer
       - in: query
         name: Rack
         type: string
@@ -4074,6 +4173,21 @@ paths:
         type: string
       - in: query
         name: Zone
+        type: string
+      - in: query
+        name: arch
+        type: string
+      - in: query
+        name: hostId
+        type: string
+      - in: query
+        name: loadStat
+        type: string
+      - in: query
+        name: purpose
+        type: string
+      - in: query
+        name: status
         type: string
       produces:
       - application/json
@@ -4085,7 +4199,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/warehouse.Stocks'
+                  $ref: '#/definitions/message.GetStocksResp'
               type: object
       security:
       - ApiKeyAuth: []
@@ -4249,7 +4363,7 @@ paths:
         in: path
         name: workFlowId
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:

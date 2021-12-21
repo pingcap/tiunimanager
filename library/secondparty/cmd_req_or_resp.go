@@ -17,6 +17,7 @@ package secondparty
 
 import (
 	"github.com/pingcap-inc/tiem/library/spec"
+	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
 	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
 )
 
@@ -27,7 +28,7 @@ type CmdDeployReq struct {
 	Version       string
 	ConfigStrYaml string
 	TimeoutS      int
-	TiupPath      string
+	TiUPPath      string
 	Flags         []string
 }
 
@@ -37,7 +38,7 @@ type CmdScaleOutReq struct {
 	InstanceName  string
 	ConfigStrYaml string
 	TimeoutS      int
-	TiupPath      string
+	TiUPPath      string
 	Flags         []string
 }
 
@@ -47,7 +48,7 @@ type CmdScaleInReq struct {
 	InstanceName  string
 	NodeId        string
 	TimeoutS      int
-	TiupPath      string
+	TiUPPath      string
 	Flags         []string
 }
 
@@ -56,7 +57,7 @@ type CmdStartReq struct {
 	TaskID        uint64
 	InstanceName  string
 	TimeoutS      int
-	TiupPath      string
+	TiUPPath      string
 	Flags         []string
 }
 
@@ -64,7 +65,7 @@ type CmdListReq struct {
 	TiUPComponent TiUPComponentTypeStr
 	TaskID        uint64
 	TimeoutS      int
-	TiupPath      string
+	TiUPPath      string
 	Flags         []string
 }
 
@@ -73,7 +74,7 @@ type CmdDestroyReq struct {
 	TaskID        uint64
 	InstanceName  string
 	TimeoutS      int
-	TiupPath      string
+	TiUPPath      string
 	Flags         []string
 }
 
@@ -85,17 +86,21 @@ type CmdGetAllTaskStatusResp struct {
 	Stats []TaskStatusMember
 }
 
+type CmdGetAllOperationStatusResp struct {
+	Stats []OperationStatusMember
+}
+
 type CmdDumplingReq struct {
 	TaskID   uint64
 	TimeoutS int
-	TiupPath string
+	TiUPPath string
 	Flags    []string
 }
 
 type CmdLightningReq struct {
 	TaskID   uint64
 	TimeoutS int
-	TiupPath string
+	TiUPPath string
 	Flags    []string
 }
 
@@ -103,7 +108,7 @@ type CmdDisplayReq struct {
 	TiUPComponent TiUPComponentTypeStr
 	InstanceName  string
 	TimeoutS      int
-	TiupPath      string
+	TiUPPath      string
 	Flags         []string
 }
 
@@ -127,11 +132,11 @@ type CmdBackUpReq struct {
 }
 
 type CmdBrResp struct {
-	Destination    string
-	Size           uint64
-	BackupTS       uint64
-	Queue_time     string
-	Execution_Time string
+	Destination   string
+	Size          uint64
+	BackupTS      uint64
+	QueueTime     string
+	ExecutionTime string
 }
 
 type CmdShowBackUpInfoReq struct {
@@ -192,7 +197,7 @@ type CmdTransferReq struct {
 	CollectorYaml string
 	RemotePath    string
 	TimeoutS      int
-	TiupPath      string
+	TiUPPath      string
 	Flags         []string
 }
 
@@ -202,7 +207,7 @@ type CmdUpgradeReq struct {
 	InstanceName  string
 	Version       string
 	TimeoutS      int
-	TiupPath      string
+	TiUPPath      string
 	Flags         []string
 }
 
@@ -263,6 +268,13 @@ type CmdReloadConfigReq struct {
 	Flags         []string
 }
 
+type CmdClusterExecReq struct {
+	TiUPComponent TiUPComponentTypeStr
+	InstanceName  string
+	TimeoutS      int
+	Flags         []string
+}
+
 type ApiEditConfigReq struct {
 	TiDBClusterComponent spec.TiDBClusterComponent
 	InstanceHost         string
@@ -283,5 +295,19 @@ type ClusterEditConfigResp struct {
 type ShowWarningsResp struct {
 	Level   string
 	Code    string
+	Message string
+}
+
+type GetOperationStatusResp struct {
+	Status   secondparty.OperationStatus
+	Result   string
+	ErrorStr string
+}
+
+type ClusterSetDbPswReq struct {
+	DbConnParameter DbConnParam
+}
+
+type ClusterSetDbPswResp struct {
 	Message string
 }

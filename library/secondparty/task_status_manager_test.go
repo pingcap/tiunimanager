@@ -47,7 +47,7 @@ func Test_MicroInit(t *testing.T) {
 		t.Errorf("taskStatusChCap cap is incorrect, got: %d, want: %d.", taskStatusChCap, 1024)
 	}
 	if taskStatusMapLen != 0 {
-		t.Errorf("taskStatusMap len is incorrect, got: %d, want: %d.", taskStatusMapLen, 0)
+		t.Errorf("operationStatusMap len is incorrect, got: %d, want: %d.", taskStatusMapLen, 0)
 	}
 }
 
@@ -59,7 +59,7 @@ func Test_taskStatusMapSyncer_NothingUpdate(t *testing.T) {
 		t.Errorf("syncedTaskStatusMapLen len is incorrect, got: %d, want: %d.", syncedTaskStatusMapLen, 0)
 	}
 	if taskStatusMapLen != 0 {
-		t.Errorf("taskStatusMap len is incorrect, got: %d, want: %d.", taskStatusMapLen, 0)
+		t.Errorf("operationStatusMap len is incorrect, got: %d, want: %d.", taskStatusMapLen, 0)
 	}
 }
 
@@ -134,6 +134,6 @@ func Test_taskStatusMapSyncer_DeleteInvalidTaskStatus(t *testing.T) {
 	time.Sleep(1000 * time.Millisecond)
 	taskStatusMapLen := len(secondMicro.taskStatusMap)
 	if taskStatusMapLen != 0 {
-		t.Errorf("taskStatusMap len is incorrect, got: %d, want: %d.", taskStatusMapLen, 0)
+		t.Errorf("operationStatusMap len is incorrect, got: %d, want: %d.", taskStatusMapLen, 0)
 	}
 }

@@ -18,11 +18,11 @@ package main
 
 import (
 	"github.com/asim/go-micro/v3"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
-	"github.com/pingcap-inc/tiem/micro-metadb/registry"
 	dbService "github.com/pingcap-inc/tiem/micro-metadb/service"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -30,18 +30,6 @@ import (
 func main() {
 	f := framework.InitBaseFrameworkFromArgs(framework.MetaDBService,
 		defaultPortForLocal,
-		func(b *framework.BaseFramework) error {
-			go func() {
-				// init embed etcd.
-				err := registry.InitEmbedEtcd(b)
-				if err != nil {
-					b.GetRootLogger().ForkFile(b.GetServiceMeta().ServiceName.ServerName()).
-						Errorf("init embed etcd failed, error: %v", err)
-					return
-				}
-			}()
-			return nil
-		},
 	)
 	log := f.GetRootLogger().ForkFile(common.LogFileSystem)
 	log.Info("etcd client connect success")
@@ -62,7 +50,7 @@ func main() {
 
 func defaultPortForLocal(f *framework.BaseFramework) error {
 	if f.GetServiceMeta().ServicePort <= 0 {
-		f.GetServiceMeta().ServicePort = common.DefaultMicroMetaDBPort
+		f.GetServiceMeta().ServicePort = constants.DefaultMicroMetaDBPort
 	}
 	return nil
 }

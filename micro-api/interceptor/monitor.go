@@ -16,6 +16,7 @@
 package interceptor
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
 	"github.com/prometheus/client_golang/prometheus"
@@ -23,16 +24,34 @@ import (
 	"time"
 )
 
+func Metrics() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+		c.Next()
+		duration := time.Since(start)
+		framework.Current.GetMetrics().MicroDurationHistogramMetric.With(prometheus.Labels{
+			metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
+			metrics.MethodLabel:  c.Request.RequestURI + ":" + c.Request.Method,
+			metrics.CodeLabel:    string(c.Writer.Status())}).
+			Observe(float64(duration.Microseconds()))
+		framework.Current.GetMetrics().MicroRequestsCounterMetric.With(prometheus.Labels{
+			metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
+			metrics.MethodLabel:  c.Request.RequestURI + ":" + c.Request.Method,
+			metrics.CodeLabel:    string(c.Writer.Status())}).
+			Inc()
+	}
+}
+
 func HandleMetrics(start time.Time, funcName string, code int) {
 	duration := time.Since(start)
 	framework.Current.GetMetrics().MicroDurationHistogramMetric.With(prometheus.Labels{
 		metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
-		metrics.MethodLabel: funcName,
-		metrics.CodeLabel: strconv.Itoa(code)}).
+		metrics.MethodLabel:  funcName,
+		metrics.CodeLabel:    strconv.Itoa(code)}).
 		Observe(duration.Seconds())
 	framework.Current.GetMetrics().MicroRequestsCounterMetric.With(prometheus.Labels{
 		metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
-		metrics.MethodLabel: funcName,
-		metrics.CodeLabel: strconv.Itoa(code)}).
+		metrics.MethodLabel:  funcName,
+		metrics.CodeLabel:    strconv.Itoa(code)}).
 		Inc()
 }

@@ -53,7 +53,7 @@ type DeleteBackupDataResp struct {
 
 // QueryBackupRecordsReq Query the list of backup files over time based on cluster ID
 type QueryBackupRecordsReq struct {
-	BackupID  string `json:"backupId"`
+	BackupID  string `json:"backupId" form:"backupId"`
 	ClusterID string `json:"clusterId" form:"clusterId"`
 	StartTime int64  `json:"startTime" form:"startTime"`
 	EndTime   int64  `json:"endTime" form:"endTime"`

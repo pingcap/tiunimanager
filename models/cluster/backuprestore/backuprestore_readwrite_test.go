@@ -248,6 +248,7 @@ func TestBRReadWrite_DeleteBackupStrategy(t *testing.T) {
 	errDelete := rw.DeleteBackupStrategy(context.TODO(), strategyCreate.ClusterID)
 	assert.NoError(t, errDelete)
 
-	_, errGet := rw.GetBackupStrategy(context.TODO(), strategyCreate.ClusterID)
-	assert.NotNil(t, errGet)
+	strategyGet, errGet := rw.GetBackupStrategy(context.TODO(), strategyCreate.ClusterID)
+	assert.Nil(t, errGet)
+	assert.Equal(t, "", strategyGet.ID)
 }

@@ -118,7 +118,7 @@ func (m *BRReadWrite) UpdateBackupStrategy(ctx context.Context, strategy *Backup
 	columnMap["backup_date"] = strategy.BackupDate
 	columnMap["start_hour"] = strategy.StartHour
 	columnMap["end_hour"] = strategy.EndHour
-	return m.DB(ctx).Model(strategy).Updates(strategy).Error
+	return m.DB(ctx).Model(strategy).Where("cluster_id = ?", strategy.ClusterID).Updates(strategy).Error
 }
 
 func (m *BRReadWrite) SaveBackupStrategy(ctx context.Context, strategy *BackupStrategy) (*BackupStrategy, error) {

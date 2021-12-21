@@ -113,6 +113,20 @@ func TestScaleOutPreCheck(t *testing.T) {
 	})
 }
 
+func TestScaleInPreCheck(t *testing.T) {
+	t.Run("parameter invalid", func(t *testing.T) {
+		err := ScaleInPreCheck(ctx.TODO(), nil, nil)
+		assert.Error(t, err)
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		meta := &ClusterMeta{}
+		instance := &management.ClusterInstance{Type: string(constants.ComponentIDPD)}
+		err := ScaleInPreCheck(ctx.TODO(), meta, instance)
+		assert.NoError(t, err)
+	})
+}
+
 func TestWaitWorkflow(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -121,6 +135,7 @@ func TestWaitWorkflow(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
+		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 		workflowService.EXPECT().DetailWorkFlow(gomock.Any(), gomock.Any()).Return(
 			message.QueryWorkFlowDetailResp{
 				Info: &structs.WorkFlowInfo{
@@ -132,6 +147,7 @@ func TestWaitWorkflow(t *testing.T) {
 	t.Run("fail", func(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
+		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 		workflowService.EXPECT().DetailWorkFlow(gomock.Any(), gomock.Any()).Return(
 			message.QueryWorkFlowDetailResp{
 				Info: &structs.WorkFlowInfo{
@@ -143,6 +159,7 @@ func TestWaitWorkflow(t *testing.T) {
 	t.Run("timeout", func(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
+		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 		workflowService.EXPECT().DetailWorkFlow(gomock.Any(), gomock.Any()).Return(
 			message.QueryWorkFlowDetailResp{
 				Info: &structs.WorkFlowInfo{

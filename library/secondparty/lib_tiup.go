@@ -23,7 +23,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/spec"
 	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
@@ -43,8 +43,8 @@ const (
 	CTLComponentTypeStr     TiUPComponentTypeStr = "ctl"
 )
 
-var topologyTmpFilePrefix = fmt.Sprintf("%s-topology", common.TiEM)
-var collectorTmpFilePrefix = fmt.Sprintf("%s-collector", common.TiEM)
+var topologyTmpFilePrefix = constants.TiUPTopologyTmpFilePrefix
+var collectorTmpFilePrefix = constants.TiUPCollectorTmpFilePrefix
 
 func (secondMicro *SecondMicro) MicroSrvTiupDeploy(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
 	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupdeploy tiupcomponent: %s, instancename: %s, version: %s, configstryaml: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, version, configStrYaml, timeoutS, flags, bizID)

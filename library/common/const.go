@@ -31,12 +31,12 @@ const (
 )
 
 const (
-	TiEM          string = "em"
+	TiEM          string = "tiem"
 	LogDirPrefix  string = "/logs/"
 	CertDirPrefix string = "/cert/"
 	DBDirPrefix   string = "/"
 
-	SqliteFileName   string = "em.sqlite.db"
+	SqliteFileName   string = "tiem.sqlite.db"
 	DatabaseFileName string = "em.db"
 
 	CrtFileName string = "server.crt"

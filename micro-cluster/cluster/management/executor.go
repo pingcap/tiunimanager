@@ -241,12 +241,7 @@ func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.Flo
 			"do backup for cluster %s error: %s", sourceClusterMeta.Cluster.ID, err.Error())
 		return err
 	}
-
-	if err = handler.WaitWorkflow(backupResponse.WorkFlowID, 10*time.Second); err != nil {
-		framework.LogWithContext(context.Context).Errorf("backup workflow error: %s", err)
-		return err
-	}
-
+	context.SetData(ContextWorkflowID, backupResponse.WorkFlowID)
 	context.SetData(ContextBackupID, backupResponse.BackupID)
 
 	return nil

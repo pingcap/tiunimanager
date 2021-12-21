@@ -50,6 +50,7 @@ func NewClusterManager() *Manager {
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowDeleteCluster, &deleteClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowRestartCluster, &restartClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowStopCluster, &stopClusterFlow)
+	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowCloneCluster, &cloneDefine)
 
 	return &Manager{}
 }
@@ -177,7 +178,8 @@ var cloneDefine = workflow.WorkFlowDefine{
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":                   {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
 		"resourceDone":            {"backupSourceCluster", "backupDone", "fail", workflow.SyncFuncNode, backupSourceCluster},
-		"backupDone":              {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
+		"backupDone":              {"waitBackup", "waitBackupDone", "fail", workflow.SyncFuncNode, waitWorkFlow},
+		"waitBackupDone":          {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
 		"configDone":              {"deployCluster", "deployDone", "fail", workflow.PollingNode, deployCluster},
 		"deployDone":              {"startCluster", "startDone", "fail", workflow.PollingNode, startCluster},
 		"startDone":               {"syncBackupStrategy", "syncBackupStrategyDone", "fail", workflow.SyncFuncNode, syncBackupStrategy},

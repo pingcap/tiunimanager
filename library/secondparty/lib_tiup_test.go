@@ -20,7 +20,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/pingcap-inc/tiem/library/spec"
+	"github.com/pingcap-inc/tiem/common/constants"
+
 	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
 
 	"testing"
@@ -357,7 +358,7 @@ func TestSecondMicro_MicroSrvTiupEditGlobalConfig_Fail(t *testing.T) {
 	configMap := make(map[string]interface{})
 	configMap["foo"] = "bar"
 	globalComponentConfigTiDB := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		TiDBClusterComponent: constants.ComponentIDTiDB,
 		ConfigMap:            configMap,
 	}
 	cmdEditGlobalConfigReq := CmdEditGlobalConfigReq{
@@ -388,7 +389,7 @@ func TestSecondMicro_MicroSrvTiupEditGlobalConfig_Success(t *testing.T) {
 	configMap := make(map[string]interface{})
 	configMap["foo"] = "bar"
 	globalComponentConfigTiDB := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		TiDBClusterComponent: constants.ComponentIDTiDB,
 		ConfigMap:            configMap,
 	}
 	cmdEditGlobalConfigReq := CmdEditGlobalConfigReq{
@@ -423,35 +424,23 @@ func TestSecondMicro_startTiupEditGlobalConfigTask(t *testing.T) {
 	configMap["foo"] = "bar"
 	topo := spec2.Specification{}
 	globalComponentConfigTiDB := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		TiDBClusterComponent: constants.ComponentIDTiDB,
 		ConfigMap:            configMap,
 	}
 	globalComponentConfigTiKV := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiKV,
+		TiDBClusterComponent: constants.ComponentIDTiKV,
 		ConfigMap:            configMap,
 	}
 	globalComponentConfigPD := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_PD,
+		TiDBClusterComponent: constants.ComponentIDPD,
 		ConfigMap:            configMap,
 	}
 	globalComponentConfigTiFlash := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiFlash,
-		ConfigMap:            configMap,
-	}
-	globalComponentConfigTiFlashLearner := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiFlashLearner,
-		ConfigMap:            configMap,
-	}
-	globalComponentConfigPump := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_Pump,
-		ConfigMap:            configMap,
-	}
-	globalComponentConfigDrainer := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_Drainer,
+		TiDBClusterComponent: constants.ComponentIDTiFlash,
 		ConfigMap:            configMap,
 	}
 	globalComponentConfigCDC := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_CDC,
+		TiDBClusterComponent: constants.ComponentIDTiCDC,
 		ConfigMap:            configMap,
 	}
 	req := CmdEditGlobalConfigReq{
@@ -462,9 +451,6 @@ func TestSecondMicro_startTiupEditGlobalConfigTask(t *testing.T) {
 			globalComponentConfigTiKV,
 			globalComponentConfigPD,
 			globalComponentConfigTiFlash,
-			globalComponentConfigTiFlashLearner,
-			globalComponentConfigPump,
-			globalComponentConfigDrainer,
 			globalComponentConfigCDC,
 		},
 	}
@@ -477,7 +463,7 @@ func TestSecondMicro_MicroSrvTiupEditInstanceConfig_Fail(t *testing.T) {
 	cmdEditInstanceConfigReq := CmdEditInstanceConfigReq{
 		TiUPComponent:        ClusterComponentTypeStr,
 		InstanceName:         "test-tidb",
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		TiDBClusterComponent: constants.ComponentIDTiDB,
 		Host:                 "1.2.3.4",
 		Port:                 1234,
 		ConfigMap:            configMap,
@@ -507,7 +493,7 @@ func TestSecondMicro_MicroSrvTiupEditInstanceConfig_Success(t *testing.T) {
 	cmdEditInstanceConfigReq := CmdEditInstanceConfigReq{
 		TiUPComponent:        ClusterComponentTypeStr,
 		InstanceName:         "test-tidb",
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		TiDBClusterComponent: constants.ComponentIDTiDB,
 		Host:                 "1.2.3.4",
 		Port:                 1234,
 		ConfigMap:            configMap,
@@ -602,7 +588,7 @@ func TestSecondMicro_startTiupEditInstanceConfigTask(t *testing.T) {
 	req := CmdEditInstanceConfigReq{
 		TiUPComponent:        ClusterComponentTypeStr,
 		InstanceName:         "test-tidb",
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		TiDBClusterComponent: constants.ComponentIDTiDB,
 		Host:                 "1.2.3.4",
 		Port:                 1234,
 		ConfigMap:            configMap,
@@ -611,37 +597,25 @@ func TestSecondMicro_startTiupEditInstanceConfigTask(t *testing.T) {
 	}
 	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
 
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiKV
+	req.TiDBClusterComponent = constants.ComponentIDTiKV
 	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
 
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiFlash
+	req.TiDBClusterComponent = constants.ComponentIDTiFlash
 	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
 
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_PD
+	req.TiDBClusterComponent = constants.ComponentIDPD
 	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
 
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_Pump
+	req.TiDBClusterComponent = constants.ComponentIDTiCDC
 	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
 
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_Drainer
+	req.TiDBClusterComponent = constants.ComponentIDPrometheus
 	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
 
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_CDC
+	req.TiDBClusterComponent = constants.ComponentIDGrafana
 	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
 
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiSparkMasters
-	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
-
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiSparkWorkers
-	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
-
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_Prometheus
-	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
-
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_Grafana
-	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
-
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_Alertmanager
+	req.TiDBClusterComponent = constants.ComponentIDAlertManager
 	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
 }
 

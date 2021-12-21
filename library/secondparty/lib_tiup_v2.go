@@ -31,11 +31,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pingcap-inc/tiem/common/constants"
+
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
 
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/spec"
 	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
 	"gopkg.in/yaml.v2"
 )
@@ -452,21 +453,15 @@ func (manager *SecondPartyManager) startTiUPEditGlobalConfigOperation(ctx contex
 
 	for _, globalComponentConfig := range req.GlobalComponentConfigs {
 		switch globalComponentConfig.TiDBClusterComponent {
-		case spec.TiDBClusterComponent_TiDB:
+		case constants.ComponentIDTiDB:
 			componentServerConfigs = topo.ServerConfigs.TiDB
-		case spec.TiDBClusterComponent_TiKV:
+		case constants.ComponentIDTiKV:
 			componentServerConfigs = topo.ServerConfigs.TiKV
-		case spec.TiDBClusterComponent_PD:
+		case constants.ComponentIDPD:
 			componentServerConfigs = topo.ServerConfigs.PD
-		case spec.TiDBClusterComponent_TiFlash:
+		case constants.ComponentIDTiFlash:
 			componentServerConfigs = topo.ServerConfigs.TiFlash
-		case spec.TiDBClusterComponent_TiFlashLearner:
-			componentServerConfigs = topo.ServerConfigs.TiFlashLearner
-		case spec.TiDBClusterComponent_Pump:
-			componentServerConfigs = topo.ServerConfigs.Pump
-		case spec.TiDBClusterComponent_Drainer:
-			componentServerConfigs = topo.ServerConfigs.Drainer
-		case spec.TiDBClusterComponent_CDC:
+		case constants.ComponentIDTiCDC:
 			componentServerConfigs = topo.ServerConfigs.CDC
 		}
 		if componentServerConfigs == nil {
@@ -476,21 +471,15 @@ func (manager *SecondPartyManager) startTiUPEditGlobalConfigOperation(ctx contex
 			componentServerConfigs[k] = v
 		}
 		switch globalComponentConfig.TiDBClusterComponent {
-		case spec.TiDBClusterComponent_TiDB:
+		case constants.ComponentIDTiDB:
 			topo.ServerConfigs.TiDB = componentServerConfigs
-		case spec.TiDBClusterComponent_TiKV:
+		case constants.ComponentIDTiKV:
 			topo.ServerConfigs.TiKV = componentServerConfigs
-		case spec.TiDBClusterComponent_PD:
+		case constants.ComponentIDPD:
 			topo.ServerConfigs.PD = componentServerConfigs
-		case spec.TiDBClusterComponent_TiFlash:
+		case constants.ComponentIDTiFlash:
 			topo.ServerConfigs.TiFlash = componentServerConfigs
-		case spec.TiDBClusterComponent_TiFlashLearner:
-			topo.ServerConfigs.TiFlashLearner = componentServerConfigs
-		case spec.TiDBClusterComponent_Pump:
-			topo.ServerConfigs.Pump = componentServerConfigs
-		case spec.TiDBClusterComponent_Drainer:
-			topo.ServerConfigs.Drainer = componentServerConfigs
-		case spec.TiDBClusterComponent_CDC:
+		case constants.ComponentIDTiCDC:
 			topo.ServerConfigs.CDC = componentServerConfigs
 		}
 	}
@@ -540,7 +529,7 @@ func (manager *SecondPartyManager) ClusterEditInstanceConfig(ctx context.Context
 func (manager *SecondPartyManager) startTiUPEditInstanceConfigOperation(ctx context.Context, operationID string,
 	req *CmdEditInstanceConfigReq, topo *spec2.Specification) {
 	switch req.TiDBClusterComponent {
-	case spec.TiDBClusterComponent_TiDB:
+	case constants.ComponentIDTiDB:
 		for idx, tiDBServer := range topo.TiDBServers {
 			if tiDBServer.Host == req.Host && tiDBServer.Port == req.Port {
 				for k, v := range req.ConfigMap {
@@ -550,7 +539,7 @@ func (manager *SecondPartyManager) startTiUPEditInstanceConfigOperation(ctx cont
 				break
 			}
 		}
-	case spec.TiDBClusterComponent_TiKV:
+	case constants.ComponentIDTiKV:
 		for idx, tiKVServer := range topo.TiKVServers {
 			if tiKVServer.Host == req.Host && tiKVServer.Port == req.Port {
 				for k, v := range req.ConfigMap {
@@ -560,7 +549,7 @@ func (manager *SecondPartyManager) startTiUPEditInstanceConfigOperation(ctx cont
 				break
 			}
 		}
-	case spec.TiDBClusterComponent_TiFlash:
+	case constants.ComponentIDTiFlash:
 		for idx, tiFlashServer := range topo.TiFlashServers {
 			if tiFlashServer.Host == req.Host && tiFlashServer.FlashServicePort == req.Port {
 				for k, v := range req.ConfigMap {
@@ -570,7 +559,7 @@ func (manager *SecondPartyManager) startTiUPEditInstanceConfigOperation(ctx cont
 				break
 			}
 		}
-	case spec.TiDBClusterComponent_PD:
+	case constants.ComponentIDPD:
 		for idx, pdServer := range topo.PDServers {
 			if pdServer.Host == req.Host && pdServer.ClientPort == req.Port {
 				for k, v := range req.ConfigMap {
@@ -580,27 +569,7 @@ func (manager *SecondPartyManager) startTiUPEditInstanceConfigOperation(ctx cont
 				break
 			}
 		}
-	case spec.TiDBClusterComponent_Pump:
-		for idx, pumpServer := range topo.PumpServers {
-			if pumpServer.Host == req.Host && pumpServer.Port == req.Port {
-				for k, v := range req.ConfigMap {
-					SetField(ctx, pumpServer, FieldKey_Yaml, k, v)
-				}
-				topo.PumpServers[idx] = pumpServer
-				break
-			}
-		}
-	case spec.TiDBClusterComponent_Drainer:
-		for idx, drainer := range topo.Drainers {
-			if drainer.Host == req.Host && drainer.Port == req.Port {
-				for k, v := range req.ConfigMap {
-					SetField(ctx, drainer, FieldKey_Yaml, k, v)
-				}
-				topo.Drainers[idx] = drainer
-				break
-			}
-		}
-	case spec.TiDBClusterComponent_CDC:
+	case constants.ComponentIDTiCDC:
 		for idx, cdcServer := range topo.CDCServers {
 			if cdcServer.Host == req.Host && cdcServer.Port == req.Port {
 				for k, v := range req.ConfigMap {
@@ -610,27 +579,7 @@ func (manager *SecondPartyManager) startTiUPEditInstanceConfigOperation(ctx cont
 				break
 			}
 		}
-	case spec.TiDBClusterComponent_TiSparkMasters:
-		for idx, tiSparkMaster := range topo.TiSparkMasters {
-			if tiSparkMaster.Host == req.Host && tiSparkMaster.Port == req.Port {
-				for k, v := range req.ConfigMap {
-					SetField(ctx, tiSparkMaster, FieldKey_Yaml, k, v)
-				}
-				topo.TiSparkMasters[idx] = tiSparkMaster
-				break
-			}
-		}
-	case spec.TiDBClusterComponent_TiSparkWorkers:
-		for idx, tiSparkWorker := range topo.TiSparkWorkers {
-			if tiSparkWorker.Host == req.Host && tiSparkWorker.Port == req.Port {
-				for k, v := range req.ConfigMap {
-					SetField(ctx, tiSparkWorker, FieldKey_Yaml, k, v)
-				}
-				topo.TiSparkWorkers[idx] = tiSparkWorker
-				break
-			}
-		}
-	case spec.TiDBClusterComponent_Prometheus:
+	case constants.ComponentIDPrometheus:
 		for idx, monitor := range topo.Monitors {
 			if monitor.Host == req.Host && monitor.Port == req.Port {
 				for k, v := range req.ConfigMap {
@@ -640,7 +589,7 @@ func (manager *SecondPartyManager) startTiUPEditInstanceConfigOperation(ctx cont
 				break
 			}
 		}
-	case spec.TiDBClusterComponent_Grafana:
+	case constants.ComponentIDGrafana:
 		for idx, grafana := range topo.Grafanas {
 			if grafana.Host == req.Host && grafana.Port == req.Port {
 				for k, v := range req.ConfigMap {
@@ -650,7 +599,7 @@ func (manager *SecondPartyManager) startTiUPEditInstanceConfigOperation(ctx cont
 				break
 			}
 		}
-	case spec.TiDBClusterComponent_Alertmanager:
+	case constants.ComponentIDAlertManager:
 		for idx, alertManager := range topo.Alertmanagers {
 			if alertManager.Host == req.Host && alertManager.WebPort == req.Port {
 				for k, v := range req.ConfigMap {
@@ -857,7 +806,7 @@ func (manager *SecondPartyManager) startTiUPTransferOperation(ctx context.Contex
 }
 
 func (manager *SecondPartyManager) ClusterComponentCtl(ctx context.Context, str TiUPComponentTypeStr,
-	clusterVersion string, component spec.TiDBClusterComponent, flags []string, timeoutS int) (string, error) {
+	clusterVersion string, component constants.EMProductComponentIDType, flags []string, timeoutS int) (string, error) {
 	framework.LogWithContext(ctx).Infof("clustercomponentctl tiupcomponent: %s,  clusterversion: %s. "+
 		"component: %s, flags: %v", string(str), clusterVersion, string(component), flags)
 	var args []string

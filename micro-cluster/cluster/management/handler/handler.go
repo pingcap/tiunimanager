@@ -567,7 +567,7 @@ func (p *ClusterMeta) GetGrafanaAddresses() []ComponentAddress {
 // @Receiver p
 // @return []ComponentAddress
 func (p *ClusterMeta) GetAlertManagerAddresses() []ComponentAddress {
-	instances := p.Instances[string(newConstants.ComponentIDAlertManger)]
+	instances := p.Instances[string(newConstants.ComponentIDAlertManager)]
 	address := make([]ComponentAddress, 0)
 
 	for _, instance := range instances {

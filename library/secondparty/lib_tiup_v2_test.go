@@ -27,9 +27,9 @@ import (
 	"context"
 	"errors"
 
-	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
+	"github.com/pingcap-inc/tiem/common/constants"
 
-	"github.com/pingcap-inc/tiem/library/spec"
+	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
 
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
@@ -311,7 +311,7 @@ func TestSecondPartyManager_ClusterEditGlobalConfig_Fail(t *testing.T) {
 	configMap := make(map[string]interface{})
 	configMap["foo"] = "bar"
 	globalComponentConfigTiDB := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		TiDBClusterComponent: constants.ComponentIDTiDB,
 		ConfigMap:            configMap,
 	}
 	cmdEditGlobalConfigReq := CmdEditGlobalConfigReq{
@@ -339,7 +339,7 @@ func TestSecondPartyManager_ClusterEditGlobalConfig_Success(t *testing.T) {
 	configMap := make(map[string]interface{})
 	configMap["foo"] = "bar"
 	globalComponentConfigTiDB := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		TiDBClusterComponent: constants.ComponentIDTiDB,
 		ConfigMap:            configMap,
 	}
 	cmdEditGlobalConfigReq := CmdEditGlobalConfigReq{
@@ -370,35 +370,23 @@ func TestSecondPartyManager_startTiupEditGlobalConfigTask(t *testing.T) {
 	configMap["foo"] = "bar"
 	topo := spec2.Specification{}
 	globalComponentConfigTiDB := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		TiDBClusterComponent: constants.ComponentIDTiDB,
 		ConfigMap:            configMap,
 	}
 	globalComponentConfigTiKV := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiKV,
+		TiDBClusterComponent: constants.ComponentIDTiKV,
 		ConfigMap:            configMap,
 	}
 	globalComponentConfigPD := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_PD,
+		TiDBClusterComponent: constants.ComponentIDPD,
 		ConfigMap:            configMap,
 	}
 	globalComponentConfigTiFlash := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiFlash,
-		ConfigMap:            configMap,
-	}
-	globalComponentConfigTiFlashLearner := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiFlashLearner,
-		ConfigMap:            configMap,
-	}
-	globalComponentConfigPump := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_Pump,
-		ConfigMap:            configMap,
-	}
-	globalComponentConfigDrainer := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_Drainer,
+		TiDBClusterComponent: constants.ComponentIDTiFlash,
 		ConfigMap:            configMap,
 	}
 	globalComponentConfigCDC := GlobalComponentConfig{
-		TiDBClusterComponent: spec.TiDBClusterComponent_CDC,
+		TiDBClusterComponent: constants.ComponentIDTiCDC,
 		ConfigMap:            configMap,
 	}
 	req := CmdEditGlobalConfigReq{
@@ -409,9 +397,6 @@ func TestSecondPartyManager_startTiupEditGlobalConfigTask(t *testing.T) {
 			globalComponentConfigTiKV,
 			globalComponentConfigPD,
 			globalComponentConfigTiFlash,
-			globalComponentConfigTiFlashLearner,
-			globalComponentConfigPump,
-			globalComponentConfigDrainer,
 			globalComponentConfigCDC,
 		},
 	}
@@ -424,7 +409,7 @@ func TestSecondPartyManager_ClusterEditInstanceConfig_Fail(t *testing.T) {
 	cmdEditInstanceConfigReq := CmdEditInstanceConfigReq{
 		TiUPComponent:        ClusterComponentTypeStr,
 		InstanceName:         "test-tidb",
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		TiDBClusterComponent: constants.ComponentIDTiDB,
 		Host:                 "1.2.3.4",
 		Port:                 1234,
 		ConfigMap:            configMap,
@@ -451,7 +436,7 @@ func TestSecondPartyManager_ClusterEditInstanceConfig_Success(t *testing.T) {
 	cmdEditInstanceConfigReq := CmdEditInstanceConfigReq{
 		TiUPComponent:        ClusterComponentTypeStr,
 		InstanceName:         "test-tidb",
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		TiDBClusterComponent: constants.ComponentIDTiDB,
 		Host:                 "1.2.3.4",
 		Port:                 1234,
 		ConfigMap:            configMap,
@@ -542,7 +527,7 @@ func TestSecondPartyManager_startTiupEditInstanceConfigTask(t *testing.T) {
 	req := CmdEditInstanceConfigReq{
 		TiUPComponent:        ClusterComponentTypeStr,
 		InstanceName:         "test-tidb",
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		TiDBClusterComponent: constants.ComponentIDTiDB,
 		Host:                 "1.2.3.4",
 		Port:                 1234,
 		ConfigMap:            configMap,
@@ -551,37 +536,25 @@ func TestSecondPartyManager_startTiupEditInstanceConfigTask(t *testing.T) {
 	}
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiKV
+	req.TiDBClusterComponent = constants.ComponentIDTiKV
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiFlash
+	req.TiDBClusterComponent = constants.ComponentIDTiFlash
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_PD
+	req.TiDBClusterComponent = constants.ComponentIDPD
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_Pump
+	req.TiDBClusterComponent = constants.ComponentIDTiCDC
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_Drainer
+	req.TiDBClusterComponent = constants.ComponentIDPrometheus
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_CDC
+	req.TiDBClusterComponent = constants.ComponentIDGrafana
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiSparkMasters
-	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
-
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiSparkWorkers
-	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
-
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_Prometheus
-	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
-
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_Grafana
-	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
-
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_Alertmanager
+	req.TiDBClusterComponent = constants.ComponentIDAlertManager
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 }
 
@@ -814,7 +787,7 @@ func TestSecondPartyManager_ClusterGetTaskStatusByBizID_Success(t *testing.T) {
 
 func TestSecondPartyManager_ClusterComponentCtl(t *testing.T) {
 
-	_, err := secondPartyManager1.ClusterComponentCtl(context.TODO(), CtlComponentTypeStr, "v5.0.0", spec.TiDBClusterComponent_PD, []string{}, 0)
+	_, err := secondPartyManager1.ClusterComponentCtl(context.TODO(), CtlComponentTypeStr, "v5.0.0", constants.ComponentIDPD, []string{}, 0)
 	if err == nil {
 		t.Errorf("case: cluster display. err(expected: not nil, actual: nil)")
 	}
@@ -822,7 +795,7 @@ func TestSecondPartyManager_ClusterComponentCtl(t *testing.T) {
 
 func TestSecondPartyManager_ClusterComponentCtl_WithTimeout(t *testing.T) {
 
-	_, err := secondPartyManager1.ClusterComponentCtl(context.TODO(), CtlComponentTypeStr, "v5.0.0", spec.TiDBClusterComponent_PD, []string{}, 1)
+	_, err := secondPartyManager1.ClusterComponentCtl(context.TODO(), CtlComponentTypeStr, "v5.0.0", constants.ComponentIDPD, []string{}, 1)
 	if err == nil {
 		t.Errorf("case: cluster display. err(expected: not nil, actual: nil)")
 	}

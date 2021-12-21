@@ -31,8 +31,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pingcap-inc/tiem/common/constants"
+
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/spec"
 )
 
 func (manager *SecondPartyManager) EditClusterConfig(ctx context.Context, req ClusterEditConfigReq, workFlowNodeID string) error {
@@ -48,9 +49,9 @@ func (manager *SecondPartyManager) EditClusterConfig(ctx context.Context, req Cl
 
 	for _, config := range req.ComponentConfigs {
 		var args []string
-		if config.TiDBClusterComponent == spec.TiDBClusterComponent_TiDB {
+		if config.TiDBClusterComponent == constants.ComponentIDTiDB {
 			args = append(args, "set")
-		} else if config.TiDBClusterComponent == spec.TiDBClusterComponent_TiKV || config.TiDBClusterComponent == spec.TiDBClusterComponent_PD {
+		} else if config.TiDBClusterComponent == constants.ComponentIDTiKV || config.TiDBClusterComponent == constants.ComponentIDPD {
 			args = append(args, "set config")
 			if len(config.InstanceAddr) != 0 {
 				args = append(args, fmt.Sprintf("\"%s\"", config.InstanceAddr))

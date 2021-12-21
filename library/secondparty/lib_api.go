@@ -30,8 +30,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/pingcap-inc/tiem/common/constants"
+
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/spec"
 	util "github.com/pingcap-inc/tiem/library/util/http"
 )
 
@@ -44,7 +45,7 @@ const (
 func (manager *SecondPartyManager) ApiEditConfig(ctx context.Context, apiEditConfigReq ApiEditConfigReq) (bool, error) {
 	framework.LogWithContext(ctx).Infof("micro srv api edit config, api req: %v", apiEditConfigReq)
 	switch apiEditConfigReq.TiDBClusterComponent {
-	case spec.TiDBClusterComponent_TiDB:
+	case constants.ComponentIDTiDB:
 		url := fmt.Sprintf("http://%s:%d%s", apiEditConfigReq.InstanceHost, apiEditConfigReq.InstancePort, TiDBApiUrl)
 		resp, err := util.PostForm(url, apiEditConfigReq.ConfigMap, apiEditConfigReq.Headers)
 		if err != nil {
@@ -53,7 +54,7 @@ func (manager *SecondPartyManager) ApiEditConfig(ctx context.Context, apiEditCon
 		}
 		framework.LogWithContext(ctx).Infof("apieditconfig, request tidb api resp status code: %v, content length: %v", resp.StatusCode, resp.ContentLength)
 		return resp.StatusCode == http.StatusOK, nil
-	case spec.TiDBClusterComponent_TiKV:
+	case constants.ComponentIDTiKV:
 		url := fmt.Sprintf("http://%s:%d%s", apiEditConfigReq.InstanceHost, apiEditConfigReq.InstancePort, TiKVApiUrl)
 		resp, err := util.PostJSON(url, apiEditConfigReq.ConfigMap, apiEditConfigReq.Headers)
 		if err != nil {
@@ -62,7 +63,7 @@ func (manager *SecondPartyManager) ApiEditConfig(ctx context.Context, apiEditCon
 		}
 		framework.LogWithContext(ctx).Infof("apieditconfig, request tikv api resp status code: %v, content length: %v", resp.StatusCode, resp.ContentLength)
 		return resp.StatusCode == http.StatusOK, nil
-	case spec.TiDBClusterComponent_PD:
+	case constants.ComponentIDPD:
 		url := fmt.Sprintf("http://%s:%d%s", apiEditConfigReq.InstanceHost, apiEditConfigReq.InstancePort, PdApiUrl)
 		resp, err := util.PostJSON(url, apiEditConfigReq.ConfigMap, apiEditConfigReq.Headers)
 		if err != nil {

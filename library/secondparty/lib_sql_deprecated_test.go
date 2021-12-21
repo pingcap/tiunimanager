@@ -28,7 +28,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/library/spec"
+	"github.com/pingcap-inc/tiem/common/constants"
 )
 
 var secondMicro3 *SecondMicro
@@ -42,7 +42,7 @@ func TestSecondMicro_EditClusterConfig_Deprecated_v1(t *testing.T) {
 		DbConnParameter: dbConnParam3,
 		ComponentConfigs: []ClusterComponentConfig{
 			{
-				TiDBClusterComponent: spec.TiDBClusterComponent_TiKV,
+				TiDBClusterComponent: constants.ComponentIDTiKV,
 				ConfigKey:            "split.qps-threshold",
 				ConfigValue:          "1000",
 			},
@@ -60,7 +60,7 @@ func TestSecondMicro_EditClusterConfig_Deprecated_v2(t *testing.T) {
 		ComponentConfigs: []ClusterComponentConfig{
 			{
 				InstanceAddr:         "127.0.0.1:10020",
-				TiDBClusterComponent: spec.TiDBClusterComponent_TiKV,
+				TiDBClusterComponent: constants.ComponentIDTiKV,
 				ConfigKey:            "split.qps-threshold",
 				ConfigValue:          "3000",
 			},
@@ -77,7 +77,7 @@ func TestSecondMicro_EditClusterConfig_Deprecated_v3(t *testing.T) {
 		DbConnParameter: dbConnParam3,
 		ComponentConfigs: []ClusterComponentConfig{
 			{
-				TiDBClusterComponent: spec.TiDBClusterComponent_TiKV,
+				TiDBClusterComponent: constants.ComponentIDTiKV,
 				ConfigKey:            "log-level",
 				ConfigValue:          "'warn'",
 			},
@@ -94,7 +94,7 @@ func TestSecondMicro_EditClusterConfig_Deprecated_v4(t *testing.T) {
 		DbConnParameter: dbConnParam3,
 		ComponentConfigs: []ClusterComponentConfig{
 			{
-				TiDBClusterComponent: spec.TiDBClusterComponent_PD,
+				TiDBClusterComponent: constants.ComponentIDPD,
 				ConfigKey:            "log.level",
 				ConfigValue:          "'info'",
 			},
@@ -111,7 +111,7 @@ func TestSecondMicro_EditClusterConfig_Deprecated_v5(t *testing.T) {
 		DbConnParameter: dbConnParam3,
 		ComponentConfigs: []ClusterComponentConfig{
 			{
-				TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+				TiDBClusterComponent: constants.ComponentIDTiDB,
 				ConfigKey:            "tidb_slow_log_threshold",
 				ConfigValue:          "200",
 			},
@@ -128,7 +128,7 @@ func TestSecondMicro_EditClusterConfig_Deprecated_v6(t *testing.T) {
 		DbConnParameter: dbConnParam3,
 		ComponentConfigs: []ClusterComponentConfig{
 			{
-				TiDBClusterComponent: spec.TiDBClusterComponent_TiFlash,
+				TiDBClusterComponent: constants.ComponentIDTiFlash,
 				ConfigKey:            "tidb_slow_log_threshold",
 				ConfigValue:          "200",
 			},

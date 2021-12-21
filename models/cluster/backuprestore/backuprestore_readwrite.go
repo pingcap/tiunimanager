@@ -164,5 +164,5 @@ func (m *BRReadWrite) DeleteBackupStrategy(ctx context.Context, clusterId string
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 	strategy := &BackupStrategy{}
-	return m.DB(ctx).First(strategy, "cluster_id = ?", clusterId).Delete(strategy).Error
+	return m.DB(ctx).First(strategy, "cluster_id = ?", clusterId).Unscoped().Delete(strategy).Error
 }

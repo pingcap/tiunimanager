@@ -53,7 +53,7 @@ func Query(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param workFlowId path int true "flow work id"
+// @Param workFlowId path string true "flow work id"
 // @Success 200 {object} controller.CommonResult{data=message.QueryWorkFlowDetailResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult

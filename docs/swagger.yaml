@@ -4363,7 +4363,7 @@ paths:
         in: path
         name: workFlowId
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:

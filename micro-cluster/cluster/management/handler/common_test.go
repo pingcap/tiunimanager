@@ -18,12 +18,17 @@ package handler
 import (
 	ctx "context"
 	"github.com/golang/mock/gomock"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
+	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
+	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestContain(t *testing.T) {
@@ -100,6 +105,7 @@ func TestScaleOutPreCheck(t *testing.T) {
 	})
 
 	t.Run("empty", func(t *testing.T) {
+
 		computes := make([]structs.ClusterResourceParameterCompute, 0)
 		meta := &ClusterMeta{}
 		err := ScaleOutPreCheck(ctx.TODO(), meta, computes)
@@ -108,7 +114,40 @@ func TestScaleOutPreCheck(t *testing.T) {
 }
 
 func TestWaitWorkflow(t *testing.T) {
-	//err := WaitWorkflow("111", 10*time.Second)
-	//assert.Error(t, err)
-	//TODO: test WaitWorkflow
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	
+	t.Run("normal", func(t *testing.T) {
+		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+		workflow.MockWorkFlowService(workflowService)
+		workflowService.EXPECT().DetailWorkFlow(gomock.Any(), gomock.Any()).Return(
+			message.QueryWorkFlowDetailResp{
+				Info: &structs.WorkFlowInfo{
+					Status: constants.WorkFlowStatusFinished}}, nil).AnyTimes()
+		err := WaitWorkflow(ctx.TODO(), "111", 1*time.Second, 2*time.Minute)
+		assert.NoError(t, err)
+	})
+
+	t.Run("fail", func(t *testing.T) {
+		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+		workflow.MockWorkFlowService(workflowService)
+		workflowService.EXPECT().DetailWorkFlow(gomock.Any(), gomock.Any()).Return(
+			message.QueryWorkFlowDetailResp{
+				Info: &structs.WorkFlowInfo{
+					Status: constants.WorkFlowStatusError}}, nil).AnyTimes()
+		err := WaitWorkflow(ctx.TODO(), "111", 1*time.Second, 2*time.Minute)
+		assert.Error(t, err)
+	})
+
+	t.Run("timeout", func(t *testing.T) {
+		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+		workflow.MockWorkFlowService(workflowService)
+		workflowService.EXPECT().DetailWorkFlow(gomock.Any(), gomock.Any()).Return(
+			message.QueryWorkFlowDetailResp{
+				Info: &structs.WorkFlowInfo{
+					Status: constants.WorkFlowStatusProcessing}}, nil).AnyTimes()
+		err := WaitWorkflow(ctx.TODO(), "111", 1*time.Second, 2*time.Second)
+		assert.Error(t, err)
+	})
 }

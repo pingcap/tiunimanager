@@ -37,9 +37,9 @@ service ClusterService {
     rpc DescribeMonitor(RpcRequest) returns (RpcResponse);
 
     // Auth manager module
-    rpc Login(LoginRequest) returns (LoginResponse);
-    rpc Logout(LogoutRequest) returns (LogoutResponse);
-    rpc VerifyIdentity(VerifyIdentityRequest) returns (VerifyIdentityResponse);
+    rpc Login(RpcRequest) returns (RpcResponse);
+    rpc Logout(RpcRequest) returns (RpcResponse);
+    rpc VerifyIdentity(RpcRequest) returns (RpcResponse);
 
     // resource manager module
     rpc ImportHosts(RpcRequest) returns (RpcResponse);

@@ -1956,15 +1956,15 @@ definitions:
     type: object
   structs.WorkFlowInfo:
     properties:
-      BizId:
+      bizId:
         type: string
       createTime:
         type: string
       deleteTime:
         type: string
-      flowWorkName:
-        type: string
       id:
+        type: string
+      name:
         type: string
       status:
         enum:

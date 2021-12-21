@@ -6850,7 +6850,7 @@ var doc = `{
         "structs.WorkFlowInfo": {
             "type": "object",
             "properties": {
-                "BizId": {
+                "bizId": {
                     "type": "string"
                 },
                 "createTime": {
@@ -6859,10 +6859,10 @@ var doc = `{
                 "deleteTime": {
                     "type": "string"
                 },
-                "flowWorkName": {
+                "id": {
                     "type": "string"
                 },
-                "id": {
+                "name": {
                     "type": "string"
                 },
                 "status": {

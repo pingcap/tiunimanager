@@ -21,11 +21,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/micro-cluster/user/identification"
+	"github.com/pingcap-inc/tiem/micro-cluster/user/tenant"
+	"github.com/pingcap-inc/tiem/micro-cluster/user/userinfo"
 	"net/http"
 	"strconv"
 	"time"
-
-	"github.com/pingcap-inc/tiem/micro-cluster/service/user/adapt"
 
 	log "github.com/sirupsen/logrus"
 
@@ -48,19 +50,14 @@ import (
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/common"
-	user "github.com/pingcap-inc/tiem/micro-cluster/service/user/application"
 
 	"github.com/pingcap-inc/tiem/library/framework"
-	userDomain "github.com/pingcap-inc/tiem/micro-cluster/service/user/domain"
 )
 
 var TiEMClusterServiceName = "go.micro.tiem.cluster"
 
 type ClusterServiceHandler struct {
 	resourceManager         *resourcemanager.ResourceManager
-	authManager             *user.AuthManager
-	tenantManager           *user.TenantManager
-	userManager             *user.UserManager
 	changeFeedManager       *changefeed.Manager
 	parameterGroupManager   *parametergroup.Manager
 	clusterParameterManager *clusterParameter.Manager
@@ -69,6 +66,9 @@ type ClusterServiceHandler struct {
 	brManager               backuprestore.BRService
 	importexportManager     importexport.ImportExportService
 	clusterLogManager       *clusterLog.Manager
+	tenantManager           *tenant.Manager
+	accountManager          *userinfo.Manager
+	authManager             *identification.Manager
 }
 
 func handleRequest(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse, requestBody interface{}) bool {
@@ -155,9 +155,6 @@ func handlePanic(ctx context.Context, funcName string, resp *clusterpb.RpcRespon
 func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandler {
 	handler := new(ClusterServiceHandler)
 	handler.resourceManager = resourcemanager.NewResourceManager()
-	handler.userManager = user.NewUserManager(adapt.MicroMetaDbRepo{})
-	handler.tenantManager = user.NewTenantManager(adapt.MicroMetaDbRepo{})
-	handler.authManager = user.NewAuthManager(handler.userManager, adapt.MicroMetaDbRepo{})
 	handler.changeFeedManager = changefeed.NewManager()
 	handler.parameterGroupManager = parametergroup.NewManager()
 	handler.clusterParameterManager = clusterParameter.NewManager()
@@ -166,6 +163,10 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.brManager = backuprestore.GetBRService()
 	handler.importexportManager = importexport.GetImportExportService()
 	handler.clusterLogManager = clusterLog.NewManager()
+	handler.tenantManager = tenant.NewTenantManager()
+	handler.accountManager = userinfo.NewAccountManager()
+	handler.authManager = identification.NewIdentificationManager()
+
 
 	return handler
 }
@@ -771,13 +772,18 @@ var ManageSuccessResponseStatus = &clusterpb.ManagerResponseStatus{
 	Code: 0,
 }
 
-func (p *ClusterServiceHandler) Login(ctx context.Context, req *clusterpb.LoginRequest, resp *clusterpb.LoginResponse) error {
+func (handler *ClusterServiceHandler) Login(ctx context.Context, req *clusterpb.LoginRequest, resp *clusterpb.LoginResponse) error {
 	log := framework.LogWithContext(ctx).WithField("fp", "ClusterServiceHandler.Login")
 	/*
 		start := time.Now()
 		defer handleMetrics(start, "Login", int(resp.GetCode()))*/
 	log.Debug("req:", req)
-	token, err := p.authManager.Login(ctx, req.GetAccountName(), req.GetPassword())
+	request := message.LoginReq{
+		UserName: req.GetAccountName(),
+		Password: req.GetPassword(),
+	}
+	token, err := handler.authManager.Login(ctx, request)
+	//token, err := p.authManager.Login(ctx, req.GetAccountName(), req.GetPassword())
 
 	if err != nil {
 		resp.Status = &clusterpb.ManagerResponseStatus{
@@ -788,15 +794,15 @@ func (p *ClusterServiceHandler) Login(ctx context.Context, req *clusterpb.LoginR
 		log.Error("resp:", resp)
 	} else {
 		resp.Status = ManageSuccessResponseStatus
-		resp.TokenString = token
+		resp.TokenString = token.TokenString
 		log.Debug("resp:", resp)
 	}
 	return nil
 
 }
 
-func (p *ClusterServiceHandler) Logout(ctx context.Context, req *clusterpb.LogoutRequest, resp *clusterpb.LogoutResponse) error {
-	accountName, err := p.authManager.Logout(ctx, req.TokenString)
+func (handler *ClusterServiceHandler) Logout(ctx context.Context, req *clusterpb.LogoutRequest, resp *clusterpb.LogoutResponse) error {
+	accountName, err := handler.authManager.Logout(ctx, message.LogoutReq{TokenString: req.TokenString})
 	if err != nil {
 		resp.Status = &clusterpb.ManagerResponseStatus{
 			Code:    http.StatusInternalServerError,
@@ -805,22 +811,27 @@ func (p *ClusterServiceHandler) Logout(ctx context.Context, req *clusterpb.Logou
 		resp.Status.Message = err.Error()
 	} else {
 		resp.Status = ManageSuccessResponseStatus
-		resp.AccountName = accountName
+		resp.AccountName = accountName.AccountName
 	}
 	return nil
 
 }
 
-func (p *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *clusterpb.VerifyIdentityRequest, resp *clusterpb.VerifyIdentityResponse) error {
-	tenantId, accountId, accountName, err := p.authManager.Accessible(ctx, req.GetAuthType(), req.GetPath(), req.GetTokenString())
+func (handler *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *clusterpb.VerifyIdentityRequest, resp *clusterpb.VerifyIdentityResponse) error {
+	request := message.AccessibleReq{
+		PathType: req.GetAuthType(),
+		Path: req.GetPath(),
+		TokenString: req.GetTokenString(),
+	}
+	response, err := handler.authManager.Accessible(ctx, request)
 
 	if err != nil {
-		if _, ok := err.(*userDomain.UnauthorizedError); ok {
+		if _, ok := err.(*structs.UnauthorizedError); ok {
 			resp.Status = &clusterpb.ManagerResponseStatus{
 				Code:    http.StatusUnauthorized,
 				Message: "未登录或登录失效，请重试",
 			}
-		} else if _, ok := err.(*userDomain.ForbiddenError); ok {
+		} else if _, ok := err.(*structs.ForbiddenError); ok {
 			resp.Status = &clusterpb.ManagerResponseStatus{
 				Code:    http.StatusForbidden,
 				Message: "无权限",
@@ -833,9 +844,9 @@ func (p *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *cluster
 		}
 	} else {
 		resp.Status = ManageSuccessResponseStatus
-		resp.TenantId = tenantId
-		resp.AccountId = accountId
-		resp.AccountName = accountName
+		resp.TenantId = response.TenantID
+		resp.AccountId = response.AccountID
+		resp.AccountName = response.AccountName
 	}
 
 	return nil

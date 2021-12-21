@@ -22,3 +22,112 @@
 *******************************************************************************/
 
 package message
+
+import (
+	"github.com/pingcap-inc/tiem/common/structs"
+)
+
+type CreateAccountReq struct {
+	*structs.Tenant
+	Name string `json:"name" form:"name" example:"default"`
+	Password string `json:"password" form:"password" example:"default"`
+}
+
+type CreateAccountResp struct {
+	structs.Account
+}
+
+type FindAccountByNameReq struct {
+	Name string `json:"name" form:"name" example:"default"`
+}
+
+type FindAccountByNameResp struct {
+	structs.Account
+}
+
+type CreateTenantReq struct {
+	Name string `json:"name" form:"name" example:"default"`
+}
+
+type CreateTenantResp struct {
+	structs.Tenant
+}
+
+type FindTenantByNameReq struct {
+	Name string `json:"name" form:"name" example:"default"`
+}
+
+type FindTenantByNameResp struct {
+	structs.Tenant
+}
+
+type FindTenantByIdReq struct {
+	ID string //Todo: gorm
+}
+
+type FindTenantByIdResp struct {
+	structs.Tenant
+}
+
+type ProvideTokenReq struct {
+	*structs.Token
+}
+
+type ProvideTokenResp struct {
+	TokenString string
+}
+
+type ModifyTokenReq struct {
+	*structs.Token
+}
+
+type ModifyTokenResp struct {
+
+}
+
+type GetTokenReq struct {
+	TokenString string
+}
+
+type GetTokenResp struct {
+	structs.Token
+}
+
+type LoginReq struct {
+	UserName string
+	Password string
+}
+
+type LoginResp struct {
+	TokenString string
+}
+
+type LogoutReq struct {
+	TokenString string
+}
+
+type LogoutResp struct {
+	AccountName string
+}
+
+type AccessibleReq struct {
+	PathType string
+	Path string
+	TokenString string
+}
+
+type AccessibleResp struct {
+	TenantID string
+	AccountID string
+	AccountName string
+}
+
+type CreateTokenReq struct {
+	AccountID string
+	AccountName string
+	TenantID string
+}
+
+type CreateTokenResp struct {
+	structs.Token
+}

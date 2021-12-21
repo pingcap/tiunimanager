@@ -37,7 +37,7 @@ func createTestHost(region, zone, rack, hostName, ip, clusterType, purpose, disk
 		HostName:     hostName,
 		IP:           ip,
 		UserName:     "root",
-		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
+		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428", // plain text: "admin2"
 		Status:       string(constants.HostOnline),
 		Stat:         string(constants.HostLoadLoadLess),
 		Arch:         string(constants.ArchX8664),
@@ -448,6 +448,7 @@ func TestAllocResources_3RequestsInBatch_SpecifyHost_Strategy(t *testing.T) {
 	assert.True(t, rsp.BatchResults[0].Results[2].HostIp == "474.111.111.129")
 	assert.Equal(t, int32(4), rsp.BatchResults[0].Results[0].ComputeRes.CpuCores)
 	assert.Equal(t, int32(8), rsp.BatchResults[0].Results[0].ComputeRes.Memory)
+	assert.Equal(t, "admin2", rsp.BatchResults[0].Results[0].Passwd)
 	var host resourcepool.Host
 	MetaDB.First(&host, "IP = ?", "474.111.111.127")
 	assert.Equal(t, int32(17-4), host.FreeCpuCores)

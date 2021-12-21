@@ -19,6 +19,8 @@ import (
 	"context"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockworkflow"
@@ -204,7 +206,7 @@ func TestFlowManager_ListWorkFlows(t *testing.T) {
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
 	manager := GetWorkFlowService()
-	_, _, err := manager.ListWorkFlows(context.TODO(), "", "", "", 1, 10)
+	_, _, err := manager.ListWorkFlows(context.TODO(), message.QueryWorkFlowsReq{PageRequest: structs.PageRequest{Page: 1, PageSize: 10}})
 	assert.NoError(t, err)
 }
 
@@ -229,7 +231,8 @@ func TestFlowManager_DetailWorkFlow(t *testing.T) {
 				"fail":          {"fail", "", "", SyncFuncNode, doFail},
 			},
 		})
-	_, err := manager.DetailWorkFlow(context.TODO(), "")
+
+	_, err := manager.DetailWorkFlow(context.TODO(), message.QueryWorkFlowDetailReq{WorkFlowID: "flowId"})
 	assert.NoError(t, err)
 }
 

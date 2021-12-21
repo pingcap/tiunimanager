@@ -45,11 +45,6 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 	framework.LogWithContext(ctx).Infof("get cluster %s tidb address from meta, %+v", meta.Cluster.ID, tidbAddress)
 	tidbServerHost := tidbAddress[0].IP
 	tidbServerPort := tidbAddress[0].Port
-	/*
-		if tidbServerPort == 0 {
-			tidbServerPort = constants.DefaultTiDBPort
-		}
-	*/
 
 	tidbUserInfo := meta.GetClusterUserNamePasswd()
 	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta, %+v", meta.Cluster.ID, tidbUserInfo)
@@ -85,7 +80,7 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 		framework.LogWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
 		return err
 	}
-	ctx.SetData(contextBackupTiupTaskID, backupTaskId)
+	ctx.SetData(contextBackupTiupTaskIDKey, backupTaskId)
 	return nil
 }
 
@@ -95,7 +90,7 @@ func updateBackupRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) e
 
 	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
 	record := ctx.GetData(contextBackupRecordKey).(*backuprestore.BackupRecord)
-	backupTaskId := ctx.GetData(contextBackupTiupTaskID).(string)
+	backupTaskId := ctx.GetData(contextBackupTiupTaskIDKey).(string)
 
 	resp, err := secondparty.Manager.ShowBackUpInfoThruMetaDB(ctx, backupTaskId)
 	if err != nil {
@@ -169,7 +164,15 @@ func defaultEnd(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	defer framework.LogWithContext(ctx).Info("end defaultEnd")
 
 	clusterMeta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
-	return clusterMeta.EndMaintenance(ctx, clusterMeta.Cluster.MaintenanceStatus)
+	maintenanceStatusChange := ctx.GetData(contextMaintenanceStatusChangeKey).(bool)
+	if maintenanceStatusChange {
+		if err := clusterMeta.EndMaintenance(ctx, clusterMeta.Cluster.MaintenanceStatus); err != nil {
+			framework.LogWithContext(ctx).Errorf("end cluster %s maintenance status failed, %s", clusterMeta.Cluster.ID, err.Error())
+			return err
+		}
+	}
+
+	return nil
 }
 
 func backupFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
@@ -193,8 +196,7 @@ func restoreFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin restoreFail")
 	defer framework.LogWithContext(ctx).Info("end restoreFail")
 
-	//todo: need update cluster maintaence status?
-	return nil
+	return defaultEnd(node, ctx)
 }
 
 func getBRStoragePath(ctx context.Context, storageType string, filePath string) string {

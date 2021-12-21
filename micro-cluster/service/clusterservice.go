@@ -20,10 +20,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/micro-cluster/service/user/adapt"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/pingcap-inc/tiem/micro-cluster/service/user/adapt"
 
 	log "github.com/sirupsen/logrus"
 
@@ -46,11 +47,9 @@ import (
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
 	user "github.com/pingcap-inc/tiem/micro-cluster/service/user/application"
 
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	userDomain "github.com/pingcap-inc/tiem/micro-cluster/service/user/domain"
 )
 
@@ -60,8 +59,7 @@ var SuccessResponseStatus = &clusterpb.ResponseStatusDTO{Code: 0}
 var BizErrorResponseStatus = &clusterpb.ResponseStatusDTO{Code: 500}
 
 type ClusterServiceHandler struct {
-	resourceManager         *resource.ResourceManager
-	resourceManager2        *resourcemanager.ResourceManager
+	resourceManager         *resourcemanager.ResourceManager
 	authManager             *user.AuthManager
 	tenantManager           *user.TenantManager
 	userManager             *user.UserManager
@@ -133,7 +131,7 @@ func handleMetrics(start time.Time, funcName string, code int) {
 
 func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandler {
 	handler := new(ClusterServiceHandler)
-	handler.SetResourceManager(resource.NewResourceManager())
+	handler.resourceManager = resourcemanager.NewResourceManager()
 	handler.userManager = user.NewUserManager(adapt.MicroMetaDbRepo{})
 	handler.tenantManager = user.NewTenantManager(adapt.MicroMetaDbRepo{})
 	handler.authManager = user.NewAuthManager(handler.userManager, adapt.MicroMetaDbRepo{})
@@ -146,18 +144,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.importexportManager = importexport.GetImportExportService()
 	handler.clusterLogManager = clusterLog.NewManager()
 
-	// This will be removed after cluster refactor completed.
-	handler.resourceManager2 = resourcemanager.NewResourceManager()
-
 	return handler
-}
-
-func (handler *ClusterServiceHandler) SetResourceManager(resourceManager *resource.ResourceManager) {
-	handler.resourceManager = resourceManager
-}
-
-func (handler *ClusterServiceHandler) ResourceManager() *resource.ResourceManager {
-	return handler.resourceManager
 }
 
 func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
@@ -570,32 +557,10 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 	backupReq := cluster.BackupClusterDataReq{}
 
 	if handleRequest(ctx, request, response, &backupReq) {
-		result, err := c.brManager.BackupCluster(ctx, backupReq)
+		result, err := c.brManager.BackupCluster(ctx, backupReq, true)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
-	return nil
-}
-
-func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterpb.RecoverRequest, resp *clusterpb.RecoverResponse) (err error) {
-	start := time.Now()
-	defer handleMetrics(start, "RecoverCluster", int(resp.GetRespStatus().GetCode()))
-	if err = domain.RecoverPreCheck(ctx, req); err != nil {
-		getLoggerWithContext(ctx).Errorf("recover cluster pre check failed, %s", err.Error())
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_RECOVER_PARAM_INVALID), Message: err.Error()}
-		return nil
-	}
-
-	clusterAggregation, err := domain.Recover(ctx, req.GetOperator(), req.GetCluster(), req.GetCommonDemand(), req.GetDemands())
-	if err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_RECOVER_PROCESS_FAILED), Message: common.TIEM_RECOVER_PROCESS_FAILED.Explain()}
-	} else {
-		resp.RespStatus = SuccessResponseStatus
-		resp.ClusterId = clusterAggregation.Cluster.Id
-		resp.BaseInfo = clusterAggregation.ExtractBaseInfoDTO()
-		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
-	}
 	return nil
 }
 
@@ -689,39 +654,16 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb
 	framework.LogWithContext(ctx).Info("list flows")
 	start := time.Now()
 	defer handleMetrics(start, "ListFlows", int(response.GetCode()))
-	reqData := request.GetRequest()
 
-	listReq := &message.QueryWorkFlowsReq{}
-	err := json.Unmarshal([]byte(reqData), listReq)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("json unmarshal reuqest failed %s", err.Error())
-		handleResponse(ctx, response, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, err.Error()), nil, nil)
-		return nil
-	}
-
-	manager := workflow.GetWorkFlowService()
-	flows, total, err := manager.ListWorkFlows(ctx, listReq.BizID, listReq.FlowName, listReq.Status, listReq.Page, listReq.PageSize)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("call workflow manager list flows failed %s", err.Error())
-		handleResponse(ctx, response, framework.NewTiEMError(common.TIEM_LIST_WORKFLOW_FAILED, err.Error()), nil, nil)
-		return nil
-	}
-
-	listResp := message.QueryWorkFlowsResp{
-		WorkFlows: flows,
-	}
-	data, err := json.Marshal(listResp)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("json marshal response failed %s", err.Error())
-		handleResponse(ctx, response, framework.NewTiEMError(common.TIEM_LIST_WORKFLOW_FAILED, err.Error()), nil, nil)
-	} else {
-		response.Code = int32(common.TIEM_SUCCESS)
-		response.Response = string(data)
-		response.Page = &clusterpb.RpcPage{
-			Page:     int32(listReq.Page),
-			PageSize: int32(listReq.PageSize),
-			Total:    int32(total),
-		}
+	listReq := message.QueryWorkFlowsReq{}
+	if handleRequest(ctx, request, response, &listReq) {
+		manager := workflow.GetWorkFlowService()
+		result, page, err := manager.ListWorkFlows(ctx, listReq)
+		handleResponse(ctx, response, err, result, &clusterpb.RpcPage{
+			Page:     int32(page.Page),
+			PageSize: int32(page.PageSize),
+			Total:    int32(page.Total),
+		})
 	}
 
 	return nil
@@ -731,36 +673,12 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 	framework.LogWithContext(ctx).Info("detail flow")
 	start := time.Now()
 	defer handleMetrics(start, "DetailFlow", int(response.GetCode()))
-	reqData := request.GetRequest()
 
-	detailReq := &message.QueryWorkFlowDetailReq{}
-	err := json.Unmarshal([]byte(reqData), detailReq)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("json unmarshal request failed %s", err.Error())
-		handleResponse(ctx, response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil, nil)
-		return nil
-	}
-
-	manager := workflow.GetWorkFlowService()
-	flowDetail, err := manager.DetailWorkFlow(ctx, detailReq.WorkFlowID)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("call detail workflow failed %s", err.Error())
-		handleResponse(ctx, response, framework.NewTiEMError(common.TIEM_DETAIL_WORKFLOW_FAILED, err.Error()), nil, nil)
-		return nil
-	}
-
-	detailResp := message.QueryWorkFlowDetailResp{
-		Info:      flowDetail.Flow,
-		NodeInfo:  flowDetail.Nodes,
-		NodeNames: flowDetail.NodeNames,
-	}
-
-	data, err := json.Marshal(detailResp)
-	if err != nil {
-		handleResponse(ctx, response, framework.NewTiEMError(common.TIEM_DETAIL_WORKFLOW_FAILED, err.Error()), nil, nil)
-	} else {
-		response.Code = int32(common.TIEM_SUCCESS)
-		response.Response = string(data)
+	detailReq := message.QueryWorkFlowDetailReq{}
+	if handleRequest(ctx, request, response, &detailReq) {
+		manager := workflow.GetWorkFlowService()
+		result, err := manager.DetailWorkFlow(ctx, detailReq)
+		handleResponse(ctx, response, err, result, nil)
 	}
 
 	return nil
@@ -773,8 +691,8 @@ var ManageSuccessResponseStatus = &clusterpb.ManagerResponseStatus{
 func (p *ClusterServiceHandler) Login(ctx context.Context, req *clusterpb.LoginRequest, resp *clusterpb.LoginResponse) error {
 	log := framework.LogWithContext(ctx).WithField("fp", "ClusterServiceHandler.Login")
 	/*
-	start := time.Now()
-	defer handleMetrics(start, "Login", int(resp.GetCode()))*/
+		start := time.Now()
+		defer handleMetrics(start, "Login", int(resp.GetCode()))*/
 	log.Debug("req:", req)
 	token, err := p.authManager.Login(ctx, req.GetAccountName(), req.GetPassword())
 
@@ -840,21 +758,13 @@ func (p *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *cluster
 	return nil
 }
 
-func (clusterManager *ClusterServiceHandler) AllocResourcesInBatch(ctx context.Context, in *clusterpb.BatchAllocRequest, out *clusterpb.BatchAllocResponse) error {
-	return clusterManager.resourceManager.AllocResourcesInBatch(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) RecycleResources(ctx context.Context, in *clusterpb.RecycleRequest, out *clusterpb.RecycleResponse) error {
-	return clusterManager.resourceManager.RecycleResources(ctx, in, out)
-}
-
 func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "ImportHosts", int(response.GetCode()))
 	reqStruct := message.ImportHostsReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
-		hostIds, err := handler.resourceManager2.ImportHosts(ctx, reqStruct.Hosts)
+		hostIds, err := handler.resourceManager.ImportHosts(ctx, reqStruct.Hosts)
 		var rsp message.ImportHostsResp
 		if err == nil {
 			rsp.HostIDS = hostIds
@@ -871,7 +781,7 @@ func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, request *
 	reqStruct := message.DeleteHostsReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
-		err := handler.resourceManager2.DeleteHosts(ctx, reqStruct.HostIDs)
+		err := handler.resourceManager.DeleteHosts(ctx, reqStruct.HostIDs)
 		var rsp message.DeleteHostsResp
 		handleResponse(ctx, response, err, rsp, nil)
 	}
@@ -888,7 +798,7 @@ func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, request *c
 		filter := reqStruct.GetHostFilter()
 		page := reqStruct.GetPage()
 
-		hosts, err := handler.resourceManager2.QueryHosts(ctx, filter, page)
+		hosts, err := handler.resourceManager.QueryHosts(ctx, filter, page)
 		var rsp message.QueryHostsResp
 		if err == nil {
 			rsp.Hosts = hosts
@@ -905,7 +815,7 @@ func (handler *ClusterServiceHandler) UpdateHostReserved(ctx context.Context, re
 	reqStruct := message.UpdateHostReservedReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
-		err := handler.resourceManager2.UpdateHostReserved(ctx, reqStruct.HostIDs, reqStruct.Reserved)
+		err := handler.resourceManager.UpdateHostReserved(ctx, reqStruct.HostIDs, reqStruct.Reserved)
 		var rsp message.UpdateHostReservedResp
 		handleResponse(ctx, response, err, rsp, nil)
 	}
@@ -919,7 +829,7 @@ func (handler *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, requ
 	reqStruct := message.UpdateHostStatusReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
-		err := handler.resourceManager2.UpdateHostStatus(ctx, reqStruct.HostIDs, reqStruct.Status)
+		err := handler.resourceManager.UpdateHostStatus(ctx, reqStruct.HostIDs, reqStruct.Status)
 		var rsp message.UpdateHostStatusResp
 		handleResponse(ctx, response, err, rsp, nil)
 	}
@@ -935,7 +845,7 @@ func (handler *ClusterServiceHandler) GetHierarchy(ctx context.Context, request 
 	if handleRequest(ctx, request, response, &reqStruct) {
 		filter := reqStruct.GetHostFilter()
 
-		root, err := handler.resourceManager2.GetHierarchy(ctx, filter, reqStruct.Level, reqStruct.Depth)
+		root, err := handler.resourceManager.GetHierarchy(ctx, filter, reqStruct.Level, reqStruct.Depth)
 		var rsp message.GetHierarchyResp
 		if err == nil {
 			rsp.Root = *root
@@ -956,7 +866,7 @@ func (handler *ClusterServiceHandler) GetStocks(ctx context.Context, request *cl
 		hostFilter := reqStruct.GetHostFilter()
 		diskFilter := reqStruct.GetDiskFilter()
 
-		stocks, err := handler.resourceManager2.GetStocks(ctx, location, hostFilter, diskFilter)
+		stocks, err := handler.resourceManager.GetStocks(ctx, location, hostFilter, diskFilter)
 		var rsp message.GetStocksResp
 		if err == nil {
 			rsp.Stocks = *stocks

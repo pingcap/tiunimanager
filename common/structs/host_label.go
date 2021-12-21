@@ -24,24 +24,38 @@
 package structs
 
 import (
-	"time"
-
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"gorm.io/gorm"
 )
 
 type Label struct {
-	Name      string `gorm:"PrimaryKey"`
-	Category  int8
-	Trait     int64
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt
+	Name     string
+	Category int8
+	Trait    int64
+}
+
+func GetTraitByName(name string) (trait int64, err error) {
+	return DefaultLabelTypes.getTraitByName(name)
+}
+
+func GetLabelNamesByTraits(traits int64) (labelNames []string) {
+	return DefaultLabelTypes.getLabelNamesByTraits(traits)
 }
 
 type Labels map[string]Label
+
+var DefaultLabelTypes = Labels{
+	string(constants.EMProductIDTiDB):              {Name: string(constants.EMProductIDTiDB), Category: int8(constants.Cluster), Trait: 0x0000000000000001},
+	string(constants.EMProductIDDataMigration):     {Name: string(constants.EMProductIDDataMigration), Category: int8(constants.Cluster), Trait: 0x0000000000000002},
+	string(constants.EMProductIDEnterpriseManager): {Name: string(constants.EMProductIDEnterpriseManager), Category: int8(constants.Cluster), Trait: 0x0000000000000004},
+	string(constants.PurposeCompute):               {Name: string(constants.PurposeCompute), Category: int8(constants.Component), Trait: 0x0000000000000008},
+	string(constants.PurposeStorage):               {Name: string(constants.PurposeStorage), Category: int8(constants.Component), Trait: 0x0000000000000010},
+	string(constants.PurposeSchedule):              {Name: string(constants.PurposeSchedule), Category: int8(constants.Component), Trait: 0x0000000000000020},
+	string(constants.NVMeSSD):                      {Name: string(constants.NVMeSSD), Category: int8(constants.DiskPerf), Trait: 0x0000000000000040},
+	string(constants.SSD):                          {Name: string(constants.SSD), Category: int8(constants.DiskPerf), Trait: 0x0000000000000080},
+	string(constants.SATA):                         {Name: string(constants.SATA), Category: int8(constants.DiskPerf), Trait: 0x0000000000000100},
+}
 
 func (labels Labels) getTraitByName(name string) (trait int64, err error) {
 	if label, ok := (labels)[name]; ok {
@@ -58,24 +72,4 @@ func (labels Labels) getLabelNamesByTraits(traits int64) (labelNames []string) {
 		}
 	}
 	return
-}
-
-var DefaultLabelTypes = Labels{
-	string(constants.EMProductIDTiDB):              {Name: string(constants.EMProductIDTiDB), Category: int8(constants.Cluster), Trait: 0x0000000000000001},
-	string(constants.EMProductIDDataMigration):     {Name: string(constants.EMProductIDDataMigration), Category: int8(constants.Cluster), Trait: 0x0000000000000002},
-	string(constants.EMProductIDEnterpriseManager): {Name: string(constants.EMProductIDEnterpriseManager), Category: int8(constants.Cluster), Trait: 0x0000000000000004},
-	string(constants.PurposeCompute):               {Name: string(constants.PurposeCompute), Category: int8(constants.Component), Trait: 0x0000000000000008},
-	string(constants.PurposeStorage):               {Name: string(constants.PurposeStorage), Category: int8(constants.Component), Trait: 0x0000000000000010},
-	string(constants.PurposeSchedule):              {Name: string(constants.PurposeSchedule), Category: int8(constants.Component), Trait: 0x0000000000000020},
-	string(constants.NVMeSSD):                      {Name: string(constants.NVMeSSD), Category: int8(constants.DiskPerf), Trait: 0x0000000000000040},
-	string(constants.SSD):                          {Name: string(constants.SSD), Category: int8(constants.DiskPerf), Trait: 0x0000000000000080},
-	string(constants.SATA):                         {Name: string(constants.SATA), Category: int8(constants.DiskPerf), Trait: 0x0000000000000100},
-}
-
-func GetTraitByName(name string) (trait int64, err error) {
-	return DefaultLabelTypes.getTraitByName(name)
-}
-
-func GetLabelNamesByTraits(traits int64) (labelNames []string) {
-	return DefaultLabelTypes.getLabelNamesByTraits(traits)
 }

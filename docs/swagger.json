@@ -6099,12 +6099,6 @@
                 "memoryUsage": {
                     "$ref": "#/definitions/structs.Usage"
                 },
-                "portList": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
                 "role": {
                     "type": "string"
                 },
@@ -6170,7 +6164,7 @@
                 "ports": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "type": "integer"
                     }
                 },
                 "role": {

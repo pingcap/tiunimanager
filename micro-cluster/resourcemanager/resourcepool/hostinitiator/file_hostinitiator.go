@@ -16,10 +16,13 @@
 package hostinitiator
 
 import (
+	"bytes"
 	"context"
 	"strconv"
 	"strings"
+	"text/template"
 
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -92,7 +95,7 @@ func (p *FileHostInitiator) InstallSoftware(ctx context.Context, hosts []structs
 }
 
 func (p *FileHostInitiator) verifyConnect(ctx context.Context, h *structs.HostInfo) (err error) {
-	p.sshClient = sshclient.NewSSHClient(h.IP, 22, sshclient.Passwd, h.UserName, h.Passwd)
+	p.sshClient = sshclient.NewSSHClient(h.IP, hostSSHPort, sshclient.Passwd, h.UserName, h.Passwd)
 	if err = p.sshClient.Connect(); err != nil {
 		return err
 	}
@@ -175,7 +178,54 @@ func (p *FileHostInitiator) setOffSwap(ctx context.Context, h *structs.HostInfo)
 	return nil
 }
 
+const hostSSHPort = 22
+const fileBeatDataDir = "/tiem-data"
+const fileBeatDeployDir = "/tiem-deploy"
+
+type templateScaleOut struct {
+	Arch      string
+	DeployDir string
+	DataDir   string
+	HostIPs   []string
+}
+
+func (p *templateScaleOut) generateTopologyConfig(ctx context.Context) (string, error) {
+	t, err := template.New("import_topology.yaml").ParseFiles("template/import_topology.yaml")
+	if err != nil {
+		return "", framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, err.Error())
+	}
+
+	topology := new(bytes.Buffer)
+	if err = t.Execute(topology, p); err != nil {
+		return "", framework.NewTiEMError(common.TIEM_UNRECOGNIZED_ERROR, err.Error())
+	}
+	framework.LogWithContext(ctx).Infof("generate topology config: %s", topology.String())
+
+	return topology.String(), nil
+}
+
 func (p *FileHostInitiator) installFileBeat(ctx context.Context, hosts []structs.HostInfo) (err error) {
+	arch := constants.GetArchAlias(constants.ArchType(hosts[0].Arch))
+	tempateInfo := templateScaleOut{
+		Arch:      arch,
+		DeployDir: fileBeatDeployDir,
+		DataDir:   fileBeatDataDir,
+	}
+	for _, host := range hosts {
+		tempateInfo.HostIPs = append(tempateInfo.HostIPs, host.IP)
+	}
+	templateStr, err := tempateInfo.generateTopologyConfig(ctx)
+	if err != nil {
+		return err
+	}
+	framework.LogWithContext(ctx).Infof("install filebeat on %s", templateStr)
+
+	operationId, err := p.secondPartyServ.ClusterScaleOut(ctx, secondparty.TiEMComponentTypeStr, "", templateStr, 0, nil, "")
+	if err != nil {
+		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "install filebeat [%v] failed, %v", templateStr, err)
+	}
+	framework.LogWithContext(ctx).Infof("installing filebeat for %v in operationId %s", tempateInfo, operationId)
+
 	return nil
 }
 

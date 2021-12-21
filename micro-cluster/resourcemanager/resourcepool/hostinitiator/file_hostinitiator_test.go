@@ -24,6 +24,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	mock_secp "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
 	mock_ssh "github.com/pingcap-inc/tiem/test/mockutil/mocksshclientexecutor"
 	"github.com/stretchr/testify/assert"
 )
@@ -139,5 +140,31 @@ func Test_SetOffSwap(t *testing.T) {
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
 	err := fileInitiator.setOffSwap(context.TODO(), &structs.HostInfo{})
+	assert.Nil(t, err)
+}
+
+func Test_GenerateTopologyConfig(t *testing.T) {
+	template_struct := templateScaleOut{
+		Arch:      "arm64",
+		DeployDir: "/root/deploy",
+		DataDir:   "/root/data",
+	}
+	template_struct.HostIPs = append(template_struct.HostIPs, "192.168.177.177")
+	template_struct.HostIPs = append(template_struct.HostIPs, "192.168.177.178")
+	template_struct.HostIPs = append(template_struct.HostIPs, "192.168.177.179")
+	str, err := template_struct.generateTopologyConfig(context.TODO())
+	assert.Nil(t, err)
+	t.Log(str)
+}
+
+func Test_InstallFileBeat(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockSec := mock_secp.NewMockSecondPartyService(ctrl)
+	mockSec.EXPECT().ClusterScaleOut(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil)
+
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSecondPartyServ(mockSec)
+	err := fileInitiator.installFileBeat(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "192.168.177.180"}})
 	assert.Nil(t, err)
 }

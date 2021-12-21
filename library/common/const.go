@@ -36,7 +36,7 @@ const (
 	CertDirPrefix string = "/cert/"
 	DBDirPrefix   string = "/"
 
-	SqliteFileName   string = "tiem.sqlite.db"
+	SqliteFileName   string = "em.sqlite.db"
 	DatabaseFileName string = "em.db"
 
 	CrtFileName string = "server.crt"
@@ -44,8 +44,8 @@ const (
 )
 
 const (
-	LogFileSystem      = "system"
-	LogFileLibTiUP     = "libTiUP"
+	LogFileSystem  = "system"
+	LogFileLibTiUP = "libTiUP"
 
 	LogFileAccess = "access"
 	LogFileAudit  = "audit"

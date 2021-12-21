@@ -39,8 +39,8 @@ type WebServerSpec struct {
 	Host            string               `yaml:"host"`
 	SSHPort         int                  `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
 	ServerName      string               `yaml:"server_name,omitempty" default:"localhost" validate:"server_name:editable"`
-	Port            int                  `yaml:"port,omitempty" default:"80"`
-	TlsPort         int                  `yaml:"tls_port,omitempty" default:"443"`
+	Port            int                  `yaml:"port,omitempty" default:"4180"`
+	TlsPort         int                  `yaml:"tls_port,omitempty" default:"4181"`
 	DeployDir       string               `yaml:"deploy_dir,omitempty"`
 	DataDir         string               `yaml:"data_dir,omitempty"`
 	LogDir          string               `yaml:"log_dir,omitempty"`
@@ -108,10 +108,10 @@ func (c *WebServerComponent) Instances() []Instance {
 	for _, s := range c.Topology.WebServers {
 		s := s
 		ports := make([]int, 0)
+		ports = append(ports, s.Port)
 		if c.Topology.HasEnableHttps() {
 			ports = append(ports, s.TlsPort)
 		}
-		ports = append(ports, s.Port)
 		ins = append(ins, &WebServerInstance{
 			ServerName: s.ServerName,
 			BaseInstance: BaseInstance{

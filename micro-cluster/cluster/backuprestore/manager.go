@@ -228,7 +228,7 @@ func (mgr *BRManager) QueryClusterBackupRecords(ctx context.Context, request clu
 	defer framework.LogWithContext(ctx).Infof("End QueryClusterBackupRecords")
 
 	brRW := models.GetBRReaderWriter()
-	records, total, err := brRW.QueryBackupRecords(ctx, request.ClusterID, request.BackupID, "", request.StartTime.Unix(), request.EndTime.Unix(), request.Page, request.PageSize)
+	records, total, err := brRW.QueryBackupRecords(ctx, request.ClusterID, request.BackupID, "", request.StartTime, request.EndTime, request.Page, request.PageSize)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("query cluster backup records %+v failed %s", request, err.Error())
 		return resp, page, framework.WrapError(common.TIEM_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("query cluster backup records %+v failed %s", request, err.Error()), err)

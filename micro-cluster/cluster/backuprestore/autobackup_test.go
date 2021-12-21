@@ -48,7 +48,7 @@ func Test_AutoBackup_doBackup(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockBRService := mock_br_service.NewMockBRService(ctrl)
-	mockBRService.EXPECT().BackupCluster(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	mockBRService.EXPECT().BackupCluster(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	MockBRService(mockBRService)
 	defer MockBRService(NewBRManager())
 

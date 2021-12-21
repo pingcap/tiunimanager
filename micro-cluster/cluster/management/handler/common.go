@@ -20,6 +20,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/workflow"
 	"reflect"
 	"strconv"
 	"strings"
@@ -27,7 +30,6 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
@@ -63,7 +65,7 @@ func Contain(list interface{}, target interface{}) bool {
 // @Return		error
 func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs.ClusterResourceParameterCompute) error {
 	if len(computes) <= 0 || meta == nil {
-		return framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter is invalid!")
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "parameter is invalid!")
 	}
 
 	for _, component := range computes {
@@ -84,11 +86,11 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 			}
 			replication := &PlacementRules{}
 			if err = json.Unmarshal([]byte(config), replication); err != nil {
-				return framework.WrapError(common.TIEM_UNMARSHAL_ERROR,
+				return errors.WrapError(errors.TIEM_UNMARSHAL_ERROR,
 					fmt.Sprintf("parse placement rules error: %s", err.Error()), err)
 			}
 			if replication.EnablePlacementRules == "false" {
-				return framework.NewTiEMError(common.TIEM_CHECK_PLACEMENT_RULES_ERROR,
+				return errors.NewError(errors.TIEM_CHECK_PLACEMENT_RULES_ERROR,
 					"enable-placement-rules is false, can not scale out TiFlash, please check it!")
 			}
 			break
@@ -106,29 +108,29 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 // @Return		error
 func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *management.ClusterInstance) error {
 	if meta == nil || instance == nil {
-		return framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter is invalid!")
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "parameter is invalid!")
 	}
 
 	if instance.Type == string(constants.ComponentIDTiFlash) {
 		address := meta.GetClusterConnectAddresses()
 		if len(address) <= 0 {
-			return framework.NewTiEMError(common.TIEM_NOT_FOUND_TIDB_ERROR, "component TiDB not found!")
+			return errors.NewError(errors.TIEM_NOT_FOUND_TIDB_ERROR, "component TiDB not found!")
 		}
 		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql",
 			meta.Cluster.DBUser, meta.Cluster.DBPassword, address[0].IP, address[0].Port))
 		if err != nil {
-			return framework.WrapError(common.TIEM_CONNECT_DB_ERROR, err.Error(), err)
+			return errors.WrapError(errors.TIEM_CONNECT_DB_ERROR, err.Error(), err)
 		}
 		defer db.Close()
 		var MaxReplicaCount sql.NullInt64
 		err = db.QueryRow(CheckMaxReplicaCmd).Scan(&MaxReplicaCount)
 		if err != nil {
-			return framework.WrapError(common.TIEM_SCAN_MAX_REPLICA_COUNT_ERROR, err.Error(), err)
+			return errors.WrapError(errors.TIEM_SCAN_MAX_REPLICA_COUNT_ERROR, err.Error(), err)
 		}
 		if MaxReplicaCount.Valid {
 			framework.LogWithContext(ctx).Infof("TiFlash max replicas: %d", MaxReplicaCount.Int64)
 			if len(meta.Instances[string(constants.ComponentIDTiFlash)])-1 < int(MaxReplicaCount.Int64) {
-				return framework.NewTiEMError(common.TIEM_CHECK_TIFLASH_MAX_REPLICAS_ERROR,
+				return errors.NewError(errors.TIEM_CHECK_TIFLASH_MAX_REPLICAS_ERROR,
 					"the number of remaining TiFlash instances is less than the maximum copies of data tables")
 			}
 		}
@@ -137,6 +139,34 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 	return nil
 }
 
-func WaitWorkflow(workflowID string, interval time.Duration) error {
+// WaitWorkflow
+// @Description wait workflow done
+// @Parameter	workflowID
+// @Parameter	timeout
+// @Return		error
+func WaitWorkflow(ctx context.Context, workflowID string, interval, timeout time.Duration) error {
+	index := int(timeout.Seconds() / interval.Seconds())
+	ticker := time.NewTicker(interval)
+	for range ticker.C {
+		response, err := workflow.GetWorkFlowService().DetailWorkFlow(ctx,
+			message.QueryWorkFlowDetailReq{WorkFlowID: workflowID})
+		if err != nil {
+			return err
+		}
+		if response.Info.Status == constants.WorkFlowStatusFinished {
+			framework.LogWithContext(ctx).Infof("workflow %s runs successfully!", workflowID)
+			return nil
+		} else if response.Info.Status == constants.WorkFlowStatusError {
+			framework.LogWithContext(ctx).Errorf("workflow %s runs failed!", workflowID)
+			return errors.NewError(errors.TIEM_WAIT_WORKFLOW_RUN_ERROR,
+				fmt.Sprintf("wait workflow %s, which runs failed!", workflowID))
+		}
+		index -= 1
+		if index == 0 {
+			return errors.NewError(errors.TIEM_WAIT_WORKFLOW_TIMEOUT_ERROR,
+				fmt.Sprintf("wait workflow %s timeout", workflowID))
+		}
+	}
+
 	return nil
 }

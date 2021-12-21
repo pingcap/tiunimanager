@@ -62,3 +62,9 @@ type ModifyParameter struct {
 	Reboot bool
 	Params []structs.ClusterParameterSampleInfo
 }
+
+type ClusterReboot int
+const (
+	NonReboot ClusterReboot = iota
+	Reboot
+)

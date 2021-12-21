@@ -46,7 +46,7 @@
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "integer",
                         "name": "endTime",
                         "in": "query"
                     },
@@ -63,7 +63,7 @@
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "integer",
                         "name": "startTime",
                         "in": "query"
                     }
@@ -3977,7 +3977,7 @@
                 "summary": "show details of a flow work",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "flow work id",
                         "name": "workFlowId",
                         "in": "path",
@@ -6787,7 +6787,7 @@
         "structs.WorkFlowInfo": {
             "type": "object",
             "properties": {
-                "BizId": {
+                "bizId": {
                     "type": "string"
                 },
                 "createTime": {
@@ -6796,10 +6796,10 @@
                 "deleteTime": {
                     "type": "string"
                 },
-                "flowWorkName": {
+                "id": {
                     "type": "string"
                 },
-                "id": {
+                "name": {
                     "type": "string"
                 },
                 "status": {

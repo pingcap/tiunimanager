@@ -1,18 +1,25 @@
 package tenant
 
 import (
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
 	"time"
 )
 
 type Tenant struct {
-	ID        string         `gorm:"PrimaryKey"`
+	ID        string              `gorm:"primaryKey"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt
 
-	Name   string            `gorm:"default:null;not null"`
-	Type   int8              `gorm:"default:0"`
-	Status int8              `gorm:"default:0"`
+	Name   string                 `gorm:"default:null;not null"`
+	Type   constants.TenantType   `gorm:"default:0"`
+	Status constants.CommonStatus `gorm:"default:0"`
 }
 
+func (e *Tenant) BeforeCreate(*gorm.DB) (err error) {
+	e.ID = uuidutil.GenerateID()
+	e.Status = 0
+	return nil
+}

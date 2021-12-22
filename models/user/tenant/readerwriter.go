@@ -22,7 +22,7 @@ import (
 type ReaderWriter interface {
 	AddTenant(ctx context.Context, name string, tenantType, status int8) (*Tenant, error)
 	FindTenantByName(ctx context.Context, name string) (*Tenant, error)
-	FindTenantById(ctx context.Context, tenantId string) (*Tenant, error)
+	FindTenantById(ctx context.Context, tenantID string) (*Tenant, error)
 }
 
 

@@ -6755,6 +6755,10 @@ var doc = `{
                     "type": "string",
                     "example": "max-merge-region-size"
                 },
+                "paramId": {
+                    "type": "string",
+                    "example": "1"
+                },
                 "value": {
                     "type": "string",
                     "example": "20"
@@ -7151,9 +7155,19 @@ var doc = `{
                     "type": "string",
                     "example": "max-merge-region-size"
                 },
-                "range": {
+                "paramId": {
                     "type": "string",
-                    "example": "1, 1000"
+                    "example": "1"
+                },
+                "range": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "1",
+                        " 1000"
+                    ]
                 },
                 "suggestVal": {
                     "type": "string",

@@ -1737,6 +1737,9 @@ definitions:
       name:
         example: max-merge-region-size
         type: string
+      paramId:
+        example: "1"
+        type: string
       value:
         example: "20"
         type: string
@@ -2016,9 +2019,16 @@ definitions:
       name:
         example: max-merge-region-size
         type: string
-      range:
-        example: 1, 1000
+      paramId:
+        example: "1"
         type: string
+      range:
+        example:
+        - "1"
+        - ' 1000'
+        items:
+          type: string
+        type: array
       suggestVal:
         example: "30"
         type: string

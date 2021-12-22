@@ -162,15 +162,17 @@ type ProductUpgradePathItem struct {
 	Versions    []string `json:"versions" example:"v5.0.0,v5.3.0"`
 }
 type ProductUpgradeVersionConfigDiffItem struct {
-	Name         string `json:"name" example:"max-merge-region-size"`
-	InstanceType string `json:"instanceType" example:"pd-server"`
-	CurrentVal   string `json:"currentVal" example:"20"`
-	SuggestVal   string `json:"suggestVal" example:"30"`
-	Range        string `json:"range" example:"1, 1000"`
-	Description  string `json:"description" example:"desc for max-merge-region-size"`
+	ParamId      string   `json:"paramId" example:"1"`
+	Name         string   `json:"name" example:"max-merge-region-size"`
+	InstanceType string   `json:"instanceType" example:"pd-server"`
+	CurrentVal   string   `json:"currentVal" example:"20"`
+	SuggestVal   string   `json:"suggestVal" example:"30"`
+	Range        []string `json:"range" example:"1, 1000"`
+	Description  string   `json:"description" example:"desc for max-merge-region-size"`
 }
 
 type ClusterUpgradeVersionConfigItem struct {
+	ParamId      string `json:"paramId" example:"1"`
 	Name         string `json:"name" example:"max-merge-region-size"`
 	InstanceType string `json:"instanceType" example:"pd-server"`
 	Value        string `json:"value" example:"20"`

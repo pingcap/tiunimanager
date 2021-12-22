@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/common"
 
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -130,6 +131,14 @@ func (flow *WorkFlowAggregation) addContext(key string, value interface{}) {
 }
 
 func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) error {
+	defer func() {
+		if r := recover(); r != nil {
+			framework.LogWithContext(flow.Context).Errorf("recover from workflow %s, node %s", flow.Flow.Name, node.Name)
+			err := errors.NewEMErrorf(errors.TIEM_PANIC, "%v", r)
+			node.Fail(err)
+		}
+	}()
+
 	flow.CurrentNode = node
 	flow.Nodes = append(flow.Nodes, node)
 	node.Processing()

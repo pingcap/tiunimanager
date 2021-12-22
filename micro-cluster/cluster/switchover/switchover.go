@@ -210,7 +210,7 @@ func (p *Manager) checkClusterReadWriteHealth(ctx context.Context, clusterID str
 		return fmt.Errorf("failed to get cluster's mysql userName and password, err:%s", err)
 	}
 	var addr string
-	addr, err = p.clusterGetOneConnectAddresses(ctx, clusterID)
+	addr, err = p.clusterGetOneConnectAddress(ctx, clusterID)
 	if err != nil {
 		return fmt.Errorf("failed to get cluster's mysql access addr, err:%s", err)
 	}
@@ -234,24 +234,25 @@ func (p *Manager) clusterGetMysqlUserNameAndPwd(ctx context.Context, clusterID s
 }
 
 // addr: ip:port
-func (p *Manager) clusterGetOneConnectAddresses(ctx context.Context, clusterID string) (string, error) {
-	panic("NIY")
-	m, err := handler.Get(ctx, clusterID)
-	_ = m
-	s := "" // m.GetConnectAddresses()
+func (p *Manager) clusterGetOneConnectAddress(ctx context.Context, clusterID string) (string, error) {
+	ip, port, err := p.clusterGetOneConnectIPPort(ctx, clusterID)
 	if err != nil {
 		return "", err
 	}
-	if len(s) == 0 {
-		return "", fmt.Errorf("no connect address available")
-	}
-	return "", nil
+	return fmt.Sprintf("%s:%d", ip, port), nil
 }
 
 // addr: ip:port
 func (p *Manager) clusterGetOneConnectIPPort(ctx context.Context, clusterID string) (ip string, port int, err error) {
-	panic("NIY")
-	return
+	m, err := handler.Get(ctx, clusterID)
+	if err != nil {
+		return "", 0, err
+	}
+	s := m.GetClusterConnectAddresses()
+	if len(s) == 0 {
+		return "", 0, fmt.Errorf("no connect address available")
+	}
+	return s[0].IP, s[0].Port, nil
 }
 
 func (p *Manager) clusterGetTLSMode(ctx context.Context, clusterID string) (tls bool, err error) {

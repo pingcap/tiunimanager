@@ -46,6 +46,8 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (resp mes
 		return
 	} else {
 		resp.TokenString = token.TokenString
+		resp.UserName = token.AccountName
+		resp.TenantId = token.TenantId
 	}
 
 	return

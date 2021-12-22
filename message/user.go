@@ -101,11 +101,13 @@ type LoginReq struct {
 }
 
 type LoginResp struct {
-	TokenString string   `json:"token" form:"token"`
+	TokenString string `json:"token" form:"token"`
+	UserName    string `json:"userName"`
+	TenantId    string `json:"tenantId"`
 }
 
 type LogoutReq struct {
-	TokenString string   `json:"tokenString" form:"tokenString"`
+	TokenString string   `json:"token" form:"token"`
 }
 
 type LogoutResp struct {

@@ -20,10 +20,10 @@ func TestTenantReadWrite_AddTenant(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"normal", args{context.TODO(), "tenant", 0, 0}, false},
+		{"normal", args{context.TODO(), "AddTenant1", 0, 0}, false},
 		{"without name", args{context.TODO(), "", 1, 0}, true},
-		{"invalid status", args{context.TODO(), "tenant", 1, 1}, true},
-		{"without status", args{context.TODO(), "tenant", 1, -1}, true},
+		{"invalid status", args{context.TODO(), "AddTenant2", 1, 1}, true},
+		{"without status", args{context.TODO(), "AddTenant3", 1, -1}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -112,7 +112,7 @@ func TestTenantReadWrite_FindTenantByName(t *testing.T) {
 func TestTenantReadWrite_FindTenantById(t *testing.T) {
 	tenant := Tenant{
 		ID: "testID",
-		Name:      "testName",
+		Name: "FindTenantById",
 	}
 	testRW.DB(context.TODO()).Create(&tenant)
 	defer testRW.DB(context.TODO()).Delete(&tenant)

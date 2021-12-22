@@ -83,8 +83,8 @@ func TestAccountReadWrite_FindAccountByName(t *testing.T) {
 
 func TestAccountReadWrite_FindAccountById(t *testing.T) {
 	account := &Account{
-		Entity:    common.Entity{TenantId: "testID", Status: "0"}, //todo: bug
-		Name:      "testName",
+		Entity:    common.Entity{TenantId: "testID", Status: "0"},
+		Name:      "FindAccountById1",
 		Salt:      "123",
 		FinalHash: "1234",
 	}
@@ -106,7 +106,6 @@ func TestAccountReadWrite_FindAccountById(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			got, err := testRW.FindAccountById(tt.args.ctx, tt.args.id)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FindAccountById() error = %v, wantErr %v", err, tt.wantErr)
@@ -123,7 +122,7 @@ func TestAccountReadWrite_FindAccountById(t *testing.T) {
 func TestAccountReadWrite_FindAccountById_v2(t *testing.T) {
 	account := &Account{
 		Entity:    common.Entity{TenantId: "testID", Status: "0"}, //todo: bug
-		Name:      "testName",
+		Name:      "FindAccountById_v2",
 		Salt:      "123",
 		FinalHash: "1234",
 	}

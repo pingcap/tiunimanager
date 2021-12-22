@@ -17,6 +17,10 @@ package models
 
 import (
 	"context"
+	dbCommon "github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiem/models/user/account"
+	"github.com/pingcap-inc/tiem/models/user/identification"
+	"github.com/pingcap-inc/tiem/models/user/tenant"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -51,6 +55,9 @@ type database struct {
 	configReaderWriter               config.ReaderWriter
 	secondPartyOperationReaderWriter secondparty.ReaderWriter
 	resourceReaderWriter             resource.ReaderWriter
+	tenantReaderWriter               tenant.ReaderWriter
+	accountReaderWriter              account.ReaderWriter
+	tokenReaderWriter                identification.ReaderWriter
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
@@ -101,7 +108,9 @@ func (p *database) initTables() (err error) {
 	p.addTable(new(parametergroup.ParameterGroup))
 	p.addTable(new(parametergroup.ParameterGroupMapping))
 	p.addTable(new(parameter.ClusterParameterMapping))
-
+	p.addTable(new(account.Account))
+	p.addTable(new(tenant.Tenant))
+	p.addTable(new(identification.Token))
 	// init tables for resource manager
 	err = p.resourceReaderWriter.InitTables(context.TODO())
 	if err != nil {
@@ -124,6 +133,9 @@ func (p *database) initReaderWriters() {
 	defaultDb.configReaderWriter = config.NewConfigReadWrite(defaultDb.base)
 	defaultDb.secondPartyOperationReaderWriter = secondparty.NewGormSecondPartyOperationReadWrite(defaultDb.base)
 	defaultDb.clusterReaderWriter = management.NewClusterReadWrite(defaultDb.base)
+	defaultDb.tenantReaderWriter = tenant.NewTenantReadWrite(defaultDb.base)
+	defaultDb.accountReaderWriter = account.NewAccountReadWrite(defaultDb.base)
+	defaultDb.tokenReaderWriter = identification.NewTokenReadWrite(defaultDb.base)
 }
 
 func (p *database) initSystemData() {
@@ -134,6 +146,19 @@ func (p *database) initSystemData() {
 	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3Endpoint, ConfigValue: constants.DefaultBackupS3Endpoint})
 	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyExportShareStoragePath, ConfigValue: constants.DefaultExportPath})
 	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyImportShareStoragePath, ConfigValue: constants.DefaultImportPath})
+
+	tenant, err := defaultDb.tenantReaderWriter.AddTenant(context.TODO(), "EM system administration", 1, 0)
+
+	if err == nil {
+		account := &account.Account {
+			Entity: dbCommon.Entity {
+				TenantId: tenant.ID,
+			},
+			Name: "admin",
+		}
+		account.GenSaltAndHash("admin")
+		defaultDb.accountReaderWriter.AddAccount(context.TODO(), tenant.ID, account.Name, account.Salt, account.FinalHash, 0)
+	}
 }
 
 func (p *database) addTable(gormModel interface{}) error {
@@ -223,6 +248,29 @@ func GetClusterParameterReaderWriter() parameter.ReaderWriter {
 
 func SetClusterParameterReaderWriter(rw parameter.ReaderWriter) {
 	defaultDb.clusterParameterReaderWriter = rw
+}
+
+func GetAccountReaderWriter() account.ReaderWriter {
+	return defaultDb.accountReaderWriter
+}
+
+func SetAccountReaderWriter(rw account.ReaderWriter) {
+	defaultDb.accountReaderWriter = rw
+}
+
+func GetTenantReaderWriter() tenant.ReaderWriter {
+	return defaultDb.tenantReaderWriter
+}
+
+func SetTenantReaderWriter(rw tenant.ReaderWriter) {
+	defaultDb.tenantReaderWriter = rw
+}
+func GetTokenReaderWriter() identification.ReaderWriter {
+	return defaultDb.tokenReaderWriter
+}
+
+func SetTokenReaderWriter(rw identification.ReaderWriter) {
+	defaultDb.tokenReaderWriter = rw
 }
 
 func MockDB() {

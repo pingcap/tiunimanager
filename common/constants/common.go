@@ -24,6 +24,7 @@
 package constants
 
 import (
+	"time"
 	"github.com/pingcap-inc/tiem/common/errors"
 )
 
@@ -160,3 +161,5 @@ const (
 const (
 	MaxBatchQueryDataNumber int = 512
 )
+
+const DefaultTokenValidPeriod time.Duration = 4 * time.Hour

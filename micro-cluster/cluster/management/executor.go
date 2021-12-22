@@ -521,6 +521,11 @@ func syncBackupStrategy(node *workflowModel.WorkFlowNode, context *workflow.Flow
 			"get cluster %s backup strategy error: %s", sourceClusterMeta.Cluster.ID, err.Error())
 		return err
 	}
+	if len(sourceStrategyRes.Strategy.BackupDate) == 0 {
+		framework.LogWithContext(context).Infof(
+			"cluster %s has no backup strategy", sourceClusterMeta.Cluster.ID)
+		return nil
+	}
 
 	_, err = backuprestore.GetBRService().SaveBackupStrategy(context.Context,
 		cluster.SaveBackupStrategyReq{

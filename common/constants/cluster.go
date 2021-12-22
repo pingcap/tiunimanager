@@ -35,6 +35,7 @@ const (
 )
 
 type ClusterMaintenanceStatus string
+
 // Definition cluster maintenance status information
 const (
 	ClusterMaintenanceCreating                     ClusterMaintenanceStatus = "Creating"
@@ -49,7 +50,7 @@ const (
 	ClusterMaintenanceUpgrading                    ClusterMaintenanceStatus = "Upgrading"
 	ClusterMaintenanceSwitching                    ClusterMaintenanceStatus = "Switching"
 	ClusterMaintenanceModifyParameterAndRestarting ClusterMaintenanceStatus = "ModifyParameterRestarting"
-	ClusterMaintenanceTakeover                 	   ClusterMaintenanceStatus = "Takeover"
+	ClusterMaintenanceTakeover                     ClusterMaintenanceStatus = "Takeover"
 	ClusterMaintenanceNone                         ClusterMaintenanceStatus = ""
 )
 

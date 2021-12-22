@@ -62,7 +62,7 @@ type QueryBackupRecordsReq struct {
 
 // QueryBackupRecordsResp Query the return information of the backup file
 type QueryBackupRecordsResp struct {
-	BackupRecords []*structs.BackupRecord
+	BackupRecords []*structs.BackupRecord `json:"backupRecords"`
 }
 
 // SaveBackupStrategyReq Request to update backup data strategy

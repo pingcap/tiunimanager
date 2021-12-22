@@ -24,8 +24,6 @@
 package constants
 
 import (
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"time"
 	"github.com/pingcap-inc/tiem/common/errors"
 )

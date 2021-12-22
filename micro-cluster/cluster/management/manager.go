@@ -445,7 +445,7 @@ func (p *Manager) RestartCluster(ctx context.Context, req cluster.RestartCluster
 	return
 }
 
-var takeoverClusterFlow = workflow.WorkFlowDefine{
+var takeoverClusterFlow = workflow.WorkFlowDefine {
 	FlowName: constants.FlowTakeoverCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":   {"fetchTopologyFile", "fetched", "fail", workflow.SyncFuncNode, fetchTopologyFile},

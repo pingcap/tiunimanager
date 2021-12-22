@@ -105,6 +105,16 @@ func (g *ClusterReadWrite) GetMeta(ctx context.Context, clusterID string) (clust
 
 }
 
+func (g *ClusterReadWrite) GetRelations(ctx context.Context, clusterID string) ([]*ClusterRelation, error) {
+	relations := make([]*ClusterRelation, 0)
+	err := g.DB(ctx).Model(&ClusterRelation{}).Where("object_cluster_id  = ? ", clusterID).Find(&relations).Error
+	if err != nil {
+		err = dbCommon.WrapDBError(err)
+	}
+
+	return relations, err
+}
+
 func (g *ClusterReadWrite) QueryMetas(ctx context.Context, filters Filters, pageReq structs.PageRequest) ([]*Result, structs.Page, error) {
 	page := structs.Page{
 		Page: pageReq.Page,

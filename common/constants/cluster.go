@@ -35,7 +35,6 @@ const (
 )
 
 type ClusterMaintenanceStatus string
-
 // Definition cluster maintenance status information
 const (
 	ClusterMaintenanceCreating                     ClusterMaintenanceStatus = "Creating"

@@ -513,3 +513,50 @@ func mockCluster(name string, clusterType string, status constants.ClusterRunnin
 	testRW.UpdateInstance(context.TODO(), instances...)
 	return got.ID
 }
+
+func TestClusterReadWrite_Relations(t *testing.T) {
+	relation1 := &ClusterRelation{
+		ObjectClusterID: "111",
+		SubjectClusterID: "222",
+		RelationType: constants.ClusterRelationCloneFrom,
+	}
+	err := testRW.CreateRelation(context.TODO(), relation1)
+	assert.NoError(t, err)
+
+	err = testRW.CreateRelation(context.TODO(), &ClusterRelation{
+		ObjectClusterID: "111",
+		SubjectClusterID: "222",
+		RelationType: constants.ClusterRelationSlaveTo,
+	})
+	assert.NoError(t, err)
+
+	err = testRW.CreateRelation(context.TODO(), &ClusterRelation{
+		ObjectClusterID: "111",
+		SubjectClusterID: "333",
+		RelationType: constants.ClusterRelationSlaveTo,
+	})
+	assert.NoError(t, err)
+
+	err = testRW.CreateRelation(context.TODO(), &ClusterRelation{
+		ObjectClusterID: "333",
+		SubjectClusterID: "111",
+		RelationType: constants.ClusterRelationSlaveTo,
+	})
+	assert.NoError(t, err)
+
+	r, err := testRW.GetRelations(context.TODO(), "111")
+	assert.NoError(t, err)
+	assert.Equal(t, 3, len(r))
+
+	r, err = testRW.GetRelations(context.TODO(), "222")
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(r))
+
+	err = testRW.DeleteRelation(context.TODO(), relation1.ID)
+	assert.NoError(t, err)
+
+	r, err = testRW.GetRelations(context.TODO(), "111")
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(r))
+
+}

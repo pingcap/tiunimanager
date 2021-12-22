@@ -496,6 +496,10 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 	return meta, nil
 }
 
+func (p *ClusterMeta) GetRelations(ctx context.Context) ([]*management.ClusterRelation, error) {
+	return models.GetClusterReaderWriter().GetRelations(ctx, p.Cluster.ID)
+}
+
 // StartMaintenance
 // @Description: try to start a maintenance
 // @Receiver p

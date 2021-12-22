@@ -29,7 +29,8 @@ definitions:
   cluster.CloneClusterReq:
     properties:
       cloneStrategy:
-        description: specify clone strategy, include empty, snapshot and sync, default empty(option)
+        description: specify clone strategy, include empty, snapshot and sync, default
+          empty(option)
         type: string
       clusterName:
         type: string
@@ -38,7 +39,8 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent
+          with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -46,10 +48,13 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster,
+          default is the root user, which is not valid for Data Migration clusters
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources,
+          when exclusive, a host will only deploy instances of the same cluster, which
+          may result in poor resource utilization
         type: boolean
       parameterGroupID:
         type: string
@@ -133,7 +138,8 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent
+          with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -141,10 +147,13 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster,
+          default is the root user, which is not valid for Data Migration clusters
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources,
+          when exclusive, a host will only deploy instances of the same cluster, which
+          may result in poor resource utilization
         type: boolean
       parameterGroupID:
         type: string
@@ -527,7 +536,8 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent
+          with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -535,10 +545,13 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster,
+          default is the root user, which is not valid for Data Migration clusters
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources,
+          when exclusive, a host will only deploy instances of the same cluster, which
+          may result in poor resource utilization
         type: boolean
       parameterGroupID:
         type: string
@@ -1364,7 +1377,8 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent
+          with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -1374,12 +1388,15 @@ definitions:
       createTime:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster,
+          default is the root user, which is not valid for Data Migration clusters
         type: string
       deleteTime:
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources,
+          when exclusive, a host will only deploy instances of the same cluster, which
+          may result in poor resource utilization
         type: boolean
       extranetConnectAddresses:
         items:
@@ -2635,6 +2652,74 @@ paths:
       summary: dashboard
       tags:
       - cluster
+  /clusters/{clusterId}/log:
+    get:
+      consumes:
+      - application/json
+      description: query cluster log
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - example: 1638331200
+        in: query
+        name: endTime
+        type: integer
+      - example: 127.0.0.1
+        in: query
+        name: ip
+        type: string
+      - example: warn
+        in: query
+        name: level
+        type: string
+      - example: tidb log
+        in: query
+        name: message
+        type: string
+      - example: tidb
+        in: query
+        name: module
+        type: string
+      - description: Current page location
+        in: query
+        name: page
+        type: integer
+      - description: Number of this request
+        in: query
+        name: pageSize
+        type: integer
+      - example: 1630468800
+        in: query
+        name: startTime
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.QueryClusterLogResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query cluster log
+      tags:
+      - cluster log
   /clusters/{clusterId}/monitor:
     get:
       consumes:
@@ -3502,74 +3587,6 @@ paths:
       summary: show cluster knowledge
       tags:
       - knowledge
-  /logs/tidb/{clusterId}:
-    get:
-      consumes:
-      - application/json
-      description: search cluster log
-      parameters:
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      - example: "2021-12-01 12:00:00"
-        in: query
-        name: endTime
-        type: string
-      - example: 127.0.0.1
-        in: query
-        name: ip
-        type: string
-      - example: warn
-        in: query
-        name: level
-        type: string
-      - example: tidb log
-        in: query
-        name: message
-        type: string
-      - example: tidb
-        in: query
-        name: module
-        type: string
-      - description: Current page location
-        in: query
-        name: page
-        type: integer
-      - description: Number of this request
-        in: query
-        name: pageSize
-        type: integer
-      - example: "2021-09-01 12:00:00"
-        in: query
-        name: startTime
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.ResultWithPage'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.QueryClusterLogResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: search cluster log
-      tags:
-      - logs
   /param-groups/:
     get:
       consumes:

@@ -1121,19 +1121,18 @@ definitions:
     type: object
   message.LoginReq:
     properties:
-      name:
+      userName:
         type: string
-      password:
+      userPassword:
         type: string
     type: object
   message.LoginResp:
     properties:
-      tokenString:
+      tenantId:
         type: string
-    type: object
-  message.LogoutReq:
-    properties:
-      tokenString:
+      token:
+        type: string
+      userName:
         type: string
     type: object
   message.LogoutResp:
@@ -4221,13 +4220,6 @@ paths:
       consumes:
       - application/json
       description: logout
-      parameters:
-      - description: login info
-        in: body
-        name: logoutInfo
-        required: true
-        schema:
-          $ref: '#/definitions/message.LogoutReq'
       produces:
       - application/json
       responses:

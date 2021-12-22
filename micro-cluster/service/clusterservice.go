@@ -125,6 +125,7 @@ func getLoggerWithContext(ctx context.Context) *log.Entry {
 }
 
 func handleMetrics(start time.Time, funcName string, code int) {
+
 	duration := time.Since(start)
 	framework.Current.GetMetrics().MicroDurationHistogramMetric.With(prometheus.Labels{
 		metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
@@ -136,6 +137,19 @@ func handleMetrics(start time.Time, funcName string, code int) {
 		metrics.MethodLabel:  funcName,
 		metrics.CodeLabel:    strconv.Itoa(code)}).
 		Inc()
+}
+
+// handlePanic
+// @Description: recover from any panic from user request
+// @Parameter ctx
+// @Parameter funcName
+// @Parameter resp
+func handlePanic(ctx context.Context, funcName string, resp *clusterpb.RpcResponse)  {
+	if r := recover(); r != nil {
+		framework.LogWithContext(ctx).Panic("recover from", funcName)
+		resp.Code = int32(errors.TIEM_PANIC)
+		resp.Message = fmt.Sprintf("%v", r)
+	}
 }
 
 func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandler {
@@ -159,6 +173,8 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "CreateChangeFeedTask", int(resp.GetCode()))
+	defer handlePanic(ctx, "CreateChangeFeedTask", resp)
+
 	request := cluster.CreateChangeFeedTaskReq{}
 
 	if handleRequest(ctx, req, resp, request) {
@@ -172,36 +188,49 @@ func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, 
 func (handler *ClusterServiceHandler) PauseChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "PauseChangeFeedTask", int(response.GetCode()))
+	defer handlePanic(ctx, "PauseChangeFeedTask", response)
+
 	panic("implement me")
 }
 
 func (handler *ClusterServiceHandler) ResumeChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "ResumeChangeFeedTask", int(response.GetCode()))
+	defer handlePanic(ctx, "ResumeChangeFeedTask", response)
+
 	panic("implement me")
 }
 
 func (handler *ClusterServiceHandler) DeleteChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "DeleteChangeFeedTask", int(response.GetCode()))
+	defer handlePanic(ctx, "DeleteChangeFeedTask", response)
+
 	panic("implement me")
 }
 
 func (handler *ClusterServiceHandler) UpdateChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "UpdateChangeFeedTask", int(response.GetCode()))
+	defer handlePanic(ctx, "UpdateChangeFeedTask", response)
+
 	panic("implement me")
 }
 
 func (handler *ClusterServiceHandler) QueryChangeFeedTasks(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "QueryChangeFeedTasks", int(response.GetCode()))
+	defer handlePanic(ctx, "QueryChangeFeedTasks", response)
+
 	panic("implement me")
 }
 
 func (handler *ClusterServiceHandler) CreateParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
+
 	defer handleMetrics(start, "CreateParameterGroup", int(resp.GetCode()))
+	defer handlePanic(ctx, "CreateParameterGroup", resp)
+
 	request := &message.CreateParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
@@ -214,6 +243,8 @@ func (handler *ClusterServiceHandler) CreateParameterGroup(ctx context.Context, 
 func (handler *ClusterServiceHandler) UpdateParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "UpdateParameterGroup", int(resp.GetCode()))
+	defer handlePanic(ctx, "UpdateParameterGroup", resp)
+
 	request := &message.UpdateParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
@@ -226,6 +257,8 @@ func (handler *ClusterServiceHandler) UpdateParameterGroup(ctx context.Context, 
 func (handler *ClusterServiceHandler) DeleteParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "DeleteParameterGroup", int(resp.GetCode()))
+	defer handlePanic(ctx, "DeleteParameterGroup", resp)
+
 	request := &message.DeleteParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
@@ -238,6 +271,8 @@ func (handler *ClusterServiceHandler) DeleteParameterGroup(ctx context.Context, 
 func (handler *ClusterServiceHandler) QueryParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "QueryParameterGroup", int(resp.GetCode()))
+	defer handlePanic(ctx, "QueryParameterGroup", resp)
+
 	request := &message.QueryParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
@@ -250,6 +285,8 @@ func (handler *ClusterServiceHandler) QueryParameterGroup(ctx context.Context, r
 func (handler *ClusterServiceHandler) DetailParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "DetailParameterGroup", int(resp.GetCode()))
+	defer handlePanic(ctx, "DetailParameterGroup", resp)
+
 	request := &message.DetailParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
@@ -262,6 +299,8 @@ func (handler *ClusterServiceHandler) DetailParameterGroup(ctx context.Context, 
 func (handler *ClusterServiceHandler) ApplyParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "ApplyParameterGroup", int(resp.GetCode()))
+	defer handlePanic(ctx, "ApplyParameterGroup", resp)
+
 	request := &message.ApplyParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
@@ -274,6 +313,8 @@ func (handler *ClusterServiceHandler) ApplyParameterGroup(ctx context.Context, r
 func (handler *ClusterServiceHandler) CopyParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "CopyParameterGroup", int(resp.GetCode()))
+	defer handlePanic(ctx, "CopyParameterGroup", resp)
+
 	request := &message.CopyParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
@@ -286,6 +327,8 @@ func (handler *ClusterServiceHandler) CopyParameterGroup(ctx context.Context, re
 func (handler *ClusterServiceHandler) QueryClusterParameters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "QueryClusterParameters", int(resp.GetCode()))
+	defer handlePanic(ctx, "QueryClusterParameters", resp)
+
 	request := &cluster.QueryClusterParametersReq{}
 
 	if handleRequest(ctx, req, resp, request) {
@@ -298,6 +341,8 @@ func (handler *ClusterServiceHandler) QueryClusterParameters(ctx context.Context
 func (handler *ClusterServiceHandler) UpdateClusterParameters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "UpdateClusterParameters", int(resp.GetCode()))
+	defer handlePanic(ctx, "UpdateClusterParameters", resp)
+
 	request := &cluster.UpdateClusterParametersReq{}
 
 	if handleRequest(ctx, req, resp, request) {
@@ -310,6 +355,8 @@ func (handler *ClusterServiceHandler) UpdateClusterParameters(ctx context.Contex
 func (handler *ClusterServiceHandler) InspectClusterParameters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "InspectClusterParameters", int(resp.GetCode()))
+	defer handlePanic(ctx, "InspectClusterParameters", resp)
+
 	request := &cluster.InspectClusterParametersReq{}
 
 	if handleRequest(ctx, req, resp, request) {
@@ -322,6 +369,8 @@ func (handler *ClusterServiceHandler) InspectClusterParameters(ctx context.Conte
 func (handler *ClusterServiceHandler) QueryClusterLog(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "QueryClusterLog", int(resp.GetCode()))
+	defer handlePanic(ctx, "QueryClusterLog", resp)
+
 	request := &cluster.QueryClusterLogReq{}
 
 	if handleRequest(ctx, req, resp, request) {
@@ -334,6 +383,7 @@ func (handler *ClusterServiceHandler) QueryClusterLog(ctx context.Context, req *
 func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "CreateCluster", int(resp.GetCode()))
+	defer handlePanic(ctx, "CreateCluster", resp)
 
 	request := cluster.CreateClusterReq{}
 
@@ -348,6 +398,7 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb
 func (c ClusterServiceHandler) RestoreNewCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "RestoreNewCluster", int(resp.GetCode()))
+	defer handlePanic(ctx, "RestoreNewCluster", resp)
 
 	request := cluster.RestoreNewClusterReq{}
 
@@ -362,6 +413,7 @@ func (c ClusterServiceHandler) RestoreNewCluster(ctx context.Context, req *clust
 func (handler *ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "ScaleOutCluster", int(resp.GetCode()))
+	defer handlePanic(ctx, "ScaleOutCluster", resp)
 
 	request := cluster.ScaleOutClusterReq{}
 
@@ -377,6 +429,7 @@ func (handler *ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *
 func (handler *ClusterServiceHandler) ScaleInCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "ScaleInCluster", int(resp.GetCode()))
+	defer handlePanic(ctx, "ScaleInCluster", resp)
 
 	request := cluster.ScaleInClusterReq{}
 
@@ -392,6 +445,7 @@ func (handler *ClusterServiceHandler) ScaleInCluster(ctx context.Context, req *c
 func (handler *ClusterServiceHandler) CloneCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "CloneCluster", int(resp.GetCode()))
+	defer handlePanic(ctx, "CloneCluster", resp)
 
 	request := cluster.CloneClusterReq{}
 
@@ -407,6 +461,8 @@ func (handler *ClusterServiceHandler) CloneCluster(ctx context.Context, req *clu
 func (handler ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "TakeoverClusters", int(resp.GetCode()))
+	defer handlePanic(ctx, "TakeoverClusters", resp)
+
 	request := cluster.TakeoverClusterReq {}
 
 	if handleRequest(ctx, req, resp, &request) {
@@ -421,6 +477,7 @@ func (handler ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *
 func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "QueryCluster", int(resp.GetCode()))
+	defer handlePanic(ctx, "QueryCluster", resp)
 
 	request := cluster.QueryClustersReq{}
 
@@ -439,6 +496,7 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.
 func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "DeleteCluster", int(resp.GetCode()))
+	defer handlePanic(ctx, "DeleteCluster", resp)
 
 	request := cluster.DeleteClusterReq{}
 
@@ -453,6 +511,7 @@ func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb
 func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "RestartCluster", int(resp.GetCode()))
+	defer handlePanic(ctx, "RestartCluster", resp)
 
 	request := cluster.RestartClusterReq{}
 
@@ -467,6 +526,7 @@ func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterp
 func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "StopCluster", int(resp.GetCode()))
+	defer handlePanic(ctx, "StopCluster", resp)
 
 	request := cluster.StopClusterReq{}
 
@@ -481,6 +541,7 @@ func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.R
 func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "DetailCluster", int(resp.GetCode()))
+	defer handlePanic(ctx, "DetailCluster", resp)
 
 	request := cluster.QueryClusterDetailReq{}
 
@@ -495,7 +556,8 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb
 func (c ClusterServiceHandler) ExportData(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "ExportData", int(response.GetCode()))
-	framework.LogWithContext(ctx).Info("export data")
+	defer handlePanic(ctx, "ExportData", response)
+
 	exportReq := message.DataExportReq{}
 
 	if handleRequest(ctx, request, response, &exportReq) {
@@ -509,7 +571,8 @@ func (c ClusterServiceHandler) ExportData(ctx context.Context, request *clusterp
 func (c ClusterServiceHandler) ImportData(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "ImportData", int(response.GetCode()))
-	framework.LogWithContext(ctx).Info("import data")
+	defer handlePanic(ctx, "ImportData", response)
+
 	importReq := message.DataImportReq{}
 
 	if handleRequest(ctx, request, response, &importReq) {
@@ -523,7 +586,8 @@ func (c ClusterServiceHandler) ImportData(ctx context.Context, request *clusterp
 func (c ClusterServiceHandler) QueryDataTransport(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "QueryDataTransport", int(response.GetCode()))
-	framework.LogWithContext(ctx).Info("query data transport")
+	defer handlePanic(ctx, "QueryDataTransport", response)
+
 	queryReq := message.QueryDataImportExportRecordsReq{}
 
 	if handleRequest(ctx, request, response, &queryReq) {
@@ -541,7 +605,8 @@ func (c ClusterServiceHandler) QueryDataTransport(ctx context.Context, request *
 func (c ClusterServiceHandler) DeleteDataTransportRecord(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "DeleteDataTransportRecord", int(response.GetCode()))
-	framework.LogWithContext(ctx).Info("delete data transport record")
+	defer handlePanic(ctx, "DeleteDataTransportRecord", response)
+
 	deleteReq := message.DeleteImportExportRecordReq{}
 
 	if handleRequest(ctx, request, response, &deleteReq) {
@@ -555,7 +620,7 @@ func (c ClusterServiceHandler) DeleteDataTransportRecord(ctx context.Context, re
 func (c *ClusterServiceHandler) GetSystemConfig(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "GetSystemConfig", int(response.GetCode()))
-	framework.LogWithContext(ctx).Info("get system config")
+	defer handlePanic(ctx, "GetSystemConfig", response)
 	getReq := message.GetSystemConfigReq{}
 
 	if handleRequest(ctx, request, response, &getReq) {
@@ -569,7 +634,7 @@ func (c *ClusterServiceHandler) GetSystemConfig(ctx context.Context, request *cl
 func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "CreateBackup", int(response.GetCode()))
-	framework.LogWithContext(ctx).Info("create backup")
+	defer handlePanic(ctx, "CreateBackup", response)
 	backupReq := cluster.BackupClusterDataReq{}
 
 	if handleRequest(ctx, request, response, &backupReq) {
@@ -583,7 +648,7 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 func (c ClusterServiceHandler) DeleteBackupRecords(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "DeleteBackupRecord", int(response.GetCode()))
-	framework.LogWithContext(ctx).Info("delete backup records")
+	defer handlePanic(ctx, "DeleteBackupRecord", response)
 	deleteReq := cluster.DeleteBackupDataReq{}
 
 	if handleRequest(ctx, request, response, &deleteReq) {
@@ -597,7 +662,7 @@ func (c ClusterServiceHandler) DeleteBackupRecords(ctx context.Context, request 
 func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "SaveBackupStrategy", int(response.GetCode()))
-	framework.LogWithContext(ctx).Info("save backup strategy")
+	defer handlePanic(ctx, "SaveBackupStrategy", response)
 	saveReq := cluster.SaveBackupStrategyReq{}
 
 	if handleRequest(ctx, request, response, &saveReq) {
@@ -611,7 +676,7 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "GetBackupStrategy", int(response.GetCode()))
-	framework.LogWithContext(ctx).Info("get backup strategy")
+	defer handlePanic(ctx, "GetBackupStrategy", response)
 	getReq := cluster.GetBackupStrategyReq{}
 
 	if handleRequest(ctx, request, response, &getReq) {
@@ -625,7 +690,7 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 func (c ClusterServiceHandler) QueryBackupRecords(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "QueryBackupRecords", int(response.GetCode()))
-	framework.LogWithContext(ctx).Info("query backup records")
+	defer handlePanic(ctx, "QueryBackupRecords", response)
 	queryReq := cluster.QueryBackupRecordsReq{}
 
 	if handleRequest(ctx, request, response, &queryReq) {
@@ -643,7 +708,7 @@ func (c ClusterServiceHandler) QueryBackupRecords(ctx context.Context, request *
 func (c ClusterServiceHandler) GetDashboardInfo(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "DescribeDashboard", int(response.GetCode()))
-	framework.LogWithContext(ctx).Info("get cluster dashboard info")
+	defer handlePanic(ctx, "DescribeDashboard", response)
 	dashboardReq := cluster.GetDashboardInfoReq{}
 
 	if handleRequest(ctx, request, response, &dashboardReq) {
@@ -657,6 +722,8 @@ func (c ClusterServiceHandler) GetDashboardInfo(ctx context.Context, request *cl
 func (c ClusterServiceHandler) GetMonitorInfo(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "GetMonitorInfo", int(resp.GetCode()))
+	defer handlePanic(ctx, "GetMonitorInfo", resp)
+
 	request := &cluster.QueryMonitorInfoReq{}
 
 	if handleRequest(ctx, req, resp, request) {
@@ -667,9 +734,9 @@ func (c ClusterServiceHandler) GetMonitorInfo(ctx context.Context, req *clusterp
 }
 
 func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	framework.LogWithContext(ctx).Info("list flows")
 	start := time.Now()
 	defer handleMetrics(start, "ListFlows", int(response.GetCode()))
+	defer handlePanic(ctx, "ListFlows", response)
 
 	listReq := message.QueryWorkFlowsReq{}
 	if handleRequest(ctx, request, response, &listReq) {
@@ -686,9 +753,9 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb
 }
 
 func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	framework.LogWithContext(ctx).Info("detail flow")
 	start := time.Now()
 	defer handleMetrics(start, "DetailFlow", int(response.GetCode()))
+	defer handlePanic(ctx, "DetailFlow", response)
 
 	detailReq := message.QueryWorkFlowDetailReq{}
 	if handleRequest(ctx, request, response, &detailReq) {
@@ -777,6 +844,8 @@ func (p *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *cluster
 func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "ImportHosts", int(response.GetCode()))
+	defer handlePanic(ctx, "ImportHosts", response)
+
 	reqStruct := message.ImportHostsReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
@@ -794,6 +863,8 @@ func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *
 func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "DeleteHosts", int(response.GetCode()))
+	defer handlePanic(ctx, "DeleteHosts", response)
+
 	reqStruct := message.DeleteHostsReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
@@ -808,6 +879,8 @@ func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, request *
 func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "QueryHosts", int(response.GetCode()))
+	defer handlePanic(ctx, "QueryHosts", response)
+
 	reqStruct := message.QueryHostsReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
@@ -828,6 +901,8 @@ func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, request *c
 func (handler *ClusterServiceHandler) UpdateHostReserved(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "UpdateHostReserved", int(response.GetCode()))
+	defer handlePanic(ctx, "UpdateHostReserved", response)
+
 	reqStruct := message.UpdateHostReservedReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
@@ -842,6 +917,8 @@ func (handler *ClusterServiceHandler) UpdateHostReserved(ctx context.Context, re
 func (handler *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "UpdateHostStatus", int(response.GetCode()))
+	defer handlePanic(ctx, "UpdateHostStatus", response)
+
 	reqStruct := message.UpdateHostStatusReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
@@ -856,6 +933,8 @@ func (handler *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, requ
 func (handler *ClusterServiceHandler) GetHierarchy(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "GetHierarchy", int(response.GetCode()))
+	defer handlePanic(ctx, "GetHierarchy", response)
+
 	reqStruct := message.GetHierarchyReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
@@ -875,6 +954,8 @@ func (handler *ClusterServiceHandler) GetHierarchy(ctx context.Context, request 
 func (handler *ClusterServiceHandler) GetStocks(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "GetStocks", int(response.GetCode()))
+	defer handlePanic(ctx, "GetStocks", response)
+
 	reqStruct := message.GetStocksReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {

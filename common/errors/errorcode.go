@@ -19,6 +19,7 @@ package errors
 type EM_ERROR_CODE int32
 
 const (
+	TIEM_PANIC EM_ERROR_CODE = -1
 	TIEM_SUCCESS EM_ERROR_CODE = 0
 
 	TIEM_UNRECOGNIZED_ERROR EM_ERROR_CODE = 10000
@@ -148,6 +149,7 @@ func (t EM_ERROR_CODE) Explain() string {
 
 var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_SUCCESS: {code: TIEM_SUCCESS, explanation: "succeed", httpCode: 200},
+	TIEM_PANIC:   {code: TIEM_PANIC, explanation: "panic", httpCode: 500},
 
 	// system error
 	TIEM_UNRECOGNIZED_ERROR: {TIEM_UNRECOGNIZED_ERROR, "unrecognized error", 500},

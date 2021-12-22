@@ -1967,7 +1967,7 @@ definitions:
       name:
         type: string
     type: object
-host: localhost:4116
+host: localhost:4100
 info:
   contact:
     email: zhangpeijin@pingcap.com

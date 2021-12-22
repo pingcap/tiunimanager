@@ -149,7 +149,7 @@ func (g *ClusterReadWrite) QueryMetas(ctx context.Context, filters Filters, page
 		query = query.Where("tag_info like '%\"" + filters.Tag + "\"%'")
 	}
 
-	err := query.Count(&total).Order("updated_at desc").Offset(pageReq.GetOffset()).Limit(pageReq.Page).Find(&clusters).Error
+	err := query.Count(&total).Order("updated_at desc").Offset(pageReq.GetOffset()).Limit(pageReq.PageSize).Find(&clusters).Error
 	if err != nil {
 		err = framework.WrapError(common.TIEM_CLUSTER_NOT_FOUND, "", err)
 		return nil, page, err

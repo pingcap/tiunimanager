@@ -16,8 +16,7 @@
 package constants
 
 import (
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/errors"
 )
 
 type ChangeFeedStatus string
@@ -53,7 +52,7 @@ func ConvertStatus(s string) (status ChangeFeedStatus, err error) {
 	if IsValidStatus(s) {
 		return ChangeFeedStatus(s), nil
 	} else {
-		return Unknown, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return Unknown, errors.NewError(errors.TIEM_PARAMETER_INVALID, "unexpected change feed status")
 	}
 }
 

@@ -101,7 +101,7 @@ type LoginReq struct {
 }
 
 type LoginResp struct {
-	TokenString string   `json:"tokenString" form:"tokenString"`
+	TokenString string   `json:"token" form:"token"`
 }
 
 type LogoutReq struct {

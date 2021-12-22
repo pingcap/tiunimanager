@@ -146,7 +146,7 @@ func handleMetrics(start time.Time, funcName string, code int) {
 // @Parameter resp
 func handlePanic(ctx context.Context, funcName string, resp *clusterpb.RpcResponse)  {
 	if r := recover(); r != nil {
-		framework.LogWithContext(ctx).Panic("recover from", funcName)
+		framework.LogWithContext(ctx).Errorf("recover from %s", funcName)
 		resp.Code = int32(errors.TIEM_PANIC)
 		resp.Message = fmt.Sprintf("%v", r)
 	}

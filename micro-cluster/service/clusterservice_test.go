@@ -124,5 +124,16 @@ func Test_handlePanic(t *testing.T) {
 		assert.Equal(t, int32(0), resp.Code)
 		assert.Empty(t, resp.Message)
 	})
+	t.Run("panic", func(t *testing.T) {
+		resp := &clusterpb.RpcResponse{
+		}
+
+		func () {
+			defer handlePanic(context.TODO(), "create", resp)
+			panic("aaa")
+		}()
+		assert.Equal(t, int32(errors.TIEM_PANIC), resp.Code)
+		assert.NotEmpty(t, resp.Message)
+	})
 
 }

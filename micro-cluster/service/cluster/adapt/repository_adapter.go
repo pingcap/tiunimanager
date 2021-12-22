@@ -476,7 +476,7 @@ func (t TaskRepoAdapter) Load(ctx context.Context, id uint) (flowWork *domain.Fl
 		Id: int64(id),
 	})
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("Call metadb rpc method [%s] failed, error: %s", "LoadFlow", err.Error())
+		framework.LogWithContext(ctx).Errorf("Call metadb rpc method %s failed, error: %s", "LoadFlow", err.Error())
 		return nil, framework.WrapError(common.TIEM_METADB_SERVER_CALL_ERROR, common.TIEM_METADB_SERVER_CALL_ERROR.Explain(), err)
 	}
 	if resp.Status.Code != 0 {

@@ -96,3 +96,14 @@ func (p *PageRequest) CalcOffset() (offset int) {
 type AsyncTaskWorkFlowInfo struct {
 	WorkFlowID string `json:"workFlowId"` // Asynchronous task workflow ID
 }
+
+//
+// Index common struct for statistical indicators
+// @Description:
+//
+type Index struct {
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Value       interface{} `json:"value"`
+	Unit        string      `json:"unit"`
+}

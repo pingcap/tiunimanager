@@ -73,7 +73,7 @@ func (m Manager) QueryClusterLog(ctx context.Context, req cluster.QueryClusterLo
 	}
 	esResp, err := framework.Current.GetElasticsearchClient().Search(logIndexPrefix, &buf, (req.Page-1)*req.PageSize, req.PageSize)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("cluster [%s] query log, search es err: %v", req.ClusterID, err)
+		framework.LogWithContext(ctx).Errorf("cluster %s query log, search es err: %v", req.ClusterID, err)
 		return resp, page, framework.SimpleError(common.TIEM_CLUSTER_LOG_QUERY_FAILED)
 	}
 	return handleResult(ctx, req, esResp)
@@ -83,18 +83,18 @@ func prepareSearchParams(ctx context.Context, req cluster.QueryClusterLogReq) (b
 	// Get cluster
 	_, err = models.GetClusterReaderWriter().Get(ctx, req.ClusterID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("cluster [%s] query log, get cluster err: %v", req.ClusterID, err)
+		framework.LogWithContext(ctx).Errorf("cluster %s query log, get cluster err: %v", req.ClusterID, err)
 		return buf, framework.SimpleError(common.TIEM_CLUSTER_NOT_FOUND)
 	}
 
 	buf = bytes.Buffer{}
 	query, err := buildSearchClusterReqParams(req)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("cluster [%s] query log, build search params err: %v", req.ClusterID, err)
+		framework.LogWithContext(ctx).Errorf("cluster %s query log, build search params err: %v", req.ClusterID, err)
 		return buf, framework.SimpleError(common.TIEM_CLUSTER_PARAMETER_QUERY_ERROR)
 	}
 	if err = json.NewEncoder(&buf).Encode(query); err != nil {
-		framework.LogWithContext(ctx).Errorf("cluster [%s] query log, encode err: %v", req.ClusterID, err)
+		framework.LogWithContext(ctx).Errorf("cluster %s query log, encode err: %v", req.ClusterID, err)
 		return buf, framework.SimpleError(common.TIEM_CLUSTER_PARAMETER_QUERY_ERROR)
 	}
 	return buf, nil
@@ -102,12 +102,12 @@ func prepareSearchParams(ctx context.Context, req cluster.QueryClusterLogReq) (b
 
 func handleResult(ctx context.Context, req cluster.QueryClusterLogReq, esResp *esapi.Response) (resp cluster.QueryClusterLogResp, page *clusterpb.RpcPage, err error) {
 	if esResp.IsError() || esResp.StatusCode != 200 {
-		framework.LogWithContext(ctx).Errorf("cluster [%s] query log, search es err: %v", req.ClusterID, err)
+		framework.LogWithContext(ctx).Errorf("cluster %s query log, search es err: %v", req.ClusterID, err)
 		return resp, page, framework.SimpleError(common.TIEM_CLUSTER_LOG_QUERY_FAILED)
 	}
 	var esResult ElasticSearchResult
 	if err = json.NewDecoder(esResp.Body).Decode(&esResult); err != nil {
-		framework.LogWithContext(ctx).Errorf("cluster [%s] query log, decoder err: %v", req.ClusterID, err)
+		framework.LogWithContext(ctx).Errorf("cluster %s query log, decoder err: %v", req.ClusterID, err)
 		return resp, page, framework.SimpleError(common.TIEM_CLUSTER_LOG_QUERY_FAILED)
 	}
 
@@ -119,7 +119,7 @@ func handleResult(ctx context.Context, req cluster.QueryClusterLogReq, esResp *e
 		var hitItem SearchClusterLogSourceItem
 		err := convert.ConvertObj(hit.Source, &hitItem)
 		if err != nil {
-			framework.LogWithContext(ctx).Errorf("cluster [%s] query log, convert obj err: %v", req.ClusterID, err)
+			framework.LogWithContext(ctx).Errorf("cluster %s query log, convert obj err: %v", req.ClusterID, err)
 			return resp, page, framework.SimpleError(common.TIEM_CONVERT_OBJ_FAILED)
 		}
 

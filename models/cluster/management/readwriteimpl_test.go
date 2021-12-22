@@ -18,6 +18,7 @@ package management
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	libCommon "github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -83,6 +84,28 @@ func TestGormClusterReadWrite_Create(t *testing.T) {
 		assert.NotEmpty(t, got.UpdatedAt)
 		assert.Equal(t, 2, len(got.Tags))
 		assert.Equal(t, string(constants.ClusterRunning), got.Status)
+	})
+	t.Run("duplicated name", func(t *testing.T) {
+		got1, _ := testRW.Create(context.TODO(), &Cluster{
+			Name: "test duplicated name",
+			Entity: common.Entity{
+				TenantId: "111",
+				Status:   string(constants.ClusterRunning),
+			},
+			Tags: []string{"tag1", "tag2"},
+		})
+		defer testRW.Delete(context.TODO(), got1.ID)
+
+		_, err := testRW.Create(context.TODO(), &Cluster{
+			Name: "test duplicated name",
+			Entity: common.Entity{
+				TenantId: "111",
+				Status:   string(constants.ClusterRunning),
+			},
+			Tags: []string{"tag1", "tag2"},
+		})
+		assert.Error(t, err)
+		assert.Equal(t, errors.TIEM_DUPLICATED_NAME, err.(errors.EMError).GetCode())
 	})
 	t.Run("default", func(t *testing.T) {
 		got, err := testRW.Create(context.TODO(), &Cluster{
@@ -489,4 +512,51 @@ func mockCluster(name string, clusterType string, status constants.ClusterRunnin
 	}
 	testRW.UpdateInstance(context.TODO(), instances...)
 	return got.ID
+}
+
+func TestClusterReadWrite_Relations(t *testing.T) {
+	relation1 := &ClusterRelation{
+		ObjectClusterID: "test_relation",
+		SubjectClusterID: "222",
+		RelationType: constants.ClusterRelationCloneFrom,
+	}
+	err := testRW.CreateRelation(context.TODO(), relation1)
+	assert.NoError(t, err)
+
+	err = testRW.CreateRelation(context.TODO(), &ClusterRelation{
+		ObjectClusterID: "test_relation",
+		SubjectClusterID: "222",
+		RelationType: constants.ClusterRelationSlaveTo,
+	})
+	assert.NoError(t, err)
+
+	err = testRW.CreateRelation(context.TODO(), &ClusterRelation{
+		ObjectClusterID: "test_relation",
+		SubjectClusterID: "333",
+		RelationType: constants.ClusterRelationSlaveTo,
+	})
+	assert.NoError(t, err)
+
+	err = testRW.CreateRelation(context.TODO(), &ClusterRelation{
+		ObjectClusterID: "333",
+		SubjectClusterID: "test_relation",
+		RelationType: constants.ClusterRelationSlaveTo,
+	})
+	assert.NoError(t, err)
+
+	r, err := testRW.GetRelations(context.TODO(), "test_relation")
+	assert.NoError(t, err)
+	assert.Equal(t, 3, len(r))
+
+	r, err = testRW.GetRelations(context.TODO(), "222")
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(r))
+
+	err = testRW.DeleteRelation(context.TODO(), relation1.ID)
+	assert.NoError(t, err)
+
+	r, err = testRW.GetRelations(context.TODO(), "test_relation")
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(r))
+
 }

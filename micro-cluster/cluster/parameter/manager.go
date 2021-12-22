@@ -69,9 +69,8 @@ var modifyParametersDefine = workflow.WorkFlowDefine{
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":       {"modifyParameter", "modifyDone", "fail", workflow.SyncFuncNode, modifyParameters},
 		"modifyDone":  {"refreshParameter", "refreshDone", "fail", workflow.SyncFuncNode, refreshParameter},
-		"refreshDone": {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
-		"onlineDone":  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistUpdateParameter)},
-		"fail":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure)},
+		"refreshDone": {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(defaultEnd, persistUpdateParameter)},
+		"fail":        {"fail", "", "", workflow.SyncFuncNode, defaultEnd},
 	},
 }
 
@@ -80,13 +79,15 @@ var applyParametersDefine = workflow.WorkFlowDefine{
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":       {"modifyParameter", "modifyDone", "fail", workflow.SyncFuncNode, modifyParameters},
 		"modifyDone":  {"refreshParameter", "refreshDone", "fail", workflow.SyncFuncNode, refreshParameter},
-		"refreshDone": {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
-		"onlineDone":  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistApplyParameter)},
-		"fail":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure)},
+		"refreshDone": {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(defaultEnd, persistApplyParameter)},
+		"fail":        {"fail", "", "", workflow.SyncFuncNode, defaultEnd},
 	},
 }
 
 func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryClusterParametersReq) (resp cluster.QueryClusterParametersResp, page *clusterpb.RpcPage, err error) {
+	framework.LogWithContext(ctx).Infof("begin query cluster parameters, request: %+v", req)
+	defer framework.LogWithContext(ctx).Infof("end query cluster parameters")
+
 	offset := (req.Page - 1) * req.PageSize
 	pgId, params, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, offset, req.PageSize)
 	if err != nil {
@@ -143,20 +144,24 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 	return resp, page, nil
 }
 
-func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.UpdateClusterParametersReq) (resp cluster.UpdateClusterParametersResp, err error) {
+func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.UpdateClusterParametersReq, maintenanceStatusChange bool) (resp cluster.UpdateClusterParametersResp, err error) {
+	framework.LogWithContext(ctx).Infof("begin update cluster parameters, request: %+v", req)
+	defer framework.LogWithContext(ctx).Infof("end update cluster parameters")
+
 	// Get cluster info and topology from db based by clusterID
 	clusterMeta, err := handler.Get(ctx, req.ClusterID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("load cluser[%s] meta from db error: %s", req.ClusterID, err.Error())
+		framework.LogWithContext(ctx).Errorf("load cluser%s meta from db error: %s", req.ClusterID, err.Error())
 		return
 	}
 
 	data := make(map[string]interface{})
 	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: req.Params}
 	data[contextUpdateParameterInfo] = &req
+	data[contextMaintenanceStatusChange] = maintenanceStatusChange
 	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("cluster [%s] update cluster parameters aync maintenance workflow error: %s", req.ClusterID, err.Error())
+		framework.LogWithContext(ctx).Errorf("cluster %s update cluster parameters aync maintenance workflow error: %s", req.ClusterID, err.Error())
 		return
 	}
 
@@ -170,17 +175,20 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 }
 
 func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyParameterGroupReq) (resp message.ApplyParameterGroupResp, err error) {
+	framework.LogWithContext(ctx).Infof("begin apply cluster parameters, request: %+v", req)
+	defer framework.LogWithContext(ctx).Infof("end apply cluster parameters")
+
 	// Get cluster info and topology from db based by clusterID
 	clusterMeta, err := handler.Get(ctx, req.ClusterID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("load cluser[%s] meta from db error: %s", req.ClusterID, err.Error())
+		framework.LogWithContext(ctx).Errorf("load cluser%s meta from db error: %s", req.ClusterID, err.Error())
 		return
 	}
 
 	// Detail parameter group by id
 	_, pgm, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("detail parameter group [%s] from db error: %s", req.ParamGroupId, err.Error())
+		framework.LogWithContext(ctx).Errorf("detail parameter group %s from db error: %s", req.ParamGroupId, err.Error())
 		return resp, framework.SimpleError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR)
 	}
 
@@ -203,9 +211,10 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 	data := make(map[string]interface{})
 	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: params}
 	data[contextApplyParameterInfo] = &req
+	data[contextMaintenanceStatusChange] = true
 	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, applyParametersDefine.FlowName)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("cluster [%s] update cluster parameters aync maintenance workflow error: %s", req.ClusterID, err.Error())
+		framework.LogWithContext(ctx).Errorf("cluster %s update cluster parameters aync maintenance workflow error: %s", req.ClusterID, err.Error())
 		return
 	}
 

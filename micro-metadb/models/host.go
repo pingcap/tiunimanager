@@ -976,11 +976,11 @@ func (m *DAOResourceManager) UpdateHostStatus(ctx context.Context, request *dbpb
 		result := tx.Model(&rt.Host{}).Where("id = ?", hostId).Update("status", request.Status)
 		if result.Error != nil {
 			tx.Rollback()
-			return framework.NewTiEMErrorf(common.TIEM_UPDATE_HOST_STATUS_FAIL, "update host [%s] status to %d fail", hostId, request.Status)
+			return framework.NewTiEMErrorf(common.TIEM_UPDATE_HOST_STATUS_FAIL, "update host %s status to %d fail", hostId, request.Status)
 		}
 		if result.RowsAffected == 0 {
 			tx.Rollback()
-			return framework.NewTiEMErrorf(common.TIEM_UPDATE_HOST_STATUS_FAIL, "update invaild host [%s] status", hostId)
+			return framework.NewTiEMErrorf(common.TIEM_UPDATE_HOST_STATUS_FAIL, "update invaild host %s status", hostId)
 		}
 	}
 	tx.Commit()
@@ -993,11 +993,11 @@ func (m *DAOResourceManager) ReserveHost(ctx context.Context, request *dbpb.DBRe
 		result := tx.Model(&rt.Host{}).Where("id = ?", hostId).Update("reserved", request.Reserved)
 		if result.Error != nil {
 			tx.Rollback()
-			return framework.NewTiEMErrorf(common.TIEM_RESERVE_HOST_FAIL, "set host [%s] reserved status to %v fail", hostId, request.Reserved)
+			return framework.NewTiEMErrorf(common.TIEM_RESERVE_HOST_FAIL, "set host %s reserved status to %v fail", hostId, request.Reserved)
 		}
 		if result.RowsAffected == 0 {
 			tx.Rollback()
-			return framework.NewTiEMErrorf(common.TIEM_RESERVE_HOST_FAIL, "set reserved status for invaild host [%s]", hostId)
+			return framework.NewTiEMErrorf(common.TIEM_RESERVE_HOST_FAIL, "set reserved status for invaild host %s", hostId)
 		}
 	}
 	tx.Commit()

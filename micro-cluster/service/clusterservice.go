@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -55,9 +56,6 @@ import (
 
 var TiEMClusterServiceName = "go.micro.tiem.cluster"
 
-var SuccessResponseStatus = &clusterpb.ResponseStatusDTO{Code: 0}
-var BizErrorResponseStatus = &clusterpb.ResponseStatusDTO{Code: 500}
-
 type ClusterServiceHandler struct {
 	resourceManager         *resourcemanager.ResourceManager
 	authManager             *user.AuthManager
@@ -89,7 +87,7 @@ func handleResponse(ctx context.Context, resp *clusterpb.RpcResponse, err error,
 		data, getDataError := json.Marshal(responseData)
 		if getDataError != nil {
 			// deal with err uniformly later
-			err = framework.WrapError(common.TIEM_MARSHAL_ERROR, fmt.Sprintf("marshal request data error, data = %v", responseData), getDataError)
+			err = errors.WrapError(errors.TIEM_MARSHAL_ERROR, fmt.Sprintf("marshal request data error, data = %v", responseData), getDataError)
 		} else {
 			// handle data and page
 			resp.Code = int32(common.TIEM_SUCCESS)
@@ -102,12 +100,23 @@ func handleResponse(ctx context.Context, resp *clusterpb.RpcResponse, err error,
 	}
 
 	if err != nil {
-		if _, ok := err.(framework.TiEMError); !ok {
-			err = framework.WrapError(common.TIEM_UNRECOGNIZED_ERROR, err.Error(), err)
+		if finalError, ok := err.(framework.TiEMError); ok {
+			framework.LogWithContext(ctx).Errorf("rpc method failed with error, %s", err.Error())
+			resp.Code = int32(finalError.GetCode())
+			resp.Message = finalError.GetMsg()
+			return
 		}
-		framework.LogWithContext(ctx).Error(err.Error())
-		resp.Code = int32(err.(framework.TiEMError).GetCode())
-		resp.Message = err.(framework.TiEMError).GetMsg()
+		if finalError, ok := err.(errors.EMError); ok {
+			framework.LogWithContext(ctx).Errorf("rpc method failed with error, %s", err.Error())
+			resp.Code = int32(finalError.GetCode())
+			resp.Message = finalError.GetMsg()
+			return
+		} else {
+			resp.Code = int32(errors.TIEM_UNRECOGNIZED_ERROR)
+			resp.Message = err.Error()
+		}
+
+		return
 	}
 }
 
@@ -292,7 +301,7 @@ func (handler *ClusterServiceHandler) UpdateClusterParameters(ctx context.Contex
 	request := &cluster.UpdateClusterParametersReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterParameterManager.UpdateClusterParameters(ctx, *request)
+		result, err := handler.clusterParameterManager.UpdateClusterParameters(ctx, *request, true)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
@@ -395,10 +404,17 @@ func (handler *ClusterServiceHandler) CloneCluster(ctx context.Context, req *clu
 	return nil
 }
 
-func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+func (handler ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "TakeoverClusters", int(resp.GetCode()))
-	// todo takeover
+	request := cluster.TakeoverClusterReq {}
+
+	if handleRequest(ctx, req, resp, &request) {
+		result, err := handler.clusterManager.Takeover(ctx, request)
+
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
 	return nil
 }
 
@@ -638,9 +654,9 @@ func (c ClusterServiceHandler) GetDashboardInfo(ctx context.Context, request *cl
 	return nil
 }
 
-func (c ClusterServiceHandler) DescribeMonitor(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+func (c ClusterServiceHandler) GetMonitorInfo(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "DescribeMonitor", int(resp.GetCode()))
+	defer handleMetrics(start, "GetMonitorInfo", int(resp.GetCode()))
 	request := &cluster.QueryMonitorInfoReq{}
 
 	if handleRequest(ctx, req, resp, request) {

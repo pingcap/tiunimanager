@@ -51,7 +51,7 @@ const TiEM_X_USER_NAME_KEY = "Em-X-User-Name"
 const TiEM_X_TENANT_ID_KEY = "Em-X-Tenant-Id"
 
 func NewTracerFromArgs(args *ClientArgs) *Tracer {
-	jaegerTracer, _, err := NewJaegerTracer("tiem", args.TracerAddress)
+	jaegerTracer, _, err := NewJaegerTracer("em", args.TracerAddress)
 	if err != nil {
 		panic("init tracer failed")
 	}

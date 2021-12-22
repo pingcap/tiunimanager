@@ -230,11 +230,11 @@ func (rw *GormResourceReadWrite) UpdateHostStatus(ctx context.Context, hostIds [
 		result := tx.Model(&rp.Host{}).Where("id = ?", hostId).Update("status", status)
 		if result.Error != nil {
 			tx.Rollback()
-			return errors.NewEMErrorf(errors.TIEM_UPDATE_HOST_STATUS_FAIL, "update host [%s] status to %s fail", hostId, status)
+			return errors.NewEMErrorf(errors.TIEM_UPDATE_HOST_STATUS_FAIL, "update host %s status to %s fail", hostId, status)
 		}
 		if result.RowsAffected == 0 {
 			tx.Rollback()
-			return errors.NewEMErrorf(errors.TIEM_UPDATE_HOST_STATUS_FAIL, "update host [%s] status to %s not affected", hostId, status)
+			return errors.NewEMErrorf(errors.TIEM_UPDATE_HOST_STATUS_FAIL, "update host %s status to %s not affected", hostId, status)
 		}
 	}
 	tx.Commit()
@@ -246,11 +246,11 @@ func (rw *GormResourceReadWrite) UpdateHostReserved(ctx context.Context, hostIds
 		result := tx.Model(&rp.Host{}).Where("id = ?", hostId).Update("reserved", reserved)
 		if result.Error != nil {
 			tx.Rollback()
-			return errors.NewEMErrorf(errors.TIEM_RESERVE_HOST_FAIL, "update host [%s] reserved status to %v fail", hostId, reserved)
+			return errors.NewEMErrorf(errors.TIEM_RESERVE_HOST_FAIL, "update host %s reserved status to %v fail", hostId, reserved)
 		}
 		if result.RowsAffected == 0 {
 			tx.Rollback()
-			return errors.NewEMErrorf(errors.TIEM_RESERVE_HOST_FAIL, "update host [%s] reserved status to %v not affected", hostId, reserved)
+			return errors.NewEMErrorf(errors.TIEM_RESERVE_HOST_FAIL, "update host %s reserved status to %v not affected", hostId, reserved)
 		}
 	}
 	tx.Commit()

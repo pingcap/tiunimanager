@@ -13,60 +13,39 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package common
+package changefeed
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"time"
-
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
-	"gorm.io/gorm"
+	"github.com/pingcap-inc/tiem/common/constants"
 )
 
-type Entity struct {
-	ID        string    `gorm:"primarykey"`
-	CreatedAt time.Time `gorm:"<-:create"`
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt
+type Service interface {
+	//
+	// CreateBetweenClusters
+	// @Description: create a change feed task for replicating the incremental data of source cluster to target cluster
+	// @param ctx
+	// @param sourceClusterID
+	// @param targetClusterID
+	// @param relationType
+	// @return ID
+	// @return err
+	//
+	CreateBetweenClusters(ctx context.Context, sourceClusterID string, targetClusterID string, relationType constants.ClusterRelationType) (ID string, err error)
 
-	TenantId string `gorm:"default:null;not null;<-:create"`
-	Status   string `gorm:"not null;"`
+	//
+	// ReverseBetweenClusters reverse change feed task
+	// @Description: it will delete change feed task of source cluster, then create a new one for target
+	// @param ctx
+	// @param sourceClusterID
+	// @param targetClusterID
+	// @param relationType
+	// @return ID
+	// @return err
+	//
+	ReverseBetweenClusters(ctx context.Context, sourceClusterID string, targetClusterID string, relationType constants.ClusterRelationType) (ID string, err error)
 }
 
-func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
-	e.ID = uuidutil.GenerateID()
+func GetChangeFeedService() Service {
 	return nil
-}
-
-type GormDB struct {
-	db *gorm.DB
-}
-
-func WrapDB(db *gorm.DB) GormDB {
-	return GormDB{db: db}
-}
-
-func (m *GormDB) DB(ctx context.Context) *gorm.DB {
-	return m.db.WithContext(ctx)
-}
-
-// WrapDBError
-// @Description:
-// @Parameter err
-// @return error is nil or TiEMError
-func WrapDBError(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	switch err.(type) {
-	case errors.EMError:
-		return err
-	case framework.TiEMError:
-		return err
-	default:
-		return errors.NewError(errors.TIEM_SQL_ERROR, err.Error())
-	}
 }

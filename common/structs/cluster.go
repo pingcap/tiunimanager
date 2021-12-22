@@ -215,3 +215,10 @@ type ClusterParameterInfo struct {
 	CreatedAt      int64              `json:"createTime" example:"1636698675"`
 	UpdatedAt      int64              `json:"updateTime" example:"1636698675"`
 }
+
+type ResourceStockCheckResult struct {
+	Type string `json:"componentType"`
+	Name string `json:"componentName"`
+	ClusterResourceParameterComputeResource
+	Enough bool
+}

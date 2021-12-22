@@ -32,6 +32,9 @@ import (
 	resourceStructs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
+	"github.com/pingcap/tiup/pkg/cluster/spec"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"strconv"
 	"strings"
 	"time"
@@ -234,6 +237,8 @@ func freeInstanceResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 
 func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	meta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	deleteReq := context.GetData(ContextDeleteRequest).(cluster.DeleteClusterReq)
+
 	_, err := backuprestore.GetBRService().DeleteBackupStrategy(context.Context, cluster.DeleteBackupStrategyReq{
 		ClusterID: meta.Cluster.ID,
 	})
@@ -243,10 +248,12 @@ func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		return err
 	}
 
-	_, err = backuprestore.GetBRService().DeleteBackupRecords(context.Context, cluster.DeleteBackupDataReq{
-		ClusterID:  meta.Cluster.ID,
-		BackupMode: string(constants.BackupModeAuto),
-	})
+	if deleteReq.ClearBackupData {
+		_, err = backuprestore.GetBRService().DeleteBackupRecords(context.Context, cluster.DeleteBackupDataReq{
+			ClusterID:  meta.Cluster.ID,
+			BackupMode: string(constants.BackupModeAuto),
+		})
+	}
 
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -258,8 +265,14 @@ func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 
 func backupBeforeDelete(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	meta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
-	_, err := backupSubProcess(context.Context, meta, false)
-	return err
+	deleteReq := context.GetData(ContextDeleteRequest).(cluster.DeleteClusterReq)
+
+	if deleteReq.AutoBackup {
+		_, err := backupSubProcess(context.Context, meta, false)
+		return err
+	}
+
+	return nil
 }
 
 func backupSubProcess(ctx context.Context, meta *handler.ClusterMeta, independenceMaintenance bool) (*cluster.BackupClusterDataResp, error) {
@@ -676,7 +689,7 @@ func deleteCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 }
 
 // freedClusterResource
-// @Description: freed resource
+// @Description: freed all resource owned by cluster
 func freedClusterResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	request := &resourceStructs.RecycleRequest{
@@ -730,3 +743,63 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 
 	return nil
 }
+
+func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	req := context.GetData(ContextTakeoverRequest).(cluster.TakeoverClusterReq)
+
+	sshClient, sftpClient, err := openSftpClient(context.Context, req)
+
+	if err != nil {
+		return err
+	} else {
+		defer sshClient.Close()
+		defer sftpClient.Close()
+	}
+
+	remoteFileName := fmt.Sprintf("%sstorage/cluster/clusters/%s/meta.yaml", req.TiUPPath, clusterMeta.Cluster.Name)
+
+	remoteFile, err := sftpClient.Open(remoteFileName)
+	if err != nil {
+		framework.LogWithContext(context).Errorf("fetch topology failed, error: %s", err.Error())
+		return errors.WrapError(errors.TIEM_TAKEOVER_SFTP_ERROR, "fetch topology failed", err)
+	}
+	defer remoteFile.Close()
+
+	dataByte, err := ioutil.ReadAll(remoteFile)
+	if err != nil {
+		framework.LogWithContext(context).Errorf("fetch topology failed, error: %s", err.Error())
+		return errors.WrapError(errors.TIEM_TAKEOVER_SFTP_ERROR, "read remote file error", err)
+	}
+	context.SetData(ContextTopologyConfig, dataByte)
+	return nil
+}
+
+func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	dataByte := context.GetData(ContextTopologyConfig).([]byte)
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+
+	metadata := &spec.ClusterMeta{}
+	err := yaml.Unmarshal(dataByte, metadata)
+	if err != nil {
+		err = errors.WrapError(errors.TIEM_UNMARSHAL_ERROR, "rebuild topology config failed", err)
+		return err
+	}
+
+	clusterMeta.Cluster.Type = "TiDB"
+	clusterMeta.Cluster.Version = metadata.Version
+	clusterSpec := metadata.GetTopology().(*spec.Specification)
+	_, err = clusterMeta.ParseTopologyFromConfig(context, clusterSpec)
+	if err != nil {
+		framework.LogWithContext(context).Errorf(
+			"add instances into cluster %s topology error: %s", clusterMeta.Cluster.ID, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	return nil
+}
+

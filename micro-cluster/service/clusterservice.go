@@ -56,9 +56,6 @@ import (
 
 var TiEMClusterServiceName = "go.micro.tiem.cluster"
 
-var SuccessResponseStatus = &clusterpb.ResponseStatusDTO{Code: 0}
-var BizErrorResponseStatus = &clusterpb.ResponseStatusDTO{Code: 500}
-
 type ClusterServiceHandler struct {
 	resourceManager         *resourcemanager.ResourceManager
 	authManager             *user.AuthManager
@@ -407,10 +404,17 @@ func (handler *ClusterServiceHandler) CloneCluster(ctx context.Context, req *clu
 	return nil
 }
 
-func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+func (handler ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "TakeoverClusters", int(resp.GetCode()))
-	// todo takeover
+	request := cluster.TakeoverClusterReq {}
+
+	if handleRequest(ctx, req, resp, &request) {
+		result, err := handler.clusterManager.Takeover(ctx, request)
+
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
 	return nil
 }
 

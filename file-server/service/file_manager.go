@@ -162,7 +162,7 @@ func (mgr *FileManager) DownloadFile(ctx context.Context, c *gin.Context, filePa
 }
 
 func (mgr *FileManager) ZipDir(ctx context.Context, dir string, zipFile string) error {
-	framework.LogWithContext(ctx).Infof("begin zipDir: dir[%s] to file[%s]", dir, zipFile)
+	framework.LogWithContext(ctx).Infof("begin zipDir: dir%s to file%s", dir, zipFile)
 	defer framework.LogWithContext(ctx).Info("end zipDir")
 	fz, err := os.Create(zipFile)
 	if err != nil {
@@ -201,7 +201,7 @@ func (mgr *FileManager) ZipDir(ctx context.Context, dir string, zipFile string) 
 }
 
 func (mgr *FileManager) UnzipDir(ctx context.Context, zipFile string, dir string) (unzipErr error) {
-	framework.LogWithContext(ctx).Infof("begin unzipDir: file[%s] to dir[%s]", zipFile, dir)
+	framework.LogWithContext(ctx).Infof("begin unzipDir: file%s to dir%s", zipFile, dir)
 	defer framework.LogWithContext(ctx).Info("end unzipDir")
 	r, err := zip.OpenReader(zipFile)
 	if err != nil {

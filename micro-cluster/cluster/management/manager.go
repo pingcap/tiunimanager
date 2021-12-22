@@ -24,6 +24,10 @@ import (
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	"github.com/pingcap-inc/tiem/workflow"
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
+	"net"
+	"strconv"
 )
 
 const (
@@ -35,6 +39,9 @@ const (
 	ContextCloneStrategy     = "CloneStrategy"
 	ContextBackupID          = "BackupID"
 	ContextWorkflowID        = "WorkflowID"
+	ContextTopologyConfig    = "TopologyConfig"
+	ContextDeleteRequest     = "DeleteRequest"
+	ContextTakeoverRequest   = "TakeoverRequest"
 )
 
 type Manager struct{}
@@ -393,6 +400,7 @@ func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterRe
 
 	data := map[string]interface{}{
 		ContextClusterMeta: meta,
+		ContextDeleteRequest: req,
 	}
 	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceDeleting, deleteClusterFlow.FlowName, data)
 	if err != nil {
@@ -436,6 +444,83 @@ func (p *Manager) RestartCluster(ctx context.Context, req cluster.RestartCluster
 
 	resp.ClusterID = meta.Cluster.ID
 	resp.WorkFlowID = flowID
+	return
+}
+
+var takeoverClusterFlow = workflow.WorkFlowDefine {
+	FlowName: constants.FlowTakeoverCluster,
+	TaskNodes: map[string]*workflow.NodeDefine{
+		"start":   {"fetchTopologyFile", "fetched", "fail", workflow.SyncFuncNode, fetchTopologyFile},
+		"fetched": {"rebuildTopologyFromConfig", "built", "fail", workflow.SyncFuncNode, rebuildTopologyFromConfig},
+		"built":   {"takeoverResource", "success", "", workflow.SyncFuncNode, takeoverResource},
+		"success": {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistCluster)},
+		"fail":    {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure)},
+	},
+}
+
+func openSftpClient(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error) {
+	conf := ssh.ClientConfig{User: req.TiUPUserName,
+		Auth: []ssh.AuthMethod{ssh.Password(req.TiUPUserPassword)},
+		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+			return nil
+		},
+	}
+
+	client, err := ssh.Dial("tcp", net.JoinHostPort(req.TiUPIp, strconv.Itoa(req.TiUPPort)), &conf)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("connect error, error: %s", err.Error())
+		return nil, nil, errors.WrapError(errors.TIEM_TAKEOVER_SSH_CONNECT_ERROR, "ssh dial error", err)
+	}
+
+	sftpClient, err := sftp.NewClient(client)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("new sftp client failed, error: %s", err.Error())
+		client.Close()
+		return nil, nil, errors.WrapError(errors.TIEM_TAKEOVER_SFTP_ERROR, "new sftp client failed", err)
+	}
+	return client, sftpClient, nil
+}
+
+func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) (resp cluster.TakeoverClusterResp, err error) {
+	if len(req.ClusterNames) == 0 {
+		err = errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster names required")
+		return
+	}
+
+	client, sftpClient, err := openSftpClient(ctx, req)
+	sftpClient.Close()
+	client.Close()
+
+	if err != nil {
+		return
+	}
+
+	resp.Clusters = make(map[string]string)
+	resp.FailedErrors = make(map[string]string)
+
+	for _, clusterName := range req.ClusterNames {
+		meta := &handler.ClusterMeta{}
+		if err = meta.BuildForTakeover(ctx, clusterName); err != nil {
+			errMsg := fmt.Sprintf("takeover cluser %s error: %s", clusterName, err.Error())
+			framework.LogWithContext(ctx).Errorf(errMsg)
+			resp.FailedErrors[clusterName] = errMsg
+			continue
+		}
+
+		data := map[string]interface{}{
+			ContextClusterMeta: meta,
+			ContextTakeoverRequest: req,
+		}
+		flowID, startError := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceCreating, createClusterFlow.FlowName, data)
+		if startError != nil {
+			errMsg := fmt.Sprintf("cluster %s async maintenance error: %s", meta.Cluster.ID, err.Error())
+			framework.LogWithContext(ctx).Errorf(errMsg)
+			resp.FailedErrors[clusterName] = errMsg
+			continue
+		}
+		resp.Clusters[clusterName] = flowID
+	}
+
 	return
 }
 

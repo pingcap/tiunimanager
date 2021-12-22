@@ -29,8 +29,7 @@ definitions:
   cluster.CloneClusterReq:
     properties:
       cloneStrategy:
-        description: specify clone strategy, include empty, snapshot and sync, default
-          empty(option)
+        description: specify clone strategy, include empty, snapshot and sync, default empty(option)
         type: string
       clusterName:
         type: string
@@ -39,8 +38,7 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent
-          with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -48,13 +46,10 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources,
-          when exclusive, a host will only deploy instances of the same cluster, which
-          may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
         type: boolean
       parameterGroupID:
         type: string
@@ -138,8 +133,7 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent
-          with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -147,13 +141,10 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources,
-          when exclusive, a host will only deploy instances of the same cluster, which
-          may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
         type: boolean
       parameterGroupID:
         type: string
@@ -403,6 +394,27 @@ definitions:
         example: 1
         type: integer
     type: object
+  cluster.PreviewClusterResp:
+    properties:
+      capabilityIndexes:
+        items:
+          $ref: '#/definitions/structs.Index'
+        type: array
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      cpuArchitecture:
+        type: string
+      region:
+        type: string
+      stockCheckResult:
+        items:
+          $ref: '#/definitions/structs.ResourceStockCheckResult'
+        type: array
+    type: object
   cluster.QueryBackupRecordsResp:
     properties:
       backupRecords:
@@ -536,8 +548,7 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent
-          with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -545,13 +556,10 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources,
-          when exclusive, a host will only deploy instances of the same cluster, which
-          may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
         type: boolean
       parameterGroupID:
         type: string
@@ -656,12 +664,13 @@ definitions:
   cluster.TakeoverClusterResp:
     properties:
       clusters:
-        items:
-          $ref: '#/definitions/structs.ClusterInfo'
-        type: array
-      workFlowId:
-        description: Asynchronous task workflow ID
-        type: string
+        additionalProperties:
+          type: string
+        type: object
+      failed:
+        additionalProperties:
+          type: string
+        type: object
     type: object
   cluster.TiDBDownstream:
     properties:
@@ -894,74 +903,6 @@ definitions:
         type: integer
       portRangeStart:
         type: integer
-    type: object
-  management.PreviewClusterRsp:
-    properties:
-      capabilityIndexes:
-        items:
-          $ref: '#/definitions/management.ServiceCapabilityIndex'
-        type: array
-      clusterName:
-        type: string
-      clusterType:
-        type: string
-      clusterVersion:
-        type: string
-      cpuArchitecture:
-        type: string
-      dbPassword:
-        type: string
-      exclusive:
-        type: boolean
-      recoverInfo:
-        $ref: '#/definitions/management.RecoverInfo'
-      region:
-        type: string
-      stockCheckResult:
-        items:
-          $ref: '#/definitions/management.StockCheckItem'
-        type: array
-      tags:
-        items:
-          type: string
-        type: array
-      tls:
-        type: boolean
-    type: object
-  management.RecoverInfo:
-    properties:
-      backupRecordId:
-        type: integer
-      sourceClusterId:
-        type: string
-    type: object
-  management.ServiceCapabilityIndex:
-    properties:
-      description:
-        type: string
-      name:
-        type: string
-      unit:
-        type: string
-      value:
-        type: object
-    type: object
-  management.StockCheckItem:
-    properties:
-      component:
-        $ref: '#/definitions/knowledge.ClusterComponent'
-      count:
-        type: integer
-      cpuArchitecture:
-        type: string
-      enough:
-        type: boolean
-      region:
-        type: string
-      specCode:
-        type: string
-      zoneCode:
-        type: string
     type: object
   message.ApplyParameterGroupReq:
     properties:
@@ -1377,8 +1318,7 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent
-          with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -1388,15 +1328,12 @@ definitions:
       createTime:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
         type: string
       deleteTime:
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources,
-          when exclusive, a host will only deploy instances of the same cluster, which
-          may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
         type: boolean
       extranetConnectAddresses:
         items:
@@ -1806,6 +1743,17 @@ definitions:
       userName:
         type: string
     type: object
+  structs.Index:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      unit:
+        type: string
+      value:
+        type: object
+    type: object
   structs.ParameterGroupParameterInfo:
     properties:
       category:
@@ -1904,6 +1852,27 @@ definitions:
       id:
         type: string
       name:
+        type: string
+    type: object
+  structs.ResourceStockCheckResult:
+    properties:
+      componentName:
+        type: string
+      componentType:
+        type: string
+      count:
+        type: integer
+      diskCapacity:
+        type: integer
+      diskType:
+        description: NVMeSSD/SSD/SATA
+        type: string
+      enough:
+        type: boolean
+      specCode:
+        description: 4C8G/8C16G ?
+        type: string
+      zoneCode:
         type: string
     type: object
   structs.Stocks:
@@ -3230,7 +3199,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.PreviewClusterRsp'
+                  $ref: '#/definitions/cluster.PreviewClusterResp'
               type: object
         "401":
           description: Unauthorized

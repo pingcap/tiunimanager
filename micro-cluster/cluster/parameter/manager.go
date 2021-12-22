@@ -151,7 +151,7 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 	// Get cluster info and topology from db based by clusterID
 	clusterMeta, err := handler.Get(ctx, req.ClusterID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("load cluser[%s] meta from db error: %s", req.ClusterID, err.Error())
+		framework.LogWithContext(ctx).Errorf("load cluser%s meta from db error: %s", req.ClusterID, err.Error())
 		return
 	}
 
@@ -161,7 +161,7 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 	data[contextMaintenanceStatusChange] = maintenanceStatusChange
 	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("cluster [%s] update cluster parameters aync maintenance workflow error: %s", req.ClusterID, err.Error())
+		framework.LogWithContext(ctx).Errorf("cluster %s update cluster parameters aync maintenance workflow error: %s", req.ClusterID, err.Error())
 		return
 	}
 
@@ -181,14 +181,14 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 	// Get cluster info and topology from db based by clusterID
 	clusterMeta, err := handler.Get(ctx, req.ClusterID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("load cluser[%s] meta from db error: %s", req.ClusterID, err.Error())
+		framework.LogWithContext(ctx).Errorf("load cluser%s meta from db error: %s", req.ClusterID, err.Error())
 		return
 	}
 
 	// Detail parameter group by id
 	_, pgm, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("detail parameter group [%s] from db error: %s", req.ParamGroupId, err.Error())
+		framework.LogWithContext(ctx).Errorf("detail parameter group %s from db error: %s", req.ParamGroupId, err.Error())
 		return resp, framework.SimpleError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR)
 	}
 
@@ -214,7 +214,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 	data[contextMaintenanceStatusChange] = true
 	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, applyParametersDefine.FlowName)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("cluster [%s] update cluster parameters aync maintenance workflow error: %s", req.ClusterID, err.Error())
+		framework.LogWithContext(ctx).Errorf("cluster %s update cluster parameters aync maintenance workflow error: %s", req.ClusterID, err.Error())
 		return
 	}
 

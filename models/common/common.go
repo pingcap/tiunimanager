@@ -29,7 +29,7 @@ type Entity struct {
 	ID        string    `gorm:"primarykey"`
 	CreatedAt time.Time `gorm:"<-:create"`
 	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	DeletedAt gorm.DeletedAt
 
 	TenantId string `gorm:"default:null;not null;<-:create"`
 	Status   string `gorm:"not null;"`

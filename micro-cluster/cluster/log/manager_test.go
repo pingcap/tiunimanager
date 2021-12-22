@@ -80,8 +80,8 @@ func TestManager_prepareSearchParams_Success1(t *testing.T) {
 			Level:     "info",
 			Ip:        "127.0.0.1",
 			Message:   "hello",
-			StartTime: "2021-01-01 00:00:00",
-			EndTime:   "2021-12-01 00:00:00",
+			StartTime: 1630468800,
+			EndTime:   1638331200,
 			PageRequest: structs.PageRequest{
 				Page:     1,
 				PageSize: 10,
@@ -105,8 +105,8 @@ func TestManager_prepareSearchParams_Success2(t *testing.T) {
 		}, nil)
 
 		_, err := prepareSearchParams(context.TODO(), cluster.QueryClusterLogReq{
-			StartTime: "",
-			EndTime:   "2021-12-01 00:00:00",
+			StartTime: 0,
+			EndTime:   1638331200,
 		})
 		assert.NoError(t, err)
 	})
@@ -125,8 +125,8 @@ func TestManager_prepareSearchParams_Success3(t *testing.T) {
 		}, nil)
 
 		_, err := prepareSearchParams(context.TODO(), cluster.QueryClusterLogReq{
-			StartTime: "2022-01-01 00:00:00",
-			EndTime:   "",
+			StartTime: 1630468800,
+			EndTime:   0,
 		})
 		assert.NoError(t, err)
 	})
@@ -145,8 +145,8 @@ func TestManager_prepareSearchParams_Error1(t *testing.T) {
 		}, nil)
 
 		_, err := prepareSearchParams(context.TODO(), cluster.QueryClusterLogReq{
-			StartTime: "2022-01-01 00:00:00",
-			EndTime:   "2021-12-01 00:00:00",
+			StartTime: 1638331200,
+			EndTime:   1630468800,
 		})
 		assert.Error(t, err)
 	})

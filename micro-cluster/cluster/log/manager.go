@@ -239,34 +239,17 @@ func buildSearchClusterReqParams(req cluster.QueryClusterLogReq) (map[string]int
 // filterTimestamp search tidb log by @timestamp
 func filterTimestamp(req cluster.QueryClusterLogReq) (map[string]interface{}, error) {
 	tsFilter := map[string]interface{}{}
-	loc, err := time.LoadLocation("Asia/Shanghai")
-	if err != nil {
-		return nil, err
-	}
-	var startTime time.Time
-	if req.StartTime != "" {
-		startTime, err = time.ParseInLocation(dateFormat, req.StartTime, loc)
-		if err != nil {
-			return nil, err
-		}
-	}
-	var endTime time.Time
-	if req.EndTime != "" {
-		endTime, err = time.ParseInLocation(dateFormat, req.EndTime, loc)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if req.StartTime != "" && req.EndTime != "" {
-		if startTime.After(endTime) {
+
+	if req.StartTime > 0 && req.EndTime > 0 {
+		if req.StartTime > req.EndTime {
 			return nil, errors.New("illegal parameters, startTime after endTime")
 		}
-		tsFilter["gte"] = startTime.Unix() * 1000
-		tsFilter["lte"] = endTime.Unix() * 1000
-	} else if req.StartTime != "" && req.EndTime == "" {
-		tsFilter["gte"] = startTime.Unix() * 1000
-	} else if req.StartTime == "" && req.EndTime != "" {
-		tsFilter["lte"] = endTime.Unix() * 1000
+		tsFilter["gte"] = req.StartTime * 1000
+		tsFilter["lte"] = req.EndTime * 1000
+	} else if req.StartTime > 0 && req.EndTime <= 0 {
+		tsFilter["gte"] = req.StartTime * 1000
+	} else if req.StartTime <= 0 && req.EndTime > 0 {
+		tsFilter["lte"] = req.EndTime * 1000
 	}
 	return tsFilter, nil
 }

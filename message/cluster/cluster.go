@@ -246,8 +246,8 @@ type QueryClusterLogReq struct {
 	Level     string `form:"level" example:"warn"`
 	Ip        string `form:"ip" example:"127.0.0.1"`
 	Message   string `form:"message" example:"tidb log"`
-	StartTime string `form:"startTime" example:"2021-09-01 12:00:00"`
-	EndTime   string `form:"endTime" example:"2021-12-01 12:00:00"`
+	StartTime int64  `form:"startTime" example:"1630468800"`
+	EndTime   int64  `form:"endTime" example:"1638331200"`
 	structs.PageRequest
 }
 

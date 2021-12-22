@@ -25,7 +25,6 @@ package parameter
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -102,127 +101,8 @@ func TestExecutor_endMaintenance(t *testing.T) {
 		}
 		ctx.SetData(contextClusterMeta, mockClusterMeta())
 		ctx.SetData(contextModifyParameters, mockModifyParameter())
-		err := endMaintenance(mockWorkFlowAggregation().CurrentNode, ctx)
+		err := defaultEnd(mockWorkFlowAggregation().CurrentNode, ctx)
 		assert.NoError(t, err)
-	})
-}
-
-func TestExecutor_setClusterFailure_Success(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
-	models.SetClusterReaderWriter(clusterManagementRW)
-	clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
-	models.SetClusterParameterReaderWriter(clusterParameterRW)
-
-	t.Run("success", func(t *testing.T) {
-		clusterManagementRW.EXPECT().UpdateStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-
-		ctx := &workflow.FlowContext{
-			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
-		}
-		ctx.SetData(contextClusterMeta, mockClusterMeta())
-		ctx.SetData(contextModifyParameters, mockModifyParameter())
-		err := setClusterFailure(mockWorkFlowAggregation().CurrentNode, ctx)
-		assert.NoError(t, err)
-	})
-}
-func TestExecutor_setClusterFailure_Error(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
-	models.SetClusterReaderWriter(clusterManagementRW)
-	clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
-	models.SetClusterParameterReaderWriter(clusterParameterRW)
-
-	t.Run("success", func(t *testing.T) {
-		clusterManagementRW.EXPECT().UpdateStatus(gomock.Any(), gomock.Any(), gomock.Any()).
-			Return(errors.New("set cluster status failed"))
-
-		ctx := &workflow.FlowContext{
-			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
-		}
-		ctx.SetData(contextClusterMeta, mockClusterMeta())
-		ctx.SetData(contextModifyParameters, mockModifyParameter())
-		err := setClusterFailure(mockWorkFlowAggregation().CurrentNode, ctx)
-		assert.Error(t, err)
-	})
-}
-
-func TestExecutor_setClusterOnline_Success(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
-	models.SetClusterReaderWriter(clusterManagementRW)
-	clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
-	models.SetClusterParameterReaderWriter(clusterParameterRW)
-
-	t.Run("success", func(t *testing.T) {
-		clusterManagementRW.EXPECT().UpdateStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-
-		ctx := &workflow.FlowContext{
-			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
-		}
-		ctx.SetData(contextClusterMeta, mockClusterMeta())
-		ctx.SetData(contextModifyParameters, mockModifyParameter())
-		err := setClusterOnline(mockWorkFlowAggregation().CurrentNode, ctx)
-		assert.NoError(t, err)
-	})
-}
-
-func TestExecutor_setClusterOnline_Error1(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
-	models.SetClusterReaderWriter(clusterManagementRW)
-	clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
-	models.SetClusterParameterReaderWriter(clusterParameterRW)
-
-	t.Run("success", func(t *testing.T) {
-		clusterManagementRW.EXPECT().UpdateStatus(gomock.Any(), gomock.Any(), gomock.Any()).
-			Return(errors.New("set cluster status failed"))
-
-		ctx := &workflow.FlowContext{
-			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
-		}
-		clusterMeta := mockClusterMeta()
-		clusterMeta.Cluster.Status = string(constants.ClusterInitializing)
-		ctx.SetData(contextClusterMeta, clusterMeta)
-		ctx.SetData(contextModifyParameters, mockModifyParameter())
-		err := setClusterOnline(mockWorkFlowAggregation().CurrentNode, ctx)
-		assert.Error(t, err)
-	})
-}
-
-func TestExecutor_setClusterOnline_Error2(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
-	models.SetClusterReaderWriter(clusterManagementRW)
-	clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
-	models.SetClusterParameterReaderWriter(clusterParameterRW)
-
-	t.Run("success", func(t *testing.T) {
-		clusterManagementRW.EXPECT().UpdateStatus(gomock.Any(), gomock.Any(), gomock.Any()).
-			Return(errors.New("set cluster status failed"))
-
-		ctx := &workflow.FlowContext{
-			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
-		}
-		ctx.SetData(contextClusterMeta, mockClusterMeta())
-		ctx.SetData(contextModifyParameters, mockModifyParameter())
-		err := setClusterOnline(mockWorkFlowAggregation().CurrentNode, ctx)
-		assert.Error(t, err)
 	})
 }
 

@@ -292,7 +292,7 @@ func (handler *ClusterServiceHandler) UpdateClusterParameters(ctx context.Contex
 	request := &cluster.UpdateClusterParametersReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterParameterManager.UpdateClusterParameters(ctx, *request)
+		result, err := handler.clusterParameterManager.UpdateClusterParameters(ctx, *request, true)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil

@@ -770,9 +770,9 @@ var ManageSuccessResponseStatus = &clusterpb.ManagerResponseStatus{
 	Code: 0,
 }
 func (c *ClusterServiceHandler) Login(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	framework.LogWithContext(ctx).Info("login")
 	start := time.Now()
 	defer handleMetrics(start, "Login", int(response.GetCode()))
+	defer handlePanic(ctx, "Login", response)
 
 	loginReq := message.LoginReq{}
 	if handleRequest(ctx, request, response, &loginReq) {
@@ -784,9 +784,9 @@ func (c *ClusterServiceHandler) Login(ctx context.Context, request *clusterpb.Rp
 }
 
 func (c *ClusterServiceHandler) Logout(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	framework.LogWithContext(ctx).Info("logout")
 	start := time.Now()
 	defer handleMetrics(start, "Logout", int(response.GetCode()))
+	defer handlePanic(ctx, "Logout", response)
 
 	logoutReq := message.LogoutReq{}
 	if handleRequest(ctx, request, response, &logoutReq) {
@@ -798,9 +798,9 @@ func (c *ClusterServiceHandler) Logout(ctx context.Context, request *clusterpb.R
 }
 
 func (c *ClusterServiceHandler) VerifyIdentity(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	framework.LogWithContext(ctx).Info("verify identity")
 	start := time.Now()
 	defer handleMetrics(start, "VerifyIdentity", int(response.GetCode()))
+	defer handlePanic(ctx, "VerifyIdentity", response)
 
 	verReq := message.AccessibleReq{}
 	if handleRequest(ctx, request, response, &verReq) {

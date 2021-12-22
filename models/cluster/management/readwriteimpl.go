@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -31,7 +32,18 @@ type ClusterReadWrite struct {
 }
 
 func (g *ClusterReadWrite) Create(ctx context.Context, cluster *Cluster) (*Cluster, error) {
-	return cluster, g.DB(ctx).Create(cluster).Error
+	err := g.DB(ctx).Create(cluster).Error
+
+	if err != nil {
+		// duplicated name
+		existOrError := g.DB(ctx).Model(&Cluster{}).Where("name = ?", cluster.Name).First(&Cluster{}).Error
+		if existOrError == nil {
+			err = errors.NewEMErrorf(errors.TIEM_DUPLICATED_NAME, "%s:%s", errors.TIEM_DUPLICATED_NAME.Explain(), cluster.Name)
+		} else {
+			err = dbCommon.WrapDBError(err)
+		}
+	}
+	return cluster, err
 }
 
 func (g *ClusterReadWrite) Delete(ctx context.Context, clusterID string) (err error) {

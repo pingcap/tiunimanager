@@ -17,6 +17,7 @@ package controller
 
 import (
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -151,14 +152,14 @@ func HandleRequest(c *gin.Context,
 	err = validator(req)
 	if err != nil {
 		framework.LogWithContext(c).Errorf("validate request failed, %s", err.Error())
-		c.JSON(http.StatusBadRequest, Fail(int(common.TIEM_PARAMETER_INVALID), err.Error()))
+		c.JSON(http.StatusBadRequest, Fail(int(errors.TIEM_PARAMETER_INVALID), err.Error()))
 		return "", false
 	}
 
 	requestBodyBytes, err := serializer(req)
 	if err != nil {
 		framework.LogWithContext(c).Errorf("marshal request failed, %s", err.Error())
-		c.JSON(http.StatusBadRequest, Fail(int(common.TIEM_MARSHAL_ERROR), err.Error()))
+		c.JSON(http.StatusBadRequest, Fail(int(errors.TIEM_MARSHAL_ERROR), err.Error()))
 		return "", false
 	} else {
 		return string(requestBodyBytes), true

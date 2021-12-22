@@ -58,7 +58,7 @@ func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Co
 	request := &cluster.QueryUpgradeVersionDiffInfoReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterManager.QueryUpgradeVersionDiffInfo(ctx, request.ClusterID, request.Version)
+		result, err := handler.clusterManager.QueryUpgradeVersionDiffInfo(ctx, request.ClusterID, request.TargetVersion)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 

@@ -157,22 +157,22 @@ type ClusterLogItem struct {
 }
 
 type ProductUpgradePathItem struct {
-	Type     string   `json:"type"`
-	Versions []string `json:"versions"`
+	UpgradeType string   `json:"type" example:"in-place/migration"`
+	Versions    []string `json:"versions" example:"v5.0.0,v5.3.0"`
 }
 type ProductUpgradeVersionConfigDiffItem struct {
-	Name         string `json:"name"`
-	InstanceType string `json:"instanceType"`
-	CurrentVal   string `json:"currentVal"`
-	SuggestVal   string `json:"suggestVal"`
-	Range        string `json:"range"`
-	Description  string `json:"description"`
+	Name         string `json:"name" example:"max-merge-region-size"`
+	InstanceType string `json:"instanceType" example:"pd-server"`
+	CurrentVal   string `json:"currentVal" example:"20"`
+	SuggestVal   string `json:"suggestVal" example:"30"`
+	Range        string `json:"range" example:"1, 1000"`
+	Description  string `json:"description" example:"desc for max-merge-region-size"`
 }
 
 type ClusterUpgradeVersionConfigItem struct {
-	Name         string `json:"name"`
-	InstanceType string `json:"instanceType"`
-	Value        string `json:"value"`
+	Name         string `json:"name" example:"max-merge-region-size"`
+	InstanceType string `json:"instanceType" example:"pd-server"`
+	Value        string `json:"value" example:"20"`
 }
 
 type ClusterInstanceParameterValue struct {

@@ -19,3 +19,6 @@ library/framework/logs
 test/
 /template
 /nohup.out
+out.txt
+run.sh
+logs/

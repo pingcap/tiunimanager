@@ -32,15 +32,15 @@ import (
 
 const paramNameOfClusterID = "clusterId"
 
-// QueryUpgradePaths query upgrade path for given cluster
-// @Summary query upgrade path for given cluster
-// @Description query upgrade path for given cluster
+// QueryUpgradePaths query upgrade path for given cluster id
+// @Summary query upgrade path for given cluster id
+// @Description query upgrade path for given cluster id
 // @Tags upgrade
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
 // @Param clusterId path string true "clusterId"
-// @Success 200 {object} controller.CommonResult{data=upgrade.QueryUpgradePathRsp}
+// @Success 200 {object} controller.CommonResult{data=cluster.QueryUpgradePathRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
@@ -55,23 +55,23 @@ func QueryUpgradePaths(c *gin.Context) {
 	}
 }
 
-// QueryUpgradeVersionDiffInfo query upgrade params diff between current cluster and dst version
-// @Summary query upgrade params diff between current cluster and dst version
-// @Description query upgrade params diff between current cluster and dst version
+// QueryUpgradeVersionDiffInfo query config diff between current cluster and target upgrade version
+// @Summary query config diff between current cluster and target upgrade version
+// @Description query config diff between current cluster and target upgrade version
 // @Tags upgrade
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
 // @Param clusterId path string true "clusterId"
-// @Param task body upgrade.QueryUpgradeVersionDiffInfoReq true "upgrade version diff info"
-// @Success 200 {object} controller.CommonResult{data=upgrade.QueryUpgradeVersionDiffInfoRsp}
+// @Param upgradeVersionDiffQuery query cluster.QueryUpgradeVersionDiffInfoReq true "upgrade version diff query"
+// @Success 200 {object} controller.CommonResult{data=cluster.QueryUpgradeVersionDiffInfoResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/:clusterId/upgrade/diff [get]
 func QueryUpgradeVersionDiffInfo(c *gin.Context) {
 	var req cluster.QueryUpgradeVersionDiffInfoReq
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c,
 		&req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
@@ -84,6 +84,20 @@ func QueryUpgradeVersionDiffInfo(c *gin.Context) {
 	}
 }
 
+// ClusterUpgrade request for upgrade
+// @Summary request for upgrade
+// @Description request for upgrade
+// @Tags upgrade
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param clusterId path string true "clusterId"
+// @Param upgradeReq body cluster.ClusterUpgradeReq true "upgrade request"
+// @Success 200 {object} controller.CommonResult{data=cluster.ClusterUpgradeResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /:clusterId/upgrade [post]
 func ClusterUpgrade(c *gin.Context) {
 	var req cluster.ClusterUpgradeReq
 	if requestBody, ok := controller.HandleJsonRequestFromBody(c,

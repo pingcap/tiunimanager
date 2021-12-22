@@ -26,19 +26,23 @@ package cluster
 
 import "github.com/pingcap-inc/tiem/common/structs"
 
+// QueryUpgradePathReq Message for querying available upgrade path for given cluster ID
 type QueryUpgradePathReq struct {
-	ClusterID string `json:"ClusterId"`
+	ClusterID string `json:"clusterId"`
 }
 
+// QueryUpgradePathRsp Reply message for querying available upgrade path for given cluster ID
 type QueryUpgradePathRsp struct {
 	Paths []*structs.ProductUpgradePathItem
 }
 
+// QueryUpgradeVersionDiffInfoReq Reply message for querying configuration difference between current cluster and target version
 type QueryUpgradeVersionDiffInfoReq struct {
-	ClusterID string `json:"clusterId"`
-	Version   string `json:"version"`
+	ClusterID     string `json:"clusterId" swaggerignore:"true"`
+	TargetVersion string `json:"targetVersion" example:"v5.0.0"`
 }
 
+// QueryUpgradeVersionDiffInfoResp Reply message for querying configuration difference between current cluster and target version
 type QueryUpgradeVersionDiffInfoResp struct {
 	ConfigDiffInfos []*structs.ProductUpgradeVersionConfigDiffItem `json:"configDiffInfos"`
 }
@@ -50,13 +54,16 @@ const (
 	UpgradeWayOnline  UpgradeWayStr = "online"
 )
 
+// ClusterUpgradeReq Message for requesting upgrade
 type ClusterUpgradeReq struct {
-	ClusterID     string        `json:"clusterId"`
-	TargetVersion string        `json:"targetVersion"`
-	UpgradeWay    UpgradeWayStr `json:"upgradeWay"`
+	ClusterID     string        `json:"clusterId" swaggerignore:"true"`
+	TargetVersion string        `json:"targetVersion" example:"v5.0.0"`
+	UpgradeType   string        `json:"type" example:"in-place/migration"`
+	UpgradeWay    UpgradeWayStr `json:"upgradeWay"  example:"offline/online"`
 	Configs       []*structs.ClusterUpgradeVersionConfigItem
 }
 
+// ClusterUpgradeResp Reply message for requesting upgrade
 type ClusterUpgradeResp struct {
 	structs.AsyncTaskWorkFlowInfo
 }

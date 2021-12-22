@@ -579,8 +579,8 @@ func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) 
 	var paths []*structs.ProductUpgradePathItem
 	for k, v := range pathMap {
 		path := structs.ProductUpgradePathItem{
-			Type:     k,
-			Versions: v,
+			UpgradeType: k,
+			Versions:    v,
 		}
 		paths = append(paths, &path)
 	}

@@ -77,9 +77,9 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 	}
 	_, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
 	if err == nil {
-		framework.LogWithContext(ctx).Infof("create cluster [%s] succeed", p.Cluster.Name)
+		framework.LogWithContext(ctx).Infof("create cluster %s succeed", p.Cluster.Name)
 	} else {
-		framework.LogWithContext(ctx).Errorf("create cluster [%s] failed, err : %s", p.Cluster.Name, err.Error())
+		framework.LogWithContext(ctx).Errorf("create cluster %s failed, err : %s", p.Cluster.Name, err.Error())
 	}
 	return err
 }
@@ -100,9 +100,9 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string) error {
 
 	_, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
 	if err == nil {
-		framework.LogWithContext(ctx).Infof("takeover cluster [%s] succeed", p.Cluster.Name)
+		framework.LogWithContext(ctx).Infof("takeover cluster %s succeed", p.Cluster.Name)
 	} else {
-		framework.LogWithContext(ctx).Errorf("takeover cluster [%s] failed, err : %s", p.Cluster.Name, err.Error())
+		framework.LogWithContext(ctx).Errorf("takeover cluster %s failed, err : %s", p.Cluster.Name, err.Error())
 	}
 	return err
 }
@@ -150,7 +150,7 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 			}
 		}
 	}
-	framework.LogWithContext(ctx).Infof("add new instances into cluster[%s] topology", p.Cluster.ID)
+	framework.LogWithContext(ctx).Infof("add new instances into cluster%s topology", p.Cluster.ID)
 	return nil
 }
 
@@ -225,7 +225,7 @@ func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) ([]res
 	requirements := make([]resource.AllocRequirement, 0)
 
 	if p.Cluster.Status != string(constants.ClusterInitializing) {
-		framework.LogWithContext(ctx).Infof("cluster [%s] is not initializing, no need to alloc global port resource", p.Cluster.Name)
+		framework.LogWithContext(ctx).Infof("cluster %s is not initializing, no need to alloc global port resource", p.Cluster.Name)
 		return requirements, nil
 	}
 
@@ -335,10 +335,10 @@ func (p *ClusterMeta) UpdateClusterStatus(ctx context.Context, status constants.
 	err := models.GetClusterReaderWriter().UpdateStatus(ctx, p.Cluster.ID, status)
 
 	if err != nil {
-		framework.LogWithContext(ctx).Infof("update cluster[%s] status into %s failed", p.Cluster.Name, status)
+		framework.LogWithContext(ctx).Infof("update cluster%s status into %s failed", p.Cluster.Name, status)
 	} else {
 		p.Cluster.Status = string(status)
-		framework.LogWithContext(ctx).Errorf("update cluster[%s] status into %s succeed", p.Cluster.Name, status)
+		framework.LogWithContext(ctx).Errorf("update cluster%s status into %s succeed", p.Cluster.Name, status)
 	}
 	return err
 }

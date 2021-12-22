@@ -426,6 +426,7 @@ func TestClusterReadWrite_QueryMetas(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 3, page.Total)
 		assert.Equal(t, cluster3, results[0].Cluster.ID)
+		assert.Equal(t, 2, len(results))
 		assert.Equal(t, 2, len(results[0].Instances))
 	})
 
@@ -479,7 +480,7 @@ func TestClusterReadWrite_QueryMetas(t *testing.T) {
 	})
 
 	t.Run("page", func(t *testing.T) {
-		_, page, err := testRW.QueryMetas(context.TODO(), Filters {
+		result, page, err := testRW.QueryMetas(context.TODO(), Filters {
 			TenantId: "1919",
 			NameLike: "",
 			Tag: "",
@@ -492,6 +493,7 @@ func TestClusterReadWrite_QueryMetas(t *testing.T) {
 		})
 		assert.NoError(t, err)
 		assert.Equal(t, 7, page.Total)
+		assert.Equal(t, 0, len(result))
 	})
 }
 

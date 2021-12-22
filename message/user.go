@@ -96,8 +96,8 @@ type GetTokenResp struct {
 }
 
 type LoginReq struct {
-	UserName string  `json:"name" form:"name"`
-	Password string  `json:"password" form:"password"`
+	UserName string  `json:"userName" form:"userName"`
+	Password string  `json:"userPassword" form:"userPassword"`
 }
 
 type LoginResp struct {

@@ -27,9 +27,9 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/models"
-	common2 "github.com/pingcap-inc/tiem/models/common"
+	dbModel "github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/workflow"
-	secondparty2 "github.com/pingcap-inc/tiem/models/workflow/secondparty"
+	secondpartyModel "github.com/pingcap-inc/tiem/models/workflow/secondparty"
 	"time"
 )
 
@@ -142,9 +142,14 @@ func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDe
 	flow.CurrentNode = node
 	flow.Nodes = append(flow.Nodes, node)
 	node.Processing()
-	err := models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
+	data, err := json.Marshal(flow.Context.FlowData)
 	if err != nil {
-		framework.Log().Warnf("update workflow detail %+v failed %s", flow, err.Error())
+		framework.Log().Warnf("json marshal flow context data failed %s", err.Error())
+	}
+	flow.Flow.Context = string(data)
+	err = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
+	if err != nil {
+		framework.Log().Warnf("update workflow %s detail of bizId %s failed %s", flow.Flow.ID, flow.Flow.BizID, err.Error())
 	}
 
 	err = nodeDefine.Executor(node, &flow.Context)
@@ -171,7 +176,7 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 		return true
 	}
 	node := &workflow.WorkFlowNode{
-		Entity: common2.Entity{
+		Entity: dbModel.Entity{
 			TenantId: flow.Flow.TenantId,
 			Status:   constants.WorkFlowStatusInitializing,
 		},
@@ -200,8 +205,15 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 		return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
 	case PollingNode:
 		ticker := time.NewTicker(3 * time.Second)
+		sequence := int32(0)
 		for range ticker.C {
-			framework.LogWithContext(flow.Context).Infof("polling node waiting, nodeId %s, nodeName %s", node.ID, node.Name)
+			sequence++
+			if sequence > maxPollingSequence {
+				node.Fail(errors.Error(errors.TIEM_WORKFLOW_NODE_POLLING_TIME_OUT))
+				flow.handleTaskError(node, nodeDefine)
+				return false
+			}
+			framework.LogWithContext(flow.Context).Infof("polling node waiting, sequence %d, nodeId %s, nodeName %s", sequence, node.ID, node.Name)
 
 			resp, err := secondparty.Manager.GetOperationStatusByWorkFlowNodeID(flow.Context, node.ID)
 			if err != nil {
@@ -210,12 +222,12 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 				flow.handleTaskError(node, nodeDefine)
 				return false
 			}
-			if resp.Status == secondparty2.OperationStatus_Error {
+			if resp.Status == secondpartyModel.OperationStatus_Error {
 				node.Fail(fmt.Errorf("call secondparty GetOperationStatusByWorkFlowNodeID %s, response error %s", node.ID, resp.ErrorStr))
 				flow.handleTaskError(node, nodeDefine)
 				return false
 			}
-			if resp.Status == secondparty2.OperationStatus_Finished {
+			if resp.Status == secondpartyModel.OperationStatus_Finished {
 				node.Success(resp.Result)
 				return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
 			}

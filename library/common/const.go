@@ -44,8 +44,8 @@ const (
 )
 
 const (
-	LogFileSystem      = "system"
-	LogFileLibTiUP     = "libTiUP"
+	LogFileSystem  = "system"
+	LogFileLibTiUP = "libTiUP"
 
 	LogFileAccess = "access"
 	LogFileAudit  = "audit"

@@ -24,3 +24,5 @@
 package constants
 
 const TiUPBinPath = "tiup"
+const TiUPTopologyTmpFilePrefix = "em-topology"
+const TiUPCollectorTmpFilePrefix = "em-collector"

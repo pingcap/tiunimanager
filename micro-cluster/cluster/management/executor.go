@@ -127,6 +127,11 @@ func buildConfig(node *workflowModel.WorkFlowNode, context *workflow.FlowContext
 func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
+	if context.GetData(ContextTopology) == nil {
+		framework.LogWithContext(context.Context).Infof(
+			"when scale out cluster, not found topology yaml config")
+		return nil
+	}
 	yamlConfig := context.GetData(ContextTopology).(string)
 
 	framework.LogWithContext(context.Context).Infof(
@@ -303,6 +308,11 @@ func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.Flo
 
 func restoreNewCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	if context.GetData(ContextBackupID) == nil {
+		framework.LogWithContext(context.Context).Infof(
+			"when restore new cluster, not found backup id")
+		return nil
+	}
 	backupID := context.GetData(ContextBackupID).(string)
 
 	restoreResponse, err := backuprestore.GetBRService().RestoreExistCluster(context.Context,
@@ -401,6 +411,11 @@ func setClusterOffline(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 // revertResourceAfterFailure
 // @Description: revert allocated resource after creating, scaling out
 func revertResourceAfterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	if context.GetData(ContextAllocResource) == nil {
+		framework.LogWithContext(context.Context).Infof(
+			"when recycle resource, not found alloc resource")
+		return nil
+	}
 	resource := context.GetData(ContextAllocResource).(*resourceStructs.BatchAllocResponse)
 
 	if resource != nil && len(resource.BatchResults) > 0 {
@@ -450,6 +465,11 @@ func persistCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
+	if context.GetData(ContextTopology) == nil {
+		framework.LogWithContext(context.Context).Infof(
+			"when deploy cluster, not found topology yaml config")
+		return nil
+	}
 	yamlConfig := context.GetData(ContextTopology).(string)
 
 	framework.LogWithContext(context.Context).Infof(
@@ -568,6 +588,11 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 func restoreCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cloneStrategy := context.GetData(ContextCloneStrategy).(string)
+	if context.GetData(ContextBackupID) == nil {
+		framework.LogWithContext(context.Context).Infof(
+			"when restore cluster, not found backup id")
+		return nil
+	}
 	backupID := context.GetData(ContextBackupID).(string)
 
 	if cloneStrategy == string(constants.ClusterTopologyClone) {

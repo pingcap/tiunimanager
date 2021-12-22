@@ -253,11 +253,19 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 
 	clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
 	tidbServers := clusterMeta.GetClusterConnectAddresses()
+	if len(tidbServers) == 0 {
+		framework.LogWithContext(ctx).Errorf("get tidb address from meta failed, empty address")
+		return nil
+	}
 	tidbServer := tidbServers[rand.Intn(len(tidbServers))]
+	framework.LogWithContext(ctx).Infof("get cluster [%s] tidb server from meta, %+v", clusterMeta.Cluster.ID, tidbServers)
+	tidbUserInfo := clusterMeta.GetClusterUserNamePasswd()
+	framework.LogWithContext(ctx).Infof("get cluster [%s] user info from meta, %+v", clusterMeta.Cluster.ID, tidbUserInfo)
+
 	req := secondparty.ClusterEditConfigReq{
 		DbConnParameter: secondparty.DbConnParam{
-			Username: "root", //todo: replace admin account
-			Password: "",
+			Username: tidbUserInfo.UserName,
+			Password: tidbUserInfo.Password,
 			IP:       tidbServer.IP,
 			Port:     strconv.Itoa(tidbServer.Port),
 		},

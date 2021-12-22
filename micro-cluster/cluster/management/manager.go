@@ -40,6 +40,7 @@ const (
 	ContextBackupID          = "BackupID"
 	ContextWorkflowID        = "WorkflowID"
 	ContextTopologyConfig    = "TopologyConfig"
+	ContextDeleteRequest     = "DeleteRequest"
 	ContextTakeoverRequest   = "TakeoverRequest"
 )
 
@@ -399,6 +400,7 @@ func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterRe
 
 	data := map[string]interface{}{
 		ContextClusterMeta: meta,
+		ContextDeleteRequest: req,
 	}
 	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceDeleting, deleteClusterFlow.FlowName, data)
 	if err != nil {

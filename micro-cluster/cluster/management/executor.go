@@ -232,6 +232,8 @@ func freeInstanceResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 
 func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	meta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	deleteReq := context.GetData(ContextDeleteRequest).(cluster.DeleteClusterReq)
+
 	_, err := backuprestore.GetBRService().DeleteBackupStrategy(context.Context, cluster.DeleteBackupStrategyReq{
 		ClusterID: meta.Cluster.ID,
 	})
@@ -241,10 +243,12 @@ func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		return err
 	}
 
-	_, err = backuprestore.GetBRService().DeleteBackupRecords(context.Context, cluster.DeleteBackupDataReq{
-		ClusterID:  meta.Cluster.ID,
-		BackupMode: string(constants.BackupModeAuto),
-	})
+	if deleteReq.ClearBackupData {
+		_, err = backuprestore.GetBRService().DeleteBackupRecords(context.Context, cluster.DeleteBackupDataReq{
+			ClusterID:  meta.Cluster.ID,
+			BackupMode: string(constants.BackupModeAuto),
+		})
+	}
 
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -256,8 +260,14 @@ func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 
 func backupBeforeDelete(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	meta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
-	_, err := backupSubProcess(context.Context, meta, false)
-	return err
+	deleteReq := context.GetData(ContextDeleteRequest).(cluster.DeleteClusterReq)
+
+	if deleteReq.AutoBackup {
+		_, err := backupSubProcess(context.Context, meta, false)
+		return err
+	}
+
+	return nil
 }
 
 func backupSubProcess(ctx context.Context, meta *handler.ClusterMeta, independenceMaintenance bool) (*cluster.BackupClusterDataResp, error) {

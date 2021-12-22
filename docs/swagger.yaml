@@ -88,8 +88,10 @@ definitions:
       targetVersion:
         example: v5.0.0
         type: string
-      type:
-        example: in-place/migration
+      upgradeType:
+        enum:
+        - in-place
+        - migration
         type: string
       upgradeWay:
         enum:

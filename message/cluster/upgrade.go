@@ -58,7 +58,7 @@ const (
 type ClusterUpgradeReq struct {
 	ClusterID     string        `json:"clusterId" swaggerignore:"true"`
 	TargetVersion string        `json:"targetVersion" example:"v5.0.0"`
-	UpgradeType   string        `json:"type" example:"in-place/migration"`
+	UpgradeType   string        `json:"upgradeType"  enums:"in-place,migration"`
 	UpgradeWay    UpgradeWayStr `json:"upgradeWay"  enums:"offline,online"`
 	Configs       []*structs.ClusterUpgradeVersionConfigItem
 }

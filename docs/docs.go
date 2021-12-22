@@ -4387,9 +4387,12 @@ var doc = `{
                     "type": "string",
                     "example": "v5.0.0"
                 },
-                "type": {
+                "upgradeType": {
                     "type": "string",
-                    "example": "in-place/migration"
+                    "enum": [
+                        "in-place",
+                        "migration"
+                    ]
                 },
                 "upgradeWay": {
                     "type": "string",

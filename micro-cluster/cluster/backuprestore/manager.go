@@ -312,7 +312,7 @@ func (mgr *BRManager) GetBackupStrategy(ctx context.Context, request cluster.Get
 	}
 
 	resp.Strategy = structs.BackupStrategy{
-		ClusterID:  strategy.ClusterID,
+		ClusterID:  request.ClusterID,
 		BackupDate: strategy.BackupDate,
 		Period:     fmt.Sprintf("%d:00-%d:00", strategy.StartHour, strategy.EndHour),
 	}

@@ -57,7 +57,7 @@ http {
             proxy_pass http://openapi-servers;
         }
 
-        location ^~ /api/v1/file {
+        location ^~ /fs {
             proxy_pass http://file-servers;
         }
 {{- end}}
@@ -97,7 +97,7 @@ http {
             proxy_pass https://openapi-servers;
         }
 
-        location ^~ /api/v1/file {
+        location ^~ /fs {
             proxy_pass http://file-servers;
         }
     }

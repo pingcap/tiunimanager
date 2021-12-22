@@ -247,7 +247,7 @@ var createClusterFlow = workflow.WorkFlowDefine{
 		"start":            {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
 		"resourceDone":     {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
 		"configDone":       {"deployCluster", "deployDone", "fail", workflow.PollingNode, deployCluster},
-		"deployDone":       {"startupCluster", "startupDone", "fail", workflow.PollingNode, startCluster},
+		"deployDone":       {"startupCluster", "startupDone", "failAfterDeploy", workflow.PollingNode, startCluster},
 		"startupDone":      {"initAccount", "initDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseAccount},
 		"initDone":         {"syncTopology", "syncTopologyDone", "failAfterDeploy", workflow.SyncFuncNode, syncTopology},
 		"syncTopologyDone": {"setClusterOnline", "onlineDone", "failAfterDeploy", workflow.SyncFuncNode, setClusterOnline},

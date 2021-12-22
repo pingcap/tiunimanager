@@ -28,6 +28,8 @@ import (
 	"encoding/json"
 	"sync"
 
+	"github.com/pingcap-inc/tiem/common/errors"
+
 	"github.com/pingcap-inc/tiem/message"
 
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
@@ -38,8 +40,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
 	"github.com/pingcap-inc/tiem/common/structs"
-
-	"github.com/pingcap-inc/tiem/library/common"
 
 	"github.com/pingcap-inc/tiem/models"
 
@@ -91,7 +91,7 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 	offset := (req.Page - 1) * req.PageSize
 	pgId, params, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, offset, req.PageSize)
 	if err != nil {
-		return resp, page, framework.WrapError(common.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, common.TIEM_CLUSTER_PARAMETER_QUERY_ERROR.Explain(), err)
+		return resp, page, errors.NewEMErrorf(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR.Explain(), err)
 	}
 
 	resp = cluster.QueryClusterParametersResp{ParamGroupId: pgId}
@@ -103,7 +103,7 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 			err = json.Unmarshal([]byte(param.Range), &ranges)
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("failed to convert parameter range. req: %v, err: %v", req, err)
-				return resp, page, framework.WrapError(common.TIEM_CONVERT_OBJ_FAILED, common.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
+				return resp, page, errors.NewEMErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
 			}
 		}
 		// convert realValue
@@ -112,7 +112,7 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 			err = json.Unmarshal([]byte(param.RealValue), &realValue)
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("failed to convert parameter realValue. req: %v, err: %v", req, err)
-				return resp, page, framework.WrapError(common.TIEM_CONVERT_OBJ_FAILED, common.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
+				return resp, page, errors.NewEMErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
 			}
 		}
 		resp.Params[i] = structs.ClusterParameterInfo{
@@ -189,7 +189,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 	_, pgm, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("detail parameter group %s from db error: %s", req.ParamGroupId, err.Error())
-		return resp, framework.SimpleError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR)
+		return resp, errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain())
 	}
 
 	// Constructing clusterParameter.ModifyParameter objects

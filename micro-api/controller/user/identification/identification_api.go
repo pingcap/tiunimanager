@@ -37,9 +37,11 @@ import (
 // @Router /user/login [post]
 func Login(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.LoginReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.Login, &message.LoginResp{},
+		respBody := &message.LoginResp{}
+		controller.InvokeRpcMethod(c, client.ClusterClient.Login, respBody,
 			requestBody,
 			controller.DefaultTimeout)
+		c.Header("Token", respBody.TokenString)
 	}
 }
 

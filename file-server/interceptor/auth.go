@@ -17,6 +17,8 @@
 package interceptor
 
 import (
+	"encoding/json"
+	"github.com/pingcap-inc/tiem/file-server/controller"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"net/http"
@@ -45,8 +47,11 @@ func VerifyIdentity(c *gin.Context) {
 
 	path := c.Request.URL
 	req := clusterpb.VerifyIdentityRequest{TokenString: tokenString, Path: path.String()}
+	body, err := json.Marshal(req)
+	rpcResp, err := client.ClusterClient.VerifyIdentity(framework.NewMicroCtxFromGinCtx(c), &clusterpb.RpcRequest{Request: string(body)}, controller.DefaultTimeout)
 
-	result, err := client.ClusterClient.VerifyIdentity(c, &req)
+	var result clusterpb.VerifyIdentityResponse
+	err = json.Unmarshal([]byte(rpcResp.Response), &result)
 	if err != nil {
 		c.Error(err)
 		c.Status(http.StatusInternalServerError)

@@ -2,12 +2,12 @@ package identification
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/micro-cluster/service/user/commons"
 	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/user/identification"
 	"time"
 )
 
@@ -23,28 +23,21 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (resp mes
 	if err != nil {
 		return
 	}
-	account := structs.Account{
-		ID: a.ID,
-		TenantID: a.TenantId,
-		Name: a.Name,
-		Salt: a.Salt,
-		FinalHash: a.FinalHash,
-		//Status: a.Status
-	}
-	loginSuccess, err := account.CheckPassword(request.Password)
+
+	loginSuccess, err := a.CheckPassword(request.Password)
 	if err != nil {
 		return
 	}
 
 	if !loginSuccess {
-		err = &structs.UnauthorizedError{}
+		err = framework.NewTiEMError(common.TIEM_UNAUTHORIZED, "unauthorized")
 		return
 	}
 
 	req := message.CreateTokenReq{
-		AccountID: account.ID,
-		AccountName: account.Name,
-		TenantID: account.TenantID,
+		AccountID: a.ID,
+		AccountName: a.Name,
+		TenantID: a.TenantId,
 	}
 	token, err := p.CreateToken(ctx, req)
 
@@ -62,7 +55,7 @@ func (p *Manager) Logout(ctx context.Context, req message.LogoutReq) (message.Lo
 	token, err := GetToken(ctx, message.GetTokenReq{TokenString: req.TokenString})
 
 	if err != nil {
-		return message.LogoutResp{AccountName: ""}, &structs.UnauthorizedError{}
+		return message.LogoutResp{AccountName: ""}, framework.NewTiEMError(common.TIEM_UNAUTHORIZED, "unauthorized")
 	} else if !token.IsValid() {
 		return message.LogoutResp{AccountName: ""}, nil
 	} else {
@@ -94,9 +87,9 @@ func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq)
 		return
 	}
 
-	resp.AccountID = token.AccountID
+	resp.AccountID = token.AccountId
 	resp.AccountName = token.AccountName
-	resp.TenantID = token.TenantID
+	resp.TenantID = token.TenantId
 
 
 	if SkipAuth {
@@ -105,7 +98,7 @@ func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq)
 	}
 
 	if !token.IsValid() {
-		err = &structs.UnauthorizedError{}
+		err = framework.NewTiEMError(common.TIEM_UNAUTHORIZED, "unauthorized")
 		return
 	}
 
@@ -113,11 +106,11 @@ func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq)
 }
 
 func (p *Manager) CreateToken(ctx context.Context, request message.CreateTokenReq) (message.CreateTokenResp, error) {
-	token := structs.Token{
+	token := identification.Token{
 		AccountName: request.AccountName,
-		AccountID: request.AccountID,
-		TenantID: request.TenantID,
-		ExpirationTime: time.Now().Add(commons.DefaultTokenValidPeriod),
+		AccountId: request.AccountID,
+		TenantId: request.TenantID,
+		ExpirationTime: time.Now().Add(constants.DefaultTokenValidPeriod),
 	}
 
 	req := message.ProvideTokenReq{Token: &token}

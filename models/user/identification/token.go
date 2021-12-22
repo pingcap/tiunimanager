@@ -15,3 +15,12 @@ type Token struct {
 	Status         int8      `gorm:"size:255"`
 	ExpirationTime time.Time `gorm:"size:255"`
 }
+
+func (token *Token) IsValid() bool {
+	now := time.Now()
+	return now.Before(token.ExpirationTime)
+}
+
+func (token *Token) Destroy() {
+	token.ExpirationTime = time.Now()
+}

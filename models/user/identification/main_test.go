@@ -1,4 +1,4 @@
-package account
+package identification
 
 import (
 	"github.com/pingcap-inc/tiem/library/common"
@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-var testRW *AccountReadWrite
+var testRW *TokenReadWrite
 
 func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
@@ -28,9 +28,9 @@ func TestMain(m *testing.M) {
 			} else {
 				logins.Infof("open database successful, filepath: %s", dbFile)
 			}
-			db.Migrator().CreateTable(Account{})
+			db.Migrator().CreateTable(Token{})
 
-			testRW = NewAccountReadWrite(db)
+			testRW = NewTokenReadWrite(db)
 			return nil
 		},
 	)

@@ -24,17 +24,19 @@
 package message
 
 import (
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/models/user/account"
+	"github.com/pingcap-inc/tiem/models/user/identification"
+	"github.com/pingcap-inc/tiem/models/user/tenant"
 )
 
 type CreateAccountReq struct {
-	*structs.Tenant
+	*tenant.Tenant
 	Name string `json:"name" form:"name" example:"default"`
 	Password string `json:"password" form:"password" example:"default"`
 }
 
 type CreateAccountResp struct {
-	structs.Account
+	account.Account
 }
 
 type FindAccountByNameReq struct {
@@ -42,7 +44,7 @@ type FindAccountByNameReq struct {
 }
 
 type FindAccountByNameResp struct {
-	structs.Account
+	account.Account
 }
 
 type CreateTenantReq struct {
@@ -50,7 +52,7 @@ type CreateTenantReq struct {
 }
 
 type CreateTenantResp struct {
-	structs.Tenant
+	tenant.Tenant
 }
 
 type FindTenantByNameReq struct {
@@ -58,7 +60,7 @@ type FindTenantByNameReq struct {
 }
 
 type FindTenantByNameResp struct {
-	structs.Tenant
+	tenant.Tenant
 }
 
 type FindTenantByIdReq struct {
@@ -66,11 +68,11 @@ type FindTenantByIdReq struct {
 }
 
 type FindTenantByIdResp struct {
-	structs.Tenant
+	tenant.Tenant
 }
 
 type ProvideTokenReq struct {
-	*structs.Token
+	*identification.Token
 }
 
 type ProvideTokenResp struct {
@@ -78,7 +80,7 @@ type ProvideTokenResp struct {
 }
 
 type ModifyTokenReq struct {
-	*structs.Token
+	*identification.Token
 }
 
 type ModifyTokenResp struct {
@@ -90,7 +92,7 @@ type GetTokenReq struct {
 }
 
 type GetTokenResp struct {
-	structs.Token
+	identification.Token
 }
 
 type LoginReq struct {
@@ -129,5 +131,5 @@ type CreateTokenReq struct {
 }
 
 type CreateTokenResp struct {
-	structs.Token
+	identification.Token
 }

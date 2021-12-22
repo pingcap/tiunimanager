@@ -1,4 +1,4 @@
-package identification
+package tenant
 
 import (
 	"github.com/pingcap-inc/tiem/library/common"
@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-var testRW *TokenReadWrite
+var testRW *TenantReadWrite
 
 func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
@@ -28,9 +28,9 @@ func TestMain(m *testing.M) {
 			} else {
 				logins.Infof("open database successful, filepath: %s", dbFile)
 			}
-			db.Migrator().CreateTable(Token{})
+			db.Migrator().CreateTable(Tenant{})
 
-			testRW = NewTokenReadWrite(db)
+			testRW = NewTenantReadWrite(db)
 			return nil
 		},
 	)

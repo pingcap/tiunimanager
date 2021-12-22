@@ -21,11 +21,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/micro-cluster/user/identification"
 	"github.com/pingcap-inc/tiem/micro-cluster/user/tenant"
 	"github.com/pingcap-inc/tiem/micro-cluster/user/userinfo"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -771,86 +769,48 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 var ManageSuccessResponseStatus = &clusterpb.ManagerResponseStatus{
 	Code: 0,
 }
+func (c *ClusterServiceHandler) Login(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	framework.LogWithContext(ctx).Info("login")
+	start := time.Now()
+	defer handleMetrics(start, "Login", int(response.GetCode()))
 
-func (handler *ClusterServiceHandler) Login(ctx context.Context, req *clusterpb.LoginRequest, resp *clusterpb.LoginResponse) error {
-	log := framework.LogWithContext(ctx).WithField("fp", "ClusterServiceHandler.Login")
-	/*
-		start := time.Now()
-		defer handleMetrics(start, "Login", int(resp.GetCode()))*/
-	log.Debug("req:", req)
-	request := message.LoginReq{
-		UserName: req.GetAccountName(),
-		Password: req.GetPassword(),
-	}
-	token, err := handler.authManager.Login(ctx, request)
-	//token, err := p.authManager.Login(ctx, req.GetAccountName(), req.GetPassword())
-
-	if err != nil {
-		resp.Status = &clusterpb.ManagerResponseStatus{
-			Code:    http.StatusInternalServerError,
-			Message: err.Error(),
-		}
-		resp.Status.Message = err.Error()
-		log.Error("resp:", resp)
-	} else {
-		resp.Status = ManageSuccessResponseStatus
-		resp.TokenString = token.TokenString
-		log.Debug("resp:", resp)
-	}
-	return nil
-
-}
-
-func (handler *ClusterServiceHandler) Logout(ctx context.Context, req *clusterpb.LogoutRequest, resp *clusterpb.LogoutResponse) error {
-	accountName, err := handler.authManager.Logout(ctx, message.LogoutReq{TokenString: req.TokenString})
-	if err != nil {
-		resp.Status = &clusterpb.ManagerResponseStatus{
-			Code:    http.StatusInternalServerError,
-			Message: err.Error(),
-		}
-		resp.Status.Message = err.Error()
-	} else {
-		resp.Status = ManageSuccessResponseStatus
-		resp.AccountName = accountName.AccountName
-	}
-	return nil
-
-}
-
-func (handler *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *clusterpb.VerifyIdentityRequest, resp *clusterpb.VerifyIdentityResponse) error {
-	request := message.AccessibleReq{
-		PathType: req.GetAuthType(),
-		Path: req.GetPath(),
-		TokenString: req.GetTokenString(),
-	}
-	response, err := handler.authManager.Accessible(ctx, request)
-
-	if err != nil {
-		if _, ok := err.(*structs.UnauthorizedError); ok {
-			resp.Status = &clusterpb.ManagerResponseStatus{
-				Code:    http.StatusUnauthorized,
-				Message: "未登录或登录失效，请重试",
-			}
-		} else if _, ok := err.(*structs.ForbiddenError); ok {
-			resp.Status = &clusterpb.ManagerResponseStatus{
-				Code:    http.StatusForbidden,
-				Message: "无权限",
-			}
-		} else {
-			resp.Status = &clusterpb.ManagerResponseStatus{
-				Code:    http.StatusInternalServerError,
-				Message: err.Error(),
-			}
-		}
-	} else {
-		resp.Status = ManageSuccessResponseStatus
-		resp.TenantId = response.TenantID
-		resp.AccountId = response.AccountID
-		resp.AccountName = response.AccountName
+	loginReq := message.LoginReq{}
+	if handleRequest(ctx, request, response, &loginReq) {
+		result, err := c.authManager.Login(ctx, loginReq)
+		handleResponse(ctx, response, err, result, nil)
 	}
 
 	return nil
 }
+
+func (c *ClusterServiceHandler) Logout(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	framework.LogWithContext(ctx).Info("logout")
+	start := time.Now()
+	defer handleMetrics(start, "Logout", int(response.GetCode()))
+
+	logoutReq := message.LogoutReq{}
+	if handleRequest(ctx, request, response, &logoutReq) {
+		result, err := c.authManager.Logout(ctx, logoutReq)
+		handleResponse(ctx, response, err, result, nil)
+	}
+
+	return nil
+}
+
+func (c *ClusterServiceHandler) VerifyIdentity(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	framework.LogWithContext(ctx).Info("verify identity")
+	start := time.Now()
+	defer handleMetrics(start, "VerifyIdentity", int(response.GetCode()))
+
+	verReq := message.AccessibleReq{}
+	if handleRequest(ctx, request, response, &verReq) {
+		result, err := c.authManager.Accessible(ctx, verReq)
+		handleResponse(ctx, response, err, result, nil)
+	}
+
+	return nil
+}
+
 
 func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()

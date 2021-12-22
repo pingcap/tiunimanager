@@ -808,8 +808,13 @@ func (p *ClusterMeta) DisplayClusterInfo(ctx context.Context) structs.ClusterInf
 	}
 	clusterInfo.ExtranetConnectAddresses = clusterInfo.IntranetConnectAddresses
 
-	clusterInfo.AlertUrl = fmt.Sprintf(fmt.Sprintf("%s:%d", p.GetAlertManagerAddresses()[0].IP, p.GetAlertManagerAddresses()[0].Port))
-	clusterInfo.GrafanaUrl = fmt.Sprintf(fmt.Sprintf("%s:%d", p.GetGrafanaAddresses()[0].IP, p.GetGrafanaAddresses()[0].Port))
+	if alertAddress := p.GetAlertManagerAddresses(); len(alertAddress) > 0 {
+		clusterInfo.AlertUrl = fmt.Sprintf(fmt.Sprintf("%s:%d", alertAddress[0].IP, alertAddress[0].Port))
+	}
+
+	if grafanaAddress := p.GetGrafanaAddresses(); len(grafanaAddress) > 0 {
+		clusterInfo.GrafanaUrl = fmt.Sprintf(fmt.Sprintf("%s:%d", grafanaAddress[0].IP, grafanaAddress[0].Port))
+	}
 
 	mockUsage := func() structs.Usage {
 		return structs.Usage{

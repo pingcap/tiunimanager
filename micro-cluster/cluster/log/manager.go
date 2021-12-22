@@ -27,17 +27,16 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"strings"
 	"time"
+
+	"github.com/pingcap-inc/tiem/common/errors"
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 
 	"github.com/pingcap-inc/tiem/library/util/convert"
 
 	"github.com/pingcap-inc/tiem/models"
-
-	"github.com/pingcap-inc/tiem/library/common"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
@@ -74,7 +73,7 @@ func (m Manager) QueryClusterLog(ctx context.Context, req cluster.QueryClusterLo
 	esResp, err := framework.Current.GetElasticsearchClient().Search(logIndexPrefix, &buf, (req.Page-1)*req.PageSize, req.PageSize)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("cluster %s query log, search es err: %v", req.ClusterID, err)
-		return resp, page, framework.SimpleError(common.TIEM_CLUSTER_LOG_QUERY_FAILED)
+		return resp, page, errors.NewEMErrorf(errors.TIEM_CLUSTER_LOG_QUERY_FAILED, errors.TIEM_CLUSTER_LOG_QUERY_FAILED.Explain())
 	}
 	return handleResult(ctx, req, esResp)
 }
@@ -84,18 +83,18 @@ func prepareSearchParams(ctx context.Context, req cluster.QueryClusterLogReq) (b
 	_, err = models.GetClusterReaderWriter().Get(ctx, req.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("cluster %s query log, get cluster err: %v", req.ClusterID, err)
-		return buf, framework.SimpleError(common.TIEM_CLUSTER_NOT_FOUND)
+		return buf, errors.NewEMErrorf(errors.TIEM_CLUSTER_NOT_FOUND, errors.TIEM_CLUSTER_NOT_FOUND.Explain())
 	}
 
 	buf = bytes.Buffer{}
 	query, err := buildSearchClusterReqParams(req)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("cluster %s query log, build search params err: %v", req.ClusterID, err)
-		return buf, framework.SimpleError(common.TIEM_CLUSTER_PARAMETER_QUERY_ERROR)
+		return buf, errors.NewEMErrorf(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR.Explain())
 	}
 	if err = json.NewEncoder(&buf).Encode(query); err != nil {
 		framework.LogWithContext(ctx).Errorf("cluster %s query log, encode err: %v", req.ClusterID, err)
-		return buf, framework.SimpleError(common.TIEM_CLUSTER_PARAMETER_QUERY_ERROR)
+		return buf, errors.NewEMErrorf(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR.Explain())
 	}
 	return buf, nil
 }
@@ -103,12 +102,12 @@ func prepareSearchParams(ctx context.Context, req cluster.QueryClusterLogReq) (b
 func handleResult(ctx context.Context, req cluster.QueryClusterLogReq, esResp *esapi.Response) (resp cluster.QueryClusterLogResp, page *clusterpb.RpcPage, err error) {
 	if esResp.IsError() || esResp.StatusCode != 200 {
 		framework.LogWithContext(ctx).Errorf("cluster %s query log, search es err: %v", req.ClusterID, err)
-		return resp, page, framework.SimpleError(common.TIEM_CLUSTER_LOG_QUERY_FAILED)
+		return resp, page, errors.NewEMErrorf(errors.TIEM_CLUSTER_LOG_QUERY_FAILED, errors.TIEM_CLUSTER_LOG_QUERY_FAILED.Explain())
 	}
 	var esResult ElasticSearchResult
 	if err = json.NewDecoder(esResp.Body).Decode(&esResult); err != nil {
 		framework.LogWithContext(ctx).Errorf("cluster %s query log, decoder err: %v", req.ClusterID, err)
-		return resp, page, framework.SimpleError(common.TIEM_CLUSTER_LOG_QUERY_FAILED)
+		return resp, page, errors.NewEMErrorf(errors.TIEM_CLUSTER_LOG_QUERY_FAILED, errors.TIEM_CLUSTER_LOG_QUERY_FAILED.Explain())
 	}
 
 	resp = cluster.QueryClusterLogResp{
@@ -120,7 +119,7 @@ func handleResult(ctx context.Context, req cluster.QueryClusterLogReq, esResp *e
 		err := convert.ConvertObj(hit.Source, &hitItem)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("cluster %s query log, convert obj err: %v", req.ClusterID, err)
-			return resp, page, framework.SimpleError(common.TIEM_CONVERT_OBJ_FAILED)
+			return resp, page, errors.NewEMErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain())
 		}
 
 		resp.Results = append(resp.Results, structs.ClusterLogItem{
@@ -242,7 +241,7 @@ func filterTimestamp(req cluster.QueryClusterLogReq) (map[string]interface{}, er
 
 	if req.StartTime > 0 && req.EndTime > 0 {
 		if req.StartTime > req.EndTime {
-			return nil, errors.New("illegal parameters, startTime after endTime")
+			return nil, errors.NewEMErrorf(errors.TIEM_CLUSTER_LOG_TIME_AFTER, errors.TIEM_CLUSTER_LOG_TIME_AFTER.Explain())
 		}
 		tsFilter["gte"] = req.StartTime * 1000
 		tsFilter["lte"] = req.EndTime * 1000

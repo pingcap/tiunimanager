@@ -35,7 +35,7 @@ const paramNameOfClusterID = "clusterId"
 // QueryUpgradePaths query upgrade path for given cluster id
 // @Summary query upgrade path for given cluster id
 // @Description query upgrade path for given cluster id
-// @Tags upgrade
+// @Tags cluster upgrade
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
@@ -58,7 +58,7 @@ func QueryUpgradePaths(c *gin.Context) {
 // QueryUpgradeVersionDiffInfo query config diff between current cluster and target upgrade version
 // @Summary query config diff between current cluster and target upgrade version
 // @Description query config diff between current cluster and target upgrade version
-// @Tags upgrade
+// @Tags cluster upgrade
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
@@ -87,7 +87,7 @@ func QueryUpgradeVersionDiffInfo(c *gin.Context) {
 // ClusterUpgrade request for upgrade
 // @Summary request for upgrade
 // @Description request for upgrade
-// @Tags upgrade
+// @Tags cluster upgrade
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
@@ -97,7 +97,7 @@ func QueryUpgradeVersionDiffInfo(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /:clusterId/upgrade [post]
+// @Router /clusters/:clusterId/upgrade [post]
 func ClusterUpgrade(c *gin.Context) {
 	var req cluster.ClusterUpgradeReq
 	if requestBody, ok := controller.HandleJsonRequestFromBody(c,

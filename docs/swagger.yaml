@@ -92,7 +92,9 @@ definitions:
         example: in-place/migration
         type: string
       upgradeWay:
-        example: offline/online
+        enum:
+        - offline
+        - online
         type: string
     type: object
   cluster.ClusterUpgradeResp:
@@ -1982,8 +1984,15 @@ definitions:
     type: object
   structs.ProductUpgradePathItem:
     properties:
-      type:
-        example: in-place/migration
+      upgradeType:
+        enum:
+        - in-place
+        - migration
+        type: string
+      upgradeWay:
+        enum:
+        - offline
+        - online
         type: string
       versions:
         example:
@@ -2101,52 +2110,6 @@ info:
   title: TiEM UI API
   version: "1.0"
 paths:
-  /:clusterId/upgrade:
-    post:
-      consumes:
-      - application/json
-      description: request for upgrade
-      parameters:
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      - description: upgrade request
-        in: body
-        name: upgradeReq
-        required: true
-        schema:
-          $ref: '#/definitions/cluster.ClusterUpgradeReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.ClusterUpgradeResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: request for upgrade
-      tags:
-      - upgrade
   /backups/:
     get:
       consumes:
@@ -2682,6 +2645,52 @@ paths:
       summary: create a cluster
       tags:
       - cluster
+  /clusters/:clusterId/upgrade:
+    post:
+      consumes:
+      - application/json
+      description: request for upgrade
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: upgrade request
+        in: body
+        name: upgradeReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.ClusterUpgradeReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.ClusterUpgradeResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: request for upgrade
+      tags:
+      - cluster upgrade
   /clusters/:clusterId/upgrade/diff:
     get:
       consumes:
@@ -2725,7 +2734,7 @@ paths:
       - ApiKeyAuth: []
       summary: query config diff between current cluster and target upgrade version
       tags:
-      - upgrade
+      - cluster upgrade
   /clusters/:clusterId/upgrade/path:
     get:
       consumes:
@@ -2765,7 +2774,7 @@ paths:
       - ApiKeyAuth: []
       summary: query upgrade path for given cluster id
       tags:
-      - upgrade
+      - cluster upgrade
   /clusters/{clusterId}:
     delete:
       consumes:

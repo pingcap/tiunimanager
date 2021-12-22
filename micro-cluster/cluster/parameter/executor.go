@@ -77,7 +77,7 @@ func asyncMaintenance(ctx context.Context, meta *handler.ClusterMeta, data map[s
 		return
 	} else {
 		flowID = flow.Flow.ID
-		flow.Context.SetData(contextClusterMeta, &meta)
+		flow.Context.SetData(contextClusterMeta, meta)
 		for k, v := range data {
 			flow.Context.SetData(k, v)
 		}
@@ -189,7 +189,8 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 	framework.LogWithContext(ctx).Debugf("got modify need reboot: %v, params size: %d", modifyParam.Reboot, len(modifyParam.Params))
 
 	// Get the apply parameter object
-	applyParameter := ctx.GetData(contextApplyParameterInfo).(*message.ApplyParameterGroupReq)
+	applyParameter := ctx.GetData(contextApplyParameterInfo)
+	framework.LogWithContext(ctx).Debugf("modify parameter get apply parameter: %v", applyParameter)
 
 	// grouping by parameter source
 	paramContainer := make(map[interface{}][]structs.ClusterParameterSampleInfo, 0)

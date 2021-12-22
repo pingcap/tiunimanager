@@ -25,8 +25,7 @@ package structs
 
 import (
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/errors"
 )
 
 type Label struct {
@@ -61,7 +60,7 @@ func (labels Labels) getTraitByName(name string) (trait int64, err error) {
 	if label, ok := (labels)[name]; ok {
 		return label.Trait, nil
 	} else {
-		return 0, framework.NewTiEMErrorf(common.TIEM_RESOURCE_TRAIT_NOT_FOUND, "label type %v not found in system default labels", name)
+		return 0, errors.NewEMErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND, "label type %v not found in system default labels", name)
 	}
 }
 

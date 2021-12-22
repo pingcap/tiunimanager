@@ -22,9 +22,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
 	resource_models "github.com/pingcap-inc/tiem/models/resource"
 	resourcepool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	mock_resource "github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
@@ -105,7 +104,7 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 			hostIds = append(hostIds, fake_hostId)
 			return hostIds, nil
 		} else {
-			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 
@@ -132,7 +131,7 @@ func Test_ImportHosts_Failed(t *testing.T) {
 			hostIds = append(hostIds, fake_hostId)
 			return hostIds, nil
 		} else {
-			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := mockFileHostProvider(mockClient)
@@ -142,9 +141,9 @@ func Test_ImportHosts_Failed(t *testing.T) {
 	hosts = append(hosts, *host)
 	_, err := hostprovider.ImportHosts(context.TODO(), hosts)
 	assert.NotNil(t, err)
-	tiemErr, ok := err.(framework.TiEMError)
+	tiemErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, common.TIEM_PARAMETER_INVALID, tiemErr.GetCode())
+	assert.Equal(t, errors.TIEM_PARAMETER_INVALID, tiemErr.GetCode())
 
 }
 
@@ -162,7 +161,7 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 			hosts = append(hosts, *dbhost)
 			return hosts, nil
 		} else {
-			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := mockFileHostProvider(mockClient)
@@ -194,7 +193,7 @@ func Test_DeleteHosts_Succeed(t *testing.T) {
 		if hostIds[0] == fake_hostId1 && hostIds[1] == fake_hostId2 {
 			return nil
 		} else {
-			return framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := mockFileHostProvider(mockClient)
@@ -221,7 +220,7 @@ func Test_UpdateHostReserved_Succeed(t *testing.T) {
 			host2.Reserved = reserved
 			return nil
 		} else {
-			return framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := mockFileHostProvider(mockClient)
@@ -250,7 +249,7 @@ func Test_UpdateHostStatus_Succeed(t *testing.T) {
 			host2.Status = status
 			return nil
 		} else {
-			return framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := mockFileHostProvider(mockClient)
@@ -298,7 +297,7 @@ func Test_GetHierarchy_Succeed(t *testing.T) {
 			items = append(items, item3)
 			return items, nil
 		} else {
-			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := mockFileHostProvider(mockClient)
@@ -337,7 +336,7 @@ func Test_GetStocks_Succeed(t *testing.T) {
 			stocks = append(stocks, stocks2)
 			return stocks, nil
 		} else {
-			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := mockFileHostProvider(mockClient)

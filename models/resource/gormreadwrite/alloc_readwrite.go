@@ -54,7 +54,7 @@ func (rw *GormResourceReadWrite) allocForSingleRequest(ctx context.Context, tx *
 	for i, require := range req.Requires {
 		switch resource_structs.AllocStrategy(require.Strategy) {
 		case resource_structs.RandomRack:
-			res, err := rw.allocResourceWithRR(tx, &req.Applicant, i, &require, choosedHosts)
+			res, err := rw.allocResourceWithRR(ctx, tx, &req.Applicant, i, &require, choosedHosts)
 			if err != nil {
 				log.Errorf("alloc resources in random rack strategy for %dth requirement %v failed, %v", i, require, err)
 				return nil, err
@@ -66,14 +66,14 @@ func (rw *GormResourceReadWrite) allocForSingleRequest(ctx context.Context, tx *
 		case resource_structs.DiffRackBestEffort:
 		case resource_structs.UserSpecifyRack:
 		case resource_structs.UserSpecifyHost:
-			res, err := rw.allocResourceInHost(tx, &req.Applicant, i, &require)
+			res, err := rw.allocResourceInHost(ctx, tx, &req.Applicant, i, &require)
 			if err != nil {
 				log.Errorf("alloc resources in specify host strategy for %dth requirement %v failed, %v", i, require, err)
 				return nil, err
 			}
 			results.Results = append(results.Results, res...)
 		case resource_structs.ClusterPorts:
-			res, err := rw.allocPortsInRegion(tx, &req.Applicant, i, &require)
+			res, err := rw.allocPortsInRegion(ctx, tx, &req.Applicant, i, &require)
 			if err != nil {
 				log.Errorf("alloc resources in cluster port strategy for %dth requirement %v failed, %v", i, require, err)
 				return nil, err
@@ -127,8 +127,8 @@ func (resource *Resource) toCompute() (result *resource_structs.Compute, err err
 
 }
 
-func (rw *GormResourceReadWrite) allocResourceWithRR(tx *gorm.DB, applicant *resource_structs.Applicant, seq int, require *resource_structs.AllocRequirement, choosedHosts []string) (results []resource_structs.Compute, err error) {
-	log := framework.Log()
+func (rw *GormResourceReadWrite) allocResourceWithRR(ctx context.Context, tx *gorm.DB, applicant *resource_structs.Applicant, seq int, require *resource_structs.AllocRequirement, choosedHosts []string) (results []resource_structs.Compute, err error) {
+	log := framework.LogWithContext(ctx)
 	regionName := require.Location.Region
 	zoneName := require.Location.Zone
 	zoneCode := structs.GenDomainCodeByName(regionName, zoneName)
@@ -236,7 +236,9 @@ func (rw *GormResourceReadWrite) allocResourceWithRR(tx *gorm.DB, applicant *res
 	return
 }
 
-func (rw *GormResourceReadWrite) allocResourceInHost(tx *gorm.DB, applicant *resource_structs.Applicant, seq int, require *resource_structs.AllocRequirement) (results []resource_structs.Compute, err error) {
+func (rw *GormResourceReadWrite) allocResourceInHost(ctx context.Context, tx *gorm.DB, applicant *resource_structs.Applicant, seq int, require *resource_structs.AllocRequirement) (results []resource_structs.Compute, err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infof("allocResourceInHost[%d] for application %v, require: %v", seq, *applicant, *require)
 	hostIp := require.Location.HostIp
 	if require.Count != 1 {
 		return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "request host count should be 1 for UserSpecifyHost allocation(%d)", require.Count)
@@ -352,7 +354,9 @@ func (rw *GormResourceReadWrite) allocResourceInHost(tx *gorm.DB, applicant *res
 	return
 }
 
-func (rw *GormResourceReadWrite) allocPortsInRegion(tx *gorm.DB, applicant *resource_structs.Applicant, seq int, require *resource_structs.AllocRequirement) (results []resource_structs.Compute, err error) {
+func (rw *GormResourceReadWrite) allocPortsInRegion(ctx context.Context, tx *gorm.DB, applicant *resource_structs.Applicant, seq int, require *resource_structs.AllocRequirement) (results []resource_structs.Compute, err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infof("allocPortsInRegion[%d] for application: %v, require: %v", seq, *applicant, *require)
 	regionCode := require.Location.Region
 	hostArch := require.HostFilter.Arch
 	if regionCode == "" {
@@ -379,11 +383,13 @@ func (rw *GormResourceReadWrite) allocPortsInRegion(tx *gorm.DB, applicant *reso
 	if err != nil {
 		return nil, errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "select used port range %d - %d in region %s failed, %v", portReq.Start, portReq.End, regionCode, err)
 	}
+	log.Infof("region used port list: %v, hosts: %v, start: %d, end: %d", usedPorts, regionHosts, portReq.Start, portReq.End)
 
 	res, err := rw.getPortsInRange(usedPorts, portReq.Start, portReq.End, int(portReq.PortCnt))
 	if err != nil {
 		return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_PORT, "Region %s has no enough %d ports on range [%d, %d]", regionCode, portReq.PortCnt, portReq.Start, portReq.End)
 	}
+	log.Infof("get region ports: %v, [%d, %d, %d]", res, portReq.Start, portReq.End, portReq.PortCnt)
 
 	err = rw.markPortsInRegion(tx, applicant, regionHosts, res)
 	if err != nil {

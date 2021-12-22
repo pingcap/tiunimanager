@@ -321,6 +321,11 @@ func restoreNewCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 }
 
 func waitWorkFlow(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	if context.GetData(ContextWorkflowID) == nil {
+		framework.LogWithContext(context.Context).Infof(
+			"when wait workflow, not found workflow id")
+		return nil
+	}
 	workflowID := context.GetData(ContextWorkflowID).(string)
 
 	if err := handler.WaitWorkflow(context.Context, workflowID, 10*time.Second, 30*24*time.Hour); err != nil {
@@ -549,7 +554,7 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 		ClusterID: clusterMeta.Cluster.ID,
 		Params:    targetParams,
 		Reboot:    reboot,
-	})
+	}, false)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"update cluster %s parameters error: %s", clusterMeta.Cluster.ID, err.Error())

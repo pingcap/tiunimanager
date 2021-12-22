@@ -753,10 +753,10 @@ func Query(ctx context.Context, req cluster.QueryClustersReq) (resp cluster.Quer
 		Type: req.Type,
 		Tag: req.Tag,
 	}
-	if req.ClusterID != "" {
+	if len(req.ClusterID) > 0 {
 		filters.ClusterIDs = []string{req.ClusterID}
 	}
-	if req.Status != "" {
+	if len(req.Status) > 0 {
 		filters.StatusFilters = []newConstants.ClusterRunningStatus{newConstants.ClusterRunningStatus(req.Status)}
 	}
 
@@ -765,6 +765,7 @@ func Query(ctx context.Context, req cluster.QueryClustersReq) (resp cluster.Quer
 		framework.LogWithContext(ctx).Errorf("query clusters failed, request = %v, errors = %s", req, err)
 		return
 	} else {
+		framework.LogWithContext(ctx).Infof("query clusters got result = %v, page = %v", result, page)
 		total = page.Total
 	}
 

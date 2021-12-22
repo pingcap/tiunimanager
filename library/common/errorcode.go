@@ -208,7 +208,7 @@ var explanationContainer = map[TIEM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_TAKEOVER_SSH_CONNECT_ERROR:   {TIEM_TAKEOVER_SSH_CONNECT_ERROR, "ssh connect failed", 500},
 	TIEM_TAKEOVER_SFTP_ERROR:          {TIEM_TAKEOVER_SFTP_ERROR, "sftp failed", 500},
 	TIEM_CLUSTER_RESOURCE_NOT_ENOUGH:  {TIEM_CLUSTER_RESOURCE_NOT_ENOUGH, "no enough resource for cluster", 500},
-	TIEM_CLUSTER_MAINTENANCE_CONFLICT: {TIEM_CLUSTER_MAINTENANCE_CONFLICT, "maintenance status conflict", 209},
+	TIEM_CLUSTER_MAINTENANCE_CONFLICT: {TIEM_CLUSTER_MAINTENANCE_CONFLICT, "maintenance status conflict", 409},
 
 	// dashboard && monitor
 	TIEM_DASHBOARD_NOT_FOUND: {TIEM_DASHBOARD_NOT_FOUND, "dashboard is not found", 500},

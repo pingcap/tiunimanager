@@ -174,7 +174,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_INVALID_TOPOLOGY:             {TIEM_INVALID_TOPOLOGY, "invalid cluster topology", 400},
 	TIEM_UNSUPPPORT_PRODUCT:           {TIEM_UNSUPPPORT_PRODUCT, "unsupported cluster type or version", 400},
 	TIEM_CLUSTER_RESOURCE_NOT_ENOUGH:  {TIEM_CLUSTER_RESOURCE_NOT_ENOUGH, "host resource is not enough", 500},
-	TIEM_CLUSTER_MAINTENANCE_CONFLICT: {TIEM_CLUSTER_MAINTENANCE_CONFLICT, "maintenance status conflict", 209},
+	TIEM_CLUSTER_MAINTENANCE_CONFLICT: {TIEM_CLUSTER_MAINTENANCE_CONFLICT, "maintenance status conflict", 409},
 
 	// cluster management
 	TIEM_TAKEOVER_SSH_CONNECT_ERROR: {TIEM_TAKEOVER_SSH_CONNECT_ERROR, "ssh connect failed", 500},

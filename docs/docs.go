@@ -3799,17 +3799,6 @@ var doc = `{
                     "platform"
                 ],
                 "summary": "logout",
-                "parameters": [
-                    {
-                        "description": "login info",
-                        "name": "logoutInfo",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/message.LogoutReq"
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -5671,10 +5660,10 @@ var doc = `{
         "message.LoginReq": {
             "type": "object",
             "properties": {
-                "name": {
+                "userName": {
                     "type": "string"
                 },
-                "password": {
+                "userPassword": {
                     "type": "string"
                 }
             }
@@ -5682,15 +5671,13 @@ var doc = `{
         "message.LoginResp": {
             "type": "object",
             "properties": {
-                "tokenString": {
+                "tenantId": {
                     "type": "string"
-                }
-            }
-        },
-        "message.LogoutReq": {
-            "type": "object",
-            "properties": {
-                "tokenString": {
+                },
+                "token": {
+                    "type": "string"
+                },
+                "userName": {
                     "type": "string"
                 }
             }

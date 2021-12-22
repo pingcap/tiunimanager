@@ -19,6 +19,7 @@ package identification
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
+	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
@@ -51,14 +52,17 @@ func Login(c *gin.Context) {
 // @Tags platform
 // @Accept application/json
 // @Produce application/json
-// @Param logoutInfo body message.LogoutReq true "login info"
 // @Security ApiKeyAuth
 // @Success 200 {object} controller.CommonResult{data=message.LogoutResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /user/logout [post]
 func Logout(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.LogoutReq{}); ok {
+	bearerTokenStr := c.GetHeader("Authorization")
+	token , _ := utils.GetTokenFromBearer(bearerTokenStr);
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.LogoutReq{
+		TokenString: token,
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.Logout, &message.LogoutResp{},
 			requestBody,
 			controller.DefaultTimeout)

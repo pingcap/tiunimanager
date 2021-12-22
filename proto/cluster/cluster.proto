@@ -34,7 +34,7 @@ service ClusterService {
     rpc GetBackupStrategy(RpcRequest) returns (RpcResponse);
 
     rpc GetDashboardInfo(RpcRequest) returns (RpcResponse);
-    rpc DescribeMonitor(RpcRequest) returns (RpcResponse);
+    rpc GetMonitorInfo(RpcRequest) returns (RpcResponse);
 
     // Auth manager module
     rpc Login(LoginRequest) returns (LoginResponse);

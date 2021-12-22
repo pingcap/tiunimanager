@@ -59,7 +59,7 @@ func (m *Manager) CreateParameterGroup(ctx context.Context, req message.CreatePa
 		Name:           req.Name,
 		ClusterSpec:    req.ClusterSpec,
 		HasDefault:     req.HasDefault,
-		DBType:         req.HasDefault,
+		DBType:         req.DBType,
 		GroupType:      req.GroupType,
 		ClusterVersion: req.ClusterVersion,
 		Note:           req.Note,

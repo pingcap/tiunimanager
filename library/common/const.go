@@ -18,11 +18,7 @@ package common
 
 // micro service default port
 const (
-	DefaultMicroMetaDBPort  int = 4100
-	DefaultMicroClusterPort int = 4110
-	DefaultMicroApiPort     int = 4116
-	DefaultMicroFilePort    int = 4118
-	DefaultMetricsPort      int = 4121
+	DefaultMetricsPort int = 4103
 )
 
 // tidb component default port
@@ -45,22 +41,14 @@ const (
 
 	CrtFileName string = "server.crt"
 	KeyFileName string = "server.key"
-
-	LocalAddress string = "0.0.0.0"
 )
 
 const (
 	LogFileSystem      = "system"
-	LogFileSecondParty = "2nd"
 	LogFileLibTiUP     = "libTiUP"
 
 	LogFileAccess = "access"
 	LogFileAudit  = "audit"
-)
-
-const (
-	RegistryMicroServicePrefix = "/micro/registry/"
-	HttpProtocol               = "http://"
 )
 
 var (

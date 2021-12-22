@@ -174,6 +174,21 @@ func TestBRReadWrite_CreateBackupStrategy(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestBRReadWrite_SaveBackupStrategy(t *testing.T) {
+	strategy := &BackupStrategy{
+		Entity: common.Entity{
+			TenantId: "tenantId",
+			Status:   "BackupInitStatus",
+		},
+		ClusterID:  "clusterId",
+		BackupDate: "Monday,Friday",
+		StartHour:  11,
+		EndHour:    12,
+	}
+	_, err := rw.SaveBackupStrategy(context.TODO(), strategy)
+	assert.NoError(t, err)
+}
+
 func TestBRReadWrite_GetBackupStrategy(t *testing.T) {
 	strategy := &BackupStrategy{
 		Entity: common.Entity{
@@ -185,7 +200,7 @@ func TestBRReadWrite_GetBackupStrategy(t *testing.T) {
 		StartHour:  11,
 		EndHour:    12,
 	}
-	strategyCreate, errCreate := rw.CreateBackupStrategy(context.TODO(), strategy)
+	strategyCreate, errCreate := rw.SaveBackupStrategy(context.TODO(), strategy)
 	assert.NoError(t, errCreate)
 
 	strategyCreate.BackupDate = "Friday"
@@ -233,6 +248,7 @@ func TestBRReadWrite_DeleteBackupStrategy(t *testing.T) {
 	errDelete := rw.DeleteBackupStrategy(context.TODO(), strategyCreate.ClusterID)
 	assert.NoError(t, errDelete)
 
-	_, errGet := rw.GetBackupStrategy(context.TODO(), strategyCreate.ClusterID)
-	assert.NotNil(t, errGet)
+	strategyGet, errGet := rw.GetBackupStrategy(context.TODO(), strategyCreate.ClusterID)
+	assert.Nil(t, errGet)
+	assert.Equal(t, "", strategyGet.ID)
 }

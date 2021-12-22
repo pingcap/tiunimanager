@@ -21,10 +21,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
-	"github.com/pingcap/errors"
 	"github.com/pingcap/tiup/pkg/crypto/rand"
 	"io/ioutil"
 	"net/http"
@@ -47,8 +47,9 @@ const loginUrlSuffix string = "api/user/login"
 func GetDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) (resp cluster.GetDashboardInfoResp, err error) {
 	meta, err := handler.Get(ctx, request.ClusterID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("get cluster %s meta failed: %s", request.ClusterID, err.Error())
-		return resp, err
+		errMsg := fmt.Sprintf("get cluster %s meta failed: %s", request.ClusterID, err.Error())
+		framework.LogWithContext(ctx).Errorf(errMsg)
+		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, errMsg, err)
 	}
 
 	tidbUserInfo := meta.GetClusterUserNamePasswd()
@@ -56,11 +57,13 @@ func GetDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) 
 
 	url, err := getDashboardUrlFromCluster(ctx, meta)
 	if err != nil {
-		return resp, err
+		return resp, errors.WrapError(errors.TIEM_DASHBOARD_NOT_FOUND,
+			fmt.Sprintf("find cluster %s dashboard failed: %s", request.ClusterID, err.Error()), err)
 	}
 	token, err := getLoginToken(ctx, url, tidbUserInfo.UserName, tidbUserInfo.Password)
 	if err != nil {
-		return resp, err
+		return resp, errors.WrapError(errors.TIEM_DASHBOARD_NOT_FOUND,
+			fmt.Sprintf("get cluster %s dashboard login token failed: %s", request.ClusterID, err.Error()), err)
 	}
 
 	resp.ClusterID = request.ClusterID
@@ -79,11 +82,7 @@ func getDashboardUrlFromCluster(ctx context.Context, meta *handler.ClusterMeta) 
 	pdNum := len(pdAddress)
 	pdServer := pdAddress[rand.Intn(pdNum)]
 	pdClientPort := pdServer.Port
-	/*
-		if pdClientPort == 0 {
-			pdClientPort = constants.DefaultPDClientPort
-		}
-	*/
+
 	return fmt.Sprintf("http://%s:%d/dashboard/", pdServer.IP, pdClientPort), nil
 }
 
@@ -120,12 +119,12 @@ func post(ctx context.Context, url string, body interface{}, headers map[string]
 		var err error
 		bodyJson, err = json.Marshal(body)
 		if err != nil {
-			return nil, errors.New("http post body to json failed")
+			return nil, fmt.Errorf("http post body to json failed")
 		}
 	}
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(bodyJson))
 	if err != nil {
-		return nil, errors.New("new request is fail: %v \n")
+		return nil, fmt.Errorf("new request is fail: %+v", req)
 	}
 	req.Header.Set("Content-type", "application/json")
 	//add headers

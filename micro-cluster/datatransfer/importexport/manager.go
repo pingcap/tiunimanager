@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
@@ -84,20 +85,20 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request message.
 
 	if err := mgr.exportDataPreCheck(ctx, &request); err != nil {
 		framework.LogWithContext(ctx).Errorf("export data precheck failed, %s", err.Error())
-		return resp, err
+		return resp, errors.WrapError(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("export data precheck failed, %s", err.Error()), err)
 	}
 
 	configRW := models.GetConfigReaderWriter()
 	exportPathConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyExportShareStoragePath)
 	if err != nil || exportPathConfig.ConfigValue == "" {
 		framework.LogWithContext(ctx).Errorf("get conifg %s failed: %s", constants.ConfigKeyExportShareStoragePath, err.Error())
-		return resp, fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyExportShareStoragePath, err.Error())
+		return resp, errors.WrapError(errors.TIEM_TRANSPORT_SYSTEM_CONFIG_INVALID, fmt.Sprintf("get conifg %s failed: %s", constants.ConfigKeyExportShareStoragePath, err.Error()), err)
 	}
 
 	meta, err := handler.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
-		return resp, fmt.Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
+		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
 	}
 
 	exportTime := time.Now()
@@ -123,7 +124,7 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request message.
 	recordCreate, err := rw.CreateDataTransportRecord(ctx, record)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create data transport record failed, %s", err.Error())
-		return resp, fmt.Errorf("create data transport record failed, %s", err.Error())
+		return resp, errors.WrapError(errors.TIEM_TRANSPORT_RECORD_CREATE_FAILED, fmt.Sprintf("create data transport record failed, %s", err.Error()), err)
 	}
 	defer func() {
 		if exportErr != nil {
@@ -149,12 +150,15 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request message.
 	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.FlowExportData)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowExportData, err.Error())
-		return resp, fmt.Errorf("create %s workflow failed, %s", constants.FlowExportData, err.Error())
+		return resp, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, fmt.Sprintf("create %s workflow failed, %s", constants.FlowExportData, err.Error()), err)
 	}
 	// Start the workflow
 	flowManager.AddContext(flow, contextClusterMetaKey, meta)
 	flowManager.AddContext(flow, contextDataTransportRecordKey, info)
-	flowManager.AsyncStart(ctx, flow)
+	if err := flowManager.AsyncStart(ctx, flow); err != nil {
+		framework.LogWithContext(ctx).Errorf("start %s workflow failed, %s", constants.FlowExportData, err.Error())
+		return resp, errors.WrapError(errors.TIEM_WORKFLOW_START_FAILED, fmt.Sprintf("start %s workflow failed, %s", constants.FlowExportData, err.Error()), err)
+	}
 
 	resp.WorkFlowID = flow.Flow.ID
 	resp.RecordID = recordCreate.ID
@@ -166,21 +170,21 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 	defer framework.LogWithContext(ctx).Infof("end importdata")
 
 	if err := mgr.importDataPreCheck(ctx, &request); err != nil {
-		framework.LogWithContext(ctx).Errorf("export data precheck failed, %s", err.Error())
-		return resp, err
+		framework.LogWithContext(ctx).Errorf("import data precheck failed, %s", err.Error())
+		return resp, errors.WrapError(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("import data precheck failed, %s", err.Error()), err)
 	}
 
 	configRW := models.GetConfigReaderWriter()
 	importPathConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyImportShareStoragePath)
 	if err != nil || importPathConfig.ConfigValue == "" {
 		framework.LogWithContext(ctx).Errorf("get conifg %s failed: %s", constants.ConfigKeyImportShareStoragePath, err.Error())
-		return resp, fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyImportShareStoragePath, err.Error())
+		return resp, errors.WrapError(errors.TIEM_TRANSPORT_SYSTEM_CONFIG_INVALID, fmt.Sprintf("get conifg %s failed: %s", constants.ConfigKeyImportShareStoragePath, err.Error()), err)
 	}
 
 	meta, err := handler.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
-		return resp, fmt.Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
+		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
 	}
 
 	rw := models.GetImportExportReaderWriter()
@@ -194,13 +198,13 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 			err = os.Rename(filepath.Join(importPrefix, request.ClusterID, "temp"), importDir)
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("find import dir failed, %s", err.Error())
-				return resp, err
+				return resp, errors.WrapError(errors.TIEM_TRANSPORT_PATH_CREATE_FAILED, fmt.Sprintf("find import dir failed, %s", err.Error()), err)
 			}
 		} else {
 			err = os.MkdirAll(importDir, os.ModeDir)
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("mkdir import dir failed, %s", err.Error())
-				return resp, err
+				return resp, errors.WrapError(errors.TIEM_TRANSPORT_PATH_CREATE_FAILED, fmt.Sprintf("mkdir import dir failed, %s", err.Error()), err)
 			}
 		}
 
@@ -222,7 +226,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 		recordCreate, err = rw.CreateDataTransportRecord(ctx, record)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("create data transport record failed, %s", err.Error())
-			return resp, fmt.Errorf("create data transport record failed, %s", err.Error())
+			return resp, errors.WrapError(errors.TIEM_TRANSPORT_RECORD_CREATE_FAILED, fmt.Sprintf("create data transport record failed, %s", err.Error()), err)
 		}
 
 		info = &importInfo{
@@ -239,11 +243,11 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 		recordGet, err := rw.GetDataTransportRecord(ctx, request.RecordId)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("get data transport record %s failed, %s", request.RecordId, err.Error())
-			return resp, fmt.Errorf("get data transport record %s failed, %s", request.RecordId, err.Error())
+			return resp, errors.WrapError(errors.TIEM_TRANSPORT_RECORD_QUERY_FAILED, fmt.Sprintf("get data transport record %s failed, %s", request.RecordId, err.Error()), err)
 		}
 
 		if err := os.MkdirAll(importDir, os.ModeDir); err != nil {
-			return resp, fmt.Errorf("make import dir %s failed, %s", importDir, err.Error())
+			return resp, errors.WrapError(errors.TIEM_TRANSPORT_PATH_CREATE_FAILED, fmt.Sprintf("make import dir %s failed, %s", importDir, err.Error()), err)
 		}
 
 		record := &importexport.DataTransportRecord{
@@ -264,7 +268,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 		recordCreate, err = rw.CreateDataTransportRecord(ctx, record)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("create data transport record failed, %s", err.Error())
-			return resp, fmt.Errorf("create data transport record failed, %s", err.Error())
+			return resp, errors.WrapError(errors.TIEM_TRANSPORT_RECORD_CREATE_FAILED, fmt.Sprintf("create data transport record failed, %s", err.Error()), err)
 		}
 		info = &importInfo{
 			ClusterId:   request.ClusterID,
@@ -288,14 +292,14 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.FlowImportData)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowImportData, err.Error())
-		return resp, fmt.Errorf("create %s workflow failed, %s", constants.FlowImportData, err.Error())
+		return resp, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, fmt.Sprintf("create %s workflow failed, %s", constants.FlowImportData, err.Error()), err)
 	}
 	// Start the workflow
 	flowManager.AddContext(flow, contextClusterMetaKey, meta)
 	flowManager.AddContext(flow, contextDataTransportRecordKey, info)
 	if err = flowManager.AsyncStart(ctx, flow); err != nil {
 		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.FlowImportData, err.Error())
-		return resp, fmt.Errorf("async start %s workflow failed, %s", constants.FlowImportData, err.Error())
+		return resp, errors.WrapError(errors.TIEM_WORKFLOW_START_FAILED, fmt.Sprintf("async start %s workflow failed, %s", constants.FlowImportData, err.Error()), err)
 	}
 
 	resp.WorkFlowID = flow.Flow.ID
@@ -310,7 +314,8 @@ func (mgr *ImportExportManager) QueryDataTransportRecords(ctx context.Context, r
 	rw := models.GetImportExportReaderWriter()
 	records, total, err := rw.QueryDataTransportRecords(ctx, request.RecordID, request.ClusterID, request.ReImport, request.StartTime, request.EndTime, request.Page, request.PageSize)
 	if err != nil {
-		return resp, page, err
+		framework.LogWithContext(ctx).Errorf("query data transport records request %+v failed, %s", request, err.Error())
+		return resp, page, errors.WrapError(errors.TIEM_TRANSPORT_RECORD_QUERY_FAILED, fmt.Sprintf("query data transport records failed, %s", err.Error()), err)
 	}
 
 	respRecords := make([]*structs.DataImportExportRecordInfo, len(records))
@@ -350,19 +355,19 @@ func (mgr *ImportExportManager) DeleteDataTransportRecord(ctx context.Context, r
 	record, err := rw.GetDataTransportRecord(ctx, request.RecordID)
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("get data transport record %s failed %s", request.RecordID, err)
-		return resp, nil
+		return resp, errors.WrapError(errors.TIEM_TRANSPORT_RECORD_QUERY_FAILED, fmt.Sprintf("get data transport record %s failed, %s", request.RecordID, err.Error()), err)
 	}
 
 	if string(constants.StorageTypeS3) != record.StorageType {
 		filePath := filepath.Dir(record.FilePath)
-		_ = os.RemoveAll(filePath)
-		framework.LogWithContext(ctx).Infof("remove file path %s, record: %+v", filePath, record.ID)
+		err = os.RemoveAll(filePath)
+		framework.LogWithContext(ctx).Infof("remove file path %s, record: %+v, error: %+v", filePath, record.ID, err)
 	}
 
 	err = rw.DeleteDataTransportRecord(ctx, request.RecordID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("delete data transport record %s failed %s", request.RecordID, err)
-		return resp, err
+		framework.LogWithContext(ctx).Errorf("delete data transport record %s failed %s", request.RecordID, err.Error())
+		return resp, errors.WrapError(errors.TIEM_TRANSPORT_RECORD_DELETE_FAILED, fmt.Sprintf("delete data transport record %s failed %s", request.RecordID, err.Error()), err)
 	}
 	framework.LogWithContext(ctx).Infof("delete transport record %+v success", record.ID)
 
@@ -383,11 +388,9 @@ func (mgr *ImportExportManager) exportDataPreCheck(ctx context.Context, request 
 	if request.UserName == "" {
 		return fmt.Errorf("invalid param userName %s", request.UserName)
 	}
-	/*
-		if request.Password == "" {
-			return fmt.Errorf("invalid param password %s", request.Password)
-		}
-	*/
+	if request.Password == "" {
+		return fmt.Errorf("invalid param password %s", request.Password)
+	}
 
 	if fileTypeCSV != request.FileType && fileTypeSQL != request.FileType {
 		return fmt.Errorf("invalid param fileType %s", request.FileType)
@@ -418,8 +421,9 @@ func (mgr *ImportExportManager) exportDataPreCheck(ctx context.Context, request 
 			return fmt.Errorf("export dir %s is not vaild", exportPathConfig.ConfigValue)
 		}
 		if !mgr.checkFilePathExists(absPath) {
-			//return fmt.Errorf("export path %s not exist", absPath)
-			_ = os.MkdirAll(absPath, os.ModeDir)
+			if err = os.MkdirAll(absPath, os.ModeDir); err != nil {
+				return fmt.Errorf("make export path %s failed, %s", absPath, err.Error())
+			}
 		}
 	default:
 		return fmt.Errorf("invalid param storageType %s", request.StorageType)
@@ -441,18 +445,17 @@ func (mgr *ImportExportManager) importDataPreCheck(ctx context.Context, request 
 	if request.UserName == "" {
 		return fmt.Errorf("invalid param userName %s", request.UserName)
 	}
-	/*
-		if request.Password == "" {
-			return fmt.Errorf("invalid param password %s", request.Password)
-		}
-	*/
+	if request.Password == "" {
+		return fmt.Errorf("invalid param password %s", request.Password)
+	}
 	absPath, err := filepath.Abs(importPathConfig.ConfigValue)
 	if err != nil {
 		return fmt.Errorf("import dir %s is not vaild", importPathConfig.ConfigValue)
 	}
 	if !mgr.checkFilePathExists(absPath) {
-		//return fmt.Errorf("import path %s not exist", absPath)
-		_ = os.MkdirAll(absPath, os.ModeDir)
+		if err = os.MkdirAll(absPath, os.ModeDir); err != nil {
+			return fmt.Errorf("make import path %s failed, %s", absPath, err.Error())
+		}
 	}
 
 	if request.RecordId == "" {

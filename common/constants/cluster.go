@@ -23,15 +23,6 @@
 
 package constants
 
-// TiDB component default port
-const (
-	DefaultTiDBPort       int = 4000
-	DefaultTiDBStatusPort int = 10080
-	DefaultPDClientPort   int = 2379
-	DefaultAlertPort      int = 9093
-	DefaultGrafanaPort    int = 3000
-)
-
 type ClusterRunningStatus string
 
 //Definition of cluster running status information
@@ -161,7 +152,7 @@ const (
 )
 
 const (
-	DefaultBackupStoragePath       string = "em/backup"
+	DefaultBackupStoragePath       string = "nfs/em/backup"
 	DefaultBackupS3AccessKey       string = "minioadmin"
 	DefaultBackupS3SecretAccessKey string = "minioadmin"
 	DefaultBackupS3Endpoint        string = "http://minio.pingcap.net:9000"

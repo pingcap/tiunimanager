@@ -13,58 +13,20 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-/*******************************************************************************
- * @File: common.go
- * @Description:
- * @Author: jiangxunyu@pingcap.com
- * @Version: 1.0.0
- * @Date: 2021/12/15 18:08
-*******************************************************************************/
+package management
 
-package parameter
+import "github.com/pingcap-inc/tiem/common/constants"
 
-import "github.com/pingcap-inc/tiem/common/structs"
-
-const (
-	contextClusterMeta         = "ClusterMeta"
-	contextModifyParameters    = "ModifyParameters"
-	contextApplyParameterInfo  = "ApplyParameterInfo"
-	contextUpdateParameterInfo = "UpdateParameterInfo"
-)
-
-type UpdateParameterSource int
-
-const (
-	TiUP UpdateParameterSource = iota
-	SQL
-	TiupAndSql
-	API
-)
-
-type ParameterValueType int
-
-const (
-	Integer ParameterValueType = iota
-	String
-	Boolean
-	Float
-	Array
-)
-
-type ApplyParameterType int
-
-const (
-	ModifyApply ApplyParameterType = iota
-	DirectApply
-)
-
-type ModifyParameter struct {
-	Reboot bool
-	Params []structs.ClusterParameterSampleInfo
+type Filters struct {
+	ClusterIDs    []string
+	TenantId      string
+	NameLike      string
+	Type          string
+	StatusFilters []constants.ClusterRunningStatus
+	Tag           string
 }
 
-type ClusterReboot int
-const (
-	NonReboot ClusterReboot = iota
-	Reboot
-)
+type Result struct {
+	Cluster *Cluster
+	Instances []*ClusterInstance
+}

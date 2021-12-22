@@ -22,11 +22,11 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
+	"github.com/pingcap-inc/tiem/micro-cluster/registry"
 	clusterService "github.com/pingcap-inc/tiem/micro-cluster/service"
 	clusterAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/adapt"
 	"github.com/pingcap-inc/tiem/models"
@@ -40,6 +40,18 @@ func main() {
 		initAdapter,
 		initDatabase,
 		defaultPortForLocal,
+		func(b *framework.BaseFramework) error {
+			go func() {
+				// init embed etcd.
+				err := registry.InitEmbedEtcd(b)
+				if err != nil {
+					b.GetRootLogger().ForkFile(b.GetServiceMeta().ServiceName.ServerName()).
+						Errorf("init embed etcd failed, error: %v", err)
+					return
+				}
+			}()
+			return nil
+		},
 	)
 
 	f.PrepareService(func(service micro.Service) error {
@@ -89,7 +101,7 @@ func initAdapter(f *framework.BaseFramework) error {
 
 func defaultPortForLocal(f *framework.BaseFramework) error {
 	if f.GetServiceMeta().ServicePort <= 0 {
-		f.GetServiceMeta().ServicePort = common.DefaultMicroClusterPort
+		f.GetServiceMeta().ServicePort = constants.DefaultMicroClusterPort
 	}
 	return nil
 }

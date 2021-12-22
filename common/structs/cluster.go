@@ -34,6 +34,13 @@ type ClusterResourceParameterComputeResource struct {
 	Count        int    `json:"count"`
 }
 
+func (p *ClusterResourceParameterComputeResource) Equal(zone, spec, diskType string, diskCapacity int) bool {
+	return p.Zone == zone &&
+		p.DiskType == diskType &&
+		p.DiskCapacity == diskCapacity &&
+		p.Spec == spec
+}
+
 //ClusterResourceParameterCompute Component resource parameters when creating a cluster, including: compute resources, storage resources
 type ClusterResourceParameterCompute struct {
 	Type     string                                    `json:"componentType"` //TiDB/TiKV/PD/TiFlash/TiCDC/DM-Master/DM-Worker
@@ -84,7 +91,6 @@ type ClusterInfo struct {
 	IntranetConnectAddresses []string  `json:"intranetConnectAddresses"`
 	ExtranetConnectAddresses []string  `json:"extranetConnectAddresses"`
 	Whitelist                []string  `json:"whitelist"`
-	PortList                 []int     `json:"portList"`
 	CpuUsage                 Usage     `json:"cpuUsage"`
 	MemoryUsage              Usage     `json:"memoryUsage"`
 	StorageUsage             Usage     `json:"storageUsage"`
@@ -103,7 +109,7 @@ type ClusterInstanceInfo struct {
 	Status       string          `json:"status"`
 	HostID       string          `json:"hostID"`
 	Addresses    []string        `json:"addresses"`
-	Ports        []string        `json:"ports"`
+	Ports        []int32			 `json:"ports"`
 	CpuUsage     Usage           `json:"cpuUsage"`
 	MemoryUsage  Usage           `json:"memoryUsage"`
 	StorageUsage Usage           `json:"storageUsage"`

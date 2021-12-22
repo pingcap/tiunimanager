@@ -113,7 +113,7 @@ func Query(c *gin.Context) {
 	var request cluster.QueryClustersReq
 
 	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &request); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryCluster, cluster.QueryClusterResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryCluster, &cluster.QueryClusterResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

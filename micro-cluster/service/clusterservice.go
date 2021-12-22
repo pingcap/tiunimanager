@@ -50,7 +50,6 @@ import (
 	user "github.com/pingcap-inc/tiem/micro-cluster/service/user/application"
 
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	userDomain "github.com/pingcap-inc/tiem/micro-cluster/service/user/domain"
 )
 
@@ -558,32 +557,10 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 	backupReq := cluster.BackupClusterDataReq{}
 
 	if handleRequest(ctx, request, response, &backupReq) {
-		result, err := c.brManager.BackupCluster(ctx, backupReq)
+		result, err := c.brManager.BackupCluster(ctx, backupReq, true)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
-	return nil
-}
-
-func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterpb.RecoverRequest, resp *clusterpb.RecoverResponse) (err error) {
-	start := time.Now()
-	defer handleMetrics(start, "RecoverCluster", int(resp.GetRespStatus().GetCode()))
-	if err = domain.RecoverPreCheck(ctx, req); err != nil {
-		getLoggerWithContext(ctx).Errorf("recover cluster pre check failed, %s", err.Error())
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_RECOVER_PARAM_INVALID), Message: err.Error()}
-		return nil
-	}
-
-	clusterAggregation, err := domain.Recover(ctx, req.GetOperator(), req.GetCluster(), req.GetCommonDemand(), req.GetDemands())
-	if err != nil {
-		getLoggerWithContext(ctx).Error(err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_RECOVER_PROCESS_FAILED), Message: common.TIEM_RECOVER_PROCESS_FAILED.Explain()}
-	} else {
-		resp.RespStatus = SuccessResponseStatus
-		resp.ClusterId = clusterAggregation.Cluster.Id
-		resp.BaseInfo = clusterAggregation.ExtractBaseInfoDTO()
-		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
-	}
 	return nil
 }
 
@@ -677,39 +654,16 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb
 	framework.LogWithContext(ctx).Info("list flows")
 	start := time.Now()
 	defer handleMetrics(start, "ListFlows", int(response.GetCode()))
-	reqData := request.GetRequest()
 
-	listReq := &message.QueryWorkFlowsReq{}
-	err := json.Unmarshal([]byte(reqData), listReq)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("json unmarshal reuqest failed %s", err.Error())
-		handleResponse(ctx, response, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, err.Error()), nil, nil)
-		return nil
-	}
-
-	manager := workflow.GetWorkFlowService()
-	flows, total, err := manager.ListWorkFlows(ctx, listReq.BizID, listReq.FlowName, listReq.Status, listReq.Page, listReq.PageSize)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("call workflow manager list flows failed %s", err.Error())
-		handleResponse(ctx, response, framework.NewTiEMError(common.TIEM_LIST_WORKFLOW_FAILED, err.Error()), nil, nil)
-		return nil
-	}
-
-	listResp := message.QueryWorkFlowsResp{
-		WorkFlows: flows,
-	}
-	data, err := json.Marshal(listResp)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("json marshal response failed %s", err.Error())
-		handleResponse(ctx, response, framework.NewTiEMError(common.TIEM_LIST_WORKFLOW_FAILED, err.Error()), nil, nil)
-	} else {
-		response.Code = int32(common.TIEM_SUCCESS)
-		response.Response = string(data)
-		response.Page = &clusterpb.RpcPage{
-			Page:     int32(listReq.Page),
-			PageSize: int32(listReq.PageSize),
-			Total:    int32(total),
-		}
+	listReq := message.QueryWorkFlowsReq{}
+	if handleRequest(ctx, request, response, &listReq) {
+		manager := workflow.GetWorkFlowService()
+		result, page, err := manager.ListWorkFlows(ctx, listReq)
+		handleResponse(ctx, response, err, result, &clusterpb.RpcPage{
+			Page:     int32(page.Page),
+			PageSize: int32(page.PageSize),
+			Total:    int32(page.Total),
+		})
 	}
 
 	return nil
@@ -719,36 +673,12 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 	framework.LogWithContext(ctx).Info("detail flow")
 	start := time.Now()
 	defer handleMetrics(start, "DetailFlow", int(response.GetCode()))
-	reqData := request.GetRequest()
 
-	detailReq := &message.QueryWorkFlowDetailReq{}
-	err := json.Unmarshal([]byte(reqData), detailReq)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("json unmarshal request failed %s", err.Error())
-		handleResponse(ctx, response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil, nil)
-		return nil
-	}
-
-	manager := workflow.GetWorkFlowService()
-	flowDetail, err := manager.DetailWorkFlow(ctx, detailReq.WorkFlowID)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("call detail workflow failed %s", err.Error())
-		handleResponse(ctx, response, framework.NewTiEMError(common.TIEM_DETAIL_WORKFLOW_FAILED, err.Error()), nil, nil)
-		return nil
-	}
-
-	detailResp := message.QueryWorkFlowDetailResp{
-		Info:      flowDetail.Flow,
-		NodeInfo:  flowDetail.Nodes,
-		NodeNames: flowDetail.NodeNames,
-	}
-
-	data, err := json.Marshal(detailResp)
-	if err != nil {
-		handleResponse(ctx, response, framework.NewTiEMError(common.TIEM_DETAIL_WORKFLOW_FAILED, err.Error()), nil, nil)
-	} else {
-		response.Code = int32(common.TIEM_SUCCESS)
-		response.Response = string(data)
+	detailReq := message.QueryWorkFlowDetailReq{}
+	if handleRequest(ctx, request, response, &detailReq) {
+		manager := workflow.GetWorkFlowService()
+		result, err := manager.DetailWorkFlow(ctx, detailReq)
+		handleResponse(ctx, response, err, result, nil)
 	}
 
 	return nil

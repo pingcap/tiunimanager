@@ -112,7 +112,6 @@ func Route(g *gin.Engine) {
 			// Backup Strategy
 			cluster.GET("/:clusterId/strategy", backuprestore.GetBackupStrategy)
 			cluster.PUT("/:clusterId/strategy", backuprestore.SaveBackupStrategy)
-			// cluster.DELETE("/:clusterId/strategy", instanceapi.DeleteBackupStrategy)
 
 			//Import and Export
 			cluster.POST("/import", importexport.ImportData)

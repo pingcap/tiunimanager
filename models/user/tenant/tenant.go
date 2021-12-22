@@ -13,7 +13,7 @@ type Tenant struct {
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt
 
-	Name   string                 `gorm:"default:null;not null"`
+	Name   string                 `gorm:"default:null;not null;uniqueIndex"`
 	Type   constants.TenantType   `gorm:"default:0"`
 	Status constants.CommonStatus `gorm:"default:0"`
 }

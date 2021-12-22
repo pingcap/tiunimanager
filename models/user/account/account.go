@@ -11,7 +11,7 @@ import (
 type Account struct {
 	common.Entity
 
-	Name      string `gorm:"default:null;not null"`
+	Name      string `gorm:"default:null;not null;uniqueIndex"`
 	Salt      string `gorm:"default:null;not null;<-:create"`
 	FinalHash string `gorm:"default:null;not null"`
 }

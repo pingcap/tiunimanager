@@ -3,6 +3,7 @@ package identification
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/user/identification"
@@ -50,6 +51,7 @@ func GetToken(ctx context.Context, request message.GetTokenReq) (response messag
 
 	resp, err := models.GetTokenReaderWriter().FindToken(ctx, req.TokenString)
 	if err != nil {
+		err = errors.NewError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized")
 		return
 	}
 

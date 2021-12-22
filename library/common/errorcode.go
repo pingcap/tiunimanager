@@ -165,9 +165,6 @@ const (
 
 	TIEM_CLUSTER_LOG_QUERY_FAILED TIEM_ERROR_CODE = 80300
 
-	//Login & Logout
-	TIEM_UNAUTHORIZED TIEM_ERROR_CODE = 50100
-
 )
 
 type ErrorCodeExplanation struct {

@@ -3728,7 +3728,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/identification.LoginInfo"
+                            "$ref": "#/definitions/message.LoginReq"
                         }
                     }
                 ],
@@ -3744,7 +3744,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/identification.UserIdentity"
+                                            "$ref": "#/definitions/message.LoginResp"
                                         }
                                     }
                                 }
@@ -3784,6 +3784,17 @@
                     "platform"
                 ],
                 "summary": "logout",
+                "parameters": [
+                    {
+                        "description": "login info",
+                        "name": "logoutInfo",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.LogoutReq"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -3796,7 +3807,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/identification.UserIdentity"
+                                            "$ref": "#/definitions/message.LogoutResp"
                                         }
                                     }
                                 }
@@ -5177,31 +5188,6 @@
                 }
             }
         },
-        "identification.LoginInfo": {
-            "type": "object",
-            "properties": {
-                "userName": {
-                    "type": "string"
-                },
-                "userPassword": {
-                    "type": "string"
-                }
-            }
-        },
-        "identification.UserIdentity": {
-            "type": "object",
-            "properties": {
-                "tenantId": {
-                    "type": "string"
-                },
-                "token": {
-                    "type": "string"
-                },
-                "userName": {
-                    "type": "string"
-                }
-            }
-        },
         "knowledge.ClusterComponent": {
             "type": "object",
             "properties": {
@@ -5664,6 +5650,41 @@
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "message.LoginReq": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.LoginResp": {
+            "type": "object",
+            "properties": {
+                "tokenString": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.LogoutReq": {
+            "type": "object",
+            "properties": {
+                "tokenString": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.LogoutResp": {
+            "type": "object",
+            "properties": {
+                "accountName": {
+                    "type": "string"
                 }
             }
         },

@@ -96,32 +96,32 @@ type GetTokenResp struct {
 }
 
 type LoginReq struct {
-	UserName string
-	Password string
+	UserName string  `json:"name" form:"name"`
+	Password string  `json:"password" form:"password"`
 }
 
 type LoginResp struct {
-	TokenString string
+	TokenString string   `json:"tokenString" form:"tokenString"`
 }
 
 type LogoutReq struct {
-	TokenString string
+	TokenString string   `json:"tokenString" form:"tokenString"`
 }
 
 type LogoutResp struct {
-	AccountName string
+	AccountName string  `json:"accountName" form:"accountName"`
 }
 
 type AccessibleReq struct {
-	PathType string
-	Path string
-	TokenString string
+	PathType string 	`json:"pathType" form:"pathType"`
+	Path string			`json:"path" form:"path"`
+	TokenString string 	`json:"tokenString" form:"tokenString"`
 }
 
 type AccessibleResp struct {
-	TenantID string
-	AccountID string
-	AccountName string
+	TenantID string 		`json:"tenantID" form:"tenantID"`
+	AccountID string		`json:"accountID" form:"accountID"`
+	AccountName string		`json:"accountName" form:"accountName"`
 }
 
 type CreateTokenReq struct {

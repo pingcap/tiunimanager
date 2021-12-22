@@ -3,8 +3,7 @@ package identification
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/user/identification"
@@ -26,11 +25,12 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (resp mes
 
 	loginSuccess, err := a.CheckPassword(request.Password)
 	if err != nil {
+		err = errors.WrapError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized", err)
 		return
 	}
 
 	if !loginSuccess {
-		err = framework.NewTiEMError(common.TIEM_UNAUTHORIZED, "unauthorized")
+		err = errors.NewError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized")
 		return
 	}
 
@@ -42,6 +42,7 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (resp mes
 	token, err := p.CreateToken(ctx, req)
 
 	if err != nil {
+		err = errors.WrapError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized", err)
 		return
 	} else {
 		resp.TokenString = token.TokenString
@@ -55,7 +56,8 @@ func (p *Manager) Logout(ctx context.Context, req message.LogoutReq) (message.Lo
 	token, err := GetToken(ctx, message.GetTokenReq{TokenString: req.TokenString})
 
 	if err != nil {
-		return message.LogoutResp{AccountName: ""}, framework.NewTiEMError(common.TIEM_UNAUTHORIZED, "unauthorized")
+
+		return message.LogoutResp{AccountName: ""}, errors.NewError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized")
 	} else if !token.IsValid() {
 		return message.LogoutResp{AccountName: ""}, nil
 	} else {
@@ -75,10 +77,6 @@ var SkipAuth = true
 
 // Accessible
 func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq) (resp message.AccessibleResp, err error) {
-	if request.Path == "" {
-		err = framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "path empty")
-		return
-	}
 
 	req := message.GetTokenReq{TokenString: request.TokenString}
 	token, err := GetToken(ctx, req)
@@ -91,14 +89,8 @@ func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq)
 	resp.AccountName = token.AccountName
 	resp.TenantID = token.TenantId
 
-
-	if SkipAuth {
-		// todo checkAuth switch
-		return
-	}
-
 	if !token.IsValid() {
-		err = framework.NewTiEMError(common.TIEM_UNAUTHORIZED, "unauthorized")
+		err = errors.NewError(errors.TIEM_UNAUTHORIZED_USER, "invalid token")
 		return
 	}
 

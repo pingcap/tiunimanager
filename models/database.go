@@ -17,6 +17,7 @@ package models
 
 import (
 	"context"
+	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/user/account"
 	"github.com/pingcap-inc/tiem/models/user/identification"
 	"github.com/pingcap-inc/tiem/models/user/tenant"
@@ -145,6 +146,19 @@ func (p *database) initSystemData() {
 	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3Endpoint, ConfigValue: constants.DefaultBackupS3Endpoint})
 	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyExportShareStoragePath, ConfigValue: constants.DefaultExportPath})
 	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyImportShareStoragePath, ConfigValue: constants.DefaultImportPath})
+
+	tenant, err := defaultDb.tenantReaderWriter.AddTenant(context.TODO(), "EM system administration", 1, 0)
+
+	if err == nil {
+		account := &account.Account {
+			Entity: dbCommon.Entity {
+				TenantId: tenant.ID,
+			},
+			Name: "admin",
+		}
+		account.GenSaltAndHash("admin")
+		defaultDb.accountReaderWriter.AddAccount(context.TODO(), tenant.ID, account.Name, account.Salt, account.FinalHash, 0)
+	}
 }
 
 func (p *database) addTable(gormModel interface{}) error {

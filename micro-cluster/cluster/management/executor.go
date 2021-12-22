@@ -554,7 +554,7 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 		ClusterID: clusterMeta.Cluster.ID,
 		Params:    targetParams,
 		Reboot:    reboot,
-	})
+	}, false)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"update cluster %s parameters error: %s", clusterMeta.Cluster.ID, err.Error())

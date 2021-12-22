@@ -126,11 +126,6 @@ func (manager *SecondPartyManager) SetClusterDbPassword(ctx context.Context, req
 	if err != nil {
 		return err
 	}
-	//is it necessary?
-	err = execShowWarningsThruSQL(ctx, db)
-	if err != nil {
-		return err
-	}
 
 	return nil
 }

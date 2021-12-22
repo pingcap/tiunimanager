@@ -700,7 +700,7 @@ func (manager *SecondPartyManager) startTiUPEditConfigOperation(ctx context.Cont
 	go func() {
 		//defer os.Remove(topologyTmpFilePath)
 		var args []string
-		args = append(args, string(req.TiUPComponent), "edit-config", req.InstanceName, "-f", topologyTmpFilePath)
+		args = append(args, string(req.TiUPComponent), "edit-config", req.InstanceName, "--topology-file", topologyTmpFilePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
 		<-manager.startTiUPOperation(ctx, operationID, manager.TiUPBinPath, args, req.TimeoutS)

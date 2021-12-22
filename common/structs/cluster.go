@@ -220,5 +220,5 @@ type ResourceStockCheckResult struct {
 	Type string `json:"componentType"`
 	Name string `json:"componentName"`
 	ClusterResourceParameterComputeResource
-	Enough bool
+	Enough bool `json:"enough"`
 }

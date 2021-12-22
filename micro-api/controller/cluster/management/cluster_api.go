@@ -270,7 +270,7 @@ func GetDashboardInfo(c *gin.Context) {
 	}
 }
 
-// DescribeMonitor describe monitoring link
+// GetMonitorInfo describe monitoring link
 // @Summary describe monitoring link
 // @Description describe monitoring link
 // @Tags cluster
@@ -283,11 +283,11 @@ func GetDashboardInfo(c *gin.Context) {
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/monitor [get]
-func DescribeMonitor(c *gin.Context) {
+func GetMonitorInfo(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.QueryMonitorInfoReq{
 		ClusterID: c.Param(ParamClusterID),
 	}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.GetDashboardInfo, &cluster.QueryMonitorInfoResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.GetMonitorInfo, &cluster.QueryMonitorInfoResp{},
 			requestBody,
 			controller.DefaultTimeout,
 		)

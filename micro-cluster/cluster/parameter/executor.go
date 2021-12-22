@@ -77,7 +77,7 @@ func asyncMaintenance(ctx context.Context, meta *handler.ClusterMeta, data map[s
 		return
 	} else {
 		flowID = flow.Flow.ID
-		flow.Context.SetData(contextClusterMeta, &meta)
+		flow.Context.SetData(contextClusterMeta, meta)
 		for k, v := range data {
 			flow.Context.SetData(k, v)
 		}

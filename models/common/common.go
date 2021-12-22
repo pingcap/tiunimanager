@@ -19,7 +19,6 @@ import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap/errors"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 
@@ -75,7 +74,7 @@ func WrapDBError(err error) error {
 
 func FinalHash(salt string, passwd string) ([]byte, error) {
 	if passwd == "" {
-		return nil, errors.New("password cannot be empty")
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID,"password cannot be empty")
 	}
 	s := salt + passwd
 	finalSalt, err := bcrypt.GenerateFromPassword([]byte(s), bcrypt.DefaultCost)

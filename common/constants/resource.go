@@ -65,14 +65,18 @@ type HostStatus string
 //Definition of host status
 const (
 	HostWhatever HostStatus = "Whatever"
+	HostInit     HostStatus = "Init"
 	HostOnline   HostStatus = "Online"
 	HostOffline  HostStatus = "Offline"
+	HostFailed   HostStatus = "Failed"
 	HostDeleted  HostStatus = "Deleted"
 )
 
 func (s HostStatus) IsValidStatus() bool {
 	return (s == HostOnline ||
 		s == HostOffline ||
+		s == HostInit ||
+		s == HostFailed ||
 		s == HostDeleted)
 }
 

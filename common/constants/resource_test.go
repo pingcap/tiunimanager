@@ -81,6 +81,8 @@ func Test_ValidStatus(t *testing.T) {
 		{"Test_Online", HostOnline, want{true}},
 		{"Test_Offline", HostOffline, want{true}},
 		{"Test_Deleted", HostDeleted, want{true}},
+		{"Test_Init", HostInit, want{true}},
+		{"Test_Failed", HostFailed, want{true}},
 		{"Test_OtherStatus", HostWhatever, want{false}},
 	}
 	for _, tt := range tests {

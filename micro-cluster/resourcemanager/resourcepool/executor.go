@@ -18,6 +18,7 @@ package resourcepool
 import (
 	"fmt"
 
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -26,8 +27,10 @@ import (
 )
 
 const (
-	contextResourcePoolKey string = "resourcePool"
-	contextImportHostsKey  string = "importHosts"
+	FlowImportHosts          string = "ImportHosts"
+	contextResourcePoolKey   string = "resourcePool"
+	contextImportHostInfoKey string = "importHostInfo"
+	contextImportHostIDsKey  string = "importHostIDs"
 )
 
 func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
@@ -69,15 +72,23 @@ func installSoftware(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext
 	return nil
 }
 
-func createHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
-	framework.LogWithContext(ctx).Info("begin createHosts")
-	defer framework.LogWithContext(ctx).Info("end createHosts")
-	return nil
-}
-
 func importHostSucceed(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin importHostSucceed")
 	defer framework.LogWithContext(ctx).Info("end importHostSucceed")
+
+	resourcePool, hosts, err := getImportHostContext(ctx)
+	if err != nil {
+		return err
+	}
+	var hostIds []string
+	for _, host := range hosts {
+		hostIds = append(hostIds, host.ID)
+	}
+	err = resourcePool.hostProvider.UpdateHostStatus(ctx, hostIds, string(constants.HostOnline))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -94,9 +105,9 @@ func getImportHostContext(ctx *workflow.FlowContext) (rp *ResourcePool, hosts []
 		errMsg := fmt.Sprintf("get key %s from flow context failed", contextResourcePoolKey)
 		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
-	hosts, ok = ctx.GetData(contextImportHostsKey).([]structs.HostInfo)
+	hosts, ok = ctx.GetData(contextImportHostInfoKey).([]structs.HostInfo)
 	if !ok {
-		errMsg := fmt.Sprintf("get key %s from flow context failed", contextImportHostsKey)
+		errMsg := fmt.Sprintf("get key %s from flow context failed", contextImportHostInfoKey)
 		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
 	return rp, hosts, nil

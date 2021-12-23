@@ -119,7 +119,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			if err = host.AddTraits(host.DiskType); err != nil {
 				return nil, err
 			}
-			host.Status = string(constants.HostOnline)
+			host.Status = string(constants.HostInit)
 			host.Stat = string(constants.HostLoadLoadLess)
 			disksStr := row[DISKS_FIELD]
 			if err = json.Unmarshal([]byte(disksStr), &host.Disks); err != nil {
@@ -321,7 +321,7 @@ func UpdateHostStatus(c *gin.Context) {
 		}
 
 		if !constants.HostStatus(req.Status).IsValidStatus() {
-			errmsg := fmt.Sprintf("input status %s is invalid, [Online,Offline,Deleted]", req.Status)
+			errmsg := fmt.Sprintf("input status %s is invalid, [Online,Offline,Deleted,Init,Failed]", req.Status)
 			setGinContextForInvalidParam(c, errmsg)
 			return
 		}

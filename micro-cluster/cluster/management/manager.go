@@ -319,6 +319,7 @@ var restoreNewClusterFlow = workflow.WorkFlowDefine{
 // @Return error
 func (p *Manager) RestoreNewCluster(ctx context.Context, req cluster.RestoreNewClusterReq) (resp cluster.RestoreNewClusterResp, err error) {
 	meta := &handler.ClusterMeta{}
+
 	if err = meta.BuildCluster(ctx, req.CreateClusterParameter); err != nil {
 		framework.LogWithContext(ctx).Errorf("build cluser %s error: %s", req.Name, err.Error())
 		return
@@ -333,7 +334,7 @@ func (p *Manager) RestoreNewCluster(ctx context.Context, req cluster.RestoreNewC
 		ContextClusterMeta: meta,
 		ContextBackupID:    req.BackupID,
 	}
-	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceRestore, createClusterFlow.FlowName, data)
+	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceRestore, restoreNewClusterFlow.FlowName, data)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"cluster %s async maintenance error: %s", meta.Cluster.ID, err.Error())
@@ -399,7 +400,7 @@ func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterRe
 	}
 
 	data := map[string]interface{}{
-		ContextClusterMeta: meta,
+		ContextClusterMeta:   meta,
 		ContextDeleteRequest: req,
 	}
 	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceDeleting, deleteClusterFlow.FlowName, data)
@@ -447,7 +448,7 @@ func (p *Manager) RestartCluster(ctx context.Context, req cluster.RestartCluster
 	return
 }
 
-var takeoverClusterFlow = workflow.WorkFlowDefine {
+var takeoverClusterFlow = workflow.WorkFlowDefine{
 	FlowName: constants.FlowTakeoverCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":   {"fetchTopologyFile", "fetched", "fail", workflow.SyncFuncNode, fetchTopologyFile},
@@ -508,7 +509,7 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 		}
 
 		data := map[string]interface{}{
-			ContextClusterMeta: meta,
+			ContextClusterMeta:     meta,
 			ContextTakeoverRequest: req,
 		}
 		flowID, startError := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceCreating, createClusterFlow.FlowName, data)

@@ -19,9 +19,11 @@ import (
 	"context"
 	"sync"
 
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostinitiator"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
+	"github.com/pingcap-inc/tiem/workflow"
 )
 
 type ResourcePool struct {
@@ -46,6 +48,19 @@ func GetResourcePool() *ResourcePool {
 func (p *ResourcePool) InitResourcePool() {
 	p.hostProvider = hostprovider.NewFileHostProvider()
 	p.hostInitiator = hostinitiator.NewFileHostInitiator()
+
+	flowManager := workflow.GetWorkFlowService()
+	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowBackupCluster, &workflow.WorkFlowDefine{
+		FlowName: constants.FlowBackupCluster,
+		TaskNodes: map[string]*workflow.NodeDefine{
+			"start":           {Name: "verifyHosts", SuccessEvent: "configHosts", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: verifyHosts},
+			"configHosts":     {Name: "configHosts", SuccessEvent: "updateRecordDone", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: configHosts},
+			"installSoftware": {Name: "installSoftware", SuccessEvent: "createHosts", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: installSoftware},
+			"createHosts":     {Name: "createHosts", SuccessEvent: "succeed", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: createHosts},
+			"succeed":         {Name: "succeed", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: importHostSucceed},
+			"fail":            {Name: "fail", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: importHostsFail},
+		},
+	})
 }
 
 func (p *ResourcePool) GetHostProvider() hostprovider.HostProvider {

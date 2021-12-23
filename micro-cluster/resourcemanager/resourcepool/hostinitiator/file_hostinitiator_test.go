@@ -70,6 +70,18 @@ func Test_VerifyCpuMem_Failed(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func Test_SetConfig(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
+	mockClient.EXPECT().RunCommandsInSession(gomock.Any()).Return("", nil).AnyTimes()
+
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSSHClient(mockClient)
+	err := fileInitiator.SetConfig(context.TODO(), &structs.HostInfo{})
+	assert.Nil(t, err)
+}
+
 func Test_VerifyDisks(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

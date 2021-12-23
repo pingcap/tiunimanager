@@ -51,6 +51,10 @@ func (p *FileHostInitiator) SetSecondPartyServ(s secondparty.SecondPartyService)
 }
 
 func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infof("verify host %v begins", *h)
+	defer log.Infof("verify host %s %s end, %v", h.HostName, h.IP, err)
+
 	err = p.verifyConnect(ctx, h)
 	if err != nil {
 		return err
@@ -80,6 +84,14 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 	if err = p.verifyOSEnv(ctx, h); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (p *FileHostInitiator) SetConfig(ctx context.Context, h *structs.HostInfo) (err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infof("set host config %v begins", *h)
+	defer log.Infof("set host %s %s config end, %v", h.HostName, h.IP, err)
 
 	return nil
 }

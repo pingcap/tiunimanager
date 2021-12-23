@@ -23,5 +23,6 @@ import (
 
 type HostInitiator interface {
 	Verify(ctx context.Context, h *structs.HostInfo) (err error)
+	SetConfig(ctx context.Context, h *structs.HostInfo) (err error)
 	InstallSoftware(ctx context.Context, hosts []structs.HostInfo) (err error)
 }

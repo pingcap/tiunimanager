@@ -329,6 +329,9 @@ func (p *Manager) RestoreNewCluster(ctx context.Context, req cluster.RestoreNewC
 			"add instances into cluster %s topology error: %s", meta.Cluster.ID, err.Error())
 		return
 	}
+	if err = meta.AddDefaultInstances(ctx); err != nil {
+		return
+	}
 
 	data := map[string]interface{}{
 		ContextClusterMeta: meta,

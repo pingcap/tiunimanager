@@ -19,15 +19,23 @@ import (
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
 	"testing"
+	"time"
 )
 
 type TestEntity struct {
 	Entity
-	name string
+	Name string `gorm:"uniqueIndex:myIndex"`
+	DeleteTime int64 `gorm:"uniqueIndex:myIndex"`
+}
+
+func (e *TestEntity) BeforeDelete(tx *gorm.DB) (err error) {
+	tx.Model(e).Update("delete_time", time.Now().Unix())
+	return nil
 }
 
 var baseDB *gorm.DB
@@ -60,4 +68,34 @@ func TestMain(m *testing.M) {
 		},
 	)
 	os.Exit(m.Run())
+}
+
+func TestUniqueIndex(t *testing.T)  {
+	entity := &TestEntity{
+		Entity: Entity{
+			TenantId: "111",
+		},
+		Name: "aaa",
+	}
+
+	err := baseDB.Create(entity).Error
+	assert.NoError(t, err)
+
+	err = baseDB.Create(&TestEntity{
+		Entity: Entity{
+			TenantId: "111",
+		},
+		Name: "aaa",
+	}).Error
+	assert.Error(t, err)
+
+	baseDB.Delete(entity)
+
+	err = baseDB.Create(&TestEntity{
+		Entity: Entity{
+			TenantId: "111",
+		},
+		Name: "aaa",
+	}).Error
+	assert.NoError(t, err)
 }

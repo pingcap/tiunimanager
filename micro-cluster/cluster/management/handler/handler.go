@@ -20,6 +20,7 @@ import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"text/template"
 
 	"fmt"
@@ -76,11 +77,39 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 	}
 	_, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
 	if err == nil {
-		framework.LogWithContext(ctx).Infof("create cluster [%s] succeed", p.Cluster.Name)
+		framework.LogWithContext(ctx).Infof("create cluster %s succeed", p.Cluster.Name)
 	} else {
-		framework.LogWithContext(ctx).Errorf("create cluster [%s] failed, err : %s", p.Cluster.Name, err.Error())
+		framework.LogWithContext(ctx).Errorf("create cluster %s failed, err : %s", p.Cluster.Name, err.Error())
 	}
 	return err
+}
+
+var TagTakeover = "takeover"
+
+func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string) error {
+	p.Cluster = &management.Cluster {
+		Entity: dbCommon.Entity{
+			TenantId: framework.GetTenantIDFromContext(ctx),
+			Status:   string(constants.ClusterInitializing),
+		},
+		Name:              name,
+		Tags:              []string{TagTakeover},
+		OwnerId:           framework.GetUserIDFromContext(ctx),
+		MaintainWindow:    "",
+	}
+
+	_, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
+	if err == nil {
+		framework.LogWithContext(ctx).Infof("takeover cluster %s succeed", p.Cluster.Name)
+	} else {
+		framework.LogWithContext(ctx).Errorf("takeover cluster %s failed, err : %s", p.Cluster.Name, err.Error())
+	}
+	return err
+}
+
+func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, spec *spec.Specification) ([]*management.ClusterInstance, error) {
+
+	return nil, nil
 }
 
 // AddInstances
@@ -121,7 +150,7 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 			}
 		}
 	}
-	framework.LogWithContext(ctx).Infof("add new instances into cluster[%s] topology", p.Cluster.ID)
+	framework.LogWithContext(ctx).Infof("add new instances into cluster%s topology", p.Cluster.ID)
 	return nil
 }
 
@@ -196,7 +225,7 @@ func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) ([]res
 	requirements := make([]resource.AllocRequirement, 0)
 
 	if p.Cluster.Status != string(constants.ClusterInitializing) {
-		framework.LogWithContext(ctx).Infof("cluster [%s] is not initializing, no need to alloc global port resource", p.Cluster.Name)
+		framework.LogWithContext(ctx).Infof("cluster %s is not initializing, no need to alloc global port resource", p.Cluster.Name)
 		return requirements, nil
 	}
 
@@ -306,10 +335,10 @@ func (p *ClusterMeta) UpdateClusterStatus(ctx context.Context, status constants.
 	err := models.GetClusterReaderWriter().UpdateStatus(ctx, p.Cluster.ID, status)
 
 	if err != nil {
-		framework.LogWithContext(ctx).Infof("update cluster[%s] status into %s failed", p.Cluster.Name, status)
+		framework.LogWithContext(ctx).Infof("update cluster%s status into %s failed", p.Cluster.Name, status)
 	} else {
 		p.Cluster.Status = string(status)
-		framework.LogWithContext(ctx).Errorf("update cluster[%s] status into %s succeed", p.Cluster.Name, status)
+		framework.LogWithContext(ctx).Errorf("update cluster%s status into %s succeed", p.Cluster.Name, status)
 	}
 	return err
 }
@@ -458,7 +487,17 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 		}
 	}
 
+	err = models.GetClusterReaderWriter().CreateRelation(ctx, &management.ClusterRelation{
+		ObjectClusterID: meta.Cluster.ID,
+		SubjectClusterID: p.Cluster.ID,
+		RelationType: constants.ClusterRelationCloneFrom,
+	})
+
 	return meta, nil
+}
+
+func (p *ClusterMeta) GetRelations(ctx context.Context) ([]*management.ClusterRelation, error) {
+	return models.GetClusterReaderWriter().GetRelations(ctx, p.Cluster.ID)
 }
 
 // StartMaintenance
@@ -714,10 +753,10 @@ func Query(ctx context.Context, req cluster.QueryClustersReq) (resp cluster.Quer
 		Type: req.Type,
 		Tag: req.Tag,
 	}
-	if req.ClusterID != "" {
+	if len(req.ClusterID) > 0 {
 		filters.ClusterIDs = []string{req.ClusterID}
 	}
-	if req.Status != "" {
+	if len(req.Status) > 0 {
 		filters.StatusFilters = []newConstants.ClusterRunningStatus{newConstants.ClusterRunningStatus(req.Status)}
 	}
 
@@ -726,6 +765,7 @@ func Query(ctx context.Context, req cluster.QueryClustersReq) (resp cluster.Quer
 		framework.LogWithContext(ctx).Errorf("query clusters failed, request = %v, errors = %s", req, err)
 		return
 	} else {
+		framework.LogWithContext(ctx).Infof("query clusters got result = %v, page = %v", result, page)
 		total = page.Total
 	}
 
@@ -768,8 +808,13 @@ func (p *ClusterMeta) DisplayClusterInfo(ctx context.Context) structs.ClusterInf
 	}
 	clusterInfo.ExtranetConnectAddresses = clusterInfo.IntranetConnectAddresses
 
-	clusterInfo.AlertUrl = fmt.Sprintf(fmt.Sprintf("%s:%d", p.GetAlertManagerAddresses()[0].IP, p.GetAlertManagerAddresses()[0].Port))
-	clusterInfo.GrafanaUrl = fmt.Sprintf(fmt.Sprintf("%s:%d", p.GetGrafanaAddresses()[0].IP, p.GetGrafanaAddresses()[0].Port))
+	if alertAddress := p.GetAlertManagerAddresses(); len(alertAddress) > 0 {
+		clusterInfo.AlertUrl = fmt.Sprintf(fmt.Sprintf("%s:%d", alertAddress[0].IP, alertAddress[0].Port))
+	}
+
+	if grafanaAddress := p.GetGrafanaAddresses(); len(grafanaAddress) > 0 {
+		clusterInfo.GrafanaUrl = fmt.Sprintf(fmt.Sprintf("%s:%d", grafanaAddress[0].IP, grafanaAddress[0].Port))
+	}
 
 	mockUsage := func() structs.Usage {
 		return structs.Usage{

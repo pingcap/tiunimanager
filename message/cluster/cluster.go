@@ -184,8 +184,8 @@ type TakeoverClusterReq struct {
 
 // TakeoverClusterResp Reply message for takeover a cluster
 type TakeoverClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
-	Clusters                      []structs.ClusterInfo `json:"clusters"`
+	Clusters     map[string]string `json:"clusters"`
+	FailedErrors map[string]string `json:"failed"`
 }
 
 // QueryClustersReq Query cluster list messages
@@ -246,8 +246,8 @@ type QueryClusterLogReq struct {
 	Level     string `form:"level" example:"warn"`
 	Ip        string `form:"ip" example:"127.0.0.1"`
 	Message   string `form:"message" example:"tidb log"`
-	StartTime string `form:"startTime" example:"2021-09-01 12:00:00"`
-	EndTime   string `form:"endTime" example:"2021-12-01 12:00:00"`
+	StartTime int64  `form:"startTime" example:"1630468800"`
+	EndTime   int64  `form:"endTime" example:"1638331200"`
 	structs.PageRequest
 }
 
@@ -289,4 +289,16 @@ type InspectClusterParametersResp struct {
 	Instance     string                     `json:"instance" example:"172.16.5.23"`
 	RealValue    structs.ParameterRealValue `json:"realValue"`
 	InspectValue string                     `json:"inspectValue" example:"1"`
+}
+
+type PreviewClusterResp struct {
+	Region          string `json:"region" form:"region"`
+	CpuArchitecture string `json:"cpuArchitecture" form:"cpuArchitecture"`
+	ClusterType     string `json:"clusterType"`
+	ClusterVersion  string `json:"clusterVersion"`
+
+	ClusterName string `json:"clusterName"`
+
+	StockCheckResult  []structs.ResourceStockCheckResult `json:"stockCheckResult"`
+	CapabilityIndexes []structs.Index      `json:"capabilityIndexes"`
 }

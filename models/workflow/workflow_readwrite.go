@@ -79,7 +79,7 @@ func (m *WorkFlowReadWrite) QueryWorkFlows(ctx context.Context, bizId, fuzzyName
 	if status != "" {
 		query = query.Where("status = ?", status)
 	}
-	err = query.Count(&total).Order("id desc").Offset(pageSize * (page - 1)).Limit(pageSize).Find(&flows).Error
+	err = query.Count(&total).Order("created_at desc").Offset(pageSize * (page - 1)).Limit(pageSize).Find(&flows).Error
 	return flows, total, err
 }
 

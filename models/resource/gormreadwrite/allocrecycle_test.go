@@ -22,10 +22,8 @@ import (
 	"testing"
 
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/common"
-
-	"github.com/pingcap-inc/tiem/library/framework"
 	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	"github.com/pingcap-inc/tiem/models/resource/management"
 	"github.com/pingcap-inc/tiem/models/resource/resourcepool"
@@ -518,9 +516,9 @@ func TestAllocResources_SpecifyHost_Strategy_TakeOver(t *testing.T) {
 	rsp, err := GormRW.AllocResources(context.TODO(), &batchReq)
 	assert.True(t, nil == rsp && err != nil)
 	t.Log(err)
-	te, ok := err.(framework.TiEMError)
+	te, ok := err.(errors.EMError)
 	assert.Equal(t, true, ok)
-	assert.True(t, common.TIEM_RESOURCE_NOT_ALL_SUCCEED.Equal(int32(te.GetCode())))
+	assert.True(t, errors.TIEM_RESOURCE_ALLOCATE_ERROR.Equal(int32(te.GetCode())))
 
 	batchReq.BatchRequests[0].Applicant.TakeoverOperation = true
 	rsp, err2 := GormRW.AllocResources(context.TODO(), &batchReq)

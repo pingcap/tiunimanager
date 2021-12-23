@@ -31,6 +31,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pingcap-inc/tiem/common/errors"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 
 	"github.com/pingcap-inc/tiem/message"
@@ -42,7 +44,6 @@ import (
 
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	secondparty2 "github.com/pingcap-inc/tiem/models/workflow/secondparty"
 
@@ -63,9 +64,12 @@ import (
 // @return flowID
 // @return err
 func asyncMaintenance(ctx context.Context, meta *handler.ClusterMeta, data map[string]interface{}, status constants.ClusterMaintenanceStatus, flowName string) (flowID string, err error) {
-	if err = meta.StartMaintenance(ctx, status); err != nil {
-		framework.LogWithContext(ctx).Errorf("start maintenance failed, clusterID = %s, status = %s,error = %s", meta.Cluster.ID, status, err.Error())
-		return
+	// condition maintenance status change
+	if data[contextMaintenanceStatusChange].(bool) {
+		if err = meta.StartMaintenance(ctx, status); err != nil {
+			framework.LogWithContext(ctx).Errorf("start maintenance failed, clusterID = %s, status = %s,error = %s", meta.Cluster.ID, status, err.Error())
+			return
+		}
 	}
 
 	if flow, flowError := workflow.GetWorkFlowService().CreateWorkFlow(ctx, meta.Cluster.ID, flowName); flowError != nil {
@@ -74,7 +78,7 @@ func asyncMaintenance(ctx context.Context, meta *handler.ClusterMeta, data map[s
 		return
 	} else {
 		flowID = flow.Flow.ID
-		flow.Context.SetData(contextClusterMeta, &meta)
+		flow.Context.SetData(contextClusterMeta, meta)
 		for k, v := range data {
 			flow.Context.SetData(k, v)
 		}
@@ -87,45 +91,20 @@ func asyncMaintenance(ctx context.Context, meta *handler.ClusterMeta, data map[s
 	return
 }
 
-// endMaintenance
+// defaultEnd
 // @Description: clear maintenance status after maintenance finished or failed
-func endMaintenance(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	clusterMeta := context.GetData(contextClusterMeta).(*handler.ClusterMeta)
-	return clusterMeta.EndMaintenance(context, clusterMeta.Cluster.MaintenanceStatus)
-}
+func defaultEnd(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.LogWithContext(ctx).Info("begin default end executor method")
+	defer framework.LogWithContext(ctx).Info("end default end executor method")
 
-// setClusterFailure
-// @Description: set cluster running status to constants.ClusterFailure
-func setClusterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	clusterMeta := context.GetData(contextClusterMeta).(*handler.ClusterMeta)
-	if err := clusterMeta.UpdateClusterStatus(context.Context, constants.ClusterFailure); err != nil {
-		framework.LogWithContext(context.Context).Errorf(
-			"update cluster[%s] instances status into failure error: %s", clusterMeta.Cluster.Name, err.Error())
-		return err
-	}
-	framework.LogWithContext(context.Context).Infof(
-		"set cluster[%s] status into failure successfully", clusterMeta.Cluster.Name)
-	return nil
-}
-
-// setClusterOnline
-// @Description: set cluster running status to constants.ClusterRunning
-func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	clusterMeta := context.GetData(contextClusterMeta).(*handler.ClusterMeta)
-	if clusterMeta.Cluster.Status == string(constants.ClusterInitializing) {
-		if err := clusterMeta.UpdateClusterStatus(context.Context, constants.ClusterRunning); err != nil {
-			framework.LogWithContext(context.Context).Errorf(
-				"update cluster[%s] status into running error: %s", clusterMeta.Cluster.Name, err.Error())
+	clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
+	maintenanceStatusChange := ctx.GetData(contextMaintenanceStatusChange).(bool)
+	if maintenanceStatusChange {
+		if err := clusterMeta.EndMaintenance(ctx, clusterMeta.Cluster.MaintenanceStatus); err != nil {
+			framework.LogWithContext(ctx).Errorf("end cluster %s maintenance status failed, %s", clusterMeta.Cluster.ID, err.Error())
 			return err
 		}
 	}
-	if err := clusterMeta.UpdateClusterStatus(context.Context, constants.ClusterRunning); err != nil {
-		framework.LogWithContext(context.Context).Errorf(
-			"update cluster[%s] instances status into running error: %s", clusterMeta.Cluster.Name, err.Error())
-		return err
-	}
-	framework.LogWithContext(context.Context).Infof(
-		"set cluster[%s]  status into running successfully", clusterMeta.Cluster.Name)
 	return nil
 }
 
@@ -135,6 +114,9 @@ func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 // @Parameter ctx
 // @return error
 func persistUpdateParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.LogWithContext(ctx).Info("begin persist update parameter executor method")
+	defer framework.LogWithContext(ctx).Info("end persist update parameter executor method")
+
 	req := ctx.GetData(contextUpdateParameterInfo).(*cluster.UpdateClusterParametersReq)
 
 	params := make([]*parameter.ClusterParameterMapping, len(req.Params))
@@ -142,7 +124,7 @@ func persistUpdateParameter(node *workflowModel.WorkFlowNode, ctx *workflow.Flow
 		b, err := json.Marshal(param.RealValue)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("failed to convert parameter realValue. req: %v, err: %v", req, err)
-			return framework.SimpleError(common.TIEM_CONVERT_OBJ_FAILED)
+			return errors.NewEMErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain())
 		}
 		params[i] = &parameter.ClusterParameterMapping{
 			ClusterID:   req.ClusterID,
@@ -153,7 +135,7 @@ func persistUpdateParameter(node *workflowModel.WorkFlowNode, ctx *workflow.Flow
 	err := models.GetClusterParameterReaderWriter().UpdateClusterParameter(ctx, req.ClusterID, params)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("update cluster parameter req: %v, err: %v", req, err)
-		return framework.SimpleError(common.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR)
+		return errors.NewEMErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR.Explain())
 	}
 	return nil
 }
@@ -164,11 +146,14 @@ func persistUpdateParameter(node *workflowModel.WorkFlowNode, ctx *workflow.Flow
 // @Parameter ctx
 // @return error
 func persistApplyParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.LogWithContext(ctx).Info("begin persist apply parameter executor method")
+	defer framework.LogWithContext(ctx).Info("end persist apply parameter executor method")
+
 	req := ctx.GetData(contextApplyParameterInfo).(*message.ApplyParameterGroupReq)
 	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId)
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		return framework.WrapError(common.TIEM_PARAMETER_GROUP_DETAIL_ERROR, common.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
+		return errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain())
 	}
 
 	pgs := make([]*parameter.ClusterParameterMapping, len(params))
@@ -176,7 +161,7 @@ func persistApplyParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowC
 		realValue := structs.ParameterRealValue{ClusterValue: param.DefaultValue}
 		b, err := json.Marshal(realValue)
 		if err != nil {
-			return framework.SimpleError(common.TIEM_PARAMETER_GROUP_APPLY_ERROR)
+			return errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, errors.TIEM_PARAMETER_GROUP_APPLY_ERROR.Explain())
 		}
 		pgs[i] = &parameter.ClusterParameterMapping{
 			ClusterID:   req.ClusterID,
@@ -187,7 +172,7 @@ func persistApplyParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowC
 	err = models.GetClusterParameterReaderWriter().ApplyClusterParameter(ctx, req.ParamGroupId, req.ClusterID, pgs)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("apply parameter group convert resp err: %v", err)
-		return framework.WrapError(common.TIEM_PARAMETER_GROUP_APPLY_ERROR, common.TIEM_PARAMETER_GROUP_APPLY_ERROR.Explain(), err)
+		return errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, errors.TIEM_PARAMETER_GROUP_APPLY_ERROR.Explain(), err)
 	}
 	return err
 }
@@ -198,11 +183,15 @@ func persistApplyParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowC
 // @Parameter ctx
 // @return error
 func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.LogWithContext(ctx).Info("begin modify parameters executor method")
+	defer framework.LogWithContext(ctx).Info("end modify parameters executor method")
+
 	modifyParam := ctx.GetData(contextModifyParameters).(*ModifyParameter)
 	framework.LogWithContext(ctx).Debugf("got modify need reboot: %v, params size: %d", modifyParam.Reboot, len(modifyParam.Params))
 
 	// Get the apply parameter object
-	applyParameter := ctx.GetData(contextApplyParameterInfo).(*message.ApplyParameterGroupReq)
+	applyParameter := ctx.GetData(contextApplyParameterInfo)
+	framework.LogWithContext(ctx).Debugf("modify parameter get apply parameter: %v", applyParameter)
 
 	// grouping by parameter source
 	paramContainer := make(map[interface{}][]structs.ClusterParameterSampleInfo, 0)
@@ -247,6 +236,9 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 // @Parameter params
 // @return error
 func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, params []structs.ClusterParameterSampleInfo) error {
+	framework.LogWithContext(ctx).Info("begin sql edit config executor method")
+	defer framework.LogWithContext(ctx).Info("end sql edit config executor method")
+
 	configs := make([]secondparty.ClusterComponentConfig, len(params))
 	for i, param := range params {
 		configKey := param.Name
@@ -262,11 +254,19 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 
 	clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
 	tidbServers := clusterMeta.GetClusterConnectAddresses()
+	if len(tidbServers) == 0 {
+		framework.LogWithContext(ctx).Errorf("get tidb address from meta failed, empty address")
+		return nil
+	}
 	tidbServer := tidbServers[rand.Intn(len(tidbServers))]
+	framework.LogWithContext(ctx).Infof("get cluster [%s] tidb server from meta, %+v", clusterMeta.Cluster.ID, tidbServers)
+	tidbUserInfo := clusterMeta.GetClusterUserNamePasswd()
+	framework.LogWithContext(ctx).Infof("get cluster [%s] user info from meta, %+v", clusterMeta.Cluster.ID, tidbUserInfo)
+
 	req := secondparty.ClusterEditConfigReq{
 		DbConnParameter: secondparty.DbConnParam{
-			Username: "root", //todo: replace admin account
-			Password: "",
+			Username: tidbUserInfo.UserName,
+			Password: tidbUserInfo.Password,
 			IP:       tidbServer.IP,
 			Port:     strconv.Itoa(tidbServer.Port),
 		},
@@ -286,6 +286,9 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 // @Parameter params
 // @return error
 func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, params []structs.ClusterParameterSampleInfo) error {
+	framework.LogWithContext(ctx).Info("begin api edit config executor method")
+	defer framework.LogWithContext(ctx).Info("end api edit config executor method")
+
 	compContainer := make(map[interface{}][]structs.ClusterParameterSampleInfo, 0)
 	for i, param := range params {
 		framework.LogWithContext(ctx).Debugf("loop %d api componet type: %v, param name: %v", i, param.InstanceType, param.Name)
@@ -348,6 +351,9 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 // @Parameter params
 // @return error
 func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, params []structs.ClusterParameterSampleInfo) error {
+	framework.LogWithContext(ctx).Info("begin tiup edit config executor method")
+	defer framework.LogWithContext(ctx).Info("end tiup edit config executor method")
+
 	clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
 	configs := make([]secondparty.GlobalComponentConfig, len(params))
 	for i, param := range params {
@@ -388,6 +394,9 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 // @return interface{}
 // @return error
 func convertRealParameterType(ctx *workflow.FlowContext, param structs.ClusterParameterSampleInfo) (interface{}, error) {
+	framework.LogWithContext(ctx).Info("begin convert real parameter type")
+	defer framework.LogWithContext(ctx).Info("end convert real parameter type")
+
 	switch param.Type {
 	case int(Integer):
 		c, err := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)
@@ -475,23 +484,26 @@ func refreshParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 // @Parameter node
 // @return error
 func getTaskStatusByTaskId(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode) error {
+	framework.LogWithContext(ctx).Info("begin get task status")
+	defer framework.LogWithContext(ctx).Info("end get task status")
+
 	ticker := time.NewTicker(3 * time.Second)
 	sequence := 0
 	for range ticker.C {
 		if sequence += 1; sequence > 200 {
-			return framework.SimpleError(common.TIEM_TASK_POLLING_TIME_OUT)
+			return errors.NewEMErrorf(errors.TIEM_TASK_POLLING_TIME_OUT, errors.TIEM_TASK_POLLING_TIME_OUT.Explain())
 		}
 		framework.LogWithContext(ctx).Infof("polling node waiting, nodeId %s, nodeName %s", node.ID, node.Name)
 
 		resp, err := secondparty.Manager.GetOperationStatusByWorkFlowNodeID(ctx, node.ID)
 		if err != nil {
 			framework.LogWithContext(ctx).Error(err)
-			node.Fail(framework.WrapError(common.TIEM_TASK_FAILED, common.TIEM_TASK_FAILED.Explain(), err))
-			return framework.WrapError(common.TIEM_TASK_FAILED, common.TIEM_TASK_FAILED.Explain(), err)
+			node.Fail(errors.NewEMErrorf(errors.TIEM_TASK_FAILED, errors.TIEM_TASK_FAILED.Explain()))
+			return errors.NewEMErrorf(errors.TIEM_TASK_FAILED, errors.TIEM_TASK_FAILED.Explain(), err)
 		}
 		if resp.Status == secondparty2.OperationStatus_Error {
-			node.Fail(framework.NewTiEMError(common.TIEM_TASK_FAILED, resp.ErrorStr))
-			return framework.NewTiEMError(common.TIEM_TASK_FAILED, resp.ErrorStr)
+			node.Fail(errors.NewEMErrorf(errors.TIEM_TASK_FAILED, resp.ErrorStr))
+			return errors.NewEMErrorf(errors.TIEM_TASK_FAILED, resp.ErrorStr)
 		}
 		if resp.Status == secondparty2.OperationStatus_Finished {
 			node.Success(resp.Result)

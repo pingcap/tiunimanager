@@ -78,7 +78,7 @@ func TestGetTraceIDFromContext(t *testing.T) {
 }
 
 func TestNewJaegerTracer(t *testing.T) {
-	_, _, err := NewJaegerTracer("tiem", "127.0.0.1:999")
+	_, _, err := NewJaegerTracer("em", "127.0.0.1:999")
 	assert.NoError(t, err)
 }
 

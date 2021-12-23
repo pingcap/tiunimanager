@@ -259,7 +259,7 @@ Initial TiEM system default system account and tenant information
 func (dao *DAOManager) initSystemDefaultData() error {
 	accountManager := dao.AccountManager()
 	log := framework.LogForkFile(common.LogFileSystem)
-	rt, err := accountManager.AddTenant(context.TODO(), "TiEM system administration", 1, 0)
+	rt, err := accountManager.AddTenant(context.TODO(), "EM system administration", 1, 0)
 	framework.AssertNoErr(err)
 	role1, err := accountManager.AddRole(context.TODO(), rt.ID, "administrators", "administrators", 0)
 	framework.AssertNoErr(err)

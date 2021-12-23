@@ -17,7 +17,7 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"net/http"
 )
@@ -39,7 +39,7 @@ type ResultWithPage struct {
 }
 
 func HandleHttpResponse(c *gin.Context, err error,
-	withStatusCode func() (common.TIEM_ERROR_CODE, string),
+	withStatusCode func() (errors.EM_ERROR_CODE, string),
 	withData func() (interface{}, error), withPage func() Page) {
 	if err != nil {
 		framework.LogWithContext(c).Error(err.Error())
@@ -49,7 +49,7 @@ func HandleHttpResponse(c *gin.Context, err error,
 
 	if withStatusCode != nil {
 		code, message := withStatusCode()
-		if code != common.TIEM_SUCCESS {
+		if code != errors.TIEM_SUCCESS {
 			framework.LogWithContext(c).Error(message)
 			c.JSON(code.GetHttpCode(), Fail(int(code), message))
 			return

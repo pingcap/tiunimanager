@@ -27,7 +27,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/errors"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
@@ -54,7 +54,7 @@ func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, cl
 	err = m.DB(ctx).Where("id = ?", clusterId).First(&cluster).Error
 	if err != nil {
 		log.Errorf("find params by cluster id err: %v, request cluster id: %v", err.Error(), clusterId)
-		err = framework.SimpleError(common.TIEM_CLUSTER_NOT_FOUND)
+		err = errors.NewEMErrorf(errors.TIEM_CLUSTER_NOT_FOUND, errors.TIEM_CLUSTER_NOT_FOUND.Explain())
 		return
 	}
 	paramGroupId = cluster.ParameterGroupID
@@ -71,7 +71,7 @@ func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, cl
 		Scan(&params).Error
 	if err != nil {
 		log.Errorf("find params by cluster id err: %v", err.Error())
-		err = framework.SimpleError(common.TIEM_CLUSTER_PARAMETER_QUERY_ERROR)
+		err = errors.NewEMErrorf(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR.Explain())
 		return
 	}
 	return
@@ -81,7 +81,7 @@ func (m ClusterParameterReadWrite) UpdateClusterParameter(ctx context.Context, c
 	log := framework.LogWithContext(ctx)
 
 	if clusterId == "" {
-		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, errors.TIEM_PARAMETER_INVALID.Explain())
 	}
 
 	tx := m.DB(ctx).Begin()
@@ -95,7 +95,7 @@ func (m ClusterParameterReadWrite) UpdateClusterParameter(ctx context.Context, c
 		if err != nil {
 			log.Errorf("update cluster params err: %v", err.Error())
 			tx.Rollback()
-			return framework.SimpleError(common.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR)
+			return errors.NewEMErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR.Explain())
 		}
 	}
 
@@ -107,7 +107,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	log := framework.LogWithContext(ctx)
 
 	if clusterId == "" || parameterGroupId == "" {
-		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, errors.TIEM_PARAMETER_INVALID.Explain())
 	}
 
 	tx := m.DB(ctx).Begin()
@@ -117,7 +117,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	if err != nil {
 		log.Errorf("apply param group err: %v", err.Error())
 		tx.Rollback()
-		return framework.SimpleError(common.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR)
+		return errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR, errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR.Explain())
 	}
 
 	// update clusters table
@@ -128,7 +128,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	if err != nil {
 		log.Errorf("apply param group err: %v", err.Error())
 		tx.Rollback()
-		return framework.SimpleError(common.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR)
+		return errors.NewEMErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR.Explain())
 	}
 
 	// batch insert cluster_parameter_mapping table
@@ -141,7 +141,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	if err != nil {
 		log.Errorf("apply param group map err: %v, request param map: %v", err.Error(), params)
 		tx.Rollback()
-		return framework.SimpleError(common.TIEM_PARAMETER_GROUP_CREATE_RELATION_PARAM_ERROR)
+		return errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_CREATE_RELATION_PARAM_ERROR, errors.TIEM_PARAMETER_GROUP_CREATE_RELATION_PARAM_ERROR.Explain())
 	}
 
 	tx.Commit()

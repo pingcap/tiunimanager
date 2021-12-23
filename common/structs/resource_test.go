@@ -20,8 +20,7 @@ import (
 
 	"github.com/alecthomas/assert"
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/errors"
 )
 
 func Test_GenDomainCodeByName(t *testing.T) {
@@ -103,7 +102,7 @@ func Test_GetTraitByName(t *testing.T) {
 		{"EM", string(constants.EMProductIDEnterpriseManager), want{trait: 0x0000000000000004, err: nil}},
 		{"Schedule", string(constants.PurposeSchedule), want{trait: 0x0000000000000020, err: nil}},
 		{"SSD", string(constants.SSD), want{trait: 0x0000000000000080, err: nil}},
-		{"ERROR", "InvalidName", want{trait: 0, err: framework.NewTiEMErrorf(common.TIEM_RESOURCE_TRAIT_NOT_FOUND,
+		{"ERROR", "InvalidName", want{trait: 0, err: errors.NewEMErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND,
 			"label type %v not found in system default labels", "InvalidName")}},
 	}
 	for _, tt := range tests {
@@ -112,7 +111,7 @@ func Test_GetTraitByName(t *testing.T) {
 			if err == nil {
 				assert.Equal(t, tt.want.trait, trait)
 			} else {
-				assert.Equal(t, err.(framework.TiEMError).GetCode(), common.TIEM_RESOURCE_TRAIT_NOT_FOUND)
+				assert.Equal(t, err.(errors.EMError).GetCode(), errors.TIEM_RESOURCE_TRAIT_NOT_FOUND)
 			}
 
 		})

@@ -66,7 +66,7 @@ func (manager *SecondPartyManager) ClusterDeploy(ctx context.Context, tiUPCompon
 }
 
 func (manager *SecondPartyManager) startTiUPDeployOperation(ctx context.Context, operationID string, req *CmdDeployReq) {
-	topologyTmpFilePath, err := newTmpFileWithContent("tiem-topology", []byte(req.ConfigStrYaml))
+	topologyTmpFilePath, err := newTmpFileWithContent(topologyTmpFilePrefix, []byte(req.ConfigStrYaml))
 	if err != nil {
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: operationID,
@@ -111,7 +111,7 @@ func (manager *SecondPartyManager) ClusterScaleOut(ctx context.Context, tiUPComp
 }
 
 func (manager *SecondPartyManager) startTiUPScaleOutOperation(ctx context.Context, operationID string, req *CmdScaleOutReq) {
-	topologyTmpFilePath, err := newTmpFileWithContent("tiem-topology", []byte(req.ConfigStrYaml))
+	topologyTmpFilePath, err := newTmpFileWithContent(topologyTmpFilePrefix, []byte(req.ConfigStrYaml))
 	if err != nil {
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: operationID,
@@ -700,7 +700,7 @@ func (manager *SecondPartyManager) startTiUPEditConfigOperation(ctx context.Cont
 	go func() {
 		//defer os.Remove(topologyTmpFilePath)
 		var args []string
-		args = append(args, string(req.TiUPComponent), "edit-config", req.InstanceName, "-f", topologyTmpFilePath)
+		args = append(args, string(req.TiUPComponent), "edit-config", req.InstanceName, "--topology-file", topologyTmpFilePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
 		<-manager.startTiUPOperation(ctx, operationID, manager.TiUPBinPath, args, req.TimeoutS)
@@ -837,7 +837,7 @@ func (manager *SecondPartyManager) Transfer(ctx context.Context, tiUPComponent T
 }
 
 func (manager *SecondPartyManager) startTiUPTransferOperation(ctx context.Context, operationID string, req *CmdTransferReq) {
-	collectorTmpFilePath, err := newTmpFileWithContent("tiem-collector", []byte(req.CollectorYaml))
+	collectorTmpFilePath, err := newTmpFileWithContent(collectorTmpFilePrefix, []byte(req.CollectorYaml))
 	if err != nil {
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: operationID,

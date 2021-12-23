@@ -373,7 +373,7 @@ func GetTokenFromBearer(bearerTokenStr string) (token string, err error) {
 	if strings.HasPrefix(bearerTokenStr, bearerPrefix) {
 		token = bearerTokenStr[len(bearerPrefix):]
 	} else {
-		err = errors.Errorf("bearer token %s should begin with [%s]", bearerTokenStr, bearerPrefix)
+		err = errors.Errorf("bearer token %s should begin with %s", bearerTokenStr, bearerPrefix)
 		return
 	}
 	return token, nil

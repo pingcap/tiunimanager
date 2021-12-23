@@ -22,9 +22,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
 	allocrecycle "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/allocator_recycler"
 	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	host_provider "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
@@ -112,7 +111,7 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 			hostIds = append(hostIds, fake_hostId)
 			return hostIds, nil
 		} else {
-			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 
@@ -150,7 +149,7 @@ func Test_ImportHosts_Failed(t *testing.T) {
 			hostIds = append(hostIds, fake_hostId)
 			return hostIds, nil
 		} else {
-			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -171,9 +170,9 @@ func Test_ImportHosts_Failed(t *testing.T) {
 	hosts = append(hosts, *host)
 	_, err := resourceManager.ImportHosts(context.TODO(), hosts)
 	assert.NotNil(t, err)
-	tiemErr, ok := err.(framework.TiEMError)
+	tiemErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, common.TIEM_PARAMETER_INVALID, tiemErr.GetCode())
+	assert.Equal(t, errors.TIEM_PARAMETER_INVALID, tiemErr.GetCode())
 
 }
 
@@ -191,7 +190,7 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 			hosts = append(hosts, *dbhost)
 			return hosts, nil
 		} else {
-			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -226,7 +225,7 @@ func Test_DeleteHosts_Succeed(t *testing.T) {
 		if hostIds[0] == fake_hostId1 && hostIds[1] == fake_hostId2 {
 			return nil
 		} else {
-			return framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -256,7 +255,7 @@ func Test_UpdateHostReserved_Succeed(t *testing.T) {
 			host2.Reserved = reserved
 			return nil
 		} else {
-			return framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -288,7 +287,7 @@ func Test_UpdateHostStatus_Succeed(t *testing.T) {
 			host2.Status = status
 			return nil
 		} else {
-			return framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -339,7 +338,7 @@ func Test_GetHierarchy_Succeed(t *testing.T) {
 			items = append(items, item3)
 			return items, nil
 		} else {
-			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -381,7 +380,7 @@ func Test_GetStocks_Succeed(t *testing.T) {
 			stocks = append(stocks, stocks2)
 			return stocks, nil
 		} else {
-			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -415,7 +414,7 @@ func Test_AllocResources_Succeed(t *testing.T) {
 		if batchReq.BatchRequests[0].Applicant.HolderId == fake_holder_id && batchReq.BatchRequests[1].Applicant.RequestId == fake_request_id &&
 			batchReq.BatchRequests[0].Requires[0].Count == 1 && batchReq.BatchRequests[1].Requires[1].Require.PortReq[1].PortCnt == 2 {
 		} else {
-			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 		var r resource_structs.Compute
 		r.Reqseq = 0
@@ -514,7 +513,7 @@ func Test_RecycleResources_Succeed(t *testing.T) {
 		if request.RecycleReqs[0].RecycleType == 2 && request.RecycleReqs[0].HolderID == fake_cluster_id {
 
 		} else {
-			return framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 		return nil
 	})

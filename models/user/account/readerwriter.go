@@ -14,3 +14,15 @@
  ******************************************************************************/
 
 package account
+
+import (
+	"context"
+)
+
+type ReaderWriter interface {
+	AddAccount(ctx context.Context, tenantId string, name string, salt string, finalHash string, status int8) (*Account, error)
+	FindAccountByName(ctx context.Context, name string) (*Account, error)
+	FindAccountById(ctx context.Context, id string) (*Account, error)
+}
+
+

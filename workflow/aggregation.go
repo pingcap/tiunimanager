@@ -18,23 +18,19 @@ package workflow
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/library/common"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/models"
-	secondparty2 "github.com/pingcap-inc/tiem/models/workflow/secondparty"
-	"github.com/pingcap/errors"
-
-	//"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
-
-	//"github.com/pingcap-inc/tiem/library/secondparty"
-	"time"
-
-	common2 "github.com/pingcap-inc/tiem/models/common"
+	dbModel "github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/workflow"
+	secondpartyModel "github.com/pingcap-inc/tiem/models/workflow/secondparty"
+	"time"
 )
 
 // WorkFlowAggregation workflow aggregation with workflow definition and nodes
@@ -83,33 +79,37 @@ func createFlowWork(ctx context.Context, bizId string, define *WorkFlowDefine) (
 	flow := define.getInstance(ctx, bizId, flowData)
 	_, err := models.GetWorkFlowReaderWriter().CreateWorkFlow(ctx, flow.Flow)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("create workflow %+v failed %s", flow.Flow, err.Error())
 		return nil, err
 	}
-	//TaskRepo.AddFlowWork(ctx, flow.FlowWork)
 	return flow, nil
 }
 
-func (flow *WorkFlowAggregation) start() {
+func (flow *WorkFlowAggregation) start(ctx context.Context) {
 	flow.Flow.Status = constants.WorkFlowStatusProcessing
 	start := flow.Define.TaskNodes["start"]
 	result := flow.handle(start)
 	flow.complete(result)
-	_ = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
-	//TaskRepo.Persist(flow.Context, flow)
+	err := models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("update workflow detail %+v failed %s", flow, err.Error())
+	}
 }
 
-func (flow *WorkFlowAggregation) asyncStart() {
-	go flow.start()
+func (flow *WorkFlowAggregation) asyncStart(ctx context.Context) {
+	go flow.start(ctx)
 }
 
-func (flow *WorkFlowAggregation) destroy(reason string) {
+func (flow *WorkFlowAggregation) destroy(ctx context.Context, reason string) {
 	flow.Flow.Status = constants.WorkFlowStatusCanceled
 
 	if flow.CurrentNode != nil {
 		flow.CurrentNode.Fail(framework.NewTiEMError(common.TIEM_TASK_CANCELED, reason))
 	}
-	_ = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
-	//TaskRepo.Persist(flow.Context, flow)
+	err := models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("update workflow detail %+v failed %s", flow, err.Error())
+	}
 }
 
 func (flow WorkFlowAggregation) complete(success bool) {
@@ -131,13 +131,30 @@ func (flow *WorkFlowAggregation) addContext(key string, value interface{}) {
 }
 
 func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) error {
+	defer func() {
+		if r := recover(); r != nil {
+			framework.LogWithContext(flow.Context).Errorf("recover from workflow %s, node %s", flow.Flow.Name, node.Name)
+			err := errors.NewEMErrorf(errors.TIEM_PANIC, "%v", r)
+			node.Fail(err)
+		}
+	}()
+
 	flow.CurrentNode = node
 	flow.Nodes = append(flow.Nodes, node)
 	node.Processing()
-	_ = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
-	//TaskRepo.Persist(flow.Context, flow)
-	err := nodeDefine.Executor(node, &flow.Context)
+	data, err := json.Marshal(flow.Context.FlowData)
 	if err != nil {
+		framework.Log().Warnf("json marshal flow context data failed %s", err.Error())
+	}
+	flow.Flow.Context = string(data)
+	err = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
+	if err != nil {
+		framework.Log().Warnf("update workflow %s detail of bizId %s failed %s", flow.Flow.ID, flow.Flow.BizID, err.Error())
+	}
+
+	err = nodeDefine.Executor(node, &flow.Context)
+	if err != nil {
+		framework.LogWithContext(flow.Context).Infof("workflow %s of bizId %s do node %s failed, %s", flow.Flow.ID, flow.Flow.BizID, node.Name, err.Error())
 		node.Fail(err)
 	}
 
@@ -145,7 +162,7 @@ func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDe
 }
 
 func (flow *WorkFlowAggregation) handleTaskError(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) {
-	flow.FlowError = errors.New(node.Result)
+	flow.FlowError = fmt.Errorf(node.Result)
 	if "" != nodeDefine.FailEvent {
 		flow.handle(flow.Define.TaskNodes[nodeDefine.FailEvent])
 	} else {
@@ -159,9 +176,9 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 		return true
 	}
 	node := &workflow.WorkFlowNode{
-		Entity: common2.Entity{
+		Entity: dbModel.Entity{
 			TenantId: flow.Flow.TenantId,
-			Status: constants.WorkFlowStatusInitializing,
+			Status:   constants.WorkFlowStatusInitializing,
 		},
 		Name:       nodeDefine.Name,
 		BizID:      flow.Flow.BizID,
@@ -170,8 +187,10 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 		StartTime:  time.Now(),
 	}
 
-	_, _ = models.GetWorkFlowReaderWriter().CreateWorkFlowNode(flow.Context, node)
-	//TaskRepo.AddFlowTask(flow.Context, task, flow.FlowWork.ID)
+	_, err := models.GetWorkFlowReaderWriter().CreateWorkFlowNode(flow.Context, node)
+	if err != nil {
+		framework.Log().Warnf("create workflow node, node %s failed %s", node.Name, err.Error())
+	}
 	handleError := flow.executeTask(node, nodeDefine)
 	if handleError != nil {
 		flow.handleTaskError(node, nodeDefine)
@@ -186,22 +205,29 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 		return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
 	case PollingNode:
 		ticker := time.NewTicker(3 * time.Second)
+		sequence := int32(0)
 		for range ticker.C {
-			framework.LogWithContext(flow.Context).Infof("polling node waiting, nodeId %s, nodeName %s", node.ID, node.Name)
+			sequence++
+			if sequence > maxPollingSequence {
+				node.Fail(errors.Error(errors.TIEM_WORKFLOW_NODE_POLLING_TIME_OUT))
+				flow.handleTaskError(node, nodeDefine)
+				return false
+			}
+			framework.LogWithContext(flow.Context).Infof("polling node waiting, sequence %d, nodeId %s, nodeName %s", sequence, node.ID, node.Name)
 
 			resp, err := secondparty.Manager.GetOperationStatusByWorkFlowNodeID(flow.Context, node.ID)
 			if err != nil {
 				framework.LogWithContext(flow.Context).Error(err)
-				node.Fail(framework.WrapError(common.TIEM_TASK_FAILED, common.TIEM_TASK_FAILED.Explain(), err))
+				node.Fail(fmt.Errorf("call secondparty GetOperationStatusByWorkFlowNodeID %s, failed %s", node.ID, err.Error()))
 				flow.handleTaskError(node, nodeDefine)
 				return false
 			}
-			if resp.Status == secondparty2.OperationStatus_Error {
-				node.Fail(framework.NewTiEMError(common.TIEM_TASK_FAILED, resp.ErrorStr))
+			if resp.Status == secondpartyModel.OperationStatus_Error {
+				node.Fail(fmt.Errorf("call secondparty GetOperationStatusByWorkFlowNodeID %s, response error %s", node.ID, resp.ErrorStr))
 				flow.handleTaskError(node, nodeDefine)
 				return false
 			}
-			if resp.Status == secondparty2.OperationStatus_Finished {
+			if resp.Status == secondpartyModel.OperationStatus_Finished {
 				node.Success(resp.Result)
 				return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
 			}

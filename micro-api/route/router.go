@@ -95,7 +95,9 @@ func Route(g *gin.Engine) {
 			cluster.POST("/:clusterId/stop", clusterApi.Stop)
 			cluster.POST("/restore", backuprestore.Restore)
 			cluster.GET("/:clusterId/dashboard", clusterApi.GetDashboardInfo)
-			cluster.GET("/:clusterId/monitor", clusterApi.DescribeMonitor)
+			cluster.GET("/:clusterId/monitor", clusterApi.GetMonitorInfo)
+
+			cluster.GET("/:clusterId/log", logApi.QueryClusterLog)
 
 			// Scale cluster
 			cluster.POST("/:clusterId/scale-out", clusterApi.ScaleOut)
@@ -171,12 +173,6 @@ func Route(g *gin.Engine) {
 			host.GET("stocks", warehouseApi.GetStocks)
 			host.PUT("host-reserved", resourceApi.UpdateHostReserved)
 			host.PUT("host-status", resourceApi.UpdateHostStatus)
-		}
-
-		log := apiV1.Group("/logs")
-		{
-			log.Use(interceptor.VerifyIdentity)
-			log.GET("/tidb/:clusterId", logApi.QueryClusterLog)
 		}
 
 		paramGroups := apiV1.Group("/param-groups")

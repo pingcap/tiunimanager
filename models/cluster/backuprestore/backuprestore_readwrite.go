@@ -163,6 +163,13 @@ func (m *BRReadWrite) DeleteBackupStrategy(ctx context.Context, clusterId string
 	if "" == clusterId {
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
-	strategy := &BackupStrategy{}
+	strategy, err := m.GetBackupStrategy(ctx, clusterId)
+	if err != nil {
+		return err
+	}
+	if strategy.ID == "" {
+		return nil
+	}
+
 	return m.DB(ctx).First(strategy, "cluster_id = ?", clusterId).Unscoped().Delete(strategy).Error
 }

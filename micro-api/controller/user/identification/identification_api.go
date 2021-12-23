@@ -17,14 +17,10 @@
 package identification
 
 import (
-	"net/http"
-
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/framework"
 	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
+	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
 
@@ -34,32 +30,19 @@ import (
 // @Tags platform
 // @Accept application/json
 // @Produce application/json
-// @Param loginInfo body LoginInfo true "login info"
+// @Param loginInfo body message.LoginReq true "login info"
 // @Header 200 {string} Token "DUISAFNDHIGADS"
-// @Success 200 {object} controller.CommonResult{data=UserIdentity}
+// @Success 200 {object} controller.CommonResult{data=message.LoginResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /user/login [post]
 func Login(c *gin.Context) {
-	var req LoginInfo
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		_ = c.Error(err)
-		return
-	}
-
-	loginReq := clusterpb.LoginRequest{AccountName: req.UserName, Password: req.UserPassword}
-	result, err := client.ClusterClient.Login(framework.NewMicroCtxFromGinCtx(c), &loginReq)
-
-	if err == nil {
-		if result.Status.Code != 0 {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(result.GetStatus().GetCode()), result.GetStatus().GetMessage()))
-		} else {
-			c.Header("Token", result.TokenString)
-			c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: req.UserName, Token: result.TokenString}))
-		}
-	} else {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.LoginReq{}); ok {
+		respBody := &message.LoginResp{}
+		controller.InvokeRpcMethod(c, client.ClusterClient.Login, respBody,
+			requestBody,
+			controller.DefaultTimeout)
+		c.Header("Token", respBody.TokenString)
 	}
 }
 
@@ -70,22 +53,18 @@ func Login(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Success 200 {object} controller.CommonResult{data=UserIdentity}
+// @Success 200 {object} controller.CommonResult{data=message.LogoutResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /user/logout [post]
 func Logout(c *gin.Context) {
-	bearerStr := c.GetHeader("Authorization")
-	tokenStr, err := utils.GetTokenFromBearer(bearerStr)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
-	}
-	logoutReq := clusterpb.LogoutRequest{TokenString: tokenStr}
-	result, err := client.ClusterClient.Logout(c, &logoutReq)
-
-	if err == nil {
-		c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: result.GetAccountName()}))
-	} else {
-		c.JSON(http.StatusOK, controller.Fail(03, err.Error()))
+	bearerTokenStr := c.GetHeader("Authorization")
+	token , _ := utils.GetTokenFromBearer(bearerTokenStr);
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.LogoutReq{
+		TokenString: token,
+	}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.Logout, &message.LogoutResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
 }

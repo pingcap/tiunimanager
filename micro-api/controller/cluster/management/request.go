@@ -22,7 +22,17 @@ import (
 
 type CreateReq struct {
 	ClusterBaseInfo
+	ClusterCommonDemand
 	NodeDemandList []ClusterNodeDemand `json:"nodeDemandList"`
+}
+
+type DetailReq struct {
+	ClusterID string `json:"clusterId"`
+}
+
+type DeleteReq struct {
+	AutoBackup      bool `json:"autoBackup" form:"autoBackup"`
+	ClearBackupData bool `json:"clearBackupData" form:"clearBackupData"`
 }
 
 type QueryReq struct {
@@ -36,7 +46,7 @@ type QueryReq struct {
 
 type TakeoverReq struct {
 	TiupIp           string   `json:"tiupIp" example:"172.16.4.147" form:"tiupIp"`
-	TiupPort         int   `json:"tiupPort" example:"22" form:"tiupPort"`
+	TiupPort         int      `json:"tiupPort" example:"22" form:"tiupPort"`
 	TiupUserName     string   `json:"tiupUserName" example:"root" form:"tiupUserName"`
 	TiupUserPassword string   `json:"tiupUserPassword" example:"password" form:"tiupUserPassword"`
 	TiupPath         string   `json:"tiupPath" example:".tiup/" form:"tiupPath"`

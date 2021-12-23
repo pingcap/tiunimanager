@@ -18,17 +18,18 @@ package main
 
 import (
 	"github.com/asim/go-micro/v3"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
+	"github.com/pingcap-inc/tiem/micro-cluster/registry"
 	clusterService "github.com/pingcap-inc/tiem/micro-cluster/service"
 	clusterAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/adapt"
-	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
+	"github.com/pingcap-inc/tiem/models"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -37,8 +38,20 @@ func main() {
 		loadKnowledge,
 		initLibForDev,
 		initAdapter,
-		initCronJob,
+		initDatabase,
 		defaultPortForLocal,
+		func(b *framework.BaseFramework) error {
+			go func() {
+				// init embed etcd.
+				err := registry.InitEmbedEtcd(b)
+				if err != nil {
+					b.GetRootLogger().ForkFile(b.GetServiceMeta().ServiceName.ServerName()).
+						Errorf("init embed etcd failed, error: %v", err)
+					return
+				}
+			}()
+			return nil
+		},
 	)
 
 	f.PrepareService(func(service micro.Service) error {
@@ -61,9 +74,13 @@ func main() {
 
 func initLibForDev(f *framework.BaseFramework) error {
 	secondparty.SecondParty = &secondparty.SecondMicro{
-		TiupBinPath: "tiup",
+		TiupBinPath: constants.TiUPBinPath,
 	}
 	secondparty.SecondParty.MicroInit()
+	secondparty.Manager = &secondparty.SecondPartyManager{
+		TiUPBinPath: constants.TiUPBinPath,
+	}
+	secondparty.Manager.Init()
 	return nil
 }
 
@@ -72,19 +89,19 @@ func loadKnowledge(f *framework.BaseFramework) error {
 	return nil
 }
 
+func initDatabase(f *framework.BaseFramework) error {
+	models.Open(f, false)
+	return nil
+}
+
 func initAdapter(f *framework.BaseFramework) error {
 	clusterAdapt.InjectionMetaDbRepo()
 	return nil
 }
 
-func initCronJob(f *framework.BaseFramework) error {
-	domain.InitAutoBackupCronJob()
-	return nil
-}
-
 func defaultPortForLocal(f *framework.BaseFramework) error {
 	if f.GetServiceMeta().ServicePort <= 0 {
-		f.GetServiceMeta().ServicePort = common.DefaultMicroClusterPort
+		f.GetServiceMeta().ServicePort = constants.DefaultMicroClusterPort
 	}
 	return nil
 }

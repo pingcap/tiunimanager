@@ -49,8 +49,11 @@ message DataExportResponse {
 message DataTransportQueryRequest {
     PageDTO pageReq = 1;
     OperatorDTO operator = 2;
-    string  clusterId = 3;
-    int64  recordId = 4;
+    string clusterId = 3;
+    int64 recordId = 4;
+    bool reImport = 5;
+    int64 startTime = 6;
+    int64 endTime = 7;
 }
 
 message DataTransportInfo {
@@ -62,6 +65,8 @@ message DataTransportInfo {
     string filePath = 6;
     string storageType = 7;
     DisplayStatusDTO displayStatus = 8;
+    string comment = 9;
+    string zipName = 10;
 }
 
 message DataTransportQueryResponse {

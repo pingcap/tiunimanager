@@ -20,6 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/file-server/controller"
 	files "github.com/pingcap-inc/tiem/file-server/controller/file"
+	"github.com/pingcap-inc/tiem/file-server/interceptor"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -38,12 +39,16 @@ func Route(g *gin.Engine) {
 	}
 
 	// api
-	apiV1 := g.Group("/api/v1")
+	apiV1 := g.Group("/fs/api/v1")
 	{
+		apiV1.Use(interceptor.GinOpenTracing())
+		apiV1.Use(interceptor.GinTraceIDHandler())
+		apiV1.Use(interceptor.AccessLog(), gin.Recovery())
+
 		file := apiV1.Group("/file")
 		{
-			//file.Use(interceptor.VerifyIdentity)
-			//file.Use(interceptor.AuditLog())
+			file.Use(interceptor.VerifyIdentity)
+			file.Use(interceptor.AuditLog())
 
 			file.POST("/import/upload", files.UploadImportFile)
 			file.GET("/export/download/:recordId", files.DownloadExportFile)

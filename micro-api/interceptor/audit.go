@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -19,9 +18,10 @@ package interceptor
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	log "github.com/sirupsen/logrus"
+	"time"
 )
 
 func AuditLog() gin.HandlerFunc {
@@ -31,25 +31,27 @@ func AuditLog() gin.HandlerFunc {
 			"unknown",
 			"unknown",
 		}
-
 		v, _ := c.Get(VisitorIdentityKey)
 		if v != nil {
 			visitor, _ = v.(*VisitorIdentity)
 		}
 
+		//process request
+		c.Next()
+
 		path := c.Request.URL.Path
-
-		entry := framework.LogForkFile(common.LogFileAudit).WithFields(log.Fields{
-			"operatorId":       visitor.AccountId,
-			"operatorName":     visitor.AccountName,
-			"operatorTenantId": visitor.TenantId,
-
-			"clientIP":  c.ClientIP(),
-			"method":    c.Request.Method,
-			"path":      path,
-			"referer":   c.Request.Referer(),
-			"userAgent": c.Request.UserAgent(),
-		})
-		entry.Info("some do something")
+		entry := framework.LogForkFile(constants.LogFileAudit).WithFields(
+			log.Fields{
+				"operatorID":   visitor.AccountId,
+				"operatorName": visitor.AccountName,
+				"clientIP":     c.ClientIP(),
+				"operatorFinishTime": time.Now(),
+				"event":        c.Request.Method,
+				"operation":    path,
+				"status":       c.Writer.Status(),
+				"referer":      c.Request.Referer(),
+				"userAgent":    c.Request.UserAgent(),
+			})
+		entry.Info()
 	}
 }

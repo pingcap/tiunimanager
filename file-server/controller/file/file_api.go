@@ -16,18 +16,19 @@
 package file
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/file-server/controller"
 	"github.com/pingcap-inc/tiem/file-server/service"
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
-	dbService "github.com/pingcap-inc/tiem/micro-metadb/service"
+	"github.com/pingcap-inc/tiem/message"
 	"net/http"
 	"path/filepath"
-	"strconv"
 )
 
 func UploadImportFile(c *gin.Context) {
@@ -37,69 +38,91 @@ func UploadImportFile(c *gin.Context) {
 		return
 	}
 
-	uploadPath, err := service.DirMgr.GetImportPath(clusterId)
+	ctx := framework.NewMicroCtxFromGinCtx(c)
+	uploadPath, err := service.DirMgr.GetImportPath(ctx, clusterId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
 
-	err = service.FileMgr.UploadFile(c.Request, uploadPath)
+	err = service.FileMgr.UploadFile(ctx, c.Request, uploadPath)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
-	err = service.FileMgr.UnzipDir(filepath.Join(uploadPath, common.DefaultZipName), filepath.Join(uploadPath, "data"))
+	err = service.FileMgr.UnzipDir(ctx, filepath.Join(uploadPath, constants.DefaultZipName), filepath.Join(uploadPath, "data"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
 
-	c.JSON(http.StatusOK, controller.Success(nil))
+	c.JSON(http.StatusOK, controller.Success(uploadPath))
 }
 
 func DownloadExportFile(c *gin.Context) {
-	recordId, err := strconv.Atoi(c.Param("recordId"))
+	ctx := framework.NewMicroCtxFromGinCtx(c)
+	recordId := c.Param("recordId")
+
+	request := &message.QueryDataImportExportRecordsReq{
+		RecordID: recordId,
+		PageRequest: structs.PageRequest{
+			Page:     1,
+			PageSize: 10,
+		},
+	}
+	if err := c.ShouldBindQuery(&request); err != nil {
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	body, err := json.Marshal(request)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("input record id invalid, %s", err.Error())))
+		framework.LogWithContext(c).Errorf("marshal request error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	queryReq := &dbpb.DBFindTransportRecordByIDRequest{
-		RecordId: int64(recordId),
-	}
-
-	ctx := framework.NewMicroCtxFromGinCtx(c)
-	resp, err := client.DBClient.FindTrasnportRecordByID(ctx, queryReq)
+	rpcResp, err := client.ClusterClient.QueryDataTransport(ctx, &clusterpb.RpcRequest{Request: string(body)}, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("find record from metadb failed, %s", err.Error())))
 		return
 	}
-	if resp.GetStatus().GetCode() != dbService.ClusterSuccessResponseStatus.GetCode() || resp.GetRecord() == nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("find record from metadb failed, %s", resp.GetStatus().GetMessage())))
+	var resp message.QueryDataImportExportRecordsResp
+	err = json.Unmarshal([]byte(rpcResp.Response), &resp)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("json unmarshal response failed, %s", err.Error())))
 		return
 	}
-	framework.LogWithContext(ctx).Info(resp.GetRecord())
-	record := resp.GetRecord()
-	if record.GetStorageType() != common.NfsStorageType {
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("storage type %s can not download", record.GetStorageType())))
+	if len(resp.Records) == 0 {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("can not found record %s", recordId)))
 		return
 	}
-	if record.GetTransportType() != string(common.TransportTypeExport) {
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("transport type %s can not download", record.GetTransportType())))
+	record := resp.Records[0]
+	framework.LogWithContext(ctx).Info(record)
+	if record.RecordID == "" {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("data transport recordId %s not exist", recordId)))
+		return
+	}
+	if record.StorageType != string(constants.StorageTypeNFS) {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("storage type %s can not download", record.StorageType)))
+		return
+	}
+	if record.TransportType != string(constants.TransportTypeExport) {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("transport type %s can not download", record.TransportType)))
 		return
 	}
 
-	downloadPath := resp.GetRecord().GetFilePath()
-	zipName := resp.GetRecord().GetZipName()
+	downloadPath := record.FilePath
+	zipName := record.ZipName
 	filePath := filepath.Join(filepath.Dir(downloadPath), zipName)
 
-	err = service.FileMgr.ZipDir(downloadPath, filePath)
+	err = service.FileMgr.ZipDir(ctx, downloadPath, filePath)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
 
-	err = service.FileMgr.DownloadFile(c, filePath)
+	err = service.FileMgr.DownloadFile(ctx, c, filePath)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return

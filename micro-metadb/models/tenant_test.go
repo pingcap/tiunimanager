@@ -19,6 +19,7 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"testing"
 	"time"
@@ -56,6 +57,8 @@ func TestAddTenant(t *testing.T) {
 					t.Errorf("AddToken() test error, testname = %v, assert %v, args = %v, gotTenant = %v", tt.name, i, tt.args, gotTenant)
 				}
 			}
+			fmt.Println(tt.args, gotTenant)
+			fmt.Println(gotTenant.ID)
 
 		})
 	}

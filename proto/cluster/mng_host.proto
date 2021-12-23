@@ -38,12 +38,14 @@ message HostInfo {
     int32 freeCpuCores = 17;    // Host cpu remains
     int32 freeMemory = 18;      // Host memory remains, Unit:GB
     string nic = 19;            // Host network type: 1GE or 10GE
-    string purpose = 20;        // What Purpose is the host used for? [compute/storage or general]
-    string diskType = 21;
-    bool reserved = 22;
-    int64 createAt = 23;
-    int64 updateAt = 24;
-    repeated Disk disks = 25;
+    string clusterType = 20;    // Host will be used in which cluster type? [database/datamigration]
+    string purpose = 21;        // What Purpose is the host used for? [compute/storage or general]
+    string diskType = 22;
+    bool reserved = 23;
+    int64 traits = 24;
+    int64 createAt = 25;
+    int64 updateAt = 26;
+    repeated Disk disks = 27;
 }
 
 // The request means "Get 3 '4C8G' Hosts in Zone3"
@@ -169,9 +171,9 @@ message GetFailureDomainResponse {
 }
 
 message HostFilter {
-	string arch = 1;
-	string purpose  = 2;
-	string diskType = 3;
+    string arch = 1;
+    string purpose  = 2;
+    string diskType = 3;
 }
 
 message GetHierarchyRequest {
@@ -193,10 +195,10 @@ message GetHierarchyResponse {
 }
 
 message StockLocation {
-	string region = 1;
-	string zone = 2;
-	string rack = 3;
-	string host = 4;
+    string region = 1;
+    string zone = 2;
+    string rack = 3;
+    string host = 4;
 }
 
 message StockHostFilter {

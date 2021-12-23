@@ -18,6 +18,8 @@ package resource
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
@@ -37,33 +39,76 @@ const (
 	DISK
 )
 
+func GenDomainCodeByName(pre string, name string) string {
+	return fmt.Sprintf("%s,%s", pre, name)
+}
+
+func GetDomainNameFromCode(failureDomain string) string {
+	pos := strings.LastIndex(failureDomain, ",")
+	return failureDomain[pos+1:]
+}
+
+func GetDomainPrefixFromCode(failureDomain string) string {
+	pos := strings.LastIndex(failureDomain, ",")
+	if pos == -1 {
+		// No found ","
+		return failureDomain
+	}
+	return failureDomain[:pos]
+}
+
 type ArchType string
 
 const (
-	Arm64 ArchType = "ARM64"
-	X86   ArchType = "X86"
+	Arm64  ArchType = "ARM64"
+	X86_64 ArchType = "X86_64"
 )
 
 func ValidArch(arch string) error {
-	if arch == string(X86) || arch == string(Arm64) {
+	if arch == string(X86_64) || arch == string(Arm64) {
 		return nil
 	}
-	return errors.New("valid arch type: [ARM64 | X86]")
+	return errors.New("valid arch type: [ARM64 | X86_64]")
+}
+
+func GetArchAlias(arch ArchType) string {
+	switch arch {
+	case Arm64:
+		return "arm64"
+	case X86_64:
+		return "amd64"
+	default:
+		return ""
+	}
 }
 
 type Purpose string
 
 const (
-	Compute Purpose = "Compute"
-	Storage Purpose = "Storage"
-	General Purpose = "General"
+	Compute  Purpose = "Compute"
+	Storage  Purpose = "Storage"
+	Dispatch Purpose = "Dispatch"
 )
 
 func ValidPurposeType(p string) error {
-	if p == string(Compute) || p == string(Storage) || p == string(General) {
+	if p == string(Compute) || p == string(Storage) || p == string(Dispatch) {
 		return nil
 	}
-	return errors.New("valid purpose: [Compute | Storage | General]")
+	return errors.New("valid purpose: [Compute | Storage | Dispatch]")
+}
+
+type ClusterType string
+
+const (
+	Database      ClusterType = "Database"
+	DataMigration ClusterType = "DataMigration"
+)
+
+func ValidClusterType(p string) error {
+	if p == string(Database) || p == string(DataMigration) {
+		return nil
+	}
+	return errors.New("valid cluster type: [Database | DataMigration]")
 }
 
 type HostStatus int32
@@ -99,6 +144,8 @@ const (
 	HOST_LOADLESS
 	HOST_INUSED
 	HOST_EXHAUST
+	HOST_COMPUTE_EXHAUST
+	HOST_DISK_EXHAUST
 	HOST_EXCLUSIVE
 )
 
@@ -127,9 +174,11 @@ type Host struct {
 	Region       string         `json:"region" gorm:"size:32"`
 	AZ           string         `json:"az" gorm:"index"`
 	Rack         string         `json:"rack" gorm:"index"`
-	Purpose      string         `json:"purpose" gorm:"index"`  // What Purpose is the host used for? [compute/storage/general]
-	DiskType     string         `json:"diskType" gorm:"index"` // Disk type of this host [sata/ssd/nvme_ssd]
-	Reserved     bool           `json:"reserved" gorm:"index"` // Whether this host is reserved - will not be allocated
+	ClusterType  string         `json:"clusterType" gorm:"index"` // What Cluster is the host used for? [database/datamigration]
+	Purpose      string         `json:"purpose" gorm:"index"`     // What Purpose is the host used for? [compute/storage/general]
+	DiskType     string         `json:"diskType" gorm:"index"`    // Disk type of this host [sata/ssd/nvme_ssd]
+	Reserved     bool           `json:"reserved" gorm:"index"`    // Whether this host is reserved - will not be allocated
+	Traits       int64          `json:"traits" gorm:"index"`      // Traits of labels
 	Disks        []Disk         `json:"disks"`
 	UsedDisks    []UsedDisk     `json:"-"`
 	UsedComputes []UsedCompute  `json:"-"`
@@ -139,7 +188,7 @@ type Host struct {
 	DeletedAt    gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
-func (h Host) IsExhaust() bool {
+func (h Host) IsExhaust() (stat HostStat, isExhaust bool) {
 	diskExaust := true
 	for _, disk := range h.Disks {
 		if disk.Status == int32(DISK_AVAILABLE) {
@@ -147,7 +196,16 @@ func (h Host) IsExhaust() bool {
 			break
 		}
 	}
-	return diskExaust || h.FreeCpuCores == 0 || h.FreeMemory == 0
+	computeExaust := (h.FreeCpuCores == 0 || h.FreeMemory == 0)
+	if diskExaust && computeExaust {
+		return HOST_EXHAUST, true
+	} else if computeExaust {
+		return HOST_COMPUTE_EXHAUST, true
+	} else if diskExaust {
+		return HOST_DISK_EXHAUST, true
+	} else {
+		return HOST_STAT_WHATEVER, false
+	}
 }
 
 func (h Host) IsLoadless() bool {
@@ -211,4 +269,33 @@ func (h *Host) AfterDelete(tx *gorm.DB) (err error) {
 func (h *Host) AfterFind(tx *gorm.DB) (err error) {
 	err = tx.Find(&(h.Disks), "HOST_ID = ?", h.ID).Error
 	return
+}
+
+func (h *Host) getPurposes() []string {
+	return strings.Split(h.Purpose, ",")
+}
+
+func (h *Host) addTraits(p string) (err error) {
+	if trait, err := GetTraitByName(p); err == nil {
+		h.Traits = h.Traits | trait
+	} else {
+		return err
+	}
+	return nil
+}
+
+func (h *Host) BuildDefaultTraits() (err error) {
+	if err := h.addTraits(h.ClusterType); err != nil {
+		return err
+	}
+	purposes := h.getPurposes()
+	for _, p := range purposes {
+		if err := h.addTraits(p); err != nil {
+			return err
+		}
+	}
+	if err := h.addTraits(h.DiskType); err != nil {
+		return err
+	}
+	return nil
 }

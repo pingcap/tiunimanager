@@ -16,7 +16,9 @@
 
 package management
 
-import "github.com/pingcap-inc/tiem/micro-api/controller"
+import (
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+)
 
 type CreateClusterRsp struct {
 	ClusterId string `json:"clusterId"`
@@ -24,13 +26,52 @@ type CreateClusterRsp struct {
 	controller.StatusInfo
 }
 
+type PreviewClusterRsp struct {
+	ClusterBaseInfo
+	ClusterCommonDemand
+	StockCheckResult  []StockCheckItem         `json:"stockCheckResult"`
+	CapabilityIndexes []ServiceCapabilityIndex `json:"capabilityIndexes"`
+}
+
+type ServiceCapabilityIndex struct {
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Value       interface{} `json:"value"`
+	Unit        string      `json:"unit"`
+}
+
 type DeleteClusterRsp struct {
 	ClusterId string `json:"clusterId"`
 	controller.StatusInfo
 }
 
+type ResourceSpec struct {
+	Zone struct {
+		Code string `json:"code"`
+		Name string `json:"name"`
+	} `json:"zone"`
+	Spec struct {
+		Code string `json:"code"`
+		Name string `json:"name"`
+	} `json:"spec"`
+	Count int `json:"count"`
+}
+
+type ClusterTopologyInfo struct {
+	CpuArchitecture string `json:"cpuArchitecture" form:"cpuArchitecture"`
+	Region          struct {
+		Code string `json:"code"`
+		Name string `json:"name"`
+	} `json:"region"`
+	ComponentTopology []struct {
+		ComponentType string `json:"componentType"`
+		ResourceSpec  []ResourceSpec
+	} `json:"componentTopology"`
+}
+
 type DetailClusterRsp struct {
 	ClusterDisplayInfo
+	ClusterTopologyInfo
 	ClusterMaintenanceInfo
 	Components []ComponentInstance `json:"components"`
 }

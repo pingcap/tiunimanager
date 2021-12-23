@@ -38,6 +38,8 @@ type ClusterRepository interface {
 
 	Persist(ctx context.Context, aggregation *ClusterAggregation) error
 
+	PersistStatus(ctx context.Context, aggregation *ClusterAggregation) error
+
 	Load(ctx context.Context, id string) (cluster *ClusterAggregation, err error)
 
 	Query(ctx context.Context, clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*ClusterAggregation, int, error)
@@ -49,15 +51,17 @@ type ClusterAccessProxy interface {
 
 type MetadataManager interface {
 	FetchFromRemoteCluster(ctx context.Context, request *clusterpb.ClusterTakeoverReqDTO) (spec.Metadata, error)
+	FetchFromLocal(ctx context.Context, tiupPath string, clusterName string) (spec.Metadata, error)
 	RebuildMetadataFromComponents(ctx context.Context, cluster *Cluster, components []*ComponentGroup) (spec.Metadata, error)
 	ParseComponentsFromMetaData(ctx context.Context, meta spec.Metadata) ([]*ComponentGroup, error)
 	ParseClusterInfoFromMetaData(ctx context.Context, meta spec.BaseMeta) (clusterType string, user string, group string, version string)
 }
 
 type ClusterTopologyPlanner interface {
-	BuildComponents(ctx context.Context, cluster *Cluster, demands []*ClusterComponentDemand) ([]*ComponentGroup, error)
-	AnalysisResourceRequest(ctx context.Context, cluster *Cluster, components []*ComponentGroup) (*clusterpb.BatchAllocRequest, error)
-	ApplyResourceToComponents(ctx context.Context, components []*ComponentGroup, response *clusterpb.BatchAllocResponse) error
+	BuildComponents(ctx context.Context, demands []*ClusterComponentDemand, cluster *Cluster) ([]*ComponentGroup, error)
+	AnalysisResourceRequest(ctx context.Context, cluster *Cluster, components []*ComponentGroup, takeover bool) (*clusterpb.BatchAllocRequest, error)
+	ApplyResourceToComponents(ctx context.Context, cluster *Cluster, response *clusterpb.BatchAllocResponse, components []*ComponentGroup) error
+	GenerateTopologyConfig(ctx context.Context, components []*ComponentGroup, cluster *Cluster) (string, error)
 }
 
 type TaskRepository interface {

@@ -17,81 +17,34 @@
 package backuprestore
 
 import (
-	"github.com/pingcap-inc/tiem/micro-api/interceptor"
-	"net/http"
-	"strconv"
-	"time"
-
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
-
-	"github.com/pingcap-inc/tiem/library/client"
-	"google.golang.org/grpc/codes"
-
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 )
 
-// Backup backup
+// Backup
 // @Summary backup
 // @Description backup
 // @Tags cluster backup
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param backupReq body BackupReq true "backup request"
-// @Success 200 {object} controller.CommonResult{data=BackupRecord}
+// @Param backupReq body cluster.BackupClusterDataReq true "backup request"
+// @Success 200 {object} controller.CommonResult{data=cluster.BackupClusterDataResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /backups/ [post]
 func Backup(c *gin.Context) {
-	var status *clusterpb.ResponseStatusDTO
-	start := time.Now()
-	defer interceptor.HandleMetrics(start, "Backup", int(status.GetCode()))
-	var req BackupReq
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-		return
-	}
-
-	operator := controller.GetOperator(c)
-
-	resp, err := client.ClusterClient.CreateBackup(framework.NewMicroCtxFromGinCtx(c), &clusterpb.CreateBackupRequest{
-		ClusterId:    req.ClusterId,
-		BackupType:   req.BackupType,
-		BackupMethod: req.BackupMethod,
-		FilePath:     req.FilePath,
-		Operator:     operator.ConvertToDTO(),
-	}, controller.DefaultTimeout)
-	if err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-	} else {
-		status = resp.GetStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
-			c.JSON(http.StatusOK, controller.Success(BackupRecord{
-				ID:           resp.GetBackupRecord().GetId(),
-				ClusterId:    resp.GetBackupRecord().GetClusterId(),
-				StartTime:    time.Unix(resp.GetBackupRecord().GetStartTime(), 0),
-				EndTime:      time.Unix(resp.GetBackupRecord().GetEndTime(), 0),
-				BackupType:   resp.GetBackupRecord().GetBackupType(),
-				BackupMethod: resp.GetBackupRecord().GetBackupMethod(),
-				BackupMode:   resp.GetBackupRecord().GetBackupMode(),
-				FilePath:     resp.GetBackupRecord().GetFilePath(),
-				Size:         resp.GetBackupRecord().GetSize(),
-				Status:       *management.ParseStatusFromDTO(resp.GetBackupRecord().DisplayStatus),
-			}))
-		} else {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		}
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &cluster.BackupClusterDataReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateBackup, &cluster.BackupClusterDataResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
 }
 
-// QueryBackupStrategy show the backup strategy of a cluster
+// GetBackupStrategy show the backup strategy of a cluster
 // @Summary show the backup strategy of a cluster
 // @Description show the backup strategy of a cluster
 // @Tags cluster backup
@@ -99,38 +52,18 @@ func Backup(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param clusterId path string true "clusterId"
-// @Success 200 {object} controller.CommonResult{data=BackupStrategy}
+// @Success 200 {object} controller.CommonResult{data=cluster.GetBackupStrategyResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/strategy/ [get]
-func QueryBackupStrategy(c *gin.Context) {
-	var status *clusterpb.ResponseStatusDTO
-	start := time.Now()
-	defer interceptor.HandleMetrics(start, "QueryBackupStrategy", int(status.GetCode()))
-
-	clusterId := c.Param("clusterId")
-	operator := controller.GetOperator(c)
-
-	resp, err := client.ClusterClient.GetBackupStrategy(framework.NewMicroCtxFromGinCtx(c), &clusterpb.GetBackupStrategyRequest{
-		ClusterId: clusterId,
-		Operator:  operator.ConvertToDTO(),
-	}, controller.DefaultTimeout)
-	if err != nil || resp == nil || resp.GetStrategy() == nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-	} else {
-		status = resp.GetStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
-			c.JSON(http.StatusOK, controller.Success(BackupStrategy{
-				ClusterId:      resp.GetStrategy().GetClusterId(),
-				BackupDate:     resp.GetStrategy().GetBackupDate(),
-				Period:         resp.GetStrategy().GetPeriod(),
-				NextBackupTime: time.Unix(resp.GetStrategy().GetNextBackupTime(), 0),
-			}))
-		} else {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		}
+func GetBackupStrategy(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.GetBackupStrategyReq{
+		ClusterID: c.Param("clusterId"),
+	}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.GetBackupStrategy, &cluster.GetBackupStrategyResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
 }
 
@@ -142,111 +75,44 @@ func QueryBackupStrategy(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param clusterId path string true "clusterId"
-// @Param updateReq body BackupStrategyUpdateReq true "备份策略信息"
-// @Success 200 {object} controller.CommonResult{data=BackupStrategy}
+// @Param updateReq body cluster.SaveBackupStrategyReq true "backup strategy request"
+// @Success 200 {object} controller.CommonResult{data=cluster.SaveBackupStrategyResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/strategy [put]
 func SaveBackupStrategy(c *gin.Context) {
-	var status *clusterpb.ResponseStatusDTO
-	start := time.Now()
-	defer interceptor.HandleMetrics(start, "SaveBackupStrategy", int(status.GetCode()))
-
-	clusterId := c.Param("clusterId")
-	var req BackupStrategyUpdateReq
-	operator := controller.GetOperator(c)
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
-		return
+	req := cluster.SaveBackupStrategyReq{
+		ClusterID: c.Param("clusterId"),
 	}
-	resp, err := client.ClusterClient.SaveBackupStrategy(framework.NewMicroCtxFromGinCtx(c), &clusterpb.SaveBackupStrategyRequest{
-		Operator: operator.ConvertToDTO(),
-		Strategy: &clusterpb.BackupStrategy{
-			ClusterId:  clusterId,
-			BackupDate: req.Strategy.BackupDate,
-			Period:     req.Strategy.Period,
-		},
-	}, controller.DefaultTimeout)
-	if err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-	} else {
-		status = resp.GetStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
-			c.JSON(http.StatusOK, controller.Success(nil))
-		} else {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		}
+
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.SaveBackupStrategy, &cluster.SaveBackupStrategyResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
 }
 
-// QueryBackup
+// QueryBackupRecords
 // @Summary query backup records of a cluster
 // @Description query backup records of a cluster
 // @Tags cluster backup
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param backupRecordQuery query BackupRecordQueryReq true "backup records query condition"
-// @Success 200 {object} controller.ResultWithPage{data=[]BackupRecord}
+// @Param backupRecordQuery query cluster.QueryBackupRecordsReq true "backup records query condition"
+// @Success 200 {object} controller.ResultWithPage{data=cluster.QueryBackupRecordsResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /backups/ [get]
-func QueryBackup(c *gin.Context) {
-	var status *clusterpb.ResponseStatusDTO
-	start := time.Now()
-	defer interceptor.HandleMetrics(start, "QueryBackup", int(status.GetCode()))
+func QueryBackupRecords(c *gin.Context) {
+	var request cluster.QueryBackupRecordsReq
 
-	var queryReq BackupRecordQueryReq
-	if err := c.ShouldBindQuery(&queryReq); err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
-		return
-	}
-	operator := controller.GetOperator(c)
-	reqDTO := &clusterpb.QueryBackupRequest{
-		Operator:  operator.ConvertToDTO(),
-		ClusterId: queryReq.ClusterId,
-		Page:      queryReq.PageRequest.ConvertToDTO(),
-		StartTime: queryReq.StartTime,
-		EndTime:   queryReq.EndTime,
-	}
-
-	resp, err := client.ClusterClient.QueryBackupRecord(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
-	if err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-	} else {
-		status = resp.GetStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
-			records := make([]BackupRecord, len(resp.BackupRecords))
-			for i, v := range resp.BackupRecords {
-				records[i] = BackupRecord{
-					ID:           v.Id,
-					ClusterId:    v.ClusterId,
-					StartTime:    time.Unix(v.StartTime, 0),
-					EndTime:      time.Unix(v.EndTime, 0),
-					BackupType:   v.BackupType,
-					BackupMethod: v.BackupMethod,
-					BackupMode:   v.BackupMode,
-					Operator: controller.Operator{
-						ManualOperator: true,
-						OperatorId:     v.Operator.Id,
-						//OperatorName: v.Operator.Name,
-						//TenantId: v.Operator.TenantId,
-					},
-					Size:     v.Size,
-					Status:   *management.ParseStatusFromDTO(v.DisplayStatus),
-					FilePath: v.FilePath,
-				}
-			}
-			c.JSON(http.StatusOK, controller.SuccessWithPage(records, *controller.ParsePageFromDTO(resp.Page)))
-		} else {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		}
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &request); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryBackupRecords, &cluster.QueryBackupRecordsResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
 }
 
@@ -258,45 +124,19 @@ func QueryBackup(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param backupId path int true "backup record id"
-// @Param backupDeleteReq body BackupDeleteReq true "backup delete request"
-// @Success 200 {object} controller.CommonResult{data=int}
+// @Param backupDeleteReq body cluster.DeleteBackupDataReq true "backup delete request"
+// @Success 200 {object} controller.CommonResult{data=cluster.DeleteBackupDataResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /backups/{backupId} [delete]
 func DeleteBackup(c *gin.Context) {
-	var status *clusterpb.ResponseStatusDTO
-	start := time.Now()
-	defer interceptor.HandleMetrics(start, "DeleteBackup", int(status.GetCode()))
-
-	backupId, err := strconv.Atoi(c.Param("backupId"))
-	if err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-		return
-	}
-
-	var req BackupDeleteReq
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
-		return
-	}
-	operator := controller.GetOperator(c)
-	resp, err := client.ClusterClient.DeleteBackupRecord(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DeleteBackupRequest{
-		BackupRecordId: int64(backupId),
-		Operator:       operator.ConvertToDTO(),
-		ClusterId:      req.ClusterId,
-	}, controller.DefaultTimeout)
-	if err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-	} else {
-		status = resp.GetStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
-			c.JSON(http.StatusOK, controller.Success(backupId))
-		} else {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		}
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.DeleteBackupDataReq{
+		BackupID: c.Param("backupId"),
+	}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteBackupRecords, &cluster.DeleteBackupDataResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
 }
 
@@ -307,50 +147,16 @@ func DeleteBackup(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param request body RestoreReq true "restore request"
-// @Success 200 {object} controller.CommonResult{data=controller.StatusInfo}
+// @Param request body cluster.RestoreNewClusterReq true "restore request"
+// @Success 200 {object} controller.CommonResult{data=cluster.RestoreNewClusterResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/restore [post]
 func Restore(c *gin.Context) {
-	var status *clusterpb.ResponseStatusDTO
-	start := time.Now()
-	defer interceptor.HandleMetrics(start, "Restore", int(status.GetCode()))
-
-	var req RestoreReq
-	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		_ = c.Error(err)
-		return
-	}
-
-	operator := controller.GetOperator(c)
-
-	baseInfo, demand := req.ConvertToDTO()
-
-	reqDTO := &clusterpb.RecoverRequest{
-		Operator: operator.ConvertToDTO(),
-		Cluster:  baseInfo,
-		Demands:  demand,
-	}
-
-	respDTO, err := client.ClusterClient.RecoverCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
-
-	if err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-	} else {
-		status = respDTO.GetRespStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
-			result := controller.BuildCommonResult(int(status.Code), status.Message, RecoverClusterRsp{
-				ClusterId:       respDTO.GetClusterId(),
-				ClusterBaseInfo: *ParseClusterBaseInfoFromDTO(respDTO.GetBaseInfo()),
-				StatusInfo:      *ParseStatusFromDTO(respDTO.GetClusterStatus()),
-			})
-			c.JSON(http.StatusOK, result)
-		} else {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		}
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &cluster.RestoreNewClusterReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.RestoreNewCluster, &cluster.RestoreNewClusterResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
 }

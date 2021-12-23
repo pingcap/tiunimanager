@@ -20,9 +20,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/backuprestore"
+	changefeed2 "github.com/pingcap-inc/tiem/micro-api/controller/cluster/changefeed"
 	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
 	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
+	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
+
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-api/controller/platform/specs"
 	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
@@ -84,27 +87,38 @@ func Route(g *gin.Engine) {
 			cluster.GET("/:clusterId", clusterApi.Detail)
 			cluster.POST("/", clusterApi.Create)
 			cluster.POST("/takeover", clusterApi.Takeover)
+			cluster.POST("/preview", clusterApi.Preview)
 
 			cluster.GET("/", clusterApi.Query)
 			cluster.DELETE("/:clusterId", clusterApi.Delete)
 			cluster.POST("/:clusterId/restart", clusterApi.Restart)
 			cluster.POST("/:clusterId/stop", clusterApi.Stop)
 			cluster.POST("/restore", backuprestore.Restore)
-			cluster.GET("/:clusterId/dashboard", clusterApi.DescribeDashboard)
-			cluster.GET("/:clusterId/monitor", clusterApi.DescribeMonitor)
+			cluster.GET("/:clusterId/dashboard", clusterApi.GetDashboardInfo)
+			cluster.GET("/:clusterId/monitor", clusterApi.GetMonitorInfo)
+
+			cluster.GET("/:clusterId/log", logApi.QueryClusterLog)
+
+			// Scale cluster
+			cluster.POST("/:clusterId/scale-out", clusterApi.ScaleOut)
+			cluster.POST("/:clusterId/scale-in", clusterApi.ScaleIn)
+
+			// Clone cluster
+			cluster.POST("/clone", clusterApi.Clone)
+
 			// Params
-			cluster.GET("/:clusterId/params", parameterApi.QueryParams)
-			cluster.POST("/:clusterId/params", parameterApi.SubmitParams)
+			cluster.GET("/:clusterId/params", parameterApi.QueryParameters)
+			cluster.PUT("/:clusterId/params", parameterApi.UpdateParameters)
+			//cluster.POST("/:clusterId/params/inspect", parameterApi.InspectParameters)
 
 			// Backup Strategy
-			cluster.GET("/:clusterId/strategy", backuprestore.QueryBackupStrategy)
+			cluster.GET("/:clusterId/strategy", backuprestore.GetBackupStrategy)
 			cluster.PUT("/:clusterId/strategy", backuprestore.SaveBackupStrategy)
-			// cluster.DELETE("/:clusterId/strategy", instanceapi.DeleteBackupStrategy)
 
 			//Import and Export
 			cluster.POST("/import", importexport.ImportData)
 			cluster.POST("/export", importexport.ExportData)
-			cluster.GET("/:clusterId/transport", importexport.DescribeDataTransport)
+			cluster.GET("/transport", importexport.QueryDataTransport)
 			cluster.DELETE("/transport/:recordId", importexport.DeleteDataTransportRecord)
 		}
 
@@ -117,46 +131,61 @@ func Route(g *gin.Engine) {
 		{
 			backup.Use(interceptor.VerifyIdentity)
 			backup.Use(interceptor.AuditLog())
+
 			backup.POST("/", backuprestore.Backup)
-			backup.GET("/", backuprestore.QueryBackup)
+			backup.GET("/", backuprestore.QueryBackupRecords)
 			backup.DELETE("/:backupId", backuprestore.DeleteBackup)
-			//backup.GET("/:backupId", instanceapi.DetailsBackup)
 		}
 
-		flowworks := apiV1.Group("/flowworks")
+		changeFeeds := apiV1.Group("/changefeeds")
+		{
+			changeFeeds.Use(interceptor.VerifyIdentity)
+			changeFeeds.Use(interceptor.AuditLog())
+
+			changeFeeds.POST("/", changefeed2.Create)
+			changeFeeds.POST("/:changeFeedTaskId/pause", changefeed2.Pause)
+			changeFeeds.POST("/:changeFeedTaskId/resume", changefeed2.Resume)
+			changeFeeds.POST("/:changeFeedTaskId/update", changefeed2.Update)
+
+			changeFeeds.DELETE("/:changeFeedTaskId", changefeed2.Delete)
+
+			changeFeeds.GET("/:changeFeedTaskId", changefeed2.Detail)
+			changeFeeds.GET("/", changefeed2.Query)
+		}
+
+		flowworks := apiV1.Group("/workflow")
 		{
 			flowworks.Use(interceptor.VerifyIdentity)
 			flowworks.Use(interceptor.AuditLog())
 			flowworks.GET("/", flowtaskApi.Query)
-			flowworks.GET("/:flowWorkId", flowtaskApi.Detail)
+			flowworks.GET("/:workFlowId", flowtaskApi.Detail)
 		}
 
 		host := apiV1.Group("/resources")
 		{
 			host.Use(interceptor.VerifyIdentity)
 			host.Use(interceptor.AuditLog())
-			host.POST("host", resourceApi.ImportHost)
 			host.POST("hosts", resourceApi.ImportHosts)
-			host.GET("hosts", resourceApi.ListHost)
-			host.GET("hosts/:hostId", resourceApi.HostDetails)
-			host.DELETE("hosts/:hostId", resourceApi.RemoveHost)
+			host.GET("hosts", resourceApi.QueryHosts)
 			host.DELETE("hosts", resourceApi.RemoveHosts)
-
 			host.GET("hosts-template", resourceApi.DownloadHostTemplateFile)
-
-			host.GET("failuredomains", warehouseApi.GetFailureDomain)
 			host.GET("hierarchy", warehouseApi.GetHierarchy)
 			host.GET("stocks", warehouseApi.GetStocks)
-
-			host.PUT("hosts", resourceApi.UpdateHost)
-			// Add allochosts API for debugging, not release.
-			host.POST("allochosts", resourceApi.AllocHosts)
+			host.PUT("host-reserved", resourceApi.UpdateHostReserved)
+			host.PUT("host-status", resourceApi.UpdateHostStatus)
 		}
 
-		log := apiV1.Group("/logs")
+		paramGroups := apiV1.Group("/param-groups")
 		{
-			log.Use(interceptor.VerifyIdentity)
-			log.GET("/tidb/:clusterId", logApi.SearchTiDBLog)
+			paramGroups.Use(interceptor.VerifyIdentity)
+			paramGroups.Use(interceptor.AuditLog())
+			paramGroups.GET("/", parametergroup.Query)
+			paramGroups.GET("/:paramGroupId", parametergroup.Detail)
+			paramGroups.POST("/", parametergroup.Create)
+			paramGroups.PUT("/:paramGroupId", parametergroup.Update)
+			paramGroups.DELETE("/:paramGroupId", parametergroup.Delete)
+			paramGroups.POST("/:paramGroupId/copy", parametergroup.Copy)
+			paramGroups.POST("/:paramGroupId/apply", parametergroup.Apply)
 		}
 	}
 

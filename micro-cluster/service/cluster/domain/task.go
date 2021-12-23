@@ -19,10 +19,12 @@ package domain
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/secondparty"
 	"time"
 )
 
@@ -79,27 +81,34 @@ type TaskEntity struct {
 	Result         string
 	StartTime      int64
 	EndTime        int64
+	TaskError      error
 }
 
 func (t *TaskEntity) Processing() {
 	t.Status = TaskStatusProcessing
 }
 
-func (t *TaskEntity) Success(result interface{}) {
+var defaultSuccessInfo = "success"
+
+func (t *TaskEntity) Success(result ...interface{}) {
 	t.Status = TaskStatusFinished
-	if result != nil {
-		r, err := json.Marshal(result)
-		if err != nil {
-			getLogger().Error(err)
-		} else {
-			t.Result = string(r)
-		}
-	}
 	t.EndTime = time.Now().Unix()
+
+	if result == nil {
+		result = []interface{}{defaultSuccessInfo}
+	}
+
+	for _, r := range result {
+		if r == nil {
+			r = defaultSuccessInfo
+		}
+		t.Result = fmt.Sprintln(t.Result, r)
+	}
 }
 
 func (t *TaskEntity) Fail(e error) {
 	t.Status = TaskStatusError
+	t.TaskError = e
 	t.EndTime = time.Now().Unix()
 	t.Result = e.Error()
 }
@@ -114,16 +123,18 @@ type FlowWorkAggregation struct {
 	CurrentTask *TaskEntity
 	Tasks       []*TaskEntity
 	Context     FlowContext
+	FlowError 	error
 }
 
 func CreateFlowWork(ctx context.Context, bizId string, defineName string, operator *Operator) (*FlowWorkAggregation, error) {
+	framework.LogWithContext(ctx).Infof("create flowwork %s for bizId %s", defineName, bizId)
 	define := FlowWorkDefineMap[defineName]
 	if define == nil {
-		return nil, errors.New("workflow undefined")
+		return nil, framework.SimpleError(common.TIEM_FLOW_NOT_FOUND)
 	}
 	flowData := make(map[string]interface{})
 
-	flow := define.getInstance(ctx , bizId, flowData, operator)
+	flow := define.getInstance(framework.ForkMicroCtx(ctx) , bizId, flowData, operator)
 	TaskRepo.AddFlowWork(ctx, flow.FlowWork)
 	return flow, nil
 }
@@ -131,14 +142,31 @@ func CreateFlowWork(ctx context.Context, bizId string, defineName string, operat
 func (flow *FlowWorkAggregation) Start() {
 	flow.FlowWork.Status = TaskStatusProcessing
 	start := flow.Define.TaskNodes["start"]
-	flow.handle(start)
+	result := flow.handle(start)
+	flow.Complete(result)
 	TaskRepo.Persist(flow.Context, flow)
 }
 
-func (flow *FlowWorkAggregation) Destroy() {
-	flow.FlowWork.Status = TaskStatusError
-	flow.CurrentTask.Fail(errors.New("workflow destroy"))
+func (flow *FlowWorkAggregation) AsyncStart() {
+	go flow.Start()
+}
+
+func (flow *FlowWorkAggregation) Destroy(reason string) {
+	flow.FlowWork.Status = TaskStatusCanceled
+
+	if flow.CurrentTask != nil {
+		flow.CurrentTask.Fail(framework.NewTiEMError(common.TIEM_TASK_CANCELED, reason))
+	}
+
 	TaskRepo.Persist(flow.Context, flow)
+}
+
+func (flow FlowWorkAggregation) Complete(success bool) {
+	if success {
+		flow.FlowWork.Status = TaskStatusFinished
+	} else {
+		flow.FlowWork.Status = TaskStatusError
+	}
 }
 
 func (flow *FlowWorkAggregation) AddContext(key string, value interface{}) {
@@ -149,13 +177,24 @@ func (flow *FlowWorkAggregation) executeTask(task *TaskEntity, taskDefine *TaskD
 	flow.CurrentTask = task
 	flow.Tasks = append(flow.Tasks, task)
 	task.Processing()
+	TaskRepo.Persist(flow.Context, flow)
+
 	return taskDefine.Executor(task, &flow.Context)
 }
 
-func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
+func (flow *FlowWorkAggregation) handleTaskError(task *TaskEntity, taskDefine *TaskDefine) {
+	flow.FlowError = task.TaskError
+	if "" != taskDefine.FailEvent {
+		flow.handle(flow.Define.TaskNodes[taskDefine.FailEvent])
+	} else {
+		framework.Log().Fatalf("no fail event in flow definition, flowname %s", taskDefine.Name)
+	}
+}
+
+func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) bool {
 	if taskDefine == nil {
 		flow.FlowWork.Status = TaskStatusFinished
-		return
+		return true
 	}
 	task := &TaskEntity{
 		Status:         TaskStatusInit,
@@ -168,44 +207,48 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 	handleSuccess := flow.executeTask(task, taskDefine)
 
 	if !handleSuccess {
-		if "" == taskDefine.FailEvent {
-			return
-		}
-		if e, ok := flow.Define.TaskNodes[taskDefine.FailEvent]; ok {
-			flow.handle(e)
-			return
-		}
-		panic("workflow define error")
+		flow.handleTaskError(task, taskDefine)
+		return false
 	}
 
 	switch taskDefine.ReturnType {
 
 	case UserTask:
-
+		return true
 	case SyncFuncTask:
-		flow.handle(flow.Define.TaskNodes[taskDefine.SuccessEvent])
+		return flow.handle(flow.Define.TaskNodes[taskDefine.SuccessEvent])
 	case CallbackTask:
-
+		return true
 	case PollingTasK:
-		// receive the taskId and start ticker
-		ticker := time.NewTicker(1 * time.Second)
-		bizId := task.Id
+		ticker := time.NewTicker(3 * time.Second)
+		sequence := 0
 		for range ticker.C {
-			// todo check bizId
-			//status, s, err := Operator.CheckProgress(uint64(f.CurrentTask.id))
-			//			if err != nil {
-			//				getLogger().Error(err)
-			//				continue
-			//			}
-			//
-			//			switch status {
-			//			case dbPb.TiupTaskStatus_Init:
-			//			getLogger().Info(s)
-			fmt.Println(bizId)
-			flow.handle(flow.Define.TaskNodes[taskDefine.SuccessEvent])
-			break
+			if sequence += 1; sequence > 200 {
+				task.Fail(framework.SimpleError(common.TIEM_TASK_POLLING_TIME_OUT))
+				flow.handleTaskError(task, taskDefine)
+				return false
+			}
+			framework.LogWithContext(flow.Context).Infof("polling task waiting, sequence %d, taskId %d, taskName %s", sequence, task.Id, task.TaskName)
+
+			stat, statString, err := secondparty.SecondParty.MicroSrvGetTaskStatusByBizID(flow.Context, uint64(task.Id))
+			if err != nil {
+				framework.LogWithContext(flow.Context).Error(err)
+				task.Fail(framework.WrapError(common.TIEM_TASK_FAILED, common.TIEM_TASK_FAILED.Explain(), err))
+				flow.handleTaskError(task, taskDefine)
+				return false
+			}
+			if stat == dbpb.TiupTaskStatus_Error {
+				task.Fail(framework.NewTiEMError(common.TIEM_TASK_FAILED, statString))
+				flow.handleTaskError(task, taskDefine)
+				return false
+			}
+			if stat == dbpb.TiupTaskStatus_Finished {
+				task.Success(statString)
+				return flow.handle(flow.Define.TaskNodes[taskDefine.SuccessEvent])
+			}
 		}
 	}
+	return true
 }
 
 func (flow *FlowWorkAggregation) GetAllTaskDef() []string {
@@ -222,14 +265,14 @@ func (flow *FlowWorkAggregation) GetAllTaskDef() []string {
 func (flow *FlowWorkAggregation) ExtractTaskDTO() []*clusterpb.TaskDTO {
 	var tasks []*clusterpb.TaskDTO
 	for _, task := range flow.Tasks {
-		tasks = append(tasks, &clusterpb.TaskDTO {
-			Id:     int64(task.Id),
-			Status: int32(task.Status),
-			TaskName: task.TaskName,
-			Result: task.Result,
+		tasks = append(tasks, &clusterpb.TaskDTO{
+			Id:         int64(task.Id),
+			Status:     int32(task.Status),
+			TaskName:   task.TaskName,
+			Result:     task.Result,
 			Parameters: task.Parameters,
-			StartTime: task.StartTime,
-			EndTime: task.EndTime,
+			StartTime:  task.StartTime,
+			EndTime:    task.EndTime,
 		})
 	}
 	return tasks

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -17,6 +16,10 @@
 
 package knowledge
 
+import (
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
+)
+
 type ClusterType struct {
 	Code string `json:"code"`
 	Name string `json:"name"`
@@ -28,8 +31,9 @@ type ClusterVersion struct {
 }
 
 type ClusterComponent struct {
-	ComponentType string `json:"componentType"`
-	ComponentName string `json:"componentName"`
+	ComponentType    string `json:"componentType"`
+	ComponentPurpose string `json:"componentPurpose"`
+	ComponentName    string `json:"componentName"`
 }
 
 type ClusterTypeSpec struct {
@@ -47,8 +51,10 @@ func (s *ClusterTypeSpec) GetVersionSpec(versionCode string) (versionSpec *Clust
 }
 
 type ClusterVersionSpec struct {
-	ClusterVersion ClusterVersion         `json:"clusterVersion"`
-	ComponentSpecs []ClusterComponentSpec `json:"componentSpecs"`
+	ClusterVersion        ClusterVersion          `json:"clusterVersion"`
+	ClusterPortConstraint ComponentPortConstraint `json:"clusterPortConstraint"`
+	ComponentSpecs        []ClusterComponentSpec  `json:"componentSpecs"`
+	ArchTypes             []resource.ArchType     `json:"archTypes"`
 }
 
 func (s *ClusterVersionSpec) GetComponentSpec(componentType string) (componentSpec *ClusterComponentSpec) {
@@ -69,11 +75,12 @@ type ComponentPortConstraint struct {
 type ClusterComponentSpec struct {
 	ClusterComponent    ClusterComponent        `json:"clusterComponent"`
 	ComponentConstraint ComponentConstraint     `json:"componentConstraint"`
-	PortConstraint      ComponentPortConstraint `json:"compentPortConstraint"`
+	PortConstraint      ComponentPortConstraint `json:"componentPortConstraint"`
 }
 
 type ComponentConstraint struct {
 	ComponentRequired       bool     `json:"componentRequired"`
+	Parasite                bool     `json:"parasite"`
 	SuggestedNodeQuantities []int    `json:"suggestedNodeQuantities"`
 	AvailableSpecCodes      []string `json:"availableSpecCodes"`
 	MinZoneQuantity         int      `json:"minZoneQuantity"`

@@ -18,11 +18,16 @@ package common
 
 // micro service default port
 const (
-	DefaultMicroMetaDBPort  int = 4100
-	DefaultMicroClusterPort int = 4110
-	DefaultMicroApiPort     int = 4116
-	DefaultMicroFilePort    int = 4118
-	DefaultMetricsPort      int = 4121
+	DefaultMetricsPort int = 4103
+)
+
+// tidb component default port
+const (
+	DefaultTidbPort       int = 4000
+	DefaultTidbStatusPort int = 10080
+	DefaultPDClientPort   int = 2379
+	DefaultAlertPort      int = 9093
+	DefaultGrafanaPort    int = 3000
 )
 
 const (
@@ -31,26 +36,19 @@ const (
 	CertDirPrefix string = "/cert/"
 	DBDirPrefix   string = "/"
 
-	SqliteFileName string = "tiem.sqlite.db"
+	SqliteFileName   string = "tiem.sqlite.db"
+	DatabaseFileName string = "em.db"
 
 	CrtFileName string = "server.crt"
 	KeyFileName string = "server.key"
-
-	LocalAddress string = "0.0.0.0"
 )
 
 const (
-	LogFileSystem      = "system"
-	LogFileSecondParty = "secondparty"
-	LogFileLibTiup     = "libtiup"
+	LogFileSystem  = "system"
+	LogFileLibTiUP = "libTiUP"
 
 	LogFileAccess = "access"
 	LogFileAudit  = "audit"
-)
-
-const (
-	RegistryMicroServicePrefix = "/micro/registry/"
-	HttpProtocol               = "http://"
 )
 
 var (
@@ -68,4 +66,15 @@ const (
 	S3StorageType       string        = "s3"
 	TransportTypeExport TransportType = "export"
 	TransportTypeImport TransportType = "import"
+)
+
+const SlowSqlThreshold = 100
+
+type ClusterRelationType uint32
+
+const (
+	SlaveTo ClusterRelationType = iota + 1
+	StandBy
+	CloneFrom
+	RecoverFrom
 )

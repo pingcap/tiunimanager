@@ -16,4 +16,7 @@ etcd/
 library/client/cluster
 library/client/metadb
 library/framework/logs
+library/secondparty/logs
 test/
+/template
+/nohup.out

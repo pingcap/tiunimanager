@@ -19,7 +19,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 
@@ -31,24 +30,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-func genDomainCodeByName(pre string, name string) string {
-	return fmt.Sprintf("%s,%s", pre, name)
-}
-
-func GetDomainNameFromCode(failureDomain string) string {
-	pos := strings.LastIndex(failureDomain, ",")
-	return failureDomain[pos+1:]
-}
-
-func getDomainPrefixFromCode(failureDomain string) string {
-	pos := strings.LastIndex(failureDomain, ",")
-	if pos == -1 {
-		// No found ","
-		return failureDomain
-	}
-	return failureDomain[:pos]
-}
 
 func copyHostInfoFromReq(src *dbpb.DBHostInfoDTO, dst *resource.Host) {
 	dst.HostName = src.HostName
@@ -65,13 +46,15 @@ func copyHostInfoFromReq(src *dbpb.DBHostInfoDTO, dst *resource.Host) {
 	dst.Memory = src.Memory
 	dst.Nic = src.Nic
 	dst.Region = src.Region
-	dst.AZ = genDomainCodeByName(dst.Region, src.Az)
-	dst.Rack = genDomainCodeByName(dst.AZ, src.Rack)
+	dst.AZ = resource.GenDomainCodeByName(dst.Region, src.Az)
+	dst.Rack = resource.GenDomainCodeByName(dst.AZ, src.Rack)
 	dst.Status = src.Status
 	dst.Stat = src.Stat
+	dst.ClusterType = src.ClusterType
 	dst.Purpose = src.Purpose
 	dst.DiskType = src.DiskType
 	dst.Reserved = src.Reserved
+	dst.Traits = src.Traits
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, resource.Disk{
 			Name:     disk.Name,
@@ -201,13 +184,21 @@ func copyHostInfoToRsp(src *resource.Host, dst *dbpb.DBHostInfoDTO) {
 	dst.Memory = src.Memory
 	dst.Nic = src.Nic
 	dst.Region = src.Region
-	dst.Az = GetDomainNameFromCode(src.AZ)
-	dst.Rack = GetDomainNameFromCode(src.Rack)
+	dst.Az = resource.GetDomainNameFromCode(src.AZ)
+	dst.Rack = resource.GetDomainNameFromCode(src.Rack)
 	dst.Status = src.Status
 	dst.Stat = src.Stat
+	if src.Stat == int32(resource.HOST_INUSED) {
+		stat, isExhaust := src.IsExhaust()
+		if isExhaust {
+			dst.Stat = int32(stat)
+		}
+	}
+	dst.ClusterType = src.ClusterType
 	dst.Purpose = src.Purpose
 	dst.DiskType = src.DiskType
 	dst.Reserved = src.Reserved
+	dst.Traits = src.Traits
 	dst.CreateAt = src.CreatedAt.Unix()
 	dst.UpdateAt = src.UpdatedAt.Unix()
 	for _, disk := range src.Disks {
@@ -560,7 +551,7 @@ func (handler *DBServiceHandler) UpdateHostStatus(ctx context.Context, in *dbpb.
 		// return nil to use rsp
 		return nil
 	}
-	out.Rs.Code = common.TIEM_SUCCESS
+	out.Rs.Code = int32(common.TIEM_SUCCESS)
 	return nil
 }
 
@@ -585,7 +576,7 @@ func (handler *DBServiceHandler) ReserveHost(ctx context.Context, in *dbpb.DBRes
 		// return nil to use rsp
 		return nil
 	}
-	out.Rs.Code = common.TIEM_SUCCESS
+	out.Rs.Code = int32(common.TIEM_SUCCESS)
 	return nil
 }
 
@@ -603,8 +594,8 @@ func addSubNode(current map[string]*node, code string, subNode *node) (parent *n
 	} else {
 		parent := node{
 			Code:   code,
-			Prefix: getDomainPrefixFromCode(code),
-			Name:   GetDomainNameFromCode(code),
+			Prefix: resource.GetDomainPrefixFromCode(code),
+			Name:   resource.GetDomainNameFromCode(code),
 		}
 		parent.subNodes = append(parent.subNodes, subNode)
 		current[code] = &parent
@@ -613,18 +604,18 @@ func addSubNode(current map[string]*node, code string, subNode *node) (parent *n
 }
 
 func (handler *DBServiceHandler) buildHierarchy(Items []models.Item) *node {
-	if len(Items) == 0 {
-		return nil
-	}
 	root := node{
 		Code: "root",
+	}
+	if len(Items) == 0 {
+		return &root
 	}
 	var regions map[string]*node = make(map[string]*node)
 	var zones map[string]*node = make(map[string]*node)
 	var racks map[string]*node = make(map[string]*node)
 	for _, item := range Items {
 		hostItem := node{
-			Code:     genDomainCodeByName(item.Ip, item.Name),
+			Code:     resource.GenDomainCodeByName(item.Ip, item.Name),
 			Prefix:   item.Ip,
 			Name:     item.Name,
 			subNodes: nil,
@@ -714,15 +705,16 @@ func (handler *DBServiceHandler) GetHierarchy(ctx context.Context, in *dbpb.DBGe
 		return nil
 	}
 	wholeTree := handler.buildHierarchy(Items)
-	if wholeTree == nil {
-		out.Rs.Code = common.TIEM_RESOURCE_NO_STOCK
-		out.Rs.Message = fmt.Sprintf("no stocks with filter:%v", filter)
-		return nil
+	var root *node
+	if wholeTree.subNodes != nil {
+		root = handler.trimTree(wholeTree, resource.FailureDomain(in.Level), int(in.Depth))
+	} else {
+		root = wholeTree
+		log.Warnf("no stocks with filter:%v", filter)
 	}
-	root := handler.trimTree(wholeTree, resource.FailureDomain(in.Level), int(in.Depth))
 	copyHierarchyToRsp(root, &out.Root)
 
-	out.Rs.Code = common.TIEM_SUCCESS
+	out.Rs.Code = int32(common.TIEM_SUCCESS)
 
 	return nil
 }
@@ -789,7 +781,7 @@ func (handler *DBServiceHandler) GetStocks(ctx context.Context, in *dbpb.DBGetSt
 		out.Stocks.FreeDiskCount += int32(stock.FreeDiskCount)
 		out.Stocks.FreeDiskCapacity += int32(stock.FreeDiskCapacity)
 	}
-	out.Rs.Code = common.TIEM_SUCCESS
+	out.Rs.Code = int32(common.TIEM_SUCCESS)
 
 	return nil
 }

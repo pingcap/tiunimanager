@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -69,32 +68,32 @@ func AllFlags(receiver *ClientArgs) []cli.Flag {
 		},
 		&cli.IntFlag{
 			Name:        "metrics-port",
-			Value:       4121,
+			Value:       4103,
 			Usage:       "Specify the metrics port exposed by the service.",
 			Destination: &receiver.MetricsPort,
 		},
 		&cli.IntFlag{
 			Name:        "registry-client-port",
-			Value:       4101,
+			Value:       4106,
 			Usage:       "Specify the default etcd registry client port.",
 			Destination: &receiver.RegistryClientPort,
 		},
 		&cli.IntFlag{
 			Name:        "registry-peer-port",
-			Value:       4102,
+			Value:       4107,
 			Usage:       "Specify the default etcd registry internal communication port.",
 			Destination: &receiver.RegistryPeerPort,
 		},
 		&cli.StringFlag{
 			Name: "registry-address",
 			// For convenience, set the default value after the embedded etcd is completed
-			Value:       "127.0.0.1:4101",
+			Value:       "127.0.0.1:4106",
 			Usage:       "Specify the default etcd registry address.",
 			Destination: &receiver.RegistryAddress,
 		},
 		&cli.StringFlag{
 			Name:        "tracer-address",
-			Value:       "127.0.0.1:4133",
+			Value:       "127.0.0.1:4114",
 			Usage:       "Specify the opentracing jaeger server address.",
 			Destination: &receiver.TracerAddress,
 		},
@@ -118,7 +117,7 @@ func AllFlags(receiver *ClientArgs) []cli.Flag {
 		},
 		&cli.StringFlag{
 			Name:        "elasticsearch-address",
-			Value:       "127.0.0.1:4127",
+			Value:       "127.0.0.1:4108",
 			Usage:       "Specify the default elasticsearch address.",
 			Destination: &receiver.ElasticsearchAddress,
 		},

@@ -10,6 +10,7 @@ message DBAllocResponseStatus {
 message DBApplicant {
 	string holderId = 1;
 	string requestId = 2;
+	bool takeoverOperation = 3;
 }
 
 message DBLocation {
@@ -27,6 +28,7 @@ message DBFilter {
 	string arch = 1;
 	string purpose  = 2;
 	string diskType = 3;
+	int64 hostTraits = 4;
 }
 
 message DBComputeRequirement {
@@ -116,7 +118,7 @@ message DBRecycleRequire {
 	string hostId = 4;
 	string hostIp = 5;
 	DBComputeRequirement computeReq = 6;
-	DBDiskResource diskReq = 7;
+	repeated DBDiskResource diskReq = 7;
 	repeated DBPortResource portReq = 8;
 }
 

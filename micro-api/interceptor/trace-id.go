@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -23,15 +22,15 @@ import (
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 )
 
-// Tiem-X-Trace-ID
+// GinTraceIDHandler EM-X-Trace-ID
 func GinTraceIDHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		id := c.GetHeader(framework.TiEM_X_TRACE_ID_NAME)
+		id := c.GetHeader(framework.TiEM_X_TRACE_ID_KEY)
 		if len(id) <= 0 {
 			id = uuidutil.GenerateID()
 		}
-		c.Set(framework.TiEM_X_TRACE_ID_NAME, id)
-		c.Header(framework.TiEM_X_TRACE_ID_NAME, id)
+		c.Set(framework.TiEM_X_TRACE_ID_KEY, id)
+		c.Header(framework.TiEM_X_TRACE_ID_KEY, id)
 		c.Next()
 	}
 }

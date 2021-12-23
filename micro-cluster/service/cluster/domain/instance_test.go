@@ -17,53 +17,57 @@
 package domain
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestClusterAggregation_ExtractInstancesDTO(t *testing.T) {
-	got := buildAggregation().ExtractInstancesDTO()
-	assert.Equal(t, "127.0.0.1:4000", got.ExtranetConnectAddresses[0])
+func TestComponentInstance_AcceptPortInfo(t *testing.T) {
+	type args struct {
+		portInfo string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []int
+	}{
+		{"normal", args{"[1,2,3]"}, []int{1, 2, 3}},
+		{"empty", args{"[]"}, []int{}},
+		{"empty", args{""}, []int{}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &ComponentInstance{}
+			c.DeserializePortInfo(tt.args.portInfo)
+			if tt.args.portInfo == "[]" || tt.args.portInfo == "" {
+				assert.NotNil(t, c.PortList)
+				assert.Equal(t, 0, len(c.PortList))
+			} else {
+				assert.Equal(t, c.PortList[0], tt.want[0])
+			}
+		})
+	}
 }
 
-func buildAggregation() *ClusterAggregation {
-	aggregation := &ClusterAggregation{
-		Cluster: &Cluster{
-			Id:             "111",
-			TenantId:       "222",
-			ClusterType:    *knowledge.ClusterTypeFromCode("TiDB"),
-			ClusterVersion: *knowledge.ClusterVersionFromCode("v5.0.0"),
-		},
-		AvailableResources: &clusterpb.AllocHostResponse{
-			TidbHosts: []*clusterpb.AllocHost{
-				{Ip: "127.0.0.1", Disk: &clusterpb.Disk{Path: "/"}},
-				{Ip: "127.0.0.1", Disk: &clusterpb.Disk{Path: "/"}},
-				{Ip: "127.0.0.1", Disk: &clusterpb.Disk{Path: "/"}},
-			},
-			TikvHosts: []*clusterpb.AllocHost{
-				{Ip: "127.0.0.1", Disk: &clusterpb.Disk{Path: "/"}},
-				{Ip: "127.0.0.1", Disk: &clusterpb.Disk{Path: "/"}},
-				{Ip: "127.0.0.1", Disk: &clusterpb.Disk{Path: "/"}},
-			},
-			PdHosts: []*clusterpb.AllocHost{
-				{Ip: "127.0.0.1", Disk: &clusterpb.Disk{Path: "/"}},
-				{Ip: "127.0.0.1", Disk: &clusterpb.Disk{Path: "/"}},
-				{Ip: "127.0.0.1", Disk: &clusterpb.Disk{Path: "/"}},
-			},
-		},
+func TestComponentInstance_ExtractPortInfo(t *testing.T) {
+	type args struct {
+		portList []int
 	}
-	aggregation.CurrentTopologyConfigRecord = &TopologyConfigRecord{
-		TenantId:    aggregation.Cluster.TenantId,
-		ClusterId:   aggregation.Cluster.Id,
-		ConfigModel: convertConfig(aggregation.AvailableResources, aggregation.Cluster),
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"normal", args{[]int{1, 2, 3}}, "[1,2,3]"},
+		{"normal", args{[]int{}}, "[]"},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 
-	return aggregation
-}
-
-func TestClusterAggregation_ExtractComponentDTOs(t *testing.T) {
-	got := buildAggregation().ExtractComponentDTOs()
-	assert.Equal(t, "127.0.0.1", got[0].Nodes[1].Instance.HostId)
+			c := &ComponentInstance{
+				PortList: tt.args.portList,
+			}
+			wants := c.SerializePortInfo()
+			assert.Equal(t, wants, tt.want)
+		})
+	}
 }

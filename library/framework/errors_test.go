@@ -17,6 +17,7 @@ package framework
 
 import (
 	"errors"
+	"fmt"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -24,20 +25,20 @@ import (
 
 func TestSimpleError(t *testing.T) {
 	cause := errors.New("cause")
-	te := WrapError(common.TIEM_BACKUP_PROCESS_FAILED, "backup", cause)
+	te := WrapError(common.TIEM_BACKUP_RECORD_CREATE_FAILED, "backup", cause)
 
 	assert.Equal(t, cause, te.cause)
 }
 
 func TestCustomizeMessageError(t *testing.T) {
-	te := CustomizeMessageError(common.TIEM_BACKUP_PROCESS_FAILED, "sss")
+	te := NewTiEMError(common.TIEM_BACKUP_RECORD_CREATE_FAILED, "sss")
 
 	assert.Equal(t, "sss", te.msg)
 }
 
 func TestWrapError(t *testing.T) {
 	cause := errors.New("cause")
-	te := WrapError(common.TIEM_BACKUP_PROCESS_FAILED, "backup", cause)
+	te := WrapError(common.TIEM_BACKUP_RECORD_CREATE_FAILED, "backup", cause)
 
 	assert.Equal(t, cause, te.cause)
 }
@@ -49,7 +50,7 @@ func TestIsError(t *testing.T) {
 	assert.True(t, simple.Is(simple))
 	assert.False(t, simple.Is(cause))
 
-	te := WrapError(common.TIEM_BACKUP_PROCESS_FAILED, "backup", cause)
+	te := WrapError(common.TIEM_BACKUP_RECORD_CREATE_FAILED, "backup", cause)
 
 	assert.True(t, te.Is(cause))
 
@@ -61,11 +62,11 @@ func TestIsError(t *testing.T) {
 
 func TestError(t *testing.T) {
 	cause := errors.New("cause")
-	te := WrapError(common.TIEM_BACKUP_PROCESS_FAILED, "backup", cause)
-	assert.Equal(t, "[606]backup, cause:cause", te.Error())
+	te := WrapError(common.TIEM_BACKUP_RECORD_CREATE_FAILED, "backup", cause)
+	assert.Equal(t, fmt.Sprintf("[%d]backup, cause:cause", common.TIEM_BACKUP_RECORD_CREATE_FAILED), te.Error())
 
-	t2 := SimpleError(common.TIEM_BACKUP_PROCESS_FAILED)
-	assert.Equal(t, "[606]backup process failed", t2.Error())
+	t2 := SimpleError(common.TIEM_BACKUP_RECORD_QUERY_FAILED)
+	assert.Equal(t, fmt.Sprintf("[%d]query backup record failed", common.TIEM_BACKUP_RECORD_QUERY_FAILED), t2.Error())
 }
 
 func TestErrorBuilder(t *testing.T) {
@@ -77,7 +78,7 @@ func TestErrorBuilder(t *testing.T) {
 		Trace("123123").
 		Build()
 
-	assert.Equal(t, common.TIEM_ADD_TOKEN_FAILED, int(err.GetCode()))
+	assert.Equal(t, int(common.TIEM_ADD_TOKEN_FAILED), int(err.GetCode()))
 	assert.Equal(t, "[400]my error sss, cause:cause", err.Error())
 	assert.Equal(t, "my error sss", err.GetMsg())
 	assert.Equal(t, "add token failed", err.GetCodeText())
@@ -87,10 +88,14 @@ func TestErrorBuilder(t *testing.T) {
 
 }
 
-
 func TestUnwrapError(t *testing.T) {
 	cause := errors.New("cause")
-	te := WrapError(common.TIEM_BACKUP_PROCESS_FAILED, "backup", cause)
+	te := WrapError(common.TIEM_BACKUP_RECORD_CREATE_FAILED, "backup", cause)
 
 	assert.Equal(t, cause, te.Unwrap())
+}
+
+func TestNewTiEMErrorf(t *testing.T) {
+	got := NewTiEMErrorf(common.TIEM_METADB_SERVER_CALL_ERROR, "1 %s 2", "insert")
+	assert.Equal(t, "[9998]1 insert 2", got.Error())
 }

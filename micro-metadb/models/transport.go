@@ -18,8 +18,8 @@ package models
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -43,7 +43,7 @@ type TransportRecordFetchResult struct {
 }
 
 func (m *DAOClusterManager) CreateTransportRecord(ctx context.Context, record *TransportRecord) (recordId int, err error) {
-	err = m.Db(ctx).Create(record).Error
+	err = m.DB(ctx).Create(record).Error
 	if err != nil {
 		return 0, err
 	}
@@ -55,28 +55,37 @@ func (m *DAOClusterManager) UpdateTransportRecord(ctx context.Context, recordId 
 		ClusterId: clusterId,
 	}
 	record.ID = uint(recordId)
-	err = m.Db(ctx).Model(&record).Updates(map[string]interface{}{"EndTime": endTime}).Error
+	err = m.DB(ctx).Model(&record).Updates(map[string]interface{}{"EndTime": endTime}).Error
 	return err
 }
 
 func (m *DAOClusterManager) FindTransportRecordById(ctx context.Context, recordId int) (record *TransportRecord, err error) {
 	record = &TransportRecord{}
-	err = m.Db(ctx).Where("id = ?", recordId).First(record).Error
-	if err != nil {
+	err = m.DB(ctx).Where("id = ?", recordId).Where("deleted_at is null").First(record).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
 		return record, err
 	}
 	return record, nil
 }
 
-func (m *DAOClusterManager) ListTransportRecord(ctx context.Context, clusterId string, recordId int, offset int32, length int32) (dos []*TransportRecordFetchResult, total int64, err error) {
+func (m *DAOClusterManager) ListTransportRecord(ctx context.Context, clusterId string, recordId int, reImport bool, startTime, endTime int64, offset int32, length int32) (dos []*TransportRecordFetchResult, total int64, err error) {
 	records := make([]*TransportRecord, length)
 
-	db := m.Db(ctx).Table(TABLE_NAME_TRANSPORT_RECORD).Where("deleted_at is null")
+	db := m.DB(ctx).Table(TABLE_NAME_TRANSPORT_RECORD).Where("deleted_at is null")
 	if clusterId != "" {
 		db.Where("cluster_id = ?", clusterId)
 	}
 	if recordId > 0 {
 		db.Where("id = ?", recordId)
+	}
+	if reImport {
+		db.Where("re_import_support = ?", reImport)
+	}
+	if startTime > 0 {
+		db = db.Where("start_time >= ?", time.Unix(startTime, 0))
+	}
+	if endTime > 0 {
+		db = db.Where("end_time <= ?", time.Unix(endTime, 0))
 	}
 	err = db.Count(&total).Order("id desc").Offset(int(offset)).Limit(int(length)).Find(&records).Error
 	if err == nil {
@@ -91,7 +100,7 @@ func (m *DAOClusterManager) ListTransportRecord(ctx context.Context, clusterId s
 		}
 
 		flows := make([]*FlowDO, len(records))
-		err = m.Db(ctx).Find(&flows, flowIds).Error
+		err = m.DB(ctx).Find(&flows, flowIds).Error
 		m.HandleMetrics(TABLE_NAME_FLOW, 0)
 		if err != nil {
 			return nil, 0, fmt.Errorf("ListTransportRecord, query record failed, clusterId: %s, error: %s", clusterId, err.Error())
@@ -112,11 +121,11 @@ func (m *DAOClusterManager) ListTransportRecord(ctx context.Context, clusterId s
 
 func (m *DAOClusterManager) DeleteTransportRecord(ctx context.Context, recordId int) (record *TransportRecord, err error) {
 	if recordId <= 0 {
-		return nil, errors.New(fmt.Sprintf("DeleteTransportRecord has invalid parameter, Id: %d", recordId))
+		return nil, fmt.Errorf(fmt.Sprintf("DeleteTransportRecord has invalid parameter, Id: %d", recordId))
 	}
 	record = &TransportRecord{}
 	record.ID = uint(recordId)
-	err = m.Db(ctx).Where("id = ?", record.ID).Delete(record).Error
+	err = m.DB(ctx).Where("id = ?", record.ID).Delete(record).Error
 	m.HandleMetrics(TABLE_NAME_TRANSPORT_RECORD, 0)
 	return record, err
 }

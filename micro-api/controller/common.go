@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -32,9 +31,10 @@
 package controller
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"net/http"
 	"time"
+
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
 	"github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"
@@ -42,56 +42,11 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 )
 
-type ResultMark struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
-type CommonResult struct {
-	ResultMark
-	Data interface{} `json:"data"`
-}
-
-type ResultWithPage struct {
-	ResultMark
-	Data interface{} `json:"data"`
-	Page Page        `json:"page"`
-}
-
-func BuildCommonResult(code int, message string, data interface{}) (result *CommonResult) {
-	result = &CommonResult{}
-	result.Code = code
-	result.Message = message
-	result.Data = data
-
-	return
-}
-
-func BuildResultWithPage(code int, message string, page *Page, data interface{}) (result *ResultWithPage) {
-	result = &ResultWithPage{}
-	result.Code = code
-	result.Message = message
-	result.Data = data
-	result.Page = *page
-
-	return
-}
-
+// DefaultTimeout
+// todo adjust timeout for async flow task
 var DefaultTimeout = func(o *client.CallOptions) {
-	o.RequestTimeout = time.Second * 30
-	o.DialTimeout = time.Second * 30
-}
-
-func Success(data interface{}) *CommonResult {
-	return &CommonResult{ResultMark: ResultMark{0, "OK"}, Data: data}
-}
-
-func SuccessWithPage(data interface{}, page Page) *ResultWithPage {
-	return &ResultWithPage{ResultMark: ResultMark{0, "OK"}, Data: data, Page: page}
-}
-
-func Fail(code int, message string) *CommonResult {
-	return &CommonResult{ResultMark{code, message}, struct{}{}}
+	o.RequestTimeout = time.Minute * 5
+	o.DialTimeout = time.Minute * 5
 }
 
 type Usage struct {

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -20,8 +19,9 @@ package models
 import (
 	"context"
 	"errors"
-	gormLog "gorm.io/gorm/logger"
 	"time"
+
+	gormLog "gorm.io/gorm/logger"
 
 	"github.com/mozillazg/go-pinyin"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -46,6 +46,7 @@ const (
 	TABLE_NAME_USED_COMPUTE       = "used_computes"
 	TABLE_NAME_USED_PORT          = "used_ports"
 	TABLE_NAME_USED_DISK          = "used_disks"
+	TABLE_NAME_LABEL              = "labels"
 	TABLE_NAME_TIUP_CONFIG        = "tiup_configs"
 	TABLE_NAME_TIUP_TASK          = "tiup_tasks"
 	TABLE_NAME_FLOW               = "flows"
@@ -55,6 +56,11 @@ const (
 	TABLE_NAME_TRANSPORT_RECORD   = "transport_records"
 	TABLE_NAME_RECOVER_RECORD     = "recover_records"
 	TABLE_NAME_COMPONENT_INSTANCE = "component_instances"
+	TABLE_NAME_CLUSTER_RELATION   = "cluster_relations"
+	TABLE_NAME_PARAM              = "params"
+	TABLE_NAME_PARAM_GROUP        = "param_groups"
+	TABLE_NAME_PARAM_GROUP_MAP    = "param_group_map"
+	TABLE_NAME_CLUSTER_PARAM_MAP  = "cluster_param_map"
 )
 
 func getLogger() *log.Entry {
@@ -77,7 +83,6 @@ func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
 	if e.Code == "" {
 		e.Code = e.ID
 	}
-	e.Status = 0
 
 	if len(e.Code) > 128 {
 		return errors.New("entity code is too long, code = " + e.Code)
@@ -134,7 +139,7 @@ func generateEntityCode(name string) string {
 }
 
 type DaoLogger struct {
-	p framework.Framework
+	p             framework.Framework
 	SlowThreshold time.Duration
 }
 
@@ -161,17 +166,20 @@ func (l DaoLogger) Error(ctx context.Context, msg string, data ...interface{}) {
 // Trace print sql message
 func (l DaoLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
 	sql, rows := fc()
-	logger := l.p.LogWithContext(ctx).WithField("sql", sql).WithField("rows", rows)
+	logger := l.p.LogWithContext(ctx).WithField("rows", rows)
 
-	elapsed := time.Since(begin)
+	elapsed := time.Since(begin).Milliseconds()
 
-	switch {
-	case err != nil && (!errors.Is(err, gormLog.ErrRecordNotFound)):
-		logger.Errorf(err.Error())
-	case elapsed > l.SlowThreshold:
-		logger.Warnf("SLOW SQL >= %v", l.SlowThreshold)
-	case l.p.GetRootLogger().LogLevel == framework.LogDebug || l.p.GetRootLogger().LogLevel == framework.LogInfo:
-		logger.Infof("execute sql")
+	if l.p.GetRootLogger().LogLevel == framework.LogDebug || l.p.GetRootLogger().LogLevel == framework.LogInfo {
+		logger.Infof("execute sql : %s", sql)
+	}
+
+	if err != nil && (!errors.Is(err, gormLog.ErrRecordNotFound)) {
+		logger.Errorf("sql error, sql : %s, err : %s", sql, err)
+	}
+
+	if elapsed > l.SlowThreshold.Milliseconds() {
+		logger.Warnf("slow sql, cost %d milliseconds, sql : %s", elapsed, sql)
 	}
 
 }

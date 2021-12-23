@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -62,7 +61,7 @@ func (m MyContext) Value(key interface{}) interface{} {
 func TestGetTraceIDFromContext(t *testing.T) {
 	t.Run("gin", func(t *testing.T) {
 		ginContext := &gin.Context{}
-		ginContext.Set(TiEM_X_TRACE_ID_NAME, "111")
+		ginContext.Set(TiEM_X_TRACE_ID_KEY, "111")
 		got := GetTraceIDFromContext(ginContext)
 		assert.Equal(t, "111", got)
 	})
@@ -79,16 +78,16 @@ func TestGetTraceIDFromContext(t *testing.T) {
 }
 
 func TestNewJaegerTracer(t *testing.T) {
-	_, _, err := NewJaegerTracer("tiem", "127.0.0.1:999")
+	_, _, err := NewJaegerTracer("em", "127.0.0.1:999")
 	assert.NoError(t, err)
 }
 
 func TestNewMicroCtxFromGinCtx(t *testing.T) {
 	ctx := &gin.Context{}
-	ctx.Set(TiEM_X_TRACE_ID_NAME, "111")
+	ctx.Set(TiEM_X_TRACE_ID_KEY, "111")
 	got := NewMicroCtxFromGinCtx(ctx)
-	assert.True(t, got.Value(TiEM_X_TRACE_ID_NAME) != "")
-	assert.True(t, got.Value(TiEM_X_TRACE_ID_NAME) == ctx.Value(TiEM_X_TRACE_ID_NAME))
+	assert.True(t, got.Value(TiEM_X_TRACE_ID_KEY) != "")
+	assert.True(t, got.Value(TiEM_X_TRACE_ID_KEY) == ctx.Value(TiEM_X_TRACE_ID_KEY))
 }
 
 func Test_getParentSpanFromGinContext(t *testing.T) {
@@ -122,4 +121,25 @@ func Test_getParentSpanFromGinContext1(t *testing.T) {
 		got := getParentSpanFromGinContext(micro)
 		assert.Equal(t, nil, got)
 	})
+}
+
+func Test_GetStringValuesFromContext(t *testing.T) {
+	c := &gin.Context{}
+	traceID := "traceID"
+	userID := "userID"
+	userName := "userName"
+	tenantID := "tenantID"
+	c.Set(TiEM_X_TRACE_ID_KEY, traceID)
+	c.Set(TiEM_X_USER_ID_KEY, userID)
+	c.Set(TiEM_X_USER_NAME_KEY, userName)
+	c.Set(TiEM_X_TENANT_ID_KEY, tenantID)
+	assert.Equal(t, traceID, GetTraceIDFromContext(c))
+	assert.Equal(t, userID, GetUserIDFromContext(c))
+	assert.Equal(t, userName, GetUserNameFromContext(c))
+	assert.Equal(t, tenantID, GetTenantIDFromContext(c))
+	ctx := NewMicroCtxFromGinCtx(c)
+	assert.Equal(t, traceID, GetTraceIDFromContext(ctx))
+	assert.Equal(t, userID, GetUserIDFromContext(ctx))
+	assert.Equal(t, userName, GetUserNameFromContext(ctx))
+	assert.Equal(t, tenantID, GetTenantIDFromContext(ctx))
 }

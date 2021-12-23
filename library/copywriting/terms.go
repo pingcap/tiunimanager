@@ -42,10 +42,14 @@ var CopyWritingContainer = map[string]map[string]string{
 		CWFlowModifyParameters: "参数修改中",
 		CWFlowExportData:       "数据导出中",
 		CWFlowImportData:       "数据导出中",
+		CWFlowBuildLogConfig:	"重建日志配置",
 		CWTaskStatusInit:       "未开始",
 		CWTaskStatusProcessing: "进行中",
 		CWTaskStatusFinished:   "完成",
 		CWTaskStatusError:      "失败",
+		CWTaskStatusCanceled:   "已取消",
+		CWFlowScaleOutCluster:  "扩容中",
+		CWFlowScaleInCluster:   "缩容中",
 	},
 }
 
@@ -58,12 +62,15 @@ var CWTaskStatusInit = "CW_TaskStatusInit"
 var CWTaskStatusProcessing = "CW_TaskStatusProcessing"
 var CWTaskStatusFinished = "CW_TaskStatusFinished"
 var CWTaskStatusError = "CW_TaskStatusError"
+var CWTaskStatusCanceled = "CW_TaskStatusCanceled"
 
 var CWFlowCreateCluster = "CW_FlowCreateCluster"
 var CWFlowTakeoverCluster = "CW_FlowTakeoverCluster"
 var CWFlowDeleteCluster = "CW_FlowDeleteCluster"
 var CWFlowRestartCluster = "CW_FlowRestartCluster"
 var CWFlowStopCluster = "CW_FlowStopCluster"
+var CWFlowScaleOutCluster = "CW_FlowScaleOutCluster"
+var CWFlowScaleInCluster = "CW_FlowScaleInCluster"
 
 var CWFlowBackupCluster = "CW_FlowBackupCluster"
 var CWFlowRecoverCluster = "CW_FlowRecoverCluster"
@@ -71,3 +78,5 @@ var CWFlowModifyParameters = "CW_FlowModifyParameters"
 
 var CWFlowExportData = "CW_FlowExportData"
 var CWFlowImportData = "CW_FlowImportData"
+
+var CWFlowBuildLogConfig = "CW_FlowBuildLogConfig"

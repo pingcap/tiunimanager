@@ -34,7 +34,7 @@ func SetupSignalHandler(shutdownFunc func(bool)) {
 				sig := <-usrDefSignalChan
 				if sig == syscall.SIGUSR1 {
 					stackLen := runtime.Stack(buf, true)
-					getLogger().Printf("\n=== Got signal [%s] to dump goroutine stack. ===\n%s\n=== Finished dumping goroutine stack. ===\n", sig, buf[:stackLen])
+					getLogger().Printf("\n=== Got signal %s to dump goroutine stack. ===\n%s\n=== Finished dumping goroutine stack. ===\n", sig, buf[:stackLen])
 				}
 			}
 		}()

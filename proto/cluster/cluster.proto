@@ -2,70 +2,87 @@ syntax = "proto3";
 
 import "common.proto";
 import "softwarespec.proto";
-import "database.proto";
 import "mng_auth.proto";
-import "mng_host.proto";
 import "mng_allocation.proto";
 option go_package = "./clusterpb/;clusterpb";
 
 service ClusterService {
     // Cluster manager module
-    rpc CreateCluster(ClusterCreateReqDTO) returns (ClusterCreateRespDTO);
-    rpc QueryCluster(ClusterQueryReqDTO) returns (ClusterQueryRespDTO);
-    rpc DeleteCluster(ClusterDeleteReqDTO) returns (ClusterDeleteRespDTO);
-    rpc DetailCluster(ClusterDetailReqDTO) returns (ClusterDetailRespDTO);
-    rpc RestartCluster(ClusterRestartReqDTO) returns (ClusterRestartRespDTO);
-    rpc StopCluster(ClusterStopReqDTO) returns (ClusterStopRespDTO);
-    rpc TakeoverClusters(ClusterTakeoverReqDTO) returns (ClusterTakeoverRespDTO);
+    rpc CreateCluster(RpcRequest) returns (RpcResponse);
+    rpc QueryCluster(RpcRequest) returns (RpcResponse);
+    rpc DeleteCluster(RpcRequest) returns (RpcResponse);
+    rpc DetailCluster(RpcRequest) returns (RpcResponse);
+    rpc RestartCluster(RpcRequest) returns (RpcResponse);
+    rpc StopCluster(RpcRequest) returns (RpcResponse);
+    rpc TakeoverClusters(RpcRequest) returns (RpcResponse);
+    rpc ScaleOutCluster(RpcRequest) returns (RpcResponse);
+    rpc ScaleInCluster(RpcRequest) returns (RpcResponse);
+    rpc CloneCluster(RpcRequest) returns (RpcResponse);
 
-    rpc ImportData(DataImportRequest) returns (DataImportResponse);
-    rpc ExportData(DataExportRequest) returns (DataExportResponse);
-    rpc DescribeDataTransport(DataTransportQueryRequest) returns (DataTransportQueryResponse);
-    rpc DeleteDataTransportRecord(DataTransportDeleteRequest) returns (DataTransportDeleteResponse);
+    rpc ImportData(RpcRequest) returns (RpcResponse);
+    rpc ExportData(RpcRequest) returns (RpcResponse);
+    rpc QueryDataTransport(RpcRequest) returns (RpcResponse);
+    rpc DeleteDataTransportRecord(RpcRequest) returns (RpcResponse);
 
-    rpc QueryBackupRecord(QueryBackupRequest) returns (QueryBackupResponse);
-    rpc CreateBackup(CreateBackupRequest) returns (CreateBackupResponse);
-    rpc RecoverCluster(RecoverRequest) returns (RecoverResponse);
-    rpc DeleteBackupRecord(DeleteBackupRequest) returns (DeleteBackupResponse);
-    rpc SaveBackupStrategy(SaveBackupStrategyRequest) returns (SaveBackupStrategyResponse);
-    rpc GetBackupStrategy(GetBackupStrategyRequest) returns (GetBackupStrategyResponse);
+    rpc QueryClusterLog(RpcRequest) returns (RpcResponse);
 
-    rpc QueryParameters(QueryClusterParametersRequest) returns (QueryClusterParametersResponse);
-    rpc SaveParameters(SaveClusterParametersRequest) returns (SaveClusterParametersResponse);
+    rpc QueryBackupRecords(RpcRequest) returns (RpcResponse);
+    rpc CreateBackup(RpcRequest) returns (RpcResponse);
+    rpc RestoreNewCluster(RpcRequest) returns (RpcResponse);
+    rpc DeleteBackupRecords(RpcRequest) returns (RpcResponse);
+    rpc SaveBackupStrategy(RpcRequest) returns (RpcResponse);
+    rpc GetBackupStrategy(RpcRequest) returns (RpcResponse);
 
-    rpc DescribeDashboard(DescribeDashboardRequest) returns (DescribeDashboardResponse);
-    rpc DescribeMonitor(DescribeMonitorRequest) returns (DescribeMonitorResponse);
+    rpc GetDashboardInfo(RpcRequest) returns (RpcResponse);
+    rpc GetMonitorInfo(RpcRequest) returns (RpcResponse);
 
     // Auth manager module
-    rpc Login(LoginRequest) returns (LoginResponse);
-    rpc Logout(LogoutRequest) returns (LogoutResponse);
-    rpc VerifyIdentity(VerifyIdentityRequest) returns (VerifyIdentityResponse);
+    rpc Login(RpcRequest) returns (RpcResponse);
+    rpc Logout(RpcRequest) returns (RpcResponse);
+    rpc VerifyIdentity(RpcRequest) returns (RpcResponse);
 
-    // host manager module
-    rpc ImportHost(ImportHostRequest) returns (ImportHostResponse);
-    rpc ImportHostsInBatch(ImportHostsInBatchRequest) returns (ImportHostsInBatchResponse);
-    rpc RemoveHost(RemoveHostRequest) returns (RemoveHostResponse);
-    rpc RemoveHostsInBatch(RemoveHostsInBatchRequest) returns (RemoveHostsInBatchResponse);
-    rpc ListHost(ListHostsRequest) returns (ListHostsResponse);
-    rpc CheckDetails(CheckDetailsRequest) returns (CheckDetailsResponse);
-    rpc AllocHosts(AllocHostsRequest) returns (AllocHostResponse);
-    rpc GetFailureDomain(GetFailureDomainRequest) returns (GetFailureDomainResponse);
-    rpc AllocResourcesInBatch(BatchAllocRequest) returns (BatchAllocResponse);
-    rpc RecycleResources(RecycleRequest) returns (RecycleResponse);
-    rpc UpdateHostStatus(UpdateHostStatusRequest) returns (UpdateHostStatusResponse);
-    rpc ReserveHost(ReserveHostRequest) returns (ReserveHostResponse);
-    rpc GetHierarchy(GetHierarchyRequest) returns (GetHierarchyResponse);
-    rpc GetStocks(GetStocksRequest) returns (GetStocksResponse);
+    // resource manager module
+    rpc ImportHosts(RpcRequest) returns (RpcResponse);
+    rpc DeleteHosts(RpcRequest) returns (RpcResponse);
+    rpc QueryHosts(RpcRequest) returns (RpcResponse);
+    rpc UpdateHostReserved(RpcRequest) returns (RpcResponse);
+    rpc UpdateHostStatus(RpcRequest) returns (RpcResponse);
+    rpc GetHierarchy(RpcRequest) returns (RpcResponse);
+    rpc GetStocks(RpcRequest) returns (RpcResponse);
 
-    // task manager
-    rpc ListFlows(ListFlowsRequest) returns (ListFlowsResponse);
-    rpc DetailFlow(DetailFlowRequest) returns (DetailFlowsResponse);
+    // workflow
+    rpc ListFlows(RpcRequest) returns (RpcResponse);
+    rpc DetailFlow(RpcRequest) returns (RpcResponse);
+
+    // Parameter Group & Cluster Parameters
+    rpc CreateParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc UpdateParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc DeleteParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc QueryParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc DetailParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc ApplyParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc CopyParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc QueryClusterParameters(RpcRequest) returns (RpcResponse);
+    rpc UpdateClusterParameters(RpcRequest) returns (RpcResponse);
+    rpc InspectClusterParameters(RpcRequest) returns (RpcResponse);
+
+    // change feed task
+    rpc CreateChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc PauseChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc ResumeChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc DeleteChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc UpdateChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc QueryChangeFeedTasks(RpcRequest) returns (RpcResponse);
+
+    // system config
+    rpc GetSystemConfig(RpcRequest) returns (RpcResponse);
 }
 
 message ClusterCreateReqDTO {
     OperatorDTO operator = 1;
     ClusterBaseInfoDTO cluster = 2;
-    repeated ClusterNodeDemandDTO demands = 3;
+    ClusterCommonDemandDTO commonDemand = 3;
+    repeated ClusterNodeDemandDTO demands = 4;
 }
 
 message ClusterCreateRespDTO {
@@ -74,6 +91,7 @@ message ClusterCreateRespDTO {
     ClusterBaseInfoDTO baseInfo = 3;
     DisplayStatusDTO clusterStatus = 4;
 }
+
 message ClusterTakeoverReqDTO {
     OperatorDTO operator = 1;
     string tiupIp = 2;
@@ -89,22 +107,6 @@ message ClusterTakeoverRespDTO {
     repeated ClusterDisplayDTO clusters = 2;
 }
 
-message ClusterQueryReqDTO {
-    OperatorDTO operator = 1;
-    PageDTO pageReq = 2;
-    string clusterId = 3;
-    string clusterName = 4;
-    string clusterType = 5;
-    string clusterStatus = 6;
-    string clusterTag = 7;
-}
-
-message ClusterQueryRespDTO {
-    ResponseStatusDTO respStatus = 1;
-    PageDTO page = 2;
-    repeated ClusterDisplayDTO clusters = 3;
-}
-
 message ClusterDeleteReqDTO {
     OperatorDTO operator = 1;
     string clusterId = 2;
@@ -114,18 +116,6 @@ message ClusterDeleteRespDTO {
     ResponseStatusDTO respStatus = 1;
     string clusterId = 2;
     DisplayStatusDTO clusterStatus = 3;
-}
-
-message ClusterDetailReqDTO {
-    OperatorDTO operator = 1;
-    string clusterId = 2;
-}
-
-message ClusterDetailRespDTO {
-    ResponseStatusDTO respStatus = 1;
-    ClusterDisplayDTO displayInfo = 2;
-    ClusterMaintenanceDTO maintenanceInfo = 3;
-    repeated ComponentInstanceDTO components = 4;
 }
 
 message ClusterRestartReqDTO {
@@ -148,15 +138,6 @@ message ClusterStopRespDTO {
     ResponseStatusDTO respStatus = 1;
     string clusterId = 2;
     DisplayStatusDTO clusterStatus = 3;
-}
-
-message ClusterMaintenanceDTO {
-    string maintainTaskCron = 1;
-}
-
-message ComponentInstanceDTO {
-    ComponentBaseInfoDTO baseInfo = 1;
-    repeated ComponentNodeDisplayInfoDTO nodes = 2;
 }
 
 message ComponentNodeDisplayInfoDTO {
@@ -209,6 +190,12 @@ message RecoverInfoDTO {
     int64 backupRecordId = 2;
 }
 
+message ClusterCommonDemandDTO {
+    bool exclusive = 1;
+    string region = 2;
+    string cpuArchitecture = 3;
+}
+
 message ClusterBaseInfoDTO {
     string clusterName = 1;
     string dbPassword = 2;
@@ -230,7 +217,6 @@ message DistributionItemDTO {
     string specCode = 2;
     int32  count = 3;
 }
-
 message ClusterDisplayDTO {
     string clusterId = 1;
     ClusterBaseInfoDTO baseInfo = 2;
@@ -260,8 +246,9 @@ message BackupRecordDTO {
     string backupMode = 7;
     OperatorDTO operator = 8;
     float size = 9;
-    DisplayStatusDTO displayStatus = 10;
-    string filePath = 11;
+    uint64 backupTso = 10;
+    DisplayStatusDTO displayStatus = 11;
+    string filePath = 12;
 }
 
 message QueryBackupRequest {
@@ -294,7 +281,8 @@ message CreateBackupResponse {
 message RecoverRequest {
     OperatorDTO operator = 1;
     ClusterBaseInfoDTO cluster = 2;
-    repeated ClusterNodeDemandDTO demands = 3;
+    ClusterCommonDemandDTO commonDemand = 3;
+    repeated ClusterNodeDemandDTO demands = 4;
 }
 
 message RecoverResponse {

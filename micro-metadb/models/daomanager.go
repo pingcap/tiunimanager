@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -22,13 +21,18 @@ import (
 	cryrand "crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"time"
+
+	"strconv"
+
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
+	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
+	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gormLog "gorm.io/gorm/logger"
-	"time"
 
 	"github.com/pingcap/errors"
 
@@ -37,18 +41,19 @@ import (
 
 type DAOManager struct {
 	db              *gorm.DB
-	daoLogger 		gormLog.Interface
+	daoLogger       gormLog.Interface
 	tables          map[string]interface{}
 	clusterManager  *DAOClusterManager
 	accountManager  *DAOAccountManager
 	resourceManager *DAOResourceManager
+	paramManager    *DAOParamManager
 }
 
 func NewDAOManager(fw *framework.BaseFramework) *DAOManager {
 	m := new(DAOManager)
 	m.daoLogger = &DaoLogger{
-		p: fw,
-		SlowThreshold: 100 * time.Millisecond,
+		p:             fw,
+		SlowThreshold: common.SlowSqlThreshold,
 	}
 	return m
 }
@@ -77,6 +82,14 @@ func (dao *DAOManager) SetResourceManager(resourceManager *DAOResourceManager) {
 	dao.resourceManager = resourceManager
 }
 
+func (dao *DAOManager) ParamManager() *DAOParamManager {
+	return dao.paramManager
+}
+
+func (dao *DAOManager) SetParamManager(paramManager *DAOParamManager) {
+	dao.paramManager = paramManager
+}
+
 func (dao *DAOManager) Db() *gorm.DB {
 	return dao.db
 }
@@ -87,6 +100,65 @@ func (dao *DAOManager) SetDb(db *gorm.DB) {
 
 func (dao *DAOManager) Tables() map[string]interface{} {
 	return dao.tables
+}
+
+const StartTime = "StartTime"
+
+func (dao *DAOManager) InitMetrics() {
+	framework.LogForkFile(common.LogFileSystem).Infof("init sqlite metrics")
+
+	before := func(db *gorm.DB) {
+		db.InstanceSet(StartTime, time.Now())
+	}
+
+	after := func(method string, db *gorm.DB) {
+		code := db.Error == nil
+
+		framework.Current.GetMetrics().SqliteRequestsCounterMetric.With(prometheus.Labels{
+			metrics.ServiceLabel: db.Name(),
+			metrics.MethodLabel:  method,
+			metrics.CodeLabel:    strconv.FormatBool(code)}).
+			Inc()
+
+		startTime, ok := db.InstanceGet(StartTime)
+
+		if ok {
+			duration := time.Since(startTime.(time.Time)).Milliseconds()
+			framework.Current.GetMetrics().SqliteDurationHistogramMetric.With(prometheus.Labels{
+				metrics.ServiceLabel: db.Name(),
+				metrics.MethodLabel:  method,
+				metrics.CodeLabel:    strconv.FormatBool(code)}).
+				Observe(float64(duration))
+
+			if duration > common.SlowSqlThreshold {
+				framework.Current.GetMetrics().SqliteRequestsCounterMetric.With(prometheus.Labels{
+					metrics.ServiceLabel: db.Name(),
+					metrics.MethodLabel:  method,
+					metrics.CodeLabel:    "slow"}).
+					Inc()
+			}
+		}
+
+	}
+	dao.db.Callback().Create().Before("gorm:before_create").Register("metrics_before_create", before)
+	dao.db.Callback().Create().After("gorm:after_create").Register("metrics_after_create", func(db *gorm.DB) {
+		after("Create", db)
+	})
+
+	dao.db.Callback().Query().Before("gorm:before_query").Register("metrics_before_query", before)
+	dao.db.Callback().Query().After("gorm:after_query").Register("metrics_after_query", func(db *gorm.DB) {
+		after("Query", db)
+	})
+
+	dao.db.Callback().Delete().Before("gorm:before_delete").Register("metrics_before_delete", before)
+	dao.db.Callback().Delete().After("gorm:after_delete").Register("metrics_after_delete", func(db *gorm.DB) {
+		after("Delete", db)
+	})
+
+	dao.db.Callback().Update().Before("gorm:before_update").Register("metrics_before_update", before)
+	dao.db.Callback().Update().After("gorm:after_update").Register("metrics_after_update", func(db *gorm.DB) {
+		after("Update", db)
+	})
 }
 
 func (dao *DAOManager) InitDB(dataDir string) error {
@@ -106,6 +178,7 @@ func (dao *DAOManager) InitDB(dataDir string) error {
 	dao.SetAccountManager(NewDAOAccountManager(dao.Db()))
 	dao.SetClusterManager(NewDAOClusterManager(dao.Db()))
 	dao.SetResourceManager(NewDAOResourceManager(dao.Db()))
+	dao.SetParamManager(NewDAOParamManager(dao.Db()))
 
 	return err
 }
@@ -131,6 +204,7 @@ func (dao *DAOManager) InitTables() error {
 	dao.AddTable(TABLE_NAME_USED_COMPUTE, new(resource.UsedCompute))
 	dao.AddTable(TABLE_NAME_USED_PORT, new(resource.UsedPort))
 	dao.AddTable(TABLE_NAME_USED_DISK, new(resource.UsedDisk))
+	dao.AddTable(TABLE_NAME_LABEL, new(resource.Label))
 	dao.AddTable(TABLE_NAME_TIUP_CONFIG, new(TopologyConfig))
 	dao.AddTable(TABLE_NAME_TIUP_TASK, new(TiupTask))
 	dao.AddTable(TABLE_NAME_FLOW, new(FlowDO))
@@ -140,6 +214,11 @@ func (dao *DAOManager) InitTables() error {
 	dao.AddTable(TABLE_NAME_TRANSPORT_RECORD, new(TransportRecord))
 	dao.AddTable(TABLE_NAME_RECOVER_RECORD, new(RecoverRecord))
 	dao.AddTable(TABLE_NAME_COMPONENT_INSTANCE, new(ComponentInstance))
+	dao.AddTable(TABLE_NAME_PARAM, new(ParamDO))
+	dao.AddTable(TABLE_NAME_PARAM_GROUP, new(ParamGroupDO))
+	dao.AddTable(TABLE_NAME_PARAM_GROUP_MAP, new(ParamGroupMapDO))
+	dao.AddTable(TABLE_NAME_CLUSTER_PARAM_MAP, new(ClusterParamMapDO))
+	dao.AddTable(TABLE_NAME_CLUSTER_RELATION, new(ClusterRelation))
 
 	log.Info("create TiEM all tables successful.")
 	return nil
@@ -154,9 +233,9 @@ func (dao *DAOManager) InitData() error {
 
 	innerLog.Infof(" initialization system default data successful")
 
-	//err = dao.initResourceDataForDev()
+	err = dao.initSystemDefaultLabels()
 	if nil != err {
-		innerLog.Errorf("initialize TiEM system test resource failed, error: %v", err)
+		innerLog.Errorf("init system default labels failed, %v\n", err)
 	}
 	return err
 }
@@ -180,7 +259,7 @@ Initial TiEM system default system account and tenant information
 func (dao *DAOManager) initSystemDefaultData() error {
 	accountManager := dao.AccountManager()
 	log := framework.LogForkFile(common.LogFileSystem)
-	rt, err := accountManager.AddTenant(context.TODO(), "TiEM system administration", 1, 0)
+	rt, err := accountManager.AddTenant(context.TODO(), "EM system administration", 1, 0)
 	framework.AssertNoErr(err)
 	role1, err := accountManager.AddRole(context.TODO(), rt.ID, "administrators", "administrators", 0)
 	framework.AssertNoErr(err)
@@ -221,15 +300,29 @@ func (dao *DAOManager) initSystemDefaultData() error {
 	return err
 }
 
-func (dao *DAOManager) InitResourceDataForDev() error {
+func (dao *DAOManager) initSystemDefaultLabels() (err error) {
+	resourceManager := dao.ResourceManager()
 	log := framework.LogForkFile(common.LogFileSystem)
+	err = resourceManager.InitSystemDefaultLabels(context.TODO())
+	if err != nil {
+		log.Debugf("init system default labels failed, %v\n", err)
+		return err
+	}
+	log.Debugln("init system default labels succeed")
+	return nil
+}
+
+func (dao *DAOManager) InitResourceDataForDev(region, zone, rack, hostIp1, hostIp2, hostIp3 string) error {
+	log := framework.LogForkFile(common.LogFileSystem)
+	zoneCode := resource.GenDomainCodeByName(region, zone)
+	rackCode := resource.GenDomainCodeByName(zoneCode, rack)
 	id1, err := dao.ResourceManager().CreateHost(context.TODO(), &resource.Host{
 		HostName:     "TEST_HOST1",
-		IP:           "168.168.168.1",
+		IP:           hostIp1,
 		UserName:     "root",
 		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:       0,
-		Arch:         string(resource.X86),
+		Arch:         string(resource.X86_64),
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
 		CpuCores:     16,
@@ -237,10 +330,10 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 		FreeCpuCores: 16,
 		FreeMemory:   64,
 		Nic:          "1GE",
-		Region:       "Region1",
-		AZ:           "Zone1",
-		Rack:         "3-1",
-		Purpose:      string(resource.General),
+		Region:       region,
+		AZ:           zoneCode,
+		Rack:         rackCode,
+		Purpose:      string(resource.Compute),
 		DiskType:     string(resource.Sata),
 		Reserved:     false,
 		Disks: []resource.Disk{
@@ -256,11 +349,11 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 	}
 	id2, err := dao.ResourceManager().CreateHost(context.TODO(), &resource.Host{
 		HostName:     "TEST_HOST2",
-		IP:           "168.168.168.2",
+		IP:           hostIp2,
 		UserName:     "root",
 		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:       0,
-		Arch:         string(resource.X86),
+		Arch:         string(resource.X86_64),
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
 		CpuCores:     16,
@@ -268,10 +361,10 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 		FreeCpuCores: 16,
 		FreeMemory:   64,
 		Nic:          "1GE",
-		Region:       "Region1",
-		AZ:           "Zone1",
-		Rack:         "3-1",
-		Purpose:      string(resource.General),
+		Region:       region,
+		AZ:           zoneCode,
+		Rack:         rackCode,
+		Purpose:      string(resource.Compute),
 		DiskType:     string(resource.Sata),
 		Reserved:     false,
 		Disks: []resource.Disk{
@@ -287,22 +380,22 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 	}
 	id3, err := dao.ResourceManager().CreateHost(context.TODO(), &resource.Host{
 		HostName:     "TEST_HOST3",
-		IP:           "168.168.168.3",
+		IP:           hostIp3,
 		UserName:     "root",
 		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:       0,
-		Arch:         string(resource.X86),
+		Arch:         string(resource.X86_64),
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
-		CpuCores:     16,
-		Memory:       64,
-		FreeCpuCores: 16,
-		FreeMemory:   64,
+		CpuCores:     12,
+		Memory:       24,
+		FreeCpuCores: 12,
+		FreeMemory:   24,
 		Nic:          "1GE",
-		Region:       "Region1",
-		AZ:           "Zone1",
-		Rack:         "3-1",
-		Purpose:      string(resource.General),
+		Region:       region,
+		AZ:           zoneCode,
+		Rack:         rackCode,
+		Purpose:      string(resource.Compute),
 		DiskType:     string(resource.Sata),
 		Reserved:     false,
 		Disks: []resource.Disk{

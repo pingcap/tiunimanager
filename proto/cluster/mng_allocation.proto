@@ -10,6 +10,7 @@ message AllocResponseStatus {
 message Applicant {
 	string holderId = 1;
 	string requestId = 2;
+	bool takeoverOperation = 3;
 }
 
 message Location {
@@ -27,6 +28,7 @@ message Filter {
 	string arch = 1;
 	string purpose  = 2;
 	string diskType = 3;
+	int64 hostTraits = 4;
 }
 
 message ComputeRequirement {
@@ -116,7 +118,7 @@ message RecycleRequire {
 	string hostId = 4;
 	string hostIp = 5;
 	ComputeRequirement computeReq = 6;
-	DiskResource diskReq = 7;
+	repeated DiskResource diskReq = 7;
 	repeated PortResource portReq = 8;
 }
 

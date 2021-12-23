@@ -20,6 +20,13 @@ enum TiupTaskType {
 	Restore = 7;
 	Restart = 8;
 	Stop = 9;
+	Transfer = 10;
+	Upgrade = 11;
+	ScaleOut = 12;
+	ScaleIn = 13;
+	EditGlobalConfig = 14;
+	EditInstanceConfig = 15;
+	Reload = 16;
 }
 
 message TiupTask {

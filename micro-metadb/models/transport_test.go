@@ -96,7 +96,7 @@ func TestDAOClusterManager_ListTransportRecord(t *testing.T) {
 	assert.Equal(t, 44, id)
 	assert.NoError(t, err)
 
-	_, _, err = Dao.ClusterManager().ListTransportRecord(context.TODO(), record.ClusterId, 44, 0, 10)
+	_, _, err = Dao.ClusterManager().ListTransportRecord(context.TODO(), record.ClusterId, 44, false, 0, 0, 0, 10)
 	assert.NoError(t, err)
 }
 

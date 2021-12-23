@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -18,6 +17,7 @@
 package domain
 
 import (
+	ctx "context"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -25,4 +25,99 @@ import (
 func Test_defaultContextParser(t *testing.T) {
 	ctx := defaultContextParser("")
 	assert.NotNil(t, ctx)
+}
+
+func TestInitFlowMap(t *testing.T) {
+	current := FlowWorkDefineMap
+	defer func() {
+		FlowWorkDefineMap = current
+	}()
+	InitFlowMap()
+	assert.LessOrEqual(t, 10, len(FlowWorkDefineMap))
+}
+
+func TestClusterEndWithPersist(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		task := &TaskEntity{
+			Id: 123,
+		}
+		flowCtx := NewFlowContext(ctx.TODO())
+		agg := &ClusterAggregation{
+			Cluster:        &Cluster{WorkFlowId: 999},
+			ConfigModified: false,
+			FlowModified:   false,
+		}
+		flowCtx.SetData(contextClusterKey, agg)
+		ret := CompositeExecutor(clusterEnd, clusterPersist)(task, flowCtx)
+
+		assert.Equal(t, true, ret)
+		assert.Equal(t, 0, int(agg.Cluster.WorkFlowId))
+		assert.Equal(t, true, agg.FlowModified)
+		assert.Equal(t, TaskStatusFinished, task.Status)
+	})
+}
+
+func TestClusterEnd(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		task := &TaskEntity{
+			Id: 123,
+		}
+		flowCtx := NewFlowContext(ctx.TODO())
+		agg := &ClusterAggregation{
+			Cluster:        &Cluster{WorkFlowId: 999},
+			ConfigModified: false,
+			FlowModified:   false,
+		}
+		flowCtx.SetData(contextClusterKey, agg)
+		ret := clusterEnd(task, flowCtx)
+
+		assert.Equal(t, true, ret)
+		assert.Equal(t, 0, int(agg.Cluster.WorkFlowId))
+		assert.Equal(t, true, agg.FlowModified)
+		assert.Equal(t, TaskStatusFinished, task.Status)
+
+	})
+}
+
+func TestClusterFailWithPersist(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		task := &TaskEntity{
+			Id: 123,
+		}
+		flowCtx := NewFlowContext(ctx.TODO())
+		agg := &ClusterAggregation{
+			Cluster:        &Cluster{WorkFlowId: 999},
+			ConfigModified: false,
+			FlowModified:   false,
+		}
+		flowCtx.SetData(contextClusterKey, agg)
+		ret := CompositeExecutor(clusterFail, clusterPersist)(task, flowCtx)
+
+		assert.Equal(t, true, ret)
+		assert.Equal(t, 0, int(agg.Cluster.WorkFlowId))
+		assert.Equal(t, true, agg.FlowModified)
+		assert.Equal(t, TaskStatusError, task.Status)
+	})
+}
+
+func TestClusterFail(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		task := &TaskEntity{
+			Id: 123,
+		}
+		flowCtx := NewFlowContext(ctx.TODO())
+		agg := &ClusterAggregation{
+			Cluster:        &Cluster{WorkFlowId: 999},
+			ConfigModified: false,
+			FlowModified:   false,
+		}
+		flowCtx.SetData(contextClusterKey, agg)
+		ret := clusterFail(task, flowCtx)
+
+		assert.Equal(t, true, ret)
+		assert.Equal(t, 0, int(agg.Cluster.WorkFlowId))
+		assert.Equal(t, true, agg.FlowModified)
+		assert.Equal(t, TaskStatusError, task.Status)
+
+	})
 }

@@ -75,7 +75,7 @@ func Log() *log.Entry {
 
 func LogWithContext(ctx context.Context) *log.Entry {
 	id := GetTraceIDFromContext(ctx)
-	return GetRootLogger().defaultLogEntry.WithField(TiEM_X_TRACE_ID_NAME, id)
+	return GetRootLogger().defaultLogEntry.WithField(TiEM_X_TRACE_ID_KEY, id)
 }
 
 func LogForkFile(fileName string) *log.Entry {
@@ -111,6 +111,7 @@ type BaseFramework struct {
 func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFramework {
 	f := new(BaseFramework)
 
+	Current = f
 	f.args = &ClientArgs{
 		Host:               "127.0.0.1",
 		Port:               4116,
@@ -135,20 +136,18 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 		},
 	}
 
-	Current = f
-
 	return f
 }
 
 func InitBaseFrameworkFromArgs(serviceName ServiceNameEnum, opts ...Opt) *BaseFramework {
 	f := new(BaseFramework)
+	Current = f
 
 	f.acceptArgs()
 	f.parseArgs(serviceName)
 
 	f.initOpts = opts
 	f.Init()
-	Current = f
 
 	f.initEtcdClient()
 	f.initElasticsearchClient()
@@ -285,7 +284,7 @@ func (b *BaseFramework) Log() *log.Entry {
 
 func (b *BaseFramework) LogWithContext(ctx context.Context) *log.Entry {
 	id := GetTraceIDFromContext(ctx)
-	return b.Log().WithField(TiEM_X_TRACE_ID_NAME, id)
+	return b.Log().WithField(TiEM_X_TRACE_ID_KEY, id)
 }
 
 func (b *BaseFramework) GetTracer() *Tracer {
@@ -332,14 +331,13 @@ func (b *BaseFramework) prometheusBoot() {
 		SetToCurrentTime()
 
 	http.Handle("/metrics", promhttp.Handler())
-	// 启动web服务，监听8085端口
 	go func() {
 		metricsPort := b.GetClientArgs().MetricsPort
 		if metricsPort <= 0 {
 			metricsPort = common.DefaultMetricsPort
 		}
 		LogForkFile(common.LogFileSystem).Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
-		err := http.ListenAndServe(common.LocalAddress+":"+strconv.Itoa(metricsPort), nil)
+		err := http.ListenAndServe("0.0.0.0:"+strconv.Itoa(metricsPort), nil)
 		if err != nil {
 			Log().Errorf("prometheus listen and serve error: %v", err)
 			panic("ListenAndServe: " + err.Error())

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -20,6 +19,8 @@ package knowledge
 import (
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestClusterComponentFromCode(t *testing.T) {
@@ -116,10 +117,10 @@ func Test_GetComponentPortRange(t *testing.T) {
 	}{
 		{"Get4_0_12_TiDB_PortRange", args{"TiDB", "v4.0.12", "TiDB"}, &ComponentPortConstraint{10000, 10020, 2}},
 		{"Get4_0_12_TiKV_PortRange", args{"TiDB", "v4.0.12", "TiKV"}, &ComponentPortConstraint{10020, 10040, 2}},
-		{"Get4_0_12_PD_PortRange", args{"TiDB", "v4.0.12", "PD"}, &ComponentPortConstraint{10040, 10060, 2}},
+		{"Get4_0_12_PD_PortRange", args{"TiDB", "v4.0.12", "PD"}, &ComponentPortConstraint{10040, 10120, 8}},
 		{"Get5_0_0_TiDB_PortRange", args{"TiDB", "v5.0.0", "TiDB"}, &ComponentPortConstraint{10000, 10020, 2}},
 		{"Get5_0_0_TiKV_PortRange", args{"TiDB", "v5.0.0", "TiKV"}, &ComponentPortConstraint{10020, 10040, 2}},
-		{"Get5_0_0_PD_PortRange", args{"TiDB", "v5.0.0", "PD"}, &ComponentPortConstraint{10040, 10060, 2}},
+		{"Get5_0_0_PD_PortRange", args{"TiDB", "v5.0.0", "PD"}, &ComponentPortConstraint{10040, 10120, 8}},
 		{"Get5_0_0_PD_PortRange_WrongClusterCode", args{"XXXTiDB", "v5.0.0", "PD"}, nil},
 		{"Get5_0_0_PD_PortRange_WrongVersionCode", args{"TiDB", "v2.9.99", "PD"}, nil},
 		{"Get5_0_0_PD_PortRange_WrongComponentType", args{"TiDB", "v5.0.0", "PDD"}, nil},
@@ -128,6 +129,50 @@ func Test_GetComponentPortRange(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := GetComponentPortRange(tt.args.typeCode, tt.args.versionCode, tt.args.componentType); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetComponentPortRange() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetMonitoredSequence(t *testing.T) {
+	port1 := GetMonitoredSequence("aaa")
+	port2 := GetMonitoredSequence("aaa")
+	assert.Equal(t, port1, port2)
+
+	port3 := GetMonitoredSequence("bbb")
+
+	port4 := GetMonitoredSequence("ccc")
+
+	port5 := GetMonitoredSequence("ddd")
+
+	assert.NotEqual(t, port1, port3)
+	assert.NotEqual(t, port1, port4)
+	assert.NotEqual(t, port1, port5)
+	assert.NotEqual(t, port3, port4)
+	assert.NotEqual(t, port3, port5)
+	assert.NotEqual(t, port4, port5)
+
+}
+
+func Test_GetClusterPortRange(t *testing.T) {
+	type args struct {
+		typeCode    string
+		versionCode string
+	}
+	tests := []struct {
+		name string
+		args args
+		want *ComponentPortConstraint
+	}{
+		{"Get4_0_12_Cluster_PortRange", args{"TiDB", "v4.0.12"}, &ComponentPortConstraint{11000, 12000, 2}},
+		{"Get5_0_0_Cluster_PortRange", args{"TiDB", "v5.0.0"}, &ComponentPortConstraint{11000, 12000, 2}},
+		{"Get_Cluster_PortRange_WrongClusterCode", args{"XXXTiDB", "v5.0.0"}, nil},
+		{"Get_Cluster_PortRange_WrongVersionCode", args{"TiDB", "v2.9.99"}, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetClusterPortRange(tt.args.typeCode, tt.args.versionCode); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetClusterPortRange() = %v, want %v", got, tt.want)
 			}
 		})
 	}

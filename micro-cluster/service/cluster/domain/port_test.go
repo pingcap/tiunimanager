@@ -84,6 +84,10 @@ func (m MockClusterRepo) Persist(ctx context.Context, aggregation *ClusterAggreg
 	return nil
 }
 
+func (c MockClusterRepo) PersistStatus(ctx context.Context, aggregation *ClusterAggregation) error {
+	return nil
+}
+
 func (m MockClusterRepo) Load(ctx context.Context, id string) (cluster *ClusterAggregation, err error) {
 	return &ClusterAggregation{
 		Cluster: &Cluster{
@@ -110,7 +114,39 @@ func (m MockClusterRepo) Load(ctx context.Context, id string) (cluster *ClusterA
 }
 
 func (m MockClusterRepo) Query(ctx context.Context, clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*ClusterAggregation, int, error) {
-	panic("implement me")
+	clusters := make([]*ClusterAggregation, 1)
+	clusters[0] = &ClusterAggregation{
+		Cluster: &Cluster{
+			Id:          "testCluster",
+			ClusterName: "testCluster",
+		},
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
+			ConfigModel: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host:      "127.0.0.1",
+						DeployDir: "/mnt/sda/testCluster/tidb-deploy",
+						LogDir:    "testCluster/tidb-log",
+					},
+				},
+				PDServers: []*spec.PDSpec{
+					{
+						Host:      "127.0.0.2",
+						DeployDir: "/mnt/sda/testCluster/pd-deploy",
+						LogDir:    "testCluster/tidb-log",
+					},
+				},
+				TiKVServers: []*spec.TiKVSpec{
+					{
+						Host:      "127.0.0.3",
+						DeployDir: "/mnt/sda/testCluster/tikv-deploy",
+						LogDir:    "testCluster/tidb-log",
+					},
+				},
+			},
+		},
+	}
+	return clusters, len(clusters), nil
 }
 
 type MockInstanceRepo struct{}

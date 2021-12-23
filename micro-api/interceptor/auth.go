@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -18,9 +17,14 @@
 package interceptor
 
 import (
+	"encoding/json"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/file-server/controller"
+	"github.com/pingcap-inc/tiem/message"
+	"net/http"
+
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
@@ -36,7 +40,6 @@ type VisitorIdentity struct {
 }
 
 func VerifyIdentity(c *gin.Context) {
-
 	bearerTokenStr := c.GetHeader("Authorization")
 
 	tokenString, err := utils.GetTokenFromBearer(bearerTokenStr)
@@ -44,23 +47,28 @@ func VerifyIdentity(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, err.Error())
 	}
 
-	path := c.Request.URL
-	req := clusterpb.VerifyIdentityRequest{TokenString: tokenString, Path: path.String()}
+	req := message.AccessibleReq {
+		TokenString: tokenString,
+	}
 
-	result, err := client.ClusterClient.VerifyIdentity(framework.NewMicroCtxFromGinCtx(c), &req)
+	body, err := json.Marshal(req)
+	rpcResp, err := client.ClusterClient.VerifyIdentity(framework.NewMicroCtxFromGinCtx(c), &clusterpb.RpcRequest{Request: string(body)}, controller.DefaultTimeout)
+
 	if err != nil {
 		c.Error(err)
 		c.Status(http.StatusInternalServerError)
 		c.Abort()
-	} else if result.Status.Code != 0 {
-		c.Status(int(result.Status.Code))
+	} else if rpcResp.Code != int32(errors.TIEM_SUCCESS) {
+		framework.LogWithContext(c).Error(rpcResp.Message)
+		c.Status(errors.EM_ERROR_CODE(rpcResp.Code).GetHttpCode())
 		c.Abort()
 	} else {
-		c.Set(VisitorIdentityKey, &VisitorIdentity{
-			AccountId:   result.AccountId,
-			AccountName: result.AccountName,
-			TenantId:    result.TenantId,
-		})
+		var result message.AccessibleResp
+		err = json.Unmarshal([]byte(rpcResp.Response), &result)
+
+		c.Set(framework.TiEM_X_USER_ID_KEY, result.AccountID)
+		c.Set(framework.TiEM_X_USER_NAME_KEY, result.AccountName)
+		c.Set(framework.TiEM_X_TENANT_ID_KEY, result.TenantID)
 		c.Next()
 	}
 }

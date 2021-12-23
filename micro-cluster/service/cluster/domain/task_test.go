@@ -20,6 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/golang/mock/gomock"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/test/mocksecondparty"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
@@ -51,8 +55,8 @@ func initFlow() {
 			TaskNodes: map[string]*TaskDefine{
 				"start":     {"doStart", "startDone", "fail", SyncFuncTask, testStart},
 				"startDone": {"doSomething", "done", "fail", SyncFuncTask, testDoing},
-				"done":      {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail":      {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done":      {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail":      {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -65,8 +69,8 @@ func initFlow() {
 			TaskNodes: map[string]*TaskDefine{
 				"start":     {"doStart", "startDone", "fail", CallbackTask, testStart},
 				"startDone": {"doSomething", "done", "fail", SyncFuncTask, testDoing},
-				"done":      {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail":      {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done":      {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail":      {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -79,7 +83,7 @@ func initFlow() {
 			TaskNodes: map[string]*TaskDefine{
 				"start":     {"doStart", "startDone", "fail", SyncFuncTask, testError},
 				"startDone": {"doSomething", "done", "fail", SyncFuncTask, testDoing},
-				"fail":      {"fail", "", "", SyncFuncTask, DefaultFail},
+				"fail":      {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -92,8 +96,8 @@ func initFlow() {
 			TaskNodes: map[string]*TaskDefine{
 				"start":     {"doStart", "startDone", "fail", PollingTasK, testStart},
 				"startDone": {"doSomething", "done", "fail", SyncFuncTask, testDoing},
-				"done":      {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail":      {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done":      {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail":      {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -107,8 +111,38 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
+			},
+			ContextParser: func(s string) *FlowContext {
+				// todo parse context
+				return nil
+			},
+		},
+		FlowScaleOutCluster: {
+			FlowName:    FlowScaleOutCluster,
+			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowScaleOutCluster),
+			TaskNodes: map[string]*TaskDefine{
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+					return true
+				}},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
+			},
+			ContextParser: func(s string) *FlowContext {
+				// todo parse context
+				return nil
+			},
+		},
+		FlowScaleInCluster: {
+			FlowName:    FlowScaleInCluster,
+			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowScaleInCluster),
+			TaskNodes: map[string]*TaskDefine{
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+					return true
+				}},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -122,8 +156,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -137,8 +171,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -152,8 +186,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -167,8 +201,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -182,8 +216,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -197,8 +231,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -212,8 +246,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				return nil
@@ -226,10 +260,40 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
+				return nil
+			},
+		},
+		FlowTakeoverCluster: {
+			FlowName:    FlowTakeoverCluster,
+			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowTakeoverCluster),
+			TaskNodes: map[string]*TaskDefine{
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+					return true
+				}},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
+			},
+			ContextParser: func(s string) *FlowContext {
+				// todo parse context
+				return nil
+			},
+		},
+		FlowBuildLogConfig: {
+			FlowName:    FlowBuildLogConfig,
+			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowBuildLogConfig),
+			TaskNodes: map[string]*TaskDefine{
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+					return true
+				}},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
+			},
+			ContextParser: func(s string) *FlowContext {
+				// todo parse context
 				return nil
 			},
 		},
@@ -273,12 +337,12 @@ func TestFlowWorkAggregation_Destroy(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		flow, _ := CreateFlowWork(context.TODO(), "111", "testFlow2", nil)
 		flow.Start()
-		flow.Destroy()
+		flow.Destroy("no why")
 		if !flow.FlowWork.Finished() {
 			t.Errorf("Start() finished")
 		}
 
-		if flow.FlowWork.Status != TaskStatusError {
+		if flow.FlowWork.Status != TaskStatusCanceled {
 			t.Errorf("Start() FlowWork status wrong, want = %v, got = %v", TaskStatusError, flow.FlowWork.Status)
 		}
 
@@ -290,6 +354,12 @@ func TestFlowWorkAggregation_Destroy(t *testing.T) {
 }
 
 func TestFlowWorkAggregation_Start(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
+	mockTiup.EXPECT().MicroSrvGetTaskStatusByBizID(gomock.Any(), gomock.Any()).Return(dbpb.TiupTaskStatus_Finished, "success", nil)
+	secondparty.SecondParty = mockTiup
+
 	t.Run("normal", func(t *testing.T) {
 		flow, _ := CreateFlowWork(context.TODO(), "1111", "testFlow", nil)
 		flow.Start()
@@ -305,7 +375,7 @@ func TestFlowWorkAggregation_Start(t *testing.T) {
 	t.Run("callback", func(t *testing.T) {
 		flow, _ := CreateFlowWork(context.TODO(), "2222", "testFlow2", nil)
 		flow.Start()
-		if flow.FlowWork.Finished() {
+		if !flow.FlowWork.Finished() {
 			t.Errorf("Start() finished")
 		}
 		if flow.CurrentTask.TaskName != "doStart" {
@@ -315,9 +385,6 @@ func TestFlowWorkAggregation_Start(t *testing.T) {
 	t.Run("polling", func(t *testing.T) {
 		flow, _ := CreateFlowWork(context.TODO(), "4444", "testFlow4", nil)
 		flow.Start()
-		if !flow.FlowWork.Finished() {
-			t.Errorf("Start() not finished")
-		}
 
 		value, ok := flow.Context.GetData("testKey").(int)
 		if !ok || 999 != value {
@@ -330,7 +397,7 @@ func TestFlowWorkAggregation_Start(t *testing.T) {
 		if !flow.FlowWork.Finished() {
 			t.Errorf("Start() finished")
 		}
-		if flow.FlowWork.Status != TaskStatusFinished {
+		if flow.FlowWork.Status != TaskStatusError {
 			t.Errorf("Start() FlowWork status wrong, want = %v, got = %v", TaskStatusError, flow.FlowWork.Status)
 		}
 	})
@@ -510,7 +577,7 @@ func TestFlowWorkAggregation_AddContext(t *testing.T) {
 }
 
 func TestFlowWorkAggregation_GetAllTaskDef(t *testing.T) {
-	flow , err := CreateFlowWork(context.TODO(), "testFlow", "testFlow", &Operator{})
+	flow, err := CreateFlowWork(context.TODO(), "testFlow", "testFlow", &Operator{})
 	if err == nil {
 		def := flow.GetAllTaskDef()
 		assert.True(t, len(def) > 0)
@@ -518,7 +585,7 @@ func TestFlowWorkAggregation_GetAllTaskDef(t *testing.T) {
 }
 
 func TestFlowWorkAggregation_ExtractTaskDTO(t *testing.T) {
-	flow := FlowWorkAggregation {
+	flow := FlowWorkAggregation{
 		Tasks: []*TaskEntity{
 			{Id: 1, Status: 1, TaskName: "name1"},
 			{Id: 2, Status: 0, TaskName: "name1"},

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -69,6 +68,7 @@ const (
 	DiffRackBestEffort                      // Require 'Region' and 'Zone', try best effort to alloc host in diff rack
 	UserSpecifyRack                         // Require 'Region' 'Zone' and 'Rack', return diff hosts in Rack
 	UserSpecifyHost                         // Return Resource in the Host Specified
+	ClusterPorts                            // Returns port range in every host within a region for cluster
 )
 
 type AllocRequirement struct {
@@ -129,8 +129,7 @@ type RecycleType int32
 const (
 	RecycleHolder  RecycleType = iota // Recycle the resources owned by HolderID
 	RecycleOperate                    // Recycle the resources operated in RequestID
-	RecycleCompute                    // Recycle Compute resources specify by Recycle request
-	RecycleDisk                       // Recycle Disk resources specify by Recycle request
+	RecycleHost                       // Recycle resources on specified host
 )
 
 type RecycleRequire struct {

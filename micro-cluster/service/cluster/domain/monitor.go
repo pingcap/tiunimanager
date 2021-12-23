@@ -28,6 +28,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/common"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 )
@@ -65,7 +66,7 @@ func getMonitorUrl(clusterAggregation *ClusterAggregation) (*Monitor, error) {
 	alertServer := configModel.Alertmanagers[0]
 	alertPort := alertServer.WebPort
 	if alertPort == 0 {
-		alertPort = DefaultAlertPort
+		alertPort = common.DefaultAlertPort
 	}
 	alertUrl := fmt.Sprintf("http://%s:%d", alertServer.Host, alertPort)
 
@@ -75,7 +76,7 @@ func getMonitorUrl(clusterAggregation *ClusterAggregation) (*Monitor, error) {
 	grafanaServer := configModel.Grafanas[0]
 	grafanaPort := grafanaServer.Port
 	if grafanaPort == 0 {
-		grafanaPort = DefaultGrafanaPort
+		grafanaPort = common.DefaultGrafanaPort
 	}
 	grafanaUrl := fmt.Sprintf("http://%s:%d", grafanaServer.Host, grafanaPort)
 

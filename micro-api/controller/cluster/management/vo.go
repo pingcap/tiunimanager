@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -18,6 +17,7 @@
 package management
 
 import (
+	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 )
@@ -60,6 +60,15 @@ type ClusterDisplayInfo struct {
 	ClusterInstanceInfo
 }
 
+type StockCheckItem struct {
+	Region          string `json:"region"`
+	CpuArchitecture string `json:"cpuArchitecture"`
+
+	DistributionItem
+	Component knowledge.ClusterComponent `json:"component"`
+	Enough    bool                       `json:"enough"`
+}
+
 type ClusterNodeDemand struct {
 	ComponentType     string             `json:"componentType"`
 	TotalNodeCount    int                `json:"totalNodeCount"`
@@ -87,6 +96,8 @@ type ComponentNodeDisplayInfo struct {
 
 type ComponentNodeInstanceInfo struct {
 	HostId string                 `json:"hostId"`
+	HostIp string                 `json:"HostIp"`
+	Ports  []int                  `json:"ports"`
 	Port   int                    `json:"port"`
 	Role   ComponentNodeRole      `json:"role"`
 	Spec   warehouse.SpecBaseInfo `json:"spec"`
@@ -109,4 +120,10 @@ type ComponentNodeRole struct {
 type ComponentBaseInfo struct {
 	ComponentType string `json:"componentType"`
 	ComponentName string `json:"componentName"`
+}
+
+type ClusterCommonDemand struct {
+	Exclusive       bool   `json:"exclusive" form:"exclusive"`
+	Region          string `json:"region" form:"region"`
+	CpuArchitecture string `json:"cpuArchitecture" form:"cpuArchitecture"`
 }

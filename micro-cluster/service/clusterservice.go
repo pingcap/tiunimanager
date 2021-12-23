@@ -766,9 +766,6 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 	return nil
 }
 
-var ManageSuccessResponseStatus = &clusterpb.ManagerResponseStatus{
-	Code: 0,
-}
 func (c *ClusterServiceHandler) Login(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "Login", int(response.GetCode()))

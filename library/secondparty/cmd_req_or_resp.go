@@ -82,10 +82,6 @@ type CmdListResp struct {
 	ListRespStr string
 }
 
-type CmdGetAllTaskStatusResp struct {
-	Stats []TaskStatusMember
-}
-
 type CmdGetAllOperationStatusResp struct {
 	Stats []OperationStatusMember
 }

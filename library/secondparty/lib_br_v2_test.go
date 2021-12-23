@@ -284,3 +284,9 @@ func initForTestLibbr() {
 	secondPartyManager2.operationStatusCh = make(chan OperationStatusMember, 1024)
 	secondPartyManager2.operationStatusMap = make(map[string]OperationStatusMapValue)
 }
+
+func resetVariable() {
+	clusterFacade = ClusterFacade{
+		DbConnParameter: dbConnParam,
+	}
+}

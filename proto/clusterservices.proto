@@ -1,0 +1,94 @@
+syntax = "proto3";
+option go_package = "./clusterpb/;clusterpb";
+
+service ClusterService {
+    // Cluster manager module
+    rpc CreateCluster(RpcRequest) returns (RpcResponse);
+    rpc QueryCluster(RpcRequest) returns (RpcResponse);
+    rpc DeleteCluster(RpcRequest) returns (RpcResponse);
+    rpc DetailCluster(RpcRequest) returns (RpcResponse);
+    rpc RestartCluster(RpcRequest) returns (RpcResponse);
+    rpc StopCluster(RpcRequest) returns (RpcResponse);
+    rpc TakeoverClusters(RpcRequest) returns (RpcResponse);
+    rpc ScaleOutCluster(RpcRequest) returns (RpcResponse);
+    rpc ScaleInCluster(RpcRequest) returns (RpcResponse);
+    rpc CloneCluster(RpcRequest) returns (RpcResponse);
+
+    rpc ImportData(RpcRequest) returns (RpcResponse);
+    rpc ExportData(RpcRequest) returns (RpcResponse);
+    rpc QueryDataTransport(RpcRequest) returns (RpcResponse);
+    rpc DeleteDataTransportRecord(RpcRequest) returns (RpcResponse);
+
+    rpc QueryClusterLog(RpcRequest) returns (RpcResponse);
+
+    rpc QueryBackupRecords(RpcRequest) returns (RpcResponse);
+    rpc CreateBackup(RpcRequest) returns (RpcResponse);
+    rpc RestoreNewCluster(RpcRequest) returns (RpcResponse);
+    rpc DeleteBackupRecords(RpcRequest) returns (RpcResponse);
+    rpc SaveBackupStrategy(RpcRequest) returns (RpcResponse);
+    rpc GetBackupStrategy(RpcRequest) returns (RpcResponse);
+
+    rpc GetDashboardInfo(RpcRequest) returns (RpcResponse);
+    rpc GetMonitorInfo(RpcRequest) returns (RpcResponse);
+
+    // Auth manager module
+    rpc Login(RpcRequest) returns (RpcResponse);
+    rpc Logout(RpcRequest) returns (RpcResponse);
+    rpc VerifyIdentity(RpcRequest) returns (RpcResponse);
+
+    // resource manager module
+    rpc ImportHosts(RpcRequest) returns (RpcResponse);
+    rpc DeleteHosts(RpcRequest) returns (RpcResponse);
+    rpc QueryHosts(RpcRequest) returns (RpcResponse);
+    rpc UpdateHostReserved(RpcRequest) returns (RpcResponse);
+    rpc UpdateHostStatus(RpcRequest) returns (RpcResponse);
+    rpc GetHierarchy(RpcRequest) returns (RpcResponse);
+    rpc GetStocks(RpcRequest) returns (RpcResponse);
+
+    // workflow
+    rpc ListFlows(RpcRequest) returns (RpcResponse);
+    rpc DetailFlow(RpcRequest) returns (RpcResponse);
+
+    // Parameter Group & Cluster Parameters
+    rpc CreateParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc UpdateParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc DeleteParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc QueryParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc DetailParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc ApplyParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc CopyParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc QueryClusterParameters(RpcRequest) returns (RpcResponse);
+    rpc UpdateClusterParameters(RpcRequest) returns (RpcResponse);
+    rpc InspectClusterParameters(RpcRequest) returns (RpcResponse);
+
+    // change feed task
+    rpc CreateChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc PauseChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc ResumeChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc DeleteChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc UpdateChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc QueryChangeFeedTasks(RpcRequest) returns (RpcResponse);
+
+    // system config
+    rpc GetSystemConfig(RpcRequest) returns (RpcResponse);
+}
+
+message RpcRequest {
+    string request = 1;
+    RpcPage page = 2;
+}
+
+message RpcResponse {
+    int32 code = 1;
+    string message = 2;
+    string response = 3;
+    RpcPage page = 4;
+}
+
+message RpcPage {
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 total = 3;
+}
+
+

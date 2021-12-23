@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	util "github.com/pingcap-inc/tiem/library/util/http"
@@ -29,7 +30,7 @@ import (
 
 const CDCApiUrl  = "/api/v1/changefeeds"
 
-func (secondMicro *SecondMicro) CreateChangeFeedTask(ctx context.Context, req ChangeFeedCreateReq) (resp ChangeFeedCmdAcceptResp, err error) {
+func (secondMicro *SecondPartyManager) CreateChangeFeedTask(ctx context.Context, req ChangeFeedCreateReq) (resp ChangeFeedCmdAcceptResp, err error) {
 	framework.LogWithContext(ctx).Infof("micro srv create change feed task, req : %v", req)
 	url := fmt.Sprintf("http://%s%s", req.PD, CDCApiUrl)
 
@@ -42,13 +43,13 @@ func (secondMicro *SecondMicro) CreateChangeFeedTask(ctx context.Context, req Ch
 	err = json.Unmarshal(bytes, data)
 
 	if err != nil {
-		err = framework.WrapError(common.TIEM_UNMARSHAL_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_UNMARSHAL_ERROR, "", err)
 		return
 	}
 
 	httpResp, err := util.PostJSON(url, data, map[string]string{})
 	if err != nil {
-		err = framework.WrapError(common.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
 		return
 	}
 
@@ -113,26 +114,26 @@ func handleAcceptedCmd(ctx context.Context,
 	}
 }
 
-func (secondMicro *SecondMicro) UpdateChangeFeedTask(ctx context.Context, req ChangeFeedUpdateReq) (resp ChangeFeedCmdAcceptResp, err error) {
+func (secondMicro *SecondPartyManager) UpdateChangeFeedTask(ctx context.Context, req ChangeFeedUpdateReq) (resp ChangeFeedCmdAcceptResp, err error) {
 	framework.LogWithContext(ctx).Infof("micro srv update change feed task, req : %v", req)
 	url := fmt.Sprintf("http://%s%s/%s", req.PD, CDCApiUrl, req.ChangeFeedID)
 
 	bytes, err := json.Marshal(&req)
 	if err != nil {
-		err = framework.WrapError(common.TIEM_MARSHAL_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_MARSHAL_ERROR, "", err)
 		return
 	}
 	data := make(map[string]interface{})
 	err = json.Unmarshal(bytes, data)
 
 	if err != nil {
-		err = framework.WrapError(common.TIEM_UNMARSHAL_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_UNMARSHAL_ERROR, "", err)
 		return
 	}
 
 	httpResp, err := util.PostJSON(url, data, map[string]string{})
 	if err != nil {
-		err = framework.WrapError(common.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
 		return
 	}
 
@@ -145,11 +146,11 @@ func (secondMicro *SecondMicro) UpdateChangeFeedTask(ctx context.Context, req Ch
 	return
 }
 
-func (secondMicro *SecondMicro) PauseChangeFeedTask(ctx context.Context, req ChangeFeedPauseReq) (resp ChangeFeedCmdAcceptResp, err error) {
+func (secondMicro *SecondPartyManager) PauseChangeFeedTask(ctx context.Context, req ChangeFeedPauseReq) (resp ChangeFeedCmdAcceptResp, err error) {
 	url := fmt.Sprintf("http://%s%s/%s/pause", req.PD, CDCApiUrl, req.ChangeFeedID)
 	httpResp, err := util.PostJSON(url, map[string]interface{}{}, map[string]string{})
 	if err != nil {
-		err = framework.WrapError(common.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
 		return
 	}
 
@@ -162,11 +163,11 @@ func (secondMicro *SecondMicro) PauseChangeFeedTask(ctx context.Context, req Cha
 	return
 }
 
-func (secondMicro *SecondMicro) ResumeChangeFeedTask(ctx context.Context, req ChangeFeedResumeReq) (resp ChangeFeedCmdAcceptResp, err error) {
+func (secondMicro *SecondPartyManager) ResumeChangeFeedTask(ctx context.Context, req ChangeFeedResumeReq) (resp ChangeFeedCmdAcceptResp, err error) {
 	url := fmt.Sprintf("http://%s%s/%s/resume", req.PD, CDCApiUrl, req.ChangeFeedID)
 	httpResp, err := util.PostJSON(url, map[string]interface{}{}, map[string]string{})
 	if err != nil {
-		err = framework.WrapError(common.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
 		return
 	}
 
@@ -179,12 +180,12 @@ func (secondMicro *SecondMicro) ResumeChangeFeedTask(ctx context.Context, req Ch
 	return
 }
 
-func (secondMicro *SecondMicro) DeleteChangeFeedTask(ctx context.Context, req ChangeFeedDeleteReq) (resp ChangeFeedCmdAcceptResp, err error) {
+func (secondMicro *SecondPartyManager) DeleteChangeFeedTask(ctx context.Context, req ChangeFeedDeleteReq) (resp ChangeFeedCmdAcceptResp, err error) {
 	url := fmt.Sprintf("http://%s%s/%s", req.PD, CDCApiUrl, req.ChangeFeedID)
 	// todo delete
 	httpResp, err := util.PostJSON(url, map[string]interface{}{}, map[string]string{})
 	if err != nil {
-		err = framework.WrapError(common.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
 		return
 	}
 
@@ -197,7 +198,7 @@ func (secondMicro *SecondMicro) DeleteChangeFeedTask(ctx context.Context, req Ch
 	return
 }
 
-func (secondMicro *SecondMicro) QueryChangeFeedTasks(ctx context.Context, req ChangeFeedQueryReq) (resp ChangeFeedQueryResp, err error) {
+func (secondMicro *SecondPartyManager) QueryChangeFeedTasks(ctx context.Context, req ChangeFeedQueryReq) (resp ChangeFeedQueryResp, err error) {
 	url := fmt.Sprintf("http://%s%s", req.PD, CDCApiUrl)
 	params := map[string]string{}
 	if req.State != "" {
@@ -206,7 +207,7 @@ func (secondMicro *SecondMicro) QueryChangeFeedTasks(ctx context.Context, req Ch
 	httpResp, err := util.Get(url, params, map[string]string{})
 
 	if err != nil {
-		err = framework.WrapError(common.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
 		return
 	}
 
@@ -224,12 +225,12 @@ func (secondMicro *SecondMicro) QueryChangeFeedTasks(ctx context.Context, req Ch
 			return
 		}
 	} else {
-		err = framework.WrapError(common.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
 	}
 	return
 }
 
-func (secondMicro *SecondMicro) DetailChangeFeedTask(ctx context.Context, req ChangeFeedDetailReq) (ChangeFeedDetailResp, error) {
+func (secondMicro *SecondPartyManager) DetailChangeFeedTask(ctx context.Context, req ChangeFeedDetailReq) (ChangeFeedDetailResp, error) {
 	return getChangeFeedTaskByID(ctx, req.PD, req.ChangeFeedID)
 }
 
@@ -238,7 +239,8 @@ func getChangeFeedTaskByID(ctx context.Context, pdAddress, id string) (resp Chan
 	httpResp, err := util.Get(url, map[string]string{}, map[string]string{})
 
 	if err != nil {
-		err = framework.WrapError(common.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		// todo connect
+		err = errors.WrapError(errors.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
 		return
 	}
 
@@ -255,7 +257,7 @@ func getChangeFeedTaskByID(ctx context.Context, pdAddress, id string) (resp Chan
 			return 
 		}
 	} else {
-		err = framework.WrapError(common.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
 	}
 	return 
 }

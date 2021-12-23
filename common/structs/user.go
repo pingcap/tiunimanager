@@ -22,3 +22,10 @@
 *******************************************************************************/
 
 package structs
+
+type UserInfo struct {
+	ID        string `json:"accountId"`
+	TenantID  string `json:"tenantId"`
+	Name      string `json:"accountName"`
+}
+

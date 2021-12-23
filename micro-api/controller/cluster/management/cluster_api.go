@@ -17,25 +17,21 @@
 package management
 
 import (
-	"encoding/json"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"net/http"
-	"strconv"
-	"time"
-
-	"github.com/pingcap-inc/tiem/micro-api/interceptor"
-
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/message/cluster"
+	"net/http"
 
 	"github.com/pingcap-inc/tiem/library/client"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
+
+const ParamClusterID = "clusterId"
 
 // Create create a cluster
 // @Summary create a cluster
@@ -51,16 +47,11 @@ import (
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/ [post]
 func Create(c *gin.Context) {
-	var req cluster.CreateClusterReq
-
-	requestBody, err := controller.HandleJsonRequestFromBody(c, req)
-
-	if err == nil {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &cluster.CreateClusterReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateCluster, &cluster.CreateClusterResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
-
 }
 
 // Preview preview cluster topology and capability
@@ -71,44 +62,48 @@ func Create(c *gin.Context) {
 // @Produce application/json
 // @Security ApiKeyAuth
 // @Param createReq body cluster.CreateClusterReq true "preview request"
-// @Success 200 {object} controller.CommonResult{data=PreviewClusterRsp}
+// @Success 200 {object} controller.CommonResult{data=cluster.PreviewClusterResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/preview [post]
 func Preview(c *gin.Context) {
-	// todo refactor at last
-	//var req cluster.CreateClusterReq
-	//
-	//if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
-	//	_ = c.Error(err)
-	//	return
-	//}
-	//
-	//stockCheckResult := make([]StockCheckItem, 0)
-	//
-	//for _, group := range req.NodeDemandList {
-	//	for _, node := range group.DistributionItems {
-	//		stockCheckResult = append(stockCheckResult, StockCheckItem{
-	//			Region:           req.Region,
-	//			CpuArchitecture:  req.CpuArchitecture,
-	//			Component:        *knowledge.ClusterComponentFromCode(group.ComponentType),
-	//			DistributionItem: node,
-	//			// todo stock
-	//			Enough: true,
-	//		})
-	//	}
-	//}
-	//
-	//c.JSON(http.StatusOK, controller.Success(PreviewClusterRsp{
-	//	ClusterBaseInfo:     req.ClusterBaseInfo,
-	//	StockCheckResult:    stockCheckResult,
-	//	ClusterCommonDemand: req.ClusterCommonDemand,
-	//	CapabilityIndexes:   []ServiceCapabilityIndex{
-	//		//{"StorageCapability", "database storage capability", 800, "GB"},
-	//		//{"TPCC", "TPCC tmpC ", 523456, ""},
-	//	},
-	//}))
+	var req cluster.CreateClusterReq
+
+	err := c.ShouldBindBodyWith(&req, binding.JSON)
+	if err != nil {
+		framework.LogWithContext(c).Errorf("unmarshal request failed, %s", err.Error())
+		c.JSON(http.StatusBadRequest, controller.Fail(int(common.TIEM_UNMARSHAL_ERROR), err.Error()))
+		return
+	}
+
+	err = validator.New().Struct(req)
+	if err != nil {
+		framework.LogWithContext(c).Errorf("validate request failed, %s", err.Error())
+		c.JSON(http.StatusBadRequest, controller.Fail(int(common.TIEM_PARAMETER_INVALID), err.Error()))
+	}
+
+	resp := &cluster.PreviewClusterResp{
+		Region: req.Region,
+		CpuArchitecture: req.CpuArchitecture,
+		ClusterType: req.Type,
+		ClusterVersion: req.Version,
+		ClusterName: req.Name,
+		CapabilityIndexes: []structs.Index{},
+	}
+	stockCheckResult := make([]structs.ResourceStockCheckResult, 0)
+	for _, instance := range req.ResourceParameter.InstanceResource {
+		for _, resource := range instance.Resource {
+			stockCheckResult = append(stockCheckResult, structs.ResourceStockCheckResult{
+				Type: instance.Type,
+				Name: instance.Type,
+				ClusterResourceParameterComputeResource: resource,
+				Enough: true,
+			})
+		}
+	}
+	resp.StockCheckResult = stockCheckResult
+	c.JSON(http.StatusOK, controller.Success(resp))
 }
 
 // Query query clusters
@@ -118,32 +113,20 @@ func Preview(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param queryReq query QueryReq false "query request"
-// @Success 200 {object} controller.ResultWithPage{data=[]ClusterDisplayInfo}
+// @Param queryReq query cluster.QueryClustersReq false "query request"
+// @Success 200 {object} controller.ResultWithPage{data=cluster.QueryClusterResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/ [get]
 func Query(c *gin.Context) {
+	var request cluster.QueryClustersReq
 
-	// Create request
-	var request QueryReq
-	if err := c.ShouldBindQuery(&request); err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &request); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryCluster, &cluster.QueryClusterResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
-
-	body, err := json.Marshal(request)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Call rpc method
-	response := &[]ClusterDisplayInfo{}
-	controller.InvokeRpcMethod(c, client.ClusterClient.QueryCluster, response, string(body), controller.DefaultTimeout)
 }
 
 // Delete delete cluster
@@ -161,12 +144,11 @@ func Query(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId} [delete]
 func Delete(c *gin.Context) {
-	var req cluster.DeleteClusterReq
+	req := cluster.DeleteClusterReq{
+		ClusterID: c.Param("clusterId"),
+	}
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c, req)
-
-
-	if err == nil {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteCluster, &cluster.DeleteClusterResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -181,17 +163,15 @@ func Delete(c *gin.Context) {
 // @Produce application/json
 // @Security ApiKeyAuth
 // @Param clusterId path string true "cluster id"
-// @Success 200 {object} controller.CommonResult{data=RestartClusterRsp}
+// @Success 200 {object} controller.CommonResult{data=cluster.RestartClusterResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/restart [post]
 func Restart(c *gin.Context) {
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, cluster.RestartClusterReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.RestartClusterReq{
 		ClusterID: c.Param("clusterId"),
-	})
-
-	if err == nil {
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.RestartCluster, &cluster.RestartClusterResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -212,11 +192,9 @@ func Restart(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/stop [post]
 func Stop(c *gin.Context) {
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, cluster.StopClusterReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.StopClusterReq{
 		ClusterID: c.Param("clusterId"),
-	})
-
-	if err == nil {
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.StopCluster, &cluster.StopClusterResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -237,11 +215,9 @@ func Stop(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId} [get]
 func Detail(c *gin.Context) {
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &cluster.QueryClusterDetailReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.QueryClusterDetailReq{
 		ClusterID: c.Param("clusterId"),
-	})
-
-	if err == nil {
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DetailCluster, &cluster.QueryClusterDetailResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -255,51 +231,23 @@ func Detail(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param takeoverReq body TakeoverReq true "takeover request"
-// @Success 200 {object} controller.CommonResult{data=[]ClusterDisplayInfo}
+// @Param takeoverReq body cluster.TakeoverClusterReq true "takeover request"
+// @Success 200 {object} controller.CommonResult{data=cluster.TakeoverClusterResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/takeover [post]
 func Takeover(c *gin.Context) {
-	var req TakeoverReq
-	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
-		_ = c.Error(err)
-		return
-	}
+	var req cluster.TakeoverClusterReq
 
-	operator := controller.GetOperator(c)
-
-	reqDTO := &clusterpb.ClusterTakeoverReqDTO{
-		Operator:         operator.ConvertToDTO(),
-		TiupIp:           req.TiupIp,
-		Port:             strconv.Itoa(req.TiupPort),
-		TiupUserName:     req.TiupUserName,
-		TiupUserPassword: req.TiupUserPassword,
-		TiupPath:         req.TiupPath,
-		ClusterNames:     req.ClusterNames,
-	}
-
-	respDTO, err := client.ClusterClient.TakeoverClusters(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
-	} else {
-		status := respDTO.GetRespStatus()
-
-		clusters := make([]ClusterDisplayInfo, len(respDTO.Clusters))
-
-		for i, v := range respDTO.Clusters {
-			clusters[i] = *ParseDisplayInfoFromDTO(v)
-		}
-
-		result := controller.BuildCommonResult(int(status.Code), status.Message, clusters)
-
-		c.JSON(http.StatusOK, result)
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.TakeoverClusters, &cluster.TakeoverClusterResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
 }
 
-// DescribeDashboard dashboard
+// GetDashboardInfo dashboard
 // @Summary dashboard
 // @Description dashboard
 // @Tags cluster
@@ -307,84 +255,43 @@ func Takeover(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param clusterId path string true "cluster id"
-// @Success 200 {object} controller.CommonResult{data=DescribeDashboardRsp}
+// @Success 200 {object} controller.CommonResult{data=cluster.GetDashboardInfoResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/dashboard [get]
-func DescribeDashboard(c *gin.Context) {
-	var status *clusterpb.ResponseStatusDTO
-	start := time.Now()
-	defer interceptor.HandleMetrics(start, "DescribeDashboard", int(status.GetCode()))
-
-	operator := controller.GetOperator(c)
-	reqDTO := &clusterpb.DescribeDashboardRequest{
-		Operator:  operator.ConvertToDTO(),
-		ClusterId: c.Param("clusterId"),
-	}
-	respDTO, err := client.ClusterClient.DescribeDashboard(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
-
-	if err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-	} else {
-		status = respDTO.GetStatus()
-		if int32(common.TIEM_SUCCESS) == status.GetCode() {
-			result := controller.BuildCommonResult(int(status.Code), status.Message, DescribeDashboardRsp{
-				ClusterId: respDTO.GetClusterId(),
-				Url:       respDTO.GetUrl(),
-				Token:     respDTO.GetToken(),
-			})
-
-			c.JSON(http.StatusOK, result)
-		} else {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		}
+func GetDashboardInfo(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.GetDashboardInfoReq{
+		ClusterID: c.Param("clusterId"),
+	}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.GetDashboardInfo, &cluster.GetDashboardInfoResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
 }
 
-// DescribeMonitor monitoring link
-// @Summary monitoring link
-// @Description monitoring link
+// GetMonitorInfo describe monitoring link
+// @Summary describe monitoring link
+// @Description describe monitoring link
 // @Tags cluster
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
 // @Param clusterId path string true "cluster id"
-// @Success 200 {object} controller.CommonResult{data=DescribeMonitorRsp}
+// @Success 200 {object} controller.CommonResult{data=cluster.QueryMonitorInfoResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/monitor [get]
-func DescribeMonitor(c *gin.Context) {
-	var status *clusterpb.ResponseStatusDTO
-	start := time.Now()
-	defer interceptor.HandleMetrics(start, "DescribeMonitor", int(status.GetCode()))
-	operator := controller.GetOperator(c)
-	reqDTO := &clusterpb.DescribeMonitorRequest{
-		Operator:  operator.ConvertToDTO(),
-		ClusterId: c.Param("clusterId"),
+func GetMonitorInfo(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.QueryMonitorInfoReq{
+		ClusterID: c.Param(ParamClusterID),
+	}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.GetMonitorInfo, &cluster.QueryMonitorInfoResp{},
+			requestBody,
+			controller.DefaultTimeout,
+		)
 	}
-	respDTO, err := client.ClusterClient.DescribeMonitor(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
-
-	if err != nil {
-		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
-		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		return
-	}
-
-	status = respDTO.GetStatus()
-	if int32(common.TIEM_SUCCESS) != status.GetCode() {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		return
-	}
-
-	result := controller.BuildCommonResult(int(status.Code), status.Message, DescribeMonitorRsp{
-		ClusterId:  respDTO.GetClusterId(),
-		AlertUrl:   respDTO.GetAlertUrl(),
-		GrafanaUrl: respDTO.GetGrafanaUrl(),
-	})
-	c.JSON(http.StatusOK, result)
 }
 
 // ScaleOut scale out a cluster
@@ -402,26 +309,15 @@ func DescribeMonitor(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/scale-out [post]
 func ScaleOut(c *gin.Context) {
-	var request cluster.ScaleOutClusterReq
-
-	// handle scale out request
-	if err := c.ShouldBindWith(&request, binding.JSON); err != nil {
-		framework.LogWithContext(c).Errorf("parse request error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-		return
+	// handle scale out request and call rpc method
+	if body, ok := controller.HandleJsonRequestFromBody(c, &cluster.ScaleOutClusterReq{},
+		func(c *gin.Context, req interface{}) error {
+			req.(*cluster.ScaleOutClusterReq).ClusterID = c.Param(ParamClusterID)
+			return nil
+		}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.ScaleOutCluster,
+			&cluster.ScaleOutClusterResp{}, body, controller.DefaultTimeout)
 	}
-	request.ClusterID = c.Param("clusterId")
-
-	body, err := json.Marshal(request)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("parse request error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-		return
-	}
-
-	// call rpc method
-	response := &cluster.ScaleOutClusterResp{}
-	controller.InvokeRpcMethod(c, client.ClusterClient.ScaleOutCluster, response, string(body), controller.DefaultTimeout)
 }
 
 // ScaleIn scale in a cluster
@@ -439,26 +335,15 @@ func ScaleOut(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/scale-in [post]
 func ScaleIn(c *gin.Context) {
-	var request cluster.ScaleInClusterReq
-
-	// handle scale in request
-	if err := c.ShouldBindWith(&request, binding.JSON); err != nil {
-		framework.LogWithContext(c).Error("parse request error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-		return
+	// handle scale in request and call rpc method
+	if body, ok := controller.HandleJsonRequestFromBody(c, &cluster.ScaleInClusterReq{},
+		func(c *gin.Context, req interface{}) error {
+			req.(*cluster.ScaleInClusterReq).ClusterID = c.Param(ParamClusterID)
+			return nil
+		}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.ScaleInCluster,
+			&cluster.ScaleInClusterResp{}, body, controller.DefaultTimeout)
 	}
-	request.ClusterID = c.Param("clusterId")
-
-	body, err := json.Marshal(request)
-	if err != nil {
-		framework.LogWithContext(c).Error("parse request error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-		return
-	}
-
-	// call rpc method
-	response := &cluster.ScaleInClusterResp{}
-	controller.InvokeRpcMethod(c, client.ClusterClient.ScaleInCluster, response, string(body), controller.DefaultTimeout)
 }
 
 // Clone clone a cluster
@@ -475,26 +360,9 @@ func ScaleIn(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/clone [post]
 func Clone(c *gin.Context) {
-	var request cluster.CloneClusterReq
-
-	// handle clone cluster request
-	if err := c.ShouldBindWith(&request, binding.JSON); err != nil {
-		framework.LogWithContext(c).Errorf("parse request error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-		return
+	// handle clone cluster request and call rpc method
+	if body, ok := controller.HandleJsonRequestFromBody(c, &cluster.CloneClusterReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.CloneCluster,
+			&cluster.CloneClusterResp{}, body, controller.DefaultTimeout)
 	}
-	// set default clone strategy
-	if len(request.CloneStrategy) == 0 {
-		request.CloneStrategy = constants.EmptyDataClone
-	}
-	body, err := json.Marshal(request)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("parse request error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-		return
-	}
-
-	// call rpc method
-	response := &cluster.CloneClusterResp{}
-	controller.InvokeRpcMethod(c, client.ClusterClient.CloneCluster, response, string(body), controller.DefaultTimeout)
 }

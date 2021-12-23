@@ -22,7 +22,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 )
 
-// Tiem-X-Trace-ID
+// GinTraceIDHandler EM-X-Trace-ID
 func GinTraceIDHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.GetHeader(framework.TiEM_X_TRACE_ID_KEY)

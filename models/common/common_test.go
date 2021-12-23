@@ -24,21 +24,21 @@ import (
 	"gorm.io/gorm"
 	"os"
 	"testing"
+	"time"
 )
 
 type TestEntity struct {
 	Entity
-	Name string
+	Name string `gorm:"uniqueIndex:myIndex"`
+	DeleteTime int64 `gorm:"uniqueIndex:myIndex"`
+}
+
+func (e *TestEntity) BeforeDelete(tx *gorm.DB) (err error) {
+	tx.Model(e).Update("delete_time", time.Now().Unix())
+	return nil
 }
 
 var baseDB *gorm.DB
-
-func (t *TestEntity) BeforeSave(tx *gorm.DB) (err error) {
-	if len(t.ID) == 0 {
-		return t.Entity.BeforeCreate(tx)
-	}
-	return nil
-}
 
 func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
@@ -52,7 +52,7 @@ func TestMain(m *testing.M) {
 
 	framework.InitBaseFrameworkForUt(framework.ClusterService,
 		func(d *framework.BaseFramework) error {
-			dbFile := testFilePath + common.DBDirPrefix + common.SqliteFileName
+			dbFile := testFilePath + common.DBDirPrefix + common.DatabaseFileName
 			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 
 			if err != nil || db.Error != nil {
@@ -70,22 +70,32 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func Test_Entity(t *testing.T) {
-	tt := &TestEntity{
-		Entity{
-			Status: "aaa",
+func TestUniqueIndex(t *testing.T)  {
+	entity := &TestEntity{
+		Entity: Entity{
 			TenantId: "111",
 		},
-		"aaa",
+		Name: "aaa",
 	}
-	baseDB.Create(tt)
 
-	assert.NotEmpty(t, tt.ID)
+	err := baseDB.Create(entity).Error
+	assert.NoError(t, err)
 
-	baseDB.Model(&TestEntity{
+	err = baseDB.Create(&TestEntity{
 		Entity: Entity{
-			ID: tt.ID,
+			TenantId: "111",
 		},
-	}).Update("nadfame", "bbb")
+		Name: "aaa",
+	}).Error
+	assert.Error(t, err)
 
+	baseDB.Delete(entity)
+
+	err = baseDB.Create(&TestEntity{
+		Entity: Entity{
+			TenantId: "111",
+		},
+		Name: "aaa",
+	}).Error
+	assert.NoError(t, err)
 }

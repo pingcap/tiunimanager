@@ -21,3 +21,7 @@ const (
 	SyncFuncNode NodeReturnType = "SyncFuncNode"
 	PollingNode  NodeReturnType = "PollingNode"
 )
+
+const (
+	maxPollingSequence int32 = 10 * 24 * 3600
+)

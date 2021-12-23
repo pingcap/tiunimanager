@@ -16,6 +16,7 @@
 package backuprestore
 
 import (
+	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -36,12 +37,17 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 	record := ctx.GetData(contextBackupRecordKey).(*backuprestore.BackupRecord)
 	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
 
-	//todo: get from meta
-	tidbServerHost := ""
-	tidbServerPort := 0
-	if tidbServerPort == 0 {
-		tidbServerPort = constants.DefaultTiDBPort
+	tidbAddress := meta.GetClusterConnectAddresses()
+	if len(tidbAddress) == 0 {
+		framework.LogWithContext(ctx).Errorf("get tidb address from meta failed, empty address")
+		return nil
 	}
+	framework.LogWithContext(ctx).Infof("get cluster %s tidb address from meta, %+v", meta.Cluster.ID, tidbAddress)
+	tidbServerHost := tidbAddress[0].IP
+	tidbServerPort := tidbAddress[0].Port
+
+	tidbUserInfo := meta.GetClusterUserNamePasswd()
+	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta, %+v", meta.Cluster.ID, tidbUserInfo)
 
 	storageType, err := convertBrStorageType(record.StorageType)
 	if err != nil {
@@ -51,8 +57,8 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 
 	clusterFacade := secondparty.ClusterFacade{
 		DbConnParameter: secondparty.DbConnParam{
-			Username: "root", //todo: replace admin account
-			Password: "",
+			Username: tidbUserInfo.UserName,
+			Password: tidbUserInfo.Password,
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),
 		},
@@ -63,7 +69,8 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 	}
 	storage := secondparty.BrStorage{
 		StorageType: storageType,
-		Root:        fmt.Sprintf("%s/%s", record.FilePath, "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"), //todo: test env s3 ak sk, get from config
+		Root:        getBRStoragePath(ctx, record.StorageType, record.FilePath),
+		//Root:        fmt.Sprintf("%s/%s", record.FilePath, "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"),
 	}
 
 	framework.LogWithContext(ctx).Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
@@ -73,7 +80,7 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 		framework.LogWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
 		return err
 	}
-	ctx.SetData("backupTaskId", backupTaskId)
+	ctx.SetData(contextBackupTiupTaskIDKey, backupTaskId)
 	return nil
 }
 
@@ -83,12 +90,16 @@ func updateBackupRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) e
 
 	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
 	record := ctx.GetData(contextBackupRecordKey).(*backuprestore.BackupRecord)
+	backupTaskId := ctx.GetData(contextBackupTiupTaskIDKey).(string)
 
-	//todo: show backup info and update backupTSO,size,endTime
-	size := uint64(0)
-	backupTSO := uint64(0)
+	resp, err := secondparty.Manager.ShowBackUpInfoThruMetaDB(ctx, backupTaskId)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("show backup info of backupId %s failed", backupTaskId)
+		return err
+	}
+
 	brRW := models.GetBRReaderWriter()
-	err := brRW.UpdateBackupRecord(ctx, record.ID, string(constants.ClusterBackupFinished), size, backupTSO, time.Now())
+	err = brRW.UpdateBackupRecord(ctx, record.ID, string(constants.ClusterBackupFinished), resp.Size, resp.BackupTS, time.Now())
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("update backup reocrd %s of cluster %s failed", record.ID, meta.Cluster.ID)
 		return err
@@ -104,9 +115,18 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
 	record := ctx.GetData(contextBackupRecordKey).(*backuprestore.BackupRecord)
 
-	//todo: get from meta
-	tidbServerHost := ""
-	tidbServerPort := 0
+	tidbServers := meta.GetClusterConnectAddresses()
+	if len(tidbServers) == 0 {
+		framework.LogWithContext(ctx).Error("get tidb servers from meta result empty")
+		return fmt.Errorf("get tidb servers from meta result empty")
+	}
+	framework.LogWithContext(ctx).Infof("get cluster %s tidb address from meta, %+v", meta.Cluster.ID, tidbServers)
+	tidbServerHost := tidbServers[0].IP
+	tidbServerPort := tidbServers[0].Port
+
+	tidbUserInfo := meta.GetClusterUserNamePasswd()
+	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta, %+v", meta.Cluster.ID, tidbUserInfo)
+
 	storageType, err := convertBrStorageType(record.StorageType)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("convert br storage type failed, %s", err.Error())
@@ -115,8 +135,8 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 
 	clusterFacade := secondparty.ClusterFacade{
 		DbConnParameter: secondparty.DbConnParam{
-			Username: "root", //todo: replace admin account
-			Password: "",
+			Username: tidbUserInfo.UserName,
+			Password: tidbUserInfo.Password,
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),
 		},
@@ -127,7 +147,8 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	}
 	storage := secondparty.BrStorage{
 		StorageType: storageType,
-		Root:        fmt.Sprintf("%s/%s", record.FilePath, "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"), //todo: test env s3 ak sk
+		Root:        getBRStoragePath(ctx, record.StorageType, record.FilePath),
+		//Root:        fmt.Sprintf("%s/%s", record.FilePath, "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"),
 	}
 	framework.LogWithContext(ctx).Infof("begin call brmgr restore api, clusterFacade %v, storage %v", clusterFacade, storage)
 	_, err = secondparty.Manager.Restore(ctx, clusterFacade, storage, node.ID)
@@ -141,6 +162,15 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 func defaultEnd(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin defaultEnd")
 	defer framework.LogWithContext(ctx).Info("end defaultEnd")
+
+	clusterMeta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
+	maintenanceStatusChange := ctx.GetData(contextMaintenanceStatusChangeKey).(bool)
+	if maintenanceStatusChange {
+		if err := clusterMeta.EndMaintenance(ctx, clusterMeta.Cluster.MaintenanceStatus); err != nil {
+			framework.LogWithContext(ctx).Errorf("end cluster %s maintenance status failed, %s", clusterMeta.Cluster.ID, err.Error())
+			return err
+		}
+	}
 
 	return nil
 }
@@ -159,20 +189,45 @@ func backupFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 		return err
 	}
 
-	return nil
+	return defaultEnd(node, ctx)
 }
 
 func restoreFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin restoreFail")
 	defer framework.LogWithContext(ctx).Info("end restoreFail")
 
-	return nil
+	return defaultEnd(node, ctx)
+}
+
+func getBRStoragePath(ctx context.Context, storageType string, filePath string) string {
+	configRW := models.GetConfigReaderWriter()
+	if string(constants.StorageTypeS3) == storageType {
+		endpointConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupS3Endpoint)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupS3Endpoint, err.Error())
+			return ""
+		}
+		accessKeyConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupS3AccessKey)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupS3AccessKey, err.Error())
+			return ""
+		}
+		secretAccessKeyConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupS3SecretAccessKey)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupS3SecretAccessKey, err.Error())
+			return ""
+		}
+		return fmt.Sprintf("%s/?access-key=%s\\&secret-access-key=%s\\&endpoint=%s\\&force-path-style=true",
+			filePath, accessKeyConfig.ConfigValue, secretAccessKeyConfig.ConfigValue, endpointConfig.ConfigValue)
+	} else {
+		return filePath
+	}
 }
 
 func convertBrStorageType(storageType string) (secondparty.StorageType, error) {
 	if string(constants.StorageTypeS3) == storageType {
 		return secondparty.StorageTypeS3, nil
-	} else if string(constants.StorageTypeLocal) == storageType {
+	} else if string(constants.StorageTypeNFS) == storageType {
 		return secondparty.StorageTypeLocal, nil
 	} else {
 		return "", fmt.Errorf("invalid storage type, %s", storageType)

@@ -65,7 +65,7 @@ type ReaderWriter interface {
 	// @Return []*BackupRecord
 	// @Return total
 	// @Return error
-	QueryBackupRecords(ctx context.Context, clusterId, backupId, backupMode string, startTime, endTime time.Time, page int, pageSize int) (records []*BackupRecord, total int64, err error)
+	QueryBackupRecords(ctx context.Context, clusterId, backupId, backupMode string, startTime, endTime int64, page int, pageSize int) (records []*BackupRecord, total int64, err error)
 
 	// DeleteBackupRecord
 	// @Description: delete backup record by Id
@@ -83,6 +83,15 @@ type ReaderWriter interface {
 	// @Return *BackupStrategy
 	// @Return error
 	CreateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (*BackupStrategy, error)
+
+	// SaveBackupStrategy
+	// @Description: create new backup strategy or update exist backup strategy
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter strategy
+	// @Return *BackupStrategy
+	// @Return error
+	SaveBackupStrategy(ctx context.Context, strategy *BackupStrategy) (*BackupStrategy, error)
 
 	// UpdateBackupStrategy
 	// @Description: update backup strategy

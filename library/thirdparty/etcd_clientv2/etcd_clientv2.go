@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -24,10 +23,10 @@ import (
 
 	"github.com/pingcap-inc/tiem/library/framework"
 
-	"github.com/pingcap-inc/tiem/library/common"
-
 	"go.etcd.io/etcd/client/v2"
 )
+
+const httpProtocol = "http://"
 
 type EtcdClient struct {
 	cli     client.Client
@@ -39,8 +38,8 @@ var etcdClient *EtcdClient
 func InitEtcdClient(etcdAddress []string) *EtcdClient {
 	// Determine whether to include 'http://'
 	for i, addr := range etcdAddress {
-		if !strings.HasPrefix(addr, common.HttpProtocol) {
-			etcdAddress[i] = common.HttpProtocol + addr
+		if !strings.HasPrefix(addr, httpProtocol) {
+			etcdAddress[i] = httpProtocol + addr
 		}
 	}
 	cli, err := client.New(client.Config{

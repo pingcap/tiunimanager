@@ -26,8 +26,6 @@ import (
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 
-	"github.com/pingcap-inc/tiem/library/common"
-
 	"github.com/elastic/go-elasticsearch/v7"
 )
 
@@ -80,8 +78,8 @@ func parseAddress(esAddress string) []string {
 	esAddressArr := strings.Split(esAddress, ",")
 	addresses := make([]string, 0)
 	for _, addr := range esAddressArr {
-		if !strings.HasPrefix(addr, common.HttpProtocol) {
-			addr = common.HttpProtocol + addr
+		if !strings.HasPrefix(addr, "http://") {
+			addr = "http://" + addr
 		}
 		addresses = append(addresses, addr)
 	}

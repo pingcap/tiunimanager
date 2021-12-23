@@ -6,11 +6,12 @@
  *                                                                            *
  * http://www.apache.org/licenses/LICENSE-2.0                                 *
  *                                                                            *
- *  Unless required by applicable law or agreed to in writing, software       *
- *  distributed under the License is distributed on an "AS IS" BASIS,         *
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
- *  See the License for the specific language governing permissions and       *
- *  limitations under the License.                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ *                                                                            *
  ******************************************************************************/
 
 /*******************************************************************************
@@ -18,7 +19,7 @@
  * @Description:
  * @Author: shenhaibo@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/6
+ * @Date: 2021/12/15
 *******************************************************************************/
 
 package secondparty
@@ -30,14 +31,13 @@ import (
 	"fmt"
 	"strings"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/spec"
 )
 
-func (secondMicro *SecondMicro) EditClusterConfig(ctx context.Context, req ClusterEditConfigReq, bizID uint64) error {
-	logInFunc := framework.LogWithContext(ctx).WithField("bizid", bizID)
-	logInFunc.Infof("editclusterconfig, clustereditconfigreq: %v, bizid: %d", req, bizID)
+func (manager *SecondPartyManager) EditClusterConfig(ctx context.Context, req ClusterEditConfigReq, workFlowNodeID string) error {
+	logInFunc := framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID)
+	logInFunc.Infof("editclusterconfig, clustereditconfigreq: %v", req)
 
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", req.DbConnParameter.Username, req.DbConnParameter.Password, req.DbConnParameter.IP, req.DbConnParameter.Port))
 	if err != nil {
@@ -99,4 +99,43 @@ func execShowWarningsThruSQL(ctx context.Context, db *sql.DB) error {
 
 	logInFunc.Errorf("set config error: %s", showWarningsResp.Message)
 	return errors.New(showWarningsResp.Message)
+}
+
+func (manager *SecondPartyManager) SetClusterDbPassword(ctx context.Context, req ClusterSetDbPswReq, workFlowNodeID string) error {
+	logInFunc := framework.LogWithContext(ctx).WithField("bizid", workFlowNodeID)
+	logInFunc.Infof("setclusterrootpsw, clustersetrootpswreq: %v, bizId: %s", req, workFlowNodeID)
+
+	if len(req.DbConnParameter.Password) < 8 || len(req.DbConnParameter.Password) > 32 {
+		errMsg := errors.New("the valid length of the password is 8~32")
+		logInFunc.Info(errMsg)
+		return errMsg
+	}
+
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", req.DbConnParameter.Username, "", req.DbConnParameter.IP, req.DbConnParameter.Port))
+	if err != nil {
+		logInFunc.Error("conn tidb error", err)
+		return err
+	}
+	defer db.Close()
+
+	sqlCommand := fmt.Sprintf("ALTER USER '%s'@'%s' IDENTIFIED BY '%s'", req.DbConnParameter.Username, "%", req.DbConnParameter.Password)
+	logInFunc.Infof("task start processing: %s, on %s:%s", sqlCommand, req.DbConnParameter.IP, req.DbConnParameter.Port)
+
+	err = execSetDbPswThruSQL(ctx, db, sqlCommand)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func execSetDbPswThruSQL(ctx context.Context, db *sql.DB, sqlCommand string) error {
+	logInFunc := framework.LogWithContext(ctx)
+	_, err := db.Exec(sqlCommand)
+	if err != nil {
+		logInFunc.Errorf("set db password error: %s", err.Error())
+		return err
+	}
+	return nil
 }

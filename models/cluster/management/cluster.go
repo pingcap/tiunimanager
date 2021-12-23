@@ -22,12 +22,13 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
+	"time"
 )
 
 type Cluster struct {
 	common.Entity
-	Name              string                             `gorm:"not null;size:64;comment:'user name of the cluster''"`
-	DBUser            string                             `gorm:"not null;size:64;comment:'user name of the database''"`
+	Name              string                             `gorm:"not null;size:64;uniqueIndex:uniqueName;comment:'user name of the cluster''"`
+	DBUser            string                             `gorm:"not null;size:64;default:root;comment:'user name of the database''"`
 	DBPassword        string                             `gorm:"not null;size:64;comment:'user password of the database''"`
 	Type              string                             `gorm:"not null;size:16;comment:'type of the cluster, eg. TiDB、TiDB Migration';"`
 	Version           string                             `gorm:"not null;size:64;comment:'version of the cluster'"`
@@ -41,6 +42,9 @@ type Cluster struct {
 	Region            string                             `gorm:"comment: region location"`
 	CpuArchitecture   constants.ArchType                 `gorm:"not null;type:varchar(64);comment:'user name of the cluster''"`
 	MaintenanceStatus constants.ClusterMaintenanceStatus `gorm:"not null;type:varchar(64);comment:'user name of the cluster''"`
+	MaintainWindow    string                             `gorm:"not null;type:varchar(64);comment:'maintain window''"`
+	// never use
+	DeleteTime        int64                              `gorm:"uniqueIndex:uniqueName"`
 }
 
 func (t *Cluster) BeforeSave(tx *gorm.DB) (err error) {
@@ -61,6 +65,11 @@ func (t *Cluster) BeforeSave(tx *gorm.DB) (err error) {
 	if len(t.ID) == 0 {
 		return t.Entity.BeforeCreate(tx)
 	}
+	return nil
+}
+
+func (t *Cluster) BeforeDelete(tx *gorm.DB) (err error) {
+	tx.Model(t).Update("delete_time", time.Now().Unix())
 	return nil
 }
 

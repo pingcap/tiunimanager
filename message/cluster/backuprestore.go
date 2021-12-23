@@ -25,7 +25,6 @@ package cluster
 
 import (
 	"github.com/pingcap-inc/tiem/common/structs"
-	"time"
 )
 
 // BackupClusterDataReq Requests for manual data backup
@@ -45,7 +44,7 @@ type BackupClusterDataResp struct {
 type DeleteBackupDataReq struct {
 	ClusterID  string `json:"clusterId"`
 	BackupMode string `json:"backupMode"`
-	BackupID   string `json:"backupId"`
+	BackupID   string `json:"backupId" swaggerignore:"true"`
 }
 
 // DeleteBackupDataResp Delete a backup file reply message
@@ -54,21 +53,21 @@ type DeleteBackupDataResp struct {
 
 // QueryBackupRecordsReq Query the list of backup files over time based on cluster ID
 type QueryBackupRecordsReq struct {
-	BackupID  string    `json:"backupId"`
-	ClusterID string    `json:"clusterId" form:"clusterId"`
-	StartTime time.Time `json:"startTime" form:"startTime"`
-	EndTime   time.Time `json:"endTime" form:"endTime"`
+	BackupID  string `json:"backupId" form:"backupId"`
+	ClusterID string `json:"clusterId" form:"clusterId"`
+	StartTime int64  `json:"startTime" form:"startTime"`
+	EndTime   int64  `json:"endTime" form:"endTime"`
 	structs.PageRequest
 }
 
 // QueryBackupRecordsResp Query the return information of the backup file
 type QueryBackupRecordsResp struct {
-	BackupRecords []*structs.BackupRecord
+	BackupRecords []*structs.BackupRecord `json:"backupRecords"`
 }
 
 // SaveBackupStrategyReq Request to update backup data strategy
 type SaveBackupStrategyReq struct {
-	ClusterID string                 `json:"clusterId"`
+	ClusterID string                 `json:"clusterId" swaggerignore:"true"`
 	Strategy  structs.BackupStrategy `json:"strategy"`
 }
 
@@ -78,7 +77,7 @@ type SaveBackupStrategyResp struct {
 
 // GetBackupStrategyReq Query messages for cluster backup strategy
 type GetBackupStrategyReq struct {
-	ClusterID string `json:"clusterId" form:"clusterId"`
+	ClusterID string `json:"clusterId" form:"clusterId" swaggerignore:"true"`
 }
 
 // GetBackupStrategyResp Query backup strategy reply message

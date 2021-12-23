@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
@@ -37,9 +36,9 @@ func buildDataImportConfig(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	defer framework.LogWithContext(ctx).Info("end buildDataImportConfig")
 
 	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
-	info := ctx.GetData(contextDataTransportRecordKey).(*ImportInfo)
+	info := ctx.GetData(contextDataTransportRecordKey).(*importInfo)
 
-	config := NewDataImportConfig(meta, info)
+	config := NewDataImportConfig(ctx, meta, info)
 	if config == nil {
 		framework.LogWithContext(ctx).Errorf("convert toml config failed, cluster: %s", meta.Cluster.ID)
 		return fmt.Errorf("convert toml config failed, cluster: %s", meta.Cluster.ID)
@@ -64,17 +63,18 @@ func importDataToCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) 
 	framework.LogWithContext(ctx).Info("begin importDataToCluster")
 	defer framework.LogWithContext(ctx).Info("end importDataToCluster")
 
-	info := ctx.GetData(contextDataTransportRecordKey).(*ImportInfo)
+	info := ctx.GetData(contextDataTransportRecordKey).(*importInfo)
 
+	framework.LogWithContext(ctx).Infof("begin do tiup tidb-lightning -config %s/tidb-lightning.toml, timeout: %d", info.ConfigPath, lightningTimeout)
 	//tiup tidb-lightning -config tidb-lightning.toml
-	importTaskId, err := secondparty.Manager.Lightning(ctx, 0,
+	importTaskId, err := secondparty.Manager.Lightning(ctx, lightningTimeout,
 		[]string{"-config", fmt.Sprintf("%s/tidb-lightning.toml", info.ConfigPath)},
 		node.ID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call tiup lightning api failed, %s", err.Error())
 		return fmt.Errorf("call tiup lightning api failed, %s", err.Error())
 	}
-	framework.LogWithContext(ctx).Infof("call tiupmgr tidb-lightning api success, importTaskId %d", importTaskId)
+	framework.LogWithContext(ctx).Infof("call tiupmgr tidb-lightning api success, importTaskId %s", importTaskId)
 	return nil
 }
 
@@ -82,7 +82,7 @@ func updateDataImportRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContex
 	framework.LogWithContext(ctx).Info("begin updateDataImportRecord")
 	defer framework.LogWithContext(ctx).Info("end updateDataImportRecord")
 
-	info := ctx.GetData(contextDataTransportRecordKey).(*ImportInfo)
+	info := ctx.GetData(contextDataTransportRecordKey).(*importInfo)
 
 	rw := models.GetImportExportReaderWriter()
 	err := rw.UpdateDataTransportRecord(ctx, info.RecordId, string(constants.DataImportExportFinished), time.Now())
@@ -98,17 +98,23 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	framework.LogWithContext(ctx).Info("begin exportDataFromCluster")
 	defer framework.LogWithContext(ctx).Info("end exportDataFromCluster")
 
-	//meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
-	info := ctx.GetData(contextDataTransportRecordKey).(*ExportInfo)
+	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
+	info := ctx.GetData(contextDataTransportRecordKey).(*exportInfo)
 
-	//todo: get from meta
-	tidbHost := ""
-	tidbPort := 4000
-	if tidbPort == 0 {
-		tidbPort = constants.DefaultTiDBPort
+	tidbServers := meta.GetClusterConnectAddresses()
+	if len(tidbServers) == 0 {
+		framework.LogWithContext(ctx).Error("get tidb servers from meta result empty")
+		return fmt.Errorf("get tidb servers from meta result empty")
 	}
-
-	if common.NfsStorageType == info.StorageType {
+	framework.LogWithContext(ctx).Infof("get cluster %s tidb address from meta, %+v", meta.Cluster.ID, tidbServers)
+	tidbHost := tidbServers[0].IP
+	tidbPort := tidbServers[0].Port
+	/*
+		if tidbPort == 0 {
+			tidbPort = constants.DefaultTiDBPort
+		}
+	*/
+	if string(constants.StorageTypeNFS) == info.StorageType {
 		if err := cleanDataTransportDir(ctx, info.FilePath); err != nil {
 			framework.LogWithContext(ctx).Errorf("clean export directory failed, %s", err.Error())
 			return fmt.Errorf("clean export directory failed, %s", err.Error())
@@ -116,7 +122,6 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	}
 
 	//tiup dumpling -u root -P 4000 --host 127.0.0.1 --filetype sql -t 8 -o /tmp/test -r 200000 -F 256MiB --filter "user*"
-	//todo: replace root password
 	cmd := []string{"-u", info.UserName,
 		"-p", info.Password,
 		"-P", strconv.Itoa(tidbPort),
@@ -129,20 +134,17 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	if info.Filter != "" {
 		cmd = append(cmd, "--filter", info.Filter)
 	}
-	if FileTypeCSV == info.FileType && info.Filter == "" && info.Sql != "" {
+	if fileTypeCSV == info.FileType && info.Filter == "" && info.Sql != "" {
 		cmd = append(cmd, "--sql", info.Sql)
 	}
-	if common.S3StorageType == info.StorageType && info.BucketRegion != "" {
-		cmd = append(cmd, "--s3.region", fmt.Sprintf("\"%s\"", info.BucketRegion))
-	}
-	framework.LogWithContext(ctx).Infof("call tiupmgr dumpling api, cmd: %v", cmd)
-	exportTaskId, err := secondparty.Manager.Dumpling(ctx, 0, cmd, node.ID)
+	framework.LogWithContext(ctx).Infof("call tiupmgr dumpling api, cmd: %v, timeout: %d", cmd, dumplingTimeout)
+	exportTaskId, err := secondparty.Manager.Dumpling(ctx, dumplingTimeout, cmd, node.ID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call tiup dumpling api failed, %s", err.Error())
 		return fmt.Errorf("call tiup dumpling api failed, %s", err.Error())
 	}
 
-	framework.LogWithContext(ctx).Infof("call tiupmgr succee, exportTaskId: %d", exportTaskId)
+	framework.LogWithContext(ctx).Infof("call tiupmgr succee, exportTaskId: %s", exportTaskId)
 	return nil
 }
 
@@ -150,7 +152,7 @@ func updateDataExportRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContex
 	framework.LogWithContext(ctx).Info("begin updateDataExportRecord")
 	defer framework.LogWithContext(ctx).Info("end updateDataExportRecord")
 
-	info := ctx.GetData(contextDataTransportRecordKey).(*ExportInfo)
+	info := ctx.GetData(contextDataTransportRecordKey).(*exportInfo)
 
 	rw := models.GetImportExportReaderWriter()
 	err := rw.UpdateDataTransportRecord(ctx, info.RecordId, string(constants.DataImportExportFinished), time.Now())
@@ -167,7 +169,7 @@ func importDataFailed(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) err
 	framework.LogWithContext(ctx).Info("begin importDataFailed")
 	defer framework.LogWithContext(ctx).Info("end importDataFailed")
 
-	info := ctx.GetData(contextDataTransportRecordKey).(*ExportInfo)
+	info := ctx.GetData(contextDataTransportRecordKey).(*importInfo)
 	if err := updateTransportRecordFailed(ctx, info.RecordId); err != nil {
 		framework.LogWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return fmt.Errorf("update data transport record failed, %s", err.Error())
@@ -177,6 +179,15 @@ func importDataFailed(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) err
 }
 
 func exportDataFailed(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.LogWithContext(ctx).Info("begin exportDataFailed")
+	defer framework.LogWithContext(ctx).Info("end exportDataFailed")
+
+	info := ctx.GetData(contextDataTransportRecordKey).(*exportInfo)
+	if err := updateTransportRecordFailed(ctx, info.RecordId); err != nil {
+		framework.LogWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
+		return fmt.Errorf("update data transport record failed, %s", err.Error())
+	}
+
 	return clusterFail(node, ctx)
 }
 

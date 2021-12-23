@@ -21,9 +21,8 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
 	mock_secp "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
 	mock_ssh "github.com/pingcap-inc/tiem/test/mockutil/mocksshclientexecutor"
 	"github.com/stretchr/testify/assert"
@@ -44,7 +43,7 @@ func Test_VerifyCpuMem_Succeed(t *testing.T) {
 		if strings.Contains(command, "Mem:") {
 			return "8", nil
 		}
-		return "", framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+		return "", errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 	}).Times(3)
 
 	fileInitiator := NewFileHostInitiator()
@@ -62,7 +61,7 @@ func Test_VerifyCpuMem_Failed(t *testing.T) {
 		if strings.Contains(command, "Architecture:") {
 			return "ARM64", nil
 		}
-		return "", framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+		return "", errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 	}).Times(1)
 
 	fileInitiator := NewFileHostInitiator()

@@ -23,8 +23,8 @@ import (
 	"text/template"
 
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	sshclient "github.com/pingcap-inc/tiem/library/util/ssh"
@@ -115,7 +115,7 @@ func (p *FileHostInitiator) verifyCpuMem(ctx context.Context, h *structs.HostInf
 		return err
 	}
 	if !strings.EqualFold(arch, h.Arch) {
-		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_HOST_NOT_EXPECTED, "Host %s [%s] arch %s is not as import %s", h.HostName, h.IP, arch, h.Arch)
+		return errors.NewEMErrorf(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, "Host %s [%s] arch %s is not as import %s", h.HostName, h.IP, arch, h.Arch)
 	}
 
 	getCpuCoresCmd := "lscpu | grep 'CPU(s):' | awk '{print $2}'"
@@ -192,12 +192,12 @@ type templateScaleOut struct {
 func (p *templateScaleOut) generateTopologyConfig(ctx context.Context) (string, error) {
 	t, err := template.New("import_topology.yaml").ParseFiles("template/import_topology.yaml")
 	if err != nil {
-		return "", framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, err.Error())
+		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
 	}
 
 	topology := new(bytes.Buffer)
 	if err = t.Execute(topology, p); err != nil {
-		return "", framework.NewTiEMError(common.TIEM_UNRECOGNIZED_ERROR, err.Error())
+		return "", errors.NewError(errors.TIEM_UNRECOGNIZED_ERROR, err.Error())
 	}
 	framework.LogWithContext(ctx).Infof("generate topology config: %s", topology.String())
 
@@ -222,7 +222,7 @@ func (p *FileHostInitiator) installFileBeat(ctx context.Context, hosts []structs
 
 	operationId, err := p.secondPartyServ.ClusterScaleOut(ctx, secondparty.TiEMComponentTypeStr, "", templateStr, 0, nil, "")
 	if err != nil {
-		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "install filebeat [%v] failed, %v", templateStr, err)
+		return errors.NewEMErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "install filebeat [%v] failed, %v", templateStr, err)
 	}
 	framework.LogWithContext(ctx).Infof("installing filebeat for %v in operationId %s", tempateInfo, operationId)
 

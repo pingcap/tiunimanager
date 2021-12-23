@@ -19,8 +19,7 @@ import (
 	"testing"
 
 	"github.com/bmizerany/assert"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/errors"
 )
 
 func Test_ValidArchType(t *testing.T) {
@@ -36,7 +35,7 @@ func Test_ValidArchType(t *testing.T) {
 		{"Test_X86_64", "X86_64", want{nil}},
 		{"Test_ARM", "ARM", want{nil}},
 		{"Test_ARM64", "ARM64", want{nil}},
-		{"Test_Fail", "x86", want{framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_ARCH, "valid arch type: [%s|%s|%s|%s]",
+		{"Test_Fail", "x86", want{errors.NewEMErrorf(errors.TIEM_RESOURCE_INVALID_ARCH, "valid arch type: [%s|%s|%s|%s]",
 			string(ArchX86), string(ArchX8664), string(ArchArm), string(ArchArm64))}},
 	}
 	for _, tt := range tests {
@@ -153,7 +152,7 @@ func Test_ValidDiskType(t *testing.T) {
 		{"Test_NVMeSSD", "NVMeSSD", want{nil}},
 		{"Test_SSD", "SSD", want{nil}},
 		{"Test_SATA", "SATA", want{nil}},
-		{"Test_Fail", "sata", want{framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_PURPOSE, "valid disk type: [%s|%s|%s]",
+		{"Test_Fail", "sata", want{errors.NewEMErrorf(errors.TIEM_RESOURCE_INVALID_PURPOSE, "valid disk type: [%s|%s|%s]",
 			string(NVMeSSD), string(SSD), string(SATA))}},
 	}
 	for _, tt := range tests {
@@ -176,7 +175,7 @@ func Test_ValidPurposeType(t *testing.T) {
 		{"Test_Compute", "Compute", want{nil}},
 		{"Test_Storage", "Storage", want{nil}},
 		{"Test_Schedule", "Schedule", want{nil}},
-		{"Test_Fail", "sata", want{framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_PURPOSE, "valid purpose name: [%s|%s|%s]",
+		{"Test_Fail", "sata", want{errors.NewEMErrorf(errors.TIEM_RESOURCE_INVALID_PURPOSE, "valid purpose name: [%s|%s|%s]",
 			string(PurposeCompute), string(PurposeStorage), string(PurposeSchedule))}},
 	}
 	for _, tt := range tests {

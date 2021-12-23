@@ -616,11 +616,13 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 // @Parameter req
 // @return resp
 // @return err
-func (p *Manager) InPlaceUpgradeCluster(ctx context.Context, req *cluster.ClusterUpgradeReq) (*cluster.ClusterUpgradeResp, error) {
+func (p *Manager) InPlaceUpgradeCluster(ctx context.Context, req *cluster.ClusterUpgradeReq) (resp *cluster.ClusterUpgradeResp, err error) {
+	framework.LogWithContext(ctx).Infof("inplaceupgradecluster, handle request [%+v]", *req)
 	meta, err := handler.Get(ctx, req.ClusterID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("get cluster failed, clusterId = %s", req.ClusterID)
-		return &cluster.ClusterUpgradeResp{}, err
+		framework.LogWithContext(ctx).Errorf(
+			"load cluster %s meta from db error: %s", req.ClusterID, err.Error())
+		return
 	}
 
 	if meta.Cluster.Status != string(constants.ClusterRunning) {
@@ -642,8 +644,6 @@ func (p *Manager) InPlaceUpgradeCluster(ctx context.Context, req *cluster.Cluste
 		flowID, err = asyncMaintenance(ctx, meta, constants.ClusterMaintenanceUpgrading, offlineInPlaceUpgradeClusterFlow.FlowName, data)
 	}
 
-	resp := &cluster.ClusterUpgradeResp{}
 	resp.WorkFlowID = flowID
-
-	return resp, err
+	return
 }

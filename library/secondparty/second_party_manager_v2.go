@@ -122,8 +122,8 @@ func (manager *SecondPartyManager) GetOperationStatus(ctx context.Context, opera
 
 func (manager *SecondPartyManager) GetOperationStatusByWorkFlowNodeID(ctx context.Context, workFlowNodeID string) (
 	resp GetOperationStatusResp, err error) {
-	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("getoperationstatusbybizid")
-	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().QueryByWorkFlowNodeID(ctx, workFlowNodeID)
+	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("getoperationstatusbyworkflownodeid")
+	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().QueryByWorkFlowNodeID(context.TODO(), workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartypperation:%v, err:%v", secondPartyOperation, err)
 		return

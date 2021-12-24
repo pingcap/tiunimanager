@@ -31,7 +31,6 @@ import (
 	_ "github.com/pingcap-inc/tiem/docs"
 	"github.com/pingcap-inc/tiem/file-server/interceptor"
 	"github.com/pingcap-inc/tiem/file-server/route"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/thirdparty/etcd_clientv2"
 )
@@ -73,11 +72,11 @@ func initGinEngine(d *framework.BaseFramework) error {
 	if d.GetClientArgs().EnableHttps {
 		g.Use(interceptor.TlsHandler(addr))
 		if err := g.RunTLS(addr, d.GetCertificateInfo().CertificateCrtFilePath, d.GetCertificateInfo().CertificateKeyFilePath); err != nil {
-			d.GetRootLogger().ForkFile(common.LogFileSystem).Fatal(err)
+			d.GetRootLogger().ForkFile(constants.LogFileSystem).Fatal(err)
 		}
 	} else {
 		if err := g.Run(addr); err != nil {
-			d.GetRootLogger().ForkFile(common.LogFileSystem).Fatal(err)
+			d.GetRootLogger().ForkFile(constants.LogFileSystem).Fatal(err)
 		}
 	}
 

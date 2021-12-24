@@ -18,7 +18,6 @@ package common
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 
@@ -64,8 +63,6 @@ func WrapDBError(err error) error {
 
 	switch err.(type) {
 	case errors.EMError:
-		return err
-	case framework.TiEMError:
 		return err
 	default:
 		return errors.NewError(errors.TIEM_SQL_ERROR, err.Error())

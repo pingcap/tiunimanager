@@ -204,7 +204,7 @@ func TestGormChangeFeedReadWrite_QueryByClusterId(t *testing.T) {
 }
 
 func TestGormChangeFeedReadWrite_UnlockStatus(t *testing.T) {
-	newStatus := "2"
+	newStatus := constants.ChangeFeedStatusStopped
 	locked, _ := testRW.Create(context.TODO(), &ChangeFeedTask{
 		Entity: common.Entity{TenantId: "111"},
 		StatusLock: sql.NullTime{
@@ -227,13 +227,13 @@ func TestGormChangeFeedReadWrite_UnlockStatus(t *testing.T) {
 	type args struct {
 		ctx          context.Context
 		taskId       string
-		targetStatus string
+		targetStatus constants.ChangeFeedStatus
 	}
 	tests := []struct {
 		name        string
 		args        args
 		wantErr     bool
-		finalStatus string
+		finalStatus constants.ChangeFeedStatus
 	}{
 		{"locked", args{context.TODO(), locked.ID, newStatus}, false, newStatus},
 		{"unlocked", args{context.TODO(), unlocked.ID, newStatus}, true, "0"},
@@ -248,7 +248,7 @@ func TestGormChangeFeedReadWrite_UnlockStatus(t *testing.T) {
 
 			if tt.finalStatus != "0" {
 				final, _ := m.Get(tt.args.ctx, tt.args.taskId)
-				assert.Equal(t, tt.finalStatus, final.Status)
+				assert.Equal(t, string(tt.finalStatus), final.Status)
 				assert.False(t, final.Locked())
 			}
 		})
@@ -265,7 +265,7 @@ func TestGormChangeFeedReadWrite_UpdateConfig(t *testing.T) {
 		Password: "updated",
 	}
 	existed.Type = constants.DownstreamTypeTiDB
-	existed.FilterRulesConfig = newString
+	existed.FilterRules = []string{newString}
 	existed.ClusterId = newString
 	existed.StartTS = int64(newInt)
 	existed.Entity.Status = "99"
@@ -297,7 +297,7 @@ func TestGormChangeFeedReadWrite_UpdateConfig(t *testing.T) {
 				assert.Equal(t, "updated", updated.Downstream.(*TiDBDownstream).Password)
 
 				assert.Equal(t, "tidb", string(updated.Type))
-				assert.Equal(t, newString, updated.FilterRulesConfig)
+				assert.Equal(t, []string{newString}, updated.FilterRules)
 				assert.NotEqual(t, newString, updated.ClusterId)
 				assert.NotEqual(t, int8(newInt), updated.Status)
 			}
@@ -315,14 +315,14 @@ func TestConvertStatus(t *testing.T) {
 		wantStatus constants.ChangeFeedStatus
 		wantErr    bool
 	}{
-		{"Initial", args{"Initial"}, constants.Initial, false},
-		{"Normal", args{"Normal"}, constants.Normal, false},
-		{"Stopped", args{"Stopped"}, constants.Stopped, false},
-		{"Finished", args{"Finished"}, constants.Finished, false},
-		{"Error", args{"Error"}, constants.Error, false},
-		{"Failed", args{"Failed"}, constants.Failed, false},
-		{"Unknown", args{"Unknown"}, constants.Unknown, true},
-		{"whatever", args{"Unknown"}, constants.Unknown, true},
+		{"Initial", args{"Initial"}, constants.ChangeFeedStatusInitial, false},
+		{"Normal", args{"Normal"}, constants.ChangeFeedStatusNormal, false},
+		{"Stopped", args{"Stopped"}, constants.ChangeFeedStatusStopped, false},
+		{"Finished", args{"Finished"}, constants.ChangeFeedStatusFinished, false},
+		{"Error", args{"Error"}, constants.ChangeFeedStatusError, false},
+		{"Failed", args{"Failed"}, constants.ChangeFeedStatusFailed, false},
+		{"Unknown", args{"Unknown"}, constants.ChangeFeedStatusUnknown, true},
+		{"whatever", args{"Unknown"}, constants.ChangeFeedStatusUnknown, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -344,13 +344,13 @@ func TestStatus_IsFinal(t *testing.T) {
 		s    constants.ChangeFeedStatus
 		want bool
 	}{
-		{"Initial", constants.Initial, false},
-		{"Normal", constants.Normal, false},
-		{"Stopped", constants.Stopped, false},
-		{"Finished", constants.Finished, true},
-		{"Error", constants.Error, false},
-		{"Failed", constants.Failed, true},
-		{"Unknown", constants.Unknown, false},
+		{"Initial", constants.ChangeFeedStatusInitial, false},
+		{"Normal", constants.ChangeFeedStatusNormal, false},
+		{"Stopped", constants.ChangeFeedStatusStopped, false},
+		{"Finished", constants.ChangeFeedStatusFinished, true},
+		{"Error", constants.ChangeFeedStatusError, false},
+		{"Failed", constants.ChangeFeedStatusFailed, true},
+		{"Unknown", constants.ChangeFeedStatusUnknown, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

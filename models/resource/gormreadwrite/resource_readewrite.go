@@ -22,10 +22,8 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	resource_models "github.com/pingcap-inc/tiem/models/resource"
-	mm "github.com/pingcap-inc/tiem/models/resource/management"
 	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	"gorm.io/gorm"
 )
@@ -51,59 +49,6 @@ func (rw *GormResourceReadWrite) addTable(ctx context.Context, tableModel interf
 	} else {
 		return false, nil
 	}
-}
-
-func (rw *GormResourceReadWrite) InitTables(ctx context.Context) error {
-	log := framework.LogWithContext(ctx)
-	_, err := rw.addTable(ctx, new(rp.Host))
-	if err != nil {
-		log.Errorf("create table Host failed, error: %v", err)
-		return err
-	}
-	_, err = rw.addTable(ctx, new(rp.Disk))
-	if err != nil {
-		log.Errorf("create table Disk failed, error: %v", err)
-		return err
-	}
-	_, err = rw.addTable(ctx, new(mm.UsedCompute))
-	if err != nil {
-		log.Errorf("create table UsedCompute failed, error: %v", err)
-		return err
-	}
-	_, err = rw.addTable(ctx, new(mm.UsedPort))
-	if err != nil {
-		log.Errorf("create table UsedPort failed, error: %v", err)
-		return err
-	}
-	_, err = rw.addTable(ctx, new(mm.UsedDisk))
-	if err != nil {
-		log.Errorf("create table UsedDisk failed, error: %v", err)
-		return err
-	}
-	newTable, err := rw.addTable(ctx, new(rp.Label))
-	if err != nil {
-		log.Errorf("create table Label failed, error: %v", err)
-		return err
-	}
-	if newTable {
-		if err = rw.initSystemDefaultLabels(ctx); err != nil {
-			log.Errorf("init table Label failed, error: %v", err)
-			return err
-		}
-	}
-	return nil
-}
-
-func (rw *GormResourceReadWrite) initSystemDefaultLabels(ctx context.Context) (err error) {
-	for _, v := range structs.DefaultLabelTypes {
-		labelRecord := new(rp.Label)
-		labelRecord.ConstructLabelRecord(&v)
-		err = rw.DB(ctx).Create(labelRecord).Error
-		if err != nil {
-			return errors.NewEMErrorf(errors.TIEM_RESOURCE_INIT_LABELS_ERROR, "init default label table failed, error: %v", err)
-		}
-	}
-	return nil
 }
 
 func (rw *GormResourceReadWrite) Create(ctx context.Context, hosts []rp.Host) (hostIds []string, err error) {

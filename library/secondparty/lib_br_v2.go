@@ -29,10 +29,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	em_errors "github.com/pingcap-inc/tiem/common/errors"
 	"strings"
 	"time"
-
-	"github.com/pingcap-inc/tiem/library/common"
 
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
@@ -120,7 +119,7 @@ func (manager *SecondPartyManager) ShowBackUpInfoThruMetaDB(ctx context.Context,
 	err = json.Unmarshal([]byte(secondPartyOperation.Result), &resp)
 	if err != nil {
 		logInFunc.Errorf("json unmarshal backup info for: %s, failed, %s", secondPartyOperation.Result, err.Error())
-		return resp, framework.NewTiEMErrorf(common.TIEM_UNMARSHAL_ERROR, err.Error())
+		return resp, em_errors.WrapError(em_errors.TIEM_UNMARSHAL_ERROR, "", err)
 	}
 	return resp, nil
 }

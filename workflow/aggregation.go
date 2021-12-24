@@ -19,10 +19,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/common"
-
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
@@ -72,7 +70,7 @@ func (c FlowContext) SetData(key string, value interface{}) {
 func createFlowWork(ctx context.Context, bizId string, define *WorkFlowDefine) (*WorkFlowAggregation, error) {
 	framework.LogWithContext(ctx).Infof("create flowwork %v for bizId %s", define, bizId)
 	if define == nil {
-		return nil, framework.SimpleError(common.TIEM_FLOW_NOT_FOUND)
+		return nil, errors.NewEMErrorf(errors.TIEM_FLOW_NOT_FOUND, "empty workflow definition")
 	}
 	flowData := make(map[string]interface{})
 
@@ -104,7 +102,7 @@ func (flow *WorkFlowAggregation) destroy(ctx context.Context, reason string) {
 	flow.Flow.Status = constants.WorkFlowStatusCanceled
 
 	if flow.CurrentNode != nil {
-		flow.CurrentNode.Fail(framework.NewTiEMError(common.TIEM_TASK_CANCELED, reason))
+		flow.CurrentNode.Fail(errors.NewError(errors.TIEM_TASK_CANCELED, reason))
 	}
 	err := models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
 	if err != nil {

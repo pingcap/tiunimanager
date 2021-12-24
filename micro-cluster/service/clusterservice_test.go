@@ -19,8 +19,6 @@ import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -57,7 +55,7 @@ func Test_handleRequest(t *testing.T) {
 		data := TestStruct{}
 		succeed := handleRequest(context.TODO(), req, resp, &data)
 		assert.False(t, succeed)
-		assert.Equal(t, int32(common.TIEM_UNMARSHAL_ERROR), resp.Code)
+		assert.Equal(t, int32(errors.TIEM_UNMARSHAL_ERROR), resp.Code)
 	})
 }
 
@@ -87,13 +85,13 @@ func Test_handleResponse(t *testing.T) {
 			Name: "aaa",
 			Type: 4,
 		}
-		handleResponse(context.TODO(), resp, framework.SimpleError(common.TIEM_CLUSTER_NOT_FOUND), data, &clusterpb.RpcPage{
+		handleResponse(context.TODO(), resp, errors.NewError(errors.TIEM_CLUSTER_NOT_FOUND, ""), data, &clusterpb.RpcPage{
 			Page:     4,
 			PageSize: 8,
 			Total:    32,
 		})
 
-		assert.Equal(t, int32(common.TIEM_CLUSTER_NOT_FOUND), resp.Code)
+		assert.Equal(t, int32(errors.TIEM_CLUSTER_NOT_FOUND), resp.Code)
 		assert.Empty(t, resp.GetPage())
 		assert.Empty(t, resp.GetResponse())
 	})

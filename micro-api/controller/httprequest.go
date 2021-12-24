@@ -23,7 +23,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 )
 
@@ -145,7 +144,7 @@ func HandleRequest(c *gin.Context,
 	err := builder(c, req)
 	if err != nil {
 		framework.LogWithContext(c).Errorf("unmarshal request failed, %s", err.Error())
-		c.JSON(http.StatusBadRequest, Fail(int(common.TIEM_UNMARSHAL_ERROR), err.Error()))
+		c.JSON(http.StatusBadRequest, Fail(int(errors.TIEM_UNMARSHAL_ERROR), err.Error()))
 		return "", false
 	}
 

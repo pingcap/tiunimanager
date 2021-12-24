@@ -27,12 +27,31 @@ import (
 	allocrecycle "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/allocator_recycler"
 	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	host_provider "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
+	"github.com/pingcap-inc/tiem/models/common"
 	resource_models "github.com/pingcap-inc/tiem/models/resource"
 	resourcepool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
+	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	mock_resource "github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
 	mock_initiator "github.com/pingcap-inc/tiem/test/mockresource/mockinitiator"
+	mock_workflow "github.com/pingcap-inc/tiem/test/mockworkflow"
+	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"
 )
+
+var emptyNode = func(task *wfModel.WorkFlowNode, context *workflow.FlowContext) error {
+	return nil
+}
+
+func getEmptyFlow(name string) *workflow.WorkFlowDefine {
+	return &workflow.WorkFlowDefine{
+		FlowName: name,
+		TaskNodes: map[string]*workflow.NodeDefine{
+			"start": {Name: "start", SuccessEvent: "done", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
+			"done":  {Name: "end", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
+			"fail":  {Name: "fail", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
+		},
+	}
+}
 
 func genHostInfo(hostName string) *structs.HostInfo {
 	host := structs.HostInfo{
@@ -94,10 +113,10 @@ func genHostRspFromDB(hostId, hostName string) *resourcepool.Host {
 func doMockInitiator(mockInitiator *mock_initiator.MockHostInitiator) {
 	mockInitiator.EXPECT().Verify(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
 		return nil
-	})
+	}).AnyTimes()
 	mockInitiator.EXPECT().InstallSoftware(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []structs.HostInfo) error {
 		return nil
-	})
+	}).AnyTimes()
 }
 func Test_ImportHosts_Succeed(t *testing.T) {
 	fake_hostId := "xxxx-xxxx-yyyy-yyyy"
@@ -128,14 +147,27 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 
 	resourceManager.GetResourcePool().SetHostInitiator(mockInitiator)
 
+	ctrl3 := gomock.NewController(t)
+	defer ctrl3.Finish()
+	workflowService := mock_workflow.NewMockWorkFlowService(ctrl3)
+	workflow.MockWorkFlowService(workflowService)
+	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
+	}, nil).AnyTimes()
+	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(3)
+
 	var hosts []structs.HostInfo
 	host := genHostInfo("TEST_HOST1")
 	hosts = append(hosts, *host)
 
-	hostIds, err := resourceManager.ImportHosts(context.TODO(), hosts)
+	flowId, hostIds, err := resourceManager.ImportHosts(context.TODO(), hosts)
 	assert.Nil(t, err)
 
 	assert.Equal(t, fake_hostId, hostIds[0])
+	assert.Equal(t, "flow01", flowId)
 }
 
 func Test_ImportHosts_Failed(t *testing.T) {
@@ -152,6 +184,7 @@ func Test_ImportHosts_Failed(t *testing.T) {
 			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
+
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
 	file_hostprovider, ok := (hostprovider).(*(host_provider.FileHostProvider))
 	assert.True(t, ok)
@@ -165,14 +198,26 @@ func Test_ImportHosts_Failed(t *testing.T) {
 
 	resourceManager.GetResourcePool().SetHostInitiator(mockInitiator)
 
+	ctrl3 := gomock.NewController(t)
+	defer ctrl3.Finish()
+	workflowService := mock_workflow.NewMockWorkFlowService(ctrl3)
+	workflow.MockWorkFlowService(workflowService)
+	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
+	}, nil).AnyTimes()
+	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
 	var hosts []structs.HostInfo
 	host := genHostInfo("TEST_HOST2")
 	hosts = append(hosts, *host)
-	_, err := resourceManager.ImportHosts(context.TODO(), hosts)
+	flowId, _, err := resourceManager.ImportHosts(context.TODO(), hosts)
 	assert.NotNil(t, err)
 	tiemErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
 	assert.Equal(t, errors.TIEM_PARAMETER_INVALID, tiemErr.GetCode())
+	assert.Equal(t, "", flowId)
 
 }
 

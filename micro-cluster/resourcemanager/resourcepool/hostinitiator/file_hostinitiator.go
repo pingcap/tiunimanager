@@ -28,6 +28,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	sshclient "github.com/pingcap-inc/tiem/library/util/ssh"
+	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 )
 
 type FileHostInitiator struct {
@@ -107,7 +108,7 @@ func (p *FileHostInitiator) InstallSoftware(ctx context.Context, hosts []structs
 }
 
 func (p *FileHostInitiator) verifyConnect(ctx context.Context, h *structs.HostInfo) (err error) {
-	p.sshClient = sshclient.NewSSHClient(h.IP, hostSSHPort, sshclient.Passwd, h.UserName, h.Passwd)
+	p.sshClient = sshclient.NewSSHClient(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd)
 	if err = p.sshClient.Connect(); err != nil {
 		return err
 	}
@@ -121,7 +122,7 @@ func (p *FileHostInitiator) closeSSHConnect() {
 }
 
 func (p *FileHostInitiator) verifyCpuMem(ctx context.Context, h *structs.HostInfo) (err error) {
-	getArchCmd := "lscpu | grep 'Architecture:' | awk '{print $2}'"
+	getArchCmd := "lscpu | grep 'Architecture:' | awk '{print $2}' | tr -d '\n'"
 	arch, err := p.sshClient.RunCommandsInSession([]string{getArchCmd})
 	if err != nil {
 		return err
@@ -130,7 +131,7 @@ func (p *FileHostInitiator) verifyCpuMem(ctx context.Context, h *structs.HostInf
 		return errors.NewEMErrorf(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, "Host %s [%s] arch %s is not as import %s", h.HostName, h.IP, arch, h.Arch)
 	}
 
-	getCpuCoresCmd := "lscpu | grep 'CPU(s):' | awk '{print $2}'"
+	getCpuCoresCmd := "lscpu | grep 'CPU(s):' | awk '{print $2}' | tr -d '\n'"
 	cpuCoreStr, err := p.sshClient.RunCommandsInSession([]string{getCpuCoresCmd})
 	if err != nil {
 		return err
@@ -143,7 +144,7 @@ func (p *FileHostInitiator) verifyCpuMem(ctx context.Context, h *structs.HostInf
 		framework.LogWithContext(ctx).Warnf("host %s [%s] cpuCores %d is not as import %d", h.HostName, h.IP, cpuCores, h.CpuCores)
 	}
 
-	getMemCmd := "free -g | grep 'Mem:' | awk '{print $2}'"
+	getMemCmd := "free -g | grep 'Mem:' | awk '{print $2}' | tr -d '\n'"
 	memStr, err := p.sshClient.RunCommandsInSession([]string{getMemCmd})
 	if err != nil {
 		return err
@@ -190,10 +191,6 @@ func (p *FileHostInitiator) setOffSwap(ctx context.Context, h *structs.HostInfo)
 	return nil
 }
 
-const hostSSHPort = 22
-const fileBeatDataDir = "/tiem-data"
-const fileBeatDeployDir = "/tiem-deploy"
-
 type templateScaleOut struct {
 	Arch      string
 	DeployDir string
@@ -202,7 +199,7 @@ type templateScaleOut struct {
 }
 
 func (p *templateScaleOut) generateTopologyConfig(ctx context.Context) (string, error) {
-	t, err := template.New("import_topology.yaml").ParseFiles("template/import_topology.yaml")
+	t, err := template.New("import_topology.yaml").ParseFiles("resource/template/import_topology.yaml")
 	if err != nil {
 		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
 	}
@@ -220,8 +217,8 @@ func (p *FileHostInitiator) installFileBeat(ctx context.Context, hosts []structs
 	arch := constants.GetArchAlias(constants.ArchType(hosts[0].Arch))
 	tempateInfo := templateScaleOut{
 		Arch:      arch,
-		DeployDir: fileBeatDeployDir,
-		DataDir:   fileBeatDataDir,
+		DeployDir: rp_consts.FileBeatDeployDir,
+		DataDir:   rp_consts.FileBeatDataDir,
 	}
 	for _, host := range hosts {
 		tempateInfo.HostIPs = append(tempateInfo.HostIPs, host.IP)
@@ -232,11 +229,18 @@ func (p *FileHostInitiator) installFileBeat(ctx context.Context, hosts []structs
 	}
 	framework.LogWithContext(ctx).Infof("install filebeat on %s", templateStr)
 
-	operationId, err := p.secondPartyServ.ClusterScaleOut(ctx, secondparty.TiEMComponentTypeStr, "", templateStr, 0, nil, "")
-	if err != nil {
-		return errors.NewEMErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "install filebeat [%v] failed, %v", templateStr, err)
+	workFlowNodeID, ok := ctx.Value(rp_consts.ContextWorkFlowNodeIDKey).(string)
+	if !ok || workFlowNodeID == "" {
+		return errors.NewEMErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "get work flow node from context failed, %s, %v", workFlowNodeID, ok)
 	}
-	framework.LogWithContext(ctx).Infof("installing filebeat for %v in operationId %s", tempateInfo, operationId)
+	framework.LogWithContext(ctx).Infof("install filebeat with work flow id %s", workFlowNodeID)
+	if rp_consts.SecondPartyReady {
+		operationId, err := p.secondPartyServ.ClusterScaleOut(ctx, secondparty.TiEMComponentTypeStr, "", templateStr, 0, nil, workFlowNodeID)
+		if err != nil {
+			return errors.NewEMErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "install filebeat [%v] failed, %v", templateStr, err)
+		}
+		framework.LogWithContext(ctx).Infof("installing filebeat for %v in operationId %s", tempateInfo, operationId)
+	}
 
 	return nil
 }

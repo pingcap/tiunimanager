@@ -17,9 +17,13 @@ package resourcepool
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/framework"
+	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostinitiator"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -49,12 +53,12 @@ func (p *ResourcePool) InitResourcePool() {
 	p.hostInitiator = hostinitiator.NewFileHostInitiator()
 
 	flowManager := workflow.GetWorkFlowService()
-	flowManager.RegisterWorkFlow(context.TODO(), FlowImportHosts, &workflow.WorkFlowDefine{
-		FlowName: FlowImportHosts,
+	flowManager.RegisterWorkFlow(context.TODO(), rp_consts.FlowImportHosts, &workflow.WorkFlowDefine{
+		FlowName: rp_consts.FlowImportHosts,
 		TaskNodes: map[string]*workflow.NodeDefine{
-			"start":           {Name: "start", SuccessEvent: "configHosts", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: verifyHosts},
-			"configHosts":     {Name: "configHosts", SuccessEvent: "updateRecordDone", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: configHosts},
-			"installSoftware": {Name: "installSoftware", SuccessEvent: "succeed", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: installSoftware},
+			"start":           {Name: "start", SuccessEvent: "configHosts", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: verifyHosts},
+			"configHosts":     {Name: "configHosts", SuccessEvent: "installSoftware", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: configHosts},
+			"installSoftware": {Name: "installSoftware", SuccessEvent: "succeed", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: installSoftware},
 			"succeed":         {Name: "succeed", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: importHostSucceed},
 			"fail":            {Name: "fail", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: importHostsFail},
 		},
@@ -69,17 +73,28 @@ func (p *ResourcePool) SetHostInitiator(initiator hostinitiator.HostInitiator) {
 	p.hostInitiator = initiator
 }
 
-func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error) {
-	for _, host := range hosts {
-		err = p.hostInitiator.Verify(ctx, &host)
-		if err != nil {
-			return nil, err
-		}
+func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (flowId string, hostIds []string, err error) {
+	hostIds, err = p.hostProvider.ImportHosts(ctx, hosts)
+	if err != nil {
+		return "", nil, err
 	}
-	if err = p.hostInitiator.InstallSoftware(ctx, hosts); err != nil {
-		return nil, err
+	flowManager := workflow.GetWorkFlowService()
+	flow, err := flowManager.CreateWorkFlow(ctx, hostIds[0], rp_consts.FlowImportHosts)
+	if err != nil {
+		errMsg := fmt.Sprintf("create %s workflow failed, %s", rp_consts.FlowImportHosts, err.Error())
+		framework.LogWithContext(ctx).Errorln(errMsg)
+		return "", nil, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, errMsg, err)
 	}
-	return p.hostProvider.ImportHosts(ctx, hosts)
+
+	flowManager.AddContext(flow, rp_consts.ContextResourcePoolKey, p)
+	flowManager.AddContext(flow, rp_consts.ContextImportHostInfoKey, hosts)
+	flowManager.AddContext(flow, rp_consts.ContextImportHostIDsKey, hostIds)
+	if err = flowManager.AsyncStart(ctx, flow); err != nil {
+		errMsg := fmt.Sprintf("async start %s workflow failed, %s", rp_consts.FlowImportHosts, err.Error())
+		framework.LogWithContext(ctx).Errorln(errMsg)
+		return "", nil, errors.WrapError(errors.TIEM_WORKFLOW_START_FAILED, errMsg, err)
+	}
+	return flow.Flow.ID, hostIds, nil
 }
 
 func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string) (err error) {

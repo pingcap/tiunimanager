@@ -48,6 +48,7 @@ type ImportHostsReq struct {
 }
 
 type ImportHostsResp struct {
+	structs.AsyncTaskWorkFlowInfo
 	HostIDS []string `json:"hostIds"`
 }
 

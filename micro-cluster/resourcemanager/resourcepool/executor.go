@@ -16,21 +16,16 @@
 package resourcepool
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
+	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
-)
-
-const (
-	FlowImportHosts          string = "ImportHosts"
-	contextResourcePoolKey   string = "resourcePool"
-	contextImportHostInfoKey string = "importHostInfo"
-	contextImportHostIDsKey  string = "importHostIDs"
 )
 
 func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
@@ -38,7 +33,7 @@ func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 	log.Info("begin verifyHosts")
 	defer log.Infof("end verifyHosts, err: %v", err)
 
-	resourcePool, hosts, err := getImportHostContext(ctx)
+	resourcePool, hosts, err := getImportHostInfoFromFlowContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -58,33 +53,32 @@ func configHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) er
 	return nil
 }
 
-func installSoftware(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+func installSoftware(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	framework.LogWithContext(ctx).Info("begin installSoftware")
-	defer framework.LogWithContext(ctx).Info("end installSoftware")
+	defer framework.LogWithContext(ctx).Info("end installSoftware, err: %v", err)
 
-	resourcePool, hosts, err := getImportHostContext(ctx)
+	resourcePool, hosts, err := getImportHostInfoFromFlowContext(ctx)
 	if err != nil {
 		return err
 	}
-	if err = resourcePool.hostInitiator.InstallSoftware(ctx, hosts); err != nil {
+	// Store nodeID for second party service
+	installSoftwareCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowNodeIDKey, node.ID)
+	if err = resourcePool.hostInitiator.InstallSoftware(installSoftwareCtx, hosts); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func importHostSucceed(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+func importHostSucceed(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	framework.LogWithContext(ctx).Info("begin importHostSucceed")
-	defer framework.LogWithContext(ctx).Info("end importHostSucceed")
+	defer framework.LogWithContext(ctx).Info("end importHostSucceed, err: %v", err)
 
-	resourcePool, hosts, err := getImportHostContext(ctx)
+	resourcePool, hostIds, err := getImportHostIDsFromFlowContext(ctx)
 	if err != nil {
 		return err
 	}
-	var hostIds []string
-	for _, host := range hosts {
-		hostIds = append(hostIds, host.ID)
-	}
-	err = resourcePool.hostProvider.UpdateHostStatus(ctx, hostIds, string(constants.HostOnline))
+	err = resourcePool.UpdateHostStatus(ctx, hostIds, string(constants.HostOnline))
 	if err != nil {
 		return err
 	}
@@ -92,23 +86,49 @@ func importHostSucceed(node *workflowModel.WorkFlowNode, ctx *workflow.FlowConte
 	return nil
 }
 
-func importHostsFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+func importHostsFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	framework.LogWithContext(ctx).Info("begin importHostFailed")
-	defer framework.LogWithContext(ctx).Info("end importHostFailed")
+	defer framework.LogWithContext(ctx).Info("end importHostFailed, err: %v", err)
+
+	resourcePool, hostIds, err := getImportHostIDsFromFlowContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = resourcePool.DeleteHosts(ctx, hostIds)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func getImportHostContext(ctx *workflow.FlowContext) (rp *ResourcePool, hosts []structs.HostInfo, err error) {
+func getImportHostInfoFromFlowContext(ctx *workflow.FlowContext) (rp *ResourcePool, hosts []structs.HostInfo, err error) {
 	var ok bool
-	rp, ok = ctx.GetData(contextResourcePoolKey).(*ResourcePool)
+	rp, ok = ctx.GetData(rp_consts.ContextResourcePoolKey).(*ResourcePool)
 	if !ok {
-		errMsg := fmt.Sprintf("get key %s from flow context failed", contextResourcePoolKey)
+		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextResourcePoolKey)
 		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
-	hosts, ok = ctx.GetData(contextImportHostInfoKey).([]structs.HostInfo)
+	hosts, ok = ctx.GetData(rp_consts.ContextImportHostInfoKey).([]structs.HostInfo)
 	if !ok {
-		errMsg := fmt.Sprintf("get key %s from flow context failed", contextImportHostInfoKey)
+		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextImportHostInfoKey)
 		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
 	return rp, hosts, nil
+}
+
+func getImportHostIDsFromFlowContext(ctx *workflow.FlowContext) (rp *ResourcePool, hostIds []string, err error) {
+	var ok bool
+	rp, ok = ctx.GetData(rp_consts.ContextResourcePoolKey).(*ResourcePool)
+	if !ok {
+		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextResourcePoolKey)
+		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
+	}
+	hostIds, ok = ctx.GetData(rp_consts.ContextImportHostIDsKey).([]string)
+	if !ok {
+		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextImportHostIDsKey)
+		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
+	}
+	return rp, hostIds, nil
 }

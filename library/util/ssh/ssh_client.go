@@ -116,7 +116,8 @@ func (c *SSHClient) RunCommandsInSession(commands []string) (result string, err 
 	if err != nil {
 		return "", errors.NewEMErrorf(errors.TIEM_RESOURCE_RUN_COMMAND_ERROR, "exec command %s on %s@%s:%d failed, %v", command, c.sshUser, c.sshHost, c.sshPort, err)
 	}
-	return string(combo), nil
+	result = string(combo)
+	return
 }
 
 func (c *SSHClient) publicKeyAuthFunc() ssh.AuthMethod {

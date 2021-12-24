@@ -136,19 +136,128 @@ func TestClusterMeta_AddDefaultInstances(t *testing.T) {
 }
 
 func TestClusterMeta_GenerateInstanceResourceRequirements(t *testing.T) {
+	meta := &ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID:        "2145635758",
+				TenantId:  "324567",
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+			Name:              "koojdafij",
+			DBUser:            "kodjsfn",
+			DBPassword:        "mypassword",
+			Type:              "TiDB",
+			Version:           "v5.0.0",
+			Tags:              []string{"111", "333"},
+			OwnerId:           "436534636u",
+			ParameterGroupID:  "352467890",
+			Copies:            4,
+			Region:            "Region1",
+			Exclusive:         false,
+			CpuArchitecture:   "x86_64",
+			MaintenanceStatus: constants.ClusterMaintenanceCreating,
+		},
+		Instances: map[string][]*management.ClusterInstance{
+			"TiDB": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceInitializing),
+					},
+					Zone:         "zone1",
+					CpuCores:     4,
+					Memory:       8,
+					Type:         "TiDB",
+					Version:      "v5.0.0",
+					Ports:        []int32{10001, 10002, 10003, 10004},
+					HostIP:       []string{"127.0.0.1"},
+					DiskType:     "SSD",
+					DiskCapacity: 128,
+				},
+			},
+			"TiKV": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceInitializing),
+					},
+					Zone:         "zone1",
+					CpuCores:     4,
+					Memory:       8,
+					Type:         "TiKV",
+					Version:      "v5.0.0",
+					Ports:        []int32{20001, 20002, 20003, 20004},
+					HostIP:       []string{"127.0.0.2"},
+					DiskType:     "SSD",
+					DiskCapacity: 128,
+				},
+			},
+			"PD": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceInitializing),
+					},
+					Zone:         "zone1",
+					CpuCores:     4,
+					Memory:       8,
+					Type:         "PD",
+					Version:      "v5.0.0",
+					Ports:        []int32{30001, 30002, 30003, 30004},
+					HostIP:       []string{"127.0.0.3"},
+					DiskType:     "SSD",
+					DiskCapacity: 128,
+				},
+			},
+		},
+	}
 
+	t.Run("normal", func(t *testing.T) {
+		got1, got2, err := meta.GenerateInstanceResourceRequirements(context.TODO())
+		assert.NoError(t, err)
+		assert.Equal(t, 3, len(got1))
+		assert.Equal(t, 3, len(got2))
+	})
 }
 
 func TestClusterMeta_GenerateGlobalPortRequirements(t *testing.T) {
+	meta := &ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID:        "2145635758",
+				TenantId:  "324567",
+				Status:    string(constants.ClusterInitializing),
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+			Name:              "koojdafij",
+			DBUser:            "kodjsfn",
+			DBPassword:        "mypassword",
+			Type:              "TiDB",
+			Version:           "v5.0.0",
+			Tags:              []string{"111", "333"},
+			OwnerId:           "436534636u",
+			ParameterGroupID:  "352467890",
+			Copies:            4,
+			Region:            "Region1",
+			Exclusive:         false,
+			CpuArchitecture:   "x86_64",
+			MaintenanceStatus: constants.ClusterMaintenanceCreating,
+		},
+	}
 
+	t.Run("normal", func(t *testing.T) {
+		got, err := meta.GenerateGlobalPortRequirements(context.TODO())
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(got))
+	})
 }
 
 func TestClusterMeta_ApplyGlobalPortResource(t *testing.T) {
-
-}
-
-func TestClusterMeta_ApplyInstanceResource(t *testing.T) {
-
+	meta := &ClusterMeta{}
+	t.Run("normal", func(t *testing.T) {
+		meta.ApplyGlobalPortResource(8001, 8002)
+		assert.Equal(t, 8001, int(meta.NodeExporterPort))
+		assert.Equal(t, 8002, int(meta.BlackboxExporterPort))
+	})
 }
 
 func TestClusterMeta_GetInstanceByStatus(t *testing.T) {
@@ -449,7 +558,7 @@ func TestClusterMeta_GetRelations(t *testing.T) {
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
-				ID:       "111",
+				ID: "111",
 			},
 		},
 	}

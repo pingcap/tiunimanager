@@ -26,6 +26,7 @@ package parameter
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -108,16 +109,35 @@ func defaultEnd(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) err
 	return nil
 }
 
-// persistUpdateParameter
-// @Description: persist update parameter
+// persistParameter
+// @Description: persist parameter
 // @Parameter node
 // @Parameter ctx
 // @return error
-func persistUpdateParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+func persistParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.LogWithContext(ctx).Info("begin persist parameter executor method")
+	defer framework.LogWithContext(ctx).Info("end persist parameter executor method")
+
+	updateParameterReq := ctx.GetData(contextUpdateParameterInfo)
+	applyParameterReq := ctx.GetData(contextApplyParameterInfo)
+
+	if applyParameterReq != nil {
+		return persistApplyParameter(applyParameterReq.(*message.ApplyParameterGroupReq), ctx)
+	}
+	if updateParameterReq != nil {
+		return persistUpdateParameter(updateParameterReq.(*cluster.UpdateClusterParametersReq), ctx)
+	}
+	return fmt.Errorf("persist parameter get data failed")
+}
+
+// persistUpdateParameter
+// @Description: persist update parameter
+// @Parameter req
+// @Parameter ctx
+// @return error
+func persistUpdateParameter(req *cluster.UpdateClusterParametersReq, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin persist update parameter executor method")
 	defer framework.LogWithContext(ctx).Info("end persist update parameter executor method")
-
-	req := ctx.GetData(contextUpdateParameterInfo).(*cluster.UpdateClusterParametersReq)
 
 	params := make([]*parameter.ClusterParameterMapping, len(req.Params))
 	for i, param := range req.Params {
@@ -145,11 +165,10 @@ func persistUpdateParameter(node *workflowModel.WorkFlowNode, ctx *workflow.Flow
 // @Parameter node
 // @Parameter ctx
 // @return error
-func persistApplyParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+func persistApplyParameter(req *message.ApplyParameterGroupReq, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin persist apply parameter executor method")
 	defer framework.LogWithContext(ctx).Info("end persist apply parameter executor method")
 
-	req := ctx.GetData(contextApplyParameterInfo).(*message.ApplyParameterGroupReq)
 	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId)
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
@@ -255,13 +274,16 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 	clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
 	tidbServers := clusterMeta.GetClusterConnectAddresses()
 	if len(tidbServers) == 0 {
-		framework.LogWithContext(ctx).Errorf("get tidb address from meta failed, empty address")
-		return nil
+		framework.LogWithContext(ctx).Errorf("get tidb connect address from meta failed, empty address")
+		return fmt.Errorf("get tidb connect address from meta failed, empty address")
 	}
 	tidbServer := tidbServers[rand.Intn(len(tidbServers))]
 	framework.LogWithContext(ctx).Infof("get cluster [%s] tidb server from meta, %+v", clusterMeta.Cluster.ID, tidbServers)
 	tidbUserInfo := clusterMeta.GetClusterUserNamePasswd()
-	framework.LogWithContext(ctx).Infof("get cluster [%s] user info from meta, %+v", clusterMeta.Cluster.ID, tidbUserInfo)
+	if len(tidbUserInfo.UserName) == 0 {
+		framework.LogWithContext(ctx).Errorf("get cluster [%s] user info from meta, %+v", clusterMeta.Cluster.ID, tidbUserInfo)
+		return fmt.Errorf("get cluster user name from meta failed, empty address")
+	}
 
 	req := secondparty.ClusterEditConfigReq{
 		DbConnParameter: secondparty.DbConnParam{
@@ -313,16 +335,28 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 			switch strings.ToLower(compStr) {
 			case spec.ComponentTiDB:
 				tidbServers := clusterMeta.GetClusterStatusAddress()
+				if len(tidbServers) == 0 {
+					framework.LogWithContext(ctx).Errorf("get tidb status address from meta failed, empty address")
+					return fmt.Errorf("get tidb status address from meta failed, empty address")
+				}
 				for _, server := range tidbServers {
 					servers[server.IP] = uint(server.Port)
 				}
 			case spec.ComponentTiKV:
 				tikvServers := clusterMeta.GetTiKVStatusAddress()
+				if len(tikvServers) == 0 {
+					framework.LogWithContext(ctx).Errorf("get tikv address from meta failed, empty address")
+					return fmt.Errorf("get tikv address from meta failed, empty address")
+				}
 				for _, server := range tikvServers {
 					servers[server.IP] = uint(server.Port)
 				}
 			case spec.ComponentPD:
 				pdServers := clusterMeta.GetPDClientAddresses()
+				if len(pdServers) == 0 {
+					framework.LogWithContext(ctx).Errorf("get pd address from meta failed, empty address")
+					return fmt.Errorf("get pd address from meta failed, empty address")
+				}
 				server := pdServers[rand.Intn(len(pdServers))]
 				servers[server.IP] = uint(server.Port)
 			}

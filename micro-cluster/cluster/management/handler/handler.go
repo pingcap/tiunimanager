@@ -486,7 +486,7 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 			meta.Instances[componentType] = append(meta.Instances[componentType], newInstance)
 		}
 	}
-
+	
 	if err := models.GetClusterReaderWriter().CreateRelation(ctx, &management.ClusterRelation{
 		ObjectClusterID:  meta.Cluster.ID,
 		SubjectClusterID: p.Cluster.ID,

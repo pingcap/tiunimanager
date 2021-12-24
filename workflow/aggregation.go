@@ -220,7 +220,12 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 				return false
 			}
 			if resp.Status == secondpartyModel.OperationStatus_Finished {
-				node.Success(resp.Result)
+				if resp.Result != "" {
+					node.Success(resp.Result)
+				} else {
+					node.Success(nil)
+				}
+
 				return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
 			}
 		}

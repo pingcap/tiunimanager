@@ -177,7 +177,7 @@ func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, 
 	request := cluster.CreateChangeFeedTaskReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.changeFeedManager.Create(ctx, request)
+		result, err := handler.changeFeedManager.Create(framework.NewBackgroundMicroCtx(ctx, false), request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -227,7 +227,7 @@ func (handler *ClusterServiceHandler) CreateParameterGroup(ctx context.Context, 
 	request := &message.CreateParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.parameterGroupManager.CreateParameterGroup(ctx, *request)
+		result, err := handler.parameterGroupManager.CreateParameterGroup(framework.NewBackgroundMicroCtx(ctx, false), *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
@@ -240,7 +240,7 @@ func (handler *ClusterServiceHandler) UpdateParameterGroup(ctx context.Context, 
 	request := &message.UpdateParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.parameterGroupManager.UpdateParameterGroup(ctx, *request)
+		result, err := handler.parameterGroupManager.UpdateParameterGroup(framework.NewBackgroundMicroCtx(ctx, false), *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
@@ -253,7 +253,7 @@ func (handler *ClusterServiceHandler) DeleteParameterGroup(ctx context.Context, 
 	request := &message.DeleteParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.parameterGroupManager.DeleteParameterGroup(ctx, *request)
+		result, err := handler.parameterGroupManager.DeleteParameterGroup(framework.NewBackgroundMicroCtx(ctx, false), *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
@@ -266,7 +266,7 @@ func (handler *ClusterServiceHandler) QueryParameterGroup(ctx context.Context, r
 	request := &message.QueryParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, page, err := handler.parameterGroupManager.QueryParameterGroup(ctx, *request)
+		result, page, err := handler.parameterGroupManager.QueryParameterGroup(framework.NewBackgroundMicroCtx(ctx, false), *request)
 		handleResponse(ctx, resp, err, result, page)
 	}
 	return nil
@@ -279,7 +279,7 @@ func (handler *ClusterServiceHandler) DetailParameterGroup(ctx context.Context, 
 	request := &message.DetailParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.parameterGroupManager.DetailParameterGroup(ctx, *request)
+		result, err := handler.parameterGroupManager.DetailParameterGroup(framework.NewBackgroundMicroCtx(ctx, false), *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
@@ -292,7 +292,7 @@ func (handler *ClusterServiceHandler) ApplyParameterGroup(ctx context.Context, r
 	request := &message.ApplyParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterParameterManager.ApplyParameterGroup(ctx, *request)
+		result, err := handler.clusterParameterManager.ApplyParameterGroup(framework.NewBackgroundMicroCtx(ctx, false), *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
@@ -305,7 +305,7 @@ func (handler *ClusterServiceHandler) CopyParameterGroup(ctx context.Context, re
 	request := &message.CopyParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.parameterGroupManager.CopyParameterGroup(ctx, *request)
+		result, err := handler.parameterGroupManager.CopyParameterGroup(framework.NewBackgroundMicroCtx(ctx, false), *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
@@ -318,7 +318,7 @@ func (handler *ClusterServiceHandler) QueryClusterParameters(ctx context.Context
 	request := &cluster.QueryClusterParametersReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, page, err := handler.clusterParameterManager.QueryClusterParameters(ctx, *request)
+		result, page, err := handler.clusterParameterManager.QueryClusterParameters(framework.NewBackgroundMicroCtx(ctx, false), *request)
 		handleResponse(ctx, resp, err, result, page)
 	}
 	return nil
@@ -331,7 +331,7 @@ func (handler *ClusterServiceHandler) UpdateClusterParameters(ctx context.Contex
 	request := &cluster.UpdateClusterParametersReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterParameterManager.UpdateClusterParameters(ctx, *request, true)
+		result, err := handler.clusterParameterManager.UpdateClusterParameters(framework.NewBackgroundMicroCtx(ctx, false), *request, true)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
@@ -344,7 +344,7 @@ func (handler *ClusterServiceHandler) InspectClusterParameters(ctx context.Conte
 	request := &cluster.InspectClusterParametersReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterParameterManager.InspectClusterParameters(ctx, *request)
+		result, err := handler.clusterParameterManager.InspectClusterParameters(framework.NewBackgroundMicroCtx(ctx, false), *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
@@ -357,7 +357,7 @@ func (handler *ClusterServiceHandler) QueryClusterLog(ctx context.Context, req *
 	request := &cluster.QueryClusterLogReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, page, err := handler.clusterLogManager.QueryClusterLog(ctx, *request)
+		result, page, err := handler.clusterLogManager.QueryClusterLog(framework.NewBackgroundMicroCtx(ctx, false), *request)
 		handleResponse(ctx, resp, err, result, page)
 	}
 	return nil
@@ -370,7 +370,7 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb
 	request := cluster.CreateClusterReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, err := c.clusterManager.CreateCluster(ctx, request)
+		result, err := c.clusterManager.CreateCluster(framework.NewBackgroundMicroCtx(ctx, false), request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -384,7 +384,7 @@ func (c ClusterServiceHandler) RestoreNewCluster(ctx context.Context, req *clust
 	request := cluster.RestoreNewClusterReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, err := c.clusterManager.RestoreNewCluster(ctx, request)
+		result, err := c.clusterManager.RestoreNewCluster(framework.NewBackgroundMicroCtx(ctx, false), request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -398,7 +398,7 @@ func (handler *ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *
 	request := cluster.ScaleOutClusterReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, err := handler.clusterManager.ScaleOut(ctx, request)
+		result, err := handler.clusterManager.ScaleOut(framework.NewBackgroundMicroCtx(ctx, false), request)
 
 		handleResponse(ctx, resp, err, result, nil)
 	}
@@ -413,7 +413,7 @@ func (handler *ClusterServiceHandler) ScaleInCluster(ctx context.Context, req *c
 	request := cluster.ScaleInClusterReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, err := handler.clusterManager.ScaleIn(ctx, request)
+		result, err := handler.clusterManager.ScaleIn(framework.NewBackgroundMicroCtx(ctx, false), request)
 
 		handleResponse(ctx, resp, err, result, nil)
 	}
@@ -428,7 +428,7 @@ func (handler *ClusterServiceHandler) CloneCluster(ctx context.Context, req *clu
 	request := cluster.CloneClusterReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, err := handler.clusterManager.Clone(ctx, request)
+		result, err := handler.clusterManager.Clone(framework.NewBackgroundMicroCtx(ctx, false), request)
 
 		handleResponse(ctx, resp, err, result, nil)
 	}
@@ -443,7 +443,7 @@ func (handler ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *
 	request := cluster.TakeoverClusterReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, err := handler.clusterManager.Takeover(ctx, request)
+		result, err := handler.clusterManager.Takeover(framework.NewBackgroundMicroCtx(ctx, false), request)
 
 		handleResponse(ctx, resp, err, result, nil)
 	}
@@ -458,7 +458,7 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.
 	request := cluster.QueryClustersReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, total, err := c.clusterManager.QueryCluster(ctx, request)
+		result, total, err := c.clusterManager.QueryCluster(framework.NewBackgroundMicroCtx(ctx, false), request)
 		handleResponse(ctx, resp, err, result, &clusterpb.RpcPage{
 			Page:     int32(request.Page),
 			PageSize: int32(request.PageSize),
@@ -476,7 +476,7 @@ func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb
 	request := cluster.DeleteClusterReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, err := c.clusterManager.DeleteCluster(ctx, request)
+		result, err := c.clusterManager.DeleteCluster(framework.NewBackgroundMicroCtx(ctx, false), request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -490,7 +490,7 @@ func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterp
 	request := cluster.RestartClusterReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, err := c.clusterManager.RestartCluster(ctx, request)
+		result, err := c.clusterManager.RestartCluster(framework.NewBackgroundMicroCtx(ctx, false), request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -504,7 +504,7 @@ func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.R
 	request := cluster.StopClusterReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, err := c.clusterManager.StopCluster(ctx, request)
+		result, err := c.clusterManager.StopCluster(framework.NewBackgroundMicroCtx(ctx, false), request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -518,7 +518,7 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb
 	request := cluster.QueryClusterDetailReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
-		result, err := c.clusterManager.DetailCluster(ctx, request)
+		result, err := c.clusterManager.DetailCluster(framework.NewBackgroundMicroCtx(ctx, false), request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -532,7 +532,7 @@ func (c ClusterServiceHandler) ExportData(ctx context.Context, request *clusterp
 	exportReq := message.DataExportReq{}
 
 	if handleRequest(ctx, request, response, &exportReq) {
-		result, err := c.importexportManager.ExportData(ctx, exportReq)
+		result, err := c.importexportManager.ExportData(framework.NewBackgroundMicroCtx(ctx, false), exportReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -546,7 +546,7 @@ func (c ClusterServiceHandler) ImportData(ctx context.Context, request *clusterp
 	importReq := message.DataImportReq{}
 
 	if handleRequest(ctx, request, response, &importReq) {
-		result, err := c.importexportManager.ImportData(ctx, importReq)
+		result, err := c.importexportManager.ImportData(framework.NewBackgroundMicroCtx(ctx, false), importReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -560,7 +560,7 @@ func (c ClusterServiceHandler) QueryDataTransport(ctx context.Context, request *
 	queryReq := message.QueryDataImportExportRecordsReq{}
 
 	if handleRequest(ctx, request, response, &queryReq) {
-		result, page, err := c.importexportManager.QueryDataTransportRecords(ctx, queryReq)
+		result, page, err := c.importexportManager.QueryDataTransportRecords(framework.NewBackgroundMicroCtx(ctx, false), queryReq)
 		handleResponse(ctx, response, err, result, &clusterpb.RpcPage{
 			Page:     int32(page.Page),
 			PageSize: int32(page.PageSize),
@@ -578,7 +578,7 @@ func (c ClusterServiceHandler) DeleteDataTransportRecord(ctx context.Context, re
 	deleteReq := message.DeleteImportExportRecordReq{}
 
 	if handleRequest(ctx, request, response, &deleteReq) {
-		result, err := c.importexportManager.DeleteDataTransportRecord(ctx, deleteReq)
+		result, err := c.importexportManager.DeleteDataTransportRecord(framework.NewBackgroundMicroCtx(ctx, false), deleteReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -592,7 +592,7 @@ func (c *ClusterServiceHandler) GetSystemConfig(ctx context.Context, request *cl
 	getReq := message.GetSystemConfigReq{}
 
 	if handleRequest(ctx, request, response, &getReq) {
-		result, err := c.systemConfigManager.GetSystemConfig(ctx, getReq)
+		result, err := c.systemConfigManager.GetSystemConfig(framework.NewBackgroundMicroCtx(ctx, false), getReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -606,7 +606,7 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 	backupReq := cluster.BackupClusterDataReq{}
 
 	if handleRequest(ctx, request, response, &backupReq) {
-		result, err := c.brManager.BackupCluster(ctx, backupReq, true)
+		result, err := c.brManager.BackupCluster(framework.NewBackgroundMicroCtx(ctx, false), backupReq, true)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -620,7 +620,7 @@ func (c ClusterServiceHandler) DeleteBackupRecords(ctx context.Context, request 
 	deleteReq := cluster.DeleteBackupDataReq{}
 
 	if handleRequest(ctx, request, response, &deleteReq) {
-		result, err := c.brManager.DeleteBackupRecords(ctx, deleteReq)
+		result, err := c.brManager.DeleteBackupRecords(framework.NewBackgroundMicroCtx(ctx, false), deleteReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -634,7 +634,7 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 	saveReq := cluster.SaveBackupStrategyReq{}
 
 	if handleRequest(ctx, request, response, &saveReq) {
-		result, err := c.brManager.SaveBackupStrategy(ctx, saveReq)
+		result, err := c.brManager.SaveBackupStrategy(framework.NewBackgroundMicroCtx(ctx, false), saveReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -648,7 +648,7 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 	getReq := cluster.GetBackupStrategyReq{}
 
 	if handleRequest(ctx, request, response, &getReq) {
-		result, err := c.brManager.GetBackupStrategy(ctx, getReq)
+		result, err := c.brManager.GetBackupStrategy(framework.NewBackgroundMicroCtx(ctx, false), getReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -662,7 +662,7 @@ func (c ClusterServiceHandler) QueryBackupRecords(ctx context.Context, request *
 	queryReq := cluster.QueryBackupRecordsReq{}
 
 	if handleRequest(ctx, request, response, &queryReq) {
-		result, page, err := c.brManager.QueryClusterBackupRecords(ctx, queryReq)
+		result, page, err := c.brManager.QueryClusterBackupRecords(framework.NewBackgroundMicroCtx(ctx, false), queryReq)
 		handleResponse(ctx, response, err, result, &clusterpb.RpcPage{
 			Page:     int32(page.Page),
 			PageSize: int32(page.PageSize),
@@ -680,7 +680,7 @@ func (c ClusterServiceHandler) GetDashboardInfo(ctx context.Context, request *cl
 	dashboardReq := cluster.GetDashboardInfoReq{}
 
 	if handleRequest(ctx, request, response, &dashboardReq) {
-		result, err := c.clusterManager.GetClusterDashboardInfo(ctx, dashboardReq)
+		result, err := c.clusterManager.GetClusterDashboardInfo(framework.NewBackgroundMicroCtx(ctx, false), dashboardReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -694,7 +694,7 @@ func (c ClusterServiceHandler) GetMonitorInfo(ctx context.Context, req *clusterp
 	request := &cluster.QueryMonitorInfoReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := c.clusterManager.GetMonitorInfo(ctx, *request)
+		result, err := c.clusterManager.GetMonitorInfo(framework.NewBackgroundMicroCtx(ctx, false), *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil
@@ -707,7 +707,7 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb
 	listReq := message.QueryWorkFlowsReq{}
 	if handleRequest(ctx, request, response, &listReq) {
 		manager := workflow.GetWorkFlowService()
-		result, page, err := manager.ListWorkFlows(ctx, listReq)
+		result, page, err := manager.ListWorkFlows(framework.NewBackgroundMicroCtx(ctx, false), listReq)
 		handleResponse(ctx, response, err, result, &clusterpb.RpcPage{
 			Page:     int32(page.Page),
 			PageSize: int32(page.PageSize),
@@ -725,7 +725,7 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 	detailReq := message.QueryWorkFlowDetailReq{}
 	if handleRequest(ctx, request, response, &detailReq) {
 		manager := workflow.GetWorkFlowService()
-		result, err := manager.DetailWorkFlow(ctx, detailReq)
+		result, err := manager.DetailWorkFlow(framework.NewBackgroundMicroCtx(ctx, false), detailReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -738,7 +738,7 @@ func (c *ClusterServiceHandler) Login(ctx context.Context, request *clusterpb.Rp
 
 	loginReq := message.LoginReq{}
 	if handleRequest(ctx, request, response, &loginReq) {
-		result, err := c.authManager.Login(ctx, loginReq)
+		result, err := c.authManager.Login(framework.NewBackgroundMicroCtx(ctx, false), loginReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -751,7 +751,7 @@ func (c *ClusterServiceHandler) Logout(ctx context.Context, request *clusterpb.R
 
 	logoutReq := message.LogoutReq{}
 	if handleRequest(ctx, request, response, &logoutReq) {
-		result, err := c.authManager.Logout(ctx, logoutReq)
+		result, err := c.authManager.Logout(framework.NewBackgroundMicroCtx(ctx, false), logoutReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -764,7 +764,7 @@ func (c *ClusterServiceHandler) VerifyIdentity(ctx context.Context, request *clu
 
 	verReq := message.AccessibleReq{}
 	if handleRequest(ctx, request, response, &verReq) {
-		result, err := c.authManager.Accessible(ctx, verReq)
+		result, err := c.authManager.Accessible(framework.NewBackgroundMicroCtx(ctx, false), verReq)
 		handleResponse(ctx, response, err, result, nil)
 	}
 
@@ -778,7 +778,7 @@ func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *
 	reqStruct := message.ImportHostsReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
-		hostIds, err := handler.resourceManager.ImportHosts(ctx, reqStruct.Hosts)
+		hostIds, err := handler.resourceManager.ImportHosts(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.Hosts)
 		var rsp message.ImportHostsResp
 		if err == nil {
 			rsp.HostIDS = hostIds
@@ -796,7 +796,7 @@ func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, request *
 	reqStruct := message.DeleteHostsReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
-		err := handler.resourceManager.DeleteHosts(ctx, reqStruct.HostIDs)
+		err := handler.resourceManager.DeleteHosts(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.HostIDs)
 		var rsp message.DeleteHostsResp
 		handleResponse(ctx, response, err, rsp, nil)
 	}
@@ -814,7 +814,7 @@ func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, request *c
 		filter := reqStruct.GetHostFilter()
 		page := reqStruct.GetPage()
 
-		hosts, err := handler.resourceManager.QueryHosts(ctx, filter, page)
+		hosts, err := handler.resourceManager.QueryHosts(framework.NewBackgroundMicroCtx(ctx, false), filter, page)
 		var rsp message.QueryHostsResp
 		if err == nil {
 			rsp.Hosts = hosts
@@ -832,7 +832,7 @@ func (handler *ClusterServiceHandler) UpdateHostReserved(ctx context.Context, re
 	reqStruct := message.UpdateHostReservedReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
-		err := handler.resourceManager.UpdateHostReserved(ctx, reqStruct.HostIDs, reqStruct.Reserved)
+		err := handler.resourceManager.UpdateHostReserved(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.HostIDs, reqStruct.Reserved)
 		var rsp message.UpdateHostReservedResp
 		handleResponse(ctx, response, err, rsp, nil)
 	}
@@ -847,7 +847,7 @@ func (handler *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, requ
 	reqStruct := message.UpdateHostStatusReq{}
 
 	if handleRequest(ctx, request, response, &reqStruct) {
-		err := handler.resourceManager.UpdateHostStatus(ctx, reqStruct.HostIDs, reqStruct.Status)
+		err := handler.resourceManager.UpdateHostStatus(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.HostIDs, reqStruct.Status)
 		var rsp message.UpdateHostStatusResp
 		handleResponse(ctx, response, err, rsp, nil)
 	}
@@ -864,7 +864,7 @@ func (handler *ClusterServiceHandler) GetHierarchy(ctx context.Context, request 
 	if handleRequest(ctx, request, response, &reqStruct) {
 		filter := reqStruct.GetHostFilter()
 
-		root, err := handler.resourceManager.GetHierarchy(ctx, filter, reqStruct.Level, reqStruct.Depth)
+		root, err := handler.resourceManager.GetHierarchy(framework.NewBackgroundMicroCtx(ctx, false), filter, reqStruct.Level, reqStruct.Depth)
 		var rsp message.GetHierarchyResp
 		if err == nil {
 			rsp.Root = *root
@@ -886,7 +886,7 @@ func (handler *ClusterServiceHandler) GetStocks(ctx context.Context, request *cl
 		hostFilter := reqStruct.GetHostFilter()
 		diskFilter := reqStruct.GetDiskFilter()
 
-		stocks, err := handler.resourceManager.GetStocks(ctx, location, hostFilter, diskFilter)
+		stocks, err := handler.resourceManager.GetStocks(framework.NewBackgroundMicroCtx(ctx, false), location, hostFilter, diskFilter)
 		var rsp message.GetStocksResp
 		if err == nil {
 			rsp.Stocks = *stocks

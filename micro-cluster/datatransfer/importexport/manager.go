@@ -201,7 +201,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 				return resp, errors.WrapError(errors.TIEM_TRANSPORT_PATH_CREATE_FAILED, fmt.Sprintf("find import dir failed, %s", err.Error()), err)
 			}
 		} else {
-			err = os.MkdirAll(importDir, os.ModeDir)
+			err = os.MkdirAll(importDir, os.ModePerm)
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("mkdir import dir failed, %s", err.Error())
 				return resp, errors.WrapError(errors.TIEM_TRANSPORT_PATH_CREATE_FAILED, fmt.Sprintf("mkdir import dir failed, %s", err.Error()), err)
@@ -246,7 +246,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 			return resp, errors.WrapError(errors.TIEM_TRANSPORT_RECORD_QUERY_FAILED, fmt.Sprintf("get data transport record %s failed, %s", request.RecordId, err.Error()), err)
 		}
 
-		if err := os.MkdirAll(importDir, os.ModeDir); err != nil {
+		if err := os.MkdirAll(importDir, os.ModePerm); err != nil {
 			return resp, errors.WrapError(errors.TIEM_TRANSPORT_PATH_CREATE_FAILED, fmt.Sprintf("make import dir %s failed, %s", importDir, err.Error()), err)
 		}
 
@@ -421,7 +421,7 @@ func (mgr *ImportExportManager) exportDataPreCheck(ctx context.Context, request 
 			return fmt.Errorf("export dir %s is not vaild", exportPathConfig.ConfigValue)
 		}
 		if !mgr.checkFilePathExists(absPath) {
-			if err = os.MkdirAll(absPath, os.ModeDir); err != nil {
+			if err = os.MkdirAll(absPath, os.ModePerm); err != nil {
 				return fmt.Errorf("make export path %s failed, %s", absPath, err.Error())
 			}
 		}
@@ -453,7 +453,7 @@ func (mgr *ImportExportManager) importDataPreCheck(ctx context.Context, request 
 		return fmt.Errorf("import dir %s is not vaild", importPathConfig.ConfigValue)
 	}
 	if !mgr.checkFilePathExists(absPath) {
-		if err = os.MkdirAll(absPath, os.ModeDir); err != nil {
+		if err = os.MkdirAll(absPath, os.ModePerm); err != nil {
 			return fmt.Errorf("make import path %s failed, %s", absPath, err.Error())
 		}
 	}

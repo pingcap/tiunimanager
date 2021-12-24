@@ -250,7 +250,7 @@ func getChangeFeedTaskByID(ctx context.Context, pdAddress, id string) (resp Chan
 			framework.LogWithContext(ctx).Errorf("read http response failed, %s", err.Error())
 			return
 		}
-		err = json.Unmarshal(respBody, resp)
+		err = json.Unmarshal(respBody, &resp)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("unmarshal http response failed, %s", err.Error())
 			return 

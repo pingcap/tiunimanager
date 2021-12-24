@@ -21,13 +21,13 @@ func TestManager_Login_v1(t *testing.T) {
 		request message.LoginReq
 	}
 	tests := []struct {
-		name     string
-		args     args
-		wantErr  bool
+		name    string
+		args    args
+		wantErr bool
 	}{
-		{"normal", args{context.TODO(), message.LoginReq{"testName", "123456789"}}, false},
-		{"wrong username", args{context.TODO(), message.LoginReq{"name", "123456789"}}, true},
-		{"wrong password", args{context.TODO(), message.LoginReq{"testName", "12345"}}, true},
+		{"normal", args{ctx: context.TODO(), request: message.LoginReq{"testName", "123456789"}}, false},
+		{"wrong username", args{ctx: context.TODO(), request: message.LoginReq{"name", "123456789"}}, true},
+		{"wrong password", args{ctx: context.TODO(), request: message.LoginReq{"testName", "12345"}}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -57,7 +57,7 @@ func TestManager_Logout(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"normal", args{context.TODO(), message.LogoutReq{tokenString.TokenString}}, false},
+		{"normal", args{ctx: context.TODO(), req: message.LogoutReq{tokenString.TokenString}}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -282,6 +282,7 @@ func TestGormClusterReadWrite_UpdateInstance(t *testing.T) {
 	err := testRW.UpdateInstance(context.TODO(), instances...)
 	assert.NoError(t, err)
 	_, gotInstances, err := testRW.GetMeta(context.TODO(), got.ID)
+	assert.NoError(t, err)
 	gotInstances[0].Status = string(constants.ClusterRunning)
 	gotInstances[0].HostIP = []string{"127.0.0.1", "127.0.0.2"}
 	gotInstances[0].CpuCores = 4
@@ -410,17 +411,17 @@ func TestClusterReadWrite_QueryMetas(t *testing.T) {
 	defer testRW.Delete(context.TODO(), cluster7)
 
 	t.Run("normal", func(t *testing.T) {
-		results, page, err := testRW.QueryMetas(context.TODO(), Filters {
+		results, page, err := testRW.QueryMetas(context.TODO(), Filters{
 			TenantId: "1919",
 			NameLike: "test",
-			Tag: "tag1",
-			Type: "TiDB",
+			Tag:      "tag1",
+			Type:     "TiDB",
 			StatusFilters: []constants.ClusterRunningStatus{
 				constants.ClusterRunning,
 				constants.ClusterInitializing,
 			},
 		}, structs.PageRequest{
-			Page: 1,
+			Page:     1,
 			PageSize: 2,
 		})
 		assert.NoError(t, err)
@@ -431,17 +432,17 @@ func TestClusterReadWrite_QueryMetas(t *testing.T) {
 	})
 
 	t.Run("no result", func(t *testing.T) {
-		_, page, err := testRW.QueryMetas(context.TODO(), Filters {
+		_, page, err := testRW.QueryMetas(context.TODO(), Filters{
 			TenantId: "1919",
 			NameLike: "whatever",
-			Tag: "tag1",
-			Type: "TiDB",
+			Tag:      "tag1",
+			Type:     "TiDB",
 			StatusFilters: []constants.ClusterRunningStatus{
 				constants.ClusterRunning,
 				constants.ClusterInitializing,
 			},
 		}, structs.PageRequest{
-			Page: 0,
+			Page:     0,
 			PageSize: 5,
 		})
 		assert.NoError(t, err)
@@ -449,30 +450,29 @@ func TestClusterReadWrite_QueryMetas(t *testing.T) {
 	})
 
 	t.Run("error", func(t *testing.T) {
-		_, _, err := testRW.QueryMetas(context.TODO(), Filters {
+		_, _, err := testRW.QueryMetas(context.TODO(), Filters{
 			NameLike: "whatever",
-			Tag: "tag1",
-			Type: "TiDB",
+			Tag:      "tag1",
+			Type:     "TiDB",
 			StatusFilters: []constants.ClusterRunningStatus{
 				constants.ClusterRunning,
 				constants.ClusterInitializing,
 			},
 		}, structs.PageRequest{
-			Page: 0,
+			Page:     0,
 			PageSize: 5,
 		})
 		assert.Error(t, err)
 	})
 	t.Run("empty filter", func(t *testing.T) {
-		_, page, err := testRW.QueryMetas(context.TODO(), Filters {
-			TenantId: "1919",
-			NameLike: "",
-			Tag: "",
-			Type: "",
-			StatusFilters: []constants.ClusterRunningStatus{
-			},
+		_, page, err := testRW.QueryMetas(context.TODO(), Filters{
+			TenantId:      "1919",
+			NameLike:      "",
+			Tag:           "",
+			Type:          "",
+			StatusFilters: []constants.ClusterRunningStatus{},
 		}, structs.PageRequest{
-			Page: 0,
+			Page:     0,
 			PageSize: 5,
 		})
 		assert.NoError(t, err)
@@ -480,15 +480,14 @@ func TestClusterReadWrite_QueryMetas(t *testing.T) {
 	})
 
 	t.Run("page", func(t *testing.T) {
-		result, page, err := testRW.QueryMetas(context.TODO(), Filters {
-			TenantId: "1919",
-			NameLike: "",
-			Tag: "",
-			Type: "",
-			StatusFilters: []constants.ClusterRunningStatus{
-			},
+		result, page, err := testRW.QueryMetas(context.TODO(), Filters{
+			TenantId:      "1919",
+			NameLike:      "",
+			Tag:           "",
+			Type:          "",
+			StatusFilters: []constants.ClusterRunningStatus{},
 		}, structs.PageRequest{
-			Page: 5,
+			Page:     5,
 			PageSize: 5,
 		})
 		assert.NoError(t, err)
@@ -498,11 +497,11 @@ func TestClusterReadWrite_QueryMetas(t *testing.T) {
 }
 
 func mockCluster(name string, clusterType string, status constants.ClusterRunningStatus, tags []string) string {
-	got, _ := testRW.Create(context.TODO(), &Cluster {
+	got, _ := testRW.Create(context.TODO(), &Cluster{
 		Name: name,
 		Entity: common.Entity{
 			TenantId: "1919",
-			Status: string(status),
+			Status:   string(status),
 		},
 		Tags: tags,
 		Type: clusterType,
@@ -518,31 +517,31 @@ func mockCluster(name string, clusterType string, status constants.ClusterRunnin
 
 func TestClusterReadWrite_Relations(t *testing.T) {
 	relation1 := &ClusterRelation{
-		ObjectClusterID: "test_relation",
+		ObjectClusterID:  "test_relation",
 		SubjectClusterID: "222",
-		RelationType: constants.ClusterRelationCloneFrom,
+		RelationType:     constants.ClusterRelationCloneFrom,
 	}
 	err := testRW.CreateRelation(context.TODO(), relation1)
 	assert.NoError(t, err)
 
 	err = testRW.CreateRelation(context.TODO(), &ClusterRelation{
-		ObjectClusterID: "test_relation",
+		ObjectClusterID:  "test_relation",
 		SubjectClusterID: "222",
-		RelationType: constants.ClusterRelationSlaveTo,
+		RelationType:     constants.ClusterRelationSlaveTo,
 	})
 	assert.NoError(t, err)
 
 	err = testRW.CreateRelation(context.TODO(), &ClusterRelation{
-		ObjectClusterID: "test_relation",
+		ObjectClusterID:  "test_relation",
 		SubjectClusterID: "333",
-		RelationType: constants.ClusterRelationSlaveTo,
+		RelationType:     constants.ClusterRelationSlaveTo,
 	})
 	assert.NoError(t, err)
 
 	err = testRW.CreateRelation(context.TODO(), &ClusterRelation{
-		ObjectClusterID: "333",
+		ObjectClusterID:  "333",
 		SubjectClusterID: "test_relation",
-		RelationType: constants.ClusterRelationSlaveTo,
+		RelationType:     constants.ClusterRelationSlaveTo,
 	})
 	assert.NoError(t, err)
 

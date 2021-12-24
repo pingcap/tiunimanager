@@ -205,7 +205,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			detail, ok = products[productID]
 			if !ok {
 				products[productID] = structs.ProductDetail{ID: productID, Name: productName, Versions: make(map[string]structs.ProductVersion)}
-				detail, _ = products[productID]
+				detail = products[productID]
 			}
 
 			//Query whether the product version information is already in Versions,
@@ -213,7 +213,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			productVersion, ok = detail.Versions[version]
 			if !ok {
 				detail.Versions[version] = structs.ProductVersion{Version: version, Arch: arch, Components: make(map[string]structs.ProductComponentProperty)}
-				productVersion, _ = detail.Versions[version]
+				productVersion = detail.Versions[version]
 			}
 
 			//Query whether the product component information is already in Components,
@@ -222,7 +222,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			if !ok {
 				productVersion.Components[info.ID] = structs.ProductComponentProperty{ID: info.ID, Name: info.Name, PurposeType: info.PurposeType,
 					StartPort: info.StartPort, EndPort: info.EndPort, MaxPort: info.MaxPort, MinInstance: info.MinInstance, MaxInstance: info.MaxInstance, Spec: make(map[string]structs.ComponentInstanceResourceSpec)}
-				productComponentInfo, _ = productVersion.Components[info.ID]
+				productComponentInfo = productVersion.Components[info.ID]
 			}
 
 			//Query whether the product component specification information is already in Specifications,

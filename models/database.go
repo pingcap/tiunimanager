@@ -114,6 +114,7 @@ func (p *database) initTables() (err error) {
 		new(management.ClusterRelation),
 		new(management.ClusterTopologySnapshot),
 		new(importexport.DataTransportRecord),
+		new(backuprestore.BackupRecord),
 		new(backuprestore.BackupStrategy),
 		new(config.SystemConfig),
 		new(secondparty.SecondPartyOperation),

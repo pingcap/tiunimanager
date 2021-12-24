@@ -17,8 +17,7 @@ package backuprestore
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/errors"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
 	"time"
@@ -41,7 +40,7 @@ func (m *BRReadWrite) CreateBackupRecord(ctx context.Context, record *BackupReco
 
 func (m *BRReadWrite) UpdateBackupRecord(ctx context.Context, backupId string, status string, size uint64, backupTso uint64, endTime time.Time) (err error) {
 	if "" == backupId {
-		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "backup id cannot be empty")
 	}
 
 	record := &BackupRecord{}
@@ -69,7 +68,7 @@ func (m *BRReadWrite) UpdateBackupRecord(ctx context.Context, backupId string, s
 
 func (m *BRReadWrite) GetBackupRecord(ctx context.Context, backupId string) (record *BackupRecord, err error) {
 	if "" == backupId {
-		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "backup id cannot be empty")
 	}
 	record = &BackupRecord{}
 	err = m.DB(ctx).First(record, "id = ?", backupId).Error
@@ -103,7 +102,7 @@ func (m *BRReadWrite) QueryBackupRecords(ctx context.Context, clusterId, backupI
 
 func (m *BRReadWrite) DeleteBackupRecord(ctx context.Context, backupId string) (err error) {
 	if "" == backupId {
-		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "backup id cannot be empty")
 	}
 	record := &BackupRecord{}
 	return m.DB(ctx).First(record, "id = ?", backupId).Delete(record).Error
@@ -132,7 +131,7 @@ func (m *BRReadWrite) SaveBackupStrategy(ctx context.Context, strategy *BackupSt
 
 func (m *BRReadWrite) GetBackupStrategy(ctx context.Context, clusterId string) (strategy *BackupStrategy, err error) {
 	if "" == clusterId {
-		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster id cannot be empty")
 	}
 
 	strategy = &BackupStrategy{}
@@ -161,7 +160,7 @@ func (m *BRReadWrite) QueryBackupStrategy(ctx context.Context, weekDay string, s
 
 func (m *BRReadWrite) DeleteBackupStrategy(ctx context.Context, clusterId string) (err error) {
 	if "" == clusterId {
-		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster id cannot be empty")
 	}
 	strategy, err := m.GetBackupStrategy(ctx, clusterId)
 	if err != nil {

@@ -47,8 +47,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/common"
-
 	"github.com/pingcap-inc/tiem/library/framework"
 )
 
@@ -73,7 +71,7 @@ func handleRequest(ctx context.Context, req *clusterpb.RpcRequest, resp *cluster
 	err := json.Unmarshal([]byte(req.GetRequest()), requestBody)
 	if err != nil {
 		errMsg := fmt.Sprintf("unmarshal request error, request = %s, err = %s", req.GetRequest(), err.Error())
-		handleResponse(ctx, resp, framework.NewTiEMErrorf(common.TIEM_UNMARSHAL_ERROR, errMsg), nil, nil)
+		handleResponse(ctx, resp, errors.NewError(errors.TIEM_UNMARSHAL_ERROR, errMsg), nil, nil)
 		return false
 	} else {
 		return true
@@ -88,7 +86,7 @@ func handleResponse(ctx context.Context, resp *clusterpb.RpcResponse, err error,
 			err = errors.WrapError(errors.TIEM_MARSHAL_ERROR, fmt.Sprintf("marshal request data error, data = %v", responseData), getDataError)
 		} else {
 			// handle data and page
-			resp.Code = int32(common.TIEM_SUCCESS)
+			resp.Code = int32(errors.TIEM_SUCCESS)
 			resp.Response = string(data)
 			if page != nil {
 				resp.Page = page
@@ -98,12 +96,6 @@ func handleResponse(ctx context.Context, resp *clusterpb.RpcResponse, err error,
 	}
 
 	if err != nil {
-		if finalError, ok := err.(framework.TiEMError); ok {
-			framework.LogWithContext(ctx).Errorf("rpc method failed with error, %s", err.Error())
-			resp.Code = int32(finalError.GetCode())
-			resp.Message = finalError.GetMsg()
-			return
-		}
 		if finalError, ok := err.(errors.EMError); ok {
 			framework.LogWithContext(ctx).Errorf("rpc method failed with error, %s", err.Error())
 			resp.Code = int32(finalError.GetCode())

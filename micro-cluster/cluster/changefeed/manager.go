@@ -19,7 +19,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/models"
@@ -71,9 +70,8 @@ func (p *Manager) Create(ctx context.Context, request cluster.CreateChangeFeedTa
 
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to create change feed task, %s", err.Error())
-		return cluster.CreateChangeFeedTaskResp{}, framework.WrapError(common.TIEM_CHANGE_FEED_CREATE_ERROR, "failed to create change feed task", err)
+		return
 	}
-
 
 	return
 }

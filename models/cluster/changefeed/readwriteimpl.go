@@ -20,8 +20,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/errors"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
 	"time"
@@ -66,7 +65,7 @@ func (m *GormChangeFeedReadWrite) LockStatus(ctx context.Context, taskId string)
 	}
 
 	if task.Locked() {
-		return framework.SimpleError(common.TIEM_CHANGE_FEED_STATUS_CONFLICT)
+		return errors.NewError(errors.TIEM_CHANGE_FEED_STATUS_CONFLICT, "")
 	}
 
 	err = m.DB(ctx).Model(task).
@@ -85,7 +84,7 @@ func (m *GormChangeFeedReadWrite) UnlockStatus(ctx context.Context, taskId strin
 	}
 
 	if !task.Locked() {
-		return framework.SimpleError(common.TIEM_CHANGE_FEED_LOCK_EXPIRED)
+		return errors.NewError(errors.TIEM_CHANGE_FEED_LOCK_EXPIRED, "")
 	}
 
 	err = m.DB(ctx).Model(task).
@@ -110,14 +109,14 @@ func (m *GormChangeFeedReadWrite) UpdateConfig(ctx context.Context, updateTempla
 
 func (m *GormChangeFeedReadWrite) Get(ctx context.Context, taskId string) (*ChangeFeedTask, error) {
 	if "" == taskId {
-		return nil, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "empty id")
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "task id required")
 	}
 
 	task := &ChangeFeedTask{}
 	err := m.DB(ctx).First(task, "id = ?", taskId).Error
 
 	if err != nil {
-		return nil, framework.NewTiEMError(common.TIEM_CHANGE_FEED_NOT_FOUND, fmt.Sprintf("task [%s]", taskId))
+		return nil, errors.NewError(errors.TIEM_CHANGE_FEED_NOT_FOUND, fmt.Sprintf("task [%s]", taskId))
 	} else {
 		return task, nil
 	}
@@ -125,7 +124,7 @@ func (m *GormChangeFeedReadWrite) Get(ctx context.Context, taskId string) (*Chan
 
 func (m *GormChangeFeedReadWrite) QueryByClusterId(ctx context.Context, clusterId string, offset int, length int) (tasks []*ChangeFeedTask, total int64, err error) {
 	if "" == clusterId {
-		return nil, 0, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "empty cluster id")
+		return nil, 0, errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster id required")
 	}
 
 	tasks = make([]*ChangeFeedTask, length)

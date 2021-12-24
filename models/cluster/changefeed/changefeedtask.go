@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
 	"time"
@@ -62,7 +60,7 @@ func UnmarshalDownstream(dt constants.DownstreamType, cc string) (ChangeFeedDown
 		err := json.Unmarshal([]byte(cc), downstream)
 		return downstream, err
 	}
-	return nil, framework.SimpleError(common.TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM)
+	return nil, errors.NewError(errors.TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM, "")
 }
 
 func (t *ChangeFeedTask) BeforeSave(tx *gorm.DB) (err error) {
@@ -71,7 +69,7 @@ func (t *ChangeFeedTask) BeforeSave(tx *gorm.DB) (err error) {
 		if jsonErr == nil {
 			t.DownstreamConfig = string(b)
 		} else {
-			return framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, jsonErr.Error())
+			return errors.NewError(errors.TIEM_PARAMETER_INVALID, jsonErr.Error())
 		}
 	}
 	if t.FilterRules == nil {

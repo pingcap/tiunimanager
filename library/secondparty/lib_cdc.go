@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	util "github.com/pingcap-inc/tiem/library/util/http"
 	"net/http"
@@ -36,7 +35,7 @@ func (secondMicro *SecondPartyManager) CreateChangeFeedTask(ctx context.Context,
 
 	bytes, err := json.Marshal(&req)
 	if err != nil {
-		err = framework.WrapError(common.TIEM_MARSHAL_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_MARSHAL_ERROR, "", err)
 		return
 	}
 	data := make(map[string]interface{})

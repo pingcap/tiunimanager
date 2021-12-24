@@ -265,7 +265,7 @@ func TestGormChangeFeedReadWrite_UpdateConfig(t *testing.T) {
 		Password: "updated",
 	}
 	existed.Type = constants.DownstreamTypeTiDB
-	existed.FilterRulesConfig = newString
+	existed.FilterRules = []string{newString}
 	existed.ClusterId = newString
 	existed.StartTS = int64(newInt)
 	existed.Entity.Status = "99"
@@ -297,7 +297,7 @@ func TestGormChangeFeedReadWrite_UpdateConfig(t *testing.T) {
 				assert.Equal(t, "updated", updated.Downstream.(*TiDBDownstream).Password)
 
 				assert.Equal(t, "tidb", string(updated.Type))
-				assert.Equal(t, newString, updated.FilterRulesConfig)
+				assert.Equal(t, []string{newString}, updated.FilterRules)
 				assert.NotEqual(t, newString, updated.ClusterId)
 				assert.NotEqual(t, int8(newInt), updated.Status)
 			}

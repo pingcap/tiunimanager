@@ -5654,6 +5654,10 @@ var doc = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
                 }
             }
         },

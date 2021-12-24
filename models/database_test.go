@@ -22,12 +22,20 @@ import (
 	"testing"
 )
 
-
 func TestGetReaderWriter(t *testing.T) {
 	assert.NotEmpty(t, GetBRReaderWriter())
 	assert.NotEmpty(t, GetChangeFeedReaderWriter())
 	assert.NotEmpty(t, GetWorkFlowReaderWriter())
 	assert.NotEmpty(t, GetImportExportReaderWriter())
+	assert.NotEmpty(t, GetResourceReaderWriter())
+	assert.NotEmpty(t, GetClusterReaderWriter())
+	assert.NotEmpty(t, GetConfigReaderWriter())
+	assert.NotEmpty(t, GetSecondPartyOperationReaderWriter())
+	assert.NotEmpty(t, GetParameterGroupReaderWriter())
+	assert.NotEmpty(t, GetClusterParameterReaderWriter())
+	assert.NotEmpty(t, GetAccountReaderWriter())
+	assert.NotEmpty(t, GetTenantReaderWriter())
+	assert.NotEmpty(t, GetTokenReaderWriter())
 }
 
 func TestMain(m *testing.M) {

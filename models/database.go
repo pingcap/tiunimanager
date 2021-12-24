@@ -102,7 +102,6 @@ func (p *database) migrateStream(models ...interface{}) (err error) {
 	return nil
 }
 
-
 func (p *database) initTables() (err error) {
 	err = p.migrateStream(
 		new(changefeed.ChangeFeedTask),

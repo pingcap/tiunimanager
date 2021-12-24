@@ -22,6 +22,7 @@ import (
 	"testing"
 )
 
+
 func TestGetReaderWriter(t *testing.T) {
 	assert.NotEmpty(t, GetBRReaderWriter())
 	assert.NotEmpty(t, GetChangeFeedReaderWriter())

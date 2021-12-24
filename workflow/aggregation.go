@@ -130,15 +130,7 @@ func (flow *WorkFlowAggregation) addContext(key string, value interface{}) {
 	flow.Flow.Context = string(data)
 }
 
-func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) (executeErr error) {
-	defer func() {
-		if r := recover(); r != nil {
-			framework.LogWithContext(flow.Context).Errorf("recover from workflow %s, node %s", flow.Flow.Name, node.Name)
-			executeErr = errors.NewEMErrorf(errors.TIEM_PANIC, "%v", r)
-			node.Fail(executeErr)
-		}
-	}()
-
+func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) error {
 	flow.CurrentNode = node
 	flow.Nodes = append(flow.Nodes, node)
 	node.Processing()
@@ -228,7 +220,12 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 				return false
 			}
 			if resp.Status == secondpartyModel.OperationStatus_Finished {
-				node.Success(resp.Result)
+				if resp.Result != "" {
+					node.Success(resp.Result)
+				} else {
+					node.Success(nil)
+				}
+
 				return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
 			}
 		}

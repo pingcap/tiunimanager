@@ -55,7 +55,7 @@ import (
 	"github.com/pingcap-inc/tiem/workflow"
 )
 
-func TestExecutor_asyncMaintenance(t *testing.T) {
+func TestExecutor_asyncMaintenance_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -78,12 +78,13 @@ func TestExecutor_asyncMaintenance(t *testing.T) {
 
 	data := map[string]interface{}{}
 	data[contextModifyParameters] = mockModifyParameter()
+	data[contextMaintenanceStatusChange] = true
 	resp, err := asyncMaintenance(context.TODO(), mockClusterMeta(), data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, resp)
 }
 
-func TestExecutor_endMaintenance(t *testing.T) {
+func TestExecutor_endMaintenance_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -101,6 +102,7 @@ func TestExecutor_endMaintenance(t *testing.T) {
 		}
 		ctx.SetData(contextClusterMeta, mockClusterMeta())
 		ctx.SetData(contextModifyParameters, mockModifyParameter())
+		ctx.SetData(contextMaintenanceStatusChange, true)
 		err := defaultEnd(mockWorkFlowAggregation().CurrentNode, ctx)
 		assert.NoError(t, err)
 	})
@@ -220,6 +222,72 @@ func TestExecutor_refreshParameter(t *testing.T) {
 	})
 }
 
+func TestExecutor_persistParameter(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+	models.SetParameterGroupReaderWriter(parameterGroupRW)
+	clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
+	models.SetClusterParameterReaderWriter(clusterParameterRW)
+
+	t.Run("success", func(t *testing.T) {
+		parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, parameterGroupId string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+				return &parametergroup.ParameterGroup{ID: "1"}, []*parametergroup.ParamDetail{
+					{
+						Parameter:    parametergroup.Parameter{ID: "1"},
+						DefaultValue: "10",
+						Note:         "param1",
+					},
+				}, nil
+			})
+		clusterParameterRW.EXPECT().ApplyClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, parameterGroupId string, clusterId string, param []*parameter.ClusterParameterMapping) error {
+				return nil
+			})
+
+		applyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		applyCtx.SetData(contextClusterMeta, mockClusterMeta())
+		applyCtx.SetData(contextModifyParameters, mockModifyParameter())
+		applyCtx.SetData(contextApplyParameterInfo, &message.ApplyParameterGroupReq{
+			ParamGroupId: "1",
+			ClusterID:    "123",
+		})
+		err := persistParameter(mockWorkFlowAggregation().CurrentNode, applyCtx)
+		assert.NoError(t, err)
+	})
+}
+
+func TestExecutor_persistParameter2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+	models.SetParameterGroupReaderWriter(parameterGroupRW)
+	clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
+	models.SetClusterParameterReaderWriter(clusterParameterRW)
+
+	t.Run("success", func(t *testing.T) {
+		clusterParameterRW.EXPECT().UpdateClusterParameter(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+
+		applyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		applyCtx.SetData(contextClusterMeta, mockClusterMeta())
+		applyCtx.SetData(contextModifyParameters, mockModifyParameter())
+		applyCtx.SetData(contextUpdateParameterInfo, &cluster.UpdateClusterParametersReq{
+			ClusterID: "123",
+		})
+		err := persistParameter(mockWorkFlowAggregation().CurrentNode, applyCtx)
+		assert.NoError(t, err)
+	})
+}
+
 func TestExecutor_persistApplyParameter(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -255,7 +323,11 @@ func TestExecutor_persistApplyParameter(t *testing.T) {
 			ParamGroupId: "1",
 			ClusterID:    "123",
 		})
-		err := persistApplyParameter(mockWorkFlowAggregation().CurrentNode, applyCtx)
+		err := persistApplyParameter(&message.ApplyParameterGroupReq{
+			ParamGroupId: "1",
+			ClusterID:    "123",
+			Reboot:       false,
+		}, applyCtx)
 		assert.NoError(t, err)
 	})
 }
@@ -289,7 +361,11 @@ func TestExecutor_persistUpdateParameter(t *testing.T) {
 				},
 			},
 		})
-		err := persistUpdateParameter(mockWorkFlowAggregation().CurrentNode, applyCtx)
+		err := persistUpdateParameter(&cluster.UpdateClusterParametersReq{
+			ClusterID: "123",
+			Params:    nil,
+			Reboot:    false,
+		}, applyCtx)
 		assert.NoError(t, err)
 	})
 }

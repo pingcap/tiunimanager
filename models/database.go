@@ -91,33 +91,47 @@ func Open(fw *framework.BaseFramework, reentry bool) error {
 	return nil
 }
 
+func (p *database) migrateStream(models ...interface{}) (err error) {
+	for _, model := range models {
+		err = p.base.AutoMigrate(model)
+		if err != nil {
+			framework.LogForkFile(common.LogFileSystem).Errorf("init table failed, model = %v", models)
+			return err
+		}
+	}
+	return nil
+}
+
+
 func (p *database) initTables() (err error) {
-	p.addTable(new(changefeed.ChangeFeedTask))
-	p.addTable(new(workflow.WorkFlow))
-	p.addTable(new(workflow.WorkFlowNode))
-	p.addTable(new(management.Cluster))
-	p.addTable(new(management.ClusterInstance))
-	p.addTable(new(management.ClusterRelation))
-	p.addTable(new(management.ClusterTopologySnapshot))
-	p.addTable(new(importexport.DataTransportRecord))
-	p.addTable(new(backuprestore.BackupRecord))
-	p.addTable(new(backuprestore.BackupStrategy))
-	p.addTable(new(config.SystemConfig))
-	p.addTable(new(secondparty.SecondPartyOperation))
-	p.addTable(new(parametergroup.Parameter))
-	p.addTable(new(parametergroup.ParameterGroup))
-	p.addTable(new(parametergroup.ParameterGroupMapping))
-	p.addTable(new(parameter.ClusterParameterMapping))
-	p.addTable(new(account.Account))
-	p.addTable(new(tenant.Tenant))
-	p.addTable(new(identification.Token))
-	// init tables for resource manager
-	err = p.resourceReaderWriter.InitTables(context.TODO())
+	err = p.migrateStream(
+		new(changefeed.ChangeFeedTask),
+		new(workflow.WorkFlow),
+		new(workflow.WorkFlowNode),
+		new(management.Cluster),
+		new(management.ClusterInstance),
+		new(management.ClusterRelation),
+		new(management.ClusterTopologySnapshot),
+		new(importexport.DataTransportRecord),
+		new(backuprestore.BackupStrategy),
+		new(config.SystemConfig),
+		new(secondparty.SecondPartyOperation),
+		new(parametergroup.Parameter),
+		new(parametergroup.ParameterGroup),
+		new(parametergroup.ParameterGroupMapping),
+		new(parameter.ClusterParameterMapping),
+		new(account.Account),
+		new(tenant.Tenant),
+		new(identification.Token),
+	)
 	if err != nil {
 		return err
 	}
 
-	// other tables
+	err = p.resourceReaderWriter.InitTables(context.TODO())
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -159,19 +173,6 @@ func (p *database) initSystemData() {
 		account.GenSaltAndHash("admin")
 		defaultDb.accountReaderWriter.AddAccount(context.TODO(), tenant.ID, account.Name, account.Salt, account.FinalHash, 0)
 	}
-}
-
-func (p *database) addTable(gormModel interface{}) error {
-	log := framework.LogForkFile(common.LogFileSystem)
-	if !p.base.Migrator().HasTable(gormModel) {
-		err := p.base.Migrator().CreateTable(gormModel)
-		if err != nil {
-			log.Errorf("create table failed, error : %v.", err)
-			return err
-		}
-	}
-
-	return nil
 }
 
 func GetChangeFeedReaderWriter() changefeed.ReaderWriter {

@@ -20,6 +20,7 @@ import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
+	resourceTemplate "github.com/pingcap-inc/tiem/resource/template"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"text/template"
 
@@ -87,15 +88,15 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 var TagTakeover = "takeover"
 
 func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string) error {
-	p.Cluster = &management.Cluster {
+	p.Cluster = &management.Cluster{
 		Entity: dbCommon.Entity{
 			TenantId: framework.GetTenantIDFromContext(ctx),
 			Status:   string(constants.ClusterInitializing),
 		},
-		Name:              name,
-		Tags:              []string{TagTakeover},
-		OwnerId:           framework.GetUserIDFromContext(ctx),
-		MaintainWindow:    "",
+		Name:           name,
+		Tags:           []string{TagTakeover},
+		OwnerId:        framework.GetUserIDFromContext(ctx),
+		MaintainWindow: "",
 	}
 
 	_, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
@@ -132,7 +133,7 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 	for _, compute := range computes {
 		for _, item := range compute.Resource {
 			for i := 0; i < item.Count; i++ {
-				instance := &management.ClusterInstance {
+				instance := &management.ClusterInstance{
 					Entity: dbCommon.Entity{
 						TenantId: p.Cluster.TenantId,
 						Status:   string(constants.ClusterInstanceInitializing),
@@ -158,7 +159,7 @@ func (p *ClusterMeta) AddDefaultInstances(ctx context.Context) error {
 	if string(newConstants.EMProductIDTiDB) == p.Cluster.Type {
 		for _, t := range newConstants.ParasiteComponentIDs {
 			instance := &management.ClusterInstance{
-				Entity: dbCommon.Entity {
+				Entity: dbCommon.Entity{
 					TenantId: p.Cluster.TenantId,
 					Status:   string(constants.ClusterInstanceInitializing),
 				},
@@ -314,7 +315,7 @@ func (p *ClusterMeta) GenerateTopologyConfig(ctx context.Context) (string, error
 		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster topology is empty, please check it!")
 	}
 
-	t, err := template.New("cluster_topology.yaml").ParseFiles("template/cluster_topology.yaml")
+	t, err := template.New("topology").Parse(resourceTemplate.ClusterTopology)
 	if err != nil {
 		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
 	}
@@ -460,8 +461,7 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 	}
 
 	// write cluster into db
-	_, err := models.GetClusterReaderWriter().Create(ctx, meta.Cluster)
-	if err != nil {
+	if _, err := models.GetClusterReaderWriter().Create(ctx, meta.Cluster); err != nil {
 		return nil, err
 	}
 
@@ -487,11 +487,13 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 		}
 	}
 
-	err = models.GetClusterReaderWriter().CreateRelation(ctx, &management.ClusterRelation{
-		ObjectClusterID: meta.Cluster.ID,
+	if err := models.GetClusterReaderWriter().CreateRelation(ctx, &management.ClusterRelation{
+		ObjectClusterID:  meta.Cluster.ID,
 		SubjectClusterID: p.Cluster.ID,
-		RelationType: constants.ClusterRelationCloneFrom,
-	})
+		RelationType:     constants.ClusterRelationCloneFrom,
+	}); err != nil {
+		return nil, err
+	}
 
 	return meta, nil
 }
@@ -546,7 +548,7 @@ func (p *ClusterMeta) GetClusterConnectAddresses() []ComponentAddress {
 	address := make([]ComponentAddress, 0)
 
 	for _, instance := range instances {
-		if instance.Status == string(constants.ClusterInstanceRunning) || instance.Status == string(constants.ClusterInstanceInitializing) {
+		if instance.Status == string(constants.ClusterInstanceRunning) {
 			address = append(address, ComponentAddress{
 				IP:   instance.HostIP[0],
 				Port: int(instance.Ports[0]),
@@ -747,11 +749,11 @@ func buildMeta(cluster *management.Cluster, instances []*management.ClusterInsta
 // @return total
 // @return err
 func Query(ctx context.Context, req cluster.QueryClustersReq) (resp cluster.QueryClusterResp, total int, err error) {
-	filters := management.Filters {
+	filters := management.Filters{
 		TenantId: framework.GetTenantIDFromContext(ctx),
 		NameLike: req.Name,
-		Type: req.Type,
-		Tag: req.Tag,
+		Type:     req.Type,
+		Tag:      req.Tag,
 	}
 	if len(req.ClusterID) > 0 {
 		filters.ClusterIDs = []string{req.ClusterID}

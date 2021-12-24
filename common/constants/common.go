@@ -24,8 +24,8 @@
 package constants
 
 import (
-	"time"
 	"github.com/pingcap-inc/tiem/common/errors"
+	"time"
 )
 
 //System log-related constants

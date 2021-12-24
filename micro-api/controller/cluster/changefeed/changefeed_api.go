@@ -38,7 +38,7 @@ import (
 func Create(c *gin.Context) {
 	var req cluster.CreateChangeFeedTaskReq
 
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, req); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &cluster.CreateChangeFeedTaskResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -60,9 +60,10 @@ func Create(c *gin.Context) {
 // @Router /changefeeds/ [get]
 func Query(c *gin.Context) {
 	var req cluster.QueryChangeFeedTaskReq
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &req); ok {
+		result := make([]cluster.QueryChangeFeedTaskResp, 0)
 
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, req); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryChangeFeedTasks, make([][]cluster.QueryChangeFeedTaskResp, 0),
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryChangeFeedTasks, &result,
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -84,10 +85,10 @@ const paramNameOfChangeFeedTaskId = "changeFeedTaskId"
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/ [get]
 func Detail(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, cluster.DetailChangeFeedTaskReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.DetailChangeFeedTaskReq {
 		ID: c.Param(paramNameOfChangeFeedTaskId),
 	}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &cluster.DetailChangeFeedTaskResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.DetailChangeFeedTask, &cluster.DetailChangeFeedTaskResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -107,10 +108,10 @@ func Detail(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/pause [post]
 func Pause(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, cluster.PauseChangeFeedTaskReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.PauseChangeFeedTaskReq{
 		ID: c.Param(paramNameOfChangeFeedTaskId),
 	}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &cluster.PauseChangeFeedTaskResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.PauseChangeFeedTask, &cluster.PauseChangeFeedTaskResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -130,10 +131,10 @@ func Pause(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/resume [post]
 func Resume(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, cluster.ResumeChangeFeedTaskReq{
-		Id: c.Param(paramNameOfChangeFeedTaskId),
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.ResumeChangeFeedTaskReq{
+		ID: c.Param(paramNameOfChangeFeedTaskId),
 	}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &cluster.ResumeChangeFeedTaskResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.ResumeChangeFeedTask, &cluster.ResumeChangeFeedTaskResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -157,13 +158,13 @@ func Update(c *gin.Context) {
 	var req cluster.UpdateChangeFeedTaskReq
 
 	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
-		req,
+		&req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
 			req.(*cluster.UpdateChangeFeedTaskReq).ID = c.Param(paramNameOfChangeFeedTaskId)
 			return nil
 		}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &cluster.UpdateChangeFeedTaskResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateChangeFeedTask, &cluster.UpdateChangeFeedTaskResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -183,10 +184,10 @@ func Update(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId} [delete]
 func Delete(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, cluster.DeleteChangeFeedTaskReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.DeleteChangeFeedTaskReq{
 		ID: c.Param(paramNameOfChangeFeedTaskId),
 	}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &cluster.DeleteChangeFeedTaskResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteChangeFeedTask, &cluster.DeleteChangeFeedTaskResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

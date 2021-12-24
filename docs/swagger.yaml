@@ -79,8 +79,6 @@ definitions:
       clusterId:
         example: CLUSTER_ID_IN_TIEM__22
         type: string
-      createTime:
-        type: string
       downstream:
         type: object
       downstreamType:
@@ -89,9 +87,6 @@ definitions:
         - kafka
         - mysql
         example: tidb
-        type: string
-      id:
-        example: CLUSTER_ID_IN_TIEM__22
         type: string
       name:
         example: my_sync_name
@@ -105,18 +100,6 @@ definitions:
       startTS:
         example: 415241823337054209
         type: integer
-      status:
-        enum:
-        - Initial
-        - Normal
-        - Stopped
-        - Finished
-        - Error
-        - Failed
-        example: "1"
-        type: string
-      updateTime:
-        type: string
     type: object
   cluster.CreateChangeFeedTaskResp:
     properties:
@@ -184,14 +167,14 @@ definitions:
         type: string
       status:
         enum:
-        - 0
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-        example: 1
-        type: integer
+        - Initial
+        - Normal
+        - Stopped
+        - Finished
+        - Error
+        - Failed
+        example: Normal
+        type: string
     type: object
   cluster.DeleteClusterReq:
     properties:
@@ -253,7 +236,7 @@ definitions:
         - Finished
         - Error
         - Failed
-        example: "1"
+        example: Normal
         type: string
       unsteady:
         example: false
@@ -385,14 +368,14 @@ definitions:
     properties:
       status:
         enum:
-        - 0
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-        example: 1
-        type: integer
+        - Initial
+        - Normal
+        - Stopped
+        - Finished
+        - Error
+        - Failed
+        example: Normal
+        type: string
     type: object
   cluster.PreviewClusterResp:
     properties:
@@ -467,7 +450,7 @@ definitions:
         - Finished
         - Error
         - Failed
-        example: "1"
+        example: Normal
         type: string
       unsteady:
         example: false
@@ -587,14 +570,14 @@ definitions:
     properties:
       status:
         enum:
-        - 0
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-        example: 1
-        type: integer
+        - Initial
+        - Normal
+        - Stopped
+        - Finished
+        - Error
+        - Failed
+        example: Normal
+        type: string
     type: object
   cluster.SaveBackupStrategyReq:
     properties:
@@ -704,11 +687,6 @@ definitions:
     type: object
   cluster.UpdateChangeFeedTaskReq:
     properties:
-      clusterId:
-        example: CLUSTER_ID_IN_TIEM__22
-        type: string
-      createTime:
-        type: string
       downstream:
         type: object
       downstreamType:
@@ -717,9 +695,6 @@ definitions:
         - kafka
         - mysql
         example: tidb
-        type: string
-      id:
-        example: CLUSTER_ID_IN_TIEM__22
         type: string
       name:
         example: my_sync_name
@@ -730,9 +705,9 @@ definitions:
         items:
           type: string
         type: array
-      startTS:
-        example: 415241823337054209
-        type: integer
+    type: object
+  cluster.UpdateChangeFeedTaskResp:
+    properties:
       status:
         enum:
         - Initial
@@ -741,23 +716,8 @@ definitions:
         - Finished
         - Error
         - Failed
-        example: "1"
+        example: Normal
         type: string
-      updateTime:
-        type: string
-    type: object
-  cluster.UpdateChangeFeedTaskResp:
-    properties:
-      status:
-        enum:
-        - 0
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-        example: 1
-        type: integer
     type: object
   cluster.UpdateClusterParametersReq:
     properties:
@@ -2118,14 +2078,13 @@ paths:
         in: query
         name: clusterId
         type: string
-      - in: query
+      - description: Current page location
+        in: query
         name: page
         type: integer
-      - in: query
+      - description: Number of this request
+        in: query
         name: pageSize
-        type: integer
-      - in: query
-        name: total
         type: integer
       produces:
       - application/json

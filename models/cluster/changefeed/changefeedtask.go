@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
@@ -35,17 +36,18 @@ type ChangeFeedTask struct {
 	Type              constants.DownstreamType   `gorm:"not null;type:varchar(16)"`
 	StartTS           int64                      `gorm:"column:start_ts"`
 	TargetTS          int64                      `gorm:"column:target_ts"`
+	FilterRules       []string                   `gorm:"-"`
 	FilterRulesConfig string                     `gorm:"type:text"`
 	Downstream        ChangeFeedDownStream       `gorm:"-"`
 	DownstreamConfig  string                     `gorm:"type:text"`
 	StatusLock        sql.NullTime               `gorm:"column:status_lock"`
 }
 
-func (t ChangeFeedTask) GetStatusLock() sql.NullTime {
+func (t *ChangeFeedTask) GetStatusLock() sql.NullTime {
 	return t.StatusLock
 }
 
-func unmarshal(dt constants.DownstreamType, cc string) (ChangeFeedDownStream, error) {
+func UnmarshalDownstream(dt constants.DownstreamType, cc string) (ChangeFeedDownStream, error) {
 	switch dt {
 	case constants.DownstreamTypeTiDB:
 		downstream := &TiDBDownstream{}
@@ -72,6 +74,16 @@ func (t *ChangeFeedTask) BeforeSave(tx *gorm.DB) (err error) {
 			return framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, jsonErr.Error())
 		}
 	}
+	if t.FilterRules == nil {
+		t.FilterRules = make([]string, 0)
+	}
+
+	b, jsonErr := json.Marshal(t.FilterRules)
+	if jsonErr == nil {
+		t.FilterRulesConfig = string(b)
+	} else {
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, jsonErr.Error())
+	}
 
 	if len(t.ID) == 0 {
 		return t.Entity.BeforeCreate(tx)
@@ -81,11 +93,15 @@ func (t *ChangeFeedTask) BeforeSave(tx *gorm.DB) (err error) {
 
 func (t *ChangeFeedTask) AfterFind(tx *gorm.DB) (err error) {
 	if len(t.DownstreamConfig) > 0 {
-		downstream, err := unmarshal(t.Type, t.DownstreamConfig)
+		downstream, err := UnmarshalDownstream(t.Type, t.DownstreamConfig)
 		if err != nil {
 			return err
 		}
 		t.Downstream = downstream
+	}
+	if len(t.FilterRulesConfig) > 0 {
+		t.FilterRules = make([]string, 0)
+		json.Unmarshal([]byte(t.FilterRulesConfig), &t.FilterRules)
 	}
 	return nil
 }

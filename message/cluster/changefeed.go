@@ -16,12 +16,17 @@
 package cluster
 
 import (
-	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"time"
 )
 
 type CreateChangeFeedTaskReq struct {
-	ChangeFeedTask
+	Name           string      `json:"name" form:"name" example:"my_sync_name"`
+	ClusterID      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
+	StartTS        int64       `json:"startTS" form:"startTS" example:"415241823337054209"`
+	FilterRules    []string    `json:"rules" form:"rules" example:"*.*"`
+	DownstreamType string      `json:"downstreamType"  form:"downstreamType" example:"tidb" enums:"tidb,kafka,mysql"`
+	Downstream     interface{} `json:"downstream" form:"downstream"`
 }
 
 type CreateChangeFeedTaskResp struct {
@@ -30,7 +35,7 @@ type CreateChangeFeedTaskResp struct {
 
 type QueryChangeFeedTaskReq struct {
 	ClusterId string `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
-	controller.Page
+	structs.PageRequest
 }
 
 type QueryChangeFeedTaskResp struct {
@@ -54,7 +59,7 @@ type PauseChangeFeedTaskResp struct {
 }
 
 type ResumeChangeFeedTaskReq struct {
-	Id string `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22"`
+	ID string `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22"`
 }
 
 type ResumeChangeFeedTaskResp struct {
@@ -62,7 +67,11 @@ type ResumeChangeFeedTaskResp struct {
 }
 
 type UpdateChangeFeedTaskReq struct {
-	ChangeFeedTask
+	ID             string      `json:"id" form:"id" swaggerignore:"true"`
+	Name           string      `json:"name" form:"name" example:"my_sync_name"`
+	FilterRules    []string    `json:"rules" form:"rules" example:"*.*"`
+	DownstreamType string      `json:"downstreamType"  form:"downstreamType" example:"tidb" enums:"tidb,kafka,mysql"`
+	Downstream     interface{} `json:"downstream" form:"downstream"`
 }
 
 type UpdateChangeFeedTaskResp struct {
@@ -91,6 +100,10 @@ type ChangeFeedTask struct {
 	UpdateTime     time.Time   `json:"updateTime" form:"updateTime"`
 }
 
+//
+// MysqlDownstream
+// @Description: only for swagger, never use
+//
 type MysqlDownstream struct {
 	Ip                string `json:"ip" form:"ip" example:"127.0.0.1"`
 	Port              int    `json:"port" form:"port" example:"8001"`
@@ -102,6 +115,10 @@ type MysqlDownstream struct {
 	Tls               bool   `json:"tls" form:"tls" example:"false"`
 }
 
+//
+// KafkaDownstream
+// @Description: only for swagger, never use
+//
 type KafkaDownstream struct {
 	Ip                string       `json:"ip" form:"ip" example:"127.0.0.1"`
 	Port              int          `json:"port" form:"port" example:"9001"`
@@ -117,11 +134,19 @@ type KafkaDownstream struct {
 	Tls               bool         `json:"tls" form:"tls" example:"false"`
 }
 
+//
+// Dispatcher
+// @Description: only for swagger, never use
+//
 type Dispatcher struct {
 	Matcher    string `json:"matcher" form:"matcher" example:"test1.*"`
 	Dispatcher string `json:"dispatcher" form:"dispatcher" example:"ts"`
 }
 
+//
+// TiDBDownstream
+// @Description: only for swagger, never use
+//
 type TiDBDownstream struct {
 	Ip                string `json:"ip" form:"ip" example:"127.0.0.1"`
 	Port              int    `json:"port" form:"port" example:"4534"`

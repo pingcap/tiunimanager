@@ -174,54 +174,103 @@ func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, 
 	defer handleMetrics(start, "CreateChangeFeedTask", int(resp.GetCode()))
 	defer handlePanic(ctx, "CreateChangeFeedTask", resp)
 
-	request := cluster.CreateChangeFeedTaskReq{}
+	request := &cluster.CreateChangeFeedTaskReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.changeFeedManager.Create(ctx, request)
+		result, err := handler.changeFeedManager.Create(ctx, *request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+func (handler *ClusterServiceHandler) DetailChangeFeedTask(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "DetailChangeFeedTask", int(resp.GetCode()))
+	defer handlePanic(ctx, "DetailChangeFeedTask", resp)
+
+	request := &cluster.DetailChangeFeedTaskReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.changeFeedManager.Detail(ctx, *request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+func (handler *ClusterServiceHandler) PauseChangeFeedTask(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "PauseChangeFeedTask", int(resp.GetCode()))
+	defer handlePanic(ctx, "PauseChangeFeedTask", resp)
+
+	request := &cluster.PauseChangeFeedTaskReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.changeFeedManager.Pause(ctx, *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
 	return nil
 }
 
-func (handler *ClusterServiceHandler) PauseChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler *ClusterServiceHandler) ResumeChangeFeedTask(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
-	defer handleMetrics(start, "PauseChangeFeedTask", int(response.GetCode()))
-	defer handlePanic(ctx, "PauseChangeFeedTask", response)
+	defer handleMetrics(start, "ResumeChangeFeedTask", int(resp.GetCode()))
+	defer handlePanic(ctx, "ResumeChangeFeedTask", resp)
 
-	panic("implement me")
+	request := &cluster.ResumeChangeFeedTaskReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.changeFeedManager.Resume(ctx, *request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
 }
 
-func (handler *ClusterServiceHandler) ResumeChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler *ClusterServiceHandler) DeleteChangeFeedTask(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
-	defer handleMetrics(start, "ResumeChangeFeedTask", int(response.GetCode()))
-	defer handlePanic(ctx, "ResumeChangeFeedTask", response)
+	defer handleMetrics(start, "DeleteChangeFeedTask", int(resp.GetCode()))
+	defer handlePanic(ctx, "DeleteChangeFeedTask", resp)
 
-	panic("implement me")
+	request := &cluster.DeleteChangeFeedTaskReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.changeFeedManager.Delete(ctx, *request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
 }
 
-func (handler *ClusterServiceHandler) DeleteChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler *ClusterServiceHandler) UpdateChangeFeedTask(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
-	defer handleMetrics(start, "DeleteChangeFeedTask", int(response.GetCode()))
-	defer handlePanic(ctx, "DeleteChangeFeedTask", response)
+	defer handleMetrics(start, "UpdateChangeFeedTask", int(resp.GetCode()))
+	defer handlePanic(ctx, "UpdateChangeFeedTask", resp)
 
-	panic("implement me")
+	request := &cluster.UpdateChangeFeedTaskReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.changeFeedManager.Update(ctx, *request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+	return nil
 }
 
-func (handler *ClusterServiceHandler) UpdateChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler *ClusterServiceHandler) QueryChangeFeedTasks(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
-	defer handleMetrics(start, "UpdateChangeFeedTask", int(response.GetCode()))
-	defer handlePanic(ctx, "UpdateChangeFeedTask", response)
+	defer handleMetrics(start, "QueryChangeFeedTasks", int(resp.GetCode()))
+	defer handlePanic(ctx, "QueryChangeFeedTasks", resp)
 
-	panic("implement me")
-}
+	request := cluster.QueryChangeFeedTaskReq {}
 
-func (handler *ClusterServiceHandler) QueryChangeFeedTasks(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	start := time.Now()
-	defer handleMetrics(start, "QueryChangeFeedTasks", int(response.GetCode()))
-	defer handlePanic(ctx, "QueryChangeFeedTasks", response)
+	if handleRequest(ctx, req, resp, &request) {
+		result, total, err := handler.changeFeedManager.Query(ctx, request)
+		handleResponse(ctx, resp, err, result, &clusterpb.RpcPage{
+			Page:     int32(request.Page),
+			PageSize: int32(request.PageSize),
+			Total:    int32(total),
+		})
+	}
 
-	panic("implement me")
+	return nil
 }
 
 func (handler *ClusterServiceHandler) CreateParameterGroup(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {

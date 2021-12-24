@@ -19,7 +19,7 @@ package framework
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"time"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -50,7 +50,7 @@ func InitEtcdClient(etcdAddress []string) *EtcdClient {
 		_, err = cli.MemberList(ctx)
 		cancel()
 		if err != nil {
-			LogForkFile(common.LogFileSystem).Warnf("connect etcd server [%v] failed, err: %v\n", etcdAddress, err)
+			LogForkFile(constants.LogFileSystem).Warnf("connect etcd server [%v] failed, err: %v\n", etcdAddress, err)
 			continue
 		}
 		break

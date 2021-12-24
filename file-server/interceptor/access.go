@@ -19,13 +19,13 @@ package interceptor
 
 import (
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"math"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	log "github.com/sirupsen/logrus"
 )
@@ -51,7 +51,7 @@ func AccessLog() gin.HandlerFunc {
 			dataLength = 0
 		}
 
-		entry := framework.LogForkFile(common.LogFileAccess).WithFields(log.Fields{
+		entry := framework.LogForkFile(constants.LogFileAccess).WithFields(log.Fields{
 			"hostname":   hostname,
 			"statusCode": statusCode,
 			"latency":    latency, // time to process

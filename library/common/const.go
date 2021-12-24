@@ -16,65 +16,7 @@
 
 package common
 
-// micro service default port
-const (
-	DefaultMetricsPort int = 4103
-)
-
-// tidb component default port
-const (
-	DefaultTidbPort       int = 4000
-	DefaultTidbStatusPort int = 10080
-	DefaultPDClientPort   int = 2379
-	DefaultAlertPort      int = 9093
-	DefaultGrafanaPort    int = 3000
-)
-
 const (
 	TiEM          string = "tiem"
-	LogDirPrefix  string = "/logs/"
-	CertDirPrefix string = "/cert/"
-	DBDirPrefix   string = "/"
 
-	SqliteFileName   string = "tiem.sqlite.db"
-	DatabaseFileName string = "em.db"
-
-	CrtFileName string = "server.crt"
-	KeyFileName string = "server.key"
-)
-
-const (
-	LogFileSystem  = "system"
-	LogFileLibTiUP = "libTiUP"
-
-	LogFileAccess = "access"
-	LogFileAudit  = "audit"
-)
-
-var (
-	TemplateFileName = "hostInfo_template.xlsx"
-	TemplateFilePath = "./etc"
-)
-
-type TransportType string
-
-const (
-	DefaultImportDir    string        = "/tmp/tiem/import"
-	DefaultExportDir    string        = "/tmp/tiem/export"
-	DefaultZipName      string        = "data.zip"
-	NfsStorageType      string        = "nfs"
-	S3StorageType       string        = "s3"
-	TransportTypeExport TransportType = "export"
-	TransportTypeImport TransportType = "import"
-)
-
-const SlowSqlThreshold = 100
-
-type ClusterRelationType uint32
-
-const (
-	SlaveTo ClusterRelationType = iota + 1
-	StandBy
-	CloneFrom
-	RecoverFrom
 )

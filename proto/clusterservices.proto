@@ -68,6 +68,7 @@ service ClusterService {
     rpc DeleteChangeFeedTask(RpcRequest) returns (RpcResponse);
     rpc UpdateChangeFeedTask(RpcRequest) returns (RpcResponse);
     rpc QueryChangeFeedTasks(RpcRequest) returns (RpcResponse);
+    rpc DetailChangeFeedTask(RpcRequest) returns (RpcResponse);
 
     // system config
     rpc GetSystemConfig(RpcRequest) returns (RpcResponse);
@@ -75,7 +76,6 @@ service ClusterService {
 
 message RpcRequest {
     string request = 1;
-    RpcPage page = 2;
 }
 
 message RpcResponse {

@@ -77,7 +77,7 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 	}
 	_, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
 	if err == nil {
-		framework.LogWithContext(ctx).Infof("create cluster %s succeed", p.Cluster.Name)
+		framework.LogWithContext(ctx).Infof("create cluster %s succeed, id = %s", p.Cluster.Name, p.Cluster.ID)
 	} else {
 		framework.LogWithContext(ctx).Errorf("create cluster %s failed, err : %s", p.Cluster.Name, err.Error())
 	}
@@ -100,7 +100,7 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string) error {
 
 	_, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
 	if err == nil {
-		framework.LogWithContext(ctx).Infof("takeover cluster %s succeed", p.Cluster.Name)
+		framework.LogWithContext(ctx).Infof("takeover cluster %s succeed, id = %s", p.Cluster.Name, p.Cluster.ID)
 	} else {
 		framework.LogWithContext(ctx).Errorf("takeover cluster %s failed, err : %s", p.Cluster.Name, err.Error())
 	}
@@ -225,7 +225,7 @@ func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) ([]res
 	requirements := make([]resource.AllocRequirement, 0)
 
 	if p.Cluster.Status != string(constants.ClusterInitializing) {
-		framework.LogWithContext(ctx).Infof("cluster %s is not initializing, no need to alloc global port resource", p.Cluster.Name)
+		framework.LogWithContext(ctx).Infof("cluster %s is not initializing, no need to alloc global port resource", p.Cluster.ID)
 		return requirements, nil
 	}
 
@@ -335,10 +335,10 @@ func (p *ClusterMeta) UpdateClusterStatus(ctx context.Context, status constants.
 	err := models.GetClusterReaderWriter().UpdateStatus(ctx, p.Cluster.ID, status)
 
 	if err != nil {
-		framework.LogWithContext(ctx).Infof("update cluster%s status into %s failed", p.Cluster.Name, status)
+		framework.LogWithContext(ctx).Infof("update cluster%s status into %s failed", p.Cluster.ID, status)
 	} else {
 		p.Cluster.Status = string(status)
-		framework.LogWithContext(ctx).Errorf("update cluster%s status into %s succeed", p.Cluster.Name, status)
+		framework.LogWithContext(ctx).Errorf("update cluster%s status into %s succeed", p.Cluster.ID, status)
 	}
 	return err
 }

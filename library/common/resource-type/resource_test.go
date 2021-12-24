@@ -18,11 +18,10 @@ package resource
 
 import (
 	"errors"
+	em_errors "github.com/pingcap-inc/tiem/common/errors"
 	"os"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
@@ -161,7 +160,7 @@ func TestHost_IsLoadLess(t *testing.T) {
 
 func Test_BuildDefaultTraits(t *testing.T) {
 	type want struct {
-		errcode common.TIEM_ERROR_CODE
+		errcode em_errors.EM_ERROR_CODE
 		Traits  int64
 	}
 	tests := []struct {
@@ -169,9 +168,9 @@ func Test_BuildDefaultTraits(t *testing.T) {
 		host Host
 		want want
 	}{
-		{"test1", Host{ClusterType: string(Database), Purpose: string(Compute), DiskType: string(NvmeSSD)}, want{common.TIEM_SUCCESS, 37}},
-		{"test2", Host{ClusterType: string(Database), Purpose: string(Compute) + "," + string(Dispatch), DiskType: string(SSD)}, want{common.TIEM_SUCCESS, 85}},
-		{"test3", Host{ClusterType: string(Database), Purpose: "General", DiskType: string(NvmeSSD)}, want{common.TIEM_RESOURCE_TRAIT_NOT_FOUND, 0}},
+		{"test1", Host{ClusterType: string(Database), Purpose: string(Compute), DiskType: string(NvmeSSD)}, want{em_errors.TIEM_SUCCESS, 37}},
+		{"test2", Host{ClusterType: string(Database), Purpose: string(Compute) + "," + string(Dispatch), DiskType: string(SSD)}, want{em_errors.TIEM_SUCCESS, 85}},
+		{"test3", Host{ClusterType: string(Database), Purpose: "General", DiskType: string(NvmeSSD)}, want{em_errors.TIEM_RESOURCE_TRAIT_NOT_FOUND, 0}},
 	}
 
 	for _, tt := range tests {
@@ -180,7 +179,7 @@ func Test_BuildDefaultTraits(t *testing.T) {
 			if err == nil {
 				assert.Equal(t, tt.want.Traits, tt.host.Traits)
 			} else {
-				te, ok := err.(framework.TiEMError)
+				te, ok := err.(em_errors.EMError)
 				assert.Equal(t, true, ok)
 				assert.True(t, tt.want.errcode.Equal(int32(te.GetCode())))
 			}
@@ -304,7 +303,7 @@ func Test_Host_Hooks(t *testing.T) {
 
 func Test_GetTraitByName(t *testing.T) {
 	type want struct {
-		errcode common.TIEM_ERROR_CODE
+		errcode em_errors.EM_ERROR_CODE
 		Traits  int64
 	}
 	tests := []struct {
@@ -312,10 +311,10 @@ func Test_GetTraitByName(t *testing.T) {
 		labelName string
 		want      want
 	}{
-		{"Test1", string(Storage), want{common.TIEM_SUCCESS, 8}},
-		{"Test2", string(DataMigration), want{common.TIEM_SUCCESS, 2}},
-		{"Test3", string(Sata), want{common.TIEM_SUCCESS, 128}},
-		{"Test1", "BadLabelName", want{common.TIEM_RESOURCE_TRAIT_NOT_FOUND, 0}},
+		{"Test1", string(Storage), want{em_errors.TIEM_SUCCESS, 8}},
+		{"Test2", string(DataMigration), want{em_errors.TIEM_SUCCESS, 2}},
+		{"Test3", string(Sata), want{em_errors.TIEM_SUCCESS, 128}},
+		{"Test1", "BadLabelName", want{em_errors.TIEM_RESOURCE_TRAIT_NOT_FOUND, 0}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -323,7 +322,7 @@ func Test_GetTraitByName(t *testing.T) {
 			if err == nil {
 				assert.Equal(t, tt.want.Traits, trait)
 			} else {
-				te, ok := err.(framework.TiEMError)
+				te, ok := err.(em_errors.EMError)
 				assert.Equal(t, true, ok)
 				assert.True(t, tt.want.errcode.Equal(int32(te.GetCode())))
 			}

@@ -406,7 +406,7 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 	framework.LogWithContext(ctx).Debugf("modify global component configs: %v", configs)
 	req := secondparty.CmdEditGlobalConfigReq{
 		TiUPComponent:          secondparty.ClusterComponentTypeStr,
-		InstanceName:           clusterMeta.Cluster.Name,
+		InstanceName:           clusterMeta.Cluster.ID,
 		GlobalComponentConfigs: configs,
 		TimeoutS:               0,
 		Flags:                  []string{},
@@ -495,7 +495,7 @@ func refreshParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 	if modifyParam.Reboot {
 		req := secondparty.CmdReloadConfigReq{
 			TiUPComponent: secondparty.ClusterComponentTypeStr,
-			InstanceName:  clusterMeta.Cluster.Name,
+			InstanceName:  clusterMeta.Cluster.ID,
 			TimeoutS:      0,
 			Flags:         []string{},
 		}

@@ -239,7 +239,6 @@ func (handler *ClusterServiceHandler) DeleteChangeFeedTask(ctx context.Context, 
 func (handler *ClusterServiceHandler) UpdateChangeFeedTask(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "UpdateChangeFeedTask", int(resp.GetCode()))
-	defer handlePanic(ctx, "UpdateChangeFeedTask", resp)
 
 	request := &cluster.UpdateChangeFeedTaskReq{}
 

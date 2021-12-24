@@ -69,6 +69,10 @@ func (p *ResourcePool) GetHostProvider() hostprovider.HostProvider {
 	return p.hostProvider
 }
 
+func (p *ResourcePool) SetHostProvider(provider hostprovider.HostProvider) {
+	p.hostProvider = provider
+}
+
 func (p *ResourcePool) SetHostInitiator(initiator hostinitiator.HostInitiator) {
 	p.hostInitiator = initiator
 }

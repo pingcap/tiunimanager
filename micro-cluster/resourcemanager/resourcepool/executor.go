@@ -55,7 +55,7 @@ func configHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) er
 
 func installSoftware(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	framework.LogWithContext(ctx).Info("begin installSoftware")
-	defer framework.LogWithContext(ctx).Info("end installSoftware, err: %v", err)
+	defer framework.LogWithContext(ctx).Infof("end installSoftware, err: %v", err)
 
 	resourcePool, hosts, err := getImportHostInfoFromFlowContext(ctx)
 	if err != nil {
@@ -72,7 +72,7 @@ func installSoftware(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext
 
 func importHostSucceed(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	framework.LogWithContext(ctx).Info("begin importHostSucceed")
-	defer framework.LogWithContext(ctx).Info("end importHostSucceed, err: %v", err)
+	defer framework.LogWithContext(ctx).Infof("end importHostSucceed, err: %v", err)
 
 	resourcePool, hostIds, err := getImportHostIDsFromFlowContext(ctx)
 	if err != nil {
@@ -88,7 +88,7 @@ func importHostSucceed(node *workflowModel.WorkFlowNode, ctx *workflow.FlowConte
 
 func importHostsFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	framework.LogWithContext(ctx).Info("begin importHostFailed")
-	defer framework.LogWithContext(ctx).Info("end importHostFailed, err: %v", err)
+	defer framework.LogWithContext(ctx).Infof("end importHostFailed, err: %v", err)
 
 	resourcePool, hostIds, err := getImportHostIDsFromFlowContext(ctx)
 	if err != nil {

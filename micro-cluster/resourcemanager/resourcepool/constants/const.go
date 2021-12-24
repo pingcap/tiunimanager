@@ -26,7 +26,9 @@ const (
 )
 
 const (
-	HostSSHPort       = 22
-	FileBeatDataDir   = "/tiem-data"
-	FileBeatDeployDir = "/tiem-deploy"
+	HostSSHPort          = 22
+	FileBeatDataDir      = "/tiem-data"
+	FileBeatDeployDir    = "/tiem-deploy"
+	FileBeatTemplateDir  = "resource/template"
+	FileBeatTemplateFile = "import_topology.yaml"
 )

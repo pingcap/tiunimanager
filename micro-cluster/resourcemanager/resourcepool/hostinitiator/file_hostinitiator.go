@@ -18,6 +18,8 @@ package hostinitiator
 import (
 	"bytes"
 	"context"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"text/template"
@@ -198,8 +200,8 @@ type templateScaleOut struct {
 	HostIPs   []string
 }
 
-func (p *templateScaleOut) generateTopologyConfig(ctx context.Context) (string, error) {
-	t, err := template.New("import_topology.yaml").ParseFiles("resource/template/import_topology.yaml")
+func (p *templateScaleOut) generateTopologyConfig(ctx context.Context, path string) (string, error) {
+	t, err := template.New("import_topology.yaml").ParseFiles(path)
 	if err != nil {
 		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
 	}
@@ -223,7 +225,11 @@ func (p *FileHostInitiator) installFileBeat(ctx context.Context, hosts []structs
 	for _, host := range hosts {
 		tempateInfo.HostIPs = append(tempateInfo.HostIPs, host.IP)
 	}
-	templateStr, err := tempateInfo.generateTopologyConfig(ctx)
+	curDir, _ := os.Getwd()
+	templateName := rp_consts.FileBeatTemplateFile
+	// The template file should be on tiem/resource/template/import_topology.yaml
+	filePath := filepath.Join(curDir, rp_consts.FileBeatTemplateDir, templateName)
+	templateStr, err := tempateInfo.generateTopologyConfig(ctx, filePath)
 	if err != nil {
 		return err
 	}

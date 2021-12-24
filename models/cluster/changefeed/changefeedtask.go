@@ -41,7 +41,6 @@ type ChangeFeedTask struct {
 	Downstream        ChangeFeedDownStream       `gorm:"-"`
 	DownstreamConfig  string                     `gorm:"type:text"`
 	StatusLock        sql.NullTime               `gorm:"column:status_lock"`
-	GGGG int
 }
 
 func (t *ChangeFeedTask) GetStatusLock() sql.NullTime {

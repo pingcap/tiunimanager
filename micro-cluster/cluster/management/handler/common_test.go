@@ -23,6 +23,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
+	"github.com/pingcap-inc/tiem/models/common"
 	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -119,11 +120,19 @@ func TestScaleInPreCheck(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("normal", func(t *testing.T) {
-		meta := &ClusterMeta{}
-		instance := &management.ClusterInstance{Type: string(constants.ComponentIDPD)}
+	t.Run("connect fail", func(t *testing.T) {
+		meta := &ClusterMeta{Cluster: &management.Cluster{}, Instances: map[string][]*management.ClusterInstance{
+			string(constants.ComponentIDTiDB): {
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8001},
+				},
+			},
+		}}
+		instance := &management.ClusterInstance{Type: string(constants.ComponentIDTiFlash)}
 		err := ScaleInPreCheck(ctx.TODO(), meta, instance)
-		assert.NoError(t, err)
+		assert.Error(t, err)
 	})
 }
 
@@ -131,7 +140,6 @@ func TestWaitWorkflow(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	
 	t.Run("normal", func(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)

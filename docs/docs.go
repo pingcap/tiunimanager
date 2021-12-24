@@ -293,17 +293,14 @@ var doc = `{
                     },
                     {
                         "type": "integer",
+                        "description": "Current page location",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "Number of this request",
                         "name": "pageSize",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "total",
                         "in": "query"
                     }
                 ],
@@ -4156,9 +4153,6 @@ var doc = `{
                     "type": "string",
                     "example": "CLUSTER_ID_IN_TIEM__22"
                 },
-                "createTime": {
-                    "type": "string"
-                },
                 "downstream": {
                     "type": "object"
                 },
@@ -4170,10 +4164,6 @@ var doc = `{
                         "mysql"
                     ],
                     "example": "tidb"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
                 },
                 "name": {
                     "type": "string",
@@ -4191,21 +4181,6 @@ var doc = `{
                 "startTS": {
                     "type": "integer",
                     "example": 415241823337054209
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "Initial",
-                        "Normal",
-                        "Stopped",
-                        "Finished",
-                        "Error",
-                        "Failed"
-                    ],
-                    "example": "1"
-                },
-                "updateTime": {
-                    "type": "string"
                 }
             }
         },
@@ -4304,16 +4279,16 @@ var doc = `{
                     "example": "TASK_ID_IN_TIEM____22"
                 },
                 "status": {
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        0,
-                        1,
-                        2,
-                        3,
-                        4,
-                        5
+                        "Initial",
+                        "Normal",
+                        "Stopped",
+                        "Finished",
+                        "Error",
+                        "Failed"
                     ],
-                    "example": 1
+                    "example": "Normal"
                 }
             }
         },
@@ -4401,7 +4376,7 @@ var doc = `{
                         "Error",
                         "Failed"
                     ],
-                    "example": "1"
+                    "example": "Normal"
                 },
                 "unsteady": {
                     "type": "boolean",
@@ -4583,16 +4558,16 @@ var doc = `{
             "type": "object",
             "properties": {
                 "status": {
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        0,
-                        1,
-                        2,
-                        3,
-                        4,
-                        5
+                        "Initial",
+                        "Normal",
+                        "Stopped",
+                        "Finished",
+                        "Error",
+                        "Failed"
                     ],
-                    "example": 1
+                    "example": "Normal"
                 }
             }
         },
@@ -4700,7 +4675,7 @@ var doc = `{
                         "Error",
                         "Failed"
                     ],
-                    "example": "1"
+                    "example": "Normal"
                 },
                 "unsteady": {
                     "type": "boolean",
@@ -4875,16 +4850,16 @@ var doc = `{
             "type": "object",
             "properties": {
                 "status": {
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        0,
-                        1,
-                        2,
-                        3,
-                        4,
-                        5
+                        "Initial",
+                        "Normal",
+                        "Stopped",
+                        "Finished",
+                        "Error",
+                        "Failed"
                     ],
-                    "example": 1
+                    "example": "Normal"
                 }
             }
         },
@@ -5046,13 +5021,6 @@ var doc = `{
         "cluster.UpdateChangeFeedTaskReq": {
             "type": "object",
             "properties": {
-                "clusterId": {
-                    "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
-                },
-                "createTime": {
-                    "type": "string"
-                },
                 "downstream": {
                     "type": "object"
                 },
@@ -5064,10 +5032,6 @@ var doc = `{
                         "mysql"
                     ],
                     "example": "tidb"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
                 },
                 "name": {
                     "type": "string",
@@ -5081,11 +5045,12 @@ var doc = `{
                     "example": [
                         "*.*"
                     ]
-                },
-                "startTS": {
-                    "type": "integer",
-                    "example": 415241823337054209
-                },
+                }
+            }
+        },
+        "cluster.UpdateChangeFeedTaskResp": {
+            "type": "object",
+            "properties": {
                 "status": {
                     "type": "string",
                     "enum": [
@@ -5096,27 +5061,7 @@ var doc = `{
                         "Error",
                         "Failed"
                     ],
-                    "example": "1"
-                },
-                "updateTime": {
-                    "type": "string"
-                }
-            }
-        },
-        "cluster.UpdateChangeFeedTaskResp": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1,
-                        2,
-                        3,
-                        4,
-                        5
-                    ],
-                    "example": 1
+                    "example": "Normal"
                 }
             }
         },

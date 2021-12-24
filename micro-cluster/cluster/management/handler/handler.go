@@ -20,12 +20,12 @@ import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
+	resourceTemplate "github.com/pingcap-inc/tiem/resource/template"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"text/template"
 
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
-	newConstants "github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
@@ -77,7 +77,7 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 	}
 	_, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
 	if err == nil {
-		framework.LogWithContext(ctx).Infof("create cluster %s succeed", p.Cluster.Name)
+		framework.LogWithContext(ctx).Infof("create cluster %s succeed, id = %s", p.Cluster.Name, p.Cluster.ID)
 	} else {
 		framework.LogWithContext(ctx).Errorf("create cluster %s failed, err : %s", p.Cluster.Name, err.Error())
 	}
@@ -87,20 +87,20 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 var TagTakeover = "takeover"
 
 func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string) error {
-	p.Cluster = &management.Cluster {
+	p.Cluster = &management.Cluster{
 		Entity: dbCommon.Entity{
 			TenantId: framework.GetTenantIDFromContext(ctx),
 			Status:   string(constants.ClusterInitializing),
 		},
-		Name:              name,
-		Tags:              []string{TagTakeover},
-		OwnerId:           framework.GetUserIDFromContext(ctx),
-		MaintainWindow:    "",
+		Name:           name,
+		Tags:           []string{TagTakeover},
+		OwnerId:        framework.GetUserIDFromContext(ctx),
+		MaintainWindow: "",
 	}
 
 	_, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
 	if err == nil {
-		framework.LogWithContext(ctx).Infof("takeover cluster %s succeed", p.Cluster.Name)
+		framework.LogWithContext(ctx).Infof("takeover cluster %s succeed, id = %s", p.Cluster.Name, p.Cluster.ID)
 	} else {
 		framework.LogWithContext(ctx).Errorf("takeover cluster %s failed, err : %s", p.Cluster.Name, err.Error())
 	}
@@ -132,7 +132,7 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 	for _, compute := range computes {
 		for _, item := range compute.Resource {
 			for i := 0; i < item.Count; i++ {
-				instance := &management.ClusterInstance {
+				instance := &management.ClusterInstance{
 					Entity: dbCommon.Entity{
 						TenantId: p.Cluster.TenantId,
 						Status:   string(constants.ClusterInstanceInitializing),
@@ -155,10 +155,10 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 }
 
 func (p *ClusterMeta) AddDefaultInstances(ctx context.Context) error {
-	if string(newConstants.EMProductIDTiDB) == p.Cluster.Type {
-		for _, t := range newConstants.ParasiteComponentIDs {
+	if string(constants.EMProductIDTiDB) == p.Cluster.Type {
+		for _, t := range constants.ParasiteComponentIDs {
 			instance := &management.ClusterInstance{
-				Entity: dbCommon.Entity {
+				Entity: dbCommon.Entity{
 					TenantId: p.Cluster.TenantId,
 					Status:   string(constants.ClusterInstanceInitializing),
 				},
@@ -180,7 +180,7 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 
 	allocInstances := make([]*management.ClusterInstance, 0)
 	for _, instance := range instances {
-		if Contain(newConstants.ParasiteComponentIDs, newConstants.EMProductComponentIDType(instance.Type)) {
+		if Contain(constants.ParasiteComponentIDs, constants.EMProductComponentIDType(instance.Type)) {
 			continue
 		}
 		portRange := knowledge.GetComponentPortRange(p.Cluster.Type, p.Cluster.Version, instance.Type)
@@ -225,7 +225,7 @@ func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) ([]res
 	requirements := make([]resource.AllocRequirement, 0)
 
 	if p.Cluster.Status != string(constants.ClusterInitializing) {
-		framework.LogWithContext(ctx).Infof("cluster %s is not initializing, no need to alloc global port resource", p.Cluster.Name)
+		framework.LogWithContext(ctx).Infof("cluster %s is not initializing, no need to alloc global port resource", p.Cluster.ID)
 		return requirements, nil
 	}
 
@@ -268,22 +268,22 @@ func (p *ClusterMeta) ApplyInstanceResource(resource *resource.AllocRsp, instanc
 		instance.DiskID = resource.Results[i].DiskRes.DiskId
 		instance.DiskPath = resource.Results[i].DiskRes.Path
 	}
-	if p.Cluster.Status == string(constants.ClusterInstanceInitializing) {
-		pd := p.Instances[string(newConstants.ComponentIDPD)][0]
-		for _, t := range newConstants.ParasiteComponentIDs {
+	if p.Cluster.Status == string(constants.ClusterInitializing) {
+		pd := p.Instances[string(constants.ComponentIDPD)][0]
+		for _, t := range constants.ParasiteComponentIDs {
 			instance := p.Instances[string(t)][0]
 			instance.HostID = pd.HostID
 			instance.HostIP = pd.HostIP
 			instance.DiskID = pd.DiskID
 			instance.DiskPath = pd.DiskPath
 			switch t {
-			case newConstants.ComponentIDGrafana:
+			case constants.ComponentIDGrafana:
 				instance.Ports = pd.Ports[3:4]
 				continue
-			case newConstants.ComponentIDPrometheus:
+			case constants.ComponentIDPrometheus:
 				instance.Ports = pd.Ports[2:3]
 				continue
-			case newConstants.ComponentIDAlertManger:
+			case constants.ComponentIDAlertManger:
 				instance.Ports = pd.Ports[4:6]
 				continue
 			default:
@@ -314,7 +314,7 @@ func (p *ClusterMeta) GenerateTopologyConfig(ctx context.Context) (string, error
 		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster topology is empty, please check it!")
 	}
 
-	t, err := template.New("cluster_topology.yaml").ParseFiles("template/cluster_topology.yaml")
+	t, err := template.New("topology").Parse(resourceTemplate.ClusterTopology)
 	if err != nil {
 		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
 	}
@@ -335,10 +335,10 @@ func (p *ClusterMeta) UpdateClusterStatus(ctx context.Context, status constants.
 	err := models.GetClusterReaderWriter().UpdateStatus(ctx, p.Cluster.ID, status)
 
 	if err != nil {
-		framework.LogWithContext(ctx).Infof("update cluster%s status into %s failed", p.Cluster.Name, status)
+		framework.LogWithContext(ctx).Infof("update cluster%s status into %s failed", p.Cluster.ID, status)
 	} else {
 		p.Cluster.Status = string(status)
-		framework.LogWithContext(ctx).Errorf("update cluster%s status into %s succeed", p.Cluster.Name, status)
+		framework.LogWithContext(ctx).Errorf("update cluster%s status into %s succeed", p.Cluster.ID, status)
 	}
 	return err
 }
@@ -460,8 +460,7 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 	}
 
 	// write cluster into db
-	_, err := models.GetClusterReaderWriter().Create(ctx, meta.Cluster)
-	if err != nil {
+	if _, err := models.GetClusterReaderWriter().Create(ctx, meta.Cluster); err != nil {
 		return nil, err
 	}
 
@@ -487,11 +486,13 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 		}
 	}
 
-	err = models.GetClusterReaderWriter().CreateRelation(ctx, &management.ClusterRelation{
-		ObjectClusterID: meta.Cluster.ID,
+	if err := models.GetClusterReaderWriter().CreateRelation(ctx, &management.ClusterRelation{
+		ObjectClusterID:  meta.Cluster.ID,
 		SubjectClusterID: p.Cluster.ID,
-		RelationType: constants.ClusterRelationCloneFrom,
-	})
+		RelationType:     constants.ClusterRelationCloneFrom,
+	}); err != nil {
+		return nil, err
+	}
 
 	return meta, nil
 }
@@ -542,11 +543,11 @@ type ComponentAddress struct {
 // @return []ComponentAddress
 func (p *ClusterMeta) GetClusterConnectAddresses() []ComponentAddress {
 	// got all tidb instances, then get connect addresses
-	instances := p.Instances[string(newConstants.ComponentIDTiDB)]
+	instances := p.Instances[string(constants.ComponentIDTiDB)]
 	address := make([]ComponentAddress, 0)
 
 	for _, instance := range instances {
-		if instance.Status == string(constants.ClusterInstanceRunning) || instance.Status == string(constants.ClusterInstanceInitializing) {
+		if instance.Status == string(constants.ClusterInstanceRunning) {
 			address = append(address, ComponentAddress{
 				IP:   instance.HostIP[0],
 				Port: int(instance.Ports[0]),
@@ -561,7 +562,7 @@ func (p *ClusterMeta) GetClusterConnectAddresses() []ComponentAddress {
 // @Receiver p
 // @return []ComponentAddress
 func (p *ClusterMeta) GetClusterStatusAddress() []ComponentAddress {
-	instances := p.Instances[string(newConstants.ComponentIDTiDB)]
+	instances := p.Instances[string(constants.ComponentIDTiDB)]
 	address := make([]ComponentAddress, 0)
 
 	for _, instance := range instances {
@@ -580,7 +581,7 @@ func (p *ClusterMeta) GetClusterStatusAddress() []ComponentAddress {
 // @Receiver p
 // @return []ComponentAddress
 func (p *ClusterMeta) GetTiKVStatusAddress() []ComponentAddress {
-	instances := p.Instances[string(newConstants.ComponentIDTiKV)]
+	instances := p.Instances[string(constants.ComponentIDTiKV)]
 	address := make([]ComponentAddress, 0)
 
 	for _, instance := range instances {
@@ -599,7 +600,7 @@ func (p *ClusterMeta) GetTiKVStatusAddress() []ComponentAddress {
 // @Receiver p
 // @return []ComponentAddress
 func (p *ClusterMeta) GetPDClientAddresses() []ComponentAddress {
-	instances := p.Instances[string(newConstants.ComponentIDPD)]
+	instances := p.Instances[string(constants.ComponentIDPD)]
 	address := make([]ComponentAddress, 0)
 
 	for _, instance := range instances {
@@ -618,7 +619,7 @@ func (p *ClusterMeta) GetPDClientAddresses() []ComponentAddress {
 // @Receiver p
 // @return []ComponentAddress
 func (p *ClusterMeta) GetMonitorAddresses() []ComponentAddress {
-	instances := p.Instances[string(newConstants.ComponentIDPrometheus)]
+	instances := p.Instances[string(constants.ComponentIDPrometheus)]
 	address := make([]ComponentAddress, 0)
 
 	for _, instance := range instances {
@@ -637,7 +638,7 @@ func (p *ClusterMeta) GetMonitorAddresses() []ComponentAddress {
 // @Receiver p
 // @return []ComponentAddress
 func (p *ClusterMeta) GetGrafanaAddresses() []ComponentAddress {
-	instances := p.Instances[string(newConstants.ComponentIDGrafana)]
+	instances := p.Instances[string(constants.ComponentIDGrafana)]
 	address := make([]ComponentAddress, 0)
 
 	for _, instance := range instances {
@@ -656,7 +657,7 @@ func (p *ClusterMeta) GetGrafanaAddresses() []ComponentAddress {
 // @Receiver p
 // @return []ComponentAddress
 func (p *ClusterMeta) GetAlertManagerAddresses() []ComponentAddress {
-	instances := p.Instances[string(newConstants.ComponentIDAlertManger)]
+	instances := p.Instances[string(constants.ComponentIDAlertManger)]
 	address := make([]ComponentAddress, 0)
 
 	for _, instance := range instances {
@@ -747,17 +748,17 @@ func buildMeta(cluster *management.Cluster, instances []*management.ClusterInsta
 // @return total
 // @return err
 func Query(ctx context.Context, req cluster.QueryClustersReq) (resp cluster.QueryClusterResp, total int, err error) {
-	filters := management.Filters {
+	filters := management.Filters{
 		TenantId: framework.GetTenantIDFromContext(ctx),
 		NameLike: req.Name,
-		Type: req.Type,
-		Tag: req.Tag,
+		Type:     req.Type,
+		Tag:      req.Tag,
 	}
 	if len(req.ClusterID) > 0 {
 		filters.ClusterIDs = []string{req.ClusterID}
 	}
 	if len(req.Status) > 0 {
-		filters.StatusFilters = []newConstants.ClusterRunningStatus{newConstants.ClusterRunningStatus(req.Status)}
+		filters.StatusFilters = []constants.ClusterRunningStatus{constants.ClusterRunningStatus(req.Status)}
 	}
 
 	result, page, err := models.GetClusterReaderWriter().QueryMetas(ctx, filters, req.PageRequest)
@@ -840,7 +841,7 @@ func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterT
 	}
 
 	for k, v := range p.Instances {
-		if Contain(newConstants.ParasiteComponentIDs, newConstants.EMProductComponentIDType(k)) {
+		if Contain(constants.ParasiteComponentIDs, constants.EMProductComponentIDType(k)) {
 			continue
 		}
 		instanceResource := structs.ClusterResourceParameterCompute{

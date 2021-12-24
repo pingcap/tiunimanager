@@ -114,12 +114,12 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 	if instance.Type == string(constants.ComponentIDTiFlash) {
 		address := meta.GetClusterConnectAddresses()
 		if len(address) <= 0 {
-			return errors.NewError(errors.TIEM_NOT_FOUND_TIDB_ERROR, "component TiDB not found!")
+			return errors.NewError(errors.TIEM_CONNECT_TIDB_ERROR, "component TiDB not found!")
 		}
 		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql",
 			meta.Cluster.DBUser, meta.Cluster.DBPassword, address[0].IP, address[0].Port))
 		if err != nil {
-			return errors.WrapError(errors.TIEM_CONNECT_DB_ERROR, err.Error(), err)
+			return errors.WrapError(errors.TIEM_CONNECT_TIDB_ERROR, err.Error(), err)
 		}
 		defer db.Close()
 		var MaxReplicaCount sql.NullInt64
@@ -158,12 +158,12 @@ func WaitWorkflow(ctx context.Context, workflowID string, interval, timeout time
 			return nil
 		} else if response.Info.Status == constants.WorkFlowStatusError {
 			framework.LogWithContext(ctx).Errorf("workflow %s runs failed!", workflowID)
-			return errors.NewError(errors.TIEM_WAIT_WORKFLOW_RUN_ERROR,
+			return errors.NewError(errors.TIEM_WORKFLOW_DETAIL_FAILED,
 				fmt.Sprintf("wait workflow %s, which runs failed!", workflowID))
 		}
 		index -= 1
 		if index == 0 {
-			return errors.NewError(errors.TIEM_WAIT_WORKFLOW_TIMEOUT_ERROR,
+			return errors.NewError(errors.TIEM_WORKFLOW_NODE_POLLING_TIME_OUT,
 				fmt.Sprintf("wait workflow %s timeout", workflowID))
 		}
 	}

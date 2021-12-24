@@ -19,7 +19,7 @@ package interceptor
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	log "github.com/sirupsen/logrus"
 )
@@ -39,7 +39,7 @@ func AuditLog() gin.HandlerFunc {
 
 		path := c.Request.URL.Path
 
-		entry := framework.LogForkFile(common.LogFileAudit).WithFields(log.Fields{
+		entry := framework.LogForkFile(constants.LogFileAudit).WithFields(log.Fields{
 			"operatorId":       visitor.AccountId,
 			"operatorName":     visitor.AccountName,
 			"operatorTenantId": visitor.TenantId,

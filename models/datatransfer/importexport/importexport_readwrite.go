@@ -17,8 +17,7 @@ package importexport
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/errors"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
 	"time"
@@ -41,7 +40,7 @@ func (m *ImportExportReadWrite) CreateDataTransportRecord(ctx context.Context, r
 
 func (m *ImportExportReadWrite) UpdateDataTransportRecord(ctx context.Context, recordId string, status string, endTime time.Time) (err error) {
 	if "" == recordId {
-		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "record id required")
 	}
 
 	record := &DataTransportRecord{}
@@ -57,7 +56,7 @@ func (m *ImportExportReadWrite) UpdateDataTransportRecord(ctx context.Context, r
 
 func (m *ImportExportReadWrite) GetDataTransportRecord(ctx context.Context, recordId string) (record *DataTransportRecord, err error) {
 	if "" == recordId {
-		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "record id required")
 	}
 	record = &DataTransportRecord{}
 	err = m.DB(ctx).First(record, "id = ?", recordId).Error
@@ -91,7 +90,7 @@ func (m *ImportExportReadWrite) QueryDataTransportRecords(ctx context.Context, r
 
 func (m *ImportExportReadWrite) DeleteDataTransportRecord(ctx context.Context, recordId string) (err error) {
 	if "" == recordId {
-		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "record id required")
 	}
 	record := &DataTransportRecord{}
 	return m.DB(ctx).First(record, "id = ?", recordId).Delete(record).Error

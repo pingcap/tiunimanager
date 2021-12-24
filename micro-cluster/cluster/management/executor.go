@@ -140,7 +140,7 @@ func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	framework.LogWithContext(context.Context).Infof(
 		"scale out cluster %s, version %s, yamlConfig %s", cluster.ID, cluster.Version, yamlConfig)
 	taskId, err := secondparty.Manager.ClusterScaleOut(
-		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name,
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.ID,
 		yamlConfig, handler.DefaultTiupTimeOut, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, node.ID)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -174,7 +174,7 @@ func scaleInCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	framework.LogWithContext(context.Context).Infof(
 		"scale in cluster %s, delete instance %s", clusterMeta.Cluster.ID, instanceID)
 	taskId, err := secondparty.Manager.ClusterScaleIn(
-		context.Context, secondparty.ClusterComponentTypeStr, clusterMeta.Cluster.Name,
+		context.Context, secondparty.ClusterComponentTypeStr, clusterMeta.Cluster.ID,
 		strings.Join([]string{instance.HostIP[0], strconv.Itoa(int(instance.Ports[0]))}, ":"), handler.DefaultTiupTimeOut, []string{"--yes"}, node.ID)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -488,7 +488,7 @@ func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 	framework.LogWithContext(context.Context).Infof(
 		"deploy cluster %s, version %s, yamlConfig %s", cluster.ID, cluster.Version, yamlConfig)
 	taskId, err := secondparty.Manager.ClusterDeploy(
-		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, cluster.Version,
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.ID, cluster.Version,
 		yamlConfig, handler.DefaultTiupTimeOut, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, node.ID)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -509,7 +509,7 @@ func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	framework.LogWithContext(context.Context).Infof(
 		"start cluster %s, version %s", cluster.ID, cluster.Version)
 	taskId, err := secondparty.Manager.ClusterStart(
-		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, handler.DefaultTiupTimeOut, []string{}, node.ID,
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.ID, handler.DefaultTiupTimeOut, []string{}, node.ID,
 	)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -651,7 +651,7 @@ func stopCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext
 	framework.LogWithContext(context.Context).Infof(
 		"stop cluster %s, version = %s", cluster.ID, cluster.Version)
 	taskId, err := secondparty.Manager.ClusterStop(
-		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, handler.DefaultTiupTimeOut, []string{}, node.ID,
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.ID, handler.DefaultTiupTimeOut, []string{}, node.ID,
 	)
 
 	if err != nil {
@@ -673,7 +673,7 @@ func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	framework.LogWithContext(context.Context).Infof(
 		"destroy cluster %s, version %s", cluster.ID, cluster.Version)
 	taskId, err := secondparty.Manager.ClusterDestroy(
-		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, handler.DefaultTiupTimeOut, []string{}, node.ID,
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.ID, handler.DefaultTiupTimeOut, []string{}, node.ID,
 	)
 
 	if err != nil {
@@ -762,7 +762,7 @@ func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 		defer sftpClient.Close()
 	}
 
-	remoteFileName := fmt.Sprintf("%sstorage/cluster/clusters/%s/meta.yaml", req.TiUPPath, clusterMeta.Cluster.Name)
+	remoteFileName := fmt.Sprintf("%sstorage/cluster/clusters/%s/meta.yaml", req.TiUPPath, clusterMeta.Cluster.ID)
 
 	remoteFile, err := sftpClient.Open(remoteFileName)
 	if err != nil {

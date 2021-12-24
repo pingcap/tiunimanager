@@ -20,8 +20,6 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	libCommon "github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -173,11 +171,11 @@ func TestGormClusterReadWrite_Delete(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
 		err := testRW.Delete(context.TODO(), "whatever")
 		assert.Error(t, err)
-		assert.Equal(t, libCommon.TIEM_CLUSTER_NOT_FOUND, err.(framework.TiEMError).GetCode())
+		assert.Equal(t, errors.TIEM_CLUSTER_NOT_FOUND, err.(errors.EMError).GetCode())
 
 		err = testRW.Delete(context.TODO(), "")
 		assert.Error(t, err)
-		assert.Equal(t, libCommon.TIEM_PARAMETER_INVALID, err.(framework.TiEMError).GetCode())
+		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
 }
 
@@ -256,11 +254,11 @@ func TestGormClusterReadWrite_UpdateBaseInfo(t *testing.T) {
 			},
 		})
 		assert.Error(t, err)
-		assert.Equal(t, libCommon.TIEM_CLUSTER_NOT_FOUND, err.(framework.TiEMError).GetCode())
+		assert.Equal(t, errors.TIEM_CLUSTER_NOT_FOUND, err.(errors.EMError).GetCode())
 
 		err = testRW.UpdateClusterInfo(context.TODO(), &Cluster{})
 		assert.Error(t, err)
-		assert.Equal(t, libCommon.TIEM_PARAMETER_INVALID, err.(framework.TiEMError).GetCode())
+		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 
 	})
 }
@@ -333,11 +331,11 @@ func TestGormClusterReadWrite_UpdateStatus(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
 		err := testRW.UpdateStatus(context.TODO(), "whatever", constants.ClusterRunning)
 		assert.Error(t, err)
-		assert.Equal(t, libCommon.TIEM_CLUSTER_NOT_FOUND, err.(framework.TiEMError).GetCode())
+		assert.Equal(t, errors.TIEM_CLUSTER_NOT_FOUND, err.(errors.EMError).GetCode())
 
 		err = testRW.UpdateStatus(context.TODO(), "", constants.ClusterRunning)
 		assert.Error(t, err)
-		assert.Equal(t, libCommon.TIEM_PARAMETER_INVALID, err.(framework.TiEMError).GetCode())
+		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
 }
 

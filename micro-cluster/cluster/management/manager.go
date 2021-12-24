@@ -248,10 +248,10 @@ var createClusterFlow = workflow.WorkFlowDefine{
 		"resourceDone":     {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
 		"configDone":       {"deployCluster", "deployDone", "fail", workflow.PollingNode, deployCluster},
 		"deployDone":       {"startupCluster", "startupDone", "failAfterDeploy", workflow.PollingNode, startCluster},
-		"startupDone":      {"initAccount", "initDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseAccount},
+		"startupDone": {"setClusterOnline", "onlineDone", "failAfterDeploy", workflow.SyncFuncNode, setClusterOnline},
+		"onlineDone":      {"initAccount", "initDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseAccount},
 		"initDone":         {"syncTopology", "syncTopologyDone", "failAfterDeploy", workflow.SyncFuncNode, syncTopology},
-		"syncTopologyDone": {"setClusterOnline", "onlineDone", "failAfterDeploy", workflow.SyncFuncNode, setClusterOnline},
-		"onlineDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistCluster)},
+		"syncTopologyDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistCluster)},
 		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure, revertResourceAfterFailure)},
 		"failAfterDeploy":  {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure)},
 	},
@@ -303,11 +303,11 @@ var restoreNewClusterFlow = workflow.WorkFlowDefine{
 		"deployDone":       {"startupCluster", "startupDone", "failAfterDeploy", workflow.PollingNode, startCluster},
 		"startupDone":      {"initAccount", "initDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseAccount},
 		"initDone":         {"syncTopology", "syncTopologyDone", "failAfterDeploy", workflow.SyncFuncNode, syncTopology},
-		"syncTopologyDone": {"syncTopology", "persistDone", "failAfterDeploy", workflow.SyncFuncNode, persistCluster},
+		"syncTopologyDone": {"persistCluster", "persistDone", "failAfterDeploy", workflow.SyncFuncNode, persistCluster},
 		"persistDone":      {"restoreData", "restoreDone", "failAfterDeploy", workflow.SyncFuncNode, restoreNewCluster},
 		"restoreDone":      {"waitWorkFlow", "waitDone", "failAfterDeploy", workflow.SyncFuncNode, waitWorkFlow},
 		"waitDone":         {"setClusterOnline", "onlineDone", "failAfterDeploy", workflow.SyncFuncNode, setClusterOnline},
-		"onlineDone":       {"end", "", "", workflow.SyncFuncNode, endMaintenance},
+		"onlineDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistCluster)},
 		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure, revertResourceAfterFailure)},
 		"failAfterDeploy":  {"failAfterDeploy", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure)},
 	},
@@ -577,7 +577,7 @@ func (p *Manager) QueryCluster(ctx context.Context, req cluster.QueryClustersReq
 func (p *Manager) DetailCluster(ctx context.Context, req cluster.QueryClusterDetailReq) (resp cluster.QueryClusterDetailResp, err error) {
 	meta, err := handler.Get(ctx, req.ClusterID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("get cluster failed, clusterId = %s", req.ClusterID)
+		framework.LogWithContext(ctx).Errorf("get cluster failed, clusterId = %s, err = %s", req.ClusterID, err.Error())
 		return
 	}
 

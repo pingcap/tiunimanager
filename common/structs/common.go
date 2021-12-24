@@ -107,3 +107,11 @@ type Index struct {
 	Value       interface{} `json:"value"`
 	Unit        string      `json:"unit"`
 }
+
+// Version Identifies the version number of the software
+type Version struct {
+	Version   string `json:"version"`
+	GitHash   string `json:"gitHash"`
+	GitBranch string `json:"gitBranch"`
+	BuildTime string `json:"buildTime"`
+}

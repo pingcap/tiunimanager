@@ -48,6 +48,28 @@ func GetDomainPrefixFromCode(failureDomain string) string {
 	return failureDomain[:pos]
 }
 
+//CPUInfo Information describing the CPU, which will currently be used for Telemetry
+type CPUInfo struct {
+	Num     int     `json:"num"`     //go's reported runtime.NUMCPU()
+	Sockets int     `json:"sockets"` //number of cpus reported
+	Cores   int32   `json:"cores"`   //reported cores for first cpu
+	Model   string  `json:"model"`   //reported model name e.g. `Intel(R) Core(TM) i7-7920HQ CPU @ 3.10GHz`
+	HZ      float64 `json:"hz"`      //speed of first cpu e.g. 3100
+}
+
+//MemoryInfo Information describing the Memory, which will currently be used for Telemetry
+type MemoryInfo struct {
+	Total     uint64 `json:"total"`
+	Available uint64 `json:"available"`
+}
+
+//OSInfo Information describing the OS, which will currently be used for Telemetry
+type OSInfo struct {
+	Family   string `json:"family"`
+	Platform string `json:"platform"`
+	Version  string `json:"version"`
+}
+
 type DiskInfo struct {
 	ID       string `json:"diskId"`
 	HostId   string `json:"hostId,omitempty"`

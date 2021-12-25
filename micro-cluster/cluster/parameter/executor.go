@@ -335,12 +335,6 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 			}
 			clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
 
-			b, err := json.Marshal(cm)
-			if err != nil {
-				return err
-			}
-			fmt.Println("===============cm: ", string(b))
-
 			// Get the instance host and port of the component based on the topology
 			servers := make(map[string]uint, 0)
 			switch strings.ToLower(compStr) {

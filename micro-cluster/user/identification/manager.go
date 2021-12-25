@@ -55,8 +55,7 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (resp mes
 
 // Logout
 func (p *Manager) Logout(ctx context.Context, req message.LogoutReq) (message.LogoutResp, error) {
-	r := message.GetTokenReq{TokenString: req.TokenString}
-	token, err := GetToken(ctx, r)
+	token, err := GetToken(ctx, (message.GetTokenReq)(req))
 
 	if err != nil {
 

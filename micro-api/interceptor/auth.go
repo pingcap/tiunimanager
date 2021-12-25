@@ -52,6 +52,13 @@ func VerifyIdentity(c *gin.Context) {
 	}
 
 	body, err := json.Marshal(req)
+	if err != nil {
+		framework.LogWithContext(c).Errorf("marshal request error: %s", err.Error())
+		c.Error(err)
+		c.Status(errors.TIEM_MARSHAL_ERROR.GetHttpCode())
+		c.Abort()
+	}
+
 	rpcResp, err := client.ClusterClient.VerifyIdentity(framework.NewMicroCtxFromGinCtx(c), &clusterpb.RpcRequest{Request: string(body)}, controller.DefaultTimeout)
 
 	if err != nil {
@@ -60,12 +67,18 @@ func VerifyIdentity(c *gin.Context) {
 		c.Abort()
 	} else if rpcResp.Code != int32(errors.TIEM_SUCCESS) {
 		framework.LogWithContext(c).Error(rpcResp.Message)
+		c.Error(err)
 		c.Status(errors.EM_ERROR_CODE(rpcResp.Code).GetHttpCode())
 		c.Abort()
 	} else {
 		var result message.AccessibleResp
 		err = json.Unmarshal([]byte(rpcResp.Response), &result)
-
+		if err != nil {
+			framework.LogWithContext(c).Errorf("unmarshal get system config rpc response error: %s", err.Error())
+			c.Error(err)
+			c.Status(errors.TIEM_UNMARSHAL_ERROR.GetHttpCode())
+			c.Abort()
+		}
 		c.Set(framework.TiEM_X_USER_ID_KEY, result.AccountID)
 		c.Set(framework.TiEM_X_USER_NAME_KEY, result.AccountName)
 		c.Set(framework.TiEM_X_TENANT_ID_KEY, result.TenantID)

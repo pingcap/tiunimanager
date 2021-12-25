@@ -15,7 +15,9 @@ var ma = &userinfo.Manager{}
 
 func TestManager_Login_v1(t *testing.T) {
 	te, _ := models.GetTenantReaderWriter().AddTenant(context.TODO(), "tenant", 0, 0)
-	ma.CreateAccount(context.TODO(), te, "testName", "123456789")
+	_, err := ma.CreateAccount(context.TODO(), te, "testName", "123456789")
+	assert.Nil(t, err)
+
 	type args struct {
 		ctx     context.Context
 		request message.LoginReq
@@ -25,9 +27,9 @@ func TestManager_Login_v1(t *testing.T) {
 		args     args
 		wantErr  bool
 	}{
-		{"normal", args{context.TODO(), message.LoginReq{"testName", "123456789"}}, false},
-		{"wrong username", args{context.TODO(), message.LoginReq{"name", "123456789"}}, true},
-		{"wrong password", args{context.TODO(), message.LoginReq{"testName", "12345"}}, true},
+		{"normal", args{context.TODO(), message.LoginReq{UserName: "testName", Password: "123456789"}}, false},
+		{"wrong username", args{context.TODO(), message.LoginReq{UserName: "name", Password: "123456789"}}, true},
+		{"wrong password", args{context.TODO(), message.LoginReq{UserName: "testName", Password: "12345"}}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -46,8 +48,10 @@ func TestManager_Login_v1(t *testing.T) {
 
 func TestManager_Logout(t *testing.T) {
 	te, _ := models.GetTenantReaderWriter().AddTenant(context.TODO(), "tenant", 0, 0)
-	ma.CreateAccount(context.TODO(), te, "testName", "123456789")
-	tokenString, _ := manager.Login(context.TODO(), message.LoginReq{"testName", "123456789"})
+	_, err := ma.CreateAccount(context.TODO(), te, "testName", "123456789")
+	assert.Nil(t, err)
+
+	tokenString, _ := manager.Login(context.TODO(), message.LoginReq{UserName: "testName", Password: "123456789"})
 	type args struct {
 		ctx context.Context
 		req message.LogoutReq
@@ -57,7 +61,7 @@ func TestManager_Logout(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"normal", args{context.TODO(), message.LogoutReq{tokenString.TokenString}}, false},
+		{"normal", args{context.TODO(), message.LogoutReq{TokenString: tokenString.TokenString}}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

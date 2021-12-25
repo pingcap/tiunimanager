@@ -321,14 +321,25 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 			compStr := strings.ToLower(comp.(string))
 			cm := map[string]interface{}{}
 			for _, param := range params {
+				configKey := param.Name
+				// set config key from system variable
+				if param.SystemVariable != "" {
+					configKey = param.SystemVariable
+				}
 				clusterValue, err := convertRealParameterType(ctx, param)
 				if err != nil {
 					framework.LogWithContext(ctx).Errorf("convert real parameter type err = %v", err)
 					return err
 				}
-				cm[param.Name] = clusterValue
+				cm[configKey] = clusterValue
 			}
 			clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
+
+			b, err := json.Marshal(cm)
+			if err != nil {
+				return err
+			}
+			fmt.Println("===============cm: ", string(b))
 
 			// Get the instance host and port of the component based on the topology
 			servers := make(map[string]uint, 0)
@@ -428,9 +439,6 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 // @return interface{}
 // @return error
 func convertRealParameterType(ctx *workflow.FlowContext, param structs.ClusterParameterSampleInfo) (interface{}, error) {
-	framework.LogWithContext(ctx).Info("begin convert real parameter type")
-	defer framework.LogWithContext(ctx).Info("end convert real parameter type")
-
 	switch param.Type {
 	case int(Integer):
 		c, err := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)

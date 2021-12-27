@@ -60,7 +60,6 @@ func VerifyIdentity(c *gin.Context) {
 	}
 
 	rpcResp, err := client.ClusterClient.VerifyIdentity(framework.NewMicroCtxFromGinCtx(c), &clusterpb.RpcRequest{Request: string(body)}, controller.DefaultTimeout)
-
 	if err != nil {
 		c.Error(err)
 		c.Status(http.StatusInternalServerError)

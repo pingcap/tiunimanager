@@ -60,7 +60,9 @@ func (p *Manager) Create(ctx context.Context, request cluster.CreateChangeFeedTa
 		FilterRules: request.FilterRules,
 	}
 
-	err = copyDownstreamConfig(task, request.DownstreamType, request.Downstream)
+	if err = copyDownstreamConfig(task, request.DownstreamType, request.Downstream); err != nil {
+		return
+	}
 
 	task, err = models.GetChangeFeedReaderWriter().Create(ctx, task)
 	resp.ID = task.ID

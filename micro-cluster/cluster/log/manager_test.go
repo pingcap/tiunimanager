@@ -46,8 +46,6 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 )
 
-var mockManager = NewManager()
-
 func TestMain(m *testing.M) {
 	var testFilePath string
 	framework.InitBaseFrameworkForUt(framework.ClusterService,

@@ -522,7 +522,7 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 			ContextClusterMeta:     meta,
 			ContextTakeoverRequest: req,
 		}
-		flowID, startError := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceCreating, createClusterFlow.FlowName, data)
+		flowID, startError := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceTakeover, takeoverClusterFlow.FlowName, data)
 		if startError != nil {
 			errMsg := fmt.Sprintf("cluster %s async maintenance error: %s", meta.Cluster.ID, err.Error())
 			framework.LogWithContext(ctx).Errorf(errMsg)

@@ -45,12 +45,10 @@ func TestMain(m *testing.M) {
 
 func TestManager_Create(t *testing.T) {
 	id, err := manager.Create(context.TODO(), cluster.CreateChangeFeedTaskReq{
-		ChangeFeedTask: cluster.ChangeFeedTask{
-			DownstreamType: "mysql",
-			Name:           "name",
-			Downstream: cluster.MysqlDownstream{
-				Username: "root",
-			},
+		DownstreamType: "mysql",
+		Name:           "name",
+		Downstream: cluster.MysqlDownstream{
+			Username: "root",
 		},
 	})
 	assert.NotEmpty(t, id)

@@ -57,20 +57,16 @@ var httpClient = &http.Client{}
 func Get(reqURL string, reqParams map[string]string, headers map[string]string) (*http.Response, error) {
 	urlParams := url.Values{}
 	parsedURL, _ := url.Parse(reqURL)
-	if reqParams != nil {
-		for key, val := range reqParams {
-			urlParams.Set(key, val)
-		}
+	for key, val := range reqParams {
+		urlParams.Set(key, val)
 	}
 
 	parsedURL.RawQuery = urlParams.Encode()
 	urlPath := parsedURL.String()
 
 	httpRequest, _ := http.NewRequest("GET", urlPath, nil)
-	if headers != nil {
-		for k, v := range headers {
-			httpRequest.Header.Add(k, v)
-		}
+	for k, v := range headers {
+		httpRequest.Header.Add(k, v)
 	}
 	resp, err := httpClient.Do(httpRequest)
 	if err != nil {
@@ -132,10 +128,8 @@ func post(reqURL string, reqParams map[string]interface{}, contentType string, f
 	}
 	httpRequest, _ := http.NewRequest("POST", reqURL, requestBody)
 	httpRequest.Header.Add("Content-Type", realContentType)
-	if headers != nil {
-		for k, v := range headers {
-			httpRequest.Header.Add(k, v)
-		}
+	for k, v := range headers {
+		httpRequest.Header.Add(k, v)
 	}
 	resp, err := httpClient.Do(httpRequest)
 	if err != nil {
@@ -153,7 +147,7 @@ func post(reqURL string, reqParams map[string]interface{}, contentType string, f
 // @return string
 // @return error
 func getReader(reqParams map[string]interface{}, contentType string, files []UploadFile) (io.Reader, string, error) {
-	if strings.Index(contentType, "json") > -1 {
+	if strings.Contains(contentType, "json") {
 		bytesData, _ := json.Marshal(reqParams)
 		return bytes.NewReader(bytesData), contentType, nil
 	} else if files != nil {
@@ -164,12 +158,14 @@ func getReader(reqParams map[string]interface{}, contentType string, files []Upl
 			if err != nil {
 				return nil, "", err
 			}
+			defer file.Close()
 			part, err := writer.CreateFormFile(uploadFile.Name, filepath.Base(uploadFile.Filepath))
 			if err != nil {
 				return nil, "", err
 			}
-			_, err = io.Copy(part, file)
-			file.Close()
+			if _, err = io.Copy(part, file); err != nil {
+				return nil, "", err
+			}
 		}
 		for k, v := range reqParams {
 			if err := writer.WriteField(k, fmt.Sprint(v)); err != nil {

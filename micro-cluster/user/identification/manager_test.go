@@ -15,7 +15,9 @@ var ma = &userinfo.Manager{}
 
 func TestManager_Login_v1(t *testing.T) {
 	te, _ := models.GetTenantReaderWriter().AddTenant(context.TODO(), "tenant", 0, 0)
-	ma.CreateAccount(context.TODO(), te, "testName", "123456789")
+	_, err := ma.CreateAccount(context.TODO(), te, "testName", "123456789")
+	assert.Nil(t, err)
+
 	type args struct {
 		ctx     context.Context
 		request message.LoginReq
@@ -46,8 +48,10 @@ func TestManager_Login_v1(t *testing.T) {
 
 func TestManager_Logout(t *testing.T) {
 	te, _ := models.GetTenantReaderWriter().AddTenant(context.TODO(), "tenant", 0, 0)
-	ma.CreateAccount(context.TODO(), te, "testName", "123456789")
-	tokenString, _ := manager.Login(context.TODO(), message.LoginReq{"testName", "123456789"})
+	_, err := ma.CreateAccount(context.TODO(), te, "test", "123456789")
+	assert.Nil(t, err)
+
+	tokenString, _ := manager.Login(context.TODO(), message.LoginReq{UserName: "test", Password: "123456789"})
 	type args struct {
 		ctx context.Context
 		req message.LogoutReq

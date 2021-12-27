@@ -175,7 +175,7 @@ func importDataFailed(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) err
 		return fmt.Errorf("update data transport record failed, %s", err.Error())
 	}
 
-	return clusterFail(node, ctx)
+	return nil
 }
 
 func exportDataFailed(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
@@ -188,14 +188,10 @@ func exportDataFailed(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) err
 		return fmt.Errorf("update data transport record failed, %s", err.Error())
 	}
 
-	return clusterFail(node, ctx)
-}
-
-func clusterEnd(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	return nil
 }
 
-func clusterFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+func defaultEnd(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	return nil
 }
 

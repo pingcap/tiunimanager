@@ -167,7 +167,7 @@ func Test_NewBackgroundMicroCtx(t *testing.T) {
 	assert.Equal(t, traceID, GetTraceIDFromContext(newCtxWithSameTraceID))
 	newCtxWithDifferentTraceID := NewBackgroundMicroCtx(ctx, true)
 	assert.NotEqual(t, traceID, GetTraceIDFromContext(newCtxWithDifferentTraceID))
-	assert.NotEqual(t, traceID, NewBackgroundMicroCtx(nil, false))
-	assert.NotEqual(t, traceID, NewBackgroundMicroCtx(nil, true))
-	assert.NotEqual(t, "", NewBackgroundMicroCtx(nil, false))
+	assert.NotEqual(t, traceID, NewBackgroundMicroCtx(ctx, false))
+	assert.NotEqual(t, traceID, NewBackgroundMicroCtx(ctx, true))
+	assert.NotEqual(t, "", NewBackgroundMicroCtx(ctx, false))
 }

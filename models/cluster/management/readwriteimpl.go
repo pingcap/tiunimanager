@@ -69,7 +69,7 @@ func (g *ClusterReadWrite) DeleteInstance(ctx context.Context, ID string) error 
 
 func (g *ClusterReadWrite) Get(ctx context.Context, clusterID string) (*Cluster, error) {
 	if "" == clusterID {
-		errInfo := fmt.Sprint("get cluster failed : empty clusterID")
+		errInfo := "get cluster failed : empty clusterID"
 		framework.LogWithContext(ctx).Error(errInfo)
 		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
 	}
@@ -116,7 +116,7 @@ func (g *ClusterReadWrite) GetRelations(ctx context.Context, clusterID string) (
 
 func (g *ClusterReadWrite) QueryMetas(ctx context.Context, filters Filters, pageReq structs.PageRequest) ([]*Result, structs.Page, error) {
 	page := structs.Page{
-		Page: pageReq.Page,
+		Page:     pageReq.Page,
 		PageSize: pageReq.PageSize,
 	}
 
@@ -169,7 +169,7 @@ func (g *ClusterReadWrite) QueryMetas(ctx context.Context, filters Filters, page
 		}
 
 		results = append(results, &Result{
-			Cluster: c,
+			Cluster:   c,
 			Instances: instances,
 		})
 	}
@@ -221,7 +221,7 @@ func (g *ClusterReadWrite) UpdateInstance(ctx context.Context, instances ...*Clu
 
 func (g *ClusterReadWrite) UpdateClusterInfo(ctx context.Context, template *Cluster) error {
 	if template == nil {
-		errInfo := fmt.Sprint("update cluster base info failed : empty template")
+		errInfo := "update cluster base info failed : empty template"
 		framework.LogWithContext(ctx).Error(errInfo)
 		return errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
 	}
@@ -310,7 +310,7 @@ func (g *ClusterReadWrite) CreateClusterTopologySnapshot(ctx context.Context, sn
 
 func (g *ClusterReadWrite) GetLatestClusterTopologySnapshot(ctx context.Context, clusterID string) (snapshot ClusterTopologySnapshot, err error) {
 	if "" == clusterID {
-		errInfo := fmt.Sprint("get latest cluster topology snapshot failed : empty clusterID")
+		errInfo := "get latest cluster topology snapshot failed : empty clusterID"
 		framework.LogWithContext(ctx).Error(errInfo)
 		err = errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
 		return

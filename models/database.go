@@ -170,7 +170,9 @@ func (p *database) initSystemData() {
 		for _, v := range structs.DefaultLabelTypes {
 			labelRecord := new(resourcePool.Label)
 			labelRecord.ConstructLabelRecord(&v)
-			err = defaultDb.base.Create(labelRecord).Error
+			if err = defaultDb.base.Create(labelRecord).Error; err != nil {
+				return
+			}
 		}
 
 		// system config

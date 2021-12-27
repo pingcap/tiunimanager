@@ -262,7 +262,7 @@ func TestPostFile(t *testing.T) {
 			files := make([]UploadFile, 1)
 			files[0] = UploadFile{
 				Name:     "http_test.go",
-				Filepath: "./",
+				Filepath: "./http_test.go",
 			}
 			resp, err := PostFile(tt.args.reqURL, tt.args.reqParams, files, tt.args.headers)
 			if err != nil {

@@ -18,7 +18,6 @@ package changefeed
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
@@ -158,13 +157,13 @@ type ChangeFeedDownStream interface {
 
 // GetSinkURI todo
 func (p *MysqlDownstream) GetSinkURI() string {
-	return fmt.Sprintf("")
+	return "todo"
 }
 
 func (p *TiDBDownstream) GetSinkURI() string {
-	return fmt.Sprintf("")
+	return "todo"
 }
 
 func (p *KafkaDownstream) GetSinkURI() string {
-	return fmt.Sprintf("")
+	return "todo"
 }

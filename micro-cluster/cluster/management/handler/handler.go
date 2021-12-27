@@ -725,7 +725,7 @@ func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
 func buildMeta(cluster *management.Cluster, instances []*management.ClusterInstance) *ClusterMeta {
 	instancesMap := make(map[string][]*management.ClusterInstance)
 
-	if instances != nil && len(instances) > 0 {
+	if len(instances) > 0 {
 		for _, instance := range instances {
 			if existed, ok := instancesMap[instance.Type]; ok {
 				instancesMap[instance.Type] = append(existed, instance)
@@ -811,11 +811,11 @@ func (p *ClusterMeta) DisplayClusterInfo(ctx context.Context) structs.ClusterInf
 	clusterInfo.ExtranetConnectAddresses = clusterInfo.IntranetConnectAddresses
 
 	if alertAddress := p.GetAlertManagerAddresses(); len(alertAddress) > 0 {
-		clusterInfo.AlertUrl = fmt.Sprintf(fmt.Sprintf("%s:%d", alertAddress[0].IP, alertAddress[0].Port))
+		clusterInfo.AlertUrl = fmt.Sprintf("%s:%d", alertAddress[0].IP, alertAddress[0].Port)
 	}
 
 	if grafanaAddress := p.GetGrafanaAddresses(); len(grafanaAddress) > 0 {
-		clusterInfo.GrafanaUrl = fmt.Sprintf(fmt.Sprintf("%s:%d", grafanaAddress[0].IP, grafanaAddress[0].Port))
+		clusterInfo.GrafanaUrl = fmt.Sprintf("%s:%d", grafanaAddress[0].IP, grafanaAddress[0].Port)
 	}
 
 	mockUsage := func() structs.Usage {

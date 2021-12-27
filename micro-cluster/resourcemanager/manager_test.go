@@ -163,11 +163,11 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 	host := genHostInfo("TEST_HOST1")
 	hosts = append(hosts, *host)
 
-	flowId, hostIds, err := resourceManager.ImportHosts(context.TODO(), hosts)
+	flowIds, hostIds, err := resourceManager.ImportHosts(context.TODO(), hosts)
 	assert.Nil(t, err)
 
 	assert.Equal(t, fake_hostId, hostIds[0])
-	assert.Equal(t, "flow01", flowId)
+	assert.Equal(t, "flow01", flowIds[0])
 }
 
 func Test_ImportHosts_Failed(t *testing.T) {
@@ -212,12 +212,12 @@ func Test_ImportHosts_Failed(t *testing.T) {
 	var hosts []structs.HostInfo
 	host := genHostInfo("TEST_HOST2")
 	hosts = append(hosts, *host)
-	flowId, _, err := resourceManager.ImportHosts(context.TODO(), hosts)
+	flowIds, _, err := resourceManager.ImportHosts(context.TODO(), hosts)
 	assert.NotNil(t, err)
 	tiemErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
 	assert.Equal(t, errors.TIEM_PARAMETER_INVALID, tiemErr.GetCode())
-	assert.Equal(t, "", flowId)
+	assert.Equal(t, nil, flowIds)
 
 }
 

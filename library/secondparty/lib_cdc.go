@@ -19,12 +19,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
 	util "github.com/pingcap-inc/tiem/library/util/http"
 	"net/http"
-	"time"
 )
 
 const CDCApiUrl  = "/api/v1/changefeeds"
@@ -39,7 +37,7 @@ func (secondMicro *SecondPartyManager) CreateChangeFeedTask(ctx context.Context,
 		return
 	}
 	data := make(map[string]interface{})
-	err = json.Unmarshal(bytes, data)
+	err = json.Unmarshal(bytes, &data)
 
 	if err != nil {
 		err = errors.WrapError(errors.TIEM_UNMARSHAL_ERROR, "", err)
@@ -87,7 +85,7 @@ func handleAcceptError(ctx context.Context, httpResp *http.Response, resp *Chang
 		resp.ErrorMsg = err.Error()
 	}
 }
-
+/*
 var changeFeedRetryTimes = 10
 
 func handleAcceptedCmd(ctx context.Context,
@@ -112,7 +110,7 @@ func handleAcceptedCmd(ctx context.Context,
 
 	}
 }
-
+*/
 func (secondMicro *SecondPartyManager) UpdateChangeFeedTask(ctx context.Context, req ChangeFeedUpdateReq) (resp ChangeFeedCmdAcceptResp, err error) {
 	framework.LogWithContext(ctx).Infof("micro srv update change feed task, req : %v", req)
 	url := fmt.Sprintf("http://%s%s/%s", req.PD, CDCApiUrl, req.ChangeFeedID)
@@ -123,7 +121,7 @@ func (secondMicro *SecondPartyManager) UpdateChangeFeedTask(ctx context.Context,
 		return
 	}
 	data := make(map[string]interface{})
-	err = json.Unmarshal(bytes, data)
+	err = json.Unmarshal(bytes, &data)
 
 	if err != nil {
 		err = errors.WrapError(errors.TIEM_UNMARSHAL_ERROR, "", err)

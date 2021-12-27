@@ -5939,6 +5939,9 @@
                 "memoryUsage": {
                     "$ref": "#/definitions/structs.Usage"
                 },
+                "region": {
+                    "type": "string"
+                },
                 "role": {
                     "type": "string"
                 },

@@ -253,6 +253,48 @@ func TestManager_ScaleIn(t *testing.T) {
 	})
 }
 
+func TestManager_Clone(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	workflow.GetWorkFlowService().RegisterWorkFlow(context.TODO(), constants.FlowScaleInCluster, getEmptyFlow(constants.FlowScaleInCluster))
+	manager := &Manager{}
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+
+	clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+		{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
+		{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
+	}, nil).AnyTimes()
+	clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil)
+	clusterRW.EXPECT().CreateRelation(gomock.Any(), gomock.Any()).Return(nil)
+
+	clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+	workflow.MockWorkFlowService(workflowService)
+	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
+	}, nil).AnyTimes()
+	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	t.Run("normal", func(t *testing.T) {
+		_, err := manager.Clone(context.TODO(), cluster.CloneClusterReq{
+			SourceClusterID: "111",
+			CreateClusterParameter: structs.CreateClusterParameter{
+				Name:       "testCluster",
+				DBUser:     "user01",
+				DBPassword: "password01",
+				Type:       "TiDB",
+				Version:    "v5.0.0",
+			},
+		})
+		assert.NoError(t, err)
+	})
+}
+
 func TestManager_CreateCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

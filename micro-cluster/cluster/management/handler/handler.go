@@ -791,6 +791,7 @@ func (p *ClusterMeta) DisplayClusterInfo(ctx context.Context) structs.ClusterInf
 		DBUser:          cluster.DBUser,
 		Tags:            cluster.Tags,
 		TLS:             cluster.TLS,
+		Region:          cluster.Region,
 		Status:          cluster.Status,
 		Copies:          cluster.Copies,
 		Exclusive:       cluster.Exclusive,

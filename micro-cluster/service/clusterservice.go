@@ -28,8 +28,6 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/user/tenant"
 	"github.com/pingcap-inc/tiem/micro-cluster/user/userinfo"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
 
 	"github.com/pingcap-inc/tiem/message"
@@ -109,10 +107,6 @@ func handleResponse(ctx context.Context, resp *clusterpb.RpcResponse, err error,
 
 		return
 	}
-}
-
-func getLoggerWithContext(ctx context.Context) *log.Entry {
-	return framework.LogWithContext(ctx)
 }
 
 func handleMetrics(start time.Time, funcName string, code int) {

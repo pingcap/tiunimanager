@@ -57,10 +57,6 @@ type BRManager struct {
 }
 
 func NewBRManager() *BRManager {
-	mgr := &BRManager{
-		autoBackupMgr: NewAutoBackupManager(),
-	}
-
 	flowManager := workflow.GetWorkFlowService()
 	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowBackupCluster, &workflow.WorkFlowDefine{
 		FlowName: constants.FlowBackupCluster,
@@ -79,6 +75,10 @@ func NewBRManager() *BRManager {
 			"fail":        {"fail", "", "", workflow.SyncFuncNode, restoreFail},
 		},
 	})
+
+	mgr := &BRManager{
+		autoBackupMgr: NewAutoBackupManager(),
+	}
 
 	return mgr
 }

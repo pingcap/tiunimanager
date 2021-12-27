@@ -1181,9 +1181,10 @@ func TestClusterMeta_Query(t *testing.T) {
 	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(rw)
 
-	rw.EXPECT().QueryMetas(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockResult("test"), structs.Page{
-		1, 1, 5,
-	}, nil)
+	rw.EXPECT().QueryMetas(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockResult("test"),
+		structs.Page{
+			Page: 1, PageSize: 1, Total: 5,
+		}, nil)
 
 	resp, total, err := Query(context.TODO(), cluster.QueryClustersReq{
 		ClusterID: "111",

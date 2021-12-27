@@ -38,7 +38,7 @@ func NewGormResourceReadWrite(db *gorm.DB) resource_models.ReaderWriter {
 	}
 	return m
 }
-
+/*
 func (rw *GormResourceReadWrite) addTable(ctx context.Context, tableModel interface{}) (newTable bool, err error) {
 	if !rw.DB(ctx).Migrator().HasTable(tableModel) {
 		err := rw.DB(ctx).Migrator().CreateTable(tableModel)
@@ -50,7 +50,7 @@ func (rw *GormResourceReadWrite) addTable(ctx context.Context, tableModel interf
 		return false, nil
 	}
 }
-
+*/
 func (rw *GormResourceReadWrite) Create(ctx context.Context, hosts []rp.Host) (hostIds []string, err error) {
 	tx := rw.DB(ctx).Begin()
 	for _, host := range hosts {

@@ -29,7 +29,7 @@ GENERATE_TARGET_DIR = $(CURDIR)/library/client/
 include Makefile.common
 
 .PHONY: all clean test gotest gotool help proto
-all: prepare proto build
+all: prepare proto swag build
 
 # download protoc-gen-micro, protoc-gen-go and protoc
 prepare:

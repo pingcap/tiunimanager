@@ -66,7 +66,7 @@ func initGinEngine(d *framework.BaseFramework) error {
 	port := d.GetServiceMeta().ServicePort
 
 	addr := fmt.Sprintf(":%d", port)
-	// openapi-server service registry
+	// file-server service registry
 	serviceRegistry(d)
 
 	if d.GetClientArgs().EnableHttps {
@@ -83,17 +83,17 @@ func initGinEngine(d *framework.BaseFramework) error {
 	return nil
 }
 
-// serviceRegistry registry openapi-server service
+// serviceRegistry registry file-server service
 func serviceRegistry(f *framework.BaseFramework) {
 	etcdClient := etcd_clientv2.InitEtcdClient(f.GetServiceMeta().RegistryAddress)
 	address := f.GetClientArgs().Host + f.GetServiceMeta().GetServiceAddress()
 	key := "/micro/registry/" + f.GetServiceMeta().ServiceName.ServerName() + "/" + address
-	// Register openapi-server every TTL-2 seconds, default TTL is 5s
+	// Register file-server every TTL-2 seconds, default TTL is 5s
 	go func() {
 		for {
 			err := etcdClient.SetWithTtl(key, "{\"weight\":1, \"max_fails\":2, \"fail_timeout\":10}", 5)
 			if err != nil {
-				f.Log().Errorf("regitry file-server failed! error: %v", err)
+				framework.LogForkFile(constants.LogFileSystem).Errorf("regitry file-server failed! error: %v", err)
 			}
 			time.Sleep(time.Second * 3)
 		}

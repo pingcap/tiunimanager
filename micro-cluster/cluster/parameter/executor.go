@@ -52,7 +52,6 @@ import (
 	spec2 "github.com/pingcap-inc/tiem/library/spec"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
-	"github.com/pingcap/tiup/pkg/cluster/spec"
 )
 
 // asyncMaintenance
@@ -261,6 +260,7 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 	configs := make([]secondparty.ClusterComponentConfig, len(params))
 	for i, param := range params {
 		configKey := param.Name
+		// set config key from system variable
 		if param.SystemVariable != "" {
 			configKey = param.SystemVariable
 		}
@@ -318,7 +318,6 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 	}
 	if len(compContainer) > 0 {
 		for comp, params := range compContainer {
-			compStr := strings.ToLower(comp.(string))
 			cm := map[string]interface{}{}
 			for _, param := range params {
 				configKey := param.Name
@@ -337,8 +336,8 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 
 			// Get the instance host and port of the component based on the topology
 			servers := make(map[string]uint, 0)
-			switch strings.ToLower(compStr) {
-			case spec.ComponentTiDB:
+			switch comp.(string) {
+			case string(constants.ComponentIDTiDB):
 				tidbServers := clusterMeta.GetClusterStatusAddress()
 				if len(tidbServers) == 0 {
 					framework.LogWithContext(ctx).Errorf("get tidb status address from meta failed, empty address")
@@ -347,7 +346,7 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 				for _, server := range tidbServers {
 					servers[server.IP] = uint(server.Port)
 				}
-			case spec.ComponentTiKV:
+			case string(constants.ComponentIDTiKV):
 				tikvServers := clusterMeta.GetTiKVStatusAddress()
 				if len(tikvServers) == 0 {
 					framework.LogWithContext(ctx).Errorf("get tikv address from meta failed, empty address")
@@ -356,7 +355,7 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 				for _, server := range tikvServers {
 					servers[server.IP] = uint(server.Port)
 				}
-			case spec.ComponentPD:
+			case string(constants.ComponentIDPD):
 				pdServers := clusterMeta.GetPDClientAddresses()
 				if len(pdServers) == 0 {
 					framework.LogWithContext(ctx).Errorf("get pd address from meta failed, empty address")
@@ -364,10 +363,12 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 				}
 				server := pdServers[rand.Intn(len(pdServers))]
 				servers[server.IP] = uint(server.Port)
+			default:
+				return fmt.Errorf(fmt.Sprintf("Component [%s] type modification is not supported", comp.(string)))
 			}
 			for host, port := range servers {
 				hasSuc, err := secondparty.Manager.ApiEditConfig(ctx, secondparty.ApiEditConfigReq{
-					TiDBClusterComponent: spec2.TiDBClusterComponent(compStr),
+					TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(comp.(string))),
 					InstanceHost:         host,
 					InstancePort:         port,
 					Headers:              map[string]string{},

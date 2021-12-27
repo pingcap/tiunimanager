@@ -26,7 +26,6 @@ import (
 	"github.com/pingcap-inc/tiem/models/user/identification"
 	"github.com/pingcap-inc/tiem/models/user/tenant"
 
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
@@ -64,8 +63,8 @@ type database struct {
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
-	dbFile := fw.GetDataDir() + common.DBDirPrefix + common.DatabaseFileName
-	logins := framework.LogForkFile(common.LogFileSystem)
+	dbFile := fw.GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName
+	logins := framework.LogForkFile(constants.LogFileSystem)
 	// todo tidb?
 	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 
@@ -98,7 +97,7 @@ func (p *database) migrateStream(models ...interface{}) (err error) {
 	for _, model := range models {
 		err = p.base.AutoMigrate(model)
 		if err != nil {
-			framework.LogForkFile(common.LogFileSystem).Errorf("init table failed, model = %v, err = %s", models, err.Error())
+			framework.LogForkFile(constants.LogFileSystem).Errorf("init table failed, model = %v, err = %s", models, err.Error())
 			return err
 		}
 	}
@@ -115,6 +114,7 @@ func (p *database) initTables() (err error) {
 		new(management.ClusterRelation),
 		new(management.ClusterTopologySnapshot),
 		new(importexport.DataTransportRecord),
+		new(backuprestore.BackupRecord),
 		new(backuprestore.BackupStrategy),
 		new(config.SystemConfig),
 		new(secondparty.SecondPartyOperation),

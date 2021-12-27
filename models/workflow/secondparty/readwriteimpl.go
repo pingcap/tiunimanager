@@ -25,20 +25,19 @@ package secondparty
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	em_errors "github.com/pingcap-inc/tiem/common/errors"
-	dbCommon "github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
 )
 
 type GormSecondPartyOperationReadWrite struct {
-	dbCommon.GormDB
+	common.GormDB
 }
 
 func NewGormSecondPartyOperationReadWrite(db *gorm.DB) *GormSecondPartyOperationReadWrite {
 	m := &GormSecondPartyOperationReadWrite{
-		dbCommon.WrapDB(db),
+		common.WrapDB(db),
 	}
 	return m
 }
@@ -46,7 +45,7 @@ func NewGormSecondPartyOperationReadWrite(db *gorm.DB) *GormSecondPartyOperation
 func (m *GormSecondPartyOperationReadWrite) Create(ctx context.Context, operationType OperationType,
 	workFlowNodeID string) (*SecondPartyOperation, error) {
 	if "" == workFlowNodeID || "" == string(operationType) {
-		return nil, em_errors.NewEMErrorf(em_errors.TIEM_PARAMETER_INVALID, "either workflownodeid(actual: %s) or "+
+		return nil, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "either workflownodeid(actual: %s) or "+
 			"type(actual: %s) is nil", workFlowNodeID, operationType)
 	}
 
@@ -60,7 +59,7 @@ func (m *GormSecondPartyOperationReadWrite) Create(ctx context.Context, operatio
 
 func (m *GormSecondPartyOperationReadWrite) Update(ctx context.Context, updateTemplate *SecondPartyOperation) error {
 	if "" == updateTemplate.ID {
-		return em_errors.NewEMErrorf(em_errors.TIEM_PARAMETER_INVALID, "id is nil for %+v", updateTemplate)
+		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "id is nil for %+v", updateTemplate)
 	}
 
 	return m.DB(ctx).Omit(Column_Type, Column_WorkFlowNodeID).
@@ -69,14 +68,14 @@ func (m *GormSecondPartyOperationReadWrite) Update(ctx context.Context, updateTe
 
 func (m *GormSecondPartyOperationReadWrite) Get(ctx context.Context, id string) (*SecondPartyOperation, error) {
 	if "" == id {
-		return nil, em_errors.NewError(em_errors.TIEM_PARAMETER_INVALID, "id required")
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "id required")
 	}
 
 	secondPartyOperation := &SecondPartyOperation{}
 	err := m.DB(ctx).First(secondPartyOperation, "id = ?", id).Error
 
 	if err != nil {
-		return nil, dbCommon.WrapDBError(err)
+		return nil, common.WrapDBError(err)
 	} else {
 		return secondPartyOperation, nil
 	}
@@ -85,7 +84,7 @@ func (m *GormSecondPartyOperationReadWrite) Get(ctx context.Context, id string) 
 func (m *GormSecondPartyOperationReadWrite) QueryByWorkFlowNodeID(ctx context.Context,
 	workFlowNodeID string) (secondPartyOperation *SecondPartyOperation, err error) {
 	if "" == workFlowNodeID {
-		return nil, em_errors.NewEMErrorf(em_errors.TIEM_PARAMETER_INVALID, "node id is required")
+		return nil, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "node id is required")
 	}
 
 	var secondPartyOperations []SecondPartyOperation
@@ -115,7 +114,7 @@ func (m *GormSecondPartyOperationReadWrite) QueryByWorkFlowNodeID(ctx context.Co
 		}
 	}
 	if len(secondPartyOperations) == 0 {
-		err = errors.New("no match record was found")
+		err = errors.NewError(errors.TIEM_PARAMETER_INVALID, "no match record was found")
 		return
 	}
 	secondPartyOperation = &SecondPartyOperation{}

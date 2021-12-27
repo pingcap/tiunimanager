@@ -157,25 +157,27 @@ type ClusterLogItem struct {
 }
 
 type ProductUpgradePathItem struct {
-	UpgradeType string   `json:"upgradeType"  enums:"in-place,migration"`
-	UpgradeWay  string   `json:"upgradeWay"  enums:"offline,online"`
-	Versions    []string `json:"versions" example:"v5.0.0,v5.3.0"`
+	UpgradeType string   `json:"upgradeType"  validate:"required" enums:"in-place,migration"`
+	UpgradeWay  string   `json:"upgradeWay,omitempty"  enums:"offline,online"`
+	Versions    []string `json:"versions" validate:"required" example:"v5.0.0,v5.3.0"`
 }
 type ProductUpgradeVersionConfigDiffItem struct {
-	ParamId      string   `json:"paramId" example:"1"`
-	Name         string   `json:"name" example:"max-merge-region-size"`
-	InstanceType string   `json:"instanceType" example:"pd-server"`
-	CurrentVal   string   `json:"currentVal" example:"20"`
-	SuggestVal   string   `json:"suggestVal" example:"30"`
-	Range        []string `json:"range" example:"1, 1000"`
+	ParamId      string   `json:"paramId" validate:"required" example:"1"`
+	Name         string   `json:"name" validate:"required" example:"max-merge-region-size"`
+	InstanceType string   `json:"instanceType" validate:"required" example:"pd-server"`
+	CurrentVal   string   `json:"currentVal" validate:"required" example:"20"`
+	SuggestVal   string   `json:"suggestVal" validate:"required" example:"30"`
+	Type         int      `json:"type" validate:"required" example:"0" enums:"0,1,2,3,4"`
+	Unit         string   `json:"unit" validate:"required" example:"mb"`
+	Range        []string `json:"range" validate:"required" example:"1, 1000"`
 	Description  string   `json:"description" example:"desc for max-merge-region-size"`
 }
 
 type ClusterUpgradeVersionConfigItem struct {
-	ParamId      string `json:"paramId" example:"1"`
-	Name         string `json:"name" example:"max-merge-region-size"`
-	InstanceType string `json:"instanceType" example:"pd-server"`
-	Value        string `json:"value" example:"20"`
+	ParamId      string `json:"paramId" validate:"required" example:"1"`
+	Name         string `json:"name" validate:"required" example:"max-merge-region-size"`
+	InstanceType string `json:"instanceType" validate:"required" example:"pd-server"`
+	Value        string `json:"value" validate:"required" example:"20"`
 }
 
 type ClusterInstanceParameterValue struct {

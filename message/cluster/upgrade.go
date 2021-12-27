@@ -39,7 +39,7 @@ type QueryUpgradePathRsp struct {
 // QueryUpgradeVersionDiffInfoReq Reply message for querying configuration difference between current cluster and target version
 type QueryUpgradeVersionDiffInfoReq struct {
 	ClusterID     string `json:"clusterId" swaggerignore:"true"`
-	TargetVersion string `json:"targetVersion" example:"v5.0.0"`
+	TargetVersion string `json:"targetVersion" validate:"required" example:"v5.0.0"`
 }
 
 // QueryUpgradeVersionDiffInfoResp Reply message for querying configuration difference between current cluster and target version
@@ -57,8 +57,8 @@ const (
 // ClusterUpgradeReq Message for requesting upgrade
 type ClusterUpgradeReq struct {
 	ClusterID     string        `json:"clusterId" swaggerignore:"true"`
-	TargetVersion string        `json:"targetVersion" example:"v5.0.0"`
-	UpgradeType   string        `json:"upgradeType"  enums:"in-place,migration"`
+	TargetVersion string        `json:"targetVersion" validate:"required" example:"v5.0.0"`
+	UpgradeType   string        `json:"upgradeType"  validate:"required" enums:"in-place,migration"`
 	UpgradeWay    UpgradeWayStr `json:"upgradeWay"  enums:"offline,online"`
 	Configs       []*structs.ClusterUpgradeVersionConfigItem
 }

@@ -95,6 +95,6 @@ func (manager *SecondPartyManager) ApiEditConfig(ctx context.Context, apiEditCon
 		return resp.StatusCode == http.StatusOK, nil
 	default:
 		framework.LogWithContext(ctx).Warnf("apieditconfig, component %s api update parameters are not supported", apiEditConfigReq.TiDBClusterComponent)
-		return false, errors.New(fmt.Sprintf("Component %s API update parameters are not supported", apiEditConfigReq.TiDBClusterComponent))
+		return false, fmt.Errorf("component %s API update parameters are not supported", apiEditConfigReq.TiDBClusterComponent)
 	}
 }

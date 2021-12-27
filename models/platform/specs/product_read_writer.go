@@ -142,12 +142,12 @@ func (p *ProductReadWriter) QueryZones(ctx context.Context) (zones []structs.Zon
 	var info structs.ZoneDetail
 	SQL := "SELECT t1.zone_id,t1.name,t2.region_id,t2.name,t3.vendor_id,t3.name FROM zones t1,regions t2,vendors t3 where t1.region_id = t2.region_id AND t1.vendor_id = t3.vendor_id"
 	rows, err := p.DB(ctx).Raw(SQL).Rows()
-	defer rows.Close()
 	log := framework.LogWithContext(ctx)
 	log.Debugf("QueryZones SQL: %s, execute result, error: %v", SQL, err)
 	if err != nil {
 		return nil, errors.WrapError(errors.QueryZoneScanRowError, "", err)
 	}
+	defer rows.Close()
 	for rows.Next() {
 		err = rows.Scan(&info.ZoneID, &info.ZoneName, &info.RegionID, &info.RegionName, &info.VendorID, &info.VendorName)
 		if err == nil {
@@ -185,11 +185,11 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 	var productName, version, arch string
 	products = make(map[string]structs.ProductDetail)
 	rows, err := p.DB(ctx).Raw(SQL, vendorID, regionID, internal, productID, status, constants.ProductSpecStatusOnline, constants.ProductSpecStatusOnline).Rows()
-	defer rows.Close()
 	log := framework.LogWithContext(ctx)
 	log.Debugf("QueryProductDetail SQL: %s vendorID:%s, regionID: %s productID: %s, internal: %d, status: %s, execute result, error: %v",
 		SQL, vendorID, regionID, productID, internal, status, err)
 	if err == nil {
+		defer rows.Close()
 		for rows.Next() {
 			//Read a row of data and store it in a temporary variable
 			err = rows.Scan(&spec.ZoneID, &spec.ZoneName, &productName, &version, &arch,
@@ -246,10 +246,10 @@ func (p *ProductReadWriter) QueryProductComponentProperty(ctx context.Context, p
 		"WHERE product_id =? AND product_version = ? AND status=?"
 	//The number of components of the product does not exceed 20
 	rows, err := p.DB(ctx).Raw(SQL, productID, productVersion, productStatus).Rows()
-	defer rows.Close()
 	if err != nil {
 		return nil, errors.WrapError(errors.QueryProductComponentProperty, "", err)
 	}
+	defer rows.Close()
 	for rows.Next() {
 		err = rows.Scan(&info.ID, &info.Name, &info.PurposeType, &info.StartPort, &info.EndPort, &info.MaxPort, &info.MaxInstance, &info.MinInstance)
 		if err == nil {

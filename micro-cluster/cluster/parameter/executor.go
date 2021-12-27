@@ -212,7 +212,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 	framework.LogWithContext(ctx).Debugf("modify parameter get apply parameter: %v", applyParameter)
 
 	// grouping by parameter source
-	paramContainer := make(map[interface{}][]structs.ClusterParameterSampleInfo, 0)
+	paramContainer := make(map[interface{}][]structs.ClusterParameterSampleInfo)
 	for i, param := range modifyParam.Params {
 		// condition apply parameter and HasApply values is 0, then filter directly
 		if applyParameter != nil && param.HasApply != int(DirectApply) {
@@ -311,7 +311,7 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 	framework.LogWithContext(ctx).Info("begin api edit config executor method")
 	defer framework.LogWithContext(ctx).Info("end api edit config executor method")
 
-	compContainer := make(map[interface{}][]structs.ClusterParameterSampleInfo, 0)
+	compContainer := make(map[interface{}][]structs.ClusterParameterSampleInfo)
 	for i, param := range params {
 		framework.LogWithContext(ctx).Debugf("loop %d api componet type: %v, param name: %v", i, param.InstanceType, param.Name)
 		putParameterContainer(compContainer, param.InstanceType, param)
@@ -335,7 +335,7 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 			clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
 
 			// Get the instance host and port of the component based on the topology
-			servers := make(map[string]uint, 0)
+			servers := make(map[string]uint)
 			switch comp.(string) {
 			case string(constants.ComponentIDTiDB):
 				tidbServers := clusterMeta.GetClusterStatusAddress()

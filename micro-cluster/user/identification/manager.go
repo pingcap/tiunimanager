@@ -35,9 +35,9 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (resp mes
 	}
 
 	req := message.CreateTokenReq{
-		AccountID: a.ID,
+		AccountID:   a.ID,
 		AccountName: a.Name,
-		TenantID: a.TenantId,
+		TenantID:    a.TenantId,
 	}
 	token, err := p.CreateToken(ctx, req)
 
@@ -55,7 +55,7 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (resp mes
 
 // Logout
 func (p *Manager) Logout(ctx context.Context, req message.LogoutReq) (message.LogoutResp, error) {
-	token, err := GetToken(ctx, message.GetTokenReq{TokenString: req.TokenString})
+	token, err := GetToken(ctx, message.GetTokenReq(req))
 
 	if err != nil {
 
@@ -101,9 +101,9 @@ func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq)
 
 func (p *Manager) CreateToken(ctx context.Context, request message.CreateTokenReq) (message.CreateTokenResp, error) {
 	token := identification.Token{
-		AccountName: request.AccountName,
-		AccountId: request.AccountID,
-		TenantId: request.TenantID,
+		AccountName:    request.AccountName,
+		AccountId:      request.AccountID,
+		TenantId:       request.TenantID,
 		ExpirationTime: time.Now().Add(constants.DefaultTokenValidPeriod),
 	}
 

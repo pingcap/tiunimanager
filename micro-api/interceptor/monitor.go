@@ -16,6 +16,7 @@
 package interceptor
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
@@ -32,12 +33,12 @@ func Metrics() gin.HandlerFunc {
 		framework.Current.GetMetrics().MicroDurationHistogramMetric.With(prometheus.Labels{
 			metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
 			metrics.MethodLabel:  c.Request.RequestURI + ":" + c.Request.Method,
-			metrics.CodeLabel:    string(c.Writer.Status())}).
+			metrics.CodeLabel:    fmt.Sprint(c.Writer.Status())}).
 			Observe(float64(duration.Microseconds()))
 		framework.Current.GetMetrics().MicroRequestsCounterMetric.With(prometheus.Labels{
 			metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
 			metrics.MethodLabel:  c.Request.RequestURI + ":" + c.Request.Method,
-			metrics.CodeLabel:    string(c.Writer.Status())}).
+			metrics.CodeLabel:    fmt.Sprint(c.Writer.Status())}).
 			Inc()
 	}
 }

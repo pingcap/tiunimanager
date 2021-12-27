@@ -11,3 +11,5 @@ logging.dest: {{.LogDir}}
 
 # elasticsearch.username: elastic
 # elasticsearch.password: elastic
+
+security.showInsecureClusterWarning: false

@@ -270,6 +270,8 @@ func backupBeforeDelete(node *workflowModel.WorkFlowNode, context *workflow.Flow
 	if deleteReq.AutoBackup {
 		_, err := backupSubProcess(context.Context, meta, false)
 		return err
+	} else {
+		node.Success("no need to backup")
 	}
 
 	return nil

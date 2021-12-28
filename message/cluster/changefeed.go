@@ -161,8 +161,8 @@ type TiDBDownstream struct {
 
 type ChangeFeedTaskInfo struct {
 	ChangeFeedTask
-	UnSteady          bool `json:"unsteady" form:"unsteady" example:"false"`
-	UpstreamUpdateTS  uint `json:"upstreamUpdateTs" form:"upstreamUpdateTs" example:"415241823337054209"`
-	DownstreamFetchTS uint `json:"downstreamFetchTs" form:"downstreamFetchTs" example:"415241823337054209"`
-	DownstreamSyncTS  uint `json:"downstreamSyncTs" form:"downstreamSyncTs" example:"415241823337054209"`
+	UnSteady          bool   `json:"unsteady" form:"unsteady" example:"false"`
+	UpstreamUpdateTS  uint64 `json:"upstreamUpdateTs" form:"upstreamUpdateTs" example:"415241823337054209"`
+	DownstreamFetchTS uint64 `json:"downstreamFetchTs" form:"downstreamFetchTs" example:"415241823337054209"`
+	DownstreamSyncTS  uint64 `json:"downstreamSyncTs" form:"downstreamSyncTs" example:"415241823337054209"`
 }

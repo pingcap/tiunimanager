@@ -23,7 +23,9 @@ import (
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
 	util "github.com/pingcap-inc/tiem/library/util/http"
+	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -31,7 +33,7 @@ const CDCApiUrl  = "/api/v1/changefeeds"
 
 func (secondMicro *SecondPartyManager) CreateChangeFeedTask(ctx context.Context, req ChangeFeedCreateReq) (resp ChangeFeedCmdAcceptResp, err error) {
 	framework.LogWithContext(ctx).Infof("micro srv create change feed task, req : %v", req)
-	url := fmt.Sprintf("http://%s%s", req.PD, CDCApiUrl)
+	url := fmt.Sprintf("http://%s%s", req.CDCAddress, CDCApiUrl)
 
 	bytes, err := json.Marshal(&req)
 	if err != nil {
@@ -48,14 +50,14 @@ func (secondMicro *SecondPartyManager) CreateChangeFeedTask(ctx context.Context,
 
 	httpResp, err := util.PostJSON(url, data, map[string]string{})
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, "", err)
 		return
 	}
 
 	if http.StatusAccepted == httpResp.StatusCode {
 		resp.Accepted = true
-		handleAcceptedCmd(ctx, req.PD, req.ChangeFeedID, &resp, func(info ChangeFeedInfo) bool {
-			return info.State == constants.ChangeFeedStatusStopped.ToString()
+		handleAcceptedCmd(ctx, req.CDCAddress, req.ChangeFeedID, &resp, func(info ChangeFeedInfo) bool {
+			return constants.ChangeFeedStatusNormal.EqualCDCState(info.State)
 		})
 	} else {
 		handleAcceptError(ctx, httpResp, &resp)
@@ -68,17 +70,12 @@ func handleAcceptError(ctx context.Context, httpResp *http.Response, resp *Chang
 	resp.Accepted = false
 	resp.Succeed = false
 
-	respBody := make([]byte, 0)
-	length, err := httpResp.Body.Read(respBody)
+	respBody, err := ioutil.ReadAll(httpResp.Body)
+
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("read http response failed, %s", err.Error())
 		resp.ErrorCode = ""
 		resp.ErrorMsg = err.Error()
-		return
-	}
-	
-	if length == 0 {
-		framework.LogWithContext(ctx).Errorf("read http response empty")
 		return
 	}
 
@@ -93,12 +90,12 @@ func handleAcceptError(ctx context.Context, httpResp *http.Response, resp *Chang
 var changeFeedRetryTimes = 10
 
 func handleAcceptedCmd(ctx context.Context,
-	pdAddress string, id string,
+	address string, id string,
 	resp *ChangeFeedCmdAcceptResp,
 	assert func(info ChangeFeedInfo) bool) {
 	for i := 0; i < changeFeedRetryTimes; i++ {
 		time.Sleep(time.Second)
-		task, err := getChangeFeedTaskByID(ctx, pdAddress, id)
+		task, err := getChangeFeedTaskByID(ctx, address, id)
 		if err != nil {
 			resp.Succeed = false
 			resp.ErrorMsg = err.Error()
@@ -106,39 +103,24 @@ func handleAcceptedCmd(ctx context.Context,
 		}
 
 		switch task.State {
-		case constants.ChangeFeedStatusError.ToString():
+		case strings.ToLower(constants.ChangeFeedStatusError.ToString()):
 			resp.Succeed = false
-			resp.ErrorCode = "error"
 			resp.ErrorMsg = task.ChangeFeedInfo.Error
-
-		case constants.ChangeFeedStatusFailed.ToString():
+		case strings.ToLower(constants.ChangeFeedStatusFailed.ToString()):
 			resp.Succeed = false
-			resp.ErrorCode = "failed"
 			resp.ErrorMsg = task.ChangeFeedInfo.Error
 		default:
 			if assert(task.ChangeFeedInfo) {
 				resp.Succeed = true
 				return
-			} else {
-
 			}
 		}
-
-		if task.State == constants.ChangeFeedStatusError.ToString() ||
-			task.State == constants.ChangeFeedStatusFailed.ToString() ||
-			task.State == constants.ChangeFeedStatusFinished.ToString() {
-			resp.ErrorCode = ""
-			break
-		}
-
-
-
 	}
 }
 
 func (secondMicro *SecondPartyManager) UpdateChangeFeedTask(ctx context.Context, req ChangeFeedUpdateReq) (resp ChangeFeedCmdAcceptResp, err error) {
 	framework.LogWithContext(ctx).Infof("micro srv update change feed task, req : %v", req)
-	url := fmt.Sprintf("http://%s%s/%s", req.PD, CDCApiUrl, req.ChangeFeedID)
+	url := fmt.Sprintf("http://%s%s/%s", req.CDCAddress, CDCApiUrl, req.ChangeFeedID)
 
 	bytes, err := json.Marshal(&req)
 	if err != nil {
@@ -153,15 +135,15 @@ func (secondMicro *SecondPartyManager) UpdateChangeFeedTask(ctx context.Context,
 		return
 	}
 
-	httpResp, err := util.PostJSON(url, data, map[string]string{})
+	httpResp, err := util.PutJSON(url, data, map[string]string{})
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, "", err)
 		return
 	}
 
 	if http.StatusAccepted == httpResp.StatusCode {
 		resp.Accepted = true
-		handleAcceptedCmd(ctx, req.PD, req.ChangeFeedID, &resp, func(info ChangeFeedInfo) bool {
+		handleAcceptedCmd(ctx, req.CDCAddress, req.ChangeFeedID, &resp, func(info ChangeFeedInfo) bool {
 			return true
 		})
 	} else {
@@ -171,16 +153,18 @@ func (secondMicro *SecondPartyManager) UpdateChangeFeedTask(ctx context.Context,
 }
 
 func (secondMicro *SecondPartyManager) PauseChangeFeedTask(ctx context.Context, req ChangeFeedPauseReq) (resp ChangeFeedCmdAcceptResp, err error) {
-	url := fmt.Sprintf("http://%s%s/%s/pause", req.PD, CDCApiUrl, req.ChangeFeedID)
+	url := fmt.Sprintf("http://%s%s/%s/pause", req.CDCAddress, CDCApiUrl, req.ChangeFeedID)
 	httpResp, err := util.PostJSON(url, map[string]interface{}{}, map[string]string{})
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, "", err)
 		return
 	}
 
 	if http.StatusAccepted == httpResp.StatusCode {
 		resp.Accepted = true
-		resp.Succeed = true
+		handleAcceptedCmd(ctx, req.CDCAddress, req.ChangeFeedID, &resp, func(info ChangeFeedInfo) bool {
+			return constants.ChangeFeedStatusStopped.EqualCDCState(info.State)
+		})
 	} else {
 		handleAcceptError(ctx, httpResp, &resp)
 	}
@@ -188,16 +172,18 @@ func (secondMicro *SecondPartyManager) PauseChangeFeedTask(ctx context.Context, 
 }
 
 func (secondMicro *SecondPartyManager) ResumeChangeFeedTask(ctx context.Context, req ChangeFeedResumeReq) (resp ChangeFeedCmdAcceptResp, err error) {
-	url := fmt.Sprintf("http://%s%s/%s/resume", req.PD, CDCApiUrl, req.ChangeFeedID)
+	url := fmt.Sprintf("http://%s%s/%s/resume", req.CDCAddress, CDCApiUrl, req.ChangeFeedID)
 	httpResp, err := util.PostJSON(url, map[string]interface{}{}, map[string]string{})
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, "", err)
 		return
 	}
 
 	if http.StatusAccepted == httpResp.StatusCode {
 		resp.Accepted = true
-		resp.Succeed = true
+		handleAcceptedCmd(ctx, req.CDCAddress, req.ChangeFeedID, &resp, func(info ChangeFeedInfo) bool {
+			return constants.ChangeFeedStatusNormal.EqualCDCState(info.State)
+		})
 	} else {
 		handleAcceptError(ctx, httpResp, &resp)
 	}
@@ -205,17 +191,15 @@ func (secondMicro *SecondPartyManager) ResumeChangeFeedTask(ctx context.Context,
 }
 
 func (secondMicro *SecondPartyManager) DeleteChangeFeedTask(ctx context.Context, req ChangeFeedDeleteReq) (resp ChangeFeedCmdAcceptResp, err error) {
-	url := fmt.Sprintf("http://%s%s/%s", req.PD, CDCApiUrl, req.ChangeFeedID)
-	// todo delete
-	httpResp, err := util.PostJSON(url, map[string]interface{}{}, map[string]string{})
+	url := fmt.Sprintf("http://%s%s/%s", req.CDCAddress, CDCApiUrl, req.ChangeFeedID)
+	httpResp, err := util.Delete(url)
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, "", err)
 		return
 	}
 
 	if http.StatusAccepted == httpResp.StatusCode {
 		resp.Accepted = true
-		resp.Succeed = true
 	} else {
 		handleAcceptError(ctx, httpResp, &resp)
 	}
@@ -223,7 +207,7 @@ func (secondMicro *SecondPartyManager) DeleteChangeFeedTask(ctx context.Context,
 }
 
 func (secondMicro *SecondPartyManager) QueryChangeFeedTasks(ctx context.Context, req ChangeFeedQueryReq) (resp ChangeFeedQueryResp, err error) {
-	url := fmt.Sprintf("http://%s%s", req.PD, CDCApiUrl)
+	url := fmt.Sprintf("http://%s%s", req.CDCAddress, CDCApiUrl)
 	params := map[string]string{}
 	if req.State != "" {
 		params["state"] = req.State
@@ -231,31 +215,30 @@ func (secondMicro *SecondPartyManager) QueryChangeFeedTasks(ctx context.Context,
 	httpResp, err := util.Get(url, params, map[string]string{})
 
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, "", err)
 		return
 	}
 
 	if http.StatusOK == httpResp.StatusCode {
-		respBody := make([]byte, 0)
-		_, err = httpResp.Body.Read(respBody)
-		if err != nil {
-			framework.LogWithContext(ctx).Errorf("read http response failed, %s", err.Error())
+		respBody, readErr := ioutil.ReadAll(httpResp.Body)
+		if readErr != nil {
+			framework.LogWithContext(ctx).Errorf("read http response failed, %s", readErr.Error())
 			return
 		}
 		resp.Tasks = make([]ChangeFeedInfo, 0)
-		err = json.Unmarshal(respBody, &resp.Tasks)
+		readErr = json.Unmarshal(respBody, &resp.Tasks)
 		if err != nil {
-			framework.LogWithContext(ctx).Errorf("unmarshal http response failed, %s", err.Error())
+			framework.LogWithContext(ctx).Errorf("unmarshal http response failed, %s", readErr.Error())
 			return
 		}
 	} else {
-		err = errors.WrapError(errors.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, "", err)
 	}
 	return
 }
 
 func (secondMicro *SecondPartyManager) DetailChangeFeedTask(ctx context.Context, req ChangeFeedDetailReq) (ChangeFeedDetailResp, error) {
-	return getChangeFeedTaskByID(ctx, req.PD, req.ChangeFeedID)
+	return getChangeFeedTaskByID(ctx, req.CDCAddress, req.ChangeFeedID)
 }
 
 func getChangeFeedTaskByID(ctx context.Context, pdAddress, id string) (resp ChangeFeedDetailResp, err error) {
@@ -263,25 +246,23 @@ func getChangeFeedTaskByID(ctx context.Context, pdAddress, id string) (resp Chan
 	httpResp, err := util.Get(url, map[string]string{}, map[string]string{})
 
 	if err != nil {
-		// todo connect
-		err = errors.WrapError(errors.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, "", err)
 		return
 	}
 
 	if http.StatusOK == httpResp.StatusCode {
-		respBody := make([]byte, 0)
-		_, err = httpResp.Body.Read(respBody)
-		if err != nil {
-			framework.LogWithContext(ctx).Errorf("read http response failed, %s", err.Error())
+		respBody, readErr := ioutil.ReadAll(httpResp.Body)
+		if readErr != nil {
+			framework.LogWithContext(ctx).Errorf("read http response failed, %s", readErr.Error())
 			return
 		}
-		err = json.Unmarshal(respBody, &resp)
-		if err != nil {
-			framework.LogWithContext(ctx).Errorf("unmarshal http response failed, %s", err.Error())
+		readErr = json.Unmarshal(respBody, &resp)
+		if readErr != nil {
+			framework.LogWithContext(ctx).Errorf("unmarshal http response failed, %s", readErr.Error())
 			return 
 		}
 	} else {
-		err = errors.WrapError(errors.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		err = errors.WrapError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, "", err)
 	}
 	return 
 }

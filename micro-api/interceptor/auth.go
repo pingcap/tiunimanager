@@ -66,7 +66,6 @@ func VerifyIdentity(c *gin.Context) {
 		c.Abort()
 	} else if rpcResp.Code != int32(errors.TIEM_SUCCESS) {
 		framework.LogWithContext(c).Error(rpcResp.Message)
-		c.Error(err)
 		c.Status(errors.EM_ERROR_CODE(rpcResp.Code).GetHttpCode())
 		c.Abort()
 	} else {

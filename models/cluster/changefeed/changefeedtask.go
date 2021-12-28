@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
 	"time"
@@ -84,7 +85,7 @@ func (t *ChangeFeedTask) BeforeSave(tx *gorm.DB) (err error) {
 	}
 
 	if len(t.ID) == 0 {
-		return t.Entity.BeforeCreate(tx)
+		t.ID = uuidutil.ShortId()
 	}
 	return nil
 }

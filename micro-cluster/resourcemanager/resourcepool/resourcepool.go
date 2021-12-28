@@ -86,7 +86,7 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 		flowManager := workflow.GetWorkFlowService()
 		flow, err := flowManager.CreateWorkFlow(ctx, hostId[0], rp_consts.FlowImportHosts)
 		if err != nil {
-			errMsg := fmt.Sprintf("create %s workflow failed, %s", rp_consts.FlowImportHosts, err.Error())
+			errMsg := fmt.Sprintf("create %s workflow failed for host %s %s, %s", rp_consts.FlowImportHosts, host.HostName, host.IP, err.Error())
 			framework.LogWithContext(ctx).Errorln(errMsg)
 			return flowIds, hostIds, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, errMsg, err)
 		}
@@ -95,7 +95,7 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 		flowManager.AddContext(flow, rp_consts.ContextImportHostInfoKey, hosts)
 		flowManager.AddContext(flow, rp_consts.ContextImportHostIDsKey, hostIds)
 		if err = flowManager.AsyncStart(ctx, flow); err != nil {
-			errMsg := fmt.Sprintf("async start %s workflow failed, %s", rp_consts.FlowImportHosts, err.Error())
+			errMsg := fmt.Sprintf("async start %s workflow failed for host %s %s, %s", host.HostName, host.IP, rp_consts.FlowImportHosts, err.Error())
 			framework.LogWithContext(ctx).Errorln(errMsg)
 			return flowIds, hostIds, errors.WrapError(errors.TIEM_WORKFLOW_START_FAILED, errMsg, err)
 		}

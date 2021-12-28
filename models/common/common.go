@@ -17,13 +17,16 @@ package common
 
 import (
 	"context"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/errors"
 	"golang.org/x/crypto/bcrypt"
-	"time"
 
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
 )
+
+const UsingSqlite = true
 
 type Entity struct {
 	ID        string    `gorm:"primarykey"`

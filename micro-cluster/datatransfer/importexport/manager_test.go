@@ -46,6 +46,9 @@ func TestGetImportExportService(t *testing.T) {
 }
 
 func TestImportExportManager_ExportData_case1(t *testing.T) {
+	os.MkdirAll("./testdata", 0755)
+	defer os.RemoveAll("./testdata")
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -71,7 +74,7 @@ func TestImportExportManager_ExportData_case1(t *testing.T) {
 	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	configService := mockconfig.NewMockReaderWriter(ctrl)
-	configService.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: string(constants.StorageTypeNFS)}, nil).AnyTimes()
+	configService.EXPECT().GetConfig(gomock.Any(), constants.ConfigKeyExportShareStoragePath).Return(&config.SystemConfig{ConfigValue: "./testdata"}, nil).AnyTimes()
 	models.SetConfigReaderWriter(configService)
 
 	transportService := mockimportexport.NewMockReaderWriter(ctrl)
@@ -159,6 +162,9 @@ func TestImportExportManager_ExportData_case2(t *testing.T) {
 }
 
 func TestImportExportManager_ImportData_case1(t *testing.T) {
+	os.MkdirAll("./testdata", 0755)
+	defer os.RemoveAll("./testdata")
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -184,7 +190,7 @@ func TestImportExportManager_ImportData_case1(t *testing.T) {
 	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	configService := mockconfig.NewMockReaderWriter(ctrl)
-	configService.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: string(constants.StorageTypeNFS)}, nil).AnyTimes()
+	configService.EXPECT().GetConfig(gomock.Any(), constants.ConfigKeyImportShareStoragePath).Return(&config.SystemConfig{ConfigValue: "./testdata"}, nil).AnyTimes()
 	models.SetConfigReaderWriter(configService)
 
 	transportService := mockimportexport.NewMockReaderWriter(ctrl)
@@ -239,7 +245,7 @@ func TestImportExportManager_ImportData_case2(t *testing.T) {
 	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	configService := mockconfig.NewMockReaderWriter(ctrl)
-	configService.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: string(constants.StorageTypeNFS)}, nil).AnyTimes()
+	configService.EXPECT().GetConfig(gomock.Any(), constants.ConfigKeyImportShareStoragePath).Return(&config.SystemConfig{ConfigValue: "./testdata"}, nil).AnyTimes()
 	models.SetConfigReaderWriter(configService)
 
 	transportService := mockimportexport.NewMockReaderWriter(ctrl)

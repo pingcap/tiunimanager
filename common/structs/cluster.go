@@ -188,6 +188,7 @@ type ParameterRealValue struct {
 
 type ClusterParameterSampleInfo struct {
 	ParamId        string             `json:"paramId" example:"1"`
+	Category       string             `json:"category" example:"basic"`
 	Name           string             `json:"name" example:"log_level"`
 	InstanceType   string             `json:"instanceType" example:"TiDB"`
 	UpdateSource   int                `json:"updateSource" example:"0" enums:"0,1,2,3"`

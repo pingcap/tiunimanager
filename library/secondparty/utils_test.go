@@ -17,6 +17,9 @@ package secondparty
 
 import (
 	ctx "context"
+	"fmt"
+	"github.com/DATA-DOG/go-sqlmock"
+	"golang.org/x/net/context"
 	"reflect"
 	"strings"
 	"testing"
@@ -102,5 +105,41 @@ func Test_SetField_Success(t *testing.T) {
 	SetField(ctx.TODO(), &foo2, FieldKey_Yaml, "bar", "newbar")
 	if foo2.Bar != "newbar" {
 		t.Errorf("fail set, it is %s now", foo2.Bar)
+	}
+}
+
+func Test_execShowRestoreInfoThruSQL_Fail(t *testing.T) {
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	mock.ExpectQuery("SHOW RESTORES").
+		WillReturnError(fmt.Errorf("some error"))
+	mock.ExpectRollback()
+
+	resp := execShowRestoreInfoThruSQL(context.TODO(), db, "SHOW RESTORES")
+	if resp.Destination == "" && resp.ErrorStr != "some error" {
+		t.Errorf("case: show restore info. Destination(%s) should have zero value, and ErrorStr(%v) should be 'some error'", resp.Destination, resp.ErrorStr)
+	}
+}
+
+func Test_execShowRestoreInfoThruSQL_Success(t *testing.T) {
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	mock.ExpectQuery("SHOW RESTORES").
+		WillReturnError(fmt.Errorf("sql: no rows in result set"))
+	mock.ExpectRollback()
+
+	resp := execShowRestoreInfoThruSQL(context.TODO(), db, "SHOW RESTORES")
+	if resp.Progress != 100 && resp.ErrorStr != "" {
+		t.Errorf("case: show restore info. Progress(%f) should be 100, and ErrorStr(%v) should have zero value", resp.Progress, resp.ErrorStr)
 	}
 }

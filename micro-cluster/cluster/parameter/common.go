@@ -26,10 +26,11 @@ package parameter
 import "github.com/pingcap-inc/tiem/common/structs"
 
 const (
-	contextClusterMeta         = "ClusterMeta"
-	contextModifyParameters    = "ModifyParameters"
-	contextApplyParameterInfo  = "ApplyParameterInfo"
-	contextUpdateParameterInfo = "UpdateParameterInfo"
+	contextClusterMeta             = "ClusterMeta"
+	contextModifyParameters        = "ModifyParameters"
+	contextApplyParameterInfo      = "ApplyParameterInfo"
+	contextUpdateParameterInfo     = "UpdateParameterInfo"
+	contextMaintenanceStatusChange = "maintenanceStatusChange"
 )
 
 type UpdateParameterSource int
@@ -62,3 +63,9 @@ type ModifyParameter struct {
 	Reboot bool
 	Params []structs.ClusterParameterSampleInfo
 }
+
+type ClusterReboot int
+const (
+	NonReboot ClusterReboot = iota
+	Reboot
+)

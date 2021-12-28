@@ -43,30 +43,12 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func TestManager_Delete(t *testing.T) {
-	result, err := manager.Create(context.TODO(), cluster.CreateChangeFeedTaskReq{
-		ChangeFeedTask: cluster.ChangeFeedTask{
-			DownstreamType: "tidb",
-			Name:           "name",
-			Downstream: cluster.TiDBDownstream{
-				MaxTxnRow: 4,
-			},
-		},
-	})
-	assert.NotEmpty(t, result)
-	assert.NoError(t, err)
-	err = manager.Delete(context.TODO(), result.ID)
-	assert.NoError(t, err)
-}
-
 func TestManager_Create(t *testing.T) {
 	id, err := manager.Create(context.TODO(), cluster.CreateChangeFeedTaskReq{
-		ChangeFeedTask: cluster.ChangeFeedTask{
-			DownstreamType: "mysql",
-			Name:           "name",
-			Downstream: cluster.MysqlDownstream{
-				Username: "root",
-			},
+		DownstreamType: "mysql",
+		Name:           "name",
+		Downstream: cluster.MysqlDownstream{
+			Username: "root",
 		},
 	})
 	assert.NotEmpty(t, id)

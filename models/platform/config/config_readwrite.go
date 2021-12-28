@@ -17,8 +17,7 @@ package config
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/errors"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
 )
@@ -40,7 +39,7 @@ func (m *ConfigReadWrite) CreateConfig(ctx context.Context, cfg *SystemConfig) (
 
 func (m *ConfigReadWrite) GetConfig(ctx context.Context, configKey string) (config *SystemConfig, err error) {
 	if "" == configKey {
-		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "config key required")
 	}
 	config = &SystemConfig{}
 	err = m.DB(ctx).First(config, "config_key = ?", configKey).Error

@@ -19,8 +19,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/errors"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
 	"time"
@@ -29,22 +28,23 @@ import (
 type ChangeFeedTask struct {
 	dbCommon.Entity
 	TaskStatus        constants.ChangeFeedStatus `gorm:"-"`
-	Name              string           `gorm:"type:varchar(32)"`
-	ClusterId         string           `gorm:"not null;type:varchar(22);index"`
+	Name              string                     `gorm:"type:varchar(32)"`
+	ClusterId         string                     `gorm:"not null;type:varchar(22);index"`
 	Type              constants.DownstreamType   `gorm:"not null;type:varchar(16)"`
-	StartTS           int64            `gorm:"column:start_ts"`
-	TargetTS          int64            `gorm:"column:target_ts"`
-	FilterRulesConfig string           `gorm:"type:text"`
-	Downstream        interface{}      `gorm:"-"`
-	DownstreamConfig  string           `gorm:"type:text"`
-	StatusLock        sql.NullTime     `gorm:"column:status_lock"`
+	StartTS           int64                      `gorm:"column:start_ts"`
+	TargetTS          int64                      `gorm:"column:target_ts"`
+	FilterRules       []string                   `gorm:"-"`
+	FilterRulesConfig string                     `gorm:"type:text"`
+	Downstream        ChangeFeedDownStream       `gorm:"-"`
+	DownstreamConfig  string                     `gorm:"type:text"`
+	StatusLock        sql.NullTime               `gorm:"column:status_lock"`
 }
 
-func (t ChangeFeedTask) GetStatusLock() sql.NullTime {
+func (t *ChangeFeedTask) GetStatusLock() sql.NullTime {
 	return t.StatusLock
 }
 
-func unmarshal(dt constants.DownstreamType, cc string) (interface{}, error) {
+func UnmarshalDownstream(dt constants.DownstreamType, cc string) (ChangeFeedDownStream, error) {
 	switch dt {
 	case constants.DownstreamTypeTiDB:
 		downstream := &TiDBDownstream{}
@@ -59,7 +59,7 @@ func unmarshal(dt constants.DownstreamType, cc string) (interface{}, error) {
 		err := json.Unmarshal([]byte(cc), downstream)
 		return downstream, err
 	}
-	return nil, framework.SimpleError(common.TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM)
+	return nil, errors.NewError(errors.TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM, "")
 }
 
 func (t *ChangeFeedTask) BeforeSave(tx *gorm.DB) (err error) {
@@ -68,8 +68,18 @@ func (t *ChangeFeedTask) BeforeSave(tx *gorm.DB) (err error) {
 		if jsonErr == nil {
 			t.DownstreamConfig = string(b)
 		} else {
-			return framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, jsonErr.Error())
+			return errors.NewError(errors.TIEM_PARAMETER_INVALID, jsonErr.Error())
 		}
+	}
+	if t.FilterRules == nil {
+		t.FilterRules = make([]string, 0)
+	}
+
+	b, jsonErr := json.Marshal(t.FilterRules)
+	if jsonErr == nil {
+		t.FilterRulesConfig = string(b)
+	} else {
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, jsonErr.Error())
 	}
 
 	if len(t.ID) == 0 {
@@ -80,11 +90,15 @@ func (t *ChangeFeedTask) BeforeSave(tx *gorm.DB) (err error) {
 
 func (t *ChangeFeedTask) AfterFind(tx *gorm.DB) (err error) {
 	if len(t.DownstreamConfig) > 0 {
-		downstream, err := unmarshal(t.Type, t.DownstreamConfig)
+		downstream, err := UnmarshalDownstream(t.Type, t.DownstreamConfig)
 		if err != nil {
 			return err
 		}
 		t.Downstream = downstream
+	}
+	if len(t.FilterRulesConfig) > 0 {
+		t.FilterRules = make([]string, 0)
+		json.Unmarshal([]byte(t.FilterRulesConfig), &t.FilterRules)
 	}
 	return nil
 }
@@ -135,4 +149,21 @@ type TiDBDownstream struct {
 type Dispatcher struct {
 	Matcher    string `json:"matcher"`
 	Dispatcher string `json:"dispatcher"`
+}
+
+type ChangeFeedDownStream interface {
+	GetSinkURI() string
+}
+
+// GetSinkURI todo
+func (p *MysqlDownstream) GetSinkURI() string {
+	return "todo"
+}
+
+func (p *TiDBDownstream) GetSinkURI() string {
+	return "todo"
+}
+
+func (p *KafkaDownstream) GetSinkURI() string {
+	return "todo"
 }

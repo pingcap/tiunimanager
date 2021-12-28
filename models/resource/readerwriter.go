@@ -32,9 +32,6 @@ type HostItem struct {
 	Name   string
 }
 type ReaderWriter interface {
-	// Init all table for resource manager
-	InitTables(ctx context.Context) error
-
 	// Create a batch of hosts
 	Create(ctx context.Context, hosts []rp.Host) ([]string, error)
 	// Delete a batch of hosts

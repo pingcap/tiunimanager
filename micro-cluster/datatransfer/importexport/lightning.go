@@ -92,18 +92,6 @@ func NewDataImportConfig(ctx context.Context, meta *handler.ClusterMeta, info *i
 	pdClientPort := pdAddress[0].Port
 
 	/*
-		if tidbServerPort == 0 {
-			tidbServerPort = constants.DefaultTiDBPort
-		}
-		if tidbStatusPort == 0 {
-			tidbStatusPort = constants.DefaultTiDBStatusPort
-		}
-		if pdClientPort == 0 {
-			pdClientPort = constants.DefaultPDClientPort
-		}
-	*/
-
-	/*
 	 * todo: sorted-kv-dir and data-source-dir in the same disk, may slow down import performance,
 	 *  and check-requirements = true can not pass lightning pre-check
 	 *  in real environment, config data-source-dir = user nfs storage, sorted-kv-dir = other disk, turn on pre-check

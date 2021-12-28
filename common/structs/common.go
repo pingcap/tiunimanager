@@ -74,6 +74,14 @@ type PageRequest struct {
 	PageSize int `json:"pageSize" form:"pageSize"` //Number of this request
 }
 
+func (p PageRequest) GetOffset() int {
+	if p.Page == 0 {
+		p.Page = 1
+	}
+
+	return (p.Page - 1) * p.PageSize
+}
+
 // Calculate the Page's offset in DB query sql
 func (p *PageRequest) CalcOffset() (offset int) {
 	if p.Page > 1 {
@@ -87,4 +95,15 @@ func (p *PageRequest) CalcOffset() (offset int) {
 // AsyncTaskWorkFlowInfo Public information returned by asynchronous tasks
 type AsyncTaskWorkFlowInfo struct {
 	WorkFlowID string `json:"workFlowId"` // Asynchronous task workflow ID
+}
+
+//
+// Index common struct for statistical indicators
+// @Description:
+//
+type Index struct {
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Value       interface{} `json:"value"`
+	Unit        string      `json:"unit"`
 }

@@ -41,7 +41,7 @@ func TestSecondMicro_ApiEditConfig(t *testing.T) {
 	}))
 	defer server.Close()
 
-	ipAndPort := strings.TrimLeft(server.URL, "http://")
+	ipAndPort := strings.TrimPrefix(server.URL, "http://")
 	host := strings.Split(ipAndPort, ":")[0]
 	portStr := strings.Split(ipAndPort, ":")[1]
 	port, err := strconv.Atoi(portStr)

@@ -105,7 +105,7 @@ func TestSecondPartyManager_taskStatusMapSyncer_updateButFail(t *testing.T) {
 	}
 	v := secondPartyManager.syncedOperationStatusMap[TestOperationID]
 	if !v.validFlag || v.stat.Status != secondparty.OperationStatusProcessing {
-		t.Errorf("TaskStatus for 1 is incorrect, got: %v %v, want: %v %v", v.validFlag, v.stat.Status, true, TaskStatusProcessing)
+		t.Errorf("TaskStatus for 1 is incorrect, got: %v %v, want: %v %v", v.validFlag, v.stat.Status, true, secondparty.OperationStatusProcessing)
 	}
 }
 
@@ -136,7 +136,7 @@ func TestSecondPartyManager_taskStatusMapSyncer_updateAndSucceed(t *testing.T) {
 	}
 	v := secondPartyManager.syncedOperationStatusMap[TestOperationID]
 	if !v.validFlag || v.stat.Status != secondparty.OperationStatusFinished {
-		t.Errorf("TaskStatus for 1 is incorrect, got: %v %v, want: %v %v", v.validFlag, v.stat.Status, true, TaskStatusFinished)
+		t.Errorf("TaskStatus for 1 is incorrect, got: %v %v, want: %v %v", v.validFlag, v.stat.Status, true, secondparty.OperationStatusFinished)
 	}
 }
 

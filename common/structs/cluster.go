@@ -34,6 +34,13 @@ type ClusterResourceParameterComputeResource struct {
 	Count        int    `json:"count"`
 }
 
+func (p *ClusterResourceParameterComputeResource) Equal(zone, spec, diskType string, diskCapacity int) bool {
+	return p.Zone == zone &&
+		p.DiskType == diskType &&
+		p.DiskCapacity == diskCapacity &&
+		p.Spec == spec
+}
+
 //ClusterResourceParameterCompute Component resource parameters when creating a cluster, including: compute resources, storage resources
 type ClusterResourceParameterCompute struct {
 	Type     string                                    `json:"componentType"` //TiDB/TiKV/PD/TiFlash/TiCDC/DM-Master/DM-Worker
@@ -72,6 +79,7 @@ type ClusterInfo struct {
 	DBUser                   string    `json:"dbUser"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
 	Tags                     []string  `json:"tags"`
 	TLS                      bool      `json:"tls"`
+	Region                   string    `json:"region"`
 	Status                   string    `json:"status"`
 	Role                     string    `json:"role"`
 	Copies                   int       `json:"copies"`                                 //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
@@ -84,7 +92,6 @@ type ClusterInfo struct {
 	IntranetConnectAddresses []string  `json:"intranetConnectAddresses"`
 	ExtranetConnectAddresses []string  `json:"extranetConnectAddresses"`
 	Whitelist                []string  `json:"whitelist"`
-	PortList                 []int     `json:"portList"`
 	CpuUsage                 Usage     `json:"cpuUsage"`
 	MemoryUsage              Usage     `json:"memoryUsage"`
 	StorageUsage             Usage     `json:"storageUsage"`
@@ -103,7 +110,7 @@ type ClusterInstanceInfo struct {
 	Status       string          `json:"status"`
 	HostID       string          `json:"hostID"`
 	Addresses    []string        `json:"addresses"`
-	Ports        []string        `json:"ports"`
+	Ports        []int32         `json:"ports"`
 	CpuUsage     Usage           `json:"cpuUsage"`
 	MemoryUsage  Usage           `json:"memoryUsage"`
 	StorageUsage Usage           `json:"storageUsage"`
@@ -219,4 +226,11 @@ type ClusterParameterInfo struct {
 	Note           string             `json:"note" example:"binlog cache size"`
 	CreatedAt      int64              `json:"createTime" example:"1636698675"`
 	UpdatedAt      int64              `json:"updateTime" example:"1636698675"`
+}
+
+type ResourceStockCheckResult struct {
+	Type string `json:"componentType"`
+	Name string `json:"componentName"`
+	ClusterResourceParameterComputeResource
+	Enough bool `json:"enough"`
 }

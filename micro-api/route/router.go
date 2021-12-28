@@ -20,7 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/backuprestore"
-	changefeed2 "github.com/pingcap-inc/tiem/micro-api/controller/cluster/changefeed"
+	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/changefeed"
 	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
 	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
@@ -96,7 +96,9 @@ func Route(g *gin.Engine) {
 			cluster.POST("/:clusterId/stop", clusterApi.Stop)
 			cluster.POST("/restore", backuprestore.Restore)
 			cluster.GET("/:clusterId/dashboard", clusterApi.GetDashboardInfo)
-			cluster.GET("/:clusterId/monitor", clusterApi.DescribeMonitor)
+			cluster.GET("/:clusterId/monitor", clusterApi.GetMonitorInfo)
+
+			cluster.GET("/:clusterId/log", logApi.QueryClusterLog)
 
 			// Scale cluster
 			cluster.POST("/:clusterId/scale-out", clusterApi.ScaleOut)
@@ -113,7 +115,6 @@ func Route(g *gin.Engine) {
 			// Backup Strategy
 			cluster.GET("/:clusterId/strategy", backuprestore.GetBackupStrategy)
 			cluster.PUT("/:clusterId/strategy", backuprestore.SaveBackupStrategy)
-			// cluster.DELETE("/:clusterId/strategy", instanceapi.DeleteBackupStrategy)
 
 			//Import and Export
 			cluster.POST("/import", importexport.ImportData)
@@ -147,15 +148,15 @@ func Route(g *gin.Engine) {
 			changeFeeds.Use(interceptor.VerifyIdentity)
 			changeFeeds.Use(interceptor.AuditLog())
 
-			changeFeeds.POST("/", changefeed2.Create)
-			changeFeeds.POST("/:changeFeedTaskId/pause", changefeed2.Pause)
-			changeFeeds.POST("/:changeFeedTaskId/resume", changefeed2.Resume)
-			changeFeeds.POST("/:changeFeedTaskId/update", changefeed2.Update)
+			changeFeeds.POST("/", changefeed.Create)
+			changeFeeds.POST("/:changeFeedTaskId/pause", changefeed.Pause)
+			changeFeeds.POST("/:changeFeedTaskId/resume", changefeed.Resume)
+			changeFeeds.POST("/:changeFeedTaskId/update", changefeed.Update)
 
-			changeFeeds.DELETE("/:changeFeedTaskId", changefeed2.Delete)
+			changeFeeds.DELETE("/:changeFeedTaskId", changefeed.Delete)
 
-			changeFeeds.GET("/:changeFeedTaskId", changefeed2.Detail)
-			changeFeeds.GET("/", changefeed2.Query)
+			changeFeeds.GET("/:changeFeedTaskId/", changefeed.Detail)
+			changeFeeds.GET("/", changefeed.Query)
 		}
 
 		flowworks := apiV1.Group("/workflow")
@@ -178,12 +179,6 @@ func Route(g *gin.Engine) {
 			host.GET("stocks", warehouseApi.GetStocks)
 			host.PUT("host-reserved", resourceApi.UpdateHostReserved)
 			host.PUT("host-status", resourceApi.UpdateHostStatus)
-		}
-
-		log := apiV1.Group("/logs")
-		{
-			log.Use(interceptor.VerifyIdentity)
-			log.GET("/tidb/:clusterId", logApi.QueryClusterLog)
 		}
 
 		paramGroups := apiV1.Group("/param-groups")

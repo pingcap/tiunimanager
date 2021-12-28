@@ -19,7 +19,14 @@ import (
 	"context"
 
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/structs"
+	dbCommon "github.com/pingcap-inc/tiem/models/common"
+	mm "github.com/pingcap-inc/tiem/models/resource/management"
+	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
+	"github.com/pingcap-inc/tiem/models/user/account"
+	"github.com/pingcap-inc/tiem/models/user/identification"
+	"github.com/pingcap-inc/tiem/models/user/tenant"
+
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
@@ -53,11 +60,14 @@ type database struct {
 	configReaderWriter               config.ReaderWriter
 	secondPartyOperationReaderWriter secondparty.ReaderWriter
 	resourceReaderWriter             resource.ReaderWriter
+	tenantReaderWriter               tenant.ReaderWriter
+	accountReaderWriter              account.ReaderWriter
+	tokenReaderWriter                identification.ReaderWriter
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
-	dbFile := fw.GetDataDir() + common.DBDirPrefix + common.DatabaseFileName
-	logins := framework.LogForkFile(common.LogFileSystem)
+	dbFile := fw.GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName
+	logins := framework.LogForkFile(constants.LogFileSystem)
 	// todo tidb?
 	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 
@@ -86,34 +96,47 @@ func Open(fw *framework.BaseFramework, reentry bool) error {
 	return nil
 }
 
-func (p *database) initTables() (err error) {
-	p.addTable(new(changefeed.ChangeFeedTask))
-	p.addTable(new(workflow.WorkFlow))
-	p.addTable(new(workflow.WorkFlowNode))
-	p.addTable(new(upgrade.ProductUpgradePath))
-	p.addTable(new(management.Cluster))
-	p.addTable(new(management.ClusterInstance))
-	p.addTable(new(management.ClusterRelation))
-	p.addTable(new(management.ClusterTopologySnapshot))
-	p.addTable(new(importexport.DataTransportRecord))
-	p.addTable(new(backuprestore.BackupRecord))
-	p.addTable(new(backuprestore.BackupStrategy))
-	p.addTable(new(config.SystemConfig))
-	p.addTable(new(secondparty.SecondPartyOperation))
-	p.addTable(new(parametergroup.Parameter))
-	p.addTable(new(parametergroup.ParameterGroup))
-	p.addTable(new(parametergroup.ParameterGroupMapping))
-	p.addTable(new(parameter.ClusterParameterMapping))
-
-	// init tables for resource manager
-	err = p.resourceReaderWriter.InitTables(context.TODO())
-	if err != nil {
-		return err
+func (p *database) migrateStream(models ...interface{}) (err error) {
+	for _, model := range models {
+		err = p.base.AutoMigrate(model)
+		if err != nil {
+			framework.LogForkFile(constants.LogFileSystem).Errorf("init table failed, model = %v, err = %s", models, err.Error())
+			return err
+		}
 	}
-
-	// other tables
-
 	return nil
+}
+
+func (p *database) initTables() (err error) {
+	return p.migrateStream(
+		new(changefeed.ChangeFeedTask),
+		new(workflow.WorkFlow),
+		new(workflow.WorkFlowNode),
+		new(upgrade.ProductUpgradePath),
+		new(management.Cluster),
+		new(management.ClusterInstance),
+		new(management.ClusterRelation),
+		new(management.ClusterTopologySnapshot),
+		new(importexport.DataTransportRecord),
+		new(backuprestore.BackupRecord),
+		new(backuprestore.BackupStrategy),
+		new(config.SystemConfig),
+		new(secondparty.SecondPartyOperation),
+		new(parametergroup.Parameter),
+		new(parametergroup.ParameterGroup),
+		new(parametergroup.ParameterGroupMapping),
+		new(parameter.ClusterParameterMapping),
+		new(account.Account),
+		new(tenant.Tenant),
+		new(identification.Token),
+		new(resourcePool.Host),
+		new(resourcePool.Disk),
+		new(resourcePool.Label),
+		new(mm.UsedCompute),
+		new(mm.UsedPort),
+		new(mm.UsedDisk),
+	)
+
 }
 
 func (p *database) initReaderWriters() {
@@ -128,29 +151,44 @@ func (p *database) initReaderWriters() {
 	defaultDb.configReaderWriter = config.NewConfigReadWrite(defaultDb.base)
 	defaultDb.secondPartyOperationReaderWriter = secondparty.NewGormSecondPartyOperationReadWrite(defaultDb.base)
 	defaultDb.clusterReaderWriter = management.NewClusterReadWrite(defaultDb.base)
+	defaultDb.tenantReaderWriter = tenant.NewTenantReadWrite(defaultDb.base)
+	defaultDb.accountReaderWriter = account.NewAccountReadWrite(defaultDb.base)
+	defaultDb.tokenReaderWriter = identification.NewTokenReadWrite(defaultDb.base)
 }
 
 func (p *database) initSystemData() {
-	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStorageType, ConfigValue: string(constants.StorageTypeS3)})
-	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStoragePath, ConfigValue: constants.DefaultBackupStoragePath})
-	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3AccessKey, ConfigValue: constants.DefaultBackupS3AccessKey})
-	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3SecretAccessKey, ConfigValue: constants.DefaultBackupS3SecretAccessKey})
-	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3Endpoint, ConfigValue: constants.DefaultBackupS3Endpoint})
-	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyExportShareStoragePath, ConfigValue: constants.DefaultExportPath})
-	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyImportShareStoragePath, ConfigValue: constants.DefaultImportPath})
-}
+	tenant, err := defaultDb.tenantReaderWriter.AddTenant(context.TODO(), "EM system administration", 1, 0)
 
-func (p *database) addTable(gormModel interface{}) error {
-	log := framework.LogForkFile(common.LogFileSystem)
-	if !p.base.Migrator().HasTable(gormModel) {
-		err := p.base.Migrator().CreateTable(gormModel)
-		if err != nil {
-			log.Errorf("create table failed, error : %v.", err)
-			return err
+	// todo determine if default data needed
+	if err == nil {
+		// system admin account
+		account := &account.Account{
+			Entity: dbCommon.Entity{
+				TenantId: tenant.ID,
+			},
+			Name: "admin",
 		}
-	}
+		account.GenSaltAndHash("admin")
+		defaultDb.accountReaderWriter.AddAccount(context.TODO(), tenant.ID, account.Name, account.Salt, account.FinalHash, 0)
 
-	return nil
+		// label
+		for _, v := range structs.DefaultLabelTypes {
+			labelRecord := new(resourcePool.Label)
+			labelRecord.ConstructLabelRecord(&v)
+			if err = defaultDb.base.Create(labelRecord).Error; err != nil {
+				return
+			}
+		}
+
+		// system config
+		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStorageType, ConfigValue: string(constants.StorageTypeS3)})
+		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStoragePath, ConfigValue: constants.DefaultBackupStoragePath})
+		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3AccessKey, ConfigValue: constants.DefaultBackupS3AccessKey})
+		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3SecretAccessKey, ConfigValue: constants.DefaultBackupS3SecretAccessKey})
+		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3Endpoint, ConfigValue: constants.DefaultBackupS3Endpoint})
+		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyExportShareStoragePath, ConfigValue: constants.DefaultExportPath})
+		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyImportShareStoragePath, ConfigValue: constants.DefaultImportPath})
+	}
 }
 
 func GetChangeFeedReaderWriter() changefeed.ReaderWriter {
@@ -234,6 +272,29 @@ func GetClusterParameterReaderWriter() parameter.ReaderWriter {
 
 func SetClusterParameterReaderWriter(rw parameter.ReaderWriter) {
 	defaultDb.clusterParameterReaderWriter = rw
+}
+
+func GetAccountReaderWriter() account.ReaderWriter {
+	return defaultDb.accountReaderWriter
+}
+
+func SetAccountReaderWriter(rw account.ReaderWriter) {
+	defaultDb.accountReaderWriter = rw
+}
+
+func GetTenantReaderWriter() tenant.ReaderWriter {
+	return defaultDb.tenantReaderWriter
+}
+
+func SetTenantReaderWriter(rw tenant.ReaderWriter) {
+	defaultDb.tenantReaderWriter = rw
+}
+func GetTokenReaderWriter() identification.ReaderWriter {
+	return defaultDb.tokenReaderWriter
+}
+
+func SetTokenReaderWriter(rw identification.ReaderWriter) {
+	defaultDb.tokenReaderWriter = rw
 }
 
 func MockDB() {

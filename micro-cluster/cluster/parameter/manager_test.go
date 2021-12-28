@@ -120,7 +120,7 @@ func TestManager_UpdateClusterParameters(t *testing.T) {
 			},
 		},
 		Reboot: false,
-	})
+	}, true)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, resp)
 }

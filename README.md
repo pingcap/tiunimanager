@@ -5,7 +5,6 @@
 - library - Common components and resources.
 - micro-api - OpenAPI http handler.
 - micro-cluster - Core service.
-- micro-metadb - Client of go-micro service.
 - docs - Documentation.
 
 ## Build and Run TiEM
@@ -23,20 +22,14 @@ make test
 ### Run Service
 If you want to run the service locally, try the following commands, enjoy it!
 
-start metadb-server
-
-```shell
-$ ./bin/metadb-server --host=127.0.0.1 --registry-address=127.0.0.1:4101
-```
-
 start cluster-server
 ```shell
-$ ./bin/cluster-server --host=127.0.0.1 --metrics-port=4122 --registry-address=127.0.0.1:4101
+$ ./bin/cluster-server --host=127.0.0.1 --port=4101 --metrics-port=4104 --registry-address=127.0.0.1:4106 --elasticsearch-address=127.0.0.1:4108
 ```
 
 start openapi-server
 ```shell
-$ ./bin/openapi-server --host=127.0.0.1 --metrics-port=4123 --registry-address=127.0.0.1:4101 --elasticsearch-address=127.0.0.1:9200
+$ ./bin/openapi-server --host=127.0.0.1 --port=4100 --metrics-port=4103 --registry-address=127.0.0.1:4106
 ```
 
 ### Try it out

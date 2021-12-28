@@ -17,8 +17,7 @@ package backuprestore
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/errors"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
 	"time"
@@ -41,13 +40,13 @@ func (m *BRReadWrite) CreateBackupRecord(ctx context.Context, record *BackupReco
 
 func (m *BRReadWrite) UpdateBackupRecord(ctx context.Context, backupId string, status string, size uint64, backupTso uint64, endTime time.Time) (err error) {
 	if "" == backupId {
-		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "backup id cannot be empty")
 	}
 
 	record := &BackupRecord{}
 	err = m.DB(ctx).First(record, "id = ?", backupId).Error
 	if err != nil {
-		return framework.SimpleError(common.TIEM_BACKUP_RECORD_NOT_FOUND)
+		return err
 	}
 
 	db := m.DB(ctx).Model(record)
@@ -69,12 +68,12 @@ func (m *BRReadWrite) UpdateBackupRecord(ctx context.Context, backupId string, s
 
 func (m *BRReadWrite) GetBackupRecord(ctx context.Context, backupId string) (record *BackupRecord, err error) {
 	if "" == backupId {
-		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "backup id cannot be empty")
 	}
 	record = &BackupRecord{}
 	err = m.DB(ctx).First(record, "id = ?", backupId).Error
 	if err != nil {
-		return nil, framework.SimpleError(common.TIEM_BACKUP_RECORD_NOT_FOUND)
+		return nil, err
 	}
 	return record, err
 }
@@ -97,13 +96,13 @@ func (m *BRReadWrite) QueryBackupRecords(ctx context.Context, clusterId, backupI
 	if endTime > 0 {
 		query = query.Where("end_time <= ?", endTime)
 	}
-	err = query.Order("id desc").Count(&total).Offset(pageSize * (page - 1)).Limit(pageSize).Find(&records).Error
+	err = query.Order("created_at desc").Count(&total).Offset(pageSize * (page - 1)).Limit(pageSize).Find(&records).Error
 	return records, total, err
 }
 
 func (m *BRReadWrite) DeleteBackupRecord(ctx context.Context, backupId string) (err error) {
 	if "" == backupId {
-		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "backup id cannot be empty")
 	}
 	record := &BackupRecord{}
 	return m.DB(ctx).First(record, "id = ?", backupId).Delete(record).Error
@@ -114,20 +113,33 @@ func (m *BRReadWrite) CreateBackupStrategy(ctx context.Context, strategy *Backup
 }
 
 func (m *BRReadWrite) UpdateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (err error) {
-	return m.DB(ctx).Model(strategy).Save(strategy).Error
+	columnMap := make(map[string]interface{})
+	columnMap["backup_date"] = strategy.BackupDate
+	columnMap["start_hour"] = strategy.StartHour
+	columnMap["end_hour"] = strategy.EndHour
+	return m.DB(ctx).Model(strategy).Where("cluster_id = ?", strategy.ClusterID).Updates(columnMap).Error
+}
+
+func (m *BRReadWrite) SaveBackupStrategy(ctx context.Context, strategy *BackupStrategy) (*BackupStrategy, error) {
+	existStrategy, err := m.GetBackupStrategy(ctx, strategy.ClusterID)
+	if err != nil || existStrategy.ID == "" {
+		return m.CreateBackupStrategy(ctx, strategy)
+	} else {
+		return strategy, m.UpdateBackupStrategy(ctx, strategy)
+	}
 }
 
 func (m *BRReadWrite) GetBackupStrategy(ctx context.Context, clusterId string) (strategy *BackupStrategy, err error) {
 	if "" == clusterId {
-		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster id cannot be empty")
 	}
 
 	strategy = &BackupStrategy{}
 	err = m.DB(ctx).First(strategy, "cluster_id = ?", clusterId).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
-		return nil, framework.SimpleError(common.TIEM_BACKUP_STRATEGY_NOT_FOUND)
+		return nil, err
 	}
-	return strategy, err
+	return strategy, nil
 }
 
 func (m *BRReadWrite) QueryBackupStrategy(ctx context.Context, weekDay string, startHour uint32) (strategies []*BackupStrategy, err error) {
@@ -148,8 +160,15 @@ func (m *BRReadWrite) QueryBackupStrategy(ctx context.Context, weekDay string, s
 
 func (m *BRReadWrite) DeleteBackupStrategy(ctx context.Context, clusterId string) (err error) {
 	if "" == clusterId {
-		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster id cannot be empty")
 	}
-	strategy := &BackupStrategy{}
-	return m.DB(ctx).First(strategy, "cluster_id = ?", clusterId).Delete(strategy).Error
+	strategy, err := m.GetBackupStrategy(ctx, clusterId)
+	if err != nil {
+		return err
+	}
+	if strategy.ID == "" {
+		return nil
+	}
+
+	return m.DB(ctx).First(strategy, "cluster_id = ?", clusterId).Unscoped().Delete(strategy).Error
 }

@@ -41,7 +41,7 @@ type CreateClusterResp struct {
 
 // DeleteClusterReq Message for delete a new cluster
 type DeleteClusterReq struct {
-	ClusterID       string `json:"clusterID"`
+	ClusterID       string `json:"clusterID" swaggerignore:"true"`
 	AutoBackup      bool   `json:"autoBackup" form:"autoBackup"`
 	ClearBackupData bool   `json:"clearBackupData" form:"clearBackupData"`
 }
@@ -76,7 +76,7 @@ type RestartClusterResp struct {
 
 // ScaleInClusterReq Message for delete an instance in the cluster
 type ScaleInClusterReq struct {
-	ClusterID  string `json:"clusterId" form:"clusterId"`
+	ClusterID  string `json:"clusterId" form:"clusterId" swaggerignore:"true"`
 	InstanceID string `json:"instanceId"  form:"instanceId"`
 }
 
@@ -88,7 +88,7 @@ type ScaleInClusterResp struct {
 
 // ScaleOutClusterReq Message for cluster expansion operation
 type ScaleOutClusterReq struct {
-	ClusterID string `json:"clusterId" form:"clusterId"`
+	ClusterID string `json:"clusterId" form:"clusterId" swaggerignore:"true"`
 	structs.ClusterResourceInfo
 }
 
@@ -159,8 +159,8 @@ type TakeoverClusterReq struct {
 
 // TakeoverClusterResp Reply message for takeover a cluster
 type TakeoverClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
-	Clusters                      []structs.ClusterInfo `json:"clusters"`
+	Clusters     map[string]string `json:"clusters"`
+	FailedErrors map[string]string `json:"failed"`
 }
 
 // QueryClustersReq Query cluster list messages
@@ -204,7 +204,7 @@ type QueryMonitorInfoResp struct {
 
 // GetDashboardInfoReq Message to query the dashboard address information of a cluster
 type GetDashboardInfoReq struct {
-	ClusterID string `json:"clusterId" example:"abc"`
+	ClusterID string `json:"clusterId" example:"abc" swaggerignore:"true"`
 }
 
 // GetDashboardInfoResp Reply message for querying the dashboard address information of the cluster
@@ -216,13 +216,13 @@ type GetDashboardInfoResp struct {
 
 //QueryClusterLogReq Messages that query cluster log information can be filtered based on query criteria
 type QueryClusterLogReq struct {
-	ClusterID string `json:"clusterId"`
+	ClusterID string `json:"clusterId" swaggerignore:"true"`
 	Module    string `form:"module" example:"tidb"`
 	Level     string `form:"level" example:"warn"`
 	Ip        string `form:"ip" example:"127.0.0.1"`
 	Message   string `form:"message" example:"tidb log"`
-	StartTime string `form:"startTime" example:"2021-09-01 12:00:00"`
-	EndTime   string `form:"endTime" example:"2021-12-01 12:00:00"`
+	StartTime int64  `form:"startTime" example:"1630468800"`
+	EndTime   int64  `form:"endTime" example:"1638331200"`
 	structs.PageRequest
 }
 
@@ -233,7 +233,7 @@ type QueryClusterLogResp struct {
 }
 
 type QueryClusterParametersReq struct {
-	ClusterID string `json:"clusterId"`
+	ClusterID string `json:"clusterId" swaggerignore:"true"`
 	structs.PageRequest
 }
 
@@ -243,7 +243,7 @@ type QueryClusterParametersResp struct {
 }
 
 type UpdateClusterParametersReq struct {
-	ClusterID string                               `json:"clusterId"`
+	ClusterID string                               `json:"clusterId" swaggerignore:"true"`
 	Params    []structs.ClusterParameterSampleInfo `json:"params"`
 	Reboot    bool                                 `json:"reboot"`
 }
@@ -264,4 +264,16 @@ type InspectClusterParametersResp struct {
 	Instance     string                     `json:"instance" example:"172.16.5.23"`
 	RealValue    structs.ParameterRealValue `json:"realValue"`
 	InspectValue string                     `json:"inspectValue" example:"1"`
+}
+
+type PreviewClusterResp struct {
+	Region          string `json:"region" form:"region"`
+	CpuArchitecture string `json:"cpuArchitecture" form:"cpuArchitecture"`
+	ClusterType     string `json:"clusterType"`
+	ClusterVersion  string `json:"clusterVersion"`
+
+	ClusterName string `json:"clusterName"`
+
+	StockCheckResult  []structs.ResourceStockCheckResult `json:"stockCheckResult"`
+	CapabilityIndexes []structs.Index      `json:"capabilityIndexes"`
 }

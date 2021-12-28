@@ -18,17 +18,19 @@ package main
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/pingcap-inc/tiem/common/constants"
+
 	"github.com/pingcap-inc/tiem/file-server/service"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"time"
 
 	"github.com/asim/go-micro/v3"
 	"github.com/gin-gonic/gin"
 	_ "github.com/pingcap-inc/tiem/docs"
 	"github.com/pingcap-inc/tiem/file-server/interceptor"
 	"github.com/pingcap-inc/tiem/file-server/route"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/thirdparty/etcd_clientv2"
 )
@@ -64,34 +66,34 @@ func initGinEngine(d *framework.BaseFramework) error {
 	port := d.GetServiceMeta().ServicePort
 
 	addr := fmt.Sprintf(":%d", port)
-	// openapi-server service registry
+	// file-server service registry
 	serviceRegistry(d)
 
 	if d.GetClientArgs().EnableHttps {
 		g.Use(interceptor.TlsHandler(addr))
 		if err := g.RunTLS(addr, d.GetCertificateInfo().CertificateCrtFilePath, d.GetCertificateInfo().CertificateKeyFilePath); err != nil {
-			d.GetRootLogger().ForkFile(common.LogFileSystem).Fatal(err)
+			d.GetRootLogger().ForkFile(constants.LogFileSystem).Fatal(err)
 		}
 	} else {
 		if err := g.Run(addr); err != nil {
-			d.GetRootLogger().ForkFile(common.LogFileSystem).Fatal(err)
+			d.GetRootLogger().ForkFile(constants.LogFileSystem).Fatal(err)
 		}
 	}
 
 	return nil
 }
 
-// serviceRegistry registry openapi-server service
+// serviceRegistry registry file-server service
 func serviceRegistry(f *framework.BaseFramework) {
 	etcdClient := etcd_clientv2.InitEtcdClient(f.GetServiceMeta().RegistryAddress)
 	address := f.GetClientArgs().Host + f.GetServiceMeta().GetServiceAddress()
-	key := common.RegistryMicroServicePrefix + f.GetServiceMeta().ServiceName.ServerName() + "/" + address
-	// Register openapi-server every TTL-2 seconds, default TTL is 5s
+	key := "/micro/registry/" + f.GetServiceMeta().ServiceName.ServerName() + "/" + address
+	// Register file-server every TTL-2 seconds, default TTL is 5s
 	go func() {
 		for {
 			err := etcdClient.SetWithTtl(key, "{\"weight\":1, \"max_fails\":2, \"fail_timeout\":10}", 5)
 			if err != nil {
-				f.Log().Errorf("regitry file-server failed! error: %v", err)
+				framework.LogForkFile(constants.LogFileSystem).Errorf("regitry file-server failed! error: %v", err)
 			}
 			time.Sleep(time.Second * 3)
 		}
@@ -100,7 +102,7 @@ func serviceRegistry(f *framework.BaseFramework) {
 
 func defaultPortForLocal(f *framework.BaseFramework) error {
 	if f.GetServiceMeta().ServicePort <= 0 {
-		f.GetServiceMeta().ServicePort = common.DefaultMicroFilePort
+		f.GetServiceMeta().ServicePort = constants.DefaultMicroFilePort
 	}
 	return nil
 }

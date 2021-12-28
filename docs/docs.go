@@ -60,7 +60,7 @@ var doc = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "integer",
                         "name": "endTime",
                         "in": "query"
                     },
@@ -77,7 +77,7 @@ var doc = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "integer",
                         "name": "startTime",
                         "in": "query"
                     }
@@ -292,17 +292,14 @@ var doc = `{
                     },
                     {
                         "type": "integer",
+                        "description": "Current page location",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "Number of this request",
                         "name": "pageSize",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "total",
                         "in": "query"
                     }
                 ],
@@ -1030,7 +1027,8 @@ var doc = `{
                         "type": "string",
                         "example": "v5.0.0",
                         "name": "targetVersion",
-                        "in": "query"
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -1388,7 +1386,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/management.PreviewClusterRsp"
+                                            "$ref": "#/definitions/cluster.PreviewClusterResp"
                                         }
                                     }
                                 }
@@ -1934,6 +1932,115 @@ var doc = `{
                 }
             }
         },
+        "/clusters/{clusterId}/log": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query cluster log",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster log"
+                ],
+                "summary": "query cluster log",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1638331200,
+                        "name": "endTime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "127.0.0.1",
+                        "name": "ip",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "warn",
+                        "name": "level",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "tidb log",
+                        "name": "message",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "tidb",
+                        "name": "module",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Current page location",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of this request",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1630468800,
+                        "name": "startTime",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.QueryClusterLogResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/clusters/{clusterId}/monitor": {
             "get": {
                 "security": [
@@ -2020,11 +2127,6 @@ var doc = `{
                 ],
                 "summary": "query parameters of a cluster",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "name": "clusterId",
-                        "in": "query"
-                    },
                     {
                         "type": "integer",
                         "description": "Current page location",
@@ -2781,120 +2883,6 @@ var doc = `{
                     },
                     "403": {
                         "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/logs/tidb/{clusterId}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "search cluster log",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "logs"
-                ],
-                "summary": "search cluster log",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "clusterId",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "clusterId",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "2021-12-01 12:00:00",
-                        "name": "endTime",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "127.0.0.1",
-                        "name": "ip",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "warn",
-                        "name": "level",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "tidb log",
-                        "name": "message",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "tidb",
-                        "name": "module",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Current page location",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Number of this request",
-                        "name": "pageSize",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "2021-09-01 12:00:00",
-                        "name": "startTime",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.ResultWithPage"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/cluster.QueryClusterLogResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/controller.CommonResult"
                         }
@@ -3968,7 +3956,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/identification.LoginInfo"
+                            "$ref": "#/definitions/message.LoginReq"
                         }
                     }
                 ],
@@ -3984,7 +3972,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/identification.UserIdentity"
+                                            "$ref": "#/definitions/message.LoginResp"
                                         }
                                     }
                                 }
@@ -4036,7 +4024,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/identification.UserIdentity"
+                                            "$ref": "#/definitions/message.LogoutResp"
                                         }
                                     }
                                 }
@@ -4217,7 +4205,7 @@ var doc = `{
                 "summary": "show details of a flow work",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "flow work id",
                         "name": "workFlowId",
                         "in": "path",
@@ -4376,6 +4364,10 @@ var doc = `{
         },
         "cluster.ClusterUpgradeReq": {
             "type": "object",
+            "required": [
+                "targetVersion",
+                "upgradeType"
+            ],
             "properties": {
                 "configs": {
                     "type": "array",
@@ -4419,9 +4411,6 @@ var doc = `{
                     "type": "string",
                     "example": "CLUSTER_ID_IN_TIEM__22"
                 },
-                "createTime": {
-                    "type": "string"
-                },
                 "downstream": {
                     "type": "object"
                 },
@@ -4433,10 +4422,6 @@ var doc = `{
                         "mysql"
                     ],
                     "example": "tidb"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
                 },
                 "name": {
                     "type": "string",
@@ -4454,21 +4439,6 @@ var doc = `{
                 "startTS": {
                     "type": "integer",
                     "example": 415241823337054209
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "Initial",
-                        "Normal",
-                        "Stopped",
-                        "Finished",
-                        "Error",
-                        "Failed"
-                    ],
-                    "example": "1"
-                },
-                "updateTime": {
-                    "type": "string"
                 }
             }
         },
@@ -4548,9 +4518,6 @@ var doc = `{
         "cluster.DeleteBackupDataReq": {
             "type": "object",
             "properties": {
-                "backupId": {
-                    "type": "string"
-                },
                 "backupMode": {
                     "type": "string"
                 },
@@ -4570,16 +4537,16 @@ var doc = `{
                     "example": "TASK_ID_IN_TIEM____22"
                 },
                 "status": {
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        0,
-                        1,
-                        2,
-                        3,
-                        4,
-                        5
+                        "Initial",
+                        "Normal",
+                        "Stopped",
+                        "Finished",
+                        "Error",
+                        "Failed"
                     ],
-                    "example": 1
+                    "example": "Normal"
                 }
             }
         },
@@ -4591,9 +4558,6 @@ var doc = `{
                 },
                 "clearBackupData": {
                     "type": "boolean"
-                },
-                "clusterID": {
-                    "type": "string"
                 }
             }
         },
@@ -4670,7 +4634,7 @@ var doc = `{
                         "Error",
                         "Failed"
                     ],
-                    "example": "1"
+                    "example": "Normal"
                 },
                 "unsteady": {
                     "type": "boolean",
@@ -4852,16 +4816,48 @@ var doc = `{
             "type": "object",
             "properties": {
                 "status": {
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        0,
-                        1,
-                        2,
-                        3,
-                        4,
-                        5
+                        "Initial",
+                        "Normal",
+                        "Stopped",
+                        "Finished",
+                        "Error",
+                        "Failed"
                     ],
-                    "example": 1
+                    "example": "Normal"
+                }
+            }
+        },
+        "cluster.PreviewClusterResp": {
+            "type": "object",
+            "properties": {
+                "capabilityIndexes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.Index"
+                    }
+                },
+                "clusterName": {
+                    "type": "string"
+                },
+                "clusterType": {
+                    "type": "string"
+                },
+                "clusterVersion": {
+                    "type": "string"
+                },
+                "cpuArchitecture": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "stockCheckResult": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ResourceStockCheckResult"
+                    }
                 }
             }
         },
@@ -4937,7 +4933,7 @@ var doc = `{
                         "Error",
                         "Failed"
                     ],
-                    "example": "1"
+                    "example": "Normal"
                 },
                 "unsteady": {
                     "type": "boolean",
@@ -5134,25 +5130,22 @@ var doc = `{
             "type": "object",
             "properties": {
                 "status": {
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        0,
-                        1,
-                        2,
-                        3,
-                        4,
-                        5
+                        "Initial",
+                        "Normal",
+                        "Stopped",
+                        "Finished",
+                        "Error",
+                        "Failed"
                     ],
-                    "example": 1
+                    "example": "Normal"
                 }
             }
         },
         "cluster.SaveBackupStrategyReq": {
             "type": "object",
             "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
                 "strategy": {
                     "$ref": "#/definitions/structs.BackupStrategy"
                 }
@@ -5164,9 +5157,6 @@ var doc = `{
         "cluster.ScaleInClusterReq": {
             "type": "object",
             "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
                 "instanceId": {
                     "type": "string"
                 }
@@ -5187,9 +5177,6 @@ var doc = `{
         "cluster.ScaleOutClusterReq": {
             "type": "object",
             "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
                 "instanceResource": {
                     "type": "array",
                     "items": {
@@ -5257,14 +5244,16 @@ var doc = `{
             "type": "object",
             "properties": {
                 "clusters": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.ClusterInfo"
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
                     }
                 },
-                "workFlowId": {
-                    "description": "Asynchronous task workflow ID",
-                    "type": "string"
+                "failed": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -5312,13 +5301,6 @@ var doc = `{
         "cluster.UpdateChangeFeedTaskReq": {
             "type": "object",
             "properties": {
-                "clusterId": {
-                    "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
-                },
-                "createTime": {
-                    "type": "string"
-                },
                 "downstream": {
                     "type": "object"
                 },
@@ -5330,10 +5312,6 @@ var doc = `{
                         "mysql"
                     ],
                     "example": "tidb"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
                 },
                 "name": {
                     "type": "string",
@@ -5347,11 +5325,12 @@ var doc = `{
                     "example": [
                         "*.*"
                     ]
-                },
-                "startTS": {
-                    "type": "integer",
-                    "example": 415241823337054209
-                },
+                }
+            }
+        },
+        "cluster.UpdateChangeFeedTaskResp": {
+            "type": "object",
+            "properties": {
                 "status": {
                     "type": "string",
                     "enum": [
@@ -5362,36 +5341,13 @@ var doc = `{
                         "Error",
                         "Failed"
                     ],
-                    "example": "1"
-                },
-                "updateTime": {
-                    "type": "string"
-                }
-            }
-        },
-        "cluster.UpdateChangeFeedTaskResp": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1,
-                        2,
-                        3,
-                        4,
-                        5
-                    ],
-                    "example": 1
+                    "example": "Normal"
                 }
             }
         },
         "cluster.UpdateClusterParametersReq": {
             "type": "object",
             "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
                 "params": {
                     "type": "array",
                     "items": {
@@ -5458,31 +5414,6 @@ var doc = `{
                 },
                 "page": {
                     "$ref": "#/definitions/controller.Page"
-                }
-            }
-        },
-        "identification.LoginInfo": {
-            "type": "object",
-            "properties": {
-                "userName": {
-                    "type": "string"
-                },
-                "userPassword": {
-                    "type": "string"
-                }
-            }
-        },
-        "identification.UserIdentity": {
-            "type": "object",
-            "properties": {
-                "tenantId": {
-                    "type": "string"
-                },
-                "token": {
-                    "type": "string"
-                },
-                "userName": {
-                    "type": "string"
                 }
             }
         },
@@ -5613,118 +5544,10 @@ var doc = `{
                 }
             }
         },
-        "management.PreviewClusterRsp": {
-            "type": "object",
-            "properties": {
-                "capabilityIndexes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/management.ServiceCapabilityIndex"
-                    }
-                },
-                "clusterName": {
-                    "type": "string"
-                },
-                "clusterType": {
-                    "type": "string"
-                },
-                "clusterVersion": {
-                    "type": "string"
-                },
-                "cpuArchitecture": {
-                    "type": "string"
-                },
-                "dbPassword": {
-                    "type": "string"
-                },
-                "exclusive": {
-                    "type": "boolean"
-                },
-                "recoverInfo": {
-                    "$ref": "#/definitions/management.RecoverInfo"
-                },
-                "region": {
-                    "type": "string"
-                },
-                "stockCheckResult": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/management.StockCheckItem"
-                    }
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "tls": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "management.RecoverInfo": {
-            "type": "object",
-            "properties": {
-                "backupRecordId": {
-                    "type": "integer"
-                },
-                "sourceClusterId": {
-                    "type": "string"
-                }
-            }
-        },
-        "management.ServiceCapabilityIndex": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "unit": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "object"
-                }
-            }
-        },
-        "management.StockCheckItem": {
-            "type": "object",
-            "properties": {
-                "component": {
-                    "$ref": "#/definitions/knowledge.ClusterComponent"
-                },
-                "count": {
-                    "type": "integer"
-                },
-                "cpuArchitecture": {
-                    "type": "string"
-                },
-                "enough": {
-                    "type": "boolean"
-                },
-                "region": {
-                    "type": "string"
-                },
-                "specCode": {
-                    "type": "string"
-                },
-                "zoneCode": {
-                    "type": "string"
-                }
-            }
-        },
         "message.ApplyParameterGroupReq": {
             "type": "object",
             "properties": {
                 "clusterId": {
-                    "type": "string",
-                    "example": "123"
-                },
-                "paramGroupId": {
                     "type": "string",
                     "example": "123"
                 },
@@ -5760,9 +5583,6 @@ var doc = `{
                 "note": {
                     "type": "string",
                     "example": "copy param group"
-                },
-                "paramGroupId": {
-                    "type": "string"
                 }
             }
         },
@@ -5953,12 +5773,7 @@ var doc = `{
             "type": "object"
         },
         "message.DeleteImportExportRecordReq": {
-            "type": "object",
-            "properties": {
-                "recordId": {
-                    "type": "string"
-                }
-            }
+            "type": "object"
         },
         "message.DeleteImportExportRecordResp": {
             "type": "object",
@@ -6064,6 +5879,39 @@ var doc = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "message.LoginReq": {
+            "type": "object",
+            "properties": {
+                "userName": {
+                    "type": "string"
+                },
+                "userPassword": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.LoginResp": {
+            "type": "object",
+            "properties": {
+                "tenantId": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.LogoutResp": {
+            "type": "object",
+            "properties": {
+                "accountName": {
+                    "type": "string"
                 }
             }
         },
@@ -6236,9 +6084,6 @@ var doc = `{
                     "type": "string",
                     "example": "default param group"
                 },
-                "paramGroupId": {
-                    "type": "string"
-                },
                 "params": {
                     "type": "array",
                     "items": {
@@ -6389,11 +6234,8 @@ var doc = `{
                 "memoryUsage": {
                     "$ref": "#/definitions/structs.Usage"
                 },
-                "portList": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
+                "region": {
+                    "type": "string"
                 },
                 "role": {
                     "type": "string"
@@ -6460,7 +6302,7 @@ var doc = `{
                 "ports": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "type": "integer"
                     }
                 },
                 "role": {
@@ -6749,6 +6591,12 @@ var doc = `{
         },
         "structs.ClusterUpgradeVersionConfigItem": {
             "type": "object",
+            "required": [
+                "instanceType",
+                "name",
+                "paramId",
+                "value"
+            ],
             "properties": {
                 "instanceType": {
                     "type": "string",
@@ -6972,6 +6820,23 @@ var doc = `{
                 }
             }
         },
+        "structs.Index": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "object"
+                }
+            }
+        },
         "structs.ParameterGroupParameterInfo": {
             "type": "object",
             "properties": {
@@ -7112,6 +6977,10 @@ var doc = `{
         },
         "structs.ProductUpgradePathItem": {
             "type": "object",
+            "required": [
+                "upgradeType",
+                "versions"
+            ],
             "properties": {
                 "upgradeType": {
                     "type": "string",
@@ -7141,6 +7010,16 @@ var doc = `{
         },
         "structs.ProductUpgradeVersionConfigDiffItem": {
             "type": "object",
+            "required": [
+                "currentVal",
+                "instanceType",
+                "name",
+                "paramId",
+                "range",
+                "suggestVal",
+                "type",
+                "unit"
+            ],
             "properties": {
                 "currentVal": {
                     "type": "string",
@@ -7175,6 +7054,52 @@ var doc = `{
                 "suggestVal": {
                     "type": "string",
                     "example": "30"
+                },
+                "type": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                    ],
+                    "example": 0
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "mb"
+                }
+            }
+        },
+        "structs.ResourceStockCheckResult": {
+            "type": "object",
+            "properties": {
+                "componentName": {
+                    "type": "string"
+                },
+                "componentType": {
+                    "type": "string"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "diskCapacity": {
+                    "type": "integer"
+                },
+                "diskType": {
+                    "description": "NVMeSSD/SSD/SATA",
+                    "type": "string"
+                },
+                "enough": {
+                    "type": "boolean"
+                },
+                "specCode": {
+                    "description": "4C8G/8C16G ?",
+                    "type": "string"
+                },
+                "zoneCode": {
+                    "type": "string"
                 }
             }
         },
@@ -7215,7 +7140,7 @@ var doc = `{
         "structs.WorkFlowInfo": {
             "type": "object",
             "properties": {
-                "BizId": {
+                "bizId": {
                     "type": "string"
                 },
                 "createTime": {
@@ -7224,10 +7149,10 @@ var doc = `{
                 "deleteTime": {
                     "type": "string"
                 },
-                "flowWorkName": {
+                "id": {
                     "type": "string"
                 },
-                "id": {
+                "name": {
                     "type": "string"
                 },
                 "status": {
@@ -7311,7 +7236,7 @@ type swaggerInfo struct {
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
 	Version:     "1.0",
-	Host:        "localhost:4116",
+	Host:        "localhost:4100",
 	BasePath:    "/api/v1/",
 	Schemes:     []string{},
 	Title:       "TiEM UI API",

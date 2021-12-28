@@ -17,6 +17,7 @@ package changefeed
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/common/constants"
 )
 
 type ReaderWriter interface {
@@ -73,7 +74,7 @@ type ReaderWriter interface {
 	// @Parameter taskId
 	// @Parameter targetStatus
 	// @return error if task non-existent or unlocked
-	UnlockStatus(ctx context.Context, taskId string, targetStatus string) error
+	UnlockStatus(ctx context.Context, taskId string, targetStatus constants.ChangeFeedStatus) error
 
 	// UpdateConfig
 	// @Description: update task config with a template

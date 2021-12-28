@@ -78,7 +78,7 @@ func TestGetTraceIDFromContext(t *testing.T) {
 }
 
 func TestNewJaegerTracer(t *testing.T) {
-	_, _, err := NewJaegerTracer("tiem", "127.0.0.1:999")
+	_, _, err := NewJaegerTracer("em", "127.0.0.1:999")
 	assert.NoError(t, err)
 }
 
@@ -142,4 +142,32 @@ func Test_GetStringValuesFromContext(t *testing.T) {
 	assert.Equal(t, userID, GetUserIDFromContext(ctx))
 	assert.Equal(t, userName, GetUserNameFromContext(ctx))
 	assert.Equal(t, tenantID, GetTenantIDFromContext(ctx))
+}
+
+func Test_NewBackgroundMicroCtx(t *testing.T) {
+	c := &gin.Context{}
+	traceID := "traceID"
+	userID := "userID"
+	userName := "userName"
+	tenantID := "tenantID"
+	c.Set(TiEM_X_TRACE_ID_KEY, traceID)
+	c.Set(TiEM_X_USER_ID_KEY, userID)
+	c.Set(TiEM_X_USER_NAME_KEY, userName)
+	c.Set(TiEM_X_TENANT_ID_KEY, tenantID)
+	assert.Equal(t, traceID, GetTraceIDFromContext(c))
+	assert.Equal(t, userID, GetUserIDFromContext(c))
+	assert.Equal(t, userName, GetUserNameFromContext(c))
+	assert.Equal(t, tenantID, GetTenantIDFromContext(c))
+	ctx := NewMicroCtxFromGinCtx(c)
+	assert.Equal(t, traceID, GetTraceIDFromContext(ctx))
+	assert.Equal(t, userID, GetUserIDFromContext(ctx))
+	assert.Equal(t, userName, GetUserNameFromContext(ctx))
+	assert.Equal(t, tenantID, GetTenantIDFromContext(ctx))
+	newCtxWithSameTraceID := NewBackgroundMicroCtx(ctx, false)
+	assert.Equal(t, traceID, GetTraceIDFromContext(newCtxWithSameTraceID))
+	newCtxWithDifferentTraceID := NewBackgroundMicroCtx(ctx, true)
+	assert.NotEqual(t, traceID, GetTraceIDFromContext(newCtxWithDifferentTraceID))
+	assert.NotEqual(t, traceID, NewBackgroundMicroCtx(ctx, false))
+	assert.NotEqual(t, traceID, NewBackgroundMicroCtx(ctx, true))
+	assert.NotEqual(t, "", NewBackgroundMicroCtx(ctx, false))
 }

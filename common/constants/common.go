@@ -24,8 +24,8 @@
 package constants
 
 import (
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"time"
 )
 
 //System log-related constants
@@ -53,11 +53,11 @@ const (
 
 // micro service default port
 const (
-	DefaultMicroMetaDBPort  int = 4100
-	DefaultMicroClusterPort int = 4110
-	DefaultMicroApiPort     int = 4116
-	DefaultMicroFilePort    int = 4118
-	DefaultMetricsPort      int = 4121
+	DefaultMicroMetaDBPort  int = 4099
+	DefaultMicroClusterPort int = 4101
+	DefaultMicroApiPort     int = 4100
+	DefaultMicroFilePort    int = 4102
+	DefaultMetricsPort      int = 4103
 )
 
 type EMProductIDType string
@@ -73,10 +73,16 @@ func ValidProductID(p string) error {
 	if p == string(EMProductIDTiDB) || p == string(EMProductIDDataMigration) || p == string(EMProductIDEnterpriseManager) {
 		return nil
 	}
-	return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_PRODUCT_NAME, "valid product name: [%s|%s|%s]", string(EMProductIDTiDB), string(EMProductIDDataMigration), string(EMProductIDEnterpriseManager))
+	return errors.NewEMErrorf(errors.TIEM_RESOURCE_INVALID_PRODUCT_NAME, "valid product name: [%s|%s|%s]", string(EMProductIDTiDB), string(EMProductIDDataMigration), string(EMProductIDEnterpriseManager))
 }
 
 type EMProductComponentIDType string
+
+var ParasiteComponentIDs = []EMProductComponentIDType{
+	ComponentIDGrafana,
+	ComponentIDPrometheus,
+	ComponentIDAlertManger,
+}
 
 //Definition of product component ID provided by Enterprise manager
 const (
@@ -155,3 +161,5 @@ const (
 const (
 	MaxBatchQueryDataNumber int = 512
 )
+
+const DefaultTokenValidPeriod time.Duration = 4 * time.Hour

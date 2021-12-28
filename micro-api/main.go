@@ -21,6 +21,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/pingcap-inc/tiem/common/constants"
+
 	"github.com/gin-contrib/cors"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
@@ -35,7 +37,6 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/pingcap-inc/tiem/docs"
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	"github.com/pingcap-inc/tiem/micro-api/route"
@@ -51,7 +52,7 @@ import (
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host localhost:4116
+// @host localhost:4100
 // @BasePath /api/v1/
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
@@ -100,11 +101,11 @@ func initGinEngine(d *framework.BaseFramework) error {
 	if d.GetClientArgs().EnableHttps {
 		g.Use(interceptor.TlsHandler(addr))
 		if err := g.RunTLS(addr, d.GetCertificateInfo().CertificateCrtFilePath, d.GetCertificateInfo().CertificateKeyFilePath); err != nil {
-			d.GetRootLogger().ForkFile(common.LogFileSystem).Fatal(err)
+			d.GetRootLogger().ForkFile(constants.LogFileSystem).Fatal(err)
 		}
 	} else {
 		if err := g.Run(addr); err != nil {
-			d.GetRootLogger().ForkFile(common.LogFileSystem).Fatal(err)
+			d.GetRootLogger().ForkFile(constants.LogFileSystem).Fatal(err)
 		}
 	}
 
@@ -128,13 +129,13 @@ func corsConfig() cors.Config {
 func serviceRegistry(f *framework.BaseFramework) {
 	etcdClient := etcd_clientv2.InitEtcdClient(f.GetServiceMeta().RegistryAddress)
 	address := f.GetClientArgs().Host + f.GetServiceMeta().GetServiceAddress()
-	key := common.RegistryMicroServicePrefix + f.GetServiceMeta().ServiceName.ServerName() + "/" + address
+	key := "/micro/registry/" + f.GetServiceMeta().ServiceName.ServerName() + "/" + address
 	// Register openapi-server every TTL-2 seconds, default TTL is 5s
 	go func() {
 		for {
 			err := etcdClient.SetWithTtl(key, "{\"weight\":1, \"max_fails\":2, \"fail_timeout\":10}", 5)
 			if err != nil {
-				framework.LogForkFile(common.LogFileSystem).Errorf("regitry openapi-server failed! error: %v", err)
+				framework.LogForkFile(constants.LogFileSystem).Errorf("regitry openapi-server failed! error: %v", err)
 			}
 			time.Sleep(time.Second * 3)
 		}
@@ -147,7 +148,7 @@ func loadKnowledge(f *framework.BaseFramework) error {
 
 func defaultPortForLocal(f *framework.BaseFramework) error {
 	if f.GetServiceMeta().ServicePort <= 0 {
-		f.GetServiceMeta().ServicePort = common.DefaultMicroApiPort
+		f.GetServiceMeta().ServicePort = constants.DefaultMicroApiPort
 	}
 	return nil
 }

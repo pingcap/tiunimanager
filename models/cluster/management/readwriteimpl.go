@@ -19,7 +19,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
@@ -30,7 +31,18 @@ type ClusterReadWrite struct {
 }
 
 func (g *ClusterReadWrite) Create(ctx context.Context, cluster *Cluster) (*Cluster, error) {
-	return cluster, g.DB(ctx).Create(cluster).Error
+	err := g.DB(ctx).Create(cluster).Error
+
+	if err != nil {
+		// duplicated name
+		existOrError := g.DB(ctx).Model(&Cluster{}).Where("name = ?", cluster.Name).First(&Cluster{}).Error
+		if existOrError == nil {
+			err = errors.NewEMErrorf(errors.TIEM_DUPLICATED_NAME, "%s:%s", errors.TIEM_DUPLICATED_NAME.Explain(), cluster.Name)
+		} else {
+			err = dbCommon.WrapDBError(err)
+		}
+	}
+	return cluster, err
 }
 
 func (g *ClusterReadWrite) Delete(ctx context.Context, clusterID string) (err error) {
@@ -46,20 +58,20 @@ func (g *ClusterReadWrite) DeleteInstance(ctx context.Context, ID string) error 
 	instance := &ClusterInstance{}
 	err := g.DB(ctx).First(instance, "id = ?", ID).Error
 	if err != nil {
-		return framework.WrapError(common.TIEM_INSTANCE_NOT_FOUND, "", err)
+		return errors.WrapError(errors.TIEM_INSTANCE_NOT_FOUND, "", err)
 	}
 	err = g.DB(ctx).Delete(instance).Error
 	if err != nil {
-		return framework.WrapError(common.TIEM_DELETE_INSTANCE_ERROR, "", err)
+		return errors.WrapError(errors.TIEM_DELETE_INSTANCE_ERROR, "", err)
 	}
 	return nil
 }
 
 func (g *ClusterReadWrite) Get(ctx context.Context, clusterID string) (*Cluster, error) {
 	if "" == clusterID {
-		errInfo := fmt.Sprint("get cluster failed : empty clusterID")
+		errInfo := "get cluster failed : empty clusterID"
 		framework.LogWithContext(ctx).Error(errInfo)
-		return nil, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, errInfo)
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
 	}
 
 	cluster := &Cluster{}
@@ -69,7 +81,7 @@ func (g *ClusterReadWrite) Get(ctx context.Context, clusterID string) (*Cluster,
 		errInfo := fmt.Sprintf("get cluster failed : clusterID = %s", clusterID)
 		framework.LogWithContext(ctx).Error(errInfo)
 
-		return nil, framework.WrapError(common.TIEM_CLUSTER_NOT_FOUND, errInfo, err)
+		return nil, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, errInfo, err)
 	} else {
 		return cluster, nil
 	}
@@ -92,6 +104,78 @@ func (g *ClusterReadWrite) GetMeta(ctx context.Context, clusterID string) (clust
 
 }
 
+func (g *ClusterReadWrite) GetRelations(ctx context.Context, clusterID string) ([]*ClusterRelation, error) {
+	relations := make([]*ClusterRelation, 0)
+	err := g.DB(ctx).Model(&ClusterRelation{}).Where("object_cluster_id  = ? ", clusterID).Find(&relations).Error
+	if err != nil {
+		err = dbCommon.WrapDBError(err)
+	}
+
+	return relations, err
+}
+
+func (g *ClusterReadWrite) QueryMetas(ctx context.Context, filters Filters, pageReq structs.PageRequest) ([]*Result, structs.Page, error) {
+	page := structs.Page{
+		Page:     pageReq.Page,
+		PageSize: pageReq.PageSize,
+	}
+
+	if len(filters.TenantId) == 0 {
+		err := errors.NewError(errors.TIEM_PARAMETER_INVALID, "tenant id required in QueryMetas")
+		return nil, page, err
+	}
+
+	clusters := make([]*Cluster, 0)
+
+	total := int64(0)
+	query := g.DB(ctx).Table("clusters").Where("tenant_id = ?", filters.TenantId)
+	if len(filters.ClusterIDs) > 0 {
+		query = query.Where("id in ?", filters.ClusterIDs)
+	}
+	if filters.NameLike != "" {
+		query = query.Where("name like '%" + filters.NameLike + "%'")
+	}
+
+	if len(filters.Type) > 0 {
+		query = query.Where("type = ?", filters.Type)
+	}
+
+	if len(filters.StatusFilters) > 0 {
+		query = query.Where("status in ?", filters.StatusFilters)
+	}
+
+	if len(filters.Tag) > 0 {
+		query = query.Where("tag_info like '%\"" + filters.Tag + "\"%'")
+	}
+
+	err := query.Count(&total).Order("updated_at desc").Offset(pageReq.GetOffset()).Limit(pageReq.PageSize).Find(&clusters).Error
+	if err != nil {
+		err = errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, "", err)
+		return nil, page, err
+	} else {
+		page.Total = int(total)
+	}
+
+	results := make([]*Result, 0)
+
+	for _, c := range clusters {
+		instances := make([]*ClusterInstance, 0)
+
+		err = g.DB(ctx).Model(&ClusterInstance{}).Where("cluster_id = ?", c.ID).Find(&instances).Error
+
+		if err != nil {
+			err = errors.WrapError(errors.TIEM_INSTANCE_NOT_FOUND, "", err)
+			return nil, page, err
+		}
+
+		results = append(results, &Result{
+			Cluster:   c,
+			Instances: instances,
+		})
+	}
+	return results, page, nil
+}
+
 func (g *ClusterReadWrite) UpdateMeta(ctx context.Context, cluster *Cluster, instances []*ClusterInstance) error {
 	return g.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		err := g.UpdateClusterInfo(ctx, cluster)
@@ -103,7 +187,7 @@ func (g *ClusterReadWrite) UpdateMeta(ctx context.Context, cluster *Cluster, ins
 			msg := fmt.Sprintf("cluster update meta failed, clusterId = %s", cluster.ID)
 			framework.LogWithContext(ctx).Error(msg)
 			tx.Rollback()
-			return framework.WrapError(common.TIEM_UNRECOGNIZED_ERROR, "", err)
+			return errors.WrapError(errors.TIEM_UNRECOGNIZED_ERROR, "", err)
 		}
 		return nil
 	})
@@ -137,9 +221,9 @@ func (g *ClusterReadWrite) UpdateInstance(ctx context.Context, instances ...*Clu
 
 func (g *ClusterReadWrite) UpdateClusterInfo(ctx context.Context, template *Cluster) error {
 	if template == nil {
-		errInfo := fmt.Sprint("update cluster base info failed : empty template")
+		errInfo := "update cluster base info failed : empty template"
 		framework.LogWithContext(ctx).Error(errInfo)
-		return framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, errInfo)
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
 	}
 
 	cluster, err := g.Get(ctx, template.ID)
@@ -175,7 +259,7 @@ func (g *ClusterReadWrite) SetMaintenanceStatus(ctx context.Context, clusterID s
 	if cluster.MaintenanceStatus != constants.ClusterMaintenanceNone && targetStatus != constants.ClusterMaintenanceDeleting {
 		errInfo := fmt.Sprintf("set cluster maintenance status conflicted : current maintenance = %s, target maintenance = %s, clusterID = %s", cluster.MaintenanceStatus, targetStatus, clusterID)
 		framework.LogWithContext(ctx).Error(errInfo)
-		return framework.NewTiEMError(common.TIEM_CLUSTER_MAINTENANCE_CONFLICT, errInfo)
+		return errors.NewError(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT, errInfo)
 	}
 
 	cluster.MaintenanceStatus = targetStatus
@@ -194,7 +278,7 @@ func (g *ClusterReadWrite) ClearMaintenanceStatus(ctx context.Context, clusterID
 	if cluster.MaintenanceStatus != originalStatus {
 		errInfo := fmt.Sprintf("clear cluster maintenance status failed : unmatched original status, want %s, current %s", originalStatus, cluster.MaintenanceStatus)
 		framework.LogWithContext(ctx).Error(errInfo)
-		return framework.NewTiEMError(common.TIEM_CLUSTER_MAINTENANCE_CONFLICT, errInfo)
+		return errors.NewError(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT, errInfo)
 	}
 
 	cluster.MaintenanceStatus = constants.ClusterMaintenanceNone
@@ -218,7 +302,7 @@ func (g *ClusterReadWrite) CreateClusterTopologySnapshot(ctx context.Context, sn
 	if snapshot.ClusterID == "" || snapshot.TenantID == "" || snapshot.Config == "" {
 		errInfo := fmt.Sprintf("CreateClusterTopologySnapshot failed : parameter invalid, ClusterID = %s, TenantID = %s, config = %s", snapshot.ClusterID, snapshot.TenantID, snapshot.Config)
 		framework.LogWithContext(ctx).Error(errInfo)
-		return framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, errInfo)
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
 	}
 	err := g.DB(ctx).Create(&snapshot).Error
 	return dbCommon.WrapDBError(err)
@@ -226,12 +310,12 @@ func (g *ClusterReadWrite) CreateClusterTopologySnapshot(ctx context.Context, sn
 
 func (g *ClusterReadWrite) GetLatestClusterTopologySnapshot(ctx context.Context, clusterID string) (snapshot ClusterTopologySnapshot, err error) {
 	if "" == clusterID {
-		errInfo := fmt.Sprint("get latest cluster topology snapshot failed : empty clusterID")
+		errInfo := "get latest cluster topology snapshot failed : empty clusterID"
 		framework.LogWithContext(ctx).Error(errInfo)
-		err = framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, errInfo)
+		err = errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
 		return
 	}
-
+	
 	err = g.DB(ctx).Model(snapshot).Where("cluster_id = ?", clusterID).Order("id desc").First(&snapshot).Error
 	err = dbCommon.WrapDBError(err)
 	return

@@ -17,8 +17,8 @@ package common
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"golang.org/x/crypto/bcrypt"
 	"time"
 
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
@@ -29,7 +29,7 @@ type Entity struct {
 	ID        string    `gorm:"primarykey"`
 	CreatedAt time.Time `gorm:"<-:create"`
 	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	DeletedAt gorm.DeletedAt
 
 	TenantId string `gorm:"default:null;not null;<-:create"`
 	Status   string `gorm:"not null;"`
@@ -62,9 +62,19 @@ func WrapDBError(err error) error {
 	}
 
 	switch err.(type) {
-	case framework.TiEMError:
+	case errors.EMError:
 		return err
 	default:
-		return framework.NewTiEMErrorf(common.TIEM_UNRECOGNIZED_ERROR, err.Error())
+		return errors.NewError(errors.TIEM_SQL_ERROR, err.Error())
 	}
+}
+
+func FinalHash(salt string, passwd string) ([]byte, error) {
+	if passwd == "" {
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "password cannot be empty")
+	}
+	s := salt + passwd
+	finalSalt, err := bcrypt.GenerateFromPassword([]byte(s), bcrypt.DefaultCost)
+
+	return finalSalt, err
 }

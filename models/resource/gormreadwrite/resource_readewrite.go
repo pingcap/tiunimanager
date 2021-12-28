@@ -17,16 +17,13 @@ package gormreadwrite
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	resource_models "github.com/pingcap-inc/tiem/models/resource"
-	mm "github.com/pingcap-inc/tiem/models/resource/management"
 	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	"gorm.io/gorm"
 )
@@ -41,79 +38,26 @@ func NewGormResourceReadWrite(db *gorm.DB) resource_models.ReaderWriter {
 	}
 	return m
 }
-
+/*
 func (rw *GormResourceReadWrite) addTable(ctx context.Context, tableModel interface{}) (newTable bool, err error) {
 	if !rw.DB(ctx).Migrator().HasTable(tableModel) {
 		err := rw.DB(ctx).Migrator().CreateTable(tableModel)
 		if nil != err {
-			return true, framework.NewTiEMErrorf(common.TIEM_RESOURCE_ADD_TABLE_ERROR, "crete table %v failed, error: %v", tableModel, err)
+			return true, errors.NewEMErrorf(errors.TIEM_RESOURCE_ADD_TABLE_ERROR, "crete table %v failed, error: %v", tableModel, err)
 		}
 		return true, nil
 	} else {
 		return false, nil
 	}
 }
-
-func (rw *GormResourceReadWrite) InitTables(ctx context.Context) error {
-	log := framework.LogWithContext(ctx)
-	_, err := rw.addTable(ctx, new(rp.Host))
-	if err != nil {
-		log.Errorf("create table Host failed, error: %v", err)
-		return err
-	}
-	_, err = rw.addTable(ctx, new(rp.Disk))
-	if err != nil {
-		log.Errorf("create table Disk failed, error: %v", err)
-		return err
-	}
-	_, err = rw.addTable(ctx, new(mm.UsedCompute))
-	if err != nil {
-		log.Errorf("create table UsedCompute failed, error: %v", err)
-		return err
-	}
-	_, err = rw.addTable(ctx, new(mm.UsedPort))
-	if err != nil {
-		log.Errorf("create table UsedPort failed, error: %v", err)
-		return err
-	}
-	_, err = rw.addTable(ctx, new(mm.UsedDisk))
-	if err != nil {
-		log.Errorf("create table UsedDisk failed, error: %v", err)
-		return err
-	}
-	newTable, err := rw.addTable(ctx, new(rp.Label))
-	if err != nil {
-		log.Errorf("create table Label failed, error: %v", err)
-		return err
-	}
-	if newTable {
-		if err = rw.initSystemDefaultLabels(ctx); err != nil {
-			log.Errorf("init table Label failed, error: %v", err)
-			return err
-		}
-	}
-	return nil
-}
-
-func (rw *GormResourceReadWrite) initSystemDefaultLabels(ctx context.Context) (err error) {
-	for _, v := range structs.DefaultLabelTypes {
-		labelRecord := new(rp.Label)
-		labelRecord.ConstructLabelRecord(&v)
-		err = rw.DB(ctx).Create(labelRecord).Error
-		if err != nil {
-			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INIT_LABELS_ERROR, "init default label table failed, error: %v", err)
-		}
-	}
-	return nil
-}
-
+*/
 func (rw *GormResourceReadWrite) Create(ctx context.Context, hosts []rp.Host) (hostIds []string, err error) {
 	tx := rw.DB(ctx).Begin()
 	for _, host := range hosts {
 		err = tx.Create(&host).Error
 		if err != nil {
 			tx.Rollback()
-			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_CREATE_HOST_ERROR, "create %s(%s) error, %v", host.HostName, host.IP, err)
+			return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_CREATE_HOST_ERROR, "create %s(%s) error, %v", host.HostName, host.IP, err)
 		}
 		hostIds = append(hostIds, host.ID)
 	}
@@ -127,12 +71,12 @@ func (rw *GormResourceReadWrite) Delete(ctx context.Context, hostIds []string) (
 		var host rp.Host
 		if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host, "ID = ?", hostId).Error; err != nil {
 			tx.Rollback()
-			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_LOCK_TABLE_ERROR, "lock host %s(%s) error, %v", hostId, host.IP, err)
+			return errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "lock host %s(%s) error, %v", hostId, host.IP, err)
 		}
 		err = tx.Delete(&host).Error
 		if err != nil {
 			tx.Rollback()
-			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_DELETE_HOST_ERROR, "delete host %s(%s) error, %v", hostId, host.IP, err)
+			return errors.NewEMErrorf(errors.TIEM_RESOURCE_DELETE_HOST_ERROR, "delete host %s(%s) error, %v", hostId, host.IP, err)
 		}
 	}
 	err = tx.Commit().Error
@@ -157,7 +101,7 @@ func (rw *GormResourceReadWrite) hostFiltered(db *gorm.DB, filter *structs.HostF
 	if filter.Purpose != "" {
 		label, err := structs.GetTraitByName(filter.Purpose)
 		if err != nil {
-			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_LABEL_NAEM, "query host use a invalid purpose name %s, %v", filter.Purpose, err)
+			return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND, "query host use a invalid purpose name %s, %v", filter.Purpose, err)
 		}
 		db = db.Where("traits & ? = ?", label, label)
 	}
@@ -213,7 +157,7 @@ func (rw *GormResourceReadWrite) Query(ctx context.Context, filter *structs.Host
 	if filter.HostID != "" {
 		err = db.Where("id = ?", filter.HostID).Find(&hosts).Error
 		if err != nil {
-			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_HOST_NOT_FOUND, "query host %s error, %v", filter.HostID, err)
+			return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_HOST_NOT_FOUND, "query host %s error, %v", filter.HostID, err)
 		}
 		return
 	}
@@ -231,11 +175,11 @@ func (rw *GormResourceReadWrite) UpdateHostStatus(ctx context.Context, hostIds [
 		result := tx.Model(&rp.Host{}).Where("id = ?", hostId).Update("status", status)
 		if result.Error != nil {
 			tx.Rollback()
-			return framework.NewTiEMErrorf(common.TIEM_UPDATE_HOST_STATUS_FAIL, "update host [%s] status to %s fail", hostId, status)
+			return errors.NewEMErrorf(errors.TIEM_UPDATE_HOST_STATUS_FAIL, "update host %s status to %s fail", hostId, status)
 		}
 		if result.RowsAffected == 0 {
 			tx.Rollback()
-			return framework.NewTiEMErrorf(common.TIEM_UPDATE_HOST_STATUS_FAIL, "update host [%s] status to %s not affected", hostId, status)
+			return errors.NewEMErrorf(errors.TIEM_UPDATE_HOST_STATUS_FAIL, "update host %s status to %s not affected", hostId, status)
 		}
 	}
 	tx.Commit()
@@ -247,11 +191,11 @@ func (rw *GormResourceReadWrite) UpdateHostReserved(ctx context.Context, hostIds
 		result := tx.Model(&rp.Host{}).Where("id = ?", hostId).Update("reserved", reserved)
 		if result.Error != nil {
 			tx.Rollback()
-			return framework.NewTiEMErrorf(common.TIEM_RESERVE_HOST_FAIL, "update host [%s] reserved status to %v fail", hostId, reserved)
+			return errors.NewEMErrorf(errors.TIEM_RESERVE_HOST_FAIL, "update host %s reserved status to %v fail", hostId, reserved)
 		}
 		if result.RowsAffected == 0 {
 			tx.Rollback()
-			return framework.NewTiEMErrorf(common.TIEM_RESERVE_HOST_FAIL, "update host [%s] reserved status to %v not affected", hostId, reserved)
+			return errors.NewEMErrorf(errors.TIEM_RESERVE_HOST_FAIL, "update host %s reserved status to %v not affected", hostId, reserved)
 		}
 	}
 	tx.Commit()
@@ -279,11 +223,11 @@ func (rw *GormResourceReadWrite) GetHostItems(ctx context.Context, filter *struc
 		err = db.Order("region").Order("az").Order("rack").Order("ip").Scan(&items).Error
 	default:
 		errMsg := fmt.Sprintf("invalid leaf level %d, level = %d, depth = %d", leafLevel, level, depth)
-		err = errors.New(errMsg)
+		err = errors.NewError(errors.TIEM_PARAMETER_INVALID, errMsg)
 	}
 	if err != nil {
 		tx.Rollback()
-		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "get hierarchy failed, %v", err)
+		return nil, errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "get hierarchy failed, %v", err)
 	}
 	tx.Commit()
 	return
@@ -315,7 +259,7 @@ func (rw *GormResourceReadWrite) GetHostStocks(ctx context.Context, location *st
 	err = db.Scan(&stocks).Error
 	if err != nil {
 		tx.Rollback()
-		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "get stocks failed, %v", err)
+		return nil, errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "get stocks failed, %v", err)
 	}
 	tx.Commit()
 	return

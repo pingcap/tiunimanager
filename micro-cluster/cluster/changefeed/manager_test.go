@@ -305,7 +305,7 @@ func TestManager_Query(t *testing.T) {
 			},
 		},
 
-	}, 3, nil).AnyTimes()
+	}, int64(3), nil).AnyTimes()
 
 	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
 	secondparty.Manager = mockSecond
@@ -325,7 +325,7 @@ func TestManager_Query(t *testing.T) {
 		})
 		assert.NoError(t, err)
 		assert.Equal(t, 3, total)
-		assert.Equal(t, uint64(9999 + 9999 + 0), resp[0].DownstreamSyncTS + resp[0].DownstreamSyncTS + resp[0].DownstreamSyncTS)
+		assert.Equal(t, uint64(9999 + 9999 + 0), resp[0].DownstreamSyncTS + resp[1].DownstreamSyncTS + resp[2].DownstreamSyncTS)
 	})
 }
 

@@ -17,6 +17,11 @@ package models
 
 import (
 	"context"
+	"io/ioutil"
+	"os"
+	"strings"
+	"syscall"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
@@ -157,8 +162,8 @@ func (p *database) initSystemData() {
 	// todo determine if default data needed
 	if err == nil {
 		// system admin account
-		account := &account.Account {
-			Entity: dbCommon.Entity {
+		account := &account.Account{
+			Entity: dbCommon.Entity{
 				TenantId: tenant.ID,
 			},
 			Name: "admin",
@@ -183,6 +188,25 @@ func (p *database) initSystemData() {
 		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3Endpoint, ConfigValue: constants.DefaultBackupS3Endpoint})
 		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyExportShareStoragePath, ConfigValue: constants.DefaultExportPath})
 		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyImportShareStoragePath, ConfigValue: constants.DefaultImportPath})
+
+		// batch import parameters & default parameter group sql
+		parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters.sql"
+		err := syscall.Access(parameterSqlFile, syscall.F_OK)
+		if !os.IsNotExist(err) {
+			sqls, err := ioutil.ReadFile(parameterSqlFile)
+			if err != nil {
+				framework.LogForkFile(constants.LogFileSystem).Errorf("batch import parameters failed, err = %s", err.Error())
+				return
+			}
+			sqlArr := strings.Split(string(sqls), ";")
+			for _, sql := range sqlArr {
+				if strings.TrimSpace(sql) == "" {
+					continue
+				}
+				// exec import sql
+				defaultDb.base.Exec(sql)
+			}
+		}
 	}
 }
 

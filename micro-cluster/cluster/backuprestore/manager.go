@@ -282,11 +282,10 @@ func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request cluster.D
 		for _, record := range records {
 			if string(constants.StorageTypeS3) != record.StorageType {
 				filePath := record.FilePath
-				err = os.RemoveAll(filePath)
-				if err != nil {
-					framework.LogWithContext(ctx).Errorf("remove backup filePath %s failed, %s", filePath, err.Error())
-					return resp, errors.WrapError(errors.TIEM_BACKUP_FILE_DELETE_FAILED, fmt.Sprintf("remove backup filePath %s failed, %s", filePath, err.Error()), err)
-				}
+				go func() {
+					removeErr := os.RemoveAll(filePath)
+					framework.LogWithContext(ctx).Infof("remove backup filePath %s, result %v", filePath, removeErr)
+				}()
 			}
 
 			err = brRW.DeleteBackupRecord(ctx, record.ID)

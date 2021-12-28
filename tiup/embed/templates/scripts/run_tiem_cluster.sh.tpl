@@ -17,6 +17,7 @@ exec env GODEBUG=madvdontneed=1 bin/cluster-server \
     --registry-client-port="{{.ClientPort}}" \
     --registry-peer-port="{{.PeerPort}}" \
     --registry-address="{{.RegistryEndpoints}}" \
+    --em-cluster-name="{{.ClusterName}}" \
     --elasticsearch-address="{{.ElasticsearchAddress}}" \
     --tracer-address="{{.TracerAddress}}" \
     --deploy-dir="{{.DeployDir}}/bin" \

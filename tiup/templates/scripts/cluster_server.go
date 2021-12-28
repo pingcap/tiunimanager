@@ -37,6 +37,7 @@ type TiEMClusterServerScript struct {
 	RegistryEndpoints    string
 	ElasticsearchAddress string
 	TracerAddress        string
+	ClusterName          string
 }
 
 // NewTiEMClusterServerScript returns a TiEMClusterServerScript with given arguments
@@ -93,6 +94,12 @@ func (c *TiEMClusterServerScript) WithElasticsearch(addr []string) *TiEMClusterS
 // WithTracer set TracerAddress
 func (c *TiEMClusterServerScript) WithTracer(addr []string) *TiEMClusterServerScript {
 	c.TracerAddress = strings.Join(addr, ",")
+	return c
+}
+
+// WithClusterName set ClusterName
+func (c *TiEMClusterServerScript) WithClusterName(clusterName string) *TiEMClusterServerScript {
+	c.ClusterName = clusterName
 	return c
 }
 

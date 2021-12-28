@@ -673,74 +673,175 @@ func TestManager_GetMonitorInfo(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
-	models.SetClusterReaderWriter(clusterRW)
+	t.Run("normal", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
 
-	clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{
-		Entity: common.Entity{
-			ID:        "2145635758",
-			TenantId:  "324567",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		},
-		Name:              "koojdafij",
-		DBUser:            "kodjsfn",
-		DBPassword:        "mypassword",
-		Type:              "TiDB",
-		Version:           "v5.0.0",
-		Tags:              []string{"111", "333"},
-		OwnerId:           "436534636u",
-		ParameterGroupID:  "352467890",
-		Copies:            4,
-		Region:            "Region1",
-		CpuArchitecture:   "x86_64",
-		MaintenanceStatus: constants.ClusterMaintenanceCreating,
-	}, []*management.ClusterInstance{
-		{
+		clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{
 			Entity: common.Entity{
-				Status: string(constants.ClusterInstanceRunning),
+				ID: "2145635758",
 			},
-			Zone:     "zone1",
-			CpuCores: 3,
-			Memory:   7,
-			Type:     "Prometheus",
-			Version:  "v5.0.0",
-			Ports:    []int32{40001, 40002},
-			HostIP:   []string{"127.0.0.4"},
-		},
-		{
-			Entity: common.Entity{
-				Status: string(constants.ClusterInstanceRunning),
+		}, []*management.ClusterInstance{
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone:     "zone1",
+				CpuCores: 4,
+				Memory:   8,
+				Type:     "Grafana",
+				Version:  "v5.0.0",
+				Ports:    []int32{50001, 50002},
+				HostIP:   []string{"127.0.0.5"},
 			},
-			Zone:     "zone1",
-			CpuCores: 4,
-			Memory:   8,
-			Type:     "Grafana",
-			Version:  "v5.0.0",
-			Ports:    []int32{50001, 50002},
-			HostIP:   []string{"127.0.0.5"},
-		},
-		{
-			Entity: common.Entity{
-				Status: string(constants.ClusterInstanceRunning),
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone:     "zone1",
+				CpuCores: 4,
+				Memory:   8,
+				Type:     "AlertManger",
+				Version:  "v5.0.0",
+				Ports:    []int32{60001, 60002},
+				HostIP:   []string{"127.0.0.6"},
 			},
-			Zone:     "zone1",
-			CpuCores: 4,
-			Memory:   8,
-			Type:     "AlertManger",
-			Version:  "v5.0.0",
-			Ports:    []int32{60001, 60002},
-			HostIP:   []string{"127.0.0.6"},
-		},
-	}, nil)
-	manager := Manager{}
-	got, err := manager.GetMonitorInfo(context.TODO(), cluster.QueryMonitorInfoReq{
-		ClusterID: "2145635758",
+		}, nil)
+		manager := Manager{}
+		got, err := manager.GetMonitorInfo(context.TODO(), cluster.QueryMonitorInfoReq{
+			ClusterID: "2145635758",
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, got.ClusterID, "2145635758")
+		assert.Equal(t, got.AlertUrl, "http://127.0.0.6:60001")
+		assert.Equal(t, got.GrafanaUrl, "http://127.0.0.5:50001")
 	})
-	assert.NoError(t, err)
-	assert.Equal(t, got.ClusterID, "2145635758")
-	assert.Equal(t, got.AlertUrl, "http://127.0.0.6:60001")
-	assert.Equal(t, got.GrafanaUrl, "http://127.0.0.5:50001")
+
+	t.Run("err ip", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{
+			Entity: common.Entity{
+				ID: "2145635758",
+			},
+		}, []*management.ClusterInstance{
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone:     "zone1",
+				CpuCores: 4,
+				Memory:   8,
+				Type:     "Grafana",
+				Version:  "v5.0.0",
+				Ports:    []int32{50001, 50002},
+				HostIP:   []string{"127.0.0.5"},
+			},
+		}, nil)
+		manager := Manager{}
+		_, err := manager.GetMonitorInfo(context.TODO(), cluster.QueryMonitorInfoReq{
+			ClusterID: "2145635758",
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("grafana err port", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{
+			Entity: common.Entity{
+				ID: "2145635758",
+			},
+		}, []*management.ClusterInstance{
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone:     "zone1",
+				CpuCores: 4,
+				Memory:   8,
+				Type:     "Grafana",
+				Version:  "v5.0.0",
+				Ports:    []int32{-50001, -50002},
+				HostIP:   []string{"127.0.0.5"},
+			},
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone:     "zone1",
+				CpuCores: 4,
+				Memory:   8,
+				Type:     "AlertManger",
+				Version:  "v5.0.0",
+				Ports:    []int32{60001, 60002},
+				HostIP:   []string{"127.0.0.6"},
+			},
+		}, nil)
+		manager := Manager{}
+		_, err := manager.GetMonitorInfo(context.TODO(), cluster.QueryMonitorInfoReq{
+			ClusterID: "2145635758",
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("alert err port", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{
+			Entity: common.Entity{
+				ID: "2145635758",
+			},
+		}, []*management.ClusterInstance{
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone:     "zone1",
+				CpuCores: 4,
+				Memory:   8,
+				Type:     "Grafana",
+				Version:  "v5.0.0",
+				Ports:    []int32{50001, 50002},
+				HostIP:   []string{"127.0.0.5"},
+			},
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone:     "zone1",
+				CpuCores: 4,
+				Memory:   8,
+				Type:     "AlertManger",
+				Version:  "v5.0.0",
+				Ports:    []int32{-60001, -60002},
+				HostIP:   []string{"127.0.0.6"},
+			},
+		}, nil)
+		manager := Manager{}
+		_, err := manager.GetMonitorInfo(context.TODO(), cluster.QueryMonitorInfoReq{
+			ClusterID: "2145635758",
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{}, []*management.ClusterInstance{
+			{},
+			{},
+		}, fmt.Errorf("not found"))
+		manager := Manager{}
+		_, err := manager.GetMonitorInfo(context.TODO(), cluster.QueryMonitorInfoReq{
+			ClusterID: "2145635758",
+		})
+		assert.Error(t, err)
+	})
 }
 
 func TestNewClusterManager(t *testing.T) {

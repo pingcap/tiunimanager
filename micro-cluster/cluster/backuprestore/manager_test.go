@@ -18,12 +18,20 @@ package backuprestore
 import (
 	"context"
 	"github.com/golang/mock/gomock"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
+	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiem/models/platform/config"
+	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockbr"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
+	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
+	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -31,6 +39,97 @@ import (
 func TestGetBRService(t *testing.T) {
 	service := GetBRService()
 	assert.NotNil(t, service)
+}
+
+func TestBRManager_BackupCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{
+		Entity: common.Entity{
+			ID:       "id-xxxx",
+			TenantId: "tid-xxx",
+		},
+	}, make([]*management.ClusterInstance, 0), nil).AnyTimes()
+	clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+	workflow.MockWorkFlowService(workflowService)
+	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
+	workflowService.EXPECT().RegisterWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
+	}, nil).AnyTimes()
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	configService := mockconfig.NewMockReaderWriter(ctrl)
+	configService.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: string(constants.StorageTypeNFS)}, nil).AnyTimes()
+	models.SetConfigReaderWriter(configService)
+
+	brService := mockbr.NewMockReaderWriter(ctrl)
+	brService.EXPECT().CreateBackupRecord(gomock.Any(), gomock.Any()).Return(&backuprestore.BackupRecord{Entity: common.Entity{
+		ID: "xxx",
+	}}, nil).AnyTimes()
+	models.SetBRReaderWriter(brService)
+
+	service := GetBRService()
+	resp, err := service.BackupCluster(context.TODO(), cluster.BackupClusterDataReq{
+		ClusterID:  "test-cls",
+		BackupMode: string(constants.BackupModeManual),
+	}, true)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, resp.BackupID)
+	assert.NotNil(t, resp.WorkFlowID)
+}
+
+func TestBRManager_RestoreExistCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{
+		Entity: common.Entity{
+			ID:       "id-xxxx",
+			TenantId: "tid-xxx",
+		},
+	}, make([]*management.ClusterInstance, 0), nil).AnyTimes()
+	clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+	workflow.MockWorkFlowService(workflowService)
+	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
+	workflowService.EXPECT().RegisterWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
+	}, nil).AnyTimes()
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	configService := mockconfig.NewMockReaderWriter(ctrl)
+	configService.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: string(constants.StorageTypeNFS)}, nil).AnyTimes()
+	models.SetConfigReaderWriter(configService)
+
+	brService := mockbr.NewMockReaderWriter(ctrl)
+	brService.EXPECT().GetBackupRecord(gomock.Any(), gomock.Any()).Return(&backuprestore.BackupRecord{Entity: common.Entity{
+		ID: "xxx",
+	}}, nil).AnyTimes()
+	models.SetBRReaderWriter(brService)
+
+	service := GetBRService()
+	resp, err := service.RestoreExistCluster(context.TODO(), cluster.RestoreExistClusterReq{
+		ClusterID: "test-cls",
+		BackupID:  "xxx",
+	}, true)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, resp.WorkFlowID)
 }
 
 func TestBRManager_DeleteBackupRecords(t *testing.T) {

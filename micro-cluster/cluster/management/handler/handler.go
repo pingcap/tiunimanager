@@ -865,7 +865,7 @@ func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterT
 					Name: knowledge.GenSpecCode(int32(instance.CpuCores), int32(instance.Memory)),
 				},
 				Zone: structs.ZoneInfo{
-					ID:   instance.Zone,
+					ID:   structs.GenDomainCodeByName(p.Cluster.Region, instance.Zone),
 					Name: instance.Zone,
 				},
 			}

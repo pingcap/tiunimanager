@@ -23,8 +23,8 @@ require (
 	github.com/go-playground/validator/v10 v10.4.1
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang/mock v1.6.0
-	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0
+	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/labstack/gommon v0.3.0
 	github.com/lithammer/shortuuid v3.0.0+incompatible
 	github.com/micro/cli/v2 v2.1.2

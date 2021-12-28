@@ -35,8 +35,6 @@ import (
 	"time"
 )
 
-var manager = &Manager{}
-
 func TestMain(m *testing.M) {
 	knowledge.LoadKnowledge()
 	models.MockDB()

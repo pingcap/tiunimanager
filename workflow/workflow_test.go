@@ -20,10 +20,13 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
+	secondpartyModel "github.com/pingcap-inc/tiem/models/workflow/secondparty"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockworkflow"
+	mock_secondparty "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -70,7 +73,7 @@ func TestFlowManager_RegisterWorkFlow(t *testing.T) {
 	assert.Equal(t, "fail", define.TaskNodes["fail"].Name)
 }
 
-func TestFlowManager_Start(t *testing.T) {
+func TestFlowManager_Start_case1(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -87,6 +90,41 @@ func TestFlowManager_Start(t *testing.T) {
 			TaskNodes: map[string]*NodeDefine{
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
+				"nodeName2Done": {"end", "", "", SyncFuncNode, CompositeExecutor(doFail, defaultSuccess)},
+				"fail":          {"fail", "", "", SyncFuncNode, doFail},
+			},
+		})
+
+	_, errRegister := manager.GetWorkFlowDefine(context.TODO(), "flowName")
+	assert.NoError(t, errRegister)
+
+	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
+	assert.NoError(t, errCreate)
+	errStart := manager.Start(context.TODO(), flow)
+	assert.NoError(t, errStart)
+}
+
+func TestFlowManager_Start_case2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockFlowRW := mockworkflow.NewMockReaderWriter(ctrl)
+	mockFlowRW.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	mockFlowRW.EXPECT().CreateWorkFlowNode(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	models.SetWorkFlowReaderWriter(mockFlowRW)
+
+	mockSecondParty := mock_secondparty.NewMockSecondPartyService(ctrl)
+	mockSecondParty.EXPECT().GetOperationStatusByWorkFlowNodeID(gomock.Any(), gomock.Any()).Return(secondparty.GetOperationStatusResp{Status: secondpartyModel.OperationStatus_Finished}, nil).AnyTimes()
+	secondparty.Manager = mockSecondParty
+
+	manager := GetWorkFlowService()
+	manager.RegisterWorkFlow(context.TODO(), "flowName",
+		&WorkFlowDefine{
+			FlowName: "flowName",
+			TaskNodes: map[string]*NodeDefine{
+				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
+				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", PollingNode, doNodeName2},
 				"nodeName2Done": {"end", "", "", SyncFuncNode, CompositeExecutor(doFail, defaultSuccess)},
 				"fail":          {"fail", "", "", SyncFuncNode, doFail},
 			},

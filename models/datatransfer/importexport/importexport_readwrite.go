@@ -17,6 +17,7 @@ package importexport
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
@@ -76,7 +77,7 @@ func (m *ImportExportReadWrite) QueryDataTransportRecords(ctx context.Context, r
 		query = query.Where("cluster_id = ?", clusterId)
 	}
 	if reImport {
-		query = query.Where("re_import_support = ?", reImport)
+		query = query.Where("re_import_support = ?", reImport).Where("status = ?", constants.DataImportExportFinished)
 	}
 	if startTime > 0 {
 		query = query.Where("start_time >= ?", startTime)

@@ -310,9 +310,9 @@ type ClusterSetDbPswResp struct {
 
 type ChangeFeedCreateReq struct {
 	PD               string
-	ChangeFeedID     string   `form:"changefeed_id"`
-	SinkURI          string   `form:"sink_uri"`
-	StartTS          uint64   `form:"start_ts"`
+	ChangeFeedID     string   `json:"changefeed_id"`
+	SinkURI          string   `json:"sink_uri"`
+	StartTS          uint64   `json:"start_ts"`
 	TargetTS         uint64   `json:"target_ts"`
 	IgnoreTxnStartTS uint64   `json:"ignore_txn_start_ts"`
 	FilterRules      []string `json:"filter_rules"`

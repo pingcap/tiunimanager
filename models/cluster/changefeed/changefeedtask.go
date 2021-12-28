@@ -18,6 +18,7 @@ package changefeed
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
@@ -155,15 +156,25 @@ type ChangeFeedDownStream interface {
 	GetSinkURI() string
 }
 
-// GetSinkURI todo
 func (p *MysqlDownstream) GetSinkURI() string {
-	return "todo"
+	return fmt.Sprintf("mysql://%s:%s@%s:%d/?worker-count=%d&max-txn-row=%d", p.Username, p.Password, p.Ip, p.Port, p.WorkerCount, p.MaxTxnRow)
 }
 
 func (p *TiDBDownstream) GetSinkURI() string {
-	return "todo"
+	return fmt.Sprintf("mysql://%s:%s@%s:%d/?worker-count=%d&max-txn-row=%d", p.Username, p.Password, p.Ip, p.Port, p.WorkerCount, p.MaxTxnRow)
 }
 
 func (p *KafkaDownstream) GetSinkURI() string {
-	return "todo"
+	return fmt.Sprintf("kafka://%s:%d/%s?kafka-version=%s&partition-num=%d&max-message-bytes=%d&replication-factor=%d&max-batch-size=%d&protocol=%s&kafka-client-id=%s",
+		p.Ip,
+		p.Port,
+		p.TopicName,
+		p.Version,
+		p.Partitions,
+		p.MaxMessageBytes,
+		p.ReplicationFactor,
+		p.MaxBatchSize,
+		p.Protocol,
+		p.ClientId,
+	)
 }

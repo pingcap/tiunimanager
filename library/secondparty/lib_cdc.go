@@ -19,10 +19,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
 	util "github.com/pingcap-inc/tiem/library/util/http"
 	"net/http"
+	"time"
 )
 
 const CDCApiUrl  = "/api/v1/changefeeds"
@@ -52,7 +54,9 @@ func (secondMicro *SecondPartyManager) CreateChangeFeedTask(ctx context.Context,
 
 	if http.StatusAccepted == httpResp.StatusCode {
 		resp.Accepted = true
-		resp.Succeed = true
+		handleAcceptedCmd(ctx, req.PD, req.ChangeFeedID, &resp, func(info ChangeFeedInfo) bool {
+			return info.State == constants.ChangeFeedStatusStopped.ToString()
+		})
 	} else {
 		handleAcceptError(ctx, httpResp, &resp)
 	}
@@ -85,13 +89,13 @@ func handleAcceptError(ctx context.Context, httpResp *http.Response, resp *Chang
 		resp.ErrorMsg = err.Error()
 	}
 }
-/*
+
 var changeFeedRetryTimes = 10
 
 func handleAcceptedCmd(ctx context.Context,
 	pdAddress string, id string,
 	resp *ChangeFeedCmdAcceptResp,
-	asserts func(info ChangeFeedInfo) bool) {
+	assert func(info ChangeFeedInfo) bool) {
 	for i := 0; i < changeFeedRetryTimes; i++ {
 		time.Sleep(time.Second)
 		task, err := getChangeFeedTaskByID(ctx, pdAddress, id)
@@ -101,16 +105,37 @@ func handleAcceptedCmd(ctx context.Context,
 			return
 		}
 
+		switch task.State {
+		case constants.ChangeFeedStatusError.ToString():
+			resp.Succeed = false
+			resp.ErrorCode = "error"
+			resp.ErrorMsg = task.ChangeFeedInfo.Error
+
+		case constants.ChangeFeedStatusFailed.ToString():
+			resp.Succeed = false
+			resp.ErrorCode = "failed"
+			resp.ErrorMsg = task.ChangeFeedInfo.Error
+		default:
+			if assert(task.ChangeFeedInfo) {
+				resp.Succeed = true
+				return
+			} else {
+
+			}
+		}
+
 		if task.State == constants.ChangeFeedStatusError.ToString() ||
 			task.State == constants.ChangeFeedStatusFailed.ToString() ||
 			task.State == constants.ChangeFeedStatusFinished.ToString() {
-			resp.Succeed = false
-			return
+			resp.ErrorCode = ""
+			break
 		}
+
+
 
 	}
 }
-*/
+
 func (secondMicro *SecondPartyManager) UpdateChangeFeedTask(ctx context.Context, req ChangeFeedUpdateReq) (resp ChangeFeedCmdAcceptResp, err error) {
 	framework.LogWithContext(ctx).Infof("micro srv update change feed task, req : %v", req)
 	url := fmt.Sprintf("http://%s%s/%s", req.PD, CDCApiUrl, req.ChangeFeedID)
@@ -136,7 +161,9 @@ func (secondMicro *SecondPartyManager) UpdateChangeFeedTask(ctx context.Context,
 
 	if http.StatusAccepted == httpResp.StatusCode {
 		resp.Accepted = true
-		resp.Succeed = true
+		handleAcceptedCmd(ctx, req.PD, req.ChangeFeedID, &resp, func(info ChangeFeedInfo) bool {
+			return true
+		})
 	} else {
 		handleAcceptError(ctx, httpResp, &resp)
 	}

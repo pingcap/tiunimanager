@@ -67,6 +67,7 @@ func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, cl
 		Joins("left join parameters on parameters.id = cluster_parameter_mappings.parameter_id").
 		Joins("left join parameter_group_mappings on parameters.id = parameter_group_mappings.parameter_id").
 		Where("cluster_parameter_mappings.cluster_id = ? and parameter_group_mappings.parameter_group_id = ?", cluster.ID, paramGroupId).
+		Order("parameters.instance_type asc").
 		Count(&total).Offset(offset).Limit(size).
 		Scan(&params).Error
 	if err != nil {

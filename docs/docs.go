@@ -6207,6 +6207,10 @@ var doc = `{
         "structs.ClusterParameterSampleInfo": {
             "type": "object",
             "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "basic"
+                },
                 "hasApply": {
                     "type": "integer",
                     "enum": [

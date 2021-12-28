@@ -20,6 +20,12 @@ package linux
 
 import (
 	"syscall"
+	"context"
+	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/host"
+	"github.com/shirou/gopsutil/load"
+	"github.com/shirou/gopsutil/mem"
+	"runtime"
 
 	"golang.org/x/sys/unix"
 )

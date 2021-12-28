@@ -18,6 +18,7 @@ package backuprestore
 import (
 	"context"
 	"github.com/golang/mock/gomock"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	"github.com/pingcap-inc/tiem/models"
@@ -75,6 +76,13 @@ func TestExecutor_updateBackupRecord(t *testing.T) {
 	brRW.EXPECT().UpdateBackupRecord(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetBRReaderWriter(brRW)
 
+	mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+	mockTiupManager.EXPECT().ShowBackUpInfoThruMetaDB(gomock.Any(), gomock.Any()).Return(secondparty.CmdBrResp{
+		Size:     123,
+		BackupTS: 234,
+	}, nil).AnyTimes()
+	secondparty.Manager = mockTiupManager
+
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(contextBackupRecordKey, &backuprestore.BackupRecord{
 		Entity: common.Entity{
@@ -88,6 +96,7 @@ func TestExecutor_updateBackupRecord(t *testing.T) {
 			},
 		},
 	})
+	flowContext.SetData(contextBackupTiupTaskIDKey, "123")
 	err := updateBackupRecord(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
 }
@@ -114,6 +123,18 @@ func TestExecutor_restoreFromSrcCluster(t *testing.T) {
 				ID: "cls-test",
 			},
 			Name: "cls-test",
+		},
+		Instances: map[string][]*management.ClusterInstance{
+			"TiDB": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Type:   "TiDB",
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8000},
+				},
+			},
 		},
 	})
 	err := restoreFromSrcCluster(&workflowModel.WorkFlowNode{}, flowContext)
@@ -145,6 +166,7 @@ func TestExecutor_backupFail(t *testing.T) {
 			},
 		},
 	})
+	flowContext.SetData(contextMaintenanceStatusChangeKey, true)
 	err := backupFail(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
 }
@@ -163,6 +185,7 @@ func TestExecutor_restoreFail(t *testing.T) {
 			},
 		},
 	})
+	flowContext.SetData(contextMaintenanceStatusChangeKey, true)
 	err := restoreFail(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
 }
@@ -188,6 +211,7 @@ func TestExecutor_defaultEnd(t *testing.T) {
 			},
 		},
 	})
+	flowContext.SetData(contextMaintenanceStatusChangeKey, true)
 	err := defaultEnd(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
 }

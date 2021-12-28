@@ -198,9 +198,34 @@ func TestScaleOutCluster(t *testing.T) {
 			Version: "v5.0.0",
 		},
 	})
-	flowContext.SetData(ContextTopology, "test topology")
-	err := scaleOutCluster(&workflowModel.WorkFlowNode{}, flowContext)
-	assert.NoError(t, err)
+
+	t.Run("normal", func(t *testing.T) {
+		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+		mockTiupManager.EXPECT().ClusterScaleOut(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
+		secondparty.Manager = mockTiupManager
+
+		flowContext.SetData(ContextTopology, "test topology")
+		err := scaleOutCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
+
+	t.Run("topology not found", func(t *testing.T) {
+		flowContext.SetData(ContextTopology, nil)
+		err := scaleOutCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
+
+	t.Run("scale out fail", func(t *testing.T) {
+		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+		mockTiupManager.EXPECT().ClusterScaleOut(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", fmt.Errorf("fail")).AnyTimes()
+		secondparty.Manager = mockTiupManager
+
+		flowContext.SetData(ContextTopology, "test topology")
+		err := scaleOutCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
 }
 
 func TestScaleInCluster(t *testing.T) {

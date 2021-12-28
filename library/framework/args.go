@@ -45,6 +45,7 @@ type ClientArgs struct {
 	DataDir              string
 	LogLevel             string
 	ElasticsearchAddress string
+	EMClusterName        string
 }
 
 func AllFlags(receiver *ClientArgs) []cli.Flag {
@@ -120,6 +121,12 @@ func AllFlags(receiver *ClientArgs) []cli.Flag {
 			Value:       "127.0.0.1:4108",
 			Usage:       "Specify the default elasticsearch address.",
 			Destination: &receiver.ElasticsearchAddress,
+		},
+		&cli.StringFlag{
+			Name:        "em-cluster-name",
+			Value:       "",
+			Usage:       "Specify the EM cluster name.",
+			Destination: &receiver.EMClusterName,
 		},
 	}
 }

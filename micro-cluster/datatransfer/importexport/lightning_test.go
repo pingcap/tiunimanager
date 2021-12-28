@@ -17,13 +17,33 @@ package importexport
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestNewDataImportConfig(t *testing.T) {
-	meta := &handler.ClusterMeta{}
+	instanceMap := make(map[string][]*management.ClusterInstance)
+	tidb := make([]*management.ClusterInstance, 1)
+	tidb[0] = &management.ClusterInstance{}
+	tidb[0].Status = string(constants.ClusterInstanceRunning)
+	tidb[0].HostIP = []string{"127.0.0.1", "127.0.0.2"}
+	tidb[0].Ports = []int32{4000, 4001}
+	instanceMap[string(constants.ComponentIDTiDB)] = tidb
+
+	pd := make([]*management.ClusterInstance, 1)
+	pd[0] = &management.ClusterInstance{}
+	pd[0].Status = string(constants.ClusterInstanceRunning)
+	pd[0].HostIP = []string{"127.0.0.1", "127.0.0.2"}
+	pd[0].Ports = []int32{4000, 4001}
+	instanceMap[string(constants.ComponentIDPD)] = pd
+
+	meta := &handler.ClusterMeta{
+		Instances: instanceMap,
+		Cluster:   &management.Cluster{},
+	}
 	info := &importInfo{
 		ClusterId:   "test-cls",
 		UserName:    "root",

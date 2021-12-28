@@ -161,6 +161,163 @@ func TestImportExportManager_ExportData_case2(t *testing.T) {
 	assert.NotNil(t, resp.WorkFlowID)
 }
 
+func TestImportExportManager_ExportData_case3(t *testing.T) {
+	os.MkdirAll("./testdata", 0755)
+	defer os.RemoveAll("./testdata")
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	configService := mockconfig.NewMockReaderWriter(ctrl)
+	configService.EXPECT().GetConfig(gomock.Any(), constants.ConfigKeyExportShareStoragePath).Return(&config.SystemConfig{ConfigValue: "./testdata"}, nil).AnyTimes()
+	models.SetConfigReaderWriter(configService)
+
+	service := GetImportExportService()
+	_, err := service.ExportData(context.TODO(), message.DataExportReq{
+		ClusterID:       "",
+		UserName:        "userName",
+		Password:        "password",
+		FileType:        "csv",
+		Filter:          "filter",
+		StorageType:     string(constants.StorageTypeS3),
+		ZipName:         "export.zip",
+		EndpointUrl:     "endpointUrl",
+		BucketUrl:       "bucketUrl",
+		AccessKey:       "ak",
+		SecretAccessKey: "sk",
+		Comment:         "comment",
+	})
+	assert.NotNil(t, err)
+
+	_, err = service.ExportData(context.TODO(), message.DataExportReq{
+		ClusterID:       "clusterId",
+		UserName:        "",
+		Password:        "password",
+		FileType:        "csv",
+		Filter:          "filter",
+		StorageType:     string(constants.StorageTypeS3),
+		ZipName:         "export.zip",
+		EndpointUrl:     "endpointUrl",
+		BucketUrl:       "bucketUrl",
+		AccessKey:       "ak",
+		SecretAccessKey: "sk",
+		Comment:         "comment",
+	})
+	assert.NotNil(t, err)
+
+	_, err = service.ExportData(context.TODO(), message.DataExportReq{
+		ClusterID:       "clusterId",
+		UserName:        "userName",
+		Password:        "password",
+		FileType:        "csv",
+		Filter:          "filter",
+		StorageType:     string(constants.StorageTypeS3),
+		ZipName:         "export.zip",
+		EndpointUrl:     "endpointUrl",
+		BucketUrl:       "bucketUrl",
+		AccessKey:       "ak",
+		SecretAccessKey: "sk",
+		Comment:         "comment",
+	})
+	assert.NotNil(t, err)
+
+	_, err = service.ExportData(context.TODO(), message.DataExportReq{
+		ClusterID:       "clusterId",
+		UserName:        "userName",
+		Password:        "",
+		FileType:        "csv",
+		Filter:          "filter",
+		StorageType:     string(constants.StorageTypeS3),
+		ZipName:         "export.zip",
+		EndpointUrl:     "endpointUrl",
+		BucketUrl:       "bucketUrl",
+		AccessKey:       "ak",
+		SecretAccessKey: "sk",
+		Comment:         "comment",
+	})
+	assert.NotNil(t, err)
+
+	_, err = service.ExportData(context.TODO(), message.DataExportReq{
+		ClusterID:       "clusterId",
+		UserName:        "userName",
+		Password:        "password",
+		FileType:        "xxx",
+		Filter:          "filter",
+		StorageType:     string(constants.StorageTypeS3),
+		ZipName:         "export.zip",
+		EndpointUrl:     "endpointUrl",
+		BucketUrl:       "bucketUrl",
+		AccessKey:       "ak",
+		SecretAccessKey: "sk",
+		Comment:         "comment",
+	})
+	assert.NotNil(t, err)
+
+	_, err = service.ExportData(context.TODO(), message.DataExportReq{
+		ClusterID:       "clusterId",
+		UserName:        "userName",
+		Password:        "password",
+		FileType:        "csv",
+		Filter:          "filter",
+		StorageType:     string(constants.StorageTypeS3),
+		ZipName:         "",
+		EndpointUrl:     "",
+		BucketUrl:       "bucketUrl",
+		AccessKey:       "ak",
+		SecretAccessKey: "sk",
+		Comment:         "comment",
+	})
+	assert.NotNil(t, err)
+
+	_, err = service.ExportData(context.TODO(), message.DataExportReq{
+		ClusterID:       "clusterId",
+		UserName:        "userName",
+		Password:        "password",
+		FileType:        "csv",
+		Filter:          "filter",
+		StorageType:     string(constants.StorageTypeS3),
+		ZipName:         "",
+		EndpointUrl:     "endpointUrl",
+		BucketUrl:       "",
+		AccessKey:       "ak",
+		SecretAccessKey: "sk",
+		Comment:         "comment",
+	})
+	assert.NotNil(t, err)
+
+	_, err = service.ExportData(context.TODO(), message.DataExportReq{
+		ClusterID:       "clusterId",
+		UserName:        "userName",
+		Password:        "password",
+		FileType:        "csv",
+		Filter:          "filter",
+		StorageType:     string(constants.StorageTypeS3),
+		ZipName:         "",
+		EndpointUrl:     "endpointUrl",
+		BucketUrl:       "bucketUrl",
+		AccessKey:       "",
+		SecretAccessKey: "sk",
+		Comment:         "comment",
+	})
+	assert.NotNil(t, err)
+
+	_, err = service.ExportData(context.TODO(), message.DataExportReq{
+		ClusterID:       "clusterId",
+		UserName:        "userName",
+		Password:        "password",
+		FileType:        "csv",
+		Filter:          "filter",
+		StorageType:     string(constants.StorageTypeS3),
+		ZipName:         "",
+		EndpointUrl:     "endpointUrl",
+		BucketUrl:       "bucketUrl",
+		AccessKey:       "ak",
+		SecretAccessKey: "",
+		Comment:         "comment",
+	})
+	assert.NotNil(t, err)
+}
+
 func TestImportExportManager_ImportData_case1(t *testing.T) {
 	os.MkdirAll("./testdata", 0755)
 	defer os.RemoveAll("./testdata")
@@ -278,6 +435,120 @@ func TestImportExportManager_ImportData_case2(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.NotNil(t, resp.WorkFlowID)
+}
+
+func TestImportExportManager_ImportData_case3(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{
+		Entity: common.Entity{
+			ID:       "id-xxxx",
+			TenantId: "tid-xxx",
+		},
+	}, make([]*management.ClusterInstance, 0), nil).AnyTimes()
+	clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	configService := mockconfig.NewMockReaderWriter(ctrl)
+	configService.EXPECT().GetConfig(gomock.Any(), constants.ConfigKeyImportShareStoragePath).Return(&config.SystemConfig{ConfigValue: "./testdata"}, nil).AnyTimes()
+	models.SetConfigReaderWriter(configService)
+
+	service := GetImportExportService()
+	_, err := service.ImportData(context.TODO(), message.DataImportReq{
+		ClusterID:       "",
+		UserName:        "userName",
+		Password:        "password",
+		RecordId:        "record-xxx",
+		StorageType:     string(constants.StorageTypeS3),
+		EndpointUrl:     "endpointUrl",
+		BucketUrl:       "bucketUrl",
+		AccessKey:       "ak",
+		SecretAccessKey: "sk",
+		Comment:         "comment",
+	})
+	assert.NotNil(t, err)
+
+	_, err = service.ImportData(context.TODO(), message.DataImportReq{
+		ClusterID:       "clusterId",
+		UserName:        "",
+		Password:        "password",
+		RecordId:        "record-xxx",
+		StorageType:     string(constants.StorageTypeS3),
+		EndpointUrl:     "endpointUrl",
+		BucketUrl:       "bucketUrl",
+		AccessKey:       "ak",
+		SecretAccessKey: "sk",
+		Comment:         "comment",
+	})
+	assert.NotNil(t, err)
+
+	_, err = service.ImportData(context.TODO(), message.DataImportReq{
+		ClusterID:       "clusterId",
+		UserName:        "userName",
+		Password:        "",
+		RecordId:        "record-xxx",
+		StorageType:     string(constants.StorageTypeS3),
+		EndpointUrl:     "endpointUrl",
+		BucketUrl:       "bucketUrl",
+		AccessKey:       "ak",
+		SecretAccessKey: "sk",
+		Comment:         "comment",
+	})
+	assert.NotNil(t, err)
+
+	_, err = service.ImportData(context.TODO(), message.DataImportReq{
+		ClusterID:       "clusterId",
+		UserName:        "userName",
+		Password:        "password",
+		StorageType:     string(constants.StorageTypeS3),
+		EndpointUrl:     "",
+		BucketUrl:       "bucketUrl",
+		AccessKey:       "ak",
+		SecretAccessKey: "sk",
+		Comment:         "comment",
+	})
+	assert.NotNil(t, err)
+
+	_, err = service.ImportData(context.TODO(), message.DataImportReq{
+		ClusterID:       "clusterId",
+		UserName:        "userName",
+		Password:        "password",
+		StorageType:     string(constants.StorageTypeS3),
+		EndpointUrl:     "endpointUrl",
+		BucketUrl:       "",
+		AccessKey:       "ak",
+		SecretAccessKey: "sk",
+		Comment:         "comment",
+	})
+	assert.NotNil(t, err)
+
+	_, err = service.ImportData(context.TODO(), message.DataImportReq{
+		ClusterID:       "clusterId",
+		UserName:        "userName",
+		Password:        "password",
+		StorageType:     string(constants.StorageTypeS3),
+		EndpointUrl:     "endpointUrl",
+		BucketUrl:       "bucketUrl",
+		AccessKey:       "",
+		SecretAccessKey: "sk",
+		Comment:         "comment",
+	})
+	assert.NotNil(t, err)
+
+	_, err = service.ImportData(context.TODO(), message.DataImportReq{
+		ClusterID:       "clusterId",
+		UserName:        "userName",
+		Password:        "password",
+		StorageType:     string(constants.StorageTypeS3),
+		EndpointUrl:     "endpointUrl",
+		BucketUrl:       "bucketUrl",
+		AccessKey:       "ak",
+		SecretAccessKey: "",
+		Comment:         "comment",
+	})
+	assert.NotNil(t, err)
 }
 
 func TestImportExportManager_DeleteDataTransportRecord(t *testing.T) {

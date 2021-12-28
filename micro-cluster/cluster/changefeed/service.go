@@ -17,13 +17,20 @@ package changefeed
 
 import (
 	"context"
+	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
+	dbCommon "github.com/pingcap-inc/tiem/models/common"
 )
 
 type Service interface {
 	//
 	// CreateBetweenClusters
-	// @Description: create a change feed task for replicating the incremental data of source cluster to target cluster
+	// @Description: createExecutor a change feed task for replicating the incremental data of source cluster to target cluster
 	// @param ctx
 	// @param sourceClusterID
 	// @param targetClusterID
@@ -35,7 +42,7 @@ type Service interface {
 
 	//
 	// ReverseBetweenClusters reverse change feed task
-	// @Description: it will delete change feed task of source cluster, then create a new one for target
+	// @Description: it will delete all change feed tasks from source to target, then create a new one from the target
 	// @param ctx
 	// @param sourceClusterID
 	// @param targetClusterID
@@ -47,5 +54,85 @@ type Service interface {
 }
 
 func GetChangeFeedService() Service {
-	return nil
+	return GetManager()
+}
+
+func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID string, targetClusterID string, relationType constants.ClusterRelationType) (ID string, err error) {
+	sourceCluster, err:= handler.Get(ctx, sourceClusterID)
+	if err != nil {
+		return
+	}
+	targetCluster, err:= handler.Get(ctx, targetClusterID)
+	if err != nil {
+		return
+	}
+
+	address := targetCluster.GetClusterConnectAddresses()[0]
+
+	task := &changefeed.ChangeFeedTask {
+		Entity: dbCommon.Entity{
+			TenantId: framework.GetTenantIDFromContext(ctx),
+			Status:   string(constants.ChangeFeedStatusInitial),
+		},
+		Name:        fmt.Sprintf("from-%s-to-%s", sourceCluster.Cluster.Name, targetCluster.Cluster.Name),
+		ClusterId:   sourceClusterID,
+		StartTS:     0,
+		FilterRules: []string{},
+		Type: constants.DownstreamTypeTiDB,
+		Downstream: &changefeed.TiDBDownstream{
+			Ip: address.IP,
+			Port: address.Port,
+			Username: targetCluster.GetClusterUserNamePasswd().UserName,
+			Password: targetCluster.GetClusterUserNamePasswd().Password,
+			TargetClusterId: targetClusterID,
+		},
+	}
+
+	task, err = models.GetChangeFeedReaderWriter().Create(ctx, task)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("init change feed task failed, %s", err.Error())
+		return
+	} else {
+		ID = task.ID
+	}
+
+	err = p.createExecutor(ctx, sourceCluster, task)
+
+	return
+}
+
+func (p *Manager) ReverseBetweenClusters(ctx context.Context, sourceClusterID string, targetClusterID string, relationType constants.ClusterRelationType) (ID string, err error) {
+	sourceCluster, err:= handler.Get(ctx, sourceClusterID)
+	if err != nil {
+		return
+	}
+
+	// todo filter in db
+	tasks, _, queryErr := models.GetChangeFeedReaderWriter().QueryByClusterId(ctx, sourceClusterID, 0, 20)
+	if queryErr != nil {
+		err = queryErr
+	}
+	for _, task := range tasks {
+		// check target, type, status
+		if task.Type == constants.DownstreamTypeTiDB &&
+			!constants.ChangeFeedStatus(task.Status).IsFinal() &&
+			task.Downstream.(*changefeed.TiDBDownstream).TargetClusterId == targetClusterID {
+			result, deleteError := secondparty.Manager.DeleteChangeFeedTask(ctx, secondparty.ChangeFeedDeleteReq {
+				CDCAddress:   sourceCluster.GetCDCClientAddresses()[0].ToString(),
+				ChangeFeedID: task.ID,
+			})
+
+			if deleteError != nil || !result.Accepted {
+				framework.LogWithContext(ctx).Errorf("failed to delete change feed task, err = %v, result = %v", err, result)
+			}
+
+			err = models.GetChangeFeedReaderWriter().Delete(ctx, task.ID)
+			if err != nil {
+				framework.LogWithContext(ctx).Errorf("failed to delete change feed task, %s", err.Error())
+				return
+			}
+		}
+	}
+
+	return p.CreateBetweenClusters(ctx, targetClusterID, sourceClusterID, relationType)
 }

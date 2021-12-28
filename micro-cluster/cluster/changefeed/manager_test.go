@@ -76,7 +76,7 @@ func TestManager_Create(t *testing.T) {
 	}, nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
-		resp, err := NewManager().Create(context.TODO(), cluster.CreateChangeFeedTaskReq{
+		resp, err := GetManager().Create(context.TODO(), cluster.CreateChangeFeedTaskReq{
 			Name: "aa",
 			ClusterID: "clusterId",
 			StartTS: 121212,
@@ -125,7 +125,7 @@ func TestManager_Delete(t *testing.T) {
 	}, nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
-		resp, err := NewManager().Delete(context.TODO(), cluster.DeleteChangeFeedTaskReq{
+		resp, err := GetManager().Delete(context.TODO(), cluster.DeleteChangeFeedTaskReq{
 			"taskId",
 		})
 		assert.NoError(t, err)
@@ -168,7 +168,7 @@ func TestManager_Pause(t *testing.T) {
 	}, nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
-		_, err := NewManager().Pause(context.TODO(), cluster.PauseChangeFeedTaskReq{
+		_, err := GetManager().Pause(context.TODO(), cluster.PauseChangeFeedTaskReq{
 			"taskId",
 		})
 		assert.NoError(t, err)
@@ -210,7 +210,7 @@ func TestManager_Resume(t *testing.T) {
 	}, nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
-		_, err := NewManager().Resume(context.TODO(), cluster.ResumeChangeFeedTaskReq{
+		_, err := GetManager().Resume(context.TODO(), cluster.ResumeChangeFeedTaskReq{
 			"taskId",
 		})
 		assert.NoError(t, err)
@@ -253,7 +253,7 @@ func TestManager_Update(t *testing.T) {
 	}, nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
-		_, err := NewManager().Update(context.TODO(), cluster.UpdateChangeFeedTaskReq{
+		_, err := GetManager().Update(context.TODO(), cluster.UpdateChangeFeedTaskReq{
 			Name: "aa",
 			FilterRules: []string{"*.*"},
 			DownstreamType: "tidb",
@@ -320,7 +320,7 @@ func TestManager_Query(t *testing.T) {
 	}, nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
-		resp, total, err := NewManager().Query(context.TODO(), cluster.QueryChangeFeedTaskReq{
+		resp, total, err := GetManager().Query(context.TODO(), cluster.QueryChangeFeedTaskReq{
 			ClusterId: "clusterId",
 		})
 		assert.NoError(t, err)
@@ -362,7 +362,7 @@ func TestManager_Detail(t *testing.T) {
 	}, nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
-		resp, err := NewManager().Detail(context.TODO(), cluster.DetailChangeFeedTaskReq{
+		resp, err := GetManager().Detail(context.TODO(), cluster.DetailChangeFeedTaskReq{
 			"taskId",
 		})
 		assert.NoError(t, err)

@@ -28,12 +28,21 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
+	"sync"
 )
+
+var manager *Manager
+var once sync.Once
 
 type Manager struct{}
 
-func NewManager() *Manager {
-	return &Manager{}
+func GetManager() *Manager {
+	once.Do(func() {
+		if manager == nil {
+			manager = &Manager{}
+		}
+	})
+	return manager
 }
 
 // Create
@@ -73,24 +82,7 @@ func (p *Manager) Create(ctx context.Context, request cluster.CreateChangeFeedTa
 	}
 
 	go func() {
-		ctx = framework.NewBackgroundMicroCtx(ctx, true)
-		libResp, libError := secondparty.Manager.CreateChangeFeedTask(ctx, secondparty.ChangeFeedCreateReq {
-			CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
-			ChangeFeedID: task.ID,
-			SinkURI:      task.Downstream.GetSinkURI(),
-			StartTS:      uint64(task.StartTS),
-			FilterRules:  task.FilterRules,
-		})
-		if libError != nil || !libResp.Accepted {
-			framework.LogWithContext(ctx).Errorf("create change feed task failed, err = %v, resp = %v", libError, libResp)
-			return
-		}
-
-		if libResp.Succeed {
-			models.GetChangeFeedReaderWriter().UnlockStatus(ctx, task.ID, constants.ChangeFeedStatusNormal)
-		} else {
-			framework.LogWithContext(ctx).Errorf("create change feed task faile, resp = %v", libResp)
-		}
+		p.createExecutor(ctx, clusterMeta, task)
 	}()
 
 	return
@@ -118,7 +110,7 @@ func (p *Manager) Delete(ctx context.Context, request cluster.DeleteChangeFeedTa
 	})
 
 	if err != nil || !result.Accepted {
-		framework.LogWithContext(ctx).Errorf("delete change feed task failed, err = %v, result = %v", err, result)
+		framework.LogWithContext(ctx).Errorf("failed to delete change feed task, err = %v, result = %v", err, result)
 	}
 
 	err = models.GetChangeFeedReaderWriter().Delete(ctx, request.ID)
@@ -152,7 +144,7 @@ func (p *Manager) Pause(ctx context.Context, request cluster.PauseChangeFeedTask
 
 	go func() {
 		ctx = framework.NewBackgroundMicroCtx(ctx, true)
-		pauseExecutor(ctx, clusterMeta, task)
+		p.pauseExecutor(ctx, clusterMeta, task)
 	}()
 
 	return
@@ -179,7 +171,7 @@ func (p *Manager) Resume(ctx context.Context, request cluster.ResumeChangeFeedTa
 
 	go func() {
 		ctx = framework.NewBackgroundMicroCtx(ctx, true)
-		resumeExecutor(ctx, clusterMeta, task)
+		p.resumeExecutor(ctx, clusterMeta, task)
 	}()
 
 	return
@@ -223,7 +215,7 @@ func (p *Manager) Update(ctx context.Context, request cluster.UpdateChangeFeedTa
 				return
 			}
 
-			err = pauseExecutor(ctx, clusterMeta, task)
+			err = p.pauseExecutor(ctx, clusterMeta, task)
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("update change feed task %s failed, step = pause, err = %s", request.ID, err.Error())
 				return
@@ -231,7 +223,7 @@ func (p *Manager) Update(ctx context.Context, request cluster.UpdateChangeFeedTa
 		}
 
 		models.GetChangeFeedReaderWriter().UpdateConfig(ctx, task)
-		err = updateExecutor(ctx, clusterMeta, task)
+		err = p.updateExecutor(ctx, clusterMeta, task)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("update change feed task %s failed, step = update, err = %s", request.ID, err.Error())
 			return
@@ -242,7 +234,7 @@ func (p *Manager) Update(ctx context.Context, request cluster.UpdateChangeFeedTa
 			if err != nil {
 				return
 			}
-			err = resumeExecutor(ctx, clusterMeta, task)
+			err = p.resumeExecutor(ctx, clusterMeta, task)
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("update change feed task %s failed, step = resume, err = %s", request.ID, err.Error())
 				return
@@ -318,7 +310,32 @@ func (p *Manager) Query(ctx context.Context, request cluster.QueryChangeFeedTask
 	return
 }
 
-func pauseExecutor(ctx context.Context, clusterMeta *handler.ClusterMeta, task *changefeed.ChangeFeedTask) error {
+func (p *Manager) createExecutor(ctx context.Context, clusterMeta *handler.ClusterMeta, task *changefeed.ChangeFeedTask) (err error) {
+	ctx = framework.NewBackgroundMicroCtx(ctx, true)
+	libResp, libError := secondparty.Manager.CreateChangeFeedTask(ctx, secondparty.ChangeFeedCreateReq {
+		CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
+		ChangeFeedID: task.ID,
+		SinkURI:      task.Downstream.GetSinkURI(),
+		StartTS:      uint64(task.StartTS),
+		FilterRules:  task.FilterRules,
+	})
+	if libError != nil || !libResp.Accepted {
+		errMsg := fmt.Sprintf("createExecutor change feed task failed, err = %v, resp = %v", libError, libResp)
+		framework.LogWithContext(ctx).Errorf(errMsg)
+		return errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, errMsg)
+	}
+
+	if libResp.Succeed {
+		models.GetChangeFeedReaderWriter().UnlockStatus(ctx, task.ID, constants.ChangeFeedStatusNormal)
+	} else {
+		framework.LogWithContext(ctx).Errorf("createExecutor change feed task faile, resp = %v", libResp)
+		return errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, libResp.ErrorMsg)
+	}
+
+	return
+}
+
+func (p *Manager) pauseExecutor(ctx context.Context, clusterMeta *handler.ClusterMeta, task *changefeed.ChangeFeedTask) error {
 	libResp, libError := secondparty.Manager.PauseChangeFeedTask(ctx, secondparty.ChangeFeedPauseReq {
 		CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
 		ChangeFeedID: task.ID,
@@ -333,7 +350,7 @@ func pauseExecutor(ctx context.Context, clusterMeta *handler.ClusterMeta, task *
 	return models.GetChangeFeedReaderWriter().UnlockStatus(ctx, task.ID, constants.ChangeFeedStatusStopped)
 }
 
-func updateExecutor(ctx context.Context, clusterMeta *handler.ClusterMeta, task *changefeed.ChangeFeedTask) error {
+func (p *Manager) updateExecutor(ctx context.Context, clusterMeta *handler.ClusterMeta, task *changefeed.ChangeFeedTask) error {
 	libResp, libError := secondparty.Manager.UpdateChangeFeedTask(ctx, secondparty.ChangeFeedUpdateReq {
 		CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
 		ChangeFeedID: task.ID,
@@ -350,7 +367,7 @@ func updateExecutor(ctx context.Context, clusterMeta *handler.ClusterMeta, task 
 	return nil
 }
 
-func resumeExecutor(ctx context.Context, clusterMeta *handler.ClusterMeta, task *changefeed.ChangeFeedTask) error {
+func (p *Manager) resumeExecutor(ctx context.Context, clusterMeta *handler.ClusterMeta, task *changefeed.ChangeFeedTask) error {
 	libResp, libError := secondparty.Manager.ResumeChangeFeedTask(ctx, secondparty.ChangeFeedResumeReq {
 		CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
 		ChangeFeedID: task.ID,

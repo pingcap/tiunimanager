@@ -187,6 +187,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 	for i, param := range pgm {
 		params[i] = structs.ClusterParameterSampleInfo{
 			ParamId:        param.ID,
+			Category:       param.Category,
 			Name:           param.Name,
 			InstanceType:   param.InstanceType,
 			UpdateSource:   param.UpdateSource,

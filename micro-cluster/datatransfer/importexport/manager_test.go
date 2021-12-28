@@ -45,7 +45,7 @@ func TestGetImportExportService(t *testing.T) {
 	assert.NotNil(t, service)
 }
 
-func TestImportExportManager_ExportData(t *testing.T) {
+func TestImportExportManager_ExportData_case1(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -88,6 +88,64 @@ func TestImportExportManager_ExportData(t *testing.T) {
 		FileType:        "csv",
 		Filter:          "filter",
 		StorageType:     string(constants.StorageTypeS3),
+		ZipName:         "export.zip",
+		EndpointUrl:     "endpointUrl",
+		BucketUrl:       "bucketUrl",
+		AccessKey:       "ak",
+		SecretAccessKey: "sk",
+		Comment:         "comment",
+	})
+
+	assert.Nil(t, err)
+	assert.NotNil(t, resp.WorkFlowID)
+}
+
+func TestImportExportManager_ExportData_case2(t *testing.T) {
+	os.MkdirAll("./testdata", 0755)
+	defer os.RemoveAll("./testdata")
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{
+		Entity: common.Entity{
+			ID:       "id-xxxx",
+			TenantId: "tid-xxx",
+		},
+	}, make([]*management.ClusterInstance, 0), nil).AnyTimes()
+	clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+	workflow.MockWorkFlowService(workflowService)
+	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
+	workflowService.EXPECT().RegisterWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
+	}, nil).AnyTimes()
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	configService := mockconfig.NewMockReaderWriter(ctrl)
+	configService.EXPECT().GetConfig(gomock.Any(), constants.ConfigKeyExportShareStoragePath).Return(&config.SystemConfig{ConfigValue: "./testdata"}, nil).AnyTimes()
+	models.SetConfigReaderWriter(configService)
+
+	transportService := mockimportexport.NewMockReaderWriter(ctrl)
+	transportService.EXPECT().CreateDataTransportRecord(gomock.Any(), gomock.Any()).Return(&importexport.DataTransportRecord{Entity: common.Entity{
+		ID: "xxx",
+	}}, nil).AnyTimes()
+	models.SetImportExportReaderWriter(transportService)
+
+	service := GetImportExportService()
+	resp, err := service.ExportData(context.TODO(), message.DataExportReq{
+		ClusterID:       "test-cls",
+		UserName:        "userName",
+		Password:        "password",
+		FileType:        "csv",
+		Filter:          "filter",
+		StorageType:     string(constants.StorageTypeNFS),
 		ZipName:         "export.zip",
 		EndpointUrl:     "endpointUrl",
 		BucketUrl:       "bucketUrl",

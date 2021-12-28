@@ -209,38 +209,6 @@ func TestImportExportManager_ExportData_case3(t *testing.T) {
 		ClusterID:       "clusterId",
 		UserName:        "userName",
 		Password:        "password",
-		FileType:        "csv",
-		Filter:          "filter",
-		StorageType:     string(constants.StorageTypeS3),
-		ZipName:         "export.zip",
-		EndpointUrl:     "endpointUrl",
-		BucketUrl:       "bucketUrl",
-		AccessKey:       "ak",
-		SecretAccessKey: "sk",
-		Comment:         "comment",
-	})
-	assert.NotNil(t, err)
-
-	_, err = service.ExportData(context.TODO(), message.DataExportReq{
-		ClusterID:       "clusterId",
-		UserName:        "userName",
-		Password:        "",
-		FileType:        "csv",
-		Filter:          "filter",
-		StorageType:     string(constants.StorageTypeS3),
-		ZipName:         "export.zip",
-		EndpointUrl:     "endpointUrl",
-		BucketUrl:       "bucketUrl",
-		AccessKey:       "ak",
-		SecretAccessKey: "sk",
-		Comment:         "comment",
-	})
-	assert.NotNil(t, err)
-
-	_, err = service.ExportData(context.TODO(), message.DataExportReq{
-		ClusterID:       "clusterId",
-		UserName:        "userName",
-		Password:        "password",
 		FileType:        "xxx",
 		Filter:          "filter",
 		StorageType:     string(constants.StorageTypeS3),

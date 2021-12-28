@@ -122,7 +122,7 @@ func (flow *WorkFlowAggregation) addContext(key string, value interface{}) {
 	flow.Context.SetData(key, value)
 	data, err := json.Marshal(flow.Context.FlowData)
 	if err != nil {
-		framework.Log().Warnf("json marshal flow context data failed %s", err.Error())
+		framework.LogWithContext(flow.Context).Warnf("json marshal flow context data failed %s", err.Error())
 		return
 	}
 	flow.Flow.Context = string(data)
@@ -142,12 +142,12 @@ func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDe
 	node.Processing()
 	data, err := json.Marshal(flow.Context.FlowData)
 	if err != nil {
-		framework.Log().Warnf("json marshal flow context data failed %s", err.Error())
+		framework.LogWithContext(flow.Context).Warnf("json marshal flow context data failed %s", err.Error())
 	}
 	flow.Flow.Context = string(data)
 	err = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
 	if err != nil {
-		framework.Log().Warnf("update workflow %s detail of bizId %s failed %s", flow.Flow.ID, flow.Flow.BizID, err.Error())
+		framework.LogWithContext(flow.Context).Warnf("update workflow %s detail of bizId %s failed %s", flow.Flow.ID, flow.Flow.BizID, err.Error())
 	}
 
 	err = nodeDefine.Executor(node, &flow.Context)
@@ -164,7 +164,7 @@ func (flow *WorkFlowAggregation) handleTaskError(node *workflow.WorkFlowNode, no
 	if "" != nodeDefine.FailEvent {
 		flow.handle(flow.Define.TaskNodes[nodeDefine.FailEvent])
 	} else {
-		framework.Log().Warnf("no fail event in flow definition, flowname %s", nodeDefine.Name)
+		framework.LogWithContext(flow.Context).Warnf("no fail event in flow definition, flowname %s", nodeDefine.Name)
 	}
 }
 
@@ -187,7 +187,7 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 
 	_, err := models.GetWorkFlowReaderWriter().CreateWorkFlowNode(flow.Context, node)
 	if err != nil {
-		framework.Log().Warnf("create workflow node, node %s failed %s", node.Name, err.Error())
+		framework.LogWithContext(flow.Context).Warnf("create workflow node, node %s failed %s", node.Name, err.Error())
 	}
 	handleError := flow.executeTask(node, nodeDefine)
 	if handleError != nil {

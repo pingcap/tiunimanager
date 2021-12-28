@@ -406,6 +406,9 @@ func TestImportExportManager_ImportData_case2(t *testing.T) {
 }
 
 func TestImportExportManager_ImportData_case3(t *testing.T) {
+	os.MkdirAll("./testdata", 0755)
+	defer os.RemoveAll("./testdata")
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 

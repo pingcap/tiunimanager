@@ -31,7 +31,6 @@ import (
 func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	log := framework.LogWithContext(ctx)
 	log.Info("begin verifyHosts")
-	defer log.Infof("end verifyHosts, err: %v", err)
 
 	resourcePool, hosts, err := getImportHostInfoFromFlowContext(ctx)
 	if err != nil {
@@ -40,6 +39,7 @@ func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 	for _, host := range hosts {
 		err = resourcePool.hostInitiator.Verify(ctx, &host)
 		if err != nil {
+			log.Errorf("verify host %s %s failed, %v", host.HostName, host.IP, err)
 			return err
 		}
 		log.Infof("verify host %v succeed", host)

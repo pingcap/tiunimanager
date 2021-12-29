@@ -15,7 +15,7 @@
 
 package constants
 
-const SecondPartyReady = false
+const SecondPartyReady = true
 
 const (
 	FlowImportHosts          string = "ImportHosts"

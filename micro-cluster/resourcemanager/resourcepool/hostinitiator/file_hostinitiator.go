@@ -56,35 +56,41 @@ func (p *FileHostInitiator) SetSecondPartyServ(s secondparty.SecondPartyService)
 func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (err error) {
 	log := framework.LogWithContext(ctx)
 	log.Infof("verify host %v begins", *h)
-	defer log.Infof("verify host %s %s end, %v", h.HostName, h.IP, err)
 
 	err = p.verifyConnect(ctx, h)
 	if err != nil {
+		log.Errorf("verify host connect %s %s failed, %v", h.HostName, h.IP, err)
 		return err
 	}
 	defer p.closeSSHConnect()
 
 	if err = p.verifyCpuMem(ctx, h); err != nil {
+		log.Errorf("verify host cpu memory %s %s failed, %v", h.HostName, h.IP, err)
 		return err
 	}
 
 	if err = p.verifyDisks(ctx, h); err != nil {
+		log.Errorf("verify host disks %s %s failed, %v", h.HostName, h.IP, err)
 		return err
 	}
 
 	if err = p.verifyFS(ctx, h); err != nil {
+		log.Errorf("verify host file system %s %s failed, %v", h.HostName, h.IP, err)
 		return err
 	}
 
 	if err = p.verifySwap(ctx, h); err != nil {
+		log.Errorf("verify host swap %s %s failed, %v", h.HostName, h.IP, err)
 		return err
 	}
 
 	if err = p.verifyEnv(ctx, h); err != nil {
+		log.Errorf("verify host env %s %s failed, %v", h.HostName, h.IP, err)
 		return err
 	}
 
 	if err = p.verifyOSEnv(ctx, h); err != nil {
+		log.Errorf("verify host os env %s %s failed, %v", h.HostName, h.IP, err)
 		return err
 	}
 

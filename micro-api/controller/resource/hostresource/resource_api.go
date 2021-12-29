@@ -228,7 +228,7 @@ func detectDuplicateElement(hostIds []string) (string, bool) {
 // @Security ApiKeyAuth
 // @Param hostIds body message.DeleteHostsReq true "list of host IDs"
 // @Success 200 {object} controller.CommonResult{data=message.DeleteHostsResp}
-// @Router /resources/hosts/ [delete]
+// @Router /resources/hosts [delete]
 func RemoveHosts(c *gin.Context) {
 	var req message.DeleteHostsReq
 
@@ -253,7 +253,7 @@ func RemoveHosts(c *gin.Context) {
 // @Produce octet-stream
 // @Security ApiKeyAuth
 // @Success 200 {file} file
-// @Router /resources/hosts-template/ [get]
+// @Router /resources/hosts-template [get]
 func DownloadHostTemplateFile(c *gin.Context) {
 	curDir, _ := os.Getwd()
 	templateName := ImportHostTemplateFileName

@@ -84,7 +84,7 @@ func (p *Manager) ScaleOut(ctx context.Context, request cluster.ScaleOutClusterR
 	clusterMeta, err := handler.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
-			"load cluser %s meta from db error: %s", request.ClusterID, err.Error())
+			"load cluster %s meta from db error: %s", request.ClusterID, err.Error())
 		return
 	}
 
@@ -140,7 +140,7 @@ func (p *Manager) ScaleIn(ctx context.Context, request cluster.ScaleInClusterReq
 	clusterMeta, err := handler.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
-			"load cluser %s meta from db error: %s", request.ClusterID, err.Error())
+			"load cluster %s meta from db error: %s", request.ClusterID, err.Error())
 		return
 	}
 
@@ -214,7 +214,7 @@ func (p *Manager) Clone(ctx context.Context, request cluster.CloneClusterReq) (r
 	sourceClusterMeta, err := handler.Get(ctx, request.SourceClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
-			"load source cluser %s meta from db error: %s", request.SourceClusterID, err.Error())
+			"load source cluster %s meta from db error: %s", request.SourceClusterID, err.Error())
 		return
 	}
 
@@ -271,7 +271,7 @@ var createClusterFlow = workflow.WorkFlowDefine{
 func (p *Manager) CreateCluster(ctx context.Context, req cluster.CreateClusterReq) (resp cluster.CreateClusterResp, err error) {
 	meta := &handler.ClusterMeta{}
 	if err = meta.BuildCluster(ctx, req.CreateClusterParameter); err != nil {
-		framework.LogWithContext(ctx).Errorf("build cluser %s error: %s", req.Name, err.Error())
+		framework.LogWithContext(ctx).Errorf("build cluster %s error: %s", req.Name, err.Error())
 		return
 	}
 	if err = meta.AddInstances(ctx, req.ResourceParameter.InstanceResource); err != nil {
@@ -328,7 +328,7 @@ func (p *Manager) RestoreNewCluster(ctx context.Context, req cluster.RestoreNewC
 	meta := &handler.ClusterMeta{}
 
 	if err = meta.BuildCluster(ctx, req.CreateClusterParameter); err != nil {
-		framework.LogWithContext(ctx).Errorf("build cluser %s error: %s", req.Name, err.Error())
+		framework.LogWithContext(ctx).Errorf("build cluster %s error: %s", req.Name, err.Error())
 		return
 	}
 	if err = meta.AddInstances(ctx, req.ResourceParameter.InstanceResource); err != nil {
@@ -370,7 +370,7 @@ func (p *Manager) StopCluster(ctx context.Context, req cluster.StopClusterReq) (
 	meta, err := handler.Get(ctx, req.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
-			"load cluser %s meta from db error: %s", req.ClusterID, err.Error())
+			"load cluster %s meta from db error: %s", req.ClusterID, err.Error())
 		return
 	}
 
@@ -405,7 +405,7 @@ func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterRe
 	meta, err := handler.Get(ctx, req.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
-			"load cluser %s meta from db error: %s", req.ClusterID, err.Error())
+			"load cluster %s meta from db error: %s", req.ClusterID, err.Error())
 		return
 	}
 
@@ -439,7 +439,7 @@ func (p *Manager) RestartCluster(ctx context.Context, req cluster.RestartCluster
 	meta, err := handler.Get(ctx, req.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
-			"load cluser %s meta from db error: %s", req.ClusterID, err.Error())
+			"load cluster %s meta from db error: %s", req.ClusterID, err.Error())
 		return
 	}
 
@@ -512,7 +512,7 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 	for _, clusterName := range req.ClusterNames {
 		meta := &handler.ClusterMeta{}
 		if err = meta.BuildForTakeover(ctx, clusterName); err != nil {
-			errMsg := fmt.Sprintf("takeover cluser %s error: %s", clusterName, err.Error())
+			errMsg := fmt.Sprintf("takeover cluster %s error: %s", clusterName, err.Error())
 			framework.LogWithContext(ctx).Errorf(errMsg)
 			resp.FailedErrors[clusterName] = errMsg
 			continue
@@ -581,7 +581,8 @@ func (p *Manager) QueryCluster(ctx context.Context, req cluster.QueryClustersReq
 func (p *Manager) DetailCluster(ctx context.Context, req cluster.QueryClusterDetailReq) (resp cluster.QueryClusterDetailResp, err error) {
 	meta, err := handler.Get(ctx, req.ClusterID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("get cluster failed, clusterId = %s, err = %s", req.ClusterID, err.Error())
+		framework.LogWithContext(ctx).Errorf(
+			"load cluster %s meta from db error: %s", req.ClusterID, err.Error())
 		return
 	}
 
@@ -600,7 +601,7 @@ func (p *Manager) GetMonitorInfo(ctx context.Context, req cluster.QueryMonitorIn
 	clusterMeta, err := handler.Get(ctx, req.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
-			"load cluser %s meta from db error: %s", req.ClusterID, err.Error())
+			"load cluster %s meta from db error: %s", req.ClusterID, err.Error())
 		return resp, err
 	}
 

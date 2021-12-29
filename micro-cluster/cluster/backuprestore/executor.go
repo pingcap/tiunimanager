@@ -40,7 +40,7 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 	tidbAddress := meta.GetClusterConnectAddresses()
 	if len(tidbAddress) == 0 {
 		framework.LogWithContext(ctx).Errorf("get tidb address from meta failed, empty address")
-		return nil
+		return fmt.Errorf("get tidb address from meta failed, empty address")
 	}
 	framework.LogWithContext(ctx).Infof("get cluster %s tidb address from meta, %+v", meta.Cluster.ID, tidbAddress)
 	tidbServerHost := tidbAddress[0].IP

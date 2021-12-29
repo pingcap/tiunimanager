@@ -18,19 +18,20 @@ package secondparty
 import (
 	ctx "context"
 	"fmt"
-	"github.com/DATA-DOG/go-sqlmock"
-	"golang.org/x/net/context"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/DATA-DOG/go-sqlmock"
+	"golang.org/x/net/context"
 )
 
 type Foo1 struct {
-	Bar                string
+	Bar string
 }
 
 type Foo2 struct {
-	Bar                string `yaml:"bar"`
+	Bar string `yaml:"bar"`
 }
 
 func Test_assert_false(t *testing.T) {
@@ -64,7 +65,7 @@ func Test_newTmpFileWithContent(t *testing.T) {
 }
 
 func Test_findName_IncorrectFieldKey(t *testing.T) {
-	foo2 := Foo2 {
+	foo2 := Foo2{
 		"bar",
 	}
 	v := reflect.ValueOf(&foo2).Elem()
@@ -82,14 +83,14 @@ func Test_SetField_NonPointer(t *testing.T) {
 			t.Errorf("The test did not panic")
 		}
 	}()
-	foo1 := Foo1 {
+	foo1 := Foo1{
 		"bar",
 	}
 	SetField(ctx.TODO(), foo1, FieldKey_Yaml, "bar", "baz")
 }
 
 func Test_SetField_FieldNotExist(t *testing.T) {
-	foo2 := Foo2 {
+	foo2 := Foo2{
 		"bar",
 	}
 	SetField(ctx.TODO(), &foo2, FieldKey_Yaml, "nobar", "baz")
@@ -99,7 +100,7 @@ func Test_SetField_FieldNotExist(t *testing.T) {
 }
 
 func Test_SetField_Success(t *testing.T) {
-	foo2 := Foo2 {
+	foo2 := Foo2{
 		"bar",
 	}
 	SetField(ctx.TODO(), &foo2, FieldKey_Yaml, "bar", "newbar")
@@ -141,5 +142,40 @@ func Test_execShowRestoreInfoThruSQL_Success(t *testing.T) {
 	resp := execShowRestoreInfoThruSQL(context.TODO(), db, "SHOW RESTORES")
 	if resp.Progress != 100 && resp.ErrorStr != "" {
 		t.Errorf("case: show restore info. Progress(%f) should be 100, and ErrorStr(%v) should have zero value", resp.Progress, resp.ErrorStr)
+	}
+}
+
+//func Test_setTiUPMirror(t *testing.T) {
+//	res, err := setTiUPMirror(context.TODO(), constants.TiUPBinPath, "https://tiup-mirrors.pingcap.com")
+//	if err != nil {
+//		t.Error(err)
+//	}
+//	fmt.Println(res)
+//
+//	mirror, err := showTiUPMirror(context.TODO(), constants.TiUPBinPath)
+//	if err != nil || mirror != "https://tiup-mirrors.pingcap.com\n" {
+//		t.Error(err)
+//	}
+//
+//	res, err = setTiUPMirror(context.TODO(), constants.TiUPBinPath, "http://127.0.0.2:8080/tiup-repo/")
+//	if err == nil || res != "" {
+//		t.Error(err)
+//	}
+//
+//	mirror, err = showTiUPMirror(context.TODO(), constants.TiUPBinPath)
+//	if err != nil || mirror != "https://tiup-mirrors.pingcap.com\n" {
+//		t.Error(err)
+//	}
+//}
+
+func Test_setTiUPMirror(t *testing.T) {
+	_, err := setTiUPMirror(context.TODO(), "mock-tiup", "https://tiup-mirrors.pingcap.com")
+	if err == nil {
+		t.Error("err nil")
+	}
+
+	_, err = showTiUPMirror(context.TODO(), "mock-tiup")
+	if err == nil {
+		t.Error("err nil")
 	}
 }

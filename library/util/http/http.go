@@ -97,6 +97,18 @@ func PostJSON(reqURL string, reqParams map[string]interface{}, headers map[strin
 	return post(reqURL, reqParams, "application/json", nil, headers)
 }
 
+
+// PutJSON
+// @Description: implements HTTP PUT with JSON format
+// @Parameter reqURL
+// @Parameter reqParams
+// @Parameter headers
+// @return *http.Response
+// @return error
+func PutJSON(reqURL string, reqParams map[string]interface{}, headers map[string]string) (*http.Response, error) {
+	return postOrPut("PUT", reqURL, reqParams, "application/json", nil, headers)
+}
+
 // PostFile
 // @Description: implements HTTP POST with file
 // @Parameter reqURL
@@ -119,6 +131,10 @@ func PostFile(reqURL string, reqParams map[string]interface{}, files []UploadFil
 // @return *http.Response
 // @return error
 func post(reqURL string, reqParams map[string]interface{}, contentType string, files []UploadFile, headers map[string]string) (*http.Response, error) {
+	return postOrPut("POST", reqURL, reqParams, contentType, files, headers)
+}
+
+func postOrPut(method string, reqURL string, reqParams map[string]interface{}, contentType string, files []UploadFile, headers map[string]string) (*http.Response, error) {
 	if reqParams == nil {
 		return nil, errors.New("the request parameter cannot be nil")
 	}
@@ -126,7 +142,7 @@ func post(reqURL string, reqParams map[string]interface{}, contentType string, f
 	if err != nil {
 		return nil, err
 	}
-	httpRequest, _ := http.NewRequest("POST", reqURL, requestBody)
+	httpRequest, _ := http.NewRequest(method, reqURL, requestBody)
 	httpRequest.Header.Add("Content-Type", realContentType)
 	for k, v := range headers {
 		httpRequest.Header.Add(k, v)
@@ -184,4 +200,13 @@ func getReader(reqParams map[string]interface{}, contentType string, files []Upl
 		reqBody := urlValues.Encode()
 		return strings.NewReader(reqBody), contentType, nil
 	}
+}
+
+func Delete(reqURL string) (*http.Response, error) {
+	httpRequest, _ := http.NewRequest("DELETE", reqURL, nil)
+	resp, err := httpClient.Do(httpRequest)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }

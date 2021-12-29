@@ -140,7 +140,7 @@ func handlePanic(ctx context.Context, funcName string, resp *clusterpb.RpcRespon
 func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandler {
 	handler := new(ClusterServiceHandler)
 	handler.resourceManager = resourcemanager.NewResourceManager()
-	handler.changeFeedManager = changefeed.NewManager()
+	handler.changeFeedManager = changefeed.GetManager()
 	handler.parameterGroupManager = parametergroup.NewManager()
 	handler.clusterParameterManager = clusterParameter.NewManager()
 	handler.clusterManager = clusterManager.NewClusterManager()

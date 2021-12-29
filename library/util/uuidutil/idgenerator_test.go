@@ -18,6 +18,8 @@
 package uuidutil
 
 import (
+	"fmt"
+	"github.com/alecthomas/assert"
 	"strings"
 	"testing"
 )
@@ -57,4 +59,22 @@ func TestGenerateIDReplace(t *testing.T) {
 		time++
 	}
 
+}
+
+func TestShortId(t *testing.T) {
+	tests := []struct {
+		name string
+		want string
+	}{
+		{},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for i := 0; i < 1000; i++ {
+				id := ShortId()
+				fmt.Println(id)
+				assert.NotContains(t, id, "_")
+			}
+		})
+	}
 }

@@ -74,7 +74,7 @@ tiflash_servers:
     data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/tiflash-data
   {{ end }}
   {{ end }}
-{{ else if and (eq $key "TiCDC") (len $instances) }}
+{{ else if and (eq $key "CDC") (len $instances) }}
 cdc_servers:
   {{ range $instances }}
   {{ if eq .Status "Initializing" }}
@@ -114,8 +114,8 @@ alertmanager_servers:
   - host: {{ index $instance.HostIP 0 }}
     web_port: {{ index $instance.Ports 4}}
     cluster_port: {{ index $instance.Ports 5}}
-    deploy_dir: {{ $instance.DiskPath }}/{{ $.Cluster.ID }}/alertmanagers-deploy
-    data_dir: {{ $instance.DiskPath }}/{{ $.Cluster.ID }}/alertmanagers-data
+    deploy_dir: {{ $instance.DiskPath }}/{{ $.Cluster.ID }}/alertmanager-deploy
+    data_dir: {{ $instance.DiskPath }}/{{ $.Cluster.ID }}/alertmanager-data
 {{ end }}
 {{ end }}
 {{ end }}

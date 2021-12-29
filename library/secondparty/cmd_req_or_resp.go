@@ -309,41 +309,41 @@ type ClusterSetDbPswResp struct {
 }
 
 type ChangeFeedCreateReq struct {
-	PD               string
-	ChangeFeedID     string   `form:"changefeed_id"`
-	SinkURI          string   `form:"sink_uri"`
-	StartTS          uint64   `form:"start_ts"`
+	CDCAddress       string   `json:"-"`
+	ChangeFeedID     string   `json:"changefeed_id"`
+	SinkURI          string   `json:"sink_uri"`
+	StartTS          uint64   `json:"start_ts"`
 	TargetTS         uint64   `json:"target_ts"`
-	IgnoreTxnStartTS uint64   `json:"ignore_txn_start_ts"`
+	IgnoreTxnStartTS []uint64 `json:"ignore_txn_start_ts"`
 	FilterRules      []string `json:"filter_rules"`
 	SinkConfig       []string `json:"sink_config"`
 	MounterWorkerNum int      `json:"mounter_worker_num"`
 }
 
 type ChangeFeedUpdateReq struct {
-	ChangeFeedID     string
-	PD               string
+	ChangeFeedID     string   `json:"-"`
+	CDCAddress       string   `json:"-"`
 	SinkURI          string   `json:"sink_uri"`
 	TargetTS         int64    `json:"target_ts"`
 	FilterRules      []string `json:"filter_rules"`
-	IgnoreTxnStartTS uint64   `json:"ignore_txn_start_ts"`
+	IgnoreTxnStartTS []uint64   `json:"ignore_txn_start_ts"`
 	SinkConfig       []string `json:"sink_config"`
 	MounterWorkerNum int      `json:"mounter_worker_num"`
 }
 
 type ChangeFeedPauseReq struct {
 	ChangeFeedID string
-	PD           string
+	CDCAddress   string
 }
 
 type ChangeFeedDeleteReq struct {
 	ChangeFeedID string
-	PD           string
+	CDCAddress   string
 }
 
 type ChangeFeedResumeReq struct {
 	ChangeFeedID string
-	PD           string
+	CDCAddress   string
 }
 
 type ChangeFeedCmdAcceptResp struct {
@@ -354,8 +354,8 @@ type ChangeFeedCmdAcceptResp struct {
 }
 
 type ChangeFeedQueryReq struct {
-	PD    string
-	State string
+	CDCAddress string
+	State      string
 }
 
 type ChangeFeedQueryResp struct {
@@ -363,7 +363,7 @@ type ChangeFeedQueryResp struct {
 }
 
 type ChangeFeedDetailReq struct {
-	PD           string
+	CDCAddress   string
 	ChangeFeedID string
 }
 
@@ -374,6 +374,6 @@ type ChangeFeedDetailResp struct {
 type ChangeFeedInfo struct {
 	ChangeFeedID  string `json:"id"`
 	State         string `json:"state"`
-	CheckPointTSO string `json:"checkpoint_tso"`
+	CheckPointTSO uint64 `json:"checkpoint_tso"`
 	Error         string `json:"error"`
 }

@@ -193,6 +193,24 @@ func (g *ClusterReadWrite) UpdateMeta(ctx context.Context, cluster *Cluster, ins
 	})
 }
 
+func (g *ClusterReadWrite) QueryInstancesByHost(ctx context.Context, hostId string, typeFilter []string, statusFilter []string) ([]*ClusterInstance, error) {
+	if len(hostId) == 0 {
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "empty hostId")
+	}
+	query := g.DB(ctx).Table("cluster_instances").Where("host_id = ?", hostId)
+	if len(typeFilter) > 0 {
+		query = query.Where("type in ?", typeFilter)
+	}
+	if len(statusFilter) > 0 {
+		query = query.Where("status in ?", statusFilter)
+	}
+
+	instances := make([]*ClusterInstance, 0)
+	err := query.Find(&instances).Error
+
+	return instances, dbCommon.WrapDBError(err)
+}
+
 func (g *ClusterReadWrite) UpdateInstance(ctx context.Context, instances ...*ClusterInstance) error {
 	return g.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		toCreate := make([]*ClusterInstance, 0)

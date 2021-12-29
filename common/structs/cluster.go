@@ -43,7 +43,7 @@ func (p *ClusterResourceParameterComputeResource) Equal(zone, spec, diskType str
 
 //ClusterResourceParameterCompute Component resource parameters when creating a cluster, including: compute resources, storage resources
 type ClusterResourceParameterCompute struct {
-	Type     string                                    `json:"componentType"` //TiDB/TiKV/PD/TiFlash/TiCDC/DM-Master/DM-Worker
+	Type     string                                    `json:"componentType"` //TiDB/TiKV/PD/TiFlash/CDC/DM-Master/DM-Worker
 	Count    int                                       `json:"totalNodeCount"`
 	Resource []ClusterResourceParameterComputeResource `json:"resource"`
 }

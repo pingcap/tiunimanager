@@ -150,7 +150,10 @@ func TestBRManager_DeleteBackupRecords(t *testing.T) {
 	models.SetBRReaderWriter(brRW)
 
 	service := GetBRService()
-	_, err := service.DeleteBackupRecords(context.TODO(), cluster.DeleteBackupDataReq{})
+	_, err := service.DeleteBackupRecords(context.TODO(), cluster.DeleteBackupDataReq{
+		ClusterID: "testCluster",
+		BackupID:  "testBackup",
+	})
 	assert.Nil(t, err)
 }
 
@@ -191,7 +194,7 @@ func TestBRManager_SaveBackupStrategy(t *testing.T) {
 	defer ctrl.Finish()
 
 	brRW := mockbr.NewMockReaderWriter(ctrl)
-	brRW.EXPECT().CreateBackupStrategy(gomock.Any(), gomock.Any()).Return(nil, nil)
+	brRW.EXPECT().SaveBackupStrategy(gomock.Any(), gomock.Any()).Return(nil, nil)
 	models.SetBRReaderWriter(brRW)
 
 	service := GetBRService()

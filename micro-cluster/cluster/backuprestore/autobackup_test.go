@@ -17,6 +17,7 @@ package backuprestore
 
 import (
 	"github.com/golang/mock/gomock"
+	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	mock_br_service "github.com/pingcap-inc/tiem/test/mockbr"
@@ -48,7 +49,8 @@ func Test_AutoBackup_doBackup(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockBRService := mock_br_service.NewMockBRService(ctrl)
-	mockBRService.EXPECT().BackupCluster(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	mockBRService.EXPECT().BackupCluster(gomock.Any(), gomock.Any(),
+		gomock.Any()).Return(cluster.BackupClusterDataResp{}, nil).AnyTimes()
 	MockBRService(mockBRService)
 	defer MockBRService(NewBRManager())
 

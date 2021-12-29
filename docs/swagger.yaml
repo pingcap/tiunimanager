@@ -1517,6 +1517,9 @@ definitions:
     type: object
   structs.ClusterParameterSampleInfo:
     properties:
+      category:
+        example: basic
+        type: string
       hasApply:
         enum:
         - 0
@@ -1565,7 +1568,7 @@ definitions:
   structs.ClusterResourceParameterCompute:
     properties:
       componentType:
-        description: TiDB/TiKV/PD/TiFlash/TiCDC/DM-Master/DM-Worker
+        description: TiDB/TiKV/PD/TiFlash/CDC/DM-Master/DM-Worker
         type: string
       resource:
         items:

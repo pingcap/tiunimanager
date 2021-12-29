@@ -537,6 +537,10 @@ type ComponentAddress struct {
 	Port int
 }
 
+func (p *ComponentAddress) ToString() string {
+	return fmt.Sprintf("%s:%d", p.IP, p.Port)
+}
+
 // GetClusterConnectAddresses
 // @Description: Access the TiDB cluster
 // @Receiver p
@@ -601,6 +605,25 @@ func (p *ClusterMeta) GetTiKVStatusAddress() []ComponentAddress {
 // @return []ComponentAddress
 func (p *ClusterMeta) GetPDClientAddresses() []ComponentAddress {
 	instances := p.Instances[string(constants.ComponentIDPD)]
+	address := make([]ComponentAddress, 0)
+
+	for _, instance := range instances {
+		if instance.Status == string(constants.ClusterInstanceRunning) {
+			address = append(address, ComponentAddress{
+				IP:   instance.HostIP[0],
+				Port: int(instance.Ports[0]),
+			})
+		}
+	}
+	return address
+}
+
+// GetCDCClientAddresses
+// @Description: communication address for CDC Servers to connect.
+// @Receiver p
+// @return []ComponentAddress
+func (p *ClusterMeta) GetCDCClientAddresses() []ComponentAddress {
+	instances := p.Instances[string(constants.ComponentIDCDC)]
 	address := make([]ComponentAddress, 0)
 
 	for _, instance := range instances {

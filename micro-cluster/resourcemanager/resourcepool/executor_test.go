@@ -107,9 +107,7 @@ func Test_ImportHostFail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockProvider := mock_provider.NewMockHostProvider(ctrl)
-	mockProvider.EXPECT().DeleteHosts(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hostIds []string) error {
-		return nil
-	})
+	mockProvider.EXPECT().UpdateHostStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 	resourcePool.SetHostProvider(mockProvider)
 

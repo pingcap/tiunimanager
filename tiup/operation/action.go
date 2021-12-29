@@ -21,6 +21,8 @@ import (
 	"strings"
 	"time"
 
+	tiuputils "github.com/pingcap/tiup/pkg/utils"
+
 	"github.com/pingcap-inc/tiem/tiup/spec"
 	"github.com/pingcap-inc/tiem/tiup/utils"
 	"github.com/pingcap/errors"
@@ -135,7 +137,17 @@ func Start(
 			}
 			// init kibana index patterns
 			if comp.Name() == spec.ComponentKibana {
-				time.Sleep(time.Second * 20)
+				// loop get kibana status
+				for {
+					client := tiuputils.NewHTTPClient(2*time.Second, tlsCfg)
+					_, err := client.Get(context.TODO(), fmt.Sprintf("http://%s:%d/status", inst.GetHost(), inst.GetPort()))
+					if err == nil {
+						break
+					}
+					time.Sleep(2 * time.Second)
+					log.Debugf("check kibana status error: %s", err.Error())
+				}
+
 				path := "/api/saved_objects/_import?overwrite=true"
 				url := fmt.Sprintf("http://%s:%d%s", inst.GetHost(), inst.GetPort(), path)
 				log.Debugf("init kibana index patterns url: %s", url)

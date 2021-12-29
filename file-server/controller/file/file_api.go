@@ -38,7 +38,7 @@ func UploadImportFile(c *gin.Context) {
 		return
 	}
 
-	ctx := framework.NewMicroCtxFromGinCtx(c)
+	ctx := framework.NewBackgroundMicroCtx(framework.NewMicroCtxFromGinCtx(c), true)
 	uploadPath, err := service.DirMgr.GetImportPath(ctx, clusterId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
@@ -60,7 +60,7 @@ func UploadImportFile(c *gin.Context) {
 }
 
 func DownloadExportFile(c *gin.Context) {
-	ctx := framework.NewMicroCtxFromGinCtx(c)
+	ctx := framework.NewBackgroundMicroCtx(framework.NewMicroCtxFromGinCtx(c), true)
 	recordId := c.Param("recordId")
 
 	request := &message.QueryDataImportExportRecordsReq{

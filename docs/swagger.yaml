@@ -652,21 +652,23 @@ definitions:
       TiUPUserPassword:
         example: password
         type: string
-      clusterNames:
-        items:
-          type: string
-        type: array
+      clusterName:
+        example: myClusterName
+        type: string
+      dbPassword:
+        example: myPassword
+        type: string
+      dbUser:
+        example: root
+        type: string
     type: object
   cluster.TakeoverClusterResp:
     properties:
-      clusters:
-        additionalProperties:
-          type: string
-        type: object
-      failed:
-        additionalProperties:
-          type: string
-        type: object
+      clusterId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
     type: object
   cluster.TiDBDownstream:
     properties:
@@ -1565,7 +1567,7 @@ definitions:
   structs.ClusterResourceParameterCompute:
     properties:
       componentType:
-        description: TiDB/TiKV/PD/TiFlash/TiCDC/DM-Master/DM-Worker
+        description: TiDB/TiKV/PD/TiFlash/CDC/DM-Master/DM-Worker
         type: string
       resource:
         items:

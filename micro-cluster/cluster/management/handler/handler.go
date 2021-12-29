@@ -174,7 +174,7 @@ func (p *ClusterMeta) AddDefaultInstances(ctx context.Context) error {
 	return nil
 }
 
-func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance, error) {
+func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance) {
 	instances := p.GetInstanceByStatus(ctx, constants.ClusterInstanceInitializing)
 	requirements := make([]resource.AllocRequirement, 0)
 
@@ -218,15 +218,15 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 		})
 		allocInstances = append(allocInstances, instance)
 	}
-	return requirements, allocInstances, nil
+	return requirements, allocInstances
 }
 
-func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) ([]resource.AllocRequirement, error) {
+func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) []resource.AllocRequirement {
 	requirements := make([]resource.AllocRequirement, 0)
 
 	if p.Cluster.Status != string(constants.ClusterInitializing) {
 		framework.LogWithContext(ctx).Infof("cluster %s is not initializing, no need to alloc global port resource", p.Cluster.ID)
-		return requirements, nil
+		return requirements
 	}
 
 	portRange := knowledge.GetClusterPortRange(p.Cluster.Type, p.Cluster.Version)
@@ -252,7 +252,7 @@ func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) ([]res
 		Strategy: resource.ClusterPorts,
 	})
 
-	return requirements, nil
+	return requirements
 }
 
 func (p *ClusterMeta) ApplyGlobalPortResource(nodeExporterPort, blackboxExporterPort int32) {

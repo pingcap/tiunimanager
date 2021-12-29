@@ -69,7 +69,7 @@ var scaleOutDefine = workflow.WorkFlowDefine{
 		"configDone":       {"scaleOutCluster", "scaleOutDone", "fail", workflow.PollingNode, scaleOutCluster},
 		"scaleOutDone":     {"syncTopology", "syncTopologyDone", "fail", workflow.SyncFuncNode, syncTopology},
 		"syncTopologyDone": {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
-		"onlineDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
+		"onlineDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
 		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
 	},
 }
@@ -198,7 +198,7 @@ var cloneDefine = workflow.WorkFlowDefine{
 		"waitSyncParamDone":      {"restoreCluster", "restoreClusterDone", "failAfterDeploy", workflow.SyncFuncNode, restoreCluster},
 		"restoreClusterDone":     {"waitRestore", "waitRestoreDone", "failAfterDeploy", workflow.SyncFuncNode, waitWorkFlow},
 		"waitRestoreDone":        {"syncIncrData", "syncIncrDataDone", "failAfterDeploy", workflow.SyncFuncNode, syncIncrData},
-		"syncIncrDataDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
+		"syncIncrDataDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
 		"fail":                   {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
 		"failAfterDeploy":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
@@ -255,7 +255,7 @@ var createClusterFlow = workflow.WorkFlowDefine{
 		"startupDone":      {"setClusterOnline", "onlineDone", "failAfterDeploy", workflow.SyncFuncNode, setClusterOnline},
 		"onlineDone":       {"initAccount", "initDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseAccount},
 		"initDone":         {"syncTopology", "syncTopologyDone", "failAfterDeploy", workflow.SyncFuncNode, syncTopology},
-		"syncTopologyDone": {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
+		"syncTopologyDone": {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
 		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
 		"failAfterDeploy":  {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
@@ -311,7 +311,7 @@ var restoreNewClusterFlow = workflow.WorkFlowDefine{
 		"syncTopologyDone": {"persistCluster", "persistDone", "failAfterDeploy", workflow.SyncFuncNode, persistCluster},
 		"persistDone":      {"restoreData", "restoreDone", "failAfterDeploy", workflow.SyncFuncNode, restoreNewCluster},
 		"restoreDone":      {"waitWorkFlow", "waitDone", "failAfterDeploy", workflow.SyncFuncNode, waitWorkFlow},
-		"waitDone":         {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
+		"waitDone":         {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
 		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
 		"failAfterDeploy":  {"failAfterDeploy", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
@@ -461,11 +461,12 @@ func (p *Manager) RestartCluster(ctx context.Context, req cluster.RestartCluster
 var takeoverClusterFlow = workflow.WorkFlowDefine{
 	FlowName: constants.FlowTakeoverCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":   {"fetchTopologyFile", "fetched", "fail", workflow.SyncFuncNode, fetchTopologyFile},
-		"fetched": {"rebuildTopologyFromConfig", "built", "fail", workflow.SyncFuncNode, rebuildTopologyFromConfig},
-		"built":   {"takeoverResource", "success", "", workflow.SyncFuncNode, takeoverResource},
-		"success": {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":    {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"start":        {"fetchTopologyFile", "fetched", "fail", workflow.SyncFuncNode, fetchTopologyFile},
+		"fetched":      {"rebuildTopologyFromConfig", "built", "fail", workflow.SyncFuncNode, rebuildTopologyFromConfig},
+		"built":        {"takeoverResource", "resourceDone", "", workflow.SyncFuncNode, takeoverResource},
+		"resourceDone": {"testConnection", "success", "", workflow.SyncFuncNode, testConnectivity},
+		"success":      {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
+		"fail":         {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 

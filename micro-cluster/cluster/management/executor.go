@@ -598,6 +598,14 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	return nil
 }
 
+func asyncBuildLog(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	go func() {
+		time.Sleep(3 * time.Second)
+		// todo
+	}()
+	return nil
+}
+
 func restoreCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cloneStrategy := context.GetData(ContextCloneStrategy).(string)
@@ -800,5 +808,9 @@ func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workfl
 }
 
 func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	return nil
+}
+
+func testConnectivity(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	return nil
 }

@@ -990,14 +990,12 @@ func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, opera
 	return exitCh
 }
 
-func (manager *SecondPartyManager) setTiUPMirrorForComponent(ctx context.Context, tiUPComponent TiUPComponentTypeStr) error {
+func (manager *SecondPartyManager) setTiUPMirrorForComponent(ctx context.Context, tiUPComponent TiUPComponentTypeStr) (err error) {
 	mirror, err := models.GetMirrorReaderWriter().QueryByComponentType(context.Background(), string(tiUPComponent))
 	if err != nil {
-		return err
+		return
 	}
 
 	_, err = setTiUPMirror(ctx, manager.TiUPBinPath, mirror.MirrorAddr)
-	if err != nil {
-		return err
-	}
+	return
 }

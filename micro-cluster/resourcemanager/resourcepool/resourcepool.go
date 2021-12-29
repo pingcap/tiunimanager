@@ -78,30 +78,39 @@ func (p *ResourcePool) SetHostInitiator(initiator hostinitiator.HostInitiator) {
 }
 
 func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (flowIds []string, hostIds []string, err error) {
-	for _, host := range hosts {
-		hostId, err := p.hostProvider.ImportHosts(ctx, []structs.HostInfo{host})
-		if err != nil {
-			return flowIds, hostIds, err
-		}
-		flowManager := workflow.GetWorkFlowService()
-		flow, err := flowManager.CreateWorkFlow(ctx, hostId[0], rp_consts.FlowImportHosts)
+	hostIds, err = p.hostProvider.ImportHosts(ctx, hosts)
+	if err != nil {
+		return flowIds, hostIds, err
+	}
+	var flows []*workflow.WorkFlowAggregation
+	flowManager := workflow.GetWorkFlowService()
+	for i, host := range hosts {
+		flow, err := flowManager.CreateWorkFlow(ctx, hostIds[i], rp_consts.FlowImportHosts)
 		if err != nil {
 			errMsg := fmt.Sprintf("create %s workflow failed for host %s %s, %s", rp_consts.FlowImportHosts, host.HostName, host.IP, err.Error())
 			framework.LogWithContext(ctx).Errorln(errMsg)
-			return flowIds, hostIds, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, errMsg, err)
+			return nil, hostIds, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, errMsg, err)
 		}
 
 		flowManager.AddContext(flow, rp_consts.ContextResourcePoolKey, p)
-		flowManager.AddContext(flow, rp_consts.ContextImportHostInfoKey, hosts)
-		flowManager.AddContext(flow, rp_consts.ContextImportHostIDsKey, hostIds)
-		if err = flowManager.AsyncStart(ctx, flow); err != nil {
-			errMsg := fmt.Sprintf("async start %s workflow failed for host %s %s, %s", host.HostName, host.IP, rp_consts.FlowImportHosts, err.Error())
-			framework.LogWithContext(ctx).Errorln(errMsg)
-			return flowIds, hostIds, errors.WrapError(errors.TIEM_WORKFLOW_START_FAILED, errMsg, err)
-		}
+		flowManager.AddContext(flow, rp_consts.ContextImportHostInfoKey, []structs.HostInfo{host})
+		flowManager.AddContext(flow, rp_consts.ContextImportHostIDsKey, []string{hostIds[i]})
+
+		flows = append(flows, flow)
 		flowIds = append(flowIds, flow.Flow.ID)
-		hostIds = append(hostIds, hostId...)
 	}
+	// Sync start each flow in a goroutine: tiup-tiem/sqlite DO NOT support concurrent
+	go func() {
+		for i, flow := range flows {
+			if err = flowManager.Start(ctx, flow); err != nil {
+				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for host %s %s, %s", rp_consts.FlowImportHosts, i, flow.Flow.ID, hosts[i].HostName, hosts[i].IP, err.Error())
+				framework.LogWithContext(ctx).Errorln(errMsg)
+				continue
+			} else {
+				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for host %s %s", rp_consts.FlowImportHosts, i, flow.Flow.ID, hosts[i].HostName, hosts[i].IP)
+			}
+		}
+	}()
 	return flowIds, hostIds, nil
 }
 

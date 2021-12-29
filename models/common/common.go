@@ -26,8 +26,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const UsingSqlite = true
-
 type Entity struct {
 	ID        string    `gorm:"primarykey"`
 	CreatedAt time.Time `gorm:"<-:create"`

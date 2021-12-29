@@ -18,19 +18,15 @@ package gormreadwrite
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/models/common"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	resource_models "github.com/pingcap-inc/tiem/models/resource"
 	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	"gorm.io/gorm"
 )
-
-var sqliteMutex sync.RWMutex
 
 type GormResourceReadWrite struct {
 	dbCommon.GormDB
@@ -57,11 +53,6 @@ func (rw *GormResourceReadWrite) addTable(ctx context.Context, tableModel interf
 }
 */
 func (rw *GormResourceReadWrite) Create(ctx context.Context, hosts []rp.Host) (hostIds []string, err error) {
-	if common.UsingSqlite {
-		sqliteMutex.Lock()
-		fmt.Printf("Lock Host %v for create\n", hosts[0].HostName)
-		defer sqliteMutex.Unlock()
-	}
 	tx := rw.DB(ctx).Begin()
 	for _, host := range hosts {
 		err = tx.Create(&host).Error
@@ -76,11 +67,6 @@ func (rw *GormResourceReadWrite) Create(ctx context.Context, hosts []rp.Host) (h
 }
 
 func (rw *GormResourceReadWrite) Delete(ctx context.Context, hostIds []string) (err error) {
-	if common.UsingSqlite {
-		sqliteMutex.Lock()
-		fmt.Printf("Lock Host %v for delete\n", hostIds)
-		defer sqliteMutex.Unlock()
-	}
 	tx := rw.DB(ctx).Begin()
 	for _, hostId := range hostIds {
 		var host rp.Host
@@ -186,11 +172,6 @@ func (rw *GormResourceReadWrite) Query(ctx context.Context, filter *structs.Host
 }
 
 func (rw *GormResourceReadWrite) UpdateHostStatus(ctx context.Context, hostIds []string, status string) (err error) {
-	if common.UsingSqlite {
-		sqliteMutex.Lock()
-		fmt.Printf("Lock Host %v for update status\n", hostIds)
-		defer sqliteMutex.Unlock()
-	}
 	tx := rw.DB(ctx).Begin()
 	for _, hostId := range hostIds {
 		result := tx.Model(&rp.Host{}).Where("id = ?", hostId).Update("status", status)
@@ -207,10 +188,6 @@ func (rw *GormResourceReadWrite) UpdateHostStatus(ctx context.Context, hostIds [
 	return nil
 }
 func (rw *GormResourceReadWrite) UpdateHostReserved(ctx context.Context, hostIds []string, reserved bool) (err error) {
-	if common.UsingSqlite {
-		sqliteMutex.Lock()
-		defer sqliteMutex.Unlock()
-	}
 	tx := rw.DB(ctx).Begin()
 	for _, hostId := range hostIds {
 		result := tx.Model(&rp.Host{}).Where("id = ?", hostId).Update("reserved", reserved)

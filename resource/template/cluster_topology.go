@@ -74,7 +74,7 @@ tiflash_servers:
     data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/tiflash-data
   {{ end }}
   {{ end }}
-{{ else if and (eq $key "TiCDC") (len $instances) }}
+{{ else if and (eq $key "CDC") (len $instances) }}
 cdc_servers:
   {{ range $instances }}
   {{ if eq .Status "Initializing" }}

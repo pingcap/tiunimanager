@@ -86,6 +86,13 @@ type SecondPartyService interface {
 	SetClusterDbPassword(ctx context.Context, req ClusterSetDbPswReq, workFlowNodeID string) error
 	ClusterComponentCtl(ctx context.Context, str TiUPComponentTypeStr, clusterVersion string,
 		component spec.TiDBClusterComponent, flags []string, timeoutS int) (string, error)
+	CreateChangeFeedTask(ctx context.Context, req ChangeFeedCreateReq) (resp ChangeFeedCmdAcceptResp, err error)
+	UpdateChangeFeedTask(ctx context.Context, req ChangeFeedUpdateReq) (resp ChangeFeedCmdAcceptResp, err error)
+	PauseChangeFeedTask(ctx context.Context, req ChangeFeedPauseReq) (resp ChangeFeedCmdAcceptResp, err error)
+	ResumeChangeFeedTask(ctx context.Context, req ChangeFeedResumeReq) (resp ChangeFeedCmdAcceptResp, err error)
+	DeleteChangeFeedTask(ctx context.Context, req ChangeFeedDeleteReq) (resp ChangeFeedCmdAcceptResp, err error)
+	QueryChangeFeedTasks(ctx context.Context, req ChangeFeedQueryReq) (resp ChangeFeedQueryResp, err error)
+	DetailChangeFeedTask(ctx context.Context, req ChangeFeedDetailReq) (ChangeFeedDetailResp, error)
 }
 
 type SecondPartyManager struct {

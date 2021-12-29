@@ -176,7 +176,7 @@ func loadSpecKnowledge() {
 		"TiFlash", "column-based-storage", "TiFlash",
 	}
 
-	cdcComponent := ClusterComponent{
+	CDCComponent := ClusterComponent{
 		"CDC", "change-feed", "CDC",
 	}
 
@@ -321,7 +321,7 @@ func loadSpecKnowledge() {
 				ComponentPortConstraint{10120, 10180, 6},
 			},
 
-			{cdcComponent, ComponentConstraint{false, false, []int{3}, []string{
+			{CDCComponent, ComponentConstraint{false, false, []int{3}, []string{
 				GenSpecCode(4, 32),
 				GenSpecCode(8, 64),
 				GenSpecCode(16, 128),

@@ -191,19 +191,8 @@ func (i *ClusterServerInstance) InitConfig(
 
 	// TODO: support user specified certificates
 	if _, _, err := e.Execute(ctx,
-		fmt.Sprintf("cp -r %s/bin/cert %s/", paths.Deploy, paths.Deploy),
-		false); err != nil {
-		return err
-	}
-
-	if _, _, err := e.Execute(ctx,
-		fmt.Sprintf("cp -r %s/bin/cert %s/", paths.Deploy, paths.Deploy),
-		false); err != nil {
-		return err
-	}
-
-	if _, _, err := e.Execute(ctx,
-		fmt.Sprintf("cp -r %s/bin/template %s/", paths.Deploy, paths.Deploy),
+		fmt.Sprintf("cp -r %s/bin/cert %s/bin/template %s/bin/sqls %s/",
+			paths.Deploy, paths.Deploy, paths.Deploy, paths.Deploy),
 		false); err != nil {
 		return err
 	}

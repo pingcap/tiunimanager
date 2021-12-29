@@ -32,7 +32,6 @@ type Config struct {
 type Logger struct {
 	Writer
 	Config
-	infoStr, warnStr, errStr            string
 	traceStr, traceErrStr, traceWarnStr string
 }
 

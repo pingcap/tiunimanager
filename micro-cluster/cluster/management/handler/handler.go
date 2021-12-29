@@ -18,13 +18,15 @@ package handler
 import (
 	"bytes"
 	"context"
+	"text/template"
+
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	resourceTemplate "github.com/pingcap-inc/tiem/resource/template"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
-	"text/template"
 
 	"fmt"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -806,28 +808,31 @@ func Query(ctx context.Context, req cluster.QueryClustersReq) (resp cluster.Quer
 }
 
 type InstanceLogInfo struct {
+	ClusterID    string
 	InstanceType constants.EMProductComponentIDType
 	IP           string
 	DataDir      string
 	DeployDir    string
+	LogDir       string
 }
 
 func QueryInstanceLogInfo(ctx context.Context, hostId string, typeFilter []string, statusFilter []string) (infos []*InstanceLogInfo, err error) {
 	instances, err := models.GetClusterReaderWriter().QueryInstancesByHost(ctx, hostId, typeFilter, statusFilter)
-
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("query instances by host failed, %s", err.Error())
 		return
 	}
-	
+
 	infos = make([]*InstanceLogInfo, 0)
 	for _, instance := range instances {
 		if len(instance.DiskPath) > 0 {
 			infos = append(infos, &InstanceLogInfo{
+				ClusterID:    instance.ClusterID,
 				InstanceType: constants.EMProductComponentIDType(instance.Type),
-				IP: instance.HostIP[0],
-				DataDir: instance.GetDataDir(),
-				DeployDir: instance.GetDeployDir(),
+				IP:           instance.HostIP[0],
+				DataDir:      instance.GetDataDir(),
+				DeployDir:    instance.GetDeployDir(),
+				LogDir:       instance.GetLogDir(),
 			})
 		}
 	}

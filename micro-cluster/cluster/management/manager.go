@@ -590,7 +590,7 @@ func (p *Manager) DetailCluster(ctx context.Context, req cluster.QueryClusterDet
 	return
 }
 
-func (manager *Manager) GetClusterDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) (resp cluster.GetDashboardInfoResp, err error) {
+func (p *Manager) GetClusterDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) (resp cluster.GetDashboardInfoResp, err error) {
 	return GetDashboardInfo(ctx, request)
 }
 

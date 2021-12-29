@@ -26,9 +26,7 @@ package log
 import (
 	ctx "context"
 
-	"github.com/pingcap-inc/tiem/message/cluster"
-
-	"github.com/pingcap-inc/tiem/models/cluster/management"
+	"github.com/pingcap-inc/tiem/common/constants"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
@@ -48,34 +46,33 @@ func collectorClusterLogConfig(node *workflowModel.WorkFlowNode, ctx *workflow.F
 	hosts := listClusterHosts(clusterMeta)
 	framework.LogWithContext(ctx).Infof("cluster [%s] list host: %v", clusterMeta.Cluster.ID, hosts)
 
-	_, total, err := handler.Query(ctx, cluster.QueryClustersReq{})
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("cluster [%s] query metas failed. err: %v", clusterMeta.Cluster.ID, err)
-		return err
-	}
-	framework.LogWithContext(ctx).Infof("cluster [%s] query metas total: %d", clusterMeta.Cluster.ID, total)
+	for hostID, hostIP := range hosts {
+		instances, err := handler.QueryInstanceLogInfo(ctx, hostID, []string{}, []string{})
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("cluster [%s] query metas failed. err: %v", clusterMeta.Cluster.ID, err)
+			return err
+		}
 
-	for _, host := range hosts {
-		collectorConfigs, err := buildCollectorClusterLogConfig(ctx, host, nil)
+		collectorConfigs, err := buildCollectorClusterLogConfig(ctx, instances)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("build collector cluster log config err： %v", err)
-			break
+			return err
 		}
 		bs, err := yaml.Marshal(collectorConfigs)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("marshal yaml err： %v", err)
-			break
+			return err
 		}
 		collectorYaml := string(bs)
 		// todo: When the tiem scale-out and scale-in is complete, change to take the filebeat deployDir from the tiem topology
 		deployDir := "/tiem-test/filebeat"
 		transferTaskId, err := secondparty.Manager.Transfer(ctx, secondparty.ClusterComponentTypeStr,
 			clusterMeta.Cluster.Name, collectorYaml, deployDir+"/conf/input_tidb.yml",
-			0, []string{"-N", host}, node.ID)
+			0, []string{"-N", hostIP}, node.ID)
 		framework.LogWithContext(ctx).Infof("got transferTaskId: %s", transferTaskId)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("collectorClusterLogConfig invoke tiup transfer err： %v", err)
-			break
+			return err
 		}
 	}
 
@@ -89,101 +86,101 @@ func collectorClusterLogConfig(node *workflowModel.WorkFlowNode, ctx *workflow.F
 // @Parameter clusters
 // @return []CollectorClusterLogConfig
 // @return error
-func buildCollectorClusterLogConfig(ctx ctx.Context, host string, metas []*management.Result) ([]CollectorClusterLogConfig, error) {
+func buildCollectorClusterLogConfig(ctx ctx.Context, clusterInfos []*handler.InstanceLogInfo) ([]CollectorClusterLogConfig, error) {
 	framework.LogWithContext(ctx).Info("begin collector cluster log config executor method")
 	defer framework.LogWithContext(ctx).Info("end collector cluster log config executor method")
 
+	// Construct the structure of multiple clusters corresponding instances
+	clusterInstances := make(map[string][]*handler.InstanceLogInfo, 0)
+	for _, instance := range clusterInfos {
+		insts := clusterInstances[instance.ClusterID]
+		if insts == nil {
+			clusterInstances[instance.ClusterID] = []*handler.InstanceLogInfo{instance}
+		} else {
+			insts = append(insts, instance)
+			clusterInstances[instance.ClusterID] = insts
+		}
+	}
+
 	// build collector cluster log configs
 	configs := make([]CollectorClusterLogConfig, 0)
-	//for _, meta := range metas {
-	//	if meta == nil || meta.Cluster == nil || meta.Instances == nil {
-	//		framework.LogWithContext(ctx).Warnf("build collector cluster log meta is nil")
-	//		continue
-	//	}
-	//	cfg := CollectorClusterLogConfig{Module: "tidb"}
-	//
-	//	// TiDB modules
-	//	for _, server := range meta.Instances[""] {
-	//		if server.Host == host {
-	//			if len(server.LogDir) == 0 {
-	//				continue
-	//			}
-	//			logPath := server.LogDir + "/tidb.log"
-	//			// multiple instances of the same cluster
-	//			if len(cfg.TiDB.Var.Paths) > 0 {
-	//				cfg.TiDB.Var.Paths = append(cfg.TiDB.Var.Paths, logPath)
-	//				continue
-	//			}
-	//			cfg.TiDB = buildCollectorModuleDetail(aggregation, server.Host, logPath)
-	//		}
-	//	}
-	//
-	//	// PD modules
-	//	for _, server := range spec.PDServers {
-	//		if server.Host == host {
-	//			if len(server.LogDir) == 0 {
-	//				continue
-	//			}
-	//			logPath := server.LogDir + "/pd.log"
-	//			// multiple instances of the same cluster
-	//			if len(cfg.PD.Var.Paths) > 0 {
-	//				cfg.PD.Var.Paths = append(cfg.PD.Var.Paths, logPath)
-	//				continue
-	//			}
-	//			cfg.PD = buildCollectorModuleDetail(aggregation, server.Host, logPath)
-	//		}
-	//	}
-	//
-	//	// TiKV modules
-	//	for _, server := range spec.TiKVServers {
-	//		if server.Host == host {
-	//			if len(server.LogDir) == 0 {
-	//				continue
-	//			}
-	//			logPath := server.LogDir + "/tikv.log"
-	//			// multiple instances of the same cluster
-	//			if len(cfg.TiKV.Var.Paths) > 0 {
-	//				cfg.TiKV.Var.Paths = append(cfg.TiKV.Var.Paths, logPath)
-	//				continue
-	//			}
-	//			cfg.TiKV = buildCollectorModuleDetail(aggregation, server.Host, logPath)
-	//		}
-	//	}
-	//
-	//	// TiFlash modules
-	//	for _, server := range spec.TiFlashServers {
-	//		if server.Host == host {
-	//			if len(server.LogDir) == 0 {
-	//				continue
-	//			}
-	//			logPath := server.LogDir + "/tiflash.log"
-	//			// multiple instances of the same cluster
-	//			if len(cfg.TiFlash.Var.Paths) > 0 {
-	//				cfg.TiFlash.Var.Paths = append(cfg.TiFlash.Var.Paths, logPath)
-	//				continue
-	//			}
-	//			cfg.TiFlash = buildCollectorModuleDetail(aggregation, server.Host, logPath)
-	//		}
-	//	}
-	//
-	//	// TiCDC modules
-	//	for _, server := range spec.CDCServers {
-	//		if server.Host == host {
-	//			if len(server.LogDir) == 0 {
-	//				continue
-	//			}
-	//			logPath := server.LogDir + "/ticdc.log"
-	//			// multiple instances of the same cluster
-	//			if len(cfg.TiCDC.Var.Paths) > 0 {
-	//				cfg.TiCDC.Var.Paths = append(cfg.TiCDC.Var.Paths, logPath)
-	//				continue
-	//			}
-	//			cfg.TiCDC = buildCollectorModuleDetail(aggregation, server.Host, logPath)
-	//		}
-	//	}
-	//
-	//	configs = append(configs, cfg)
-	//}
+	for clusterID, instances := range clusterInstances {
+		cfg := CollectorClusterLogConfig{Module: "tidb"}
+
+		for _, server := range instances {
+			// TiDB modules
+			if server.InstanceType == constants.ComponentIDTiDB {
+				if len(server.LogDir) == 0 {
+					continue
+				}
+				logPath := server.LogDir + "/tidb.log"
+				// multiple instances of the same cluster
+				if len(cfg.TiDB.Var.Paths) > 0 {
+					cfg.TiDB.Var.Paths = append(cfg.TiDB.Var.Paths, logPath)
+					continue
+				}
+				cfg.TiDB = buildCollectorModuleDetail(clusterID, server.IP, logPath)
+			}
+
+			// PD modules
+			if server.InstanceType == constants.ComponentIDPD {
+				if len(server.LogDir) == 0 {
+					continue
+				}
+				logPath := server.LogDir + "/pd.log"
+				// multiple instances of the same cluster
+				if len(cfg.PD.Var.Paths) > 0 {
+					cfg.PD.Var.Paths = append(cfg.PD.Var.Paths, logPath)
+					continue
+				}
+				cfg.PD = buildCollectorModuleDetail(clusterID, server.IP, logPath)
+			}
+
+			// TiKV modules
+			if server.InstanceType == constants.ComponentIDTiKV {
+				if len(server.LogDir) == 0 {
+					continue
+				}
+				logPath := server.LogDir + "/tikv.log"
+				// multiple instances of the same cluster
+				if len(cfg.TiKV.Var.Paths) > 0 {
+					cfg.TiKV.Var.Paths = append(cfg.TiKV.Var.Paths, logPath)
+					continue
+				}
+				cfg.TiKV = buildCollectorModuleDetail(clusterID, server.IP, logPath)
+			}
+
+			// TiFlash modules
+			if server.InstanceType == constants.ComponentIDTiFlash {
+				if len(server.LogDir) == 0 {
+					continue
+				}
+				logPath := server.LogDir + "/tiflash.log"
+				// multiple instances of the same cluster
+				if len(cfg.TiFlash.Var.Paths) > 0 {
+					cfg.TiFlash.Var.Paths = append(cfg.TiFlash.Var.Paths, logPath)
+					continue
+				}
+				cfg.TiFlash = buildCollectorModuleDetail(clusterID, server.IP, logPath)
+			}
+
+			// TiCDC modules
+			if server.InstanceType == constants.ComponentIDCDC {
+				if len(server.LogDir) == 0 {
+					continue
+				}
+				logPath := server.LogDir + "/cdc.log"
+				// multiple instances of the same cluster
+				if len(cfg.TiCDC.Var.Paths) > 0 {
+					cfg.TiCDC.Var.Paths = append(cfg.TiCDC.Var.Paths, logPath)
+					continue
+				}
+				cfg.TiCDC = buildCollectorModuleDetail(clusterID, server.IP, logPath)
+			}
+		}
+
+		configs = append(configs, cfg)
+	}
 	return configs, nil
 }
 
@@ -193,7 +190,7 @@ func buildCollectorClusterLogConfig(ctx ctx.Context, host string, metas []*manag
 // @Parameter host
 // @Parameter logDir
 // @return CollectorModuleDetail
-func buildCollectorModuleDetail(clusterId string, host, logDir string) CollectorModuleDetail {
+func buildCollectorModuleDetail(clusterID string, host, logDir string) CollectorModuleDetail {
 	return CollectorModuleDetail{
 		Enabled: true,
 		Var: CollectorModuleVar{
@@ -202,7 +199,7 @@ func buildCollectorModuleDetail(clusterId string, host, logDir string) Collector
 		Input: CollectorModuleInput{
 			Fields: CollectorModuleFields{
 				Type:      "tidb",
-				ClusterId: clusterId,
+				ClusterId: clusterID,
 				Ip:        host,
 			},
 			FieldsUnderRoot: true,
@@ -215,18 +212,13 @@ func buildCollectorModuleDetail(clusterId string, host, logDir string) Collector
 // listClusterHosts
 // @Description: List the hosts after cluster de-duplication
 // @Parameter clusterMeta
-// @return []string
-func listClusterHosts(clusterMeta *handler.ClusterMeta) []string {
-	kv := make(map[string]byte, 0)
+// @return map[string]string
+func listClusterHosts(clusterMeta *handler.ClusterMeta) map[string]string {
+	hosts := make(map[string]string, 0)
 	for _, instances := range clusterMeta.Instances {
 		for _, instance := range instances {
-			kv[instance.HostIP[0]] = 1
+			hosts[instance.HostID] = instance.HostIP[0]
 		}
-	}
-
-	hosts := make([]string, 0, len(kv))
-	for host := range kv {
-		hosts = append(hosts, host)
 	}
 	return hosts
 }

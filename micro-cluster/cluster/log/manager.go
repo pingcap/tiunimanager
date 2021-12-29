@@ -72,13 +72,13 @@ func NewManager() *Manager {
 var buildLogConfigDefine = workflow.WorkFlowDefine{
 	FlowName: constants.FlowBuildLogConfig,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":   {"collect", "success", "fail", workflow.PollingNode, collectorClusterLogConfig},
+		"start":   {"collect", "success", "fail", workflow.SyncFuncNode, collectorClusterLogConfig},
 		"success": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
 		"fail":    {"fail", "", "", workflow.SyncFuncNode, defaultEnd},
 	},
 }
 
-func BuildClusterLogConfig(ctx context.Context, clusterId string) (flowID string, err error) {
+func (m Manager) BuildClusterLogConfig(ctx context.Context, clusterId string) (flowID string, err error) {
 	framework.LogWithContext(ctx).Infof("begin build cluster log, req clusterId: %+v", clusterId)
 	defer framework.LogWithContext(ctx).Infof("end build cluster log")
 
@@ -91,13 +91,13 @@ func BuildClusterLogConfig(ctx context.Context, clusterId string) (flowID string
 
 	if flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, clusterMeta.Cluster.ID, buildLogConfigDefine.FlowName); err != nil {
 		framework.LogWithContext(ctx).Errorf("create flow %s failed, clusterID = %s, error = %s", flow.Flow.Name, clusterMeta.Cluster.ID, err.Error())
-		return
+		return "", err
 	} else {
 		flowID = flow.Flow.ID
 		flow.Context.SetData(contextClusterMeta, clusterMeta)
 		if err = workflow.GetWorkFlowService().AsyncStart(ctx, flow); err != nil {
 			framework.LogWithContext(ctx).Errorf("start flow %s failed, clusterID = %s, error = %s", flow.Flow.Name, clusterMeta.Cluster.ID, err.Error())
-			return
+			return flowID, err
 		}
 		framework.LogWithContext(ctx).Infof("create flow %s succeed, clusterID = %s", flow.Flow.Name, clusterMeta.Cluster.ID)
 	}

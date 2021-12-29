@@ -16,7 +16,6 @@
 package management
 
 import (
-	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -196,7 +195,7 @@ func freeInstanceResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s delete instance %s error: %s", clusterMeta.Cluster.ID, instanceID, err.Error())
-		return nil
+		return err
 	}
 	// recycle instance resource
 	request := &resourceStructs.RecycleRequest{
@@ -253,13 +252,13 @@ func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 			ClusterID:  meta.Cluster.ID,
 			BackupMode: string(constants.BackupModeAuto),
 		})
+		if err != nil {
+			framework.LogWithContext(context.Context).Errorf(
+				"delete auto backup data for cluster %s error: %s", meta.Cluster.ID, err.Error())
+			return err
+		}
 	}
 
-	if err != nil {
-		framework.LogWithContext(context.Context).Errorf(
-			"delete auto backup data for cluster %s error: %s", meta.Cluster.ID, err.Error())
-		return err
-	}
 	return nil
 }
 
@@ -268,32 +267,26 @@ func backupBeforeDelete(node *workflowModel.WorkFlowNode, context *workflow.Flow
 	deleteReq := context.GetData(ContextDeleteRequest).(cluster.DeleteClusterReq)
 
 	if deleteReq.AutoBackup {
-		_, err := backupSubProcess(context.Context, meta, false)
-		return err
+		backupResponse, err := backuprestore.GetBRService().BackupCluster(
+			context.Context,
+			cluster.BackupClusterDataReq{
+				ClusterID:  meta.Cluster.ID,
+				BackupMode: string(constants.BackupModeManual),
+			}, false)
+		if err != nil {
+			framework.LogWithContext(context.Context).Errorf(
+				"do backup for cluster %s error: %s", meta.Cluster.ID, err.Error())
+			return err
+		}
+		if err = handler.WaitWorkflow(context.Context, backupResponse.WorkFlowID, 10*time.Second, 30*24*time.Hour); err != nil {
+			framework.LogWithContext(context).Errorf("backup workflow error: %s", err)
+			return err
+		}
 	} else {
 		node.Success("no need to backup")
 	}
 
 	return nil
-}
-
-func backupSubProcess(ctx context.Context, meta *handler.ClusterMeta, independenceMaintenance bool) (*cluster.BackupClusterDataResp, error) {
-	backupResponse, err := backuprestore.GetBRService().BackupCluster(ctx,
-		cluster.BackupClusterDataReq{
-			ClusterID:  meta.Cluster.ID,
-			BackupMode: string(constants.BackupModeManual),
-		}, independenceMaintenance)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf(
-			"do backup for cluster %s error: %s", meta.Cluster.ID, err.Error())
-		return nil, err
-	}
-
-	if err = handler.WaitWorkflow(ctx, backupResponse.WorkFlowID, 10*time.Second, 30*24*time.Hour); err != nil {
-		framework.LogWithContext(ctx).Errorf("backup workflow error: %s", err)
-		return nil, err
-	}
-	return &backupResponse, nil
 }
 
 func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
@@ -809,4 +802,3 @@ func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workfl
 func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	return nil
 }
-

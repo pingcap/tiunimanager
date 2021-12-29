@@ -1286,3 +1286,25 @@ func mockResult(name string) []*management.Result {
 
 	return []*management.Result{one}
 }
+
+func TestQueryInstanceLogInfo(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(rw)
+
+	rw.EXPECT().QueryInstancesByHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*management.ClusterInstance{
+		{Type: string(constants.ComponentIDPD), DiskPath: "/a/a", ClusterID: "aaaa", HostIP: []string{"127.0.0.1"}},
+		{Type: string(constants.ComponentIDCDC), DiskPath: "/b/b", ClusterID: "bbbb", HostIP: []string{"127.0.0.2"}},
+	}, nil)
+
+	t.Run("normal", func(t *testing.T) {
+		infos, err := QueryInstanceLogInfo(context.TODO(), "host", []string{}, []string{})
+		assert.NoError(t, err)
+		assert.Equal(t, 2, len(infos))
+		assert.Equal(t, "/a/a/aaaa/pd-data", infos[0].DataDir)
+		assert.Equal(t, "/b/b/bbbb/cdc-deploy", infos[1].DeployDir)
+		assert.Equal(t, constants.ComponentIDPD, infos[0].InstanceType)
+		assert.Equal(t, "127.0.0.2", infos[1].IP)
+	})
+}

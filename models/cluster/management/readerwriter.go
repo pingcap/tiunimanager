@@ -51,6 +51,18 @@ type ReaderWriter interface {
 	UpdateInstance(ctx context.Context, instances ...*ClusterInstance) error
 
 	//
+	// QueryInstancesByHost
+	// @Description: query all instances located at host
+	// @param ctx
+	// @param hostId
+	// @param typeFilter
+	// @param statusFilter
+	// @return []*ClusterInstance
+	// @return error
+	//
+	QueryInstancesByHost(ctx context.Context, hostId string, typeFilter []string, statusFilter []string) ([]*ClusterInstance, error)
+
+	//
 	// UpdateClusterInfo
 	// @Description:  update cluster base info, excluding Status, MaintenanceStatus
 	// please update status with specific method, UpdateStatus, SetMaintenanceStatus, ClearMaintenanceStatus

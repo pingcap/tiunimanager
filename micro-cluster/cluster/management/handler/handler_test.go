@@ -211,8 +211,7 @@ func TestClusterMeta_GenerateInstanceResourceRequirements(t *testing.T) {
 	}
 
 	t.Run("normal", func(t *testing.T) {
-		got1, got2, err := meta.GenerateInstanceResourceRequirements(context.TODO())
-		assert.NoError(t, err)
+		got1, got2 := meta.GenerateInstanceResourceRequirements(context.TODO())
 		assert.Equal(t, 3, len(got1))
 		assert.Equal(t, 3, len(got2))
 	})
@@ -245,8 +244,7 @@ func TestClusterMeta_GenerateGlobalPortRequirements(t *testing.T) {
 	}
 
 	t.Run("normal", func(t *testing.T) {
-		got, err := meta.GenerateGlobalPortRequirements(context.TODO())
-		assert.NoError(t, err)
+		got := meta.GenerateGlobalPortRequirements(context.TODO())
 		assert.Equal(t, 1, len(got))
 	})
 }

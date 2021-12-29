@@ -109,9 +109,131 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbUser 
 	return err
 }
 
-func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, spec *spec.Specification) ([]*management.ClusterInstance, error) {
+func parseInstanceFromSpec(cluster *management.Cluster, componentType constants.EMProductComponentIDType, getHost func() string, getPort func() []int32) *management.ClusterInstance {
+	return &management.ClusterInstance{
+		Entity: dbCommon.Entity {
+			TenantId: cluster.TenantId,
+			Status: string(constants.ClusterInstanceRunning),
+		},
+		Type: string(componentType),
+		Version: cluster.Version,
+		ClusterID: cluster.ID,
+		HostIP: []string{getHost()},
+		Ports: getPort(),
+	}
+}
 
-	return nil, nil
+// ParseTopologyFromConfig
+// @Description: parse topology from yaml config
+// @Receiver p
+// @Parameter ctx
+// @Parameter specs
+// @return []*management.ClusterInstance
+// @return error
+func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.Specification) ([]*management.ClusterInstance, error) {
+	if specs == nil {
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "cannot parse empty specification")
+	}
+	instances := make([]*management.ClusterInstance, 0)
+	if len(specs.PDServers) > 0 {
+		for _, server := range specs.PDServers {
+			instances = append(instances, parseInstanceFromSpec(p.Cluster, constants.ComponentIDPD, func() string {
+				return server.Host
+			}, func() []int32 {
+				return []int32{
+					int32(server.ClientPort),
+					int32(server.PeerPort),
+				}
+			}))
+		}
+	}
+	if len(specs.TiDBServers) > 0 {
+		for _, server := range specs.TiDBServers {
+			instances = append(instances, parseInstanceFromSpec(p.Cluster, constants.ComponentIDPD, func() string {
+				return server.Host
+			}, func() []int32 {
+				return []int32{
+					int32(server.Port),
+					int32(server.StatusPort),
+				}
+			}))
+		}
+	}
+	if len(specs.TiKVServers) > 0 {
+		for _, server := range specs.TiKVServers {
+			instances = append(instances, parseInstanceFromSpec(p.Cluster, constants.ComponentIDTiKV, func() string {
+				return server.Host
+			}, func() []int32 {
+				return []int32{
+					int32(server.Port),
+					int32(server.StatusPort),
+				}
+			}))
+		}
+	}
+	if len(specs.TiFlashServers) > 0 {
+		for _, server := range specs.TiFlashServers {
+			instances = append(instances, parseInstanceFromSpec(p.Cluster, constants.ComponentIDTiFlash, func() string {
+				return server.Host
+			}, func() []int32 {
+				return []int32{
+					int32(server.TCPPort),
+					int32(server.HTTPPort),
+					int32(server.FlashServicePort),
+					int32(server.FlashProxyPort),
+					int32(server.FlashProxyStatusPort),
+					int32(server.StatusPort),
+				}
+			}))
+		}
+	}
+	if len(specs.CDCServers) > 0 {
+		for _, server := range specs.CDCServers {
+			instances = append(instances, parseInstanceFromSpec(p.Cluster, constants.ComponentIDCDC, func() string {
+				return server.Host
+			}, func() []int32 {
+				return []int32{
+					int32(server.Port),
+				}
+			}))
+		}
+	}
+	if len(specs.Grafanas) > 0 {
+		for _, server := range specs.Grafanas {
+			instances = append(instances, parseInstanceFromSpec(p.Cluster, constants.ComponentIDGrafana, func() string {
+				return server.Host
+			}, func() []int32 {
+				return []int32{
+					int32(server.Port),
+				}
+			}))
+		}
+	}
+	if len(specs.Alertmanagers) > 0 {
+		for _, server := range specs.Alertmanagers {
+			instances = append(instances, parseInstanceFromSpec(p.Cluster, constants.ComponentIDAlertManger, func() string {
+				return server.Host
+			}, func() []int32 {
+				return []int32{
+					int32(server.WebPort),
+					int32(server.ClusterPort),
+				}
+			}))
+		}
+	}
+	if len(specs.Monitors) > 0 {
+		for _, server := range specs.Monitors {
+			instances = append(instances, parseInstanceFromSpec(p.Cluster, constants.ComponentIDPrometheus, func() string {
+				return server.Host
+			}, func() []int32 {
+				return []int32{
+					int32(server.Port),
+				}
+			}))
+		}
+	}
+
+	return instances, nil
 }
 
 // AddInstances

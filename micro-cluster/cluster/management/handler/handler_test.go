@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"testing"
 	"time"
 
@@ -1306,5 +1307,58 @@ func TestQueryInstanceLogInfo(t *testing.T) {
 		assert.Equal(t, "/b/b/bbbb/cdc-deploy", infos[1].DeployDir)
 		assert.Equal(t, constants.ComponentIDPD, infos[0].InstanceType)
 		assert.Equal(t, "127.0.0.2", infos[1].IP)
+	})
+}
+
+func TestClusterMeta_ParseTopologyFromConfig(t *testing.T) {
+	meta := &ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "clusterId",
+				TenantId: "tenantId",
+			},
+			Version: "v5.0.0",
+		},
+	}
+
+	t.Run("normal", func(t *testing.T) {
+		instances, err := meta.ParseTopologyFromConfig(context.TODO(), &spec.Specification{
+			TiDBServers:  []*spec.TiDBSpec {
+				{Host: "127.0.0.1", Port: 1, StatusPort: 2},
+				{Host: "127.0.0.2", Port: 3, StatusPort: 4},
+			},
+			TiKVServers:  []*spec.TiKVSpec {
+				{Host: "127.0.0.4", Port: 5, StatusPort: 6},
+				{Host: "127.0.0.5", Port: 7, StatusPort: 8},
+			},
+			TiFlashServers:  []*spec.TiFlashSpec {
+				{Host: "127.0.0.6", TCPPort: 9, HTTPPort: 10, FlashServicePort: 11, FlashProxyPort: 12, FlashProxyStatusPort: 13, StatusPort: 14},
+			},
+			CDCServers:  []*spec.CDCSpec {
+				{Host: "127.0.0.7", Port: 15},
+				{Host: "127.0.0.8", Port: 16},
+			},
+			PDServers:  []*spec.PDSpec {
+				{Host: "127.0.0.9", ClientPort: 17, PeerPort: 18},
+				{Host: "127.0.0.10", ClientPort: 19, PeerPort: 20},
+			},
+			Grafanas:  []*spec.GrafanaSpec {
+				{Host: "127.0.0.11", Port: 21},
+			},
+			Alertmanagers:  []*spec.AlertmanagerSpec {
+				{Host: "127.0.0.12", WebPort: 22, ClusterPort: 23},
+			},
+			Monitors:  []*spec.PrometheusSpec {
+				{Host: "127.0.0.13", Port: 24},
+			},
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, 12, len(instances))
+		assert.Equal(t, "v5.0.0", instances[0].Version)
+		assert.Equal(t, "tenantId", instances[1].TenantId)
+		assert.Equal(t, "clusterId", instances[2].ClusterID)
+		assert.NotEmpty(t, instances[3].Ports)
+		assert.NotEmpty(t, instances[4].HostIP)
+		assert.Equal(t, string(constants.ClusterInstanceRunning), instances[4].Status)
 	})
 }

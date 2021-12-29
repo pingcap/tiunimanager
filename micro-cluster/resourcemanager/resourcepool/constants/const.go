@@ -22,7 +22,7 @@ const (
 	ContextResourcePoolKey   string = "resourcePool"
 	ContextImportHostInfoKey string = "importHostInfo"
 	ContextImportHostIDsKey  string = "importHostIDs"
-	ContextWorkFlowNodeIDKey string = "workFlowNodeID"
+	ContextWorkFlowNodeIDKey string = "importHostsWorkFlowNodeID"
 )
 
 const (

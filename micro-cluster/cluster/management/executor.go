@@ -795,7 +795,7 @@ func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workfl
 	clusterMeta.Cluster.Type = "TiDB"
 	clusterMeta.Cluster.Version = metadata.Version
 	clusterSpec := metadata.GetTopology().(*spec.Specification)
-	_, err = clusterMeta.ParseTopologyFromConfig(context, clusterSpec)
+	err = clusterMeta.ParseTopologyFromConfig(context, clusterSpec)
 	if err != nil {
 		framework.LogWithContext(context).Errorf(
 			"add instances into cluster %s topology error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -806,6 +806,32 @@ func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workfl
 }
 
 func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	requirements, instances, err := clusterMeta.GenerateTakeoverResourceRequirements(context)
+
+	batchReq := &resourceStructs.BatchAllocRequest{
+		BatchRequests: []resourceStructs.AllocReq{
+			{
+				Applicant: resourceStructs.Applicant{
+					HolderId:          clusterMeta.Cluster.ID,
+					RequestId:         uuidutil.GenerateID(),
+					TakeoverOperation: true,
+				},
+				Requires: requirements,
+			},
+		},
+	}
+	allocResponse, err := resourceManagement.GetManagement().GetAllocatorRecycler().AllocResources(context, batchReq)
+
+	if err != nil {
+		return err
+	}
+	resourceResult := allocResponse.BatchResults[0]
+
+	for i, instance := range instances {
+		instance.HostID = resourceResult.Results[i].HostId
+	}
+
 	return nil
 }
 

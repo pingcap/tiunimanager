@@ -130,9 +130,9 @@ func parseInstanceFromSpec(cluster *management.Cluster, componentType constants.
 // @Parameter specs
 // @return []*management.ClusterInstance
 // @return error
-func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.Specification) ([]*management.ClusterInstance, error) {
+func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.Specification) error {
 	if specs == nil {
-		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "cannot parse empty specification")
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "cannot parse empty specification")
 	}
 	instances := make([]*management.ClusterInstance, 0)
 	if len(specs.PDServers) > 0 {
@@ -149,7 +149,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 	}
 	if len(specs.TiDBServers) > 0 {
 		for _, server := range specs.TiDBServers {
-			instances = append(instances, parseInstanceFromSpec(p.Cluster, constants.ComponentIDPD, func() string {
+			instances = append(instances, parseInstanceFromSpec(p.Cluster, constants.ComponentIDTiDB, func() string {
 				return server.Host
 			}, func() []int32 {
 				return []int32{
@@ -233,7 +233,13 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 		}
 	}
 
-	return instances, nil
+	p.acceptInstances(instances)
+
+	err := models.GetClusterReaderWriter().UpdateInstance(ctx, instances...)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // AddInstances
@@ -345,6 +351,38 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 	return requirements, allocInstances, nil
 }
 
+func (p *ClusterMeta) GenerateTakeoverResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance, error) {
+	instances := p.GetInstanceByStatus(ctx, constants.ClusterInstanceRunning)
+	requirements := make([]resource.AllocRequirement, 0)
+
+	allocInstances := make([]*management.ClusterInstance, 0)
+	for _, instance := range instances {
+		portRequirements := make([]resource.PortRequirement, 0)
+		for _, port := range instance.Ports {
+			portRequirements = append(portRequirements, resource.PortRequirement{
+				Start:   port,
+				End:     port + 1,
+				PortCnt: int32(1),
+			})
+		}
+		requirements = append(requirements, resource.AllocRequirement{
+			Location: structs.Location{
+				HostIp: instance.HostIP[0],
+			},
+			Require: resource.Requirement {
+				Exclusive: p.Cluster.Exclusive,
+				PortReq: portRequirements,
+				DiskReq: resource.DiskRequirement {},
+				ComputeReq: resource.ComputeRequirement {},
+			},
+			Count: 1,
+			Strategy: resource.UserSpecifyHost,
+		})
+		allocInstances = append(allocInstances, instance)
+	}
+	return requirements, allocInstances, nil
+}
+
 func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) ([]resource.AllocRequirement, error) {
 	requirements := make([]resource.AllocRequirement, 0)
 
@@ -413,6 +451,7 @@ func (p *ClusterMeta) ApplyInstanceResource(resource *resource.AllocRsp, instanc
 			default:
 			}
 		}
+		pd.Ports = pd.Ports[:2]
 	}
 }
 
@@ -866,10 +905,11 @@ func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return buildMeta(cluster, instances), err
 }
 
-func buildMeta(cluster *management.Cluster, instances []*management.ClusterInstance) *ClusterMeta {
+func (p *ClusterMeta) acceptInstances(instances []*management.ClusterInstance) {
 	instancesMap := make(map[string][]*management.ClusterInstance)
 
 	if len(instances) > 0 {
@@ -881,10 +921,15 @@ func buildMeta(cluster *management.Cluster, instances []*management.ClusterInsta
 			}
 		}
 	}
-	return &ClusterMeta{
+	p.Instances = instancesMap
+}
+
+func buildMeta(cluster *management.Cluster, instances []*management.ClusterInstance) *ClusterMeta {
+	meta := &ClusterMeta{
 		Cluster:   cluster,
-		Instances: instancesMap,
 	}
+	meta.acceptInstances(instances)
+	return meta
 }
 
 // Query

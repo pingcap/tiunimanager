@@ -92,6 +92,13 @@ func (manager *SecondPartyManager) ClusterScaleOut(ctx context.Context, tiUPComp
 	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("clusterscaleout "+
 		"tiupcomponent: %s, instancename: %s, configstryaml: %s, timeout: %d, flags: %v, workflownodeid: %s",
 		string(tiUPComponent), instanceName, configStrYaml, timeoutS, flags, workFlowNodeID)
+	if tiUPComponent == TiEMComponentTypeStr {
+		err = manager.setTiUPMirrorForComponent(ctx, tiUPComponent)
+		if err != nil {
+			return "", err
+		}
+		defer manager.setTiUPMirrorForComponent(ctx, DefaultComponentTypeStr)
+	}
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
 		secondparty.OperationType_ClusterScaleOut, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
@@ -137,6 +144,13 @@ func (manager *SecondPartyManager) ClusterScaleIn(ctx context.Context, tiUPCompo
 	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("clusterscalein "+
 		"tiupcomponent: %s, instancename: %s, nodeid: %s, timeout: %d, flags: %v, workflownodeid: %s",
 		string(tiUPComponent), instanceName, nodeId, timeoutS, flags, workFlowNodeID)
+	if tiUPComponent == TiEMComponentTypeStr {
+		err = manager.setTiUPMirrorForComponent(ctx, tiUPComponent)
+		if err != nil {
+			return "", err
+		}
+		defer manager.setTiUPMirrorForComponent(ctx, DefaultComponentTypeStr)
+	}
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
 		secondparty.OperationType_ClusterScaleIn, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
@@ -974,4 +988,16 @@ func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, opera
 		}
 	}()
 	return exitCh
+}
+
+func (manager *SecondPartyManager) setTiUPMirrorForComponent(ctx context.Context, tiUPComponent TiUPComponentTypeStr) error {
+	mirror, err := models.GetMirrorReaderWriter().QueryByComponentType(context.Background(), string(tiUPComponent))
+	if err != nil {
+		return err
+	}
+
+	_, err = setTiUPMirror(ctx, manager.TiUPBinPath, mirror.MirrorAddr)
+	if err != nil {
+		return err
+	}
 }

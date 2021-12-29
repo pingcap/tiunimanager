@@ -792,7 +792,7 @@ func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workfl
 		return err
 	}
 
-	clusterMeta.Cluster.Type = "TiDB"
+	clusterMeta.Cluster.Type = string(constants.EMProductIDTiDB)
 	clusterMeta.Cluster.Version = metadata.Version
 	clusterSpec := metadata.GetTopology().(*spec.Specification)
 	err = clusterMeta.ParseTopologyFromConfig(context, clusterSpec)

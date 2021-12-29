@@ -26,6 +26,11 @@ package secondparty
 import (
 	"context"
 	"errors"
+	"strings"
+
+	mirror2 "github.com/pingcap-inc/tiem/models/mirror"
+
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockmirror"
 
 	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
 
@@ -79,6 +84,21 @@ func TestSecondPartyManager_ClusterDeploy_Success(t *testing.T) {
 	operationID, err := secondPartyManager1.ClusterDeploy(context.TODO(), ClusterComponentTypeStr, "test-tidb", "v1", "", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
 		t.Errorf("case: create secondparty operation successfully. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", TestOperationID, operationID, nil, err)
+	}
+}
+
+func TestSecondPartyManager_ClusterScaleOut_Fail(t *testing.T) {
+
+	expectedErr := errors.New("fail create second party operation")
+
+	mockCtl := gomock.NewController(t)
+	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
+	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterDeploy, TestWorkFlowNodeID).Return(nil, expectedErr)
+
+	operationID, err := secondPartyManager1.ClusterDeploy(context.TODO(), ClusterComponentTypeStr, "test-tidb", "v1", "", 0, []string{}, TestWorkFlowNodeID)
+	if operationID != "" || err == nil {
+		t.Errorf("case: fail create second party operation intentionally. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", "", operationID, expectedErr, err)
 	}
 }
 
@@ -834,6 +854,32 @@ func TestSecondPartyManager_startTiUPTask_Wrong(t *testing.T) {
 
 func TestSecondPartyManager_startTiUPTask(t *testing.T) {
 	secondPartyManager1.startTiUPOperation(context.TODO(), TestOperationID, "ls", []string{}, 1)
+}
+
+func TestSecondPartyManager_setTiUPMirrorForComponent_Fail(t *testing.T) {
+	mockCtl := gomock.NewController(t)
+	mockReaderWriter := mockmirror.NewMockReaderWriter(mockCtl)
+	models.SetMirrorReaderWriter(mockReaderWriter)
+	mockReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(TiEMComponentTypeStr)).Return(nil, errors.New("some error"))
+	err := secondPartyManager1.setTiUPMirrorForComponent(context.TODO(), TiEMComponentTypeStr)
+	if err != nil && !strings.Contains(err.Error(), "some error") {
+		t.Error(err)
+	}
+}
+
+func TestSecondPartyManager_setTiUPMirrorForComponent_Success(t *testing.T) {
+	mirror := &mirror2.Mirror{
+		MirrorAddr: "mirror address",
+	}
+
+	mockCtl := gomock.NewController(t)
+	mockReaderWriter := mockmirror.NewMockReaderWriter(mockCtl)
+	models.SetMirrorReaderWriter(mockReaderWriter)
+	mockReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(TiEMComponentTypeStr)).Return(mirror, nil)
+	err := secondPartyManager1.setTiUPMirrorForComponent(context.TODO(), TiEMComponentTypeStr)
+	if err == nil || strings.Contains(err.Error(), "some error") {
+		t.Error("wrong set")
+	}
 }
 
 func initForTestLibtiup() {

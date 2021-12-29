@@ -1229,3 +1229,54 @@ func TestInitDatabaseAccount(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func Test_testConnectivity(t *testing.T) {
+	/* run this case with real tidb ip/port/user/password
+	t.Run("normal", func(t *testing.T) {
+		ctx := workflow.NewFlowContext(context.TODO())
+		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				DBUser: "root",
+				DBPassword: "mypassword",
+			},
+			Instances: map[string][]*management.ClusterInstance{
+				string(constants.ComponentIDTiDB) : {
+					{
+						Entity: common.Entity{
+							Status: string(constants.ClusterRunning),
+						},
+						HostIP: []string{"172.16.6.176"},
+						Ports: []int32{10000},
+					},
+				},
+			},
+		})
+		err := testConnectivity(nil, ctx)
+		assert.NoError(t, err)
+	})
+	 */
+	t.Run("error", func(t *testing.T) {
+		ctx := workflow.NewFlowContext(context.TODO())
+		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				DBUser: "root",
+				DBPassword: "wrong",
+			},
+			Instances: map[string][]*management.ClusterInstance{
+				string(constants.ComponentIDTiDB) : {
+					{
+						Entity: common.Entity{
+							Status: string(constants.ClusterRunning),
+						},
+						HostIP: []string{"172.16.6.176"},
+						Ports: []int32{10000},
+					},
+				},
+			},
+		})
+		err := testConnectivity(nil, ctx)
+		assert.Error(t, err)
+	})
+
+
+}

@@ -16,6 +16,7 @@
 package management
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -724,9 +725,6 @@ func freedClusterResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 // initDatabaseAccount
 // @Description: init database account for new cluster
 func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	framework.LogWithContext(context).Info("begin initDatabaseAccount")
-	defer framework.LogWithContext(context).Info("end initDatabaseAccount")
-
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
 
@@ -812,5 +810,19 @@ func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 }
 
 func testConnectivity(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	connectAddress := clusterMeta.GetClusterConnectAddresses()[0]
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql", clusterMeta.Cluster.DBUser, clusterMeta.Cluster.DBPassword, connectAddress.IP, connectAddress.Port))
+	if err != nil {
+		framework.LogWithContext(context).Errorf("connect tidb failed, err = %s", err)
+		return err
+	}
+	defer db.Close()
+
+	_, err = db.Query("select * from mysql.db")
+	if err != nil {
+		framework.LogWithContext(context).Errorf("connect tidb failed, err = %s", err)
+		return err
+	}
 	return nil
 }

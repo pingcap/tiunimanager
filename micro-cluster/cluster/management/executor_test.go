@@ -129,7 +129,13 @@ func TestPrepareResource(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		resourceManager := mock_allocator_recycler.NewMockAllocatorRecycler(ctrl)
 		resourceManager.EXPECT().AllocResources(gomock.Any(), gomock.Any()).Return(&structs.BatchAllocResponse{
-			BatchResults: []*structs.AllocRsp{},
+			BatchResults: []*structs.AllocRsp{
+				{
+					Applicant: structs.Applicant{
+						RequestId: "123",
+					},
+				},
+			},
 		}, nil)
 		resourceManagement.GetManagement().SetAllocatorRecycler(resourceManager)
 		err := prepareResource(&workflowModel.WorkFlowNode{}, flowContext)
@@ -181,6 +187,19 @@ func TestBuildConfig(t *testing.T) {
 	})
 	err := buildConfig(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.NoError(t, err)
+
+	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID:     "111",
+				Status: string(constants.ClusterRunning),
+			},
+			Version: "v4.1.1",
+		},
+		Instances: map[string][]*management.ClusterInstance{},
+	})
+	err = buildConfig(&workflowModel.WorkFlowNode{}, flowContext)
+	assert.Error(t, err)
 }
 
 func TestScaleOutCluster(t *testing.T) {
@@ -549,7 +568,7 @@ func TestBackupBeforeDelete(t *testing.T) {
 		err := backupBeforeDelete(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
 	})
-	
+
 	t.Run("no backup", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
 		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
@@ -608,17 +627,16 @@ func TestRestoreNewCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
-		Cluster: &management.Cluster{
-			Entity: common.Entity{
-				ID: "testCluster",
-			},
-		},
-	})
-	flowContext.SetData(ContextBackupID, "backup123")
-
 	t.Run("normal", func(t *testing.T) {
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+			},
+		})
+		flowContext.SetData(ContextBackupID, "backup123")
 		brService := mock_br_service.NewMockBRService(ctrl)
 		backuprestore.MockBRService(brService)
 		brService.EXPECT().RestoreExistCluster(gomock.Any(),
@@ -633,6 +651,15 @@ func TestRestoreNewCluster(t *testing.T) {
 	})
 
 	t.Run("restore fail", func(t *testing.T) {
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+			},
+		})
+		flowContext.SetData(ContextBackupID, "backup123")
 		brService := mock_br_service.NewMockBRService(ctrl)
 		backuprestore.MockBRService(brService)
 		brService.EXPECT().RestoreExistCluster(gomock.Any(),
@@ -641,12 +668,24 @@ func TestRestoreNewCluster(t *testing.T) {
 		err := restoreNewCluster(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
 	})
+
+	t.Run("no backup id", func(t *testing.T) {
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+			},
+		})
+		err := restoreNewCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
 }
 
 func TestWaitWorkFlow(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-
 
 	t.Run("no found workflow", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
@@ -781,18 +820,18 @@ func TestSetClusterOffline(t *testing.T) {
 func TestRevertResourceAfterFailure(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextAllocResource, &structs.BatchAllocResponse{
-		BatchResults: []*structs.AllocRsp{
-			{
-				Applicant: structs.Applicant{
-					RequestId: "123",
-				},
-			},
-		},
-	})
 
 	t.Run("normal", func(t *testing.T) {
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextAllocResource, &structs.BatchAllocResponse{
+			BatchResults: []*structs.AllocRsp{
+				{
+					Applicant: structs.Applicant{
+						RequestId: "123",
+					},
+				},
+			},
+		})
 		resourceManager := mock_allocator_recycler.NewMockAllocatorRecycler(ctrl)
 		resourceManager.EXPECT().RecycleResources(gomock.Any(), gomock.Any()).Return(nil)
 		resourceManagement.GetManagement().SetAllocatorRecycler(resourceManager)
@@ -801,11 +840,27 @@ func TestRevertResourceAfterFailure(t *testing.T) {
 	})
 
 	t.Run("recycle fail", func(t *testing.T) {
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextAllocResource, &structs.BatchAllocResponse{
+			BatchResults: []*structs.AllocRsp{
+				{
+					Applicant: structs.Applicant{
+						RequestId: "123",
+					},
+				},
+			},
+		})
 		resourceManager := mock_allocator_recycler.NewMockAllocatorRecycler(ctrl)
 		resourceManager.EXPECT().RecycleResources(gomock.Any(), gomock.Any()).Return(fmt.Errorf("recycle fail"))
 		resourceManagement.GetManagement().SetAllocatorRecycler(resourceManager)
 		err := revertResourceAfterFailure(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
+	})
+
+	t.Run("no alloc response", func(t *testing.T) {
+		flowContext := workflow.NewFlowContext(context.TODO())
+		err := revertResourceAfterFailure(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
 	})
 }
 
@@ -872,45 +927,103 @@ func TestDeployCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	mockTiupManager.EXPECT().ClusterDeploy(gomock.Any(), gomock.Any(), gomock.Any(),
-		gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
-	secondparty.Manager = mockTiupManager
+	t.Run("normal", func(t *testing.T) {
+		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+		mockTiupManager.EXPECT().ClusterDeploy(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
+		secondparty.Manager = mockTiupManager
 
-	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
-		Cluster: &management.Cluster{
-			Entity: common.Entity{
-				ID: "testCluster",
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
 			},
-			Version: "v5.0.0",
-		},
+		})
+		flowContext.SetData(ContextTopology, "test topology")
+		err := deployCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
 	})
-	flowContext.SetData(ContextTopology, "test topology")
-	err := deployCluster(&workflowModel.WorkFlowNode{}, flowContext)
-	assert.NoError(t, err)
+
+	t.Run("no topology", func(t *testing.T) {
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		err := deployCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
+
+	t.Run("deploy fail", func(t *testing.T) {
+		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+		mockTiupManager.EXPECT().ClusterDeploy(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any()).Return("task01", fmt.Errorf("fail")).AnyTimes()
+		secondparty.Manager = mockTiupManager
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		flowContext.SetData(ContextTopology, "test topology")
+		err := deployCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
 }
 
 func TestStartCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	mockTiupManager.EXPECT().ClusterStart(gomock.Any(), gomock.Any(), gomock.Any(),
-		gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
-	secondparty.Manager = mockTiupManager
+	t.Run("normal", func(t *testing.T) {
+		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+		mockTiupManager.EXPECT().ClusterStart(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
+		secondparty.Manager = mockTiupManager
 
-	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
-		Cluster: &management.Cluster{
-			Entity: common.Entity{
-				ID: "testCluster",
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
 			},
-			Version: "v5.0.0",
-		},
+		})
+		err := startCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
 	})
-	err := startCluster(&workflowModel.WorkFlowNode{}, flowContext)
-	assert.NoError(t, err)
+
+	t.Run("start fail", func(t *testing.T) {
+		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+		mockTiupManager.EXPECT().ClusterStart(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", fmt.Errorf("fail")).AnyTimes()
+		secondparty.Manager = mockTiupManager
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		err := startCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
 }
 
 func TestSyncBackupStrategy(t *testing.T) {
@@ -1026,18 +1139,17 @@ func TestRestoreCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
-		Cluster: &management.Cluster{
-			Entity: common.Entity{
-				ID: "testCluster",
-			},
-		},
-	})
-	flowContext.SetData(ContextBackupID, "backup123")
-	flowContext.SetData(ContextCloneStrategy, string(constants.SnapShotClone))
-
 	t.Run("normal", func(t *testing.T) {
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+			},
+		})
+		flowContext.SetData(ContextBackupID, "backup123")
+		flowContext.SetData(ContextCloneStrategy, string(constants.SnapShotClone))
 		brService := mock_br_service.NewMockBRService(ctrl)
 		backuprestore.MockBRService(brService)
 		brService.EXPECT().RestoreExistCluster(gomock.Any(),
@@ -1052,6 +1164,16 @@ func TestRestoreCluster(t *testing.T) {
 	})
 
 	t.Run("restore fail", func(t *testing.T) {
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+			},
+		})
+		flowContext.SetData(ContextBackupID, "backup123")
+		flowContext.SetData(ContextCloneStrategy, string(constants.SnapShotClone))
 		brService := mock_br_service.NewMockBRService(ctrl)
 		backuprestore.MockBRService(brService)
 		brService.EXPECT().RestoreExistCluster(gomock.Any(),
@@ -1060,50 +1182,107 @@ func TestRestoreCluster(t *testing.T) {
 		err := restoreCluster(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
 	})
+
+	t.Run("no backup id", func(t *testing.T) {
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+			},
+		})
+		flowContext.SetData(ContextCloneStrategy, string(constants.SnapShotClone))
+
+		err := restoreCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
 }
 
 func TestStopCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	mockTiupManager.EXPECT().ClusterStop(gomock.Any(), gomock.Any(), gomock.Any(),
-		gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
-	secondparty.Manager = mockTiupManager
+	t.Run("normal", func(t *testing.T) {
+		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+		mockTiupManager.EXPECT().ClusterStop(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
+		secondparty.Manager = mockTiupManager
 
-	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
-		Cluster: &management.Cluster{
-			Entity: common.Entity{
-				ID: "testCluster",
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
 			},
-			Version: "v5.0.0",
-		},
+		})
+		err := stopCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
 	})
-	err := stopCluster(&workflowModel.WorkFlowNode{}, flowContext)
-	assert.NoError(t, err)
+
+	t.Run("stop fail", func(t *testing.T) {
+		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+		mockTiupManager.EXPECT().ClusterStop(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", fmt.Errorf("fail")).AnyTimes()
+		secondparty.Manager = mockTiupManager
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		err := stopCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
 }
 
 func TestDestroyCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	mockTiupManager.EXPECT().ClusterDestroy(gomock.Any(), gomock.Any(), gomock.Any(),
-		gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
-	secondparty.Manager = mockTiupManager
+	t.Run("normal", func(t *testing.T) {
+		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+		mockTiupManager.EXPECT().ClusterDestroy(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
+		secondparty.Manager = mockTiupManager
 
-	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
-		Cluster: &management.Cluster{
-			Entity: common.Entity{
-				ID: "testCluster",
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
 			},
-			Version: "v5.0.0",
-		},
+		})
+		err := destroyCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
 	})
-	err := destroyCluster(&workflowModel.WorkFlowNode{}, flowContext)
-	assert.NoError(t, err)
+
+	t.Run("destroy fail", func(t *testing.T) {
+		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+		mockTiupManager.EXPECT().ClusterDestroy(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", fmt.Errorf("fail")).AnyTimes()
+		secondparty.Manager = mockTiupManager
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		err := destroyCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
 }
 
 func TestDeleteCluster(t *testing.T) {

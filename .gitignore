@@ -21,3 +21,6 @@ library/secondparty/logs
 test/
 /template
 /nohup.out
+log/
+out.txt
+run.sh

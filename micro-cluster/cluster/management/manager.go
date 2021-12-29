@@ -57,6 +57,7 @@ func NewClusterManager() *Manager {
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowRestartCluster, &restartClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowStopCluster, &stopClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowCloneCluster, &cloneDefine)
+	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowTakeoverCluster, &takeoverClusterFlow)
 
 	return &Manager{}
 }

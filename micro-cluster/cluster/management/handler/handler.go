@@ -91,8 +91,9 @@ var TagTakeover = "takeover"
 func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbUser string, dbPassword string) error {
 	p.Cluster = &management.Cluster{
 		Entity: dbCommon.Entity{
+			ID: name,
 			TenantId: framework.GetTenantIDFromContext(ctx),
-			Status:   string(constants.ClusterInitializing),
+			Status:   string(constants.ClusterRunning),
 		},
 		Name:           name,
 		DBUser:         dbUser,

@@ -817,10 +817,14 @@ func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 	if err != nil {
 		return err
 	}
+
 	resourceResult := allocResponse.BatchResults[0]
+	clusterMeta.Cluster.Region = resourceResult.Results[0].Location.Region
 
 	for i, instance := range instances {
 		instance.HostID = resourceResult.Results[i].HostId
+		instance.Zone = resourceResult.Results[i].Location.Zone
+		instance.Rack = resourceResult.Results[i].Location.Rack
 	}
 
 	return nil

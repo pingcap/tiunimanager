@@ -26,6 +26,7 @@ const (
 	DMComponentTypeStr      TiUPComponentTypeStr = "dm"
 	TiEMComponentTypeStr    TiUPComponentTypeStr = "tiem"
 	CTLComponentTypeStr     TiUPComponentTypeStr = "ctl"
+	DefaultComponentTypeStr TiUPComponentTypeStr = "default"
 )
 
 var topologyTmpFilePrefix = constants.TiUPTopologyTmpFilePrefix

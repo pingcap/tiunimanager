@@ -18,13 +18,15 @@ package handler
 import (
 	"bytes"
 	"context"
+	"text/template"
+
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	resourceTemplate "github.com/pingcap-inc/tiem/resource/template"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
-	"text/template"
 
 	"fmt"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -86,13 +88,15 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 
 var TagTakeover = "takeover"
 
-func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string) error {
+func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbUser string, dbPassword string) error {
 	p.Cluster = &management.Cluster{
 		Entity: dbCommon.Entity{
 			TenantId: framework.GetTenantIDFromContext(ctx),
 			Status:   string(constants.ClusterInitializing),
 		},
 		Name:           name,
+		DBUser:         dbUser,
+		DBPassword:     dbPassword,
 		Tags:           []string{TagTakeover},
 		OwnerId:        framework.GetUserIDFromContext(ctx),
 		MaintainWindow: "",
@@ -174,7 +178,7 @@ func (p *ClusterMeta) AddDefaultInstances(ctx context.Context) error {
 	return nil
 }
 
-func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance, error) {
+func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance) {
 	instances := p.GetInstanceByStatus(ctx, constants.ClusterInstanceInitializing)
 	requirements := make([]resource.AllocRequirement, 0)
 
@@ -218,15 +222,15 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 		})
 		allocInstances = append(allocInstances, instance)
 	}
-	return requirements, allocInstances, nil
+	return requirements, allocInstances
 }
 
-func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) ([]resource.AllocRequirement, error) {
+func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) []resource.AllocRequirement {
 	requirements := make([]resource.AllocRequirement, 0)
 
 	if p.Cluster.Status != string(constants.ClusterInitializing) {
 		framework.LogWithContext(ctx).Infof("cluster %s is not initializing, no need to alloc global port resource", p.Cluster.ID)
-		return requirements, nil
+		return requirements
 	}
 
 	portRange := knowledge.GetClusterPortRange(p.Cluster.Type, p.Cluster.Version)
@@ -252,7 +256,7 @@ func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) ([]res
 		Strategy: resource.ClusterPorts,
 	})
 
-	return requirements, nil
+	return requirements
 }
 
 func (p *ClusterMeta) ApplyGlobalPortResource(nodeExporterPort, blackboxExporterPort int32) {
@@ -537,6 +541,10 @@ type ComponentAddress struct {
 	Port int
 }
 
+func (p *ComponentAddress) ToString() string {
+	return fmt.Sprintf("%s:%d", p.IP, p.Port)
+}
+
 // GetClusterConnectAddresses
 // @Description: Access the TiDB cluster
 // @Receiver p
@@ -601,6 +609,25 @@ func (p *ClusterMeta) GetTiKVStatusAddress() []ComponentAddress {
 // @return []ComponentAddress
 func (p *ClusterMeta) GetPDClientAddresses() []ComponentAddress {
 	instances := p.Instances[string(constants.ComponentIDPD)]
+	address := make([]ComponentAddress, 0)
+
+	for _, instance := range instances {
+		if instance.Status == string(constants.ClusterInstanceRunning) {
+			address = append(address, ComponentAddress{
+				IP:   instance.HostIP[0],
+				Port: int(instance.Ports[0]),
+			})
+		}
+	}
+	return address
+}
+
+// GetCDCClientAddresses
+// @Description: communication address for CDC Servers to connect.
+// @Receiver p
+// @return []ComponentAddress
+func (p *ClusterMeta) GetCDCClientAddresses() []ComponentAddress {
+	instances := p.Instances[string(constants.ComponentIDCDC)]
 	address := make([]ComponentAddress, 0)
 
 	for _, instance := range instances {
@@ -777,6 +804,38 @@ func Query(ctx context.Context, req cluster.QueryClustersReq) (resp cluster.Quer
 		resp.Clusters = append(resp.Clusters, meta.DisplayClusterInfo(ctx))
 	}
 
+	return
+}
+
+type InstanceLogInfo struct {
+	ClusterID    string
+	InstanceType constants.EMProductComponentIDType
+	IP           string
+	DataDir      string
+	DeployDir    string
+	LogDir       string
+}
+
+func QueryInstanceLogInfo(ctx context.Context, hostId string, typeFilter []string, statusFilter []string) (infos []*InstanceLogInfo, err error) {
+	instances, err := models.GetClusterReaderWriter().QueryInstancesByHost(ctx, hostId, typeFilter, statusFilter)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("query instances by host failed, %s", err.Error())
+		return
+	}
+
+	infos = make([]*InstanceLogInfo, 0)
+	for _, instance := range instances {
+		if len(instance.DiskPath) > 0 {
+			infos = append(infos, &InstanceLogInfo{
+				ClusterID:    instance.ClusterID,
+				InstanceType: constants.EMProductComponentIDType(instance.Type),
+				IP:           instance.HostIP[0],
+				DataDir:      instance.GetDataDir(),
+				DeployDir:    instance.GetDeployDir(),
+				LogDir:       instance.GetLogDir(),
+			})
+		}
+	}
 	return
 }
 

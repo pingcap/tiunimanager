@@ -18,10 +18,10 @@ package backuprestore
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	"github.com/robfig/cron"
@@ -83,11 +83,19 @@ func (auto *autoBackupHandler) doBackup(strategy *backuprestore.BackupStrategy) 
 	framework.Log().Infof("begin do auto backup for cluster %s", strategy.ClusterID)
 	defer framework.Log().Infof("end do auto backup for cluster %s", strategy.ClusterID)
 
-	_, err := GetBRService().BackupCluster(framework.NewMicroCtxFromGinCtx(&gin.Context{}), cluster.BackupClusterDataReq{
+	meta, err := handler.Get(context.Background(), strategy.ClusterID)
+	if err != nil || meta.Cluster == nil {
+		framework.LogWithContext(context.Background()).Errorf("load cluster meta %s failed, %v", strategy.ClusterID, err)
+		return
+	}
+
+	ctx := framework.NewMicroContextWithKeyValuePairs(context.Background(), map[string]string{framework.TiEM_X_TENANT_ID_KEY: meta.Cluster.TenantId})
+	_, err = GetBRService().BackupCluster(ctx, cluster.BackupClusterDataReq{
 		ClusterID:  strategy.ClusterID,
 		BackupMode: string(constants.BackupModeAuto),
 	}, true)
 	if err != nil {
-		framework.Log().Errorf("do backup for cluster %s failed, %s", strategy.ClusterID, err.Error())
+		framework.LogWithContext(context.Background()).Errorf("do backup for cluster %s failed, %s", strategy.ClusterID, err.Error())
+		return
 	}
 }

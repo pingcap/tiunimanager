@@ -17,6 +17,7 @@ package constants
 
 import (
 	"github.com/pingcap-inc/tiem/common/errors"
+	"strings"
 )
 
 type ChangeFeedStatus string
@@ -30,6 +31,10 @@ const (
 	ChangeFeedStatusFailed   ChangeFeedStatus = "Failed"
 	ChangeFeedStatusUnknown  ChangeFeedStatus = "Unknown"
 )
+
+func (s ChangeFeedStatus) EqualCDCState(state string) bool {
+	return strings.ToLower(s.ToString()) == state
+}
 
 func (s ChangeFeedStatus) IsFinal() bool {
 	return ChangeFeedStatusFinished == s || ChangeFeedStatusFailed == s

@@ -11,73 +11,38 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
+ *                                                                            *
  ******************************************************************************/
 
-package common
+/*******************************************************************************
+ * @File: mirror
+ * @Description:
+ * @Author: shenhaibo@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/28
+*******************************************************************************/
+
+package mirror
 
 import (
-	"context"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"golang.org/x/crypto/bcrypt"
 	"time"
 
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+
 	"gorm.io/gorm"
 )
 
-type Entity struct {
-	ID        string    `gorm:"primarykey"`
-	CreatedAt time.Time `gorm:"<-:create"`
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt
-
-	TenantId string `gorm:"default:null;not null;<-:create"`
-	Status   string `gorm:"not null;"`
+// Mirror Record mirror info for TiUP
+type Mirror struct {
+	ID            string    `gorm:"primaryKey;"`
+	ComponentType string    `gorm:"not null;comment:'TiUP component type, eg: cluster, tiem, dm, ctl;'"`
+	MirrorAddr    string    `gorm:"not null;comment:'TiUP mirror address'"`
+	CreatedAt     time.Time `gorm:"<-:create"`
+	UpdatedAt     time.Time
+	DeletedAt     gorm.DeletedAt `gorm:"index"`
 }
 
-func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
-	if len(e.ID) == 0 {
-		e.ID = uuidutil.GenerateID()
-	}
-
+func (s *Mirror) BeforeCreate(tx *gorm.DB) (err error) {
+	s.ID = uuidutil.GenerateID()
 	return nil
-}
-
-type GormDB struct {
-	db *gorm.DB
-}
-
-func WrapDB(db *gorm.DB) GormDB {
-	return GormDB{db: db}
-}
-
-func (m *GormDB) DB(ctx context.Context) *gorm.DB {
-	return m.db.WithContext(ctx)
-}
-
-// WrapDBError
-// @Description:
-// @Parameter err
-// @return error is nil or TiEMError
-func WrapDBError(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	switch err.(type) {
-	case errors.EMError:
-		return err
-	default:
-		return errors.NewError(errors.TIEM_SQL_ERROR, err.Error())
-	}
-}
-
-func FinalHash(salt string, passwd string) ([]byte, error) {
-	if passwd == "" {
-		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "password cannot be empty")
-	}
-	s := salt + passwd
-	finalSalt, err := bcrypt.GenerateFromPassword([]byte(s), bcrypt.DefaultCost)
-
-	return finalSalt, err
 }

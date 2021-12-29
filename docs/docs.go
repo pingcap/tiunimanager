@@ -4951,28 +4951,29 @@ var doc = `{
                     "type": "string",
                     "example": "password"
                 },
-                "clusterNames": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "clusterName": {
+                    "type": "string",
+                    "example": "myClusterName"
+                },
+                "dbPassword": {
+                    "type": "string",
+                    "example": "myPassword"
+                },
+                "dbUser": {
+                    "type": "string",
+                    "example": "root"
                 }
             }
         },
         "cluster.TakeoverClusterResp": {
             "type": "object",
             "properties": {
-                "clusters": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
+                "clusterId": {
+                    "type": "string"
                 },
-                "failed": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
                 }
             }
         },
@@ -6207,6 +6208,10 @@ var doc = `{
         "structs.ClusterParameterSampleInfo": {
             "type": "object",
             "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "basic"
+                },
                 "hasApply": {
                     "type": "integer",
                     "enum": [
@@ -6272,7 +6277,7 @@ var doc = `{
             "type": "object",
             "properties": {
                 "componentType": {
-                    "description": "TiDB/TiKV/PD/TiFlash/TiCDC/DM-Master/DM-Worker",
+                    "description": "TiDB/TiKV/PD/TiFlash/CDC/DM-Master/DM-Worker",
                     "type": "string"
                 },
                 "resource": {

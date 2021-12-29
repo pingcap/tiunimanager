@@ -23,7 +23,6 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/pingcap-inc/tiem/common/constants"
 	"golang.org/x/net/context"
 )
 
@@ -146,25 +145,37 @@ func Test_execShowRestoreInfoThruSQL_Success(t *testing.T) {
 	}
 }
 
+//func Test_setTiUPMirror(t *testing.T) {
+//	res, err := setTiUPMirror(context.TODO(), constants.TiUPBinPath, "https://tiup-mirrors.pingcap.com")
+//	if err != nil {
+//		t.Error(err)
+//	}
+//	fmt.Println(res)
+//
+//	mirror, err := showTiUPMirror(context.TODO(), constants.TiUPBinPath)
+//	if err != nil || mirror != "https://tiup-mirrors.pingcap.com\n" {
+//		t.Error(err)
+//	}
+//
+//	res, err = setTiUPMirror(context.TODO(), constants.TiUPBinPath, "http://127.0.0.2:8080/tiup-repo/")
+//	if err == nil || res != "" {
+//		t.Error(err)
+//	}
+//
+//	mirror, err = showTiUPMirror(context.TODO(), constants.TiUPBinPath)
+//	if err != nil || mirror != "https://tiup-mirrors.pingcap.com\n" {
+//		t.Error(err)
+//	}
+//}
+
 func Test_setTiUPMirror(t *testing.T) {
-	res, err := setTiUPMirror(context.TODO(), constants.TiUPBinPath, "https://tiup-mirrors.pingcap.com")
-	if err != nil {
-		t.Error(err)
-	}
-	fmt.Println(res)
-
-	mirror, err := showTiUPMirror(context.TODO(), constants.TiUPBinPath)
-	if err != nil || mirror != "https://tiup-mirrors.pingcap.com\n" {
-		t.Error(err)
+	_, err := setTiUPMirror(context.TODO(), "mock-tiup", "https://tiup-mirrors.pingcap.com")
+	if err == nil {
+		t.Error("err nil")
 	}
 
-	res, err = setTiUPMirror(context.TODO(), constants.TiUPBinPath, "http://127.0.0.2:8080/tiup-repo/")
-	if err == nil || res != "" {
-		t.Error(err)
-	}
-
-	mirror, err = showTiUPMirror(context.TODO(), constants.TiUPBinPath)
-	if err != nil || mirror != "https://tiup-mirrors.pingcap.com\n" {
-		t.Error(err)
+	_, err = showTiUPMirror(context.TODO(), "mock-tiup")
+	if err == nil {
+		t.Error("err nil")
 	}
 }

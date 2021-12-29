@@ -1517,6 +1517,9 @@ definitions:
     type: object
   structs.ClusterParameterSampleInfo:
     properties:
+      category:
+        example: basic
+        type: string
       hasApply:
         enum:
         - 0

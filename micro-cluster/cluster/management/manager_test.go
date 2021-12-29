@@ -35,6 +35,7 @@ import (
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 var emptyNode = func(task *wfModel.WorkFlowNode, context *workflow.FlowContext) error {
@@ -510,4 +511,340 @@ func TestManager_DeleteCluster(t *testing.T) {
 		})
 		assert.Error(t, err)
 	})
+}
+
+func TestManager_DetailCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+
+	clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{
+		Entity: common.Entity{
+			ID:        "2145635758",
+			TenantId:  "324567",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		},
+		Name:              "koojdafij",
+		DBUser:            "kodjsfn",
+		DBPassword:        "mypassword",
+		Type:              "TiDB",
+		Version:           "v5.0.0",
+		Tags:              []string{"111", "333"},
+		OwnerId:           "436534636u",
+		ParameterGroupID:  "352467890",
+		Copies:            4,
+		Region:            "Region1",
+		CpuArchitecture:   "x86_64",
+		MaintenanceStatus: constants.ClusterMaintenanceCreating,
+	}, []*management.ClusterInstance{
+		{
+			Entity: common.Entity{
+				Status: string(constants.ClusterInstanceRunning),
+			},
+			Zone:     "zone1",
+			CpuCores: 4,
+			Memory:   8,
+			Type:     "TiDB",
+			Version:  "v5.0.0",
+			Ports:    []int32{10001, 10002, 10003, 10004},
+			HostIP:   []string{"127.0.0.1"},
+		},
+		{
+			Entity: common.Entity{
+				Status: string(constants.ClusterInstanceRunning),
+			},
+			Zone:     "zone1",
+			CpuCores: 3,
+			Memory:   7,
+			Type:     "TiDB",
+			Version:  "v5.0.0",
+			Ports:    []int32{10001, 10002, 10003, 10004},
+			HostIP:   []string{"127.0.0.1"},
+		},
+		{
+			Entity: common.Entity{
+				Status: string(constants.ClusterInstanceRunning),
+			},
+			Zone:     "zone1",
+			CpuCores: 4,
+			Memory:   8,
+			Type:     "TiKV",
+			Version:  "v5.0.0",
+			Ports:    []int32{20001, 20002, 20003, 20004},
+			HostIP:   []string{"127.0.0.2"},
+		},
+		{
+			Entity: common.Entity{
+				Status: string(constants.ClusterInstanceRunning),
+			},
+			Zone:     "zone1",
+			CpuCores: 3,
+			Memory:   7,
+			Type:     "TiKV",
+			Version:  "v5.0.0",
+			Ports:    []int32{20001, 20002, 20003, 20004},
+			HostIP:   []string{"127.0.0.2"},
+		},
+		{
+			Entity: common.Entity{
+				Status: string(constants.ClusterInstanceRunning),
+			},
+			Zone:     "zone1",
+			CpuCores: 4,
+			Memory:   8,
+			Type:     "PD",
+			Version:  "v5.0.0",
+			Ports:    []int32{30001, 30002, 30003, 30004},
+			HostIP:   []string{"127.0.0.3"},
+		},
+		{
+			Entity: common.Entity{
+				Status: string(constants.ClusterInstanceRunning),
+			},
+			Zone:     "zone1",
+			CpuCores: 3,
+			Memory:   7,
+			Type:     "PD",
+			Version:  "v5.0.0",
+			Ports:    []int32{30001, 30002, 30003, 30004},
+			HostIP:   []string{"127.0.0.3"},
+		},
+	}, nil)
+	manager := Manager{}
+	got, err := manager.DetailCluster(context.TODO(), cluster.QueryClusterDetailReq{
+		ClusterID: "111",
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, got.Info.Region, "Region1")
+	assert.Equal(t, len(got.ClusterTopologyInfo.Topology), 6)
+}
+
+func TestManager_RestoreNewCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	workflow.GetWorkFlowService().RegisterWorkFlow(context.TODO(), constants.FlowRestoreNewCluster, getEmptyFlow(constants.FlowRestoreNewCluster))
+	manager := Manager{}
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+
+	clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+
+	clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+	workflow.MockWorkFlowService(workflowService)
+	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
+	}, nil).AnyTimes()
+	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	t.Run("normal", func(t *testing.T) {
+		_, err := manager.RestoreNewCluster(context.TODO(), cluster.RestoreNewClusterReq{
+			ResourceParameter: structs.ClusterResourceInfo{
+				InstanceResource: []structs.ClusterResourceParameterCompute{
+					{Type: "TiDB", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+					{Type: "TiKV", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+					{Type: "PD", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+				},
+			},
+			BackupID: "backup123",
+		})
+		assert.NoError(t, err)
+	})
+	t.Run("no computes", func(t *testing.T) {
+		_, err := manager.RestoreNewCluster(context.TODO(), cluster.RestoreNewClusterReq{})
+		assert.Error(t, err)
+	})
+}
+
+func TestManager_GetMonitorInfo(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	t.Run("normal", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{
+			Entity: common.Entity{
+				ID: "2145635758",
+			},
+		}, []*management.ClusterInstance{
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone:     "zone1",
+				CpuCores: 4,
+				Memory:   8,
+				Type:     "Grafana",
+				Version:  "v5.0.0",
+				Ports:    []int32{50001, 50002},
+				HostIP:   []string{"127.0.0.5"},
+			},
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone:     "zone1",
+				CpuCores: 4,
+				Memory:   8,
+				Type:     "AlertManger",
+				Version:  "v5.0.0",
+				Ports:    []int32{60001, 60002},
+				HostIP:   []string{"127.0.0.6"},
+			},
+		}, nil)
+		manager := Manager{}
+		got, err := manager.GetMonitorInfo(context.TODO(), cluster.QueryMonitorInfoReq{
+			ClusterID: "2145635758",
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, got.ClusterID, "2145635758")
+		assert.Equal(t, got.AlertUrl, "http://127.0.0.6:60001")
+		assert.Equal(t, got.GrafanaUrl, "http://127.0.0.5:50001")
+	})
+
+	t.Run("err ip", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{
+			Entity: common.Entity{
+				ID: "2145635758",
+			},
+		}, []*management.ClusterInstance{
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone:     "zone1",
+				CpuCores: 4,
+				Memory:   8,
+				Type:     "Grafana",
+				Version:  "v5.0.0",
+				Ports:    []int32{50001, 50002},
+				HostIP:   []string{"127.0.0.5"},
+			},
+		}, nil)
+		manager := Manager{}
+		_, err := manager.GetMonitorInfo(context.TODO(), cluster.QueryMonitorInfoReq{
+			ClusterID: "2145635758",
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("grafana err port", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{
+			Entity: common.Entity{
+				ID: "2145635758",
+			},
+		}, []*management.ClusterInstance{
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone:     "zone1",
+				CpuCores: 4,
+				Memory:   8,
+				Type:     "Grafana",
+				Version:  "v5.0.0",
+				Ports:    []int32{-50001, -50002},
+				HostIP:   []string{"127.0.0.5"},
+			},
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone:     "zone1",
+				CpuCores: 4,
+				Memory:   8,
+				Type:     "AlertManger",
+				Version:  "v5.0.0",
+				Ports:    []int32{60001, 60002},
+				HostIP:   []string{"127.0.0.6"},
+			},
+		}, nil)
+		manager := Manager{}
+		_, err := manager.GetMonitorInfo(context.TODO(), cluster.QueryMonitorInfoReq{
+			ClusterID: "2145635758",
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("alert err port", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{
+			Entity: common.Entity{
+				ID: "2145635758",
+			},
+		}, []*management.ClusterInstance{
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone:     "zone1",
+				CpuCores: 4,
+				Memory:   8,
+				Type:     "Grafana",
+				Version:  "v5.0.0",
+				Ports:    []int32{50001, 50002},
+				HostIP:   []string{"127.0.0.5"},
+			},
+			{
+				Entity: common.Entity{
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Zone:     "zone1",
+				CpuCores: 4,
+				Memory:   8,
+				Type:     "AlertManger",
+				Version:  "v5.0.0",
+				Ports:    []int32{-60001, -60002},
+				HostIP:   []string{"127.0.0.6"},
+			},
+		}, nil)
+		manager := Manager{}
+		_, err := manager.GetMonitorInfo(context.TODO(), cluster.QueryMonitorInfoReq{
+			ClusterID: "2145635758",
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{}, []*management.ClusterInstance{
+			{},
+			{},
+		}, fmt.Errorf("not found"))
+		manager := Manager{}
+		_, err := manager.GetMonitorInfo(context.TODO(), cluster.QueryMonitorInfoReq{
+			ClusterID: "2145635758",
+		})
+		assert.Error(t, err)
+	})
+}
+
+func TestNewClusterManager(t *testing.T) {
+	got := NewClusterManager()
+	assert.NotNil(t, got)
 }

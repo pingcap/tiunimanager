@@ -161,7 +161,7 @@ func (m ParameterGroupReadWrite) QueryParameterGroup(ctx context.Context, name, 
 	if hasDefault > 0 {
 		query = query.Where("has_default = ?", hasDefault)
 	}
-	err = query.Order("id asc").Count(&total).Offset(offset).Limit(size).Find(&groups).Error
+	err = query.Order("created_at desc").Count(&total).Offset(offset).Limit(size).Find(&groups).Error
 	if err != nil {
 		log.Errorf("list param group err: %v", err.Error())
 		return nil, 0, errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_QUERY_ERROR, errors.TIEM_PARAMETER_GROUP_QUERY_ERROR.Explain())
@@ -240,7 +240,9 @@ func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, p
 			"parameters.update_source, parameters.description, parameter_group_mappings.default_value, parameter_group_mappings.note, "+
 			"parameter_group_mappings.created_at, parameter_group_mappings.updated_at").
 		Joins("left join parameter_group_mappings on parameters.id = parameter_group_mappings.parameter_id").
-		Where("parameter_group_mappings.parameter_group_id = ?", parameterGroupId).Scan(&params).Error
+		Where("parameter_group_mappings.parameter_group_id = ?", parameterGroupId).
+		Order("parameters.instance_type asc").
+		Scan(&params).Error
 	if err != nil {
 		log.Errorf("query parameters by group id err: %v", err.Error())
 		return nil, errors.NewEMErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, errors.TIEM_PARAMETER_QUERY_ERROR.Explain())

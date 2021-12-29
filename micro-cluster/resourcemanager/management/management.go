@@ -46,6 +46,10 @@ func (m *Management) InitManagement() {
 	m.localHostManage = allocrecycle.NewLocalHostManagement()
 }
 
+func (m *Management) SetAllocatorRecycler(localHostManage structs.AllocatorRecycler) {
+	m.localHostManage = localHostManage
+}
+
 func (m *Management) GetAllocatorRecycler() structs.AllocatorRecycler {
 	return m.localHostManage
 }

@@ -360,8 +360,10 @@ func (mgr *ImportExportManager) DeleteDataTransportRecord(ctx context.Context, r
 
 	if string(constants.StorageTypeS3) != record.StorageType {
 		filePath := filepath.Dir(record.FilePath)
-		err = os.RemoveAll(filePath)
-		framework.LogWithContext(ctx).Infof("remove file path %s, record: %+v, error: %+v", filePath, record.ID, err)
+		go func() {
+			removeErr := os.RemoveAll(filePath)
+			framework.LogWithContext(ctx).Infof("remove file path %s, record: %+v, error: %v", filePath, record, removeErr)
+		}()
 	}
 
 	err = rw.DeleteDataTransportRecord(ctx, request.RecordID)

@@ -132,6 +132,7 @@ func (p *database) initTables() (err error) {
 		new(account.Account),
 		new(tenant.Tenant),
 		new(identification.Token),
+		new(mirror.Mirror),
 		new(resourcePool.Host),
 		new(resourcePool.Disk),
 		new(resourcePool.Label),
@@ -179,6 +180,7 @@ func (p *database) initSystemData() {
 			labelRecord := new(resourcePool.Label)
 			labelRecord.ConstructLabelRecord(&v)
 			if err = defaultDb.base.Create(labelRecord).Error; err != nil {
+				framework.LogForkFile(constants.LogFileSystem).Errorf("create label error: %s", err.Error())
 				return
 			}
 		}

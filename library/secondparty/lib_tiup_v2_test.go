@@ -814,7 +814,7 @@ func TestSecondPartyManager_ClusterGetTaskStatusByBizID_Success(t *testing.T) {
 
 func TestSecondPartyManager_ClusterComponentCtl(t *testing.T) {
 
-	_, err := secondPartyManager1.ClusterComponentCtl(context.TODO(), CtlComponentTypeStr, "v5.0.0", spec.TiDBClusterComponent_PD, []string{}, 0)
+	_, err := secondPartyManager1.ClusterComponentCtl(context.TODO(), CTLComponentTypeStr, "v5.0.0", spec.TiDBClusterComponent_PD, []string{}, 0)
 	if err == nil {
 		t.Errorf("case: cluster display. err(expected: not nil, actual: nil)")
 	}
@@ -822,7 +822,7 @@ func TestSecondPartyManager_ClusterComponentCtl(t *testing.T) {
 
 func TestSecondPartyManager_ClusterComponentCtl_WithTimeout(t *testing.T) {
 
-	_, err := secondPartyManager1.ClusterComponentCtl(context.TODO(), CtlComponentTypeStr, "v5.0.0", spec.TiDBClusterComponent_PD, []string{}, 1)
+	_, err := secondPartyManager1.ClusterComponentCtl(context.TODO(), CTLComponentTypeStr, "v5.0.0", spec.TiDBClusterComponent_PD, []string{}, 1)
 	if err == nil {
 		t.Errorf("case: cluster display. err(expected: not nil, actual: nil)")
 	}

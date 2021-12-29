@@ -25,7 +25,6 @@ const (
 	ClusterComponentTypeStr TiUPComponentTypeStr = "cluster"
 	DMComponentTypeStr      TiUPComponentTypeStr = "dm"
 	TiEMComponentTypeStr    TiUPComponentTypeStr = "tiem"
-	CtlComponentTypeStr     TiUPComponentTypeStr = "ctl"
 	CTLComponentTypeStr     TiUPComponentTypeStr = "ctl"
 )
 

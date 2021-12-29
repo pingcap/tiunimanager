@@ -156,7 +156,7 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
 	}, nil).AnyTimes()
-	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(3)
 
 	var hosts []structs.HostInfo
@@ -207,7 +207,7 @@ func Test_ImportHosts_Failed(t *testing.T) {
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
 	}, nil).AnyTimes()
-	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	var hosts []structs.HostInfo
 	host := genHostInfo("TEST_HOST2")
@@ -217,7 +217,7 @@ func Test_ImportHosts_Failed(t *testing.T) {
 	tiemErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
 	assert.Equal(t, errors.TIEM_PARAMETER_INVALID, tiemErr.GetCode())
-	assert.Equal(t, nil, flowIds)
+	assert.Nil(t, flowIds)
 
 }
 

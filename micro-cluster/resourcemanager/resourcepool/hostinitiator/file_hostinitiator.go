@@ -239,9 +239,10 @@ func (p *FileHostInitiator) installFileBeat(ctx context.Context, hosts []structs
 	if !ok || workFlowNodeID == "" {
 		return errors.NewEMErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "get work flow node from context failed, %s, %v", workFlowNodeID, ok)
 	}
-	framework.LogWithContext(ctx).Infof("install filebeat with work flow id %s", workFlowNodeID)
 	if rp_consts.SecondPartyReady {
-		operationId, err := p.secondPartyServ.ClusterScaleOut(ctx, secondparty.TiEMComponentTypeStr, "", templateStr, 0, nil, workFlowNodeID)
+		emClusterName := framework.Current.GetClientArgs().EMClusterName
+		framework.LogWithContext(ctx).Infof("install filebeat with work flow id %s, scale out cluster %s", workFlowNodeID, emClusterName)
+		operationId, err := p.secondPartyServ.ClusterScaleOut(ctx, secondparty.TiEMComponentTypeStr, emClusterName, templateStr, 0, nil, workFlowNodeID)
 		if err != nil {
 			return errors.NewEMErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "install filebeat [%v] failed, %v", templateStr, err)
 		}

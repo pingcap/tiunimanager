@@ -95,7 +95,7 @@ func importHostsFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext
 		return err
 	}
 
-	err = resourcePool.DeleteHosts(ctx, hostIds)
+	err = resourcePool.UpdateHostStatus(ctx, hostIds, string(constants.HostFailed))
 	if err != nil {
 		return err
 	}

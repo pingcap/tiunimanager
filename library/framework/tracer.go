@@ -102,7 +102,7 @@ type BackgroundTask struct {
 // The new ctx returned is never canceled, and has no deadline.
 func NewBackgroundMicroCtx(fromMicroCtx context.Context, newTraceIDFlag bool) context.Context {
 	if fromMicroCtx == nil {
-		retCtx := newMicroContextWithKeyValuePairs(
+		retCtx := NewMicroContextWithKeyValuePairs(
 			context.Background(),
 			map[string]string{
 				TiEM_X_TRACE_ID_KEY: uuidutil.GenerateID(),
@@ -115,7 +115,7 @@ func NewBackgroundMicroCtx(fromMicroCtx context.Context, newTraceIDFlag bool) co
 	if newTraceIDFlag {
 		traceID = uuidutil.GenerateID()
 	}
-	retCtx := newMicroContextWithKeyValuePairs(
+	retCtx := NewMicroContextWithKeyValuePairs(
 		context.Background(),
 		map[string]string{
 			TiEM_X_TRACE_ID_KEY:  traceID,
@@ -217,7 +217,7 @@ func NewMicroCtxFromGinCtx(c *gin.Context) context.Context {
 	if parentSpan != nil {
 		ctx = opentracing.ContextWithSpan(ctx, parentSpan)
 	}
-	return newMicroContextWithKeyValuePairs(ctx, map[string]string{
+	return NewMicroContextWithKeyValuePairs(ctx, map[string]string{
 		TiEM_X_TRACE_ID_KEY:  traceID,
 		TiEM_X_USER_ID_KEY:   userID,
 		TiEM_X_USER_NAME_KEY: userName,
@@ -313,7 +313,7 @@ func getStringValueFromContext(ctx context.Context, key string) string {
 	return getStringValueFromMicroContext(ctx, key)
 }
 
-func newMicroContextWithKeyValuePairs(ctx context.Context, pairs map[string]string) context.Context {
+func NewMicroContextWithKeyValuePairs(ctx context.Context, pairs map[string]string) context.Context {
 	md, ok := metadata.FromContext(ctx)
 	if ok {
 	} else {

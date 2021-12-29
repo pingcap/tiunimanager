@@ -210,6 +210,25 @@ func (p *database) initSystemData() {
 				defaultDb.base.Exec(sql)
 			}
 		}
+
+		// import TiUP mirror
+		mirrorSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/mirrors.sql"
+		err = syscall.Access(mirrorSqlFile, syscall.F_OK)
+		if !os.IsNotExist(err) {
+			sqls, err := ioutil.ReadFile(mirrorSqlFile)
+			if err != nil {
+				framework.LogForkFile(constants.LogFileSystem).Errorf("import mirrors failed, err = %s", err.Error())
+				return
+			}
+			sqlArr := strings.Split(string(sqls), ";")
+			for _, sql := range sqlArr {
+				if strings.TrimSpace(sql) == "" {
+					continue
+				}
+				// exec import sql
+				defaultDb.base.Exec(sql)
+			}
+		}
 	}
 }
 

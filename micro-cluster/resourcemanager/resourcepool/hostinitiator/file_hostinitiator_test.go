@@ -177,6 +177,18 @@ func Test_GenerateTopologyConfig(t *testing.T) {
 func Test_InstallSoftware(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
+	mockClient.EXPECT().RunCommandsInSession(gomock.Any()).Return("", nil).AnyTimes()
+
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSSHClient(mockClient)
+	err := fileInitiator.InstallSoftware(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "192.168.177.180"}})
+	assert.Nil(t, err)
+}
+
+func Test_JoinEMCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 	mockSec := mock_secp.NewMockSecondPartyService(ctrl)
 	mockSec.EXPECT().ClusterScaleOut(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
 
@@ -188,6 +200,6 @@ func Test_InstallSoftware(t *testing.T) {
 	err := os.Chdir(workDir)
 	assert.Nil(t, err)
 	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowNodeIDKey, "fake-node-id")
-	err = fileInitiator.InstallSoftware(ctx, []structs.HostInfo{{Arch: "X86_64", IP: "192.168.177.180"}})
+	err = fileInitiator.JoinEMCluster(ctx, []structs.HostInfo{{Arch: "X86_64", IP: "192.168.177.180"}})
 	assert.Nil(t, err)
 }

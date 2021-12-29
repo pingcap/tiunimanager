@@ -100,12 +100,46 @@ func (p *FileHostInitiator) SetConfig(ctx context.Context, h *structs.HostInfo) 
 }
 
 func (p *FileHostInitiator) InstallSoftware(ctx context.Context, hosts []structs.HostInfo) (err error) {
-	if err = p.installFileBeat(ctx, hosts); err != nil {
-		return err
-	}
 	if err = p.installTcpDump(ctx, hosts); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.HostInfo) (err error) {
+	arch := constants.GetArchAlias(constants.ArchType(hosts[0].Arch))
+	tempateInfo := templateScaleOut{
+		Arch:      arch,
+		DeployDir: rp_consts.FileBeatDeployDir,
+		DataDir:   rp_consts.FileBeatDataDir,
+	}
+	for _, host := range hosts {
+		tempateInfo.HostIPs = append(tempateInfo.HostIPs, host.IP)
+	}
+	curDir, _ := os.Getwd()
+	templateName := rp_consts.FileBeatTemplateFile
+	// The template file should be on tiem/resource/template/import_topology.yaml
+	filePath := filepath.Join(curDir, rp_consts.FileBeatTemplateDir, templateName)
+	templateStr, err := tempateInfo.generateTopologyConfig(ctx, filePath)
+	if err != nil {
+		return err
+	}
+	framework.LogWithContext(ctx).Infof("join em cluster on %s", templateStr)
+
+	workFlowNodeID, ok := ctx.Value(rp_consts.ContextWorkFlowNodeIDKey).(string)
+	if !ok || workFlowNodeID == "" {
+		return errors.NewEMErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "get work flow node from context failed, %s, %v", workFlowNodeID, ok)
+	}
+	if rp_consts.SecondPartyReady {
+		emClusterName := framework.Current.GetClientArgs().EMClusterName
+		framework.LogWithContext(ctx).Infof("join em cluster %s with work flow id %s", emClusterName, workFlowNodeID)
+		operationId, err := p.secondPartyServ.ClusterScaleOut(ctx, secondparty.TiEMComponentTypeStr, emClusterName, templateStr, 0, nil, workFlowNodeID)
+		if err != nil {
+			return errors.NewEMErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "join em cluster %s [%v] failed, %v", emClusterName, templateStr, err)
+		}
+		framework.LogWithContext(ctx).Infof("join em cluster %s for %v in operationId %s", emClusterName, tempateInfo, operationId)
+	}
+
 	return nil
 }
 
@@ -213,43 +247,6 @@ func (p *templateScaleOut) generateTopologyConfig(ctx context.Context, path stri
 	framework.LogWithContext(ctx).Infof("generate topology config: %s", topology.String())
 
 	return topology.String(), nil
-}
-
-func (p *FileHostInitiator) installFileBeat(ctx context.Context, hosts []structs.HostInfo) (err error) {
-	arch := constants.GetArchAlias(constants.ArchType(hosts[0].Arch))
-	tempateInfo := templateScaleOut{
-		Arch:      arch,
-		DeployDir: rp_consts.FileBeatDeployDir,
-		DataDir:   rp_consts.FileBeatDataDir,
-	}
-	for _, host := range hosts {
-		tempateInfo.HostIPs = append(tempateInfo.HostIPs, host.IP)
-	}
-	curDir, _ := os.Getwd()
-	templateName := rp_consts.FileBeatTemplateFile
-	// The template file should be on tiem/resource/template/import_topology.yaml
-	filePath := filepath.Join(curDir, rp_consts.FileBeatTemplateDir, templateName)
-	templateStr, err := tempateInfo.generateTopologyConfig(ctx, filePath)
-	if err != nil {
-		return err
-	}
-	framework.LogWithContext(ctx).Infof("install filebeat on %s", templateStr)
-
-	workFlowNodeID, ok := ctx.Value(rp_consts.ContextWorkFlowNodeIDKey).(string)
-	if !ok || workFlowNodeID == "" {
-		return errors.NewEMErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "get work flow node from context failed, %s, %v", workFlowNodeID, ok)
-	}
-	if rp_consts.SecondPartyReady {
-		emClusterName := framework.Current.GetClientArgs().EMClusterName
-		framework.LogWithContext(ctx).Infof("install filebeat with work flow id %s, scale out cluster %s", workFlowNodeID, emClusterName)
-		operationId, err := p.secondPartyServ.ClusterScaleOut(ctx, secondparty.TiEMComponentTypeStr, emClusterName, templateStr, 0, nil, workFlowNodeID)
-		if err != nil {
-			return errors.NewEMErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "install filebeat [%v] failed, %v", templateStr, err)
-		}
-		framework.LogWithContext(ctx).Infof("installing filebeat for %v in operationId %s", tempateInfo, operationId)
-	}
-
-	return nil
 }
 
 func (p *FileHostInitiator) installTcpDump(ctx context.Context, hosts []structs.HostInfo) (err error) {

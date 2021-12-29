@@ -61,9 +61,25 @@ func installSoftware(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext
 	if err != nil {
 		return err
 	}
+
+	if err = resourcePool.hostInitiator.InstallSoftware(ctx, hosts); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func joinEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
+	framework.LogWithContext(ctx).Info("begin join em cluster")
+	defer framework.LogWithContext(ctx).Infof("end join em cluster, err: %v", err)
+
+	resourcePool, hosts, err := getImportHostInfoFromFlowContext(ctx)
+	if err != nil {
+		return err
+	}
 	// Store nodeID for second party service
 	installSoftwareCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowNodeIDKey, node.ID)
-	if err = resourcePool.hostInitiator.InstallSoftware(installSoftwareCtx, hosts); err != nil {
+	if err = resourcePool.hostInitiator.JoinEMCluster(installSoftwareCtx, hosts); err != nil {
 		return err
 	}
 

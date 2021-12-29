@@ -53,6 +53,29 @@ func Test_InstallSoftware(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func Test_JoinEMCluster(t *testing.T) {
+	models.MockDB()
+	resourcePool := GetResourcePool()
+
+	// Mock host initiator
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockInitiator := mock_initiator.NewMockHostInitiator(ctrl)
+	mockInitiator.EXPECT().JoinEMCluster(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []structs.HostInfo) error {
+		return nil
+	})
+
+	resourcePool.SetHostInitiator(mockInitiator)
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
+	flowContext.SetData(rp_consts.ContextImportHostInfoKey, []structs.HostInfo{{IP: "192.168.192.192"}})
+
+	var node workflowModel.WorkFlowNode
+	err := joinEmCluster(&node, flowContext)
+	assert.Nil(t, err)
+}
+
 func Test_Verify(t *testing.T) {
 	models.MockDB()
 	resourcePool := GetResourcePool()

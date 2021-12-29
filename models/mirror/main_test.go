@@ -28,8 +28,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/library/secondparty"
-
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
@@ -40,7 +38,7 @@ import (
 var testRW *GormMirrorReadWrite
 
 const (
-	TestComponentType = string(secondparty.TiEMComponentTypeStr)
+	TestComponentType = "tiem"
 	TestMirrorAddr    = "http://127.0.0.1:8080/tiup-repo/"
 	TestMirrorAddr2   = "http://127.0.0.2:8080/tiup-repo/"
 )

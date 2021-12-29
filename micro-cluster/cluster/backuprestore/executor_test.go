@@ -63,6 +63,24 @@ func TestExecutor_backupCluster(t *testing.T) {
 			},
 			Name: "cls-test",
 		},
+		Instances: map[string][]*management.ClusterInstance{
+			"TiDB": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone:         "zone1",
+					CpuCores:     4,
+					Memory:       8,
+					Type:         "TiDB",
+					Version:      "v5.0.0",
+					Ports:        []int32{10001, 10002, 10003, 10004},
+					HostIP:       []string{"127.0.0.1"},
+					DiskType:     "SSD",
+					DiskCapacity: 128,
+				},
+			},
+		},
 	})
 	err := backupCluster(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)

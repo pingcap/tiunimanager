@@ -70,10 +70,52 @@ func TestExecutor_buildCollectorClusterLogConfig(t *testing.T) {
 				DeployDir:    "/mnt/sda/123/tidb-deploy",
 				LogDir:       "/mnt/sda/123/tidb-deploy/123/tidb-log",
 			},
+			{
+				ClusterID:    "123",
+				InstanceType: "PD",
+				IP:           "172.16.1.2",
+				DataDir:      "/mnt/sda/123/pd-data",
+				DeployDir:    "/mnt/sda/123/pd-deploy",
+				LogDir:       "/mnt/sda/123/pd-deploy/123/tidb-log",
+			},
+			{
+				ClusterID:    "123",
+				InstanceType: "TiKV",
+				IP:           "172.16.1.3",
+				DataDir:      "/mnt/sda/123/tikv-data",
+				DeployDir:    "/mnt/sda/123/tikv-deploy",
+				LogDir:       "/mnt/sda/123/tikv-deploy/123/tidb-log",
+			},
+			{
+				ClusterID:    "123",
+				InstanceType: "TiFlash",
+				IP:           "172.16.1.4",
+				DataDir:      "/mnt/sda/123/tiflash-data",
+				DeployDir:    "/mnt/sda/123/tiflash-deploy",
+				LogDir:       "/mnt/sda/123/tiflash-deploy/123/tidb-log",
+			},
+			{
+				ClusterID:    "123",
+				InstanceType: "CDC",
+				IP:           "172.16.1.5",
+				DataDir:      "/mnt/sda/123/cdc-data",
+				DeployDir:    "/mnt/sda/123/cdc-deploy",
+				LogDir:       "/mnt/sda/123/cdc-deploy/123/tidb-log",
+			},
+			{
+				ClusterID:    "124",
+				InstanceType: "CDC",
+				IP:           "172.16.1.5",
+				DataDir:      "/mnt/sda/123/cdc-data",
+				DeployDir:    "/mnt/sda/123/cdc-deploy",
+				LogDir:       "/mnt/sda/123/cdc-deploy/123/tidb-log",
+			},
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, 1, len(configs))
+		assert.Equal(t, 2, len(configs))
 		assert.Equal(t, "/mnt/sda/123/tidb-deploy/123/tidb-log/tidb.log", configs[0].TiDB.Var.Paths[0])
+		assert.Equal(t, "/mnt/sda/123/pd-deploy/123/tidb-log/pd.log", configs[0].PD.Var.Paths[0])
+		assert.Equal(t, "/mnt/sda/123/tikv-deploy/123/tidb-log/tikv.log", configs[0].TiKV.Var.Paths[0])
 	})
 }
 

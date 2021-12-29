@@ -5579,15 +5579,17 @@
         "message.ImportHostsResp": {
             "type": "object",
             "properties": {
+                "flowInfo": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.AsyncTaskWorkFlowInfo"
+                    }
+                },
                 "hostIds": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
-                },
-                "workFlowId": {
-                    "description": "Asynchronous task workflow ID",
-                    "type": "string"
                 }
             }
         },
@@ -5807,6 +5809,15 @@
                 "paramGroupId": {
                     "type": "string",
                     "example": "1"
+                }
+            }
+        },
+        "structs.AsyncTaskWorkFlowInfo": {
+            "type": "object",
+            "properties": {
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
                 }
             }
         },

@@ -1087,13 +1087,14 @@ definitions:
     type: object
   message.ImportHostsResp:
     properties:
+      flowInfo:
+        items:
+          $ref: '#/definitions/structs.AsyncTaskWorkFlowInfo'
+        type: array
       hostIds:
         items:
           type: string
         type: array
-      workFlowId:
-        description: Asynchronous task workflow ID
-        type: string
     type: object
   message.LoginReq:
     properties:
@@ -1241,6 +1242,12 @@ definitions:
     properties:
       paramGroupId:
         example: "1"
+        type: string
+    type: object
+  structs.AsyncTaskWorkFlowInfo:
+    properties:
+      workFlowId:
+        description: Asynchronous task workflow ID
         type: string
     type: object
   structs.BackupRecord:

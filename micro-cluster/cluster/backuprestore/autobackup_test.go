@@ -20,8 +20,11 @@ import (
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
+	"github.com/pingcap-inc/tiem/models/cluster/management"
+	"github.com/pingcap-inc/tiem/models/common"
 	mock_br_service "github.com/pingcap-inc/tiem/test/mockbr"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockbr"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -47,6 +50,16 @@ func Test_AutoBackup_Run(t *testing.T) {
 func Test_AutoBackup_doBackup(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{
+		Entity: common.Entity{
+			ID:       "id-xxxx",
+			TenantId: "tid-xxx",
+		},
+	}, make([]*management.ClusterInstance, 0), nil).AnyTimes()
+	clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	mockBRService := mock_br_service.NewMockBRService(ctrl)
 	mockBRService.EXPECT().BackupCluster(gomock.Any(), gomock.Any(),

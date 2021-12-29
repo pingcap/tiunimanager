@@ -17,10 +17,12 @@ package management
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
+	"strings"
 )
 
 // ClusterInstance the component instances of cluster
@@ -92,4 +94,12 @@ func (t *ClusterInstance) AfterFind(tx *gorm.DB) (err error) {
 		err = json.Unmarshal([]byte(t.HostInfo), &t.HostIP)
 	}
 	return err
+}
+
+func (t *ClusterInstance) GetDeployDir() string {
+	return fmt.Sprintf("%s/%s/%s-deploy", t.DiskPath, t.ClusterID, strings.ToLower(t.Type))
+}
+
+func (t *ClusterInstance) GetDataDir() string {
+	return fmt.Sprintf("%s/%s/%s-data", t.DiskPath, t.ClusterID, strings.ToLower(t.Type))
 }

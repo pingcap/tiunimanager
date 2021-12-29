@@ -46,7 +46,6 @@ import (
 	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
 	"gorm.io/driver/sqlite"
 	"log"
-	"os"
 	"time"
 
 	"gorm.io/gorm"

@@ -90,7 +90,7 @@ const (
 	ComponentIDTiKV    EMProductComponentIDType = "TiKV"
 	ComponentIDPD      EMProductComponentIDType = "PD"
 	ComponentIDTiFlash EMProductComponentIDType = "TiFlash"
-	ComponentIDCDC   EMProductComponentIDType = "CDC"
+	ComponentIDCDC     EMProductComponentIDType = "CDC"
 
 	ComponentIDGrafana          EMProductComponentIDType = "Grafana"
 	ComponentIDPrometheus       EMProductComponentIDType = "Prometheus"

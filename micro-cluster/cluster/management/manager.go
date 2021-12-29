@@ -493,8 +493,8 @@ func openSftpClient(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.C
 }
 
 func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) (resp cluster.TakeoverClusterResp, err error) {
-	if len(req.ClusterNames) == 0 {
-		err = errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster names required")
+	if len(req.ClusterName) == 0 {
+		err = errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster name required")
 		return
 	}
 
@@ -506,32 +506,24 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 		return
 	}
 
-	resp.Clusters = make(map[string]string)
-	resp.FailedErrors = make(map[string]string)
-
-	for _, clusterName := range req.ClusterNames {
-		meta := &handler.ClusterMeta{}
-		if err = meta.BuildForTakeover(ctx, clusterName); err != nil {
-			errMsg := fmt.Sprintf("takeover cluster %s error: %s", clusterName, err.Error())
-			framework.LogWithContext(ctx).Errorf(errMsg)
-			resp.FailedErrors[clusterName] = errMsg
-			continue
-		}
-
-		data := map[string]interface{}{
-			ContextClusterMeta:     meta,
-			ContextTakeoverRequest: req,
-		}
-		flowID, startError := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceTakeover, takeoverClusterFlow.FlowName, data)
-		if startError != nil {
-			errMsg := fmt.Sprintf("cluster %s async maintenance error: %s", meta.Cluster.ID, err.Error())
-			framework.LogWithContext(ctx).Errorf(errMsg)
-			resp.FailedErrors[clusterName] = errMsg
-			continue
-		}
-		resp.Clusters[clusterName] = flowID
+	meta := &handler.ClusterMeta{}
+	if err = meta.BuildForTakeover(ctx, req.ClusterName, req.DBUser, req.DBPassword); err != nil {
+		framework.LogWithContext(ctx).Errorf(err.Error())
 	}
 
+	data := map[string]interface{}{
+		ContextClusterMeta:     meta,
+		ContextTakeoverRequest: req,
+	}
+	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceTakeover, takeoverClusterFlow.FlowName, data)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"cluster %s async maintenance error: %s", meta.Cluster.ID, err.Error())
+		return
+	}
+
+	resp.ClusterID = meta.Cluster.ID
+	resp.WorkFlowID = flowID
 	return
 }
 

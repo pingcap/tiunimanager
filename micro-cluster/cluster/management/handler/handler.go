@@ -86,13 +86,15 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 
 var TagTakeover = "takeover"
 
-func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string) error {
+func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbUser string, dbPassword string) error {
 	p.Cluster = &management.Cluster{
 		Entity: dbCommon.Entity{
 			TenantId: framework.GetTenantIDFromContext(ctx),
 			Status:   string(constants.ClusterInitializing),
 		},
 		Name:           name,
+		DBUser:         dbUser,
+		DBPassword:     dbPassword,
 		Tags:           []string{TagTakeover},
 		OwnerId:        framework.GetUserIDFromContext(ctx),
 		MaintainWindow: "",
@@ -800,6 +802,35 @@ func Query(ctx context.Context, req cluster.QueryClustersReq) (resp cluster.Quer
 		resp.Clusters = append(resp.Clusters, meta.DisplayClusterInfo(ctx))
 	}
 
+	return
+}
+
+type InstanceLogInfo struct {
+	InstanceType constants.EMProductComponentIDType
+	IP           string
+	DataDir      string
+	DeployDir    string
+}
+
+func QueryInstanceLogInfo(ctx context.Context, hostId string, typeFilter []string, statusFilter []string) (infos []*InstanceLogInfo, err error) {
+	instances, err := models.GetClusterReaderWriter().QueryInstancesByHost(ctx, hostId, typeFilter, statusFilter)
+
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("query instances by host failed, %s", err.Error())
+		return
+	}
+	
+	infos = make([]*InstanceLogInfo, 0)
+	for _, instance := range instances {
+		if len(instance.DiskPath) > 0 {
+			infos = append(infos, &InstanceLogInfo{
+				InstanceType: constants.EMProductComponentIDType(instance.Type),
+				IP: instance.HostIP[0],
+				DataDir: instance.GetDataDir(),
+				DeployDir: instance.GetDeployDir(),
+			})
+		}
+	}
 	return
 }
 

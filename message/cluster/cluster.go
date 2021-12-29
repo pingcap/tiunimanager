@@ -174,18 +174,20 @@ type ClusterUpgradeResp struct {
 
 // TakeoverClusterReq Requests to take over an existing TiDB cluster, requiring TiDB version >= 4.0 when taking over
 type TakeoverClusterReq struct {
-	TiUPIp           string   `json:"TiUPIp" example:"172.16.4.147" form:"TiUPIp"`
-	TiUPPort         int      `json:"TiUPPort" example:"22" form:"TiUPPort"`
-	TiUPUserName     string   `json:"TiUPUserName" example:"root" form:"TiUPUserName"`
-	TiUPUserPassword string   `json:"TiUPUserPassword" example:"password" form:"TiUPUserPassword"`
-	TiUPPath         string   `json:"TiUPPath" example:".tiup/" form:"TiUPPath"`
-	ClusterNames     []string `json:"clusterNames" form:"clusterNames"`
+	TiUPIp           string `json:"TiUPIp" example:"172.16.4.147" form:"TiUPIp"`
+	TiUPPort         int    `json:"TiUPPort" example:"22" form:"TiUPPort"`
+	TiUPUserName     string `json:"TiUPUserName" example:"root" form:"TiUPUserName"`
+	TiUPUserPassword string `json:"TiUPUserPassword" example:"password" form:"TiUPUserPassword"`
+	TiUPPath         string `json:"TiUPPath" example:".tiup/" form:"TiUPPath"`
+	ClusterName      string `json:"clusterName" example:"myClusterName" form:"clusterName"`
+	DBUser           string `json:"dbUser" example:"root" form:"dbUser"`
+	DBPassword       string `json:"dbPassword" example:"myPassword" form:"dbPassword"`
 }
 
 // TakeoverClusterResp Reply message for takeover a cluster
 type TakeoverClusterResp struct {
-	Clusters     map[string]string `json:"clusters"`
-	FailedErrors map[string]string `json:"failed"`
+	structs.AsyncTaskWorkFlowInfo
+	ClusterID string `json:"clusterId"`
 }
 
 // QueryClustersReq Query cluster list messages

@@ -37,7 +37,10 @@ type Entity struct {
 }
 
 func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
-	e.ID = uuidutil.GenerateID()
+	if len(e.ID) == 0 {
+		e.ID = uuidutil.GenerateID()
+	}
+
 	return nil
 }
 

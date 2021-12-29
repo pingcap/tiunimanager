@@ -360,3 +360,159 @@ func TestStatus_IsFinal(t *testing.T) {
 		})
 	}
 }
+
+func TestMysqlDownstream_GetSinkURI(t *testing.T) {
+	type fields struct {
+		Ip                string
+		Port              int
+		Username          string
+		Password          string
+		ConcurrentThreads int
+		WorkerCount       int
+		MaxTxnRow         int
+		Tls               bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "normal",
+			fields: fields{
+				Username: "root",
+				Password: "123456",
+				Ip: "127.0.0.1",
+				Port: 3306,
+				WorkerCount: 16,
+				MaxTxnRow: 5000,
+			},
+			want: "mysql://root:123456@127.0.0.1:3306/?worker-count=16&max-txn-row=5000",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &MysqlDownstream{
+				Ip:                tt.fields.Ip,
+				Port:              tt.fields.Port,
+				Username:          tt.fields.Username,
+				Password:          tt.fields.Password,
+				ConcurrentThreads: tt.fields.ConcurrentThreads,
+				WorkerCount:       tt.fields.WorkerCount,
+				MaxTxnRow:         tt.fields.MaxTxnRow,
+				Tls:               tt.fields.Tls,
+			}
+			if got := p.GetSinkURI(); got != tt.want {
+				t.Errorf("GetSinkURI() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTiDBDownstream_GetSinkURI(t *testing.T) {
+	type fields struct {
+		Ip                string
+		Port              int
+		Username          string
+		Password          string
+		ConcurrentThreads int
+		WorkerCount       int
+		MaxTxnRow         int
+		Tls               bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "normal",
+			fields: fields{
+				Username: "root",
+				Password: "123456",
+				Ip: "127.0.0.1",
+				Port: 3306,
+				WorkerCount: 16,
+				MaxTxnRow: 5000,
+			},
+			want: "mysql://root:123456@127.0.0.1:3306/?worker-count=16&max-txn-row=5000",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &TiDBDownstream{
+				Ip:                tt.fields.Ip,
+				Port:              tt.fields.Port,
+				Username:          tt.fields.Username,
+				Password:          tt.fields.Password,
+				ConcurrentThreads: tt.fields.ConcurrentThreads,
+				WorkerCount:       tt.fields.WorkerCount,
+				MaxTxnRow:         tt.fields.MaxTxnRow,
+				Tls:               tt.fields.Tls,
+			}
+			if got := p.GetSinkURI(); got != tt.want {
+				t.Errorf("GetSinkURI() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestKafkaDownstream_GetSinkURI(t *testing.T) {
+	type fields struct {
+		Ip                string
+		Port              int
+		Version           string
+		ClientId          string
+		TopicName         string
+		Protocol          string
+		Partitions        int
+		ReplicationFactor int
+		MaxMessageBytes   int
+		MaxBatchSize      int
+		Dispatchers       []Dispatcher
+		Tls               bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "normal",
+			fields: fields{
+				Ip: "127.0.0.1",
+				Port: 9092,
+				Version: "2.4.0",
+				Partitions: 6,
+				MaxMessageBytes: 67108864,
+				ReplicationFactor: 1,
+				MaxBatchSize: 3,
+				Protocol: "default",
+				ClientId: "client1",
+				TopicName: "myTopic",
+			},
+			want: "kafka://127.0.0.1:9092/myTopic?kafka-version=2.4.0&partition-num=6&max-message-bytes=67108864&replication-factor=1&max-batch-size=3&protocol=default&kafka-client-id=client1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &KafkaDownstream{
+				Ip:                tt.fields.Ip,
+				Port:              tt.fields.Port,
+				Version:           tt.fields.Version,
+				ClientId:          tt.fields.ClientId,
+				TopicName:         tt.fields.TopicName,
+				Protocol:          tt.fields.Protocol,
+				Partitions:        tt.fields.Partitions,
+				ReplicationFactor: tt.fields.ReplicationFactor,
+				MaxMessageBytes:   tt.fields.MaxMessageBytes,
+				MaxBatchSize:      tt.fields.MaxBatchSize,
+				Dispatchers:       tt.fields.Dispatchers,
+				Tls:               tt.fields.Tls,
+			}
+			if got := p.GetSinkURI(); got != tt.want {
+				t.Errorf("GetSinkURI() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -121,7 +121,7 @@ type ClusterCloneStrategy string
 const (
 	ClusterTopologyClone ClusterCloneStrategy = "TopologyClone"
 	SnapShotClone        ClusterCloneStrategy = "Snapshot"
-	TiCDCSyncClone       ClusterCloneStrategy = "TiCDCSync"
+	CDCSyncClone         ClusterCloneStrategy = "CDCSync"
 )
 
 type BackupType string

@@ -157,11 +157,7 @@ func Test_SetOffSwap(t *testing.T) {
 }
 
 func Test_GenerateTopologyConfig(t *testing.T) {
-	template_struct := templateScaleOut{
-		Arch:      "arm64",
-		DeployDir: "/root/deploy",
-		DataDir:   "/root/data",
-	}
+	template_struct := templateScaleOut{}
 	template_struct.HostIPs = append(template_struct.HostIPs, "192.168.177.177")
 	template_struct.HostIPs = append(template_struct.HostIPs, "192.168.177.178")
 	template_struct.HostIPs = append(template_struct.HostIPs, "192.168.177.179")

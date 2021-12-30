@@ -14,7 +14,7 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: paltform.go
+ * @File: platform.go
  * @Description:
  * @Author: duanbing@pingcap.com
  * @Version: 1.0.0
@@ -22,6 +22,17 @@
 *******************************************************************************/
 
 package structs
+
+//SpecInfo information about spec
+type SpecInfo struct {
+	ID          string `json:"id"`   //ID of the resource specification
+	Name        string `json:"name"` //Name of the resource specification,eg: TiDB.c1.large
+	CPU         int    `json:"cpu"`
+	Memory      int    `json:"memory"`       //The amount of memory occupied by the instance, in GiB
+	DiskType    string `json:"diskType"`     //eg: NVMeSSD/SSD/SATA
+	PurposeType string `json:"purpose_type"` // eg:Compute/Storage/Schedule
+	Status      string `json:"status"`       //e.g. Online/Offline
+}
 
 // ComponentInstanceResourceSpec Information on the resources required for the product components to run, including: memory, CPU, etc.
 type ComponentInstanceResourceSpec struct {
@@ -44,14 +55,14 @@ type ProductComponentProperty struct {
 	MaxPort     int32                                    `json:"maxPort"`
 	MinInstance int32                                    `json:"minInstance"` //Minimum number of instances of product components at runtime, e.g. at least 1 instance of PD, at least 3 instances of TiKV
 	MaxInstance int32                                    `json:"maxInstance"` //Maximum number of instances when the product component is running, e.g. PD can run up to 7 instances, other components have no upper limit
-	Spec        map[string]ComponentInstanceResourceSpec `json:"specs"`       //Information on the specifications of the resources online for the running of product components,organized by different Zone
+	Spec        map[string]ComponentInstanceResourceSpec `json:"spec"`        //Information on the specifications of the resources online for the running of product components,organized by different Zone
 }
 
 //ProductVersion Product version and component details, with each product categorized by version and supported CPU architecture
 type ProductVersion struct {
-	Version    string                              `json:"version"`    //Version information of the product, e.g. v5.0.0
-	Arch       string                              `json:"arch"`       //Arch information of the product, e.g. X86/X86_64
-	Components map[string]ProductComponentProperty `json:"components"` //Component Info of the product
+	Version string                                         `json:"version"` //Version information of the product, e.g. v5.0.0
+	Arch    map[string]map[string]ProductComponentProperty `json:"arch"`    //Arch information of the product, e.g. X86/X86_64
+	//Components map[string]ProductComponentProperty `json:"components"` //Component Info of the product
 }
 
 // ProductDetail product information provided by Enterprise Manager
@@ -71,20 +82,23 @@ type Product struct {
 	RegionName string `json:"regionName"`
 	VendorID   string `json:"vendorId"`   // the vendor ID of the vendor, e.go AWS
 	VendorName string `json:"vendorName"` // the Vendor name of the vendor, e.g AWS/Aliyun
+	Status     string `json:"status"`
+	Internal   int    `json:"internal"`
 }
 
-//ZoneDetail vendor & region & zone information provided by Enterprise Manager
-type ZoneDetail struct {
+//ZoneInfo vendor & region & zone information provided by Enterprise Manager
+type ZoneInfo struct {
 	ZoneID     string `json:"zoneId"`     //The value of the ZoneID is similar to CN-HANGZHOU-H
 	ZoneName   string `json:"zoneName"`   //The value of the Name is similar to Hangzhou(H)
 	RegionID   string `json:"regionId"`   //The value of the RegionID is similar to CN-HANGZHOU
 	RegionName string `json:"regionName"` //The value of the Name is similar to East China(Hangzhou)
 	VendorID   string `json:"vendorId"`   //The value of the VendorID is similar to AWS
 	VendorName string `json:"vendorName"` //The value of the Name is similar to AWS
+	Comment    string `json:"comment"`
 }
 
 // SystemConfig system config of platform
 type SystemConfig struct {
-	ConfigKey   string
-	ConfigValue string
+	ConfigKey   string `json:"configKey"`
+	ConfigValue string `json:"configValue"`
 }

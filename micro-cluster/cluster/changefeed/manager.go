@@ -58,6 +58,11 @@ func (p *Manager) Create(ctx context.Context, request cluster.CreateChangeFeedTa
 		return
 	}
 
+	cdcAddress := clusterMeta.GetCDCClientAddresses()
+	if len(cdcAddress) == 0 {
+		err = errors.NewEMErrorf(errors.TIEM_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
+		return
+	}
 	task := &changefeed.ChangeFeedTask {
 		Entity: dbCommon.Entity{
 			TenantId: framework.GetTenantIDFromContext(ctx),
@@ -81,10 +86,11 @@ func (p *Manager) Create(ctx context.Context, request cluster.CreateChangeFeedTa
 		resp.ID = task.ID
 	}
 
-	go func() {
-		p.createExecutor(ctx, clusterMeta, task)
-	}()
+	err = p.createExecutor(ctx, clusterMeta, task)
 
+	if err != nil {
+		models.GetChangeFeedReaderWriter().Delete(ctx, task.ID)
+	}
 	return
 }
 
@@ -102,7 +108,11 @@ func (p *Manager) Delete(ctx context.Context, request cluster.DeleteChangeFeedTa
 	if err != nil {
 		return
 	}
-
+	cdcAddress := clusterMeta.GetCDCClientAddresses()
+	if len(cdcAddress) == 0 {
+		err = errors.NewEMErrorf(errors.TIEM_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
+		return
+	}
 	//ctx = framework.NewBackgroundMicroCtx(ctx, true)
 	result, err := secondparty.Manager.DeleteChangeFeedTask(ctx, secondparty.ChangeFeedDeleteReq {
 		CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
@@ -136,16 +146,17 @@ func (p *Manager) Pause(ctx context.Context, request cluster.PauseChangeFeedTask
 	if err != nil {
 		return
 	}
-
+	cdcAddress := clusterMeta.GetCDCClientAddresses()
+	if len(cdcAddress) == 0 {
+		err = errors.NewEMErrorf(errors.TIEM_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
+		return
+	}
 	err = models.GetChangeFeedReaderWriter().LockStatus(ctx, request.ID)
 	if err != nil {
 		return
 	}
 
-	go func() {
-		ctx = framework.NewBackgroundMicroCtx(ctx, true)
-		p.pauseExecutor(ctx, clusterMeta, task)
-	}()
+	err = p.pauseExecutor(ctx, clusterMeta, task)
 
 	return
 }
@@ -164,15 +175,17 @@ func (p *Manager) Resume(ctx context.Context, request cluster.ResumeChangeFeedTa
 		return
 	}
 
+	cdcAddress := clusterMeta.GetCDCClientAddresses()
+	if len(cdcAddress) == 0 {
+		err = errors.NewEMErrorf(errors.TIEM_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
+		return
+	}
 	err = models.GetChangeFeedReaderWriter().LockStatus(ctx, request.ID)
 	if err != nil {
 		return
 	}
 
-	go func() {
-		ctx = framework.NewBackgroundMicroCtx(ctx, true)
-		p.resumeExecutor(ctx, clusterMeta, task)
-	}()
+	p.resumeExecutor(ctx, clusterMeta, task)
 
 	return
 }
@@ -192,6 +205,7 @@ func (p *Manager) Update(ctx context.Context, request cluster.UpdateChangeFeedTa
 		// return current task status
 		resp.Status = task.Status
 	}
+
 	running := constants.ChangeFeedStatusNormal.ToString() == task.Status
 
 	task.Name = request.Name
@@ -205,43 +219,43 @@ func (p *Manager) Update(ctx context.Context, request cluster.UpdateChangeFeedTa
 	if err != nil {
 		return
 	}
-
+	cdcAddress := clusterMeta.GetCDCClientAddresses()
+	if len(cdcAddress) == 0 {
+		err = errors.NewEMErrorf(errors.TIEM_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
+		return
+	}
 	// pause -> update -> resume
-	go func() {
-		ctx = framework.NewBackgroundMicroCtx(ctx, true)
-		if running {
-			err = models.GetChangeFeedReaderWriter().LockStatus(ctx, request.ID)
-			if err != nil {
-				return
-			}
-
-			err = p.pauseExecutor(ctx, clusterMeta, task)
-			if err != nil {
-				framework.LogWithContext(ctx).Errorf("update change feed task %s failed, step = pause, err = %s", request.ID, err.Error())
-				return
-			}
-		}
-
-		models.GetChangeFeedReaderWriter().UpdateConfig(ctx, task)
-		err = p.updateExecutor(ctx, clusterMeta, task)
+	if running {
+		err = models.GetChangeFeedReaderWriter().LockStatus(ctx, request.ID)
 		if err != nil {
-			framework.LogWithContext(ctx).Errorf("update change feed task %s failed, step = update, err = %s", request.ID, err.Error())
 			return
 		}
 
-		if running {
-			err = models.GetChangeFeedReaderWriter().LockStatus(ctx, request.ID)
-			if err != nil {
-				return
-			}
-			err = p.resumeExecutor(ctx, clusterMeta, task)
-			if err != nil {
-				framework.LogWithContext(ctx).Errorf("update change feed task %s failed, step = resume, err = %s", request.ID, err.Error())
-				return
-			}
+		err = p.pauseExecutor(ctx, clusterMeta, task)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("update change feed task %s failed, step = pause, err = %s", request.ID, err.Error())
+			return
 		}
-	}()
+	}
 
+	models.GetChangeFeedReaderWriter().UpdateConfig(ctx, task)
+	err = p.updateExecutor(ctx, clusterMeta, task)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("update change feed task %s failed, step = update, err = %s", request.ID, err.Error())
+		return
+	}
+
+	if running {
+		err = models.GetChangeFeedReaderWriter().LockStatus(ctx, request.ID)
+		if err != nil {
+			return
+		}
+		err = p.resumeExecutor(ctx, clusterMeta, task)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("update change feed task %s failed, step = resume, err = %s", request.ID, err.Error())
+			return
+		}
+	}
 	return
 }
 
@@ -251,21 +265,31 @@ func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTa
 		return
 	}
 
+	if task.Status == constants.ChangeFeedStatusInitial.ToString() {
+		err = errors.NewError(errors.TIEM_CHANGE_FEED_NOT_FOUND, "change feed task has not been created")
+	}
+
 	clusterMeta, err:= handler.Get(ctx, task.ClusterId)
 	if err != nil {
 		return
 	}
-
+	cdcAddress := clusterMeta.GetCDCClientAddresses()
+	if len(cdcAddress) == 0 {
+		err = errors.NewEMErrorf(errors.TIEM_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
+		return
+	}
 	resp.ChangeFeedTaskInfo = parse(*task)
 
-	taskDetail, err := secondparty.Manager.DetailChangeFeedTask(ctx, secondparty.ChangeFeedDetailReq{
+	taskDetail, detailError := secondparty.Manager.DetailChangeFeedTask(ctx, secondparty.ChangeFeedDetailReq{
 		CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
 		ChangeFeedID: task.ID,
 	})
 
-	if err == nil {
+	if detailError == nil {
 		resp.ChangeFeedTaskInfo.DownstreamSyncTS = taskDetail.CheckPointTSO
-		// todo where to get UpstreamUpdateTS and DownstreamFetchTS
+		resp.ChangeFeedTaskInfo.DownstreamFetchTS = taskDetail.ResolvedTSO
+	} else {
+		framework.LogWithContext(ctx).Errorf("detail change feed task err = %s", err)
 	}
 
 	return
@@ -277,9 +301,14 @@ func (p *Manager) Query(ctx context.Context, request cluster.QueryChangeFeedTask
 		return
 	}
 
+	cdcAddress := clusterMeta.GetCDCClientAddresses()
+	if len(cdcAddress) == 0 {
+		err = errors.NewEMErrorf(errors.TIEM_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
+		return
+	}
 	// remote
 	result, err := secondparty.Manager.QueryChangeFeedTasks(ctx, secondparty.ChangeFeedQueryReq {
-		CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
+		CDCAddress:   cdcAddress[0].ToString(),
 	})
 
 	cdcTaskInstanceMap := make(map[string]secondparty.ChangeFeedInfo)
@@ -394,7 +423,7 @@ func copyDownstreamConfig(target *changefeed.ChangeFeedTask, changeFeedType stri
 
 func parse(task changefeed.ChangeFeedTask) cluster.ChangeFeedTaskInfo {
 	info := cluster.ChangeFeedTaskInfo{
-		ChangeFeedTask: cluster.ChangeFeedTask {
+		ChangeFeedTask: cluster.ChangeFeedTask{
 			ID:             task.ID,
 			Name:           task.Name,
 			ClusterID:      task.ClusterId,
@@ -402,9 +431,9 @@ func parse(task changefeed.ChangeFeedTask) cluster.ChangeFeedTaskInfo {
 			FilterRules:    task.FilterRules,
 			Status:         task.Status,
 			DownstreamType: string(task.Type),
-			Downstream: task.Downstream,
-			CreateTime: task.CreatedAt,
-			UpdateTime: task.UpdatedAt,
+			Downstream:     task.Downstream,
+			CreateTime:     task.CreatedAt,
+			UpdateTime:     task.UpdatedAt,
 		},
 		UnSteady: task.Locked(),
 	}

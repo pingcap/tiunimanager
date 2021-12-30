@@ -17,6 +17,7 @@ package models
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/models/platform/product"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -69,6 +70,7 @@ type database struct {
 	accountReaderWriter              account.ReaderWriter
 	tokenReaderWriter                identification.ReaderWriter
 	mirrorReaderWriter               mirror.ReaderWriter
+	productReaderWriter              product.ProductReadWriterInterface
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
@@ -78,8 +80,8 @@ func Open(fw *framework.BaseFramework, reentry bool) error {
 	newLogger := framework.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags),
 		framework.Config{
-			SlowThreshold: time.Second,
-			LogLevel:      framework.Info,
+			SlowThreshold:             time.Second,
+			LogLevel:                  framework.Info,
 			IgnoreRecordNotFoundError: true,
 		},
 	)
@@ -151,8 +153,11 @@ func (p *database) initTables() (err error) {
 		new(mm.UsedCompute),
 		new(mm.UsedPort),
 		new(mm.UsedDisk),
+		new(product.Zone),
+		new(product.Spec),
+		new(product.Product),
+		new(product.ProductComponent),
 	)
-
 }
 
 func (p *database) initReaderWriters() {
@@ -170,6 +175,7 @@ func (p *database) initReaderWriters() {
 	defaultDb.accountReaderWriter = account.NewAccountReadWrite(defaultDb.base)
 	defaultDb.tokenReaderWriter = identification.NewTokenReadWrite(defaultDb.base)
 	defaultDb.mirrorReaderWriter = mirror.NewGormMirrorReadWrite(defaultDb.base)
+	defaultDb.productReaderWriter = product.NewProductReadWriter(defaultDb.base)
 }
 
 func (p *database) initSystemData() {
@@ -351,6 +357,13 @@ func GetMirrorReaderWriter() mirror.ReaderWriter {
 
 func SetMirrorReaderWriter(rw mirror.ReaderWriter) {
 	defaultDb.mirrorReaderWriter = rw
+}
+
+func GetProductReaderWriter() product.ProductReadWriterInterface {
+	return defaultDb.productReaderWriter
+}
+func SetProductReaderWriter(rw product.ProductReadWriterInterface) {
+	defaultDb.productReaderWriter = rw
 }
 
 func MockDB() {

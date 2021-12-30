@@ -17,14 +17,21 @@ package resourcepool
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/framework"
+	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostinitiator"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
+	"github.com/pingcap-inc/tiem/workflow"
 )
 
 type ResourcePool struct {
-	hostProvider hostprovider.HostProvider
+	hostProvider  hostprovider.HostProvider
+	hostInitiator hostinitiator.HostInitiator
 	// cloudHostProvider hostprovider.HostProvider
 }
 
@@ -43,14 +50,85 @@ func GetResourcePool() *ResourcePool {
 
 func (p *ResourcePool) InitResourcePool() {
 	p.hostProvider = hostprovider.NewFileHostProvider()
+	p.hostInitiator = hostinitiator.NewFileHostInitiator()
+
+	flowManager := workflow.GetWorkFlowService()
+	p.registerImportHostsWorkFlow(context.TODO(), flowManager)
+}
+
+func (p *ResourcePool) registerImportHostsWorkFlow(ctx context.Context, flowManager workflow.WorkFlowService) {
+	log := framework.LogWithContext(ctx)
+	if !framework.Current.GetClientArgs().SkipHostInit {
+		log.Infoln("register import hosts workflow with host init")
+		flowManager.RegisterWorkFlow(ctx, rp_consts.FlowImportHosts, &workflow.WorkFlowDefine{
+			FlowName: rp_consts.FlowImportHosts,
+			TaskNodes: map[string]*workflow.NodeDefine{
+				"start":           {Name: "start", SuccessEvent: "configHosts", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: verifyHosts},
+				"configHosts":     {Name: "configHosts", SuccessEvent: "installSoftware", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: configHosts},
+				"installSoftware": {Name: "installSoftware", SuccessEvent: "joinEMCluster", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: installSoftware},
+				"joinEMCluster":   {Name: "joinEMCluster", SuccessEvent: "succeed", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: joinEmCluster},
+				"succeed":         {Name: "succeed", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: importHostSucceed},
+				"fail":            {Name: "fail", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: importHostsFail},
+			},
+		})
+	} else {
+		log.Infoln("register import hosts workflow without host init")
+		flowManager.RegisterWorkFlow(ctx, rp_consts.FlowImportHosts, &workflow.WorkFlowDefine{
+			FlowName: rp_consts.FlowImportHosts,
+			TaskNodes: map[string]*workflow.NodeDefine{
+				"start": {Name: "start", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: importHostSucceed},
+			},
+		})
+	}
 }
 
 func (p *ResourcePool) GetHostProvider() hostprovider.HostProvider {
 	return p.hostProvider
 }
 
-func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error) {
-	return p.hostProvider.ImportHosts(ctx, hosts)
+func (p *ResourcePool) SetHostProvider(provider hostprovider.HostProvider) {
+	p.hostProvider = provider
+}
+
+func (p *ResourcePool) SetHostInitiator(initiator hostinitiator.HostInitiator) {
+	p.hostInitiator = initiator
+}
+
+func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (flowIds []string, hostIds []string, err error) {
+	hostIds, err = p.hostProvider.ImportHosts(ctx, hosts)
+	if err != nil {
+		return flowIds, hostIds, err
+	}
+	var flows []*workflow.WorkFlowAggregation
+	flowManager := workflow.GetWorkFlowService()
+	for i, host := range hosts {
+		flow, err := flowManager.CreateWorkFlow(ctx, hostIds[i], rp_consts.FlowImportHosts)
+		if err != nil {
+			errMsg := fmt.Sprintf("create %s workflow failed for host %s %s, %s", rp_consts.FlowImportHosts, host.HostName, host.IP, err.Error())
+			framework.LogWithContext(ctx).Errorln(errMsg)
+			return nil, hostIds, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, errMsg, err)
+		}
+
+		flowManager.AddContext(flow, rp_consts.ContextResourcePoolKey, p)
+		flowManager.AddContext(flow, rp_consts.ContextImportHostInfoKey, []structs.HostInfo{host})
+		flowManager.AddContext(flow, rp_consts.ContextImportHostIDsKey, []string{hostIds[i]})
+
+		flows = append(flows, flow)
+		flowIds = append(flowIds, flow.Flow.ID)
+	}
+	// Sync start each flow in a goroutine: tiup-tiem/sqlite DO NOT support concurrent
+	go func() {
+		for i, flow := range flows {
+			if err = flowManager.Start(ctx, flow); err != nil {
+				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for host %s %s, %s", rp_consts.FlowImportHosts, i, flow.Flow.ID, hosts[i].HostName, hosts[i].IP, err.Error())
+				framework.LogWithContext(ctx).Errorln(errMsg)
+				continue
+			} else {
+				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for host %s %s", rp_consts.FlowImportHosts, i, flow.Flow.ID, hosts[i].HostName, hosts[i].IP)
+			}
+		}
+	}()
+	return flowIds, hostIds, nil
 }
 
 func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string) (err error) {

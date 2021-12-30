@@ -117,6 +117,12 @@ const (
 	TIEM_RESOURCE_DECRYPT_PASSWD_ERROR      EM_ERROR_CODE = 30123
 	TIEM_RESOURCE_ALLOCATE_ERROR            EM_ERROR_CODE = 30124
 	TIEM_RESOURCE_RECYCLE_ERROR             EM_ERROR_CODE = 30125
+	TIEM_RESOURCE_CONNECT_TO_HOST_ERROR     EM_ERROR_CODE = 30126
+	TIEM_RESOURCE_NEW_SESSION_ERROR         EM_ERROR_CODE = 30127
+	TIEM_RESOURCE_RUN_COMMAND_ERROR         EM_ERROR_CODE = 30128
+	TIEM_RESOURCE_HOST_NOT_EXPECTED         EM_ERROR_CODE = 30129
+	TIEM_RESOURCE_INIT_FILEBEAT_ERROR       EM_ERROR_CODE = 30130
+	TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR    EM_ERROR_CODE = 30131
 
 	TIEM_MONITOR_NOT_FOUND EM_ERROR_CODE = 614
 
@@ -158,9 +164,16 @@ const (
 
 	TIEM_CHECK_CLUSTER_VERSION_ERROR EM_ERROR_CODE = 21301
 
-	QueryProductComponentProperty = 706 //TODO
-	QueryProductsScanRowError     = 707 //TODO
-	QueryZoneScanRowError         = 708 //TODO
+	CreateZonesError              EM_ERROR_CODE = 70001
+	DeleteZonesError              EM_ERROR_CODE = 70002
+	QueryZoneScanRowError         EM_ERROR_CODE = 70003
+	CreateProductError            EM_ERROR_CODE = 70004
+	DeleteProductError            EM_ERROR_CODE = 70005
+	QueryProductsScanRowError     EM_ERROR_CODE = 70006
+	QueryProductComponentProperty EM_ERROR_CODE = 70007
+	CreateSpecsError              EM_ERROR_CODE = 70008
+	DeleteSpecsError              EM_ERROR_CODE = 70009
+	QuerySpecScanRowError         EM_ERROR_CODE = 70010
 
 	TIEM_CLUSTER_LOG_QUERY_FAILED EM_ERROR_CODE = 80300
 	TIEM_CLUSTER_LOG_TIME_AFTER   EM_ERROR_CODE = 80301
@@ -274,6 +287,12 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_RESOURCE_CREATE_DISK_ERROR:         {"ailed to update disk table", 500},
 	TIEM_RESOURCE_TEMPLATE_FILE_NOT_FOUND:   {"template file is not found", 500},
 	TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR: {"parse template file failed", 400},
+	TIEM_RESOURCE_CONNECT_TO_HOST_ERROR:     {"connect to host failed", 400},
+	TIEM_RESOURCE_NEW_SESSION_ERROR:         {"new connect session to host failed", 500},
+	TIEM_RESOURCE_RUN_COMMAND_ERROR:         {"run command on host failed", 500},
+	TIEM_RESOURCE_HOST_NOT_EXPECTED:         {"host is not expected as import file", 400},
+	TIEM_RESOURCE_INIT_FILEBEAT_ERROR:       {"install filebeat on host failed", 400},
+	TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR:    {"extract workflow context failed", 500},
 
 	// param group & cluster param
 	TIEM_DEFAULT_PARAM_GROUP_NOT_DEL:                 {"Not allow to deleted the default parameter group", 409},
@@ -317,4 +336,16 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_CHECK_PLACEMENT_RULES_ERROR:      {"Placement rule is not set when scale out TiFlash", 409},
 	TIEM_CHECK_TIFLASH_MAX_REPLICAS_ERROR: {"The number of remaining TiFlash instances is less than the maximum replicas of data tables", 409},
 	TIEM_SCAN_MAX_REPLICA_COUNT_ERROR:     {"Failed to scan max replicas of data tables of TiFlash", 500},
+
+	//product
+	CreateZonesError:              {"create zone failed", 500},
+	DeleteZonesError:              {"delete zone failed", 500},
+	QueryZoneScanRowError:         {"query all zone failed", 401},
+	CreateProductError:            {"create product failed", 500},
+	DeleteProductError:            {"delete product failed", 500},
+	QueryProductsScanRowError:     {"query all product failed", 401},
+	QueryProductComponentProperty: {"query all component property failed", 401},
+	CreateSpecsError:              {"create specs failed", 500},
+	DeleteSpecsError:              {"delete specs failed", 500},
+	QuerySpecScanRowError:         {"query all specs failed", 401},
 }

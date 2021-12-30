@@ -45,19 +45,38 @@ func ValidArchType(arch string) error {
 		string(ArchX86), string(ArchX8664), string(ArchArm), string(ArchArm64))
 }
 
+func GetArchAlias(arch ArchType) string {
+	switch arch {
+	case ArchArm:
+		fallthrough
+	case ArchArm64:
+		return "arm64"
+	case ArchX86:
+		fallthrough
+	case ArchX8664:
+		return "amd64"
+	default:
+		return ""
+	}
+}
+
 type HostStatus string
 
 //Definition of host status
 const (
 	HostWhatever HostStatus = "Whatever"
+	HostInit     HostStatus = "Init"
 	HostOnline   HostStatus = "Online"
 	HostOffline  HostStatus = "Offline"
+	HostFailed   HostStatus = "Failed"
 	HostDeleted  HostStatus = "Deleted"
 )
 
 func (s HostStatus) IsValidStatus() bool {
 	return (s == HostOnline ||
 		s == HostOffline ||
+		s == HostInit ||
+		s == HostFailed ||
 		s == HostDeleted)
 }
 

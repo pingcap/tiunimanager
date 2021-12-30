@@ -91,7 +91,7 @@ var TagTakeover = "takeover"
 func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbUser string, dbPassword string) error {
 	p.Cluster = &management.Cluster{
 		Entity: dbCommon.Entity{
-			ID: name,
+			ID:       name,
 			TenantId: framework.GetTenantIDFromContext(ctx),
 			Status:   string(constants.ClusterRunning),
 		},
@@ -114,15 +114,15 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbUser 
 
 func parseInstanceFromSpec(cluster *management.Cluster, componentType constants.EMProductComponentIDType, getHost func() string, getPort func() []int32) *management.ClusterInstance {
 	return &management.ClusterInstance{
-		Entity: dbCommon.Entity {
+		Entity: dbCommon.Entity{
 			TenantId: cluster.TenantId,
-			Status: string(constants.ClusterInstanceRunning),
+			Status:   string(constants.ClusterInstanceRunning),
 		},
-		Type: string(componentType),
-		Version: cluster.Version,
+		Type:      string(componentType),
+		Version:   cluster.Version,
 		ClusterID: cluster.ID,
-		HostIP: []string{getHost()},
-		Ports: getPort(),
+		HostIP:    []string{getHost()},
+		Ports:     getPort(),
 	}
 }
 
@@ -372,13 +372,13 @@ func (p *ClusterMeta) GenerateTakeoverResourceRequirements(ctx context.Context) 
 			Location: structs.Location{
 				HostIp: instance.HostIP[0],
 			},
-			Require: resource.Requirement {
-				Exclusive: p.Cluster.Exclusive,
-				PortReq: portRequirements,
-				DiskReq: resource.DiskRequirement {},
-				ComputeReq: resource.ComputeRequirement {},
+			Require: resource.Requirement{
+				Exclusive:  p.Cluster.Exclusive,
+				PortReq:    portRequirements,
+				DiskReq:    resource.DiskRequirement{},
+				ComputeReq: resource.ComputeRequirement{},
 			},
-			Count: 1,
+			Count:    1,
 			Strategy: resource.UserSpecifyHost,
 		})
 		allocInstances = append(allocInstances, instance)
@@ -929,7 +929,7 @@ func (p *ClusterMeta) acceptInstances(instances []*management.ClusterInstance) {
 
 func buildMeta(cluster *management.Cluster, instances []*management.ClusterInstance) *ClusterMeta {
 	meta := &ClusterMeta{
-		Cluster:   cluster,
+		Cluster: cluster,
 	}
 	meta.acceptInstances(instances)
 	return meta
@@ -1092,8 +1092,8 @@ func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterT
 					Name: knowledge.GenSpecCode(int32(instance.CpuCores), int32(instance.Memory)),
 				},
 				Zone: structs.ZoneInfo{
-					ID:   structs.GenDomainCodeByName(p.Cluster.Region, instance.Zone),
-					Name: instance.Zone,
+					ZoneID:   structs.GenDomainCodeByName(p.Cluster.Region, instance.Zone),
+					ZoneName: instance.Zone,
 				},
 			}
 			topologyInfo.Topology = append(topologyInfo.Topology, instanceInfo)

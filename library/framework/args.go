@@ -35,6 +35,7 @@ import (
 type ClientArgs struct {
 	Host                 string
 	EnableHttps          bool
+	SkipHostInit         bool
 	Port                 int
 	MetricsPort          int
 	RegistryClientPort   int
@@ -61,6 +62,12 @@ func AllFlags(receiver *ClientArgs) []cli.Flag {
 			Value:       false,
 			Usage:       "Enable https for open-api.",
 			Destination: &receiver.EnableHttps,
+		},
+		&cli.BoolFlag{
+			Name:        "skip-host-init",
+			Value:       false,
+			Usage:       "Skip initialize host when importing.",
+			Destination: &receiver.SkipHostInit,
 		},
 		&cli.IntFlag{
 			Name:        "port",

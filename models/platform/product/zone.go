@@ -14,57 +14,30 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: test_main.go
+ * @File: zone.go
  * @Description:
  * @Author: duanbing@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/10
+ * @Date: 2021/12/6
 *******************************************************************************/
 
-package specs
+package product
 
 import (
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"os"
-	"testing"
+	"time"
 )
 
-func TestMain(m *testing.M) {
-	testFilePath := "testdata/" + uuidutil.ShortId()
-	os.MkdirAll(testFilePath, 0755)
-
-	logins := framework.LogForkFile(constants.LogFileSystem)
-
-	defer func() {
-		os.RemoveAll(testFilePath)
-		os.Remove(testFilePath)
-	}()
-
-	framework.InitBaseFrameworkForUt(framework.ClusterService,
-		func(d *framework.BaseFramework) error {
-			dbFile := testFilePath + constants.DBDirPrefix + constants.DatabaseFileName
-			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
-
-			if err != nil || db.Error != nil {
-				logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)
-			} else {
-				logins.Infof("open database successful, filepath: %s", dbFile)
-			}
-			db.Migrator().CreateTable(Zone{})
-			db.Migrator().CreateTable(Region{})
-			db.Migrator().CreateTable(ResourceSpec{})
-			db.Migrator().CreateTable(ProductComponent{})
-			db.Migrator().CreateTable(Product{})
-			db.Migrator().CreateTable(Vendor{})
-			//init test data
-			prw = NewProductReadWriter(db)
-			return nil
-		},
-	)
-
-	os.Exit(m.Run())
+// Zone information provided by Enterprise Manager
+type Zone struct {
+	VendorID   string         `gorm:"primaryKey;size:32"`
+	VendorName string         `gorm:"primaryKey;size:32"`
+	RegionID   string         `gorm:"primaryKey;size:32"`
+	RegionName string         `gorm:"primaryKey;size:32"`
+	ZoneID     string         `gorm:"primaryKey;size:32"`
+	ZoneName   string         `gorm:"primaryKey;size:32"`
+	Comment    string         `gorm:"size:1024;"`
+	CreatedAt  time.Time      `gorm:"autoCreateTime;<-:create;->;"`
+	UpdatedAt  time.Time      `gorm:"autoUpdateTime"`
+	DeletedAt  gorm.DeletedAt `gorm:""`
 }

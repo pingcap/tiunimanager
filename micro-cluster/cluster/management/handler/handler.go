@@ -354,7 +354,7 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 	return requirements, allocInstances
 }
 
-func (p *ClusterMeta) GenerateTakeoverResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance, error) {
+func (p *ClusterMeta) GenerateTakeoverResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance) {
 	instances := p.GetInstanceByStatus(ctx, constants.ClusterInstanceRunning)
 	requirements := make([]resource.AllocRequirement, 0)
 
@@ -383,7 +383,7 @@ func (p *ClusterMeta) GenerateTakeoverResourceRequirements(ctx context.Context) 
 		})
 		allocInstances = append(allocInstances, instance)
 	}
-	return requirements, allocInstances, nil
+	return requirements, allocInstances
 }
 
 func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) []resource.AllocRequirement {

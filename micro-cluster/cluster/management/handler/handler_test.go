@@ -1393,8 +1393,7 @@ func TestClusterMeta_GenerateTakeoverResourceRequirements(t *testing.T) {
 		}
         err := meta.ParseTopologyFromConfig(context.TODO(), mockSpec())
         assert.NoError(t, err)
-        requirements, instances, err := meta.GenerateTakeoverResourceRequirements(context.TODO())
-        assert.NoError(t, err)
+        requirements, instances := meta.GenerateTakeoverResourceRequirements(context.TODO())
 		assert.Equal(t, 12, len(requirements))
 		assert.Equal(t, len(requirements), len(instances))
 	})

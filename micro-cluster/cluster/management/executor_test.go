@@ -1435,22 +1435,22 @@ func Test_testConnectivity(t *testing.T) {
 		err := testConnectivity(nil, ctx)
 		assert.NoError(t, err)
 	})
-	 */
+	*/
 	t.Run("error", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
 		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
 			Cluster: &management.Cluster{
-				DBUser: "root",
+				DBUser:     "root",
 				DBPassword: "wrong",
 			},
 			Instances: map[string][]*management.ClusterInstance{
-				string(constants.ComponentIDTiDB) : {
+				string(constants.ComponentIDTiDB): {
 					{
 						Entity: common.Entity{
 							Status: string(constants.ClusterRunning),
 						},
 						HostIP: []string{"172.16.6.176"},
-						Ports: []int32{10000},
+						Ports:  []int32{10000},
 					},
 				},
 			},
@@ -1473,7 +1473,7 @@ func Test_testRebuildTopologyFromConfig(t *testing.T) {
 		clusterMeta := &handler.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
-					ID: "clusterId",
+					ID:       "clusterId",
 					TenantId: "tenantId",
 				},
 			},
@@ -1483,32 +1483,32 @@ func Test_testRebuildTopologyFromConfig(t *testing.T) {
 		metadata := &spec.ClusterMeta{
 			Version: "v5.2.2",
 			Topology: &spec.Specification{
-				TiDBServers:  []*spec.TiDBSpec {
+				TiDBServers: []*spec.TiDBSpec{
 					{Host: "127.0.0.1", Port: 1, StatusPort: 2},
 					{Host: "127.0.0.2", Port: 3, StatusPort: 4},
 				},
-				TiKVServers:  []*spec.TiKVSpec {
+				TiKVServers: []*spec.TiKVSpec{
 					{Host: "127.0.0.4", Port: 5, StatusPort: 6},
 					{Host: "127.0.0.5", Port: 7, StatusPort: 8},
 				},
-				TiFlashServers:  []*spec.TiFlashSpec {
+				TiFlashServers: []*spec.TiFlashSpec{
 					{Host: "127.0.0.6", TCPPort: 9, HTTPPort: 10, FlashServicePort: 11, FlashProxyPort: 12, FlashProxyStatusPort: 13, StatusPort: 14},
 				},
-				CDCServers:  []*spec.CDCSpec {
+				CDCServers: []*spec.CDCSpec{
 					{Host: "127.0.0.7", Port: 15},
 					{Host: "127.0.0.8", Port: 16},
 				},
-				PDServers:  []*spec.PDSpec {
+				PDServers: []*spec.PDSpec{
 					{Host: "127.0.0.9", ClientPort: 17, PeerPort: 18},
 					{Host: "127.0.0.10", ClientPort: 19, PeerPort: 20},
 				},
-				Grafanas:  []*spec.GrafanaSpec {
+				Grafanas: []*spec.GrafanaSpec{
 					{Host: "127.0.0.11", Port: 21},
 				},
-				Alertmanagers:  []*spec.AlertmanagerSpec {
+				Alertmanagers: []*spec.AlertmanagerSpec{
 					{Host: "127.0.0.12", WebPort: 22, ClusterPort: 23},
 				},
-				Monitors:  []*spec.PrometheusSpec {
+				Monitors: []*spec.PrometheusSpec{
 					{Host: "127.0.0.13", Port: 24},
 				},
 			},
@@ -1522,5 +1522,87 @@ func Test_testRebuildTopologyFromConfig(t *testing.T) {
 		assert.Equal(t, "v5.2.2", clusterMeta.Cluster.Version)
 		assert.NotEmpty(t, clusterMeta.Instances)
 
+	})
+}
+
+func TestTakeoverResource(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID:        "2145635758",
+				TenantId:  "324567",
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+			Name:              "koojdafij",
+			DBUser:            "kodjsfn",
+			DBPassword:        "mypassword",
+			Type:              "TiDB",
+			Version:           "v5.0.0",
+			Tags:              []string{"111", "333"},
+			OwnerId:           "436534636u",
+			ParameterGroupID:  "352467890",
+			Copies:            4,
+			Region:            "Region1",
+			CpuArchitecture:   "x86_64",
+			MaintenanceStatus: constants.ClusterMaintenanceCreating,
+		},
+		Instances: map[string][]*management.ClusterInstance{
+			"TiDB": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone:     "zone1",
+					CpuCores: 4,
+					Memory:   8,
+					Type:     "TiDB",
+					Version:  "v5.0.0",
+					Ports:    []int32{10001, 10002, 10003, 10004},
+					HostIP:   []string{"127.0.0.1"},
+				},
+			},
+		},
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		resourceManager := mock_allocator_recycler.NewMockAllocatorRecycler(ctrl)
+		resourceManager.EXPECT().AllocResources(gomock.Any(), gomock.Any()).Return(&structs.BatchAllocResponse{
+			BatchResults: []*structs.AllocRsp{
+				{
+					Applicant: structs.Applicant{
+						RequestId: "123",
+					},
+					Results: []structs.Compute{
+						{
+							Location: structs2.Location{
+								Region: "region01",
+								Zone:   "zone01",
+								Rack:   "rack01",
+							},
+							HostId: "001",
+						},
+					},
+				},
+			},
+		}, nil)
+		resourceManagement.GetManagement().SetAllocatorRecycler(resourceManager)
+
+		err := takeoverResource(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
+
+	t.Run("alloc fail", func(t *testing.T) {
+		resourceManager := mock_allocator_recycler.NewMockAllocatorRecycler(ctrl)
+		resourceManager.EXPECT().AllocResources(gomock.Any(),
+			gomock.Any()).Return(&structs.BatchAllocResponse{}, fmt.Errorf("fail"))
+		resourceManagement.GetManagement().SetAllocatorRecycler(resourceManager)
+
+		err := takeoverResource(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
 	})
 }

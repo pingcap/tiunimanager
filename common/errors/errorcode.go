@@ -283,6 +283,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_RESOURCE_RUN_COMMAND_ERROR:         {"run command on host failed", 500},
 	TIEM_RESOURCE_HOST_NOT_EXPECTED:         {"host is not expected as import file", 400},
 	TIEM_RESOURCE_INIT_FILEBEAT_ERROR:       {"install filebeat on host failed", 400},
+	TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR:    {"extract workflow context failed", 500},
 
 	// param group & cluster param
 	TIEM_DEFAULT_PARAM_GROUP_NOT_DEL:                 {"Not allow to deleted the default parameter group", 409},

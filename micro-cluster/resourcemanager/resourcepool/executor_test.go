@@ -21,6 +21,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/framework"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	"github.com/pingcap-inc/tiem/models"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
@@ -32,6 +33,7 @@ import (
 
 func Test_InstallSoftware(t *testing.T) {
 	models.MockDB()
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
 	resourcePool := GetResourcePool()
 
 	// Mock host initiator

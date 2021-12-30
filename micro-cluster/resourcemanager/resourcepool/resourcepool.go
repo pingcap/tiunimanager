@@ -53,17 +53,33 @@ func (p *ResourcePool) InitResourcePool() {
 	p.hostInitiator = hostinitiator.NewFileHostInitiator()
 
 	flowManager := workflow.GetWorkFlowService()
-	flowManager.RegisterWorkFlow(context.TODO(), rp_consts.FlowImportHosts, &workflow.WorkFlowDefine{
-		FlowName: rp_consts.FlowImportHosts,
-		TaskNodes: map[string]*workflow.NodeDefine{
-			"start":           {Name: "start", SuccessEvent: "configHosts", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: verifyHosts},
-			"configHosts":     {Name: "configHosts", SuccessEvent: "installSoftware", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: configHosts},
-			"installSoftware": {Name: "installSoftware", SuccessEvent: "joinEMCluster", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: installSoftware},
-			"joinEMCluster":   {Name: "joinEMCluster", SuccessEvent: "succeed", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: joinEmCluster},
-			"succeed":         {Name: "succeed", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: importHostSucceed},
-			"fail":            {Name: "fail", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: importHostsFail},
-		},
-	})
+	p.registerImportHostsWorkFlow(context.TODO(), flowManager)
+}
+
+func (p *ResourcePool) registerImportHostsWorkFlow(ctx context.Context, flowManager workflow.WorkFlowService) {
+	log := framework.LogWithContext(ctx)
+	if !framework.Current.GetClientArgs().SkipHostInit {
+		log.Infoln("register import hosts workflow with host init")
+		flowManager.RegisterWorkFlow(ctx, rp_consts.FlowImportHosts, &workflow.WorkFlowDefine{
+			FlowName: rp_consts.FlowImportHosts,
+			TaskNodes: map[string]*workflow.NodeDefine{
+				"start":           {Name: "start", SuccessEvent: "configHosts", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: verifyHosts},
+				"configHosts":     {Name: "configHosts", SuccessEvent: "installSoftware", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: configHosts},
+				"installSoftware": {Name: "installSoftware", SuccessEvent: "joinEMCluster", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: installSoftware},
+				"joinEMCluster":   {Name: "joinEMCluster", SuccessEvent: "succeed", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: joinEmCluster},
+				"succeed":         {Name: "succeed", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: importHostSucceed},
+				"fail":            {Name: "fail", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: importHostsFail},
+			},
+		})
+	} else {
+		log.Infoln("register import hosts workflow without host init")
+		flowManager.RegisterWorkFlow(ctx, rp_consts.FlowImportHosts, &workflow.WorkFlowDefine{
+			FlowName: rp_consts.FlowImportHosts,
+			TaskNodes: map[string]*workflow.NodeDefine{
+				"start": {Name: "start", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: importHostSucceed},
+			},
+		})
+	}
 }
 
 func (p *ResourcePool) GetHostProvider() hostprovider.HostProvider {

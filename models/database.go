@@ -29,7 +29,6 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
-	"github.com/pingcap-inc/tiem/models/mirror"
 	mm "github.com/pingcap-inc/tiem/models/resource/management"
 	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	"github.com/pingcap-inc/tiem/models/user/account"
@@ -73,7 +72,6 @@ type database struct {
 	tenantReaderWriter               tenant.ReaderWriter
 	accountReaderWriter              account.ReaderWriter
 	tokenReaderWriter                identification.ReaderWriter
-	mirrorReaderWriter               mirror.ReaderWriter
 	productReaderWriter              product.ProductReadWriterInterface
 	tiUPConfigReaderWriter           tiup.ReaderWriter
 }
@@ -151,7 +149,6 @@ func (p *database) initTables() (err error) {
 		new(account.Account),
 		new(tenant.Tenant),
 		new(identification.Token),
-		new(mirror.Mirror),
 		new(tiup.TiupConfig),
 		new(resourcePool.Host),
 		new(resourcePool.Disk),
@@ -180,7 +177,6 @@ func (p *database) initReaderWriters() {
 	defaultDb.tenantReaderWriter = tenant.NewTenantReadWrite(defaultDb.base)
 	defaultDb.accountReaderWriter = account.NewAccountReadWrite(defaultDb.base)
 	defaultDb.tokenReaderWriter = identification.NewTokenReadWrite(defaultDb.base)
-	defaultDb.mirrorReaderWriter = mirror.NewGormMirrorReadWrite(defaultDb.base)
 	defaultDb.productReaderWriter = product.NewProductReadWriter(defaultDb.base)
 	defaultDb.tiUPConfigReaderWriter = tiup.NewGormTiupConfigReadWrite(defaultDb.base)
 }
@@ -226,25 +222,6 @@ func (p *database) initSystemData() {
 			sqls, err := ioutil.ReadFile(parameterSqlFile)
 			if err != nil {
 				framework.LogForkFile(constants.LogFileSystem).Errorf("batch import parameters failed, err = %s", err.Error())
-				return
-			}
-			sqlArr := strings.Split(string(sqls), ";")
-			for _, sql := range sqlArr {
-				if strings.TrimSpace(sql) == "" {
-					continue
-				}
-				// exec import sql
-				defaultDb.base.Exec(sql)
-			}
-		}
-
-		// import TiUP mirror
-		mirrorSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/mirrors.sql"
-		err = syscall.Access(mirrorSqlFile, syscall.F_OK)
-		if !os.IsNotExist(err) {
-			sqls, err := ioutil.ReadFile(mirrorSqlFile)
-			if err != nil {
-				framework.LogForkFile(constants.LogFileSystem).Errorf("import mirrors failed, err = %s", err.Error())
 				return
 			}
 			sqlArr := strings.Split(string(sqls), ";")
@@ -375,14 +352,6 @@ func GetTokenReaderWriter() identification.ReaderWriter {
 
 func SetTokenReaderWriter(rw identification.ReaderWriter) {
 	defaultDb.tokenReaderWriter = rw
-}
-
-func GetMirrorReaderWriter() mirror.ReaderWriter {
-	return defaultDb.mirrorReaderWriter
-}
-
-func SetMirrorReaderWriter(rw mirror.ReaderWriter) {
-	defaultDb.mirrorReaderWriter = rw
 }
 
 func GetProductReaderWriter() product.ProductReadWriterInterface {

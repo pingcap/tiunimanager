@@ -26,11 +26,6 @@ package secondparty
 import (
 	"context"
 	"errors"
-	"strings"
-
-	mirror2 "github.com/pingcap-inc/tiem/models/mirror"
-
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockmirror"
 
 	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
 
@@ -849,37 +844,11 @@ func TestSecondPartyManager_ClusterComponentCtl_WithTimeout(t *testing.T) {
 }
 
 func TestSecondPartyManager_startTiUPTask_Wrong(t *testing.T) {
-	secondPartyManager1.startTiUPOperation(context.TODO(), TestOperationID, "ls", []string{"-2"}, 1)
+	secondPartyManager1.startTiUPOperation(context.TODO(), TestOperationID, "ls", []string{"-2"}, 1, "")
 }
 
 func TestSecondPartyManager_startTiUPTask(t *testing.T) {
-	secondPartyManager1.startTiUPOperation(context.TODO(), TestOperationID, "ls", []string{}, 1)
-}
-
-func TestSecondPartyManager_setTiUPMirrorForComponent_Fail(t *testing.T) {
-	mockCtl := gomock.NewController(t)
-	mockReaderWriter := mockmirror.NewMockReaderWriter(mockCtl)
-	models.SetMirrorReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(TiEMComponentTypeStr)).Return(nil, errors.New("some error"))
-	err := secondPartyManager1.setTiUPMirrorForComponent(context.TODO(), TiEMComponentTypeStr)
-	if err != nil && !strings.Contains(err.Error(), "some error") {
-		t.Error(err)
-	}
-}
-
-func TestSecondPartyManager_setTiUPMirrorForComponent_Success(t *testing.T) {
-	mirror := &mirror2.Mirror{
-		MirrorAddr: "mirror address",
-	}
-
-	mockCtl := gomock.NewController(t)
-	mockReaderWriter := mockmirror.NewMockReaderWriter(mockCtl)
-	models.SetMirrorReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(TiEMComponentTypeStr)).Return(mirror, nil)
-	err := secondPartyManager1.setTiUPMirrorForComponent(context.TODO(), TiEMComponentTypeStr)
-	if err == nil || strings.Contains(err.Error(), "some error") {
-		t.Error("wrong set")
-	}
+	secondPartyManager1.startTiUPOperation(context.TODO(), TestOperationID, "ls", []string{}, 1, "")
 }
 
 func initForTestLibtiup() {

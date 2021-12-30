@@ -375,5 +375,6 @@ type ChangeFeedInfo struct {
 	ChangeFeedID  string `json:"id"`
 	State         string `json:"state"`
 	CheckPointTSO uint64 `json:"checkpoint_tso"`
+	ResolvedTSO   uint64 `json:"resolved_tso"`
 	Error         string `json:"error"`
 }

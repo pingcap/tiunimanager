@@ -292,7 +292,7 @@ func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTa
 
 	if err == nil {
 		resp.ChangeFeedTaskInfo.DownstreamSyncTS = taskDetail.CheckPointTSO
-		// todo where to get UpstreamUpdateTS and DownstreamFetchTS
+		resp.ChangeFeedTaskInfo.DownstreamFetchTS = taskDetail.ResolvedTSO
 	}
 
 	return

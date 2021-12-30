@@ -60,6 +60,7 @@ func (secondMicro *SecondPartyManager) CreateChangeFeedTask(ctx context.Context,
 		handleAcceptedCmd(ctx, req.CDCAddress, req.ChangeFeedID, &resp, func(info ChangeFeedInfo) bool {
 			return constants.ChangeFeedStatusNormal.EqualCDCState(info.State)
 		})
+
 	} else {
 		handleAcceptError(ctx, httpResp, &resp)
 	}
@@ -88,16 +89,17 @@ func handleAcceptError(ctx context.Context, httpResp *http.Response, resp *Chang
 	}
 }
 
-var changeFeedRetryTimes = 10
+var changeFeedRetryTimes = 20
 
 func handleAcceptedCmd(ctx context.Context,
 	address string, id string,
 	resp *ChangeFeedCmdAcceptResp,
 	assert func(info ChangeFeedInfo) bool) {
 	for i := 0; i < changeFeedRetryTimes; i++ {
-		time.Sleep(time.Second)
+		time.Sleep(time.Millisecond * 500)
 		task, err := getChangeFeedTaskByID(ctx, address, id)
 		if err != nil {
+			framework.LogWithContext(ctx).Errorf("execute cdc command failed, err = %s", err.Error())
 			resp.Succeed = false
 			resp.ErrorMsg = err.Error()
 			return
@@ -248,6 +250,7 @@ func getChangeFeedTaskByID(ctx context.Context, pdAddress, id string) (resp Chan
 
 	if err != nil {
 		err = errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, err.Error())
+		framework.LogWithContext(ctx).Errorf("get change feed task failed, %s", err.Error())
 		return
 	}
 
@@ -264,6 +267,7 @@ func getChangeFeedTaskByID(ctx context.Context, pdAddress, id string) (resp Chan
 		}
 	} else {
 		err = errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, err.Error())
+		framework.LogWithContext(ctx).Errorf(err.Error())
 	}
 	return 
 }

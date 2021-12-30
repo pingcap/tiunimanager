@@ -86,9 +86,7 @@ func (p *Manager) Create(ctx context.Context, request cluster.CreateChangeFeedTa
 		resp.ID = task.ID
 	}
 
-	go func() {
-		p.createExecutor(ctx, clusterMeta, task)
-	}()
+	err = p.createExecutor(ctx, clusterMeta, task)
 
 	return
 }
@@ -155,10 +153,7 @@ func (p *Manager) Pause(ctx context.Context, request cluster.PauseChangeFeedTask
 		return
 	}
 
-	go func() {
-		ctx = framework.NewBackgroundMicroCtx(ctx, true)
-		p.pauseExecutor(ctx, clusterMeta, task)
-	}()
+	err = p.pauseExecutor(ctx, clusterMeta, task)
 
 	return
 }
@@ -187,10 +182,7 @@ func (p *Manager) Resume(ctx context.Context, request cluster.ResumeChangeFeedTa
 		return
 	}
 
-	go func() {
-		ctx = framework.NewBackgroundMicroCtx(ctx, true)
-		p.resumeExecutor(ctx, clusterMeta, task)
-	}()
+	p.resumeExecutor(ctx, clusterMeta, task)
 
 	return
 }
@@ -230,41 +222,37 @@ func (p *Manager) Update(ctx context.Context, request cluster.UpdateChangeFeedTa
 		return
 	}
 	// pause -> update -> resume
-	go func() {
-		ctx = framework.NewBackgroundMicroCtx(ctx, true)
-		if running {
-			err = models.GetChangeFeedReaderWriter().LockStatus(ctx, request.ID)
-			if err != nil {
-				return
-			}
-
-			err = p.pauseExecutor(ctx, clusterMeta, task)
-			if err != nil {
-				framework.LogWithContext(ctx).Errorf("update change feed task %s failed, step = pause, err = %s", request.ID, err.Error())
-				return
-			}
-		}
-
-		models.GetChangeFeedReaderWriter().UpdateConfig(ctx, task)
-		err = p.updateExecutor(ctx, clusterMeta, task)
+	if running {
+		err = models.GetChangeFeedReaderWriter().LockStatus(ctx, request.ID)
 		if err != nil {
-			framework.LogWithContext(ctx).Errorf("update change feed task %s failed, step = update, err = %s", request.ID, err.Error())
 			return
 		}
 
-		if running {
-			err = models.GetChangeFeedReaderWriter().LockStatus(ctx, request.ID)
-			if err != nil {
-				return
-			}
-			err = p.resumeExecutor(ctx, clusterMeta, task)
-			if err != nil {
-				framework.LogWithContext(ctx).Errorf("update change feed task %s failed, step = resume, err = %s", request.ID, err.Error())
-				return
-			}
+		err = p.pauseExecutor(ctx, clusterMeta, task)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("update change feed task %s failed, step = pause, err = %s", request.ID, err.Error())
+			return
 		}
-	}()
+	}
 
+	models.GetChangeFeedReaderWriter().UpdateConfig(ctx, task)
+	err = p.updateExecutor(ctx, clusterMeta, task)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("update change feed task %s failed, step = update, err = %s", request.ID, err.Error())
+		return
+	}
+
+	if running {
+		err = models.GetChangeFeedReaderWriter().LockStatus(ctx, request.ID)
+		if err != nil {
+			return
+		}
+		err = p.resumeExecutor(ctx, clusterMeta, task)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("update change feed task %s failed, step = resume, err = %s", request.ID, err.Error())
+			return
+		}
+	}
 	return
 }
 

@@ -20,13 +20,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/micro-cluster/platform/product"
 	"github.com/pingcap-inc/tiem/micro-cluster/user/identification"
 	"github.com/pingcap-inc/tiem/micro-cluster/user/tenant"
 	"github.com/pingcap-inc/tiem/micro-cluster/user/userinfo"
-	"strconv"
-	"time"
 
 	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
 
@@ -860,10 +862,13 @@ func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, req *clus
 	reqStruct := message.ImportHostsReq{}
 
 	if handleRequest(ctx, req, resp, &reqStruct) {
-		hostIds, err := handler.resourceManager.ImportHosts(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.Hosts)
+		flowIds, hostIds, err := handler.resourceManager.ImportHosts(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.Hosts)
 		var rsp message.ImportHostsResp
 		if err == nil {
 			rsp.HostIDS = hostIds
+			for _, flowId := range flowIds {
+				rsp.FlowInfo = append(rsp.FlowInfo, structs.AsyncTaskWorkFlowInfo{WorkFlowID: flowId})
+			}
 		}
 		handleResponse(ctx, resp, err, rsp, nil)
 	}

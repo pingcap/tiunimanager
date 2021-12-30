@@ -117,6 +117,12 @@ const (
 	TIEM_RESOURCE_DECRYPT_PASSWD_ERROR      EM_ERROR_CODE = 30123
 	TIEM_RESOURCE_ALLOCATE_ERROR            EM_ERROR_CODE = 30124
 	TIEM_RESOURCE_RECYCLE_ERROR             EM_ERROR_CODE = 30125
+	TIEM_RESOURCE_CONNECT_TO_HOST_ERROR     EM_ERROR_CODE = 30126
+	TIEM_RESOURCE_NEW_SESSION_ERROR         EM_ERROR_CODE = 30127
+	TIEM_RESOURCE_RUN_COMMAND_ERROR         EM_ERROR_CODE = 30128
+	TIEM_RESOURCE_HOST_NOT_EXPECTED         EM_ERROR_CODE = 30129
+	TIEM_RESOURCE_INIT_FILEBEAT_ERROR       EM_ERROR_CODE = 30130
+	TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR    EM_ERROR_CODE = 30131
 
 	TIEM_MONITOR_NOT_FOUND EM_ERROR_CODE = 614
 
@@ -281,6 +287,12 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_RESOURCE_CREATE_DISK_ERROR:         {"ailed to update disk table", 500},
 	TIEM_RESOURCE_TEMPLATE_FILE_NOT_FOUND:   {"template file is not found", 500},
 	TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR: {"parse template file failed", 400},
+	TIEM_RESOURCE_CONNECT_TO_HOST_ERROR:     {"connect to host failed", 400},
+	TIEM_RESOURCE_NEW_SESSION_ERROR:         {"new connect session to host failed", 500},
+	TIEM_RESOURCE_RUN_COMMAND_ERROR:         {"run command on host failed", 500},
+	TIEM_RESOURCE_HOST_NOT_EXPECTED:         {"host is not expected as import file", 400},
+	TIEM_RESOURCE_INIT_FILEBEAT_ERROR:       {"install filebeat on host failed", 400},
+	TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR:    {"extract workflow context failed", 500},
 
 	// param group & cluster param
 	TIEM_DEFAULT_PARAM_GROUP_NOT_DEL:                 {"Not allow to deleted the default parameter group", 409},

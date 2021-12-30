@@ -13,4 +13,17 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package resourcemanager
+package hostinitiator
+
+import (
+	"context"
+
+	"github.com/pingcap-inc/tiem/common/structs"
+)
+
+type HostInitiator interface {
+	Verify(ctx context.Context, h *structs.HostInfo) (err error)
+	SetConfig(ctx context.Context, h *structs.HostInfo) (err error)
+	InstallSoftware(ctx context.Context, hosts []structs.HostInfo) (err error)
+	JoinEMCluster(ctx context.Context, hosts []structs.HostInfo) (err error)
+}

@@ -58,8 +58,8 @@ func (m *ResourceManager) GetManagement() *management.Management {
 	return m.management
 }
 
-func (m *ResourceManager) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error) {
-	hostIds, err = m.resourcePool.ImportHosts(ctx, hosts)
+func (m *ResourceManager) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (flowIds []string, hostIds []string, err error) {
+	flowIds, hostIds, err = m.resourcePool.ImportHosts(ctx, hosts)
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("import hosts %v in batch failed from db service: %v", hosts, err)
 	} else {

@@ -1089,6 +1089,10 @@ definitions:
     type: object
   message.ImportHostsResp:
     properties:
+      flowInfo:
+        items:
+          $ref: '#/definitions/structs.AsyncTaskWorkFlowInfo'
+        type: array
       hostIds:
         items:
           type: string
@@ -1240,6 +1244,12 @@ definitions:
     properties:
       paramGroupId:
         example: "1"
+        type: string
+    type: object
+  structs.AsyncTaskWorkFlowInfo:
+    properties:
+      workFlowId:
+        description: Asynchronous task workflow ID
         type: string
     type: object
   structs.BackupRecord:
@@ -3981,6 +3991,34 @@ paths:
       tags:
       - resource
   /resources/hosts:
+    delete:
+      consumes:
+      - application/json
+      description: remove hosts by a list
+      parameters:
+      - description: list of host IDs
+        in: body
+        name: hostIds
+        required: true
+        schema:
+          $ref: '#/definitions/message.DeleteHostsReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.DeleteHostsResp'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Remove a batch of hosts
+      tags:
+      - resource
     get:
       consumes:
       - application/json
@@ -4058,7 +4096,7 @@ paths:
       summary: Import a batch of hosts to TiEM
       tags:
       - resource
-  /resources/hosts-template/:
+  /resources/hosts-template:
     get:
       consumes:
       - application/json
@@ -4073,35 +4111,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Download the host information template file for importing
-      tags:
-      - resource
-  /resources/hosts/:
-    delete:
-      consumes:
-      - application/json
-      description: remove hosts by a list
-      parameters:
-      - description: list of host IDs
-        in: body
-        name: hostIds
-        required: true
-        schema:
-          $ref: '#/definitions/message.DeleteHostsReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.DeleteHostsResp'
-              type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Remove a batch of hosts
       tags:
       - resource
   /resources/stocks:

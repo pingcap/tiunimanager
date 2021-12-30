@@ -24,6 +24,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
+	"strings"
 	"time"
 )
 
@@ -158,14 +159,17 @@ type ChangeFeedDownStream interface {
 }
 
 func (p *MysqlDownstream) GetSinkURI() string {
+	p.Ip = strings.TrimPrefix(p.Ip, "http://")
 	return fmt.Sprintf("mysql://%s:%s@%s:%d/?worker-count=%d&max-txn-row=%d", p.Username, p.Password, p.Ip, p.Port, p.WorkerCount, p.MaxTxnRow)
 }
 
 func (p *TiDBDownstream) GetSinkURI() string {
+	p.Ip = strings.TrimPrefix(p.Ip, "http://")
 	return fmt.Sprintf("mysql://%s:%s@%s:%d/?worker-count=%d&max-txn-row=%d", p.Username, p.Password, p.Ip, p.Port, p.WorkerCount, p.MaxTxnRow)
 }
 
 func (p *KafkaDownstream) GetSinkURI() string {
+	p.Ip = strings.TrimPrefix(p.Ip, "http://")
 	return fmt.Sprintf("kafka://%s:%d/%s?kafka-version=%s&partition-num=%d&max-message-bytes=%d&replication-factor=%d&max-batch-size=%d&protocol=%s&kafka-client-id=%s",
 		p.Ip,
 		p.Port,

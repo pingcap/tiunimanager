@@ -423,7 +423,7 @@ func copyDownstreamConfig(target *changefeed.ChangeFeedTask, changeFeedType stri
 
 func parse(task changefeed.ChangeFeedTask) cluster.ChangeFeedTaskInfo {
 	info := cluster.ChangeFeedTaskInfo{
-		ChangeFeedTask: cluster.ChangeFeedTask {
+		ChangeFeedTask: cluster.ChangeFeedTask{
 			ID:             task.ID,
 			Name:           task.Name,
 			ClusterID:      task.ClusterId,
@@ -431,9 +431,9 @@ func parse(task changefeed.ChangeFeedTask) cluster.ChangeFeedTaskInfo {
 			FilterRules:    task.FilterRules,
 			Status:         task.Status,
 			DownstreamType: string(task.Type),
-			Downstream: task.Downstream,
-			CreateTime: task.CreatedAt,
-			UpdateTime: task.UpdatedAt,
+			Downstream:     task.Downstream,
+			CreateTime:     task.CreatedAt,
+			UpdateTime:     task.UpdatedAt,
 		},
 		UnSteady: task.Locked(),
 	}

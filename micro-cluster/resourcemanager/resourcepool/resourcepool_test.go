@@ -128,3 +128,33 @@ func Test_QueryHosts(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(hosts))
 }
+
+func Test_UpdateHostStatus(t *testing.T) {
+	models.MockDB()
+	resourcePool := GetResourcePool()
+
+	// Mock host provider
+	ctrl1 := gomock.NewController(t)
+	defer ctrl1.Finish()
+	mockProvider := mock_provider.NewMockHostProvider(ctrl1)
+	mockProvider.EXPECT().UpdateHostStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	resourcePool.SetHostProvider(mockProvider)
+
+	err := resourcePool.UpdateHostStatus(context.TODO(), []string{"hostId1", "hostId2"}, string(constants.HostOffline))
+	assert.Nil(t, err)
+}
+
+func Test_UpdateHostReserved(t *testing.T) {
+	models.MockDB()
+	resourcePool := GetResourcePool()
+
+	// Mock host provider
+	ctrl1 := gomock.NewController(t)
+	defer ctrl1.Finish()
+	mockProvider := mock_provider.NewMockHostProvider(ctrl1)
+	mockProvider.EXPECT().UpdateHostReserved(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	resourcePool.SetHostProvider(mockProvider)
+
+	err := resourcePool.UpdateHostReserved(context.TODO(), []string{"hostId1", "hostId2"}, true)
+	assert.Nil(t, err)
+}

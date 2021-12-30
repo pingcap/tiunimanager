@@ -30,10 +30,11 @@ import (
 
 func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	log := framework.LogWithContext(ctx)
-	log.Info("begin verifyHosts")
+	log.Infoln("begin verifyHosts")
 
 	resourcePool, hosts, err := getImportHostInfoFromFlowContext(ctx)
 	if err != nil {
+		log.Errorf("verify host failed for get flow context, %v", err)
 		return err
 	}
 	for _, host := range hosts {
@@ -54,32 +55,37 @@ func configHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) er
 }
 
 func installSoftware(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
-	framework.LogWithContext(ctx).Info("begin installSoftware")
-	defer framework.LogWithContext(ctx).Infof("end installSoftware, err: %v", err)
+	log := framework.LogWithContext(ctx)
+	log.Infoln("begin installSoftware")
 
 	resourcePool, hosts, err := getImportHostInfoFromFlowContext(ctx)
 	if err != nil {
+		log.Errorf("install software failed for get flow context, %v", err)
 		return err
 	}
 
 	if err = resourcePool.hostInitiator.InstallSoftware(ctx, hosts); err != nil {
+		log.Errorf("install software failed for %v, %v", hosts, err)
 		return err
 	}
+	log.Infof("install software succeed for %v", hosts)
 
 	return nil
 }
 
 func joinEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
-	framework.LogWithContext(ctx).Info("begin join em cluster")
-	defer framework.LogWithContext(ctx).Infof("end join em cluster, err: %v", err)
+	log := framework.LogWithContext(ctx)
+	log.Infoln("begin join em cluster")
 
 	resourcePool, hosts, err := getImportHostInfoFromFlowContext(ctx)
 	if err != nil {
+		log.Errorf("join em cluster failed for get flow context, %v", err)
 		return err
 	}
 	// Store nodeID for second party service
 	installSoftwareCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowNodeIDKey, node.ID)
 	if err = resourcePool.hostInitiator.JoinEMCluster(installSoftwareCtx, hosts); err != nil {
+		log.Errorf("join em cluster failed for %v, %v", hosts, err)
 		return err
 	}
 
@@ -87,34 +93,40 @@ func joinEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) 
 }
 
 func importHostSucceed(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
-	framework.LogWithContext(ctx).Info("begin importHostSucceed")
-	defer framework.LogWithContext(ctx).Infof("end importHostSucceed, err: %v", err)
+	log := framework.LogWithContext(ctx)
+	log.Infoln("begin importHostSucceed")
 
 	resourcePool, hostIds, err := getImportHostIDsFromFlowContext(ctx)
 	if err != nil {
+		log.Errorf("set host online failed for get flow context, %v", err)
 		return err
 	}
 	err = resourcePool.UpdateHostStatus(ctx, hostIds, string(constants.HostOnline))
 	if err != nil {
+		log.Errorf("set host %v online failed, %v", hostIds, err)
 		return err
 	}
+	log.Infof("set host %v online succeed", hostIds)
 
 	return nil
 }
 
 func importHostsFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
-	framework.LogWithContext(ctx).Info("begin importHostFailed")
-	defer framework.LogWithContext(ctx).Infof("end importHostFailed, err: %v", err)
+	log := framework.LogWithContext(ctx)
+	log.Infoln("begin importHostFailed")
 
 	resourcePool, hostIds, err := getImportHostIDsFromFlowContext(ctx)
 	if err != nil {
+		log.Errorf("set host failed failed for get flow context, %v", err)
 		return err
 	}
 
 	err = resourcePool.UpdateHostStatus(ctx, hostIds, string(constants.HostFailed))
 	if err != nil {
+		log.Errorf("set host %v failed failed, %v", hostIds, err)
 		return err
 	}
+	log.Infof("set host %v failed succeed", hostIds)
 
 	return nil
 }

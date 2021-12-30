@@ -62,12 +62,12 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 		return err
 	}
 	defer p.closeSSHConnect()
-
-	if err = p.verifyCpuMem(ctx, h); err != nil {
-		log.Errorf("verify host cpu memory %s %s failed, %v", h.HostName, h.IP, err)
-		return err
-	}
-
+	/*
+		if err = p.verifyCpuMem(ctx, h); err != nil {
+			log.Errorf("verify host cpu memory %s %s failed, %v", h.HostName, h.IP, err)
+			return err
+		}
+	*/
 	if err = p.verifyDisks(ctx, h); err != nil {
 		log.Errorf("verify host disks %s %s failed, %v", h.HostName, h.IP, err)
 		return err

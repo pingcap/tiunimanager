@@ -262,6 +262,10 @@ func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTa
 		return
 	}
 
+	if task.Status == constants.ChangeFeedStatusInitial.ToString() {
+		err = errors.NewError(errors.TIEM_CHANGE_FEED_NOT_FOUND, "change feed task has not been created")
+	}
+
 	clusterMeta, err:= handler.Get(ctx, task.ClusterId)
 	if err != nil {
 		return

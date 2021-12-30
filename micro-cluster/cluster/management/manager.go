@@ -393,7 +393,7 @@ func (p *Manager) StopCluster(ctx context.Context, req cluster.StopClusterReq) (
 
 var deleteClusterFlow = workflow.WorkFlowDefine{
 	FlowName: constants.FlowDeleteCluster,
-	TaskNodes: map[string]*workflow.NodeDefine {
+	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":              {"backupBeforeDelete", "backupDone", "fail", workflow.SyncFuncNode, backupBeforeDelete},
 		"backupDone":         {"destroyCluster", "destroyClusterDone", "fail", workflow.PollingNode, destroyCluster},
 		"destroyClusterDone": {"freedClusterResource", "freedResourceDone", "fail", workflow.SyncFuncNode, freedClusterResource},
@@ -411,6 +411,11 @@ func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterRe
 		return
 	}
 
+	resp.ClusterID = meta.Cluster.ID
+	if meta.Cluster.Status == string(constants.ClusterInitializing) {
+		err = meta.Delete(ctx)
+	}
+
 	data := map[string]interface{}{
 		ContextClusterMeta:   meta,
 		ContextDeleteRequest: req,
@@ -423,7 +428,6 @@ func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterRe
 	}
 
 	resp.WorkFlowID = flowID
-	resp.ClusterID = meta.Cluster.ID
 	return
 }
 

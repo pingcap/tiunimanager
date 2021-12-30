@@ -22,7 +22,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -112,12 +111,7 @@ func (p *FileHostInitiator) InstallSoftware(ctx context.Context, hosts []structs
 }
 
 func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.HostInfo) (err error) {
-	arch := constants.GetArchAlias(constants.ArchType(hosts[0].Arch))
-	tempateInfo := templateScaleOut{
-		Arch:      arch,
-		DeployDir: rp_consts.FileBeatDeployDir,
-		DataDir:   rp_consts.FileBeatDataDir,
-	}
+	tempateInfo := templateScaleOut{}
 	for _, host := range hosts {
 		tempateInfo.HostIPs = append(tempateInfo.HostIPs, host.IP)
 	}
@@ -231,10 +225,7 @@ func (p *FileHostInitiator) setOffSwap(ctx context.Context, h *structs.HostInfo)
 }
 
 type templateScaleOut struct {
-	Arch      string
-	DeployDir string
-	DataDir   string
-	HostIPs   []string
+	HostIPs []string
 }
 
 func (p *templateScaleOut) generateTopologyConfig(ctx context.Context) (string, error) {

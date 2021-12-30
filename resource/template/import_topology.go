@@ -16,15 +16,6 @@
 package template
 
 var EMClusterScaleOut = `
-global:
-  user: "tiem"
-  group: "tiem"
-  ssh_port: 22
-  deploy_dir: {{ .DeployDir }}
-  data_dir: {{ .DataDir }}
-  arch: {{ .Arch }}
-  log_level: "info"
-
 filebeat_servers:
 {{ range .HostIPs }}
   - host: {{ . }}

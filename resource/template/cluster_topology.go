@@ -88,9 +88,9 @@ cdc_servers:
 grafana_servers:
   {{ range $instances }}
   {{ if eq .Status "Initializing" }}
-  - host: {{ index $instance.HostIP 0 }}
-    port: {{ index $instance.Ports 0}}
-    deploy_dir: {{ $instance.DiskPath }}/{{ $.Cluster.ID }}/grafana-deploy
+  - host: {{ index .HostIP 0 }}
+    port: {{ index .Ports 0}}
+    deploy_dir: {{ .DiskPath }}/{{ .ID }}/grafana-deploy
     anonymous_enable: true
     default_theme: light
     org_name: Main Org.
@@ -101,21 +101,21 @@ grafana_servers:
 monitoring_servers:
   {{ range $instances }}
   {{ if eq .Status "Initializing" }}
-  - host: {{ index $instance.HostIP 0 }}
-    port: {{ index $instance.Ports 0}}
-    deploy_dir: {{ $instance.DiskPath }}/{{ $.Cluster.ID }}/prometheus-deploy
-    data_dir: {{ $instance.DiskPath }}/{{ $.Cluster.ID }}/prometheus-data
+  - host: {{ index .HostIP 0 }}
+    port: {{ index .Ports 0}}
+    deploy_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/prometheus-deploy
+    data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/prometheus-data
   {{ end }}
   {{ end }}
 {{ else if and (eq $key "AlertManger") (len $instances) }}
 alertmanager_servers:
   {{ range $instances }}
   {{ if eq .Status "Initializing" }}
-  - host: {{ index $instance.HostIP 0 }}
-    web_port: {{ index $instance.Ports 0}}
-    cluster_port: {{ index $instance.Ports 1}}
-    deploy_dir: {{ $instance.DiskPath }}/{{ $.Cluster.ID }}/alertmanager-deploy
-    data_dir: {{ $instance.DiskPath }}/{{ $.Cluster.ID }}/alertmanager-data
+  - host: {{ index .HostIP 0 }}
+    web_port: {{ index .Ports 0}}
+    cluster_port: {{ index .Ports 1}}
+    deploy_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/alertmanager-deploy
+    data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/alertmanager-data
   {{ end }}
   {{ end }}
 {{ else if and (eq $key "PD") (len $instances) }}
@@ -129,7 +129,6 @@ pd_servers:
     data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/pd-data
   {{ end }}
   {{ end }}
-
 {{ end }}
 {{ end }}
 `

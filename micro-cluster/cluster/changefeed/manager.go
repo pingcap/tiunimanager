@@ -261,7 +261,7 @@ func (p *Manager) Update(ctx context.Context, request cluster.UpdateChangeFeedTa
 }
 
 func currentTSO() uint64 {
-	return  uint64(time.Now().Unix() << 18)
+	return  uint64((time.Now().UnixNano() / 1000) << 18)
 }
 
 func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTaskReq) (resp cluster.DetailChangeFeedTaskResp, err error) {

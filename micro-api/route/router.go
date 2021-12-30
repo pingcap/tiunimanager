@@ -27,7 +27,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
-	"github.com/pingcap-inc/tiem/micro-api/controller/platform/specs"
+	"github.com/pingcap-inc/tiem/micro-api/controller/platform/product"
 	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
 	warehouseApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 	flowtaskApi "github.com/pingcap-inc/tiem/micro-api/controller/task/flowtask"
@@ -124,7 +124,7 @@ func Route(g *gin.Engine) {
 
 		knowledge := apiV1.Group("/knowledges")
 		{
-			knowledge.GET("/", specs.ClusterKnowledge)
+			knowledge.GET("/", product.ClusterKnowledge)
 		}
 
 		backup := apiV1.Group("/backups")
@@ -186,6 +186,34 @@ func Route(g *gin.Engine) {
 			paramGroups.DELETE("/:paramGroupId", parametergroup.Delete)
 			paramGroups.POST("/:paramGroupId/copy", parametergroup.Copy)
 			paramGroups.POST("/:paramGroupId/apply", parametergroup.Apply)
+		}
+
+		productGroup := apiV1.Group("/products")
+		{
+			productGroup.Use(interceptor.VerifyIdentity)
+			productGroup.Use(interceptor.AuditLog())
+			productGroup.POST("/", product.CreateProduct)
+			productGroup.DELETE("/", product.DeleteProduct)
+			productGroup.GET("/", product.QueryProducts)
+			productGroup.GET("/detail", product.QueryProductDetail)
+		}
+
+		zoneGroup := apiV1.Group("/zones")
+		{
+			zoneGroup.Use(interceptor.VerifyIdentity)
+			zoneGroup.Use(interceptor.AuditLog())
+			zoneGroup.POST("/", product.CreateZones)
+			zoneGroup.DELETE("/", product.DeleteZones)
+			zoneGroup.GET("/", product.QueryZones)
+		}
+
+		specGroup := apiV1.Group("/specs")
+		{
+			specGroup.Use(interceptor.VerifyIdentity)
+			specGroup.Use(interceptor.AuditLog())
+			specGroup.POST("/", product.CreateSpecs)
+			specGroup.DELETE("/", product.DeleteSpecs)
+			specGroup.GET("/", product.QuerySpecs)
 		}
 	}
 

@@ -51,6 +51,11 @@ func (g *ClusterReadWrite) Delete(ctx context.Context, clusterID string) (err er
 		return
 	}
 	err = g.DB(ctx).Delete(got).Error
+	if err != nil {
+		return dbCommon.WrapDBError(err)
+	}
+
+	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Delete(&ClusterInstance{}).Error
 	return dbCommon.WrapDBError(err)
 }
 

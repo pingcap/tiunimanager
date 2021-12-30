@@ -146,6 +146,15 @@ func TestGormClusterReadWrite_Delete(t *testing.T) {
 		Tags: []string{"tag1", "tag2"},
 	}
 	got, _ := testRW.Create(context.TODO(), cluster)
+
+	testRW.UpdateInstance(context.TODO(), &ClusterInstance{
+		Entity: common.Entity{
+			TenantId: "111",
+		},
+		Type: "dsfds",
+		Version: "v5.0.0",
+		ClusterID: cluster.ID,
+	})
 	defer testRW.Delete(context.TODO(), got.ID)
 	cluster2 := &Cluster{
 		Name: "tesfasfdsaf",
@@ -164,7 +173,8 @@ func TestGormClusterReadWrite_Delete(t *testing.T) {
 		assert.NoError(t, err)
 		err = testRW.DB(context.TODO()).Where("id = ?", cluster.ID).First(cluster).Error
 		assert.Error(t, err)
-
+		err = testRW.DB(context.TODO()).Where("cluster_id = ?", cluster.ID).First(&ClusterInstance{}).Error
+		assert.Error(t, err)
 		assert.NoError(t, testRW.DB(context.TODO()).Where("id = ?", cluster2.ID).First(cluster2).Error)
 	})
 

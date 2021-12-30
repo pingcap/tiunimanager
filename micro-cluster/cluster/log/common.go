@@ -25,6 +25,15 @@ package log
 
 import "time"
 
+const (
+	contextClusterMeta = "ClusterMeta"
+)
+
+const (
+	dateFormat     = "2006-01-02 15:04:05"
+	logIndexPrefix = "em-database-cluster-*"
+)
+
 type ElasticSearchResult struct {
 	Took     int      `json:"took"`
 	TimedOut bool     `json:"timed_out"`
@@ -68,4 +77,38 @@ type LogItem struct {
 
 type FilesetItem struct {
 	Name string `json:"name"`
+}
+
+// CollectorClusterLogConfig
+// @Description: collector tidb log config struct
+type CollectorClusterLogConfig struct {
+	Module  string                `json:"module" yaml:"module"`
+	TiDB    CollectorModuleDetail `json:"tidb" yaml:"tidb"`
+	PD      CollectorModuleDetail `json:"pd" yaml:"pd"`
+	TiKV    CollectorModuleDetail `json:"tikv" yaml:"tikv"`
+	TiFlash CollectorModuleDetail `json:"tiflash" yaml:"tiflash"`
+	TiCDC   CollectorModuleDetail `json:"ticdc" yaml:"ticdc"`
+}
+
+type CollectorModuleDetail struct {
+	Enabled bool                 `json:"enabled" yaml:"enabled"`
+	Var     CollectorModuleVar   `json:"var" yaml:"var"`
+	Input   CollectorModuleInput `json:"input" yaml:"input"`
+}
+
+type CollectorModuleVar struct {
+	Paths []string `json:"paths" yaml:"paths"`
+}
+
+type CollectorModuleInput struct {
+	Fields          CollectorModuleFields `json:"fields" yaml:"fields"`
+	FieldsUnderRoot bool                  `json:"fields_under_root" yaml:"fields_under_root"`
+	IncludeLines    []string              `json:"include_lines" yaml:"include_lines"`
+	ExcludeLines    []string              `json:"exclude_lines" yaml:"exclude_lines"`
+}
+
+type CollectorModuleFields struct {
+	Type      string `json:"type" yaml:"type"`
+	ClusterId string `json:"clusterId" yaml:"clusterId"`
+	Ip        string `json:"ip" yaml:"ip"`
 }

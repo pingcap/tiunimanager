@@ -20,6 +20,7 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (resp mes
 	a, err := models.GetAccountReaderWriter().FindAccountByName(ctx, request.UserName)
 
 	if err != nil {
+		err = errors.NewError(errors.TIEM_USER_NOT_FOUND, "user not found")
 		return
 	}
 

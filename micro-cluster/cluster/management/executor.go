@@ -16,6 +16,7 @@
 package management
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -25,6 +26,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/log"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
@@ -589,6 +591,13 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	return nil
 }
 
+func asyncBuildLog(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+
+	log.GetService().BuildClusterLogConfig(context, clusterMeta.Cluster.ID)
+	return nil
+}
+
 func restoreCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cloneStrategy := context.GetData(ContextCloneStrategy).(string)
@@ -707,9 +716,6 @@ func freedClusterResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 // initDatabaseAccount
 // @Description: init database account for new cluster
 func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	framework.LogWithContext(context).Info("begin initDatabaseAccount")
-	defer framework.LogWithContext(context).Info("end initDatabaseAccount")
-
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
 
@@ -777,10 +783,10 @@ func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workfl
 		return err
 	}
 
-	clusterMeta.Cluster.Type = "TiDB"
+	clusterMeta.Cluster.Type = string(constants.EMProductIDTiDB)
 	clusterMeta.Cluster.Version = metadata.Version
 	clusterSpec := metadata.GetTopology().(*spec.Specification)
-	_, err = clusterMeta.ParseTopologyFromConfig(context, clusterSpec)
+	err = clusterMeta.ParseTopologyFromConfig(context, clusterSpec)
 	if err != nil {
 		framework.LogWithContext(context).Errorf(
 			"add instances into cluster %s topology error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -791,5 +797,55 @@ func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workfl
 }
 
 func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	requirements, instances := clusterMeta.GenerateTakeoverResourceRequirements(context)
+
+	batchReq := &resourceStructs.BatchAllocRequest{
+		BatchRequests: []resourceStructs.AllocReq{
+			{
+				Applicant: resourceStructs.Applicant{
+					HolderId:          clusterMeta.Cluster.ID,
+					RequestId:         uuidutil.GenerateID(),
+					TakeoverOperation: true,
+				},
+				Requires: requirements,
+			},
+		},
+	}
+	allocResponse, err := resourceManagement.GetManagement().GetAllocatorRecycler().AllocResources(context, batchReq)
+
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster %s alloc resource error: %s", clusterMeta.Cluster.ID, err.Error())
+		return err
+	}
+
+	resourceResult := allocResponse.BatchResults[0]
+	clusterMeta.Cluster.Region = resourceResult.Results[0].Location.Region
+
+	for i, instance := range instances {
+		instance.HostID = resourceResult.Results[i].HostId
+		instance.Zone = resourceResult.Results[i].Location.Zone
+		instance.Rack = resourceResult.Results[i].Location.Rack
+	}
+
+	return nil
+}
+
+func testConnectivity(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	connectAddress := clusterMeta.GetClusterConnectAddresses()[0]
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql", clusterMeta.Cluster.DBUser, clusterMeta.Cluster.DBPassword, connectAddress.IP, connectAddress.Port))
+	if err != nil {
+		framework.LogWithContext(context).Errorf("connect tidb failed, err = %s", err)
+		return err
+	}
+	defer db.Close()
+
+	_, err = db.Query("select * from mysql.db")
+	if err != nil {
+		framework.LogWithContext(context).Errorf("connect tidb failed, err = %s", err)
+		return err
+	}
 	return nil
 }

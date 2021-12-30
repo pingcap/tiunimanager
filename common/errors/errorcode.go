@@ -87,6 +87,7 @@ const (
 
 	//user
 	TIEM_UNAUTHORIZED_USER EM_ERROR_CODE = 70600
+	TIEM_USER_NOT_FOUND    EM_ERROR_CODE = 70601
 
 	// dashboard && monitor
 	TIEM_DASHBOARD_NOT_FOUND EM_ERROR_CODE = 80100
@@ -163,9 +164,16 @@ const (
 
 	TIEM_CHECK_CLUSTER_VERSION_ERROR EM_ERROR_CODE = 21301
 
-	QueryProductComponentProperty = 706 //TODO
-	QueryProductsScanRowError     = 707 //TODO
-	QueryZoneScanRowError         = 708 //TODO
+	CreateZonesError              EM_ERROR_CODE = 70001
+	DeleteZonesError              EM_ERROR_CODE = 70002
+	QueryZoneScanRowError         EM_ERROR_CODE = 70003
+	CreateProductError            EM_ERROR_CODE = 70004
+	DeleteProductError            EM_ERROR_CODE = 70005
+	QueryProductsScanRowError     EM_ERROR_CODE = 70006
+	QueryProductComponentProperty EM_ERROR_CODE = 70007
+	CreateSpecsError              EM_ERROR_CODE = 70008
+	DeleteSpecsError              EM_ERROR_CODE = 70009
+	QuerySpecScanRowError         EM_ERROR_CODE = 70010
 
 	TIEM_CLUSTER_LOG_QUERY_FAILED EM_ERROR_CODE = 80300
 	TIEM_CLUSTER_LOG_TIME_AFTER   EM_ERROR_CODE = 80301
@@ -200,6 +208,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_MARSHAL_ERROR:      {"marshal error", 500},
 	TIEM_UNMARSHAL_ERROR:    {"marshal error", 500},
 	TIEM_UNAUTHORIZED_USER:  {"unauthorized", 401},
+	TIEM_USER_NOT_FOUND:     {"user not found", 404},
 
 	TIEM_METADB_SERVER_CALL_ERROR:  {"call metadb-Server failed", 500},
 	TIEM_CLUSTER_SERVER_CALL_ERROR: {"call cluster-Server failed", 500},
@@ -327,4 +336,16 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_CHECK_PLACEMENT_RULES_ERROR:      {"Placement rule is not set when scale out TiFlash", 409},
 	TIEM_CHECK_TIFLASH_MAX_REPLICAS_ERROR: {"The number of remaining TiFlash instances is less than the maximum replicas of data tables", 409},
 	TIEM_SCAN_MAX_REPLICA_COUNT_ERROR:     {"Failed to scan max replicas of data tables of TiFlash", 500},
+
+	//product
+	CreateZonesError:              {"create zone failed", 500},
+	DeleteZonesError:              {"delete zone failed", 500},
+	QueryZoneScanRowError:         {"query all zone failed", 401},
+	CreateProductError:            {"create product failed", 500},
+	DeleteProductError:            {"delete product failed", 500},
+	QueryProductsScanRowError:     {"query all product failed", 401},
+	QueryProductComponentProperty: {"query all component property failed", 401},
+	CreateSpecsError:              {"create specs failed", 500},
+	DeleteSpecsError:              {"delete specs failed", 500},
+	QuerySpecScanRowError:         {"query all specs failed", 401},
 }

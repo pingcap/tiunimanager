@@ -143,6 +143,7 @@ func (m ParameterGroupReadWrite) UpdateParameterGroup(ctx context.Context, pg *P
 }
 
 func (m ParameterGroupReadWrite) QueryParameterGroup(ctx context.Context, name, clusterSpec, clusterVersion string, dbType, hasDefault int, offset, size int) (groups []*ParameterGroup, total int64, err error) {
+	groups = make([]*ParameterGroup, 0)
 	log := framework.LogWithContext(ctx)
 
 	query := m.DB(ctx).Model(&ParameterGroup{})

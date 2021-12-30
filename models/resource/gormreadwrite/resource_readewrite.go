@@ -38,6 +38,7 @@ func NewGormResourceReadWrite(db *gorm.DB) resource_models.ReaderWriter {
 	}
 	return m
 }
+
 /*
 func (rw *GormResourceReadWrite) addTable(ctx context.Context, tableModel interface{}) (newTable bool, err error) {
 	if !rw.DB(ctx).Migrator().HasTable(tableModel) {
@@ -69,7 +70,8 @@ func (rw *GormResourceReadWrite) Delete(ctx context.Context, hostIds []string) (
 	tx := rw.DB(ctx).Begin()
 	for _, hostId := range hostIds {
 		var host rp.Host
-		if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host, "ID = ?", hostId).Error; err != nil {
+		//if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host, "ID = ?", hostId).Error; err != nil {
+		if err = tx.First(&host, "ID = ?", hostId).Error; err != nil {
 			tx.Rollback()
 			return errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "lock host %s(%s) error, %v", hostId, host.IP, err)
 		}

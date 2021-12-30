@@ -20,12 +20,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/micro-cluster/platform/product"
 	"github.com/pingcap-inc/tiem/micro-cluster/user/identification"
 	"github.com/pingcap-inc/tiem/micro-cluster/user/tenant"
 	"github.com/pingcap-inc/tiem/micro-cluster/user/userinfo"
-	"strconv"
-	"time"
 
 	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
 
@@ -63,6 +66,7 @@ type ClusterServiceHandler struct {
 	tenantManager           *tenant.Manager
 	accountManager          *userinfo.Manager
 	authManager             *identification.Manager
+	productManager          *product.ProductManager
 }
 
 func handleRequest(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse, requestBody interface{}) bool {
@@ -123,13 +127,12 @@ func handleMetrics(start time.Time, funcName string, code int) {
 		Inc()
 }
 
-
 // handlePanic
 // @Description: recover from any panic from user request
 // @Parameter ctx
 // @Parameter funcName
 // @Parameter resp
-func handlePanic(ctx context.Context, funcName string, resp *clusterpb.RpcResponse)  {
+func handlePanic(ctx context.Context, funcName string, resp *clusterpb.RpcResponse) {
 	if r := recover(); r != nil {
 		framework.LogWithContext(ctx).Errorf("recover from %s", funcName)
 		resp.Code = int32(errors.TIEM_PANIC)
@@ -151,6 +154,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.tenantManager = tenant.NewTenantManager()
 	handler.accountManager = userinfo.NewAccountManager()
 	handler.authManager = identification.NewIdentificationManager()
+	handler.productManager = product.NewProductManager()
 
 	return handler
 }
@@ -245,7 +249,7 @@ func (handler *ClusterServiceHandler) QueryChangeFeedTasks(ctx context.Context, 
 	defer handleMetrics(start, "QueryChangeFeedTasks", int(resp.GetCode()))
 	defer handlePanic(ctx, "QueryChangeFeedTasks", resp)
 
-	request := cluster.QueryChangeFeedTaskReq {}
+	request := cluster.QueryChangeFeedTaskReq{}
 
 	if handleRequest(ctx, req, resp, &request) {
 		result, total, err := handler.changeFeedManager.Query(ctx, request)
@@ -858,10 +862,13 @@ func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, req *clus
 	reqStruct := message.ImportHostsReq{}
 
 	if handleRequest(ctx, req, resp, &reqStruct) {
-		hostIds, err := handler.resourceManager.ImportHosts(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.Hosts)
+		flowIds, hostIds, err := handler.resourceManager.ImportHosts(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.Hosts)
 		var rsp message.ImportHostsResp
 		if err == nil {
 			rsp.HostIDS = hostIds
+			for _, flowId := range flowIds {
+				rsp.FlowInfo = append(rsp.FlowInfo, structs.AsyncTaskWorkFlowInfo{WorkFlowID: flowId})
+			}
 		}
 		handleResponse(ctx, resp, err, rsp, nil)
 	}
@@ -978,6 +985,136 @@ func (handler *ClusterServiceHandler) GetStocks(ctx context.Context, req *cluste
 			rsp.Stocks = *stocks
 		}
 		handleResponse(ctx, resp, err, rsp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) CreateZones(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "CreateZones", int(response.GetCode()))
+
+	req := message.CreateZonesReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.productManager.CreateZones(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) DeleteZone(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "DeleteZone", int(response.GetCode()))
+
+	req := message.DeleteZoneReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.productManager.DeleteZones(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) QueryZones(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "QueryZones", int(response.GetCode()))
+
+	req := message.QueryZonesReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.productManager.QueryZones(ctx)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) CreateProduct(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "CreateProduct", int(response.GetCode()))
+
+	req := message.CreateProductReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.productManager.CreateProduct(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) DeleteProduct(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "DeleteProduct", int(response.GetCode()))
+
+	req := message.DeleteProductReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.productManager.DeleteProduct(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) QueryProducts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "QueryProducts", int(response.GetCode()))
+
+	req := message.QueryProductsReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.productManager.QueryProducts(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) QueryProductDetail(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "QueryProductDetail", int(response.GetCode()))
+
+	req := message.QueryProductDetailReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.productManager.QueryProductDetail(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) CreateSpecs(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "CreateSpecs", int(response.GetCode()))
+
+	req := message.CreateSpecsReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.productManager.CreateSpecs(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) DeleteSpecs(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "DeleteSpecs", int(response.GetCode()))
+
+	req := message.DeleteSpecsReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.productManager.DeleteSpecs(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) QuerySpecs(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "QuerySpecs", int(response.GetCode()))
+
+	req := message.QuerySpecsReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.productManager.QuerySpecs(ctx)
+		handleResponse(ctx, response, err, resp, nil)
 	}
 
 	return nil

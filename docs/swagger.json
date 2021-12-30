@@ -3522,37 +3522,7 @@
                         }
                     }
                 }
-            }
-        },
-        "/resources/hosts-template/": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "get host template xlsx file",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/octet-stream"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "Download the host information template file for importing",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "file"
-                        }
-                    }
-                }
-            }
-        },
-        "/resources/hosts/": {
+            },
             "delete": {
                 "security": [
                     {
@@ -3598,6 +3568,34 @@
                                     }
                                 }
                             ]
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/hosts-template": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get host template xlsx file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Download the host information template file for importing",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
                         }
                     }
                 }
@@ -5580,6 +5578,12 @@
         "message.ImportHostsResp": {
             "type": "object",
             "properties": {
+                "flowInfo": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.AsyncTaskWorkFlowInfo"
+                    }
+                },
                 "hostIds": {
                     "type": "array",
                     "items": {
@@ -5804,6 +5808,15 @@
                 "paramGroupId": {
                     "type": "string",
                     "example": "1"
+                }
+            }
+        },
+        "structs.AsyncTaskWorkFlowInfo": {
+            "type": "object",
+            "properties": {
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
                 }
             }
         },

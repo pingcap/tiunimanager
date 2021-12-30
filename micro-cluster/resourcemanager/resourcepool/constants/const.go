@@ -13,4 +13,22 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package resourcemanager
+package constants
+
+const SecondPartyReady = true
+
+const (
+	FlowImportHosts          string = "ImportHosts"
+	ContextResourcePoolKey   string = "resourcePool"
+	ContextImportHostInfoKey string = "importHostInfo"
+	ContextImportHostIDsKey  string = "importHostIDs"
+	ContextWorkFlowNodeIDKey string = "importHostsWorkFlowNodeID"
+)
+
+const (
+	HostSSHPort       = 22
+	FileBeatDataDir   = "/tiem-data"
+	FileBeatDeployDir = "/tiem-deploy"
+)
+
+const DefaultTiupTimeOut = 360

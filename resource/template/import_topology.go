@@ -13,28 +13,11 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-/*******************************************************************************
- * @File: region.go
- * @Description:
- * @Author: duanbing@pingcap.com
- * @Version: 1.0.0
- * @Date: 2021/12/6
-*******************************************************************************/
+package template
 
-package specs
-
-import (
-	"gorm.io/gorm"
-	"time"
-)
-
-//Region region information provided by Enterprise Manager
-type Region struct {
-	RegionID  string         `gorm:"primaryKey;"`
-	VendorID  string         `gorm:"primaryKey;"`
-	Name      string         `gorm:"size:32;"`
-	Comment   string         `gorm:"size:1024;"`
-	CreatedAt time.Time      `gorm:"autoCreateTime;<-:create;->;"`
-	UpdatedAt time.Time      `gorm:"autoUpdateTime"`
-	DeletedAt gorm.DeletedAt `gorm:""`
-}
+var EMClusterScaleOut = `
+filebeat_servers:
+{{ range .HostIPs }}
+  - host: {{ . }}
+{{ end }}
+`

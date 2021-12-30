@@ -6,8 +6,10 @@ import (
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"log"
 	"os"
 	"testing"
+	"time"
 )
 
 var testRW *AccountReadWrite
@@ -21,8 +23,18 @@ func TestMain(m *testing.M) {
 	framework.InitBaseFrameworkForUt(framework.ClusterService,
 		func(d *framework.BaseFramework) error {
 			dbFile := testFilePath + constants.DBDirPrefix + constants.DatabaseFileName
-			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
-
+			newLogger := framework.New(
+				log.New(os.Stdout, "\r\n", log.LstdFlags),
+				framework.Config{
+					SlowThreshold: time.Second,
+					LogLevel:      framework.Info,
+					IgnoreRecordNotFoundError: true,
+				},
+			)
+			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{
+				Logger: newLogger,
+				//Logger: d.GetRootLogger(),
+			})
 			if err != nil || db.Error != nil {
 				logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)
 			} else {

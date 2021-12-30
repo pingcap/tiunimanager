@@ -798,7 +798,7 @@ func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workfl
 
 func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
-	requirements, instances, err := clusterMeta.GenerateTakeoverResourceRequirements(context)
+	requirements, instances := clusterMeta.GenerateTakeoverResourceRequirements(context)
 
 	batchReq := &resourceStructs.BatchAllocRequest{
 		BatchRequests: []resourceStructs.AllocReq{

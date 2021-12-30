@@ -412,8 +412,10 @@ func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterRe
 	}
 
 	resp.ClusterID = meta.Cluster.ID
-	if meta.Cluster.Status == string(constants.ClusterInitializing) {
+	// if remote cluster is empty
+	if meta.Cluster.Status == string(constants.ClusterInitializing) || meta.Cluster.Status == string(constants.ClusterFailure) {
 		err = meta.Delete(ctx)
+		return
 	}
 
 	data := map[string]interface{}{

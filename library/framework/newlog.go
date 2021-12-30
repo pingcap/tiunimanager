@@ -43,56 +43,56 @@ func New(writer Writer, config Config) *Logger {
 	return l
 }
 
-func (l *Logger) LogMode(level logger.LogLevel) logger.Interface {
-	newlogger := *l
+func (p *Logger) LogMode(level logger.LogLevel) logger.Interface {
+	newlogger := *p
 	newlogger.LogLevel = LogLevel(level)
 	return &newlogger
 }
 
-func (l *Logger) Info(ctx context.Context, s string, i ...interface{}) {
+func (p *Logger) Info(ctx context.Context, s string, i ...interface{}) {
 	LogWithContext(ctx).Infof(s, i...)
 }
 
-func (l *Logger) Warn(ctx context.Context, s string, i ...interface{}) {
+func (p *Logger) Warn(ctx context.Context, s string, i ...interface{}) {
 	LogWithContext(ctx).Warnf(s, i...)
 }
 
-func (l *Logger) Error(ctx context.Context, s string, i ...interface{}) {
+func (p *Logger) Error(ctx context.Context, s string, i ...interface{}) {
 	LogWithContext(ctx).Errorf(s, i...)
 }
 
-func (l *Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
-	if l.LogLevel <= Silent {
+func (p *Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
+	if p.LogLevel <= Silent {
 		return
 	}
 
 	elapsed := time.Since(begin)
 	switch {
-	case err != nil && l.LogLevel >= Error && (!errors.Is(err, ErrRecordNotFound) || !l.IgnoreRecordNotFoundError):
+	case err != nil && p.LogLevel >= Error && (!errors.Is(err, ErrRecordNotFound) || !p.IgnoreRecordNotFoundError):
 		sql, rows := fc()
 		if rows == -1 {
-			l.Printf(l.traceErrStr, utils.FileWithLineNum(), err, float64(elapsed.Nanoseconds())/1e6, "-", sql)
+			p.Printf(p.traceErrStr, utils.FileWithLineNum(), err, float64(elapsed.Nanoseconds())/1e6, "-", sql)
 		} else {
-			l.Printf(l.traceErrStr, utils.FileWithLineNum(), err, float64(elapsed.Nanoseconds())/1e6, rows, sql)
+			p.Printf(p.traceErrStr, utils.FileWithLineNum(), err, float64(elapsed.Nanoseconds())/1e6, rows, sql)
 		}
-	case elapsed > l.SlowThreshold && l.SlowThreshold != 0 && l.LogLevel >= Warn:
+	case elapsed > p.SlowThreshold && p.SlowThreshold != 0 && p.LogLevel >= Warn:
 		sql, rows := fc()
-		slowLog := fmt.Sprintf("SLOW SQL >= %v", l.SlowThreshold)
+		slowLog := fmt.Sprintf("SLOW SQL >= %v", p.SlowThreshold)
 		if rows == -1 {
-			l.Printf(l.traceWarnStr, utils.FileWithLineNum(), slowLog, float64(elapsed.Nanoseconds())/1e6, "-", sql)
+			p.Printf(p.traceWarnStr, utils.FileWithLineNum(), slowLog, float64(elapsed.Nanoseconds())/1e6, "-", sql)
 		} else {
-			l.Printf(l.traceWarnStr, utils.FileWithLineNum(), slowLog, float64(elapsed.Nanoseconds())/1e6, rows, sql)
+			p.Printf(p.traceWarnStr, utils.FileWithLineNum(), slowLog, float64(elapsed.Nanoseconds())/1e6, rows, sql)
 		}
-	case l.LogLevel == Info:
+	case p.LogLevel == Info:
 		sql, rows := fc()
 		if rows == -1 {
-			l.Printf(l.traceStr, utils.FileWithLineNum(), float64(elapsed.Nanoseconds())/1e6, "-", sql)
+			p.Printf(p.traceStr, utils.FileWithLineNum(), float64(elapsed.Nanoseconds())/1e6, "-", sql)
 		} else {
-			l.Printf(l.traceStr, utils.FileWithLineNum(), float64(elapsed.Nanoseconds())/1e6, rows, sql)
+			p.Printf(p.traceStr, utils.FileWithLineNum(), float64(elapsed.Nanoseconds())/1e6, rows, sql)
 		}
 	}
 }
 
-func (l *Logger) Printf(format string, args ...interface{}) {
+func (p *Logger) Printf(format string, args ...interface{}) {
 	Log().Infof(format, args...)
 }

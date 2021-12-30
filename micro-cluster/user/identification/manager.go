@@ -102,9 +102,9 @@ func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq)
 
 func (p *Manager) CreateToken(ctx context.Context, request message.CreateTokenReq) (message.CreateTokenResp, error) {
 	token := identification.Token{
-		AccountName: request.AccountName,
-		AccountId: request.AccountID,
-		TenantId: request.TenantID,
+		AccountName:    request.AccountName,
+		AccountId:      request.AccountID,
+		TenantId:       request.TenantID,
 		ExpirationTime: time.Now().Add(constants.DefaultTokenValidPeriod),
 	}
 

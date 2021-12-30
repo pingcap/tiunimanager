@@ -411,6 +411,10 @@ func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterRe
 		return
 	}
 
+	if meta.Cluster.Status == string(constants.ClusterInitializing) {
+		meta.Delete(ctx)
+	}
+
 	data := map[string]interface{}{
 		ContextClusterMeta:   meta,
 		ContextDeleteRequest: req,

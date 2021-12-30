@@ -135,7 +135,8 @@ func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.H
 	if rp_consts.SecondPartyReady {
 		emClusterName := framework.Current.GetClientArgs().EMClusterName
 		framework.LogWithContext(ctx).Infof("join em cluster %s with work flow id %s", emClusterName, workFlowNodeID)
-		operationId, err := p.secondPartyServ.ClusterScaleOut(ctx, secondparty.TiEMComponentTypeStr, emClusterName, templateStr, 0, nil, workFlowNodeID)
+		operationId, err := p.secondPartyServ.ClusterScaleOut(ctx, secondparty.TiEMComponentTypeStr, emClusterName, templateStr, rp_consts.DefaultTiupTimeOut,
+			[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, workFlowNodeID)
 		if err != nil {
 			return errors.NewEMErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "join em cluster %s [%v] failed, %v", emClusterName, templateStr, err)
 		}

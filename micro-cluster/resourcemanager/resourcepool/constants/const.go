@@ -30,3 +30,5 @@ const (
 	FileBeatDataDir   = "/tiem-data"
 	FileBeatDeployDir = "/tiem-deploy"
 )
+
+const DefaultTiupTimeOut = 360

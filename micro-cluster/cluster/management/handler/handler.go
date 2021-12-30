@@ -91,8 +91,9 @@ var TagTakeover = "takeover"
 func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbUser string, dbPassword string) error {
 	p.Cluster = &management.Cluster{
 		Entity: dbCommon.Entity{
+			ID: name,
 			TenantId: framework.GetTenantIDFromContext(ctx),
-			Status:   string(constants.ClusterInitializing),
+			Status:   string(constants.ClusterRunning),
 		},
 		Name:           name,
 		DBUser:         dbUser,
@@ -111,9 +112,137 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbUser 
 	return err
 }
 
-func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, spec *spec.Specification) ([]*management.ClusterInstance, error) {
+func parseInstanceFromSpec(cluster *management.Cluster, componentType constants.EMProductComponentIDType, getHost func() string, getPort func() []int32) *management.ClusterInstance {
+	return &management.ClusterInstance{
+		Entity: dbCommon.Entity {
+			TenantId: cluster.TenantId,
+			Status: string(constants.ClusterInstanceRunning),
+		},
+		Type: string(componentType),
+		Version: cluster.Version,
+		ClusterID: cluster.ID,
+		HostIP: []string{getHost()},
+		Ports: getPort(),
+	}
+}
 
-	return nil, nil
+// ParseTopologyFromConfig
+// @Description: parse topology from yaml config
+// @Receiver p
+// @Parameter ctx
+// @Parameter specs
+// @return []*management.ClusterInstance
+// @return error
+func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.Specification) error {
+	if specs == nil {
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "cannot parse empty specification")
+	}
+	instances := make([]*management.ClusterInstance, 0)
+	if len(specs.PDServers) > 0 {
+		for _, server := range specs.PDServers {
+			instances = append(instances, parseInstanceFromSpec(p.Cluster, constants.ComponentIDPD, func() string {
+				return server.Host
+			}, func() []int32 {
+				return []int32{
+					int32(server.ClientPort),
+					int32(server.PeerPort),
+				}
+			}))
+		}
+	}
+	if len(specs.TiDBServers) > 0 {
+		for _, server := range specs.TiDBServers {
+			instances = append(instances, parseInstanceFromSpec(p.Cluster, constants.ComponentIDTiDB, func() string {
+				return server.Host
+			}, func() []int32 {
+				return []int32{
+					int32(server.Port),
+					int32(server.StatusPort),
+				}
+			}))
+		}
+	}
+	if len(specs.TiKVServers) > 0 {
+		for _, server := range specs.TiKVServers {
+			instances = append(instances, parseInstanceFromSpec(p.Cluster, constants.ComponentIDTiKV, func() string {
+				return server.Host
+			}, func() []int32 {
+				return []int32{
+					int32(server.Port),
+					int32(server.StatusPort),
+				}
+			}))
+		}
+	}
+	if len(specs.TiFlashServers) > 0 {
+		for _, server := range specs.TiFlashServers {
+			instances = append(instances, parseInstanceFromSpec(p.Cluster, constants.ComponentIDTiFlash, func() string {
+				return server.Host
+			}, func() []int32 {
+				return []int32{
+					int32(server.TCPPort),
+					int32(server.HTTPPort),
+					int32(server.FlashServicePort),
+					int32(server.FlashProxyPort),
+					int32(server.FlashProxyStatusPort),
+					int32(server.StatusPort),
+				}
+			}))
+		}
+	}
+	if len(specs.CDCServers) > 0 {
+		for _, server := range specs.CDCServers {
+			instances = append(instances, parseInstanceFromSpec(p.Cluster, constants.ComponentIDCDC, func() string {
+				return server.Host
+			}, func() []int32 {
+				return []int32{
+					int32(server.Port),
+				}
+			}))
+		}
+	}
+	if len(specs.Grafanas) > 0 {
+		for _, server := range specs.Grafanas {
+			instances = append(instances, parseInstanceFromSpec(p.Cluster, constants.ComponentIDGrafana, func() string {
+				return server.Host
+			}, func() []int32 {
+				return []int32{
+					int32(server.Port),
+				}
+			}))
+		}
+	}
+	if len(specs.Alertmanagers) > 0 {
+		for _, server := range specs.Alertmanagers {
+			instances = append(instances, parseInstanceFromSpec(p.Cluster, constants.ComponentIDAlertManger, func() string {
+				return server.Host
+			}, func() []int32 {
+				return []int32{
+					int32(server.WebPort),
+					int32(server.ClusterPort),
+				}
+			}))
+		}
+	}
+	if len(specs.Monitors) > 0 {
+		for _, server := range specs.Monitors {
+			instances = append(instances, parseInstanceFromSpec(p.Cluster, constants.ComponentIDPrometheus, func() string {
+				return server.Host
+			}, func() []int32 {
+				return []int32{
+					int32(server.Port),
+				}
+			}))
+		}
+	}
+
+	p.acceptInstances(instances)
+
+	err := models.GetClusterReaderWriter().UpdateInstance(ctx, instances...)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // AddInstances
@@ -225,6 +354,38 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 	return requirements, allocInstances
 }
 
+func (p *ClusterMeta) GenerateTakeoverResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance, error) {
+	instances := p.GetInstanceByStatus(ctx, constants.ClusterInstanceRunning)
+	requirements := make([]resource.AllocRequirement, 0)
+
+	allocInstances := make([]*management.ClusterInstance, 0)
+	for _, instance := range instances {
+		portRequirements := make([]resource.PortRequirement, 0)
+		for _, port := range instance.Ports {
+			portRequirements = append(portRequirements, resource.PortRequirement{
+				Start:   port,
+				End:     port + 1,
+				PortCnt: int32(1),
+			})
+		}
+		requirements = append(requirements, resource.AllocRequirement{
+			Location: structs.Location{
+				HostIp: instance.HostIP[0],
+			},
+			Require: resource.Requirement {
+				Exclusive: p.Cluster.Exclusive,
+				PortReq: portRequirements,
+				DiskReq: resource.DiskRequirement {},
+				ComputeReq: resource.ComputeRequirement {},
+			},
+			Count: 1,
+			Strategy: resource.UserSpecifyHost,
+		})
+		allocInstances = append(allocInstances, instance)
+	}
+	return requirements, allocInstances, nil
+}
+
 func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) []resource.AllocRequirement {
 	requirements := make([]resource.AllocRequirement, 0)
 
@@ -293,6 +454,7 @@ func (p *ClusterMeta) ApplyInstanceResource(resource *resource.AllocRsp, instanc
 			default:
 			}
 		}
+		pd.Ports = pd.Ports[:2]
 	}
 }
 
@@ -746,10 +908,11 @@ func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return buildMeta(cluster, instances), err
 }
 
-func buildMeta(cluster *management.Cluster, instances []*management.ClusterInstance) *ClusterMeta {
+func (p *ClusterMeta) acceptInstances(instances []*management.ClusterInstance) {
 	instancesMap := make(map[string][]*management.ClusterInstance)
 
 	if len(instances) > 0 {
@@ -761,10 +924,15 @@ func buildMeta(cluster *management.Cluster, instances []*management.ClusterInsta
 			}
 		}
 	}
-	return &ClusterMeta{
+	p.Instances = instancesMap
+}
+
+func buildMeta(cluster *management.Cluster, instances []*management.ClusterInstance) *ClusterMeta {
+	meta := &ClusterMeta{
 		Cluster:   cluster,
-		Instances: instancesMap,
 	}
+	meta.acceptInstances(instances)
+	return meta
 }
 
 // Query

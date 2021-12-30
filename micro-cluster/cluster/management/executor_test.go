@@ -40,7 +40,9 @@ import (
 	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
 	"github.com/pingcap-inc/tiem/workflow"
+	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 	"testing"
 	"time"
 )
@@ -1406,5 +1408,119 @@ func TestInitDatabaseAccount(t *testing.T) {
 		secondparty.Manager = mockTiupManager
 		err := initDatabaseAccount(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
+	})
+}
+
+func Test_testConnectivity(t *testing.T) {
+	/* run this case with real tidb ip/port/user/password
+	t.Run("normal", func(t *testing.T) {
+		ctx := workflow.NewFlowContext(context.TODO())
+		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				DBUser: "root",
+				DBPassword: "mypassword",
+			},
+			Instances: map[string][]*management.ClusterInstance{
+				string(constants.ComponentIDTiDB) : {
+					{
+						Entity: common.Entity{
+							Status: string(constants.ClusterRunning),
+						},
+						HostIP: []string{"172.16.6.176"},
+						Ports: []int32{10000},
+					},
+				},
+			},
+		})
+		err := testConnectivity(nil, ctx)
+		assert.NoError(t, err)
+	})
+	 */
+	t.Run("error", func(t *testing.T) {
+		ctx := workflow.NewFlowContext(context.TODO())
+		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				DBUser: "root",
+				DBPassword: "wrong",
+			},
+			Instances: map[string][]*management.ClusterInstance{
+				string(constants.ComponentIDTiDB) : {
+					{
+						Entity: common.Entity{
+							Status: string(constants.ClusterRunning),
+						},
+						HostIP: []string{"172.16.6.176"},
+						Ports: []int32{10000},
+					},
+				},
+			},
+		})
+		err := testConnectivity(nil, ctx)
+		assert.Error(t, err)
+	})
+}
+
+func Test_testRebuildTopologyFromConfig(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(rw)
+
+	rw.EXPECT().UpdateInstance(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	t.Run("normal", func(t *testing.T) {
+		ctx := workflow.NewFlowContext(context.TODO())
+		clusterMeta := &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "clusterId",
+					TenantId: "tenantId",
+				},
+			},
+		}
+		ctx.SetData(ContextClusterMeta, clusterMeta)
+
+		metadata := &spec.ClusterMeta{
+			Version: "v5.2.2",
+			Topology: &spec.Specification{
+				TiDBServers:  []*spec.TiDBSpec {
+					{Host: "127.0.0.1", Port: 1, StatusPort: 2},
+					{Host: "127.0.0.2", Port: 3, StatusPort: 4},
+				},
+				TiKVServers:  []*spec.TiKVSpec {
+					{Host: "127.0.0.4", Port: 5, StatusPort: 6},
+					{Host: "127.0.0.5", Port: 7, StatusPort: 8},
+				},
+				TiFlashServers:  []*spec.TiFlashSpec {
+					{Host: "127.0.0.6", TCPPort: 9, HTTPPort: 10, FlashServicePort: 11, FlashProxyPort: 12, FlashProxyStatusPort: 13, StatusPort: 14},
+				},
+				CDCServers:  []*spec.CDCSpec {
+					{Host: "127.0.0.7", Port: 15},
+					{Host: "127.0.0.8", Port: 16},
+				},
+				PDServers:  []*spec.PDSpec {
+					{Host: "127.0.0.9", ClientPort: 17, PeerPort: 18},
+					{Host: "127.0.0.10", ClientPort: 19, PeerPort: 20},
+				},
+				Grafanas:  []*spec.GrafanaSpec {
+					{Host: "127.0.0.11", Port: 21},
+				},
+				Alertmanagers:  []*spec.AlertmanagerSpec {
+					{Host: "127.0.0.12", WebPort: 22, ClusterPort: 23},
+				},
+				Monitors:  []*spec.PrometheusSpec {
+					{Host: "127.0.0.13", Port: 24},
+				},
+			},
+		}
+		bytes, err := yaml.Marshal(metadata)
+		assert.NoError(t, err)
+		ctx.SetData(ContextTopologyConfig, bytes)
+
+		err = rebuildTopologyFromConfig(nil, ctx)
+		assert.NoError(t, err)
+		assert.Equal(t, "v5.2.2", clusterMeta.Cluster.Version)
+		assert.NotEmpty(t, clusterMeta.Instances)
+
 	})
 }

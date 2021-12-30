@@ -68,7 +68,7 @@ func (m *WorkFlowReadWrite) GetWorkFlow(ctx context.Context, flowId string) (flo
 }
 
 func (m *WorkFlowReadWrite) QueryWorkFlows(ctx context.Context, bizId, fuzzyName, status string, page int, pageSize int) (flows []*WorkFlow, total int64, err error) {
-	flows = make([]*WorkFlow, pageSize)
+	flows = make([]*WorkFlow, 0)
 	query := m.DB(ctx).Model(&WorkFlow{})
 	if bizId != "" {
 		query = query.Where("biz_id = ?", bizId)

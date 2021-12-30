@@ -45,6 +45,8 @@ import (
 	"github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
 	"gorm.io/driver/sqlite"
+	"log"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -73,7 +75,17 @@ func Open(fw *framework.BaseFramework, reentry bool) error {
 	dbFile := fw.GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName
 	logins := framework.LogForkFile(constants.LogFileSystem)
 	// todo tidb?
-	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+	newLogger := framework.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		framework.Config{
+			SlowThreshold: time.Second,
+			LogLevel:      framework.Info,
+			IgnoreRecordNotFoundError: true,
+		},
+	)
+	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{
+		Logger: newLogger,
+	})
 
 	if err != nil || db.Error != nil {
 		logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)

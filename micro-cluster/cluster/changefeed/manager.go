@@ -29,6 +29,7 @@ import (
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"sync"
+	"time"
 )
 
 var manager *Manager
@@ -259,6 +260,10 @@ func (p *Manager) Update(ctx context.Context, request cluster.UpdateChangeFeedTa
 	return
 }
 
+func currentTSO() uint64 {
+	return  uint64(time.Now().Unix() << 18)
+}
+
 func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTaskReq) (resp cluster.DetailChangeFeedTaskResp, err error) {
 	task, err := models.GetChangeFeedReaderWriter().Get(ctx, request.ID)
 	if err != nil {
@@ -287,7 +292,7 @@ func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTa
 
 	if detailError == nil {
 		resp.ChangeFeedTaskInfo.DownstreamSyncTS = taskDetail.CheckPointTSO
-		resp.ChangeFeedTaskInfo.DownstreamFetchTS = taskDetail.ResolvedTSO
+		resp.ChangeFeedTaskInfo.UpstreamUpdateTS = currentTSO()
 	} else {
 		framework.LogWithContext(ctx).Errorf("detail change feed task err = %s", err)
 	}
@@ -332,6 +337,7 @@ func (p *Manager) Query(ctx context.Context, request cluster.QueryChangeFeedTask
 
 		if t, ok := cdcTaskInstanceMap[task.ID]; ok {
 			resp.DownstreamSyncTS = t.CheckPointTSO
+			resp.ChangeFeedTaskInfo.UpstreamUpdateTS = currentTSO()
 		}
 		resps = append(resps, resp)
 	}

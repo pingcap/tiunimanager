@@ -87,6 +87,7 @@ const (
 
 	//user
 	TIEM_UNAUTHORIZED_USER EM_ERROR_CODE = 70600
+	TIEM_USER_NOT_FOUND    EM_ERROR_CODE = 70601
 
 	// dashboard && monitor
 	TIEM_DASHBOARD_NOT_FOUND EM_ERROR_CODE = 80100
@@ -194,6 +195,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_MARSHAL_ERROR:      {"marshal error", 500},
 	TIEM_UNMARSHAL_ERROR:    {"marshal error", 500},
 	TIEM_UNAUTHORIZED_USER:  {"unauthorized", 401},
+	TIEM_USER_NOT_FOUND:     {"user not found", 404},
 
 	TIEM_METADB_SERVER_CALL_ERROR:  {"call metadb-Server failed", 500},
 	TIEM_CLUSTER_SERVER_CALL_ERROR: {"call cluster-Server failed", 500},

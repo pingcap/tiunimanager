@@ -20,6 +20,7 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (resp mes
 	a, err := models.GetAccountReaderWriter().FindAccountByName(ctx, request.UserName)
 
 	if err != nil {
+		err = errors.NewError(errors.TIEM_USER_NOT_FOUND, "user not found")
 		return
 	}
 
@@ -101,9 +102,9 @@ func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq)
 
 func (p *Manager) CreateToken(ctx context.Context, request message.CreateTokenReq) (message.CreateTokenResp, error) {
 	token := identification.Token{
-		AccountName:    request.AccountName,
-		AccountId:      request.AccountID,
-		TenantId:       request.TenantID,
+		AccountName: request.AccountName,
+		AccountId: request.AccountID,
+		TenantId: request.TenantID,
 		ExpirationTime: time.Now().Add(constants.DefaultTokenValidPeriod),
 	}
 

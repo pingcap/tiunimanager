@@ -26,6 +26,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/log"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
@@ -591,10 +592,9 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 }
 
 func asyncBuildLog(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	go func() {
-		time.Sleep(3 * time.Second)
-		// todo
-	}()
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+
+	log.GetService().BuildClusterLogConfig(context, clusterMeta.Cluster.ID)
 	return nil
 }
 

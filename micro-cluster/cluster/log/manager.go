@@ -78,6 +78,14 @@ var buildLogConfigDefine = workflow.WorkFlowDefine{
 	},
 }
 
+type Service interface {
+	BuildClusterLogConfig(ctx context.Context, clusterId string) (flowID string, err error)
+}
+
+func GetService() Service{
+	return NewManager()
+}
+
 func (m Manager) BuildClusterLogConfig(ctx context.Context, clusterId string) (flowID string, err error) {
 	framework.LogWithContext(ctx).Infof("begin build cluster log, req clusterId: %+v", clusterId)
 	defer framework.LogWithContext(ctx).Infof("end build cluster log")

@@ -815,6 +815,8 @@ func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 	allocResponse, err := resourceManagement.GetManagement().GetAllocatorRecycler().AllocResources(context, batchReq)
 
 	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster %s alloc resource error: %s", clusterMeta.Cluster.ID, err.Error())
 		return err
 	}
 

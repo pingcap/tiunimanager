@@ -35,11 +35,12 @@ type RegionInfo struct {
 	Name string `json:"name"`
 }
 
+/*
 // ZoneInfo Information about the physical location of the cluster, the meaning of Zone is the same as that of Cloud
 type ZoneInfo struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
-}
+}*/
 
 // ProductSpecInfo Enterprise Manager product specification description information, mainly will be described by computing, storage are specifications
 type ProductSpecInfo struct {

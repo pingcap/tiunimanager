@@ -176,7 +176,7 @@ func (secondMicro *SecondPartyManager) ResumeChangeFeedTask(ctx context.Context,
 	url := fmt.Sprintf("http://%s%s/%s/resume", req.CDCAddress, CDCApiUrl, req.ChangeFeedID)
 	httpResp, err := util.PostJSON(url, map[string]interface{}{}, map[string]string{})
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, "", err)
+		err = errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, err.Error())
 		return
 	}
 
@@ -195,7 +195,7 @@ func (secondMicro *SecondPartyManager) DeleteChangeFeedTask(ctx context.Context,
 	url := fmt.Sprintf("http://%s%s/%s", req.CDCAddress, CDCApiUrl, req.ChangeFeedID)
 	httpResp, err := util.Delete(url)
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, "", err)
+		err = errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, err.Error())
 		return
 	}
 
@@ -216,7 +216,7 @@ func (secondMicro *SecondPartyManager) QueryChangeFeedTasks(ctx context.Context,
 	httpResp, err := util.Get(url, params, map[string]string{})
 
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, "", err)
+		err = errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, err.Error())
 		return
 	}
 
@@ -233,7 +233,7 @@ func (secondMicro *SecondPartyManager) QueryChangeFeedTasks(ctx context.Context,
 			return
 		}
 	} else {
-		err = errors.WrapError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, "", err)
+		err = errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, err.Error())
 	}
 	return
 }
@@ -247,7 +247,7 @@ func getChangeFeedTaskByID(ctx context.Context, pdAddress, id string) (resp Chan
 	httpResp, err := util.Get(url, map[string]string{}, map[string]string{})
 
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, "", err)
+		err = errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, err.Error())
 		return
 	}
 
@@ -263,7 +263,7 @@ func getChangeFeedTaskByID(ctx context.Context, pdAddress, id string) (resp Chan
 			return 
 		}
 	} else {
-		err = errors.WrapError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, "", err)
+		err = errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, err.Error())
 	}
 	return 
 }

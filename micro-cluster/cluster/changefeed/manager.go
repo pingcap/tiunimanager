@@ -285,14 +285,16 @@ func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTa
 	}
 	resp.ChangeFeedTaskInfo = parse(*task)
 
-	taskDetail, err := secondparty.Manager.DetailChangeFeedTask(ctx, secondparty.ChangeFeedDetailReq{
+	taskDetail, detailError := secondparty.Manager.DetailChangeFeedTask(ctx, secondparty.ChangeFeedDetailReq{
 		CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
 		ChangeFeedID: task.ID,
 	})
 
-	if err == nil {
+	if detailError == nil {
 		resp.ChangeFeedTaskInfo.DownstreamSyncTS = taskDetail.CheckPointTSO
 		resp.ChangeFeedTaskInfo.DownstreamFetchTS = taskDetail.ResolvedTSO
+	} else {
+		framework.LogWithContext(ctx).Errorf("detail change feed task err = %s", err)
 	}
 
 	return

@@ -88,6 +88,9 @@ func (p *Manager) Create(ctx context.Context, request cluster.CreateChangeFeedTa
 
 	err = p.createExecutor(ctx, clusterMeta, task)
 
+	if err != nil {
+		models.GetChangeFeedReaderWriter().Delete(ctx, task.ID)
+	}
 	return
 }
 

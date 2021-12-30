@@ -48,9 +48,10 @@ func (secondMicro *SecondPartyManager) CreateChangeFeedTask(ctx context.Context,
 		return
 	}
 
+	framework.LogWithContext(ctx).Infof("create change feed task, url = %s, data = %s", url, data)
 	httpResp, err := util.PostJSON(url, data, map[string]string{})
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, "", err)
+		err = errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, err.Error())
 		return
 	}
 

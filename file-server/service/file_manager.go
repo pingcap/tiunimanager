@@ -22,6 +22,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/file-server/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"golang.org/x/net/context"
 	"io"
@@ -32,10 +33,6 @@ import (
 	"strings"
 	"sync"
 )
-
-const maxFileSize int64 = 2 * bytes.GB
-const maxUploadNum int32 = 3
-const maxDownloadNum int32 = 3
 
 var FileMgr FileManager
 
@@ -51,7 +48,7 @@ func InitFileManager() *FileManager {
 	FileMgr = FileManager{
 		uploadCount:   0,
 		downloadCount: 0,
-		maxFileSize:   maxFileSize,
+		maxFileSize:   common.MaxFileSize,
 	}
 	return &FileMgr
 }
@@ -60,8 +57,8 @@ func (mgr *FileManager) UploadFile(ctx context.Context, r *http.Request, uploadP
 	framework.LogWithContext(ctx).Infof("begin UploadFile: uploadPath %s", uploadPath)
 	defer framework.LogWithContext(ctx).Info("end UploadFile")
 	if !mgr.checkUploadCnt() {
-		framework.LogWithContext(ctx).Errorf("upload goroutine reach max, %d", maxUploadNum)
-		return fmt.Errorf("upload goroutine reach max, %d", maxUploadNum)
+		framework.LogWithContext(ctx).Errorf("upload goroutine reach max, %d", common.MaxUploadNum)
+		return fmt.Errorf("upload goroutine reach max, %d", common.MaxUploadNum)
 	}
 	mgr.addUploadCnt()
 	defer mgr.reduceUploadCnt()
@@ -136,8 +133,8 @@ func (mgr *FileManager) DownloadFile(ctx context.Context, c *gin.Context, filePa
 	framework.LogWithContext(ctx).Infof("begin DownloadFile: filePath %s", filePath)
 	defer framework.LogWithContext(ctx).Info("end DownloadFile")
 	if !mgr.checkDownloadCnt() {
-		framework.LogWithContext(ctx).Errorf("download goroutine reach max, %d", maxDownloadNum)
-		return fmt.Errorf("download goroutine reach max, %d", maxDownloadNum)
+		framework.LogWithContext(ctx).Errorf("download goroutine reach max, %d", common.MaxDownloadNum)
+		return fmt.Errorf("download goroutine reach max, %d", common.MaxDownloadNum)
 	}
 	mgr.addDownloadCnt()
 	defer mgr.reduceDownloadCnt()
@@ -162,10 +159,11 @@ func (mgr *FileManager) DownloadFile(ctx context.Context, c *gin.Context, filePa
 }
 
 func (mgr *FileManager) ZipDir(ctx context.Context, dir string, zipFile string) error {
-	framework.LogWithContext(ctx).Infof("begin zipDir: dir%s to file%s", dir, zipFile)
+	framework.LogWithContext(ctx).Infof("begin zipDir, dir: %s to file: %s", dir, zipFile)
 	defer framework.LogWithContext(ctx).Info("end zipDir")
 	fz, err := os.Create(zipFile)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("create zip file failed, %s", err.Error())
 		return fmt.Errorf("create zip file failed, %s", err.Error())
 	}
 	defer fz.Close()
@@ -201,10 +199,11 @@ func (mgr *FileManager) ZipDir(ctx context.Context, dir string, zipFile string) 
 }
 
 func (mgr *FileManager) UnzipDir(ctx context.Context, zipFile string, dir string) (unzipErr error) {
-	framework.LogWithContext(ctx).Infof("begin unzipDir: file%s to dir%s", zipFile, dir)
+	framework.LogWithContext(ctx).Infof("begin unzipDir, file: %s to dir: %s", zipFile, dir)
 	defer framework.LogWithContext(ctx).Info("end unzipDir")
 	r, err := zip.OpenReader(zipFile)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("open zip file failed: %s", err.Error())
 		return fmt.Errorf("open zip file failed: %s", err.Error())
 	}
 	defer r.Close()
@@ -270,7 +269,7 @@ func (mgr *FileManager) reduceUploadCnt() {
 }
 
 func (mgr *FileManager) checkUploadCnt() bool {
-	return mgr.downloadCount < maxUploadNum
+	return mgr.downloadCount < common.MaxUploadNum
 }
 
 func (mgr *FileManager) addDownloadCnt() {
@@ -288,5 +287,5 @@ func (mgr *FileManager) reduceDownloadCnt() {
 }
 
 func (mgr *FileManager) checkDownloadCnt() bool {
-	return mgr.downloadCount < maxDownloadNum
+	return mgr.downloadCount < common.MaxDownloadNum
 }

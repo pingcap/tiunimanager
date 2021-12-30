@@ -21,7 +21,7 @@
  * @Date: 2021/12/6
 *******************************************************************************/
 
-package specs
+package product
 
 import (
 	"gorm.io/gorm"
@@ -47,9 +47,12 @@ type Product struct {
 //ProductComponent Enterprise Manager offers two products, TiDB and TiDB Data Migration,
 //each consisting of multiple components, each with multiple ports enabled and a limit on the number of instances each component can start.
 type ProductComponent struct {
-	ComponentID    string         `gorm:"primaryKey;"`
+	VendorID       string         `gorm:"primaryKey;"`
+	RegionID       string         `gorm:"primaryKey;"`
 	ProductID      string         `gorm:"primaryKey;"`
 	ProductVersion string         `gorm:"primaryKey;"`
+	Arch           string         `gorm:"primaryKey;size 16;comment: original cpu arch of the product"`
+	ComponentID    string         `gorm:"primaryKey;"`
 	Name           string         `gorm:"primaryKey;comment:'original name of the product'"`
 	Status         string         `gorm:"not null;size:32;"` //Online,Offline
 	PurposeType    string         `gorm:"size:32;comment:Compute/Storage/Schedule"`
@@ -63,20 +66,18 @@ type ProductComponent struct {
 	DeletedAt      gorm.DeletedAt `gorm:""`
 }
 
-//ResourceSpec product specification information provided by Enterprise Manager
-type ResourceSpec struct {
-	ResourceSpecID string         `gorm:"primaryKey"`
-	ZoneID         string         `gorm:"primaryKey"`
-	Arch           string         `gorm:"primaryKey;comment: original cpu arch of the product"`
-	Name           string         `gorm:"not null;size 16;comment: original spec of the product, eg 8C16G"`
-	CPU            int            `gorm:"comment: unit: vCPU"`
-	Memory         int            `gorm:"comment: unit: GiB"`
-	DiskType       string         `gorm:"comment:NVMeSSD/SSD/SATA"`
-	PurposeType    string         `gorm:"comment:Compute/Storage/Schedule"`
-	Status         string         `gorm:"not null;size:32;"`
-	CreatedAt      time.Time      `gorm:"autoCreateTime;<-:create;->;"`
-	UpdatedAt      time.Time      `gorm:"autoUpdateTime"`
-	DeletedAt      gorm.DeletedAt `gorm:""`
+//Spec product specification information provided by Enterprise Manager
+type Spec struct {
+	ID          string         `gorm:"primaryKey;size:32"`
+	Name        string         `gorm:"not null;size 16;comment: original spec of the product, eg 8C16G"`
+	CPU         int            `gorm:"comment: unit: vCPU"`
+	Memory      int            `gorm:"comment: unit: GiB"`
+	DiskType    string         `gorm:"comment:NVMeSSD/SSD/SATA"`
+	PurposeType string         `gorm:"comment:Compute/Storage/Schedule"`
+	Status      string         `gorm:"default:'Online';not null;size:32;"`
+	CreatedAt   time.Time      `gorm:"autoCreateTime;<-:create;->;"`
+	UpdatedAt   time.Time      `gorm:"autoUpdateTime"`
+	DeletedAt   gorm.DeletedAt `gorm:""`
 }
 
 /**

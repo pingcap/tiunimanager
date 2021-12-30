@@ -21,7 +21,7 @@
  * @Date: 2021/12/10
 *******************************************************************************/
 
-package specs
+package product
 
 import (
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -55,16 +55,17 @@ func TestMain(m *testing.M) {
 				logins.Infof("open database successful, filepath: %s", dbFile)
 			}
 			db.Migrator().CreateTable(Zone{})
-			db.Migrator().CreateTable(Region{})
-			db.Migrator().CreateTable(ResourceSpec{})
+			db.Migrator().CreateTable(Spec{})
 			db.Migrator().CreateTable(ProductComponent{})
 			db.Migrator().CreateTable(Product{})
-			db.Migrator().CreateTable(Vendor{})
 			//init test data
 			prw = NewProductReadWriter(db)
 			return nil
 		},
 	)
 
-	os.Exit(m.Run())
+	code := m.Run()
+	os.RemoveAll("testdata/")
+	os.RemoveAll("logs/")
+	os.Exit(code)
 }

@@ -25,6 +25,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
+	"os"
 	"path/filepath"
 )
 
@@ -80,4 +81,15 @@ func (mgr *DirManager) GetImportPath(ctx context.Context, clusterId string) (str
 	}
 
 	return fmt.Sprintf("%s/%s/temp", importAbsDir, clusterId), nil
+}
+
+func (mgr *DirManager) DirSizeB(path string) (int64, error) {
+	var size int64
+	err := filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
+		if !info.IsDir() {
+			size += info.Size()
+		}
+		return err
+	})
+	return size, err
 }

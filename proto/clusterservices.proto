@@ -72,6 +72,18 @@ service ClusterService {
 
     // system config
     rpc GetSystemConfig(RpcRequest) returns (RpcResponse);
+
+    //product & spec
+    rpc CreateZones(RpcRequest) returns (RpcResponse);
+    rpc DeleteZone(RpcRequest) returns (RpcResponse);
+    rpc QueryZones(RpcRequest) returns (RpcResponse);
+    rpc QueryProducts(RpcRequest) returns (RpcResponse);
+    rpc CreateProduct(RpcRequest) returns (RpcResponse);
+    rpc DeleteProduct(RpcRequest) returns (RpcResponse);
+    rpc QueryProductDetail(RpcRequest) returns (RpcResponse);
+    rpc CreateSpecs(RpcRequest) returns (RpcResponse);
+    rpc DeleteSpecs(RpcRequest) returns (RpcResponse);
+    rpc QuerySpecs(RpcRequest) returns (RpcResponse);
 }
 
 message RpcRequest {

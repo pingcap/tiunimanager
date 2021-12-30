@@ -17,14 +17,13 @@ package hostinitiator
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/framework"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	mock_secp "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
 	mock_ssh "github.com/pingcap-inc/tiem/test/mockutil/mocksshclientexecutor"
@@ -166,10 +165,8 @@ func Test_GenerateTopologyConfig(t *testing.T) {
 	template_struct.HostIPs = append(template_struct.HostIPs, "192.168.177.177")
 	template_struct.HostIPs = append(template_struct.HostIPs, "192.168.177.178")
 	template_struct.HostIPs = append(template_struct.HostIPs, "192.168.177.179")
-	curDir, _ := os.Getwd()
-	templateName := rp_consts.FileBeatTemplateFile
-	filePath := filepath.Join(curDir, "../../../../", rp_consts.FileBeatTemplateDir, templateName)
-	str, err := template_struct.generateTopologyConfig(context.TODO(), filePath)
+
+	str, err := template_struct.generateTopologyConfig(context.TODO())
 	assert.Nil(t, err)
 	t.Log(str)
 }
@@ -195,11 +192,8 @@ func Test_JoinEMCluster(t *testing.T) {
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSecondPartyServ(mockSec)
 
-	curDir, _ := os.Getwd()
-	workDir := filepath.Join(curDir, "../../../../")
-	err := os.Chdir(workDir)
-	assert.Nil(t, err)
 	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowNodeIDKey, "fake-node-id")
-	err = fileInitiator.JoinEMCluster(ctx, []structs.HostInfo{{Arch: "X86_64", IP: "192.168.177.180"}})
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	err := fileInitiator.JoinEMCluster(ctx, []structs.HostInfo{{Arch: "X86_64", IP: "192.168.177.180"}})
 	assert.Nil(t, err)
 }

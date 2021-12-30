@@ -18,8 +18,6 @@ package hostinitiator
 import (
 	"bytes"
 	"context"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"text/template"
@@ -31,6 +29,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	sshclient "github.com/pingcap-inc/tiem/library/util/ssh"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
+	resourceTemplate "github.com/pingcap-inc/tiem/resource/template"
 )
 
 type FileHostInitiator struct {
@@ -122,11 +121,8 @@ func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.H
 	for _, host := range hosts {
 		tempateInfo.HostIPs = append(tempateInfo.HostIPs, host.IP)
 	}
-	curDir, _ := os.Getwd()
-	templateName := rp_consts.FileBeatTemplateFile
-	// The template file should be on tiem/resource/template/import_topology.yaml
-	filePath := filepath.Join(curDir, rp_consts.FileBeatTemplateDir, templateName)
-	templateStr, err := tempateInfo.generateTopologyConfig(ctx, filePath)
+
+	templateStr, err := tempateInfo.generateTopologyConfig(ctx)
 	if err != nil {
 		return err
 	}
@@ -240,8 +236,8 @@ type templateScaleOut struct {
 	HostIPs   []string
 }
 
-func (p *templateScaleOut) generateTopologyConfig(ctx context.Context, path string) (string, error) {
-	t, err := template.New("import_topology.yaml").ParseFiles(path)
+func (p *templateScaleOut) generateTopologyConfig(ctx context.Context) (string, error) {
+	t, err := template.New("import_topology.yaml").Parse(resourceTemplate.EMClusterScaleOut)
 	if err != nil {
 		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
 	}

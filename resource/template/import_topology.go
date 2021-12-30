@@ -13,20 +13,20 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package constants
+package template
 
-const SecondPartyReady = true
+var EMClusterScaleOut = `
+global:
+  user: "tiem"
+  group: "tiem"
+  ssh_port: 22
+  deploy_dir: {{ .DeployDir }}
+  data_dir: {{ .DataDir }}
+  arch: {{ .Arch }}
+  log_level: "info"
 
-const (
-	FlowImportHosts          string = "ImportHosts"
-	ContextResourcePoolKey   string = "resourcePool"
-	ContextImportHostInfoKey string = "importHostInfo"
-	ContextImportHostIDsKey  string = "importHostIDs"
-	ContextWorkFlowNodeIDKey string = "importHostsWorkFlowNodeID"
-)
-
-const (
-	HostSSHPort       = 22
-	FileBeatDataDir   = "/tiem-data"
-	FileBeatDeployDir = "/tiem-deploy"
-)
+filebeat_servers:
+{{ range .HostIPs }}
+  - host: {{ . }}
+{{ end }}
+`

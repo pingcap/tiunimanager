@@ -17,11 +17,14 @@ package models
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/models/platform/product"
 	"io/ioutil"
 	"os"
 	"strings"
 	"syscall"
+
+	"github.com/pingcap-inc/tiem/models/platform/product"
+
+	"github.com/pingcap-inc/tiem/models/tiup"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -32,6 +35,9 @@ import (
 	"github.com/pingcap-inc/tiem/models/user/account"
 	"github.com/pingcap-inc/tiem/models/user/identification"
 	"github.com/pingcap-inc/tiem/models/user/tenant"
+
+	"log"
+	"time"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
@@ -46,8 +52,6 @@ import (
 	"github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
 	"gorm.io/driver/sqlite"
-	"log"
-	"time"
 
 	"gorm.io/gorm"
 )
@@ -71,6 +75,7 @@ type database struct {
 	tokenReaderWriter                identification.ReaderWriter
 	mirrorReaderWriter               mirror.ReaderWriter
 	productReaderWriter              product.ProductReadWriterInterface
+	tiUPConfigReaderWriter           tiup.ReaderWriter
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
@@ -147,6 +152,7 @@ func (p *database) initTables() (err error) {
 		new(tenant.Tenant),
 		new(identification.Token),
 		new(mirror.Mirror),
+		new(tiup.TiupConfig),
 		new(resourcePool.Host),
 		new(resourcePool.Disk),
 		new(resourcePool.Label),
@@ -176,6 +182,7 @@ func (p *database) initReaderWriters() {
 	defaultDb.tokenReaderWriter = identification.NewTokenReadWrite(defaultDb.base)
 	defaultDb.mirrorReaderWriter = mirror.NewGormMirrorReadWrite(defaultDb.base)
 	defaultDb.productReaderWriter = product.NewProductReadWriter(defaultDb.base)
+	defaultDb.tiUPConfigReaderWriter = tiup.NewGormTiupConfigReadWrite(defaultDb.base)
 }
 
 func (p *database) initSystemData() {
@@ -238,6 +245,25 @@ func (p *database) initSystemData() {
 			sqls, err := ioutil.ReadFile(mirrorSqlFile)
 			if err != nil {
 				framework.LogForkFile(constants.LogFileSystem).Errorf("import mirrors failed, err = %s", err.Error())
+				return
+			}
+			sqlArr := strings.Split(string(sqls), ";")
+			for _, sql := range sqlArr {
+				if strings.TrimSpace(sql) == "" {
+					continue
+				}
+				// exec import sql
+				defaultDb.base.Exec(sql)
+			}
+		}
+
+		// import TiUP configs
+		tiUPSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/tiup_configs.sql"
+		err = syscall.Access(tiUPSqlFile, syscall.F_OK)
+		if !os.IsNotExist(err) {
+			sqls, err := ioutil.ReadFile(tiUPSqlFile)
+			if err != nil {
+				framework.LogForkFile(constants.LogFileSystem).Errorf("import tiupconfigs failed, err = %s", err.Error())
 				return
 			}
 			sqlArr := strings.Split(string(sqls), ";")
@@ -364,6 +390,14 @@ func GetProductReaderWriter() product.ProductReadWriterInterface {
 }
 func SetProductReaderWriter(rw product.ProductReadWriterInterface) {
 	defaultDb.productReaderWriter = rw
+}
+
+func GetTiUPConfigReaderWriter() tiup.ReaderWriter {
+	return defaultDb.tiUPConfigReaderWriter
+}
+
+func SetTiUPConfigReaderWriter(rw tiup.ReaderWriter) {
+	defaultDb.tiUPConfigReaderWriter = rw
 }
 
 func MockDB() {

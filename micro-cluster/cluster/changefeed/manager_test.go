@@ -606,22 +606,32 @@ func Test_ClusterError(t *testing.T) {
 		assert.Error(t, err)
 	})
 	t.Run("update", func(t *testing.T) {
+		_, err := GetManager().Update(context.TODO(), cluster.UpdateChangeFeedTaskReq{
+			ID: "NotFound",
+		})
+		assert.Error(t, err)
+		_, err = GetManager().Update(context.TODO(), cluster.UpdateChangeFeedTaskReq{
+			ID: "WithoutCDC",
+		})
+		assert.Error(t, err)
+	})
+	t.Run("detail", func(t *testing.T) {
 		_, err := GetManager().Detail(context.TODO(), cluster.DetailChangeFeedTaskReq{
 			ID: "NotFound",
 		})
 		assert.Error(t, err)
-		_, _, err = GetManager().Query(context.TODO(), cluster.QueryChangeFeedTaskReq{
-			ClusterId: "WithoutCDC",
+		_, err = GetManager().Detail(context.TODO(), cluster.DetailChangeFeedTaskReq{
+			ID: "WithoutCDC",
 		})
 		assert.Error(t, err)
 	})
-	t.Run("update", func(t *testing.T) {
-		_, err := GetManager().Delete(context.TODO(), cluster.DeleteChangeFeedTaskReq{
-			ID: "NotFound",
+	t.Run("query", func(t *testing.T) {
+		_, _, err := GetManager().Query(context.TODO(), cluster.QueryChangeFeedTaskReq{
+			ClusterId: "NotFound",
 		})
 		assert.Error(t, err)
-		_, err = GetManager().Delete(context.TODO(), cluster.DeleteChangeFeedTaskReq{
-			ID: "WithoutCDC",
+		_, _, err = GetManager().Query(context.TODO(), cluster.QueryChangeFeedTaskReq{
+			ClusterId: "WithoutCDC",
 		})
 		assert.Error(t, err)
 	})

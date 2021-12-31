@@ -214,6 +214,13 @@ func TestManager_Resume(t *testing.T) {
 		assert.NoError(t, err)
 		time.Sleep(time.Millisecond * 10)
 	})
+	t.Run("without cdc", func(t *testing.T) {
+		_, err := GetManager().Resume(context.TODO(), cluster.ResumeChangeFeedTaskReq {
+			"taskId",
+		})
+		assert.NoError(t, err)
+		time.Sleep(time.Millisecond * 10)
+	})
 }
 
 func TestManager_Update(t *testing.T) {
@@ -231,7 +238,8 @@ func TestManager_Update(t *testing.T) {
 	models.SetChangeFeedReaderWriter(changefeedRW)
 	changefeedRW.EXPECT().Get(gomock.Any(),gomock.Any()).Return(&changefeed.ChangeFeedTask{
 		Entity: common.Entity{
-			ID: "taskId",
+			Status: string(constants.ChangeFeedStatusNormal),
+			ID:     "taskId",
 		},
 		ClusterId: "clusterId",
 		Downstream: &changefeed.TiDBDownstream{
@@ -246,6 +254,16 @@ func TestManager_Update(t *testing.T) {
 	secondparty.Manager = mockSecond
 
 	mockSecond.EXPECT().UpdateChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+		Accepted: true,
+		Succeed: true,
+	}, nil).AnyTimes()
+
+	mockSecond.EXPECT().PauseChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+		Accepted: true,
+		Succeed: true,
+	}, nil).AnyTimes()
+
+	mockSecond.EXPECT().ResumeChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
 		Accepted: true,
 		Succeed: true,
 	}, nil).AnyTimes()

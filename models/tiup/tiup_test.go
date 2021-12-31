@@ -15,23 +15,19 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: mirror_test
+ * @File: tiup_test
  * @Description:
  * @Author: shenhaibo@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/29
+ * @Date: 2021/12/30
 *******************************************************************************/
 
-package mirror
+package tiup
 
 import (
 	"context"
 	"testing"
 )
-
-func TestGormMirrorReadWrite_Create_Fail(t *testing.T) {
-
-}
 
 func TestGormMirrorReadWrite(t *testing.T) {
 	// create fail
@@ -41,47 +37,47 @@ func TestGormMirrorReadWrite(t *testing.T) {
 	}
 
 	// create success
-	mirror1, err := testRW.Create(context.TODO(), TestComponentType, TestMirrorAddr)
-	if err != nil || mirror1 == nil {
-		t.Errorf("Create error: %v: mirror: %v", err, mirror1)
+	config1, err := testRW.Create(context.TODO(), TestComponentType, TestTiUPHome)
+	if err != nil || config1 == nil {
+		t.Errorf("Create error: %v: config: %v", err, config1)
 	}
 
 	// get fail
-	mirror2, err := testRW.Get(context.TODO(), "")
+	config2, err := testRW.Get(context.TODO(), "")
 	if err == nil {
 		t.Error("Deliberately Get error got nil")
 	}
 
 	// get success
-	mirror2, err = testRW.Get(context.TODO(), mirror1.ID)
-	if err != nil || mirror2 == nil || mirror1.ID != mirror2.ID {
-		t.Errorf("Get error: %v, mirror1: %v, mirror2: %v", err, mirror1, mirror2)
+	config2, err = testRW.Get(context.TODO(), config1.ID)
+	if err != nil || config2 == nil || config1.ID != config2.ID {
+		t.Errorf("Get error: %v, config1: %v, config2: %v", err, config1, config2)
 	}
 
 	// query fail
-	mirror2, err = testRW.QueryByComponentType(context.TODO(), "")
+	config2, err = testRW.QueryByComponentType(context.TODO(), "")
 	if err == nil {
 		t.Error("Deliberately Query error got nil")
 	}
 
 	// query success
-	mirror2, err = testRW.QueryByComponentType(context.TODO(), mirror1.ComponentType)
-	if err != nil || mirror2 == nil || mirror1.ID != mirror2.ID {
-		t.Errorf("Query error: %v, mirror1: %v, mirror2: %v", err, mirror1, mirror2)
+	config2, err = testRW.QueryByComponentType(context.TODO(), config1.ComponentType)
+	if err != nil || config2 == nil || config1.ID != config2.ID {
+		t.Errorf("Query error: %v, config1: %v, config2: %v", err, config1, config2)
 	}
 
 	// update fail
-	mirror2.ID = ""
-	mirror2.MirrorAddr = TestMirrorAddr2
-	err = testRW.Update(context.TODO(), mirror2)
+	config2.ID = ""
+	config2.TiupHome = TestTiUPHome2
+	err = testRW.Update(context.TODO(), config2)
 	if err == nil {
 		t.Error("Deliberately Update error got nil")
 	}
 
 	// update success
-	mirror2.ID = mirror1.ID
-	mirror2.MirrorAddr = TestMirrorAddr2
-	err = testRW.Update(context.TODO(), mirror2)
+	config2.ID = config1.ID
+	config2.TiupHome = TestTiUPHome2
+	err = testRW.Update(context.TODO(), config2)
 	if err != nil {
 		t.Errorf("Update error: %v", err)
 	}

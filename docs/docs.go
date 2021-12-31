@@ -4843,8 +4843,8 @@ var doc = `{
                     ]
                 },
                 "startTS": {
-                    "type": "integer",
-                    "example": 415241823337054209
+                    "type": "string",
+                    "example": "415241823337054209"
                 }
             }
         },
@@ -4993,12 +4993,12 @@ var doc = `{
                     "type": "object"
                 },
                 "downstreamFetchTs": {
-                    "type": "integer",
-                    "example": 415241823337054209
+                    "type": "string",
+                    "example": "415241823337054209"
                 },
                 "downstreamSyncTs": {
-                    "type": "integer",
-                    "example": 415241823337054209
+                    "type": "string",
+                    "example": "415241823337054209"
                 },
                 "downstreamType": {
                     "type": "string",
@@ -5027,8 +5027,8 @@ var doc = `{
                     ]
                 },
                 "startTS": {
-                    "type": "integer",
-                    "example": 415241823337054209
+                    "type": "string",
+                    "example": "415241823337054209"
                 },
                 "status": {
                     "type": "string",
@@ -5050,8 +5050,8 @@ var doc = `{
                     "type": "string"
                 },
                 "upstreamUpdateTs": {
-                    "type": "integer",
-                    "example": 415241823337054209
+                    "type": "string",
+                    "example": "415241823337054209"
                 }
             }
         },
@@ -5292,12 +5292,12 @@ var doc = `{
                     "type": "object"
                 },
                 "downstreamFetchTs": {
-                    "type": "integer",
-                    "example": 415241823337054209
+                    "type": "string",
+                    "example": "415241823337054209"
                 },
                 "downstreamSyncTs": {
-                    "type": "integer",
-                    "example": 415241823337054209
+                    "type": "string",
+                    "example": "415241823337054209"
                 },
                 "downstreamType": {
                     "type": "string",
@@ -5326,8 +5326,8 @@ var doc = `{
                     ]
                 },
                 "startTS": {
-                    "type": "integer",
-                    "example": 415241823337054209
+                    "type": "string",
+                    "example": "415241823337054209"
                 },
                 "status": {
                     "type": "string",
@@ -5349,8 +5349,8 @@ var doc = `{
                     "type": "string"
                 },
                 "upstreamUpdateTs": {
-                    "type": "integer",
-                    "example": 415241823337054209
+                    "type": "string",
+                    "example": "415241823337054209"
                 }
             }
         },
@@ -6650,7 +6650,7 @@ var doc = `{
                     "type": "string"
                 },
                 "backupTso": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "backupType": {
                     "type": "string"

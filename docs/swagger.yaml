@@ -96,8 +96,8 @@ definitions:
           type: string
         type: array
       startTS:
-        example: 415241823337054209
-        type: integer
+        example: "415241823337054209"
+        type: string
     type: object
   cluster.CreateChangeFeedTaskResp:
     properties:
@@ -203,11 +203,11 @@ definitions:
       downstream:
         type: object
       downstreamFetchTs:
-        example: 415241823337054209
-        type: integer
+        example: "415241823337054209"
+        type: string
       downstreamSyncTs:
-        example: 415241823337054209
-        type: integer
+        example: "415241823337054209"
+        type: string
       downstreamType:
         enum:
         - tidb
@@ -228,8 +228,8 @@ definitions:
           type: string
         type: array
       startTS:
-        example: 415241823337054209
-        type: integer
+        example: "415241823337054209"
+        type: string
       status:
         enum:
         - Initial
@@ -246,8 +246,8 @@ definitions:
       updateTime:
         type: string
       upstreamUpdateTs:
-        example: 415241823337054209
-        type: integer
+        example: "415241823337054209"
+        type: string
     type: object
   cluster.Dispatcher:
     properties:
@@ -417,11 +417,11 @@ definitions:
       downstream:
         type: object
       downstreamFetchTs:
-        example: 415241823337054209
-        type: integer
+        example: "415241823337054209"
+        type: string
       downstreamSyncTs:
-        example: 415241823337054209
-        type: integer
+        example: "415241823337054209"
+        type: string
       downstreamType:
         enum:
         - tidb
@@ -442,8 +442,8 @@ definitions:
           type: string
         type: array
       startTS:
-        example: 415241823337054209
-        type: integer
+        example: "415241823337054209"
+        type: string
       status:
         enum:
         - Initial
@@ -460,8 +460,8 @@ definitions:
       updateTime:
         type: string
       upstreamUpdateTs:
-        example: 415241823337054209
-        type: integer
+        example: "415241823337054209"
+        type: string
     type: object
   cluster.QueryClusterDetailResp:
     properties:
@@ -1341,7 +1341,7 @@ definitions:
       backupMode:
         type: string
       backupTso:
-        type: integer
+        type: string
       backupType:
         type: string
       clusterId:

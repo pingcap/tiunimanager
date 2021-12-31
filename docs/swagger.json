@@ -4829,8 +4829,8 @@
                     ]
                 },
                 "startTS": {
-                    "type": "integer",
-                    "example": 415241823337054209
+                    "type": "string",
+                    "example": "415241823337054209"
                 }
             }
         },
@@ -4979,12 +4979,12 @@
                     "type": "object"
                 },
                 "downstreamFetchTs": {
-                    "type": "integer",
-                    "example": 415241823337054209
+                    "type": "string",
+                    "example": "415241823337054209"
                 },
                 "downstreamSyncTs": {
-                    "type": "integer",
-                    "example": 415241823337054209
+                    "type": "string",
+                    "example": "415241823337054209"
                 },
                 "downstreamType": {
                     "type": "string",
@@ -5013,8 +5013,8 @@
                     ]
                 },
                 "startTS": {
-                    "type": "integer",
-                    "example": 415241823337054209
+                    "type": "string",
+                    "example": "415241823337054209"
                 },
                 "status": {
                     "type": "string",
@@ -5036,8 +5036,8 @@
                     "type": "string"
                 },
                 "upstreamUpdateTs": {
-                    "type": "integer",
-                    "example": 415241823337054209
+                    "type": "string",
+                    "example": "415241823337054209"
                 }
             }
         },
@@ -5278,12 +5278,12 @@
                     "type": "object"
                 },
                 "downstreamFetchTs": {
-                    "type": "integer",
-                    "example": 415241823337054209
+                    "type": "string",
+                    "example": "415241823337054209"
                 },
                 "downstreamSyncTs": {
-                    "type": "integer",
-                    "example": 415241823337054209
+                    "type": "string",
+                    "example": "415241823337054209"
                 },
                 "downstreamType": {
                     "type": "string",
@@ -5312,8 +5312,8 @@
                     ]
                 },
                 "startTS": {
-                    "type": "integer",
-                    "example": 415241823337054209
+                    "type": "string",
+                    "example": "415241823337054209"
                 },
                 "status": {
                     "type": "string",
@@ -5335,8 +5335,8 @@
                     "type": "string"
                 },
                 "upstreamUpdateTs": {
-                    "type": "integer",
-                    "example": 415241823337054209
+                    "type": "string",
+                    "example": "415241823337054209"
                 }
             }
         },
@@ -6636,7 +6636,7 @@
                     "type": "string"
                 },
                 "backupTso": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "backupType": {
                     "type": "string"

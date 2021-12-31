@@ -18,6 +18,7 @@ package framework
 import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
+	"net"
 	"testing"
 )
 
@@ -28,5 +29,8 @@ func TestInitElasticsearch(t *testing.T) {
 func TestSearch(t *testing.T)  {
 	client := InitElasticsearch("127.0.0.1")
 	_, e := client.Search("aaa", &bytes.Buffer{}, 1, 1)
-	assert.Error(t, e)
+
+	err, ok := e.(*net.OpError)
+	assert.True(t, ok)
+	assert.Error(t, err)
 }

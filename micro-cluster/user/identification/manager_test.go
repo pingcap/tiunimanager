@@ -2,12 +2,13 @@ package identification
 
 import (
 	"context"
-	"fmt"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-cluster/user/userinfo"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 var manager = &Manager{}
@@ -34,7 +35,6 @@ func TestManager_Login_v1(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotResp, err := manager.Login(tt.args.ctx, tt.args.request)
-			fmt.Println(err)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Login() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -72,6 +72,49 @@ func TestManager_Logout(t *testing.T) {
 			}
 			if err == nil {
 				assert.NotEmpty(t, got.AccountName)
+			}
+		})
+	}
+}
+
+func TestManager_Accessible(t *testing.T) {
+	models.GetTokenReaderWriter().AddToken(context.TODO(), "&vhgjkgsjksdas", "account", "accountID", "tenantID", time.Unix(2, 56).Add(constants.DefaultTokenValidPeriod))
+	models.GetTokenReaderWriter().AddToken(context.TODO(), "token", "account1", "accountID1", "tenantID1", time.Now().Add(constants.DefaultTokenValidPeriod))
+	type args struct {
+		ctx     context.Context
+		request message.AccessibleReq
+	}
+	tests := []struct {
+		name     string
+		args     args
+		wantErr  bool
+	}{
+		{"normal", args{ctx: context.TODO(), request: message.AccessibleReq{
+			PathType: "type",
+			Path: "path",
+			TokenString: "token",
+		}}, false},
+		{"invalid token", args{ctx: context.TODO(), request: message.AccessibleReq{
+			PathType: "type",
+			Path: "path",
+			TokenString: "&vhgjkgsjksdas",
+		}}, true},
+		{"token not found", args{ctx: context.TODO(), request: message.AccessibleReq{
+			PathType: "type",
+			Path: "path",
+			TokenString: "&vhgjs",
+		}}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotResp, err := manager.Accessible(tt.args.ctx, tt.args.request)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Accessible() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if err == nil {
+				assert.NotEmpty(t, gotResp.AccountID)
+				assert.NotEmpty(t, gotResp.TenantID)
 			}
 		})
 	}

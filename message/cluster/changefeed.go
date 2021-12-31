@@ -23,7 +23,7 @@ import (
 type CreateChangeFeedTaskReq struct {
 	Name           string      `json:"name" form:"name" example:"my_sync_name"`
 	ClusterID      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
-	StartTS        int64       `json:"startTS" form:"startTS" example:"415241823337054209"`
+	StartTS        string       `json:"startTS" form:"startTS" example:"415241823337054209"`
 	FilterRules    []string    `json:"rules" form:"rules" example:"*.*"`
 	DownstreamType string      `json:"downstreamType"  form:"downstreamType" example:"tidb" enums:"tidb,kafka,mysql"`
 	Downstream     interface{} `json:"downstream" form:"downstream"`
@@ -91,7 +91,7 @@ type ChangeFeedTask struct {
 	ID             string      `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22"`
 	Name           string      `json:"name" form:"name" example:"my_sync_name"`
 	ClusterID      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
-	StartTS        int64       `json:"startTS" form:"startTS" example:"415241823337054209"`
+	StartTS        string      `json:"startTS" form:"startTS" example:"415241823337054209"`
 	FilterRules    []string    `json:"rules" form:"rules" example:"*.*"`
 	Status         string      `json:"status" form:"status" example:"Normal" enums:"Initial,Normal,Stopped,Finished,Error,Failed"`
 	DownstreamType string      `json:"downstreamType"  form:"downstreamType" example:"tidb" enums:"tidb,kafka,mysql"`
@@ -162,7 +162,7 @@ type TiDBDownstream struct {
 type ChangeFeedTaskInfo struct {
 	ChangeFeedTask
 	UnSteady          bool   `json:"unsteady" form:"unsteady" example:"false"`
-	UpstreamUpdateTS  uint64 `json:"upstreamUpdateTs" form:"upstreamUpdateTs" example:"415241823337054209"`
-	DownstreamFetchTS uint64 `json:"downstreamFetchTs" form:"downstreamFetchTs" example:"415241823337054209"`
-	DownstreamSyncTS  uint64 `json:"downstreamSyncTs" form:"downstreamSyncTs" example:"415241823337054209"`
+	UpstreamUpdateTS  string `json:"upstreamUpdateTs" form:"upstreamUpdateTs" example:"415241823337054209"`
+	DownstreamFetchTS string `json:"downstreamFetchTs" form:"downstreamFetchTs" example:"415241823337054209"`
+	DownstreamSyncTS  string `json:"downstreamSyncTs" form:"downstreamSyncTs" example:"415241823337054209"`
 }

@@ -28,6 +28,7 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -69,10 +70,20 @@ func (p *Manager) Create(ctx context.Context, request cluster.CreateChangeFeedTa
 			TenantId: framework.GetTenantIDFromContext(ctx),
 			Status:   string(constants.ChangeFeedStatusInitial),
 		},
+		StartTS: 0,
 		Name:        request.Name,
 		ClusterId:   request.ClusterID,
-		StartTS:     request.StartTS,
 		FilterRules: request.FilterRules,
+	}
+
+	if len(request.StartTS) > 0  {
+		tso, parseError := strconv.ParseInt(request.StartTS, 10, 64)
+		if parseError == nil {
+			task.StartTS = tso
+		} else {
+			err = errors.NewError(errors.TIEM_PARAMETER_INVALID, parseError.Error())
+			return
+		}
 	}
 
 	if err = copyDownstreamConfig(task, request.DownstreamType, request.Downstream); err != nil {
@@ -291,8 +302,8 @@ func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTa
 	})
 
 	if detailError == nil {
-		resp.ChangeFeedTaskInfo.DownstreamSyncTS = taskDetail.CheckPointTSO
-		resp.ChangeFeedTaskInfo.UpstreamUpdateTS = currentTSO()
+		resp.ChangeFeedTaskInfo.DownstreamSyncTS = strconv.FormatInt(int64(taskDetail.CheckPointTSO), 10)
+		resp.ChangeFeedTaskInfo.UpstreamUpdateTS = strconv.FormatInt(int64(currentTSO()), 10)
 	} else {
 		framework.LogWithContext(ctx).Errorf("detail change feed task err = %s", err)
 	}
@@ -336,8 +347,8 @@ func (p *Manager) Query(ctx context.Context, request cluster.QueryChangeFeedTask
 		}
 
 		if t, ok := cdcTaskInstanceMap[task.ID]; ok {
-			resp.DownstreamSyncTS = t.CheckPointTSO
-			resp.ChangeFeedTaskInfo.UpstreamUpdateTS = currentTSO()
+			resp.DownstreamSyncTS = strconv.FormatInt(int64(t.CheckPointTSO), 10)
+			resp.ChangeFeedTaskInfo.UpstreamUpdateTS = strconv.FormatInt(int64(currentTSO()), 10)
 		}
 		resps = append(resps, resp)
 	}
@@ -433,7 +444,7 @@ func parse(task changefeed.ChangeFeedTask) cluster.ChangeFeedTaskInfo {
 			ID:             task.ID,
 			Name:           task.Name,
 			ClusterID:      task.ClusterId,
-			StartTS:        task.StartTS,
+			StartTS:        strconv.FormatInt(task.StartTS, 10),
 			FilterRules:    task.FilterRules,
 			Status:         task.Status,
 			DownstreamType: string(task.Type),

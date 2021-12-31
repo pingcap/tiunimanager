@@ -6,11 +6,8 @@ results.xml
 data.etcd1/
 *.db
 /bin
-/micro-metadb/models/tmp
-/micro-metadb/service/tmp/
-/micro-metadb/models/tmp/
 *.log
-/micro-metadb/models/testdata/
+/proto/clusterservices
 /micro-cluster/user/userinfo/testdata/
 etcd/
 /dbtest123.yaml

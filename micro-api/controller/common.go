@@ -36,7 +36,6 @@ import (
 
 	"github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 )
 
 // DefaultTimeout
@@ -90,17 +89,4 @@ type Operator struct {
 	OperatorName   string `json:"operatorName"`
 	OperatorId     string `json:"operatorId"`
 	TenantId       string `json:"tenantId"`
-}
-
-func GetOperator(c *gin.Context) *Operator {
-	v, _ := c.Get(interceptor.VisitorIdentityKey)
-
-	visitor, _ := v.(*interceptor.VisitorIdentity)
-
-	return &Operator{
-		ManualOperator: true,
-		OperatorId:     visitor.AccountId,
-		OperatorName:   visitor.AccountName,
-		TenantId:       visitor.TenantId,
-	}
 }

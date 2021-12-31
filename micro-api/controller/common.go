@@ -42,8 +42,8 @@ import (
 // DefaultTimeout
 // todo adjust timeout for async flow task
 var DefaultTimeout = func(o *client.CallOptions) {
-	o.RequestTimeout = time.Minute * 5
-	o.DialTimeout = time.Minute * 5
+	o.RequestTimeout = time.Second * 30
+	o.DialTimeout = time.Second * 30
 }
 
 type Usage struct {

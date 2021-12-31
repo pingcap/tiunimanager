@@ -77,7 +77,7 @@ func TestManager_Create(t *testing.T) {
 		resp, err := GetManager().Create(context.TODO(), cluster.CreateChangeFeedTaskReq{
 			Name: "aa",
 			ClusterID: "clusterId",
-			StartTS: 121212,
+			StartTS: "121212",
 			FilterRules: []string{"*.*"},
 			DownstreamType: "tidb",
 			Downstream: changefeed.TiDBDownstream{
@@ -323,7 +323,9 @@ func TestManager_Query(t *testing.T) {
 		})
 		assert.NoError(t, err)
 		assert.Equal(t, 3, total)
-		assert.Equal(t, uint64(9999 + 9999 + 0), resp[0].DownstreamSyncTS + resp[1].DownstreamSyncTS + resp[2].DownstreamSyncTS)
+		assert.Contains(t, []string{resp[0].DownstreamSyncTS, resp[1].DownstreamSyncTS, resp[2].DownstreamSyncTS}, "9999" )
+		assert.Contains(t, []string{resp[0].DownstreamSyncTS, resp[1].DownstreamSyncTS, resp[2].DownstreamSyncTS}, "0" )
+
 	})
 }
 
@@ -365,7 +367,7 @@ func TestManager_Detail(t *testing.T) {
 		})
 		assert.NoError(t, err)
 		assert.Equal(t, "taskId", resp.ID)
-		assert.Equal(t, uint64(9999), resp.DownstreamSyncTS)
+		assert.Equal(t, "9999", resp.DownstreamSyncTS)
 
 	})
 }

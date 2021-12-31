@@ -23,7 +23,7 @@ import (
 type CreateChangeFeedTaskReq struct {
 	Name           string      `json:"name" form:"name" example:"my_sync_name"`
 	ClusterID      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
-	StartTS        string       `json:"startTS" form:"startTS" example:"415241823337054209"`
+	StartTS        string      `json:"startTS" form:"startTS" example:"415241823337054209"`
 	FilterRules    []string    `json:"rules" form:"rules" example:"*.*"`
 	DownstreamType string      `json:"downstreamType"  form:"downstreamType" example:"tidb" enums:"tidb,kafka,mysql"`
 	Downstream     interface{} `json:"downstream" form:"downstream"`

@@ -346,9 +346,11 @@ func (p *Manager) Query(ctx context.Context, request cluster.QueryChangeFeedTask
 			ChangeFeedTaskInfo: parse(*task),
 		}
 
+		resp.ChangeFeedTaskInfo.UpstreamUpdateTS = strconv.FormatInt(int64(currentTSO()), 10)
 		if t, ok := cdcTaskInstanceMap[task.ID]; ok {
 			resp.DownstreamSyncTS = strconv.FormatInt(int64(t.CheckPointTSO), 10)
-			resp.ChangeFeedTaskInfo.UpstreamUpdateTS = strconv.FormatInt(int64(currentTSO()), 10)
+		} else {
+			resp.DownstreamSyncTS = "0"
 		}
 		resps = append(resps, resp)
 	}

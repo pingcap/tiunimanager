@@ -62,7 +62,6 @@ func TestAccount_CheckPassword(t *testing.T) {
 				t.Errorf("CheckPassword() error = %v, got = %v, wantErr %v, want %v", err, got, tt.wantErr, tt.want)
 				return
 			}
-
 		})
 	}
 }

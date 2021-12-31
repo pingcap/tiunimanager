@@ -69,6 +69,7 @@ const (
 	HostOnline   HostStatus = "Online"
 	HostOffline  HostStatus = "Offline"
 	HostFailed   HostStatus = "Failed"
+	HostDeleting HostStatus = "Deleting"
 	HostDeleted  HostStatus = "Deleted"
 )
 
@@ -77,6 +78,7 @@ func (s HostStatus) IsValidStatus() bool {
 		s == HostOffline ||
 		s == HostInit ||
 		s == HostFailed ||
+		s == HostDeleting ||
 		s == HostDeleted)
 }
 

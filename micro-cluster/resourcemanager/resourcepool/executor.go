@@ -92,9 +92,9 @@ func joinEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) 
 	return nil
 }
 
-func importHostSucceed(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
+func setHostsOnline(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	log := framework.LogWithContext(ctx)
-	log.Infoln("begin importHostSucceed")
+	log.Infoln("begin set host online")
 
 	resourcePool, hostIds, err := getImportHostIDsFromFlowContext(ctx)
 	if err != nil {
@@ -111,9 +111,9 @@ func importHostSucceed(node *workflowModel.WorkFlowNode, ctx *workflow.FlowConte
 	return nil
 }
 
-func importHostsFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
+func setHostsFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	log := framework.LogWithContext(ctx)
-	log.Infoln("begin importHostFailed")
+	log.Infoln("begin set host failed")
 
 	resourcePool, hostIds, err := getImportHostIDsFromFlowContext(ctx)
 	if err != nil {
@@ -128,6 +128,71 @@ func importHostsFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext
 	}
 	log.Infof("set host %v failed succeed", hostIds)
 
+	return nil
+}
+
+func checkHostBeforeDelete(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infoln("begin check hosts before delete")
+
+	resourcePool, hostIds, err := getImportHostIDsFromFlowContext(ctx)
+	if err != nil {
+		log.Errorf("delete hosts failed for get flow context, %v", err)
+		return err
+	}
+
+	hosts, err := resourcePool.QueryHosts(ctx, &structs.HostFilter{HostID: hostIds[0]}, &structs.PageRequest{})
+	if err != nil {
+		log.Errorf("query hosts %v failed, %v", hostIds[0], err)
+		return err
+	}
+
+	if hosts[0].Stat != string(constants.HostLoadLoadLess) {
+		errMsg := fmt.Sprintf("check before delete host failed, host %s load stat is not loadless, %s", hosts[0].ID, hosts[0].Stat)
+		log.Errorln(errMsg)
+		return errors.NewError(errors.TIEM_RESOURCE_HOST_STILL_INUSED, errMsg)
+	}
+	log.Infof("check host %s before delete succeed", hostIds[0])
+
+	return nil
+}
+
+func deleteHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infoln("begin delete hosts")
+
+	resourcePool, hostIds, err := getImportHostIDsFromFlowContext(ctx)
+	if err != nil {
+		log.Errorf("delete hosts failed for get flow context, %v", err)
+		return err
+	}
+
+	err = resourcePool.UpdateHostStatus(ctx, hostIds, string(constants.HostFailed))
+	if err != nil {
+		log.Errorf("delete hosts %v failed, %v", hostIds, err)
+		return err
+	}
+	log.Infof("delete host %v succeed", hostIds)
+
+	return nil
+}
+
+func leaveEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infoln("begin join em cluster")
+	/*
+		resourcePool, hostIds, err := getImportHostIDsFromFlowContext(ctx)
+		if err != nil {
+			log.Errorf("leave em cluster failed for get flow context, %v", err)
+			return err
+		}
+		// Store nodeID for second party service
+		wrapCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowNodeIDKey, node.ID)
+		if err = resourcePool.hostInitiator.LeaveEMCluster(wrapCtx, hostIds); err != nil {
+			log.Errorf("leave em cluster failed for %v, %v", hostIds, err)
+			return err
+		}
+	*/
 	return nil
 }
 

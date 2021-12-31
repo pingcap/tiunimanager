@@ -26,6 +26,11 @@ const (
 )
 
 const (
+	FlowDeleteHosts         string = "DeleteHosts"
+	ContextDeleteHostIDsKey string = "deleteHostIDs"
+)
+
+const (
 	HostSSHPort       = 22
 	FileBeatDataDir   = "/tiem-data"
 	FileBeatDeployDir = "/tiem-deploy"

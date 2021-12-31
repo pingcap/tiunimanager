@@ -35,9 +35,6 @@ import (
 	"github.com/pingcap-inc/tiem/models/user/identification"
 	"github.com/pingcap-inc/tiem/models/user/tenant"
 
-	"log"
-	"time"
-
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
@@ -80,16 +77,16 @@ func Open(fw *framework.BaseFramework, reentry bool) error {
 	dbFile := fw.GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName + "?_busy_timeout=60000"
 	logins := framework.LogForkFile(constants.LogFileSystem)
 	// todo tidb?
-	newLogger := framework.New(
-		log.New(os.Stdout, "\r\n", log.LstdFlags),
-		framework.Config{
-			SlowThreshold:             time.Second,
-			LogLevel:                  framework.Info,
-			IgnoreRecordNotFoundError: true,
-		},
-	)
+	//newLogger := framework.New(
+	//	log.New(os.Stdout, "\r\n", log.LstdFlags),
+	//	framework.Config{
+	//		SlowThreshold:             time.Second,
+	//		LogLevel:                  framework.Info,
+	//		IgnoreRecordNotFoundError: true,
+	//	},
+	//)
 	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{
-		Logger: newLogger,
+		//Logger: newLogger,
 	})
 
 	if err != nil || db.Error != nil {

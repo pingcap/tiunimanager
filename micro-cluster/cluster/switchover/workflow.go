@@ -32,6 +32,8 @@ const (
 	wfContextReqKey                     string = "wfContextReqKey"
 	wfContextOldSyncChangeFeedTaskIDKey string = "wfContextOldSyncChangeFeedTaskIDKey"
 	wfContextNewSyncChangeFeedTaskIDKey string = "wfContextNewSyncChangeFeedTaskIDKey"
+	wfContextCancelDeferStackKey        string = "wfContextCancelDeferStackKey"
+	wfContextExecutingDeferStackFlagKey string = "wfContextExecDeferStackFlagKey"
 )
 
 // wfGetReq workflow get request
@@ -46,6 +48,63 @@ func wfGetReqJson(ctx *workflow.FlowContext) string {
 		return "-"
 	}
 	return string(bs)
+}
+
+func wfGetExecutingDeferStackFlag(ctx *workflow.FlowContext) bool {
+	s, ok := ctx.GetData(wfContextExecutingDeferStackFlagKey).(string)
+	if ok {
+		if len(s) > 0 {
+			return true
+		}
+	} else {
+	}
+	return false
+}
+
+func wfSetExecutingDeferStackFlag(ctx *workflow.FlowContext) {
+	ctx.SetData(wfContextExecutingDeferStackFlagKey, "true")
+}
+
+type deferStack []string
+
+func wfGetDeferStack(ctx *workflow.FlowContext) []string {
+	var stk deferStack
+	s, ok := ctx.GetData(wfContextCancelDeferStackKey).(string)
+	if ok {
+		err := json.Unmarshal([]byte(s), &stk)
+		if err != nil {
+			framework.Log().Panicf("wfGetDeferStack: unmarshal deferStack failed, s:%s", s)
+		}
+	} else {
+	}
+	return stk
+}
+
+func wfSetDeferStack(ctx *workflow.FlowContext, stk []string) {
+	bs, err := json.Marshal(&stk)
+	if err != nil {
+		framework.Log().Panicf("wfSetDeferStack: marshal deferStack failed, err:%s", err)
+	}
+	ctx.SetData(wfContextCancelDeferStackKey, string(bs))
+}
+
+func wfGetDeferStackToConsume(ctx *workflow.FlowContext) []string {
+	stk := wfGetDeferStack(ctx)
+	length := len(stk)
+	reversedStk := make(deferStack, length)
+	for i := range stk {
+		reversedStk[length-1-i] = stk[i]
+	}
+	return reversedStk
+}
+
+func wfPushDeferStack(ctx *workflow.FlowContext, taskName string) {
+	if wfGetExecutingDeferStackFlag(ctx) {
+		return
+	}
+	stk := wfGetDeferStack(ctx)
+	stk = append(stk, taskName)
+	wfSetDeferStack(ctx, stk)
 }
 
 func wfGetOldMasterClusterId(ctx *workflow.FlowContext) string {
@@ -96,6 +155,21 @@ func wfnSetNewMasterReadWrite(node *workflowModel.WorkFlowNode, ctx *workflow.Fl
 	return err
 }
 
+// wfnSetOldMasterReadWrite workflow node set new master read-write mode
+func wfnSetOldMasterReadWrite(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.LogWithContext(ctx).Info("start wfnSetOldMasterReadWrite")
+	defer framework.LogWithContext(ctx).Info("exit wfnSetOldMasterReadWrite")
+	err := mgr.clusterSetReadWrite(ctx, wfGetOldMasterClusterId(ctx))
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"wfnSetOldMasterReadWrite clusterId:%s failed err:%s", wfGetOldMasterClusterId(ctx), err)
+	} else {
+		framework.LogWithContext(ctx).Infof(
+			"wfnSetOldMasterReadWrite clusterId:%s success", wfGetOldMasterClusterId(ctx))
+	}
+	return err
+}
+
 func wfnSetOldMasterReadOnly(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("start wfnSetOldMasterReadOnly")
 	defer framework.LogWithContext(ctx).Info("exit wfnSetOldMasterReadOnly")
@@ -106,6 +180,20 @@ func wfnSetOldMasterReadOnly(node *workflowModel.WorkFlowNode, ctx *workflow.Flo
 	} else {
 		framework.LogWithContext(ctx).Infof(
 			"wfnSetOldMasterReadOnly clusterId:%s success", wfGetOldMasterClusterId(ctx))
+	}
+	return err
+}
+
+func wfnSetOldSlaveReadOnly(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.LogWithContext(ctx).Info("start wfnSetOldSlaveReadOnly")
+	defer framework.LogWithContext(ctx).Info("exit wfnSetOldSlaveReadOnly")
+	err := mgr.clusterSetReadonly(ctx, wfGetOldSlaveClusterId(ctx))
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"wfnSetOldSlaveReadOnly clusterId:%s failed err:%s", wfGetOldSlaveClusterId(ctx), err)
+	} else {
+		framework.LogWithContext(ctx).Infof(
+			"wfnSetOldSlaveReadOnly clusterId:%s success", wfGetOldSlaveClusterId(ctx))
 	}
 	return err
 }
@@ -135,6 +223,36 @@ func wfnPauseSyncChangeFeedTask(node *workflowModel.WorkFlowNode, ctx *workflow.
 	framework.LogWithContext(ctx).Infof("start %s", funcName)
 	defer framework.LogWithContext(ctx).Infof("exit %s", funcName)
 	err := mgr.pauseChangeFeedTask(ctx, syncChangeFeedTaskId)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"%s req:%s err:%s", funcName, wfGetReqJson(ctx), err)
+	} else {
+		framework.LogWithContext(ctx).Infof(
+			"%s req:%s success", funcName, wfGetReqJson(ctx))
+	}
+	return err
+}
+
+func wfnResumeSyncChangeFeedTask(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext, syncChangeFeedTaskId string) error {
+	funcName := "wfnResumeSyncChangeFeedTask"
+	framework.LogWithContext(ctx).Infof("start %s", funcName)
+	defer framework.LogWithContext(ctx).Infof("exit %s", funcName)
+	err := mgr.resumeChangeFeedTask(ctx, syncChangeFeedTaskId)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"%s req:%s err:%s", funcName, wfGetReqJson(ctx), err)
+	} else {
+		framework.LogWithContext(ctx).Infof(
+			"%s req:%s success", funcName, wfGetReqJson(ctx))
+	}
+	return err
+}
+
+func wfnRemoveSyncChangeFeedTask(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext, syncChangeFeedTaskId string) error {
+	funcName := "wfnRemoveSyncChangeFeedTask"
+	framework.LogWithContext(ctx).Infof("start %s", funcName)
+	defer framework.LogWithContext(ctx).Infof("exit %s", funcName)
+	err := mgr.removeChangeFeedTask(ctx, syncChangeFeedTaskId)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"%s req:%s err:%s", funcName, wfGetReqJson(ctx), err)
@@ -238,11 +356,27 @@ func wfnGetSyncChangeFeedTaskStatus(node *workflowModel.WorkFlowNode, ctx *workf
 	return constants.ChangeFeedStatus(task.Status), err
 }
 
-func wfnMigrateAllDownStreamSyncChangeFeedTasksToNewMaster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext, exceptOldSyncChangeFeedTaskId string) error {
-	funcName := "wfnCloneAllDownStreamSyncChangeFeedTasksToNewMaster"
+func wfnMigrateAllDownStreamSyncChangeFeedTasksToNewMaster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	return wfnMigrateAllDownStreamSyncChangeFeedTasks(node, ctx,
+		wfGetOldMasterClusterId(ctx), wfGetNewMasterClusterId(ctx), wfGetOldSyncChangeFeedTaskId(ctx))
+}
+
+func wfnMigrateAllDownStreamSyncChangeFeedTasksBackToOldMaster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	return wfnMigrateAllDownStreamSyncChangeFeedTasks(node, ctx,
+		wfGetNewMasterClusterId(ctx), wfGetOldMasterClusterId(ctx), wfGetNewSyncChangeFeedTaskId(ctx))
+}
+
+func wfnMigrateAllDownStreamSyncChangeFeedTasks(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext,
+	fromCluster, toCluster, exceptSyncChangeFeedTaskId string) error {
+	funcName := "wfnMigrateAllDownStreamSyncChangeFeedTasks"
 	framework.LogWithContext(ctx).Infof("start %s", funcName)
 	defer framework.LogWithContext(ctx).Infof("exit %s", funcName)
-	tasks, err := mgr.getAllChangeFeedTasksOnCluster(ctx, wfGetOldMasterClusterId(ctx))
+
+	if len(fromCluster) == 0 || len(toCluster) == 0 {
+		return fmt.Errorf("%s: unexpected clusterID len, fromCluster:%s toCluster:%s", funcName, fromCluster, toCluster)
+	}
+
+	tasks, err := mgr.getAllChangeFeedTasksOnCluster(ctx, fromCluster)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"%s req:%s err:%s", funcName, wfGetReqJson(ctx), err)
@@ -253,7 +387,7 @@ func wfnMigrateAllDownStreamSyncChangeFeedTasksToNewMaster(node *workflowModel.W
 	}
 	var finalTasks []*cluster.ChangeFeedTask
 	for _, v := range tasks {
-		if v != nil && v.Id != exceptOldSyncChangeFeedTaskId {
+		if v != nil && v.Id != exceptSyncChangeFeedTaskId {
 			finalTasks = append(finalTasks, v)
 		}
 	}
@@ -269,10 +403,9 @@ func wfnMigrateAllDownStreamSyncChangeFeedTasksToNewMaster(node *workflowModel.W
 	}
 	for _, v := range finalTasks {
 		var zeroT time.Time
-		v.ClusterId = wfGetNewMasterClusterId(ctx)
 		v.Id = ""
 		v.Name = ""
-		v.ClusterId = wfGetNewMasterClusterId(ctx)
+		v.ClusterId = toCluster
 		v.StartTS = 0
 		v.Status = string(constants.Normal)
 		v.CreateTime = zeroT
@@ -365,6 +498,12 @@ func wfnCheckSyncCaughtUp(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCo
 	}
 }
 
+func wfnExecuteDeferStack(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	wfSetExecutingDeferStackFlag(ctx)
+	panic("NIY")
+	return nil
+}
+
 func wfStepFinish(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	funcName := "wfStepFinish"
 	framework.LogWithContext(ctx).Infof("%s", funcName)
@@ -374,44 +513,85 @@ func wfStepFinish(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) e
 func wfStepFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	funcName := "wfStepFail"
 	framework.LogWithContext(ctx).Errorf("%s", funcName)
-	return nil
+	return wfnExecuteDeferStack(node, ctx)
+}
+
+func ifNoErrThenPushDefer(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext,
+	fp func(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error, deferTaskName string) error {
+
+	err := fp(node, ctx)
+	if err == nil {
+		wfPushDeferStack(ctx, deferTaskName)
+		return nil
+	} else {
+		return err
+	}
 }
 
 func wfStepSetNewMasterReadWrite(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
-	return wfnSetNewMasterReadWrite(node, ctx)
+	return ifNoErrThenPushDefer(node, ctx, wfnSetNewMasterReadWrite, "wfStepSetOldSlaveReadonly")
+}
+
+func wfStepSetOldSlaveReadonly(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.Assert(wfGetExecutingDeferStackFlag(ctx))
+	return wfnSetOldSlaveReadOnly(node, ctx)
 }
 
 func wfStepSetOldMasterReadOnly(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
-	return wfnSetOldMasterReadOnly(node, ctx)
+	return ifNoErrThenPushDefer(node, ctx, wfnSetOldMasterReadOnly, "wfStepSetOldMasterReadWrite")
+}
+
+func wfStepSetOldMasterReadWrite(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.Assert(wfGetExecutingDeferStackFlag(ctx))
+	return wfnSetOldMasterReadWrite(node, ctx)
 }
 
 func wfStepSwapMasterSlaveRelationInDB(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	// no defer task needed because it is the last step
 	return wfnSwapMasterSlaveRelationInDB(node, ctx, wfGetNewSyncChangeFeedTaskId(ctx))
 }
 
+func wfStepResumeOldSyncChangeFeedTask(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.Assert(wfGetExecutingDeferStackFlag(ctx))
+	return wfnResumeSyncChangeFeedTask(node, ctx, wfGetOldSyncChangeFeedTaskId(ctx))
+}
+
 func wfStepPauseOldSyncChangeFeedTask(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
-	return wfnPauseSyncChangeFeedTask(node, ctx, wfGetOldSyncChangeFeedTaskId(ctx))
+	return ifNoErrThenPushDefer(node, ctx,
+		func(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+			return wfnPauseSyncChangeFeedTask(node, ctx, wfGetOldSyncChangeFeedTaskId(ctx))
+		},
+		"wfStepResumeOldSyncChangeFeedTask",
+	)
+}
+
+func wfStepRemoveNewSyncChangeFeedTask(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.Assert(wfGetExecutingDeferStackFlag(ctx))
+	return wfnRemoveSyncChangeFeedTask(node, ctx, wfGetNewSyncChangeFeedTaskId(ctx))
 }
 
 func wfStepCreateReverseSyncChangeFeedTask(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
-	funcName := "wfStepCreateReverseSyncChangeFeedTask"
-	framework.LogWithContext(ctx).Infof("start %s", funcName)
-	defer framework.LogWithContext(ctx).Infof("exit %s", funcName)
-	task, err := mgr.getChangeFeedTask(ctx, wfGetOldSyncChangeFeedTaskId(ctx))
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf(
-			"%s getChangeFeedTask req:%s err:%s", funcName, wfGetReqJson(ctx), err)
+	fp := func(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+		funcName := "wfStepCreateReverseSyncChangeFeedTask"
+		framework.LogWithContext(ctx).Infof("start %s", funcName)
+		defer framework.LogWithContext(ctx).Infof("exit %s", funcName)
+		task, err := mgr.getChangeFeedTask(ctx, wfGetOldSyncChangeFeedTaskId(ctx))
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf(
+				"%s getChangeFeedTask req:%s err:%s", funcName, wfGetReqJson(ctx), err)
+			return err
+		} else {
+			framework.LogWithContext(ctx).Infof(
+				"%s getChangeFeedTask req:%s success", funcName, wfGetReqJson(ctx))
+		}
+		var newTaskID string
+		newTaskID, err = wfnCreateReverseSyncChangeFeedTask(node, ctx, task)
+		if err == nil {
+			wfSetNewSyncChangeFeedTaskId(ctx, newTaskID)
+		}
 		return err
-	} else {
-		framework.LogWithContext(ctx).Infof(
-			"%s getChangeFeedTask req:%s success", funcName, wfGetReqJson(ctx))
 	}
-	var newTaskID string
-	newTaskID, err = wfnCreateReverseSyncChangeFeedTask(node, ctx, task)
-	if err == nil {
-		wfSetNewSyncChangeFeedTaskId(ctx, newTaskID)
-	}
-	return err
+	return ifNoErrThenPushDefer(node, ctx, fp, "wfStepRemoveNewSyncChangeFeedTask")
 }
 
 func wfStepCheckNewMasterReadWriteHealth(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
@@ -445,7 +625,11 @@ func wfStepCheckNewSyncChangeFeedTaskHealth(node *workflowModel.WorkFlowNode, ct
 }
 
 func wfStepMigrateAllDownStreamSyncChangeFeedTasksToNewMaster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
-	return wfnMigrateAllDownStreamSyncChangeFeedTasksToNewMaster(node, ctx, wfGetOldSyncChangeFeedTaskId(ctx))
+	return wfnMigrateAllDownStreamSyncChangeFeedTasksToNewMaster(node, ctx)
+}
+
+func wfStepMigrateAllDownStreamSyncChangeFeedTasksBackToOldMaster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	return wfnMigrateAllDownStreamSyncChangeFeedTasksBackToOldMaster(node, ctx)
 }
 
 func wfStepCheckSyncChangeFeedTaskMaxLagTime(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {

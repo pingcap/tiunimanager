@@ -16,14 +16,12 @@
 package secondparty
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"reflect"
 	"runtime/debug"
 	"strings"
@@ -155,47 +153,4 @@ func execShowRestoreInfoThruSQL(ctx context.Context, db *sql.DB, showRestoreSQLC
 	logInFunc.Info("sql cmd return successfully")
 	successFp()
 	return resp
-}
-
-func setTiUPMirror(ctx context.Context, tiUPBinPath string, mirrorAddr string) (string, error) {
-	logInFunc := framework.LogWithContext(ctx)
-	logInFunc.Infof("set TiUP mirror : %s", mirrorAddr)
-
-	var args []string
-	args = append(args, "mirror", "set", mirrorAddr)
-	var cmd *exec.Cmd
-	cmd = exec.Command(tiUPBinPath, args...)
-
-	cmd.SysProcAttr = genSysProcAttr()
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	data, err := cmd.Output()
-	if err != nil {
-		logInFunc.Errorf("set TiUP mirror err: %+v, errstr: %s", err, stderr.String())
-		err = fmt.Errorf("set TiUP mirror err: %+v, errstr: %s", err, stderr.String())
-		return "", err
-	}
-	return string(data), nil
-}
-
-func showTiUPMirror(ctx context.Context, tiUPBinPath string) (string, error) {
-	logInFunc := framework.LogWithContext(ctx)
-	logInFunc.Info("show TiUP mirror")
-
-	var args []string
-	args = append(args, "mirror", "show")
-	var cmd *exec.Cmd
-	cmd = exec.Command(tiUPBinPath, args...)
-
-	cmd.SysProcAttr = genSysProcAttr()
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	data, err := cmd.Output()
-	if err != nil {
-		logInFunc.Errorf("set TiUP mirror err: %+v, errstr: %s", err, stderr.String())
-		err = fmt.Errorf("set TiUP mirror err: %+v, errstr: %s", err, stderr.String())
-		return "", err
-	}
-	logInFunc.Infof("show TiUP mirror res: %s", string(data))
-	return string(data), nil
 }

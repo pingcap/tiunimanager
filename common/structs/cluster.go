@@ -141,7 +141,7 @@ type BackupRecord struct {
 	BackupMode   string    `json:"backupMode"`
 	FilePath     string    `json:"filePath"`
 	Size         float32   `json:"size"`
-	BackupTSO    uint64    `json:"backupTso"`
+	BackupTSO    string    `json:"backupTso"`
 	Status       string    `json:"status"`
 	StartTime    time.Time `json:"startTime"`
 	EndTime      time.Time `json:"endTime"`

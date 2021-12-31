@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -15,20 +14,34 @@
  *                                                                            *
  ******************************************************************************/
 
-package warehouse
+/*******************************************************************************
+ * @File: tiup
+ * @Description:
+ * @Author: shenhaibo@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/30
+*******************************************************************************/
 
-type ZoneHostStock struct {
-	ZoneBaseInfo
-	SpecBaseInfo
-	Count int
+package tiup
+
+import (
+	"time"
+
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"gorm.io/gorm"
+)
+
+// TiupConfig Record config, i.e. TIUP_HOME for different component of TiUP
+type TiupConfig struct {
+	ID            string    `gorm:"primaryKey;"`
+	ComponentType string    `gorm:"not null;comment:'TiUP component type, eg: cluster, tiem, dm, ctl;'"`
+	TiupHome      string    `gorm:"not null;comment:'TiUP_HOME path'"`
+	CreatedAt     time.Time `gorm:"<-:create"`
+	UpdatedAt     time.Time
+	DeletedAt     gorm.DeletedAt `gorm:"index"`
 }
 
-type ZoneBaseInfo struct {
-	ZoneCode string
-	ZoneName string
-}
-
-type SpecBaseInfo struct {
-	SpecCode string
-	SpecName string
+func (s *TiupConfig) BeforeCreate(tx *gorm.DB) (err error) {
+	s.ID = uuidutil.GenerateID()
+	return nil
 }

@@ -29,6 +29,7 @@ type CmdDeployReq struct {
 	ConfigStrYaml string
 	TimeoutS      int
 	TiUPPath      string
+	TiUPHome      string
 	Flags         []string
 }
 
@@ -39,6 +40,7 @@ type CmdScaleOutReq struct {
 	ConfigStrYaml string
 	TimeoutS      int
 	TiUPPath      string
+	TiUPHome      string
 	Flags         []string
 }
 
@@ -49,6 +51,7 @@ type CmdScaleInReq struct {
 	NodeId        string
 	TimeoutS      int
 	TiUPPath      string
+	TiUPHome      string
 	Flags         []string
 }
 
@@ -58,6 +61,7 @@ type CmdStartReq struct {
 	InstanceName  string
 	TimeoutS      int
 	TiUPPath      string
+	TiUPHome      string
 	Flags         []string
 }
 
@@ -66,6 +70,7 @@ type CmdListReq struct {
 	TaskID        uint64
 	TimeoutS      int
 	TiUPPath      string
+	TiUPHome      string
 	Flags         []string
 }
 
@@ -75,6 +80,7 @@ type CmdDestroyReq struct {
 	InstanceName  string
 	TimeoutS      int
 	TiUPPath      string
+	TiUPHome      string
 	Flags         []string
 }
 
@@ -88,6 +94,7 @@ type CmdGetAllOperationStatusResp struct {
 
 type CmdDumplingReq struct {
 	TaskID   uint64
+	TiUPHome string
 	TimeoutS int
 	TiUPPath string
 	Flags    []string
@@ -97,6 +104,7 @@ type CmdLightningReq struct {
 	TaskID   uint64
 	TimeoutS int
 	TiUPPath string
+	TiUPHome string
 	Flags    []string
 }
 
@@ -192,6 +200,7 @@ type CmdTransferReq struct {
 	InstanceName  string
 	CollectorYaml string
 	RemotePath    string
+	TiUPHome      string
 	TimeoutS      int
 	TiUPPath      string
 	Flags         []string
@@ -204,6 +213,7 @@ type CmdUpgradeReq struct {
 	Version       string
 	TimeoutS      int
 	TiUPPath      string
+	TiUPHome      string
 	Flags         []string
 }
 
@@ -253,6 +263,7 @@ type CmdEditConfigReq struct {
 	TiUPComponent TiUPComponentTypeStr
 	InstanceName  string
 	NewTopo       *spec2.Specification
+	TiUPHome      string
 	TimeoutS      int
 	Flags         []string
 }
@@ -260,6 +271,7 @@ type CmdEditConfigReq struct {
 type CmdReloadConfigReq struct {
 	TiUPComponent TiUPComponentTypeStr
 	InstanceName  string
+	TiUPHome      string
 	TimeoutS      int
 	Flags         []string
 }
@@ -267,6 +279,7 @@ type CmdReloadConfigReq struct {
 type CmdClusterExecReq struct {
 	TiUPComponent TiUPComponentTypeStr
 	InstanceName  string
+	TiUPHome      string
 	TimeoutS      int
 	Flags         []string
 }
@@ -326,7 +339,7 @@ type ChangeFeedUpdateReq struct {
 	SinkURI          string   `json:"sink_uri"`
 	TargetTS         int64    `json:"target_ts"`
 	FilterRules      []string `json:"filter_rules"`
-	IgnoreTxnStartTS []uint64   `json:"ignore_txn_start_ts"`
+	IgnoreTxnStartTS []uint64 `json:"ignore_txn_start_ts"`
 	SinkConfig       []string `json:"sink_config"`
 	MounterWorkerNum int      `json:"mounter_worker_num"`
 }

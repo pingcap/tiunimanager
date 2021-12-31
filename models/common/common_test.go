@@ -99,3 +99,31 @@ func TestUniqueIndex(t *testing.T)  {
 	}).Error
 	assert.NoError(t, err)
 }
+
+func TestFinalHash(t *testing.T) {
+	type args struct {
+		salt   string
+		passwd string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{"normal", args{salt: "&shgdjsdfgjhfgksdh", passwd: "Test12345678"}, false},
+		{"empty password", args{salt: "&shgdjsdfgjhfgksdh", passwd: ""}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := FinalHash(tt.args.salt, tt.args.passwd)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FinalHash() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if err == nil {
+				assert.NotEmpty(t, got)
+			}
+		})
+	}
+}

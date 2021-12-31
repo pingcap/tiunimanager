@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -12,12 +11,26 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
-package identification
+package framework
 
-type LoginInfo struct {
-	UserName     string `json:"userName"`
-	UserPassword string `json:"userPassword"`
+import (
+	"bytes"
+	"github.com/stretchr/testify/assert"
+	"net"
+	"testing"
+)
+
+func TestInitElasticsearch(t *testing.T) {
+	InitElasticsearch("127.0.0.1")
+}
+
+func TestSearch(t *testing.T)  {
+	client := InitElasticsearch("127.0.0.1")
+	_, e := client.Search("aaa", &bytes.Buffer{}, 1, 1)
+
+	err, ok := e.(*net.OpError)
+	assert.True(t, ok)
+	assert.Error(t, err)
 }

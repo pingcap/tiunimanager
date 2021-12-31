@@ -26,6 +26,7 @@ package parameter
 import (
 	"context"
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
 	"sync"
 
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -36,8 +37,6 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/workflow"
-
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
 	"github.com/pingcap-inc/tiem/common/structs"
 
@@ -74,7 +73,7 @@ var modifyParametersDefine = workflow.WorkFlowDefine{
 	},
 }
 
-func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryClusterParametersReq) (resp cluster.QueryClusterParametersResp, page *clusterpb.RpcPage, err error) {
+func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryClusterParametersReq) (resp cluster.QueryClusterParametersResp, page *clusterservices.RpcPage, err error) {
 	framework.LogWithContext(ctx).Infof("begin query cluster parameters, request: %+v", req)
 	defer framework.LogWithContext(ctx).Infof("end query cluster parameters")
 
@@ -126,7 +125,7 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 		}
 	}
 
-	page = &clusterpb.RpcPage{
+	page = &clusterservices.RpcPage{
 		Page:     int32(req.Page),
 		PageSize: int32(req.PageSize),
 		Total:    int32(total),

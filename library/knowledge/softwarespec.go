@@ -17,7 +17,7 @@
 package knowledge
 
 import (
-	"github.com/pingcap-inc/tiem/library/common/resource-type"
+	"github.com/pingcap-inc/tiem/common/constants"
 )
 
 type ClusterType struct {
@@ -54,7 +54,7 @@ type ClusterVersionSpec struct {
 	ClusterVersion        ClusterVersion          `json:"clusterVersion"`
 	ClusterPortConstraint ComponentPortConstraint `json:"clusterPortConstraint"`
 	ComponentSpecs        []ClusterComponentSpec  `json:"componentSpecs"`
-	ArchTypes             []resource.ArchType     `json:"archTypes"`
+	ArchTypes             []constants.ArchType    `json:"archTypes"`
 }
 
 func (s *ClusterVersionSpec) GetComponentSpec(componentType string) (componentSpec *ClusterComponentSpec) {

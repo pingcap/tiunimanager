@@ -17,11 +17,13 @@ package changefeed
 
 import (
 	"context"
+	"errors"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
@@ -77,7 +79,7 @@ func TestManager_Create(t *testing.T) {
 		resp, err := GetManager().Create(context.TODO(), cluster.CreateChangeFeedTaskReq{
 			Name: "aa",
 			ClusterID: "clusterId",
-			StartTS: 121212,
+			StartTS: "121212",
 			FilterRules: []string{"*.*"},
 			DownstreamType: "tidb",
 			Downstream: changefeed.TiDBDownstream{
@@ -214,6 +216,13 @@ func TestManager_Resume(t *testing.T) {
 		assert.NoError(t, err)
 		time.Sleep(time.Millisecond * 10)
 	})
+	t.Run("without cdc", func(t *testing.T) {
+		_, err := GetManager().Resume(context.TODO(), cluster.ResumeChangeFeedTaskReq {
+			"taskId",
+		})
+		assert.NoError(t, err)
+		time.Sleep(time.Millisecond * 10)
+	})
 }
 
 func TestManager_Update(t *testing.T) {
@@ -231,7 +240,8 @@ func TestManager_Update(t *testing.T) {
 	models.SetChangeFeedReaderWriter(changefeedRW)
 	changefeedRW.EXPECT().Get(gomock.Any(),gomock.Any()).Return(&changefeed.ChangeFeedTask{
 		Entity: common.Entity{
-			ID: "taskId",
+			Status: string(constants.ChangeFeedStatusNormal),
+			ID:     "taskId",
 		},
 		ClusterId: "clusterId",
 		Downstream: &changefeed.TiDBDownstream{
@@ -246,6 +256,16 @@ func TestManager_Update(t *testing.T) {
 	secondparty.Manager = mockSecond
 
 	mockSecond.EXPECT().UpdateChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+		Accepted: true,
+		Succeed: true,
+	}, nil).AnyTimes()
+
+	mockSecond.EXPECT().PauseChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+		Accepted: true,
+		Succeed: true,
+	}, nil).AnyTimes()
+
+	mockSecond.EXPECT().ResumeChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
 		Accepted: true,
 		Succeed: true,
 	}, nil).AnyTimes()
@@ -323,7 +343,9 @@ func TestManager_Query(t *testing.T) {
 		})
 		assert.NoError(t, err)
 		assert.Equal(t, 3, total)
-		assert.Equal(t, uint64(9999 + 9999 + 0), resp[0].DownstreamSyncTS + resp[1].DownstreamSyncTS + resp[2].DownstreamSyncTS)
+		assert.Contains(t, []string{resp[0].DownstreamSyncTS, resp[1].DownstreamSyncTS, resp[2].DownstreamSyncTS}, "9999" )
+		assert.Contains(t, []string{resp[0].DownstreamSyncTS, resp[1].DownstreamSyncTS, resp[2].DownstreamSyncTS}, "0" )
+
 	})
 }
 
@@ -365,7 +387,253 @@ func TestManager_Detail(t *testing.T) {
 		})
 		assert.NoError(t, err)
 		assert.Equal(t, "taskId", resp.ID)
-		assert.Equal(t, uint64(9999), resp.DownstreamSyncTS)
+		assert.Equal(t, "9999", resp.DownstreamSyncTS)
 
 	})
+}
+
+func TestManager_updateExecutor(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+	secondparty.Manager = mockSecond
+
+	mockSecond.EXPECT().UpdateChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+		Accepted: false,
+		Succeed: false,
+	}, nil).AnyTimes()
+
+	clusterMeta := &handler.ClusterMeta{
+		Instances: map[string][]*management.ClusterInstance{
+			"CDC": {
+				{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
+			},
+		},
+	}
+
+	task := &changefeed.ChangeFeedTask{
+		Entity: common.Entity{
+			ID: "taskId",
+		},
+		ClusterId: "clusterId",
+		Downstream: &changefeed.TiDBDownstream{
+		},
+	}
+	t.Run("failed", func(t *testing.T) {
+		err := GetManager().updateExecutor(context.TODO(), clusterMeta, task)
+		assert.Error(t, err)
+	})
+
+}
+func TestManager_pauseExecutor(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+	secondparty.Manager = mockSecond
+
+	mockSecond.EXPECT().PauseChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+		Accepted: false,
+		Succeed: false,
+	}, nil).AnyTimes()
+
+	clusterMeta := &handler.ClusterMeta{
+		Instances: map[string][]*management.ClusterInstance{
+			"CDC": {
+				{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
+			},
+		},
+	}
+
+	task := &changefeed.ChangeFeedTask{
+		Entity: common.Entity{
+			ID: "taskId",
+		},
+		ClusterId: "clusterId",
+		Downstream: &changefeed.TiDBDownstream{
+		},
+	}
+	t.Run("failed", func(t *testing.T) {
+		err := GetManager().pauseExecutor(context.TODO(), clusterMeta, task)
+		assert.Error(t, err)
+	})
+
+}
+func TestManager_resumeExecutor(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+	secondparty.Manager = mockSecond
+
+	mockSecond.EXPECT().ResumeChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+		Accepted: false,
+		Succeed: false,
+	}, nil).AnyTimes()
+
+	clusterMeta := &handler.ClusterMeta{
+		Instances: map[string][]*management.ClusterInstance{
+			"CDC": {
+				{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
+			},
+		},
+	}
+
+	task := &changefeed.ChangeFeedTask{
+		Entity: common.Entity{
+			ID: "taskId",
+		},
+		ClusterId: "clusterId",
+		Downstream: &changefeed.TiDBDownstream{
+		},
+	}
+	t.Run("failed", func(t *testing.T) {
+		err := GetManager().resumeExecutor(context.TODO(), clusterMeta, task)
+		assert.Error(t, err)
+	})
+
+}
+func TestManager_createExecutor(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+	secondparty.Manager = mockSecond
+
+	mockSecond.EXPECT().CreateChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+		Accepted: false,
+		Succeed: false,
+	}, nil).AnyTimes()
+
+	clusterMeta := &handler.ClusterMeta{
+		Instances: map[string][]*management.ClusterInstance{
+			"CDC": {
+				{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
+			},
+		},
+	}
+
+	task := &changefeed.ChangeFeedTask{
+		Entity: common.Entity{
+			ID: "taskId",
+		},
+		ClusterId: "clusterId",
+		Downstream: &changefeed.TiDBDownstream{
+		},
+	}
+	t.Run("failed", func(t *testing.T) {
+		err := GetManager().createExecutor(context.TODO(), clusterMeta, task)
+		assert.Error(t, err)
+	})
+
+}
+
+func Test_ClusterError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().GetMeta(gomock.Any(), "NotFound").Return(&management.Cluster{}, []*management.ClusterInstance{
+		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
+		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.2"}, Ports: []int32{111}},
+	}, errors.New("")).AnyTimes()
+
+	clusterRW.EXPECT().GetMeta(gomock.Any(), "WithoutCDC").Return(&management.Cluster{}, []*management.ClusterInstance{
+		{Type: "PD", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.2"}, Ports: []int32{111}},
+	}, nil).AnyTimes()
+
+
+	changefeedRW := mockchangefeed.NewMockReaderWriter(ctrl)
+	models.SetChangeFeedReaderWriter(changefeedRW)
+
+	changefeedRW.EXPECT().Get(gomock.Any(), "NotFound").Return(&changefeed.ChangeFeedTask{
+		Entity: common.Entity{
+			ID: "NotFound",
+		},
+		ClusterId: "NotFound",
+		Downstream: &changefeed.TiDBDownstream{
+		},
+	}, nil).AnyTimes()
+	changefeedRW.EXPECT().Get(gomock.Any(), "WithoutCDC").Return(&changefeed.ChangeFeedTask{
+		Entity: common.Entity{
+			ID: "WithoutCDC",
+		},
+		ClusterId: "WithoutCDC",
+		Downstream: &changefeed.TiDBDownstream{
+		},
+	}, nil).AnyTimes()
+	t.Run("create", func(t *testing.T) {
+		_, err := GetManager().Create(context.TODO(), cluster.CreateChangeFeedTaskReq{
+			ClusterID: "NotFound",
+		})
+		assert.Error(t, err)
+		_, err = GetManager().Create(context.TODO(), cluster.CreateChangeFeedTaskReq{
+			ClusterID: "WithoutCDC",
+		})
+		assert.Error(t, err)
+	})
+	t.Run("delete", func(t *testing.T) {
+		_, err := GetManager().Delete(context.TODO(), cluster.DeleteChangeFeedTaskReq{
+			ID: "NotFound",
+		})
+		assert.Error(t, err)
+		_, err = GetManager().Delete(context.TODO(), cluster.DeleteChangeFeedTaskReq{
+			ID: "WithoutCDC",
+		})
+		assert.Error(t, err)
+	})
+	t.Run("pause", func(t *testing.T) {
+		_, err := GetManager().Pause(context.TODO(), cluster.PauseChangeFeedTaskReq{
+			ID: "NotFound",
+		})
+		assert.Error(t, err)
+		_, err = GetManager().Pause(context.TODO(), cluster.PauseChangeFeedTaskReq{
+			ID: "WithoutCDC",
+		})
+		assert.Error(t, err)
+	})
+	t.Run("resume", func(t *testing.T) {
+		_, err := GetManager().Resume(context.TODO(), cluster.ResumeChangeFeedTaskReq{
+			ID: "NotFound",
+		})
+		assert.Error(t, err)
+		_, err = GetManager().Resume(context.TODO(), cluster.ResumeChangeFeedTaskReq{
+			ID: "WithoutCDC",
+		})
+		assert.Error(t, err)
+	})
+	t.Run("update", func(t *testing.T) {
+		_, err := GetManager().Update(context.TODO(), cluster.UpdateChangeFeedTaskReq{
+			ID: "NotFound",
+		})
+		assert.Error(t, err)
+		_, err = GetManager().Update(context.TODO(), cluster.UpdateChangeFeedTaskReq{
+			ID: "WithoutCDC",
+		})
+		assert.Error(t, err)
+	})
+	t.Run("detail", func(t *testing.T) {
+		_, err := GetManager().Detail(context.TODO(), cluster.DetailChangeFeedTaskReq{
+			ID: "NotFound",
+		})
+		assert.Error(t, err)
+		_, err = GetManager().Detail(context.TODO(), cluster.DetailChangeFeedTaskReq{
+			ID: "WithoutCDC",
+		})
+		assert.Error(t, err)
+	})
+	t.Run("query", func(t *testing.T) {
+		_, _, err := GetManager().Query(context.TODO(), cluster.QueryChangeFeedTaskReq{
+			ClusterId: "NotFound",
+		})
+		assert.Error(t, err)
+		_, _, err = GetManager().Query(context.TODO(), cluster.QueryChangeFeedTaskReq{
+			ClusterId: "WithoutCDC",
+		})
+		assert.Error(t, err)
+	})
+
 }

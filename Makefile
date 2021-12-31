@@ -24,7 +24,7 @@ PROTOC_GEN_GO = google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
 PROTOBUF_VERSION = 3.14.0
 PROTOC_PKG = protoc-$(PROTOBUF_VERSION)-$(OS)-$(ARCH).zip
 PROTOC_URL = https://github.com/protocolbuffers/protobuf/releases/download/v$(PROTOBUF_VERSION)/$(PROTOC_PKG)
-GENERATE_TARGET_DIR = $(CURDIR)/library/client/
+GENERATE_TARGET_DIR = $(CURDIR)/proto
 
 include Makefile.common
 
@@ -47,9 +47,9 @@ prepare:
 # generate protobuf files
 proto:
 	@echo "start to generate protobuf files"
-	@if [ ! -d "$(GENERATE_TARGET_DIR)/cluster" ]; then mkdir -p $(GENERATE_TARGET_DIR)/cluster; fi
-	protoc --proto_path=$(CURDIR)/proto:$(GOPATH)/include --micro_out=$(GENERATE_TARGET_DIR)/cluster \
-		--go_out=$(GENERATE_TARGET_DIR)/cluster $(CURDIR)/proto/*.proto
+	@if [ ! -d "$(GENERATE_TARGET_DIR)" ]; then mkdir -p $(GENERATE_TARGET_DIR); fi
+	protoc --proto_path=$(CURDIR)/proto:$(GOPATH)/include --micro_out=$(GENERATE_TARGET_DIR) \
+		--go_out=$(GENERATE_TARGET_DIR) $(CURDIR)/proto/*.proto
 	@echo "generate protobuf files successfully"
 
 
@@ -188,7 +188,7 @@ clean:
 	@if [ -f ${TIEM_BINARY_DIR}/vfsgendev ] ; then rm ${TIEM_BINARY_DIR}/vfsgendev; fi
 	@if [ -f ${TIEM_BINARY_DIR}/golangci-lint ] ; then rm ${TIEM_BINARY_DIR}/golangci-lint; fi
 	@if [ -f ${TIEM_BINARY_DIR}/errdoc-gen ] ; then rm ${TIEM_BINARY_DIR}/errdoc-gen; fi
-	@if [ -d ${GENERATE_TARGET_DIR}/cluster ] ; then rm -rf ${GENERATE_TARGET_DIR}/cluster; fi
+	@if [ -d ${GENERATE_TARGET_DIR}/clusterservices ] ; then rm -rf ${GENERATE_TARGET_DIR}/clusterservices; fi
 	@if [ -d ${CURDIR}/test ] ; then rm -rf ${CURDIR}/test; fi
 
 help:
@@ -260,7 +260,7 @@ add_test_file:
 
 mock:
 	$(GO) install github.com/golang/mock/mockgen
-	mockgen -destination ./test/mockcluster/mock_cluster.pb.micro.go -package mockcluster -source ./library/client/cluster/clusterpb/clusterservices.pb.micro.go
+	mockgen -destination ./test/mockcluster/mock_clusterservices.pb.micro.go -package mockclusterservices -source ./proto/clusterservices/clusterservices.pb.micro.go
 
 	mockgen -destination ./test/mockmodels/mockmanagement/mock_management_interface.go -package mockmanagement -source ./models/cluster/management/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockworkflow/mock_workflow_interface.go -package mockworkflow -source ./models/workflow/readerwriter.go
@@ -269,12 +269,11 @@ mock:
 	mockgen -destination ./test/mockmodels/mockresource/mock_resource_interface.go -package mockresource -source ./models/resource/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockconfig/mock_config_interface.go -package mockconfig -source ./models/platform/config/readerwriter.go
 	mockgen -destination ./test/mockmodels/mocksecondparty/mock_secondparty_interface.go -package mocksecondparty -source ./models/workflow/secondparty/readerwriter.go
-	mockgen -destination ./test/mockmodels/mockmirror/mock_mirror_interface.go -package mockmirror -source ./models/mirror/readerwriter.go
+	mockgen -destination ./test/mockmodels/mocktiupconfig/mock_tiupconfig_interface.go -package mocktiupconfig -source ./models/tiup/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockparametergroup/mock_parametergroup_interface.go -package mockparametergroup -source ./models/parametergroup/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockclusterparameter/mock_clusterparameter_interface.go -package mockclusterparameter -source ./models/cluster/parameter/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockclustermanagement/mock_cluster_management_interface.go -package mockclustermanagement -source ./models/cluster/management/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockchangefeed/mock_change_feed_interface.go -package mockchangefeed -source ./models/cluster/changefeed/readerwriter.go
-
 	mockgen -destination ./test/mockworkflow/mock_workflow.go -package mock_workflow_service -source ./workflow/workflow.go
 	mockgen -destination ./test/mockbr/mock_br.go -package mock_br_service -source ./micro-cluster/cluster/backuprestore/service.go
 	mockgen -destination ./test/mocksecondparty_v2/mock_secondparty.go -package mock_secondparty -source ./library/secondparty/second_party_manager_v2.go

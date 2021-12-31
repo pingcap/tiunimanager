@@ -26,10 +26,9 @@ package parametergroup
 import (
 	"context"
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
 
 	"github.com/pingcap-inc/tiem/common/errors"
-
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
 	"github.com/pingcap-inc/tiem/models/parametergroup"
 
@@ -142,7 +141,7 @@ func (m *Manager) DeleteParameterGroup(ctx context.Context, req message.DeletePa
 	return resp, nil
 }
 
-func (m *Manager) QueryParameterGroup(ctx context.Context, req message.QueryParameterGroupReq) (resp []message.QueryParameterGroupResp, page *clusterpb.RpcPage, err error) {
+func (m *Manager) QueryParameterGroup(ctx context.Context, req message.QueryParameterGroupReq) (resp []message.QueryParameterGroupResp, page *clusterservices.RpcPage, err error) {
 	offset := (req.Page - 1) * req.PageSize
 	pgs, total, err := models.GetParameterGroupReaderWriter().QueryParameterGroup(ctx, req.Name, req.ClusterSpec, req.ClusterVersion, req.DBType, req.HasDefault, offset, req.PageSize)
 	if err != nil {
@@ -174,7 +173,7 @@ func (m *Manager) QueryParameterGroup(ctx context.Context, req message.QueryPara
 		}
 	}
 
-	page = &clusterpb.RpcPage{
+	page = &clusterservices.RpcPage{
 		Page:     int32(req.Page),
 		PageSize: int32(req.PageSize),
 		Total:    int32(total),

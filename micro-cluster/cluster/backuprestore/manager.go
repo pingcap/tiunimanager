@@ -246,7 +246,7 @@ func (mgr *BRManager) QueryClusterBackupRecords(ctx context.Context, request clu
 			BackupMode:   record.BackupMode,
 			FilePath:     record.FilePath,
 			Size:         float32(record.Size) / bytes.MB, //Byte to MByte,
-			BackupTSO:    record.BackupTso,
+			BackupTSO:    strconv.FormatUint(record.BackupTso, 10),
 			Status:       record.Status,
 			StartTime:    record.StartTime,
 			EndTime:      record.EndTime,

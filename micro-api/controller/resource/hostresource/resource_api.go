@@ -19,6 +19,7 @@ package hostresource
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/client"
 	"io"
 	"net"
 	"os"
@@ -29,7 +30,6 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 
 	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/360EntSecGroup-Skylar/excelize"

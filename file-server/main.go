@@ -18,13 +18,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/client"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
 	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 
 	"github.com/pingcap-inc/tiem/file-server/service"
-	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
 	"github.com/asim/go-micro/v3"
 	"github.com/gin-gonic/gin"
@@ -43,7 +43,7 @@ func main() {
 
 	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
 		framework.ClusterService: func(service micro.Service) error {
-			client.ClusterClient = clusterpb.NewClusterService(string(framework.ClusterService), service.Client())
+			client.ClusterClient = clusterservices.NewClusterService(string(framework.ClusterService), service.Client())
 			return nil
 		},
 	})

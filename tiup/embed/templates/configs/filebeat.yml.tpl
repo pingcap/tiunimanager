@@ -24,7 +24,7 @@ logging.files:
 
 filebeat.config.modules:
   enable: true
-  path: {{.DeployDir}}/conf/*_input.yml
+  path: {{.DeployDir}}/conf/input_*.yml
   reload.enabled: true
   reload.period: 5s
 

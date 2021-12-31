@@ -15,51 +15,33 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: readerwriter
+ * @File: tiup
  * @Description:
  * @Author: shenhaibo@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/28
+ * @Date: 2021/12/30
 *******************************************************************************/
 
-package mirror
+package tiup
 
-import "context"
+import (
+	"time"
 
-type ReaderWriter interface {
-	// Create
-	// @Description: create new mirror record
-	// @Receiver m
-	// @Parameter ctx
-	// @Parameter tiUPComponentType
-	// @Parameter mirrorAddr
-	// @Return *Mirror
-	// @Return error
-	Create(ctx context.Context, tiUPComponentType string, mirrorAddr string) (*Mirror, error)
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"gorm.io/gorm"
+)
 
-	// Update
-	// @Description: update mirror record
-	// @Receiver m
-	// @Parameter ctx
-	// @Parameter updateTemplate
-	// @Return error
-	Update(ctx context.Context, updateTemplate *Mirror) error
+// TiupConfig Record config, i.e. TIUP_HOME for different component of TiUP
+type TiupConfig struct {
+	ID            string    `gorm:"primaryKey;"`
+	ComponentType string    `gorm:"not null;comment:'TiUP component type, eg: cluster, tiem, dm, ctl;'"`
+	TiupHome      string    `gorm:"not null;comment:'TiUP_HOME path'"`
+	CreatedAt     time.Time `gorm:"<-:create"`
+	UpdatedAt     time.Time
+	DeletedAt     gorm.DeletedAt `gorm:"index"`
+}
 
-	// Get
-	// @Description: get mirror record for given id
-	// @Receiver m
-	// @Parameter ctx
-	// @Parameter id
-	// @Return *Mirror
-	// @Return error
-	Get(ctx context.Context, id string) (*Mirror, error)
-
-	// QueryByComponentType
-	// @Description: get mirror record for given tiUPComponentType
-	// @Receiver m
-	// @Parameter ctx
-	// @Parameter tiUPComponentType
-	// @Return *Mirror
-	// @Return error
-	QueryByComponentType(ctx context.Context, tiUPComponentType string) (*Mirror, error)
+func (s *TiupConfig) BeforeCreate(tx *gorm.DB) (err error) {
+	s.ID = uuidutil.GenerateID()
+	return nil
 }

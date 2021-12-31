@@ -15,58 +15,51 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: main_test
+ * @File: readerwriter
  * @Description:
  * @Author: shenhaibo@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/29
+ * @Date: 2021/12/30
 *******************************************************************************/
 
-package mirror
+package tiup
 
-import (
-	"os"
-	"testing"
+import "context"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-)
+type ReaderWriter interface {
+	// Create
+	// @Description: create new record
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter tiUPComponentType
+	// @Parameter tiUPHome
+	// @Return *TiupConfig
+	// @Return error
+	Create(ctx context.Context, tiUPComponentType string, tiUPHome string) (*TiupConfig, error)
 
-var testRW *GormMirrorReadWrite
+	// Update
+	// @Description: update record
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter updateTemplate
+	// @Return error
+	Update(ctx context.Context, updateTemplate *TiupConfig) error
 
-const (
-	TestComponentType = "tiem"
-	TestMirrorAddr    = "http://127.0.0.1:8080/tiup-repo/"
-	TestMirrorAddr2   = "http://127.0.0.2:8080/tiup-repo/"
-)
+	// Get
+	// @Description: get record for given id
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter id
+	// @Return *TiupConfig
+	// @Return error
+	Get(ctx context.Context, id string) (*TiupConfig, error)
 
-func TestMain(m *testing.M) {
-	testFilePath := "testdata/" + uuidutil.ShortId()
-	os.MkdirAll(testFilePath, 0755)
-
-	logins := framework.LogForkFile(constants.LogFileSystem)
-
-	framework.InitBaseFrameworkForUt(framework.ClusterService,
-		func(d *framework.BaseFramework) error {
-			dbFile := testFilePath + constants.DBDirPrefix + constants.DatabaseFileName
-			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
-
-			if err != nil || db.Error != nil {
-				logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)
-			} else {
-				logins.Infof("open database successful, filepath: %s", dbFile)
-			}
-			db.Migrator().CreateTable(Mirror{})
-
-			testRW = NewGormMirrorReadWrite(db)
-			return nil
-		},
-	)
-	code := m.Run()
-	os.RemoveAll("testdata/")
-	os.RemoveAll("logs/")
-	os.Exit(code)
+	// QueryByComponentType
+	// @Description: get record for given tiUPComponentType
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter tiUPComponentType
+	// @Return *TiupConfig
+	// @Return error
+	QueryByComponentType(ctx context.Context, tiUPComponentType string) (*TiupConfig, error)
 }

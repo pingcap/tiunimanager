@@ -7,7 +7,7 @@ elasticsearch.hosts:
   - "http://{{.}}"
 {{- end}}
 monitoring.ui.container.elasticsearch.enabled: true
-logging.dest: {{.LogDir}}
+logging.dest: {{.LogDir}}/kibana.log
 
 # elasticsearch.username: elastic
 # elasticsearch.password: elastic

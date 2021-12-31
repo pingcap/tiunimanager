@@ -19,12 +19,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/file-server/controller"
-	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
 	"os"
 	"path/filepath"
 )
@@ -50,7 +50,7 @@ func (mgr *DirManager) GetImportPath(ctx context.Context, clusterId string) (str
 		return "", fmt.Errorf("marshal request error: %s", err.Error())
 	}
 
-	rpcResp, err := client.ClusterClient.GetSystemConfig(ctx, &clusterpb.RpcRequest{Request: string(body)}, controller.DefaultTimeout)
+	rpcResp, err := client.ClusterClient.GetSystemConfig(ctx, &clusterservices.RpcRequest{Request: string(body)}, controller.DefaultTimeout)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call cluster service api failed %s", err.Error())
 		return "", fmt.Errorf("call cluster service api failed %s", err.Error())

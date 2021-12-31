@@ -4343,7 +4343,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/account.UserProfile"
+                                            "$ref": "#/definitions/message.UserProfile"
                                         }
                                     }
                                 }
@@ -4713,17 +4713,6 @@ var doc = `{
         }
     },
     "definitions": {
-        "account.UserProfile": {
-            "type": "object",
-            "properties": {
-                "tenantId": {
-                    "type": "string"
-                },
-                "userName": {
-                    "type": "string"
-                }
-            }
-        },
         "cluster.BackupClusterDataReq": {
             "type": "object",
             "properties": {
@@ -6628,6 +6617,17 @@ var doc = `{
                 "paramGroupId": {
                     "type": "string",
                     "example": "1"
+                }
+            }
+        },
+        "message.UserProfile": {
+            "type": "object",
+            "properties": {
+                "tenantId": {
+                    "type": "string"
+                },
+                "userName": {
+                    "type": "string"
                 }
             }
         },

@@ -11,14 +11,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
 package client
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
 )
 
+var ClusterClient clusterservices.ClusterService
 
-var ClusterClient clusterpb.ClusterService
+

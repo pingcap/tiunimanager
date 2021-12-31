@@ -18,7 +18,7 @@ package parameter
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )

@@ -18,13 +18,14 @@ package main
 
 import (
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/client"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
 	"net/http"
 	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 
 	"github.com/gin-contrib/cors"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -36,7 +37,6 @@ import (
 	"github.com/asim/go-micro/v3"
 	"github.com/gin-gonic/gin"
 	_ "github.com/pingcap-inc/tiem/docs"
-	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	"github.com/pingcap-inc/tiem/micro-api/route"
@@ -62,10 +62,9 @@ func main() {
 		loadKnowledge,
 		defaultPortForLocal,
 	)
-
 	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
 		framework.ClusterService: func(service micro.Service) error {
-			client.ClusterClient = clusterpb.NewClusterService(string(framework.ClusterService), service.Client())
+			client.ClusterClient = clusterservices.NewClusterService(string(framework.ClusterService), service.Client())
 			return nil
 		},
 	})

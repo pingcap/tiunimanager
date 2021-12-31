@@ -1,12 +1,5 @@
 basePath: /api/v1/
 definitions:
-  account.UserProfile:
-    properties:
-      tenantId:
-        type: string
-      userName:
-        type: string
-    type: object
   cluster.BackupClusterDataReq:
     properties:
       backupMode:
@@ -1326,6 +1319,13 @@ definitions:
     properties:
       paramGroupId:
         example: "1"
+        type: string
+    type: object
+  message.UserProfile:
+    properties:
+      tenantId:
+        type: string
+      userName:
         type: string
     type: object
   structs.AsyncTaskWorkFlowInfo:
@@ -4770,7 +4770,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/account.UserProfile'
+                  $ref: '#/definitions/message.UserProfile'
               type: object
         "401":
           description: Unauthorized

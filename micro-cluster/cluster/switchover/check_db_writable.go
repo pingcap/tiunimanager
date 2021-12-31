@@ -21,42 +21,60 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
-var databaseName = constants.SwitchoverExclusiveDBNameForReadWriteHealthTest
+var databaseName = constants.SwitchoverReadWriteHealthTestDBName
+var tableNamePrefix = constants.SwitchoverReadWriteHealthTestTableNamePrefix
 
 type CheckWritable struct {
 	gorm.Model
+
+	// private field which is ignored by gorm
+	tableNameSuffix string `gorm:"-"`
 }
 
-func (p *Manager) checkClusterWritable(ctx context.Context, userName, pwd, addr string) error {
+func (c CheckWritable) TableName() string {
+	return fmt.Sprintf("%s_%s", tableNamePrefix, c.tableNameSuffix)
+}
+
+func (p *Manager) checkClusterWritable(ctx context.Context, clusterID, userName, pwd, addr string) error {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", userName, pwd, addr, databaseName)
+	mylog := framework.LogWithContext(ctx).WithField("clusterID", clusterID)
+	mylog.Info("checkClusterWritable gorm.Open with dsn:", dsn)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		framework.LogWithContext(ctx).Error("checkClusterWritable gorm.Open err:", err)
+		mylog.Warn("checkClusterWritable gorm.Open err:", err)
 		return err
 	} else {
-		framework.LogWithContext(ctx).Info("checkClusterWritable gorm.Open success")
+		mylog.Info("checkClusterWritable gorm.Open success")
 	}
-
+	suffixOfTableName := uuidutil.GenerateID()
+	var table = &CheckWritable{tableNameSuffix: suffixOfTableName}
 	// Migrate the schema
-	err = db.AutoMigrate(&CheckWritable{})
+	err = db.AutoMigrate(table)
 	if err != nil {
-		framework.LogWithContext(ctx).Error("checkClusterWritable AutoMigrate err:", err)
+		mylog.Warnf("checkClusterWritable AutoMigrate table %s err:%s", table.TableName(), err)
 		return err
 	} else {
-		framework.LogWithContext(ctx).Info("checkClusterWritable AutoMigrate success")
+		mylog.Info("checkClusterWritable AutoMigrate success")
+		defer func() {
+			err := db.Migrator().DropTable(table)
+			if err != nil {
+				mylog.Warnf("checkClusterWritable DropTable %s err:%s", table.TableName(), err)
+			} else {
+				mylog.Infof("checkClusterWritable DropTable %s success", table.TableName())
+			}
+		}()
 	}
-
 	ret := db.Create(&CheckWritable{})
 	if ret.Error != nil {
-		framework.LogWithContext(ctx).Error("checkClusterWritable Create Record err:", ret.Error)
-		return err
+		mylog.Warn("checkClusterWritable Create Record err:", ret.Error)
+		return ret.Error
 	} else {
-		framework.LogWithContext(ctx).Info("checkClusterWritable Create Record success")
+		mylog.Info("checkClusterWritable Create Record success")
 	}
-
 	return nil
 }

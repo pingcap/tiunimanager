@@ -71,16 +71,6 @@ type ReaderWriter interface {
 	UpdateStatus(ctx context.Context, clusterID string, status constants.ClusterRunningStatus) error
 
 	//
-	// UpdateReadOnlyFlag
-	//  @Description:
-	//  @param ctx
-	//  @param clusterID
-	//  @param readOnlyFlag
-	//  @return error
-	//
-	UpdateReadOnlyFlag(ctx context.Context, clusterID string, readOnlyFlag bool) error
-
-	//
 	// SetMaintenanceStatus
 	//  @Description: set maintenance status to targetStatus,
 	//  (current MaintenanceStatus == constants.ClusterMaintenanceNone) is a precondition

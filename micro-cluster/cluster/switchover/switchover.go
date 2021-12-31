@@ -214,7 +214,7 @@ func (p *Manager) checkClusterReadWriteHealth(ctx context.Context, clusterID str
 	if err != nil {
 		return fmt.Errorf("failed to get cluster's mysql access addr, err:%s", err)
 	}
-	return p.checkClusterWritable(ctx, userName, password, addr)
+	return p.checkClusterWritable(ctx, clusterID, userName, password, addr)
 }
 
 func (p *Manager) clusterGetMysqlUserNameAndPwd(ctx context.Context, clusterID string) (userName, password string, err error) {
@@ -267,24 +267,23 @@ func (p *Manager) clusterGetTLSMode(ctx context.Context, clusterID string) (tls 
 }
 
 func (p *Manager) clusterGetReadWriteMode(ctx context.Context, clusterID string) (readOnlyFlag bool, err error) {
-	db := models.GetClusterReaderWriter()
-	cluster, err := db.Get(ctx, clusterID)
-	if err != nil {
-		return readOnlyFlag, err
-	} else {
-		readOnlyFlag = cluster.ReadOnlyFlag
-		return readOnlyFlag, err
-	}
+	framework.LogWithContext(ctx).Errorf(
+		"function clusterGetReadWriteMode is not implemented yet, clusterId:%s", clusterID)
+	panic("NIY")
 }
 
+// set cluster Readonly to normal user but still Read-Writeable to changeFeedTask's user
 func (p *Manager) clusterSetReadonly(ctx context.Context, clusterID string) error {
-	db := models.GetClusterReaderWriter()
-	return db.UpdateReadOnlyFlag(ctx, clusterID, true)
+	framework.LogWithContext(ctx).Warnf(
+		"function clusterSetReadonly now is only a dummy and not implemented yet, clusterId:%s", clusterID)
+	return nil
 }
 
+// set cluster Read-Writeable to normal user and changeFeedTask's user
 func (p *Manager) clusterSetReadWrite(ctx context.Context, clusterID string) error {
-	db := models.GetClusterReaderWriter()
-	return db.UpdateReadOnlyFlag(ctx, clusterID, false)
+	framework.LogWithContext(ctx).Warnf(
+		"function clusterSetReadWrite now is only a dummy and not implemented yet, clusterId:%s", clusterID)
+	return nil
 }
 
 func (p *Manager) convertTSOToPhysicalTime(ctx context.Context, tso uint64) time.Time {

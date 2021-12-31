@@ -30,7 +30,6 @@ type Cluster struct {
 	Name              string                             `gorm:"not null;size:64;uniqueIndex;comment:'user name of the cluster''"`
 	DBUser            string                             `gorm:"not null;size:64;default:root;comment:'user name of the database''"`
 	DBPassword        string                             `gorm:"not null;size:64;comment:'user password of the database''"`
-	ReadOnlyFlag      bool                               `gorm:"default:false;comment:'indicating current cluster is ready only for user or not'"`
 	Type              string                             `gorm:"not null;size:16;comment:'type of the cluster, eg. TiDB、TiDB Migration';"`
 	Version           string                             `gorm:"not null;size:64;comment:'version of the cluster'"`
 	TLS               bool                               `gorm:"default:false;comment:'whether to enable TLS, value: true or false'"`

@@ -231,19 +231,6 @@ func (g *ClusterReadWrite) UpdateStatus(ctx context.Context, clusterID string, s
 	return dbCommon.WrapDBError(err)
 }
 
-func (g *ClusterReadWrite) UpdateReadOnlyFlag(ctx context.Context, clusterID string, readOnlyFlag bool) error {
-	cluster, err := g.Get(ctx, clusterID)
-
-	if err != nil {
-		return err
-	}
-
-	cluster.ReadOnlyFlag = readOnlyFlag
-
-	err = g.DB(ctx).Save(cluster).Error
-	return dbCommon.WrapDBError(err)
-}
-
 func (g *ClusterReadWrite) SetMaintenanceStatus(ctx context.Context, clusterID string, targetStatus constants.ClusterMaintenanceStatus) error {
 	cluster, err := g.Get(ctx, clusterID)
 

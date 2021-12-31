@@ -34,4 +34,5 @@ const SwitchoverCheckSyncChangeFeedTaskCaughtUpRetriesCount = 3
 const SwitchoverCheckSyncChangeFeedTaskCaughtUpRetryWait = 1000 * time.Millisecond
 const SwitchoverCheckSyncChangeFeedTaskCaughtUpMaxLagTime = 1000 * time.Millisecond
 
-const SwitchoverExclusiveDBNameForReadWriteHealthTest = "em_private_switchover_db"
+const SwitchoverReadWriteHealthTestDBName = "test"
+const SwitchoverReadWriteHealthTestTableNamePrefix = "em_rwtest"

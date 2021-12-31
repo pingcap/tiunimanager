@@ -73,10 +73,6 @@ func TestGetReaderWriter(t *testing.T) {
 	SetTokenReaderWriter(nil)
 	assert.Empty(t, GetTokenReaderWriter())
 
-	assert.NotEmpty(t, GetMirrorReaderWriter())
-	SetMirrorReaderWriter(nil)
-	assert.Empty(t, GetMirrorReaderWriter())
-
 	assert.NotEmpty(t, GetProductReaderWriter())
 	SetProductReaderWriter(nil)
 	assert.Empty(t, GetProductReaderWriter())

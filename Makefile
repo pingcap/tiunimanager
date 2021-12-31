@@ -269,12 +269,11 @@ mock:
 	mockgen -destination ./test/mockmodels/mockresource/mock_resource_interface.go -package mockresource -source ./models/resource/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockconfig/mock_config_interface.go -package mockconfig -source ./models/platform/config/readerwriter.go
 	mockgen -destination ./test/mockmodels/mocksecondparty/mock_secondparty_interface.go -package mocksecondparty -source ./models/workflow/secondparty/readerwriter.go
-	mockgen -destination ./test/mockmodels/mockmirror/mock_mirror_interface.go -package mockmirror -source ./models/mirror/readerwriter.go
+	mockgen -destination ./test/mockmodels/mocktiupconfig/mock_tiupconfig_interface.go -package mocktiupconfig -source ./models/tiup/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockparametergroup/mock_parametergroup_interface.go -package mockparametergroup -source ./models/parametergroup/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockclusterparameter/mock_clusterparameter_interface.go -package mockclusterparameter -source ./models/cluster/parameter/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockclustermanagement/mock_cluster_management_interface.go -package mockclustermanagement -source ./models/cluster/management/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockchangefeed/mock_change_feed_interface.go -package mockchangefeed -source ./models/cluster/changefeed/readerwriter.go
-
 	mockgen -destination ./test/mockworkflow/mock_workflow.go -package mock_workflow_service -source ./workflow/workflow.go
 	mockgen -destination ./test/mockbr/mock_br.go -package mock_br_service -source ./micro-cluster/cluster/backuprestore/service.go
 	mockgen -destination ./test/mocksecondparty_v2/mock_secondparty.go -package mock_secondparty -source ./library/secondparty/second_party_manager_v2.go

@@ -15,34 +15,58 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: mirror
+ * @File: main_test
  * @Description:
  * @Author: shenhaibo@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/28
+ * @Date: 2021/12/30
 *******************************************************************************/
 
-package mirror
+package tiup
 
 import (
-	"time"
+	"os"
+	"testing"
 
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
-
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-// Mirror Record mirror info for TiUP
-type Mirror struct {
-	ID            string    `gorm:"primaryKey;"`
-	ComponentType string    `gorm:"not null;comment:'TiUP component type, eg: cluster, tiem, dm, ctl;'"`
-	MirrorAddr    string    `gorm:"not null;comment:'TiUP mirror address'"`
-	CreatedAt     time.Time `gorm:"<-:create"`
-	UpdatedAt     time.Time
-	DeletedAt     gorm.DeletedAt `gorm:"index"`
-}
+var testRW *GormTiupConfigReadWrite
 
-func (s *Mirror) BeforeCreate(tx *gorm.DB) (err error) {
-	s.ID = uuidutil.GenerateID()
-	return nil
+const (
+	TestComponentType = "tiem"
+	TestTiUPHome      = ""
+	TestTiUPHome2     = "/home/tiem/.tiuptiem"
+)
+
+func TestMain(m *testing.M) {
+	testFilePath := "testdata/" + uuidutil.ShortId()
+	os.MkdirAll(testFilePath, 0755)
+
+	logins := framework.LogForkFile(constants.LogFileSystem)
+
+	framework.InitBaseFrameworkForUt(framework.ClusterService,
+		func(d *framework.BaseFramework) error {
+			dbFile := testFilePath + constants.DBDirPrefix + constants.DatabaseFileName
+			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+
+			if err != nil || db.Error != nil {
+				logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)
+			} else {
+				logins.Infof("open database successful, filepath: %s", dbFile)
+			}
+			db.Migrator().CreateTable(TiupConfig{})
+
+			testRW = NewGormTiupConfigReadWrite(db)
+			return nil
+		},
+	)
+	code := m.Run()
+	os.RemoveAll("testdata/")
+	os.RemoveAll("logs/")
+	os.Exit(code)
 }

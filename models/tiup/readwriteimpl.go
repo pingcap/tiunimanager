@@ -19,10 +19,10 @@
  * @Description:
  * @Author: shenhaibo@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/28
+ * @Date: 2021/12/30
 *******************************************************************************/
 
-package mirror
+package tiup
 
 import (
 	"context"
@@ -32,32 +32,31 @@ import (
 	"gorm.io/gorm"
 )
 
-type GormMirrorReadWrite struct {
+type GormTiupConfigReadWrite struct {
 	common.GormDB
 }
 
-func NewGormMirrorReadWrite(db *gorm.DB) *GormMirrorReadWrite {
-	m := &GormMirrorReadWrite{
+func NewGormTiupConfigReadWrite(db *gorm.DB) *GormTiupConfigReadWrite {
+	m := &GormTiupConfigReadWrite{
 		common.WrapDB(db),
 	}
 	return m
 }
 
-func (m *GormMirrorReadWrite) Create(ctx context.Context, componentType string, mirrorAddr string) (*Mirror, error) {
-	if "" == componentType || "" == mirrorAddr {
-		return nil, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "either componentType(actual: %s) or "+
-			"mirrorAddr(actual: %s) is nil", componentType, mirrorAddr)
+func (m *GormTiupConfigReadWrite) Create(ctx context.Context, componentType string, tiUPHome string) (*TiupConfig, error) {
+	if "" == componentType {
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "componenttype nil")
 	}
 
-	mirror := &Mirror{
+	tiUPConfig := &TiupConfig{
 		ComponentType: componentType,
-		MirrorAddr:    mirrorAddr,
+		TiupHome:      tiUPHome,
 	}
 
-	return mirror, m.DB(ctx).Create(mirror).Error
+	return tiUPConfig, m.DB(ctx).Create(tiUPConfig).Error
 }
 
-func (m *GormMirrorReadWrite) Update(ctx context.Context, updateTemplate *Mirror) error {
+func (m *GormTiupConfigReadWrite) Update(ctx context.Context, updateTemplate *TiupConfig) error {
 	if "" == updateTemplate.ID {
 		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "id is nil for %+v", updateTemplate)
 	}
@@ -65,32 +64,32 @@ func (m *GormMirrorReadWrite) Update(ctx context.Context, updateTemplate *Mirror
 	return m.DB(ctx).Save(updateTemplate).Error
 }
 
-func (m *GormMirrorReadWrite) Get(ctx context.Context, id string) (*Mirror, error) {
+func (m *GormTiupConfigReadWrite) Get(ctx context.Context, id string) (*TiupConfig, error) {
 	if "" == id {
 		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "id required")
 	}
 
-	mirror := &Mirror{}
-	err := m.DB(ctx).First(mirror, "id = ?", id).Error
+	tiUPConfig := &TiupConfig{}
+	err := m.DB(ctx).First(tiUPConfig, "id = ?", id).Error
 
 	if err != nil {
 		return nil, common.WrapDBError(err)
 	} else {
-		return mirror, nil
+		return tiUPConfig, nil
 	}
 }
 
-func (m *GormMirrorReadWrite) QueryByComponentType(ctx context.Context, componentType string) (*Mirror, error) {
+func (m *GormTiupConfigReadWrite) QueryByComponentType(ctx context.Context, componentType string) (*TiupConfig, error) {
 	if "" == componentType {
 		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "componenttype is required")
 	}
 
-	mirror := &Mirror{}
-	err := m.DB(ctx).First(mirror, "component_type = ?", componentType).Error
+	tiUPConfig := &TiupConfig{}
+	err := m.DB(ctx).First(tiUPConfig, "component_type = ?", componentType).Error
 
 	if err != nil {
 		return nil, common.WrapDBError(err)
 	} else {
-		return mirror, nil
+		return tiUPConfig, nil
 	}
 }

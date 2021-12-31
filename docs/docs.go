@@ -5831,7 +5831,7 @@ var doc = `{
                     "type": "string"
                 },
                 "backupTso": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "backupType": {
                     "type": "string"

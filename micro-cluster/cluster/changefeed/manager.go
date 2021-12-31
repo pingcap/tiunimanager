@@ -138,9 +138,7 @@ func (p *Manager) Delete(ctx context.Context, request cluster.DeleteChangeFeedTa
 	err = models.GetChangeFeedReaderWriter().Delete(ctx, request.ID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to delete change feed task, %s", err.Error())
-		return cluster.DeleteChangeFeedTaskResp{
-			ID: request.ID,
-		}, err
+		return
 	}
 	return
 }

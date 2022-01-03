@@ -63,7 +63,7 @@ func (m *ResourceManager) ImportHosts(ctx context.Context, hosts []structs.HostI
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("import hosts %v in batch failed from db service: %v", hosts, err)
 	} else {
-		framework.LogWithContext(ctx).Infof("import %d hosts in batch succeed from db service.", len(hosts))
+		framework.LogWithContext(ctx).Infof("import %d hosts in batch %v succeed from db service.", len(hosts), flowIds)
 	}
 
 	return
@@ -80,12 +80,12 @@ func (m *ResourceManager) QueryHosts(ctx context.Context, filter *structs.HostFi
 	return
 }
 
-func (m *ResourceManager) DeleteHosts(ctx context.Context, hostIds []string) (err error) {
-	err = m.resourcePool.DeleteHosts(ctx, hostIds)
+func (m *ResourceManager) DeleteHosts(ctx context.Context, hostIds []string) (flowIds []string, err error) {
+	flowIds, err = m.resourcePool.DeleteHosts(ctx, hostIds)
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("delete %d hosts %v in failed from db service: %v", len(hostIds), hostIds, err)
 	} else {
-		framework.LogWithContext(ctx).Infof("delete %d hosts %v succeed from db service.", len(hostIds), hostIds)
+		framework.LogWithContext(ctx).Infof("delete %d hosts %v in batch %v succeed from db service.", len(hostIds), hostIds, flowIds)
 	}
 
 	return

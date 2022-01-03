@@ -86,17 +86,29 @@ func (p *ResourcePool) registerImportHostsWorkFlow(ctx context.Context, flowMana
 
 func (p *ResourcePool) registerDeleteHostsWorkFlow(ctx context.Context, flowManager workflow.WorkFlowService) {
 	log := framework.LogWithContext(ctx)
-	log.Infoln("register delete hosts workflow with host init")
-	flowManager.RegisterWorkFlow(ctx, rp_consts.FlowDeleteHosts, &workflow.WorkFlowDefine{
-		FlowName: rp_consts.FlowDeleteHosts,
-		TaskNodes: map[string]*workflow.NodeDefine{
-			"start":          {Name: "start", SuccessEvent: "leaveEMCluster", FailEvent: "recover", ReturnType: workflow.SyncFuncNode, Executor: checkHostBeforeDelete},
-			"leaveEMCluster": {Name: "leaveEMCluster", SuccessEvent: "succeed", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: leaveEmCluster},
-			"succeed":        {Name: "succeed", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: deleteHosts},
-			"recover":        {Name: "recover", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsOnline},
-			"fail":           {Name: "fail", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsFail},
-		},
-	})
+	if !framework.Current.GetClientArgs().SkipHostInit {
+		log.Infoln("register delete hosts workflow with host init")
+		flowManager.RegisterWorkFlow(ctx, rp_consts.FlowDeleteHosts, &workflow.WorkFlowDefine{
+			FlowName: rp_consts.FlowDeleteHosts,
+			TaskNodes: map[string]*workflow.NodeDefine{
+				"start":          {Name: "start", SuccessEvent: "leaveEMCluster", FailEvent: "recover", ReturnType: workflow.SyncFuncNode, Executor: checkHostBeforeDelete},
+				"leaveEMCluster": {Name: "leaveEMCluster", SuccessEvent: "succeed", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: leaveEmCluster},
+				"succeed":        {Name: "succeed", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: deleteHosts},
+				"recover":        {Name: "recover", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsOnline},
+				"fail":           {Name: "fail", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsFail},
+			},
+		})
+	} else {
+		log.Infoln("register delete hosts workflow without host init")
+		flowManager.RegisterWorkFlow(ctx, rp_consts.FlowDeleteHosts, &workflow.WorkFlowDefine{
+			FlowName: rp_consts.FlowDeleteHosts,
+			TaskNodes: map[string]*workflow.NodeDefine{
+				"start":   {Name: "start", SuccessEvent: "succeed", FailEvent: "recover", ReturnType: workflow.SyncFuncNode, Executor: checkHostBeforeDelete},
+				"succeed": {Name: "succeed", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: deleteHosts},
+				"recover": {Name: "recover", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsOnline},
+			},
+		})
+	}
 }
 
 func (p *ResourcePool) GetHostProvider() hostprovider.HostProvider {

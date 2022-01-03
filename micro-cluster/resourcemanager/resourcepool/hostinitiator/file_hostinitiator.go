@@ -140,6 +140,27 @@ func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.H
 	return nil
 }
 
+func (p *FileHostInitiator) LeaveEMCluster(ctx context.Context, nodeId string) (err error) {
+	framework.LogWithContext(ctx).Infof("host %s leave em cluster", nodeId)
+
+	workFlowNodeID, ok := ctx.Value(rp_consts.ContextWorkFlowNodeIDKey).(string)
+	if !ok || workFlowNodeID == "" {
+		return errors.NewEMErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "get work flow node from context failed, %s, %v", workFlowNodeID, ok)
+	}
+	if rp_consts.SecondPartyReady {
+		emClusterName := framework.Current.GetClientArgs().EMClusterName
+		framework.LogWithContext(ctx).Infof("leave em cluster %s with work flow id %s", emClusterName, workFlowNodeID)
+		operationId, err := p.secondPartyServ.ClusterScaleIn(ctx, secondparty.TiEMComponentTypeStr, emClusterName, nodeId, rp_consts.DefaultTiupTimeOut,
+			[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, workFlowNodeID)
+		if err != nil {
+			return errors.NewEMErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "leave em cluster %s [%s] failed, %v", emClusterName, nodeId, err)
+		}
+		framework.LogWithContext(ctx).Infof("leave em cluster %s for %s in operationId %s", emClusterName, nodeId, operationId)
+	}
+
+	return nil
+}
+
 func (p *FileHostInitiator) verifyConnect(ctx context.Context, h *structs.HostInfo) (err error) {
 	p.sshClient = sshclient.NewSSHClient(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd)
 	if err = p.sshClient.Connect(); err != nil {

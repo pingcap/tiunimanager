@@ -154,6 +154,9 @@ func checkHostBeforeDelete(node *workflowModel.WorkFlowNode, ctx *workflow.FlowC
 	}
 	log.Infof("check host %s before delete succeed", hostIds[0])
 
+	// Set host info to context for leave em cluster executor
+	ctx.SetData(rp_consts.ContextImportHostInfoKey, hosts)
+
 	return nil
 }
 
@@ -179,20 +182,21 @@ func deleteHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 
 func leaveEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	log := framework.LogWithContext(ctx)
-	log.Infoln("begin join em cluster")
-	/*
-		resourcePool, hostIds, err := getImportHostIDsFromFlowContext(ctx)
-		if err != nil {
-			log.Errorf("leave em cluster failed for get flow context, %v", err)
+	log.Infoln("begin leave em cluster")
+	resourcePool, hosts, err := getImportHostInfoFromFlowContext(ctx)
+	if err != nil {
+		log.Errorf("leave em cluster failed for get flow context, %v", err)
+		return err
+	}
+	// Store nodeID for second party service
+	wrapCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowNodeIDKey, node.ID)
+	for _, host := range hosts {
+		clusterNodeId := fmt.Sprintf("%s:%d", host.IP, rp_consts.HostFileBeatPort)
+		if err = resourcePool.hostInitiator.LeaveEMCluster(wrapCtx, clusterNodeId); err != nil {
+			log.Errorf("leave em cluster failed for %v, %v", host.IP, err)
 			return err
 		}
-		// Store nodeID for second party service
-		wrapCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowNodeIDKey, node.ID)
-		if err = resourcePool.hostInitiator.LeaveEMCluster(wrapCtx, hostIds); err != nil {
-			log.Errorf("leave em cluster failed for %v, %v", hostIds, err)
-			return err
-		}
-	*/
+	}
 	return nil
 }
 

@@ -101,7 +101,7 @@ func Test_Verify(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func Test_ImportHostSucceed(t *testing.T) {
+func Test_SetHostOnline(t *testing.T) {
 	models.MockDB()
 	resourcePool := GetResourcePool()
 
@@ -120,11 +120,11 @@ func Test_ImportHostSucceed(t *testing.T) {
 	flowContext.SetData(rp_consts.ContextImportHostIDsKey, []string{"fake-host-id"})
 
 	var node workflowModel.WorkFlowNode
-	err := importHostSucceed(&node, flowContext)
+	err := setHostsOnline(&node, flowContext)
 	assert.Nil(t, err)
 }
 
-func Test_ImportHostFail(t *testing.T) {
+func Test_SetHostFail(t *testing.T) {
 	models.MockDB()
 	resourcePool := GetResourcePool()
 
@@ -141,6 +141,6 @@ func Test_ImportHostFail(t *testing.T) {
 	flowContext.SetData(rp_consts.ContextImportHostIDsKey, []string{"fake-host-id"})
 
 	var node workflowModel.WorkFlowNode
-	err := importHostsFail(&node, flowContext)
+	err := setHostsFail(&node, flowContext)
 	assert.Nil(t, err)
 }

@@ -127,8 +127,8 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 		}
 
 		flowManager.AddContext(flow, rp_consts.ContextResourcePoolKey, p)
-		flowManager.AddContext(flow, rp_consts.ContextImportHostInfoKey, []structs.HostInfo{host})
-		flowManager.AddContext(flow, rp_consts.ContextImportHostIDsKey, []string{hostIds[i]})
+		flowManager.AddContext(flow, rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{host})
+		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostIds[i]})
 
 		flows = append(flows, flow)
 		flowIds = append(flowIds, flow.Flow.ID)
@@ -164,7 +164,7 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string) (flowI
 		}
 
 		flowManager.AddContext(flow, rp_consts.ContextResourcePoolKey, p)
-		flowManager.AddContext(flow, rp_consts.ContextDeleteHostIDsKey, []string{hostId})
+		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostId})
 
 		flows = append(flows, flow)
 		flowIds = append(flowIds, flow.Flow.ID)

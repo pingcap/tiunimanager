@@ -41,6 +41,7 @@ func genHostInfo(hostName string) *structs.HostInfo {
 		AZ:       "TEST_AZ",
 		Rack:     "TEST_RACK",
 		Status:   string(constants.HostOnline),
+		Stat:     string(constants.HostLoadLoadLess),
 		Nic:      "10GE",
 		Purpose:  "Compute",
 	}

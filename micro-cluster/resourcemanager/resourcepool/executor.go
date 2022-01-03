@@ -32,7 +32,7 @@ func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin verifyHosts")
 
-	resourcePool, hosts, err := getImportHostInfoFromFlowContext(ctx)
+	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("verify host failed for get flow context, %v", err)
 		return err
@@ -58,7 +58,7 @@ func installSoftware(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin installSoftware")
 
-	resourcePool, hosts, err := getImportHostInfoFromFlowContext(ctx)
+	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("install software failed for get flow context, %v", err)
 		return err
@@ -77,7 +77,7 @@ func joinEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) 
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin join em cluster")
 
-	resourcePool, hosts, err := getImportHostInfoFromFlowContext(ctx)
+	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("join em cluster failed for get flow context, %v", err)
 		return err
@@ -96,7 +96,7 @@ func setHostsOnline(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin set host online")
 
-	resourcePool, hostIds, err := getImportHostIDsFromFlowContext(ctx)
+	resourcePool, hostIds, err := getHostIDArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("set host online failed for get flow context, %v", err)
 		return err
@@ -115,7 +115,7 @@ func setHostsFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin set host failed")
 
-	resourcePool, hostIds, err := getImportHostIDsFromFlowContext(ctx)
+	resourcePool, hostIds, err := getHostIDArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("set host failed failed for get flow context, %v", err)
 		return err
@@ -135,7 +135,7 @@ func checkHostBeforeDelete(node *workflowModel.WorkFlowNode, ctx *workflow.FlowC
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin check hosts before delete")
 
-	resourcePool, hostIds, err := getImportHostIDsFromFlowContext(ctx)
+	resourcePool, hostIds, err := getHostIDArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("delete hosts failed for get flow context, %v", err)
 		return err
@@ -155,7 +155,7 @@ func checkHostBeforeDelete(node *workflowModel.WorkFlowNode, ctx *workflow.FlowC
 	log.Infof("check host %s before delete succeed", hostIds[0])
 
 	// Set host info to context for leave em cluster executor
-	ctx.SetData(rp_consts.ContextImportHostInfoKey, hosts)
+	ctx.SetData(rp_consts.ContextHostInfoArrayKey, hosts)
 
 	return nil
 }
@@ -164,13 +164,13 @@ func deleteHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin delete hosts")
 
-	resourcePool, hostIds, err := getImportHostIDsFromFlowContext(ctx)
+	resourcePool, hostIds, err := getHostIDArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("delete hosts failed for get flow context, %v", err)
 		return err
 	}
 
-	err = resourcePool.UpdateHostStatus(ctx, hostIds, string(constants.HostFailed))
+	err = resourcePool.hostProvider.DeleteHosts(ctx, hostIds)
 	if err != nil {
 		log.Errorf("delete hosts %v failed, %v", hostIds, err)
 		return err
@@ -183,7 +183,7 @@ func deleteHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 func leaveEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin leave em cluster")
-	resourcePool, hosts, err := getImportHostInfoFromFlowContext(ctx)
+	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("leave em cluster failed for get flow context, %v", err)
 		return err
@@ -200,31 +200,31 @@ func leaveEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 	return nil
 }
 
-func getImportHostInfoFromFlowContext(ctx *workflow.FlowContext) (rp *ResourcePool, hosts []structs.HostInfo, err error) {
+func getHostInfoArrayFromFlowContext(ctx *workflow.FlowContext) (rp *ResourcePool, hosts []structs.HostInfo, err error) {
 	var ok bool
 	rp, ok = ctx.GetData(rp_consts.ContextResourcePoolKey).(*ResourcePool)
 	if !ok {
 		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextResourcePoolKey)
 		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
-	hosts, ok = ctx.GetData(rp_consts.ContextImportHostInfoKey).([]structs.HostInfo)
+	hosts, ok = ctx.GetData(rp_consts.ContextHostInfoArrayKey).([]structs.HostInfo)
 	if !ok {
-		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextImportHostInfoKey)
+		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextHostInfoArrayKey)
 		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
 	return rp, hosts, nil
 }
 
-func getImportHostIDsFromFlowContext(ctx *workflow.FlowContext) (rp *ResourcePool, hostIds []string, err error) {
+func getHostIDArrayFromFlowContext(ctx *workflow.FlowContext) (rp *ResourcePool, hostIds []string, err error) {
 	var ok bool
 	rp, ok = ctx.GetData(rp_consts.ContextResourcePoolKey).(*ResourcePool)
 	if !ok {
 		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextResourcePoolKey)
 		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
-	hostIds, ok = ctx.GetData(rp_consts.ContextImportHostIDsKey).([]string)
+	hostIds, ok = ctx.GetData(rp_consts.ContextHostIDArrayKey).([]string)
 	if !ok {
-		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextImportHostIDsKey)
+		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextHostIDArrayKey)
 		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
 	return rp, hostIds, nil

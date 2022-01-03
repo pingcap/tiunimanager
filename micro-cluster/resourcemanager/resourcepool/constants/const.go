@@ -18,16 +18,15 @@ package constants
 const SecondPartyReady = true
 
 const (
-	FlowImportHosts          string = "ImportHosts"
-	ContextResourcePoolKey   string = "resourcePool"
-	ContextImportHostInfoKey string = "importHostInfo"
-	ContextImportHostIDsKey  string = "importHostIDs"
-	ContextWorkFlowNodeIDKey string = "importHostsWorkFlowNodeID"
+	FlowImportHosts string = "ImportHosts"
+	FlowDeleteHosts string = "DeleteHosts"
 )
 
 const (
-	FlowDeleteHosts         string = "DeleteHosts"
-	ContextDeleteHostIDsKey string = "deleteHostIDs"
+	ContextResourcePoolKey   string = "resourcePool"
+	ContextHostInfoArrayKey  string = "hostInfoArray"
+	ContextHostIDArrayKey    string = "hostIDArray"
+	ContextWorkFlowNodeIDKey string = "resourceWorkFlowNodeID"
 )
 
 const (

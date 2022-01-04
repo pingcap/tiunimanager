@@ -38,25 +38,33 @@ func TestGormClusterReadWrite_MaintenanceStatus(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, constants.ClusterMaintenanceNone, got.MaintenanceStatus)
 
-	// set ok
+	// ok
 	err = testRW.SetMaintenanceStatus(context.TODO(), got.ID, constants.ClusterMaintenanceStopping)
 	assert.NoError(t, err)
 
-	// set failed
-	err = testRW.SetMaintenanceStatus(context.TODO(), got.ID, constants.ClusterMaintenanceCloning)
+	// failed
+	err = testRW.SetMaintenanceStatus(context.TODO(), got.ID, constants.ClusterMaintenanceStopping)
+	assert.Error(t, err)
+
+	// ok
+	err = testRW.SetMaintenanceStatus(context.TODO(), got.ID, constants.ClusterMaintenanceDeleting)
+	assert.NoError(t, err)
+
+	// failed
+	err = testRW.SetMaintenanceStatus(context.TODO(), got.ID, constants.ClusterMaintenanceDeleting)
 	assert.Error(t, err)
 
 	// check
 	check, err := testRW.Get(context.TODO(), got.ID)
 	assert.NoError(t, err)
-	assert.Equal(t, constants.ClusterMaintenanceStopping, check.MaintenanceStatus)
+	assert.Equal(t, constants.ClusterMaintenanceDeleting, check.MaintenanceStatus)
 
 	// clear failed
 	err = testRW.ClearMaintenanceStatus(context.TODO(), got.ID, constants.ClusterMaintenanceCloning)
 	assert.Error(t, err)
 
 	// clear ok
-	err = testRW.ClearMaintenanceStatus(context.TODO(), got.ID, constants.ClusterMaintenanceStopping)
+	err = testRW.ClearMaintenanceStatus(context.TODO(), got.ID, constants.ClusterMaintenanceDeleting)
 	assert.NoError(t, err)
 
 	// check

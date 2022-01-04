@@ -240,10 +240,24 @@ func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		return err
 	}
 
-	if deleteReq.ClearBackupData {
+	// delete auto backup records
+	_, err = backuprestore.GetBRService().DeleteBackupRecords(context.Context, cluster.DeleteBackupDataReq{
+		ClusterID:  meta.Cluster.ID,
+		BackupMode: string(constants.BackupModeAuto),
+	})
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"delete auto backup data for cluster %s error: %s", meta.Cluster.ID, err.Error())
+		return err
+	}
+
+	// delete manual backup records
+	if deleteReq.KeepHistoryBackupRecords {
+	} else {
 		_, err = backuprestore.GetBRService().DeleteBackupRecords(context.Context, cluster.DeleteBackupDataReq{
 			ClusterID:  meta.Cluster.ID,
-			BackupMode: string(constants.BackupModeAuto),
+			BackupMode: string(constants.BackupModeManual),
+			// todo exclude backup record before deleting
 		})
 		if err != nil {
 			framework.LogWithContext(context.Context).Errorf(

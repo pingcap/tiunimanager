@@ -182,7 +182,9 @@ definitions:
     properties:
       autoBackup:
         type: boolean
-      clearBackupData:
+      force:
+        type: boolean
+      keepHistoryBackupRecords:
         type: boolean
     type: object
   cluster.DeleteClusterResp:

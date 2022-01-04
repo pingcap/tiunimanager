@@ -18,9 +18,10 @@ package main
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/proto/clusterservices"
-	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 
@@ -32,7 +33,6 @@ import (
 	"github.com/pingcap-inc/tiem/file-server/interceptor"
 	"github.com/pingcap-inc/tiem/file-server/route"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/thirdparty/etcd_clientv2"
 )
 
 func main() {
@@ -85,7 +85,7 @@ func initGinEngine(d *framework.BaseFramework) error {
 
 // serviceRegistry registry file-server service
 func serviceRegistry(f *framework.BaseFramework) {
-	etcdClient := etcd_clientv2.InitEtcdClient(f.GetServiceMeta().RegistryAddress)
+	etcdClient := framework.InitEtcdClientV2(f.GetServiceMeta().RegistryAddress)
 	address := f.GetClientArgs().Host + f.GetServiceMeta().GetServiceAddress()
 	key := "/micro/registry/" + f.GetServiceMeta().ServiceName.ServerName() + "/" + address
 	// Register file-server every TTL-2 seconds, default TTL is 5s

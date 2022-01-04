@@ -18,6 +18,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/metrics"
 	"github.com/pingcap-inc/tiem/proto/clusterservices"
@@ -28,8 +29,6 @@ import (
 	"github.com/gin-contrib/cors"
 
 	"github.com/prometheus/client_golang/prometheus"
-
-	"github.com/pingcap-inc/tiem/library/thirdparty/etcd_clientv2"
 
 	"github.com/pingcap-inc/tiem/library/knowledge"
 
@@ -123,7 +122,7 @@ func corsConfig() cors.Config {
 
 // serviceRegistry registry openapi-server service
 func serviceRegistry(f *framework.BaseFramework) {
-	etcdClient := etcd_clientv2.InitEtcdClient(f.GetServiceMeta().RegistryAddress)
+	etcdClient := framework.InitEtcdClientV2(f.GetServiceMeta().RegistryAddress)
 	address := f.GetClientArgs().Host + f.GetServiceMeta().GetServiceAddress()
 	key := "/micro/registry/" + f.GetServiceMeta().ServiceName.ServerName() + "/" + address
 	// Register openapi-server every TTL-2 seconds, default TTL is 5s

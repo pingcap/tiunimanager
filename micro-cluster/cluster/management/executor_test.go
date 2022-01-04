@@ -449,13 +449,13 @@ func TestClearBackupData(t *testing.T) {
 			},
 		},
 	})
-	flowContext.SetData(ContextDeleteRequest, cluster.DeleteClusterReq{ClearBackupData: true})
+	flowContext.SetData(ContextDeleteRequest, cluster.DeleteClusterReq{KeepHistoryBackupRecords: false})
 
 	t.Run("normal", func(t *testing.T) {
 		brService := mock_br_service.NewMockBRService(ctrl)
 		backuprestore.MockBRService(brService)
-		brService.EXPECT().DeleteBackupStrategy(gomock.Any(), gomock.Any()).Return(cluster.DeleteBackupStrategyResp{}, nil)
-		brService.EXPECT().DeleteBackupRecords(gomock.Any(), gomock.Any()).Return(cluster.DeleteBackupDataResp{}, nil)
+		brService.EXPECT().DeleteBackupStrategy(gomock.Any(), gomock.Any()).Return(cluster.DeleteBackupStrategyResp{}, nil).AnyTimes()
+		brService.EXPECT().DeleteBackupRecords(gomock.Any(), gomock.Any()).Return(cluster.DeleteBackupDataResp{}, nil).AnyTimes()
 		err := clearBackupData(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.NoError(t, err)
 	})
@@ -464,7 +464,7 @@ func TestClearBackupData(t *testing.T) {
 		brService := mock_br_service.NewMockBRService(ctrl)
 		backuprestore.MockBRService(brService)
 		brService.EXPECT().DeleteBackupStrategy(gomock.Any(),
-			gomock.Any()).Return(cluster.DeleteBackupStrategyResp{}, fmt.Errorf("delete backup strategy fail"))
+			gomock.Any()).Return(cluster.DeleteBackupStrategyResp{}, fmt.Errorf("delete backup strategy fail")).AnyTimes()
 		err := clearBackupData(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
 	})
@@ -473,9 +473,9 @@ func TestClearBackupData(t *testing.T) {
 		brService := mock_br_service.NewMockBRService(ctrl)
 		backuprestore.MockBRService(brService)
 		brService.EXPECT().DeleteBackupStrategy(gomock.Any(),
-			gomock.Any()).Return(cluster.DeleteBackupStrategyResp{}, nil)
+			gomock.Any()).Return(cluster.DeleteBackupStrategyResp{}, nil).AnyTimes()
 		brService.EXPECT().DeleteBackupRecords(gomock.Any(),
-			gomock.Any()).Return(cluster.DeleteBackupDataResp{}, fmt.Errorf("delete backup data fail"))
+			gomock.Any()).Return(cluster.DeleteBackupDataResp{}, fmt.Errorf("delete backup data fail")).AnyTimes()
 		err := clearBackupData(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
 	})

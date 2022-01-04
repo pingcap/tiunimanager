@@ -4962,7 +4962,10 @@ var doc = `{
                 "autoBackup": {
                     "type": "boolean"
                 },
-                "clearBackupData": {
+                "force": {
+                    "type": "boolean"
+                },
+                "keepHistoryBackupRecords": {
                     "type": "boolean"
                 }
             }
@@ -4972,6 +4975,12 @@ var doc = `{
             "properties": {
                 "clusterID": {
                     "type": "string"
+                },
+                "maintenanceStatus": {
+                    "type": "string"
+                },
+                "needConfirmation": {
+                    "type": "boolean"
                 },
                 "workFlowId": {
                     "description": "Asynchronous task workflow ID",

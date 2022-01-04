@@ -36,3 +36,7 @@ const SwitchoverCheckSyncChangeFeedTaskCaughtUpMaxLagTime = 1000 * time.Millisec
 
 const SwitchoverReadWriteHealthTestDBName = "test"
 const SwitchoverReadWriteHealthTestTableNamePrefix = "em_rwtest"
+
+const SwitchoverCancelOpRetriesCount = 3
+const SwitchoverCancelOpRetryWait = 500 * time.Millisecond
+const SwitchoverCancelOpRunAllStepsEvenOnFail = true

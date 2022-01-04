@@ -326,6 +326,11 @@ func (m *Manager) pauseChangeFeedTask(ctx context.Context, changeFeedTaskId stri
 	return nil
 }
 
+func (m *Manager) resumeChangeFeedTask(ctx context.Context, changeFeedTaskId string) error {
+	panic("NIY")
+	return nil
+}
+
 func (m *Manager) queryChangeFeedTask(ctx context.Context, changeFeedTaskId string) (*cluster.ChangeFeedTaskInfo, error) {
 	panic("NIY")
 	return nil, nil
@@ -343,7 +348,7 @@ func (m *Manager) queryChangeFeedTaskCheckpointedTime(ctx context.Context, chang
 	return t, nil
 }
 
-func (m *Manager) deleteChangeFeedTask(ctx context.Context, changeFeedTaskId string) error {
+func (m *Manager) removeChangeFeedTask(ctx context.Context, changeFeedTaskId string) error {
 	panic("NIY")
 	return nil
 }

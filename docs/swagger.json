@@ -6197,7 +6197,15 @@
             }
         },
         "message.DeleteHostsResp": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "flowInfo": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.AsyncTaskWorkFlowInfo"
+                    }
+                }
+            }
         },
         "message.DeleteImportExportRecordReq": {
             "type": "object"

@@ -42,9 +42,10 @@ type BackupClusterDataResp struct {
 
 // DeleteBackupDataReq Delete a backup file based on the cluster ID and the ID of the backup file
 type DeleteBackupDataReq struct {
-	ClusterID  string `json:"clusterId"`
-	BackupMode string `json:"backupMode"`
-	BackupID   string `json:"backupId" swaggerignore:"true"`
+	ClusterID        string   `json:"clusterId"`
+	BackupMode       string   `json:"backupMode"`
+	BackupID         string   `json:"backupId" swaggerignore:"true"`
+	ExcludeBackupIDs []string `json:"excludeBackupId" swaggerignore:"true"`
 }
 
 // DeleteBackupDataResp Delete a backup file reply message

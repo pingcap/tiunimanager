@@ -268,6 +268,14 @@ func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request cluster.D
 		return resp, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "invalid param clusterId and backupId empty")
 	}
 
+	deleteRecordMap := make(map[string]*backuprestore.BackupRecord)
+	excludeBackupIdMap := make(map[string]string)
+	if len(request.ExcludeBackupIDs) > 0 {
+		for _, excludeId := range request.ExcludeBackupIDs {
+			excludeBackupIdMap[excludeId] = excludeId
+		}
+	}
+
 	brRW := models.GetBRReaderWriter()
 	for page, pageSize := 1, defaultPageSize; ; page++ {
 		records, _, err := brRW.QueryBackupRecords(ctx, request.ClusterID, request.BackupID, request.BackupMode, 0, 0, page, pageSize)
@@ -280,20 +288,29 @@ func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request cluster.D
 		}
 
 		for _, record := range records {
-			if string(constants.StorageTypeS3) != record.StorageType {
-				filePath := record.FilePath
-				go func() {
-					removeErr := os.RemoveAll(filePath)
-					framework.LogWithContext(ctx).Infof("remove backup filePath %s, result %v", filePath, removeErr)
-				}()
+			if _, ok := excludeBackupIdMap[record.ID]; ok {
+				framework.LogWithContext(ctx).Infof("current backupId %s in excludeBackupIds, skip delete!", record.ID)
+				continue
 			}
-
-			err = brRW.DeleteBackupRecord(ctx, record.ID)
-			if err != nil {
-				framework.LogWithContext(ctx).Errorf("delete backup record %s failed, %s", record.ID, err.Error())
-				return resp, errors.WrapError(errors.TIEM_BACKUP_RECORD_DELETE_FAILED, fmt.Sprintf("delete backup record %s failed, %s", record.ID, err.Error()), err)
-			}
+			deleteRecordMap[record.ID] = record
 		}
+	}
+
+	for recordId, record := range deleteRecordMap {
+		framework.LogWithContext(ctx).Infof("begin delete backup record %+v", record)
+		if string(constants.StorageTypeS3) != record.StorageType {
+			filePath := record.FilePath
+			go func() {
+				removeErr := os.RemoveAll(filePath)
+				framework.LogWithContext(ctx).Infof("remove backup filePath %s, result %v", filePath, removeErr)
+			}()
+		}
+		err = brRW.DeleteBackupRecord(ctx, recordId)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("delete backup record %s failed, %s", recordId, err.Error())
+			return resp, errors.WrapError(errors.TIEM_BACKUP_RECORD_DELETE_FAILED, fmt.Sprintf("delete backup record %s failed, %s", recordId, err.Error()), err)
+		}
+		framework.LogWithContext(ctx).Infof("success delete backup record %+v", record)
 	}
 
 	return resp, nil

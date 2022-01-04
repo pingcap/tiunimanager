@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -18,9 +17,12 @@
 package metrics
 
 import (
-	"testing"
-
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/stretchr/testify/assert"
+	"net/http"
+	"net/url"
+	"testing"
+	"time"
 )
 
 func TestRegisterNewGaugeVec(t *testing.T) {
@@ -68,5 +70,43 @@ func TestRegisterNewSummaryVec(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		m := RegisterNewSummaryVec(md)
 		assert.NotNil(t, m)
+	})
+}
+
+func TestMetrics(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		m := GetMetrics()
+		assert.NotNil(t, m.APIRequestsCounterMetric)
+		assert.NotNil(t, m.RequestDurationHistogramMetric)
+		assert.NotNil(t, m.RequestSizeHistogramMetric)
+		assert.NotNil(t, m.ResponseSizeHistogramMetric)
+		assert.NotNil(t, m.MicroRequestsCounterMetric)
+		assert.NotNil(t, m.MicroDurationHistogramMetric)
+		assert.NotNil(t, m.SqliteRequestsCounterMetric)
+		assert.NotNil(t, m.SqliteDurationHistogramMetric)
+		assert.NotNil(t, m.ServerStartTimeGaugeMetric)
+	})
+
+	t.Run("handle metrics", func(t *testing.T) {
+		callback := HandleMetrics(constants.MetricsClusterCreate)
+		assert.NotNil(t, callback)
+		HandleClusterMetrics(time.Now(), "test", 200)
+	})
+
+	t.Run("compute request size", func(t *testing.T) {
+		r := &http.Request{
+			URL: &url.URL{
+				Path: "/test",
+			},
+			ContentLength: 12,
+			Host: "127.0.0.1",
+			Proto: "http 1.0",
+			Method: "GET",
+			Header: http.Header{
+				"key": []string{"value"},
+			},
+		}
+		got := computeApproximateRequestSize(r)
+		assert.Equal(t, got, 45)
 	})
 }

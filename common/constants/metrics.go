@@ -60,7 +60,7 @@ const (
 	MetricsDataExport             MetricsType = "data/export"
 	MetricsDataImport             MetricsType = "data/import"
 	MetricsDataExportImportQuery  MetricsType = "data/query_export_import_record"
-	MetricsDataExportImportDetail MetricsType = "data/delete_export_import_record"
+	MetricsDataExportImportDelete MetricsType = "data/delete_export_import_record"
 
 	// MetricsPlatformQueryKnowledge define knowledge metrics
 	MetricsPlatformQueryKnowledge MetricsType = "platform/query_knowledge"
@@ -136,7 +136,7 @@ var EMMetrics = []MetricsType{
 	MetricsDataExport,
 	MetricsDataImport,
 	MetricsDataExportImportQuery,
-	MetricsDataExportImportDetail,
+	MetricsDataExportImportDelete,
 
 	// MetricsPlatformQueryKnowledge define knowledge metrics
 	MetricsPlatformQueryKnowledge,

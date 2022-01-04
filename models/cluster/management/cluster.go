@@ -18,8 +18,7 @@ package management
 import (
 	"encoding/json"
 	"github.com/pingcap-inc/tiem/common/constants"
-	libCommon "github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
 	"time"
@@ -59,7 +58,7 @@ func (t *Cluster) BeforeSave(tx *gorm.DB) (err error) {
 	if jsonErr == nil {
 		t.TagInfo = string(b)
 	} else {
-		return framework.NewTiEMErrorf(libCommon.TIEM_PARAMETER_INVALID, jsonErr.Error())
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, jsonErr.Error())
 	}
 
 	if len(t.ID) == 0 {

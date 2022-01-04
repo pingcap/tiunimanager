@@ -21,7 +21,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/asim/go-micro/v3/server"
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"io"
 	"os"
 	"path"
@@ -85,7 +85,7 @@ func DefaultRootLogger() *RootLogger {
 	lr := &RootLogger{
 		LogLevel:      "info",
 		LogOutput:     "file",
-		LogFileRoot:   "." + common.LogDirPrefix,
+		LogFileRoot:   "." + constants.LogDirPrefix,
 		LogFileName:   "default-server",
 		LogMaxSize:    512,
 		LogMaxAge:     30,
@@ -105,7 +105,7 @@ func NewLogRecordFromArgs(serviceName ServiceNameEnum, args *ClientArgs) *RootLo
 	lr := &RootLogger{
 		LogLevel:      args.LogLevel,
 		LogOutput:     "file",
-		LogFileRoot:   args.DataDir + common.LogDirPrefix,
+		LogFileRoot:   args.DataDir + constants.LogDirPrefix,
 		LogFileName:   serviceName.ServerName(),
 		LogMaxSize:    512,
 		LogMaxAge:     30,

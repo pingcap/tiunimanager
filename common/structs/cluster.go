@@ -43,7 +43,7 @@ func (p *ClusterResourceParameterComputeResource) Equal(zone, spec, diskType str
 
 //ClusterResourceParameterCompute Component resource parameters when creating a cluster, including: compute resources, storage resources
 type ClusterResourceParameterCompute struct {
-	Type     string                                    `json:"componentType"` //TiDB/TiKV/PD/TiFlash/TiCDC/DM-Master/DM-Worker
+	Type     string                                    `json:"componentType"` //TiDB/TiKV/PD/TiFlash/CDC/DM-Master/DM-Worker
 	Count    int                                       `json:"totalNodeCount"`
 	Resource []ClusterResourceParameterComputeResource `json:"resource"`
 }
@@ -79,6 +79,7 @@ type ClusterInfo struct {
 	DBUser                   string    `json:"dbUser"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
 	Tags                     []string  `json:"tags"`
 	TLS                      bool      `json:"tls"`
+	Region                   string    `json:"region"`
 	Status                   string    `json:"status"`
 	Role                     string    `json:"role"`
 	Copies                   int       `json:"copies"`                                 //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
@@ -109,7 +110,7 @@ type ClusterInstanceInfo struct {
 	Status       string          `json:"status"`
 	HostID       string          `json:"hostID"`
 	Addresses    []string        `json:"addresses"`
-	Ports        []int32			 `json:"ports"`
+	Ports        []int32         `json:"ports"`
 	CpuUsage     Usage           `json:"cpuUsage"`
 	MemoryUsage  Usage           `json:"memoryUsage"`
 	StorageUsage Usage           `json:"storageUsage"`
@@ -140,7 +141,7 @@ type BackupRecord struct {
 	BackupMode   string    `json:"backupMode"`
 	FilePath     string    `json:"filePath"`
 	Size         float32   `json:"size"`
-	BackupTSO    uint64    `json:"backupTso"`
+	BackupTSO    string    `json:"backupTso"`
 	Status       string    `json:"status"`
 	StartTime    time.Time `json:"startTime"`
 	EndTime      time.Time `json:"endTime"`
@@ -187,6 +188,7 @@ type ParameterRealValue struct {
 
 type ClusterParameterSampleInfo struct {
 	ParamId        string             `json:"paramId" example:"1"`
+	Category       string             `json:"category" example:"basic"`
 	Name           string             `json:"name" example:"log_level"`
 	InstanceType   string             `json:"instanceType" example:"TiDB"`
 	UpdateSource   int                `json:"updateSource" example:"0" enums:"0,1,2,3"`

@@ -19,10 +19,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/common"
-
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
@@ -72,7 +70,7 @@ func (c FlowContext) SetData(key string, value interface{}) {
 func createFlowWork(ctx context.Context, bizId string, define *WorkFlowDefine) (*WorkFlowAggregation, error) {
 	framework.LogWithContext(ctx).Infof("create flowwork %v for bizId %s", define, bizId)
 	if define == nil {
-		return nil, framework.SimpleError(common.TIEM_FLOW_NOT_FOUND)
+		return nil, errors.NewEMErrorf(errors.TIEM_FLOW_NOT_FOUND, "empty workflow definition")
 	}
 	flowData := make(map[string]interface{})
 
@@ -104,7 +102,7 @@ func (flow *WorkFlowAggregation) destroy(ctx context.Context, reason string) {
 	flow.Flow.Status = constants.WorkFlowStatusCanceled
 
 	if flow.CurrentNode != nil {
-		flow.CurrentNode.Fail(framework.NewTiEMError(common.TIEM_TASK_CANCELED, reason))
+		flow.CurrentNode.Fail(errors.NewError(errors.TIEM_TASK_CANCELED, reason))
 	}
 	err := models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
 	if err != nil {
@@ -124,18 +122,18 @@ func (flow *WorkFlowAggregation) addContext(key string, value interface{}) {
 	flow.Context.SetData(key, value)
 	data, err := json.Marshal(flow.Context.FlowData)
 	if err != nil {
-		framework.Log().Warnf("json marshal flow context data failed %s", err.Error())
+		framework.LogWithContext(flow.Context).Warnf("json marshal flow context data failed %s", err.Error())
 		return
 	}
 	flow.Flow.Context = string(data)
 }
 
-func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) error {
+func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) (execErr error) {
 	defer func() {
 		if r := recover(); r != nil {
 			framework.LogWithContext(flow.Context).Errorf("recover from workflow %s, node %s", flow.Flow.Name, node.Name)
-			err := errors.NewEMErrorf(errors.TIEM_PANIC, "%v", r)
-			node.Fail(err)
+			execErr = errors.NewEMErrorf(errors.TIEM_PANIC, "%v", r)
+			node.Fail(execErr)
 		}
 	}()
 
@@ -144,12 +142,12 @@ func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDe
 	node.Processing()
 	data, err := json.Marshal(flow.Context.FlowData)
 	if err != nil {
-		framework.Log().Warnf("json marshal flow context data failed %s", err.Error())
+		framework.LogWithContext(flow.Context).Warnf("json marshal flow context data failed %s", err.Error())
 	}
 	flow.Flow.Context = string(data)
 	err = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
 	if err != nil {
-		framework.Log().Warnf("update workflow %s detail of bizId %s failed %s", flow.Flow.ID, flow.Flow.BizID, err.Error())
+		framework.LogWithContext(flow.Context).Warnf("update workflow %s detail of bizId %s failed %s", flow.Flow.ID, flow.Flow.BizID, err.Error())
 	}
 
 	err = nodeDefine.Executor(node, &flow.Context)
@@ -166,7 +164,7 @@ func (flow *WorkFlowAggregation) handleTaskError(node *workflow.WorkFlowNode, no
 	if "" != nodeDefine.FailEvent {
 		flow.handle(flow.Define.TaskNodes[nodeDefine.FailEvent])
 	} else {
-		framework.Log().Warnf("no fail event in flow definition, flowname %s", nodeDefine.Name)
+		framework.LogWithContext(flow.Context).Warnf("no fail event in flow definition, flowname %s", nodeDefine.Name)
 	}
 }
 
@@ -189,7 +187,7 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 
 	_, err := models.GetWorkFlowReaderWriter().CreateWorkFlowNode(flow.Context, node)
 	if err != nil {
-		framework.Log().Warnf("create workflow node, node %s failed %s", node.Name, err.Error())
+		framework.LogWithContext(flow.Context).Warnf("create workflow node, node %s failed %s", node.Name, err.Error())
 	}
 	handleError := flow.executeTask(node, nodeDefine)
 	if handleError != nil {
@@ -228,7 +226,12 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 				return false
 			}
 			if resp.Status == secondpartyModel.OperationStatus_Finished {
-				node.Success(resp.Result)
+				if resp.Result != "" {
+					node.Success(resp.Result)
+				} else {
+					node.Success(nil)
+				}
+
 				return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
 			}
 		}

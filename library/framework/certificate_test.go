@@ -18,7 +18,7 @@
 package framework
 
 import (
-	 "github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"reflect"
 	"testing"
 )
@@ -33,8 +33,8 @@ func TestNewCertificateFromArgs(t *testing.T) {
 		want *CertificateInfo
 	}{
 		{"normal", args{&ClientArgs{DeployDir: "aaaa"}}, &CertificateInfo{
-			CertificateCrtFilePath: "aaaa" + common.CertDirPrefix + common.CrtFileName,
-			CertificateKeyFilePath: "aaaa" + common.CertDirPrefix + common.KeyFileName,
+			CertificateCrtFilePath: "aaaa" + constants.CertDirPrefix + constants.CertFileName,
+			CertificateKeyFilePath: "aaaa" + constants.CertDirPrefix + constants.KeyFileName,
 		}},
 	}
 	for _, tt := range tests {

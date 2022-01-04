@@ -27,8 +27,11 @@ import (
 	"bytes"
 	"context"
 	"io/ioutil"
-	"os"
 	"testing"
+
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
+	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
+	"github.com/pingcap-inc/tiem/workflow"
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 
@@ -42,24 +45,33 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/message/cluster"
 
-	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models"
 )
 
-var mockManager = NewManager()
+func TestManager_BuildClusterLogConfig(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-func TestMain(m *testing.M) {
-	var testFilePath string
-	framework.InitBaseFrameworkForUt(framework.ClusterService,
-		func(d *framework.BaseFramework) error {
-			testFilePath = d.GetDataDir()
-			os.MkdirAll(testFilePath, 0755)
-			return models.Open(d, false)
+	clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterManagementRW)
+	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+	workflow.MockWorkFlowService(workflowService)
+	configRW := mockconfig.NewMockReaderWriter(ctrl)
+	models.SetConfigReaderWriter(configRW)
+
+	clusterManagementRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, clusterID string) (*management.Cluster, []*management.ClusterInstance, error) {
+			return mockCluster(), mockClusterInstances(), nil
 		})
-	code := m.Run()
-	os.RemoveAll(testFilePath)
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, bizId string, flowName string) (*workflow.WorkFlowAggregation, error) {
+			return mockWorkFlowAggregation(), nil
+		})
+	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).AnyTimes()
+	configRW.EXPECT().CreateConfig(gomock.Any(), gomock.Any()).AnyTimes()
 
-	os.Exit(code)
+	_, err := mockManager.BuildClusterLogConfig(context.TODO(), "123")
+	assert.NoError(t, err)
 }
 
 func TestManager_prepareSearchParams_Success1(t *testing.T) {

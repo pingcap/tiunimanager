@@ -33,4 +33,7 @@ const (
 
 	ConfigKeyImportShareStoragePath string = "ImportShareStoragePath"
 	ConfigKeyExportShareStoragePath string = "ExportShareStoragePath"
+
+	ConfigTelemetrySwitch   string = "config_telemetry_switch"
+	ConfigPrometheusAddress string = "config_prometheus_address"
 )

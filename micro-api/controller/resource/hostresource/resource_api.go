@@ -19,6 +19,7 @@ package hostresource
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/client"
 	"io"
 	"net"
 	"os"
@@ -29,7 +30,6 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 
 	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
@@ -119,7 +119,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			if err = host.AddTraits(host.DiskType); err != nil {
 				return nil, err
 			}
-			host.Status = string(constants.HostOnline)
+			host.Status = string(constants.HostInit)
 			host.Stat = string(constants.HostLoadLoadLess)
 			disksStr := row[DISKS_FIELD]
 			if err = json.Unmarshal([]byte(disksStr), &host.Disks); err != nil {
@@ -228,7 +228,7 @@ func detectDuplicateElement(hostIds []string) (string, bool) {
 // @Security ApiKeyAuth
 // @Param hostIds body message.DeleteHostsReq true "list of host IDs"
 // @Success 200 {object} controller.CommonResult{data=message.DeleteHostsResp}
-// @Router /resources/hosts/ [delete]
+// @Router /resources/hosts [delete]
 func RemoveHosts(c *gin.Context) {
 	var req message.DeleteHostsReq
 
@@ -253,7 +253,7 @@ func RemoveHosts(c *gin.Context) {
 // @Produce octet-stream
 // @Security ApiKeyAuth
 // @Success 200 {file} file
-// @Router /resources/hosts-template/ [get]
+// @Router /resources/hosts-template [get]
 func DownloadHostTemplateFile(c *gin.Context) {
 	curDir, _ := os.Getwd()
 	templateName := ImportHostTemplateFileName
@@ -321,7 +321,7 @@ func UpdateHostStatus(c *gin.Context) {
 		}
 
 		if !constants.HostStatus(req.Status).IsValidStatus() {
-			errmsg := fmt.Sprintf("input status %s is invalid, [Online,Offline,Deleted]", req.Status)
+			errmsg := fmt.Sprintf("input status %s is invalid, [Online,Offline,Deleted,Init,Failed]", req.Status)
 			setGinContextForInvalidParam(c, errmsg)
 			return
 		}

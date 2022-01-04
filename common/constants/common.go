@@ -24,8 +24,12 @@
 package constants
 
 import (
-	"time"
 	"github.com/pingcap-inc/tiem/common/errors"
+	"time"
+)
+
+const (
+	TiEM string = "tiem"
 )
 
 //System log-related constants
@@ -90,7 +94,7 @@ const (
 	ComponentIDTiKV    EMProductComponentIDType = "TiKV"
 	ComponentIDPD      EMProductComponentIDType = "PD"
 	ComponentIDTiFlash EMProductComponentIDType = "TiFlash"
-	ComponentIDTiCDC   EMProductComponentIDType = "CDC"
+	ComponentIDCDC     EMProductComponentIDType = "CDC"
 
 	ComponentIDGrafana          EMProductComponentIDType = "Grafana"
 	ComponentIDPrometheus       EMProductComponentIDType = "Prometheus"

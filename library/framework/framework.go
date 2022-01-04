@@ -20,14 +20,13 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"net/http"
 	"os"
 	"strconv"
 
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
 	prom "github.com/prometheus/client_golang/prometheus"
-
-	"github.com/pingcap-inc/tiem/library/common"
 
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
@@ -317,7 +316,7 @@ func (b *BaseFramework) StopService() error {
 
 func (b *BaseFramework) StartService() error {
 	if err := b.microService.Run(); err != nil {
-		b.GetRootLogger().ForkFile(common.LogFileSystem).Fatalf("Initialization micro service failed, error %v, listening address %s, etcd registry address %s", err, b.serviceMeta.GetServiceAddress(), b.serviceMeta.RegistryAddress)
+		b.GetRootLogger().ForkFile(constants.LogFileSystem).Fatalf("Initialization micro service failed, error %v, listening address %s, etcd registry address %s", err, b.serviceMeta.GetServiceAddress(), b.serviceMeta.RegistryAddress)
 		return errors.New("initialization micro service failed")
 	}
 
@@ -334,9 +333,9 @@ func (b *BaseFramework) prometheusBoot() {
 	go func() {
 		metricsPort := b.GetClientArgs().MetricsPort
 		if metricsPort <= 0 {
-			metricsPort = common.DefaultMetricsPort
+			metricsPort = constants.DefaultMetricsPort
 		}
-		LogForkFile(common.LogFileSystem).Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
+		LogForkFile(constants.LogFileSystem).Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
 		err := http.ListenAndServe("0.0.0.0:"+strconv.Itoa(metricsPort), nil)
 		if err != nil {
 			Log().Errorf("prometheus listen and serve error: %v", err)

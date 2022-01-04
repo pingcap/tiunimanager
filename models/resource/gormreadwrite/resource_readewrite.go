@@ -22,10 +22,8 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	resource_models "github.com/pingcap-inc/tiem/models/resource"
-	mm "github.com/pingcap-inc/tiem/models/resource/management"
 	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	"gorm.io/gorm"
 )
@@ -41,6 +39,7 @@ func NewGormResourceReadWrite(db *gorm.DB) resource_models.ReaderWriter {
 	return m
 }
 
+/*
 func (rw *GormResourceReadWrite) addTable(ctx context.Context, tableModel interface{}) (newTable bool, err error) {
 	if !rw.DB(ctx).Migrator().HasTable(tableModel) {
 		err := rw.DB(ctx).Migrator().CreateTable(tableModel)
@@ -52,60 +51,7 @@ func (rw *GormResourceReadWrite) addTable(ctx context.Context, tableModel interf
 		return false, nil
 	}
 }
-
-func (rw *GormResourceReadWrite) InitTables(ctx context.Context) error {
-	log := framework.LogWithContext(ctx)
-	_, err := rw.addTable(ctx, new(rp.Host))
-	if err != nil {
-		log.Errorf("create table Host failed, error: %v", err)
-		return err
-	}
-	_, err = rw.addTable(ctx, new(rp.Disk))
-	if err != nil {
-		log.Errorf("create table Disk failed, error: %v", err)
-		return err
-	}
-	_, err = rw.addTable(ctx, new(mm.UsedCompute))
-	if err != nil {
-		log.Errorf("create table UsedCompute failed, error: %v", err)
-		return err
-	}
-	_, err = rw.addTable(ctx, new(mm.UsedPort))
-	if err != nil {
-		log.Errorf("create table UsedPort failed, error: %v", err)
-		return err
-	}
-	_, err = rw.addTable(ctx, new(mm.UsedDisk))
-	if err != nil {
-		log.Errorf("create table UsedDisk failed, error: %v", err)
-		return err
-	}
-	newTable, err := rw.addTable(ctx, new(rp.Label))
-	if err != nil {
-		log.Errorf("create table Label failed, error: %v", err)
-		return err
-	}
-	if newTable {
-		if err = rw.initSystemDefaultLabels(ctx); err != nil {
-			log.Errorf("init table Label failed, error: %v", err)
-			return err
-		}
-	}
-	return nil
-}
-
-func (rw *GormResourceReadWrite) initSystemDefaultLabels(ctx context.Context) (err error) {
-	for _, v := range structs.DefaultLabelTypes {
-		labelRecord := new(rp.Label)
-		labelRecord.ConstructLabelRecord(&v)
-		err = rw.DB(ctx).Create(labelRecord).Error
-		if err != nil {
-			return errors.NewEMErrorf(errors.TIEM_RESOURCE_INIT_LABELS_ERROR, "init default label table failed, error: %v", err)
-		}
-	}
-	return nil
-}
-
+*/
 func (rw *GormResourceReadWrite) Create(ctx context.Context, hosts []rp.Host) (hostIds []string, err error) {
 	tx := rw.DB(ctx).Begin()
 	for _, host := range hosts {
@@ -124,7 +70,8 @@ func (rw *GormResourceReadWrite) Delete(ctx context.Context, hostIds []string) (
 	tx := rw.DB(ctx).Begin()
 	for _, hostId := range hostIds {
 		var host rp.Host
-		if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host, "ID = ?", hostId).Error; err != nil {
+		//if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host, "ID = ?", hostId).Error; err != nil {
+		if err = tx.First(&host, "ID = ?", hostId).Error; err != nil {
 			tx.Rollback()
 			return errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "lock host %s(%s) error, %v", hostId, host.IP, err)
 		}
@@ -207,6 +154,7 @@ func (rw *GormResourceReadWrite) locationFiltered(db *gorm.DB, location *structs
 }
 
 func (rw *GormResourceReadWrite) Query(ctx context.Context, filter *structs.HostFilter, offset int, limit int) (hosts []rp.Host, err error) {
+	hosts = make([]rp.Host, 0)
 	db := rw.DB(ctx)
 	// Check Host Detail
 	if filter.HostID != "" {

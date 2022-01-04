@@ -26,6 +26,7 @@ package parameter
 import (
 	"context"
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
 	"sync"
 
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -36,8 +37,6 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/workflow"
-
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
 	"github.com/pingcap-inc/tiem/common/structs"
 
@@ -69,22 +68,12 @@ var modifyParametersDefine = workflow.WorkFlowDefine{
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":       {"modifyParameter", "modifyDone", "fail", workflow.SyncFuncNode, modifyParameters},
 		"modifyDone":  {"refreshParameter", "refreshDone", "fail", workflow.SyncFuncNode, refreshParameter},
-		"refreshDone": {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(defaultEnd, persistUpdateParameter)},
+		"refreshDone": {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(defaultEnd, persistParameter)},
 		"fail":        {"fail", "", "", workflow.SyncFuncNode, defaultEnd},
 	},
 }
 
-var applyParametersDefine = workflow.WorkFlowDefine{
-	FlowName: constants.FlowModifyParameters,
-	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":       {"modifyParameter", "modifyDone", "fail", workflow.SyncFuncNode, modifyParameters},
-		"modifyDone":  {"refreshParameter", "refreshDone", "fail", workflow.SyncFuncNode, refreshParameter},
-		"refreshDone": {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(defaultEnd, persistApplyParameter)},
-		"fail":        {"fail", "", "", workflow.SyncFuncNode, defaultEnd},
-	},
-}
-
-func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryClusterParametersReq) (resp cluster.QueryClusterParametersResp, page *clusterpb.RpcPage, err error) {
+func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryClusterParametersReq) (resp cluster.QueryClusterParametersResp, page *clusterservices.RpcPage, err error) {
 	framework.LogWithContext(ctx).Infof("begin query cluster parameters, request: %+v", req)
 	defer framework.LogWithContext(ctx).Infof("end query cluster parameters")
 
@@ -136,7 +125,7 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 		}
 	}
 
-	page = &clusterpb.RpcPage{
+	page = &clusterservices.RpcPage{
 		Page:     int32(req.Page),
 		PageSize: int32(req.PageSize),
 		Total:    int32(total),
@@ -197,6 +186,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 	for i, param := range pgm {
 		params[i] = structs.ClusterParameterSampleInfo{
 			ParamId:        param.ID,
+			Category:       param.Category,
 			Name:           param.Name,
 			InstanceType:   param.InstanceType,
 			UpdateSource:   param.UpdateSource,
@@ -212,7 +202,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: params}
 	data[contextApplyParameterInfo] = &req
 	data[contextMaintenanceStatusChange] = true
-	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, applyParametersDefine.FlowName)
+	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("cluster %s update cluster parameters aync maintenance workflow error: %s", req.ClusterID, err.Error())
 		return

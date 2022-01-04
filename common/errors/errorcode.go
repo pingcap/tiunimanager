@@ -37,7 +37,8 @@ const (
 	TIEM_CLUSTER_NOT_FOUND  EM_ERROR_CODE = 10003
 	TIEM_MARSHAL_ERROR      EM_ERROR_CODE = 10004
 	TIEM_UNMARSHAL_ERROR    EM_ERROR_CODE = 10005
-	TIEM_UNAUTHORIZED_USER  EM_ERROR_CODE = 10006
+	TIEM_INSTANCE_NOT_FOUND EM_ERROR_CODE = 10006
+	TIEM_CONNECT_TIDB_ERROR EM_ERROR_CODE = 10007
 
 	// cluster
 	TIEM_DUPLICATED_NAME             EM_ERROR_CODE = 20101
@@ -84,14 +85,12 @@ const (
 	TIEM_TRANSPORT_FILE_DOWNLOAD_FAILED    EM_ERROR_CODE = 60110
 	TIEM_TRANSPORT_FILE_TRANSFER_LIMITED   EM_ERROR_CODE = 60111
 
+	//user
+	TIEM_UNAUTHORIZED_USER EM_ERROR_CODE = 70600
+	TIEM_USER_NOT_FOUND    EM_ERROR_CODE = 70601
+
 	// dashboard && monitor
 	TIEM_DASHBOARD_NOT_FOUND EM_ERROR_CODE = 80100
-
-	TIEM_ACCOUNT_NOT_FOUND       EM_ERROR_CODE = 100
-	TIEM_TENANT_NOT_FOUND        EM_ERROR_CODE = 200
-	TIEM_QUERY_PERMISSION_FAILED EM_ERROR_CODE = 300
-	TIEM_ADD_TOKEN_FAILED        EM_ERROR_CODE = 400
-	TIEM_TOKEN_NOT_FOUND         EM_ERROR_CODE = 401
 
 	TIEM_RESOURCE_HOST_NOT_FOUND            EM_ERROR_CODE = 30101
 	TIEM_RESOURCE_NO_ENOUGH_HOST            EM_ERROR_CODE = 30102
@@ -118,6 +117,12 @@ const (
 	TIEM_RESOURCE_DECRYPT_PASSWD_ERROR      EM_ERROR_CODE = 30123
 	TIEM_RESOURCE_ALLOCATE_ERROR            EM_ERROR_CODE = 30124
 	TIEM_RESOURCE_RECYCLE_ERROR             EM_ERROR_CODE = 30125
+	TIEM_RESOURCE_CONNECT_TO_HOST_ERROR     EM_ERROR_CODE = 30126
+	TIEM_RESOURCE_NEW_SESSION_ERROR         EM_ERROR_CODE = 30127
+	TIEM_RESOURCE_RUN_COMMAND_ERROR         EM_ERROR_CODE = 30128
+	TIEM_RESOURCE_HOST_NOT_EXPECTED         EM_ERROR_CODE = 30129
+	TIEM_RESOURCE_INIT_FILEBEAT_ERROR       EM_ERROR_CODE = 30130
+	TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR    EM_ERROR_CODE = 30131
 
 	TIEM_MONITOR_NOT_FOUND EM_ERROR_CODE = 614
 
@@ -145,36 +150,36 @@ const (
 	TIEM_PARAMETER_DETAIL_ERROR EM_ERROR_CODE = 20523
 	TIEM_PARAMETER_UPDATE_ERROR EM_ERROR_CODE = 20524
 
-	TIEM_CHANGE_FEED_NOT_FOUND EM_ERROR_CODE = 701
+	TIEM_CHANGE_FEED_NOT_FOUND              EM_ERROR_CODE = 21201
+	TIEM_CHANGE_FEED_DUPLICATE_ID           EM_ERROR_CODE = 21202
+	TIEM_CHANGE_FEED_STATUS_CONFLICT        EM_ERROR_CODE = 21203
+	TIEM_CHANGE_FEED_LOCK_EXPIRED           EM_ERROR_CODE = 21204
+	TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM EM_ERROR_CODE = 21205
+	TIEM_CHANGE_FEED_EXECUTE_ERROR          EM_ERROR_CODE = 21206
 
-	TIEM_CHANGE_FEED_DUPLICATE_ID           EM_ERROR_CODE = 702
-	TIEM_CHANGE_FEED_STATUS_CONFLICT        EM_ERROR_CODE = 703
-	TIEM_CHANGE_FEED_LOCK_EXPIRED           EM_ERROR_CODE = 704
-	TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM EM_ERROR_CODE = 705
-
-	TIEM_INSTANCE_NOT_FOUND          EM_ERROR_CODE = 20801
-	TIEM_DELETE_INSTANCE_ERROR       EM_ERROR_CODE = 20802
-	TIEM_CHECK_PLACEMENT_RULES_ERROR EM_ERROR_CODE = 20803
-
-	TIEM_CHECK_TIFLASH_MAX_REPLICAS_ERROR EM_ERROR_CODE = 20901
-	TIEM_NOT_FOUND_TIDB_ERROR             EM_ERROR_CODE = 20902
-	TIEM_CONNECT_DB_ERROR                 EM_ERROR_CODE = 20903
-	TIEM_SCAN_MAX_REPLICA_COUNT_ERROR     EM_ERROR_CODE = 20904
-	TIEM_WAIT_WORKFLOW_TIMEOUT_ERROR      EM_ERROR_CODE = 20905
-	TIEM_WAIT_WORKFLOW_RUN_ERROR          EM_ERROR_CODE = 20906
+	TIEM_DELETE_INSTANCE_ERROR            EM_ERROR_CODE = 20801
+	TIEM_CHECK_PLACEMENT_RULES_ERROR      EM_ERROR_CODE = 20802
+	TIEM_CHECK_TIFLASH_MAX_REPLICAS_ERROR EM_ERROR_CODE = 20803
+	TIEM_SCAN_MAX_REPLICA_COUNT_ERROR     EM_ERROR_CODE = 20804
 
 	TIEM_CHECK_CLUSTER_VERSION_ERROR EM_ERROR_CODE = 21301
 
-	QueryProductComponentProperty = 706 //TODO
-	QueryProductsScanRowError     = 707 //TODO
-	QueryZoneScanRowError         = 708 //TODO
+	CreateZonesError              EM_ERROR_CODE = 70001
+	DeleteZonesError              EM_ERROR_CODE = 70002
+	QueryZoneScanRowError         EM_ERROR_CODE = 70003
+	CreateProductError            EM_ERROR_CODE = 70004
+	DeleteProductError            EM_ERROR_CODE = 70005
+	QueryProductsScanRowError     EM_ERROR_CODE = 70006
+	QueryProductComponentProperty EM_ERROR_CODE = 70007
+	CreateSpecsError              EM_ERROR_CODE = 70008
+	DeleteSpecsError              EM_ERROR_CODE = 70009
+	QuerySpecScanRowError         EM_ERROR_CODE = 70010
 
 	TIEM_CLUSTER_LOG_QUERY_FAILED EM_ERROR_CODE = 80300
 	TIEM_CLUSTER_LOG_TIME_AFTER   EM_ERROR_CODE = 80301
 )
 
 type ErrorCodeExplanation struct {
-	code        EM_ERROR_CODE
 	explanation string
 	httpCode    int
 }
@@ -192,134 +197,155 @@ func (t EM_ERROR_CODE) Explain() string {
 }
 
 var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
-	TIEM_SUCCESS: {code: TIEM_SUCCESS, explanation: "succeed", httpCode: 200},
-	TIEM_PANIC:   {code: TIEM_PANIC, explanation: "panic", httpCode: 500},
+	TIEM_SUCCESS: {"succeed", 200},
+	TIEM_PANIC:   {"panic", 500},
 
 	// system error
-	TIEM_UNRECOGNIZED_ERROR: {TIEM_UNRECOGNIZED_ERROR, "unrecognized error", 500},
-	TIEM_PARAMETER_INVALID:  {TIEM_PARAMETER_INVALID, "parameter is invalid", 400},
-	TIEM_SQL_ERROR:          {TIEM_SQL_ERROR, "failed to execute SQL", 500},
-	TIEM_CLUSTER_NOT_FOUND:  {TIEM_CLUSTER_NOT_FOUND, "cluster not found", 404},
-	TIEM_MARSHAL_ERROR:      {TIEM_MARSHAL_ERROR, "marshal error", 500},
-	TIEM_UNMARSHAL_ERROR:    {TIEM_UNMARSHAL_ERROR, "marshal error", 500},
-	TIEM_UNAUTHORIZED_USER:  {TIEM_UNAUTHORIZED_USER, "unauthorized", 401},
+	TIEM_UNRECOGNIZED_ERROR: {"unrecognized error", 500},
+	TIEM_PARAMETER_INVALID:  {"parameter is invalid", 400},
+	TIEM_SQL_ERROR:          {"failed to execute SQL", 500},
+	TIEM_CLUSTER_NOT_FOUND:  {"cluster not found", 404},
+	TIEM_MARSHAL_ERROR:      {"marshal error", 500},
+	TIEM_UNMARSHAL_ERROR:    {"marshal error", 500},
+	TIEM_UNAUTHORIZED_USER:  {"unauthorized", 401},
+	TIEM_USER_NOT_FOUND:     {"user not found", 404},
 
-	TIEM_METADB_SERVER_CALL_ERROR:  {TIEM_METADB_SERVER_CALL_ERROR, "call metadb-Server failed", 500},
-	TIEM_CLUSTER_SERVER_CALL_ERROR: {TIEM_CLUSTER_SERVER_CALL_ERROR, "call cluster-Server failed", 500},
+	TIEM_METADB_SERVER_CALL_ERROR:  {"call metadb-Server failed", 500},
+	TIEM_CLUSTER_SERVER_CALL_ERROR: {"call cluster-Server failed", 500},
 
-	TIEM_TASK_TIMEOUT:          {TIEM_TASK_TIMEOUT, "task timeout", 500},
-	TIEM_FLOW_NOT_FOUND:        {TIEM_FLOW_NOT_FOUND, "flow not found", 500},
-	TIEM_TASK_FAILED:           {TIEM_TASK_FAILED, "task failed", 500},
-	TIEM_TASK_CONFLICT:         {TIEM_TASK_CONFLICT, "task polling time out", 500},
-	TIEM_TASK_CANCELED:         {TIEM_TASK_CONFLICT, "task canceled", 500},
-	TIEM_TASK_POLLING_TIME_OUT: {TIEM_TASK_POLLING_TIME_OUT, "task polling time out", 500},
+	TIEM_TASK_TIMEOUT:          {"task timeout", 500},
+	TIEM_FLOW_NOT_FOUND:        {"flow not found", 500},
+	TIEM_TASK_FAILED:           {"task failed", 500},
+	TIEM_TASK_CONFLICT:         {"task polling time out", 500},
+	TIEM_TASK_CANCELED:         {"task canceled", 500},
+	TIEM_TASK_POLLING_TIME_OUT: {"task polling time out", 500},
 
-	TIEM_DUPLICATED_NAME:              {TIEM_DUPLICATED_NAME, "duplicated cluster name", 400},
-	TIEM_INVALID_TOPOLOGY:             {TIEM_INVALID_TOPOLOGY, "invalid cluster topology", 400},
-	TIEM_UNSUPPPORT_PRODUCT:           {TIEM_UNSUPPPORT_PRODUCT, "unsupported cluster type or version", 400},
-	TIEM_CLUSTER_RESOURCE_NOT_ENOUGH:  {TIEM_CLUSTER_RESOURCE_NOT_ENOUGH, "host resource is not enough", 500},
-	TIEM_CLUSTER_MAINTENANCE_CONFLICT: {TIEM_CLUSTER_MAINTENANCE_CONFLICT, "maintenance status conflict", 409},
+	TIEM_DUPLICATED_NAME:              {"duplicated cluster name", 400},
+	TIEM_INVALID_TOPOLOGY:             {"invalid cluster topology", 400},
+	TIEM_UNSUPPPORT_PRODUCT:           {"unsupported cluster type or version", 400},
+	TIEM_CLUSTER_RESOURCE_NOT_ENOUGH:  {"host resource is not enough", 500},
+	TIEM_CLUSTER_MAINTENANCE_CONFLICT: {"maintenance status conflict", 409},
 
 	// cluster management
-	TIEM_TAKEOVER_SSH_CONNECT_ERROR: {TIEM_TAKEOVER_SSH_CONNECT_ERROR, "ssh connect failed", 500},
-	TIEM_TAKEOVER_SFTP_ERROR:        {TIEM_TAKEOVER_SFTP_ERROR, "sftp failed", 500},
+	TIEM_TAKEOVER_SSH_CONNECT_ERROR: {"ssh connect failed", 500},
+	TIEM_TAKEOVER_SFTP_ERROR:        {"sftp failed", 500},
 
 	// dashboard && monitor
-	TIEM_DASHBOARD_NOT_FOUND: {TIEM_DASHBOARD_NOT_FOUND, "dashboard is not found", 500},
+	TIEM_DASHBOARD_NOT_FOUND: {"dashboard is not found", 500},
 
 	// workflow
-	TIEM_WORKFLOW_CREATE_FAILED:         {TIEM_WORKFLOW_CREATE_FAILED, "workflow create failed", 500},
-	TIEM_WORKFLOW_QUERY_FAILED:          {TIEM_WORKFLOW_QUERY_FAILED, "workflow query failed", 500},
-	TIEM_WORKFLOW_DETAIL_FAILED:         {TIEM_WORKFLOW_DETAIL_FAILED, "workflow detail failed", 500},
-	TIEM_WORKFLOW_START_FAILED:          {TIEM_WORKFLOW_START_FAILED, "workflow start failed", 500},
-	TIEM_WORKFLOW_DEFINE_NOT_FOUND:      {TIEM_WORKFLOW_DEFINE_NOT_FOUND, "workflow define not found", 404},
-	TIEM_WORKFLOW_NODE_POLLING_TIME_OUT: {TIEM_WORKFLOW_NODE_POLLING_TIME_OUT, "workflow node polling time out", 500},
+	TIEM_WORKFLOW_CREATE_FAILED:         {"workflow create failed", 500},
+	TIEM_WORKFLOW_QUERY_FAILED:          {"workflow query failed", 500},
+	TIEM_WORKFLOW_DETAIL_FAILED:         {"workflow detail failed", 500},
+	TIEM_WORKFLOW_START_FAILED:          {"workflow start failed", 500},
+	TIEM_WORKFLOW_DEFINE_NOT_FOUND:      {"workflow define not found", 404},
+	TIEM_WORKFLOW_NODE_POLLING_TIME_OUT: {"workflow node polling time out", 500},
 
 	// import && export
-	TIEM_TRANSPORT_SYSTEM_CONFIG_NOT_FOUND: {TIEM_TRANSPORT_SYSTEM_CONFIG_NOT_FOUND, "data transport system config not found", 404},
-	TIEM_TRANSPORT_SYSTEM_CONFIG_INVALID:   {TIEM_TRANSPORT_SYSTEM_CONFIG_INVALID, "data transport system config invalid", 400},
-	TIEM_TRANSPORT_RECORD_NOT_FOUND:        {TIEM_TRANSPORT_RECORD_NOT_FOUND, "data transport record is not found", 404},
-	TIEM_TRANSPORT_RECORD_CREATE_FAILED:    {TIEM_TRANSPORT_RECORD_CREATE_FAILED, "create data transport record failed", 500},
-	TIEM_TRANSPORT_RECORD_DELETE_FAILED:    {TIEM_TRANSPORT_RECORD_DELETE_FAILED, "delete data transport record failed", 500},
-	TIEM_TRANSPORT_RECORD_QUERY_FAILED:     {TIEM_TRANSPORT_RECORD_QUERY_FAILED, "query data transport record failed", 500},
-	TIEM_TRANSPORT_FILE_DELETE_FAILED:      {TIEM_TRANSPORT_FILE_DELETE_FAILED, "remove transport file failed", 500},
-	TIEM_TRANSPORT_PATH_CREATE_FAILED:      {TIEM_TRANSPORT_PATH_CREATE_FAILED, "data transport filepath create failed", 500},
-	TIEM_TRANSPORT_FILE_SIZE_INVALID:       {TIEM_TRANSPORT_FILE_SIZE_INVALID, "data transport file size invalid", 400},
-	TIEM_TRANSPORT_FILE_UPLOAD_FAILED:      {TIEM_TRANSPORT_FILE_UPLOAD_FAILED, "data transport file upload failed", 500},
-	TIEM_TRANSPORT_FILE_DOWNLOAD_FAILED:    {TIEM_TRANSPORT_FILE_DOWNLOAD_FAILED, "data transport file download failed", 500},
-	TIEM_TRANSPORT_FILE_TRANSFER_LIMITED:   {TIEM_TRANSPORT_FILE_TRANSFER_LIMITED, "exceed limit file transfer num", 400},
+	TIEM_TRANSPORT_SYSTEM_CONFIG_NOT_FOUND: {"data transport system config not found", 404},
+	TIEM_TRANSPORT_SYSTEM_CONFIG_INVALID:   {"data transport system config invalid", 400},
+	TIEM_TRANSPORT_RECORD_NOT_FOUND:        {"data transport record is not found", 404},
+	TIEM_TRANSPORT_RECORD_CREATE_FAILED:    {"create data transport record failed", 500},
+	TIEM_TRANSPORT_RECORD_DELETE_FAILED:    {"delete data transport record failed", 500},
+	TIEM_TRANSPORT_RECORD_QUERY_FAILED:     {"query data transport record failed", 500},
+	TIEM_TRANSPORT_FILE_DELETE_FAILED:      {"remove transport file failed", 500},
+	TIEM_TRANSPORT_PATH_CREATE_FAILED:      {"data transport filepath create failed", 500},
+	TIEM_TRANSPORT_FILE_SIZE_INVALID:       {"data transport file size invalid", 400},
+	TIEM_TRANSPORT_FILE_UPLOAD_FAILED:      {"data transport file upload failed", 500},
+	TIEM_TRANSPORT_FILE_DOWNLOAD_FAILED:    {"data transport file download failed", 500},
+	TIEM_TRANSPORT_FILE_TRANSFER_LIMITED:   {"exceed limit file transfer num", 400},
 
 	// backup && restore
-	TIEM_BACKUP_SYSTEM_CONFIG_NOT_FOUND: {TIEM_BACKUP_SYSTEM_CONFIG_NOT_FOUND, "backup system config not found", 404},
-	TIEM_BACKUP_SYSTEM_CONFIG_INVAILD:   {TIEM_BACKUP_SYSTEM_CONFIG_INVAILD, "backup system config invalid", 400},
-	TIEM_BACKUP_RECORD_CREATE_FAILED:    {TIEM_BACKUP_RECORD_CREATE_FAILED, "create backup record failed", 500},
-	TIEM_BACKUP_RECORD_DELETE_FAILED:    {TIEM_BACKUP_RECORD_DELETE_FAILED, "delete backup record failed", 500},
-	TIEM_BACKUP_RECORD_QUERY_FAILED:     {TIEM_BACKUP_RECORD_QUERY_FAILED, "query backup record failed", 500},
-	TIEM_BACKUP_STRATEGY_SAVE_FAILED:    {TIEM_BACKUP_STRATEGY_SAVE_FAILED, "save backup strategy failed", 500},
-	TIEM_BACKUP_STRATEGY_QUERY_FAILED:   {TIEM_BACKUP_STRATEGY_QUERY_FAILED, "query backup strategy failed", 500},
-	TIEM_BACKUP_STRATEGY_DELETE_FAILED:  {TIEM_BACKUP_STRATEGY_DELETE_FAILED, "delete backup strategy failed", 500},
-	TIEM_BACKUP_FILE_DELETE_FAILED:      {TIEM_BACKUP_FILE_DELETE_FAILED, "remove backup file failed", 500},
-	TIEM_BACKUP_PATH_CREATE_FAILED:      {TIEM_BACKUP_PATH_CREATE_FAILED, "backup filepath create failed", 500},
+	TIEM_BACKUP_SYSTEM_CONFIG_NOT_FOUND: {"backup system config not found", 404},
+	TIEM_BACKUP_SYSTEM_CONFIG_INVAILD:   {"backup system config invalid", 400},
+	TIEM_BACKUP_RECORD_CREATE_FAILED:    {"create backup record failed", 500},
+	TIEM_BACKUP_RECORD_DELETE_FAILED:    {"delete backup record failed", 500},
+	TIEM_BACKUP_RECORD_QUERY_FAILED:     {"query backup record failed", 500},
+	TIEM_BACKUP_STRATEGY_SAVE_FAILED:    {"save backup strategy failed", 500},
+	TIEM_BACKUP_STRATEGY_QUERY_FAILED:   {"query backup strategy failed", 500},
+	TIEM_BACKUP_STRATEGY_DELETE_FAILED:  {"delete backup strategy failed", 500},
+	TIEM_BACKUP_FILE_DELETE_FAILED:      {"remove backup file failed", 500},
+	TIEM_BACKUP_PATH_CREATE_FAILED:      {"backup filepath create failed", 500},
 
 	// resource
-	TIEM_RESOURCE_HOST_NOT_FOUND:            {TIEM_RESOURCE_HOST_NOT_FOUND, "host not found", 500},
-	TIEM_UPDATE_HOST_STATUS_FAIL:            {TIEM_UPDATE_HOST_STATUS_FAIL, "update host status failed", 500},
-	TIEM_RESERVE_HOST_FAIL:                  {TIEM_RESERVE_HOST_FAIL, "reserved host failed", 500},
-	TIEM_RESOURCE_NO_STOCK:                  {TIEM_RESOURCE_NO_STOCK, "Insufficient resources for inventory inquiries", 400},
-	TIEM_RESOURCE_TRAIT_NOT_FOUND:           {TIEM_RESOURCE_TRAIT_NOT_FOUND, "trait not found by label name", 400},
-	TIEM_RESOURCE_INVALID_LOCATION:          {TIEM_RESOURCE_INVALID_LOCATION, "invalid location of host", 400},
-	TIEM_RESOURCE_INVALID_ARCH:              {TIEM_RESOURCE_INVALID_ARCH, "invalid architecture of host", 400},
-	TIEM_RESOURCE_ADD_TABLE_ERROR:           {TIEM_RESOURCE_ADD_TABLE_ERROR, "failed to create database for resources", 500},
-	TIEM_RESOURCE_INIT_LABELS_ERROR:         {TIEM_RESOURCE_INIT_LABELS_ERROR, "failed to initiate label table ", 500},
-	TIEM_RESOURCE_CREATE_HOST_ERROR:         {TIEM_RESOURCE_CREATE_HOST_ERROR, "failed to create hosts to db", 500},
-	TIEM_RESOURCE_DELETE_HOST_ERROR:         {TIEM_RESOURCE_DELETE_HOST_ERROR, "failed to delete hosts", 500},
-	TIEM_RESOURCE_INVALID_PRODUCT_NAME:      {TIEM_RESOURCE_INVALID_PRODUCT_NAME, "invalid product name", 400},
-	TIEM_RESOURCE_INVALID_PURPOSE:           {TIEM_RESOURCE_INVALID_PURPOSE, "invalid purpose of host", 400},
-	TIEM_RESOURCE_INVALID_DISKTYPE:          {TIEM_RESOURCE_INVALID_DISKTYPE, "invalid disk type of host", 400},
-	TIEM_RESOURCE_HOST_ALREADY_EXIST:        {TIEM_RESOURCE_HOST_ALREADY_EXIST, "host already exists in the resource pool", 409},
-	TIEM_RESOURCE_HOST_STILL_INUSED:         {TIEM_RESOURCE_HOST_STILL_INUSED, "host is still in use", 409},
-	TIEM_RESOURCE_CREATE_DISK_ERROR:         {TIEM_RESOURCE_CREATE_DISK_ERROR, "ailed to update disk table", 500},
-	TIEM_RESOURCE_TEMPLATE_FILE_NOT_FOUND:   {TIEM_RESOURCE_TEMPLATE_FILE_NOT_FOUND, "template file is not found", 500},
-	TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR: {TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, "parse template file failed", 400},
-
-	// tenant
-	TIEM_ACCOUNT_NOT_FOUND:       {TIEM_ACCOUNT_NOT_FOUND, "account not found", 500},
-	TIEM_TENANT_NOT_FOUND:        {TIEM_TENANT_NOT_FOUND, "tenant not found", 500},
-	TIEM_QUERY_PERMISSION_FAILED: {TIEM_QUERY_PERMISSION_FAILED, "query permission failed", 500},
-	TIEM_ADD_TOKEN_FAILED:        {TIEM_ADD_TOKEN_FAILED, "add token failed", 500},
-	TIEM_TOKEN_NOT_FOUND:         {TIEM_TOKEN_NOT_FOUND, "token not found", 500},
+	TIEM_RESOURCE_HOST_NOT_FOUND:            {"host not found", 500},
+	TIEM_UPDATE_HOST_STATUS_FAIL:            {"update host status failed", 500},
+	TIEM_RESERVE_HOST_FAIL:                  {"reserved host failed", 500},
+	TIEM_RESOURCE_NO_STOCK:                  {"Insufficient resources for inventory inquiries", 400},
+	TIEM_RESOURCE_TRAIT_NOT_FOUND:           {"trait not found by label name", 400},
+	TIEM_RESOURCE_INVALID_LOCATION:          {"invalid location of host", 400},
+	TIEM_RESOURCE_INVALID_ARCH:              {"invalid architecture of host", 400},
+	TIEM_RESOURCE_ADD_TABLE_ERROR:           {"failed to create database for resources", 500},
+	TIEM_RESOURCE_INIT_LABELS_ERROR:         {"failed to initiate label table ", 500},
+	TIEM_RESOURCE_CREATE_HOST_ERROR:         {"failed to create hosts to db", 500},
+	TIEM_RESOURCE_DELETE_HOST_ERROR:         {"failed to delete hosts", 500},
+	TIEM_RESOURCE_INVALID_PRODUCT_NAME:      {"invalid product name", 400},
+	TIEM_RESOURCE_INVALID_PURPOSE:           {"invalid purpose of host", 400},
+	TIEM_RESOURCE_INVALID_DISKTYPE:          {"invalid disk type of host", 400},
+	TIEM_RESOURCE_HOST_ALREADY_EXIST:        {"host already exists in the resource pool", 409},
+	TIEM_RESOURCE_HOST_STILL_INUSED:         {"host is still in use", 409},
+	TIEM_RESOURCE_CREATE_DISK_ERROR:         {"ailed to update disk table", 500},
+	TIEM_RESOURCE_TEMPLATE_FILE_NOT_FOUND:   {"template file is not found", 500},
+	TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR: {"parse template file failed", 400},
+	TIEM_RESOURCE_CONNECT_TO_HOST_ERROR:     {"connect to host failed", 400},
+	TIEM_RESOURCE_NEW_SESSION_ERROR:         {"new connect session to host failed", 500},
+	TIEM_RESOURCE_RUN_COMMAND_ERROR:         {"run command on host failed", 500},
+	TIEM_RESOURCE_HOST_NOT_EXPECTED:         {"host is not expected as import file", 400},
+	TIEM_RESOURCE_INIT_FILEBEAT_ERROR:       {"install filebeat on host failed", 400},
+	TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR:    {"extract workflow context failed", 500},
 
 	// param group & cluster param
-	TIEM_DEFAULT_PARAM_GROUP_NOT_DEL:                 {TIEM_DEFAULT_PARAM_GROUP_NOT_DEL, "Not allow to deleted the default parameter group", 409},
-	TIEM_DEFAULT_PARAM_GROUP_NOT_MODIFY:              {TIEM_DEFAULT_PARAM_GROUP_NOT_MODIFY, "Not allow to modify the default parameter group", 409},
-	TIEM_MODIFY_PARAM_FAILED:                         {TIEM_MODIFY_PARAM_FAILED, "Failed to modify parameter", 500},
-	TIEM_CONVERT_OBJ_FAILED:                          {TIEM_CONVERT_OBJ_FAILED, "Failed to convert data type of parameter", 500},
-	TIEM_PARAMETER_GROUP_CREATE_ERROR:                {TIEM_PARAMETER_GROUP_CREATE_ERROR, "Failed to create parameter group", 500},
-	TIEM_PARAMETER_GROUP_UPDATE_ERROR:                {TIEM_PARAMETER_GROUP_UPDATE_ERROR, "Failed to update parameter group", 500},
-	TIEM_PARAMETER_GROUP_DELETE_ERROR:                {TIEM_PARAMETER_GROUP_DELETE_ERROR, "Failed to delete parameter group", 500},
-	TIEM_PARAMETER_GROUP_QUERY_ERROR:                 {TIEM_PARAMETER_GROUP_QUERY_ERROR, "Failed to query parameter group", 500},
-	TIEM_PARAMETER_GROUP_DETAIL_ERROR:                {TIEM_PARAMETER_GROUP_DETAIL_ERROR, "Failed to get parameter group details", 500},
-	TIEM_PARAMETER_GROUP_COPY_ERROR:                  {TIEM_PARAMETER_GROUP_COPY_ERROR, "Failed to copy parameter group", 500},
-	TIEM_PARAMETER_GROUP_APPLY_ERROR:                 {TIEM_PARAMETER_GROUP_APPLY_ERROR, "Failed to apply parameter group", 500},
-	TIEM_PARAMETER_GROUP_CREATE_RELATION_PARAM_ERROR: {TIEM_PARAMETER_GROUP_CREATE_RELATION_PARAM_ERROR, "Failed to create relation parameter in parameter group", 500},
-	TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR: {TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR, "Failed to delete relation parameter in parameter group", 500},
-	TIEM_PARAMETER_GROUP_UPDATE_RELATION_PARAM_ERROR: {TIEM_PARAMETER_GROUP_UPDATE_RELATION_PARAM_ERROR, "Failed to update relation parameter in parameter group", 500},
-	TIEM_CLUSTER_PARAMETER_QUERY_ERROR:               {TIEM_CLUSTER_PARAMETER_QUERY_ERROR, "Failed to query cluster parameters", 500},
-	TIEM_CLUSTER_PARAMETER_UPDATE_ERROR:              {TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, "Failed to update cluster parameters", 500},
+	TIEM_DEFAULT_PARAM_GROUP_NOT_DEL:                 {"Not allow to deleted the default parameter group", 409},
+	TIEM_DEFAULT_PARAM_GROUP_NOT_MODIFY:              {"Not allow to modify the default parameter group", 409},
+	TIEM_MODIFY_PARAM_FAILED:                         {"Failed to modify parameter", 500},
+	TIEM_CONVERT_OBJ_FAILED:                          {"Failed to convert data type of parameter", 500},
+	TIEM_PARAMETER_GROUP_CREATE_ERROR:                {"Failed to create parameter group", 500},
+	TIEM_PARAMETER_GROUP_UPDATE_ERROR:                {"Failed to update parameter group", 500},
+	TIEM_PARAMETER_GROUP_DELETE_ERROR:                {"Failed to delete parameter group", 500},
+	TIEM_PARAMETER_GROUP_QUERY_ERROR:                 {"Failed to query parameter group", 500},
+	TIEM_PARAMETER_GROUP_DETAIL_ERROR:                {"Failed to get parameter group details", 500},
+	TIEM_PARAMETER_GROUP_COPY_ERROR:                  {"Failed to copy parameter group", 500},
+	TIEM_PARAMETER_GROUP_APPLY_ERROR:                 {"Failed to apply parameter group", 500},
+	TIEM_PARAMETER_GROUP_CREATE_RELATION_PARAM_ERROR: {"Failed to create relation parameter in parameter group", 500},
+	TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR: {"Failed to delete relation parameter in parameter group", 500},
+	TIEM_PARAMETER_GROUP_UPDATE_RELATION_PARAM_ERROR: {"Failed to update relation parameter in parameter group", 500},
+	TIEM_CLUSTER_PARAMETER_QUERY_ERROR:               {"Failed to query cluster parameters", 500},
+	TIEM_CLUSTER_PARAMETER_UPDATE_ERROR:              {"Failed to update cluster parameters", 500},
 
-	TIEM_PARAMETER_QUERY_ERROR:  {TIEM_PARAMETER_QUERY_ERROR, "Failed to query parameter by parameter group id", 500},
-	TIEM_PARAMETER_CREATE_ERROR: {TIEM_PARAMETER_CREATE_ERROR, "Failed to create parameter", 500},
-	TIEM_PARAMETER_DELETE_ERROR: {TIEM_PARAMETER_DELETE_ERROR, "Failed to delete parameter", 500},
-	TIEM_PARAMETER_DETAIL_ERROR: {TIEM_PARAMETER_DETAIL_ERROR, "Failed to detail parameter", 500},
-	TIEM_PARAMETER_UPDATE_ERROR: {TIEM_PARAMETER_UPDATE_ERROR, "Failed to update parameter", 500},
+	TIEM_PARAMETER_QUERY_ERROR:  {"Failed to query parameter by parameter group id", 500},
+	TIEM_PARAMETER_CREATE_ERROR: {"Failed to create parameter", 500},
+	TIEM_PARAMETER_DELETE_ERROR: {"Failed to delete parameter", 500},
+	TIEM_PARAMETER_DETAIL_ERROR: {"Failed to detail parameter", 500},
+	TIEM_PARAMETER_UPDATE_ERROR: {"Failed to update parameter", 500},
 
 	// change feed
-	TIEM_CHANGE_FEED_NOT_FOUND:              {TIEM_CHANGE_FEED_NOT_FOUND, "change feed task not found", 404},
-	TIEM_CHANGE_FEED_DUPLICATE_ID:           {TIEM_CHANGE_FEED_DUPLICATE_ID, "duplicate id", 500},
-	TIEM_CHANGE_FEED_STATUS_CONFLICT:        {TIEM_CHANGE_FEED_STATUS_CONFLICT, "task status conflict", 409},
-	TIEM_CHANGE_FEED_LOCK_EXPIRED:           {TIEM_CHANGE_FEED_LOCK_EXPIRED, "task status lock expired", 409},
-	TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM: {TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM, "task downstream type not supported", 500},
+	TIEM_CHANGE_FEED_NOT_FOUND:              {"Change feed task is not found", 404},
+	TIEM_CHANGE_FEED_DUPLICATE_ID:           {"Duplicate id", 500},
+	TIEM_CHANGE_FEED_STATUS_CONFLICT:        {"Task status conflict", 409},
+	TIEM_CHANGE_FEED_LOCK_EXPIRED:           {"Task status lock expired", 409},
+	TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM: {"Task downstream type not supported", 500},
+	TIEM_CHANGE_FEED_EXECUTE_ERROR:          {"Failed to execute task command", 500},
 
-	TIEM_CLUSTER_LOG_QUERY_FAILED: {TIEM_CLUSTER_LOG_QUERY_FAILED, "Failed to query cluster log", 500},
-	TIEM_CLUSTER_LOG_TIME_AFTER:   {TIEM_CLUSTER_LOG_TIME_AFTER, "query log parameter startTime after endTime", 401},
+	TIEM_CLUSTER_LOG_QUERY_FAILED: {"Failed to query cluster log", 500},
+	TIEM_CLUSTER_LOG_TIME_AFTER:   {"query log parameter startTime after endTime", 401},
+
+	// scale out & scale in
+	TIEM_INSTANCE_NOT_FOUND:               {"Instance of cluster is not found", 404},
+	TIEM_CONNECT_TIDB_ERROR:               {"Failed to connect TiDB instances", 500},
+	TIEM_DELETE_INSTANCE_ERROR:            {"Failed to delete cluster instance", 500},
+	TIEM_CHECK_PLACEMENT_RULES_ERROR:      {"Placement rule is not set when scale out TiFlash", 409},
+	TIEM_CHECK_TIFLASH_MAX_REPLICAS_ERROR: {"The number of remaining TiFlash instances is less than the maximum replicas of data tables", 409},
+	TIEM_SCAN_MAX_REPLICA_COUNT_ERROR:     {"Failed to scan max replicas of data tables of TiFlash", 500},
+
+	//product
+	CreateZonesError:              {"create zone failed", 500},
+	DeleteZonesError:              {"delete zone failed", 500},
+	QueryZoneScanRowError:         {"query all zone failed", 401},
+	CreateProductError:            {"create product failed", 500},
+	DeleteProductError:            {"delete product failed", 500},
+	QueryProductsScanRowError:     {"query all product failed", 401},
+	QueryProductComponentProperty: {"query all component property failed", 401},
+	CreateSpecsError:              {"create specs failed", 500},
+	DeleteSpecsError:              {"delete specs failed", 500},
+	QuerySpecScanRowError:         {"query all specs failed", 401},
 }

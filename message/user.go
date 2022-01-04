@@ -135,3 +135,8 @@ type CreateTokenReq struct {
 type CreateTokenResp struct {
 	identification.Token
 }
+
+type UserProfile struct {
+	UserName string `json:"userName"`
+	TenantId string `json:"tenantId"`
+}

@@ -19,13 +19,12 @@ package management
 import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/pingcap-inc/tiem/common/client"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"net/http"
-
-	"github.com/pingcap-inc/tiem/library/client"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
@@ -73,14 +72,14 @@ func Preview(c *gin.Context) {
 	err := c.ShouldBindBodyWith(&req, binding.JSON)
 	if err != nil {
 		framework.LogWithContext(c).Errorf("unmarshal request failed, %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(int(common.TIEM_UNMARSHAL_ERROR), err.Error()))
+		c.JSON(http.StatusBadRequest, controller.Fail(int(errors.TIEM_UNMARSHAL_ERROR), err.Error()))
 		return
 	}
 
 	err = validator.New().Struct(req)
 	if err != nil {
 		framework.LogWithContext(c).Errorf("validate request failed, %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(int(common.TIEM_PARAMETER_INVALID), err.Error()))
+		c.JSON(http.StatusBadRequest, controller.Fail(int(errors.TIEM_PARAMETER_INVALID), err.Error()))
 	}
 
 	resp := &cluster.PreviewClusterResp{

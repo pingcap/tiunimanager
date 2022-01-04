@@ -17,14 +17,17 @@ package secondparty
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"runtime/debug"
 	"strings"
+	"time"
+
+	"github.com/pingcap-inc/tiem/library/framework"
 )
 
 type FieldKey string
@@ -102,4 +105,52 @@ func findName(t reflect.StructTag, fieldKey FieldKey) (string, error) {
 		return strings.Split(yt, ",")[0], nil
 	}
 	return "", fmt.Errorf("tag provided does not define a tag %s", string(fieldKey))
+}
+
+func execShowBackUpInfoThruSQL(ctx context.Context, db *sql.DB, showBackupSQLCmd string) (resp CmdShowBackUpInfoResp) {
+	t0 := time.Now()
+	err := db.QueryRow(showBackupSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.QueueTime, &resp.ExecutionTime, &resp.FinishTime, &resp.Connection)
+	logInFunc := framework.LogWithContext(ctx)
+	successFp := func() {
+		logInFunc.Info("showbackupinfo task finished, time cost", time.Since(t0))
+	}
+	if err != nil {
+		logInFunc.Errorf("query sql cmd err: %v", err)
+		if err.Error() != "sql: no rows in result set" {
+			logInFunc.Debugf("(%s) != (sql: no rows in result set", err.Error())
+			resp.ErrorStr = err.Error()
+			return
+		}
+		logInFunc.Debugf("(%s) == (sql: no rows in result set)", err.Error())
+		logInFunc.Infof("task has finished without checking db while no rows is result for sql cmd")
+		resp.Progress = 100
+		return
+	}
+	logInFunc.Info("sql cmd return successfully")
+	successFp()
+	return
+}
+
+func execShowRestoreInfoThruSQL(ctx context.Context, db *sql.DB, showRestoreSQLCmd string) (resp CmdShowRestoreInfoResp) {
+	t0 := time.Now()
+	err := db.QueryRow(showRestoreSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.QueueTime, &resp.ExecutionTime, &resp.FinishTime, &resp.Connection)
+	logInFunc := framework.LogWithContext(ctx)
+	successFp := func() {
+		logInFunc.Info("showretoreinfo task finished, time cost", time.Since(t0))
+	}
+	if err != nil {
+		logInFunc.Errorf("query sql cmd err: %v", err)
+		if err.Error() != "sql: no rows in result set" {
+			logInFunc.Debugf("(%s) != (sql: no rows in result set", err.Error())
+			resp.ErrorStr = err.Error()
+			return resp
+		}
+		logInFunc.Debugf("(%s) == (sql: no rows in result set)", err.Error())
+		logInFunc.Infof("task has finished without checking db while no rows is result for sql cmd")
+		resp.Progress = 100
+		return resp
+	}
+	logInFunc.Info("sql cmd return successfully")
+	successFp()
+	return resp
 }

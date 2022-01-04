@@ -16,7 +16,7 @@
 package common
 
 import (
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/stretchr/testify/assert"
@@ -43,7 +43,7 @@ var baseDB *gorm.DB
 func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
 	os.MkdirAll(testFilePath, 0755)
-	logins := framework.LogForkFile(common.LogFileSystem)
+	logins := framework.LogForkFile(constants.LogFileSystem)
 
 	defer func() {
 		os.RemoveAll(testFilePath)
@@ -52,7 +52,7 @@ func TestMain(m *testing.M) {
 
 	framework.InitBaseFrameworkForUt(framework.ClusterService,
 		func(d *framework.BaseFramework) error {
-			dbFile := testFilePath + common.DBDirPrefix + common.DatabaseFileName
+			dbFile := testFilePath + constants.DBDirPrefix + constants.DatabaseFileName
 			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 
 			if err != nil || db.Error != nil {
@@ -98,4 +98,32 @@ func TestUniqueIndex(t *testing.T)  {
 		Name: "aaa",
 	}).Error
 	assert.NoError(t, err)
+}
+
+func TestFinalHash(t *testing.T) {
+	type args struct {
+		salt   string
+		passwd string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{"normal", args{salt: "&shgdjsdfgjhfgksdh", passwd: "Test12345678"}, false},
+		{"empty password", args{salt: "&shgdjsdfgjhfgksdh", passwd: ""}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := FinalHash(tt.args.salt, tt.args.passwd)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FinalHash() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if err == nil {
+				assert.NotEmpty(t, got)
+			}
+		})
+	}
 }

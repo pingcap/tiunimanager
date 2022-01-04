@@ -17,9 +17,11 @@ package management
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
+
 	"github.com/pingcap-inc/tiem/common/constants"
-	libCommon "github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
 )
@@ -64,7 +66,7 @@ func (t *ClusterInstance) BeforeSave(tx *gorm.DB) (err error) {
 	if jsonErr == nil {
 		t.PortInfo = string(p)
 	} else {
-		return framework.NewTiEMErrorf(libCommon.TIEM_PARAMETER_INVALID, jsonErr.Error())
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, jsonErr.Error())
 	}
 
 	if t.HostIP == nil {
@@ -74,7 +76,7 @@ func (t *ClusterInstance) BeforeSave(tx *gorm.DB) (err error) {
 	if jsonErr == nil {
 		t.HostInfo = string(h)
 	} else {
-		return framework.NewTiEMErrorf(libCommon.TIEM_PARAMETER_INVALID, jsonErr.Error())
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, jsonErr.Error())
 	}
 
 	if len(t.ID) == 0 {
@@ -93,4 +95,16 @@ func (t *ClusterInstance) AfterFind(tx *gorm.DB) (err error) {
 		err = json.Unmarshal([]byte(t.HostInfo), &t.HostIP)
 	}
 	return err
+}
+
+func (t *ClusterInstance) GetDeployDir() string {
+	return fmt.Sprintf("%s/%s/%s-deploy", t.DiskPath, t.ClusterID, strings.ToLower(t.Type))
+}
+
+func (t *ClusterInstance) GetDataDir() string {
+	return fmt.Sprintf("%s/%s/%s-data", t.DiskPath, t.ClusterID, strings.ToLower(t.Type))
+}
+
+func (t *ClusterInstance) GetLogDir() string {
+	return fmt.Sprintf("%s/%s/tidb-log", t.GetDeployDir(), t.ClusterID)
 }

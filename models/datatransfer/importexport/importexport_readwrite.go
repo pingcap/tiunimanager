@@ -17,8 +17,8 @@ package importexport
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
 	"time"
@@ -41,7 +41,7 @@ func (m *ImportExportReadWrite) CreateDataTransportRecord(ctx context.Context, r
 
 func (m *ImportExportReadWrite) UpdateDataTransportRecord(ctx context.Context, recordId string, status string, endTime time.Time) (err error) {
 	if "" == recordId {
-		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "record id required")
 	}
 
 	record := &DataTransportRecord{}
@@ -57,7 +57,7 @@ func (m *ImportExportReadWrite) UpdateDataTransportRecord(ctx context.Context, r
 
 func (m *ImportExportReadWrite) GetDataTransportRecord(ctx context.Context, recordId string) (record *DataTransportRecord, err error) {
 	if "" == recordId {
-		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "record id required")
 	}
 	record = &DataTransportRecord{}
 	err = m.DB(ctx).First(record, "id = ?", recordId).Error
@@ -68,7 +68,7 @@ func (m *ImportExportReadWrite) GetDataTransportRecord(ctx context.Context, reco
 }
 
 func (m *ImportExportReadWrite) QueryDataTransportRecords(ctx context.Context, recordId string, clusterId string, reImport bool, startTime, endTime int64, page int, pageSize int) (records []*DataTransportRecord, total int64, err error) {
-	records = make([]*DataTransportRecord, pageSize)
+	records = make([]*DataTransportRecord, 0)
 	query := m.DB(ctx).Model(&DataTransportRecord{}).Where("deleted_at is null")
 	if recordId != "" {
 		query = query.Where("id = ?", recordId)
@@ -77,7 +77,7 @@ func (m *ImportExportReadWrite) QueryDataTransportRecords(ctx context.Context, r
 		query = query.Where("cluster_id = ?", clusterId)
 	}
 	if reImport {
-		query = query.Where("re_import_support = ?", reImport)
+		query = query.Where("re_import_support = ?", reImport).Where("status = ?", constants.DataImportExportFinished)
 	}
 	if startTime > 0 {
 		query = query.Where("start_time >= ?", startTime)
@@ -91,7 +91,7 @@ func (m *ImportExportReadWrite) QueryDataTransportRecords(ctx context.Context, r
 
 func (m *ImportExportReadWrite) DeleteDataTransportRecord(ctx context.Context, recordId string) (err error) {
 	if "" == recordId {
-		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "record id required")
 	}
 	record := &DataTransportRecord{}
 	return m.DB(ctx).First(record, "id = ?", recordId).Delete(record).Error

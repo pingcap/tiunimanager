@@ -26,6 +26,7 @@ package parameter
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -51,7 +52,6 @@ import (
 	spec2 "github.com/pingcap-inc/tiem/library/spec"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
-	"github.com/pingcap/tiup/pkg/cluster/spec"
 )
 
 // asyncMaintenance
@@ -108,16 +108,35 @@ func defaultEnd(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) err
 	return nil
 }
 
-// persistUpdateParameter
-// @Description: persist update parameter
+// persistParameter
+// @Description: persist parameter
 // @Parameter node
 // @Parameter ctx
 // @return error
-func persistUpdateParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+func persistParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.LogWithContext(ctx).Info("begin persist parameter executor method")
+	defer framework.LogWithContext(ctx).Info("end persist parameter executor method")
+
+	updateParameterReq := ctx.GetData(contextUpdateParameterInfo)
+	applyParameterReq := ctx.GetData(contextApplyParameterInfo)
+
+	if applyParameterReq != nil {
+		return persistApplyParameter(applyParameterReq.(*message.ApplyParameterGroupReq), ctx)
+	}
+	if updateParameterReq != nil {
+		return persistUpdateParameter(updateParameterReq.(*cluster.UpdateClusterParametersReq), ctx)
+	}
+	return fmt.Errorf("persist parameter get data failed")
+}
+
+// persistUpdateParameter
+// @Description: persist update parameter
+// @Parameter req
+// @Parameter ctx
+// @return error
+func persistUpdateParameter(req *cluster.UpdateClusterParametersReq, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin persist update parameter executor method")
 	defer framework.LogWithContext(ctx).Info("end persist update parameter executor method")
-
-	req := ctx.GetData(contextUpdateParameterInfo).(*cluster.UpdateClusterParametersReq)
 
 	params := make([]*parameter.ClusterParameterMapping, len(req.Params))
 	for i, param := range req.Params {
@@ -145,11 +164,10 @@ func persistUpdateParameter(node *workflowModel.WorkFlowNode, ctx *workflow.Flow
 // @Parameter node
 // @Parameter ctx
 // @return error
-func persistApplyParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+func persistApplyParameter(req *message.ApplyParameterGroupReq, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin persist apply parameter executor method")
 	defer framework.LogWithContext(ctx).Info("end persist apply parameter executor method")
 
-	req := ctx.GetData(contextApplyParameterInfo).(*message.ApplyParameterGroupReq)
 	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId)
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
@@ -194,7 +212,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 	framework.LogWithContext(ctx).Debugf("modify parameter get apply parameter: %v", applyParameter)
 
 	// grouping by parameter source
-	paramContainer := make(map[interface{}][]structs.ClusterParameterSampleInfo, 0)
+	paramContainer := make(map[interface{}][]structs.ClusterParameterSampleInfo)
 	for i, param := range modifyParam.Params {
 		// condition apply parameter and HasApply values is 0, then filter directly
 		if applyParameter != nil && param.HasApply != int(DirectApply) {
@@ -242,6 +260,7 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 	configs := make([]secondparty.ClusterComponentConfig, len(params))
 	for i, param := range params {
 		configKey := param.Name
+		// set config key from system variable
 		if param.SystemVariable != "" {
 			configKey = param.SystemVariable
 		}
@@ -255,13 +274,16 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 	clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
 	tidbServers := clusterMeta.GetClusterConnectAddresses()
 	if len(tidbServers) == 0 {
-		framework.LogWithContext(ctx).Errorf("get tidb address from meta failed, empty address")
-		return nil
+		framework.LogWithContext(ctx).Errorf("get tidb connect address from meta failed, empty address")
+		return fmt.Errorf("get tidb connect address from meta failed, empty address")
 	}
 	tidbServer := tidbServers[rand.Intn(len(tidbServers))]
 	framework.LogWithContext(ctx).Infof("get cluster [%s] tidb server from meta, %+v", clusterMeta.Cluster.ID, tidbServers)
 	tidbUserInfo := clusterMeta.GetClusterUserNamePasswd()
-	framework.LogWithContext(ctx).Infof("get cluster [%s] user info from meta, %+v", clusterMeta.Cluster.ID, tidbUserInfo)
+	if len(tidbUserInfo.UserName) == 0 {
+		framework.LogWithContext(ctx).Errorf("get cluster [%s] user info from meta, %+v", clusterMeta.Cluster.ID, tidbUserInfo)
+		return fmt.Errorf("get cluster user name from meta failed, empty address")
+	}
 
 	req := secondparty.ClusterEditConfigReq{
 		DbConnParameter: secondparty.DbConnParam{
@@ -289,46 +311,64 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 	framework.LogWithContext(ctx).Info("begin api edit config executor method")
 	defer framework.LogWithContext(ctx).Info("end api edit config executor method")
 
-	compContainer := make(map[interface{}][]structs.ClusterParameterSampleInfo, 0)
+	compContainer := make(map[interface{}][]structs.ClusterParameterSampleInfo)
 	for i, param := range params {
 		framework.LogWithContext(ctx).Debugf("loop %d api componet type: %v, param name: %v", i, param.InstanceType, param.Name)
 		putParameterContainer(compContainer, param.InstanceType, param)
 	}
 	if len(compContainer) > 0 {
 		for comp, params := range compContainer {
-			compStr := strings.ToLower(comp.(string))
 			cm := map[string]interface{}{}
 			for _, param := range params {
+				configKey := param.Name
+				// set config key from system variable
+				if param.SystemVariable != "" {
+					configKey = param.SystemVariable
+				}
 				clusterValue, err := convertRealParameterType(ctx, param)
 				if err != nil {
 					framework.LogWithContext(ctx).Errorf("convert real parameter type err = %v", err)
 					return err
 				}
-				cm[param.Name] = clusterValue
+				cm[configKey] = clusterValue
 			}
 			clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
 
 			// Get the instance host and port of the component based on the topology
-			servers := make(map[string]uint, 0)
-			switch strings.ToLower(compStr) {
-			case spec.ComponentTiDB:
+			servers := make(map[string]uint)
+			switch comp.(string) {
+			case string(constants.ComponentIDTiDB):
 				tidbServers := clusterMeta.GetClusterStatusAddress()
+				if len(tidbServers) == 0 {
+					framework.LogWithContext(ctx).Errorf("get tidb status address from meta failed, empty address")
+					return fmt.Errorf("get tidb status address from meta failed, empty address")
+				}
 				for _, server := range tidbServers {
 					servers[server.IP] = uint(server.Port)
 				}
-			case spec.ComponentTiKV:
+			case string(constants.ComponentIDTiKV):
 				tikvServers := clusterMeta.GetTiKVStatusAddress()
+				if len(tikvServers) == 0 {
+					framework.LogWithContext(ctx).Errorf("get tikv address from meta failed, empty address")
+					return fmt.Errorf("get tikv address from meta failed, empty address")
+				}
 				for _, server := range tikvServers {
 					servers[server.IP] = uint(server.Port)
 				}
-			case spec.ComponentPD:
+			case string(constants.ComponentIDPD):
 				pdServers := clusterMeta.GetPDClientAddresses()
+				if len(pdServers) == 0 {
+					framework.LogWithContext(ctx).Errorf("get pd address from meta failed, empty address")
+					return fmt.Errorf("get pd address from meta failed, empty address")
+				}
 				server := pdServers[rand.Intn(len(pdServers))]
 				servers[server.IP] = uint(server.Port)
+			default:
+				return fmt.Errorf(fmt.Sprintf("Component [%s] type modification is not supported", comp.(string)))
 			}
 			for host, port := range servers {
 				hasSuc, err := secondparty.Manager.ApiEditConfig(ctx, secondparty.ApiEditConfigReq{
-					TiDBClusterComponent: spec2.TiDBClusterComponent(compStr),
+					TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(comp.(string))),
 					InstanceHost:         host,
 					InstancePort:         port,
 					Headers:              map[string]string{},
@@ -363,7 +403,17 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 			framework.LogWithContext(ctx).Errorf("convert real parameter type err = %s", err.Error())
 			return err
 		}
-		cm[param.Name] = clusterValue
+		if param.InstanceType == string(constants.ComponentIDTiDB) || param.InstanceType == string(constants.ComponentIDTiKV) {
+			var configKey = ""
+			if param.Category != "basic" {
+				configKey = param.Category + "." + param.Name
+			} else {
+				configKey = param.Name
+			}
+			cm[configKey] = clusterValue
+		} else {
+			cm[param.Name] = clusterValue
+		}
 		configs[i] = secondparty.GlobalComponentConfig{
 			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.InstanceType)),
 			ConfigMap:            cm,
@@ -372,7 +422,7 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 	framework.LogWithContext(ctx).Debugf("modify global component configs: %v", configs)
 	req := secondparty.CmdEditGlobalConfigReq{
 		TiUPComponent:          secondparty.ClusterComponentTypeStr,
-		InstanceName:           clusterMeta.Cluster.Name,
+		InstanceName:           clusterMeta.Cluster.ID,
 		GlobalComponentConfigs: configs,
 		TimeoutS:               0,
 		Flags:                  []string{},
@@ -394,9 +444,6 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 // @return interface{}
 // @return error
 func convertRealParameterType(ctx *workflow.FlowContext, param structs.ClusterParameterSampleInfo) (interface{}, error) {
-	framework.LogWithContext(ctx).Info("begin convert real parameter type")
-	defer framework.LogWithContext(ctx).Info("end convert real parameter type")
-
 	switch param.Type {
 	case int(Integer):
 		c, err := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)
@@ -461,7 +508,7 @@ func refreshParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 	if modifyParam.Reboot {
 		req := secondparty.CmdReloadConfigReq{
 			TiUPComponent: secondparty.ClusterComponentTypeStr,
-			InstanceName:  clusterMeta.Cluster.Name,
+			InstanceName:  clusterMeta.Cluster.ID,
 			TimeoutS:      0,
 			Flags:         []string{},
 		}

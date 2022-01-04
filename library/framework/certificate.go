@@ -18,7 +18,7 @@
 package framework
 
 import (
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/constants"
 )
 
 type CertificateInfo struct {
@@ -28,7 +28,7 @@ type CertificateInfo struct {
 
 func NewCertificateFromArgs(args *ClientArgs) *CertificateInfo {
 	return &CertificateInfo{
-		CertificateCrtFilePath: args.DeployDir + common.CertDirPrefix + common.CrtFileName,
-		CertificateKeyFilePath: args.DeployDir + common.CertDirPrefix + common.KeyFileName,
+		CertificateCrtFilePath: args.DeployDir + constants.CertDirPrefix + constants.CertFileName,
+		CertificateKeyFilePath: args.DeployDir + constants.CertDirPrefix + constants.KeyFileName,
 	}
 }

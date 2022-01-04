@@ -17,22 +17,27 @@ package constants
 
 import (
 	"github.com/pingcap-inc/tiem/common/errors"
+	"strings"
 )
 
 type ChangeFeedStatus string
 
 const (
-	Initial  ChangeFeedStatus = "Initial"
-	Normal   ChangeFeedStatus = "Normal"
-	Stopped  ChangeFeedStatus = "Stopped"
-	Finished ChangeFeedStatus = "Finished"
-	Error    ChangeFeedStatus = "Error"
-	Failed   ChangeFeedStatus = "Failed"
-	Unknown  ChangeFeedStatus = "Unknown"
+	ChangeFeedStatusInitial  ChangeFeedStatus = "Initial"
+	ChangeFeedStatusNormal   ChangeFeedStatus = "Normal"
+	ChangeFeedStatusStopped  ChangeFeedStatus = "Stopped"
+	ChangeFeedStatusFinished ChangeFeedStatus = "Finished"
+	ChangeFeedStatusError    ChangeFeedStatus = "Error"
+	ChangeFeedStatusFailed   ChangeFeedStatus = "Failed"
+	ChangeFeedStatusUnknown  ChangeFeedStatus = "Unknown"
 )
 
+func (s ChangeFeedStatus) EqualCDCState(state string) bool {
+	return strings.ToLower(s.ToString()) == state
+}
+
 func (s ChangeFeedStatus) IsFinal() bool {
-	return Finished == s || Failed == s
+	return ChangeFeedStatusFinished == s || ChangeFeedStatusFailed == s
 }
 
 func (s ChangeFeedStatus) ToString() string {
@@ -40,19 +45,19 @@ func (s ChangeFeedStatus) ToString() string {
 }
 
 func IsValidStatus(s string) bool {
-	return Initial.ToString() == s ||
-		Normal.ToString() == s ||
-		Stopped.ToString() == s ||
-		Finished.ToString() == s ||
-		Error.ToString() == s ||
-		Failed.ToString() == s
+	return ChangeFeedStatusInitial.ToString() == s ||
+		ChangeFeedStatusNormal.ToString() == s ||
+		ChangeFeedStatusStopped.ToString() == s ||
+		ChangeFeedStatusFinished.ToString() == s ||
+		ChangeFeedStatusError.ToString() == s ||
+		ChangeFeedStatusFailed.ToString() == s
 }
 
 func ConvertStatus(s string) (status ChangeFeedStatus, err error) {
 	if IsValidStatus(s) {
 		return ChangeFeedStatus(s), nil
 	} else {
-		return Unknown, errors.NewError(errors.TIEM_PARAMETER_INVALID, "unexpected change feed status")
+		return ChangeFeedStatusUnknown, errors.NewError(errors.TIEM_PARAMETER_INVALID, "unexpected change feed status")
 	}
 }
 

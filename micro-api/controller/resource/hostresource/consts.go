@@ -41,5 +41,5 @@ const (
 //Constants for importing host information
 const (
 	ImportHostTemplateFileName string = "hostInfo_template.xlsx"
-	ImportHostTemplateFilePath string = "./etc"
+	ImportHostTemplateFilePath string = "./resource"
 )

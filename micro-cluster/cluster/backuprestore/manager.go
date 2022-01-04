@@ -57,10 +57,6 @@ type BRManager struct {
 }
 
 func NewBRManager() *BRManager {
-	mgr := &BRManager{
-		autoBackupMgr: NewAutoBackupManager(),
-	}
-
 	flowManager := workflow.GetWorkFlowService()
 	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowBackupCluster, &workflow.WorkFlowDefine{
 		FlowName: constants.FlowBackupCluster,
@@ -79,6 +75,10 @@ func NewBRManager() *BRManager {
 			"fail":        {"fail", "", "", workflow.SyncFuncNode, restoreFail},
 		},
 	})
+
+	mgr := &BRManager{
+		autoBackupMgr: NewAutoBackupManager(),
+	}
 
 	return mgr
 }
@@ -246,7 +246,7 @@ func (mgr *BRManager) QueryClusterBackupRecords(ctx context.Context, request clu
 			BackupMode:   record.BackupMode,
 			FilePath:     record.FilePath,
 			Size:         float32(record.Size) / bytes.MB, //Byte to MByte,
-			BackupTSO:    record.BackupTso,
+			BackupTSO:    strconv.FormatUint(record.BackupTso, 10),
 			Status:       record.Status,
 			StartTime:    record.StartTime,
 			EndTime:      record.EndTime,
@@ -282,11 +282,10 @@ func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request cluster.D
 		for _, record := range records {
 			if string(constants.StorageTypeS3) != record.StorageType {
 				filePath := record.FilePath
-				err = os.RemoveAll(filePath)
-				if err != nil {
-					framework.LogWithContext(ctx).Errorf("remove backup filePath %s failed, %s", filePath, err.Error())
-					return resp, errors.WrapError(errors.TIEM_BACKUP_FILE_DELETE_FAILED, fmt.Sprintf("remove backup filePath %s failed, %s", filePath, err.Error()), err)
-				}
+				go func() {
+					removeErr := os.RemoveAll(filePath)
+					framework.LogWithContext(ctx).Infof("remove backup filePath %s, result %v", filePath, removeErr)
+				}()
 			}
 
 			err = brRW.DeleteBackupRecord(ctx, record.ID)

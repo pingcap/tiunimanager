@@ -17,10 +17,10 @@ package common
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"golang.org/x/crypto/bcrypt"
 	"time"
+
+	"github.com/pingcap-inc/tiem/common/errors"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
@@ -37,7 +37,10 @@ type Entity struct {
 }
 
 func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
-	e.ID = uuidutil.GenerateID()
+	if len(e.ID) == 0 {
+		e.ID = uuidutil.GenerateID()
+	}
+
 	return nil
 }
 
@@ -64,8 +67,6 @@ func WrapDBError(err error) error {
 
 	switch err.(type) {
 	case errors.EMError:
-		return err
-	case framework.TiEMError:
 		return err
 	default:
 		return errors.NewError(errors.TIEM_SQL_ERROR, err.Error())

@@ -109,11 +109,7 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	framework.LogWithContext(ctx).Infof("get cluster %s tidb address from meta, %+v", meta.Cluster.ID, tidbServers)
 	tidbHost := tidbServers[0].IP
 	tidbPort := tidbServers[0].Port
-	/*
-		if tidbPort == 0 {
-			tidbPort = constants.DefaultTiDBPort
-		}
-	*/
+
 	if string(constants.StorageTypeNFS) == info.StorageType {
 		if err := cleanDataTransportDir(ctx, info.FilePath); err != nil {
 			framework.LogWithContext(ctx).Errorf("clean export directory failed, %s", err.Error())
@@ -175,7 +171,7 @@ func importDataFailed(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) err
 		return fmt.Errorf("update data transport record failed, %s", err.Error())
 	}
 
-	return clusterFail(node, ctx)
+	return nil
 }
 
 func exportDataFailed(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
@@ -188,24 +184,22 @@ func exportDataFailed(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) err
 		return fmt.Errorf("update data transport record failed, %s", err.Error())
 	}
 
-	return clusterFail(node, ctx)
-}
-
-func clusterEnd(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	return nil
 }
 
-func clusterFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+func defaultEnd(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	return nil
 }
 
 func cleanDataTransportDir(ctx context.Context, filepath string) error {
 	framework.LogWithContext(ctx).Infof("clean and re-mkdir data dir: %s", filepath)
 	if err := os.RemoveAll(filepath); err != nil {
+		framework.LogWithContext(ctx).Errorf("remove data dir: %s failed %s", filepath, err.Error())
 		return err
 	}
 
-	if err := os.MkdirAll(filepath, os.ModeDir); err != nil {
+	if err := os.MkdirAll(filepath, os.ModePerm); err != nil {
+		framework.LogWithContext(ctx).Errorf("re-mkdir data dir: %s failed %s", filepath, err.Error())
 		return err
 	}
 	return nil

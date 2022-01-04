@@ -27,8 +27,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/workflow"
 
 	"github.com/pingcap-inc/tiem/common/errors"
 
@@ -38,23 +45,70 @@ import (
 
 	"github.com/pingcap-inc/tiem/models"
 
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/pingcap-inc/tiem/message/cluster"
 )
 
-const (
-	dateFormat     = "2006-01-02 15:04:05"
-	logIndexPrefix = "em-database-cluster-*"
-)
-
 type Manager struct{}
 
+var manager *Manager
+var once sync.Once
+
 func NewManager() *Manager {
-	return &Manager{}
+	once.Do(func() {
+		if manager == nil {
+			workflowManager := workflow.GetWorkFlowService()
+			workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowBuildLogConfig, &buildLogConfigDefine)
+
+			manager = &Manager{}
+		}
+	})
+	return manager
+}
+
+var buildLogConfigDefine = workflow.WorkFlowDefine{
+	FlowName: constants.FlowBuildLogConfig,
+	TaskNodes: map[string]*workflow.NodeDefine{
+		"start":   {"collect", "success", "fail", workflow.SyncFuncNode, collectorClusterLogConfig},
+		"success": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
+		"fail":    {"fail", "", "", workflow.SyncFuncNode, defaultEnd},
+	},
+}
+
+type Service interface {
+	BuildClusterLogConfig(ctx context.Context, clusterId string) (flowID string, err error)
+}
+
+func GetService() Service{
+	return NewManager()
+}
+
+func (m Manager) BuildClusterLogConfig(ctx context.Context, clusterId string) (flowID string, err error) {
+	framework.LogWithContext(ctx).Infof("begin build cluster log, req clusterId: %+v", clusterId)
+	defer framework.LogWithContext(ctx).Infof("end build cluster log")
+
+	// Get cluster info and topology from db based by clusterID
+	clusterMeta, err := handler.Get(ctx, clusterId)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("load cluser [%s] meta from db error: %s", clusterId, err.Error())
+		return
+	}
+
+	if flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, clusterMeta.Cluster.ID, buildLogConfigDefine.FlowName); err != nil {
+		framework.LogWithContext(ctx).Errorf("create flow %s failed, clusterID = %s, error = %s", flow.Flow.Name, clusterMeta.Cluster.ID, err.Error())
+		return "", err
+	} else {
+		flowID = flow.Flow.ID
+		flow.Context.SetData(contextClusterMeta, clusterMeta)
+		if err = workflow.GetWorkFlowService().AsyncStart(ctx, flow); err != nil {
+			framework.LogWithContext(ctx).Errorf("start flow %s failed, clusterID = %s, error = %s", flow.Flow.Name, clusterMeta.Cluster.ID, err.Error())
+			return flowID, err
+		}
+		framework.LogWithContext(ctx).Infof("create flow %s succeed, clusterID = %s", flow.Flow.Name, clusterMeta.Cluster.ID)
+	}
+	return flowID, nil
 }
 
 // QueryClusterLog
@@ -65,7 +119,7 @@ func NewManager() *Manager {
 // @return resp
 // @return page
 // @return err
-func (m Manager) QueryClusterLog(ctx context.Context, req cluster.QueryClusterLogReq) (resp cluster.QueryClusterLogResp, page *clusterpb.RpcPage, err error) {
+func (m Manager) QueryClusterLog(ctx context.Context, req cluster.QueryClusterLogReq) (resp cluster.QueryClusterLogResp, page *clusterservices.RpcPage, err error) {
 	buf, err := prepareSearchParams(ctx, req)
 	if err != nil {
 		return resp, page, err
@@ -99,7 +153,7 @@ func prepareSearchParams(ctx context.Context, req cluster.QueryClusterLogReq) (b
 	return buf, nil
 }
 
-func handleResult(ctx context.Context, req cluster.QueryClusterLogReq, esResp *esapi.Response) (resp cluster.QueryClusterLogResp, page *clusterpb.RpcPage, err error) {
+func handleResult(ctx context.Context, req cluster.QueryClusterLogReq, esResp *esapi.Response) (resp cluster.QueryClusterLogResp, page *clusterservices.RpcPage, err error) {
 	if esResp.IsError() || esResp.StatusCode != 200 {
 		framework.LogWithContext(ctx).Errorf("cluster %s query log, search es err: %v", req.ClusterID, err)
 		return resp, page, errors.NewEMErrorf(errors.TIEM_CLUSTER_LOG_QUERY_FAILED, errors.TIEM_CLUSTER_LOG_QUERY_FAILED.Explain())
@@ -136,7 +190,7 @@ func handleResult(ctx context.Context, req cluster.QueryClusterLogReq, esResp *e
 		})
 	}
 
-	page = &clusterpb.RpcPage{
+	page = &clusterservices.RpcPage{
 		Page:     int32(req.Page),
 		PageSize: int32(req.PageSize),
 		Total:    int32(esResult.Hits.Total.Value),

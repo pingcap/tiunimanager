@@ -18,7 +18,7 @@
 package metrics
 
 import (
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -31,7 +31,7 @@ type MetricDef struct {
 func RegisterNewGaugeVec(metricDef MetricDef) *prometheus.GaugeVec {
 	metric := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Namespace: common.TiEM,
+			Namespace: constants.TiEM,
 			Name:      metricDef.Name,
 			Help:      metricDef.Help,
 		},
@@ -44,7 +44,7 @@ func RegisterNewGaugeVec(metricDef MetricDef) *prometheus.GaugeVec {
 func RegisterNewCounterVec(metricDef MetricDef) *prometheus.CounterVec {
 	metric := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: common.TiEM,
+			Namespace: constants.TiEM,
 			Name:      metricDef.Name,
 			Help:      metricDef.Help,
 		},
@@ -57,7 +57,7 @@ func RegisterNewCounterVec(metricDef MetricDef) *prometheus.CounterVec {
 func RegisterNewHistogramVec(metricDef MetricDef) *prometheus.HistogramVec {
 	metric := prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Namespace: common.TiEM,
+			Namespace: constants.TiEM,
 			Name:      metricDef.Name,
 			Help:      metricDef.Help,
 		},
@@ -70,7 +70,7 @@ func RegisterNewHistogramVec(metricDef MetricDef) *prometheus.HistogramVec {
 func RegisterNewSummaryVec(metricDef MetricDef) *prometheus.SummaryVec {
 	metric := prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
-			Namespace: common.TiEM,
+			Namespace: constants.TiEM,
 			Name:      metricDef.Name,
 			Help:      metricDef.Help,
 		},
@@ -83,7 +83,7 @@ func RegisterNewSummaryVec(metricDef MetricDef) *prometheus.SummaryVec {
 func RegisterNewGaugeVecForUT(metricDef MetricDef) *prometheus.GaugeVec {
 	metric := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Namespace: common.TiEM,
+			Namespace: constants.TiEM,
 			Name:      metricDef.Name,
 			Help:      metricDef.Help,
 		},
@@ -95,7 +95,7 @@ func RegisterNewGaugeVecForUT(metricDef MetricDef) *prometheus.GaugeVec {
 func RegisterNewCounterVecForUT(metricDef MetricDef) *prometheus.CounterVec {
 	metric := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: common.TiEM,
+			Namespace: constants.TiEM,
 			Name:      metricDef.Name,
 			Help:      metricDef.Help,
 		},
@@ -107,7 +107,7 @@ func RegisterNewCounterVecForUT(metricDef MetricDef) *prometheus.CounterVec {
 func RegisterNewHistogramVecForUT(metricDef MetricDef) *prometheus.HistogramVec {
 	metric := prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Namespace: common.TiEM,
+			Namespace: constants.TiEM,
 			Name:      metricDef.Name,
 			Help:      metricDef.Help,
 		},
@@ -119,7 +119,7 @@ func RegisterNewHistogramVecForUT(metricDef MetricDef) *prometheus.HistogramVec 
 func RegisterNewSummaryVecForUT(metricDef MetricDef) *prometheus.SummaryVec {
 	metric := prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
-			Namespace: common.TiEM,
+			Namespace: constants.TiEM,
 			Name:      metricDef.Name,
 			Help:      metricDef.Help,
 		},

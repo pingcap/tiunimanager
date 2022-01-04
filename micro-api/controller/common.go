@@ -34,19 +34,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-
 	"github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/knowledge"
-	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 )
 
 // DefaultTimeout
 // todo adjust timeout for async flow task
 var DefaultTimeout = func(o *client.CallOptions) {
-	o.RequestTimeout = time.Minute * 5
-	o.DialTimeout = time.Minute * 5
+	o.RequestTimeout = time.Second * 30
+	o.DialTimeout = time.Second * 30
 }
 
 type Usage struct {
@@ -93,77 +89,4 @@ type Operator struct {
 	OperatorName   string `json:"operatorName"`
 	OperatorId     string `json:"operatorId"`
 	TenantId       string `json:"tenantId"`
-}
-
-func GetOperator(c *gin.Context) *Operator {
-	v, _ := c.Get(interceptor.VisitorIdentityKey)
-
-	visitor, _ := v.(*interceptor.VisitorIdentity)
-
-	return &Operator{
-		ManualOperator: true,
-		OperatorId:     visitor.AccountId,
-		OperatorName:   visitor.AccountName,
-		TenantId:       visitor.TenantId,
-	}
-}
-
-func (o *Operator) ConvertToDTO() *clusterpb.OperatorDTO {
-	return &clusterpb.OperatorDTO{
-		Id:       o.OperatorId,
-		Name:     o.OperatorName,
-		TenantId: o.TenantId,
-	}
-}
-
-func (p *PageRequest) ConvertToDTO() *clusterpb.PageDTO {
-	return &clusterpb.PageDTO{
-		Page:     int32(p.Page),
-		PageSize: int32(p.PageSize),
-	}
-}
-
-func ParsePageFromDTO(dto *clusterpb.PageDTO) *Page {
-	return &Page{
-		Page:     int(dto.Page),
-		PageSize: int(dto.PageSize),
-		Total:    int(dto.Total),
-	}
-}
-
-func ParseUsageFromDTO(dto *clusterpb.UsageDTO) (usage *Usage) {
-	usage = &Usage{
-		Total:     dto.Total,
-		Used:      dto.Used,
-		UsageRate: dto.UsageRate,
-	}
-	return
-}
-
-func ConvertVersionDTO(code string) (dto *clusterpb.ClusterVersionDTO) {
-	version := knowledge.ClusterVersionFromCode(code)
-
-	dto = &clusterpb.ClusterVersionDTO{
-		Code: version.Code,
-		Name: version.Name,
-	}
-
-	return
-}
-
-func ConvertTypeDTO(code string) (dto *clusterpb.ClusterTypeDTO) {
-	t := knowledge.ClusterTypeFromCode(code)
-
-	dto = &clusterpb.ClusterTypeDTO{
-		Code: t.Code,
-		Name: t.Name,
-	}
-	return
-}
-
-func ConvertRecoverInfoDTO(sourceClusterId string, backupRecordId int64) (dto *clusterpb.RecoverInfoDTO) {
-	return &clusterpb.RecoverInfoDTO{
-		SourceClusterId: sourceClusterId,
-		BackupRecordId:  backupRecordId,
-	}
 }

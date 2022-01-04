@@ -16,7 +16,7 @@
 package management
 
 import (
-	"context"
+	"database/sql"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -26,6 +26,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/log"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
@@ -48,18 +49,9 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	globalAllocId := uuidutil.GenerateID()
 	instanceAllocId := uuidutil.GenerateID()
 
-	globalRequirement, err := clusterMeta.GenerateGlobalPortRequirements(context)
-	if err != nil {
-		framework.LogWithContext(context).Errorf(
-			"generate global port requirements failed, cluster %s", clusterMeta.Cluster.ID)
-		return err
-	}
-	instanceRequirement, instances, err := clusterMeta.GenerateInstanceResourceRequirements(context)
-	if err != nil {
-		framework.LogWithContext(context).Errorf(
-			"generate instance resource requirements failed, cluster %s", clusterMeta.Cluster.ID)
-		return err
-	}
+	globalRequirement := clusterMeta.GenerateGlobalPortRequirements(context)
+	instanceRequirement, instances := clusterMeta.GenerateInstanceResourceRequirements(context)
+
 	batchReq := &resourceStructs.BatchAllocRequest{
 		BatchRequests: []resourceStructs.AllocReq{
 			{
@@ -140,7 +132,7 @@ func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	framework.LogWithContext(context.Context).Infof(
 		"scale out cluster %s, version %s, yamlConfig %s", cluster.ID, cluster.Version, yamlConfig)
 	taskId, err := secondparty.Manager.ClusterScaleOut(
-		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name,
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.ID,
 		yamlConfig, handler.DefaultTiupTimeOut, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, node.ID)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -174,7 +166,7 @@ func scaleInCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	framework.LogWithContext(context.Context).Infof(
 		"scale in cluster %s, delete instance %s", clusterMeta.Cluster.ID, instanceID)
 	taskId, err := secondparty.Manager.ClusterScaleIn(
-		context.Context, secondparty.ClusterComponentTypeStr, clusterMeta.Cluster.Name,
+		context.Context, secondparty.ClusterComponentTypeStr, clusterMeta.Cluster.ID,
 		strings.Join([]string{instance.HostIP[0], strconv.Itoa(int(instance.Ports[0]))}, ":"), handler.DefaultTiupTimeOut, []string{"--yes"}, node.ID)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -196,7 +188,7 @@ func freeInstanceResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s delete instance %s error: %s", clusterMeta.Cluster.ID, instanceID, err.Error())
-		return nil
+		return err
 	}
 	// recycle instance resource
 	request := &resourceStructs.RecycleRequest{
@@ -253,13 +245,13 @@ func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 			ClusterID:  meta.Cluster.ID,
 			BackupMode: string(constants.BackupModeAuto),
 		})
+		if err != nil {
+			framework.LogWithContext(context.Context).Errorf(
+				"delete auto backup data for cluster %s error: %s", meta.Cluster.ID, err.Error())
+			return err
+		}
 	}
 
-	if err != nil {
-		framework.LogWithContext(context.Context).Errorf(
-			"delete auto backup data for cluster %s error: %s", meta.Cluster.ID, err.Error())
-		return err
-	}
 	return nil
 }
 
@@ -268,30 +260,26 @@ func backupBeforeDelete(node *workflowModel.WorkFlowNode, context *workflow.Flow
 	deleteReq := context.GetData(ContextDeleteRequest).(cluster.DeleteClusterReq)
 
 	if deleteReq.AutoBackup {
-		_, err := backupSubProcess(context.Context, meta, false)
-		return err
+		backupResponse, err := backuprestore.GetBRService().BackupCluster(
+			context.Context,
+			cluster.BackupClusterDataReq{
+				ClusterID:  meta.Cluster.ID,
+				BackupMode: string(constants.BackupModeManual),
+			}, false)
+		if err != nil {
+			framework.LogWithContext(context.Context).Errorf(
+				"do backup for cluster %s error: %s", meta.Cluster.ID, err.Error())
+			return err
+		}
+		if err = handler.WaitWorkflow(context.Context, backupResponse.WorkFlowID, 10*time.Second, 30*24*time.Hour); err != nil {
+			framework.LogWithContext(context).Errorf("backup workflow error: %s", err)
+			return err
+		}
+	} else {
+		node.Success("no need to backup")
 	}
 
 	return nil
-}
-
-func backupSubProcess(ctx context.Context, meta *handler.ClusterMeta, independenceMaintenance bool) (*cluster.BackupClusterDataResp, error) {
-	backupResponse, err := backuprestore.GetBRService().BackupCluster(ctx,
-		cluster.BackupClusterDataReq{
-			ClusterID:  meta.Cluster.ID,
-			BackupMode: string(constants.BackupModeManual),
-		}, independenceMaintenance)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf(
-			"do backup for cluster %s error: %s", meta.Cluster.ID, err.Error())
-		return nil, err
-	}
-
-	if err = handler.WaitWorkflow(ctx, backupResponse.WorkFlowID, 10*time.Second, 30*24*time.Hour); err != nil {
-		framework.LogWithContext(ctx).Errorf("backup workflow error: %s", err)
-		return nil, err
-	}
-	return &backupResponse, nil
 }
 
 func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
@@ -488,7 +476,7 @@ func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 	framework.LogWithContext(context.Context).Infof(
 		"deploy cluster %s, version %s, yamlConfig %s", cluster.ID, cluster.Version, yamlConfig)
 	taskId, err := secondparty.Manager.ClusterDeploy(
-		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, cluster.Version,
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.ID, cluster.Version,
 		yamlConfig, handler.DefaultTiupTimeOut, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, node.ID)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -509,7 +497,7 @@ func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	framework.LogWithContext(context.Context).Infof(
 		"start cluster %s, version %s", cluster.ID, cluster.Version)
 	taskId, err := secondparty.Manager.ClusterStart(
-		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, handler.DefaultTiupTimeOut, []string{}, node.ID,
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.ID, handler.DefaultTiupTimeOut, []string{}, node.ID,
 	)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -603,6 +591,13 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	return nil
 }
 
+func asyncBuildLog(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+
+	log.GetService().BuildClusterLogConfig(context, clusterMeta.Cluster.ID)
+	return nil
+}
+
 func restoreCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cloneStrategy := context.GetData(ContextCloneStrategy).(string)
@@ -651,7 +646,7 @@ func stopCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext
 	framework.LogWithContext(context.Context).Infof(
 		"stop cluster %s, version = %s", cluster.ID, cluster.Version)
 	taskId, err := secondparty.Manager.ClusterStop(
-		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, handler.DefaultTiupTimeOut, []string{}, node.ID,
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.ID, handler.DefaultTiupTimeOut, []string{}, node.ID,
 	)
 
 	if err != nil {
@@ -673,7 +668,7 @@ func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	framework.LogWithContext(context.Context).Infof(
 		"destroy cluster %s, version %s", cluster.ID, cluster.Version)
 	taskId, err := secondparty.Manager.ClusterDestroy(
-		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, handler.DefaultTiupTimeOut, []string{}, node.ID,
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.ID, handler.DefaultTiupTimeOut, []string{}, node.ID,
 	)
 
 	if err != nil {
@@ -721,9 +716,6 @@ func freedClusterResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 // initDatabaseAccount
 // @Description: init database account for new cluster
 func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	framework.LogWithContext(context).Info("begin initDatabaseAccount")
-	defer framework.LogWithContext(context).Info("end initDatabaseAccount")
-
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
 
@@ -762,7 +754,7 @@ func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 		defer sftpClient.Close()
 	}
 
-	remoteFileName := fmt.Sprintf("%sstorage/cluster/clusters/%s/meta.yaml", req.TiUPPath, clusterMeta.Cluster.Name)
+	remoteFileName := fmt.Sprintf("%sstorage/cluster/clusters/%s/meta.yaml", req.TiUPPath, clusterMeta.Cluster.ID)
 
 	remoteFile, err := sftpClient.Open(remoteFileName)
 	if err != nil {
@@ -791,10 +783,10 @@ func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workfl
 		return err
 	}
 
-	clusterMeta.Cluster.Type = "TiDB"
+	clusterMeta.Cluster.Type = string(constants.EMProductIDTiDB)
 	clusterMeta.Cluster.Version = metadata.Version
 	clusterSpec := metadata.GetTopology().(*spec.Specification)
-	_, err = clusterMeta.ParseTopologyFromConfig(context, clusterSpec)
+	err = clusterMeta.ParseTopologyFromConfig(context, clusterSpec)
 	if err != nil {
 		framework.LogWithContext(context).Errorf(
 			"add instances into cluster %s topology error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -805,6 +797,55 @@ func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workfl
 }
 
 func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	requirements, instances := clusterMeta.GenerateTakeoverResourceRequirements(context)
+
+	batchReq := &resourceStructs.BatchAllocRequest{
+		BatchRequests: []resourceStructs.AllocReq{
+			{
+				Applicant: resourceStructs.Applicant{
+					HolderId:          clusterMeta.Cluster.ID,
+					RequestId:         uuidutil.GenerateID(),
+					TakeoverOperation: true,
+				},
+				Requires: requirements,
+			},
+		},
+	}
+	allocResponse, err := resourceManagement.GetManagement().GetAllocatorRecycler().AllocResources(context, batchReq)
+
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster %s alloc resource error: %s", clusterMeta.Cluster.ID, err.Error())
+		return err
+	}
+
+	resourceResult := allocResponse.BatchResults[0]
+	clusterMeta.Cluster.Region = resourceResult.Results[0].Location.Region
+
+	for i, instance := range instances {
+		instance.HostID = resourceResult.Results[i].HostId
+		instance.Zone = resourceResult.Results[i].Location.Zone
+		instance.Rack = resourceResult.Results[i].Location.Rack
+	}
+
 	return nil
 }
 
+func testConnectivity(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	connectAddress := clusterMeta.GetClusterConnectAddresses()[0]
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql", clusterMeta.Cluster.DBUser, clusterMeta.Cluster.DBPassword, connectAddress.IP, connectAddress.Port))
+	if err != nil {
+		framework.LogWithContext(context).Errorf("connect tidb failed, err = %s", err)
+		return err
+	}
+	defer db.Close()
+
+	_, err = db.Query("select * from mysql.db")
+	if err != nil {
+		framework.LogWithContext(context).Errorf("connect tidb failed, err = %s", err)
+		return err
+	}
+	return nil
+}

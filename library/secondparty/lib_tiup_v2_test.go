@@ -27,6 +27,9 @@ import (
 	"context"
 	"errors"
 
+	"github.com/pingcap-inc/tiem/models/tiup"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mocktiupconfig"
+
 	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
 
 	"github.com/pingcap-inc/tiem/library/spec"
@@ -76,13 +79,43 @@ func TestSecondPartyManager_ClusterDeploy_Success(t *testing.T) {
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterDeploy, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
+
 	operationID, err := secondPartyManager1.ClusterDeploy(context.TODO(), ClusterComponentTypeStr, "test-tidb", "v1", "", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
 		t.Errorf("case: create secondparty operation successfully. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", TestOperationID, operationID, nil, err)
 	}
 }
 
+func TestSecondPartyManager_ClusterScaleOut_Fail(t *testing.T) {
+
+	expectedErr := errors.New("fail create second party operation")
+
+	mockCtl := gomock.NewController(t)
+	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
+	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterDeploy, TestWorkFlowNodeID).Return(nil, expectedErr)
+
+	operationID, err := secondPartyManager1.ClusterDeploy(context.TODO(), ClusterComponentTypeStr, "test-tidb", "v1", "", 0, []string{}, TestWorkFlowNodeID)
+	if operationID != "" || err == nil {
+		t.Errorf("case: fail create second party operation intentionally. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", "", operationID, expectedErr, err)
+	}
+}
+
 func TestSecondPartyManager_ClusterList(t *testing.T) {
+	mockCtl := gomock.NewController(t)
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
+
 	_, err := secondPartyManager1.ClusterList(context.TODO(), ClusterComponentTypeStr, 0, []string{})
 	if err == nil {
 		t.Errorf("case: create secondparty task successfully. err(expected: not nil, actual: nil)")
@@ -90,6 +123,13 @@ func TestSecondPartyManager_ClusterList(t *testing.T) {
 }
 
 func TestSecondPartyManager_ClusterList_WithTimeOut(t *testing.T) {
+	mockCtl := gomock.NewController(t)
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 	_, err := secondPartyManager1.ClusterList(context.TODO(), ClusterComponentTypeStr, 1, []string{})
 	if err == nil {
 		t.Errorf("case: create secondparty task successfully. err(expected: not nil, actual: nil)")
@@ -120,6 +160,13 @@ func TestSecondPartyManager_ClusterStart_Success(t *testing.T) {
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterStart, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 
 	operationID, err := secondPartyManager1.ClusterStart(context.TODO(), ClusterComponentTypeStr, "test-tidb", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
@@ -152,6 +199,13 @@ func TestSecondPartyManager_ClusterRestart_Success(t *testing.T) {
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterRestart, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
+
 	operationID, err := secondPartyManager1.ClusterRestart(context.TODO(), ClusterComponentTypeStr, "test-tidb", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
 		t.Errorf("case: create secondparty operation successfully. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", TestOperationID, operationID, nil, err)
@@ -183,6 +237,13 @@ func TestSecondPartyManager_ClusterStop_Success(t *testing.T) {
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterStop, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
+
 	operationID, err := secondPartyManager1.ClusterStop(context.TODO(), ClusterComponentTypeStr, "test-tidb", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
 		t.Errorf("case: create secondparty operation successfully. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", TestOperationID, operationID, nil, err)
@@ -212,6 +273,13 @@ func TestSecondPartyManager_ClusterDestroy_Success(t *testing.T) {
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterDestroy, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 
 	operationID, err := secondPartyManager1.ClusterDestroy(context.TODO(), ClusterComponentTypeStr, "test-tidb", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
@@ -244,6 +312,13 @@ func TestSecondPartyManager_ClusterTransfer_Success(t *testing.T) {
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_Transfer, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(TiEMComponentTypeStr)).Return(tiUPConfig, nil)
+
 	operationID, err := secondPartyManager1.Transfer(context.TODO(), TiEMComponentTypeStr, "test-tidb", "test-yaml", "/remote/path", 0, []string{"-N", "test-host"}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
 		t.Errorf("case: create secondparty operation successfully. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", TestOperationID, operationID, nil, err)
@@ -275,6 +350,13 @@ func TestSecondPartyManager_ClusterUpgrade_Success(t *testing.T) {
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterUpgrade, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
+
 	operationID, err := secondPartyManager1.ClusterUpgrade(context.TODO(), ClusterComponentTypeStr, "test-tidb", "v1", 0, []string{}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
 		t.Errorf("case: create secondparty operation successfully. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", TestOperationID, operationID, nil, err)
@@ -282,6 +364,14 @@ func TestSecondPartyManager_ClusterUpgrade_Success(t *testing.T) {
 }
 
 func TestSecondPartyManager_ClusterShowConfig(t *testing.T) {
+	mockCtl := gomock.NewController(t)
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
+
 	req := CmdShowConfigReq{
 		TiUPComponent: ClusterComponentTypeStr,
 		InstanceName:  "test-tidb",
@@ -295,6 +385,14 @@ func TestSecondPartyManager_ClusterShowConfig(t *testing.T) {
 }
 
 func TestSecondPartyManager_ClusterShowConfig_WithTimeout(t *testing.T) {
+	mockCtl := gomock.NewController(t)
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
+
 	req := CmdShowConfigReq{
 		TiUPComponent: ClusterComponentTypeStr,
 		InstanceName:  "test-tidb",
@@ -359,6 +457,13 @@ func TestSecondPartyManager_ClusterEditGlobalConfig_Success(t *testing.T) {
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterEditGlobalConfig, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
+
 	operationID, err := secondPartyManager1.ClusterEditGlobalConfig(context.TODO(), cmdEditGlobalConfigReq, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err == nil {
 		t.Errorf("case: create secondparty operation successfully. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", TestOperationID, operationID, nil, err)
@@ -366,6 +471,14 @@ func TestSecondPartyManager_ClusterEditGlobalConfig_Success(t *testing.T) {
 }
 
 func TestSecondPartyManager_startTiupEditGlobalConfigTask(t *testing.T) {
+	mockCtl := gomock.NewController(t)
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
+
 	configMap := make(map[string]interface{})
 	configMap["foo"] = "bar"
 	topo := spec2.Specification{}
@@ -468,6 +581,13 @@ func TestSecondPartyManager_ClusterEditInstanceConfig_Success(t *testing.T) {
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterEditInstanceConfig, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
+
 	operationID, err := secondPartyManager1.ClusterEditInstanceConfig(context.TODO(), cmdEditInstanceConfigReq, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err == nil {
 		t.Errorf("case: create secondparty operation successfully. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", TestOperationID, operationID, nil, err)
@@ -475,6 +595,13 @@ func TestSecondPartyManager_ClusterEditInstanceConfig_Success(t *testing.T) {
 }
 
 func TestSecondPartyManager_startTiupEditInstanceConfigTask(t *testing.T) {
+	mockCtl := gomock.NewController(t)
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+
 	configMap := make(map[string]interface{})
 	configMap["host"] = "1.2.3.5"
 	tiDBSpec := spec2.TiDBSpec{
@@ -549,38 +676,50 @@ func TestSecondPartyManager_startTiupEditInstanceConfigTask(t *testing.T) {
 		TimeoutS:             0,
 		Flags:                []string{},
 	}
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiKV
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiFlash
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 	req.TiDBClusterComponent = spec.TiDBClusterComponent_PD
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 	req.TiDBClusterComponent = spec.TiDBClusterComponent_Pump
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 	req.TiDBClusterComponent = spec.TiDBClusterComponent_Drainer
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 	req.TiDBClusterComponent = spec.TiDBClusterComponent_CDC
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiSparkMasters
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiSparkWorkers
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 	req.TiDBClusterComponent = spec.TiDBClusterComponent_Prometheus
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 	req.TiDBClusterComponent = spec.TiDBClusterComponent_Grafana
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 	req.TiDBClusterComponent = spec.TiDBClusterComponent_Alertmanager
 	secondPartyManager1.startTiUPEditInstanceConfigOperation(context.TODO(), TestOperationID, &req, &topo)
 }
@@ -615,6 +754,13 @@ func TestSecondPartyManager_ClusterReload_Success(t *testing.T) {
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterReload, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 
 	cmdReloadConfigReq := CmdReloadConfigReq{
 		TiUPComponent: ClusterComponentTypeStr,
@@ -659,6 +805,13 @@ func TestSecondPartyManager_ClusterExec_Success(t *testing.T) {
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterExec, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
+
 	req := CmdClusterExecReq{
 		TiUPComponent: ClusterComponentTypeStr,
 		InstanceName:  "test-tidb",
@@ -696,6 +849,13 @@ func TestSecondPartyManager_ClusterDumpling_Success(t *testing.T) {
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_Dumpling, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
+
 	operationID, err := secondPartyManager1.Dumpling(context.TODO(), 0, []string{}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
 		t.Errorf("case: create secondparty operation successfully. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", TestOperationID, operationID, nil, err)
@@ -727,6 +887,13 @@ func TestSecondPartyManager_ClusterLightning_Success(t *testing.T) {
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_Lightning, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
+
 	operationID, err := secondPartyManager1.Lightning(context.TODO(), 0, []string{}, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
 		t.Errorf("case: create secondparty operation successfully. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", TestOperationID, operationID, nil, err)
@@ -734,6 +901,13 @@ func TestSecondPartyManager_ClusterLightning_Success(t *testing.T) {
 }
 
 func TestSecondPartyManager_ClusterClusterDisplay(t *testing.T) {
+	mockCtl := gomock.NewController(t)
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 
 	_, err := secondPartyManager1.ClusterDisplay(context.TODO(), ClusterComponentTypeStr, "test-tidb", 0, []string{})
 	if err == nil {
@@ -742,6 +916,13 @@ func TestSecondPartyManager_ClusterClusterDisplay(t *testing.T) {
 }
 
 func TestSecondPartyManager_ClusterClusterDisplay_WithTimeout(t *testing.T) {
+	mockCtl := gomock.NewController(t)
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 
 	_, err := secondPartyManager1.ClusterDisplay(context.TODO(), ClusterComponentTypeStr, "test-tidb", 1, []string{})
 	if err == nil {
@@ -813,27 +994,41 @@ func TestSecondPartyManager_ClusterGetTaskStatusByBizID_Success(t *testing.T) {
 }
 
 func TestSecondPartyManager_ClusterComponentCtl(t *testing.T) {
+	mockCtl := gomock.NewController(t)
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 
-	_, err := secondPartyManager1.ClusterComponentCtl(context.TODO(), CtlComponentTypeStr, "v5.0.0", spec.TiDBClusterComponent_PD, []string{}, 0)
+	_, err := secondPartyManager1.ClusterComponentCtl(context.TODO(), CTLComponentTypeStr, "v5.0.0", spec.TiDBClusterComponent_PD, []string{}, 0)
 	if err == nil {
 		t.Errorf("case: cluster display. err(expected: not nil, actual: nil)")
 	}
 }
 
 func TestSecondPartyManager_ClusterComponentCtl_WithTimeout(t *testing.T) {
+	mockCtl := gomock.NewController(t)
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 
-	_, err := secondPartyManager1.ClusterComponentCtl(context.TODO(), CtlComponentTypeStr, "v5.0.0", spec.TiDBClusterComponent_PD, []string{}, 1)
+	_, err := secondPartyManager1.ClusterComponentCtl(context.TODO(), CTLComponentTypeStr, "v5.0.0", spec.TiDBClusterComponent_PD, []string{}, 1)
 	if err == nil {
 		t.Errorf("case: cluster display. err(expected: not nil, actual: nil)")
 	}
 }
 
 func TestSecondPartyManager_startTiUPTask_Wrong(t *testing.T) {
-	secondPartyManager1.startTiUPOperation(context.TODO(), TestOperationID, "ls", []string{"-2"}, 1)
+	secondPartyManager1.startTiUPOperation(context.TODO(), TestOperationID, "ls", []string{"-2"}, 1, "")
 }
 
 func TestSecondPartyManager_startTiUPTask(t *testing.T) {
-	secondPartyManager1.startTiUPOperation(context.TODO(), TestOperationID, "ls", []string{}, 1)
+	secondPartyManager1.startTiUPOperation(context.TODO(), TestOperationID, "ls", []string{}, 1, "")
 }
 
 func initForTestLibtiup() {

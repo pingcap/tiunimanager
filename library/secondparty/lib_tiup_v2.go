@@ -27,6 +27,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"syscall"
 	"time"
@@ -60,6 +61,7 @@ func (manager *SecondPartyManager) ClusterDeploy(ctx context.Context, tiUPCompon
 		deployReq.TimeoutS = timeoutS
 		deployReq.Flags = flags
 		deployReq.TiUPPath = manager.TiUPBinPath
+		deployReq.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
 		manager.startTiUPDeployOperation(ctx, secondPartyOperation.ID, &deployReq)
 		return secondPartyOperation.ID, nil
 	}
@@ -82,7 +84,7 @@ func (manager *SecondPartyManager) startTiUPDeployOperation(ctx context.Context,
 		args = append(args, string(req.TiUPComponent), "deploy", req.InstanceName, req.Version, topologyTmpFilePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome)
 	}()
 }
 
@@ -105,6 +107,7 @@ func (manager *SecondPartyManager) ClusterScaleOut(ctx context.Context, tiUPComp
 		scaleOutReq.TimeoutS = timeoutS
 		scaleOutReq.Flags = flags
 		scaleOutReq.TiUPPath = manager.TiUPBinPath
+		scaleOutReq.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
 		manager.startTiUPScaleOutOperation(ctx, secondPartyOperation.ID, &scaleOutReq)
 		return secondPartyOperation.ID, nil
 	}
@@ -127,7 +130,7 @@ func (manager *SecondPartyManager) startTiUPScaleOutOperation(ctx context.Contex
 		args = append(args, string(req.TiUPComponent), "scale-out", req.InstanceName, topologyTmpFilePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome)
 	}()
 }
 
@@ -150,6 +153,7 @@ func (manager *SecondPartyManager) ClusterScaleIn(ctx context.Context, tiUPCompo
 		scaleInReq.TimeoutS = timeoutS
 		scaleInReq.Flags = flags
 		scaleInReq.TiUPPath = manager.TiUPBinPath
+		scaleInReq.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
 		manager.startTiUPScaleInOperation(ctx, secondPartyOperation.ID, &scaleInReq)
 		return secondPartyOperation.ID, nil
 	}
@@ -160,7 +164,7 @@ func (manager *SecondPartyManager) startTiUPScaleInOperation(ctx context.Context
 		var args []string
 		args = append(args, string(req.TiUPComponent), "scale-in", req.InstanceName, "--node", req.NodeId)
 		args = append(args, req.Flags...)
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome)
 	}()
 }
 
@@ -180,6 +184,7 @@ func (manager *SecondPartyManager) ClusterStart(ctx context.Context, tiUPCompone
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
 		req.TiUPPath = manager.TiUPBinPath
+		req.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
 		req.Flags = flags
 		manager.startTiUPStartOperation(ctx, secondPartyOperation.ID, &req)
 		return secondPartyOperation.ID, nil
@@ -192,7 +197,7 @@ func (manager *SecondPartyManager) startTiUPStartOperation(ctx context.Context, 
 		args = append(args, string(req.TiUPComponent), "start", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome)
 	}()
 }
 
@@ -212,6 +217,7 @@ func (manager *SecondPartyManager) ClusterRestart(ctx context.Context, tiUPCompo
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
 		req.TiUPPath = manager.TiUPBinPath
+		req.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
 		req.Flags = flags
 		manager.startTiUPRestartOperation(ctx, secondPartyOperation.ID, &req)
 		return secondPartyOperation.ID, nil
@@ -224,7 +230,7 @@ func (manager *SecondPartyManager) startTiUPRestartOperation(ctx context.Context
 		args = append(args, string(req.TiUPComponent), "restart", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome)
 	}()
 }
 
@@ -244,6 +250,7 @@ func (manager *SecondPartyManager) ClusterStop(ctx context.Context, tiUPComponen
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
 		req.TiUPPath = manager.TiUPBinPath
+		req.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
 		req.Flags = flags
 		manager.startTiUPStopOperation(ctx, secondPartyOperation.ID, &req)
 		return secondPartyOperation.ID, nil
@@ -256,7 +263,7 @@ func (manager *SecondPartyManager) startTiUPStopOperation(ctx context.Context, o
 		args = append(args, string(req.TiUPComponent), "stop", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome)
 	}()
 }
 
@@ -268,6 +275,7 @@ func (manager *SecondPartyManager) ClusterList(ctx context.Context, tiUPComponen
 	req.TiUPComponent = tiUPComponent
 	req.TimeoutS = timeoutS
 	req.TiUPPath = manager.TiUPBinPath
+	req.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
 	req.Flags = flags
 	cmdListResp, err := manager.startTiUPListOperation(ctx, &req)
 	return &cmdListResp, err
@@ -293,6 +301,8 @@ func (manager *SecondPartyManager) startTiUPListOperation(ctx context.Context, r
 		cmd = exec.Command(req.TiUPPath, args...)
 		cancelFp = func() {}
 	}
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, fmt.Sprintf("TIUP_HOME=%s", req.TiUPHome))
 	defer cancelFp()
 	cmd.SysProcAttr = genSysProcAttr()
 	var out, stderr bytes.Buffer
@@ -324,6 +334,7 @@ func (manager *SecondPartyManager) ClusterDestroy(ctx context.Context, tiUPCompo
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
 		req.TiUPPath = manager.TiUPBinPath
+		req.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
 		req.Flags = flags
 		manager.startTiUPDestroyOperation(ctx, secondPartyOperation.ID, &req)
 		return secondPartyOperation.ID, nil
@@ -336,7 +347,7 @@ func (manager *SecondPartyManager) startTiUPDestroyOperation(ctx context.Context
 		args = append(args, string(req.TiUPComponent), "destroy", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome)
 	}()
 }
 
@@ -348,7 +359,8 @@ func (manager *SecondPartyManager) ClusterDisplay(ctx context.Context, tiUPCompo
 	args = append(args, string(tiUPComponent), "display")
 	args = append(args, instanceName)
 	args = append(args, flags...)
-	result, err := manager.startSyncTiUPOperation(ctx, args, timeoutS)
+	tiUPHome := getTiUPHomeForComponent(ctx, tiUPComponent)
+	result, err := manager.startSyncTiUPOperation(ctx, args, timeoutS, tiUPHome)
 	resp = &CmdDisplayResp{}
 	resp.DisplayRespString = result
 	return
@@ -374,6 +386,7 @@ func (manager *SecondPartyManager) ClusterUpgrade(ctx context.Context, tiUPCompo
 		req.TimeoutS = timeoutS
 		req.Flags = flags
 		req.TiUPPath = manager.TiUPBinPath
+		req.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
 		manager.startTiUPUpgradeOperation(ctx, secondPartyOperation.ID, &req)
 		return secondPartyOperation.ID, nil
 	}
@@ -385,7 +398,7 @@ func (manager *SecondPartyManager) startTiUPUpgradeOperation(ctx context.Context
 		args = append(args, string(req.TiUPComponent), "upgrade", req.InstanceName, req.Version)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome)
 	}()
 }
 
@@ -396,8 +409,9 @@ func (manager *SecondPartyManager) ClusterShowConfig(ctx context.Context, req *C
 	args = append(args, string(req.TiUPComponent), "show-config")
 	args = append(args, req.InstanceName)
 	args = append(args, req.Flags...)
+	tiUPHome := getTiUPHomeForComponent(ctx, req.TiUPComponent)
 
-	topoStr, err := manager.startSyncTiUPOperation(ctx, args, req.TimeoutS)
+	topoStr, err := manager.startSyncTiUPOperation(ctx, args, req.TimeoutS, tiUPHome)
 	if err != nil {
 		return nil, err
 	}
@@ -499,6 +513,7 @@ func (manager *SecondPartyManager) startTiUPEditGlobalConfigOperation(ctx contex
 		TiUPComponent: req.TiUPComponent,
 		InstanceName:  req.InstanceName,
 		NewTopo:       topo,
+		TiUPHome:      getTiUPHomeForComponent(ctx, req.TiUPComponent),
 		TimeoutS:      req.TimeoutS,
 		Flags:         req.Flags,
 	}
@@ -666,6 +681,7 @@ func (manager *SecondPartyManager) startTiUPEditInstanceConfigOperation(ctx cont
 		TiUPComponent: req.TiUPComponent,
 		InstanceName:  req.InstanceName,
 		NewTopo:       topo,
+		TiUPHome:      getTiUPHomeForComponent(ctx, req.TiUPComponent),
 		TimeoutS:      req.TimeoutS,
 		Flags:         req.Flags,
 	}
@@ -703,7 +719,7 @@ func (manager *SecondPartyManager) startTiUPEditConfigOperation(ctx context.Cont
 		args = append(args, string(req.TiUPComponent), "edit-config", req.InstanceName, "--topology-file", topologyTmpFilePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, manager.TiUPBinPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, manager.TiUPBinPath, args, req.TimeoutS, req.TiUPHome)
 	}()
 }
 
@@ -717,6 +733,7 @@ func (manager *SecondPartyManager) ClusterReload(ctx context.Context, cmdReloadC
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
 	}
+	cmdReloadConfigReq.TiUPHome = getTiUPHomeForComponent(ctx, cmdReloadConfigReq.TiUPComponent)
 	manager.startTiUPReloadOperation(ctx, secondPartyOperation.ID, &cmdReloadConfigReq)
 	return secondPartyOperation.ID, nil
 }
@@ -727,7 +744,7 @@ func (manager *SecondPartyManager) startTiUPReloadOperation(ctx context.Context,
 		args = append(args, string(req.TiUPComponent), "reload", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, manager.TiUPBinPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, manager.TiUPBinPath, args, req.TimeoutS, req.TiUPHome)
 	}()
 }
 
@@ -741,6 +758,7 @@ func (manager *SecondPartyManager) ClusterExec(ctx context.Context, cmdClusterEx
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
 	}
+	cmdClusterExecReq.TiUPHome = getTiUPHomeForComponent(ctx, cmdClusterExecReq.TiUPComponent)
 	manager.startTiUPExecOperation(ctx, secondPartyOperation.ID, &cmdClusterExecReq)
 	return secondPartyOperation.ID, nil
 }
@@ -751,7 +769,7 @@ func (manager *SecondPartyManager) startTiUPExecOperation(ctx context.Context, o
 		args = append(args, string(req.TiUPComponent), "exec", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, manager.TiUPBinPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, manager.TiUPBinPath, args, req.TimeoutS, req.TiUPHome)
 	}()
 }
 
@@ -769,6 +787,7 @@ func (manager *SecondPartyManager) Dumpling(ctx context.Context, timeoutS int, f
 		dumplingReq.TimeoutS = timeoutS
 		dumplingReq.TiUPPath = manager.TiUPBinPath
 		dumplingReq.Flags = flags
+		dumplingReq.TiUPHome = getTiUPHomeForComponent(ctx, DefaultComponentTypeStr)
 		manager.startTiUPDumplingOperation(ctx, secondPartyOperation.ID, &dumplingReq)
 		return secondPartyOperation.ID, nil
 	}
@@ -779,7 +798,7 @@ func (manager *SecondPartyManager) startTiUPDumplingOperation(ctx context.Contex
 		var args []string
 		args = append(args, "dumpling")
 		args = append(args, req.Flags...)
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome)
 	}()
 }
 
@@ -797,6 +816,7 @@ func (manager *SecondPartyManager) Lightning(ctx context.Context, timeoutS int, 
 		lightningReq.TimeoutS = timeoutS
 		lightningReq.TiUPPath = manager.TiUPBinPath
 		lightningReq.Flags = flags
+		lightningReq.TiUPHome = getTiUPHomeForComponent(ctx, DefaultComponentTypeStr)
 		manager.startTiUPLightningOperation(ctx, secondPartyOperation.ID, &lightningReq)
 		return secondPartyOperation.ID, nil
 	}
@@ -807,7 +827,7 @@ func (manager *SecondPartyManager) startTiUPLightningOperation(ctx context.Conte
 		var args []string
 		args = append(args, "tidb-lightning")
 		args = append(args, req.Flags...)
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome)
 	}()
 }
 
@@ -828,6 +848,7 @@ func (manager *SecondPartyManager) Transfer(ctx context.Context, tiUPComponent T
 		req.InstanceName = instanceName
 		req.CollectorYaml = collectorYaml
 		req.RemotePath = remotePath
+		req.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
 		req.TimeoutS = timeoutS
 		req.Flags = flags
 		req.TiUPPath = manager.TiUPBinPath
@@ -852,7 +873,7 @@ func (manager *SecondPartyManager) startTiUPTransferOperation(ctx context.Contex
 		args = append(args, string(req.TiUPComponent), "push", req.InstanceName, collectorTmpFilePath, req.RemotePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome)
 	}()
 }
 
@@ -864,14 +885,15 @@ func (manager *SecondPartyManager) ClusterComponentCtl(ctx context.Context, str 
 	args = append(args, fmt.Sprintf("%s:%s", string(str), clusterVersion))
 	args = append(args, string(component))
 	args = append(args, flags...)
-	return manager.startSyncTiUPOperation(ctx, args, timeoutS)
+	tiUPHome := getTiUPHomeForComponent(ctx, str)
+	return manager.startSyncTiUPOperation(ctx, args, timeoutS, tiUPHome)
 }
 
 func (manager *SecondPartyManager) startSyncTiUPOperation(ctx context.Context, args []string,
-	timeoutS int) (result string, err error) {
+	timeoutS int, tiUPHome string) (result string, err error) {
 	logInFunc := framework.LogWithContext(ctx)
-	logInFunc.Info("operation starts processing:", fmt.Sprintf("tiuppath:%s tiupargs:%v timeouts:%d",
-		manager.TiUPBinPath, args, timeoutS))
+	logInFunc.Info("operation starts processing:", fmt.Sprintf("TIUP_HOME=%s tiuppath:%s tiupargs:%v timeouts:%d",
+		tiUPHome, manager.TiUPBinPath, args, timeoutS))
 	var cmd *exec.Cmd
 	var cancelFp context.CancelFunc
 	if timeoutS != 0 {
@@ -882,6 +904,8 @@ func (manager *SecondPartyManager) startSyncTiUPOperation(ctx context.Context, a
 		cmd = exec.Command(manager.TiUPBinPath, args...)
 		cancelFp = func() {}
 	}
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, fmt.Sprintf("TIUP_HOME=%s", tiUPHome))
 	defer cancelFp()
 	cmd.SysProcAttr = genSysProcAttr()
 	var stderr bytes.Buffer
@@ -896,11 +920,11 @@ func (manager *SecondPartyManager) startSyncTiUPOperation(ctx context.Context, a
 }
 
 func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, operationID string, tiUPPath string,
-	tiUPArgs []string, TimeoutS int) (exitCh chan struct{}) {
+	tiUPArgs []string, TimeoutS int, tiUPHome string) (exitCh chan struct{}) {
 	exitCh = make(chan struct{})
 	logInFunc := framework.LogWithContext(ctx).WithField("operation", operationID)
-	logInFunc.Info("operation starts processing:", fmt.Sprintf("tiuppath:%s tiupargs:%v timeouts:%d",
-		tiUPPath, tiUPArgs, TimeoutS))
+	logInFunc.Info("operation starts processing:", fmt.Sprintf("TIUP_HOME=%s tiuppath:%s tiupargs:%v timeouts:%d",
+		tiUPHome, tiUPPath, tiUPArgs, TimeoutS))
 	manager.operationStatusCh <- OperationStatusMember{
 		OperationID: operationID,
 		Status:      secondparty.OperationStatus_Processing,
@@ -919,6 +943,8 @@ func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, opera
 			cmd = exec.Command(tiUPPath, tiUPArgs...)
 			cancelFp = func() {}
 		}
+		cmd.Env = os.Environ()
+		cmd.Env = append(cmd.Env, fmt.Sprintf("TIUP_HOME=%s", tiUPHome))
 		defer cancelFp()
 		cmd.SysProcAttr = genSysProcAttr()
 		var out, stderr bytes.Buffer
@@ -974,4 +1000,21 @@ func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, opera
 		}
 	}()
 	return exitCh
+}
+
+func getTiUPHomeForComponent(ctx context.Context, tiUPComponent TiUPComponentTypeStr) string {
+	var component string
+	switch tiUPComponent {
+	case TiEMComponentTypeStr:
+		component = string(TiEMComponentTypeStr)
+	default:
+		component = string(DefaultComponentTypeStr)
+	}
+	tiUPConfig, err := models.GetTiUPConfigReaderWriter().QueryByComponentType(context.Background(), component)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("fail get tiup_home for %s: %s", component, err.Error())
+		return ""
+	} else {
+		return tiUPConfig.TiupHome
+	}
 }

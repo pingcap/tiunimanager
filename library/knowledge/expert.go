@@ -20,7 +20,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/pingcap-inc/tiem/library/common/resource-type"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 )
 
@@ -176,7 +176,7 @@ func loadSpecKnowledge() {
 		"TiFlash", "column-based-storage", "TiFlash",
 	}
 
-	cdcComponent := ClusterComponent{
+	CDCComponent := ClusterComponent{
 		"CDC", "change-feed", "CDC",
 	}
 
@@ -193,9 +193,9 @@ func loadSpecKnowledge() {
 	tidbV4_0_12_Spec := ClusterVersionSpec{
 		ClusterVersion:        tidbV4_0_12,
 		ClusterPortConstraint: ComponentPortConstraint{11000, 12000, 2},
-		ArchTypes: []resource.ArchType{
-			resource.Arm64,
-			resource.X86_64,
+		ArchTypes: []constants.ArchType{
+			constants.ArchArm64,
+			constants.ArchX8664,
 		},
 		ComponentSpecs: []ClusterComponentSpec{
 			{tidbComponent, ComponentConstraint{true, false, []int{3}, []string{
@@ -240,9 +240,9 @@ func loadSpecKnowledge() {
 	tidbV5_0_0_Spec := ClusterVersionSpec{
 		ClusterVersion:        tidbV5_0_0,
 		ClusterPortConstraint: ComponentPortConstraint{11000, 12000, 2},
-		ArchTypes: []resource.ArchType{
-			resource.Arm64,
-			resource.X86_64,
+		ArchTypes: []constants.ArchType{
+			constants.ArchArm64,
+			constants.ArchX8664,
 		},
 		ComponentSpecs: []ClusterComponentSpec{
 			{tidbComponent, ComponentConstraint{true, false, []int{3}, []string{
@@ -287,9 +287,9 @@ func loadSpecKnowledge() {
 	tidbV5_2_2_Spec := ClusterVersionSpec{
 		ClusterVersion:        tidbV5_2_2,
 		ClusterPortConstraint: ComponentPortConstraint{11000, 12000, 2},
-		ArchTypes: []resource.ArchType{
-			resource.Arm64,
-			resource.X86_64,
+		ArchTypes: []constants.ArchType{
+			constants.ArchArm64,
+			constants.ArchX8664,
 		},
 		ComponentSpecs: []ClusterComponentSpec{
 			{tidbComponent, ComponentConstraint{true, false, []int{3}, []string{
@@ -321,7 +321,7 @@ func loadSpecKnowledge() {
 				ComponentPortConstraint{10120, 10180, 6},
 			},
 
-			{cdcComponent, ComponentConstraint{false, false, []int{3}, []string{
+			{CDCComponent, ComponentConstraint{false, false, []int{3}, []string{
 				GenSpecCode(4, 32),
 				GenSpecCode(8, 64),
 				GenSpecCode(16, 128),

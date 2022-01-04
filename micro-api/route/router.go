@@ -20,14 +20,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/backuprestore"
-	changefeed2 "github.com/pingcap-inc/tiem/micro-api/controller/cluster/changefeed"
+	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/changefeed"
 	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
 	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
 	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
-	"github.com/pingcap-inc/tiem/micro-api/controller/platform/specs"
+	"github.com/pingcap-inc/tiem/micro-api/controller/platform/product"
 	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
 	warehouseApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 	flowtaskApi "github.com/pingcap-inc/tiem/micro-api/controller/task/flowtask"
@@ -124,7 +124,7 @@ func Route(g *gin.Engine) {
 
 		knowledge := apiV1.Group("/knowledges")
 		{
-			knowledge.GET("/", specs.ClusterKnowledge)
+			knowledge.GET("/", product.ClusterKnowledge)
 		}
 
 		backup := apiV1.Group("/backups")
@@ -142,15 +142,15 @@ func Route(g *gin.Engine) {
 			changeFeeds.Use(interceptor.VerifyIdentity)
 			changeFeeds.Use(interceptor.AuditLog())
 
-			changeFeeds.POST("/", changefeed2.Create)
-			changeFeeds.POST("/:changeFeedTaskId/pause", changefeed2.Pause)
-			changeFeeds.POST("/:changeFeedTaskId/resume", changefeed2.Resume)
-			changeFeeds.POST("/:changeFeedTaskId/update", changefeed2.Update)
+			changeFeeds.POST("/", changefeed.Create)
+			changeFeeds.POST("/:changeFeedTaskId/pause", changefeed.Pause)
+			changeFeeds.POST("/:changeFeedTaskId/resume", changefeed.Resume)
+			changeFeeds.POST("/:changeFeedTaskId/update", changefeed.Update)
 
-			changeFeeds.DELETE("/:changeFeedTaskId", changefeed2.Delete)
+			changeFeeds.DELETE("/:changeFeedTaskId", changefeed.Delete)
 
-			changeFeeds.GET("/:changeFeedTaskId", changefeed2.Detail)
-			changeFeeds.GET("/", changefeed2.Query)
+			changeFeeds.GET("/:changeFeedTaskId/", changefeed.Detail)
+			changeFeeds.GET("/", changefeed.Query)
 		}
 
 		flowworks := apiV1.Group("/workflow")
@@ -186,6 +186,34 @@ func Route(g *gin.Engine) {
 			paramGroups.DELETE("/:paramGroupId", parametergroup.Delete)
 			paramGroups.POST("/:paramGroupId/copy", parametergroup.Copy)
 			paramGroups.POST("/:paramGroupId/apply", parametergroup.Apply)
+		}
+
+		productGroup := apiV1.Group("/products")
+		{
+			productGroup.Use(interceptor.VerifyIdentity)
+			productGroup.Use(interceptor.AuditLog())
+			productGroup.POST("/", product.CreateProduct)
+			productGroup.DELETE("/", product.DeleteProduct)
+			productGroup.GET("/", product.QueryProducts)
+			productGroup.GET("/detail", product.QueryProductDetail)
+		}
+
+		zoneGroup := apiV1.Group("/zones")
+		{
+			zoneGroup.Use(interceptor.VerifyIdentity)
+			zoneGroup.Use(interceptor.AuditLog())
+			zoneGroup.POST("/", product.CreateZones)
+			zoneGroup.DELETE("/", product.DeleteZones)
+			zoneGroup.GET("/", product.QueryZones)
+		}
+
+		specGroup := apiV1.Group("/specs")
+		{
+			specGroup.Use(interceptor.VerifyIdentity)
+			specGroup.Use(interceptor.AuditLog())
+			specGroup.POST("/", product.CreateSpecs)
+			specGroup.DELETE("/", product.DeleteSpecs)
+			specGroup.GET("/", product.QuerySpecs)
 		}
 	}
 

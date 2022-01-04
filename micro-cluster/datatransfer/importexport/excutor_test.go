@@ -18,9 +18,12 @@ package importexport
 import (
 	"context"
 	"github.com/golang/mock/gomock"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/cluster/management"
+	"github.com/pingcap-inc/tiem/models/common"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockimportexport"
 	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
@@ -35,7 +38,26 @@ func TestExecutor_buildDataImportConfig(t *testing.T) {
 	defer os.RemoveAll("./testdata")
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(contextClusterMetaKey, &handler.ClusterMeta{})
+	instanceMap := make(map[string][]*management.ClusterInstance)
+	tidb := make([]*management.ClusterInstance, 1)
+	tidb[0] = &management.ClusterInstance{}
+	tidb[0].Status = string(constants.ClusterInstanceRunning)
+	tidb[0].HostIP = []string{"127.0.0.1", "127.0.0.2"}
+	tidb[0].Ports = []int32{4000, 4001}
+	instanceMap[string(constants.ComponentIDTiDB)] = tidb
+
+	pd := make([]*management.ClusterInstance, 1)
+	pd[0] = &management.ClusterInstance{}
+	pd[0].Status = string(constants.ClusterInstanceRunning)
+	pd[0].HostIP = []string{"127.0.0.1", "127.0.0.2"}
+	pd[0].Ports = []int32{4000, 4001}
+	instanceMap[string(constants.ComponentIDPD)] = pd
+	flowContext.SetData(contextClusterMetaKey, &handler.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{ID: "xxx"},
+		},
+		Instances: instanceMap,
+	})
 	flowContext.SetData(contextDataTransportRecordKey, &importInfo{ConfigPath: "./testdata"})
 	err := buildDataImportConfig(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
@@ -128,6 +150,22 @@ func TestExecutor_exportDataFromCluster(t *testing.T) {
 		FileType:    "csv",
 		FilePath:    "./testdata",
 		Filter:      "*.db",
+	})
+	instanceMap := make(map[string][]*management.ClusterInstance)
+	tidb := make([]*management.ClusterInstance, 1)
+	tidb[0] = &management.ClusterInstance{}
+	tidb[0].Status = string(constants.ClusterInstanceRunning)
+	tidb[0].HostIP = []string{"127.0.0.1", "127.0.0.2"}
+	tidb[0].Ports = []int32{4000, 4001}
+	instanceMap[string(constants.ComponentIDTiDB)] = tidb
+	flowContext.SetData(contextClusterMetaKey, &handler.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "cls-test",
+			},
+			Name: "cls-test",
+		},
+		Instances: instanceMap,
 	})
 	err := exportDataFromCluster(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)

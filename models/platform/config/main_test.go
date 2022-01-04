@@ -16,7 +16,7 @@
 package config
 
 import (
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/driver/sqlite"
@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
 	os.MkdirAll(testFilePath, 0755)
 
-	logins := framework.LogForkFile(common.LogFileSystem)
+	logins := framework.LogForkFile(constants.LogFileSystem)
 
 	defer func() {
 		os.RemoveAll(testFilePath)
@@ -38,7 +38,7 @@ func TestMain(m *testing.M) {
 
 	framework.InitBaseFrameworkForUt(framework.ClusterService,
 		func(d *framework.BaseFramework) error {
-			dbFile := testFilePath + common.DBDirPrefix + common.DatabaseFileName
+			dbFile := testFilePath + constants.DBDirPrefix + constants.DatabaseFileName
 			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 
 			if err != nil || db.Error != nil {

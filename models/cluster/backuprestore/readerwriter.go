@@ -75,6 +75,14 @@ type ReaderWriter interface {
 	// @Return error
 	DeleteBackupRecord(ctx context.Context, backupId string) (err error)
 
+	// DeleteBackupRecords
+	// @Description: delete backup records by ids
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter backupIds
+	// @Return error
+	DeleteBackupRecords(ctx context.Context, backupIds []string) (err error)
+
 	// CreateBackupStrategy
 	// @Description: create new backup record
 	// @Receiver m

@@ -2,12 +2,13 @@ package identification
 
 import (
 	"context"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/user/identification"
-	"time"
 )
 
 type Manager struct{}
@@ -92,9 +93,10 @@ func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq)
 	resp.AccountName = token.AccountName
 	resp.TenantID = token.TenantId
 
+	// expired
 	if !token.IsValid() {
-		err = errors.NewError(errors.TIEM_UNAUTHORIZED_USER, "invalid token")
-		return
+		err = errors.Error(errors.TIEM_ACCESS_TOKEN_EXPIRED)
+		return resp, err
 	}
 
 	return

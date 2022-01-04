@@ -4976,6 +4976,9 @@ var doc = `{
                 "clusterID": {
                     "type": "string"
                 },
+                "needConfirmation": {
+                    "type": "boolean"
+                },
                 "workFlowId": {
                     "description": "Asynchronous task workflow ID",
                     "type": "string"

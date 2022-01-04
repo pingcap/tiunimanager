@@ -279,9 +279,6 @@ func (g *ClusterReadWrite) SetMaintenanceStatus(ctx context.Context, clusterID s
 		return err
 	}
 
-	// let A = current maintenance status, B = target maintenance status
-	// if A == nil, can do anything
-	// if A != nil && A != deleting, can do deleting
 	if cluster.MaintenanceStatus != constants.ClusterMaintenanceNone &&
 		targetStatus != constants.ClusterMaintenanceDeleting ||
 		cluster.MaintenanceStatus == constants.ClusterMaintenanceDeleting {

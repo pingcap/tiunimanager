@@ -253,11 +253,20 @@ func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 
 	// delete manual backup records
 	if deleteReq.KeepHistoryBackupRecords {
+		framework.LogWithContext(context.Context).Infof(
+			"keep backup data for cluster %s", meta.Cluster.ID)
 	} else {
-		_, err = backuprestore.GetBRService().DeleteBackupRecords(context.Context, cluster.DeleteBackupDataReq{
-			ClusterID:  meta.Cluster.ID,
-			BackupMode: string(constants.BackupModeManual),
-			// todo exclude backup record before deleting
+		excludeBackupIDs := make([]string, 0)
+		backupIdBeforeDeleting := context.GetData(ContextBackupID)
+
+		if backupIdBeforeDeleting != nil {
+			excludeBackupIDs = append(excludeBackupIDs, backupIdBeforeDeleting.(string))
+		}
+
+		_, err = backuprestore.GetBRService().DeleteBackupRecords(context.Context, cluster.DeleteBackupDataReq {
+			ClusterID:        meta.Cluster.ID,
+			BackupMode:       string(constants.BackupModeManual),
+			ExcludeBackupIDs: excludeBackupIDs,
 		})
 		if err != nil {
 			framework.LogWithContext(context.Context).Errorf(
@@ -284,6 +293,8 @@ func backupBeforeDelete(node *workflowModel.WorkFlowNode, context *workflow.Flow
 			framework.LogWithContext(context.Context).Errorf(
 				"do backup for cluster %s error: %s", meta.Cluster.ID, err.Error())
 			return err
+		} else {
+			context.SetData(ContextBackupID, backupResponse.BackupID)
 		}
 		if err = handler.WaitWorkflow(context.Context, backupResponse.WorkFlowID, 10*time.Second, 30*24*time.Hour); err != nil {
 			framework.LogWithContext(context).Errorf("backup workflow error: %s", err)

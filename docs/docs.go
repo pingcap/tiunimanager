@@ -4976,6 +4976,9 @@ var doc = `{
                 "clusterID": {
                     "type": "string"
                 },
+                "maintenanceStatus": {
+                    "type": "string"
+                },
                 "needConfirmation": {
                     "type": "boolean"
                 },

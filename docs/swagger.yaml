@@ -191,6 +191,8 @@ definitions:
     properties:
       clusterID:
         type: string
+      maintenanceStatus:
+        type: string
       needConfirmation:
         type: boolean
       workFlowId:

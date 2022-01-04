@@ -19,6 +19,8 @@ package metrics
 import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/stretchr/testify/assert"
+	"net/http"
+	"net/url"
 	"testing"
 	"time"
 )
@@ -86,8 +88,25 @@ func TestMetrics(t *testing.T) {
 	})
 
 	t.Run("handle metrics", func(t *testing.T) {
-		got := HandleMetrics(constants.MetricsClusterCreate)
-		assert.NotNil(t, got)
+		callback := HandleMetrics(constants.MetricsClusterCreate)
+		assert.NotNil(t, callback)
 		HandleClusterMetrics(time.Now(), "test", 200)
+	})
+
+	t.Run("compute request size", func(t *testing.T) {
+		r := &http.Request{
+			URL: &url.URL{
+				Path: "/test",
+			},
+			ContentLength: 12,
+			Host: "127.0.0.1",
+			Proto: "http 1.0",
+			Method: "GET",
+			Header: http.Header{
+				"key": []string{"value"},
+			},
+		}
+		got := computeApproximateRequestSize(r)
+		assert.Equal(t, got, 45)
 	})
 }

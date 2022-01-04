@@ -20,10 +20,11 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"github.com/pingcap-inc/tiem/common/constants"
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/pingcap-inc/tiem/common/constants"
 
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
 	prom "github.com/prometheus/client_golang/prometheus"
@@ -51,7 +52,7 @@ type Framework interface {
 	Log() *log.Entry
 	LogWithContext(context.Context) *log.Entry
 	GetTracer() *Tracer
-	GetEtcdClient() *EtcdClient
+	GetEtcdClient() *EtcdClientV3
 	GetElasticsearchClient() *ElasticSearchClient
 	GetMetrics() *metrics.Metrics
 
@@ -90,7 +91,7 @@ type BaseFramework struct {
 	configuration *Configuration
 	log           *RootLogger
 	trace         *Tracer
-	etcdClient    *EtcdClient
+	etcdClient    *EtcdClientV3
 	certificate   *CertificateInfo
 
 	elasticsearchClient *ElasticSearchClient
@@ -294,7 +295,7 @@ func (b *BaseFramework) GetCertificateInfo() *CertificateInfo {
 	return b.certificate
 }
 
-func (b *BaseFramework) GetEtcdClient() *EtcdClient {
+func (b *BaseFramework) GetEtcdClient() *EtcdClientV3 {
 	return b.etcdClient
 }
 

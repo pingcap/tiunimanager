@@ -114,7 +114,6 @@ func TestExecutor_buildCollectorClusterLogConfig(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 2, len(configs))
 
-		assert.Equal(t, "/mnt/sda/123/tidb-deploy/123/tidb-log/tidb.log", configs[0].TiDB.Var.Paths[0])
 		assert.Equal(t, "/mnt/sda/123/pd-deploy/123/tidb-log/pd.log", configs[0].PD.Var.Paths[0])
 		assert.Equal(t, "/mnt/sda/123/tikv-deploy/123/tidb-log/tikv.log", configs[0].TiKV.Var.Paths[0])
 	})

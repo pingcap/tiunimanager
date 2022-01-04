@@ -25,7 +25,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
+	"github.com/pingcap-inc/tiem/metrics"
 	prom "github.com/prometheus/client_golang/prometheus"
 
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
@@ -95,10 +95,9 @@ type BaseFramework struct {
 
 	elasticsearchClient *ElasticSearchClient
 
-	metrics *metrics.Metrics
-
 	serviceMeta  *ServiceMeta
 	microService micro.Service
+	metrics *metrics.Metrics
 
 	initOpts     []Opt
 	shutdownOpts []Opt
@@ -124,7 +123,6 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 	}
 	f.parseArgs(serviceName)
 
-	f.metrics = metrics.InitMetricsForUT()
 	f.serviceMeta = NewServiceMetaFromArgs(serviceName, f.args)
 	f.initOpts = opts
 	f.Init()
@@ -234,7 +232,7 @@ func (b *BaseFramework) initElasticsearchClient() {
 }
 
 func (b *BaseFramework) initMetrics() {
-	b.metrics = metrics.InitMetrics()
+	b.metrics = metrics.GetMetrics()
 }
 
 func (b *BaseFramework) GetDeployDir() string {

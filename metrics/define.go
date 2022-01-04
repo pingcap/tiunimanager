@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -17,12 +16,25 @@
 
 package metrics
 
+import "sync"
+
 const (
-	ServiceLabel = "service"
-	HandlerLabel = "handler"
-	MethodLabel  = "method"
-	CodeLabel    = "code"
+	ServiceLabel  = "service"
+	HandlerLabel  = "handler"
+	MethodLabel   = "method"
+	CodeLabel     = "code"
+	OpenApiServer = "openapi-server"
+	ClusterServer = "cluster-server"
 )
+
+type MetricDef struct {
+	Name       string
+	Help       string
+	LabelNames []string
+}
+
+var once sync.Once
+var metrics *Metrics
 
 // Metrics Define
 var (
@@ -72,17 +84,6 @@ var (
 	SqliteDurationHistogramMetricDef = MetricDef{
 		Name:       "sqlite_request_duration_seconds",
 		Help:       "A histogram for requests duration to the sqlite.",
-		LabelNames: []string{ServiceLabel, MethodLabel, CodeLabel},
-	}
-
-	TiUPRequestsCounterMetricDef = MetricDef{
-		Name:       "tiup_requests_total",
-		Help:       "A counter for requests to the tiup.",
-		LabelNames: []string{ServiceLabel, MethodLabel, CodeLabel},
-	}
-	TiUPDurationHistogramMetricDef = MetricDef{
-		Name:       "tiup_request_duration_seconds",
-		Help:       "A histogram for requests duration to the tiup.",
 		LabelNames: []string{ServiceLabel, MethodLabel, CodeLabel},
 	}
 

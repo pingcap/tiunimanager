@@ -151,7 +151,7 @@ func (p *FileHostInitiator) LeaveEMCluster(ctx context.Context, nodeId string) (
 		emClusterName := framework.Current.GetClientArgs().EMClusterName
 		framework.LogWithContext(ctx).Infof("leave em cluster %s with work flow id %s", emClusterName, workFlowNodeID)
 		operationId, err := p.secondPartyServ.ClusterScaleIn(ctx, secondparty.TiEMComponentTypeStr, emClusterName, nodeId, rp_consts.DefaultTiupTimeOut,
-			[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, workFlowNodeID)
+			[]string{}, workFlowNodeID)
 		if err != nil {
 			return errors.NewEMErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "leave em cluster %s [%s] failed, %v", emClusterName, nodeId, err)
 		}

@@ -18,16 +18,16 @@ package interceptor
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/proto/clusterservices"
-	"net/http"
-
-	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/library/framework"
 	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
 )
 
@@ -66,7 +66,9 @@ func VerifyIdentity(c *gin.Context) {
 		c.Abort()
 	} else if rpcResp.Code != int32(errors.TIEM_SUCCESS) {
 		framework.LogWithContext(c).Error(rpcResp.Message)
-		c.Status(errors.EM_ERROR_CODE(rpcResp.Code).GetHttpCode())
+		code := errors.EM_ERROR_CODE(rpcResp.Code)
+		msg := rpcResp.Message
+		c.JSON(code.GetHttpCode(), controller.Fail(int(code), msg))
 		c.Abort()
 	} else {
 		var result message.AccessibleResp

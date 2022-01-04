@@ -28,6 +28,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/pingcap-inc/tiem/proto/clusterservices"
+	"github.com/pingcap-inc/tiem/util/convert"
 	"strings"
 	"sync"
 	"time"
@@ -40,8 +41,6 @@ import (
 	"github.com/pingcap-inc/tiem/common/errors"
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
-
-	"github.com/pingcap-inc/tiem/library/util/convert"
 
 	"github.com/pingcap-inc/tiem/models"
 

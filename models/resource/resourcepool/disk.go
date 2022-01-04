@@ -16,9 +16,9 @@
 package resourcepool
 
 import (
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"time"
 
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
 )
 

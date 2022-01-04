@@ -23,12 +23,12 @@ import (
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/proto/clusterservices"
+	utils "github.com/pingcap-inc/tiem/util/stringutil"
 	"net/http"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/gin-gonic/gin"
-	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
 )
 
 const VisitorIdentityKey = "VisitorIdentity"

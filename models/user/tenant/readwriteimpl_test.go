@@ -2,7 +2,7 @@ package tenant
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"

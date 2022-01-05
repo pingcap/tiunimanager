@@ -759,6 +759,13 @@ func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 
 	framework.LogWithContext(context.Context).Infof(
 		"destroy cluster %s, version %s", cluster.ID, cluster.Version)
+	_, err := models.GetClusterReaderWriter().GetCurrentClusterTopologySnapshot(context, clusterMeta.Cluster.ID)
+	if err != nil {
+		framework.LogWithContext(context).Warnf("cluster %s is not really existed", clusterMeta.Cluster.ID)
+		node.Success("skip destroy cluster because it is not ")
+		return nil
+	}
+
 	taskId, err := secondparty.Manager.ClusterDestroy(
 		context.Context, secondparty.ClusterComponentTypeStr, cluster.ID, handler.DefaultTiupTimeOut, []string{}, node.ID,
 	)

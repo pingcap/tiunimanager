@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Copyright (c)  2022 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
  * you may not use this file except in compliance with the License.           *
  * You may obtain a copy of the License at                                    *
@@ -15,10 +15,25 @@
 
 package management
 
-type ClusterTopologySnapshot struct {
-	ClusterID  string `gorm:"primarykey;<-:create;size:64;comment:'cluster id';"`
-	TenantID   string `gorm:"not null;default:null;<-:create;size:64;comment:'tenant id';"`
-	Config     string `gorm:"type:text;comment:'yaml content of cluster topology';'"`
-	PublicKey  string `gorm:"not null;default:null;<-:create;type:text;comment:'connection public key';"`
-	PrivateKey string `gorm:"not null;default:null;<-:create;type:text;comment:'Connection private key';"`
+import (
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
+
+func TestClusterInstance_GetDir(t *testing.T) {
+	instance := ClusterInstance {
+		ClusterID: "cluster1",
+		DiskPath: "/sda",
+		Type: string(constants.ComponentIDTiKV),
+	}
+	t.Run("deploy", func(t *testing.T) {
+		assert.Equal(t, "/sda/cluster1/tikv-deploy",instance.GetDeployDir())
+	})
+	t.Run("data", func(t *testing.T) {
+		assert.Equal(t, "/sda/cluster1/tikv-data",instance.GetDataDir())
+	})
+	t.Run("log", func(t *testing.T) {
+		assert.Equal(t, "/sda/cluster1/tikv-deploy/cluster1/tidb-log", instance.GetLogDir())
+	})
 }

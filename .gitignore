@@ -19,3 +19,4 @@ library/framework/logs
 test/
 /template
 /nohup.out
+.vscode/

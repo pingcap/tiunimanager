@@ -667,7 +667,7 @@ func syncIncrData(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 }
 
 func getTiUPClusterSpace(ctx context.Context, clusterID string) string {
-	tiupHome := "~/.tiup"
+	tiupHome := "/root/.tiup"
 	tiUPConfig, err := models.GetTiUPConfigReaderWriter().QueryByComponentType(ctx, string(secondparty.ClusterComponentTypeStr))
 
 	if err != nil {

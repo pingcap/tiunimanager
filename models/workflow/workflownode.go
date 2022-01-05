@@ -41,10 +41,7 @@ func (node *WorkFlowNode) Processing() {
 
 var defaultSuccessInfo = "success"
 
-func (node *WorkFlowNode) Success(result ...interface{}) {
-	node.Status = constants.WorkFlowStatusFinished
-	node.EndTime = time.Now()
-
+func (node *WorkFlowNode) Record(result ...interface{}) {
 	if result == nil {
 		result = []interface{}{defaultSuccessInfo}
 	}
@@ -55,6 +52,13 @@ func (node *WorkFlowNode) Success(result ...interface{}) {
 		}
 		node.Result = fmt.Sprintln(node.Result, r)
 	}
+}
+
+func (node *WorkFlowNode) Success(result ...interface{}) {
+	node.Record(result)
+
+	node.Status = constants.WorkFlowStatusFinished
+	node.EndTime = time.Now()
 }
 
 func (node *WorkFlowNode) Fail(e error) {

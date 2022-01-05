@@ -16,6 +16,7 @@
 package management
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -30,12 +31,15 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
 	resourceStructs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
+	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/cluster/management"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -655,11 +659,74 @@ func syncIncrData(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	return nil
 }
 
+func getTiUPClusterSpace(ctx context.Context, clusterID string) string {
+	tiupHome := "~/.tiup"
+	tiUPConfig, err := models.GetTiUPConfigReaderWriter().QueryByComponentType(ctx, string(secondparty.ClusterComponentTypeStr))
+
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("get tiup_home failed: %s", err.Error())
+	} else {
+		tiupHome = tiUPConfig.TiupHome
+	}
+
+	return fmt.Sprintf("%s/storage/cluster/clusters/%s/", tiupHome, clusterID)
+}
+
+// syncConnectionKey
+// @Description: get private and public key from tiup
+func syncConnectionKey(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+
+	privateKey, err := readTiUPFile(context, clusterMeta.Cluster.ID, "ssh/id_rsa")
+	if err != nil {
+		err = errors.NewEMErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "sync connection private key failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
+		framework.LogWithContext(context).Errorf(err.Error())
+		return  err
+	}
+	publicKey, err := readTiUPFile(context, clusterMeta.Cluster.ID, "ssh/id_rsa.pub")
+	if err != nil {
+		err = errors.NewEMErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "sync connection public key failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
+		framework.LogWithContext(context).Errorf(err.Error())
+		return  err
+	}
+	err = models.GetClusterReaderWriter().CreateClusterTopologySnapshot(context, management.ClusterTopologySnapshot{
+		ClusterID: clusterMeta.Cluster.ID,
+		TenantID: clusterMeta.Cluster.TenantId,
+		PrivateKey: privateKey,
+		PublicKey: publicKey,
+	})
+
+	return err
+}
+
 // syncTopology
-// @Description: get topology content from tiup, save it as a snapshot for comparing or recovering
-// todo
+// @Description: get meta.yaml from tiup
 func syncTopology(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	return nil
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	metaYaml, err := readTiUPFile(context, clusterMeta.Cluster.ID, "meta.yaml")
+	if err != nil {
+		err = errors.NewEMErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "read meta.yaml failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
+		framework.LogWithContext(context).Errorf(err.Error())
+		return  err
+	}
+
+	return models.GetClusterReaderWriter().UpdateTopologySnapshotConfig(context, clusterMeta.Cluster.ID, metaYaml)
+}
+
+func readTiUPFile(ctx context.Context, clusterID string, file string) (string, error) {
+	fileName := fmt.Sprintf("%s%s", getTiUPClusterSpace(ctx, clusterID), file)
+	fileData, err := os.Open(fileName)
+	if err != nil {
+		return "", err
+	}
+	defer fileData.Close()
+
+	dataByte, err := ioutil.ReadAll(fileData)
+	if err != nil {
+		return "", err
+	}
+
+	return string(dataByte), nil
 }
 
 // stopCluster

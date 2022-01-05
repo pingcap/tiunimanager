@@ -18,13 +18,13 @@ package framework
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"io"
 	"time"
 
 	"github.com/asim/go-micro/v3/metadata"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 )

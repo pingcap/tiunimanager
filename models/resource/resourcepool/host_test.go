@@ -17,13 +17,13 @@
 package resourcepool
 
 import (
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"os"
 	"testing"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

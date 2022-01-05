@@ -17,14 +17,14 @@ package resourcepool
 
 import (
 	"errors"
+	crypto "github.com/pingcap-inc/tiem/util/encrypt"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"strings"
 	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	em_errors "github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	crypto "github.com/pingcap-inc/tiem/library/thirdparty/encrypt"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
 )
 

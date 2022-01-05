@@ -17,10 +17,10 @@ package management
 
 import (
 	"errors"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"time"
 
 	em_errors "github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
 )
 

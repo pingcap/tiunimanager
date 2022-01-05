@@ -19,9 +19,9 @@ package identification
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/common/client"
-	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
+	utils "github.com/pingcap-inc/tiem/util/stringutil"
 )
 
 // Login login

@@ -115,7 +115,7 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 		FlowData: map[string]interface{}{},
 	}
 
-	v, err := convertRealParameterType(applyCtx, structs.ClusterParameterSampleInfo{
+	v, err := convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
 		ParamId:   "1",
 		Name:      "param1",
 		Type:      0,
@@ -124,7 +124,7 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, 1, v)
 
-	v, err = convertRealParameterType(applyCtx, structs.ClusterParameterSampleInfo{
+	v, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
 		ParamId:   "2",
 		Name:      "param2",
 		Type:      1,
@@ -133,7 +133,7 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, "debug", v)
 
-	v, err = convertRealParameterType(applyCtx, structs.ClusterParameterSampleInfo{
+	v, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
 		ParamId:   "3",
 		Name:      "param3",
 		Type:      2,
@@ -142,7 +142,7 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, true, v)
 
-	v, err = convertRealParameterType(applyCtx, structs.ClusterParameterSampleInfo{
+	v, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
 		ParamId:   "4",
 		Name:      "param4",
 		Type:      3,
@@ -151,7 +151,7 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, 3.14, v)
 
-	v, err = convertRealParameterType(applyCtx, structs.ClusterParameterSampleInfo{
+	v, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
 		ParamId:   "5",
 		Name:      "param5",
 		Type:      4,
@@ -168,7 +168,7 @@ func TestExecutor_convertRealParameterType_Error(t *testing.T) {
 		FlowData: map[string]interface{}{},
 	}
 
-	_, err := convertRealParameterType(applyCtx, structs.ClusterParameterSampleInfo{
+	_, err := convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
 		ParamId:   "2",
 		Name:      "param2",
 		Type:      2,
@@ -176,7 +176,7 @@ func TestExecutor_convertRealParameterType_Error(t *testing.T) {
 	})
 	assert.Error(t, err)
 
-	_, err = convertRealParameterType(applyCtx, structs.ClusterParameterSampleInfo{
+	_, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
 		ParamId:   "3",
 		Name:      "param3",
 		Type:      3,
@@ -184,7 +184,7 @@ func TestExecutor_convertRealParameterType_Error(t *testing.T) {
 	})
 	assert.Error(t, err)
 
-	_, err = convertRealParameterType(applyCtx, structs.ClusterParameterSampleInfo{
+	_, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
 		ParamId:   "5",
 		Name:      "param5",
 		Type:      0,
@@ -387,9 +387,8 @@ func TestExecutor_persistUpdateParameter(t *testing.T) {
 			ClusterID: "123",
 			Params: []structs.ClusterParameterSampleInfo{
 				{
-					ParamId:      "1",
-					Name:         "param1",
-					InstanceType: "TiDB",
+					ParamId:   "1",
+					RealValue: structs.ParameterRealValue{ClusterValue: "info"},
 				},
 			},
 		})
@@ -397,16 +396,9 @@ func TestExecutor_persistUpdateParameter(t *testing.T) {
 			ClusterID: "123",
 			Reboot:    false,
 			Params: []structs.ClusterParameterSampleInfo{
-				structs.ClusterParameterSampleInfo{
-					ParamId:        "1",
-					Category:       "basic",
-					Name:           "log_level",
-					InstanceType:   "TiDB",
-					UpdateSource:   3,
-					SystemVariable: "log_level",
-					Type:           1,
-					HasApply:       1,
-					RealValue:      structs.ParameterRealValue{ClusterValue: "info"},
+				{
+					ParamId:   "1",
+					RealValue: structs.ParameterRealValue{ClusterValue: "info"},
 				},
 			},
 		}, applyCtx)

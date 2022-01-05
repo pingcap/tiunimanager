@@ -125,7 +125,7 @@ func mockClusterInstances() []*management.ClusterInstance {
 func mockModifyParameter() *ModifyParameter {
 	return &ModifyParameter{
 		Reboot: false,
-		Params: []structs.ClusterParameterSampleInfo{
+		Params: []ModifyClusterParameterInfo{
 			{
 				ParamId:        "1",
 				Name:           "test_param_1",

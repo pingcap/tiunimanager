@@ -95,6 +95,24 @@ func TestManager_UpdateClusterParameters(t *testing.T) {
 	configRW := mockconfig.NewMockReaderWriter(ctrl)
 	models.SetConfigReaderWriter(configRW)
 
+	clusterParameterRW.EXPECT().QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, clusterId string, offset, size int) (paramGroupId string, params []*parameter.ClusterParamDetail, total int64, err error) {
+			return "1", []*parameter.ClusterParamDetail{
+				{
+					Parameter: parametergroup.Parameter{
+						ID:             "1",
+						Category:       "basic",
+						Name:           "param1",
+						InstanceType:   "TiKV",
+						SystemVariable: "",
+						Type:           0,
+					},
+					DefaultValue: "10",
+					RealValue:    "{\"clusterValue\":\"1\"}",
+					Note:         "test parameter",
+				},
+			}, 1, nil
+		})
 	clusterManagementRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).
 		DoAndReturn(func(ctx context.Context, clusterID string) (*management.Cluster, []*management.ClusterInstance, error) {
 			return mockCluster(), mockClusterInstances(), nil
@@ -111,12 +129,8 @@ func TestManager_UpdateClusterParameters(t *testing.T) {
 		ClusterID: "1",
 		Params: []structs.ClusterParameterSampleInfo{
 			{
-				ParamId:      "1",
-				Name:         "param1",
-				InstanceType: "TiKV",
-				UpdateSource: 1,
-				Type:         1,
-				RealValue:    structs.ParameterRealValue{},
+				ParamId:   "1",
+				RealValue: structs.ParameterRealValue{ClusterValue: "10"},
 			},
 		},
 		Reboot: false,

@@ -55,7 +55,7 @@ func (node *WorkFlowNode) Record(result ...interface{}) {
 }
 
 func (node *WorkFlowNode) Success(result ...interface{}) {
-	node.Record(result)
+	node.Record(result...)
 
 	node.Status = constants.WorkFlowStatusFinished
 	node.EndTime = time.Now()

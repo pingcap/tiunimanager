@@ -99,11 +99,74 @@ func TestSecondPartyManager_ClusterScaleOut_Fail(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterDeploy, TestWorkFlowNodeID).Return(nil, expectedErr)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterScaleOut, TestWorkFlowNodeID).Return(nil, expectedErr)
 
-	operationID, err := secondPartyManager1.ClusterDeploy(context.TODO(), ClusterComponentTypeStr, "test-tidb", "v1", "", 0, []string{}, TestWorkFlowNodeID, "")
+	operationID, err := secondPartyManager1.ClusterScaleOut(context.TODO(), ClusterComponentTypeStr, "test-tidb", "", 0, []string{}, TestWorkFlowNodeID, "")
 	if operationID != "" || err == nil {
 		t.Errorf("case: fail create second party operation intentionally. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", "", operationID, expectedErr, err)
+	}
+}
+
+func TestSecondPartyManager_ClusterScaleOut_Success(t *testing.T) {
+
+	secondPartyOperation := secondparty.SecondPartyOperation{
+		ID: TestOperationID,
+	}
+
+	mockCtl := gomock.NewController(t)
+	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
+	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterScaleOut, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
+
+	operationID, err := secondPartyManager1.ClusterScaleOut(context.TODO(), ClusterComponentTypeStr, "test-tidb", "", 0, []string{}, TestWorkFlowNodeID, "")
+	if operationID != TestOperationID || err != nil {
+		t.Errorf("case: create secondparty operation successfully. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", TestOperationID, operationID, nil, err)
+	}
+}
+
+func TestSecondPartyManager_ClusterScaleIn_Fail(t *testing.T) {
+
+	expectedErr := errors.New("fail create second party operation")
+
+	mockCtl := gomock.NewController(t)
+	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
+	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterScaleIn, TestWorkFlowNodeID).Return(nil, expectedErr)
+
+	operationID, err := secondPartyManager1.ClusterScaleIn(context.TODO(), ClusterComponentTypeStr, "test-tidb", "", 0, []string{}, TestWorkFlowNodeID)
+	if operationID != "" || err == nil {
+		t.Errorf("case: fail create second party operation intentionally. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", "", operationID, expectedErr, err)
+	}
+}
+
+func TestSecondPartyManager_ClusterScaleIn_Success(t *testing.T) {
+
+	secondPartyOperation := secondparty.SecondPartyOperation{
+		ID: TestOperationID,
+	}
+
+	mockCtl := gomock.NewController(t)
+	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
+	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_ClusterScaleIn, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+
+	tiUPConfig := &tiup.TiupConfig{
+		TiupHome: "",
+	}
+	mockTiUPConfigReaderWriter := mocktiupconfig.NewMockReaderWriter(mockCtl)
+	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
+	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
+
+	operationID, err := secondPartyManager1.ClusterScaleIn(context.TODO(), ClusterComponentTypeStr, "test-tidb", "", 0, []string{}, TestWorkFlowNodeID)
+	if operationID != TestOperationID || err != nil {
+		t.Errorf("case: create secondparty operation successfully. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", TestOperationID, operationID, nil, err)
 	}
 }
 
@@ -1025,6 +1088,14 @@ func TestSecondPartyManager_ClusterComponentCtl_WithTimeout(t *testing.T) {
 
 func TestSecondPartyManager_startTiUPTask_Wrong(t *testing.T) {
 	secondPartyManager1.startTiUPOperation(context.TODO(), TestOperationID, "ls", []string{"-2"}, 1, "", "")
+}
+
+func TestSecondPartyManager_startTiUPTask_Wrong2(t *testing.T) {
+	secondPartyManager1.startTiUPOperation(context.TODO(), TestOperationID, "ls", []string{"-2"}, 1, "", "password")
+}
+
+func TestSecondPartyManager_startTiUPTask_Wrong3(t *testing.T) {
+	secondPartyManager1.startTiUPOperation(context.TODO(), TestOperationID, "ls", []string{}, 1, "", "password")
 }
 
 func TestSecondPartyManager_startTiUPTask(t *testing.T) {

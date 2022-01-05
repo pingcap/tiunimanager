@@ -28,12 +28,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/pingcap-inc/tiem/util/http"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/spec"
-	util "github.com/pingcap-inc/tiem/library/util/http"
 )
 
 const (

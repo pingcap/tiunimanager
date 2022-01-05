@@ -22,7 +22,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
-	util "github.com/pingcap-inc/tiem/library/util/http"
+	"github.com/pingcap-inc/tiem/util/http"
 	"io/ioutil"
 	"net/http"
 	"strings"

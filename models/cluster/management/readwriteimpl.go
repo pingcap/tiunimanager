@@ -279,7 +279,10 @@ func (g *ClusterReadWrite) SetMaintenanceStatus(ctx context.Context, clusterID s
 		return err
 	}
 
-	if cluster.MaintenanceStatus != constants.ClusterMaintenanceNone && targetStatus != constants.ClusterMaintenanceDeleting {
+	if cluster.MaintenanceStatus != constants.ClusterMaintenanceNone &&
+		targetStatus != constants.ClusterMaintenanceDeleting ||
+		cluster.MaintenanceStatus == constants.ClusterMaintenanceDeleting {
+
 		errInfo := fmt.Sprintf("set cluster maintenance status conflicted : current maintenance = %s, target maintenance = %s, clusterID = %s", cluster.MaintenanceStatus, targetStatus, clusterID)
 		framework.LogWithContext(ctx).Error(errInfo)
 		return errors.NewError(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT, errInfo)

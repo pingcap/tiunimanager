@@ -17,13 +17,13 @@ package gormreadwrite
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/util/bitmap"
+	crypto "github.com/pingcap-inc/tiem/util/encrypt"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
-	crypto "github.com/pingcap-inc/tiem/library/thirdparty/encrypt"
-	"github.com/pingcap-inc/tiem/library/util/bitmap"
 	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	mm "github.com/pingcap-inc/tiem/models/resource/management"
 	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"

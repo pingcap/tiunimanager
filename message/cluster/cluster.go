@@ -41,15 +41,18 @@ type CreateClusterResp struct {
 
 // DeleteClusterReq Message for delete a new cluster
 type DeleteClusterReq struct {
-	ClusterID       string `json:"clusterID" swaggerignore:"true"`
-	AutoBackup      bool   `json:"autoBackup" form:"autoBackup"`
-	ClearBackupData bool   `json:"clearBackupData" form:"clearBackupData"`
+	ClusterID                string `json:"clusterID" swaggerignore:"true"`
+	AutoBackup               bool   `json:"autoBackup" form:"autoBackup"`
+	KeepHistoryBackupRecords bool   `json:"keepHistoryBackupRecords" form:"keepHistoryBackupRecords"`
+	Force                    bool   `json:"force" form:"force"`
 }
 
 // DeleteClusterResp Reply message for delete a new cluster
 type DeleteClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
-	ClusterID string `json:"clusterID"`
+	ClusterID         string `json:"clusterID"`
+	NeedConfirmation  bool   `json:"needConfirmation"`
+	MaintenanceStatus string `json:"maintenanceStatus"`
 }
 
 // StopClusterReq Message for stop a new cluster

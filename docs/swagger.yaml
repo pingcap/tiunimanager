@@ -182,13 +182,19 @@ definitions:
     properties:
       autoBackup:
         type: boolean
-      clearBackupData:
+      force:
+        type: boolean
+      keepHistoryBackupRecords:
         type: boolean
     type: object
   cluster.DeleteClusterResp:
     properties:
       clusterID:
         type: string
+      maintenanceStatus:
+        type: string
+      needConfirmation:
+        type: boolean
       workFlowId:
         description: Asynchronous task workflow ID
         type: string

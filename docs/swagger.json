@@ -4948,7 +4948,10 @@
                 "autoBackup": {
                     "type": "boolean"
                 },
-                "clearBackupData": {
+                "force": {
+                    "type": "boolean"
+                },
+                "keepHistoryBackupRecords": {
                     "type": "boolean"
                 }
             }
@@ -4958,6 +4961,12 @@
             "properties": {
                 "clusterID": {
                     "type": "string"
+                },
+                "maintenanceStatus": {
+                    "type": "string"
+                },
+                "needConfirmation": {
+                    "type": "boolean"
                 },
                 "workFlowId": {
                     "description": "Asynchronous task workflow ID",

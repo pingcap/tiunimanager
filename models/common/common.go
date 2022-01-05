@@ -17,12 +17,12 @@ package common
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"time"
 
 	"github.com/pingcap-inc/tiem/common/errors"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
 )
 

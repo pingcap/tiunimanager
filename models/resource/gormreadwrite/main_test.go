@@ -19,11 +19,11 @@ package gormreadwrite
 import (
 	mm "github.com/pingcap-inc/tiem/models/resource/management"
 	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"os"
 	"testing"
 
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/pingcap-inc/tiem/models/resource"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

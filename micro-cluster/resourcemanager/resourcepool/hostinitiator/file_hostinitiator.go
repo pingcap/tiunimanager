@@ -18,6 +18,7 @@ package hostinitiator
 import (
 	"bytes"
 	"context"
+	"github.com/pingcap-inc/tiem/util/ssh"
 	"strconv"
 	"strings"
 	"text/template"
@@ -26,7 +27,6 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	sshclient "github.com/pingcap-inc/tiem/library/util/ssh"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	resourceTemplate "github.com/pingcap-inc/tiem/resource/template"
 )

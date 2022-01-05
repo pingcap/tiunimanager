@@ -25,6 +25,7 @@ package parameter
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -108,7 +109,7 @@ func TestExecutor_endMaintenance_Success(t *testing.T) {
 	})
 }
 
-func TestExecutor_convertRealParameterType(t *testing.T) {
+func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 	applyCtx := &workflow.FlowContext{
 		Context:  context.TODO(),
 		FlowData: map[string]interface{}{},
@@ -159,7 +160,37 @@ func TestExecutor_convertRealParameterType(t *testing.T) {
 	assert.NoError(t, err)
 	expect := []interface{}{"debug", "info"}
 	assert.EqualValues(t, expect, v)
+}
 
+func TestExecutor_convertRealParameterType_Error(t *testing.T) {
+	applyCtx := &workflow.FlowContext{
+		Context:  context.TODO(),
+		FlowData: map[string]interface{}{},
+	}
+
+	_, err := convertRealParameterType(applyCtx, structs.ClusterParameterSampleInfo{
+		ParamId:   "2",
+		Name:      "param2",
+		Type:      2,
+		RealValue: structs.ParameterRealValue{ClusterValue: "debug"},
+	})
+	assert.Error(t, err)
+
+	_, err = convertRealParameterType(applyCtx, structs.ClusterParameterSampleInfo{
+		ParamId:   "3",
+		Name:      "param3",
+		Type:      3,
+		RealValue: structs.ParameterRealValue{ClusterValue: "true"},
+	})
+	assert.Error(t, err)
+
+	_, err = convertRealParameterType(applyCtx, structs.ClusterParameterSampleInfo{
+		ParamId:   "5",
+		Name:      "param5",
+		Type:      0,
+		RealValue: structs.ParameterRealValue{ClusterValue: "[\"debug\",\"info\"]"},
+	})
+	assert.Error(t, err)
 }
 
 func TestExecutor_modifyParameters(t *testing.T) {
@@ -179,6 +210,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		mock2rdService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
 		mock2rdService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
 		mock2rdService.EXPECT().EditClusterConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+		mock2rdService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
@@ -363,9 +395,68 @@ func TestExecutor_persistUpdateParameter(t *testing.T) {
 		})
 		err := persistUpdateParameter(&cluster.UpdateClusterParametersReq{
 			ClusterID: "123",
-			Params:    nil,
 			Reboot:    false,
+			Params: []structs.ClusterParameterSampleInfo{
+				structs.ClusterParameterSampleInfo{
+					ParamId:        "1",
+					Category:       "basic",
+					Name:           "log_level",
+					InstanceType:   "TiDB",
+					UpdateSource:   3,
+					SystemVariable: "log_level",
+					Type:           1,
+					HasApply:       1,
+					RealValue:      structs.ParameterRealValue{ClusterValue: "info"},
+				},
+			},
 		}, applyCtx)
 		assert.NoError(t, err)
+	})
+}
+
+func TestExecutor_getTaskStatusByTaskId(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock2rdService := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+	secondparty.Manager = mock2rdService
+
+	t.Run("success", func(t *testing.T) {
+		mock2rdService.EXPECT().GetOperationStatusByWorkFlowNodeID(gomock.Any(), gomock.Any()).Return(secondparty.GetOperationStatusResp{
+			Status: secondparty2.OperationStatus_Finished, Result: "success", ErrorStr: "",
+		}, nil)
+
+		ctx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		err := getTaskStatusByTaskId(ctx, mockWorkFlowAggregation().CurrentNode)
+		assert.NoError(t, err)
+	})
+
+	t.Run("error1", func(t *testing.T) {
+		mock2rdService.EXPECT().GetOperationStatusByWorkFlowNodeID(gomock.Any(), gomock.Any()).Return(secondparty.GetOperationStatusResp{
+			Status: secondparty2.OperationStatus_Finished, Result: "success", ErrorStr: "",
+		}, errors.New("get status error"))
+
+		ctx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		err := getTaskStatusByTaskId(ctx, mockWorkFlowAggregation().CurrentNode)
+		assert.Error(t, err)
+	})
+
+	t.Run("error2", func(t *testing.T) {
+		mock2rdService.EXPECT().GetOperationStatusByWorkFlowNodeID(gomock.Any(), gomock.Any()).Return(secondparty.GetOperationStatusResp{
+			Status: secondparty2.OperationStatus_Error, Result: "error", ErrorStr: "error",
+		}, nil)
+
+		ctx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		err := getTaskStatusByTaskId(ctx, mockWorkFlowAggregation().CurrentNode)
+		assert.Error(t, err)
 	})
 }

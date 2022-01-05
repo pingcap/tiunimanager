@@ -37,9 +37,10 @@ import (
 )
 
 const (
-	PdApiUrl   = "/pd/api/v1/config"
-	TiKVApiUrl = "/config"
-	TiDBApiUrl = "/settings"
+	PdApiUrl     = "/pd/api/v1/config"
+	TiKVApiUrl   = "/config"
+	TiDBApiUrl   = "/settings"
+	CdcLogApiUrl = "/api/v1/log"
 )
 
 func (manager *SecondPartyManager) ApiEditConfig(ctx context.Context, apiEditConfigReq ApiEditConfigReq) (bool, error) {
@@ -79,6 +80,22 @@ func (manager *SecondPartyManager) ApiEditConfig(ctx context.Context, apiEditCon
 		return resp.StatusCode == http.StatusOK, nil
 	case spec.TiDBClusterComponent_PD:
 		url := fmt.Sprintf("http://%s:%d%s", apiEditConfigReq.InstanceHost, apiEditConfigReq.InstancePort, PdApiUrl)
+		resp, err := util.PostJSON(url, apiEditConfigReq.ConfigMap, apiEditConfigReq.Headers)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("apieditconfig, request pd api resp err: %v", err.Error())
+			return false, err
+		}
+		if resp.StatusCode != http.StatusOK {
+			b, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return false, err
+			}
+			framework.LogWithContext(ctx).Errorf("apieditconfig, request pd api resp status code: %v, content: %v", resp.StatusCode, string(b))
+			return false, errors.New(string(b))
+		}
+		return resp.StatusCode == http.StatusOK, nil
+	case spec.TiDBClusterComponent_CDC:
+		url := fmt.Sprintf("http://%s:%d%s", apiEditConfigReq.InstanceHost, apiEditConfigReq.InstancePort, CdcLogApiUrl)
 		resp, err := util.PostJSON(url, apiEditConfigReq.ConfigMap, apiEditConfigReq.Headers)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("apieditconfig, request pd api resp err: %v", err.Error())

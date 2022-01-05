@@ -363,6 +363,14 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 				}
 				server := pdServers[rand.Intn(len(pdServers))]
 				servers[server.IP] = uint(server.Port)
+			case string(constants.ComponentIDCDC):
+				cdcServers := clusterMeta.GetCDCClientAddresses()
+				if len(cdcServers) == 0 {
+					framework.LogWithContext(ctx).Errorf("get cdc address from meta failed, empty address")
+					return fmt.Errorf("get cdc address from meta failed, empty address")
+				}
+				server := cdcServers[rand.Intn(len(cdcServers))]
+				servers[server.IP] = uint(server.Port)
 			default:
 				return fmt.Errorf(fmt.Sprintf("Component [%s] type modification is not supported", comp.(string)))
 			}

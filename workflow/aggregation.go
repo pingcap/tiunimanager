@@ -221,7 +221,7 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 				return false
 			}
 			if resp.Status == secondpartyModel.OperationStatus_Error {
-				framework.LogWithContext(flow.Context).Errorf("call secondparty GetOperationStatusByWorkFlowNodeID %s, response error %s", node.ID, resp.ErrorStr))
+				framework.LogWithContext(flow.Context).Errorf("call secondparty GetOperationStatusByWorkFlowNodeID %s, response error %s", node.ID, resp.ErrorStr)
 				node.Fail(fmt.Errorf(resp.ErrorStr))
 				flow.handleTaskError(node, nodeDefine)
 				return false

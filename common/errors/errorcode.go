@@ -143,6 +143,7 @@ const (
 	TIEM_PARAMETER_GROUP_UPDATE_RELATION_PARAM_ERROR EM_ERROR_CODE = 20513
 	TIEM_CLUSTER_PARAMETER_QUERY_ERROR               EM_ERROR_CODE = 20514
 	TIEM_CLUSTER_PARAMETER_UPDATE_ERROR              EM_ERROR_CODE = 20515
+	TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS         EM_ERROR_CODE = 20516
 
 	TIEM_PARAMETER_QUERY_ERROR  EM_ERROR_CODE = 20520
 	TIEM_PARAMETER_CREATE_ERROR EM_ERROR_CODE = 20521
@@ -311,6 +312,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_PARAMETER_GROUP_UPDATE_RELATION_PARAM_ERROR: {"Failed to update relation parameter in parameter group", 500},
 	TIEM_CLUSTER_PARAMETER_QUERY_ERROR:               {"Failed to query cluster parameters", 500},
 	TIEM_CLUSTER_PARAMETER_UPDATE_ERROR:              {"Failed to update cluster parameters", 500},
+	TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS:         {"Parameter group name already exists", 500},
 
 	TIEM_PARAMETER_QUERY_ERROR:  {"Failed to query parameter by parameter group id", 500},
 	TIEM_PARAMETER_CREATE_ERROR: {"Failed to create parameter", 500},

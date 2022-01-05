@@ -28,6 +28,10 @@ import (
 	"time"
 )
 
+const (
+	TiEM string = "tiem"
+)
+
 //System log-related constants
 const (
 	LogFileSystem      string = "system"

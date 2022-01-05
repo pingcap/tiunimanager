@@ -4329,7 +4329,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/account.UserProfile"
+                                            "$ref": "#/definitions/message.UserProfile"
                                         }
                                     }
                                 }
@@ -4699,17 +4699,6 @@
         }
     },
     "definitions": {
-        "account.UserProfile": {
-            "type": "object",
-            "properties": {
-                "tenantId": {
-                    "type": "string"
-                },
-                "userName": {
-                    "type": "string"
-                }
-            }
-        },
         "cluster.BackupClusterDataReq": {
             "type": "object",
             "properties": {
@@ -4959,7 +4948,10 @@
                 "autoBackup": {
                     "type": "boolean"
                 },
-                "clearBackupData": {
+                "force": {
+                    "type": "boolean"
+                },
+                "keepHistoryBackupRecords": {
                     "type": "boolean"
                 }
             }
@@ -4969,6 +4961,12 @@
             "properties": {
                 "clusterID": {
                     "type": "string"
+                },
+                "maintenanceStatus": {
+                    "type": "string"
+                },
+                "needConfirmation": {
+                    "type": "boolean"
                 },
                 "workFlowId": {
                     "description": "Asynchronous task workflow ID",
@@ -6622,6 +6620,17 @@
                 "paramGroupId": {
                     "type": "string",
                     "example": "1"
+                }
+            }
+        },
+        "message.UserProfile": {
+            "type": "object",
+            "properties": {
+                "tenantId": {
+                    "type": "string"
+                },
+                "userName": {
+                    "type": "string"
                 }
             }
         },

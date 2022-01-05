@@ -23,7 +23,6 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/log"
@@ -32,6 +31,7 @@ import (
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
 	resourceStructs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"gopkg.in/yaml.v2"
@@ -240,14 +240,37 @@ func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		return err
 	}
 
-	if deleteReq.ClearBackupData {
-		_, err = backuprestore.GetBRService().DeleteBackupRecords(context.Context, cluster.DeleteBackupDataReq{
-			ClusterID:  meta.Cluster.ID,
-			BackupMode: string(constants.BackupModeAuto),
+	// delete auto backup records
+	_, err = backuprestore.GetBRService().DeleteBackupRecords(context.Context, cluster.DeleteBackupDataReq{
+		ClusterID:  meta.Cluster.ID,
+		BackupMode: string(constants.BackupModeAuto),
+	})
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"delete auto backup data for cluster %s error: %s", meta.Cluster.ID, err.Error())
+		return err
+	}
+
+	// delete manual backup records
+	if deleteReq.KeepHistoryBackupRecords {
+		framework.LogWithContext(context.Context).Infof(
+			"keep manual backup data for cluster %s", meta.Cluster.ID)
+	} else {
+		excludeBackupIDs := make([]string, 0)
+		backupIdBeforeDeleting := context.GetData(ContextBackupID)
+
+		if backupIdBeforeDeleting != nil {
+			excludeBackupIDs = append(excludeBackupIDs, backupIdBeforeDeleting.(string))
+		}
+
+		_, err = backuprestore.GetBRService().DeleteBackupRecords(context.Context, cluster.DeleteBackupDataReq {
+			ClusterID:        meta.Cluster.ID,
+			BackupMode:       string(constants.BackupModeManual),
+			ExcludeBackupIDs: excludeBackupIDs,
 		})
 		if err != nil {
 			framework.LogWithContext(context.Context).Errorf(
-				"delete auto backup data for cluster %s error: %s", meta.Cluster.ID, err.Error())
+				"delete manual backup data for cluster %s error: %s", meta.Cluster.ID, err.Error())
 			return err
 		}
 	}
@@ -270,6 +293,8 @@ func backupBeforeDelete(node *workflowModel.WorkFlowNode, context *workflow.Flow
 			framework.LogWithContext(context.Context).Errorf(
 				"do backup for cluster %s error: %s", meta.Cluster.ID, err.Error())
 			return err
+		} else {
+			context.SetData(ContextBackupID, backupResponse.BackupID)
 		}
 		if err = handler.WaitWorkflow(context.Context, backupResponse.WorkFlowID, 10*time.Second, 30*24*time.Hour); err != nil {
 			framework.LogWithContext(context).Errorf("backup workflow error: %s", err)

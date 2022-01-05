@@ -27,6 +27,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
+	"github.com/pingcap-inc/tiem/util/convert"
 	"strings"
 	"sync"
 	"time"
@@ -40,11 +42,7 @@ import (
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 
-	"github.com/pingcap-inc/tiem/library/util/convert"
-
 	"github.com/pingcap-inc/tiem/models"
-
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -120,7 +118,7 @@ func (m Manager) BuildClusterLogConfig(ctx context.Context, clusterId string) (f
 // @return resp
 // @return page
 // @return err
-func (m Manager) QueryClusterLog(ctx context.Context, req cluster.QueryClusterLogReq) (resp cluster.QueryClusterLogResp, page *clusterpb.RpcPage, err error) {
+func (m Manager) QueryClusterLog(ctx context.Context, req cluster.QueryClusterLogReq) (resp cluster.QueryClusterLogResp, page *clusterservices.RpcPage, err error) {
 	buf, err := prepareSearchParams(ctx, req)
 	if err != nil {
 		return resp, page, err
@@ -154,7 +152,7 @@ func prepareSearchParams(ctx context.Context, req cluster.QueryClusterLogReq) (b
 	return buf, nil
 }
 
-func handleResult(ctx context.Context, req cluster.QueryClusterLogReq, esResp *esapi.Response) (resp cluster.QueryClusterLogResp, page *clusterpb.RpcPage, err error) {
+func handleResult(ctx context.Context, req cluster.QueryClusterLogReq, esResp *esapi.Response) (resp cluster.QueryClusterLogResp, page *clusterservices.RpcPage, err error) {
 	if esResp.IsError() || esResp.StatusCode != 200 {
 		framework.LogWithContext(ctx).Errorf("cluster %s query log, search es err: %v", req.ClusterID, err)
 		return resp, page, errors.NewEMErrorf(errors.TIEM_CLUSTER_LOG_QUERY_FAILED, errors.TIEM_CLUSTER_LOG_QUERY_FAILED.Explain())
@@ -191,7 +189,7 @@ func handleResult(ctx context.Context, req cluster.QueryClusterLogReq, esResp *e
 		})
 	}
 
-	page = &clusterpb.RpcPage{
+	page = &clusterservices.RpcPage{
 		Page:     int32(req.Page),
 		PageSize: int32(req.PageSize),
 		Total:    int32(esResult.Hits.Total.Value),

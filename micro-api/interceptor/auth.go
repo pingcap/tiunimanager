@@ -18,17 +18,17 @@ package interceptor
 
 import (
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/file-server/controller"
 	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
+	utils "github.com/pingcap-inc/tiem/util/stringutil"
 	"net/http"
 
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/client"
-	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
 )
 
 const VisitorIdentityKey = "VisitorIdentity"
@@ -47,7 +47,7 @@ func VerifyIdentity(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, err.Error())
 	}
 
-	req := message.AccessibleReq {
+	req := message.AccessibleReq{
 		TokenString: tokenString,
 	}
 
@@ -59,7 +59,7 @@ func VerifyIdentity(c *gin.Context) {
 		c.Abort()
 	}
 
-	rpcResp, err := client.ClusterClient.VerifyIdentity(framework.NewMicroCtxFromGinCtx(c), &clusterpb.RpcRequest{Request: string(body)}, controller.DefaultTimeout)
+	rpcResp, err := client.ClusterClient.VerifyIdentity(framework.NewMicroCtxFromGinCtx(c), &clusterservices.RpcRequest{Request: string(body)}, controller.DefaultTimeout)
 	if err != nil {
 		c.Error(err)
 		c.Status(http.StatusInternalServerError)

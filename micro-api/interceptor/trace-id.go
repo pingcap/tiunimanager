@@ -19,7 +19,7 @@ package interceptor
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 )
 
 // GinTraceIDHandler EM-X-Trace-ID

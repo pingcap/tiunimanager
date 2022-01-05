@@ -26,12 +26,12 @@ package parametergroup
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"os"
 	"strconv"
 	"testing"
 
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

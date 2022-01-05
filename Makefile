@@ -24,7 +24,7 @@ PROTOC_GEN_GO = google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
 PROTOBUF_VERSION = 3.14.0
 PROTOC_PKG = protoc-$(PROTOBUF_VERSION)-$(OS)-$(ARCH).zip
 PROTOC_URL = https://github.com/protocolbuffers/protobuf/releases/download/v$(PROTOBUF_VERSION)/$(PROTOC_PKG)
-GENERATE_TARGET_DIR = $(CURDIR)/library/client/
+GENERATE_TARGET_DIR = $(CURDIR)/proto
 
 include Makefile.common
 
@@ -47,9 +47,9 @@ prepare:
 # generate protobuf files
 proto:
 	@echo "start to generate protobuf files"
-	@if [ ! -d "$(GENERATE_TARGET_DIR)/cluster" ]; then mkdir -p $(GENERATE_TARGET_DIR)/cluster; fi
-	protoc --proto_path=$(CURDIR)/proto:$(GOPATH)/include --micro_out=$(GENERATE_TARGET_DIR)/cluster \
-		--go_out=$(GENERATE_TARGET_DIR)/cluster $(CURDIR)/proto/*.proto
+	@if [ ! -d "$(GENERATE_TARGET_DIR)" ]; then mkdir -p $(GENERATE_TARGET_DIR); fi
+	protoc --proto_path=$(CURDIR)/proto:$(GOPATH)/include --micro_out=$(GENERATE_TARGET_DIR) \
+		--go_out=$(GENERATE_TARGET_DIR) $(CURDIR)/proto/*.proto
 	@echo "generate protobuf files successfully"
 
 
@@ -188,7 +188,7 @@ clean:
 	@if [ -f ${TIEM_BINARY_DIR}/vfsgendev ] ; then rm ${TIEM_BINARY_DIR}/vfsgendev; fi
 	@if [ -f ${TIEM_BINARY_DIR}/golangci-lint ] ; then rm ${TIEM_BINARY_DIR}/golangci-lint; fi
 	@if [ -f ${TIEM_BINARY_DIR}/errdoc-gen ] ; then rm ${TIEM_BINARY_DIR}/errdoc-gen; fi
-	@if [ -d ${GENERATE_TARGET_DIR}/cluster ] ; then rm -rf ${GENERATE_TARGET_DIR}/cluster; fi
+	@if [ -d ${GENERATE_TARGET_DIR}/clusterservices ] ; then rm -rf ${GENERATE_TARGET_DIR}/clusterservices; fi
 	@if [ -d ${CURDIR}/test ] ; then rm -rf ${CURDIR}/test; fi
 
 help:
@@ -260,7 +260,7 @@ add_test_file:
 
 mock:
 	$(GO) install github.com/golang/mock/mockgen
-	mockgen -destination ./test/mockcluster/mock_cluster.pb.micro.go -package mockcluster -source ./library/client/cluster/clusterpb/clusterservices.pb.micro.go
+	mockgen -destination ./test/mockcluster/mock_clusterservices.pb.micro.go -package mockclusterservices -source ./proto/clusterservices/clusterservices.pb.micro.go
 
 	mockgen -destination ./test/mockmodels/mockmanagement/mock_management_interface.go -package mockmanagement -source ./models/cluster/management/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockworkflow/mock_workflow_interface.go -package mockworkflow -source ./models/workflow/readerwriter.go
@@ -279,7 +279,7 @@ mock:
 	mockgen -destination ./test/mocksecondparty_v2/mock_secondparty.go -package mock_secondparty -source ./library/secondparty/second_party_manager_v2.go
 	mockgen -destination ./test/mockresource/mockinitiator/mock_initiator_interface.go -package mockinitiator -source ./micro-cluster/resourcemanager/resourcepool/hostinitiator/hostinitiator.go
 	mockgen -destination ./test/mockresource/mockprovider/mock_provider_interface.go -package mockinitiator -source ./micro-cluster/resourcemanager/resourcepool/hostprovider/hostprovider.go
-	mockgen -destination ./test/mockutil/mocksshclientexecutor/mock_ssh_client_interface.go -package mocksshclient -source ./library/util/ssh/ssh_client.go
+	mockgen -destination ./test/mockutil/mocksshclientexecutor/mock_ssh_client_interface.go -package mocksshclient -source ./util/ssh/ssh_client.go
 	mockgen -destination ./test/mockresource/mock_allocator_recycler.go -package mock_allocator_recycler -source ./micro-cluster/resourcemanager/management/structs/allocator_recycler.go
 	mockgen -destination ./test/mockmodels/mock_product.go -package mock_product -source ./models/platform/product/product_read_writer.go
 

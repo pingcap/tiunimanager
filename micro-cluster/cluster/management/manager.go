@@ -418,11 +418,18 @@ func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterRe
 		return
 	}
 
+	if len(meta.Cluster.MaintenanceStatus) > 0 && !req.Force {
+		resp.NeedConfirmation = true
+		resp.MaintenanceStatus = string(meta.Cluster.MaintenanceStatus)
+		return
+	}
+
 	data := map[string]interface{}{
 		ContextClusterMeta:   meta,
 		ContextDeleteRequest: req,
 	}
 	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceDeleting, deleteClusterFlow.FlowName, data)
+
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"cluster %s async maintenance error: %s", meta.Cluster.ID, err.Error())

@@ -19,14 +19,14 @@ package main
 import (
 	"github.com/asim/go-micro/v3"
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
+	"github.com/pingcap-inc/tiem/metrics"
 	"github.com/pingcap-inc/tiem/micro-cluster/registry"
 	clusterService "github.com/pingcap-inc/tiem/micro-cluster/service"
 	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -51,7 +51,7 @@ func main() {
 	)
 
 	f.PrepareService(func(service micro.Service) error {
-		return clusterpb.RegisterClusterServiceHandler(service.Server(), clusterService.NewClusterServiceHandler(f))
+		return clusterservices.RegisterClusterServiceHandler(service.Server(), clusterService.NewClusterServiceHandler(f))
 	})
 
 	f.GetMetrics().ServerStartTimeGaugeMetric.

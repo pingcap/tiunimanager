@@ -67,12 +67,14 @@ func collectorClusterLogConfig(node *workflowModel.WorkFlowNode, ctx *workflow.F
 		// todo: When the tiem scale-out and scale-in is complete, change to take the filebeat deployDir from the tiem topology
 		deployDir := "/tiem-test/filebeat"
 		clusterComponentType := secondparty.ClusterComponentTypeStr
+		clusterName := clusterMeta.Cluster.ID
 		if framework.Current.GetClientArgs().EMClusterName != "" {
 			deployDir = "/tiem-deploy/filebeat-0"
 			clusterComponentType = secondparty.TiEMComponentTypeStr
+			clusterName = framework.Current.GetClientArgs().EMClusterName
 		}
 		transferTaskId, err := secondparty.Manager.Transfer(ctx, clusterComponentType,
-			clusterMeta.Cluster.ID, collectorYaml, deployDir+"/conf/input_tidb.yml",
+			clusterName, collectorYaml, deployDir+"/conf/input_tidb.yml",
 			0, []string{"-N", hostIP}, node.ID)
 		framework.LogWithContext(ctx).Infof("got transferTaskId: %s", transferTaskId)
 		if err != nil {

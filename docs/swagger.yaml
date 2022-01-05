@@ -1,12 +1,5 @@
 basePath: /api/v1/
 definitions:
-  account.UserProfile:
-    properties:
-      tenantId:
-        type: string
-      userName:
-        type: string
-    type: object
   cluster.BackupClusterDataReq:
     properties:
       backupMode:
@@ -189,13 +182,19 @@ definitions:
     properties:
       autoBackup:
         type: boolean
-      clearBackupData:
+      force:
+        type: boolean
+      keepHistoryBackupRecords:
         type: boolean
     type: object
   cluster.DeleteClusterResp:
     properties:
       clusterID:
         type: string
+      maintenanceStatus:
+        type: string
+      needConfirmation:
+        type: boolean
       workFlowId:
         description: Asynchronous task workflow ID
         type: string
@@ -1331,6 +1330,13 @@ definitions:
     properties:
       paramGroupId:
         example: "1"
+        type: string
+    type: object
+  message.UserProfile:
+    properties:
+      tenantId:
+        type: string
+      userName:
         type: string
     type: object
   structs.AsyncTaskWorkFlowInfo:
@@ -4775,7 +4781,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/account.UserProfile'
+                  $ref: '#/definitions/message.UserProfile'
               type: object
         "401":
           description: Unauthorized

@@ -19,15 +19,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/file-server/common"
 	"github.com/pingcap-inc/tiem/file-server/controller"
 	"github.com/pingcap-inc/tiem/file-server/service"
-	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
 	"net/http"
 	"path/filepath"
 )
@@ -87,7 +87,7 @@ func DownloadExportFile(c *gin.Context) {
 		return
 	}
 
-	rpcResp, err := client.ClusterClient.QueryDataTransport(ctx, &clusterpb.RpcRequest{Request: string(body)}, controller.DefaultTimeout)
+	rpcResp, err := client.ClusterClient.QueryDataTransport(ctx, &clusterservices.RpcRequest{Request: string(body)}, controller.DefaultTimeout)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("query data transport record by recordId %s failed, %s", recordId, err.Error())
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("find record from metadb failed, %s", err.Error())))

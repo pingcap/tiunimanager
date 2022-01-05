@@ -422,11 +422,6 @@ func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterRe
 	}
 
 	resp.ClusterID = meta.Cluster.ID
-	if meta.Cluster.Status == string(constants.ClusterInitializing) || meta.Cluster.Status == string(constants.ClusterFailure) {
-
-		err = meta.Delete(ctx)
-		return
-	}
 
 	if len(meta.Cluster.MaintenanceStatus) > 0 && !req.Force {
 		resp.NeedConfirmation = true

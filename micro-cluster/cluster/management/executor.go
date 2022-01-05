@@ -286,6 +286,13 @@ func backupBeforeDelete(node *workflowModel.WorkFlowNode, context *workflow.Flow
 	meta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	deleteReq := context.GetData(ContextDeleteRequest).(cluster.DeleteClusterReq)
 
+	_, err := models.GetClusterReaderWriter().GetCurrentClusterTopologySnapshot(context, meta.Cluster.ID)
+	if err != nil {
+		framework.LogWithContext(context).Warnf("cluster %s is not really existed", meta.Cluster.ID)
+		node.Success("skip because cluster is not existed")
+		return nil
+	}
+
 	if deleteReq.AutoBackup {
 		backupResponse, err := backuprestore.GetBRService().BackupCluster(
 			context.Context,
@@ -757,12 +764,10 @@ func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
 
-	framework.LogWithContext(context.Context).Infof(
-		"destroy cluster %s, version %s", cluster.ID, cluster.Version)
-	_, err := models.GetClusterReaderWriter().GetCurrentClusterTopologySnapshot(context, clusterMeta.Cluster.ID)
+	_, err := models.GetClusterReaderWriter().GetCurrentClusterTopologySnapshot(context, cluster.ID)
 	if err != nil {
-		framework.LogWithContext(context).Warnf("cluster %s is not really existed", clusterMeta.Cluster.ID)
-		node.Success("skip destroy cluster because it is not ")
+		framework.LogWithContext(context).Warnf("cluster %s is not really existed", cluster.ID)
+		node.Success("skip because cluster is not existed")
 		return nil
 	}
 

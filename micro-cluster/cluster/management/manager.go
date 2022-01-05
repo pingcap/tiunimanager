@@ -20,8 +20,10 @@ import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/pkg/sftp"
@@ -328,6 +330,11 @@ var restoreNewClusterFlow = workflow.WorkFlowDefine{
 // @Return error
 func (p *Manager) RestoreNewCluster(ctx context.Context, req cluster.RestoreNewClusterReq) (resp cluster.RestoreNewClusterResp, err error) {
 	meta := &handler.ClusterMeta{}
+
+	if err = p.restoreNewClusterPreCheck(ctx, req); err != nil {
+		framework.LogWithContext(ctx).Errorf("restore new cluster precheck failed: %s", err.Error())
+		return
+	}
 
 	if err = meta.BuildCluster(ctx, req.CreateClusterParameter); err != nil {
 		framework.LogWithContext(ctx).Errorf("build cluster %s error: %s", req.Name, err.Error())
@@ -643,4 +650,30 @@ func (p *Manager) GetMonitorInfo(ctx context.Context, req cluster.QueryMonitorIn
 		GrafanaUrl: grafanaUrl,
 	}
 	return resp, nil
+}
+
+func (p *Manager) restoreNewClusterPreCheck(ctx context.Context, req cluster.RestoreNewClusterReq) error {
+	if req.BackupID == "" {
+		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("restore new cluster input backupId empty"))
+	}
+
+	brService := backuprestore.GetBRService()
+	resp, _, err := brService.QueryClusterBackupRecords(ctx, cluster.QueryBackupRecordsReq{
+		BackupID: req.BackupID,
+		PageRequest: structs.PageRequest{
+			Page:     1,
+			PageSize: 1,
+		},
+	})
+	if err != nil {
+		return errors.NewEMErrorf(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, err.Error())
+	}
+	if len(resp.BackupRecords) <= 0 {
+		return errors.NewEMErrorf(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("backup recordId %s not found", req.BackupID))
+	}
+	if resp.BackupRecords[0].Status != string(constants.ClusterBackupFinished) {
+		return errors.NewEMErrorf(errors.TIEM_BACKUP_RECORD_INVALID, fmt.Sprintf("backup record status invalid"))
+	}
+
+	return nil
 }

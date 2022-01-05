@@ -62,6 +62,7 @@ const (
 	TIEM_BACKUP_STRATEGY_DELETE_FAILED  EM_ERROR_CODE = 20607
 	TIEM_BACKUP_FILE_DELETE_FAILED      EM_ERROR_CODE = 20608
 	TIEM_BACKUP_PATH_CREATE_FAILED      EM_ERROR_CODE = 20609
+	TIEM_BACKUP_RECORD_INVALID          EM_ERROR_CODE = 20610
 
 	// workflow
 	TIEM_WORKFLOW_CREATE_FAILED         EM_ERROR_CODE = 40100
@@ -266,6 +267,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_BACKUP_STRATEGY_DELETE_FAILED:  {"delete backup strategy failed", 500},
 	TIEM_BACKUP_FILE_DELETE_FAILED:      {"remove backup file failed", 500},
 	TIEM_BACKUP_PATH_CREATE_FAILED:      {"backup filepath create failed", 500},
+	TIEM_BACKUP_RECORD_INVALID:          {"backup record invalid", 400},
 
 	// resource
 	TIEM_RESOURCE_HOST_NOT_FOUND:            {"host not found", 500},

@@ -195,6 +195,69 @@ func persistApplyParameter(req *message.ApplyParameterGroupReq, ctx *workflow.Fl
 	return err
 }
 
+// validationParameters
+// @Description: validation parameters
+// @Parameter node
+// @Parameter ctx
+// @return error
+func validationParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.LogWithContext(ctx).Info("begin validation parameters executor method")
+	defer framework.LogWithContext(ctx).Info("end validation parameters executor method")
+
+	modifyParam := ctx.GetData(contextModifyParameters).(*ModifyParameter)
+	framework.LogWithContext(ctx).Debugf("got validation parameters size: %d", len(modifyParam.Params))
+
+	for _, param := range modifyParam.Params {
+		// validate parameter value by range field
+		if !validateRange(param) {
+			return fmt.Errorf(fmt.Sprintf("Validation parameter %s failed, update value: %s, can take a range of values: %v",
+				param.Name, param.RealValue.ClusterValue, param.Range))
+		}
+	}
+	return nil
+}
+
+// validateRange
+// @Description: validate parameter value by range field
+// @Parameter param
+// @return bool
+func validateRange(param ModifyClusterParameterInfo) bool {
+	// Determine if range is nil or an expression, continue the loop directly
+	if param.Range == nil || len(param.Range) <= 1 {
+		return true
+	}
+	switch param.Type {
+	case int(Integer):
+		start, err1 := strconv.ParseInt(param.Range[0], 0, 64)
+		end, err2 := strconv.ParseInt(param.Range[1], 0, 64)
+		clusterValue, err3 := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)
+		if err1 == nil && err2 == nil && err3 == nil && clusterValue >= start && clusterValue <= end {
+			return true
+		}
+	case int(String):
+		for _, enumValue := range param.Range {
+			if param.RealValue.ClusterValue == enumValue {
+				return true
+			}
+		}
+	case int(Boolean):
+		_, err := strconv.ParseBool(param.RealValue.ClusterValue)
+		if err == nil {
+			return true
+		}
+	case int(Float):
+		start, err1 := strconv.ParseFloat(param.Range[0], 64)
+		end, err2 := strconv.ParseFloat(param.Range[1], 64)
+		clusterValue, err3 := strconv.ParseFloat(param.RealValue.ClusterValue, 64)
+		if err1 == nil && err2 == nil && err3 == nil && clusterValue >= start && clusterValue <= end {
+			return true
+		}
+	case int(Array):
+		return true
+	}
+	return false
+}
+
 // modifyParameters
 // @Description: modify parameters
 // @Parameter node
@@ -205,7 +268,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 	defer framework.LogWithContext(ctx).Info("end modify parameters executor method")
 
 	modifyParam := ctx.GetData(contextModifyParameters).(*ModifyParameter)
-	framework.LogWithContext(ctx).Debugf("got modify need reboot: %v, params size: %d", modifyParam.Reboot, len(modifyParam.Params))
+	framework.LogWithContext(ctx).Debugf("got modify need reboot: %v, parameters size: %d", modifyParam.Reboot, len(modifyParam.Params))
 
 	// Get the apply parameter object
 	applyParameter := ctx.GetData(contextApplyParameterInfo)

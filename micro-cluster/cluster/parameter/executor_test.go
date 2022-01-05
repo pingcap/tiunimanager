@@ -193,6 +193,113 @@ func TestExecutor_convertRealParameterType_Error(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestExecutor_validationParameters(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		modifyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
+		modifyCtx.SetData(contextModifyParameters, mockModifyParameter())
+
+		err := validationParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		assert.NoError(t, err)
+	})
+	t.Run("error", func(t *testing.T) {
+		modifyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
+		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
+			Params: []ModifyClusterParameterInfo{
+				{
+					ParamId:        "1",
+					Name:           "test_param_1",
+					InstanceType:   "TiDB",
+					UpdateSource:   0,
+					HasApply:       1,
+					SystemVariable: "",
+					Type:           0,
+					Range:          []string{"s", "e"},
+					RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
+				},
+			},
+		})
+
+		err := validationParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		assert.Error(t, err)
+	})
+}
+
+func TestExecutor_validateRange(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		validated := validateRange(ModifyClusterParameterInfo{
+			ParamId:        "1",
+			Name:           "test_param_1",
+			InstanceType:   "TiDB",
+			UpdateSource:   0,
+			HasApply:       1,
+			SystemVariable: "",
+			Type:           0,
+			Range:          []string{"1", "10"},
+			RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
+		})
+		assert.EqualValues(t, true, validated)
+
+		validated = validateRange(ModifyClusterParameterInfo{
+			ParamId:        "2",
+			Name:           "test_param_2",
+			InstanceType:   "TiDB",
+			UpdateSource:   0,
+			HasApply:       1,
+			SystemVariable: "",
+			Type:           1,
+			Range:          []string{"debug", "info", "warn", "error"},
+			RealValue:      structs.ParameterRealValue{ClusterValue: "info"},
+		})
+		assert.EqualValues(t, true, validated)
+
+		validated = validateRange(ModifyClusterParameterInfo{
+			ParamId:        "3",
+			Name:           "test_param_3",
+			InstanceType:   "TiDB",
+			UpdateSource:   0,
+			HasApply:       1,
+			SystemVariable: "",
+			Type:           2,
+			Range:          []string{"true", "false"},
+			RealValue:      structs.ParameterRealValue{ClusterValue: "true"},
+		})
+		assert.EqualValues(t, true, validated)
+
+		validated = validateRange(ModifyClusterParameterInfo{
+			ParamId:        "4",
+			Name:           "test_param_4",
+			InstanceType:   "TiDB",
+			UpdateSource:   0,
+			HasApply:       1,
+			SystemVariable: "",
+			Type:           3,
+			Range:          []string{"0.1", "5.2"},
+			RealValue:      structs.ParameterRealValue{ClusterValue: "3.14"},
+		})
+
+		validated = validateRange(ModifyClusterParameterInfo{
+			ParamId:        "5",
+			Name:           "test_param_5",
+			InstanceType:   "TiDB",
+			UpdateSource:   0,
+			HasApply:       1,
+			SystemVariable: "",
+			Type:           4,
+			Range:          []string{"[]", "[]"},
+			RealValue:      structs.ParameterRealValue{ClusterValue: "[]"},
+		})
+		assert.EqualValues(t, true, validated)
+	})
+}
+
 func TestExecutor_modifyParameters(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

@@ -163,6 +163,7 @@ func TestManager_ApplyParameterGroup_Success(t *testing.T) {
 						Type:           0,
 						HasApply:       1,
 						UpdateSource:   0,
+						Range:          "[\"0\", \"1024\"]",
 					},
 					DefaultValue: "1",
 					Note:         "param1",

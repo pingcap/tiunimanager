@@ -18,6 +18,11 @@ package management
 import (
 	"database/sql"
 	"fmt"
+	"io/ioutil"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -35,10 +40,6 @@ import (
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // prepareResource
@@ -263,7 +264,7 @@ func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 			excludeBackupIDs = append(excludeBackupIDs, backupIdBeforeDeleting.(string))
 		}
 
-		_, err = backuprestore.GetBRService().DeleteBackupRecords(context.Context, cluster.DeleteBackupDataReq {
+		_, err = backuprestore.GetBRService().DeleteBackupRecords(context.Context, cluster.DeleteBackupDataReq{
 			ClusterID:        meta.Cluster.ID,
 			BackupMode:       string(constants.BackupModeManual),
 			ExcludeBackupIDs: excludeBackupIDs,
@@ -587,14 +588,8 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 			continue
 		}
 		targetParam := structs.ClusterParameterSampleInfo{
-			ParamId:        param.ParamId,
-			Name:           param.Name,
-			InstanceType:   param.InstanceType,
-			UpdateSource:   param.UpdateSource,
-			SystemVariable: param.SystemVariable,
-			Type:           param.Type,
-			HasApply:       param.HasApply,
-			RealValue:      param.RealValue,
+			ParamId:   param.ParamId,
+			RealValue: param.RealValue,
 		}
 		targetParams = append(targetParams, targetParam)
 		if param.HasReboot == int(parameter.Reboot) {

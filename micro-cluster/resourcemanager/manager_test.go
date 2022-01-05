@@ -266,24 +266,32 @@ func Test_DeleteHosts_Succeed(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_resource.NewMockReaderWriter(ctrl)
-	mockClient.EXPECT().Delete(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hostIds []string) error {
-		if hostIds[0] == fake_hostId1 && hostIds[1] == fake_hostId2 {
-			return nil
-		} else {
-			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
-		}
-	})
+	mockClient.EXPECT().UpdateHostStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
 	file_hostprovider, ok := (hostprovider).(*(host_provider.FileHostProvider))
 	assert.True(t, ok)
 	file_hostprovider.SetResourceReaderWriter(mockClient)
 
+	ctrl3 := gomock.NewController(t)
+	defer ctrl3.Finish()
+	workflowService := mock_workflow.NewMockWorkFlowService(ctrl3)
+	workflow.MockWorkFlowService(workflowService)
+	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
+	}, nil).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(4)
+
 	var hostIds []string
 	hostIds = append(hostIds, fake_hostId1)
 	hostIds = append(hostIds, fake_hostId2)
 
-	err := resourceManager.DeleteHosts(context.TODO(), hostIds)
+	flowIds, err := resourceManager.DeleteHosts(context.TODO(), hostIds)
 	assert.Nil(t, err)
+	assert.Equal(t, 2, len(flowIds))
 }
 
 func Test_UpdateHostReserved_Succeed(t *testing.T) {

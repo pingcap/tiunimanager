@@ -20,6 +20,8 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
@@ -48,7 +50,7 @@ func Test_InstallSoftware(t *testing.T) {
 
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
-	flowContext.SetData(rp_consts.ContextImportHostInfoKey, []structs.HostInfo{{IP: "192.168.192.192"}})
+	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
 
 	var node workflowModel.WorkFlowNode
 	err := installSoftware(&node, flowContext)
@@ -71,7 +73,7 @@ func Test_JoinEMCluster(t *testing.T) {
 
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
-	flowContext.SetData(rp_consts.ContextImportHostInfoKey, []structs.HostInfo{{IP: "192.168.192.192"}})
+	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
 
 	var node workflowModel.WorkFlowNode
 	err := joinEmCluster(&node, flowContext)
@@ -94,14 +96,14 @@ func Test_Verify(t *testing.T) {
 
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
-	flowContext.SetData(rp_consts.ContextImportHostInfoKey, []structs.HostInfo{{IP: "192.168.192.192"}})
+	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
 
 	var node workflowModel.WorkFlowNode
 	err := verifyHosts(&node, flowContext)
 	assert.Nil(t, err)
 }
 
-func Test_ImportHostSucceed(t *testing.T) {
+func Test_SetHostOnline(t *testing.T) {
 	models.MockDB()
 	resourcePool := GetResourcePool()
 
@@ -117,14 +119,14 @@ func Test_ImportHostSucceed(t *testing.T) {
 
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
-	flowContext.SetData(rp_consts.ContextImportHostIDsKey, []string{"fake-host-id"})
+	flowContext.SetData(rp_consts.ContextHostIDArrayKey, []string{"fake-host-id"})
 
 	var node workflowModel.WorkFlowNode
-	err := importHostSucceed(&node, flowContext)
+	err := setHostsOnline(&node, flowContext)
 	assert.Nil(t, err)
 }
 
-func Test_ImportHostFail(t *testing.T) {
+func Test_SetHostFail(t *testing.T) {
 	models.MockDB()
 	resourcePool := GetResourcePool()
 
@@ -138,9 +140,113 @@ func Test_ImportHostFail(t *testing.T) {
 
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
-	flowContext.SetData(rp_consts.ContextImportHostIDsKey, []string{"fake-host-id"})
+	flowContext.SetData(rp_consts.ContextHostIDArrayKey, []string{"fake-host-id"})
 
 	var node workflowModel.WorkFlowNode
-	err := importHostsFail(&node, flowContext)
+	err := setHostsFail(&node, flowContext)
+	assert.Nil(t, err)
+}
+
+func Test_SetHostDeleted(t *testing.T) {
+	models.MockDB()
+	resourcePool := GetResourcePool()
+
+	// Mock host initiator
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockProvider := mock_provider.NewMockHostProvider(ctrl)
+	mockProvider.EXPECT().DeleteHosts(gomock.Any(), gomock.Any()).Return(nil)
+
+	resourcePool.SetHostProvider(mockProvider)
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
+	flowContext.SetData(rp_consts.ContextHostIDArrayKey, []string{"fake-host-id"})
+
+	var node workflowModel.WorkFlowNode
+	err := deleteHosts(&node, flowContext)
+	assert.Nil(t, err)
+}
+
+func Test_CheckHostBeforeDeleted_Succeed(t *testing.T) {
+	models.MockDB()
+	resourcePool := GetResourcePool()
+
+	// Mock host initiator
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockProvider := mock_provider.NewMockHostProvider(ctrl)
+	mockProvider.EXPECT().QueryHosts(gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.HostInfo{*genHostInfo("Test_Host1")}, nil)
+
+	resourcePool.SetHostProvider(mockProvider)
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
+	flowContext.SetData(rp_consts.ContextHostIDArrayKey, []string{"fake-host-id"})
+
+	var node workflowModel.WorkFlowNode
+	err := checkHostBeforeDelete(&node, flowContext)
+	assert.Nil(t, err)
+	var hosts []structs.HostInfo
+	hosts, ok := flowContext.GetData(rp_consts.ContextHostInfoArrayKey).([]structs.HostInfo)
+	assert.True(t, ok)
+	assert.Equal(t, 1, len(hosts))
+	t.Log(hosts)
+	assert.Equal(t, "Test_Host1", hosts[0].HostName)
+}
+
+func Test_CheckHostBeforeDeleted_Fail(t *testing.T) {
+	models.MockDB()
+	resourcePool := GetResourcePool()
+
+	// Mock host initiator
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockProvider := mock_provider.NewMockHostProvider(ctrl)
+	host := genHostInfo("Test_Host1")
+	host.Stat = string(constants.HostLoadInUsed)
+	mockProvider.EXPECT().QueryHosts(gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.HostInfo{*host}, nil)
+
+	resourcePool.SetHostProvider(mockProvider)
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
+	flowContext.SetData(rp_consts.ContextHostIDArrayKey, []string{"fake-host-id"})
+
+	var node workflowModel.WorkFlowNode
+	err := checkHostBeforeDelete(&node, flowContext)
+	assert.NotNil(t, err)
+	var emERR errors.EMError
+	emERR, ok := err.(errors.EMError)
+	assert.True(t, ok)
+	assert.Equal(t, errors.TIEM_RESOURCE_HOST_STILL_INUSED, emERR.GetCode())
+}
+
+func Test_LeaveEMCluster(t *testing.T) {
+	models.MockDB()
+	resourcePool := GetResourcePool()
+
+	// Mock host initiator
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockInitiator := mock_initiator.NewMockHostInitiator(ctrl)
+	mockInitiator.EXPECT().LeaveEMCluster(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, nodeId string) error {
+		assert.Equal(t, "192.168.192.192:0", nodeId)
+		var workFlowId string
+		workFlowId, ok := ctx.Value(rp_consts.ContextWorkFlowNodeIDKey).(string)
+		assert.True(t, ok)
+		assert.Equal(t, "Fake-NodeID-1", workFlowId)
+		return nil
+	})
+
+	resourcePool.SetHostInitiator(mockInitiator)
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
+	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
+
+	var node workflowModel.WorkFlowNode
+	node.ID = "Fake-NodeID-1"
+	err := leaveEmCluster(&node, flowContext)
 	assert.Nil(t, err)
 }

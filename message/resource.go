@@ -57,6 +57,7 @@ type DeleteHostsReq struct {
 }
 
 type DeleteHostsResp struct {
+	FlowInfo []structs.AsyncTaskWorkFlowInfo `json:"flowInfo"`
 }
 
 type UpdateHostReservedReq struct {

@@ -22,6 +22,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/common"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
@@ -41,6 +42,7 @@ func genHostInfo(hostName string) *structs.HostInfo {
 		AZ:       "TEST_AZ",
 		Rack:     "TEST_RACK",
 		Status:   string(constants.HostOnline),
+		Stat:     string(constants.HostLoadLoadLess),
 		Nic:      "10GE",
 		Purpose:  "Compute",
 	}
@@ -94,6 +96,46 @@ func Test_ImportHosts(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func Test_ImportHosts_WithoutInit(t *testing.T) {
+	models.MockDB()
+	framework.Current.GetClientArgs().SkipHostInit = true
+
+	resourcePool := GetResourcePool()
+
+	// Mock host provider
+	ctrl1 := gomock.NewController(t)
+	defer ctrl1.Finish()
+	mockProvider := mock_provider.NewMockHostProvider(ctrl1)
+	mockProvider.EXPECT().ImportHosts(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []structs.HostInfo) ([]string, error) {
+		return []string{"hostId1", "hostId2", "hostId3"}, nil
+	})
+	resourcePool.SetHostProvider(mockProvider)
+
+	ctrl2 := gomock.NewController(t)
+	defer ctrl2.Finish()
+	workflowService := mock_workflow.NewMockWorkFlowService(ctrl2)
+	workflow.MockWorkFlowService(workflowService)
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
+	}, nil).Times(3)
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, flow *workflow.WorkFlowAggregation) error {
+		return nil
+	}).AnyTimes()
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(9)
+	workflowService.EXPECT().RegisterWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return()
+
+	resourcePool.registerImportHostsWorkFlow(context.TODO(), workflowService)
+
+	host1 := genHostInfo("Test_Host1")
+	host2 := genHostInfo("Test_Host2")
+	host3 := genHostInfo("Test_Host3")
+	flowIds, hostIds, err := resourcePool.ImportHosts(context.TODO(), []structs.HostInfo{*host1, *host2, *host3})
+	assert.Equal(t, 3, len(flowIds))
+	assert.Equal(t, 3, len(hostIds))
+	assert.Nil(t, err)
+}
+
 func Test_DeleteHosts(t *testing.T) {
 	models.MockDB()
 	resourcePool := GetResourcePool()
@@ -102,12 +144,58 @@ func Test_DeleteHosts(t *testing.T) {
 	ctrl1 := gomock.NewController(t)
 	defer ctrl1.Finish()
 	mockProvider := mock_provider.NewMockHostProvider(ctrl1)
-	mockProvider.EXPECT().DeleteHosts(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hostIds []string) error {
-		return nil
-	})
+	mockProvider.EXPECT().UpdateHostStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 	resourcePool.SetHostProvider(mockProvider)
 
-	err := resourcePool.DeleteHosts(context.TODO(), []string{"hostId1", "hostId2", "hostId3"})
+	ctrl2 := gomock.NewController(t)
+	defer ctrl2.Finish()
+	workflowService := mock_workflow.NewMockWorkFlowService(ctrl2)
+	workflow.MockWorkFlowService(workflowService)
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
+	}, nil).Times(3)
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, flow *workflow.WorkFlowAggregation) error {
+		return nil
+	}).AnyTimes()
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(6)
+
+	flowIds, err := resourcePool.DeleteHosts(context.TODO(), []string{"hostId1", "hostId2", "hostId3"})
+	assert.Equal(t, 3, len(flowIds))
+	assert.Nil(t, err)
+}
+
+func Test_DeleteHosts_WithoutInit(t *testing.T) {
+	models.MockDB()
+	resourcePool := GetResourcePool()
+
+	framework.Current.GetClientArgs().SkipHostInit = true
+
+	// Mock host provider
+	ctrl1 := gomock.NewController(t)
+	defer ctrl1.Finish()
+	mockProvider := mock_provider.NewMockHostProvider(ctrl1)
+	mockProvider.EXPECT().UpdateHostStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	resourcePool.SetHostProvider(mockProvider)
+
+	ctrl2 := gomock.NewController(t)
+	defer ctrl2.Finish()
+	workflowService := mock_workflow.NewMockWorkFlowService(ctrl2)
+	workflow.MockWorkFlowService(workflowService)
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
+	}, nil).Times(3)
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, flow *workflow.WorkFlowAggregation) error {
+		return nil
+	}).AnyTimes()
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(6)
+	workflowService.EXPECT().RegisterWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return()
+
+	resourcePool.registerDeleteHostsWorkFlow(context.TODO(), workflowService)
+
+	flowIds, err := resourcePool.DeleteHosts(context.TODO(), []string{"hostId1", "hostId2", "hostId3"})
+	assert.Equal(t, 3, len(flowIds))
 	assert.Nil(t, err)
 }
 

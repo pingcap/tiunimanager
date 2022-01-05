@@ -866,8 +866,13 @@ func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, req *clus
 	reqStruct := message.DeleteHostsReq{}
 
 	if handleRequest(ctx, req, resp, &reqStruct) {
-		err := handler.resourceManager.DeleteHosts(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.HostIDs)
+		flowIds, err := handler.resourceManager.DeleteHosts(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.HostIDs)
 		var rsp message.DeleteHostsResp
+		if err == nil {
+			for _, flowId := range flowIds {
+				rsp.FlowInfo = append(rsp.FlowInfo, structs.AsyncTaskWorkFlowInfo{WorkFlowID: flowId})
+			}
+		}
 		handleResponse(ctx, resp, err, rsp, nil)
 	}
 

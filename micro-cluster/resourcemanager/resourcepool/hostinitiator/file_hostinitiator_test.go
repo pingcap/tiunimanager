@@ -193,3 +193,18 @@ func Test_JoinEMCluster(t *testing.T) {
 	err := fileInitiator.JoinEMCluster(ctx, []structs.HostInfo{{Arch: "X86_64", IP: "192.168.177.180"}})
 	assert.Nil(t, err)
 }
+
+func Test_LeaveEMCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockSec := mock_secp.NewMockSecondPartyService(ctrl)
+	mockSec.EXPECT().ClusterScaleIn(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
+
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSecondPartyServ(mockSec)
+
+	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowNodeIDKey, "fake-node-id")
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	err := fileInitiator.LeaveEMCluster(ctx, "192.168.177.180:0")
+	assert.Nil(t, err)
+}

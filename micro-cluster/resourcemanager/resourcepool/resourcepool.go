@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -54,6 +55,7 @@ func (p *ResourcePool) InitResourcePool() {
 
 	flowManager := workflow.GetWorkFlowService()
 	p.registerImportHostsWorkFlow(context.TODO(), flowManager)
+	p.registerDeleteHostsWorkFlow(context.TODO(), flowManager)
 }
 
 func (p *ResourcePool) registerImportHostsWorkFlow(ctx context.Context, flowManager workflow.WorkFlowService) {
@@ -67,8 +69,8 @@ func (p *ResourcePool) registerImportHostsWorkFlow(ctx context.Context, flowMana
 				"configHosts":     {Name: "configHosts", SuccessEvent: "installSoftware", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: configHosts},
 				"installSoftware": {Name: "installSoftware", SuccessEvent: "joinEMCluster", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: installSoftware},
 				"joinEMCluster":   {Name: "joinEMCluster", SuccessEvent: "succeed", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: joinEmCluster},
-				"succeed":         {Name: "succeed", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: importHostSucceed},
-				"fail":            {Name: "fail", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: importHostsFail},
+				"succeed":         {Name: "succeed", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsOnline},
+				"fail":            {Name: "fail", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsFail},
 			},
 		})
 	} else {
@@ -76,7 +78,34 @@ func (p *ResourcePool) registerImportHostsWorkFlow(ctx context.Context, flowMana
 		flowManager.RegisterWorkFlow(ctx, rp_consts.FlowImportHosts, &workflow.WorkFlowDefine{
 			FlowName: rp_consts.FlowImportHosts,
 			TaskNodes: map[string]*workflow.NodeDefine{
-				"start": {Name: "start", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: importHostSucceed},
+				"start": {Name: "start", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsOnline},
+			},
+		})
+	}
+}
+
+func (p *ResourcePool) registerDeleteHostsWorkFlow(ctx context.Context, flowManager workflow.WorkFlowService) {
+	log := framework.LogWithContext(ctx)
+	if !framework.Current.GetClientArgs().SkipHostInit {
+		log.Infoln("register delete hosts workflow with host init")
+		flowManager.RegisterWorkFlow(ctx, rp_consts.FlowDeleteHosts, &workflow.WorkFlowDefine{
+			FlowName: rp_consts.FlowDeleteHosts,
+			TaskNodes: map[string]*workflow.NodeDefine{
+				"start":          {Name: "start", SuccessEvent: "leaveEMCluster", FailEvent: "recover", ReturnType: workflow.SyncFuncNode, Executor: checkHostBeforeDelete},
+				"leaveEMCluster": {Name: "leaveEMCluster", SuccessEvent: "succeed", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: leaveEmCluster},
+				"succeed":        {Name: "succeed", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: deleteHosts},
+				"recover":        {Name: "recover", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsOnline},
+				"fail":           {Name: "fail", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsFail},
+			},
+		})
+	} else {
+		log.Infoln("register delete hosts workflow without host init")
+		flowManager.RegisterWorkFlow(ctx, rp_consts.FlowDeleteHosts, &workflow.WorkFlowDefine{
+			FlowName: rp_consts.FlowDeleteHosts,
+			TaskNodes: map[string]*workflow.NodeDefine{
+				"start":   {Name: "start", SuccessEvent: "succeed", FailEvent: "recover", ReturnType: workflow.SyncFuncNode, Executor: checkHostBeforeDelete},
+				"succeed": {Name: "succeed", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: deleteHosts},
+				"recover": {Name: "recover", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsOnline},
 			},
 		})
 	}
@@ -110,8 +139,8 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 		}
 
 		flowManager.AddContext(flow, rp_consts.ContextResourcePoolKey, p)
-		flowManager.AddContext(flow, rp_consts.ContextImportHostInfoKey, []structs.HostInfo{host})
-		flowManager.AddContext(flow, rp_consts.ContextImportHostIDsKey, []string{hostIds[i]})
+		flowManager.AddContext(flow, rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{host})
+		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostIds[i]})
 
 		flows = append(flows, flow)
 		flowIds = append(flowIds, flow.Flow.ID)
@@ -131,8 +160,39 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 	return flowIds, hostIds, nil
 }
 
-func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string) (err error) {
-	return p.hostProvider.DeleteHosts(ctx, hostIds)
+func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string) (flowIds []string, err error) {
+	err = p.UpdateHostStatus(ctx, hostIds, string(constants.HostDeleting))
+	if err != nil {
+		return nil, err
+	}
+	var flows []*workflow.WorkFlowAggregation
+	flowManager := workflow.GetWorkFlowService()
+	for _, hostId := range hostIds {
+		flow, err := flowManager.CreateWorkFlow(ctx, hostId, rp_consts.FlowDeleteHosts)
+		if err != nil {
+			errMsg := fmt.Sprintf("create %s workflow failed for host %s, %s", rp_consts.FlowDeleteHosts, hostId, err.Error())
+			framework.LogWithContext(ctx).Errorln(errMsg)
+			return nil, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, errMsg, err)
+		}
+
+		flowManager.AddContext(flow, rp_consts.ContextResourcePoolKey, p)
+		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostId})
+
+		flows = append(flows, flow)
+		flowIds = append(flowIds, flow.Flow.ID)
+	}
+
+	go func() {
+		for i, flow := range flows {
+			if err = flowManager.Start(ctx, flow); err != nil {
+				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for delete host %s, %s", rp_consts.FlowDeleteHosts, i, flow.Flow.ID, hostIds[i], err.Error())
+				framework.LogWithContext(ctx).Errorln(errMsg)
+			} else {
+				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for delete host %s", rp_consts.FlowDeleteHosts, i, flow.Flow.ID, hostIds[i])
+			}
+		}
+	}()
+	return flowIds, nil
 }
 
 func (p *ResourcePool) QueryHosts(ctx context.Context, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, err error) {

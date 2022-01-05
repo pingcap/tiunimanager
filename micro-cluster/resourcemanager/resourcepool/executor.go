@@ -32,7 +32,7 @@ func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin verifyHosts")
 
-	resourcePool, hosts, err := getImportHostInfoFromFlowContext(ctx)
+	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("verify host failed for get flow context, %v", err)
 		return err
@@ -58,7 +58,7 @@ func installSoftware(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin installSoftware")
 
-	resourcePool, hosts, err := getImportHostInfoFromFlowContext(ctx)
+	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("install software failed for get flow context, %v", err)
 		return err
@@ -77,7 +77,7 @@ func joinEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) 
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin join em cluster")
 
-	resourcePool, hosts, err := getImportHostInfoFromFlowContext(ctx)
+	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("join em cluster failed for get flow context, %v", err)
 		return err
@@ -92,11 +92,11 @@ func joinEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) 
 	return nil
 }
 
-func importHostSucceed(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
+func setHostsOnline(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	log := framework.LogWithContext(ctx)
-	log.Infoln("begin importHostSucceed")
+	log.Infoln("begin set host online")
 
-	resourcePool, hostIds, err := getImportHostIDsFromFlowContext(ctx)
+	resourcePool, hostIds, err := getHostIDArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("set host online failed for get flow context, %v", err)
 		return err
@@ -111,11 +111,11 @@ func importHostSucceed(node *workflowModel.WorkFlowNode, ctx *workflow.FlowConte
 	return nil
 }
 
-func importHostsFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
+func setHostsFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	log := framework.LogWithContext(ctx)
-	log.Infoln("begin importHostFailed")
+	log.Infoln("begin set host failed")
 
-	resourcePool, hostIds, err := getImportHostIDsFromFlowContext(ctx)
+	resourcePool, hostIds, err := getHostIDArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("set host failed failed for get flow context, %v", err)
 		return err
@@ -131,31 +131,100 @@ func importHostsFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext
 	return nil
 }
 
-func getImportHostInfoFromFlowContext(ctx *workflow.FlowContext) (rp *ResourcePool, hosts []structs.HostInfo, err error) {
+func checkHostBeforeDelete(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infoln("begin check hosts before delete")
+
+	resourcePool, hostIds, err := getHostIDArrayFromFlowContext(ctx)
+	if err != nil {
+		log.Errorf("delete hosts failed for get flow context, %v", err)
+		return err
+	}
+
+	hosts, err := resourcePool.QueryHosts(ctx, &structs.HostFilter{HostID: hostIds[0]}, &structs.PageRequest{})
+	if err != nil {
+		log.Errorf("query hosts %v failed, %v", hostIds[0], err)
+		return err
+	}
+
+	if hosts[0].Stat != string(constants.HostLoadLoadLess) {
+		errMsg := fmt.Sprintf("check before delete host failed, host %s load stat is not loadless, %s", hosts[0].ID, hosts[0].Stat)
+		log.Errorln(errMsg)
+		return errors.NewError(errors.TIEM_RESOURCE_HOST_STILL_INUSED, errMsg)
+	}
+	log.Infof("check host %s before delete succeed", hostIds[0])
+
+	// Set host info to context for leave em cluster executor
+	ctx.SetData(rp_consts.ContextHostInfoArrayKey, hosts)
+
+	return nil
+}
+
+func deleteHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infoln("begin delete hosts")
+
+	resourcePool, hostIds, err := getHostIDArrayFromFlowContext(ctx)
+	if err != nil {
+		log.Errorf("delete hosts failed for get flow context, %v", err)
+		return err
+	}
+
+	err = resourcePool.hostProvider.DeleteHosts(ctx, hostIds)
+	if err != nil {
+		log.Errorf("delete hosts %v failed, %v", hostIds, err)
+		return err
+	}
+	log.Infof("delete host %v succeed", hostIds)
+
+	return nil
+}
+
+func leaveEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infoln("begin leave em cluster")
+	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
+	if err != nil {
+		log.Errorf("leave em cluster failed for get flow context, %v", err)
+		return err
+	}
+	// Store nodeID for second party service
+	wrapCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowNodeIDKey, node.ID)
+	for _, host := range hosts {
+		clusterNodeId := fmt.Sprintf("%s:%d", host.IP, rp_consts.HostFileBeatPort)
+		if err = resourcePool.hostInitiator.LeaveEMCluster(wrapCtx, clusterNodeId); err != nil {
+			log.Errorf("leave em cluster failed for %v, %v", host.IP, err)
+			return err
+		}
+	}
+	return nil
+}
+
+func getHostInfoArrayFromFlowContext(ctx *workflow.FlowContext) (rp *ResourcePool, hosts []structs.HostInfo, err error) {
 	var ok bool
 	rp, ok = ctx.GetData(rp_consts.ContextResourcePoolKey).(*ResourcePool)
 	if !ok {
 		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextResourcePoolKey)
 		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
-	hosts, ok = ctx.GetData(rp_consts.ContextImportHostInfoKey).([]structs.HostInfo)
+	hosts, ok = ctx.GetData(rp_consts.ContextHostInfoArrayKey).([]structs.HostInfo)
 	if !ok {
-		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextImportHostInfoKey)
+		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextHostInfoArrayKey)
 		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
 	return rp, hosts, nil
 }
 
-func getImportHostIDsFromFlowContext(ctx *workflow.FlowContext) (rp *ResourcePool, hostIds []string, err error) {
+func getHostIDArrayFromFlowContext(ctx *workflow.FlowContext) (rp *ResourcePool, hostIds []string, err error) {
 	var ok bool
 	rp, ok = ctx.GetData(rp_consts.ContextResourcePoolKey).(*ResourcePool)
 	if !ok {
 		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextResourcePoolKey)
 		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
-	hostIds, ok = ctx.GetData(rp_consts.ContextImportHostIDsKey).([]string)
+	hostIds, ok = ctx.GetData(rp_consts.ContextHostIDArrayKey).([]string)
 	if !ok {
-		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextImportHostIDsKey)
+		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextHostIDArrayKey)
 		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
 	return rp, hostIds, nil

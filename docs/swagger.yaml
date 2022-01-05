@@ -1045,6 +1045,11 @@ definitions:
         type: array
     type: object
   message.DeleteHostsResp:
+    properties:
+      flowInfo:
+        items:
+          $ref: '#/definitions/structs.AsyncTaskWorkFlowInfo'
+        type: array
     type: object
   message.DeleteImportExportRecordReq:
     type: object

@@ -18,15 +18,20 @@ package constants
 const SecondPartyReady = true
 
 const (
-	FlowImportHosts          string = "ImportHosts"
+	FlowImportHosts string = "ImportHosts"
+	FlowDeleteHosts string = "DeleteHosts"
+)
+
+const (
 	ContextResourcePoolKey   string = "resourcePool"
-	ContextImportHostInfoKey string = "importHostInfo"
-	ContextImportHostIDsKey  string = "importHostIDs"
-	ContextWorkFlowNodeIDKey string = "importHostsWorkFlowNodeID"
+	ContextHostInfoArrayKey  string = "hostInfoArray"
+	ContextHostIDArrayKey    string = "hostIDArray"
+	ContextWorkFlowNodeIDKey string = "resourceWorkFlowNodeID"
 )
 
 const (
 	HostSSHPort       = 22
+	HostFileBeatPort  = 0
 	FileBeatDataDir   = "/tiem-data"
 	FileBeatDeployDir = "/tiem-deploy"
 )

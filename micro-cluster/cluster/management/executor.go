@@ -865,6 +865,8 @@ func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 		return errors.WrapError(errors.TIEM_TAKEOVER_SFTP_ERROR, "read remote file error", err)
 	}
 
+	context.SetData(ContextPrivateKey, privateKey)
+	context.SetData(ContextPublicKey, privateKey)
 	context.SetData(ContextTopologyConfig, metaData)
 
 	err = models.GetClusterReaderWriter().CreateClusterTopologySnapshot(context, management.ClusterTopologySnapshot{
@@ -899,6 +901,11 @@ func readRemoteFile(ctx context.Context, sftp *sftp.Client, clusterHome string, 
 	return dataByte, nil
 }
 
+// rebuildTopologyFromConfig
+// @Description:
+// @Parameter node
+// @Parameter context
+// @return error
 func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	dataByte := context.GetData(ContextTopologyConfig).([]byte)
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
@@ -920,6 +927,51 @@ func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workfl
 		return err
 	}
 
+	return nil
+}
+
+// rebuildTiupSpaceForCluster
+// @Description:
+// @Parameter node
+// @Parameter context
+// @return error
+func rebuildTiupSpaceForCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	metaYaml := context.GetData(ContextTopologyConfig).([]byte)
+	privateKey := context.GetData(ContextPrivateKey).([]byte)
+	publicKey := context.GetData(ContextPublicKey).([]byte)
+
+	home := getClusterSpaceInTiUP(context, clusterMeta.Cluster.ID)
+	err := os.MkdirAll(home + "ssh/", 0755)
+	if err != nil {
+		framework.LogWithContext(context).Errorf("mkdir for cluster %s failed, err = %s", clusterMeta.Cluster.ID, err.Error())
+		return err
+	}
+
+	metaFile, err := os.Open(home + "meta.yaml")
+	if err != nil {
+		framework.LogWithContext(context).Errorf("open meta.yaml failed")
+		return err
+	} else {
+		defer metaFile.Close()
+	}
+	privateKeyFile, err := os.Open(home + "ssh/id_rsa")
+	if err != nil {
+		framework.LogWithContext(context).Errorf("open private key file failed")
+		return err
+	} else {
+		defer metaFile.Close()
+	}
+	publicKeyFile, err := os.Open(home + "ssh/id_ras.pub")
+	if err != nil {
+		framework.LogWithContext(context).Errorf("open public key file failed")
+		return err
+	} else {
+		defer metaFile.Close()
+	}
+	metaFile.Write(metaYaml)
+	privateKeyFile.Write(privateKey)
+	publicKeyFile.Write(publicKey)
 	return nil
 }
 

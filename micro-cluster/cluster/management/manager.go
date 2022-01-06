@@ -42,6 +42,8 @@ const (
 	ContextBackupID          = "BackupID"
 	ContextWorkflowID        = "WorkflowID"
 	ContextTopologyConfig    = "TopologyConfig"
+	ContextPublicKey         = "PublicKey"
+	ContextPrivateKey        = "PrivateKey"
 	ContextDeleteRequest     = "DeleteRequest"
 	ContextTakeoverRequest   = "TakeoverRequest"
 )
@@ -481,12 +483,13 @@ func (p *Manager) RestartCluster(ctx context.Context, req cluster.RestartCluster
 var takeoverClusterFlow = workflow.WorkFlowDefine{
 	FlowName: constants.FlowTakeoverCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":        {"fetchTopologyFile", "fetched", "fail", workflow.SyncFuncNode, fetchTopologyFile},
-		"fetched":      {"rebuildTopologyFromConfig", "built", "fail", workflow.SyncFuncNode, rebuildTopologyFromConfig},
-		"built":        {"takeoverResource", "resourceDone", "", workflow.SyncFuncNode, takeoverResource},
-		"resourceDone": {"testConnectivity", "success", "", workflow.SyncFuncNode, testConnectivity},
-		"success":      {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":         {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"start":            {"fetchTopologyFile", "fetched", "fail", workflow.SyncFuncNode, fetchTopologyFile},
+		"fetched":          {"rebuildTopologyFromConfig", "built", "fail", workflow.SyncFuncNode, rebuildTopologyFromConfig},
+		"built":            {"takeoverResource", "resourceDone", "", workflow.SyncFuncNode, takeoverResource},
+		"workingSpaceDone": {"rebuildTiupSpaceForCluster", "workingSpaceDone", "", workflow.SyncFuncNode, rebuildTiupSpaceForCluster},
+		"spaceDone":        {"testConnectivity", "success", "", workflow.SyncFuncNode, testConnectivity},
+		"success":          {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
+		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 

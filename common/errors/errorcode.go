@@ -210,7 +210,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_CLUSTER_NOT_FOUND:  {"cluster not found", 404},
 	TIEM_MARSHAL_ERROR:      {"marshal error", 500},
 	TIEM_UNMARSHAL_ERROR:    {"marshal error", 500},
-	TIEM_UNAUTHORIZED_USER:  {"unauthorized", 401},
+	TIEM_UNAUTHORIZED_USER:  {"unauthorized", 400},
 	TIEM_USER_NOT_FOUND:     {"user not found", 404},
 
 	TIEM_METADB_SERVER_CALL_ERROR:  {"call metadb-Server failed", 500},

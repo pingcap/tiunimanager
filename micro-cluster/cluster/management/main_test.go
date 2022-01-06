@@ -25,6 +25,7 @@ import (
 func TestMain(m *testing.M) {
 	knowledge.LoadKnowledge()
 	models.MockDB()
-
-	os.Exit(m.Run())
+	code := m.Run()
+	os.RemoveAll("testdata")
+	os.Exit(code)
 }

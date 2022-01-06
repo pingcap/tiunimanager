@@ -121,7 +121,7 @@ func TestScaleInPreCheck(t *testing.T) {
 	})
 
 	t.Run("connect fail", func(t *testing.T) {
-		meta := &ClusterMeta{Cluster: &management.Cluster{}, Instances: map[string][]*management.ClusterInstance{
+		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0"}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDTiDB): {
 				{
 					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},

@@ -161,13 +161,6 @@ func scaleInCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 			"cluster %s has no instance %s", clusterMeta.Cluster.ID, instanceID)
 		return err
 	}
-	if clusterMeta.IsComponentRequired(context.Context, instance.Type) {
-		if len(clusterMeta.Instances[instance.Type]) <= 1 {
-			framework.LogWithContext(context.Context).Errorf(
-				"instance %s is unique in cluster %s, can not delete it", instanceID, clusterMeta.Cluster.ID)
-			return errors.NewError(errors.TIEM_DELETE_INSTANCE_ERROR, "instance can not be deleted")
-		}
-	}
 	framework.LogWithContext(context.Context).Infof(
 		"scale in cluster %s, delete instance %s", clusterMeta.Cluster.ID, instanceID)
 	taskId, err := secondparty.Manager.ClusterScaleIn(
@@ -662,7 +655,7 @@ func syncIncrData(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 }
 
 func getTiUPClusterSpace(ctx context.Context, clusterID string) string {
-	tiupHome := "/root/.tiup"
+	tiupHome := "/home/tiem/.tiup"
 	tiUPConfig, err := models.GetTiUPConfigReaderWriter().QueryByComponentType(ctx, string(secondparty.ClusterComponentTypeStr))
 
 	if err != nil {

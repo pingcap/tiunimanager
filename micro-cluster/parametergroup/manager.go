@@ -87,7 +87,7 @@ func (m *Manager) UpdateParameterGroup(ctx context.Context, req message.UpdatePa
 
 	// default parameter group not be modify.
 	if group.HasDefault == int(DEFAULT) {
-		return resp, errors.NewEMErrorf(errors.TIEM_DEFAULT_PARAM_GROUP_NOT_MODIFY, errors.TIEM_DEFAULT_PARAM_GROUP_NOT_MODIFY.Explain(), err)
+		return resp, errors.NewEMErrorf(errors.TIEM_DEFAULT_PARAM_GROUP_NOT_MODIFY, errors.TIEM_DEFAULT_PARAM_GROUP_NOT_MODIFY.Explain())
 	}
 
 	pg := &parametergroup.ParameterGroup{
@@ -124,7 +124,7 @@ func (m *Manager) DeleteParameterGroup(ctx context.Context, req message.DeletePa
 
 	// default parameter group not be deleted.
 	if pg.HasDefault == int(DEFAULT) {
-		return resp, errors.NewEMErrorf(errors.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL, errors.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL.Explain(), err)
+		return resp, errors.NewEMErrorf(errors.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL, errors.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL.Explain())
 	}
 	err = models.GetParameterGroupReaderWriter().DeleteParameterGroup(ctx, pg.ID)
 	if err != nil {
@@ -207,7 +207,7 @@ func (m *Manager) CopyParameterGroup(ctx context.Context, req message.CopyParame
 	// Determine if the name of the copy parameter group is modified
 	if pg.Name == req.Name {
 		framework.LogWithContext(ctx).Errorf("Parameter group name %s already exists", req.Name)
-		return resp, errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS, errors.TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS.Explain(), err)
+		return resp, errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS, errors.TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS.Explain())
 	}
 
 	pgm := make([]*parametergroup.ParameterGroupMapping, len(params))

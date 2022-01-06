@@ -67,7 +67,7 @@ func NewManager() *Manager {
 var modifyParametersDefine = workflow.WorkFlowDefine{
 	FlowName: constants.FlowModifyParameters,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":          {"validationParameters", "validationDone", "fail", workflow.SyncFuncNode, validationParameters},
+		"start":          {"validationParameter", "validationDone", "fail", workflow.SyncFuncNode, validationParameter},
 		"validationDone": {"modifyParameter", "modifyDone", "fail", workflow.SyncFuncNode, modifyParameters},
 		"modifyDone":     {"refreshParameter", "refreshDone", "fail", workflow.SyncFuncNode, refreshParameter},
 		"refreshDone":    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(defaultEnd, persistParameter)},

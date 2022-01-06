@@ -202,7 +202,7 @@ func TestExecutor_validationParameters(t *testing.T) {
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, mockModifyParameter())
 
-		err := validationParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		err := validationParameter(mockWorkFlowAggregation().CurrentNode, modifyCtx)
 		assert.NoError(t, err)
 	})
 	t.Run("error", func(t *testing.T) {
@@ -227,7 +227,7 @@ func TestExecutor_validationParameters(t *testing.T) {
 			},
 		})
 
-		err := validationParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		err := validationParameter(mockWorkFlowAggregation().CurrentNode, modifyCtx)
 		assert.Error(t, err)
 	})
 }

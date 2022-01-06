@@ -30,6 +30,7 @@ type CmdDeployReq struct {
 	TimeoutS      int
 	TiUPPath      string
 	TiUPHome      string
+	Password      string
 	Flags         []string
 }
 
@@ -41,6 +42,7 @@ type CmdScaleOutReq struct {
 	TimeoutS      int
 	TiUPPath      string
 	TiUPHome      string
+	Password      string
 	Flags         []string
 }
 

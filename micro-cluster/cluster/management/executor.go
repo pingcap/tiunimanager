@@ -937,41 +937,42 @@ func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workfl
 // @return error
 func rebuildTiupSpaceForCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
-	metaYaml := context.GetData(ContextTopologyConfig).([]byte)
-	privateKey := context.GetData(ContextPrivateKey).([]byte)
-	publicKey := context.GetData(ContextPublicKey).([]byte)
+	snapshot, err := models.GetClusterReaderWriter().GetCurrentClusterTopologySnapshot(context, clusterMeta.Cluster.ID)
+	if err != nil {
+		return err
+	}
 
 	home := getClusterSpaceInTiUP(context, clusterMeta.Cluster.ID)
-	err := os.MkdirAll(home + "ssh/", 0755)
+	err = os.MkdirAll(home + "ssh", 0755)
 	if err != nil {
 		framework.LogWithContext(context).Errorf("mkdir for cluster %s failed, err = %s", clusterMeta.Cluster.ID, err.Error())
 		return err
 	}
 
-	metaFile, err := os.Open(home + "meta.yaml")
+	metaFile, err := os.Create(home + "meta.yaml")
 	if err != nil {
 		framework.LogWithContext(context).Errorf("open meta.yaml failed")
 		return err
 	} else {
 		defer metaFile.Close()
 	}
-	privateKeyFile, err := os.Open(home + "ssh/id_rsa")
+	privateKeyFile, err := os.Create(home + "ssh/id_rsa")
 	if err != nil {
 		framework.LogWithContext(context).Errorf("open private key file failed")
 		return err
 	} else {
 		defer metaFile.Close()
 	}
-	publicKeyFile, err := os.Open(home + "ssh/id_ras.pub")
+	publicKeyFile, err := os.Create(home + "ssh/id_rsa.pub")
 	if err != nil {
 		framework.LogWithContext(context).Errorf("open public key file failed")
 		return err
 	} else {
 		defer metaFile.Close()
 	}
-	metaFile.Write(metaYaml)
-	privateKeyFile.Write(privateKey)
-	publicKeyFile.Write(publicKey)
+	metaFile.Write([]byte(snapshot.Config))
+	privateKeyFile.Write([]byte(snapshot.PrivateKey))
+	publicKeyFile.Write([]byte(snapshot.PublicKey))
 	return nil
 }
 

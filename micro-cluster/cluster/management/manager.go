@@ -485,9 +485,9 @@ var takeoverClusterFlow = workflow.WorkFlowDefine{
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":            {"fetchTopologyFile", "fetched", "fail", workflow.SyncFuncNode, fetchTopologyFile},
 		"fetched":          {"rebuildTopologyFromConfig", "built", "fail", workflow.SyncFuncNode, rebuildTopologyFromConfig},
-		"built":            {"takeoverResource", "resourceDone", "", workflow.SyncFuncNode, takeoverResource},
-		"workingSpaceDone": {"rebuildTiupSpaceForCluster", "workingSpaceDone", "", workflow.SyncFuncNode, rebuildTiupSpaceForCluster},
-		"spaceDone":        {"testConnectivity", "success", "", workflow.SyncFuncNode, testConnectivity},
+		"built":            {"takeoverResource", "resourceDone", "fail", workflow.SyncFuncNode, takeoverResource},
+		"resourceDone":     {"rebuildTiupSpaceForCluster", "workingSpaceDone", "fail", workflow.SyncFuncNode, rebuildTiupSpaceForCluster},
+		"workingSpaceDone": {"testConnectivity", "success", "", workflow.SyncFuncNode, testConnectivity},
 		"success":          {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
 		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},

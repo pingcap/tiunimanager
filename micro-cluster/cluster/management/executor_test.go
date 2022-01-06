@@ -18,6 +18,7 @@ package management
 import (
 	"context"
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"os"
 	"testing"
 	"time"
@@ -489,6 +490,10 @@ func TestBackupBeforeDelete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "testCluster").Return(management.ClusterTopologySnapshot{}, nil).AnyTimes()
+
 	t.Run("normal", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
 		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
@@ -586,6 +591,25 @@ func TestBackupBeforeDelete(t *testing.T) {
 		err := backupBeforeDelete(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.NoError(t, err)
 	})
+
+	t.Run("skip", func(t *testing.T) {
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "skip",
+				},
+			},
+		})
+		flowContext.SetData(ContextDeleteRequest, cluster.DeleteClusterReq{AutoBackup: false})
+
+		clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "skip").Return(management.ClusterTopologySnapshot{}, errors.NewError(errors.TIEM_PANIC, "")).Times(1)
+		node := &workflowModel.WorkFlowNode{}
+		err := backupBeforeDelete(node, flowContext)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, node.Result)
+	})
+
 }
 
 func TestBackupSourceCluster(t *testing.T) {
@@ -1249,6 +1273,9 @@ func TestStopCluster(t *testing.T) {
 func TestDestroyCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "testCluster").Return(management.ClusterTopologySnapshot{}, nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
 		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
@@ -1286,6 +1313,24 @@ func TestDestroyCluster(t *testing.T) {
 		})
 		err := destroyCluster(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
+	})
+
+	t.Run("skip", func(t *testing.T) {
+		clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "skip").Return(management.ClusterTopologySnapshot{}, errors.NewError(errors.TIEM_PANIC, "")).AnyTimes()
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "skip",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		node := &workflowModel.WorkFlowNode{}
+		err := destroyCluster(node, flowContext)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, node.Result)
 	})
 }
 

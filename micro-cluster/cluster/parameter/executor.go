@@ -195,6 +195,69 @@ func persistApplyParameter(req *message.ApplyParameterGroupReq, ctx *workflow.Fl
 	return err
 }
 
+// validationParameters
+// @Description: validation parameters
+// @Parameter node
+// @Parameter ctx
+// @return error
+func validationParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.LogWithContext(ctx).Info("begin validation parameters executor method")
+	defer framework.LogWithContext(ctx).Info("end validation parameters executor method")
+
+	modifyParam := ctx.GetData(contextModifyParameters).(*ModifyParameter)
+	framework.LogWithContext(ctx).Debugf("got validation parameters size: %d", len(modifyParam.Params))
+
+	for _, param := range modifyParam.Params {
+		// validate parameter value by range field
+		if !validateRange(param) {
+			return fmt.Errorf(fmt.Sprintf("Validation parameter %s failed, update value: %s, can take a range of values: %v",
+				param.Name, param.RealValue.ClusterValue, param.Range))
+		}
+	}
+	return nil
+}
+
+// validateRange
+// @Description: validate parameter value by range field
+// @Parameter param
+// @return bool
+func validateRange(param ModifyClusterParameterInfo) bool {
+	// Determine if range is nil or an expression, continue the loop directly
+	if param.Range == nil || len(param.Range) <= 1 {
+		return true
+	}
+	switch param.Type {
+	case int(Integer):
+		start, err1 := strconv.ParseInt(param.Range[0], 0, 64)
+		end, err2 := strconv.ParseInt(param.Range[1], 0, 64)
+		clusterValue, err3 := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)
+		if err1 == nil && err2 == nil && err3 == nil && clusterValue >= start && clusterValue <= end {
+			return true
+		}
+	case int(String):
+		for _, enumValue := range param.Range {
+			if param.RealValue.ClusterValue == enumValue {
+				return true
+			}
+		}
+	case int(Boolean):
+		_, err := strconv.ParseBool(param.RealValue.ClusterValue)
+		if err == nil {
+			return true
+		}
+	case int(Float):
+		start, err1 := strconv.ParseFloat(param.Range[0], 64)
+		end, err2 := strconv.ParseFloat(param.Range[1], 64)
+		clusterValue, err3 := strconv.ParseFloat(param.RealValue.ClusterValue, 64)
+		if err1 == nil && err2 == nil && err3 == nil && clusterValue >= start && clusterValue <= end {
+			return true
+		}
+	case int(Array):
+		return true
+	}
+	return false
+}
+
 // modifyParameters
 // @Description: modify parameters
 // @Parameter node
@@ -205,14 +268,14 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 	defer framework.LogWithContext(ctx).Info("end modify parameters executor method")
 
 	modifyParam := ctx.GetData(contextModifyParameters).(*ModifyParameter)
-	framework.LogWithContext(ctx).Debugf("got modify need reboot: %v, params size: %d", modifyParam.Reboot, len(modifyParam.Params))
+	framework.LogWithContext(ctx).Debugf("got modify need reboot: %v, parameters size: %d", modifyParam.Reboot, len(modifyParam.Params))
 
 	// Get the apply parameter object
 	applyParameter := ctx.GetData(contextApplyParameterInfo)
 	framework.LogWithContext(ctx).Debugf("modify parameter get apply parameter: %v", applyParameter)
 
 	// grouping by parameter source
-	paramContainer := make(map[interface{}][]structs.ClusterParameterSampleInfo)
+	paramContainer := make(map[interface{}][]ModifyClusterParameterInfo)
 	for i, param := range modifyParam.Params {
 		// condition apply parameter and HasApply values is 0, then filter directly
 		if applyParameter != nil && param.HasApply != int(DirectApply) {
@@ -253,7 +316,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 // @Parameter ctx
 // @Parameter params
 // @return error
-func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, params []structs.ClusterParameterSampleInfo) error {
+func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, params []ModifyClusterParameterInfo) error {
 	framework.LogWithContext(ctx).Info("begin sql edit config executor method")
 	defer framework.LogWithContext(ctx).Info("end sql edit config executor method")
 
@@ -307,11 +370,11 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 // @Parameter ctx
 // @Parameter params
 // @return error
-func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, params []structs.ClusterParameterSampleInfo) error {
+func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, params []ModifyClusterParameterInfo) error {
 	framework.LogWithContext(ctx).Info("begin api edit config executor method")
 	defer framework.LogWithContext(ctx).Info("end api edit config executor method")
 
-	compContainer := make(map[interface{}][]structs.ClusterParameterSampleInfo)
+	compContainer := make(map[interface{}][]ModifyClusterParameterInfo)
 	for i, param := range params {
 		framework.LogWithContext(ctx).Debugf("loop %d api componet type: %v, param name: %v", i, param.InstanceType, param.Name)
 		putParameterContainer(compContainer, param.InstanceType, param)
@@ -363,6 +426,14 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 				}
 				server := pdServers[rand.Intn(len(pdServers))]
 				servers[server.IP] = uint(server.Port)
+			case string(constants.ComponentIDCDC):
+				cdcServers := clusterMeta.GetCDCClientAddresses()
+				if len(cdcServers) == 0 {
+					framework.LogWithContext(ctx).Errorf("get cdc address from meta failed, empty address")
+					return fmt.Errorf("get cdc address from meta failed, empty address")
+				}
+				server := cdcServers[rand.Intn(len(cdcServers))]
+				servers[server.IP] = uint(server.Port)
 			default:
 				return fmt.Errorf(fmt.Sprintf("Component [%s] type modification is not supported", comp.(string)))
 			}
@@ -390,7 +461,7 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 // @Parameter node
 // @Parameter params
 // @return error
-func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, params []structs.ClusterParameterSampleInfo) error {
+func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, params []ModifyClusterParameterInfo) error {
 	framework.LogWithContext(ctx).Info("begin tiup edit config executor method")
 	defer framework.LogWithContext(ctx).Info("end tiup edit config executor method")
 
@@ -443,7 +514,7 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 // @Parameter param
 // @return interface{}
 // @return error
-func convertRealParameterType(ctx *workflow.FlowContext, param structs.ClusterParameterSampleInfo) (interface{}, error) {
+func convertRealParameterType(ctx *workflow.FlowContext, param ModifyClusterParameterInfo) (interface{}, error) {
 	switch param.Type {
 	case int(Integer):
 		c, err := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)
@@ -484,10 +555,10 @@ func convertRealParameterType(ctx *workflow.FlowContext, param structs.ClusterPa
 // @Parameter paramContainer
 // @Parameter key
 // @Parameter param
-func putParameterContainer(paramContainer map[interface{}][]structs.ClusterParameterSampleInfo, key interface{}, param structs.ClusterParameterSampleInfo) {
+func putParameterContainer(paramContainer map[interface{}][]ModifyClusterParameterInfo, key interface{}, param ModifyClusterParameterInfo) {
 	params := paramContainer[key]
 	if params == nil {
-		paramContainer[key] = []structs.ClusterParameterSampleInfo{param}
+		paramContainer[key] = []ModifyClusterParameterInfo{param}
 	} else {
 		params = append(params, param)
 		paramContainer[key] = params

@@ -18,7 +18,6 @@ package resourcepool
 import (
 	"context"
 	"fmt"
-
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -26,6 +25,7 @@ import (
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
+	"strings"
 )
 
 func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
@@ -45,6 +45,7 @@ func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 		}
 		log.Infof("verify host %v succeed", host)
 	}
+	node.Record("verify hosts successfully")
 	return nil
 }
 
@@ -69,7 +70,7 @@ func installSoftware(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext
 		return err
 	}
 	log.Infof("install software succeed for %v", hosts)
-
+	node.Record("install software for hosts successfully")
 	return nil
 }
 
@@ -89,6 +90,7 @@ func joinEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) 
 		return err
 	}
 
+	node.Record("join em cluster for hosts successfully")
 	return nil
 }
 
@@ -107,6 +109,7 @@ func setHostsOnline(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 		return err
 	}
 	log.Infof("set host %v online succeed", hostIds)
+	node.Record("set status of hosts " + strings.Join(hostIds, ", ") + " to " + string(constants.HostOnline) + " successfully")
 
 	return nil
 }
@@ -127,6 +130,7 @@ func setHostsFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (
 		return err
 	}
 	log.Infof("set host %v failed succeed", hostIds)
+	node.Record("set status of hosts " + strings.Join(hostIds, ", ") + " to " + string(constants.HostFailed) + " successfully")
 
 	return nil
 }
@@ -156,6 +160,7 @@ func checkHostBeforeDelete(node *workflowModel.WorkFlowNode, ctx *workflow.FlowC
 
 	// Set host info to context for leave em cluster executor
 	ctx.SetData(rp_consts.ContextHostInfoArrayKey, hosts)
+	node.Record("check host " + hostIds[0] + " before delete successfully")
 
 	return nil
 }
@@ -176,6 +181,7 @@ func deleteHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 		return err
 	}
 	log.Infof("delete host %v succeed", hostIds)
+	node.Record("delete hosts " + strings.Join(hostIds, ", ") + " successfully")
 
 	return nil
 }
@@ -197,6 +203,7 @@ func leaveEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 			return err
 		}
 	}
+	node.Record("leave em cluster for hosts successfully")
 	return nil
 }
 

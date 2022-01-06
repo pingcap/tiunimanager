@@ -92,7 +92,7 @@ func TestPrepareResource(t *testing.T) {
 					Type:         "TiDB",
 					Version:      "v5.0.0",
 					Ports:        []int32{10001, 10002, 10003, 10004},
-					HostIP:       []string{"127.0.0.1"},
+					HostIP:       []string{"127.0.0.1", "127.0.0.6"},
 					DiskType:     "SSD",
 					DiskCapacity: 128,
 				},

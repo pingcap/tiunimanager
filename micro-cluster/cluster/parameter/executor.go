@@ -214,6 +214,7 @@ func validationParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCon
 				param.Name, param.RealValue.ClusterValue, param.Range))
 		}
 	}
+	node.Record("validate parameters successfully")
 	return nil
 }
 
@@ -289,6 +290,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		} else {
 			putParameterContainer(paramContainer, param.UpdateSource, param)
 		}
+		node.Record("modify parameter " + param.Name + " in " + param.InstanceType + " to " + param.RealValue.ClusterValue)
 	}
 
 	for source, params := range paramContainer {
@@ -308,6 +310,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 			}
 		}
 	}
+	node.Record("modify parameters successfully")
 	return nil
 }
 
@@ -593,6 +596,7 @@ func refreshParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		// loop get tiup exec status
 		return getTaskStatusByTaskId(ctx, node)
 	}
+	node.Record("refresh cluster " + clusterMeta.Cluster.ID + " parameters successfully")
 	return nil
 }
 

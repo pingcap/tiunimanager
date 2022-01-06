@@ -107,14 +107,13 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	for _, ins := range instances {
 		var hostIP []string
 		if len(ins.HostIP) > 1 {
-			for _, ip := range ins.HostIP{
-				hostIP = append(hostIP, ip)
-			}
+			hostIP = append(hostIP, ins.HostIP...)
 			node.Record("type: " + ins.Type, "zone: " + ins.Zone, "host IP: " + strings.Join(hostIP, ", "))
 		}else{
 			node.Record("type: " + ins.Type, "zone: " + ins.Zone, "host IP: " + ins.HostIP[0])
 		}
 	}
+	fmt.Println(node.Result)
 	return nil
 }
 

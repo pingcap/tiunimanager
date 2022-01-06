@@ -275,9 +275,10 @@ func TestManager_ScaleIn(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
-			{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
-			{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Type: "TiDB", Version: "v4.0.12"}, []*management.ClusterInstance{
+			{Entity: common.Entity{ID: "instance01"}, Version: "v4.0.12", Type: "TiDB"},
+			{Entity: common.Entity{ID: "instance02"}, Version: "v4.0.12", Type: "TiDB"},
+			{Entity: common.Entity{ID: "instance03"}, Version: "v4.0.12", Type: "TiFlash"},
 		}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		_, err := manager.ScaleIn(context.TODO(), cluster.ScaleInClusterReq{
@@ -290,7 +291,7 @@ func TestManager_ScaleIn(t *testing.T) {
 	t.Run("not found cluster", func(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "112").Return(&management.Cluster{}, []*management.ClusterInstance{
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "112").Return(&management.Cluster{Type: "TiDB", Version: "v4.0.12"}, []*management.ClusterInstance{
 			{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
 			{Entity: common.Entity{ID: "instance02"}, Type: "PD"},
 		}, fmt.Errorf("not found cluster")).AnyTimes()
@@ -305,7 +306,7 @@ func TestManager_ScaleIn(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Type: "TiDB", Version: "v4.0.12"}, []*management.ClusterInstance{
 			{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
 			{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
 		}, nil).AnyTimes()
@@ -320,11 +321,17 @@ func TestManager_ScaleIn(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Type: "TiDB", Version: "v4.0.12"}, []*management.ClusterInstance{
 			{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
 			{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
 		}, nil).AnyTimes()
 		_, err := manager.ScaleIn(context.TODO(), cluster.ScaleInClusterReq{
+			ClusterID:  "111",
+			InstanceID: "instance01",
+		})
+		assert.Error(t, err)
+
+		_, err = manager.ScaleIn(context.TODO(), cluster.ScaleInClusterReq{
 			ClusterID:  "111",
 			InstanceID: "instance02",
 		})
@@ -335,9 +342,10 @@ func TestManager_ScaleIn(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Type: "TiDB", Version: "v4.0.12"}, []*management.ClusterInstance{
 			{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
-			{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
+			{Entity: common.Entity{ID: "instance02"}, Type: "TiDB"},
+			{Entity: common.Entity{ID: "instance03"}, Type: "TiFlash"},
 		}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("fail")).AnyTimes()
 		_, err := manager.ScaleIn(context.TODO(), cluster.ScaleInClusterReq{

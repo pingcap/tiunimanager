@@ -111,6 +111,14 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "parameter is invalid!")
 	}
 
+	if meta.IsComponentRequired(ctx, instance.Type) {
+		if len(meta.Instances[instance.Type]) <= 1 {
+			errMsg := fmt.Sprintf("instance %s is unique in cluster %s, can not delete it", instance.ID, meta.Cluster.ID)
+			framework.LogWithContext(ctx).Errorf(errMsg)
+			return errors.NewError(errors.TIEM_DELETE_INSTANCE_ERROR, errMsg)
+		}
+	}
+
 	if instance.Type == string(constants.ComponentIDTiFlash) {
 		address := meta.GetClusterConnectAddresses()
 		if len(address) <= 0 {

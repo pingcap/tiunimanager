@@ -1560,7 +1560,7 @@ func Test_testRebuildTopologyFromConfig(t *testing.T) {
 		assert.NoError(t, err)
 		ctx.SetData(ContextTopologyConfig, bytes)
 
-		err = rebuildTopologyFromConfig(nil, ctx)
+		err = rebuildTopologyFromConfig(&workflowModel.WorkFlowNode{}, ctx)
 		assert.NoError(t, err)
 		assert.Equal(t, "v5.2.2", clusterMeta.Cluster.Version)
 		assert.NotEmpty(t, clusterMeta.Instances)

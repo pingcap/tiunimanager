@@ -45,6 +45,8 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 	framework.LogWithContext(ctx).Infof("get cluster %s tidb address from meta, %+v", meta.Cluster.ID, tidbAddress)
 	tidbServerHost := tidbAddress[0].IP
 	tidbServerPort := tidbAddress[0].Port
+	node.Success("get tidb address: " + tidbServerHost + ":" + strconv.Itoa(tidbServerPort))
+	node.Result = ""
 
 	tidbUserInfo := meta.GetClusterUserNamePasswd()
 	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta, %+v", meta.Cluster.ID, tidbUserInfo)
@@ -54,6 +56,8 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 		framework.LogWithContext(ctx).Errorf("convert storage type failed, %s", err.Error())
 		return err
 	}
+	node.Success("convert storage type: " + storageType)
+	node.Result = ""
 
 	clusterFacade := secondparty.ClusterFacade{
 		DbConnParameter: secondparty.DbConnParam{
@@ -81,6 +85,7 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 		return err
 	}
 	ctx.SetData(contextBackupTiupTaskIDKey, backupTaskId)
+	node.Success("backup cluster " + meta.Cluster.ID + " successfully")
 	return nil
 }
 

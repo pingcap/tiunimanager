@@ -20,13 +20,14 @@ import (
 	"context"
 	"sync"
 
+	"github.com/pingcap-inc/tiem/common/errors"
 	allocrecycle "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/allocator_recycler"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 )
 
 type Management struct {
 	localHostManage structs.AllocatorRecycler
-	// cloudManage allocrecycle.AllocatorRecycler
+	AwsManage       structs.AllocatorRecycler
 }
 
 var management *Management
@@ -44,6 +45,7 @@ func GetManagement() *Management {
 
 func (m *Management) InitManagement() {
 	m.localHostManage = allocrecycle.NewLocalHostManagement()
+	m.AwsManage = allocrecycle.NewAwsManagement()
 }
 
 func (m *Management) SetAllocatorRecycler(localHostManage structs.AllocatorRecycler) {
@@ -55,8 +57,21 @@ func (m *Management) GetAllocatorRecycler() structs.AllocatorRecycler {
 }
 
 func (m *Management) AllocResources(ctx context.Context, batchReq *structs.BatchAllocRequest) (results *structs.BatchAllocResponse, err error) {
-	return m.localHostManage.AllocResources(ctx, batchReq)
+	if batchReq.IsLocalVendor() {
+		return m.localHostManage.AllocResources(ctx, batchReq)
+	} else if batchReq.IsAwsVendor() {
+		return m.AwsManage.AllocResources(ctx, batchReq)
+	} else {
+		return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_UNKNOWN_VENDOR, "alloc with unknown vendor %s", batchReq.Vendor)
+	}
 }
 func (m *Management) RecycleResources(ctx context.Context, request *structs.RecycleRequest) (err error) {
-	return m.localHostManage.RecycleResources(ctx, request)
+	if request.IsLocalVendor() {
+		return m.localHostManage.RecycleResources(ctx, request)
+	} else if request.IsAwsVendor() {
+		return m.AwsManage.RecycleResources(ctx, request)
+	} else {
+		return errors.NewEMErrorf(errors.TIEM_RESOURCE_UNKNOWN_VENDOR, "recycle with unknown vendor %s", request.Vendor)
+	}
+
 }

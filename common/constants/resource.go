@@ -193,3 +193,10 @@ const (
 	HOST
 	DISK
 )
+
+type ProviderVendor string
+
+const (
+	Local ProviderVendor = "Local"
+	AWS   ProviderVendor = "AWS"
+)

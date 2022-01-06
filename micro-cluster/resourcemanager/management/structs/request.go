@@ -16,14 +16,26 @@
 
 package structs
 
-import "github.com/pingcap-inc/tiem/common/structs"
+import (
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/structs"
+)
 
 ///////////////////////////////
 // Alloc Request
 //////////////////////////////
 
 type BatchAllocRequest struct {
+	Vendor        string
 	BatchRequests []AllocReq
+}
+
+func (r BatchAllocRequest) IsLocalVendor() bool {
+	return r.Vendor == string(constants.Local)
+}
+
+func (r BatchAllocRequest) IsAwsVendor() bool {
+	return r.Vendor == string(constants.AWS)
 }
 
 type AllocReq struct {
@@ -115,5 +127,14 @@ type RecycleRequire struct {
 }
 
 type RecycleRequest struct {
+	Vendor      string
 	RecycleReqs []RecycleRequire
+}
+
+func (r RecycleRequest) IsLocalVendor() bool {
+	return r.Vendor == string(constants.Local)
+}
+
+func (r RecycleRequest) IsAwsVendor() bool {
+	return r.Vendor == string(constants.AWS)
 }

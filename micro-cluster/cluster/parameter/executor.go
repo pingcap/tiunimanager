@@ -195,12 +195,12 @@ func persistApplyParameter(req *message.ApplyParameterGroupReq, ctx *workflow.Fl
 	return err
 }
 
-// validationParameters
+// validationParameter
 // @Description: validation parameters
 // @Parameter node
 // @Parameter ctx
 // @return error
-func validationParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+func validationParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin validation parameters executor method")
 	defer framework.LogWithContext(ctx).Info("end validation parameters executor method")
 

@@ -654,16 +654,8 @@ func syncIncrData(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	return nil
 }
 
-func getTiUPClusterSpace(ctx context.Context, clusterID string) string {
-	tiupHome := "/home/tiem/.tiup"
-	tiUPConfig, err := models.GetTiUPConfigReaderWriter().QueryByComponentType(ctx, string(secondparty.ClusterComponentTypeStr))
-
-	if err != nil {
-		framework.LogWithContext(ctx).Warnf("get tiup_home failed: %s", err.Error())
-	} else {
-		tiupHome = tiUPConfig.TiupHome
-	}
-
+func getClusterSpaceInTiUP(ctx context.Context, clusterID string) string {
+	tiupHome := secondparty.GetTiUPHomeForComponent(ctx, secondparty.ClusterComponentTypeStr)
 	return fmt.Sprintf("%s/storage/cluster/clusters/%s/", tiupHome, clusterID)
 }
 
@@ -709,7 +701,7 @@ func syncTopology(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 }
 
 func readTiUPFile(ctx context.Context, clusterID string, file string) (string, error) {
-	fileName := fmt.Sprintf("%s%s", getTiUPClusterSpace(ctx, clusterID), file)
+	fileName := fmt.Sprintf("%s%s", getClusterSpaceInTiUP(ctx, clusterID), file)
 	fileData, err := os.Open(fileName)
 	if err != nil {
 		return "", err

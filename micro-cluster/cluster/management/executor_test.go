@@ -1679,7 +1679,7 @@ func Test_syncTopology(t *testing.T) {
 		os.RemoveAll(testFilePath)
 		os.Remove(testFilePath)
 	}()
-	path := getTiUPClusterSpace(context.TODO(), "111")
+	path := getClusterSpaceInTiUP(context.TODO(), "111")
 	os.MkdirAll(path, 0755)
 
 	t.Run("normal", func(t *testing.T) {
@@ -1727,7 +1727,7 @@ func Test_syncConnectionKey(t *testing.T) {
 		os.RemoveAll(testFilePath)
 		os.Remove(testFilePath)
 	}()
-	path := getTiUPClusterSpace(context.TODO(), "111")
+	path := getClusterSpaceInTiUP(context.TODO(), "111")
 	os.MkdirAll(path, 0755)
 
 	t.Run("normal", func(t *testing.T) {

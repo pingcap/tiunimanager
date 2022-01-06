@@ -90,6 +90,7 @@ const (
 	TIEM_UNAUTHORIZED_USER    EM_ERROR_CODE = 70600
 	TIEM_USER_NOT_FOUND       EM_ERROR_CODE = 70601
 	TIEM_ACCESS_TOKEN_EXPIRED EM_ERROR_CODE = 70602
+	TIEM_LOGIN_FAILED         EM_ERROR_CODE = 70603
 
 	// dashboard && monitor
 	TIEM_DASHBOARD_NOT_FOUND EM_ERROR_CODE = 80100
@@ -215,6 +216,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_UNAUTHORIZED_USER:    {"unauthorized", 401},
 	TIEM_USER_NOT_FOUND:       {"user not found", 404},
 	TIEM_ACCESS_TOKEN_EXPIRED: {"access token has been expired", 401},
+	TIEM_LOGIN_FAILED:         {"incorrect username or password", 400},
 
 	TIEM_METADB_SERVER_CALL_ERROR:  {"call metadb-Server failed", 500},
 	TIEM_CLUSTER_SERVER_CALL_ERROR: {"call cluster-Server failed", 500},

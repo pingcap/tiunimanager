@@ -18,10 +18,11 @@ package hostinitiator
 import (
 	"bytes"
 	"context"
-	"github.com/pingcap-inc/tiem/util/ssh"
 	"strconv"
 	"strings"
 	"text/template"
+
+	sshclient "github.com/pingcap-inc/tiem/util/ssh"
 
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -130,7 +131,7 @@ func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.H
 		emClusterName := framework.Current.GetClientArgs().EMClusterName
 		framework.LogWithContext(ctx).Infof("join em cluster %s with work flow id %s", emClusterName, workFlowNodeID)
 		operationId, err := p.secondPartyServ.ClusterScaleOut(ctx, secondparty.TiEMComponentTypeStr, emClusterName, templateStr, rp_consts.DefaultTiupTimeOut,
-			[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, workFlowNodeID)
+			[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, workFlowNodeID, "")
 		if err != nil {
 			return errors.NewEMErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "join em cluster %s [%v] failed, %v", emClusterName, templateStr, err)
 		}

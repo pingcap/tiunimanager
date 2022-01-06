@@ -7044,57 +7044,12 @@ var doc = `{
         "structs.ClusterParameterSampleInfo": {
             "type": "object",
             "properties": {
-                "category": {
-                    "type": "string",
-                    "example": "basic"
-                },
-                "hasApply": {
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1
-                    ],
-                    "example": 1
-                },
-                "instanceType": {
-                    "type": "string",
-                    "example": "TiDB"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "log_level"
-                },
                 "paramId": {
                     "type": "string",
                     "example": "1"
                 },
                 "realValue": {
                     "$ref": "#/definitions/structs.ParameterRealValue"
-                },
-                "systemVariable": {
-                    "type": "string",
-                    "example": "log.binlog_cache"
-                },
-                "type": {
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1,
-                        2,
-                        3,
-                        4
-                    ],
-                    "example": 0
-                },
-                "updateSource": {
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1,
-                        2,
-                        3
-                    ],
-                    "example": 0
                 }
             }
         },

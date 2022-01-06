@@ -18,6 +18,10 @@ package management
 import (
 	"context"
 	"fmt"
+	"os"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	structs2 "github.com/pingcap-inc/tiem/common/structs"
@@ -45,9 +49,6 @@ import (
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
-	"os"
-	"testing"
-	"time"
 )
 
 func TestPrepareResource(t *testing.T) {
@@ -211,7 +212,7 @@ func TestScaleOutCluster(t *testing.T) {
 
 	mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
 	mockTiupManager.EXPECT().ClusterScaleOut(gomock.Any(), gomock.Any(), gomock.Any(),
-		gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
+		gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
 	secondparty.Manager = mockTiupManager
 
 	flowContext := workflow.NewFlowContext(context.TODO())
@@ -227,7 +228,7 @@ func TestScaleOutCluster(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
 		mockTiupManager.EXPECT().ClusterScaleOut(gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
 		secondparty.Manager = mockTiupManager
 
 		flowContext.SetData(ContextTopology, "test topology")
@@ -244,7 +245,7 @@ func TestScaleOutCluster(t *testing.T) {
 	t.Run("scale out fail", func(t *testing.T) {
 		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
 		mockTiupManager.EXPECT().ClusterScaleOut(gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", fmt.Errorf("fail")).AnyTimes()
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", fmt.Errorf("fail")).AnyTimes()
 		secondparty.Manager = mockTiupManager
 
 		flowContext.SetData(ContextTopology, "test topology")
@@ -933,7 +934,7 @@ func TestDeployCluster(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
 		mockTiupManager.EXPECT().ClusterDeploy(gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
 		secondparty.Manager = mockTiupManager
 
 		flowContext := workflow.NewFlowContext(context.TODO())
@@ -968,7 +969,7 @@ func TestDeployCluster(t *testing.T) {
 		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
 		mockTiupManager.EXPECT().ClusterDeploy(gomock.Any(), gomock.Any(), gomock.Any(),
 			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any()).Return("task01", fmt.Errorf("fail")).AnyTimes()
+			gomock.Any(), gomock.Any()).Return("task01", fmt.Errorf("fail")).AnyTimes()
 		secondparty.Manager = mockTiupManager
 
 		flowContext := workflow.NewFlowContext(context.TODO())

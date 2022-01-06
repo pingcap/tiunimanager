@@ -26,8 +26,9 @@ package parameter
 import (
 	"context"
 	"encoding/json"
-	"github.com/pingcap-inc/tiem/proto/clusterservices"
 	"sync"
+
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
 
 	"github.com/pingcap-inc/tiem/common/errors"
 
@@ -66,10 +67,11 @@ func NewManager() *Manager {
 var modifyParametersDefine = workflow.WorkFlowDefine{
 	FlowName: constants.FlowModifyParameters,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":       {"modifyParameter", "modifyDone", "fail", workflow.SyncFuncNode, modifyParameters},
-		"modifyDone":  {"refreshParameter", "refreshDone", "fail", workflow.SyncFuncNode, refreshParameter},
-		"refreshDone": {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(defaultEnd, persistParameter)},
-		"fail":        {"fail", "", "", workflow.SyncFuncNode, defaultEnd},
+		"start":          {"validationParameters", "validationDone", "fail", workflow.SyncFuncNode, validationParameters},
+		"validationDone": {"modifyParameter", "modifyDone", "fail", workflow.SyncFuncNode, modifyParameters},
+		"modifyDone":     {"refreshParameter", "refreshDone", "fail", workflow.SyncFuncNode, refreshParameter},
+		"refreshDone":    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(defaultEnd, persistParameter)},
+		"fail":           {"fail", "", "", workflow.SyncFuncNode, defaultEnd},
 	},
 }
 
@@ -137,6 +139,14 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 	framework.LogWithContext(ctx).Infof("begin update cluster parameters, request: %+v", req)
 	defer framework.LogWithContext(ctx).Infof("end update cluster parameters")
 
+	// query cluster parameter by cluster id
+	pgId, paramDetails, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, 0, 0)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("query cluster %s parameter error: %s", req.ClusterID, err.Error())
+		return
+	}
+	framework.LogWithContext(ctx).Infof("query cluster %s parameter group id: %s, total size: %d", req.ClusterID, pgId, total)
+
 	// Get cluster info and topology from db based by clusterID
 	clusterMeta, err := handler.Get(ctx, req.ClusterID)
 	if err != nil {
@@ -144,8 +154,38 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 		return
 	}
 
+	params := make([]ModifyClusterParameterInfo, 0)
+
+	// Iterate to get the complete information of the modified parameters
+	for _, detail := range paramDetails {
+		for _, param := range req.Params {
+			if detail.ID == param.ParamId {
+				ranges := make([]string, 0)
+				if len(detail.Range) > 0 {
+					err = json.Unmarshal([]byte(detail.Range), &ranges)
+					if err != nil {
+						framework.LogWithContext(ctx).Errorf("failed to convert parameter range. range: %v, err: %v", detail.Range, err)
+						return
+					}
+				}
+				params = append(params, ModifyClusterParameterInfo{
+					ParamId:        param.ParamId,
+					Category:       detail.Category,
+					Name:           detail.Name,
+					InstanceType:   detail.InstanceType,
+					UpdateSource:   detail.UpdateSource,
+					SystemVariable: detail.SystemVariable,
+					Type:           detail.Type,
+					Range:          ranges,
+					HasApply:       detail.HasApply,
+					RealValue:      param.RealValue,
+				})
+			}
+		}
+	}
+
 	data := make(map[string]interface{})
-	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: req.Params}
+	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: params}
 	data[contextUpdateParameterInfo] = &req
 	data[contextMaintenanceStatusChange] = maintenanceStatusChange
 	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
@@ -182,9 +222,17 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 	}
 
 	// Constructing clusterParameter.ModifyParameter objects
-	params := make([]structs.ClusterParameterSampleInfo, len(pgm))
+	params := make([]ModifyClusterParameterInfo, len(pgm))
 	for i, param := range pgm {
-		params[i] = structs.ClusterParameterSampleInfo{
+		ranges := make([]string, 0)
+		if len(param.Range) > 0 {
+			err = json.Unmarshal([]byte(param.Range), &ranges)
+			if err != nil {
+				framework.LogWithContext(ctx).Errorf("failed to convert parameter range. range: %v, err: %v", param.Range, err)
+				return
+			}
+		}
+		params[i] = ModifyClusterParameterInfo{
 			ParamId:        param.ID,
 			Category:       param.Category,
 			Name:           param.Name,
@@ -193,6 +241,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 			SystemVariable: param.SystemVariable,
 			Type:           param.Type,
 			HasApply:       param.HasApply,
+			Range:          ranges,
 			RealValue:      structs.ParameterRealValue{ClusterValue: param.DefaultValue},
 		}
 	}

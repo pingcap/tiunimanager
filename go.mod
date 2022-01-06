@@ -24,6 +24,7 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
+	github.com/google/goexpect v0.0.0-20210430020637-ab937bf7fd6f // indirect
 	github.com/google/uuid v1.3.0
 	github.com/labstack/gommon v0.3.0
 	github.com/lithammer/shortuuid v3.0.0+incompatible

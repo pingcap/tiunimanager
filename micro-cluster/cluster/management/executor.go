@@ -19,6 +19,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -38,11 +44,6 @@ import (
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"os"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // prepareResource
@@ -137,7 +138,7 @@ func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		"scale out cluster %s, version %s, yamlConfig %s", cluster.ID, cluster.Version, yamlConfig)
 	taskId, err := secondparty.Manager.ClusterScaleOut(
 		context.Context, secondparty.ClusterComponentTypeStr, cluster.ID,
-		yamlConfig, handler.DefaultTiupTimeOut, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, node.ID)
+		yamlConfig, handler.DefaultTiupTimeOut, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, node.ID, "")
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s scale out error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -267,7 +268,7 @@ func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 			excludeBackupIDs = append(excludeBackupIDs, backupIdBeforeDeleting.(string))
 		}
 
-		_, err = backuprestore.GetBRService().DeleteBackupRecords(context.Context, cluster.DeleteBackupDataReq {
+		_, err = backuprestore.GetBRService().DeleteBackupRecords(context.Context, cluster.DeleteBackupDataReq{
 			ClusterID:        meta.Cluster.ID,
 			BackupMode:       string(constants.BackupModeManual),
 			ExcludeBackupIDs: excludeBackupIDs,
@@ -513,7 +514,7 @@ func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 		"deploy cluster %s, version %s, yamlConfig %s", cluster.ID, cluster.Version, yamlConfig)
 	taskId, err := secondparty.Manager.ClusterDeploy(
 		context.Context, secondparty.ClusterComponentTypeStr, cluster.ID, cluster.Version,
-		yamlConfig, handler.DefaultTiupTimeOut, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, node.ID)
+		yamlConfig, handler.DefaultTiupTimeOut, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, node.ID, "")
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s deploy error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -598,14 +599,8 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 			continue
 		}
 		targetParam := structs.ClusterParameterSampleInfo{
-			ParamId:        param.ParamId,
-			Name:           param.Name,
-			InstanceType:   param.InstanceType,
-			UpdateSource:   param.UpdateSource,
-			SystemVariable: param.SystemVariable,
-			Type:           param.Type,
-			HasApply:       param.HasApply,
-			RealValue:      param.RealValue,
+			ParamId:   param.ParamId,
+			RealValue: param.RealValue,
 		}
 		targetParams = append(targetParams, targetParam)
 		if param.HasReboot == int(parameter.Reboot) {

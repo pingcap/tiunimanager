@@ -313,12 +313,6 @@ func TestScaleInCluster(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("can't delete", func(t *testing.T) {
-		flowContext.SetData(ContextInstanceID, "instance04")
-		err := scaleInCluster(&workflowModel.WorkFlowNode{}, flowContext)
-		assert.Error(t, err)
-	})
-
 	t.Run("not found", func(t *testing.T) {
 		flowContext.SetData(ContextInstanceID, "instance05")
 		err := scaleInCluster(&workflowModel.WorkFlowNode{}, flowContext)

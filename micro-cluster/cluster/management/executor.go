@@ -114,7 +114,6 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		}else{
 			node.Record("type: " + ins.Type, "zone: " + ins.Zone, "host IP: " + ins.HostIP[0])
 		}
-		node.Result = ""
 	}
 	return nil
 }
@@ -257,7 +256,6 @@ func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		return err
 	}
 	node.Record("delete backup strategy for cluster " + meta.Cluster.ID + " successfully")
-	node.Result = ""
 
 	// delete auto backup records
 	_, err = backuprestore.GetBRService().DeleteBackupRecords(context.Context, cluster.DeleteBackupDataReq{
@@ -270,7 +268,6 @@ func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		return err
 	}
 	node.Record("delete auto backup data for cluster " + meta.Cluster.ID + " successfully")
-	node.Result = ""
 
 	// delete manual backup records
 	if deleteReq.KeepHistoryBackupRecords {
@@ -592,7 +589,6 @@ func syncBackupStrategy(node *workflowModel.WorkFlowNode, context *workflow.Flow
 		return err
 	}
 	node.Record("get cluster " + clusterMeta.Cluster.ID + " backup strategy successfully")
-	node.Result = ""
 
 	if len(sourceStrategyRes.Strategy.BackupDate) == 0 {
 		framework.LogWithContext(context).Infof(
@@ -967,7 +963,6 @@ func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 	}
 
 	node.Record("cluster " + clusterMeta.Cluster.ID + " alloc resource successfully")
-	node.Result = ""
 
 	resourceResult := allocResponse.BatchResults[0]
 	clusterMeta.Cluster.Region = resourceResult.Results[0].Location.Region
@@ -977,7 +972,6 @@ func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 		instance.Zone = resourceResult.Results[i].Location.Zone
 		instance.Rack = resourceResult.Results[i].Location.Rack
 		node.Record("type: " + instance.Type, "zone: " + instance.Zone, "host IP: " + instance.HostIP[0])
-		node.Result = ""
 	}
 
 	return nil

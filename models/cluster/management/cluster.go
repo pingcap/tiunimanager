@@ -42,7 +42,7 @@ type Cluster struct {
 	CpuArchitecture   constants.ArchType                 `gorm:"not null;type:varchar(64);comment:'user name of the cluster''"`
 	MaintenanceStatus constants.ClusterMaintenanceStatus `gorm:"not null;type:varchar(64);comment:'user name of the cluster''"`
 	MaintainWindow    string                             `gorm:"not null;type:varchar(64);comment:'maintain window''"`
-	// never use
+	// only for database
 	DeleteTime        int64                              `gorm:"uniqueIndex:uniqueName"`
 }
 

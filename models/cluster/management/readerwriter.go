@@ -108,5 +108,6 @@ type ReaderWriter interface {
 	DeleteRelation(ctx context.Context, relationID uint) error
 
 	CreateClusterTopologySnapshot(ctx context.Context, snapshot ClusterTopologySnapshot) error
-	GetLatestClusterTopologySnapshot(ctx context.Context, clusterID string) (ClusterTopologySnapshot, error)
+	GetCurrentClusterTopologySnapshot(ctx context.Context, clusterID string) (ClusterTopologySnapshot, error)
+	UpdateTopologySnapshotConfig(ctx context.Context, clusterID string, config string) error
 }

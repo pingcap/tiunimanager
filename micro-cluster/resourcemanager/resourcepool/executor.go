@@ -109,7 +109,7 @@ func setHostsOnline(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 		return err
 	}
 	log.Infof("set host %v online succeed", hostIds)
-	node.Record("set status of hosts " + strings.Join(hostIds, ", ") + " to " + string(constants.HostOnline) + " successfully")
+	node.Record(fmt.Sprintf("set status of hosts %v to %v successfully", strings.Join(hostIds, ", "), constants.HostOnline))
 
 	return nil
 }
@@ -130,7 +130,7 @@ func setHostsFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (
 		return err
 	}
 	log.Infof("set host %v failed succeed", hostIds)
-	node.Record("set status of hosts " + strings.Join(hostIds, ", ") + " to " + string(constants.HostFailed) + " successfully")
+	node.Record(fmt.Sprintf("set status of hosts %v to %v successfully", strings.Join(hostIds, ", "), constants.HostFailed))
 
 	return nil
 }
@@ -160,7 +160,7 @@ func checkHostBeforeDelete(node *workflowModel.WorkFlowNode, ctx *workflow.FlowC
 
 	// Set host info to context for leave em cluster executor
 	ctx.SetData(rp_consts.ContextHostInfoArrayKey, hosts)
-	node.Record("check host " + hostIds[0] + " before delete successfully")
+	node.Record(fmt.Sprintf("check host %s before delete successfully", hostIds[0]))
 
 	return nil
 }
@@ -181,7 +181,7 @@ func deleteHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 		return err
 	}
 	log.Infof("delete host %v succeed", hostIds)
-	node.Record("delete hosts " + strings.Join(hostIds, ", ") + " successfully")
+	node.Record(fmt.Sprintf("delete hosts %v successfully", strings.Join(hostIds, ", ")))
 
 	return nil
 }

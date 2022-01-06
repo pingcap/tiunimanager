@@ -26,19 +26,14 @@ package parametergroup
 import (
 	"context"
 	"encoding/json"
-	"github.com/pingcap-inc/tiem/proto/clusterservices"
 
 	"github.com/pingcap-inc/tiem/common/errors"
-
-	"github.com/pingcap-inc/tiem/models/parametergroup"
-
-	"github.com/pingcap-inc/tiem/models"
-
 	"github.com/pingcap-inc/tiem/common/structs"
-
-	"github.com/pingcap-inc/tiem/message"
-
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/parametergroup"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
 )
 
 type Manager struct{}
@@ -207,6 +202,12 @@ func (m *Manager) CopyParameterGroup(ctx context.Context, req message.CopyParame
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
 		return resp, errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
+	}
+
+	// Determine if the name of the copy parameter group is modified
+	if pg.Name == req.Name {
+		framework.LogWithContext(ctx).Errorf("Parameter group name %s already exists", req.Name)
+		return resp, errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS, errors.TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS.Explain(), err)
 	}
 
 	pgm := make([]*parametergroup.ParameterGroupMapping, len(params))

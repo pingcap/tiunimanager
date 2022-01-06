@@ -588,14 +588,8 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 			continue
 		}
 		targetParam := structs.ClusterParameterSampleInfo{
-			ParamId:        param.ParamId,
-			Name:           param.Name,
-			InstanceType:   param.InstanceType,
-			UpdateSource:   param.UpdateSource,
-			SystemVariable: param.SystemVariable,
-			Type:           param.Type,
-			HasApply:       param.HasApply,
-			RealValue:      param.RealValue,
+			ParamId:   param.ParamId,
+			RealValue: param.RealValue,
 		}
 		targetParams = append(targetParams, targetParam)
 		if param.HasReboot == int(parameter.Reboot) {

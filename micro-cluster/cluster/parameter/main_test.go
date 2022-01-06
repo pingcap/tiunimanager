@@ -68,6 +68,7 @@ func mockClusterMeta() *handler.ClusterMeta {
 			"TiDB": mockClusterInstances(),
 			"TiKV": mockClusterInstances(),
 			"PD":   mockClusterInstances(),
+			"CDC":  mockClusterInstances(),
 		},
 		NodeExporterPort:     9091,
 		BlackboxExporterPort: 9092,
@@ -124,7 +125,7 @@ func mockClusterInstances() []*management.ClusterInstance {
 func mockModifyParameter() *ModifyParameter {
 	return &ModifyParameter{
 		Reboot: false,
-		Params: []structs.ClusterParameterSampleInfo{
+		Params: []ModifyClusterParameterInfo{
 			{
 				ParamId:        "1",
 				Name:           "test_param_1",
@@ -133,6 +134,7 @@ func mockModifyParameter() *ModifyParameter {
 				HasApply:       1,
 				SystemVariable: "",
 				Type:           0,
+				Range:          []string{"0", "1024"},
 				RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
 			},
 			{
@@ -184,6 +186,16 @@ func mockModifyParameter() *ModifyParameter {
 				SystemVariable: "",
 				Type:           0,
 				RealValue:      structs.ParameterRealValue{ClusterValue: "2"},
+			},
+			{
+				ParamId:        "7",
+				Name:           "test_param_7",
+				InstanceType:   "CDC",
+				UpdateSource:   3,
+				HasApply:       1,
+				SystemVariable: "",
+				Type:           1,
+				RealValue:      structs.ParameterRealValue{ClusterValue: "info"},
 			},
 		},
 	}

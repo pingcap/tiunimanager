@@ -34,5 +34,5 @@ func NewRBACReadWrite(db *gorm.DB) *RBACReadWrite {
 }
 
 func (m *RBACReadWrite) GetRBACAdapter(ctx context.Context) (*gormadapter.Adapter, error) {
-	return gormadapter.NewAdapterByDBWithCustomTable(m.DB(ctx), &RBAC{})
+	return gormadapter.NewAdapterByDBWithCustomTable(m.DB(ctx), "")
 }

@@ -145,7 +145,7 @@ func (p *database) initTables() (err error) {
 		new(parametergroup.ParameterGroup),
 		new(parametergroup.ParameterGroupMapping),
 		new(parameter.ClusterParameterMapping),
-		new(rbac.RBAC),
+		//new(rbac.RBAC),
 		new(account.Account),
 		new(tenant.Tenant),
 		new(identification.Token),

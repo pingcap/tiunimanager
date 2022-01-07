@@ -31,7 +31,7 @@ func TestOfNullable(t *testing.T) {
 		want *Optional
 	}{
 		{"normal", args{err: NewError(TIEM_UNRECOGNIZED_ERROR, "")}, &Optional{
-			err: NewError(TIEM_UNRECOGNIZED_ERROR, ""),
+			last:   NewError(TIEM_UNRECOGNIZED_ERROR, ""),
 			broken: false,
 		}},
 	}
@@ -61,26 +61,26 @@ func TestOptional_BreakIf(t *testing.T) {
 		{"with error", fields{broken: false}, args{executor: func() error {
 			return NewError(TIEM_UNRECOGNIZED_ERROR, "")
 		}}, &Optional{
-			err: NewError(TIEM_UNRECOGNIZED_ERROR, ""),
+			last:   NewError(TIEM_UNRECOGNIZED_ERROR, ""),
 			broken: true,
 		}},
 		{"without error", fields{broken: false}, args{executor: func() error {
 			return nil
 		}}, &Optional{
-			err: nil,
+			last:   nil,
 			broken: false,
 		}},
 		{"broken", fields{broken: true}, args{executor: func() error {
 			return nil
 		}}, &Optional{
-			err: nil,
+			last:   nil,
 			broken: true,
 		}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := &Optional{
-				err:    tt.fields.err,
+				last:   tt.fields.err,
 				broken: tt.fields.broken,
 			}
 			if got := p.BreakIf(tt.args.executor); !reflect.DeepEqual(got, tt.want) {
@@ -107,26 +107,26 @@ func TestOptional_ContinueIf(t *testing.T) {
 		{"with error", fields{}, args{executor: func() error {
 			return NewError(TIEM_UNRECOGNIZED_ERROR, "")
 		}}, &Optional{
-			err: NewError(TIEM_UNRECOGNIZED_ERROR, ""),
+			last:   NewError(TIEM_UNRECOGNIZED_ERROR, ""),
 			broken: false,
 		}},
 		{"without error", fields{}, args{executor: func() error {
 			return nil
 		}}, &Optional{
-			err: nil,
+			last:   nil,
 			broken: false,
 		}},
 		{"broken", fields{broken: true}, args{executor: func() error {
 			return nil
 		}}, &Optional{
-			err: nil,
+			last:   nil,
 			broken: true,
 		}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := &Optional{
-				err:    tt.fields.err,
+				last:   tt.fields.err,
 				broken: tt.fields.broken,
 			}
 			if got := p.ContinueIf(tt.args.executor); !reflect.DeepEqual(got, tt.want) {
@@ -140,7 +140,7 @@ func TestOptional_Else(t *testing.T) {
 	t.Run("with error", func(t *testing.T) {
 		a := 0
 		optional := &Optional{
-			err: NewError(TIEM_UNRECOGNIZED_ERROR, ""),
+			last: NewError(TIEM_UNRECOGNIZED_ERROR, ""),
 		}
 		optional.Else(func() {
 			a = 5
@@ -150,7 +150,7 @@ func TestOptional_Else(t *testing.T) {
 	t.Run("without error", func(t *testing.T) {
 		a := 0
 		optional := &Optional{
-			err: nil,
+			last: nil,
 		}
 		optional.Else(func() {
 			a = 5
@@ -163,7 +163,7 @@ func TestOptional_Handle(t *testing.T) {
 	t.Run("with error", func(t *testing.T) {
 		a := ""
 		optional := &Optional{
-			err: NewError(TIEM_UNRECOGNIZED_ERROR, "aaa"),
+			last: NewError(TIEM_UNRECOGNIZED_ERROR, "aaa"),
 		}
 		optional.If(func(err error) {
 			a = err.Error()
@@ -173,7 +173,7 @@ func TestOptional_Handle(t *testing.T) {
 	t.Run("without error", func(t *testing.T) {
 		a := ""
 		optional := &Optional{
-			err: nil,
+			last: nil,
 		}
 		optional.If(func(err error) {
 			a = err.Error()
@@ -187,9 +187,9 @@ func TestOptional_If(t *testing.T) {
 		a := ""
 		b := 0
 		optional := &Optional{
-			err: NewError(TIEM_UNRECOGNIZED_ERROR, "aaa"),
+			last: NewError(TIEM_UNRECOGNIZED_ERROR, "aaa"),
 		}
-		optional.Handle(func(err error) {
+		optional.IfElse(func(err error) {
 			a = err.Error()
 		}, func() {
 			b = 5
@@ -201,9 +201,9 @@ func TestOptional_If(t *testing.T) {
 		a := ""
 		b := 0
 		optional := &Optional{
-			err: nil,
+			last: nil,
 		}
-		optional.Handle(func(err error) {
+		optional.IfElse(func(err error) {
 			a = err.Error()
 		}, func() {
 			b = 5
@@ -229,7 +229,7 @@ func TestOptional_Present(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := &Optional{
-				err:    tt.fields.err,
+				last:   tt.fields.err,
 				broken: tt.fields.broken,
 			}
 			if err := p.Present(); (err != nil) != tt.wantErr {

@@ -16,15 +16,29 @@
 package errors
 
 type Optional struct {
-	err       error
-	broken    bool
+	last   error
+	allErrors []error
+	broken bool
 }
 
 func OfNullable(err error) *Optional {
-	return &Optional{
-		err:    err,
+	optional := &Optional{
 		broken: false,
 	}
+	optional.addError(err)
+	return optional
+}
+
+func (p *Optional) addError(err error) {
+	if err == nil {
+		return
+	}
+	p.last = err
+	if len(p.allErrors) == 0 {
+		p.allErrors = make([]error, 0)
+	}
+
+	p.allErrors = append(p.allErrors, err)
 }
 
 func (p *Optional) BreakIf(executor func() error) *Optional {
@@ -32,8 +46,8 @@ func (p *Optional) BreakIf(executor func() error) *Optional {
 		return p
 	}
 	if err := executor(); err != nil {
-		p.err = err
 		p.broken = true
+		p.addError(err)
 	}
 
 	return p
@@ -44,29 +58,29 @@ func (p *Optional) ContinueIf(executor func() error) *Optional {
 		return p
 	}
 	if err := executor(); err != nil {
-		p.err = err
+		p.addError(err)
 	}
 	return p
 }
 
 func (p *Optional) If(handle func(err error)) *Optional {
-	if p.err != nil && handle != nil {
-		handle(p.err)
+	if p.last != nil && handle != nil {
+		handle(p.last)
 	}
 	return p
 }
 
 func (p *Optional) Else(handle func()) *Optional {
-	if p.err == nil && handle != nil {
+	if p.last == nil && handle != nil {
 		handle()
 	}
 	return p
 }
 
-func (p *Optional) Handle(errHandler func(err error), nilHandler func()) *Optional {
+func (p *Optional) IfElse(errHandler func(err error), nilHandler func()) *Optional {
 	return p.If(errHandler).Else(nilHandler)
 }
 
 func (p *Optional) Present() error {
-	return p.err
+	return p.last
 }

@@ -956,6 +956,48 @@ definitions:
     type: object
   message.CreateSpecsResp:
     type: object
+  message.CreateTenantReqV1:
+    properties:
+      creator:
+        type: string
+      id:
+        type: string
+      maxCluster:
+        type: integer
+      maxCpu:
+        type: integer
+      maxMemory:
+        type: integer
+      maxStorage:
+        type: integer
+      name:
+        type: string
+      onBoardingStatus:
+        type: string
+      status:
+        type: string
+    type: object
+  message.CreateTenantRespV1:
+    type: object
+  message.CreateUserReq:
+    properties:
+      creator:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      tenantId:
+        type: string
+    type: object
+  message.CreateUserResp:
+    type: object
   message.CreateZonesReq:
     properties:
       zones:
@@ -1076,6 +1118,22 @@ definitions:
     type: object
   message.DeleteSpecsResp:
     type: object
+  message.DeleteTenantReq:
+    properties:
+      id:
+        type: string
+    type: object
+  message.DeleteTenantResp:
+    type: object
+  message.DeleteUserReq:
+    properties:
+      id:
+        type: string
+      tenantId:
+        type: string
+    type: object
+  message.DeleteUserResp:
+    type: object
   message.DeleteZoneReq:
     properties:
       zone:
@@ -1140,6 +1198,28 @@ definitions:
     properties:
       stocks:
         $ref: '#/definitions/structs.Stocks'
+    type: object
+  message.GetTenantReq:
+    properties:
+      id:
+        type: string
+    type: object
+  message.GetTenantResp:
+    properties:
+      info:
+        $ref: '#/definitions/structs.TenantInfo'
+    type: object
+  message.GetUserReq:
+    properties:
+      id:
+        type: string
+      tenantId:
+        type: string
+    type: object
+  message.GetUserResp:
+    properties:
+      userInfo:
+        $ref: '#/definitions/structs.UserInfoExt'
     type: object
   message.ImportHostsResp:
     properties:
@@ -1254,6 +1334,27 @@ definitions:
           $ref: '#/definitions/structs.SpecInfo'
         type: array
     type: object
+  message.QueryTenantReq:
+    properties:
+      id:
+        type: string
+    type: object
+  message.QueryTenantResp:
+    properties:
+      infos:
+        additionalProperties:
+          $ref: '#/definitions/structs.TenantInfo'
+        type: object
+    type: object
+  message.QueryUserReq:
+    type: object
+  message.QueryUserResp:
+    properties:
+      userInfos:
+        additionalProperties:
+          $ref: '#/definitions/structs.UserInfoExt'
+        type: object
+    type: object
   message.QueryWorkFlowDetailResp:
     properties:
       info:
@@ -1327,6 +1428,45 @@ definitions:
       paramGroupId:
         example: "1"
         type: string
+    type: object
+  message.UpdateTenantOnBoardingStatusReq:
+    properties:
+      id:
+        type: string
+      onBoardingStatus:
+        type: string
+    type: object
+  message.UpdateTenantOnBoardingStatusResp:
+    type: object
+  message.UpdateTenantProfileReq:
+    properties:
+      id:
+        type: string
+      maxCluster:
+        type: integer
+      maxCpu:
+        type: integer
+      maxMemory:
+        type: integer
+      maxStorage:
+        type: integer
+      name:
+        type: string
+    type: object
+  message.UpdateTenantProfileResp:
+    type: object
+  message.UpdateUserProfileReq:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      phone:
+        type: string
+      tenantId:
+        type: string
+    type: object
+  message.UpdateUserProfileResp:
     type: object
   message.UserProfile:
     properties:
@@ -2073,6 +2213,31 @@ definitions:
       freeMemory:
         type: integer
     type: object
+  structs.TenantInfo:
+    properties:
+      createAt:
+        type: string
+      creator:
+        type: string
+      id:
+        type: string
+      maxCluster:
+        type: integer
+      maxCpu:
+        type: integer
+      maxMemory:
+        type: integer
+      maxStorage:
+        type: integer
+      name:
+        type: string
+      onBoardingStatus:
+        type: string
+      status:
+        type: string
+      updateAt:
+        type: string
+    type: object
   structs.Usage:
     properties:
       total:
@@ -2081,6 +2246,27 @@ definitions:
         type: number
       used:
         type: number
+    type: object
+  structs.UserInfoExt:
+    properties:
+      createAt:
+        type: string
+      creator:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      status:
+        type: string
+      tenantId:
+        type: string
+      updateAt:
+        type: string
     type: object
   structs.WorkFlowInfo:
     properties:
@@ -4660,6 +4846,248 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: created  specs
+      tags:
+      - platform
+  /tenant:
+    delete:
+      consumes:
+      - application/json
+      description: delete tenant
+      parameters:
+      - description: delete tenant request parameter
+        in: body
+        name: DeleteTenantReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.DeleteTenantReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.DeleteTenantResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: delete tenant
+      tags:
+      - user
+    get:
+      consumes:
+      - application/json
+      description: query all tenant profile
+      parameters:
+      - description: query tenant profile request parameter
+        in: body
+        name: QueryTenantReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.QueryTenantReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryTenantResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: queries all tenant profile
+      tags:
+      - user
+    post:
+      consumes:
+      - application/json
+      description: update tenant onboarding status
+      parameters:
+      - description: query tenant profile request parameter
+        in: body
+        name: UpdateTenantOnBoardingStatusReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateTenantOnBoardingStatusReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateTenantOnBoardingStatusResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: update tenant onboarding status
+      tags:
+      - user
+  /user:
+    delete:
+      consumes:
+      - application/json
+      description: delete user
+      parameters:
+      - description: delete user request parameter
+        in: body
+        name: CreateZoneReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.DeleteUserReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.DeleteUserResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: delete user
+      tags:
+      - platform
+    get:
+      consumes:
+      - application/json
+      description: query all user profile
+      parameters:
+      - description: query user profile request parameter
+        in: body
+        name: CreateZoneReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.QueryUserReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryUserResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: queries all user profile
+      tags:
+      - platform
+    post:
+      consumes:
+      - application/json
+      description: update user profile
+      parameters:
+      - description: query user profile request parameter
+        in: body
+        name: CreateZoneReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateUserProfileReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateUserProfileResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: update user profile
       tags:
       - platform
   /user/login:

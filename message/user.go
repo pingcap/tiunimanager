@@ -24,6 +24,7 @@
 package message
 
 import (
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/models/user/account"
 	"github.com/pingcap-inc/tiem/models/user/identification"
 	"github.com/pingcap-inc/tiem/models/user/tenant"
@@ -31,7 +32,7 @@ import (
 
 type CreateAccountReq struct {
 	*tenant.Tenant
-	Name string `json:"name" form:"name" example:"default"`
+	Name     string `json:"name" form:"name" example:"default"`
 	Password string `json:"password" form:"password" example:"default"`
 }
 
@@ -84,7 +85,6 @@ type ModifyTokenReq struct {
 }
 
 type ModifyTokenResp struct {
-
 }
 
 type GetTokenReq struct {
@@ -96,8 +96,8 @@ type GetTokenResp struct {
 }
 
 type LoginReq struct {
-	UserName string  `json:"userName" form:"userName"`
-	Password string  `json:"userPassword" form:"userPassword"`
+	UserName string `json:"userName" form:"userName"`
+	Password string `json:"userPassword" form:"userPassword"`
 }
 
 type LoginResp struct {
@@ -107,29 +107,29 @@ type LoginResp struct {
 }
 
 type LogoutReq struct {
-	TokenString string   `json:"token" form:"token"`
+	TokenString string `json:"token" form:"token"`
 }
 
 type LogoutResp struct {
-	AccountName string  `json:"accountName" form:"accountName"`
+	AccountName string `json:"accountName" form:"accountName"`
 }
 
 type AccessibleReq struct {
-	PathType string 	`json:"pathType" form:"pathType"`
-	Path string			`json:"path" form:"path"`
-	TokenString string 	`json:"tokenString" form:"tokenString"`
+	PathType    string `json:"pathType" form:"pathType"`
+	Path        string `json:"path" form:"path"`
+	TokenString string `json:"tokenString" form:"tokenString"`
 }
 
 type AccessibleResp struct {
-	TenantID string 		`json:"tenantID" form:"tenantID"`
-	AccountID string		`json:"accountID" form:"accountID"`
-	AccountName string		`json:"accountName" form:"accountName"`
+	TenantID    string `json:"tenantID" form:"tenantID"`
+	AccountID   string `json:"accountID" form:"accountID"`
+	AccountName string `json:"accountName" form:"accountName"`
 }
 
 type CreateTokenReq struct {
-	AccountID string
+	AccountID   string
 	AccountName string
-	TenantID string
+	TenantID    string
 }
 
 type CreateTokenResp struct {
@@ -139,4 +139,110 @@ type CreateTokenResp struct {
 type UserProfile struct {
 	UserName string `json:"userName"`
 	TenantId string `json:"tenantId"`
+}
+
+//CreateUserReq user message
+type CreateUserReq struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Creator  string `json:"creator"`
+	TenantID string `json:"tenantId"`
+	Email    string `json:"email"`
+	Phone    string `json:"phone"`
+	Password string `json:"password"`
+}
+type CreateUserResp struct {
+}
+
+type DeleteUserReq struct {
+	ID       string `json:"id"`
+	TenantID string `json:"tenantId"`
+}
+type DeleteUserResp struct {
+}
+
+type GetUserReq struct {
+	ID       string `json:"id"`
+	TenantID string `json:"tenantId"`
+}
+type GetUserResp struct {
+	Info structs.UserInfoExt `json:"userInfo"`
+}
+
+type QueryUserReq struct {
+}
+type QueryUserResp struct {
+	UserInfo map[string]structs.UserInfoExt `json:"userInfos"`
+}
+
+type UpdateUserProfileReq struct {
+	ID       string `json:"id"`
+	TenantID string `json:"tenantId"`
+	Name     string `json:"email"`
+	Email    string `json:"email"`
+	Phone    string `json:"phone"`
+}
+type UpdateUserProfileResp struct {
+}
+
+type UpdateUserPasswordReq struct {
+	ID       string `json:"id"`
+	TenantID string `json:"tenantId"`
+	Password string `json:"password"`
+}
+type UpdateUserPasswordResp struct {
+}
+
+// CreateTenantReqV1 Tenant message
+type CreateTenantReqV1 struct {
+	ID               string `json:"id"`
+	Name             string `json:"name"`
+	Creator          string `json:"creator"`
+	Status           string `json:"status"`
+	OnBoardingStatus string `json:"onBoardingStatus"`
+	MaxCluster       int32  `json:"maxCluster"`
+	MaxCPU           int32  `json:"maxCpu"`
+	MaxMemory        int32  `json:"maxMemory"`
+	MaxStorage       int32  `json:"maxStorage"`
+}
+type CreateTenantRespV1 struct {
+}
+
+type DeleteTenantReq struct {
+	ID string `json:"id"`
+}
+type DeleteTenantResp struct {
+}
+
+type GetTenantReq struct {
+	ID string `json:"id"`
+}
+
+type GetTenantResp struct {
+	Info structs.TenantInfo `json:"info"`
+}
+
+type QueryTenantReq struct {
+	ID string `json:"id"`
+}
+type QueryTenantResp struct {
+	Infos map[string]structs.TenantInfo `json:"infos"`
+}
+
+type UpdateTenantProfileReq struct {
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	MaxCluster int32  `json:"maxCluster"`
+	MaxCPU     int32  `json:"maxCpu"`
+	MaxMemory  int32  `json:"maxMemory"`
+	MaxStorage int32  `json:"maxStorage"`
+}
+type UpdateTenantProfileResp struct {
+}
+
+type UpdateTenantOnBoardingStatusReq struct {
+	ID               string `json:"id"`
+	OnBoardingStatus string `json:"onBoardingStatus"`
+}
+type UpdateTenantOnBoardingStatusResp struct {
 }

@@ -23,9 +23,43 @@
 
 package structs
 
+import "time"
+
 type UserInfo struct {
-	ID        string `json:"accountId"`
-	TenantID  string `json:"tenantId"`
-	Name      string `json:"accountName"`
+	ID       string `json:"accountId"`
+	TenantID string `json:"tenantId"`
+	Name     string `json:"accountName"`
 }
 
+type UserInfoExt struct {
+	ID       string    `json:"id"`
+	Name     string    `json:"name"`
+	Creator  string    `json:"creator"`
+	TenantID string    `json:"tenantId"`
+	Email    string    `json:"email"`
+	Phone    string    `json:"phone"`
+	Status   string    `json:"status"`
+	CreateAt time.Time `json:"createAt"`
+	UpdateAt time.Time `json:"updateAt"`
+}
+
+type TenantInfo struct {
+	ID               string    `json:"id"`
+	Name             string    `json:"name"`
+	Creator          string    `json:"creator"`
+	Status           string    `json:"status"`
+	OnBoardingStatus string    `json:"onBoardingStatus"`
+	MaxCluster       int32     `json:"maxCluster"`
+	MaxCPU           int32     `json:"maxCpu"`
+	MaxMemory        int32     `json:"maxMemory"`
+	MaxStorage       int32     `json:"maxStorage"`
+	CreateAt         time.Time `json:"createAt"`
+	UpdateAt         time.Time `json:"updateAt"`
+}
+
+type RoleInfo struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Creator string `json:"creator"`
+	Status  string `json:"status"`
+}

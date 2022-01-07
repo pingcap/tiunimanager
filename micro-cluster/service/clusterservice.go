@@ -1106,3 +1106,137 @@ func (handler *ClusterServiceHandler) QuerySpecs(ctx context.Context, request *c
 
 	return nil
 }
+
+func (handler *ClusterServiceHandler) CreateUser(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "CreateUser", int(response.GetCode()))
+
+	req := message.CreateUserReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.accountManager.CreateUser(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) DeleteUser(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "DeleteUser", int(response.GetCode()))
+
+	req := message.DeleteUserReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.accountManager.DeleteUser(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) GetUser(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "GetUser", int(response.GetCode()))
+
+	req := message.GetUserReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.accountManager.GetUser(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) QueryUsers(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "QueryUsers", int(response.GetCode()))
+
+	req := message.QueryUserReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.accountManager.QueryUsers(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) UpdateUserProfile(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "UpdateUserProfile", int(response.GetCode()))
+
+	req := message.UpdateUserProfileReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.accountManager.UpdateUserProfile(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+	return nil
+
+}
+
+func (handler *ClusterServiceHandler) CreateTenant(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "CreateTenant", int(response.GetCode()))
+
+	req := message.CreateTenantReqV1{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.tenantManager.CreateTenant(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) DeleteTenant(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "DeleteTenant", int(response.GetCode()))
+
+	req := message.DeleteTenantReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.tenantManager.DeleteTenant(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) GetTenant(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "GetTenant", int(response.GetCode()))
+
+	req := message.GetTenantReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.tenantManager.GetTenant(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) QueryTenants(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "QueryTenants", int(response.GetCode()))
+
+	req := message.QueryTenantReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.tenantManager.QueryTenants(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) UpdateTenantOnBoardingStatus(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "UpdateTenantOnBoardingStatus", int(response.GetCode()))
+
+	req := message.UpdateTenantOnBoardingStatusReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.tenantManager.UpdateTenantOnBoardingStatus(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) UpdateTenantProfile(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "UpdateTenantProfile", int(response.GetCode()))
+
+	req := message.UpdateTenantProfileReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.tenantManager.UpdateTenantProfile(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+	return nil
+}

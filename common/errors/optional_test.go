@@ -31,8 +31,9 @@ func TestOfNullable(t *testing.T) {
 		want *Optional
 	}{
 		{"normal", args{err: NewError(TIEM_UNRECOGNIZED_ERROR, "")}, &Optional{
-			last:   NewError(TIEM_UNRECOGNIZED_ERROR, ""),
+			last:  NewError(TIEM_UNRECOGNIZED_ERROR, ""),
 			broken: false,
+			allErrors: []error{ NewError(TIEM_UNRECOGNIZED_ERROR, "")},
 		}},
 	}
 	for _, tt := range tests {
@@ -63,18 +64,22 @@ func TestOptional_BreakIf(t *testing.T) {
 		}}, &Optional{
 			last:   NewError(TIEM_UNRECOGNIZED_ERROR, ""),
 			broken: true,
+			allErrors: []error{ NewError(TIEM_UNRECOGNIZED_ERROR, "")},
 		}},
 		{"without error", fields{broken: false}, args{executor: func() error {
 			return nil
 		}}, &Optional{
 			last:   nil,
 			broken: false,
+			allErrors: nil,
+
 		}},
 		{"broken", fields{broken: true}, args{executor: func() error {
 			return nil
 		}}, &Optional{
 			last:   nil,
 			broken: true,
+			allErrors: nil,
 		}},
 	}
 	for _, tt := range tests {
@@ -109,18 +114,22 @@ func TestOptional_ContinueIf(t *testing.T) {
 		}}, &Optional{
 			last:   NewError(TIEM_UNRECOGNIZED_ERROR, ""),
 			broken: false,
+			allErrors: []error{ NewError(TIEM_UNRECOGNIZED_ERROR, "")},
+
 		}},
 		{"without error", fields{}, args{executor: func() error {
 			return nil
 		}}, &Optional{
 			last:   nil,
 			broken: false,
+			allErrors: nil,
 		}},
 		{"broken", fields{broken: true}, args{executor: func() error {
 			return nil
 		}}, &Optional{
 			last:   nil,
 			broken: true,
+			allErrors: nil,
 		}},
 	}
 	for _, tt := range tests {

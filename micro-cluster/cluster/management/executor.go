@@ -548,7 +548,7 @@ func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 	}
 	framework.LogWithContext(context.Context).Infof(
 		"get deploy cluster %s task id: %s", clusterMeta.Cluster.ID, taskId)
-	node.Record(fmt.Sprintf("deploy cluster %s successfully", clusterMeta.Cluster.ID), fmt.Sprintf("version: %s", cluster.Version), fmt.Sprintf("yaml config: %s", yamlConfig))
+	node.Record(fmt.Sprintf("deploy cluster %s", clusterMeta.Cluster.ID), fmt.Sprintf("yaml config: %s", yamlConfig))
 	return nil
 }
 
@@ -571,7 +571,7 @@ func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	framework.LogWithContext(context.Context).Infof(
 		"get start cluster %s task id: %s", clusterMeta.Cluster.ID, taskId)
 
-	node.Record(fmt.Sprintf("start cluster %s successfully", clusterMeta.Cluster.ID), fmt.Sprintf("version: %s", cluster.Version))
+	node.Record(fmt.Sprintf("start cluster %s", clusterMeta.Cluster.ID), fmt.Sprintf("version: %s", cluster.Version))
 	return nil
 }
 
@@ -652,7 +652,7 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	}
 	context.SetData(ContextWorkflowID, response.WorkFlowID)
 
-	node.Record(fmt.Sprintf("update cluster %s parameters successfully", clusterMeta.Cluster.ID))
+	node.Record(fmt.Sprintf("update cluster %s parameters", clusterMeta.Cluster.ID))
 	return nil
 }
 
@@ -660,7 +660,7 @@ func asyncBuildLog(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
 	log.GetService().BuildClusterLogConfig(context, clusterMeta.Cluster.ID)
-	node.Record(fmt.Sprintf("update cluster %s build log successfully",clusterMeta.Cluster.ID))
+	node.Record(fmt.Sprintf("rebuild log config for cluster %s",clusterMeta.Cluster.ID))
 	return nil
 }
 
@@ -689,7 +689,7 @@ func restoreCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	}
 	context.SetData(ContextWorkflowID, restoreResponse.WorkFlowID)
 
-	node.Record(fmt.Sprintf("do restore for cluster %s  successfully", clusterMeta.Cluster.ID), fmt.Sprintf("Backup ID: %s", backupID))
+	node.Record(fmt.Sprintf("do restore for cluster %s", clusterMeta.Cluster.ID), fmt.Sprintf("backup id: %s", backupID))
 	return nil
 }
 
@@ -746,6 +746,7 @@ func syncTopology(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 		return  err
 	}
 
+	node.Record(fmt.Sprintf("sync topology config for cluster %s", clusterMeta.Cluster.ID), fmt.Sprintf("content: %s", metaYaml))
 	return models.GetClusterReaderWriter().UpdateTopologySnapshotConfig(context, clusterMeta.Cluster.ID, metaYaml)
 }
 
@@ -798,7 +799,7 @@ func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	_, err := models.GetClusterReaderWriter().GetCurrentClusterTopologySnapshot(context, cluster.ID)
 	if err != nil {
 		framework.LogWithContext(context).Warnf("cluster %s is not really existed", cluster.ID)
-		node.Record("skip because cluster is not existed")
+		node.Success("skip because cluster is not existed")
 		return nil
 	}
 
@@ -813,7 +814,8 @@ func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	}
 	framework.LogWithContext(context.Context).Infof(
 		"get destroy cluster %s task id: %s", clusterMeta.Cluster.ID, taskId)
-	node.Record(fmt.Sprintf("destroy cluster: %s successfully", clusterMeta.Cluster.ID), fmt.Sprintf("version: %s", cluster.Version))
+
+	node.Record("destroy cluster: " + clusterMeta.Cluster.ID, "version: " + cluster.Version)
 	return nil
 }
 
@@ -873,7 +875,7 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		return err
 	}
 	framework.LogWithContext(context.Context).Infof(
-		"cluster %s init database account succeed", clusterMeta.Cluster.ID)
+		"cluster %s init database account successfully", clusterMeta.Cluster.ID)
 
 	node.Record(fmt.Sprintf("cluster %s init database account successfully", clusterMeta.Cluster.ID))
 	return nil
@@ -929,7 +931,7 @@ func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 	if err != nil {
 		return err
 	}
-	node.Record("fetch topology successfully")
+	node.Record("fetch topology of cluster " + clusterMeta.Cluster.ID, string(metaData))
 
 	return err
 }
@@ -993,7 +995,7 @@ func rebuildTiupSpaceForCluster(node *workflowModel.WorkFlowNode, context *workf
 	}
 
 	home := getClusterSpaceInTiUP(context, clusterMeta.Cluster.ID)
-	err = os.MkdirAll(home + "ssh", os.ModePerm)
+	err = os.MkdirAll(home + "ssh", 0750)
 	if err != nil {
 		framework.LogWithContext(context).Errorf("mkdir for cluster %s failed, err = %s", clusterMeta.Cluster.ID, err.Error())
 		return err
@@ -1021,6 +1023,8 @@ func rebuildTiupSpaceForCluster(node *workflowModel.WorkFlowNode, context *workf
 		defer metaFile.Close()
 	}
 	metaFile.Write([]byte(snapshot.Config))
+	node.Record("write topology config into meta.yaml for cluster " + clusterMeta.Cluster.ID, snapshot.Config)
+
 	privateKeyFile.Write([]byte(snapshot.PrivateKey))
 	publicKeyFile.Write([]byte(snapshot.PublicKey))
 	return nil
@@ -1068,19 +1072,29 @@ func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 func testConnectivity(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	connectAddress := clusterMeta.GetClusterConnectAddresses()[0]
-	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql", clusterMeta.Cluster.DBUser, clusterMeta.Cluster.DBPassword, connectAddress.IP, connectAddress.Port))
-	if err != nil {
-		framework.LogWithContext(context).Errorf("connect tidb failed, err = %s", err)
-		return err
-	}
-	defer db.Close()
 
-	_, err = db.Query("select * from mysql.db")
-	if err != nil {
-		framework.LogWithContext(context).Errorf("connect tidb failed, err = %s", err)
-		return err
-	}
-	node.Record(fmt.Sprintf("test connect TiDB address %s:%d successfully", connectAddress.IP, connectAddress.Port))
-	fmt.Println(node.Result)
-	return nil
+	var db *sql.DB
+	defer func() {
+		if db != nil {
+			db.Close()
+		}
+	}()
+
+	return errors.OfNullable(nil).
+		BreakIf(func() error {
+			sqlDB, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql", clusterMeta.Cluster.DBUser, clusterMeta.Cluster.DBPassword, connectAddress.IP, connectAddress.Port))
+			db = sqlDB
+			return err
+		}).
+		BreakIf(func() error {
+			_, err := db.Query("select * from mysql.db")
+			return err
+		}).
+		If(func(err error) {
+			framework.LogWithContext(context).Errorf("test connectivity failed, err = %s", err.Error())
+		}).
+		Else(func() {
+			node.Record(fmt.Sprintf("test TiDB server %s:%d connection successfully", connectAddress.IP, connectAddress.Port))
+		}).
+		Present()
 }

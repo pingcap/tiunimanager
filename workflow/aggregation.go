@@ -197,9 +197,7 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 
 	switch nodeDefine.ReturnType {
 	case SyncFuncNode:
-		if node.Result == "" {
-			node.Success()
-		}
+		node.Success()
 		return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
 	case PollingNode:
 		if node.Status == constants.WorkFlowStatusFinished {

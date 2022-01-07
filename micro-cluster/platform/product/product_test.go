@@ -26,7 +26,6 @@ package product
 
 import (
 	"context"
-	"github.com/alecthomas/assert"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -34,6 +33,7 @@ import (
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
 	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
+	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
 )
@@ -577,5 +577,40 @@ func TestProductManager_QueryProductDetail(t *testing.T) {
 			errors.NewEMErrorf(errors.QueryProductsScanRowError, "scan data database error")).AnyTimes()
 		_, err := mgr.QueryProductDetail(context.TODO(), msg)
 		assert.Equal(t, errors.QueryProductsScanRowError, err.(errors.EMError).GetCode())
+	})
+}
+
+func Test_addToProducts(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		resp := &message.QueryProductsResp{}
+		resp.Products = make(map[string]map[string]map[string]map[string]structs.Product)
+		products := []structs.Product{
+			{RegionID: "region1", ID: "TiDB", Arch: "X86", Version: "v5.0.0", Status: "aaa"},
+			{RegionID: "region1", ID: "TiDB", Arch: "X86", Version: "v5.2.2"},
+			{RegionID: "region1", ID: "TiDB", Arch: "Arm", Version: "v5.0.0"},
+			{RegionID: "region1", ID: "TiDB", Arch: "Arm", Version: "v5.2.2"},
+			{RegionID: "region1", ID: "DM", Arch: "X86", Version: "v5.0.0"},
+			{RegionID: "region1", ID: "DM", Arch: "X86", Version: "v5.2.2"},
+			{RegionID: "region1", ID: "DM", Arch: "Arm", Version: "v5.0.0"},
+			{RegionID: "region1", ID: "DM", Arch: "Arm", Version: "v5.2.2"},
+			{RegionID: "region2", ID: "TiDB", Arch: "X86", Version: "v5.0.0"},
+			{RegionID: "region2", ID: "TiDB", Arch: "X86", Version: "v5.2.2"},
+			{RegionID: "region2", ID: "TiDB", Arch: "Arm", Version: "v5.0.0"},
+			{RegionID: "region2", ID: "TiDB", Arch: "Arm", Version: "v5.2.2"},
+			{RegionID: "region2", ID: "DM", Arch: "X86", Version: "v5.0.0"},
+			{RegionID: "region2", ID: "DM", Arch: "X86", Version: "v5.2.2"},
+			{RegionID: "region2", ID: "DM", Arch: "Arm", Version: "v5.0.0"},
+			{RegionID: "region2", ID: "DM", Arch: "Arm", Version: "v5.2.2"},
+		}
+
+		for _, p := range products {
+			addToProducts(resp.Products, p)
+		}
+		assert.Equal(t, 2, len(resp.Products))
+		assert.Equal(t, 2, len(resp.Products["region1"]))
+		assert.Equal(t, 2, len(resp.Products["region1"]["TiDB"]))
+		assert.Equal(t, 2, len(resp.Products["region1"]["TiDB"]["X86"]))
+		assert.Equal(t, "aaa", resp.Products["region1"]["TiDB"]["X86"]["v5.0.0"].Status)
+
 	})
 }

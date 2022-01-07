@@ -88,13 +88,13 @@ type Product struct {
 
 //ZoneInfo vendor & region & zone information provided by Enterprise Manager
 type ZoneInfo struct {
-	ZoneID     string `json:"zoneId"`     //The value of the ZoneID is similar to CN-HANGZHOU-H
-	ZoneName   string `json:"zoneName"`   //The value of the Name is similar to Hangzhou(H)
-	RegionID   string `json:"regionId"`   //The value of the RegionID is similar to CN-HANGZHOU
-	RegionName string `json:"regionName"` //The value of the Name is similar to East China(Hangzhou)
-	VendorID   string `json:"vendorId"`   //The value of the VendorID is similar to AWS
-	VendorName string `json:"vendorName"` //The value of the Name is similar to AWS
-	Comment    string `json:"comment"`
+	ZoneID     string `json:"zoneId" form:"zoneId"`         //The value of the ZoneID is similar to CN-HANGZHOU-H
+	ZoneName   string `json:"zoneName" form:"zoneName"`     //The value of the Name is similar to Hangzhou(H)
+	RegionID   string `json:"regionId" form:"regionId"`     //The value of the RegionID is similar to CN-HANGZHOU
+	RegionName string `json:"regionName" form:"regionName"` //The value of the Name is similar to East China(Hangzhou)
+	VendorID   string `json:"vendorId" form:"vendorId"`     //The value of the VendorID is similar to AWS
+	VendorName string `json:"vendorName" form:"vendorName"` //The value of the Name is similar to AWS
+	Comment    string `json:"comment" form:"comment"`
 }
 
 // SystemConfig system config of platform

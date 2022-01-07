@@ -29,60 +29,59 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
-	"gopkg.in/yaml.v2"
 )
 
 func collectorClusterLogConfig(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
-	framework.LogWithContext(ctx).Info("begin collector cluster log config executor method")
-	defer framework.LogWithContext(ctx).Info("end collector cluster log config executor method")
+	/*
+		framework.LogWithContext(ctx).Info("begin collector cluster log config executor method")
+		defer framework.LogWithContext(ctx).Info("end collector cluster log config executor method")
 
-	clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
+		clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
 
-	// get current cluster hosts
-	hosts := listClusterHosts(clusterMeta)
-	framework.LogWithContext(ctx).Infof("cluster [%s] list host: %v", clusterMeta.Cluster.ID, hosts)
+		// get current cluster hosts
+		hosts := listClusterHosts(clusterMeta)
+		framework.LogWithContext(ctx).Infof("cluster [%s] list host: %v", clusterMeta.Cluster.ID, hosts)
 
-	for hostID, hostIP := range hosts {
-		instances, err := handler.QueryInstanceLogInfo(ctx, hostID, []string{}, []string{})
-		if err != nil {
-			framework.LogWithContext(ctx).Errorf("cluster [%s] query metas failed. err: %v", clusterMeta.Cluster.ID, err)
-			return err
-		}
+		for hostID, hostIP := range hosts {
+			instances, err := handler.QueryInstanceLogInfo(ctx, hostID, []string{}, []string{})
+			if err != nil {
+				framework.LogWithContext(ctx).Errorf("cluster [%s] query metas failed. err: %v", clusterMeta.Cluster.ID, err)
+				return err
+			}
 
-		collectorConfigs, err := buildCollectorClusterLogConfig(ctx, instances)
-		if err != nil {
-			framework.LogWithContext(ctx).Errorf("build collector cluster log config err： %v", err)
-			return err
+			collectorConfigs, err := buildCollectorClusterLogConfig(ctx, instances)
+			if err != nil {
+				framework.LogWithContext(ctx).Errorf("build collector cluster log config err： %v", err)
+				return err
+			}
+			bs, err := yaml.Marshal(collectorConfigs)
+			if err != nil {
+				framework.LogWithContext(ctx).Errorf("marshal yaml err： %v", err)
+				return err
+			}
+			collectorYaml := string(bs)
+			// todo: When the tiem scale-out and scale-in is complete, change to take the filebeat deployDir from the tiem topology
+			deployDir := "/tiem-test/filebeat"
+			clusterComponentType := secondparty.ClusterComponentTypeStr
+			clusterName := clusterMeta.Cluster.ID
+			if framework.Current.GetClientArgs().EMClusterName != "" {
+				deployDir = "/tiem-deploy/filebeat-0"
+				clusterComponentType = secondparty.TiEMComponentTypeStr
+				clusterName = framework.Current.GetClientArgs().EMClusterName
+			}
+			transferTaskId, err := secondparty.Manager.Transfer(ctx, clusterComponentType,
+				clusterName, collectorYaml, deployDir+"/conf/input_tidb.yml",
+				0, []string{"-N", hostIP}, node.ID)
+			framework.LogWithContext(ctx).Infof("got transferTaskId: %s", transferTaskId)
+			if err != nil {
+				framework.LogWithContext(ctx).Errorf("collectorClusterLogConfig invoke tiup transfer err： %v", err)
+				return err
+			}
 		}
-		bs, err := yaml.Marshal(collectorConfigs)
-		if err != nil {
-			framework.LogWithContext(ctx).Errorf("marshal yaml err： %v", err)
-			return err
-		}
-		collectorYaml := string(bs)
-		// todo: When the tiem scale-out and scale-in is complete, change to take the filebeat deployDir from the tiem topology
-		deployDir := "/tiem-test/filebeat"
-		clusterComponentType := secondparty.ClusterComponentTypeStr
-		clusterName := clusterMeta.Cluster.ID
-		if framework.Current.GetClientArgs().EMClusterName != "" {
-			deployDir = "/tiem-deploy/filebeat-0"
-			clusterComponentType = secondparty.TiEMComponentTypeStr
-			clusterName = framework.Current.GetClientArgs().EMClusterName
-		}
-		transferTaskId, err := secondparty.Manager.Transfer(ctx, clusterComponentType,
-			clusterName, collectorYaml, deployDir+"/conf/input_tidb.yml",
-			0, []string{"-N", hostIP}, node.ID)
-		framework.LogWithContext(ctx).Infof("got transferTaskId: %s", transferTaskId)
-		if err != nil {
-			framework.LogWithContext(ctx).Errorf("collectorClusterLogConfig invoke tiup transfer err： %v", err)
-			return err
-		}
-	}
-
+	*/
 	return nil
 }
 

@@ -21,6 +21,7 @@ import (
 	"sync"
 
 	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/library/framework"
 	allocrecycle "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/allocator_recycler"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 )
@@ -57,6 +58,7 @@ func (m *Management) GetAllocatorRecycler() structs.AllocatorRecycler {
 }
 
 func (m *Management) AllocResources(ctx context.Context, batchReq *structs.BatchAllocRequest) (results *structs.BatchAllocResponse, err error) {
+	framework.LogWithContext(ctx).Infof("AllocResources in vendor %s", batchReq.Vendor)
 	if batchReq.IsLocalVendor() {
 		return m.localHostManage.AllocResources(ctx, batchReq)
 	} else if batchReq.IsAwsVendor() {

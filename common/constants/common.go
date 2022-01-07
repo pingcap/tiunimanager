@@ -24,8 +24,9 @@
 package constants
 
 import (
-	"github.com/pingcap-inc/tiem/common/errors"
 	"time"
+
+	"github.com/pingcap-inc/tiem/common/errors"
 )
 
 const (
@@ -167,3 +168,5 @@ const (
 )
 
 const DefaultTokenValidPeriod time.Duration = 4 * time.Hour
+
+var TiUPFlags = []string{"--user", "ec2-user", "-i", "/home/ec2-user/id_rsa"}

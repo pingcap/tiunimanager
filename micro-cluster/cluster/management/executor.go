@@ -38,7 +38,6 @@ import (
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
 	resourceStructs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/management"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -58,6 +57,7 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	instanceRequirement, instances := clusterMeta.GenerateInstanceResourceRequirements(context)
 
 	batchReq := &resourceStructs.BatchAllocRequest{
+		Vendor: clusterMeta.Cluster.Vendor,
 		BatchRequests: []resourceStructs.AllocReq{
 			{
 				Applicant: resourceStructs.Applicant{
@@ -81,7 +81,7 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		})
 	}
 
-	allocResponse, err := resourceManagement.GetManagement().GetAllocatorRecycler().AllocResources(context, batchReq)
+	allocResponse, err := resourceManagement.GetManagement().AllocResources(context, batchReq)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s alloc resource error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -108,9 +108,9 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		var hostIP []string
 		if len(ins.HostIP) > 1 {
 			hostIP = append(hostIP, ins.HostIP...)
-			node.Record("type: " + ins.Type, "zone: " + ins.Zone, "host IP: " + strings.Join(hostIP, ", "))
-		}else{
-			node.Record("type: " + ins.Type, "zone: " + ins.Zone, "host IP: " + ins.HostIP[0])
+			node.Record("type: "+ins.Type, "zone: "+ins.Zone, "host IP: "+strings.Join(hostIP, ", "))
+		} else {
+			node.Record("type: "+ins.Type, "zone: "+ins.Zone, "host IP: "+ins.HostIP[0])
 		}
 	}
 	return nil
@@ -149,7 +149,7 @@ func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		"scale out cluster %s, version %s, yamlConfig %s", cluster.ID, cluster.Version, yamlConfig)
 	taskId, err := secondparty.Manager.ClusterScaleOut(
 		context.Context, secondparty.ClusterComponentTypeStr, cluster.ID,
-		yamlConfig, handler.DefaultTiupTimeOut, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, node.ID, "")
+		yamlConfig, handler.DefaultTiupTimeOut, constants.TiUPFlags, node.ID, "")
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s scale out error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -230,7 +230,7 @@ func freeInstanceResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 		},
 	}
 
-	err = resourceManagement.GetManagement().GetAllocatorRecycler().RecycleResources(context, request)
+	err = resourceManagement.GetManagement().RecycleResources(context, request)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s recycle instance %s resource error: %s", clusterMeta.Cluster.ID, instanceID, err.Error())
@@ -490,7 +490,7 @@ func revertResourceAfterFailure(node *workflowModel.WorkFlowNode, context *workf
 			})
 		}
 
-		err := resourceManagement.GetManagement().GetAllocatorRecycler().RecycleResources(context.Context, request)
+		err := resourceManagement.GetManagement().RecycleResources(context.Context, request)
 		if err != nil {
 			framework.LogWithContext(context.Context).Errorf(
 				"recycle resources error: %s", err.Error())
@@ -539,7 +539,7 @@ func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 		"deploy cluster %s, version %s, yamlConfig %s", cluster.ID, cluster.Version, yamlConfig)
 	taskId, err := secondparty.Manager.ClusterDeploy(
 		context.Context, secondparty.ClusterComponentTypeStr, cluster.ID, cluster.Version,
-		yamlConfig, handler.DefaultTiupTimeOut, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, node.ID, "")
+		yamlConfig, handler.DefaultTiupTimeOut, constants.TiUPFlags, node.ID, "")
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s deploy error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -659,7 +659,7 @@ func asyncBuildLog(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
 	log.GetService().BuildClusterLogConfig(context, clusterMeta.Cluster.ID)
-	node.Record(fmt.Sprintf("update cluster %s build log successfully",clusterMeta.Cluster.ID))
+	node.Record(fmt.Sprintf("update cluster %s build log successfully", clusterMeta.Cluster.ID))
 	return nil
 }
 
@@ -712,42 +712,48 @@ func getTiUPClusterSpace(ctx context.Context, clusterID string) string {
 // syncConnectionKey
 // @Description: get private and public key from tiup
 func syncConnectionKey(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	/*
+		clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
-	privateKey, err := readTiUPFile(context, clusterMeta.Cluster.ID, "ssh/id_rsa")
-	if err != nil {
-		err = errors.NewEMErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "sync connection private key failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
-		framework.LogWithContext(context).Errorf(err.Error())
-		return  err
-	}
-	publicKey, err := readTiUPFile(context, clusterMeta.Cluster.ID, "ssh/id_rsa.pub")
-	if err != nil {
-		err = errors.NewEMErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "sync connection public key failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
-		framework.LogWithContext(context).Errorf(err.Error())
-		return  err
-	}
-	err = models.GetClusterReaderWriter().CreateClusterTopologySnapshot(context, management.ClusterTopologySnapshot{
-		ClusterID: clusterMeta.Cluster.ID,
-		TenantID: clusterMeta.Cluster.TenantId,
-		PrivateKey: privateKey,
-		PublicKey: publicKey,
-	})
+		privateKey, err := readTiUPFile(context, clusterMeta.Cluster.ID, "ssh/id_rsa")
+		if err != nil {
+			err = errors.NewEMErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "sync connection private key failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
+			framework.LogWithContext(context).Errorf(err.Error())
+			return err
+		}
+		publicKey, err := readTiUPFile(context, clusterMeta.Cluster.ID, "ssh/id_rsa.pub")
+		if err != nil {
+			err = errors.NewEMErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "sync connection public key failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
+			framework.LogWithContext(context).Errorf(err.Error())
+			return err
+		}
+		err = models.GetClusterReaderWriter().CreateClusterTopologySnapshot(context, management.ClusterTopologySnapshot{
+			ClusterID:  clusterMeta.Cluster.ID,
+			TenantID:   clusterMeta.Cluster.TenantId,
+			PrivateKey: privateKey,
+			PublicKey:  publicKey,
+		})
 
-	return err
+		return err
+	*/
+	return nil
 }
 
 // syncTopology
 // @Description: get meta.yaml from tiup
 func syncTopology(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
-	metaYaml, err := readTiUPFile(context, clusterMeta.Cluster.ID, "meta.yaml")
-	if err != nil {
-		err = errors.NewEMErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "read meta.yaml failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
-		framework.LogWithContext(context).Errorf(err.Error())
-		return  err
-	}
+	/*
+		clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+		metaYaml, err := readTiUPFile(context, clusterMeta.Cluster.ID, "meta.yaml")
+		if err != nil {
+			err = errors.NewEMErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "read meta.yaml failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
+			framework.LogWithContext(context).Errorf(err.Error())
+			return err
+		}
 
-	return models.GetClusterReaderWriter().UpdateTopologySnapshotConfig(context, clusterMeta.Cluster.ID, metaYaml)
+		return models.GetClusterReaderWriter().UpdateTopologySnapshotConfig(context, clusterMeta.Cluster.ID, metaYaml)
+	*/
+	return nil
 }
 
 func readTiUPFile(ctx context.Context, clusterID string, file string) (string, error) {
@@ -786,7 +792,7 @@ func stopCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext
 	framework.LogWithContext(context.Context).Infof(
 		"get stop cluster %s task id: %s", clusterMeta.Cluster.ID, taskId)
 
-	node.Record("stop cluster: " + clusterMeta.Cluster.ID, "version: " + cluster.Version)
+	node.Record("stop cluster: "+clusterMeta.Cluster.ID, "version: "+cluster.Version)
 	return nil
 }
 
@@ -837,7 +843,7 @@ func freedClusterResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 			},
 		},
 	}
-	err := resourceManagement.GetManagement().GetAllocatorRecycler().RecycleResources(context, request)
+	err := resourceManagement.GetManagement().RecycleResources(context, request)
 
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -942,6 +948,7 @@ func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 	requirements, instances := clusterMeta.GenerateTakeoverResourceRequirements(context)
 
 	batchReq := &resourceStructs.BatchAllocRequest{
+		// where to get vendor
 		BatchRequests: []resourceStructs.AllocReq{
 			{
 				Applicant: resourceStructs.Applicant{
@@ -953,7 +960,7 @@ func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 			},
 		},
 	}
-	allocResponse, err := resourceManagement.GetManagement().GetAllocatorRecycler().AllocResources(context, batchReq)
+	allocResponse, err := resourceManagement.GetManagement().AllocResources(context, batchReq)
 
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -970,7 +977,7 @@ func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 		instance.HostID = resourceResult.Results[i].HostId
 		instance.Zone = resourceResult.Results[i].Location.Zone
 		instance.Rack = resourceResult.Results[i].Location.Rack
-		node.Record("type: " + instance.Type, "zone: " + instance.Zone, "host IP: " + instance.HostIP[0])
+		node.Record("type: "+instance.Type, "zone: "+instance.Zone, "host IP: "+instance.HostIP[0])
 	}
 
 	return nil

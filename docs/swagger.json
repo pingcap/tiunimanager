@@ -4781,6 +4781,9 @@
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendorId": {
+                    "type": "string"
                 }
             }
         },
@@ -4892,6 +4895,9 @@
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendorId": {
+                    "type": "string"
                 }
             }
         },
@@ -5490,6 +5496,9 @@
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendorId": {
+                    "type": "string"
                 }
             }
         },
@@ -6493,9 +6502,19 @@
             "type": "object",
             "properties": {
                 "products": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.Product"
+                    "description": "arch version",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "$ref": "#/definitions/structs.Product"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -6801,6 +6820,9 @@
                     "type": "string"
                 },
                 "userId": {
+                    "type": "string"
+                },
+                "vendor": {
                     "type": "string"
                 },
                 "whitelist": {

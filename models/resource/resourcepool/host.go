@@ -17,10 +17,11 @@ package resourcepool
 
 import (
 	"errors"
-	crypto "github.com/pingcap-inc/tiem/util/encrypt"
-	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"strings"
 	"time"
+
+	crypto "github.com/pingcap-inc/tiem/util/encrypt"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	em_errors "github.com/pingcap-inc/tiem/common/errors"
@@ -83,7 +84,9 @@ func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
 		return em_errors.NewEMErrorf(em_errors.TIEM_RESOURCE_HOST_ALREADY_EXIST, "host %s(%s) is existed", h.HostName, h.IP)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		h.ID = uuidutil.GenerateID()
+		if h.ID != "" {
+			h.ID = uuidutil.GenerateID()
+		}
 		return nil
 	} else {
 		return err

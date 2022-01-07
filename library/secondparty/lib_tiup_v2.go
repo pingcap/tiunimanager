@@ -65,7 +65,7 @@ func (manager *SecondPartyManager) ClusterDeploy(ctx context.Context, tiUPCompon
 		deployReq.Flags = flags
 		deployReq.TiUPPath = manager.TiUPBinPath
 		deployReq.Password = password
-		deployReq.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
+		deployReq.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 		manager.startTiUPDeployOperation(ctx, secondPartyOperation.ID, &deployReq)
 		return secondPartyOperation.ID, nil
 	}
@@ -111,7 +111,7 @@ func (manager *SecondPartyManager) ClusterScaleOut(ctx context.Context, tiUPComp
 		scaleOutReq.TimeoutS = timeoutS
 		scaleOutReq.Flags = flags
 		scaleOutReq.TiUPPath = manager.TiUPBinPath
-		scaleOutReq.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
+		scaleOutReq.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 		scaleOutReq.Password = password
 		manager.startTiUPScaleOutOperation(ctx, secondPartyOperation.ID, &scaleOutReq)
 		return secondPartyOperation.ID, nil
@@ -158,7 +158,7 @@ func (manager *SecondPartyManager) ClusterScaleIn(ctx context.Context, tiUPCompo
 		scaleInReq.TimeoutS = timeoutS
 		scaleInReq.Flags = flags
 		scaleInReq.TiUPPath = manager.TiUPBinPath
-		scaleInReq.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
+		scaleInReq.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 		manager.startTiUPScaleInOperation(ctx, secondPartyOperation.ID, &scaleInReq)
 		return secondPartyOperation.ID, nil
 	}
@@ -189,7 +189,7 @@ func (manager *SecondPartyManager) ClusterStart(ctx context.Context, tiUPCompone
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
 		req.TiUPPath = manager.TiUPBinPath
-		req.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
+		req.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 		req.Flags = flags
 		manager.startTiUPStartOperation(ctx, secondPartyOperation.ID, &req)
 		return secondPartyOperation.ID, nil
@@ -222,7 +222,7 @@ func (manager *SecondPartyManager) ClusterRestart(ctx context.Context, tiUPCompo
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
 		req.TiUPPath = manager.TiUPBinPath
-		req.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
+		req.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 		req.Flags = flags
 		manager.startTiUPRestartOperation(ctx, secondPartyOperation.ID, &req)
 		return secondPartyOperation.ID, nil
@@ -255,7 +255,7 @@ func (manager *SecondPartyManager) ClusterStop(ctx context.Context, tiUPComponen
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
 		req.TiUPPath = manager.TiUPBinPath
-		req.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
+		req.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 		req.Flags = flags
 		manager.startTiUPStopOperation(ctx, secondPartyOperation.ID, &req)
 		return secondPartyOperation.ID, nil
@@ -280,7 +280,7 @@ func (manager *SecondPartyManager) ClusterList(ctx context.Context, tiUPComponen
 	req.TiUPComponent = tiUPComponent
 	req.TimeoutS = timeoutS
 	req.TiUPPath = manager.TiUPBinPath
-	req.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
+	req.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 	req.Flags = flags
 	cmdListResp, err := manager.startTiUPListOperation(ctx, &req)
 	return &cmdListResp, err
@@ -339,7 +339,7 @@ func (manager *SecondPartyManager) ClusterDestroy(ctx context.Context, tiUPCompo
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
 		req.TiUPPath = manager.TiUPBinPath
-		req.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
+		req.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 		req.Flags = flags
 		manager.startTiUPDestroyOperation(ctx, secondPartyOperation.ID, &req)
 		return secondPartyOperation.ID, nil
@@ -364,7 +364,7 @@ func (manager *SecondPartyManager) ClusterDisplay(ctx context.Context, tiUPCompo
 	args = append(args, string(tiUPComponent), "display")
 	args = append(args, instanceName)
 	args = append(args, flags...)
-	tiUPHome := getTiUPHomeForComponent(ctx, tiUPComponent)
+	tiUPHome := GetTiUPHomeForComponent(ctx, tiUPComponent)
 	result, err := manager.startSyncTiUPOperation(ctx, args, timeoutS, tiUPHome)
 	resp = &CmdDisplayResp{}
 	resp.DisplayRespString = result
@@ -391,7 +391,7 @@ func (manager *SecondPartyManager) ClusterUpgrade(ctx context.Context, tiUPCompo
 		req.TimeoutS = timeoutS
 		req.Flags = flags
 		req.TiUPPath = manager.TiUPBinPath
-		req.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
+		req.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 		manager.startTiUPUpgradeOperation(ctx, secondPartyOperation.ID, &req)
 		return secondPartyOperation.ID, nil
 	}
@@ -414,7 +414,7 @@ func (manager *SecondPartyManager) ClusterShowConfig(ctx context.Context, req *C
 	args = append(args, string(req.TiUPComponent), "show-config")
 	args = append(args, req.InstanceName)
 	args = append(args, req.Flags...)
-	tiUPHome := getTiUPHomeForComponent(ctx, req.TiUPComponent)
+	tiUPHome := GetTiUPHomeForComponent(ctx, req.TiUPComponent)
 
 	topoStr, err := manager.startSyncTiUPOperation(ctx, args, req.TimeoutS, tiUPHome)
 	if err != nil {
@@ -518,7 +518,7 @@ func (manager *SecondPartyManager) startTiUPEditGlobalConfigOperation(ctx contex
 		TiUPComponent: req.TiUPComponent,
 		InstanceName:  req.InstanceName,
 		NewTopo:       topo,
-		TiUPHome:      getTiUPHomeForComponent(ctx, req.TiUPComponent),
+		TiUPHome:      GetTiUPHomeForComponent(ctx, req.TiUPComponent),
 		TimeoutS:      req.TimeoutS,
 		Flags:         req.Flags,
 	}
@@ -686,7 +686,7 @@ func (manager *SecondPartyManager) startTiUPEditInstanceConfigOperation(ctx cont
 		TiUPComponent: req.TiUPComponent,
 		InstanceName:  req.InstanceName,
 		NewTopo:       topo,
-		TiUPHome:      getTiUPHomeForComponent(ctx, req.TiUPComponent),
+		TiUPHome:      GetTiUPHomeForComponent(ctx, req.TiUPComponent),
 		TimeoutS:      req.TimeoutS,
 		Flags:         req.Flags,
 	}
@@ -738,7 +738,7 @@ func (manager *SecondPartyManager) ClusterReload(ctx context.Context, cmdReloadC
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
 	}
-	cmdReloadConfigReq.TiUPHome = getTiUPHomeForComponent(ctx, cmdReloadConfigReq.TiUPComponent)
+	cmdReloadConfigReq.TiUPHome = GetTiUPHomeForComponent(ctx, cmdReloadConfigReq.TiUPComponent)
 	manager.startTiUPReloadOperation(ctx, secondPartyOperation.ID, &cmdReloadConfigReq)
 	return secondPartyOperation.ID, nil
 }
@@ -763,7 +763,7 @@ func (manager *SecondPartyManager) ClusterExec(ctx context.Context, cmdClusterEx
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
 	}
-	cmdClusterExecReq.TiUPHome = getTiUPHomeForComponent(ctx, cmdClusterExecReq.TiUPComponent)
+	cmdClusterExecReq.TiUPHome = GetTiUPHomeForComponent(ctx, cmdClusterExecReq.TiUPComponent)
 	manager.startTiUPExecOperation(ctx, secondPartyOperation.ID, &cmdClusterExecReq)
 	return secondPartyOperation.ID, nil
 }
@@ -792,7 +792,7 @@ func (manager *SecondPartyManager) Dumpling(ctx context.Context, timeoutS int, f
 		dumplingReq.TimeoutS = timeoutS
 		dumplingReq.TiUPPath = manager.TiUPBinPath
 		dumplingReq.Flags = flags
-		dumplingReq.TiUPHome = getTiUPHomeForComponent(ctx, DefaultComponentTypeStr)
+		dumplingReq.TiUPHome = GetTiUPHomeForComponent(ctx, DefaultComponentTypeStr)
 		manager.startTiUPDumplingOperation(ctx, secondPartyOperation.ID, &dumplingReq)
 		return secondPartyOperation.ID, nil
 	}
@@ -821,7 +821,7 @@ func (manager *SecondPartyManager) Lightning(ctx context.Context, timeoutS int, 
 		lightningReq.TimeoutS = timeoutS
 		lightningReq.TiUPPath = manager.TiUPBinPath
 		lightningReq.Flags = flags
-		lightningReq.TiUPHome = getTiUPHomeForComponent(ctx, DefaultComponentTypeStr)
+		lightningReq.TiUPHome = GetTiUPHomeForComponent(ctx, DefaultComponentTypeStr)
 		manager.startTiUPLightningOperation(ctx, secondPartyOperation.ID, &lightningReq)
 		return secondPartyOperation.ID, nil
 	}
@@ -853,7 +853,7 @@ func (manager *SecondPartyManager) Transfer(ctx context.Context, tiUPComponent T
 		req.InstanceName = instanceName
 		req.CollectorYaml = collectorYaml
 		req.RemotePath = remotePath
-		req.TiUPHome = getTiUPHomeForComponent(ctx, tiUPComponent)
+		req.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 		req.TimeoutS = timeoutS
 		req.Flags = flags
 		req.TiUPPath = manager.TiUPBinPath
@@ -890,7 +890,7 @@ func (manager *SecondPartyManager) ClusterComponentCtl(ctx context.Context, str 
 	args = append(args, fmt.Sprintf("%s:%s", string(str), clusterVersion))
 	args = append(args, string(component))
 	args = append(args, flags...)
-	tiUPHome := getTiUPHomeForComponent(ctx, str)
+	tiUPHome := GetTiUPHomeForComponent(ctx, str)
 	return manager.startSyncTiUPOperation(ctx, args, timeoutS, tiUPHome)
 }
 
@@ -1064,7 +1064,7 @@ func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, opera
 	return exitCh
 }
 
-func getTiUPHomeForComponent(ctx context.Context, tiUPComponent TiUPComponentTypeStr) string {
+func GetTiUPHomeForComponent(ctx context.Context, tiUPComponent TiUPComponentTypeStr) string {
 	var component string
 	switch tiUPComponent {
 	case TiEMComponentTypeStr:

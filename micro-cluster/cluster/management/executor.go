@@ -19,6 +19,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/pkg/sftp"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -303,7 +304,7 @@ func backupBeforeDelete(node *workflowModel.WorkFlowNode, context *workflow.Flow
 	_, err := models.GetClusterReaderWriter().GetCurrentClusterTopologySnapshot(context, meta.Cluster.ID)
 	if err != nil {
 		framework.LogWithContext(context).Warnf("cluster %s is not really existed", meta.Cluster.ID)
-		node.Record("skip because cluster is not existed")
+		node.Success("skip because cluster is not existed")
 		return nil
 	}
 
@@ -327,7 +328,7 @@ func backupBeforeDelete(node *workflowModel.WorkFlowNode, context *workflow.Flow
 		}
 		node.Record(fmt.Sprintf("do backup for cluster %s successfully", meta.Cluster.ID))
 	} else {
-		node.Record("no need to backup")
+		node.Success("no need to backup")
 	}
 
 	return nil
@@ -696,16 +697,8 @@ func syncIncrData(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	return nil
 }
 
-func getTiUPClusterSpace(ctx context.Context, clusterID string) string {
-	tiupHome := "/home/tiem/.tiup"
-	tiUPConfig, err := models.GetTiUPConfigReaderWriter().QueryByComponentType(ctx, string(secondparty.ClusterComponentTypeStr))
-
-	if err != nil {
-		framework.LogWithContext(ctx).Warnf("get tiup_home failed: %s", err.Error())
-	} else {
-		tiupHome = tiUPConfig.TiupHome
-	}
-
+func getClusterSpaceInTiUP(ctx context.Context, clusterID string) string {
+	tiupHome := secondparty.GetTiUPHomeForComponent(ctx, secondparty.ClusterComponentTypeStr)
 	return fmt.Sprintf("%s/storage/cluster/clusters/%s/", tiupHome, clusterID)
 }
 
@@ -714,13 +707,17 @@ func getTiUPClusterSpace(ctx context.Context, clusterID string) string {
 func syncConnectionKey(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
-	privateKey, err := readTiUPFile(context, clusterMeta.Cluster.ID, "ssh/id_rsa")
+	privateKey, err := readTiUPFile(context,
+		getClusterSpaceInTiUP(context, clusterMeta.Cluster.ID),
+		"ssh/id_rsa")
 	if err != nil {
 		err = errors.NewEMErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "sync connection private key failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
 		framework.LogWithContext(context).Errorf(err.Error())
 		return  err
 	}
-	publicKey, err := readTiUPFile(context, clusterMeta.Cluster.ID, "ssh/id_rsa.pub")
+	publicKey, err := readTiUPFile(context,
+		getClusterSpaceInTiUP(context, clusterMeta.Cluster.ID),
+		"ssh/id_rsa.pub")
 	if err != nil {
 		err = errors.NewEMErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "sync connection public key failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
 		framework.LogWithContext(context).Errorf(err.Error())
@@ -740,7 +737,9 @@ func syncConnectionKey(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 // @Description: get meta.yaml from tiup
 func syncTopology(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
-	metaYaml, err := readTiUPFile(context, clusterMeta.Cluster.ID, "meta.yaml")
+	metaYaml, err := readTiUPFile(context,
+		getClusterSpaceInTiUP(context, clusterMeta.Cluster.ID),
+		"meta.yaml")
 	if err != nil {
 		err = errors.NewEMErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "read meta.yaml failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
 		framework.LogWithContext(context).Errorf(err.Error())
@@ -750,8 +749,8 @@ func syncTopology(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	return models.GetClusterReaderWriter().UpdateTopologySnapshotConfig(context, clusterMeta.Cluster.ID, metaYaml)
 }
 
-func readTiUPFile(ctx context.Context, clusterID string, file string) (string, error) {
-	fileName := fmt.Sprintf("%s%s", getTiUPClusterSpace(ctx, clusterID), file)
+func readTiUPFile(ctx context.Context, clusterHome string, file string) (string, error) {
+	fileName := fmt.Sprintf("%s%s", clusterHome, file)
 	fileData, err := os.Open(fileName)
 	if err != nil {
 		return "", err
@@ -893,25 +892,69 @@ func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 		defer sftpClient.Close()
 	}
 
-	remoteFileName := fmt.Sprintf("%sstorage/cluster/clusters/%s/meta.yaml", req.TiUPPath, clusterMeta.Cluster.ID)
+	clusterHome := fmt.Sprintf("%sstorage/cluster/clusters/%s/", req.TiUPPath, clusterMeta.Cluster.ID)
 
-	remoteFile, err := sftpClient.Open(remoteFileName)
+	privateKey, err := readRemoteFile(context, sftpClient, clusterHome, "/ssh/id_rsa")
 	if err != nil {
-		framework.LogWithContext(context).Errorf("fetch topology failed, error: %s", err.Error())
-		return errors.WrapError(errors.TIEM_TAKEOVER_SFTP_ERROR, "fetch topology failed", err)
-	}
-	defer remoteFile.Close()
-
-	dataByte, err := ioutil.ReadAll(remoteFile)
-	if err != nil {
-		framework.LogWithContext(context).Errorf("fetch topology failed, error: %s", err.Error())
+		framework.LogWithContext(context).Errorf("read private key failed, error: %s", err.Error())
 		return errors.WrapError(errors.TIEM_TAKEOVER_SFTP_ERROR, "read remote file error", err)
 	}
-	context.SetData(ContextTopologyConfig, dataByte)
+
+	publicKey, err := readRemoteFile(context, sftpClient, clusterHome, "/ssh/id_rsa.pub")
+	if err != nil {
+		framework.LogWithContext(context).Errorf("read public key failed, error: %s", err.Error())
+		return errors.WrapError(errors.TIEM_TAKEOVER_SFTP_ERROR, "read remote file error", err)
+	}
+
+	metaData, err := readRemoteFile(context, sftpClient, clusterHome, "meta.yaml")
+	if err != nil {
+		framework.LogWithContext(context).Errorf("fetch topology file meta.yaml failed, error: %s", err.Error())
+		return errors.WrapError(errors.TIEM_TAKEOVER_SFTP_ERROR, "read remote file error", err)
+	}
+
+	context.SetData(ContextPrivateKey, privateKey)
+	context.SetData(ContextPublicKey, privateKey)
+	context.SetData(ContextTopologyConfig, metaData)
+
+	err = models.GetClusterReaderWriter().CreateClusterTopologySnapshot(context, management.ClusterTopologySnapshot{
+		ClusterID: clusterMeta.Cluster.ID,
+		TenantID: clusterMeta.Cluster.TenantId,
+		PrivateKey: string(privateKey),
+		PublicKey: string(publicKey),
+	})
+	if err != nil {
+		return err
+	}
+	err = models.GetClusterReaderWriter().UpdateTopologySnapshotConfig(context, clusterMeta.Cluster.ID, string(metaData))
+	if err != nil {
+		return err
+	}
 	node.Record("fetch topology successfully")
-	return nil
+
+	return err
 }
 
+func readRemoteFile(ctx context.Context, sftp *sftp.Client, clusterHome string, file string) ([]byte, error) {
+	filePath := fmt.Sprintf("%s%s", clusterHome, file)
+	fileData, err := sftp.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer fileData.Close()
+
+	dataByte, err := ioutil.ReadAll(fileData)
+	if err != nil {
+		return nil, err
+	}
+
+	return dataByte, nil
+}
+
+// rebuildTopologyFromConfig
+// @Description:
+// @Parameter node
+// @Parameter context
+// @return error
 func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	dataByte := context.GetData(ContextTopologyConfig).([]byte)
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
@@ -934,6 +977,52 @@ func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workfl
 	}
 
 	node.Record("rebuild topology config successfully", fmt.Sprintf("add instances into cluster %s topology successfully", clusterMeta.Cluster.ID))
+	return nil
+}
+
+// rebuildTiupSpaceForCluster
+// @Description:
+// @Parameter node
+// @Parameter context
+// @return error
+func rebuildTiupSpaceForCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	snapshot, err := models.GetClusterReaderWriter().GetCurrentClusterTopologySnapshot(context, clusterMeta.Cluster.ID)
+	if err != nil {
+		return err
+	}
+
+	home := getClusterSpaceInTiUP(context, clusterMeta.Cluster.ID)
+	err = os.MkdirAll(home + "ssh", os.ModePerm)
+	if err != nil {
+		framework.LogWithContext(context).Errorf("mkdir for cluster %s failed, err = %s", clusterMeta.Cluster.ID, err.Error())
+		return err
+	}
+
+	metaFile, err := os.Create(home + "meta.yaml")
+	if err != nil {
+		framework.LogWithContext(context).Errorf("open meta.yaml failed")
+		return err
+	} else {
+		defer metaFile.Close()
+	}
+	privateKeyFile, err := os.Create(home + "ssh/id_rsa")
+	if err != nil {
+		framework.LogWithContext(context).Errorf("open private key file failed")
+		return err
+	} else {
+		defer metaFile.Close()
+	}
+	publicKeyFile, err := os.Create(home + "ssh/id_rsa.pub")
+	if err != nil {
+		framework.LogWithContext(context).Errorf("open public key file failed")
+		return err
+	} else {
+		defer metaFile.Close()
+	}
+	metaFile.Write([]byte(snapshot.Config))
+	privateKeyFile.Write([]byte(snapshot.PrivateKey))
+	publicKeyFile.Write([]byte(snapshot.PublicKey))
 	return nil
 }
 

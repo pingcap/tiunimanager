@@ -501,10 +501,10 @@ func (p *ClusterMeta) UpdateClusterStatus(ctx context.Context, status constants.
 	err := models.GetClusterReaderWriter().UpdateStatus(ctx, p.Cluster.ID, status)
 
 	if err != nil {
-		framework.LogWithContext(ctx).Infof("update cluster%s status into %s failed", p.Cluster.ID, status)
+		framework.LogWithContext(ctx).Errorf("update cluster%s status into %s failed", p.Cluster.ID, status)
 	} else {
 		p.Cluster.Status = string(status)
-		framework.LogWithContext(ctx).Errorf("update cluster%s status into %s succeed", p.Cluster.ID, status)
+		framework.LogWithContext(ctx).Infof("update cluster%s status into %s succeed", p.Cluster.ID, status)
 	}
 	return err
 }

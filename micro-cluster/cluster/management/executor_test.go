@@ -1679,7 +1679,7 @@ func Test_syncTopology(t *testing.T) {
 		os.RemoveAll(testFilePath)
 		os.Remove(testFilePath)
 	}()
-	path := getTiUPClusterSpace(context.TODO(), "111")
+	path := getClusterSpaceInTiUP(context.TODO(), "111")
 	os.MkdirAll(path, 0755)
 
 	t.Run("normal", func(t *testing.T) {
@@ -1727,7 +1727,7 @@ func Test_syncConnectionKey(t *testing.T) {
 		os.RemoveAll(testFilePath)
 		os.Remove(testFilePath)
 	}()
-	path := getTiUPClusterSpace(context.TODO(), "111")
+	path := getClusterSpaceInTiUP(context.TODO(), "111")
 	os.MkdirAll(path, 0755)
 
 	t.Run("normal", func(t *testing.T) {
@@ -1780,4 +1780,45 @@ func Test_syncConnectionKey(t *testing.T) {
 		err = syncConnectionKey(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
 	})
+}
+
+func Test_rebuildTiupSpaceForCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	tiupRW := mocktiupconfig.NewMockReaderWriter(ctrl)
+	models.SetTiUPConfigReaderWriter(tiupRW)
+	tiupRW.EXPECT().QueryByComponentType(gomock.Any(), gomock.Any()).Return(&tiup.TiupConfig{
+		TiupHome: "testdata",
+	}, nil).AnyTimes()
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), gomock.Any()).Return(management.ClusterTopologySnapshot{
+		Config: "111",
+		PublicKey: "222",
+		PrivateKey: "333",
+	}, nil).AnyTimes()
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "111",
+			},
+			Version: "v5.0.0",
+		},
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		err := rebuildTiupSpaceForCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+		publicKey, err := os.ReadFile("testdata/storage/cluster/clusters/111/ssh/id_rsa.pub")
+		assert.NoError(t, err)
+		assert.Equal(t, "222", string(publicKey))
+	})
+}
+
+func Test_fetchTopologyFile(t *testing.T) {
+
 }

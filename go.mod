@@ -8,7 +8,6 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/HdrHistogram/hdrhistogram-go v1.1.1 // indirect
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
-	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/asim/go-micro/plugins/registry/etcd/v3 v3.0.0-20210812172626-c7195aae9817
 	github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3 v3.0.0-20210812172626-c7195aae9817
 	github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3 v3.0.0-20210812172626-c7195aae9817
@@ -24,7 +23,7 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
-	github.com/google/goexpect v0.0.0-20210430020637-ab937bf7fd6f // indirect
+	github.com/google/goexpect v0.0.0-20210430020637-ab937bf7fd6f
 	github.com/google/uuid v1.3.0
 	github.com/labstack/gommon v0.3.0
 	github.com/lithammer/shortuuid v3.0.0+incompatible

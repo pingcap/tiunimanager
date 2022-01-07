@@ -75,8 +75,10 @@ type QueryProductsReq struct {
 	Status          string `json:"status" form:"status"`
 	InternalProduct int    `json:"internalProduct" form:"internalProduct"`
 }
+
 type QueryProductsResp struct {
-	Products []structs.Product `json:"products"`
+	// arch version
+	Products map[string]map[string]map[string][]structs.Product `json:"products"`
 }
 
 //QueryProductDetailReq query product detail message
@@ -87,6 +89,7 @@ type QueryProductDetailReq struct {
 	Status          string `json:"status" form:"status"`
 	InternalProduct int    `json:"internalProduct" form:"internalProduct"`
 }
+
 type QueryProductDetailResp struct {
 	Products map[string]structs.ProductDetail `json:"products"`
 }

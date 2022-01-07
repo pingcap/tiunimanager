@@ -66,6 +66,7 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 		ParameterGroupID:  param.ParameterGroupID,
 		Copies:            param.Copies,
 		Exclusive:         param.Exclusive,
+		Vendor:            param.Vendor,
 		Region:            param.Region,
 		CpuArchitecture:   constants.ArchType(param.CpuArchitecture),
 		MaintenanceStatus: constants.ClusterMaintenanceNone,

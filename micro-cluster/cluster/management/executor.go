@@ -58,6 +58,7 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	instanceRequirement, instances := clusterMeta.GenerateInstanceResourceRequirements(context)
 
 	batchReq := &resourceStructs.BatchAllocRequest{
+		Vendor: clusterMeta.Cluster.Vendor,
 		BatchRequests: []resourceStructs.AllocReq{
 			{
 				Applicant: resourceStructs.Applicant{

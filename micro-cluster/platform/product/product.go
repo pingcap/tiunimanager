@@ -27,6 +27,7 @@ package product
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
@@ -91,10 +92,9 @@ func (manager *ProductManager) QueryZones(ctx context.Context) (resp message.Que
 }
 
 func (manager *ProductManager) QueryProducts(ctx context.Context, request message.QueryProductsReq) (resp message.QueryProductsResp, err error) {
-
 	log := framework.LogWithContext(ctx)
 	rw := models.GetProductReaderWriter()
-	resp.Products, err = rw.QueryProducts(ctx, request.VendorID, constants.ProductStatus(request.Status), constants.EMInternalProduct(request.InternalProduct))
+	products, err := rw.QueryProducts(ctx, request.VendorID, constants.ProductStatus(request.Status), constants.EMInternalProduct(request.InternalProduct))
 	if err != nil {
 		log.Warningf("query all products error: %v,vendorID: %s,status: %s,internalProduct: %d",
 			err, request.VendorID, request.Status, request.InternalProduct)
@@ -104,7 +104,38 @@ func (manager *ProductManager) QueryProducts(ctx context.Context, request messag
 	log.Debugf("query all products success,vendorID: %s,status: %s,internalProduct: %d",
 		request.VendorID, request.Status, request.InternalProduct)
 
+	// region arch version
+	resp.Products = make(map[string]map[string]map[string][]structs.Product)
+	for _, product := range products {
+		addToProducts(resp.Products, product)
+	}
 	return resp, nil
+}
+
+func addToProducts(products map[string]map[string]map[string][]structs.Product, product structs.Product) {
+	if region, ok := products[product.RegionID]; ok {
+		addToRegion(region, product)
+	} else {
+		products[product.RegionID] = make(map[string]map[string][]structs.Product)
+		addToRegion(products[product.RegionID], product)
+	}
+}
+
+func addToRegion(region map[string]map[string][]structs.Product, product structs.Product) {
+	if arch, ok := region[product.Arch]; ok {
+		addToArch(arch, product)
+	} else {
+		region[product.Arch] = make(map[string][]structs.Product)
+		addToArch(region[product.Arch], product)
+	}
+}
+
+func addToArch(arch map[string][]structs.Product, product structs.Product) {
+	if version, ok := arch[product.Version]; ok {
+		arch[product.Version] = append(version, product)
+	} else {
+		arch[product.Version] = []structs.Product{product}
+	}
 }
 
 func (manager *ProductManager) CreateProduct(ctx context.Context, request message.CreateProductReq) (resp message.CreateProductResp, err error) {

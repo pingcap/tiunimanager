@@ -62,8 +62,9 @@ type CreateClusterParameter struct {
 	Version          string   `json:"clusterVersion"`
 	Tags             []string `json:"tags"`
 	TLS              bool     `json:"tls"`
-	Copies           int      `json:"copies"`                                 //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
-	Exclusive        bool     `json:"exclusive" form:"exclusive"`             //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+	Copies           int      `json:"copies"`                     //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
+	Exclusive        bool     `json:"exclusive" form:"exclusive"` //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+	Vendor           string   `json:"vendorId" form:"vendor"`
 	Region           string   `json:"region" form:"region"`                   //The Region where the cluster is located
 	CpuArchitecture  string   `json:"cpuArchitecture" form:"cpuArchitecture"` //X86/X86_64/ARM
 	ParameterGroupID string   `json:"parameterGroupID" form:"parameterGroupID"`

@@ -161,7 +161,6 @@ func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		"get scale out cluster %s task id: %s", cluster.ID, taskId)
 
 	node.Record(fmt.Sprintf("scale out cluster %s, version: %s, ", clusterMeta.Cluster.ID, cluster.Version))
-	fmt.Println(node.Result)
 	return nil
 }
 
@@ -359,7 +358,7 @@ func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	context.SetData(ContextBackupID, backupResponse.BackupID)
 
 	node.Record(fmt.Sprintf("do backup for source cluster %s, ", sourceClusterMeta.Cluster.ID),
-		fmt.Sprintf("backup mode: %v, ", constants.BackupModeManual))
+		fmt.Sprintf("backup mode: %v ", constants.BackupModeManual))
 	return nil
 }
 
@@ -383,7 +382,7 @@ func restoreNewCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 	}
 
 	context.SetData(ContextWorkflowID, restoreResponse.WorkFlowID)
-	node.Record(fmt.Sprintf("do restore for cluster %s, backup ID: %s, ", clusterMeta.Cluster.ID, backupID))
+	node.Record(fmt.Sprintf("do restore for cluster %s, backup ID: %s ", clusterMeta.Cluster.ID, backupID))
 	return nil
 }
 
@@ -690,7 +689,7 @@ func restoreCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	}
 	context.SetData(ContextWorkflowID, restoreResponse.WorkFlowID)
 
-	node.Record(fmt.Sprintf("do restore for cluster %s, backup id: %s, ", clusterMeta.Cluster.ID, backupID))
+	node.Record(fmt.Sprintf("do restore for cluster %s, backup id: %s ", clusterMeta.Cluster.ID, backupID))
 	return nil
 }
 
@@ -787,7 +786,7 @@ func stopCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext
 	framework.LogWithContext(context.Context).Infof(
 		"get stop cluster %s task id: %s", clusterMeta.Cluster.ID, taskId)
 
-	node.Record(fmt.Sprintf("stop cluster: %s, version: %s, ", clusterMeta.Cluster.ID, cluster.Version))
+	node.Record(fmt.Sprintf("stop cluster: %s, version: %s ", clusterMeta.Cluster.ID, cluster.Version))
 	return nil
 }
 
@@ -816,7 +815,7 @@ func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	framework.LogWithContext(context.Context).Infof(
 		"get destroy cluster %s task id: %s", clusterMeta.Cluster.ID, taskId)
 
-	node.Record(fmt.Sprintf("destroy cluster: %s, version: %s, ", clusterMeta.Cluster.ID, cluster.Version))
+	node.Record(fmt.Sprintf("destroy cluster: %s, version: %s ", clusterMeta.Cluster.ID, cluster.Version))
 	return nil
 }
 
@@ -1062,7 +1061,6 @@ func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 		instance.HostID = resourceResult.Results[i].HostId
 		instance.Zone = resourceResult.Results[i].Location.Zone
 		instance.Rack = resourceResult.Results[i].Location.Rack
-		//todo
 		node.Record(fmt.Sprintf("type: %s, zone: %s, host IP: %s; ", instance.Type, instance.Zone, instance.HostIP[0]))
 	}
 	node.Record(fmt.Sprintf("cluster %s alloc resource ", clusterMeta.Cluster.ID))

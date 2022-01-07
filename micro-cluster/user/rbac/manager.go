@@ -78,8 +78,12 @@ func (mgr *RBACManager) CheckPermissionForUser(ctx context.Context, request mess
 	for _, permission := range request.Permissions {
 		result, err := mgr.enforcer.Enforce(request.UserID, permission.Resource, permission.Action)
 		if err != nil {
-			framework.LogWithContext(ctx).Infof("user %s check permission result %v", request.UserID, result)
+			framework.LogWithContext(ctx).Errorf("user %s check permission error: %s", request.UserID, err.Error())
 			return message.CheckPermissionForUserResp{Result: result}, err
+		}
+		if !result {
+			framework.LogWithContext(ctx).Infof("user %s check permission %+v failed", request.UserID, permission)
+			return message.CheckPermissionForUserResp{Result: result}, nil
 		}
 	}
 	return message.CheckPermissionForUserResp{Result: true}, nil

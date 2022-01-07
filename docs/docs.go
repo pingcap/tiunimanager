@@ -4795,6 +4795,9 @@ var doc = `{
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendorId": {
+                    "type": "string"
                 }
             }
         },
@@ -4906,6 +4909,9 @@ var doc = `{
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendorId": {
+                    "type": "string"
                 }
             }
         },
@@ -5504,6 +5510,9 @@ var doc = `{
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendorId": {
+                    "type": "string"
                 }
             }
         },
@@ -6507,9 +6516,19 @@ var doc = `{
             "type": "object",
             "properties": {
                 "products": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.Product"
+                    "description": "arch version",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/structs.Product"
+                                }
+                            }
+                        }
                     }
                 }
             }

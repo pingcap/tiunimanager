@@ -942,7 +942,7 @@ func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	requirements, instances := clusterMeta.GenerateTakeoverResourceRequirements(context)
 
-	batchReq := &resourceStructs.BatchAllocRequest{
+	batchReq := &resourceStructs.BatchAllocRequest {
 		BatchRequests: []resourceStructs.AllocReq{
 			{
 				Applicant: resourceStructs.Applicant{

@@ -63,6 +63,8 @@ definitions:
         type: array
       tls:
         type: boolean
+      vendorId:
+        type: string
     type: object
   cluster.CloneClusterResp:
     properties:
@@ -144,6 +146,8 @@ definitions:
         type: array
       tls:
         type: boolean
+      vendorId:
+        type: string
     type: object
   cluster.CreateClusterResp:
     properties:
@@ -569,6 +573,8 @@ definitions:
         type: array
       tls:
         type: boolean
+      vendorId:
+        type: string
     type: object
   cluster.RestoreNewClusterResp:
     properties:
@@ -1247,9 +1253,16 @@ definitions:
   message.QueryProductsResp:
     properties:
       products:
-        items:
-          $ref: '#/definitions/structs.Product'
-        type: array
+        additionalProperties:
+          additionalProperties:
+            additionalProperties:
+              items:
+                $ref: '#/definitions/structs.Product'
+              type: array
+            type: object
+          type: object
+        description: arch version
+        type: object
     type: object
   message.QuerySpecsResp:
     properties:

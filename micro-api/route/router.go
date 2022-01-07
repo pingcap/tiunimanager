@@ -26,16 +26,15 @@ import (
 	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
 	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
-	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
-
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
+	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
 	"github.com/pingcap-inc/tiem/micro-api/controller/platform/product"
 	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
 	warehouseApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 	flowtaskApi "github.com/pingcap-inc/tiem/micro-api/controller/task/flowtask"
 	accountApi "github.com/pingcap-inc/tiem/micro-api/controller/user/account"
 	idApi "github.com/pingcap-inc/tiem/micro-api/controller/user/identification"
-
+	rbacApi "github.com/pingcap-inc/tiem/micro-api/controller/user/rbac"
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -80,6 +79,20 @@ func Route(g *gin.Engine) {
 			profile.Use(interceptor.VerifyIdentity)
 			profile.Use(interceptor.AuditLog())
 			profile.GET("/profile", metrics.HandleMetrics(constants.MetricsUserProfile), accountApi.Profile)
+		}
+
+		rbac := apiV1.Group("/rbac")
+		{
+			rbac.Use(interceptor.VerifyIdentity)
+			rbac.Use(interceptor.AuditLog())
+			rbac.POST("/user_role/add", metrics.HandleMetrics(constants.MetricsRbacAddRoleForUser), rbacApi.AddRoleForUser)
+			rbac.DELETE("/user_role/delete", metrics.HandleMetrics(constants.MetricsRbacDeleteRoleForUser), rbacApi.DeleteRoleForUser)
+			rbac.DELETE("/user/:userId", metrics.HandleMetrics(constants.MetricsRbacDeleteUser), rbacApi.DeleteRbacUser)
+			rbac.DELETE("/role/:role", metrics.HandleMetrics(constants.MetricsRbacDeleteRole), rbacApi.DeleteRbacRole)
+			rbac.POST("/permission/add", metrics.HandleMetrics(constants.MetricsRbacAddPermissionForRole), rbacApi.AddPermissionsForRole)
+			rbac.DELETE("/permission/delete", metrics.HandleMetrics(constants.MetricsRbacDeletePermissionForRole), rbacApi.DeletePermissionsForRole)
+			rbac.GET("/permission/:userId", metrics.HandleMetrics(constants.MetricsRbacGetPermissionForUser), rbacApi.GetPermissionsForUser)
+			rbac.POST("/permission/check", metrics.HandleMetrics(constants.MetricsRbacCheckPermissionForUser), rbacApi.CheckPermissionForUser)
 		}
 
 		cluster := apiV1.Group("/clusters")

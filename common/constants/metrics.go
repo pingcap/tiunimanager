@@ -85,9 +85,17 @@ const (
 	MetricsParameterGroupUpdate MetricsType = "parameter_group/update"
 
 	// MetricsUserLogin define user metrics
-	MetricsUserLogin   MetricsType = "user/login"
-	MetricsUserLogout  MetricsType = "user/logout"
-	MetricsUserProfile MetricsType = "user/profile"
+	MetricsUserLogin                   MetricsType = "user/login"
+	MetricsUserLogout                  MetricsType = "user/logout"
+	MetricsUserProfile                 MetricsType = "user/profile"
+	MetricsRbacAddRoleForUser          MetricsType = "user/rbac/user_role/add"
+	MetricsRbacDeleteRoleForUser       MetricsType = "user/rbac/user_role/delete"
+	MetricsRbacDeleteRole              MetricsType = "user/rbac/role/delete"
+	MetricsRbacDeleteUser              MetricsType = "user/rbac/user/delete"
+	MetricsRbacAddPermissionForRole    MetricsType = "user/rbac/permission/add"
+	MetricsRbacDeletePermissionForRole MetricsType = "user/rbac/permission/delete"
+	MetricsRbacGetPermissionForUser    MetricsType = "user/rbac/permission/get"
+	MetricsRbacCheckPermissionForUser  MetricsType = "user/rbac/permission/check"
 
 	// MetricsWorkFlowQuery define workflow metrics
 	MetricsWorkFlowQuery  MetricsType = "workflow/query"

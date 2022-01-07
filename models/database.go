@@ -17,6 +17,7 @@ package models
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/models/user/rbac"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -66,6 +67,7 @@ type database struct {
 	configReaderWriter               config.ReaderWriter
 	secondPartyOperationReaderWriter secondparty.ReaderWriter
 	resourceReaderWriter             resource.ReaderWriter
+	rbacReaderWriter                 rbac.ReaderWriter
 	tenantReaderWriter               tenant.ReaderWriter
 	accountReaderWriter              account.ReaderWriter
 	tokenReaderWriter                identification.ReaderWriter
@@ -143,6 +145,7 @@ func (p *database) initTables() (err error) {
 		new(parametergroup.ParameterGroup),
 		new(parametergroup.ParameterGroupMapping),
 		new(parameter.ClusterParameterMapping),
+		new(rbac.RBAC),
 		new(account.Account),
 		new(tenant.Tenant),
 		new(identification.Token),
@@ -171,6 +174,7 @@ func (p *database) initReaderWriters() {
 	defaultDb.configReaderWriter = config.NewConfigReadWrite(defaultDb.base)
 	defaultDb.secondPartyOperationReaderWriter = secondparty.NewGormSecondPartyOperationReadWrite(defaultDb.base)
 	defaultDb.clusterReaderWriter = management.NewClusterReadWrite(defaultDb.base)
+	defaultDb.rbacReaderWriter = rbac.NewRBACReadWrite(defaultDb.base)
 	defaultDb.tenantReaderWriter = tenant.NewTenantReadWrite(defaultDb.base)
 	defaultDb.accountReaderWriter = account.NewAccountReadWrite(defaultDb.base)
 	defaultDb.tokenReaderWriter = identification.NewTokenReadWrite(defaultDb.base)
@@ -326,6 +330,14 @@ func GetClusterParameterReaderWriter() parameter.ReaderWriter {
 
 func SetClusterParameterReaderWriter(rw parameter.ReaderWriter) {
 	defaultDb.clusterParameterReaderWriter = rw
+}
+
+func GetRBACReaderWriter() rbac.ReaderWriter {
+	return defaultDb.rbacReaderWriter
+}
+
+func SetRBACReaderWriter(rw rbac.ReaderWriter) {
+	defaultDb.rbacReaderWriter = rw
 }
 
 func GetAccountReaderWriter() account.ReaderWriter {

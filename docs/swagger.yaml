@@ -1257,9 +1257,7 @@ definitions:
           additionalProperties:
             additionalProperties:
               additionalProperties:
-                items:
-                  $ref: '#/definitions/structs.Product'
-                type: array
+                $ref: '#/definitions/structs.Product'
               type: object
             type: object
           type: object

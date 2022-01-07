@@ -1461,7 +1461,7 @@ func Test_testConnectivity(t *testing.T) {
 		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
 			Cluster: &management.Cluster{
 				DBUser: "root",
-				DBPassword: "mypassword",
+				DBPassword: "fdasfsdafa",
 			},
 			Instances: map[string][]*management.ClusterInstance{
 				string(constants.ComponentIDTiDB) : {
@@ -1469,13 +1469,13 @@ func Test_testConnectivity(t *testing.T) {
 						Entity: common.Entity{
 							Status: string(constants.ClusterRunning),
 						},
-						HostIP: []string{"172.16.6.176"},
+						HostIP: []string{"172.16.5.148"},
 						Ports: []int32{10000},
 					},
 				},
 			},
 		})
-		err := testConnectivity(nil, ctx)
+		err := testConnectivity(&workflowModel.WorkFlowNode{}, ctx)
 		assert.NoError(t, err)
 	})
 	*/
@@ -1498,7 +1498,7 @@ func Test_testConnectivity(t *testing.T) {
 				},
 			},
 		})
-		err := testConnectivity(nil, ctx)
+		err := testConnectivity(&workflowModel.WorkFlowNode{}, ctx)
 		assert.Error(t, err)
 	})
 }

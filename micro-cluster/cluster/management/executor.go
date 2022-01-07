@@ -993,7 +993,7 @@ func rebuildTiupSpaceForCluster(node *workflowModel.WorkFlowNode, context *workf
 	}
 
 	home := getClusterSpaceInTiUP(context, clusterMeta.Cluster.ID)
-	err = os.MkdirAll(home + "ssh", 0755)
+	err = os.MkdirAll(home + "ssh", os.ModePerm)
 	if err != nil {
 		framework.LogWithContext(context).Errorf("mkdir for cluster %s failed, err = %s", clusterMeta.Cluster.ID, err.Error())
 		return err

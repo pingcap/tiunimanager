@@ -25,8 +25,9 @@ package parametergroup
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"time"
+
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 
 	"github.com/pingcap-inc/tiem/common/errors"
 
@@ -241,7 +242,7 @@ func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, p
 			"parameter_group_mappings.created_at, parameter_group_mappings.updated_at").
 		Joins("left join parameter_group_mappings on parameters.id = parameter_group_mappings.parameter_id").
 		Where("parameter_group_mappings.parameter_group_id = ?", parameterGroupId).
-		Order("parameters.instance_type asc").
+		Order("parameters.instance_type desc").
 		Scan(&params).Error
 	if err != nil {
 		log.Errorf("query parameters by group id err: %v", err.Error())

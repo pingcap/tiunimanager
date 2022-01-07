@@ -92,7 +92,7 @@ func TestPrepareResource(t *testing.T) {
 					Type:         "TiDB",
 					Version:      "v5.0.0",
 					Ports:        []int32{10001, 10002, 10003, 10004},
-					HostIP:       []string{"127.0.0.1"},
+					HostIP:       []string{"127.0.0.1", "127.0.0.6"},
 					DiskType:     "SSD",
 					DiskCapacity: 128,
 				},
@@ -1560,7 +1560,7 @@ func Test_testRebuildTopologyFromConfig(t *testing.T) {
 		assert.NoError(t, err)
 		ctx.SetData(ContextTopologyConfig, bytes)
 
-		err = rebuildTopologyFromConfig(nil, ctx)
+		err = rebuildTopologyFromConfig(&workflowModel.WorkFlowNode{}, ctx)
 		assert.NoError(t, err)
 		assert.Equal(t, "v5.2.2", clusterMeta.Cluster.Version)
 		assert.NotEmpty(t, clusterMeta.Instances)

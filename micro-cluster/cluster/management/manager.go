@@ -426,8 +426,8 @@ func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterRe
 	resp.ClusterID = meta.Cluster.ID
 
 	if len(meta.Cluster.MaintenanceStatus) > 0 && !req.Force {
-		resp.NeedConfirmation = true
-		resp.MaintenanceStatus = string(meta.Cluster.MaintenanceStatus)
+		msg := fmt.Sprintf("cluster maintenance status is '%s'", string(meta.Cluster.MaintenanceStatus))
+		err = errors.NewError(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT, msg)
 		return
 	}
 

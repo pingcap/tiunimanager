@@ -51,8 +51,6 @@ type DeleteClusterReq struct {
 type DeleteClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
 	ClusterID         string `json:"clusterID"`
-	NeedConfirmation  bool   `json:"needConfirmation"`
-	MaintenanceStatus string `json:"maintenanceStatus"`
 }
 
 // StopClusterReq Message for stop a new cluster

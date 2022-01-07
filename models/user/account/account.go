@@ -6,7 +6,24 @@ import (
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap/errors"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
+	"time"
 )
+
+type User struct {
+	ID        string    `gorm:"primarykey"`
+	TenantID  string    `gorm:"primarykey"`
+	Creator   string    `gorm:"default:null;not null;;<-:create"`
+	Name      string    `gorm:"default:null;not null;uniqueIndex"`
+	Salt      string    `gorm:"default:null;not null;<-:create"` //password
+	FinalHash string    `gorm:"default:null;not null"`
+	Email     string    `gorm:"default:null"`
+	Phone     string    `gorm:"default:null"`
+	Status    string    `gorm:"not null;"`
+	CreatedAt time.Time `gorm:"<-:create"`
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt
+}
 
 type Account struct {
 	common.Entity

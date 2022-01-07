@@ -33,6 +33,7 @@ import (
 	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
 	warehouseApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 	flowtaskApi "github.com/pingcap-inc/tiem/micro-api/controller/task/flowtask"
+	ur "github.com/pingcap-inc/tiem/micro-api/controller/user"
 	accountApi "github.com/pingcap-inc/tiem/micro-api/controller/user/account"
 	idApi "github.com/pingcap-inc/tiem/micro-api/controller/user/identification"
 
@@ -73,6 +74,20 @@ func Route(g *gin.Engine) {
 		{
 			user.POST("/login", metrics.HandleMetrics(constants.MetricsUserLogin), idApi.Login)
 			user.POST("/logout", metrics.HandleMetrics(constants.MetricsUserLogout), idApi.Logout)
+			user.POST("/create", metrics.HandleMetrics(constants.MetricsUserCreate), ur.CreateUser)
+			user.DELETE("/delete", metrics.HandleMetrics(constants.MetricsUserDelete), ur.DeleteUser)
+			user.POST("/update_profile", metrics.HandleMetrics(constants.MetricsUserUpdateProfile), ur.UpdateUserProfile)
+			user.GET("/get", metrics.HandleMetrics(constants.MetricsTenantGet), ur.GetUser)
+			user.GET("/query", metrics.HandleMetrics(constants.MetricsUserQuery), ur.QueryUsers)
+		}
+		tenant := apiV1.Group("/tenant")
+		{
+			tenant.POST("/create", metrics.HandleMetrics(constants.MetricsTenantCreate), ur.CreateTenant)
+			tenant.DELETE("/delete", metrics.HandleMetrics(constants.MetricsTenantDelete), ur.DeleteTenant)
+			tenant.POST("/update_profile", metrics.HandleMetrics(constants.MetricsTenantUpdateProfile), ur.UpdateTenantProfile)
+			tenant.POST("/update_on_boarding_status", metrics.HandleMetrics(constants.MetricsTenantUpdateOnBoardingStatus), ur.UpdateTenantOnBoardingStatus)
+			tenant.GET("/get", metrics.HandleMetrics(constants.MetricsTenantGet), ur.GetTenant)
+			tenant.GET("/query", metrics.HandleMetrics(constants.MetricsTenantQuery), ur.QueryTenants)
 		}
 
 		profile := user.Group("")

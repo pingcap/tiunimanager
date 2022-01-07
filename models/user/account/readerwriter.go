@@ -17,12 +17,27 @@ package account
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/common/structs"
 )
 
 type ReaderWriter interface {
 	AddAccount(ctx context.Context, tenantId string, name string, salt string, finalHash string, status int8) (*Account, error)
 	FindAccountByName(ctx context.Context, name string) (*Account, error)
 	FindAccountById(ctx context.Context, id string) (*Account, error)
+
+	CreateUser(ctx context.Context, user User) (info *structs.UserInfoExt, err error)
+	DeleteUser(ctx context.Context, tenantID, userID string) error
+	QueryUsers(ctx context.Context) (userInfos map[string]structs.UserInfoExt, err error)
+	GetUser(ctx context.Context, tenantID, userID string) (userInfo structs.UserInfoExt, err error)
+	UpdateUserStatus(ctx context.Context, tenantID, userID string, status string) error
+	UpdateUserProfile(ctx context.Context, tenantID, userID, email, phone string) error
+	UpdateUserPassword(ctx context.Context, tenantID, userID, salt, finalHash string) error
+
+	CreateTenant(ctx context.Context, tenant Tenant) (info *structs.TenantInfo, err error)
+	DeleteTenant(ctx context.Context, tenantID string) error
+	GetTenant(ctx context.Context, tenantID string) (tenant structs.TenantInfo, err error)
+	QueryTenants(ctx context.Context) (tenants map[string]structs.TenantInfo, err error)
+	UpdateTenantStatus(ctx context.Context, tenantID, status string) error
+	UpdateTenantProfile(ctx context.Context, tenantID, name string, maxCluster, maxCPU, maxMemory, maxStorage int32) error
+	UpdateTenantOnBoardingStatus(ctx context.Context, tenantID, status string) error
 }
-
-

@@ -84,6 +84,19 @@ service ClusterService {
     rpc CreateSpecs(RpcRequest) returns (RpcResponse);
     rpc DeleteSpecs(RpcRequest) returns (RpcResponse);
     rpc QuerySpecs(RpcRequest) returns (RpcResponse);
+
+    //user & tenant
+    rpc CreateUser(RpcRequest) returns (RpcResponse);
+    rpc DeleteUser(RpcRequest) returns (RpcResponse);
+    rpc GetUser(RpcRequest) returns (RpcResponse);
+    rpc QueryUsers(RpcRequest) returns (RpcResponse);
+    rpc UpdateUserProfile(RpcRequest) returns (RpcResponse);
+    rpc CreateTenant(RpcRequest) returns (RpcResponse);
+    rpc DeleteTenant(RpcRequest) returns (RpcResponse);
+    rpc GetTenant(RpcRequest) returns (RpcResponse);
+    rpc QueryTenants(RpcRequest) returns (RpcResponse);
+    rpc UpdateTenantOnBoardingStatus(RpcRequest) returns (RpcResponse);
+    rpc UpdateTenantProfile(RpcRequest) returns (RpcResponse);
 }
 
 message RpcRequest {

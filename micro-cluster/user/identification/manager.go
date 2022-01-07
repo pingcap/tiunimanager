@@ -67,7 +67,7 @@ func (p *Manager) Logout(ctx context.Context, req message.LogoutReq) (message.Lo
 		accountName := token.AccountName
 		token.Destroy()
 
-		err := Modify(ctx, message.ModifyTokenReq{Token: &token.Token})
+		err = Modify(ctx, message.ModifyTokenReq{Token: &token.Token})
 		if err != nil {
 			return message.LogoutResp{AccountName: ""}, err
 		}

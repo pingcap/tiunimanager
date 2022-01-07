@@ -31,7 +31,7 @@ type BatchAllocRequest struct {
 }
 
 func (r BatchAllocRequest) IsLocalVendor() bool {
-	return r.Vendor == string(constants.Local)
+	return r.Vendor == "" || r.Vendor == string(constants.Local)
 }
 
 func (r BatchAllocRequest) IsAwsVendor() bool {
@@ -132,7 +132,7 @@ type RecycleRequest struct {
 }
 
 func (r RecycleRequest) IsLocalVendor() bool {
-	return r.Vendor == string(constants.Local)
+	return r.Vendor == "" || r.Vendor == string(constants.Local)
 }
 
 func (r RecycleRequest) IsAwsVendor() bool {

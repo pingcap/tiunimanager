@@ -1092,7 +1092,7 @@ func testConnectivity(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 		}).
 		If(func(err error) {
 			framework.LogWithContext(context).Errorf("test connectivity failed, err = %s", err.Error())
-	    }).
+		}).
 		Else(func() {
 			node.Record(fmt.Sprintf("test TiDB server %s:%d connection successfully", connectAddress.IP, connectAddress.Port))
 		}).

@@ -78,7 +78,7 @@ type QueryProductsReq struct {
 
 type QueryProductsResp struct {
 	// arch version
-	Products map[string]map[string]map[string][]structs.Product `json:"products"`
+	Products map[string]map[string]map[string]map[string][]structs.Product `json:"products"`
 }
 
 //QueryProductDetailReq query product detail message

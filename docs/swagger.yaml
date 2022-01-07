@@ -1256,9 +1256,11 @@ definitions:
         additionalProperties:
           additionalProperties:
             additionalProperties:
-              items:
-                $ref: '#/definitions/structs.Product'
-              type: array
+              additionalProperties:
+                items:
+                  $ref: '#/definitions/structs.Product'
+                type: array
+              type: object
             type: object
           type: object
         description: arch version

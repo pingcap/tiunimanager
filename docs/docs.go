@@ -6523,9 +6523,12 @@ var doc = `{
                         "additionalProperties": {
                             "type": "object",
                             "additionalProperties": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "#/definitions/structs.Product"
+                                "type": "object",
+                                "additionalProperties": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/structs.Product"
+                                    }
                                 }
                             }
                         }

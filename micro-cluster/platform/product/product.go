@@ -105,23 +105,31 @@ func (manager *ProductManager) QueryProducts(ctx context.Context, request messag
 		request.VendorID, request.Status, request.InternalProduct)
 
 	// region arch version
-	resp.Products = make(map[string]map[string]map[string][]structs.Product)
+	resp.Products = make(map[string]map[string]map[string]map[string][]structs.Product)
 	for _, product := range products {
 		addToProducts(resp.Products, product)
 	}
 	return resp, nil
 }
 
-func addToProducts(products map[string]map[string]map[string][]structs.Product, product structs.Product) {
+func addToProducts(products map[string]map[string]map[string]map[string][]structs.Product, product structs.Product) {
 	if region, ok := products[product.RegionID]; ok {
 		addToRegion(region, product)
 	} else {
-		products[product.RegionID] = make(map[string]map[string][]structs.Product)
+		products[product.RegionID] = make(map[string]map[string]map[string][]structs.Product)
 		addToRegion(products[product.RegionID], product)
 	}
 }
 
-func addToRegion(region map[string]map[string][]structs.Product, product structs.Product) {
+func addToRegion(region map[string]map[string]map[string][]structs.Product, product structs.Product) {
+	if productType, ok := region[product.ID]; ok {
+		addToProductType(productType, product)
+	} else {
+		region[product.ID] = make(map[string]map[string][]structs.Product)
+		addToProductType(region[product.ID], product)
+	}
+}
+func addToProductType(region map[string]map[string][]structs.Product, product structs.Product) {
 	if arch, ok := region[product.Arch]; ok {
 		addToArch(arch, product)
 	} else {

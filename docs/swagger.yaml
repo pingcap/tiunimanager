@@ -862,6 +862,26 @@ definitions:
       portRangeStart:
         type: integer
     type: object
+  message.AddPermissionsForRoleReq:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/structs.RbacPermission'
+        type: array
+      role:
+        type: string
+    type: object
+  message.AddPermissionsForRoleResp:
+    type: object
+  message.AddRoleForUserReq:
+    properties:
+      role:
+        type: string
+      userId:
+        type: string
+    type: object
+  message.AddRoleForUserResp:
+    type: object
   message.ApplyParameterGroupReq:
     properties:
       clusterId:
@@ -881,6 +901,20 @@ definitions:
       workFlowId:
         description: Asynchronous task workflow ID
         type: string
+    type: object
+  message.CheckPermissionForUserReq:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/structs.RbacPermission'
+        type: array
+      userId:
+        type: string
+    type: object
+  message.CheckPermissionForUserResp:
+    properties:
+      result:
+        type: boolean
     type: object
   message.CopyParameterGroupReq:
     properties:
@@ -1064,12 +1098,34 @@ definitions:
         example: "1"
         type: string
     type: object
+  message.DeletePermissionsForRoleReq:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/structs.RbacPermission'
+        type: array
+      role:
+        type: string
+    type: object
+  message.DeletePermissionsForRoleResp:
+    type: object
   message.DeleteProductReq:
     properties:
       productInfo:
         $ref: '#/definitions/structs.Product'
     type: object
   message.DeleteProductResp:
+    type: object
+  message.DeleteRoleForUserReq:
+    properties:
+      role:
+        type: string
+      userId:
+        type: string
+    type: object
+  message.DeleteRoleForUserResp:
+    type: object
+  message.DeleteRoleResp:
     type: object
   message.DeleteSpecsReq:
     properties:
@@ -1079,6 +1135,8 @@ definitions:
         type: array
     type: object
   message.DeleteSpecsResp:
+    type: object
+  message.DeleteUserResp:
     type: object
   message.DeleteZoneReq:
     properties:
@@ -1139,6 +1197,15 @@ definitions:
     properties:
       root:
         $ref: '#/definitions/structs.HierarchyTreeNode'
+    type: object
+  message.GetPermissionsForUserResp:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/structs.RbacPermission'
+        type: array
+      userId:
+        type: string
     type: object
   message.GetStocksResp:
     properties:
@@ -2018,6 +2085,13 @@ definitions:
         type: object
       version:
         description: Version information of the product, e.g. v5.0.0
+        type: string
+    type: object
+  structs.RbacPermission:
+    properties:
+      action:
+        type: string
+      resource:
         type: string
     type: object
   structs.ResourceStockCheckResult:
@@ -4267,6 +4341,331 @@ paths:
       summary: query all product detail
       tags:
       - platform
+  /rbac/permission/{userId}:
+    get:
+      consumes:
+      - application/json
+      description: GetPermissionsForUser
+      parameters:
+      - description: rbac userId
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.GetPermissionsForUserResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: get permissions of user
+      tags:
+      - rbac GetPermissionsForUser
+  /rbac/permission/add:
+    post:
+      consumes:
+      - application/json
+      description: AddPermissionsForRole
+      parameters:
+      - description: AddPermissionsForRole request
+        in: body
+        name: addPermissionsForRoleReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.AddPermissionsForRoleReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.AddPermissionsForRoleResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: add permissions for role
+      tags:
+      - rbac AddPermissionsForRole
+  /rbac/permission/check:
+    post:
+      consumes:
+      - application/json
+      description: CheckPermissionForUser
+      parameters:
+      - description: CheckPermissionForUser request
+        in: body
+        name: checkPermissionForUserReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.CheckPermissionForUserReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.CheckPermissionForUserResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: check permissions of user
+      tags:
+      - rbac CheckPermissionForUser
+  /rbac/permission/delete:
+    delete:
+      consumes:
+      - application/json
+      description: DeletePermissionsForRole
+      parameters:
+      - description: DeleteRoleForUser request
+        in: body
+        name: deletePermissionsForRoleReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.DeletePermissionsForRoleReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.DeletePermissionsForRoleResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: delete permissions for role
+      tags:
+      - rbac DeletePermissionsForRole
+  /rbac/role/{role}:
+    delete:
+      consumes:
+      - application/json
+      description: DeleteRbacRole
+      parameters:
+      - description: rbac role
+        in: path
+        name: role
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.DeleteRoleResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: delete rbac role
+      tags:
+      - rbac DeleteRbacRole
+  /rbac/user/{userId}:
+    delete:
+      consumes:
+      - application/json
+      description: DeleteRbacUser
+      parameters:
+      - description: rbac userId
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.DeleteUserResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: delete rbac user
+      tags:
+      - rbac DeleteRbacUser
+  /rbac/user_role/add:
+    post:
+      consumes:
+      - application/json
+      description: AddRoleForUser
+      parameters:
+      - description: AddRoleForUser request
+        in: body
+        name: addReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.AddRoleForUserReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.AddRoleForUserResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: add user with role
+      tags:
+      - rbac AddRoleForUser
+  /rbac/user_role/delete:
+    delete:
+      consumes:
+      - application/json
+      description: DeleteRoleForUser
+      parameters:
+      - description: DeleteRoleForUser request
+        in: body
+        name: deleteRoleForUserReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.DeleteRoleForUserReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.DeleteRoleForUserResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: unbind rbac role from user
+      tags:
+      - rbac DeleteRoleForUser
   /resources/hierarchy:
     get:
       consumes:

@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
@@ -74,8 +75,14 @@ func (mgr *RBACManager) CheckPermissionForUser(ctx context.Context, request mess
 	framework.LogWithContext(ctx).Infof("begin CheckPermissionForUser, request: %+v", request)
 	framework.LogWithContext(ctx).Info("end CheckPermissionForUser")
 
-	result, err := mgr.enforcer.Enforce(request.UserID, request.Permission.Resource, request.Permission.Action)
-	return message.CheckPermissionForUserResp{Result: result}, err
+	for _, permission := range request.Permissions {
+		result, err := mgr.enforcer.Enforce(request.UserID, permission.Resource, permission.Action)
+		if err != nil {
+			framework.LogWithContext(ctx).Infof("user %s check permission result %v", request.UserID, result)
+			return message.CheckPermissionForUserResp{Result: result}, err
+		}
+	}
+	return message.CheckPermissionForUserResp{Result: true}, nil
 }
 
 func (mgr *RBACManager) DeleteRole(ctx context.Context, request message.DeleteRoleReq) (resp message.DeleteRoleResp, err error) {
@@ -102,7 +109,16 @@ func (mgr *RBACManager) AddRoleForUser(ctx context.Context, request message.AddR
 	framework.LogWithContext(ctx).Infof("begin BindRoleForUser, request: %+v", request)
 	framework.LogWithContext(ctx).Info("end BindRoleForUser")
 
-	//todo: check userID valid
+	if request.UserID == "" {
+		return resp, fmt.Errorf("invalid input empty userId")
+	}
+	if request.Role == "" {
+		return resp, fmt.Errorf("invalid input empty role")
+	}
+	if _, ok := constants.RbacRoleMap[request.Role]; ok {
+		return resp, fmt.Errorf("default role %s can not modify permission", request.Role)
+	}
+
 	if _, err = mgr.enforcer.AddRoleForUser(request.UserID, request.Role); err != nil {
 		framework.LogWithContext(ctx).Errorf("call enforcer AddRoleForUser failed %s", err.Error())
 	}
@@ -123,7 +139,13 @@ func (mgr *RBACManager) AddPermissionsForRole(ctx context.Context, request messa
 	framework.LogWithContext(ctx).Infof("begin AddPermissionsForRole, request: %+v", request)
 	framework.LogWithContext(ctx).Info("end AddPermissionsForRole")
 
-	// todo: check role valid
+	if request.Role == "" {
+		return resp, fmt.Errorf("invalid input empty role")
+	}
+	if _, ok := constants.RbacRoleMap[request.Role]; ok {
+		return resp, fmt.Errorf("default role %s can not modify permission", request.Role)
+	}
+
 	var permissionList [][]string
 	for _, permission := range request.Permissions {
 		if !permission.CheckInvalid() {
@@ -144,7 +166,13 @@ func (mgr *RBACManager) DeletePermissionsForRole(ctx context.Context, request me
 	framework.LogWithContext(ctx).Infof("begin DeletePermissionsForRole, request: %+v", request)
 	framework.LogWithContext(ctx).Info("end DeletePermissionsForRole")
 
-	// todo: check role valid
+	if request.Role == "" {
+		return resp, fmt.Errorf("invalid input empty role")
+	}
+	if _, ok := constants.RbacRoleMap[request.Role]; ok {
+		return resp, fmt.Errorf("default role %s can not modify permission", request.Role)
+	}
+
 	for _, permission := range request.Permissions {
 		if !permission.CheckInvalid() {
 			err = fmt.Errorf("permission %+v is invaild", permission)

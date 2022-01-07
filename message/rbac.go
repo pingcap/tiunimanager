@@ -18,8 +18,8 @@ package message
 import "github.com/pingcap-inc/tiem/common/structs"
 
 type CheckPermissionForUserReq struct {
-	UserID     string                 `json:"userId"`
-	Permission structs.RbacPermission `json:"permission"`
+	UserID      string                   `json:"userId"`
+	Permissions []structs.RbacPermission `json:"permissions"`
 }
 
 type CheckPermissionForUserResp struct {

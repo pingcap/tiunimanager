@@ -71,9 +71,9 @@ type DeleteProductResp struct {
 
 //QueryProductsReq query all products message
 type QueryProductsReq struct {
-	VendorID        string `json:"vendorId"`
-	Status          string `json:"status"`
-	InternalProduct int    `json:"internalProduct"`
+	VendorID        string `json:"vendorId" form:"vendorId"`
+	Status          string `json:"status" form:"status"`
+	InternalProduct int    `json:"internalProduct" form:"internalProduct"`
 }
 type QueryProductsResp struct {
 	Products []structs.Product `json:"products"`
@@ -81,11 +81,11 @@ type QueryProductsResp struct {
 
 //QueryProductDetailReq query product detail message
 type QueryProductDetailReq struct {
-	VendorID        string `json:"vendorId"`
-	RegionID        string `json:"regionId"`
-	ProductID       string `json:"productId"`
-	Status          string `json:"status"`
-	InternalProduct int    `json:"internalProduct"`
+	VendorID        string `json:"vendorId" form:"vendorId"`
+	RegionID        string `json:"regionId" form:"regionId"`
+	ProductID       string `json:"productId" form:"productId"`
+	Status          string `json:"status" form:"status"`
+	InternalProduct int    `json:"internalProduct" form:"internalProduct"`
 }
 type QueryProductDetailResp struct {
 	Products map[string]structs.ProductDetail `json:"products"`

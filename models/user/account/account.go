@@ -13,9 +13,9 @@ import (
 type User struct {
 	ID        string    `gorm:"primarykey"`
 	TenantID  string    `gorm:"primarykey"`
-	Creator   string    `gorm:"default:null;not null;;<-:create"`
+	Creator   string    `gorm:"default:null;not null;"`
 	Name      string    `gorm:"default:null;not null;uniqueIndex"`
-	Salt      string    `gorm:"default:null;not null;<-:create"` //password
+	Salt      string    `gorm:"default:null;not null;"` //password
 	FinalHash string    `gorm:"default:null;not null"`
 	Email     string    `gorm:"default:null"`
 	Phone     string    `gorm:"default:null"`

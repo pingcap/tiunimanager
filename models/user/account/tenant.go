@@ -30,10 +30,10 @@ import (
 )
 
 type Tenant struct {
-	ID               string    `gorm:"primaryKey"`
-	Creator          string    `gorm:"default:null;not null;;<-:create"`
+	ID               string    `gorm:"default:null;not null"`
+	Creator          string    `gorm:"default:null;not null"`
 	Name             string    `gorm:"default:null;not null"`
-	Status           string    `gorm:"not null;"`
+	Status           string    `gorm:"default:null;not null"`
 	OnBoardingStatus string    `gorm:"default:null;not null"`
 	MaxCluster       int32     `gorm:"default:1024;"`
 	MaxCPU           int32     `gorm:"default:102400"`

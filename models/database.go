@@ -177,8 +177,12 @@ func (p *database) initReaderWriters() {
 }
 
 func (p *database) initSystemData() {
-	tenant, err := defaultDb.accountReaderWriter.CreateTenant(context.TODO(), account.Tenant{Name: "EM system administration",
+	tenant, err := defaultDb.accountReaderWriter.CreateTenant(context.TODO(), account.Tenant{ID: "admin", Name: "EM system administration",
 		Creator: "System", Status: string(constants.TenantStatusNormal), OnBoardingStatus: string(constants.TenantOnBoarding)})
+	if err != nil {
+		framework.LogWithContext(context.TODO()).Errorf("---%v", err)
+		return
+	}
 
 	// todo determine if default data needed
 	if err == nil {

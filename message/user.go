@@ -162,13 +162,14 @@ type DeleteUserResp struct {
 
 type GetUserReq struct {
 	ID       string `json:"id" swaggerignore:"true"`
-	TenantID string `json:"tenantId"`
+	TenantID string `json:"tenantId" form:"tenantId"`
 }
 type GetUserResp struct {
 	User structs.UserInfo `json:"user"`
 }
 
 type QueryUserReq struct {
+	structs.PageRequest
 }
 type QueryUserResp struct {
 	Users map[string]structs.UserInfo `json:"users"`
@@ -177,7 +178,7 @@ type QueryUserResp struct {
 type UpdateUserProfileReq struct {
 	ID       string `json:"id" swaggerignore:"true"`
 	TenantID string `json:"tenantId"`
-	Name     string `json:"email"`
+	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Phone    string `json:"phone"`
 }
@@ -196,7 +197,6 @@ type UpdateUserPasswordResp struct {
 type CreateTenantReqV1 struct {
 	ID               string `json:"id"`
 	Name             string `json:"name"`
-	Creator          string `json:"creator"`
 	Status           string `json:"status"`
 	OnBoardingStatus string `json:"onBoardingStatus"`
 	MaxCluster       int32  `json:"maxCluster"`
@@ -222,6 +222,7 @@ type GetTenantResp struct {
 }
 
 type QueryTenantReq struct {
+	structs.PageRequest
 }
 
 type QueryTenantResp struct {

@@ -71,8 +71,8 @@ func (arw *AccountReadWrite) GetUser(ctx context.Context, tenantID, userID strin
 		framework.LogWithContext(ctx).Warningf("get user profile,tenantID: %s, userID: %s, parameter invalid", tenantID, userID)
 		return structs.UserInfo{}, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "get user profile: tenantID: %s, userID:%s, parameter invalid", tenantID, userID)
 	}
-	user := User{ID: userID, TenantID: tenantID}
-	err = arw.DB(ctx).Where(&User{ID: userID, TenantID: tenantID}).First(user).Error
+	user := &User{}
+	err = arw.DB(ctx).First(user, "id = ? AND tenant_id = ?", userID, tenantID).Error
 	if err == gorm.ErrRecordNotFound {
 		return structs.UserInfo{}, errors.NewEMErrorf(errors.UserNotExist, "query user %s profile not found", userID)
 	}
@@ -83,9 +83,10 @@ func (arw *AccountReadWrite) GetUser(ctx context.Context, tenantID, userID strin
 		Email: user.Email, Phone: user.Phone, Status: user.Status, CreateAt: user.CreatedAt, UpdateAt: user.UpdatedAt}, err
 }
 
-func (arw *AccountReadWrite) QueryUsers(ctx context.Context) (userInfos map[string]structs.UserInfo, err error) {
+func (arw *AccountReadWrite) QueryUsers(ctx context.Context) (map[string]structs.UserInfo, error) {
 	var info structs.UserInfo
-	SQL := "SELECT id,name,tenant_id,status,email,phone,create_at,update_at,creator FROM users;"
+	userInfos := make(map[string]structs.UserInfo)
+	SQL := "SELECT id,name,tenant_id,status,email,phone,created_at,updated_at,creator FROM users;"
 	rows, err := arw.DB(ctx).Raw(SQL).Rows()
 	defer rows.Close()
 	if err != nil {
@@ -110,22 +111,20 @@ func (arw *AccountReadWrite) UpdateUserStatus(ctx context.Context, tenantID, use
 		framework.LogWithContext(ctx).Warningf("update user status,tenantID: %s, userID: %s, status: %s, parameter invalid", tenantID, userID, status)
 		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "update user status: tenantID: %s, userID:%s, status:%s, parameter invalid", tenantID, userID, status)
 	}
-	return arw.DB(ctx).Model(&User{}).Where("tenant_id = ? AND id = ?", tenantID, userID).Update("status = ?", status).Error
+	return arw.DB(ctx).Model(&User{}).Where("tenant_id = ? AND id = ?", tenantID, userID).Update("status", status).Error
 }
 
 func (arw *AccountReadWrite) UpdateUserProfile(ctx context.Context, tenantID, userID, email, phone string) error {
-	if "" == tenantID || "" == userID || "" == email || "" == phone {
+	if "" == tenantID || "" == userID {
 		framework.LogWithContext(ctx).Warningf("update user profile,tenantID: %s, userID: %s, email: %s, phone: %s, parameter invalid", tenantID, userID, email, phone)
 		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "update user profile: tenantID: %s, userID:%s, email: %s, phone: %s, parameter invalid", tenantID, userID, email, phone)
 	}
-	sql := make(map[string]interface{})
-	if "" != email {
-		sql["email"] = email
+	user := &User{}
+	err := arw.DB(ctx).First(user, "id = ? AND tenant_id = ?", userID, tenantID).Error
+	if err != nil {
+		return err
 	}
-	if "" != phone {
-		sql["phone"] = phone
-	}
-	return arw.DB(ctx).Model(&User{}).Where("tenant_id = ? AND id = ?", tenantID, userID).Updates(sql).Error
+	return arw.DB(ctx).Model(user).Update("email", email).Update("phone", phone).Error
 }
 
 func (arw *AccountReadWrite) UpdateUserPassword(ctx context.Context, tenantID, userID, salt, finalHash string) error {
@@ -157,8 +156,8 @@ func (arw *AccountReadWrite) GetTenant(ctx context.Context, tenantID string) (te
 		framework.LogWithContext(ctx).Warningf("get tenant,tenantID: %s, parameter invalid", tenantID)
 		return structs.TenantInfo{}, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "get tenant: tenantID: %s, parameter invalid", tenantID)
 	}
-	info := &Tenant{ID: tenantID}
-	err = arw.DB(ctx).Where(&Tenant{ID: tenantID}).First(info).Error
+	info := &Tenant{}
+	err = arw.DB(ctx).First(info, "id = ?", tenantID).Error
 	if err == gorm.ErrRecordNotFound {
 		return structs.TenantInfo{}, errors.NewEMErrorf(errors.TenantNotExist, "query user %s profile not found", tenantID)
 	}
@@ -169,9 +168,10 @@ func (arw *AccountReadWrite) GetTenant(ctx context.Context, tenantID string) (te
 		OnBoardingStatus: info.OnBoardingStatus, MaxCluster: info.MaxCluster, Status: info.Status, CreateAt: info.CreatedAt, UpdateAt: info.UpdatedAt}, err
 }
 
-func (arw *AccountReadWrite) QueryTenants(ctx context.Context) (tenants map[string]structs.TenantInfo, err error) {
+func (arw *AccountReadWrite) QueryTenants(ctx context.Context) (map[string]structs.TenantInfo, error) {
 	var info structs.TenantInfo
-	SQL := "SELECT id,name,creator,status,on_boarding_status,max_cluster,create_at,update_at,creator,max_cpu,max_memory,max_storage FROM users;"
+	tenants := make(map[string]structs.TenantInfo)
+	SQL := "SELECT id,name,creator,status,on_boarding_status,max_cluster,created_at,updated_at,creator,max_cpu,max_memory,max_storage FROM tenants;"
 	rows, err := arw.DB(ctx).Raw(SQL).Rows()
 	defer rows.Close()
 	if err != nil {
@@ -197,7 +197,7 @@ func (arw *AccountReadWrite) UpdateTenantStatus(ctx context.Context, tenantID, s
 		framework.LogWithContext(ctx).Warningf("update tenant status,tenantID: %s, status: %s, parameter invalid", tenantID, status)
 		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "update tenant status: tenantID: %s, status:%s, parameter invalid", tenantID, status)
 	}
-	return arw.DB(ctx).Model(&Tenant{}).Where("id = ?", tenantID).Update("status = ?", status).Error
+	return arw.DB(ctx).Model(&Tenant{}).Where("id = ?", tenantID).Update("status", status).Error
 }
 
 func (arw *AccountReadWrite) UpdateTenantProfile(ctx context.Context, tenantID, name string, maxCluster, maxCPU, maxMemory, maxStorage int32) error {
@@ -205,23 +205,10 @@ func (arw *AccountReadWrite) UpdateTenantProfile(ctx context.Context, tenantID, 
 		framework.LogWithContext(ctx).Warningf("update tenant profile,tenantID: %s, name: %s, maxCluster: %d, maxCPU: %d, maxMemory: %d, maxStorage: %d,parameter invalid", tenantID, name, maxCluster, maxCPU, maxMemory, maxStorage)
 		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "update tenant profile: tenantID: %s, name: %s, maxCluster: %d, maxCPU: %d, maxMemory: %d, maxStorage: %d, parameter invalid", tenantID, name, maxCluster, maxCPU, maxMemory, maxStorage)
 	}
-	sql := make(map[string]interface{})
-	if "" != name {
-		sql["name"] = name
-	}
-	if maxCluster > 0 {
-		sql["max_cluster"] = maxCluster
-	}
-	if maxCPU > 0 {
-		sql["max_cpu"] = maxCPU
-	}
-	if maxMemory > 0 {
-		sql["max_memory"] = maxMemory
-	}
-	if maxStorage > 0 {
-		sql["max_storage"] = maxStorage
-	}
-	return arw.DB(ctx).Model(&Tenant{}).Where("id = ?", tenantID).Updates(sql).Error
+
+	return arw.DB(ctx).Model(&Tenant{}).Where("id = ?", tenantID).
+		Update("name", name).Update("max_cluster", maxCluster).
+		Update("max_cpu", maxCPU).Update("max_memory", maxMemory).Update("max_storage", maxStorage).Error
 }
 
 func (arw *AccountReadWrite) UpdateTenantOnBoardingStatus(ctx context.Context, tenantID, status string) error {
@@ -229,5 +216,5 @@ func (arw *AccountReadWrite) UpdateTenantOnBoardingStatus(ctx context.Context, t
 		framework.LogWithContext(ctx).Warningf("update tenant on boarding status,tenantID: %s, status: %s, parameter invalid", tenantID, status)
 		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "update tenant on boarding status: tenantID: %s, status:%s, parameter invalid", tenantID, status)
 	}
-	return arw.DB(ctx).Model(&Tenant{}).Where("id = ?", tenantID).Update("on_boarding_status = ?", status).Error
+	return arw.DB(ctx).Model(&Tenant{}).Where("id = ?", tenantID).Update("on_boarding_status", status).Error
 }

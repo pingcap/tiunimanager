@@ -4788,7 +4788,7 @@ var doc = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/controller.CommonResult"
+                                    "$ref": "#/definitions/controller.ResultWithPage"
                                 },
                                 {
                                     "type": "object",
@@ -6818,9 +6818,6 @@ var doc = `{
         "message.CreateTenantReqV1": {
             "type": "object",
             "properties": {
-                "creator": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "string"
                 },
@@ -7371,7 +7368,17 @@ var doc = `{
             }
         },
         "message.QueryTenantReq": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "page": {
+                    "description": "Current page location",
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "description": "Number of this request",
+                    "type": "integer"
+                }
+            }
         },
         "message.QueryTenantResp": {
             "type": "object",
@@ -7385,7 +7392,17 @@ var doc = `{
             }
         },
         "message.QueryUserReq": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "page": {
+                    "description": "Current page location",
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "description": "Number of this request",
+                    "type": "integer"
+                }
+            }
         },
         "message.QueryUserResp": {
             "type": "object",
@@ -7554,6 +7571,9 @@ var doc = `{
             "type": "object",
             "properties": {
                 "email": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 },
                 "phone": {

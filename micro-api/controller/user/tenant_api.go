@@ -67,7 +67,7 @@ func CreateTenant(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /tenants/{tenantId} [delete]
 func DeleteTenant(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.DeleteTenantReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.DeleteTenantReq{
 		ID: c.Param("tenantId"),
 	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteTenant, &message.DeleteTenantResp{},

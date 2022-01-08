@@ -107,7 +107,7 @@ func (p *Manager) CreateUser(ctx context.Context, request message.CreateUserReq)
 		}
 
 		_, err = rw.CreateUser(ctx, account.User{ID: request.ID, Name: request.Name, Status: string(constants.UserStatusNormal),
-			TenantID: request.TenantID, Email: request.Email, Phone: request.Phone, /* TODO Creator: request.Creator,*/
+			TenantID: request.TenantID, Email: request.Email, Phone: request.Phone, Creator: "System",
 			Salt: slat, FinalHash: hash,
 		})
 		if nil != err {
@@ -161,7 +161,7 @@ func (p *Manager) QueryUsers(ctx context.Context, request message.QueryUserReq) 
 func (p *Manager) UpdateUserProfile(ctx context.Context, request message.UpdateUserProfileReq) (resp message.UpdateUserProfileResp, err error) {
 	log := framework.LogWithContext(ctx)
 	rw := models.GetAccountReaderWriter()
-	err = rw.UpdateUserProfile(ctx, request.ID, request.Name, request.Email, request.Phone)
+	err = rw.UpdateUserProfile(ctx, request.TenantID, request.ID, request.Email, request.Phone)
 	if err != nil {
 		log.Warningf("update user profile error: %v,tenantID: %s, userID: %s,name:%s, email:%s, phone:%s", err, request.TenantID, request.ID, request.Name, request.Email, request.Phone)
 		return resp, errors.NewEMErrorf(errors.UpdateUserProfileFailed, "error: %v,tenantID: %s, userID: %s,name:%s, email:%s, phone:%s", err, request.TenantID, request.ID, request.Name, request.Email, request.Phone)

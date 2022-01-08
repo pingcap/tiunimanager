@@ -90,7 +90,7 @@ func DeleteUser(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /users/{userId} [get]
 func GetUser(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.GetUserReq{
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.GetUserReq{
 		ID: c.Param("userId"),
 	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.GetUser, &message.GetUserResp{},
@@ -107,7 +107,7 @@ func GetUser(c *gin.Context) {
 // @Produce application/json
 // @Security ApiKeyAuth
 // @Param queryUserRequest body message.QueryUserReq true "query user profile request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.QueryUserResp}
+// @Success 200 {object} controller.ResultWithPage{data=message.QueryUserResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult

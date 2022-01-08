@@ -958,8 +958,6 @@ definitions:
     type: object
   message.CreateTenantReqV1:
     properties:
-      creator:
-        type: string
       id:
         type: string
       maxCluster:
@@ -1326,6 +1324,13 @@ definitions:
         type: array
     type: object
   message.QueryTenantReq:
+    properties:
+      page:
+        description: Current page location
+        type: integer
+      pageSize:
+        description: Number of this request
+        type: integer
     type: object
   message.QueryTenantResp:
     properties:
@@ -1335,6 +1340,13 @@ definitions:
         type: object
     type: object
   message.QueryUserReq:
+    properties:
+      page:
+        description: Current page location
+        type: integer
+      pageSize:
+        description: Number of this request
+        type: integer
     type: object
   message.QueryUserResp:
     properties:
@@ -1446,6 +1458,8 @@ definitions:
   message.UpdateUserProfileReq:
     properties:
       email:
+        type: string
+      name:
         type: string
       phone:
         type: string
@@ -5176,7 +5190,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/controller.CommonResult'
+            - $ref: '#/definitions/controller.ResultWithPage'
             - properties:
                 data:
                   $ref: '#/definitions/message.QueryUserResp'

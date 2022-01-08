@@ -15,7 +15,7 @@
  */
 
 /*******************************************************************************
- * @File: tenant.go
+ * @File: tenant_api.go
  * @Description:
  * @Author: duanbing@pingcap.com
  * @Version: 1.0.0

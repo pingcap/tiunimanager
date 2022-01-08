@@ -15,7 +15,7 @@
  */
 
 /*******************************************************************************
- * @File: user.go
+ * @File: user_api.go
  * @Description:
  * @Author: duanbing@pingcap.com
  * @Version: 1.0.0
@@ -38,14 +38,14 @@ import (
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param CreateZoneReq body message.CreateUserReq true "create user request parameter"
+// @Param createUserReq body message.CreateUserReq true "create user request parameter"
 // @Success 200 {object} controller.CommonResult{data=message.CreateUserResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /user [post]
+// @Router /users/ [post]
 func CreateUser(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.CreateUserReq{}); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.CreateUserReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateUser, &message.CreateUserResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -59,14 +59,17 @@ func CreateUser(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param CreateZoneReq body message.DeleteUserReq true "delete user request parameter"
+// @Param userId path string true "user id"
+// @Param deleteUserReq body message.DeleteUserReq true "delete user request parameter"
 // @Success 200 {object} controller.CommonResult{data=message.DeleteUserResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /user [delete]
+// @Router /users/{userId} [delete]
 func DeleteUser(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.DeleteUserReq{}); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.DeleteUserReq{
+		ID: c.Param("userId"),
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteUser, &message.DeleteUserResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -80,14 +83,16 @@ func DeleteUser(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param CreateZoneReq body message.GetUserReq true "get user profile request parameter"
+// @Param userId path string true "user id"
 // @Success 200 {object} controller.CommonResult{data=message.GetUserResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /user [get]
+// @Router /users/{userId} [get]
 func GetUser(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.GetUserReq{}); ok {
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.GetUserReq{
+		ID: c.Param("userId"),
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.GetUser, &message.GetUserResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -101,14 +106,14 @@ func GetUser(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param CreateZoneReq body message.QueryUserReq true "query user profile request parameter"
+// @Param queryUserRequest body message.QueryUserReq true "query user profile request parameter"
 // @Success 200 {object} controller.CommonResult{data=message.QueryUserResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /user [get]
+// @Router /users/ [get]
 func QueryUsers(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.QueryUserReq{}); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryUserReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.QueryUsers, &message.QueryUserResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -122,14 +127,23 @@ func QueryUsers(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param CreateZoneReq body message.UpdateUserProfileReq true "query user profile request parameter"
+// @Param userId path string true "user id"
+// @Param updateUserProfileRequest body message.UpdateUserProfileReq true "query user profile request parameter"
 // @Success 200 {object} controller.CommonResult{data=message.UpdateUserProfileResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /user [post]
+// @Router /users/{userId}/update_profile [post]
 func UpdateUserProfile(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.UpdateUserProfileReq{}); ok {
+	var req message.UpdateUserProfileReq
+
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
+		&req,
+		// append id in path to request
+		func(c *gin.Context, req interface{}) error {
+			req.(*message.UpdateUserProfileReq).ID = c.Param("userId")
+			return nil
+		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateUserProfile, &message.UpdateUserProfileResp{},
 			requestBody,
 			controller.DefaultTimeout)

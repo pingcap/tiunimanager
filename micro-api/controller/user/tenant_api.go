@@ -15,7 +15,7 @@
  */
 
 /*******************************************************************************
- * @File: tenant.go
+ * @File: tenant_api.go
  * @Description:
  * @Author: duanbing@pingcap.com
  * @Version: 1.0.0
@@ -43,9 +43,9 @@ import (
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /tenant [post]
+// @Router /tenants/ [post]
 func CreateTenant(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.CreateTenantReqV1{}); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.CreateTenantReqV1{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateTenant, &message.CreateTenantRespV1{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -59,14 +59,17 @@ func CreateTenant(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
+// @Param tenantId path string true "tenant id"
 // @Param DeleteTenantReq body message.DeleteTenantReq true "delete tenant request parameter"
 // @Success 200 {object} controller.CommonResult{data=message.DeleteTenantResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /tenant [delete]
+// @Router /tenants/{tenantId} [delete]
 func DeleteTenant(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.DeleteTenantReq{}); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.DeleteTenantReq{
+		ID: c.Param("tenantId"),
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteTenant, &message.DeleteTenantResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -80,14 +83,17 @@ func DeleteTenant(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
+// @Param tenantId path string true "tenant id"
 // @Param GetTenantReq body message.GetTenantReq true "get tenant profile request parameter"
 // @Success 200 {object} controller.CommonResult{data=message.GetTenantResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /tenant [get]
+// @Router /tenant/{tenantId} [get]
 func GetTenant(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.GetTenantReq{}); ok {
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.GetTenantReq{
+		ID: c.Param("tenantId"),
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.GetTenant, &message.GetTenantResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -108,7 +114,7 @@ func GetTenant(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /tenant [get]
 func QueryTenants(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.QueryTenantReq{}); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryTenantReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.QueryTenants, &message.QueryTenantResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -122,14 +128,23 @@ func QueryTenants(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
+// @Param tenantId path string true "tenant id"
 // @Param UpdateTenantProfileReq body message.UpdateTenantProfileReq true "query tenant profile request parameter"
 // @Success 200 {object} controller.CommonResult{data=message.UpdateTenantProfileResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /tenant [post]
+// @Router /tenants/{tenantId}/update_profile [post]
 func UpdateTenantProfile(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.UpdateTenantProfileReq{}); ok {
+	var req message.UpdateTenantProfileReq
+
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
+		&req,
+		// append id in path to request
+		func(c *gin.Context, req interface{}) error {
+			req.(*message.UpdateTenantProfileReq).ID = c.Param("tenantId")
+			return nil
+		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateTenantProfile, &message.UpdateTenantProfileResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -143,6 +158,7 @@ func UpdateTenantProfile(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
+// @Param tenantId path string true "tenant id"
 // @Param UpdateTenantOnBoardingStatusReq body message.UpdateTenantOnBoardingStatusReq true "query tenant profile request parameter"
 // @Success 200 {object} controller.CommonResult{data=message.UpdateTenantOnBoardingStatusResp}
 // @Failure 401 {object} controller.CommonResult
@@ -150,7 +166,15 @@ func UpdateTenantProfile(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /tenant [post]
 func UpdateTenantOnBoardingStatus(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.UpdateTenantOnBoardingStatusReq{}); ok {
+	var req message.UpdateTenantOnBoardingStatusReq
+
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
+		&req,
+		// append id in path to request
+		func(c *gin.Context, req interface{}) error {
+			req.(*message.UpdateTenantOnBoardingStatusReq).ID = c.Param("tenantId")
+			return nil
+		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateTenantOnBoardingStatus, &message.UpdateTenantOnBoardingStatusResp{},
 			requestBody,
 			controller.DefaultTimeout)

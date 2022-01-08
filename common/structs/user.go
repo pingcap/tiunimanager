@@ -14,7 +14,7 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: user.go
+ * @File: user_api.go
  * @Description:
  * @Author: duanbing@pingcap.com
  * @Version: 1.0.0
@@ -26,12 +26,6 @@ package structs
 import "time"
 
 type UserInfo struct {
-	ID       string `json:"accountId"`
-	TenantID string `json:"tenantId"`
-	Name     string `json:"accountName"`
-}
-
-type UserInfoExt struct {
 	ID       string    `json:"id"`
 	Name     string    `json:"name"`
 	Creator  string    `json:"creator"`

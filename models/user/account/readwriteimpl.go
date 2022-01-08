@@ -50,12 +50,12 @@ func NewAccountReadWrite(db *gorm.DB) *AccountReadWrite {
 	}
 }
 
-func (arw *AccountReadWrite) CreateUser(ctx context.Context, user User) (info *structs.UserInfoExt, err error) {
+func (arw *AccountReadWrite) CreateUser(ctx context.Context, user User) (info *structs.UserInfo, err error) {
 	if "" == user.ID || "" == user.Name {
 		framework.LogWithContext(ctx).Warningf("create user %v, parameter invalid", user)
 		return nil, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "create user %v, parameter invalid", user)
 	}
-	return &structs.UserInfoExt{ID: user.ID, Name: user.Name, TenantID: user.TenantID}, arw.DB(ctx).Create(&user).Error
+	return &structs.UserInfo{ID: user.ID, Name: user.Name, TenantID: user.TenantID}, arw.DB(ctx).Create(&user).Error
 }
 
 func (arw *AccountReadWrite) DeleteUser(ctx context.Context, tenantID, userID string) error {
@@ -66,22 +66,25 @@ func (arw *AccountReadWrite) DeleteUser(ctx context.Context, tenantID, userID st
 	return arw.DB(ctx).Where("tenant_id = ? AND id = ?", tenantID, userID).Unscoped().Delete(&User{}).Error
 }
 
-func (arw *AccountReadWrite) GetUser(ctx context.Context, tenantID, userID string) (userInfo structs.UserInfoExt, err error) {
+func (arw *AccountReadWrite) GetUser(ctx context.Context, tenantID, userID string) (userInfo structs.UserInfo, err error) {
 	if "" == tenantID || "" == userID {
 		framework.LogWithContext(ctx).Warningf("get user profile,tenantID: %s, userID: %s, parameter invalid", tenantID, userID)
-		return structs.UserInfoExt{}, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "get user profile: tenantID: %s, userID:%s, parameter invalid", tenantID, userID)
+		return structs.UserInfo{}, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "get user profile: tenantID: %s, userID:%s, parameter invalid", tenantID, userID)
 	}
 	user := User{ID: userID, TenantID: tenantID}
 	err = arw.DB(ctx).Where(&User{ID: userID, TenantID: tenantID}).First(user).Error
-	if err != nil {
-		return structs.UserInfoExt{}, errors.NewEMErrorf(errors.QueryUserScanRowError, "query user profile,tenantID: %s, userID:%s, scan data error: %v,", tenantID, userID, err)
+	if err == gorm.ErrRecordNotFound {
+		return structs.UserInfo{}, errors.NewEMErrorf(errors.UserNotExist, "query user %s profile not found", userID)
 	}
-	return structs.UserInfoExt{ID: user.ID, Name: user.Name, TenantID: user.TenantID,
+	if err != nil {
+		return structs.UserInfo{}, errors.NewEMErrorf(errors.QueryUserScanRowError, "query user profile,tenantID: %s, userID:%s, scan data error: %v,", tenantID, userID, err)
+	}
+	return structs.UserInfo{ID: user.ID, Name: user.Name, TenantID: user.TenantID,
 		Email: user.Email, Phone: user.Phone, Status: user.Status, CreateAt: user.CreatedAt, UpdateAt: user.UpdatedAt}, err
 }
 
-func (arw *AccountReadWrite) QueryUsers(ctx context.Context) (userInfos map[string]structs.UserInfoExt, err error) {
-	var info structs.UserInfoExt
+func (arw *AccountReadWrite) QueryUsers(ctx context.Context) (userInfos map[string]structs.UserInfo, err error) {
+	var info structs.UserInfo
 	SQL := "SELECT id,name,tenant_id,status,email,phone,create_at,update_at,creator FROM users;"
 	rows, err := arw.DB(ctx).Raw(SQL).Rows()
 	defer rows.Close()
@@ -156,6 +159,9 @@ func (arw *AccountReadWrite) GetTenant(ctx context.Context, tenantID string) (te
 	}
 	info := &Tenant{ID: tenantID}
 	err = arw.DB(ctx).Where(&Tenant{ID: tenantID}).First(info).Error
+	if err == gorm.ErrRecordNotFound {
+		return structs.TenantInfo{}, errors.NewEMErrorf(errors.TenantNotExist, "query user %s profile not found", tenantID)
+	}
 	if err != nil {
 		return structs.TenantInfo{}, errors.NewEMErrorf(errors.QueryTenantScanRowError, "get tenant profile,tenantID: %s, query data error: %v,", tenantID, err)
 	}

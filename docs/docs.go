@@ -4290,6 +4290,13 @@ var doc = `{
                 "summary": "update tenant onboarding status",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "tenant id",
+                        "name": "tenantId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "query tenant profile request parameter",
                         "name": "UpdateTenantOnBoardingStatusReq",
                         "in": "body",
@@ -4337,7 +4344,154 @@ var doc = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/tenant/{tenantId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get tenant profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "get tenant profile",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "tenant id",
+                        "name": "tenantId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "get tenant profile request parameter",
+                        "name": "GetTenantReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.GetTenantReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.GetTenantResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/tenants/": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "created tenant",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "created  tenant",
+                "parameters": [
+                    {
+                        "description": "create tenant request parameter",
+                        "name": "CreateTenantReqV1",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.CreateTenantReqV1"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.CreateTenantRespV1"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/tenants/{tenantId}": {
             "delete": {
                 "security": [
                     {
@@ -4356,6 +4510,13 @@ var doc = `{
                 ],
                 "summary": "delete tenant",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "tenant id",
+                        "name": "tenantId",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "description": "delete tenant request parameter",
                         "name": "DeleteTenantReq",
@@ -4406,81 +4567,14 @@ var doc = `{
                 }
             }
         },
-        "/user": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "query all user profile",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "platform"
-                ],
-                "summary": "queries all user profile",
-                "parameters": [
-                    {
-                        "description": "query user profile request parameter",
-                        "name": "CreateZoneReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/message.QueryUserReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/message.QueryUserResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            },
+        "/tenants/{tenantId}/update_profile": {
             "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "update user profile",
+                "description": "update tenant profile",
                 "consumes": [
                     "application/json"
                 ],
@@ -4488,17 +4582,24 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "user"
                 ],
-                "summary": "update user profile",
+                "summary": "update tenant profile",
                 "parameters": [
                     {
-                        "description": "query user profile request parameter",
-                        "name": "CreateZoneReq",
+                        "type": "string",
+                        "description": "tenant id",
+                        "name": "tenantId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "query tenant profile request parameter",
+                        "name": "UpdateTenantProfileReq",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/message.UpdateUserProfileReq"
+                            "$ref": "#/definitions/message.UpdateTenantProfileReq"
                         }
                     }
                 ],
@@ -4514,74 +4615,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/message.UpdateUserProfileResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "delete user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "platform"
-                ],
-                "summary": "delete user",
-                "parameters": [
-                    {
-                        "description": "delete user request parameter",
-                        "name": "CreateZoneReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/message.DeleteUserReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/message.DeleteUserResp"
+                                            "$ref": "#/definitions/message.UpdateTenantProfileResp"
                                         }
                                     }
                                 }
@@ -4719,14 +4753,14 @@ var doc = `{
                 }
             }
         },
-        "/user/profile": {
+        "/users/": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "profile",
+                "description": "query all user profile",
                 "consumes": [
                     "application/json"
                 ],
@@ -4736,7 +4770,18 @@ var doc = `{
                 "tags": [
                     "platform"
                 ],
-                "summary": "user profile",
+                "summary": "queries all user profile",
+                "parameters": [
+                    {
+                        "description": "query user profile request parameter",
+                        "name": "queryUserRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.QueryUserReq"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4749,7 +4794,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/message.UserProfile"
+                                            "$ref": "#/definitions/message.QueryUserResp"
                                         }
                                     }
                                 }
@@ -4758,6 +4803,296 @@ var doc = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "created user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "created  user",
+                "parameters": [
+                    {
+                        "description": "create user request parameter",
+                        "name": "createUserReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.CreateUserReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.CreateUserResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{userId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get user profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "get user profile",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user id",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.GetUserResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "delete user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "delete user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user id",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "delete user request parameter",
+                        "name": "deleteUserReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.DeleteUserReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.DeleteUserResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{userId}/update_profile": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "update user profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "update user profile",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user id",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "query user profile request parameter",
+                        "name": "updateUserProfileRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UpdateUserProfileReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UpdateUserProfileResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/controller.CommonResult"
                         }
@@ -6742,9 +7077,6 @@ var doc = `{
         "message.DeleteUserReq": {
             "type": "object",
             "properties": {
-                "id": {
-                    "type": "string"
-                },
                 "tenantId": {
                     "type": "string"
                 }
@@ -6862,22 +7194,11 @@ var doc = `{
                 }
             }
         },
-        "message.GetUserReq": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "tenantId": {
-                    "type": "string"
-                }
-            }
-        },
         "message.GetUserResp": {
             "type": "object",
             "properties": {
-                "userInfo": {
-                    "$ref": "#/definitions/structs.UserInfoExt"
+                "user": {
+                    "$ref": "#/definitions/structs.UserInfo"
                 }
             }
         },
@@ -7050,17 +7371,12 @@ var doc = `{
             }
         },
         "message.QueryTenantReq": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                }
-            }
+            "type": "object"
         },
         "message.QueryTenantResp": {
             "type": "object",
             "properties": {
-                "infos": {
+                "tenants": {
                     "type": "object",
                     "additionalProperties": {
                         "$ref": "#/definitions/structs.TenantInfo"
@@ -7074,10 +7390,10 @@ var doc = `{
         "message.QueryUserResp": {
             "type": "object",
             "properties": {
-                "userInfos": {
+                "users": {
                     "type": "object",
                     "additionalProperties": {
-                        "$ref": "#/definitions/structs.UserInfoExt"
+                        "$ref": "#/definitions/structs.UserInfo"
                     }
                 }
             }
@@ -7240,9 +7556,6 @@ var doc = `{
                 "email": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "string"
-                },
                 "phone": {
                     "type": "string"
                 },
@@ -7253,17 +7566,6 @@ var doc = `{
         },
         "message.UpdateUserProfileResp": {
             "type": "object"
-        },
-        "message.UserProfile": {
-            "type": "object",
-            "properties": {
-                "tenantId": {
-                    "type": "string"
-                },
-                "userName": {
-                    "type": "string"
-                }
-            }
         },
         "structs.AsyncTaskWorkFlowInfo": {
             "type": "object",
@@ -8364,7 +8666,7 @@ var doc = `{
                 }
             }
         },
-        "structs.UserInfoExt": {
+        "structs.UserInfo": {
             "type": "object",
             "properties": {
                 "createAt": {

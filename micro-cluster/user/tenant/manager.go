@@ -48,7 +48,7 @@ func (p *Manager) CreateTenant(ctx context.Context, request message.CreateTenant
 	} else if err.(errors.EMError).GetCode() == errors.TenantNotExist {
 		_, err = rw.CreateTenant(ctx, account.Tenant{ID: request.ID, Name: request.Name, Status: request.Status,
 			OnBoardingStatus: request.OnBoardingStatus, MaxCluster: request.MaxCluster, MaxCPU: request.MaxCPU,
-			MaxMemory: request.MaxMemory, MaxStorage: request.MaxStorage, /* TODO Creator: request.Creator,*/
+			MaxMemory: request.MaxMemory, MaxStorage: request.MaxStorage, Creator: "System",
 		})
 		if nil != err {
 			log.Warningf("create tenant %s error: %v", request.ID, err)

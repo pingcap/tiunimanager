@@ -31,6 +31,12 @@ const (
 	TenantStatusDeactivate TenantStatus = "Deactivate"
 )
 
+type TenantOnBoardingStatus string
+const (
+	TenantOnBoarding  TenantOnBoardingStatus = "On"
+	TenantOFFBoarding TenantOnBoardingStatus = "Off"
+)
+
 type UserStatus string
 
 //Definition user status information

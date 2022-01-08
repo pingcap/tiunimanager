@@ -36,7 +36,6 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/user/account"
-	"github.com/pingcap-inc/tiem/models/user/tenant"
 	"golang.org/x/crypto/bcrypt"
 	"strconv"
 )
@@ -67,8 +66,8 @@ func (p *Manager) genSaltAndHash(passwd string) (salt, finalHash string, er erro
 	return salt, string(hash), nil
 }
 
-func (p *Manager) CreateAccount(ctx context.Context, tenant *tenant.Tenant, name, passwd string) (*account.Account, error) {
-	if tenant == nil || !tenant.Status.IsValid() {
+func (p *Manager) CreateAccount(ctx context.Context, tenant *account.Tenant, name, passwd string) (*account.Account, error) {
+	if tenant == nil {
 		return nil, fmt.Errorf("tenant not valid")
 	}
 
@@ -91,15 +90,15 @@ func (p *Manager) FindAccountByName(ctx context.Context, name string) (*account.
 	return a, err
 }
 
-func (p *Manager) CreateUser(ctx context.Context, request message.CreateUserReq) (resp message.CreateUserResp, er error) {
+func (p *Manager) CreateUser(ctx context.Context, request message.CreateUserReq) (message.CreateUserResp, error) {
+	resp := message.CreateUserResp{}
 	log := framework.LogWithContext(ctx)
 	rw := models.GetAccountReaderWriter()
 
 	user, err := rw.GetUser(ctx, request.TenantID, request.ID)
 	if err == nil && user.ID == request.ID {
 		return resp, errors.NewEMErrorf(errors.UserAlreadyExist, "tenantID: %s, userID: %s", request.TenantID, request.ID)
-	}
-	if err == nil {
+	} else if err.(errors.EMError).GetCode() == errors.UserNotExist {
 		var slat, hash string
 		slat, hash, err = p.genSaltAndHash(request.Password)
 		if err != nil {
@@ -112,33 +111,35 @@ func (p *Manager) CreateUser(ctx context.Context, request message.CreateUserReq)
 			Salt: slat, FinalHash: hash,
 		})
 		if nil != err {
-			log.Warningf("craete user %s error %v", request.ID, err)
+			log.Warningf("create user %s error: %v", request.ID, err)
 		}
 	}
+
 	return resp, err
 }
 
-func (p *Manager) DeleteUser(ctx context.Context, request message.DeleteUserReq) (resp message.DeleteUserResp, err error) {
+func (p *Manager) DeleteUser(ctx context.Context, request message.DeleteUserReq) (message.DeleteUserResp, error) {
+	resp := message.DeleteUserResp{}
 	log := framework.LogWithContext(ctx)
 	rw := models.GetAccountReaderWriter()
-	_, er := rw.GetUser(ctx, request.TenantID, request.ID)
-	if er != nil {
-		log.Warningf("delete user error: %v,tenantID: %s, userID: %s", er, request.TenantID, request.ID)
+	_, err := rw.GetUser(ctx, request.TenantID, request.ID)
+	if err != nil {
+		log.Warningf("delete user error: %v,tenantID: %s, userID: %s", err, request.TenantID, request.ID)
 		return resp, errors.NewEMErrorf(errors.UserNotExist, "tenantID: %s, userID:%s", request.TenantID, request.ID)
 	}
 
-	er = rw.DeleteUser(ctx, request.TenantID, request.ID)
-	if er != nil {
-		log.Warningf("delete user error: %v,tenantID: %s,userID: %s", er, request.TenantID, request.ID)
+	err = rw.DeleteUser(ctx, request.TenantID, request.ID)
+	if err != nil {
+		log.Warningf("delete user error: %v,tenantID: %s,userID: %s", err, request.TenantID, request.ID)
 		return resp, errors.NewEMErrorf(errors.DeleteUserFailed, "tenantID: %s,userID:%s", request.TenantID, request.ID)
 	}
-	return
+	return resp, nil
 }
 
 func (p *Manager) GetUser(ctx context.Context, request message.GetUserReq) (resp message.GetUserResp, err error) {
 	log := framework.LogWithContext(ctx)
 	rw := models.GetAccountReaderWriter()
-	resp.Info, err = rw.GetUser(ctx, request.TenantID, request.ID)
+	resp.User, err = rw.GetUser(ctx, request.TenantID, request.ID)
 	if err != nil {
 		log.Warningf("get user error: %v,tenantID: %s, userID: %s", err, request.TenantID, request.ID)
 		return resp, errors.NewEMErrorf(errors.UserNotExist, "tenantID: %s,userID: %s", request.TenantID, request.ID)
@@ -149,7 +150,7 @@ func (p *Manager) GetUser(ctx context.Context, request message.GetUserReq) (resp
 func (p *Manager) QueryUsers(ctx context.Context, request message.QueryUserReq) (resp message.QueryUserResp, err error) {
 	log := framework.LogWithContext(ctx)
 	rw := models.GetAccountReaderWriter()
-	resp.UserInfo, err = rw.QueryUsers(ctx)
+	resp.Users, err = rw.QueryUsers(ctx)
 	if err != nil {
 		log.Warningf("query all user error: %v", err)
 		return resp, errors.NewEMErrorf(errors.QueryUserScanRowError, "error: %v", err)

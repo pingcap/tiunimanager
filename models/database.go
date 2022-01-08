@@ -33,7 +33,6 @@ import (
 	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	"github.com/pingcap-inc/tiem/models/user/account"
 	"github.com/pingcap-inc/tiem/models/user/identification"
-	"github.com/pingcap-inc/tiem/models/user/tenant"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
@@ -66,7 +65,6 @@ type database struct {
 	configReaderWriter               config.ReaderWriter
 	secondPartyOperationReaderWriter secondparty.ReaderWriter
 	resourceReaderWriter             resource.ReaderWriter
-	tenantReaderWriter               tenant.ReaderWriter
 	accountReaderWriter              account.ReaderWriter
 	tokenReaderWriter                identification.ReaderWriter
 	productReaderWriter              product.ProductReadWriterInterface
@@ -144,7 +142,6 @@ func (p *database) initTables() (err error) {
 		new(parametergroup.ParameterGroupMapping),
 		new(parameter.ClusterParameterMapping),
 		new(account.Account),
-		new(tenant.Tenant),
 		new(identification.Token),
 		new(tiup.TiupConfig),
 		new(resourcePool.Host),
@@ -157,6 +154,8 @@ func (p *database) initTables() (err error) {
 		new(product.Spec),
 		new(product.Product),
 		new(product.ProductComponent),
+		new(account.User),
+		new(account.Tenant),
 	)
 }
 
@@ -171,7 +170,6 @@ func (p *database) initReaderWriters() {
 	defaultDb.configReaderWriter = config.NewConfigReadWrite(defaultDb.base)
 	defaultDb.secondPartyOperationReaderWriter = secondparty.NewGormSecondPartyOperationReadWrite(defaultDb.base)
 	defaultDb.clusterReaderWriter = management.NewClusterReadWrite(defaultDb.base)
-	defaultDb.tenantReaderWriter = tenant.NewTenantReadWrite(defaultDb.base)
 	defaultDb.accountReaderWriter = account.NewAccountReadWrite(defaultDb.base)
 	defaultDb.tokenReaderWriter = identification.NewTokenReadWrite(defaultDb.base)
 	defaultDb.productReaderWriter = product.NewProductReadWriter(defaultDb.base)
@@ -179,7 +177,7 @@ func (p *database) initReaderWriters() {
 }
 
 func (p *database) initSystemData() {
-	tenant, err := defaultDb.tenantReaderWriter.AddTenant(context.TODO(), "EM system administration", 1, 0)
+	tenant, err := defaultDb.accountReaderWriter.CreateTenant(context.TODO(), account.Tenant{Name: "EM system administration"})
 
 	// todo determine if default data needed
 	if err == nil {
@@ -336,13 +334,6 @@ func SetAccountReaderWriter(rw account.ReaderWriter) {
 	defaultDb.accountReaderWriter = rw
 }
 
-func GetTenantReaderWriter() tenant.ReaderWriter {
-	return defaultDb.tenantReaderWriter
-}
-
-func SetTenantReaderWriter(rw tenant.ReaderWriter) {
-	defaultDb.tenantReaderWriter = rw
-}
 func GetTokenReaderWriter() identification.ReaderWriter {
 	return defaultDb.tokenReaderWriter
 }

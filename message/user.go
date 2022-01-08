@@ -14,7 +14,7 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: user.go
+ * @File: user_api.go
  * @Description:
  * @Author: duanbing@pingcap.com
  * @Version: 1.0.0
@@ -27,11 +27,10 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/models/user/account"
 	"github.com/pingcap-inc/tiem/models/user/identification"
-	"github.com/pingcap-inc/tiem/models/user/tenant"
 )
 
 type CreateAccountReq struct {
-	*tenant.Tenant
+	*account.Tenant
 	Name     string `json:"name" form:"name" example:"default"`
 	Password string `json:"password" form:"password" example:"default"`
 }
@@ -53,7 +52,7 @@ type CreateTenantReq struct {
 }
 
 type CreateTenantResp struct {
-	tenant.Tenant
+	account.Tenant
 }
 
 type FindTenantByNameReq struct {
@@ -61,7 +60,7 @@ type FindTenantByNameReq struct {
 }
 
 type FindTenantByNameResp struct {
-	tenant.Tenant
+	account.Tenant
 }
 
 type FindTenantByIdReq struct {
@@ -69,7 +68,7 @@ type FindTenantByIdReq struct {
 }
 
 type FindTenantByIdResp struct {
-	tenant.Tenant
+	account.Tenant
 }
 
 type ProvideTokenReq struct {
@@ -155,28 +154,28 @@ type CreateUserResp struct {
 }
 
 type DeleteUserReq struct {
-	ID       string `json:"id"`
+	ID       string `json:"id" swaggerignore:"true"`
 	TenantID string `json:"tenantId"`
 }
 type DeleteUserResp struct {
 }
 
 type GetUserReq struct {
-	ID       string `json:"id"`
+	ID       string `json:"id" swaggerignore:"true"`
 	TenantID string `json:"tenantId"`
 }
 type GetUserResp struct {
-	Info structs.UserInfoExt `json:"userInfo"`
+	User structs.UserInfo `json:"user"`
 }
 
 type QueryUserReq struct {
 }
 type QueryUserResp struct {
-	UserInfo map[string]structs.UserInfoExt `json:"userInfos"`
+	Users map[string]structs.UserInfo `json:"users"`
 }
 
 type UpdateUserProfileReq struct {
-	ID       string `json:"id"`
+	ID       string `json:"id" swaggerignore:"true"`
 	TenantID string `json:"tenantId"`
 	Name     string `json:"email"`
 	Email    string `json:"email"`
@@ -223,10 +222,10 @@ type GetTenantResp struct {
 }
 
 type QueryTenantReq struct {
-	ID string `json:"id"`
 }
+
 type QueryTenantResp struct {
-	Infos map[string]structs.TenantInfo `json:"infos"`
+	Tenants map[string]structs.TenantInfo `json:"tenants"`
 }
 
 type UpdateTenantProfileReq struct {

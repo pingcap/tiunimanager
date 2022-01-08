@@ -45,16 +45,16 @@ func (p *Manager) CreateTenant(ctx context.Context, request message.CreateTenant
 	tenant, err := rw.GetTenant(ctx, request.ID)
 	if err == nil && tenant.ID == request.ID {
 		return resp, errors.NewEMErrorf(errors.TenantAlreadyExist, "tenantID: %s", request.ID)
-	}
-	if err == nil {
+	} else if err.(errors.EMError).GetCode() == errors.TenantNotExist {
 		_, err = rw.CreateTenant(ctx, account.Tenant{ID: request.ID, Name: request.Name, Status: request.Status,
 			OnBoardingStatus: request.OnBoardingStatus, MaxCluster: request.MaxCluster, MaxCPU: request.MaxCPU,
 			MaxMemory: request.MaxMemory, MaxStorage: request.MaxStorage, /* TODO Creator: request.Creator,*/
 		})
 		if nil != err {
-			log.Warningf("craete tenant %s error %v", request.ID, err)
+			log.Warningf("create tenant %s error: %v", request.ID, err)
 		}
 	}
+
 	return resp, err
 }
 
@@ -89,7 +89,7 @@ func (p *Manager) GetTenant(ctx context.Context, request message.GetTenantReq) (
 func (p *Manager) QueryTenants(ctx context.Context, request message.QueryTenantReq) (resp message.QueryTenantResp, err error) {
 	log := framework.LogWithContext(ctx)
 	rw := models.GetAccountReaderWriter()
-	resp.Infos, err = rw.QueryTenants(ctx)
+	resp.Tenants, err = rw.QueryTenants(ctx)
 	if err != nil {
 		log.Warningf("query all tenant error: %v", err)
 		return resp, errors.NewEMErrorf(errors.QueryTenantScanRowError, "error: %v", err)

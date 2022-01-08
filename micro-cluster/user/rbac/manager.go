@@ -119,10 +119,11 @@ func (mgr *RBACManager) AddRoleForUser(ctx context.Context, request message.AddR
 	if request.Role == "" {
 		return resp, fmt.Errorf("invalid input empty role")
 	}
-	if _, ok := constants.RbacRoleMap[request.Role]; ok {
-		return resp, fmt.Errorf("default role %s can not modify permission", request.Role)
-	}
-
+	/*
+		if _, ok := constants.RbacRoleMap[request.Role]; ok {
+			return resp, fmt.Errorf("default role %s can not modify permission", request.Role)
+		}
+	*/
 	if _, err = mgr.enforcer.AddRoleForUser(request.UserID, request.Role); err != nil {
 		framework.LogWithContext(ctx).Errorf("call enforcer AddRoleForUser failed %s", err.Error())
 	}
@@ -146,9 +147,11 @@ func (mgr *RBACManager) AddPermissionsForRole(ctx context.Context, request messa
 	if request.Role == "" {
 		return resp, fmt.Errorf("invalid input empty role")
 	}
-	if _, ok := constants.RbacRoleMap[request.Role]; ok {
-		return resp, fmt.Errorf("default role %s can not modify permission", request.Role)
-	}
+	/*
+		if _, ok := constants.RbacRoleMap[request.Role]; ok {
+			return resp, fmt.Errorf("default role %s can not modify permission", request.Role)
+		}
+	*/
 
 	var permissionList [][]string
 	for _, permission := range request.Permissions {

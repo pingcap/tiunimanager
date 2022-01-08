@@ -201,16 +201,24 @@ func (mgr *RBACManager) GetPermissionsForUser(ctx context.Context, request messa
 	framework.LogWithContext(ctx).Infof("begin GetPermissionsForUser, request: %+v", request)
 	framework.LogWithContext(ctx).Info("end GetPermissionsForUser")
 
-	rbacPermissions := mgr.enforcer.GetPermissionsForUser(request.UserID)
-	framework.LogWithContext(ctx).Infof("call enforcer GetPermissionsForUser result %+v", rbacPermissions)
+	roles, err := mgr.enforcer.GetRolesForUser(request.UserID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("call enforcer GetRolesForUser roles failed, %s", err.Error())
+		return
+	}
 
-	resp.UserID = request.UserID
-	for index := 0; index < len(rbacPermissions); index++ {
-		permission := structs.RbacPermission{
-			Resource: rbacPermissions[index][ResourceIndex],
-			Action:   rbacPermissions[index][ActionIndex],
+	for _, role := range roles {
+		rbacPermissions := mgr.enforcer.GetPermissionsForUser(role)
+		framework.LogWithContext(ctx).Infof("call enforcer GetPermissionsForUser by role %s result %+v", role, rbacPermissions)
+
+		resp.UserID = request.UserID
+		for index := 0; index < len(rbacPermissions); index++ {
+			permission := structs.RbacPermission{
+				Resource: rbacPermissions[index][ResourceIndex],
+				Action:   rbacPermissions[index][ActionIndex],
+			}
+			resp.Permissions = append(resp.Permissions, permission)
 		}
-		resp.Permissions = append(resp.Permissions, permission)
 	}
 
 	return

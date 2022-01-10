@@ -151,14 +151,14 @@ func HandleRequest(c *gin.Context,
 				}).
 				Present()
 		}).
-		ContinueIf(func() error {
+		BreakIf(func() error {
 			return errors.OfNullable(validator(req)).
 				Map(func(err error) error {
 					return errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
 				}).
 				Present()
 		}).
-		ContinueIf(func() error {
+		BreakIf(func() error {
 			bytes, err := serializer(req)
 			return errors.OfNullable(err).
 				Map(func(err error) error {

@@ -480,6 +480,7 @@ func TestClusterReadWrite_QueryMetas(t *testing.T) {
 		})
 		assert.Error(t, err)
 	})
+
 	t.Run("empty filter", func(t *testing.T) {
 		_, page, err := testRW.QueryMetas(context.TODO(), Filters{
 			TenantId:      "1919",
@@ -509,6 +510,24 @@ func TestClusterReadWrite_QueryMetas(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 7, page.Total)
 		assert.Equal(t, 0, len(result))
+	})
+
+	t.Run("total", func(t *testing.T) {
+		cluster8 := mockCluster("ssssddddffff", "TiDB", constants.ClusterStopped, []string{"tag1"})
+		testRW.Delete(context.TODO(), cluster8)
+
+		_, page, err := testRW.QueryMetas(context.TODO(), Filters{
+			TenantId:      "1919",
+			NameLike:      "",
+			Tag:           "",
+			Type:          "",
+			StatusFilters: []constants.ClusterRunningStatus{},
+		}, structs.PageRequest{
+			Page:     1,
+			PageSize: 2,
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, 7, page.Total)
 	})
 }
 

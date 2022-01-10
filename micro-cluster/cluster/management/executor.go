@@ -885,6 +885,7 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	req := context.GetData(ContextTakeoverRequest).(cluster.TakeoverClusterReq)
+	clusterHome := fmt.Sprintf("%sstorage/cluster/clusters/%s/", req.TiUPPath, clusterMeta.Cluster.ID)
 
 	var sshClient *ssh.Client
 	var sftpClient *sftp.Client
@@ -893,11 +894,9 @@ func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 		if sftpClient != nil{ sftpClient.Close() }
 	}()
 
-	var err error
-	clusterHome := fmt.Sprintf("%sstorage/cluster/clusters/%s/", req.TiUPPath, clusterMeta.Cluster.ID)
-
 	return errors.OfNullable(nil).
 		BreakIf(func() error {
+			var err error
 			sshClient, sftpClient, err = openSftpClient(context.Context, req)
 			return err
 		}).

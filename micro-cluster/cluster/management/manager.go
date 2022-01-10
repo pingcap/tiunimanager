@@ -75,7 +75,7 @@ var scaleOutDefine = workflow.WorkFlowDefine{
 		"scaleOutDone":     {"syncTopology", "syncTopologyDone", "fail", workflow.SyncFuncNode, syncTopology},
 		"syncTopologyDone": {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
 		"onlineDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
+		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, endMaintenance)},
 	},
 }
 
@@ -131,7 +131,7 @@ var scaleInDefine = workflow.WorkFlowDefine{
 		"start":       {"scaleInCluster", "scaleInDone", "fail", workflow.PollingNode, scaleInCluster},
 		"scaleInDone": {"freeInstanceResource", "freeDone", "fail", workflow.SyncFuncNode, freeInstanceResource},
 		"freeDone":    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
+		"fail":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, endMaintenance)},
 	},
 }
 

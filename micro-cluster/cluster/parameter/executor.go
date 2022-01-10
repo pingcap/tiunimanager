@@ -539,6 +539,18 @@ func convertRealParameterType(ctx *workflow.FlowContext, param ModifyClusterPara
 			framework.LogWithContext(ctx).Errorf("strconv realvalue type float fail, err = %s", err.Error())
 			return nil, err
 		}
+		// Retains floating precision and is not converted to integer
+		valStr := strings.Split(param.RealValue.ClusterValue, ".")
+		if len(valStr) == 2 {
+			num, err := strconv.Atoi(valStr[1])
+			if err != nil {
+				return nil, err
+			}
+			fmt.Println(num)
+			if num == 0 {
+				c += 1e-8
+			}
+		}
 		return c, nil
 	case int(Array):
 		var c interface{}

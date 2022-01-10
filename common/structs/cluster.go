@@ -65,7 +65,7 @@ type CreateClusterParameter struct {
 	Copies           int      `json:"copies"`                                 //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
 	Exclusive        bool     `json:"exclusive" form:"exclusive"`             //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
 	Region           string   `json:"region" form:"region" validate:"required,max=32"`                   //The Region where the cluster is located
-	CpuArchitecture  string   `json:"cpuArchitecture" form:"cpuArchitecture" validate:"oneof=X86 X86_64 ARM ARM64,max=32"` //X86/X86_64/ARM
+	CpuArchitecture  string   `json:"cpuArchitecture" form:"cpuArchitecture" validate:"required,oneof=X86 X86_64 ARM ARM64"` //X86/X86_64/ARM
 	ParameterGroupID string   `json:"parameterGroupID" form:"parameterGroupID"`
 }
 

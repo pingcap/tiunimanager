@@ -18,6 +18,8 @@ package resourcepool
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -25,8 +27,28 @@ import (
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
-	"strings"
 )
+
+func authHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infoln("begin authHosts")
+
+	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
+	if err != nil {
+		log.Errorf("auth host failed for get flow context, %v", err)
+		return err
+	}
+	for _, host := range hosts {
+		err = resourcePool.hostInitiator.CopySSHID(ctx, &host)
+		if err != nil {
+			log.Errorf("auth host %s %s@%s failed, %v", host.HostName, host.UserName, host.IP, err)
+			return err
+		}
+		log.Infof("auth host %v succeed", host)
+	}
+	node.Record("auth hosts successfully")
+	return nil
+}
 
 func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	log := framework.LogWithContext(ctx)

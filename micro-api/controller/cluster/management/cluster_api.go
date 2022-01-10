@@ -80,6 +80,7 @@ func Preview(c *gin.Context) {
 	if err != nil {
 		framework.LogWithContext(c).Errorf("validate request failed, %s", err.Error())
 		c.JSON(http.StatusBadRequest, controller.Fail(int(errors.TIEM_PARAMETER_INVALID), err.Error()))
+		return
 	}
 
 	resp := &cluster.PreviewClusterResp{

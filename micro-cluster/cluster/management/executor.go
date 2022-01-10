@@ -20,6 +20,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -885,55 +886,54 @@ func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	req := context.GetData(ContextTakeoverRequest).(cluster.TakeoverClusterReq)
 
-	sshClient, sftpClient, err := openSftpClient(context.Context, req)
+	var sshClient *ssh.Client
+	var sftpClient *sftp.Client
+	defer func() {
+		if sshClient != nil{ sshClient.Close() }
+		if sftpClient != nil{ sftpClient.Close() }
+	}()
 
-	if err != nil {
-		return err
-	} else {
-		defer sshClient.Close()
-		defer sftpClient.Close()
-	}
-
+	var err error
 	clusterHome := fmt.Sprintf("%sstorage/cluster/clusters/%s/", req.TiUPPath, clusterMeta.Cluster.ID)
 
-	privateKey, err := readRemoteFile(context, sftpClient, clusterHome, "/ssh/id_rsa")
-	if err != nil {
-		framework.LogWithContext(context).Errorf("read private key failed, error: %s", err.Error())
-		return errors.WrapError(errors.TIEM_TAKEOVER_SFTP_ERROR, "read remote file error", err)
-	}
-
-	publicKey, err := readRemoteFile(context, sftpClient, clusterHome, "/ssh/id_rsa.pub")
-	if err != nil {
-		framework.LogWithContext(context).Errorf("read public key failed, error: %s", err.Error())
-		return errors.WrapError(errors.TIEM_TAKEOVER_SFTP_ERROR, "read remote file error", err)
-	}
-
-	metaData, err := readRemoteFile(context, sftpClient, clusterHome, "meta.yaml")
-	if err != nil {
-		framework.LogWithContext(context).Errorf("fetch topology file meta.yaml failed, error: %s", err.Error())
-		return errors.WrapError(errors.TIEM_TAKEOVER_SFTP_ERROR, "read remote file error", err)
-	}
-
-	context.SetData(ContextPrivateKey, privateKey)
-	context.SetData(ContextPublicKey, privateKey)
-	context.SetData(ContextTopologyConfig, metaData)
-
-	err = models.GetClusterReaderWriter().CreateClusterTopologySnapshot(context, management.ClusterTopologySnapshot{
-		ClusterID: clusterMeta.Cluster.ID,
-		TenantID: clusterMeta.Cluster.TenantId,
-		PrivateKey: string(privateKey),
-		PublicKey: string(publicKey),
-	})
-	if err != nil {
-		return err
-	}
-	err = models.GetClusterReaderWriter().UpdateTopologySnapshotConfig(context, clusterMeta.Cluster.ID, string(metaData))
-	if err != nil {
-		return err
-	}
-	node.Record("fetch topology of cluster " + clusterMeta.Cluster.ID, string(metaData))
-
-	return err
+	return errors.OfNullable(nil).
+		BreakIf(func() error {
+			sshClient, sftpClient, err = openSftpClient(context.Context, req)
+			return err
+		}).
+		BreakIf(func() error {
+			privateKey, err := readRemoteFile(context, sftpClient, clusterHome, "/ssh/id_rsa")
+			context.SetData(ContextPrivateKey, privateKey)
+			return err
+		}).
+		BreakIf(func() error {
+			publicKey, err := readRemoteFile(context, sftpClient, clusterHome, "/ssh/id_rsa.pub")
+			context.SetData(ContextPublicKey, publicKey)
+			return err
+		}).
+		BreakIf(func() error {
+			metaData, err := readRemoteFile(context, sftpClient, clusterHome, "meta.yaml")
+			context.SetData(ContextTopologyConfig, metaData)
+			return err
+		}).
+		BreakIf(func() error {
+			return models.GetClusterReaderWriter().CreateClusterTopologySnapshot(context, management.ClusterTopologySnapshot{
+				ClusterID: clusterMeta.Cluster.ID,
+				TenantID: clusterMeta.Cluster.TenantId,
+				PrivateKey: string(context.GetData(ContextPrivateKey).([]byte)),
+				PublicKey: string(context.GetData(ContextPublicKey).([]byte)),
+			})
+		}).
+		BreakIf(func() error {
+			return models.GetClusterReaderWriter().UpdateTopologySnapshotConfig(context, clusterMeta.Cluster.ID, string(context.GetData(ContextTopologyConfig).([]byte)))
+		}).
+		If(func(err error) {
+			framework.LogWithContext(context).Errorf("fetch topology of cluster %s failed, err = %s", clusterMeta.Cluster.ID, err.Error())
+		}).
+		Else(func() {
+			node.Record("fetch topology of cluster " + clusterMeta.Cluster.ID, string(context.GetData(ContextTopologyConfig).([]byte)))
+		}).
+		Present()
 }
 
 func readRemoteFile(ctx context.Context, sftp *sftp.Client, clusterHome string, file string) ([]byte, error) {

@@ -191,6 +191,22 @@ func TestOptional_Handle(t *testing.T) {
 	})
 }
 
+func TestOptional_Map(t *testing.T) {
+	t.Run("with error", func(t *testing.T) {
+		assert.Equal(t, "[10004]bbb", OfNullable(NewError(TIEM_UNRECOGNIZED_ERROR, "aaa")).
+			Map(func(err error) error {
+				return NewError(TIEM_MARSHAL_ERROR, "bbb")
+			}).Present().Error())
+	})
+	t.Run("without error", func(t *testing.T) {
+		assert.NoError(t, OfNullable(nil).
+			Map(func(err error) error {
+				return NewError(TIEM_MARSHAL_ERROR, "bbb")
+			}).
+			Present())
+	})
+}
+
 func TestOptional_If(t *testing.T) {
 	t.Run("with error", func(t *testing.T) {
 		a := ""
@@ -247,3 +263,13 @@ func TestOptional_Present(t *testing.T) {
 		})
 	}
 }
+
+
+func TestOptional_IfPresent(t *testing.T) {
+	assert.True(t, OfNullable(NewError(TIEM_UNRECOGNIZED_ERROR, "")).IfPresent())
+	assert.False(t, OfNullable(NewError(TIEM_UNRECOGNIZED_ERROR, "")).IfNil())
+	assert.True(t, OfNullable(nil).IfNil())
+	assert.False(t, OfNullable(nil).IfPresent())
+
+}
+

@@ -144,8 +144,7 @@ func HandleRequest(c *gin.Context,
 	requestContent := ""
 	ok := errors.OfNullable(nil).
 		BreakIf(func() error {
-			err := builder(c, req)
-			return errors.OfNullable(err).
+			return errors.OfNullable(builder(c, req)).
 				Map(func(err error) error {
 					return errors.NewError(errors.TIEM_MARSHAL_ERROR, err.Error())
 				}).

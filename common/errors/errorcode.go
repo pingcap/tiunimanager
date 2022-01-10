@@ -87,8 +87,10 @@ const (
 	TIEM_TRANSPORT_FILE_TRANSFER_LIMITED   EM_ERROR_CODE = 60111
 
 	//user
-	TIEM_UNAUTHORIZED_USER EM_ERROR_CODE = 70600
-	TIEM_USER_NOT_FOUND    EM_ERROR_CODE = 70601
+	TIEM_UNAUTHORIZED_USER    EM_ERROR_CODE = 70600
+	TIEM_USER_NOT_FOUND       EM_ERROR_CODE = 70601
+	TIEM_ACCESS_TOKEN_EXPIRED EM_ERROR_CODE = 70602
+	TIEM_LOGIN_FAILED         EM_ERROR_CODE = 70603
 
 	// dashboard && monitor
 	TIEM_DASHBOARD_NOT_FOUND EM_ERROR_CODE = 80100
@@ -145,6 +147,7 @@ const (
 	TIEM_PARAMETER_GROUP_UPDATE_RELATION_PARAM_ERROR EM_ERROR_CODE = 20513
 	TIEM_CLUSTER_PARAMETER_QUERY_ERROR               EM_ERROR_CODE = 20514
 	TIEM_CLUSTER_PARAMETER_UPDATE_ERROR              EM_ERROR_CODE = 20515
+	TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS         EM_ERROR_CODE = 20516
 
 	TIEM_PARAMETER_QUERY_ERROR  EM_ERROR_CODE = 20520
 	TIEM_PARAMETER_CREATE_ERROR EM_ERROR_CODE = 20521
@@ -209,8 +212,11 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_CLUSTER_NOT_FOUND:  {"cluster not found", 404},
 	TIEM_MARSHAL_ERROR:      {"marshal error", 500},
 	TIEM_UNMARSHAL_ERROR:    {"marshal error", 500},
-	TIEM_UNAUTHORIZED_USER:  {"unauthorized", 401},
-	TIEM_USER_NOT_FOUND:     {"user not found", 404},
+
+	TIEM_UNAUTHORIZED_USER:    {"unauthorized", 401},
+	TIEM_USER_NOT_FOUND:       {"user not found", 404},
+	TIEM_ACCESS_TOKEN_EXPIRED: {"access token has been expired", 401},
+	TIEM_LOGIN_FAILED:         {"incorrect username or password", 400},
 
 	TIEM_METADB_SERVER_CALL_ERROR:  {"call metadb-Server failed", 500},
 	TIEM_CLUSTER_SERVER_CALL_ERROR: {"call cluster-Server failed", 500},
@@ -315,6 +321,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_PARAMETER_GROUP_UPDATE_RELATION_PARAM_ERROR: {"Failed to update relation parameter in parameter group", 500},
 	TIEM_CLUSTER_PARAMETER_QUERY_ERROR:               {"Failed to query cluster parameters", 500},
 	TIEM_CLUSTER_PARAMETER_UPDATE_ERROR:              {"Failed to update cluster parameters", 500},
+	TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS:         {"Parameter group name already exists", 500},
 
 	TIEM_PARAMETER_QUERY_ERROR:  {"Failed to query parameter by parameter group id", 500},
 	TIEM_PARAMETER_CREATE_ERROR: {"Failed to create parameter", 500},

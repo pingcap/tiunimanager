@@ -191,10 +191,6 @@ definitions:
     properties:
       clusterID:
         type: string
-      maintenanceStatus:
-        type: string
-      needConfirmation:
-        type: boolean
       workFlowId:
         description: Asynchronous task workflow ID
         type: string
@@ -1619,46 +1615,11 @@ definitions:
     type: object
   structs.ClusterParameterSampleInfo:
     properties:
-      category:
-        example: basic
-        type: string
-      hasApply:
-        enum:
-        - 0
-        - 1
-        example: 1
-        type: integer
-      instanceType:
-        example: TiDB
-        type: string
-      name:
-        example: log_level
-        type: string
       paramId:
         example: "1"
         type: string
       realValue:
         $ref: '#/definitions/structs.ParameterRealValue'
-      systemVariable:
-        example: log.binlog_cache
-        type: string
-      type:
-        enum:
-        - 0
-        - 1
-        - 2
-        - 3
-        - 4
-        example: 0
-        type: integer
-      updateSource:
-        enum:
-        - 0
-        - 1
-        - 2
-        - 3
-        example: 0
-        type: integer
     type: object
   structs.ClusterResourceInfo:
     properties:

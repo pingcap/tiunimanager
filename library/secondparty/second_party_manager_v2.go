@@ -40,9 +40,9 @@ var Manager SecondPartyService
 type SecondPartyService interface {
 	Init()
 	ClusterDeploy(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string, version string,
-		configStrYaml string, timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error)
+		configStrYaml string, timeoutS int, flags []string, workFlowNodeID string, password string) (operationID string, err error)
 	ClusterScaleOut(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string, configStrYaml string,
-		timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error)
+		timeoutS int, flags []string, workFlowNodeID string, password string) (operationID string, err error)
 	ClusterScaleIn(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string, nodeId string,
 		timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error)
 	ClusterStart(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string, timeoutS int,

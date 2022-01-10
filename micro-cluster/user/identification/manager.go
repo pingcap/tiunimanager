@@ -2,12 +2,13 @@ package identification
 
 import (
 	"context"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/user/identification"
-	"time"
 )
 
 type Manager struct{}
@@ -20,18 +21,18 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (resp mes
 	a, err := models.GetAccountReaderWriter().FindAccountByName(ctx, request.UserName)
 
 	if err != nil {
-		err = errors.NewError(errors.TIEM_USER_NOT_FOUND, "user not found")
+		err = errors.NewError(errors.TIEM_LOGIN_FAILED, "incorrect username or password")
 		return
 	}
 
 	loginSuccess, err := a.CheckPassword(request.Password)
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized", err)
+		err = errors.WrapError(errors.TIEM_LOGIN_FAILED, "incorrect username or password", err)
 		return
 	}
 
 	if !loginSuccess {
-		err = errors.NewError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized")
+		err = errors.NewError(errors.TIEM_LOGIN_FAILED, "Incorrect username or password")
 		return
 	}
 
@@ -43,7 +44,7 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (resp mes
 	token, err := p.CreateToken(ctx, req)
 
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized", err)
+		err = errors.WrapError(errors.TIEM_UNRECOGNIZED_ERROR, "login failed", err)
 		return
 	} else {
 		resp.TokenString = token.TokenString
@@ -92,9 +93,10 @@ func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq)
 	resp.AccountName = token.AccountName
 	resp.TenantID = token.TenantId
 
+	// expired
 	if !token.IsValid() {
-		err = errors.NewError(errors.TIEM_UNAUTHORIZED_USER, "invalid token")
-		return
+		err = errors.Error(errors.TIEM_ACCESS_TOKEN_EXPIRED)
+		return resp, err
 	}
 
 	return

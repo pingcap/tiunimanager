@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Copyright (c)  2022 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
  * you may not use this file except in compliance with the License.           *
  * You may obtain a copy of the License at                                    *
@@ -16,16 +16,24 @@
 package management
 
 import (
-	"github.com/pingcap-inc/tiem/library/knowledge"
-	"github.com/pingcap-inc/tiem/models"
-	"os"
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestMain(m *testing.M) {
-	knowledge.LoadKnowledge()
-	models.MockDB()
-	code := m.Run()
-	os.RemoveAll("testdata")
-	os.Exit(code)
+func TestClusterInstance_GetDir(t *testing.T) {
+	instance := ClusterInstance {
+		ClusterID: "cluster1",
+		DiskPath: "/sda",
+		Type: string(constants.ComponentIDTiKV),
+	}
+	t.Run("deploy", func(t *testing.T) {
+		assert.Equal(t, "/sda/cluster1/tikv-deploy",instance.GetDeployDir())
+	})
+	t.Run("data", func(t *testing.T) {
+		assert.Equal(t, "/sda/cluster1/tikv-data",instance.GetDataDir())
+	})
+	t.Run("log", func(t *testing.T) {
+		assert.Equal(t, "/sda/cluster1/tikv-deploy/cluster1/tidb-log", instance.GetLogDir())
+	})
 }

@@ -192,7 +192,7 @@ func (g *ClusterReadWrite) UpdateMeta(ctx context.Context, cluster *Cluster, ins
 			msg := fmt.Sprintf("cluster update meta failed, clusterId = %s", cluster.ID)
 			framework.LogWithContext(ctx).Error(msg)
 			tx.Rollback()
-			return errors.WrapError(errors.TIEM_UNRECOGNIZED_ERROR, "", err)
+			return dbCommon.WrapDBError(err)
 		}
 		return nil
 	})
@@ -325,26 +325,45 @@ func (g *ClusterReadWrite) DeleteRelation(ctx context.Context, relationID uint) 
 }
 
 func (g *ClusterReadWrite) CreateClusterTopologySnapshot(ctx context.Context, snapshot ClusterTopologySnapshot) error {
-	if snapshot.ClusterID == "" || snapshot.TenantID == "" || snapshot.Config == "" {
-		errInfo := fmt.Sprintf("CreateClusterTopologySnapshot failed : parameter invalid, ClusterID = %s, TenantID = %s, config = %s", snapshot.ClusterID, snapshot.TenantID, snapshot.Config)
+	if len(snapshot.ClusterID) == 0 || len(snapshot.TenantID) == 0 {
+		errInfo := fmt.Sprintf("CreateClusterTopologySnapshot failed : parameter invalid, ClusterID = %s, TenantID = %s", snapshot.ClusterID, snapshot.TenantID)
 		framework.LogWithContext(ctx).Error(errInfo)
 		return errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
 	}
+	if len(snapshot.PrivateKey) == 0 || len(snapshot.PublicKey) == 0 {
+		errInfo := fmt.Sprintf("CreateClusterTopologySnapshot failed : connection key required")
+		framework.LogWithContext(ctx).Error(errInfo)
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
+	}
+
 	err := g.DB(ctx).Create(&snapshot).Error
 	return dbCommon.WrapDBError(err)
 }
 
-func (g *ClusterReadWrite) GetLatestClusterTopologySnapshot(ctx context.Context, clusterID string) (snapshot ClusterTopologySnapshot, err error) {
-	if "" == clusterID {
-		errInfo := "get latest cluster topology snapshot failed : empty clusterID"
+func (g *ClusterReadWrite) GetCurrentClusterTopologySnapshot(ctx context.Context, clusterID string) (snapshot ClusterTopologySnapshot, err error) {
+	if len(clusterID) == 0 {
+		errInfo := "get cluster topology snapshot failed : cluster id required"
 		framework.LogWithContext(ctx).Error(errInfo)
 		err = errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
 		return
 	}
 	
-	err = g.DB(ctx).Model(snapshot).Where("cluster_id = ?", clusterID).Order("id desc").First(&snapshot).Error
+	err = g.DB(ctx).Model(snapshot).Where("cluster_id = ?", clusterID).First(&snapshot).Error
 	err = dbCommon.WrapDBError(err)
 	return
+}
+
+func (g *ClusterReadWrite) UpdateTopologySnapshotConfig(ctx context.Context, clusterID string, config string) error {
+	snapshot := &ClusterTopologySnapshot{}
+	err := g.DB(ctx).Model(&ClusterTopologySnapshot{}).Where("cluster_id = ?", clusterID).First(snapshot).Error
+	if err != nil {
+		errInfo := "update cluster topology snapshot failed : record not found"
+		framework.LogWithContext(ctx).Error(errInfo)
+		err = errors.NewError(errors.TIEM_CLUSTER_NOT_FOUND, errInfo)
+	}
+	snapshot.Config = config
+
+	return dbCommon.WrapDBError(g.DB(ctx).Save(snapshot).Error)
 }
 
 func NewClusterReadWrite(db *gorm.DB) *ClusterReadWrite {

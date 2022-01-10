@@ -187,15 +187,8 @@ type ParameterRealValue struct {
 }
 
 type ClusterParameterSampleInfo struct {
-	ParamId        string             `json:"paramId" example:"1"`
-	Category       string             `json:"category" example:"basic"`
-	Name           string             `json:"name" example:"log_level"`
-	InstanceType   string             `json:"instanceType" example:"TiDB"`
-	UpdateSource   int                `json:"updateSource" example:"0" enums:"0,1,2,3"`
-	SystemVariable string             `json:"systemVariable" example:"log.binlog_cache"`
-	Type           int                `json:"type" example:"0" enums:"0,1,2,3,4"`
-	HasApply       int                `json:"hasApply" example:"1" enums:"0,1"`
-	RealValue      ParameterRealValue `json:"realValue"`
+	ParamId   string             `json:"paramId" example:"1"`
+	RealValue ParameterRealValue `json:"realValue"`
 }
 
 type ClusterParameterInfo struct {

@@ -197,11 +197,12 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 
 	switch nodeDefine.ReturnType {
 	case SyncFuncNode:
-		if node.Result == "" {
-			node.Success()
-		}
+		node.Success()
 		return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
 	case PollingNode:
+		if node.Status == constants.WorkFlowStatusFinished {
+			return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
+		}
 		ticker := time.NewTicker(3 * time.Second)
 		sequence := int32(0)
 		for range ticker.C {

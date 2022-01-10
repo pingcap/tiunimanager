@@ -26,6 +26,7 @@ package parameter
 import (
 	"context"
 	"errors"
+	"math"
 	"testing"
 
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -146,10 +147,10 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 		ParamId:   "4",
 		Name:      "param4",
 		Type:      3,
-		RealValue: structs.ParameterRealValue{ClusterValue: "3.14"},
+		RealValue: structs.ParameterRealValue{ClusterValue: "3.00"},
 	})
 	assert.NoError(t, err)
-	assert.EqualValues(t, 3.14, v)
+	assert.EqualValues(t, 3.00, math.Trunc(v.(float64)))
 
 	v, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
 		ParamId:   "5",

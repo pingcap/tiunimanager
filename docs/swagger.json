@@ -4731,6 +4731,7 @@
             "type": "object",
             "required": [
                 "cloneStrategy",
+                "clusterName",
                 "clusterType",
                 "clusterVersion",
                 "cpuArchitecture",
@@ -4855,6 +4856,7 @@
         "cluster.CreateClusterReq": {
             "type": "object",
             "required": [
+                "clusterName",
                 "clusterType",
                 "clusterVersion",
                 "cpuArchitecture",
@@ -5452,6 +5454,7 @@
             "type": "object",
             "required": [
                 "backupId",
+                "clusterName",
                 "clusterType",
                 "clusterVersion",
                 "cpuArchitecture",

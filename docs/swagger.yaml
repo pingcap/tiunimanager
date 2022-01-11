@@ -65,6 +65,7 @@ definitions:
         type: boolean
     required:
     - cloneStrategy
+    - clusterName
     - clusterType
     - clusterVersion
     - cpuArchitecture
@@ -153,6 +154,7 @@ definitions:
       tls:
         type: boolean
     required:
+    - clusterName
     - clusterType
     - clusterVersion
     - cpuArchitecture
@@ -581,6 +583,7 @@ definitions:
         type: boolean
     required:
     - backupId
+    - clusterName
     - clusterType
     - clusterVersion
     - cpuArchitecture

@@ -4745,6 +4745,7 @@ var doc = `{
             "type": "object",
             "required": [
                 "cloneStrategy",
+                "clusterName",
                 "clusterType",
                 "clusterVersion",
                 "cpuArchitecture",
@@ -4869,6 +4870,7 @@ var doc = `{
         "cluster.CreateClusterReq": {
             "type": "object",
             "required": [
+                "clusterName",
                 "clusterType",
                 "clusterVersion",
                 "cpuArchitecture",
@@ -5466,6 +5468,7 @@ var doc = `{
             "type": "object",
             "required": [
                 "backupId",
+                "clusterName",
                 "clusterType",
                 "clusterVersion",
                 "cpuArchitecture",

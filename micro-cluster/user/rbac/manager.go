@@ -75,9 +75,9 @@ func NewRBACManager() *RBACManager {
 
 func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 	framework.LogWithContext(ctx).Infof("begin init default rbac...")
-	mgr.CreateRole(ctx, message.CreateRoleReq{Role: string(constants.RbacRoleAdmin)})
-	mgr.CreateRole(ctx, message.CreateRoleReq{Role: string(constants.RbacRoleClusterManager)})
-	mgr.CreateRole(ctx, message.CreateRoleReq{Role: string(constants.RbacRolePlatformManager)})
+	mgr.CreateRole(ctx, message.CreateRoleReq{Role: string(constants.RbacRoleAdmin)}, true)
+	mgr.CreateRole(ctx, message.CreateRoleReq{Role: string(constants.RbacRoleClusterManager)}, true)
+	mgr.CreateRole(ctx, message.CreateRoleReq{Role: string(constants.RbacRolePlatformManager)}, true)
 
 	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleAdmin), Permissions: []structs.RbacPermission{
 		{
@@ -96,7 +96,7 @@ func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 			Resource: string(constants.RbacResourceUser),
 			Action:   string(constants.RbacActionAll),
 		},
-	}})
+	}}, true)
 	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleClusterManager), Permissions: []structs.RbacPermission{
 		{
 			Resource: string(constants.RbacResourceCluster),
@@ -114,7 +114,7 @@ func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 			Resource: string(constants.RbacResourceUser),
 			Action:   string(constants.RbacActionRead),
 		},
-	}})
+	}}, true)
 	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRolePlatformManager), Permissions: []structs.RbacPermission{
 		{
 			Resource: string(constants.RbacResourceCluster),
@@ -132,7 +132,7 @@ func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 			Resource: string(constants.RbacResourceUser),
 			Action:   string(constants.RbacActionAll),
 		},
-	}})
+	}}, true)
 }
 
 func (mgr *RBACManager) CheckPermissionForUser(ctx context.Context, request message.CheckPermissionForUserReq) (resp message.CheckPermissionForUserResp, err error) {
@@ -176,7 +176,7 @@ func (mgr *RBACManager) DeleteRole(ctx context.Context, request message.DeleteRo
 	return
 }
 
-func (mgr *RBACManager) CreateRole(ctx context.Context, request message.CreateRoleReq) (resp message.CreateRoleResp, err error) {
+func (mgr *RBACManager) CreateRole(ctx context.Context, request message.CreateRoleReq, system bool) (resp message.CreateRoleResp, err error) {
 	framework.LogWithContext(ctx).Infof("begin CreateRole, request: %+v", request)
 	framework.LogWithContext(ctx).Info("end CreateRole")
 
@@ -184,8 +184,10 @@ func (mgr *RBACManager) CreateRole(ctx context.Context, request message.CreateRo
 		return resp, fmt.Errorf("invalid input empty role")
 	}
 
-	if _, ok := constants.RbacRoleMap[request.Role]; ok {
-		return resp, fmt.Errorf("default role %s can not modify permission", request.Role)
+	if !system {
+		if _, ok := constants.RbacRoleMap[request.Role]; ok {
+			return resp, fmt.Errorf("default role %s can not modify permission", request.Role)
+		}
 	}
 
 	if _, err = mgr.enforcer.AddRoleForUser("", request.Role); err != nil {
@@ -223,7 +225,7 @@ func (mgr *RBACManager) UnbindRoleForUser(ctx context.Context, request message.U
 	return
 }
 
-func (mgr *RBACManager) AddPermissionsForRole(ctx context.Context, request message.AddPermissionsForRoleReq) (resp message.AddPermissionsForRoleResp, err error) {
+func (mgr *RBACManager) AddPermissionsForRole(ctx context.Context, request message.AddPermissionsForRoleReq, system bool) (resp message.AddPermissionsForRoleResp, err error) {
 	framework.LogWithContext(ctx).Infof("begin AddPermissionsForRole, request: %+v", request)
 	framework.LogWithContext(ctx).Info("end AddPermissionsForRole")
 
@@ -231,8 +233,10 @@ func (mgr *RBACManager) AddPermissionsForRole(ctx context.Context, request messa
 		return resp, fmt.Errorf("invalid input empty role")
 	}
 
-	if _, ok := constants.RbacRoleMap[request.Role]; ok {
-		return resp, fmt.Errorf("default role %s can not modify permission", request.Role)
+	if !system {
+		if _, ok := constants.RbacRoleMap[request.Role]; ok {
+			return resp, fmt.Errorf("default role %s can not modify permission", request.Role)
+		}
 	}
 
 	var permissionList [][]string

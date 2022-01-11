@@ -860,7 +860,7 @@ func (c *ClusterServiceHandler) CreateRbacRole(ctx context.Context, req *cluster
 
 	createReq := message.CreateRoleReq{}
 	if handleRequest(ctx, req, resp, &createReq) {
-		result, err := c.rbacManager.CreateRole(framework.NewBackgroundMicroCtx(ctx, false), createReq)
+		result, err := c.rbacManager.CreateRole(framework.NewBackgroundMicroCtx(ctx, false), createReq, false)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -902,7 +902,7 @@ func (c *ClusterServiceHandler) AddPermissionsForRole(ctx context.Context, req *
 
 	addReq := message.AddPermissionsForRoleReq{}
 	if handleRequest(ctx, req, resp, &addReq) {
-		result, err := c.rbacManager.AddPermissionsForRole(framework.NewBackgroundMicroCtx(ctx, false), addReq)
+		result, err := c.rbacManager.AddPermissionsForRole(framework.NewBackgroundMicroCtx(ctx, false), addReq, false)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 

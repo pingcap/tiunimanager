@@ -54,9 +54,10 @@ type RBACService interface {
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
+	// @Parameter system
 	// @Return message.CreateRoleResp
 	// @Return error
-	CreateRole(ctx context.Context, request message.CreateRoleReq) (resp message.CreateRoleResp, err error)
+	CreateRole(ctx context.Context, request message.CreateRoleReq, system bool) (resp message.CreateRoleResp, err error)
 
 	// BindRoleForUser
 	// @Description: bind rbac role for user
@@ -81,9 +82,10 @@ type RBACService interface {
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
+	// @Parameter system
 	// @Return message.AddPermissionsForRoleResp
 	// @Return error
-	AddPermissionsForRole(ctx context.Context, request message.AddPermissionsForRoleReq) (resp message.AddPermissionsForRoleResp, err error)
+	AddPermissionsForRole(ctx context.Context, request message.AddPermissionsForRoleReq, system bool) (resp message.AddPermissionsForRoleResp, err error)
 
 	// DeletePermissionsForRole
 	// @Description: delete permissions for rbac role

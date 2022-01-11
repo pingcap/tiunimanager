@@ -33,6 +33,30 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_AuthHost(t *testing.T) {
+	models.MockDB()
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	resourcePool := GetResourcePool()
+
+	// Mock host initiator
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockInitiator := mock_initiator.NewMockHostInitiator(ctrl)
+	mockInitiator.EXPECT().CopySSHID(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
+		return nil
+	})
+
+	resourcePool.SetHostInitiator(mockInitiator)
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
+	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
+
+	var node workflowModel.WorkFlowNode
+	err := authHosts(&node, flowContext)
+	assert.Nil(t, err)
+}
+
 func Test_InstallSoftware(t *testing.T) {
 	models.MockDB()
 	framework.InitBaseFrameworkForUt(framework.ClusterService)

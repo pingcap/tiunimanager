@@ -30,6 +30,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_CopySSHID(t *testing.T) {
+	fileInitiator := NewFileHostInitiator()
+
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	err := fileInitiator.CopySSHID(context.TODO(), &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"})
+	assert.NotNil(t, err)
+}
+
 func Test_VerifyCpuMem_Succeed(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

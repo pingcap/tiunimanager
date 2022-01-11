@@ -22,6 +22,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/pingcap-inc/tiem/util/scp"
 	sshclient "github.com/pingcap-inc/tiem/util/ssh"
 
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -50,6 +51,19 @@ func (p *FileHostInitiator) SetSSHClient(c sshclient.SSHClientExecutor) {
 
 func (p *FileHostInitiator) SetSecondPartyServ(s secondparty.SecondPartyService) {
 	p.secondPartyServ = s
+}
+
+func (p *FileHostInitiator) CopySSHID(ctx context.Context, h *structs.HostInfo) (err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infof("copy ssh id to host %s %s@%s", h.HostName, h.UserName, h.IP)
+
+	err = scp.CopySSHID(ctx, h.IP, h.UserName, h.Passwd, rp_consts.DefaultCopySshIDTimeOut)
+	if err != nil {
+		log.Errorf("copy ssh id to host %s %s@%s failed, %v", h.HostName, h.UserName, h.IP, err)
+		return err
+	}
+
+	return nil
 }
 
 func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (err error) {

@@ -205,10 +205,6 @@ func (mgr *RBACManager) BindRoleForUser(ctx context.Context, request message.Bin
 		return resp, fmt.Errorf("invalid input empty userId or role")
 	}
 
-	if _, ok := constants.RbacRoleMap[request.Role]; ok {
-		return resp, fmt.Errorf("default role %s can not modify permission", request.Role)
-	}
-
 	if _, err = mgr.enforcer.AddRoleForUser(request.UserID, request.Role); err != nil {
 		framework.LogWithContext(ctx).Errorf("call enforcer AddRoleForUser failed %s", err.Error())
 	}

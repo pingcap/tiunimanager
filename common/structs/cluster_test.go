@@ -48,6 +48,10 @@ func Test_validateCreateClusterParameter(t *testing.T)  {
 		err = validator.New().Struct(parameter)
 		assert.Error(t, err)
 
+		parameter.Name = "ValidString_"
+		err = validator.New().Struct(parameter)
+		assert.NoError(t, err)
+
 		parameter.Name = "ValidString"
 	})
 	t.Run("user", func(t *testing.T) {

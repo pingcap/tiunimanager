@@ -91,19 +91,68 @@ func Preview(c *gin.Context) {
 		ClusterName: req.Name,
 		CapabilityIndexes: []structs.Index{},
 	}
-	stockCheckResult := make([]structs.ResourceStockCheckResult, 0)
-	for _, instance := range req.ResourceParameter.InstanceResource {
+	stockCheckResult, ok := preCheckStock(c, req.Region, req.CpuArchitecture, req.ResourceParameter.InstanceResource)
+
+	if ok {
+		resp.StockCheckResult = stockCheckResult
+		c.JSON(http.StatusOK, controller.Success(resp))
+	} else {
+		return
+	}
+}
+
+func preCheckStock(c *gin.Context, region string, arch string, instanceResource []structs.ClusterResourceParameterCompute) ([]structs.ResourceStockCheckResult, bool) {
+	//requestBody, err := json.Marshal(&message.GetStocksReq {
+	//	Location: structs.Location {
+	//		Region: region,
+	//	},
+	//	HostFilter: structs.HostFilter{
+	//		Arch: arch,
+	//	},
+	//})
+	//if err != nil {
+	//	framework.LogWithContext(c).Error(err.Error())
+	//	c.JSON(errors.TIEM_MARSHAL_ERROR.GetHttpCode(), controller.Fail(int(errors.TIEM_MARSHAL_ERROR), err.Error()))
+	//	return nil, false
+	//}
+	//
+	//rpcResponse, err := client.ClusterClient.GetStocks(framework.NewMicroCtxFromGinCtx(c),
+	//	&clusterservices.RpcRequest{
+	//		Request: string(requestBody),
+	//	},
+	//)
+	//if err != nil {
+	//	framework.LogWithContext(c).Error(err.Error())
+	//	c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	//	return nil, false
+	//}
+	//if rpcResponse.Code != int32(errors.TIEM_SUCCESS) {
+	//	framework.LogWithContext(c).Error(rpcResponse.Message)
+	//	c.JSON(errors.EM_ERROR_CODE(rpcResponse.Code).GetHttpCode(), controller.Fail(int(rpcResponse.Code), rpcResponse.Message))
+	//	return nil, false
+	//}
+	//
+	//stocks := message.GetStocksResp{}
+	//err = json.Unmarshal([]byte(rpcResponse.GetResponse()), &stocks)
+	//if err != nil {
+	//	framework.LogWithContext(c).Error(err.Error())
+	//	c.JSON(errors.TIEM_UNMARSHAL_ERROR.GetHttpCode(), controller.Fail(int(errors.TIEM_UNMARSHAL_ERROR), err.Error()))
+	//	return nil, false
+	//}
+	//
+	result := make([]structs.ResourceStockCheckResult, 0)
+	for _, instance := range instanceResource {
 		for _, resource := range instance.Resource {
-			stockCheckResult = append(stockCheckResult, structs.ResourceStockCheckResult{
+			enough := true
+			result = append(result, structs.ResourceStockCheckResult {
 				Type: instance.Type,
 				Name: instance.Type,
 				ClusterResourceParameterComputeResource: resource,
-				Enough: true,
+				Enough: enough,
 			})
 		}
 	}
-	resp.StockCheckResult = stockCheckResult
-	c.JSON(http.StatusOK, controller.Success(resp))
+	return result, true
 }
 
 // Query query clusters

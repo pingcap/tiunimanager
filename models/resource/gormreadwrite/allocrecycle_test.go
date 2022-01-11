@@ -128,7 +128,7 @@ func Test_Create_Query_Host_Succeed(t *testing.T) {
 	assert.Equal(t, 1, int(total))
 	assert.Equal(t, id1[0], hosts[0].ID)
 	assert.Equal(t, hostName1, hosts[0].HostName)
-	assert.Equal(t, hostIp2, hosts[0].IP)
+	assert.Equal(t, hostIp1, hosts[0].IP)
 	assert.Equal(t, 3, len(hosts[0].Disks))
 	hosts, total, err = GormRW.Query(context.TODO(), &structs.HostFilter{Purpose: string(constants.PurposeCompute)}, 0, 3)
 	assert.Nil(t, err)

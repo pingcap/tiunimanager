@@ -155,7 +155,7 @@ func (rw *GormResourceReadWrite) locationFiltered(db *gorm.DB, location *structs
 
 func (rw *GormResourceReadWrite) Query(ctx context.Context, filter *structs.HostFilter, offset int, limit int) (hosts []rp.Host, total int64, err error) {
 	hosts = make([]rp.Host, 0)
-	db := rw.DB(ctx)
+	db := rw.DB(ctx).Model(&rp.Host{})
 	// Check Host Detail
 	if filter.HostID != "" {
 		err = db.Where("id = ?", filter.HostID).Count(&total).Find(&hosts).Error

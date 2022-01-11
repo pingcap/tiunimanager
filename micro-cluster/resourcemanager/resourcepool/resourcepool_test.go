@@ -78,7 +78,7 @@ func Test_ImportHosts(t *testing.T) {
 	defer ctrl2.Finish()
 	workflowService := mock_workflow.NewMockWorkFlowService(ctrl2)
 	workflow.MockWorkFlowService(workflowService)
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 	}, nil).Times(3)
@@ -115,7 +115,7 @@ func Test_ImportHosts_WithoutInit(t *testing.T) {
 	defer ctrl2.Finish()
 	workflowService := mock_workflow.NewMockWorkFlowService(ctrl2)
 	workflow.MockWorkFlowService(workflowService)
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 	}, nil).Times(3)
@@ -151,7 +151,7 @@ func Test_DeleteHosts(t *testing.T) {
 	defer ctrl2.Finish()
 	workflowService := mock_workflow.NewMockWorkFlowService(ctrl2)
 	workflow.MockWorkFlowService(workflowService)
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 	}, nil).Times(3)
@@ -182,7 +182,7 @@ func Test_DeleteHosts_WithoutInit(t *testing.T) {
 	defer ctrl2.Finish()
 	workflowService := mock_workflow.NewMockWorkFlowService(ctrl2)
 	workflow.MockWorkFlowService(workflowService)
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 	}, nil).Times(3)

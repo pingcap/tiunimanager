@@ -567,7 +567,7 @@ func asyncMaintenance(ctx context.Context, meta *handler.ClusterMeta,
 		return "", err
 	}
 
-	flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, meta.Cluster.ID, flowName)
+	flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, meta.Cluster.ID, workflow.BizTypeCluster, flowName)
 	if err != nil {
 		meta.EndMaintenance(ctx, status)
 		framework.LogWithContext(ctx).Errorf(

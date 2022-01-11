@@ -4391,6 +4391,11 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "bizType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "flowName",
                         "in": "query"
                     },
@@ -4743,6 +4748,16 @@ var doc = `{
         },
         "cluster.CloneClusterReq": {
             "type": "object",
+            "required": [
+                "cloneStrategy",
+                "clusterName",
+                "clusterType",
+                "clusterVersion",
+                "cpuArchitecture",
+                "dbPassword",
+                "region",
+                "sourceClusterId"
+            ],
             "properties": {
                 "cloneStrategy": {
                     "description": "specify clone strategy, include empty, snapshot and sync, default empty(option)",
@@ -4859,6 +4874,14 @@ var doc = `{
         },
         "cluster.CreateClusterReq": {
             "type": "object",
+            "required": [
+                "clusterName",
+                "clusterType",
+                "clusterVersion",
+                "cpuArchitecture",
+                "dbPassword",
+                "region"
+            ],
             "properties": {
                 "clusterName": {
                     "type": "string"
@@ -5448,6 +5471,15 @@ var doc = `{
         },
         "cluster.RestoreNewClusterReq": {
             "type": "object",
+            "required": [
+                "backupId",
+                "clusterName",
+                "clusterType",
+                "clusterVersion",
+                "cpuArchitecture",
+                "dbPassword",
+                "region"
+            ],
             "properties": {
                 "backupId": {
                     "type": "string"
@@ -5598,6 +5630,16 @@ var doc = `{
         },
         "cluster.TakeoverClusterReq": {
             "type": "object",
+            "required": [
+                "TiUPIp",
+                "TiUPPath",
+                "TiUPPort",
+                "TiUPUserName",
+                "TiUPUserPassword",
+                "clusterName",
+                "dbPassword",
+                "dbUser"
+            ],
             "properties": {
                 "TiUPIp": {
                     "type": "string",
@@ -7707,6 +7749,9 @@ var doc = `{
             "type": "object",
             "properties": {
                 "bizId": {
+                    "type": "string"
+                },
+                "bizType": {
                     "type": "string"
                 },
                 "createTime": {

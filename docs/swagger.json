@@ -4377,6 +4377,11 @@
                     },
                     {
                         "type": "string",
+                        "name": "bizType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "flowName",
                         "in": "query"
                     },
@@ -4729,6 +4734,16 @@
         },
         "cluster.CloneClusterReq": {
             "type": "object",
+            "required": [
+                "cloneStrategy",
+                "clusterName",
+                "clusterType",
+                "clusterVersion",
+                "cpuArchitecture",
+                "dbPassword",
+                "region",
+                "sourceClusterId"
+            ],
             "properties": {
                 "cloneStrategy": {
                     "description": "specify clone strategy, include empty, snapshot and sync, default empty(option)",
@@ -4845,6 +4860,14 @@
         },
         "cluster.CreateClusterReq": {
             "type": "object",
+            "required": [
+                "clusterName",
+                "clusterType",
+                "clusterVersion",
+                "cpuArchitecture",
+                "dbPassword",
+                "region"
+            ],
             "properties": {
                 "clusterName": {
                     "type": "string"
@@ -5434,6 +5457,15 @@
         },
         "cluster.RestoreNewClusterReq": {
             "type": "object",
+            "required": [
+                "backupId",
+                "clusterName",
+                "clusterType",
+                "clusterVersion",
+                "cpuArchitecture",
+                "dbPassword",
+                "region"
+            ],
             "properties": {
                 "backupId": {
                     "type": "string"
@@ -5584,6 +5616,16 @@
         },
         "cluster.TakeoverClusterReq": {
             "type": "object",
+            "required": [
+                "TiUPIp",
+                "TiUPPath",
+                "TiUPPort",
+                "TiUPUserName",
+                "TiUPUserPassword",
+                "clusterName",
+                "dbPassword",
+                "dbUser"
+            ],
             "properties": {
                 "TiUPIp": {
                     "type": "string",
@@ -7693,6 +7735,9 @@
             "type": "object",
             "properties": {
                 "bizId": {
+                    "type": "string"
+                },
+                "bizType": {
                     "type": "string"
                 },
                 "createTime": {

@@ -80,7 +80,7 @@ type Service interface {
 	BuildClusterLogConfig(ctx context.Context, clusterId string) (flowID string, err error)
 }
 
-func GetService() Service{
+func GetService() Service {
 	return NewManager()
 }
 
@@ -95,7 +95,7 @@ func (m Manager) BuildClusterLogConfig(ctx context.Context, clusterId string) (f
 		return
 	}
 
-	if flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, clusterMeta.Cluster.ID, buildLogConfigDefine.FlowName); err != nil {
+	if flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, clusterMeta.Cluster.ID, workflow.BizTypeCluster, buildLogConfigDefine.FlowName); err != nil {
 		framework.LogWithContext(ctx).Errorf("create flow %s failed, clusterID = %s, error = %s", flow.Flow.Name, clusterMeta.Cluster.ID, err.Error())
 		return "", err
 	} else {

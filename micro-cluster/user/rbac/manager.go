@@ -166,6 +166,10 @@ func (mgr *RBACManager) DeleteRole(ctx context.Context, request message.DeleteRo
 	framework.LogWithContext(ctx).Infof("begin DeleteRole, request: %+v", request)
 	framework.LogWithContext(ctx).Info("end DeleteRole")
 
+	if _, ok := constants.RbacRoleMap[request.Role]; ok {
+		return resp, fmt.Errorf("default role %s can not delete", request.Role)
+	}
+
 	if _, err = mgr.enforcer.DeleteRole(request.Role); err != nil {
 		framework.LogWithContext(ctx).Errorf("call enforcer DeleteRole failed %s", err.Error())
 	}

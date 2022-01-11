@@ -50,7 +50,7 @@ func NewRBACManager() *RBACManager {
 	m.AddDef("p", "p", "sub, obj, act")
 	m.AddDef("g", "g", "_, _")
 	m.AddDef("e", "e", "some(where (p.eft == allow))")
-	m.AddDef("m", "m", "g(r.sub, p.sub) && r.obj == p.obj && (r.act == p.act || p.act == *)")
+	m.AddDef("m", "m", "g(r.sub, p.sub) && r.obj == p.obj && (r.act == p.act || p.act == \"*\")")
 	adapter, err := models.GetRBACReaderWriter().GetRBACAdapter(context.Background())
 	if err != nil {
 		framework.LogWithContext(context.Background()).Fatalf("get casbin gorm adapter failed, %s", err.Error())

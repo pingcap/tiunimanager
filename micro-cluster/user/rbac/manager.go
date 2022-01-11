@@ -88,6 +88,15 @@ func (mgr *RBACManager) CheckPermissionForUser(ctx context.Context, request mess
 	return message.CheckPermissionForUserResp{Result: true}, nil
 }
 
+func (mgr *RBACManager) GetRoles(ctx context.Context, request message.GetRolesReq) (resp message.GetRolesResp, err error) {
+	framework.LogWithContext(ctx).Infof("begin GetRoles, request: %+v", request)
+	framework.LogWithContext(ctx).Info("end GetRoles")
+
+	return message.GetRolesResp{
+		Roles: mgr.enforcer.GetAllRoles(),
+	}, nil
+}
+
 func (mgr *RBACManager) DeleteRole(ctx context.Context, request message.DeleteRoleReq) (resp message.DeleteRoleResp, err error) {
 	framework.LogWithContext(ctx).Infof("begin DeleteRole, request: %+v", request)
 	framework.LogWithContext(ctx).Info("end DeleteRole")

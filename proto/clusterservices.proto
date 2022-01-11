@@ -38,6 +38,7 @@ service ClusterService {
 
     // RBAC
     rpc AddRoleForUser(RpcRequest) returns (RpcResponse);
+    rpc GetRoles(RpcRequest) returns (RpcResponse);
     rpc DeleteRbacRole(RpcRequest) returns (RpcResponse);
     rpc DeleteRbacUser(RpcRequest) returns (RpcResponse);
     rpc DeleteRoleForUser(RpcRequest) returns (RpcResponse);

@@ -87,6 +87,7 @@ func Route(g *gin.Engine) {
 			rbac.Use(interceptor.AuditLog())
 			rbac.POST("/user_role/add", metrics.HandleMetrics(constants.MetricsRbacAddRoleForUser), rbacApi.AddRoleForUser)
 			rbac.DELETE("/user_role/delete", metrics.HandleMetrics(constants.MetricsRbacDeleteRoleForUser), rbacApi.DeleteRoleForUser)
+			rbac.GET("/role/", metrics.HandleMetrics(constants.MetricsRbacGetRole), rbacApi.GetRbacRoles)
 			rbac.DELETE("/user/:userId", metrics.HandleMetrics(constants.MetricsRbacDeleteUser), rbacApi.DeleteRbacUser)
 			rbac.DELETE("/role/:role", metrics.HandleMetrics(constants.MetricsRbacDeleteRole), rbacApi.DeleteRbacRole)
 			rbac.POST("/permission/add", metrics.HandleMetrics(constants.MetricsRbacAddPermissionForRole), rbacApi.AddPermissionsForRole)

@@ -40,6 +40,13 @@ type DeleteRoleReq struct {
 type DeleteRoleResp struct {
 }
 
+type GetRolesReq struct {
+}
+
+type GetRolesResp struct {
+	Roles []string
+}
+
 type DeleteUserReq struct {
 	UserID string `json:"userId"`
 }

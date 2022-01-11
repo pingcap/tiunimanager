@@ -90,6 +90,7 @@ const (
 	MetricsUserProfile                 MetricsType = "user/profile"
 	MetricsRbacAddRoleForUser          MetricsType = "user/rbac/user_role/add"
 	MetricsRbacDeleteRoleForUser       MetricsType = "user/rbac/user_role/delete"
+	MetricsRbacGetRole                 MetricsType = "user/rbac/role/"
 	MetricsRbacDeleteRole              MetricsType = "user/rbac/role/delete"
 	MetricsRbacDeleteUser              MetricsType = "user/rbac/user/delete"
 	MetricsRbacAddPermissionForRole    MetricsType = "user/rbac/permission/add"

@@ -951,6 +951,20 @@ func (c *ClusterServiceHandler) CheckPermissionForUser(ctx context.Context, req 
 	return nil
 }
 
+func (c *ClusterServiceHandler) GetRoles(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "GetRoles", int(resp.GetCode()))
+	defer handlePanic(ctx, "GetRoles", resp)
+
+	getReq := message.GetRolesReq{}
+	if handleRequest(ctx, req, resp, &getReq) {
+		result, err := c.rbacManager.GetRoles(framework.NewBackgroundMicroCtx(ctx, false), getReq)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
 func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "ImportHosts", int(resp.GetCode()))

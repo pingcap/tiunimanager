@@ -1207,6 +1207,13 @@ definitions:
       userId:
         type: string
     type: object
+  message.GetRolesResp:
+    properties:
+      roles:
+        items:
+          type: string
+        type: array
+    type: object
   message.GetStocksResp:
     properties:
       stocks:
@@ -4504,6 +4511,46 @@ paths:
       summary: delete permissions for role
       tags:
       - rbac DeletePermissionsForRole
+  /rbac/role/:
+    get:
+      consumes:
+      - application/json
+      description: GetRbacRoles
+      parameters:
+      - description: rbac role
+        in: path
+        name: role
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.GetRolesResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: get rbac roles
+      tags:
+      - rbac GetRbacRoles
   /rbac/role/{role}:
     delete:
       consumes:

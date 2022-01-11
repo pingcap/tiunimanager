@@ -44,6 +44,27 @@ func AddRoleForUser(c *gin.Context) {
 	}
 }
 
+// GetRbacRoles
+// @Summary get rbac roles
+// @Description GetRbacRoles
+// @Tags rbac GetRbacRoles
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param role path string true "rbac role"
+// @Success 200 {object} controller.CommonResult{data=message.GetRolesResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /rbac/role/ [get]
+func GetRbacRoles(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.GetRolesReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.GetRoles, &message.GetRolesResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
 // DeleteRbacRole
 // @Summary delete rbac role
 // @Description DeleteRbacRole

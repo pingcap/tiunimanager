@@ -40,10 +40,6 @@ func Test_validateCreateClusterParameter(t *testing.T)  {
 		err := validator.New().Struct(parameter)
 		assert.Error(t, err)
 
-		parameter.Name = "ValidString☢"
-		err = validator.New().Struct(parameter)
-		assert.Error(t, err)
-
 		parameter.Name = "TooLongTooLongTooLongTooLongTooLongTooLongTooLongTooLongTooLongTooLongTooLongTooLongTooLongTooLongTooLongTooLong"
 		err = validator.New().Struct(parameter)
 		assert.Error(t, err)
@@ -68,10 +64,6 @@ func Test_validateCreateClusterParameter(t *testing.T)  {
 	t.Run("password", func(t *testing.T) {
 		parameter.DBPassword = "len"
 		err := validator.New().Struct(parameter)
-		assert.Error(t, err)
-
-		parameter.DBPassword = "ValidString☢"
-		err = validator.New().Struct(parameter)
 		assert.Error(t, err)
 
 		parameter.DBPassword = "TooLongTooLongTooLongTooLongTooLongTooLongTooLongTooLongTooLongTooLongTooLongTooLongTooLongTooLongTooLongTooLong"

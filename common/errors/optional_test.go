@@ -219,7 +219,8 @@ func TestOptional_If(t *testing.T) {
 		}, func() {
 			b = 5
 		})
-		assert.Equal(t, "[10000]aaa", a)
+		assert.Contains(t, a, "[10000]")
+		assert.Contains(t, a, "aaa")
 		assert.Equal(t, 0, b)
 	})
 	t.Run("without error", func(t *testing.T) {

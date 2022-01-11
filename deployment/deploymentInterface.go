@@ -81,6 +81,7 @@ const (
 	CMDLightning    = "tidb-lightning"
 	CMDTopologyFile = "--topology-file"
 	CMDPush         = "push"
+	FlagWaitTimeout = "--wait-timeout"
 )
 
 type Interface interface {

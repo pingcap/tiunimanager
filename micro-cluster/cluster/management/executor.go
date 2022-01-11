@@ -109,11 +109,12 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		var hostIP []string
 		if len(ins.HostIP) > 1 {
 			hostIP = append(hostIP, ins.HostIP...)
-			node.Record("type: " + ins.Type, "zone: " + ins.Zone, "host IP: " + strings.Join(hostIP, ", "))
+			node.Record(fmt.Sprintf("type: %s, zone: %s, host IP: %s; ", ins.Type, ins.Zone, strings.Join(hostIP, ", ")))
 		}else{
-			node.Record("type: " + ins.Type, "zone: " + ins.Zone, "host IP: " + ins.HostIP[0])
+			node.Record(fmt.Sprintf("type: %s, zone: %s, host IP: %s; ", ins.Type, ins.Zone, ins.HostIP[0]))
 		}
 	}
+	node.Record(fmt.Sprintf("prepare resource for cluster %s ", clusterMeta.Cluster.ID))
 	return nil
 }
 
@@ -130,7 +131,7 @@ func buildConfig(node *workflowModel.WorkFlowNode, context *workflow.FlowContext
 	}
 
 	context.SetData(ContextTopology, topology)
-	node.Record("build config successfully, topology:", topology)
+	node.Record("build config ")
 	return nil
 }
 
@@ -159,7 +160,8 @@ func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	framework.LogWithContext(context.Context).Infof(
 		"get scale out cluster %s task id: %s", cluster.ID, taskId)
 
-	node.Record(fmt.Sprintf("scale out cluster %s ", clusterMeta.Cluster.ID), fmt.Sprintf("version: %s", cluster.Version))
+	node.Record(fmt.Sprintf("scale out cluster %s, version: %s, ", clusterMeta.Cluster.ID, cluster.Version))
+	fmt.Println(node.Result)
 	return nil
 }
 
@@ -254,7 +256,7 @@ func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 			"delete backup strategy for cluster %s error: %s", meta.Cluster.ID, err.Error())
 		return err
 	}
-	node.Record(fmt.Sprintf("delete backup strategy for cluster %s ", meta.Cluster.ID))
+	node.Record(fmt.Sprintf("delete backup strategy for cluster %s; ", meta.Cluster.ID))
 
 	// delete auto backup records
 	_, err = backuprestore.GetBRService().DeleteBackupRecords(context.Context, cluster.DeleteBackupDataReq{
@@ -266,7 +268,7 @@ func clearBackupData(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 			"delete auto backup data for cluster %s error: %s", meta.Cluster.ID, err.Error())
 		return err
 	}
-	node.Record(fmt.Sprintf("delete auto backup data for cluster %s ", meta.Cluster.ID))
+	node.Record(fmt.Sprintf("delete auto backup data for cluster %s; ", meta.Cluster.ID))
 
 	// delete manual backup records
 	if deleteReq.KeepHistoryBackupRecords {
@@ -356,9 +358,8 @@ func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	context.SetData(ContextWorkflowID, backupResponse.WorkFlowID)
 	context.SetData(ContextBackupID, backupResponse.BackupID)
 
-	node.Record(fmt.Sprintf("do backup for source cluster %s ", sourceClusterMeta.Cluster.ID),
-		fmt.Sprintf("backup mode: %v", constants.BackupModeManual))
-	fmt.Println(node.Result)
+	node.Record(fmt.Sprintf("do backup for source cluster %s, ", sourceClusterMeta.Cluster.ID),
+		fmt.Sprintf("backup mode: %v, ", constants.BackupModeManual))
 	return nil
 }
 
@@ -382,7 +383,7 @@ func restoreNewCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 	}
 
 	context.SetData(ContextWorkflowID, restoreResponse.WorkFlowID)
-	node.Record(fmt.Sprintf("do restore for cluster %s ", clusterMeta.Cluster.ID), fmt.Sprintf("backup ID: %s", backupID))
+	node.Record(fmt.Sprintf("do restore for cluster %s, backup ID: %s, ", clusterMeta.Cluster.ID, backupID))
 	return nil
 }
 
@@ -399,7 +400,7 @@ func waitWorkFlow(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 		return err
 	}
 
-	node.Record(fmt.Sprintf("wait workflow %s done", workflowID))
+	node.Record(fmt.Sprintf("wait workflow %s done ", workflowID))
 	return nil
 }
 
@@ -548,7 +549,7 @@ func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 	}
 	framework.LogWithContext(context.Context).Infof(
 		"get deploy cluster %s task id: %s", clusterMeta.Cluster.ID, taskId)
-	node.Record(fmt.Sprintf("deploy cluster %s", clusterMeta.Cluster.ID), fmt.Sprintf("yaml config: %s", yamlConfig))
+	node.Record(fmt.Sprintf("deploy cluster %s ", clusterMeta.Cluster.ID))
 	return nil
 }
 
@@ -571,7 +572,7 @@ func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	framework.LogWithContext(context.Context).Infof(
 		"get start cluster %s task id: %s", clusterMeta.Cluster.ID, taskId)
 
-	node.Record(fmt.Sprintf("start cluster %s", clusterMeta.Cluster.ID), fmt.Sprintf("version: %s", cluster.Version))
+	node.Record(fmt.Sprintf("start cluster %s, version: %s, ", clusterMeta.Cluster.ID, cluster.Version))
 	return nil
 }
 
@@ -588,12 +589,12 @@ func syncBackupStrategy(node *workflowModel.WorkFlowNode, context *workflow.Flow
 			"get cluster %s backup strategy error: %s", sourceClusterMeta.Cluster.ID, err.Error())
 		return err
 	}
-	node.Record(fmt.Sprintf("get cluster %s backup strategy ", clusterMeta.Cluster.ID))
+	node.Record(fmt.Sprintf("get cluster %s backup strategy, ", clusterMeta.Cluster.ID))
 
 	if len(sourceStrategyRes.Strategy.BackupDate) == 0 {
 		framework.LogWithContext(context).Infof(
 			"cluster %s has no backup strategy", sourceClusterMeta.Cluster.ID)
-		node.Record(fmt.Sprintf("cluster %s has no backup strategy, no need to update", clusterMeta.Cluster.ID))
+		node.Success(fmt.Sprintf("cluster %s has no backup strategy, no need to update", clusterMeta.Cluster.ID))
 		return nil
 	}
 
@@ -652,7 +653,7 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	}
 	context.SetData(ContextWorkflowID, response.WorkFlowID)
 
-	node.Record(fmt.Sprintf("update cluster %s parameters", clusterMeta.Cluster.ID))
+	node.Record(fmt.Sprintf("update cluster %s parameters ", clusterMeta.Cluster.ID))
 	return nil
 }
 
@@ -660,7 +661,7 @@ func asyncBuildLog(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
 	log.GetService().BuildClusterLogConfig(context, clusterMeta.Cluster.ID)
-	node.Record(fmt.Sprintf("rebuild log config for cluster %s",clusterMeta.Cluster.ID))
+	node.Record(fmt.Sprintf("rebuild log config for cluster %s ",clusterMeta.Cluster.ID))
 	return nil
 }
 
@@ -689,7 +690,7 @@ func restoreCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	}
 	context.SetData(ContextWorkflowID, restoreResponse.WorkFlowID)
 
-	node.Record(fmt.Sprintf("do restore for cluster %s", clusterMeta.Cluster.ID), fmt.Sprintf("backup id: %s", backupID))
+	node.Record(fmt.Sprintf("do restore for cluster %s, backup id: %s, ", clusterMeta.Cluster.ID, backupID))
 	return nil
 }
 
@@ -746,7 +747,7 @@ func syncTopology(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 		return  err
 	}
 
-	node.Record(fmt.Sprintf("sync topology config for cluster %s", clusterMeta.Cluster.ID), fmt.Sprintf("content: %s", metaYaml))
+	node.Record(fmt.Sprintf("sync topology config for cluster %s ", clusterMeta.Cluster.ID))
 	return models.GetClusterReaderWriter().UpdateTopologySnapshotConfig(context, clusterMeta.Cluster.ID, metaYaml)
 }
 
@@ -786,7 +787,7 @@ func stopCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext
 	framework.LogWithContext(context.Context).Infof(
 		"get stop cluster %s task id: %s", clusterMeta.Cluster.ID, taskId)
 
-	node.Record("stop cluster: " + clusterMeta.Cluster.ID, "version: " + cluster.Version)
+	node.Record(fmt.Sprintf("stop cluster: %s, version: %s, ", clusterMeta.Cluster.ID, cluster.Version))
 	return nil
 }
 
@@ -815,7 +816,7 @@ func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	framework.LogWithContext(context.Context).Infof(
 		"get destroy cluster %s task id: %s", clusterMeta.Cluster.ID, taskId)
 
-	node.Record("destroy cluster: " + clusterMeta.Cluster.ID, "version: " + cluster.Version)
+	node.Record(fmt.Sprintf("destroy cluster: %s, version: %s, ", clusterMeta.Cluster.ID, cluster.Version))
 	return nil
 }
 
@@ -931,7 +932,7 @@ func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 	if err != nil {
 		return err
 	}
-	node.Record("fetch topology of cluster " + clusterMeta.Cluster.ID, string(metaData))
+	node.Record(fmt.Sprintf("fetch topology of cluster %s ", clusterMeta.Cluster.ID))
 
 	return err
 }
@@ -977,8 +978,7 @@ func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workfl
 			"add instances into cluster %s topology error: %s", clusterMeta.Cluster.ID, err.Error())
 		return err
 	}
-
-	node.Record("rebuild topology config ", fmt.Sprintf("add instances into cluster %s topology ", clusterMeta.Cluster.ID))
+	node.Record(fmt.Sprintf("rebuild topology config, add instances into cluster %s topology ", clusterMeta.Cluster.ID))
 	return nil
 }
 
@@ -1023,7 +1023,7 @@ func rebuildTiupSpaceForCluster(node *workflowModel.WorkFlowNode, context *workf
 		defer metaFile.Close()
 	}
 	metaFile.Write([]byte(snapshot.Config))
-	node.Record("write topology config into meta.yaml for cluster " + clusterMeta.Cluster.ID, snapshot.Config)
+	node.Record(fmt.Sprintf("write topology config into meta.yaml for cluster %s ", clusterMeta.Cluster.ID))
 
 	privateKeyFile.Write([]byte(snapshot.PrivateKey))
 	publicKeyFile.Write([]byte(snapshot.PublicKey))
@@ -1054,7 +1054,6 @@ func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 		return err
 	}
 
-	node.Record(fmt.Sprintf("cluster %s alloc resource ", clusterMeta.Cluster.ID))
 
 	resourceResult := allocResponse.BatchResults[0]
 	clusterMeta.Cluster.Region = resourceResult.Results[0].Location.Region
@@ -1063,9 +1062,10 @@ func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 		instance.HostID = resourceResult.Results[i].HostId
 		instance.Zone = resourceResult.Results[i].Location.Zone
 		instance.Rack = resourceResult.Results[i].Location.Rack
-		node.Record("type: " + instance.Type, "zone: " + instance.Zone, "host IP: " + instance.HostIP[0])
+		//todo
+		node.Record(fmt.Sprintf("type: %s, zone: %s, host IP: %s; ", instance.Type, instance.Zone, instance.HostIP[0]))
 	}
-
+	node.Record(fmt.Sprintf("cluster %s alloc resource ", clusterMeta.Cluster.ID))
 	return nil
 }
 
@@ -1094,7 +1094,7 @@ func testConnectivity(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 			framework.LogWithContext(context).Errorf("test connectivity failed, err = %s", err.Error())
 		}).
 		Else(func() {
-			node.Record(fmt.Sprintf("test TiDB server %s:%d connection", connectAddress.IP, connectAddress.Port))
+			node.Record(fmt.Sprintf("test TiDB server %s:%d connection ", connectAddress.IP, connectAddress.Port))
 		}).
 		Present()
 }

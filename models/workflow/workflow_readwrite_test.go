@@ -53,6 +53,14 @@ func TestFlowReadWrite_GetWorkFlow(t *testing.T) {
 	flowGet, errGet := rw.GetWorkFlow(context.TODO(), flowCreate.ID)
 	assert.Equal(t, flowCreate.ID, flowGet.ID)
 	assert.NoError(t, errGet)
+
+	_, errGet = rw.GetWorkFlow(context.TODO(), "")
+	assert.Equal(t, flowCreate.ID, flowGet.ID)
+	assert.Error(t, errGet)
+
+	_, errGet = rw.GetWorkFlow(context.TODO(), "sssss")
+	assert.Equal(t, flowCreate.ID, flowGet.ID)
+	assert.Error(t, errGet)
 }
 
 func TestFlowReadWrite_QueryWorkFlows(t *testing.T) {
@@ -71,6 +79,9 @@ func TestFlowReadWrite_QueryWorkFlows(t *testing.T) {
 	assert.Equal(t, int64(1), total)
 	assert.Equal(t, flowCreate.ID, flowQuery[0].ID)
 	assert.NoError(t, errQuery)
+
+	_, total, _ = rw.QueryWorkFlows(context.TODO(), "fdasfdsa", "flowNameQuery", "fdsafdsaf", 0, 10)
+	assert.Equal(t, 0, 0)
 }
 
 func TestFlowReadWrite_UpdateWorkFlow(t *testing.T) {
@@ -95,6 +106,12 @@ func TestFlowReadWrite_UpdateWorkFlow(t *testing.T) {
 	assert.Equal(t, flowCreate.Status, flowGet.Status)
 	assert.Equal(t, flowCreate.Context, flowGet.Context)
 	assert.NoError(t, errGet)
+
+	errUpdate = rw.UpdateWorkFlow(context.TODO(), "", flowCreate.Status, flowCreate.Context)
+	assert.Error(t, errUpdate)
+
+	errUpdate = rw.UpdateWorkFlow(context.TODO(), "aaaa", flowCreate.Status, flowCreate.Context)
+	assert.Error(t, errUpdate)
 }
 
 func TestFlowReadWrite_DetailWorkFlow(t *testing.T) {
@@ -129,6 +146,12 @@ func TestFlowReadWrite_DetailWorkFlow(t *testing.T) {
 	assert.NoError(t, errDetail)
 	assert.Equal(t, flowCreate.ID, flowDetail.ID)
 	assert.Equal(t, nodeCreate.ID, nodeDetail[0].ID)
+
+	_, _, errDetail = rw.QueryDetailWorkFlow(context.TODO(), "")
+	assert.Error(t, errDetail)
+
+	_, _, errDetail = rw.QueryDetailWorkFlow(context.TODO(), "ssssss")
+	assert.Error(t, errDetail)
 }
 
 func TestFlowReadWrite_CreateWorkFlowNode(t *testing.T) {
@@ -222,4 +245,7 @@ func TestFlowReadWrite_UpdateWorkFlowDetail(t *testing.T) {
 	assert.Equal(t, flowCreate.Context, flowQuery.Context)
 	assert.Equal(t, nodeCreate.Status, nodeQuery[0].Status)
 	assert.Equal(t, nodeCreate.Result, nodeQuery[0].Result)
+
+	err := rw.UpdateWorkFlowDetail(context.TODO(), &WorkFlow{Entity: common.Entity{ID: "999"}}, nodes)
+	assert.Error(t, err)
 }

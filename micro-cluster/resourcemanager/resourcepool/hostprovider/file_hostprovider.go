@@ -58,10 +58,10 @@ func (p *FileHostProvider) DeleteHosts(ctx context.Context, hostIds []string) (e
 	return p.rw.Delete(ctx, hostIds)
 }
 
-func (p *FileHostProvider) QueryHosts(ctx context.Context, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, err error) {
-	dbhosts, err := p.rw.Query(ctx, filter, page.CalcOffset(), page.PageSize)
+func (p *FileHostProvider) QueryHosts(ctx context.Context, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, total int64, err error) {
+	dbhosts, total, err := p.rw.Query(ctx, filter, page.CalcOffset(), page.PageSize)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	for _, dbhost := range dbhosts {
 		var host structs.HostInfo

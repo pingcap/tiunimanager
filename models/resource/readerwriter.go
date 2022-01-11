@@ -37,7 +37,7 @@ type ReaderWriter interface {
 	// Delete a batch of hosts
 	Delete(ctx context.Context, hostIds []string) (err error)
 	// Query hosts, if specify HostID in HostFilter, return a single host info
-	Query(ctx context.Context, filter *structs.HostFilter, offset int, limit int) (hosts []rp.Host, err error)
+	Query(ctx context.Context, filter *structs.HostFilter, offset int, limit int) (hosts []rp.Host, total int64, err error)
 
 	UpdateHostStatus(ctx context.Context, hostIds []string, status string) (err error)
 	UpdateHostReserved(ctx context.Context, hostIds []string, reserved bool) (err error)

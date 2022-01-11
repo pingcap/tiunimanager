@@ -200,7 +200,7 @@ func Test_CheckHostBeforeDeleted_Succeed(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockProvider := mock_provider.NewMockHostProvider(ctrl)
-	mockProvider.EXPECT().QueryHosts(gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.HostInfo{*genHostInfo("Test_Host1")}, nil)
+	mockProvider.EXPECT().QueryHosts(gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.HostInfo{*genHostInfo("Test_Host1")}, int64(1), nil)
 
 	resourcePool.SetHostProvider(mockProvider)
 
@@ -229,7 +229,7 @@ func Test_CheckHostBeforeDeleted_Fail(t *testing.T) {
 	mockProvider := mock_provider.NewMockHostProvider(ctrl)
 	host := genHostInfo("Test_Host1")
 	host.Stat = string(constants.HostLoadInUsed)
-	mockProvider.EXPECT().QueryHosts(gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.HostInfo{*host}, nil)
+	mockProvider.EXPECT().QueryHosts(gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.HostInfo{*host}, int64(1), nil)
 
 	resourcePool.SetHostProvider(mockProvider)
 

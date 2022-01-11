@@ -63,6 +63,14 @@ definitions:
         type: array
       tls:
         type: boolean
+    required:
+    - cloneStrategy
+    - clusterType
+    - clusterVersion
+    - cpuArchitecture
+    - dbPassword
+    - region
+    - sourceClusterId
     type: object
   cluster.CloneClusterResp:
     properties:
@@ -144,6 +152,12 @@ definitions:
         type: array
       tls:
         type: boolean
+    required:
+    - clusterType
+    - clusterVersion
+    - cpuArchitecture
+    - dbPassword
+    - region
     type: object
   cluster.CreateClusterResp:
     properties:
@@ -565,6 +579,13 @@ definitions:
         type: array
       tls:
         type: boolean
+    required:
+    - backupId
+    - clusterType
+    - clusterVersion
+    - cpuArchitecture
+    - dbPassword
+    - region
     type: object
   cluster.RestoreNewClusterResp:
     properties:
@@ -656,6 +677,15 @@ definitions:
       dbUser:
         example: root
         type: string
+    required:
+    - TiUPIp
+    - TiUPPath
+    - TiUPPort
+    - TiUPUserName
+    - TiUPUserPassword
+    - clusterName
+    - dbPassword
+    - dbUser
     type: object
   cluster.TakeoverClusterResp:
     properties:

@@ -110,9 +110,9 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		var hostIP []string
 		if len(ins.HostIP) > 1 {
 			hostIP = append(hostIP, ins.HostIP...)
-			node.Record("type: " + ins.Type, "zone: " + ins.Zone, "host IP: " + strings.Join(hostIP, ", "))
+			node.Record("type: " + ins.Type, ", zone: " + ins.Zone, ", host IP: " + strings.Join(hostIP, ", ") + ";")
 		}else{
-			node.Record("type: " + ins.Type, "zone: " + ins.Zone, "host IP: " + ins.HostIP[0])
+			node.Record("type: " + ins.Type, ", zone: " + ins.Zone, ", host IP: " + ins.HostIP[0] + ";")
 		}
 	}
 	return nil

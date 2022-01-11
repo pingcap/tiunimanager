@@ -3858,6 +3858,142 @@ var doc = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "CreateRbacRole",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac CreateRbacRole"
+                ],
+                "summary": "create rbac role",
+                "parameters": [
+                    {
+                        "description": "CreateRole request",
+                        "name": "createReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.CreateRoleReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.CreateRoleResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/rbac/role/bind": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "BindRoleForUser",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac BindRoleForUser"
+                ],
+                "summary": "bind user with role",
+                "parameters": [
+                    {
+                        "description": "BindRoleForUser request",
+                        "name": "bindReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.BindRoleForUserReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.BindRoleForUserResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
             }
         },
         "/rbac/role/{role}": {
@@ -3994,75 +4130,6 @@ var doc = `{
                 }
             }
         },
-        "/rbac/user_role/add": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "AddRoleForUser",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "rbac AddRoleForUser"
-                ],
-                "summary": "add user with role",
-                "parameters": [
-                    {
-                        "description": "AddRoleForUser request",
-                        "name": "addReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/message.AddRoleForUserReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/message.AddRoleForUserResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
         "/rbac/user_role/delete": {
             "delete": {
                 "security": [
@@ -4070,7 +4137,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "DeleteRoleForUser",
+                "description": "UnbindRoleForUser",
                 "consumes": [
                     "application/json"
                 ],
@@ -4078,17 +4145,17 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "rbac DeleteRoleForUser"
+                    "rbac UnbindRoleForUser"
                 ],
                 "summary": "unbind rbac role from user",
                 "parameters": [
                     {
-                        "description": "DeleteRoleForUser request",
+                        "description": "UnbindRoleForUser request",
                         "name": "deleteRoleForUserReq",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/message.DeleteRoleForUserReq"
+                            "$ref": "#/definitions/message.UnbindRoleForUserReq"
                         }
                     }
                 ],
@@ -4104,7 +4171,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/message.DeleteRoleForUserResp"
+                                            "$ref": "#/definitions/message.UnbindRoleForUserResp"
                                         }
                                     }
                                 }
@@ -6568,20 +6635,6 @@ var doc = `{
         "message.AddPermissionsForRoleResp": {
             "type": "object"
         },
-        "message.AddRoleForUserReq": {
-            "type": "object",
-            "properties": {
-                "role": {
-                    "type": "string"
-                },
-                "userId": {
-                    "type": "string"
-                }
-            }
-        },
-        "message.AddRoleForUserResp": {
-            "type": "object"
-        },
         "message.ApplyParameterGroupReq": {
             "type": "object",
             "properties": {
@@ -6610,6 +6663,20 @@ var doc = `{
                     "type": "string"
                 }
             }
+        },
+        "message.BindRoleForUserReq": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.BindRoleForUserResp": {
+            "type": "object"
         },
         "message.CheckPermissionForUserReq": {
             "type": "object",
@@ -6730,6 +6797,17 @@ var doc = `{
             }
         },
         "message.CreateProductResp": {
+            "type": "object"
+        },
+        "message.CreateRoleReq": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.CreateRoleResp": {
             "type": "object"
         },
         "message.CreateSpecsReq": {
@@ -6931,20 +7009,6 @@ var doc = `{
             }
         },
         "message.DeleteProductResp": {
-            "type": "object"
-        },
-        "message.DeleteRoleForUserReq": {
-            "type": "object",
-            "properties": {
-                "role": {
-                    "type": "string"
-                },
-                "userId": {
-                    "type": "string"
-                }
-            }
-        },
-        "message.DeleteRoleForUserResp": {
             "type": "object"
         },
         "message.DeleteRoleResp": {
@@ -7294,6 +7358,20 @@ var doc = `{
                     }
                 }
             }
+        },
+        "message.UnbindRoleForUserReq": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.UnbindRoleForUserResp": {
+            "type": "object"
         },
         "message.UpdateHostReservedReq": {
             "type": "object",

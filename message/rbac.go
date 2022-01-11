@@ -79,18 +79,18 @@ type GetPermissionsForUserResp struct {
 	Permissions []structs.RbacPermission `json:"permissions"`
 }
 
-type AddRoleForUserReq struct {
+type BindRoleForUserReq struct {
 	UserID string `json:"userId"`
 	Role   string `json:"role"`
 }
 
-type AddRoleForUserResp struct {
+type BindRoleForUserResp struct {
 }
 
-type DeleteRoleForUserReq struct {
+type UnbindRoleForUserReq struct {
 	UserID string `json:"userId"`
 	Role   string `json:"role"`
 }
 
-type DeleteRoleForUserResp struct {
+type UnbindRoleForUserResp struct {
 }

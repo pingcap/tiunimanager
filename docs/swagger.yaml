@@ -873,15 +873,6 @@ definitions:
     type: object
   message.AddPermissionsForRoleResp:
     type: object
-  message.AddRoleForUserReq:
-    properties:
-      role:
-        type: string
-      userId:
-        type: string
-    type: object
-  message.AddRoleForUserResp:
-    type: object
   message.ApplyParameterGroupReq:
     properties:
       clusterId:
@@ -901,6 +892,15 @@ definitions:
       workFlowId:
         description: Asynchronous task workflow ID
         type: string
+    type: object
+  message.BindRoleForUserReq:
+    properties:
+      role:
+        type: string
+      userId:
+        type: string
+    type: object
+  message.BindRoleForUserResp:
     type: object
   message.CheckPermissionForUserReq:
     properties:
@@ -984,6 +984,13 @@ definitions:
         $ref: '#/definitions/structs.Product'
     type: object
   message.CreateProductResp:
+    type: object
+  message.CreateRoleReq:
+    properties:
+      role:
+        type: string
+    type: object
+  message.CreateRoleResp:
     type: object
   message.CreateSpecsReq:
     properties:
@@ -1115,15 +1122,6 @@ definitions:
         $ref: '#/definitions/structs.Product'
     type: object
   message.DeleteProductResp:
-    type: object
-  message.DeleteRoleForUserReq:
-    properties:
-      role:
-        type: string
-      userId:
-        type: string
-    type: object
-  message.DeleteRoleForUserResp:
     type: object
   message.DeleteRoleResp:
     type: object
@@ -1358,6 +1356,15 @@ definitions:
         items:
           $ref: '#/definitions/structs.ZoneInfo'
         type: array
+    type: object
+  message.UnbindRoleForUserReq:
+    properties:
+      role:
+        type: string
+      userId:
+        type: string
+    type: object
+  message.UnbindRoleForUserResp:
     type: object
   message.UpdateHostReservedReq:
     properties:
@@ -4551,6 +4558,46 @@ paths:
       summary: get rbac roles
       tags:
       - rbac GetRbacRoles
+    post:
+      consumes:
+      - application/json
+      description: CreateRbacRole
+      parameters:
+      - description: CreateRole request
+        in: body
+        name: createReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.CreateRoleReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.CreateRoleResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: create rbac role
+      tags:
+      - rbac CreateRbacRole
   /rbac/role/{role}:
     delete:
       consumes:
@@ -4591,6 +4638,47 @@ paths:
       summary: delete rbac role
       tags:
       - rbac DeleteRbacRole
+  /rbac/role/bind:
+    post:
+      consumes:
+      - application/json
+      description: BindRoleForUser
+      parameters:
+      - description: BindRoleForUser request
+        in: body
+        name: bindReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.BindRoleForUserReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.BindRoleForUserResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: bind user with role
+      tags:
+      - rbac BindRoleForUser
   /rbac/user/{userId}:
     delete:
       consumes:
@@ -4631,59 +4719,18 @@ paths:
       summary: delete rbac user
       tags:
       - rbac DeleteRbacUser
-  /rbac/user_role/add:
-    post:
-      consumes:
-      - application/json
-      description: AddRoleForUser
-      parameters:
-      - description: AddRoleForUser request
-        in: body
-        name: addReq
-        required: true
-        schema:
-          $ref: '#/definitions/message.AddRoleForUserReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.AddRoleForUserResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: add user with role
-      tags:
-      - rbac AddRoleForUser
   /rbac/user_role/delete:
     delete:
       consumes:
       - application/json
-      description: DeleteRoleForUser
+      description: UnbindRoleForUser
       parameters:
-      - description: DeleteRoleForUser request
+      - description: UnbindRoleForUser request
         in: body
         name: deleteRoleForUserReq
         required: true
         schema:
-          $ref: '#/definitions/message.DeleteRoleForUserReq'
+          $ref: '#/definitions/message.UnbindRoleForUserReq'
       produces:
       - application/json
       responses:
@@ -4694,7 +4741,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/message.DeleteRoleForUserResp'
+                  $ref: '#/definitions/message.UnbindRoleForUserResp'
               type: object
         "401":
           description: Unauthorized
@@ -4712,7 +4759,7 @@ paths:
       - ApiKeyAuth: []
       summary: unbind rbac role from user
       tags:
-      - rbac DeleteRoleForUser
+      - rbac UnbindRoleForUser
   /resources/hierarchy:
     get:
       consumes:

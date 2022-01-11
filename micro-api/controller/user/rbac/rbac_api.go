@@ -23,27 +23,6 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
 
-// AddRoleForUser
-// @Summary add user with role
-// @Description AddRoleForUser
-// @Tags rbac AddRoleForUser
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param addReq body message.AddRoleForUserReq true "AddRoleForUser request"
-// @Success 200 {object} controller.CommonResult{data=message.AddRoleForUserResp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /rbac/user_role/add [post]
-func AddRoleForUser(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.AddRoleForUserReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.AddRoleForUser, &message.AddRoleForUserResp{},
-			requestBody,
-			controller.DefaultTimeout)
-	}
-}
-
 // GetRbacRoles
 // @Summary get rbac roles
 // @Description GetRbacRoles
@@ -60,6 +39,27 @@ func AddRoleForUser(c *gin.Context) {
 func GetRbacRoles(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.GetRolesReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.GetRoles, &message.GetRolesResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// CreateRbacRole
+// @Summary create rbac role
+// @Description CreateRbacRole
+// @Tags rbac CreateRbacRole
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param createReq body message.CreateRoleReq true "CreateRole request"
+// @Success 200 {object} controller.CommonResult{data=message.CreateRoleResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /rbac/role/ [post]
+func CreateRbacRole(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.CreateRoleReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateRbacRole, &message.CreateRoleResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -111,22 +111,43 @@ func DeleteRbacUser(c *gin.Context) {
 	}
 }
 
-// DeleteRoleForUser
-// @Summary unbind rbac role from user
-// @Description DeleteRoleForUser
-// @Tags rbac DeleteRoleForUser
+// BindRoleForUser
+// @Summary bind user with role
+// @Description BindRoleForUser
+// @Tags rbac BindRoleForUser
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param deleteRoleForUserReq body message.DeleteRoleForUserReq true "DeleteRoleForUser request"
-// @Success 200 {object} controller.CommonResult{data=message.DeleteRoleForUserResp}
+// @Param bindReq body message.BindRoleForUserReq true "BindRoleForUser request"
+// @Success 200 {object} controller.CommonResult{data=message.BindRoleForUserResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /rbac/role/bind [post]
+func BindRoleForUser(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.BindRoleForUserReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.BindRoleForUser, &message.BindRoleForUserResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// UnbindRoleForUser
+// @Summary unbind rbac role from user
+// @Description UnbindRoleForUser
+// @Tags rbac UnbindRoleForUser
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param deleteRoleForUserReq body message.UnbindRoleForUserReq true "UnbindRoleForUser request"
+// @Success 200 {object} controller.CommonResult{data=message.UnbindRoleForUserResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /rbac/user_role/delete [delete]
-func DeleteRoleForUser(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.DeleteRoleForUserReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteRoleForUser, &message.DeleteRoleForUserResp{},
+func UnbindRoleForUser(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.UnbindRoleForUserReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.UnbindRoleForUser, &message.UnbindRoleForUserResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

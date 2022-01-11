@@ -40,11 +40,11 @@ func MockRBACService(service RBACService) {
 }
 
 type RBACManager struct {
-	enforcer *casbin.Enforcer
+	enforcer *casbin.SyncedEnforcer // use synced enforcer to fit concurrent case
 }
 
 func NewRBACManager() *RBACManager {
-	// casbin RBAC conf: https://github.com/casbin/casbin/blob/master/examples/rbac_model.conf
+	// casbin RBAC conf
 	m := model.NewModel()
 	m.AddDef("r", "r", "sub, obj, act")
 	m.AddDef("p", "p", "sub, obj, act")
@@ -56,7 +56,7 @@ func NewRBACManager() *RBACManager {
 		framework.LogWithContext(context.Background()).Fatalf("get casbin gorm adapter failed, %s", err.Error())
 		return nil
 	}
-	e, err := casbin.NewEnforcer(m, adapter)
+	e, err := casbin.NewSyncedEnforcer(m, adapter)
 	if err != nil {
 		framework.LogWithContext(context.Background()).Fatalf("new casbin enforcer failed, %s", err.Error())
 		return nil
@@ -117,13 +117,31 @@ func (mgr *RBACManager) DeleteUser(ctx context.Context, request message.DeleteUs
 	return
 }
 
-func (mgr *RBACManager) AddRoleForUser(ctx context.Context, request message.AddRoleForUserReq) (resp message.AddRoleForUserResp, err error) {
+func (mgr *RBACManager) CreateRole(ctx context.Context, request message.CreateRoleReq) (resp message.CreateRoleResp, err error) {
+	framework.LogWithContext(ctx).Infof("begin CreateRole, request: %+v", request)
+	framework.LogWithContext(ctx).Info("end CreateRole")
+
+	if request.Role == "" {
+		return resp, fmt.Errorf("invalid input empty role")
+	}
+	/*
+		if _, ok := constants.RbacRoleMap[request.Role]; ok {
+			return resp, fmt.Errorf("default role %s can not modify permission", request.Role)
+		}
+	*/
+	if _, err = mgr.enforcer.AddRoleForUser("", request.Role); err != nil {
+		framework.LogWithContext(ctx).Errorf("call enforcer AddRoleForUser failed %s", err.Error())
+	}
+	return
+}
+
+func (mgr *RBACManager) BindRoleForUser(ctx context.Context, request message.BindRoleForUserReq) (resp message.BindRoleForUserResp, err error) {
 	framework.LogWithContext(ctx).Infof("begin BindRoleForUser, request: %+v", request)
 	framework.LogWithContext(ctx).Info("end BindRoleForUser")
 
 	//todo: check userId valid
-	if request.Role == "" {
-		return resp, fmt.Errorf("invalid input empty role")
+	if request.Role == "" || request.UserID == "" {
+		return resp, fmt.Errorf("invalid input empty userId or role")
 	}
 	/*
 		if _, ok := constants.RbacRoleMap[request.Role]; ok {
@@ -136,7 +154,7 @@ func (mgr *RBACManager) AddRoleForUser(ctx context.Context, request message.AddR
 	return
 }
 
-func (mgr *RBACManager) DeleteRoleForUser(ctx context.Context, request message.DeleteRoleForUserReq) (resp message.DeleteRoleForUserResp, err error) {
+func (mgr *RBACManager) UnbindRoleForUser(ctx context.Context, request message.UnbindRoleForUserReq) (resp message.UnbindRoleForUserResp, err error) {
 	framework.LogWithContext(ctx).Infof("begin UnBindRoleForUser, request: %+v", request)
 	framework.LogWithContext(ctx).Info("end UnBindRoleForUser")
 

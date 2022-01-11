@@ -839,14 +839,28 @@ func (c *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *cluster
 	return nil
 }
 
-func (c *ClusterServiceHandler) AddRoleForUser(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+func (c *ClusterServiceHandler) BindRoleForUser(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "AddRoleForUser", int(resp.GetCode()))
 	defer handlePanic(ctx, "AddRoleForUser", resp)
 
-	addReq := message.AddRoleForUserReq{}
-	if handleRequest(ctx, req, resp, &addReq) {
-		result, err := c.rbacManager.AddRoleForUser(framework.NewBackgroundMicroCtx(ctx, false), addReq)
+	bindReq := message.BindRoleForUserReq{}
+	if handleRequest(ctx, req, resp, &bindReq) {
+		result, err := c.rbacManager.BindRoleForUser(framework.NewBackgroundMicroCtx(ctx, false), bindReq)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (c *ClusterServiceHandler) CreateRbacRole(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "CreateRbacRole", int(resp.GetCode()))
+	defer handlePanic(ctx, "CreateRbacRole", resp)
+
+	createReq := message.CreateRoleReq{}
+	if handleRequest(ctx, req, resp, &createReq) {
+		result, err := c.rbacManager.CreateRole(framework.NewBackgroundMicroCtx(ctx, false), createReq)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -881,14 +895,14 @@ func (c *ClusterServiceHandler) DeleteRbacUser(ctx context.Context, req *cluster
 	return nil
 }
 
-func (c *ClusterServiceHandler) DeleteRoleForUser(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+func (c *ClusterServiceHandler) UnbindRoleForUser(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "DeleteRoleForUser", int(resp.GetCode()))
 	defer handlePanic(ctx, "DeleteRoleForUser", resp)
 
-	deleteReq := message.DeleteRoleForUserReq{}
-	if handleRequest(ctx, req, resp, &deleteReq) {
-		result, err := c.rbacManager.DeleteRoleForUser(framework.NewBackgroundMicroCtx(ctx, false), deleteReq)
+	unBindReq := message.UnbindRoleForUserReq{}
+	if handleRequest(ctx, req, resp, &unBindReq) {
+		result, err := c.rbacManager.UnbindRoleForUser(framework.NewBackgroundMicroCtx(ctx, false), unBindReq)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 

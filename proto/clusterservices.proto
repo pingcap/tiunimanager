@@ -37,11 +37,12 @@ service ClusterService {
     rpc VerifyIdentity(RpcRequest) returns (RpcResponse);
 
     // RBAC
-    rpc AddRoleForUser(RpcRequest) returns (RpcResponse);
+    rpc BindRoleForUser(RpcRequest) returns (RpcResponse);
     rpc GetRoles(RpcRequest) returns (RpcResponse);
+    rpc CreateRbacRole(RpcRequest) returns (RpcResponse);
     rpc DeleteRbacRole(RpcRequest) returns (RpcResponse);
     rpc DeleteRbacUser(RpcRequest) returns (RpcResponse);
-    rpc DeleteRoleForUser(RpcRequest) returns (RpcResponse);
+    rpc UnbindRoleForUser(RpcRequest) returns (RpcResponse);
     rpc AddPermissionsForRole(RpcRequest) returns (RpcResponse);
     rpc DeletePermissionsForRole(RpcRequest) returns (RpcResponse);
     rpc GetPermissionsForUser(RpcRequest) returns (RpcResponse);

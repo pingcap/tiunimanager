@@ -58,23 +58,32 @@ type RBACService interface {
 	// @Return error
 	GetRoles(ctx context.Context, request message.GetRolesReq) (resp message.GetRolesResp, err error)
 
-	// AddRoleForUser
-	// @Description: add rbac role for user
+	// CreateRole
+	// @Description: create rbac role
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter request
+	// @Return message.CreateRoleResp
+	// @Return error
+	CreateRole(ctx context.Context, request message.CreateRoleReq) (resp message.CreateRoleResp, err error)
+
+	// BindRoleForUser
+	// @Description: bind rbac role for user
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
 	// @Return message.BindRoleForUserResp
 	// @Return error
-	AddRoleForUser(ctx context.Context, request message.AddRoleForUserReq) (resp message.AddRoleForUserResp, err error)
+	BindRoleForUser(ctx context.Context, request message.BindRoleForUserReq) (resp message.BindRoleForUserResp, err error)
 
-	// DeleteRoleForUser
-	// @Description: delete rbac role for user
+	// UnbindRoleForUser
+	// @Description: unbind rbac role for user
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
-	// @Return message.DeleteRoleForUserResp
+	// @Return message.UnbindRoleForUserResp
 	// @Return error
-	DeleteRoleForUser(ctx context.Context, request message.DeleteRoleForUserReq) (resp message.DeleteRoleForUserResp, err error)
+	UnbindRoleForUser(ctx context.Context, request message.UnbindRoleForUserReq) (resp message.UnbindRoleForUserResp, err error)
 
 	// AddPermissionsForRole
 	// @Description: add permissions for rbac role

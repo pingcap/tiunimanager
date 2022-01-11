@@ -161,7 +161,7 @@ func Route(g *gin.Engine) {
 			switchover.Use(interceptor.VerifyIdentity)
 			switchover.Use(interceptor.AuditLog())
 
-			switchover.POST("/", switchoverApi.Switchover)
+			switchover.POST("/", metrics.HandleMetrics(constants.MetricsSwitchover), switchoverApi.Switchover)
 		}
 
 		flowworks := apiV1.Group("/workflow")

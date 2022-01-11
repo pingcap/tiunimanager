@@ -17,7 +17,7 @@ package switchover
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
@@ -38,7 +38,7 @@ import (
 func Switchover(c *gin.Context) {
 	var req cluster.MasterSlaveClusterSwitchoverReq
 
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, req); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.MasterSlaveSwitchover, &cluster.MasterSlaveClusterSwitchoverResp{},
 			requestBody,
 			controller.DefaultTimeout)

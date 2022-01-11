@@ -67,11 +67,14 @@ func (m *WorkFlowReadWrite) GetWorkFlow(ctx context.Context, flowId string) (flo
 	return flow, nil
 }
 
-func (m *WorkFlowReadWrite) QueryWorkFlows(ctx context.Context, bizId, fuzzyName, status string, page int, pageSize int) (flows []*WorkFlow, total int64, err error) {
+func (m *WorkFlowReadWrite) QueryWorkFlows(ctx context.Context, bizId, bizType, fuzzyName, status string, page int, pageSize int) (flows []*WorkFlow, total int64, err error) {
 	flows = make([]*WorkFlow, 0)
 	query := m.DB(ctx).Model(&WorkFlow{})
 	if bizId != "" {
 		query = query.Where("biz_id = ?", bizId)
+	}
+	if bizType != "" {
+		query = query.Where("biz_type = ?", bizType)
 	}
 	if fuzzyName != "" {
 		query = query.Where("name like '%" + fuzzyName + "%'")

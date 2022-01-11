@@ -131,7 +131,7 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 	var flows []*workflow.WorkFlowAggregation
 	flowManager := workflow.GetWorkFlowService()
 	for i, host := range hosts {
-		flow, err := flowManager.CreateWorkFlow(ctx, hostIds[i], rp_consts.FlowImportHosts)
+		flow, err := flowManager.CreateWorkFlow(ctx, hostIds[i], workflow.BizTypeHost, rp_consts.FlowImportHosts)
 		if err != nil {
 			errMsg := fmt.Sprintf("create %s workflow failed for host %s %s, %s", rp_consts.FlowImportHosts, host.HostName, host.IP, err.Error())
 			framework.LogWithContext(ctx).Errorln(errMsg)
@@ -168,7 +168,7 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string) (flowI
 	var flows []*workflow.WorkFlowAggregation
 	flowManager := workflow.GetWorkFlowService()
 	for _, hostId := range hostIds {
-		flow, err := flowManager.CreateWorkFlow(ctx, hostId, rp_consts.FlowDeleteHosts)
+		flow, err := flowManager.CreateWorkFlow(ctx, hostId, workflow.BizTypeHost, rp_consts.FlowDeleteHosts)
 		if err != nil {
 			errMsg := fmt.Sprintf("create %s workflow failed for host %s, %s", rp_consts.FlowDeleteHosts, hostId, err.Error())
 			framework.LogWithContext(ctx).Errorln(errMsg)

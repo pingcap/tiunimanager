@@ -98,7 +98,7 @@ func TestFlowManager_Start_case1(t *testing.T) {
 	_, errRegister := manager.GetWorkFlowDefine(context.TODO(), "flowName")
 	assert.NoError(t, errRegister)
 
-	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
+	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", BizTypeCluster, "flowName")
 	assert.NoError(t, errCreate)
 	errStart := manager.Start(context.TODO(), flow)
 	assert.NoError(t, errStart)
@@ -133,7 +133,7 @@ func TestFlowManager_Start_case2(t *testing.T) {
 	_, errRegister := manager.GetWorkFlowDefine(context.TODO(), "flowName")
 	assert.NoError(t, errRegister)
 
-	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
+	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", BizTypeCluster, "flowName")
 	assert.NoError(t, errCreate)
 	errStart := manager.Start(context.TODO(), flow)
 	assert.NoError(t, errStart)
@@ -164,7 +164,7 @@ func TestFlowManager_AddContext(t *testing.T) {
 	_, errRegister := manager.GetWorkFlowDefine(context.TODO(), "flowName")
 	assert.NoError(t, errRegister)
 
-	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
+	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", BizTypeCluster, "flowName")
 	assert.NoError(t, errCreate)
 
 	manager.AddContext(flow, "key", "value")
@@ -196,7 +196,7 @@ func TestFlowManager_Destroy(t *testing.T) {
 	_, errRegister := manager.GetWorkFlowDefine(context.TODO(), "flowName")
 	assert.NoError(t, errRegister)
 
-	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
+	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", BizTypeCluster, "flowName")
 	assert.NoError(t, errCreate)
 
 	errDestroy := manager.Destroy(context.TODO(), flow, "reason")
@@ -228,7 +228,7 @@ func TestFlowManager_Complete(t *testing.T) {
 	_, errRegister := manager.GetWorkFlowDefine(context.TODO(), "flowName")
 	assert.NoError(t, errRegister)
 
-	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
+	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", BizTypeCluster, "flowName")
 	assert.NoError(t, errCreate)
 
 	manager.Complete(context.TODO(), flow, true)
@@ -299,7 +299,7 @@ func TestFlowManager_AsyncStart(t *testing.T) {
 	_, errRegister := manager.GetWorkFlowDefine(context.TODO(), "flowName")
 	assert.NoError(t, errRegister)
 
-	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
+	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", BizTypeCluster, "flowName")
 	assert.NoError(t, errCreate)
 	errStart := manager.AsyncStart(context.TODO(), flow)
 	assert.NoError(t, errStart)

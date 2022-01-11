@@ -25,6 +25,7 @@ type WorkFlow struct {
 	common.Entity
 	Name    string `gorm:"default:null;comment:'name of the workflow'"`
 	BizID   string `gorm:"default:null;<-:create"`
+	BizType string `gorm:"default:null"`
 	Context string `gorm:"default:null"`
 }
 

@@ -63,6 +63,15 @@ definitions:
         type: array
       tls:
         type: boolean
+    required:
+    - cloneStrategy
+    - clusterName
+    - clusterType
+    - clusterVersion
+    - cpuArchitecture
+    - dbPassword
+    - region
+    - sourceClusterId
     type: object
   cluster.CloneClusterResp:
     properties:
@@ -144,6 +153,13 @@ definitions:
         type: array
       tls:
         type: boolean
+    required:
+    - clusterName
+    - clusterType
+    - clusterVersion
+    - cpuArchitecture
+    - dbPassword
+    - region
     type: object
   cluster.CreateClusterResp:
     properties:
@@ -565,6 +581,14 @@ definitions:
         type: array
       tls:
         type: boolean
+    required:
+    - backupId
+    - clusterName
+    - clusterType
+    - clusterVersion
+    - cpuArchitecture
+    - dbPassword
+    - region
     type: object
   cluster.RestoreNewClusterResp:
     properties:
@@ -656,6 +680,15 @@ definitions:
       dbUser:
         example: root
         type: string
+    required:
+    - TiUPIp
+    - TiUPPath
+    - TiUPPort
+    - TiUPUserName
+    - TiUPUserPassword
+    - clusterName
+    - dbPassword
+    - dbUser
     type: object
   cluster.TakeoverClusterResp:
     properties:
@@ -2085,6 +2118,8 @@ definitions:
   structs.WorkFlowInfo:
     properties:
       bizId:
+        type: string
+      bizType:
         type: string
       createTime:
         type: string
@@ -4765,6 +4800,9 @@ paths:
       parameters:
       - in: query
         name: bizId
+        type: string
+      - in: query
+        name: bizType
         type: string
       - in: query
         name: flowName

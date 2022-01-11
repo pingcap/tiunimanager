@@ -505,7 +505,7 @@ func openSftpClient(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.C
 
 	client, err := ssh.Dial("tcp", net.JoinHostPort(req.TiUPIp, strconv.Itoa(req.TiUPPort)), &conf)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("connect error, error: %s", err.Error())
+		framework.LogWithContext(ctx).Errorf("connection error: %s", err.Error())
 		return nil, nil, errors.WrapError(errors.TIEM_TAKEOVER_SSH_CONNECT_ERROR, "ssh dial error", err)
 	}
 

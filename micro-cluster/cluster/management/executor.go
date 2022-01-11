@@ -161,7 +161,6 @@ func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		"get scale out cluster %s task id: %s", cluster.ID, taskId)
 
 	node.Record(fmt.Sprintf("scale out cluster %s, version: %s, ", clusterMeta.Cluster.ID, cluster.Version))
-	fmt.Println(node.Result)
 	return nil
 }
 
@@ -1062,7 +1061,6 @@ func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 		instance.HostID = resourceResult.Results[i].HostId
 		instance.Zone = resourceResult.Results[i].Location.Zone
 		instance.Rack = resourceResult.Results[i].Location.Rack
-		//todo
 		node.Record(fmt.Sprintf("type: %s, zone: %s, host IP: %s; ", instance.Type, instance.Zone, instance.HostIP[0]))
 	}
 	node.Record(fmt.Sprintf("cluster %s alloc resource ", clusterMeta.Cluster.ID))

@@ -85,7 +85,6 @@ func Route(g *gin.Engine) {
 		{
 			rbac.Use(interceptor.VerifyIdentity)
 			rbac.Use(interceptor.AuditLog())
-			rbac.DELETE("/user/:userId", metrics.HandleMetrics(constants.MetricsRbacDeleteUser), rbacApi.DeleteRbacUser)
 			rbac.POST("/role/", metrics.HandleMetrics(constants.MetricsRbacCreateRole), rbacApi.CreateRbacRole)
 			rbac.GET("/role/", metrics.HandleMetrics(constants.MetricsRbacGetRole), rbacApi.GetRbacRoles)
 			rbac.POST("/role/bind", metrics.HandleMetrics(constants.MetricsRbacBindRoleForUser), rbacApi.BindRoleForUser)

@@ -40,15 +40,6 @@ type RBACService interface {
 	// @Return error
 	DeleteRole(ctx context.Context, request message.DeleteRoleReq) (resp message.DeleteRoleResp, err error)
 
-	// DeleteUser
-	// @Description: delete rbac user
-	// @Receiver m
-	// @Parameter ctx
-	// @Parameter request
-	// @Return message.DeleteUserResp
-	// @Return error
-	DeleteUser(ctx context.Context, request message.DeleteUserReq) (resp message.DeleteUserResp, err error)
-
 	// GetRoles
 	// @Description: get rbac roles
 	// @Receiver m

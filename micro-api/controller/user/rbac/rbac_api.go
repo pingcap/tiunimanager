@@ -88,29 +88,6 @@ func DeleteRbacRole(c *gin.Context) {
 	}
 }
 
-// DeleteRbacUser
-// @Summary delete rbac user
-// @Description DeleteRbacUser
-// @Tags rbac DeleteRbacUser
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param userId path string true "rbac userId"
-// @Success 200 {object} controller.CommonResult{data=message.DeleteUserResp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /rbac/user/{userId} [delete]
-func DeleteRbacUser(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.DeleteUserReq{
-		UserID: c.Param("userId"),
-	}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteRbacUser, &message.DeleteUserResp{},
-			requestBody,
-			controller.DefaultTimeout)
-	}
-}
-
 // BindRoleForUser
 // @Summary bind user with role
 // @Description BindRoleForUser

@@ -47,13 +47,6 @@ type GetRolesResp struct {
 	Roles []string
 }
 
-type DeleteUserReq struct {
-	UserID string `json:"userId"`
-}
-
-type DeleteUserResp struct {
-}
-
 type AddPermissionsForRoleReq struct {
 	Role        string                   `json:"role"`
 	Permissions []structs.RbacPermission `json:"permissions"`

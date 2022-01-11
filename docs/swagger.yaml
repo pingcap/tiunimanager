@@ -1134,8 +1134,6 @@ definitions:
     type: object
   message.DeleteSpecsResp:
     type: object
-  message.DeleteUserResp:
-    type: object
   message.DeleteZoneReq:
     properties:
       zone:
@@ -4679,46 +4677,6 @@ paths:
       summary: bind user with role
       tags:
       - rbac BindRoleForUser
-  /rbac/user/{userId}:
-    delete:
-      consumes:
-      - application/json
-      description: DeleteRbacUser
-      parameters:
-      - description: rbac userId
-        in: path
-        name: userId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.DeleteUserResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: delete rbac user
-      tags:
-      - rbac DeleteRbacUser
   /rbac/user_role/delete:
     delete:
       consumes:

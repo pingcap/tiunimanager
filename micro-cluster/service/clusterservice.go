@@ -881,20 +881,6 @@ func (c *ClusterServiceHandler) DeleteRbacRole(ctx context.Context, req *cluster
 	return nil
 }
 
-func (c *ClusterServiceHandler) DeleteRbacUser(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
-	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "DeleteRbacUser", int(resp.GetCode()))
-	defer handlePanic(ctx, "DeleteRbacUser", resp)
-
-	deleteReq := message.DeleteUserReq{}
-	if handleRequest(ctx, req, resp, &deleteReq) {
-		result, err := c.rbacManager.DeleteUser(framework.NewBackgroundMicroCtx(ctx, false), deleteReq)
-		handleResponse(ctx, resp, err, result, nil)
-	}
-
-	return nil
-}
-
 func (c *ClusterServiceHandler) UnbindRoleForUser(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "DeleteRoleForUser", int(resp.GetCode()))

@@ -4063,73 +4063,6 @@ var doc = `{
                 }
             }
         },
-        "/rbac/user/{userId}": {
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "DeleteRbacUser",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "rbac DeleteRbacUser"
-                ],
-                "summary": "delete rbac user",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "rbac userId",
-                        "name": "userId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/message.DeleteUserResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
         "/rbac/user_role/delete": {
             "delete": {
                 "security": [
@@ -7026,9 +6959,6 @@ var doc = `{
             }
         },
         "message.DeleteSpecsResp": {
-            "type": "object"
-        },
-        "message.DeleteUserResp": {
             "type": "object"
         },
         "message.DeleteZoneReq": {

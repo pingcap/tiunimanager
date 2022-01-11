@@ -40,7 +40,6 @@ func TestMain(m *testing.M) {
 			} else {
 				logins.Infof("open database successful, filepath: %s", dbFile)
 			}
-			db.Migrator().CreateTable(RBAC{})
 
 			RW = NewRBACReadWrite(db)
 			return nil

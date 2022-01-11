@@ -72,7 +72,7 @@ func TestExecutor_asyncMaintenance_Success(t *testing.T) {
 
 	clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, bizId string, flowName string) (*workflow.WorkFlowAggregation, error) {
+		DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (*workflow.WorkFlowAggregation, error) {
 			return mockWorkFlowAggregation(), nil
 		})
 	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).AnyTimes()

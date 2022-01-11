@@ -525,13 +525,18 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 	}
 
 	client, sftpClient, err := openSftpClient(ctx, req)
-	sftpClient.Close()
-	client.Close()
 
+	defer func() {
+		if sftpClient != nil {
+			sftpClient.Close()
+		}
+		if client != nil {
+			client.Close()
+		}
+	}()
 	if err != nil {
 		return
 	}
-
 	meta := &handler.ClusterMeta{}
 	if err = meta.BuildForTakeover(ctx, req.ClusterName, req.DBUser, req.DBPassword); err != nil {
 		framework.LogWithContext(ctx).Errorf(err.Error())

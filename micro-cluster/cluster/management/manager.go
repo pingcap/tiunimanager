@@ -30,6 +30,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"net"
 	"strconv"
+	"time"
 )
 
 const (
@@ -499,6 +500,7 @@ func openSftpClient(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.C
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			return nil
 		},
+		Timeout: time.Second * 3,
 	}
 
 	client, err := ssh.Dial("tcp", net.JoinHostPort(req.TiUPIp, strconv.Itoa(req.TiUPPort)), &conf)

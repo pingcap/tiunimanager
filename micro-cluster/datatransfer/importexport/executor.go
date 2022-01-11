@@ -56,7 +56,7 @@ func buildDataImportConfig(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 		return fmt.Errorf("encode data import toml config failed, %s", err.Error())
 	}
 	framework.LogWithContext(ctx).Infof("build lightning toml config sucess, %v", config)
-	node.Record("build lightning toml config successfully")
+	node.Record("build lightning toml config ")
 	return nil
 }
 
@@ -76,7 +76,7 @@ func importDataToCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) 
 		return fmt.Errorf("call tiup lightning api failed, %s", err.Error())
 	}
 	framework.LogWithContext(ctx).Infof("call tiupmgr tidb-lightning api success, importTaskId %s", importTaskId)
-	node.Record("import data to cluster successfully")
+	node.Record("import data to cluster ")
 	return nil
 }
 
@@ -93,7 +93,7 @@ func updateDataImportRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContex
 		return fmt.Errorf("update data transport record failed, %s", err.Error())
 	}
 	framework.LogWithContext(ctx).Info("update data transport record success")
-	node.Record("update data transport record successfully")
+	node.Record("update data transport record ")
 	return nil
 }
 
@@ -144,8 +144,8 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	}
 
 	framework.LogWithContext(ctx).Infof("call tiupmgr succee, exportTaskId: %s", exportTaskId)
-	node.Record(fmt.Sprintf("export data from cluster %s successfully", meta.Cluster.ID),
-		fmt.Sprintf("host: %s", tidbHost), fmt.Sprintf("port: %d", tidbPort))
+	node.Record(fmt.Sprintf("export data from cluster %s, host: %s, port: %d ",
+				meta.Cluster.ID, tidbHost, tidbPort))
 	return nil
 }
 
@@ -163,7 +163,7 @@ func updateDataExportRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContex
 	}
 
 	framework.LogWithContext(ctx).Info("update data transport record success")
-	node.Record("update data transport record successfully")
+	node.Record("update data transport record ")
 	return nil
 }
 

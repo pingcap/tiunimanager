@@ -71,7 +71,7 @@ func TestExecutor_asyncMaintenance_Success(t *testing.T) {
 	models.SetConfigReaderWriter(configRW)
 
 	clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		DoAndReturn(func(ctx context.Context, bizId string, flowName string) (*workflow.WorkFlowAggregation, error) {
 			return mockWorkFlowAggregation(), nil
 		})

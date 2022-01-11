@@ -152,7 +152,7 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 	workflowService := mock_workflow.NewMockWorkFlowService(ctrl3)
 	workflow.MockWorkFlowService(workflowService)
 	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
 	}, nil).AnyTimes()
@@ -203,7 +203,7 @@ func Test_ImportHosts_Failed(t *testing.T) {
 	workflowService := mock_workflow.NewMockWorkFlowService(ctrl3)
 	workflow.MockWorkFlowService(workflowService)
 	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
 	}, nil).AnyTimes()
@@ -278,7 +278,7 @@ func Test_DeleteHosts_Succeed(t *testing.T) {
 	workflowService := mock_workflow.NewMockWorkFlowService(ctrl3)
 	workflow.MockWorkFlowService(workflowService)
 	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
 	}, nil).AnyTimes()

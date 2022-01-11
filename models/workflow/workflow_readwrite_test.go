@@ -67,7 +67,7 @@ func TestFlowReadWrite_QueryWorkFlows(t *testing.T) {
 	flowCreate, errCreate := rw.CreateWorkFlow(context.TODO(), flow)
 	assert.NoError(t, errCreate)
 
-	flowQuery, total, errQuery := rw.QueryWorkFlows(context.TODO(), "", "cluster", "flowNameQuery", "", 0, 10)
+	flowQuery, total, errQuery := rw.QueryWorkFlows(context.TODO(), "", "", "flowNameQuery", "", 0, 10)
 	assert.Equal(t, int64(1), total)
 	assert.Equal(t, flowCreate.ID, flowQuery[0].ID)
 	assert.NoError(t, errQuery)

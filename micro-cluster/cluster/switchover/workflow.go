@@ -287,11 +287,11 @@ func wfnCreateReverseSyncChangeFeedTask(node *workflowModel.WorkFlowNode, ctx *w
 	}
 
 	var zeroT time.Time
-	newTask.Id = ""
+	newTask.ID = ""
 	newTask.Name = ""
-	newTask.ClusterId = wfGetNewMasterClusterId(ctx)
-	newTask.StartTS = 0
-	newTask.Status = string(constants.Normal)
+	newTask.ClusterID = wfGetNewMasterClusterId(ctx)
+	newTask.StartTS = "0"
+	newTask.Status = constants.ChangeFeedStatusNormal.ToString()
 	newTask.CreateTime = zeroT
 	newTask.UpdateTime = zeroT
 	tidbDownStream := newTask.Downstream.(*changefeedModel.TiDBDownstream)
@@ -395,15 +395,15 @@ func wfnMigrateAllDownStreamSyncChangeFeedTasks(node *workflowModel.WorkFlowNode
 	}
 	var finalTasks []*cluster.ChangeFeedTask
 	for _, v := range tasks {
-		if v != nil && v.Id != exceptSyncChangeFeedTaskId {
+		if v != nil && v.ID != exceptSyncChangeFeedTaskId {
 			finalTasks = append(finalTasks, v)
 		}
 	}
 	for _, v := range finalTasks {
-		err := mgr.pauseChangeFeedTask(ctx, v.Id)
+		err := mgr.pauseChangeFeedTask(ctx, v.ID)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf(
-				"%s pauseChangeFeedTask req:%s taskId:%s err:%s", funcName, wfGetReqJson(ctx), v.Id, err)
+				"%s pauseChangeFeedTask req:%s taskId:%s err:%s", funcName, wfGetReqJson(ctx), v.ID, err)
 		} else {
 			framework.LogWithContext(ctx).Infof(
 				"%s pauseChangeFeedTask req:%s success", funcName, wfGetReqJson(ctx))
@@ -411,17 +411,17 @@ func wfnMigrateAllDownStreamSyncChangeFeedTasks(node *workflowModel.WorkFlowNode
 	}
 	for _, v := range finalTasks {
 		var zeroT time.Time
-		v.Id = ""
+		v.ID = ""
 		v.Name = ""
-		v.ClusterId = toCluster
-		v.StartTS = 0
-		v.Status = string(constants.Normal)
+		v.ClusterID = toCluster
+		v.StartTS = "0"
+		v.Status = constants.ChangeFeedStatusNormal.ToString()
 		v.CreateTime = zeroT
 		v.UpdateTime = zeroT
 		id, err := mgr.createChangeFeedTask(ctx, v)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf(
-				"%s pauseChangeFeedTask req:%s taskId:%s err:%s", funcName, wfGetReqJson(ctx), v.Id, err)
+				"%s pauseChangeFeedTask req:%s taskId:%s err:%s", funcName, wfGetReqJson(ctx), v.ID, err)
 		} else {
 			framework.LogWithContext(ctx).Infof(
 				"%s pauseChangeFeedTask req:%s success taskId:%s", funcName, wfGetReqJson(ctx), id)
@@ -479,7 +479,7 @@ func wfnCheckSyncCaughtUp(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCo
 		framework.LogWithContext(ctx).Infof(
 			"%s queryChangeFeedTask req:%s success", funcName, wfGetReqJson(ctx))
 	}
-	if firstInfo.Status != constants.Normal.ToString() {
+	if firstInfo.Status != constants.ChangeFeedStatusNormal.ToString() {
 		return fmt.Errorf("%s syncChangeFeedTaskInfo status is %s instead of Normal", funcName, firstInfo.Status)
 	}
 	slaveT, err = mgr.calcCheckpointedTimeFromChangeFeedTaskInfo(ctx, firstInfo)

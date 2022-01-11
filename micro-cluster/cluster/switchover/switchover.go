@@ -400,7 +400,7 @@ func (m *Manager) checkSyncChangeFeedTaskHealth(ctx context.Context, reqJson, lo
 		framework.LogWithContext(ctx).Infof(
 			"%s queryChangeFeedTask req:%s success", funcName, reqJson)
 	}
-	if firstInfo.Status != constants.Normal.ToString() {
+	if firstInfo.Status != constants.ChangeFeedStatusNormal.ToString() {
 		return fmt.Errorf("%s syncChangeFeedTaskInfo status is %s instead of Normal", funcName, firstInfo.Status)
 	}
 	firstT, err = mgr.calcCheckpointedTimeFromChangeFeedTaskInfo(ctx, firstInfo)
@@ -424,7 +424,7 @@ func (m *Manager) checkSyncChangeFeedTaskHealth(ctx context.Context, reqJson, lo
 		framework.LogWithContext(ctx).Infof(
 			"%s queryChangeFeedTask req:%s success", funcName, reqJson)
 	}
-	if firstInfo.Status != constants.Normal.ToString() {
+	if firstInfo.Status != constants.ChangeFeedStatusNormal.ToString() {
 		return fmt.Errorf("%s syncChangeFeedTaskInfo status is %s instead of Normal", funcName, firstInfo.Status)
 	}
 	secondT, err = mgr.calcCheckpointedTimeFromChangeFeedTaskInfo(ctx, secondInfo)

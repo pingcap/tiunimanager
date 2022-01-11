@@ -70,6 +70,9 @@ service ClusterService {
     rpc QueryChangeFeedTasks(RpcRequest) returns (RpcResponse);
     rpc DetailChangeFeedTask(RpcRequest) returns (RpcResponse);
 
+    // switchover
+    rpc MasterSlaveSwitchover(RpcRequest) returns (RpcResponse);
+
     // system config
     rpc GetSystemConfig(RpcRequest) returns (RpcResponse);
 

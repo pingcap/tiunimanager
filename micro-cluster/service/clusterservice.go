@@ -47,7 +47,6 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager"
 	"github.com/pingcap-inc/tiem/workflow"
 
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 )
 
@@ -113,22 +112,6 @@ func handleResponse(ctx context.Context, resp *clusterservices.RpcResponse, err 
 	}
 }
 
-func (handler *ClusterServiceHandler) MasterSlaveSwitchover(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "MasterSlaveSwitchover", int(response.GetCode()))
-	defer handlePanic(ctx, "MasterSlaveSwitchover", response)
-
-	framework.LogWithContext(ctx).Info("master/slave switchover")
-	reqBody := cluster.MasterSlaveClusterSwitchoverReq{}
-
-	if handleRequest(ctx, request, response, reqBody) {
-		result, err := handler.switchoverManager.Switchover(ctx, &reqBody)
-		handleResponse(ctx, response, err, result, nil)
-	}
-
-	return nil
-}
-
 // handlePanic
 // @Description: recover from any panic from user request
 // @Parameter ctx
@@ -160,6 +143,22 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.productManager = product.NewProductManager()
 
 	return handler
+}
+
+func (handler *ClusterServiceHandler) MasterSlaveSwitchover(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "MasterSlaveSwitchover", int(response.GetCode()))
+	defer handlePanic(ctx, "MasterSlaveSwitchover", response)
+
+	framework.LogWithContext(ctx).Info("master/slave switchover")
+	reqBody := cluster.MasterSlaveClusterSwitchoverReq{}
+
+	if handleRequest(ctx, request, response, reqBody) {
+		result, err := handler.switchoverManager.Switchover(ctx, &reqBody)
+		handleResponse(ctx, response, err, result, nil)
+	}
+
+	return nil
 }
 
 func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {

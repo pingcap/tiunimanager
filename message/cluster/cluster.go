@@ -55,7 +55,7 @@ type DeleteClusterResp struct {
 
 // StopClusterReq Message for stop a new cluster
 type StopClusterReq struct {
-	ClusterID string `json:"clusterId" validate:"required,min=8,max=64,"`
+	ClusterID string `json:"clusterId" validate:"required,min=8,max=64"`
 }
 
 // StopClusterResp Reply message for stop a new cluster
@@ -66,7 +66,7 @@ type StopClusterResp struct {
 
 // RestartClusterReq Message for restart a new cluster
 type RestartClusterReq struct {
-	ClusterID string `json:"clusterId" validate:"required,min=8,max=64,"`
+	ClusterID string `json:"clusterId" validate:"required,min=8,max=64"`
 }
 
 // RestartClusterResp Reply message for restart a new cluster
@@ -77,7 +77,7 @@ type RestartClusterResp struct {
 
 // ScaleInClusterReq Message for delete an instance in the cluster
 type ScaleInClusterReq struct {
-	ClusterID  string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64,"`
+	ClusterID  string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
 	InstanceID string `json:"instanceId"  form:"instanceId"`
 }
 
@@ -89,7 +89,7 @@ type ScaleInClusterResp struct {
 
 // ScaleOutClusterReq Message for cluster expansion operation
 type ScaleOutClusterReq struct {
-	ClusterID string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64,"`
+	ClusterID string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
 	structs.ClusterResourceInfo
 }
 
@@ -102,7 +102,7 @@ type ScaleOutClusterResp struct {
 //RestoreNewClusterReq Restore to a new cluster message using the backup file
 type RestoreNewClusterReq struct {
 	structs.CreateClusterParameter
-	BackupID          string                      `json:"backupId" validate:"required,min=8,max=64,"`
+	BackupID          string                      `json:"backupId" validate:"required,min=8,max=64"`
 	ResourceParameter structs.ClusterResourceInfo `json:"resourceParameters"`
 }
 
@@ -114,8 +114,8 @@ type RestoreNewClusterResp struct {
 
 //RestoreExistClusterReq Restore to exist cluster message using the backup file
 type RestoreExistClusterReq struct {
-	ClusterID string `json:"clusterID" validate:"required,min=8,max=64,"`
-	BackupID  string `json:"backupID" validate:"required,min=8,max=64,"`
+	ClusterID string `json:"clusterID" validate:"required,min=8,max=64"`
+	BackupID  string `json:"backupID" validate:"required,min=8,max=64"`
 }
 
 //RestoreExistClusterResp Restore to exist cluster using the backup file Reply Message
@@ -127,7 +127,7 @@ type RestoreExistClusterResp struct {
 type CloneClusterReq struct {
 	structs.CreateClusterParameter
 	CloneStrategy   string `json:"cloneStrategy" validate:"required"`   // specify clone strategy, include empty, snapshot and sync, default empty(option)
-	SourceClusterID string `json:"sourceClusterId" validate:"required,min=8,max=64,"` // specify source cluster id(require)
+	SourceClusterID string `json:"sourceClusterId" validate:"required,min=8,max=64"` // specify source cluster id(require)
 }
 
 // CloneClusterResp Reply message for clone a new cluster
@@ -138,8 +138,8 @@ type CloneClusterResp struct {
 
 // MasterSlaveClusterSwitchoverReq Master and slave cluster switchover messages
 type MasterSlaveClusterSwitchoverReq struct {
-	SourceClusterID string `json:"sourceClusterID" validate:"required,min=8,max=64,"`
-	TargetClusterID string `json:"targetClusterID" validate:"required,min=8,max=64,"`
+	SourceClusterID string `json:"sourceClusterID" validate:"required,min=8,max=64"`
+	TargetClusterID string `json:"targetClusterID" validate:"required,min=8,max=64"`
 	Force           bool   `json:"force"`
 }
 

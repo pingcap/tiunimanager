@@ -55,9 +55,9 @@ type ClusterResourceInfo struct {
 
 //CreateClusterParameter User input parameters when creating a cluster
 type CreateClusterParameter struct {
-	Name             string   `json:"clusterName" validate:"required,min=8,max=64,"`
+	Name             string   `json:"clusterName" validate:"required,min=8,max=64"`
 	DBUser           string   `json:"dbUser" validate:"max=32"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
-	DBPassword       string   `json:"dbPassword" validate:"required,min=8,max=32,"`
+	DBPassword       string   `json:"dbPassword" validate:"required,min=8,max=32"`
 	Type             string   `json:"clusterType" validate:"required,oneof=TiDB DM TiKV"`
 	Version          string   `json:"clusterVersion" validate:"required,startswith=v"`
 	Tags             []string `json:"tags"`

@@ -18,13 +18,13 @@ package framework
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"io"
 	"time"
 
 	"github.com/asim/go-micro/v3/metadata"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 )
@@ -51,7 +51,7 @@ const TiEM_X_USER_NAME_KEY = "Em-X-User-Name"
 const TiEM_X_TENANT_ID_KEY = "Em-X-Tenant-Id"
 
 func NewTracerFromArgs(args *ClientArgs) *Tracer {
-	jaegerTracer, _, err := NewJaegerTracer("tiem", args.TracerAddress)
+	jaegerTracer, _, err := NewJaegerTracer("em", args.TracerAddress)
 	if err != nil {
 		panic("init tracer failed")
 	}
@@ -97,19 +97,56 @@ type BackgroundTask struct {
 	retErr      error
 }
 
+// NewBackgroundMicroCtx return a new background micro ctx.
+// A new traceID would be generated if newTraceIDFlag is true. Otherwise, the old traceID would be used again.
+// The new ctx returned is never canceled, and has no deadline.
+func NewBackgroundMicroCtx(fromMicroCtx context.Context, newTraceIDFlag bool) context.Context {
+	if fromMicroCtx == nil {
+		retCtx := NewMicroContextWithKeyValuePairs(
+			context.Background(),
+			map[string]string{
+				TiEM_X_TRACE_ID_KEY: uuidutil.GenerateID(),
+			},
+		)
+		LogWithContext(retCtx).Warn("current ctx is created from a nil micro ctx")
+		return retCtx
+	}
+	traceID := getStringValueFromMicroContext(fromMicroCtx, TiEM_X_TRACE_ID_KEY)
+	if newTraceIDFlag {
+		traceID = uuidutil.GenerateID()
+	}
+	retCtx := NewMicroContextWithKeyValuePairs(
+		context.Background(),
+		map[string]string{
+			TiEM_X_TRACE_ID_KEY:  traceID,
+			TiEM_X_USER_ID_KEY:   getStringValueFromMicroContext(fromMicroCtx, TiEM_X_USER_ID_KEY),
+			TiEM_X_USER_NAME_KEY: getStringValueFromMicroContext(fromMicroCtx, TiEM_X_USER_NAME_KEY),
+			TiEM_X_TENANT_ID_KEY: getStringValueFromMicroContext(fromMicroCtx, TiEM_X_TENANT_ID_KEY),
+		},
+	)
+	if newTraceIDFlag {
+		LogWithContext(retCtx).Infof("current ctx is created from the ctx with traceID %s",
+			getStringValueFromMicroContext(fromMicroCtx, TiEM_X_TRACE_ID_KEY))
+	} else {
+		LogWithContext(retCtx).Infof("new ctx is created")
+	}
+	return retCtx
+}
+
 // NewBackgroundTask return a new background task but do not start it in this function call.
 func NewBackgroundTask(fromCtx context.Context, comments string, fn func(context.Context) error) *BackgroundTask {
-	currentTraceID := uuidutil.GenerateID()
 	var fromTraceID string
 	if fromCtx == nil {
 		fromTraceID = ""
 	} else {
 		fromTraceID = GetTraceIDFromContext(fromCtx)
 	}
+	newCtx := NewBackgroundMicroCtx(fromCtx, true)
+	currentTraceID := getStringValueFromMicroContext(newCtx, TiEM_X_TRACE_ID_KEY)
 	t := &BackgroundTask{
 		fromCtx:        fromCtx,
 		fromTraceID:    fromTraceID,
-		currentCtx:     newMicroContextWithTraceID(context.Background(), currentTraceID),
+		currentCtx:     newCtx,
 		currentTraceID: currentTraceID,
 		fn:             fn,
 		comments:       comments,
@@ -180,7 +217,7 @@ func NewMicroCtxFromGinCtx(c *gin.Context) context.Context {
 	if parentSpan != nil {
 		ctx = opentracing.ContextWithSpan(ctx, parentSpan)
 	}
-	return newMicroContextWithKeyValuePairs(ctx, map[string]string{
+	return NewMicroContextWithKeyValuePairs(ctx, map[string]string{
 		TiEM_X_TRACE_ID_KEY:  traceID,
 		TiEM_X_USER_ID_KEY:   userID,
 		TiEM_X_USER_NAME_KEY: userName,
@@ -276,7 +313,7 @@ func getStringValueFromContext(ctx context.Context, key string) string {
 	return getStringValueFromMicroContext(ctx, key)
 }
 
-func newMicroContextWithKeyValuePairs(ctx context.Context, pairs map[string]string) context.Context {
+func NewMicroContextWithKeyValuePairs(ctx context.Context, pairs map[string]string) context.Context {
 	md, ok := metadata.FromContext(ctx)
 	if ok {
 	} else {

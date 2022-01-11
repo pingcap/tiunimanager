@@ -18,13 +18,12 @@ package warehouse
 
 import (
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/client"
 
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
-
-	"github.com/pingcap-inc/tiem/library/client"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
@@ -32,7 +31,7 @@ import (
 
 func setGinContextForInvalidParam(c *gin.Context, errmsg string) {
 	framework.LogWithContext(c).Error(errmsg)
-	c.JSON(common.TIEM_PARAMETER_INVALID.GetHttpCode(), controller.Fail(int(common.TIEM_PARAMETER_INVALID), errmsg))
+	c.JSON(errors.TIEM_PARAMETER_INVALID.GetHttpCode(), controller.Fail(int(errors.TIEM_PARAMETER_INVALID), errmsg))
 }
 
 // GetHierarchy godoc

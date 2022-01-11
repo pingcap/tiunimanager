@@ -17,8 +17,7 @@
 package log
 
 import (
-	"github.com/pingcap-inc/tiem/library/client"
-
+	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/message/cluster"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller"
@@ -29,9 +28,9 @@ import (
 const paramNameOfClusterId = "clusterId"
 
 // QueryClusterLog
-// @Summary search cluster log
-// @Description search cluster log
-// @Tags logs
+// @Summary query cluster log
+// @Description query cluster log
+// @Tags cluster log
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
@@ -40,7 +39,7 @@ const paramNameOfClusterId = "clusterId"
 // @Success 200 {object} controller.ResultWithPage{data=cluster.QueryClusterLogResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /logs/tidb/{clusterId} [get]
+// @Router /clusters/{clusterId}/log [get]
 func QueryClusterLog(c *gin.Context) {
 	var req cluster.QueryClusterLogReq
 

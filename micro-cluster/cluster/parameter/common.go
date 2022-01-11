@@ -23,13 +23,16 @@
 
 package parameter
 
-import "github.com/pingcap-inc/tiem/common/structs"
+import (
+	"github.com/pingcap-inc/tiem/common/structs"
+)
 
 const (
-	contextClusterMeta         = "ClusterMeta"
-	contextModifyParameters    = "ModifyParameters"
-	contextApplyParameterInfo  = "ApplyParameterInfo"
-	contextUpdateParameterInfo = "UpdateParameterInfo"
+	contextClusterMeta             = "ClusterMeta"
+	contextModifyParameters        = "ModifyParameters"
+	contextApplyParameterInfo      = "ApplyParameterInfo"
+	contextUpdateParameterInfo     = "UpdateParameterInfo"
+	contextMaintenanceStatusChange = "maintenanceStatusChange"
 )
 
 type UpdateParameterSource int
@@ -60,5 +63,25 @@ const (
 
 type ModifyParameter struct {
 	Reboot bool
-	Params []structs.ClusterParameterSampleInfo
+	Params []ModifyClusterParameterInfo
 }
+
+type ModifyClusterParameterInfo struct {
+	ParamId        string
+	Category       string
+	Name           string
+	InstanceType   string
+	UpdateSource   int
+	SystemVariable string
+	Type           int
+	Range          []string
+	HasApply       int
+	RealValue      structs.ParameterRealValue
+}
+
+type ClusterReboot int
+
+const (
+	NonReboot ClusterReboot = iota
+	Reboot
+)

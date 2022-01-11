@@ -17,14 +17,13 @@
 package resourcepool
 
 import (
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"os"
 	"testing"
 
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -32,7 +31,7 @@ import (
 
 func Test_BuildDefaultTraits(t *testing.T) {
 	type want struct {
-		errcode common.TIEM_ERROR_CODE
+		errcode errors.EM_ERROR_CODE
 		Traits  int64
 	}
 	tests := []struct {
@@ -40,9 +39,9 @@ func Test_BuildDefaultTraits(t *testing.T) {
 		host Host
 		want want
 	}{
-		{"test1", Host{ClusterType: string(constants.EMProductIDTiDB), Purpose: string(constants.PurposeCompute), DiskType: string(constants.NVMeSSD)}, want{common.TIEM_SUCCESS, 73}},
-		{"test2", Host{ClusterType: string(constants.EMProductIDTiDB), Purpose: string(constants.PurposeCompute) + "," + string(constants.PurposeSchedule), DiskType: string(constants.SSD)}, want{common.TIEM_SUCCESS, 169}},
-		{"test3", Host{ClusterType: string(constants.EMProductIDTiDB), Purpose: "General", DiskType: string(constants.NVMeSSD)}, want{common.TIEM_RESOURCE_TRAIT_NOT_FOUND, 0}},
+		{"test1", Host{ClusterType: string(constants.EMProductIDTiDB), Purpose: string(constants.PurposeCompute), DiskType: string(constants.NVMeSSD)}, want{errors.TIEM_SUCCESS, 73}},
+		{"test2", Host{ClusterType: string(constants.EMProductIDTiDB), Purpose: string(constants.PurposeCompute) + "," + string(constants.PurposeSchedule), DiskType: string(constants.SSD)}, want{errors.TIEM_SUCCESS, 169}},
+		{"test3", Host{ClusterType: string(constants.EMProductIDTiDB), Purpose: "General", DiskType: string(constants.NVMeSSD)}, want{errors.TIEM_RESOURCE_TRAIT_NOT_FOUND, 0}},
 	}
 
 	for _, tt := range tests {
@@ -51,7 +50,7 @@ func Test_BuildDefaultTraits(t *testing.T) {
 			if err == nil {
 				assert.Equal(t, tt.want.Traits, tt.host.Traits)
 			} else {
-				te, ok := err.(framework.TiEMError)
+				te, ok := err.(errors.EMError)
 				assert.Equal(t, true, ok)
 				assert.True(t, tt.want.errcode.Equal(int32(te.GetCode())))
 			}

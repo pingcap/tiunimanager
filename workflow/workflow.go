@@ -17,8 +17,8 @@ package workflow
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
@@ -148,7 +148,7 @@ func (mgr *WorkFlowManager) GetWorkFlowDefine(ctx context.Context, flowName stri
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
 		framework.LogWithContext(ctx).Errorf("WorkFlow %s not exist", flowName)
-		return nil, framework.NewTiEMErrorf(common.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
+		return nil, errors.NewEMErrorf(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
 	}
 	return flowDefine.(*WorkFlowDefine), nil
 }
@@ -156,12 +156,12 @@ func (mgr *WorkFlowManager) GetWorkFlowDefine(ctx context.Context, flowName stri
 func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, flowName string) (*WorkFlowAggregation, error) {
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
-		return nil, framework.NewTiEMErrorf(common.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
+		return nil, errors.NewEMErrorf(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
 	}
 
 	flow, err := createFlowWork(ctx, bizId, flowDefine.(*WorkFlowDefine))
 	if err != nil {
-		return nil, framework.WrapError(common.TIEM_WORKFLOW_CREATE_FAILED, err.Error(), err)
+		return nil, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, err.Error(), err)
 	}
 	return flow, nil
 }
@@ -169,7 +169,7 @@ func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, fl
 func (mgr *WorkFlowManager) ListWorkFlows(ctx context.Context, request message.QueryWorkFlowsReq) (resp message.QueryWorkFlowsResp, page structs.Page, err error) {
 	flows, total, err := models.GetWorkFlowReaderWriter().QueryWorkFlows(ctx, request.BizID, request.FlowName, request.Status, request.Page, request.PageSize)
 	if err != nil {
-		return resp, page, framework.WrapError(common.TIEM_WORKFLOW_QUERY_FAILED, err.Error(), err)
+		return resp, page, errors.WrapError(errors.TIEM_WORKFLOW_QUERY_FAILED, err.Error(), err)
 	}
 
 	flowInfos := make([]*structs.WorkFlowInfo, len(flows))
@@ -196,12 +196,12 @@ func (mgr *WorkFlowManager) ListWorkFlows(ctx context.Context, request message.Q
 func (mgr *WorkFlowManager) DetailWorkFlow(ctx context.Context, request message.QueryWorkFlowDetailReq) (resp message.QueryWorkFlowDetailResp, err error) {
 	flow, nodes, err := models.GetWorkFlowReaderWriter().QueryDetailWorkFlow(ctx, request.WorkFlowID)
 	if err != nil {
-		return resp, framework.WrapError(common.TIEM_WORKFLOW_DETAIL_FAILED, err.Error(), err)
+		return resp, errors.WrapError(errors.TIEM_WORKFLOW_DETAIL_FAILED, err.Error(), err)
 	}
 
 	define, err := mgr.GetWorkFlowDefine(ctx, flow.Name)
 	if err != nil {
-		return resp, framework.WrapError(common.TIEM_WORKFLOW_DEFINE_NOT_FOUND, err.Error(), err)
+		return resp, errors.WrapError(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, err.Error(), err)
 	}
 
 	resp = message.QueryWorkFlowDetailResp{
@@ -238,19 +238,19 @@ func (mgr *WorkFlowManager) AddContext(flow *WorkFlowAggregation, key string, va
 
 func (mgr *WorkFlowManager) AsyncStart(ctx context.Context, flow *WorkFlowAggregation) error {
 	framework.LogWithContext(ctx).Infof("Begin async start workflow name %s, workflowId %s, bizId: %s", flow.Flow.Name, flow.Flow.ID, flow.Flow.BizID)
-	flow.asyncStart()
+	flow.asyncStart(ctx)
 	return nil
 }
 
 func (mgr *WorkFlowManager) Start(ctx context.Context, flow *WorkFlowAggregation) error {
 	framework.LogWithContext(ctx).Infof("Begin sync start workflow name %s, workflowId %s, bizId: %s", flow.Flow.Name, flow.Flow.ID, flow.Flow.BizID)
-	flow.start()
+	flow.start(ctx)
 	return nil
 }
 
 func (mgr *WorkFlowManager) Destroy(ctx context.Context, flow *WorkFlowAggregation, reason string) error {
 	framework.LogWithContext(ctx).Infof("Begin destroy workflow name %s, workflowId %s, bizId: %s", flow.Flow.Name, flow.Flow.ID, flow.Flow.BizID)
-	flow.destroy(reason)
+	flow.destroy(ctx, reason)
 	return nil
 }
 

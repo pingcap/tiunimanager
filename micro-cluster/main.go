@@ -19,17 +19,14 @@ package main
 import (
 	"github.com/asim/go-micro/v3"
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
+	"github.com/pingcap-inc/tiem/metrics"
 	"github.com/pingcap-inc/tiem/micro-cluster/registry"
 	clusterService "github.com/pingcap-inc/tiem/micro-cluster/service"
-	clusterAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/adapt"
 	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -37,7 +34,6 @@ func main() {
 	f := framework.InitBaseFrameworkFromArgs(framework.ClusterService,
 		loadKnowledge,
 		initLibForDev,
-		initAdapter,
 		initDatabase,
 		defaultPortForLocal,
 		func(b *framework.BaseFramework) error {
@@ -55,14 +51,7 @@ func main() {
 	)
 
 	f.PrepareService(func(service micro.Service) error {
-		return clusterpb.RegisterClusterServiceHandler(service.Server(), clusterService.NewClusterServiceHandler(f))
-	})
-
-	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
-		framework.MetaDBService: func(service micro.Service) error {
-			client.DBClient = dbpb.NewTiEMDBService(string(framework.MetaDBService), service.Client())
-			return nil
-		},
+		return clusterservices.RegisterClusterServiceHandler(service.Server(), clusterService.NewClusterServiceHandler(f))
 	})
 
 	f.GetMetrics().ServerStartTimeGaugeMetric.
@@ -73,10 +62,6 @@ func main() {
 }
 
 func initLibForDev(f *framework.BaseFramework) error {
-	secondparty.SecondParty = &secondparty.SecondMicro{
-		TiupBinPath: constants.TiUPBinPath,
-	}
-	secondparty.SecondParty.MicroInit()
 	secondparty.Manager = &secondparty.SecondPartyManager{
 		TiUPBinPath: constants.TiUPBinPath,
 	}
@@ -91,11 +76,6 @@ func loadKnowledge(f *framework.BaseFramework) error {
 
 func initDatabase(f *framework.BaseFramework) error {
 	models.Open(f, false)
-	return nil
-}
-
-func initAdapter(f *framework.BaseFramework) error {
-	clusterAdapt.InjectionMetaDbRepo()
 	return nil
 }
 

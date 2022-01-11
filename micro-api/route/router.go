@@ -18,9 +18,11 @@ package route
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/metrics"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/backuprestore"
-	changefeed2 "github.com/pingcap-inc/tiem/micro-api/controller/cluster/changefeed"
+	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/changefeed"
 	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
 	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
@@ -28,7 +30,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
-	"github.com/pingcap-inc/tiem/micro-api/controller/platform/specs"
+	"github.com/pingcap-inc/tiem/micro-api/controller/platform/product"
 	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
 	warehouseApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 	flowtaskApi "github.com/pingcap-inc/tiem/micro-api/controller/task/flowtask"
@@ -70,60 +72,62 @@ func Route(g *gin.Engine) {
 
 		user := apiV1.Group("/user")
 		{
-			user.POST("/login", idApi.Login)
-			user.POST("/logout", idApi.Logout)
+			user.POST("/login", metrics.HandleMetrics(constants.MetricsUserLogin), idApi.Login)
+			user.POST("/logout", metrics.HandleMetrics(constants.MetricsUserLogout), idApi.Logout)
 		}
 
 		profile := user.Group("")
 		{
 			profile.Use(interceptor.VerifyIdentity)
 			profile.Use(interceptor.AuditLog())
-			profile.GET("/profile", accountApi.Profile)
+			profile.GET("/profile", metrics.HandleMetrics(constants.MetricsUserProfile), accountApi.Profile)
 		}
 
 		cluster := apiV1.Group("/clusters")
 		{
 			cluster.Use(interceptor.VerifyIdentity)
 			cluster.Use(interceptor.AuditLog())
-			cluster.GET("/:clusterId", clusterApi.Detail)
-			cluster.POST("/", clusterApi.Create)
-			cluster.POST("/takeover", clusterApi.Takeover)
-			cluster.POST("/preview", clusterApi.Preview)
+			cluster.GET("/:clusterId", metrics.HandleMetrics(constants.MetricsClusterDetail), clusterApi.Detail)
+			cluster.POST("/", metrics.HandleMetrics(constants.MetricsClusterCreate), clusterApi.Create)
+			cluster.POST("/takeover", metrics.HandleMetrics(constants.MetricsClusterTakeover), clusterApi.Takeover)
+			cluster.POST("/preview", metrics.HandleMetrics(constants.MetricsClusterPreview), clusterApi.Preview)
 
-			cluster.GET("/", clusterApi.Query)
-			cluster.DELETE("/:clusterId", clusterApi.Delete)
-			cluster.POST("/:clusterId/restart", clusterApi.Restart)
-			cluster.POST("/:clusterId/stop", clusterApi.Stop)
-			cluster.POST("/restore", backuprestore.Restore)
-			cluster.GET("/:clusterId/dashboard", clusterApi.GetDashboardInfo)
-			cluster.GET("/:clusterId/monitor", clusterApi.DescribeMonitor)
+			cluster.GET("/", metrics.HandleMetrics(constants.MetricsClusterQuery), clusterApi.Query)
+			cluster.DELETE("/:clusterId", metrics.HandleMetrics(constants.MetricsClusterDelete), clusterApi.Delete)
+			cluster.POST("/:clusterId/restart", metrics.HandleMetrics(constants.MetricsClusterRestart), clusterApi.Restart)
+			cluster.POST("/:clusterId/stop", metrics.HandleMetrics(constants.MetricsClusterStop), clusterApi.Stop)
+			cluster.POST("/restore", metrics.HandleMetrics(constants.MetricsClusterRestore), backuprestore.Restore)
+			cluster.GET("/:clusterId/dashboard", metrics.HandleMetrics(constants.MetricsClusterQueryDashboardAddress), clusterApi.GetDashboardInfo)
+			cluster.GET("/:clusterId/monitor", metrics.HandleMetrics(constants.MetricsClusterQueryMonitorAddress), clusterApi.GetMonitorInfo)
+
+			cluster.GET("/:clusterId/log", metrics.HandleMetrics(constants.MetricsClusterQueryLogParameter), logApi.QueryClusterLog)
 
 			// Scale cluster
-			cluster.POST("/:clusterId/scale-out", clusterApi.ScaleOut)
-			cluster.POST("/:clusterId/scale-in", clusterApi.ScaleIn)
+			cluster.POST("/:clusterId/scale-out", metrics.HandleMetrics(constants.MetricsClusterScaleOut), clusterApi.ScaleOut)
+			cluster.POST("/:clusterId/scale-in", metrics.HandleMetrics(constants.MetricsClusterScaleIn), clusterApi.ScaleIn)
 
 			// Clone cluster
-			cluster.POST("/clone", clusterApi.Clone)
+			cluster.POST("/clone", metrics.HandleMetrics(constants.MetricsClusterClone), clusterApi.Clone)
 
 			// Params
-			cluster.GET("/:clusterId/params", parameterApi.QueryParameters)
-			cluster.PUT("/:clusterId/params", parameterApi.UpdateParameters)
+			cluster.GET("/:clusterId/params", metrics.HandleMetrics(constants.MetricsClusterQueryParameter), parameterApi.QueryParameters)
+			cluster.PUT("/:clusterId/params", metrics.HandleMetrics(constants.MetricsClusterModifyParameter), parameterApi.UpdateParameters)
 			//cluster.POST("/:clusterId/params/inspect", parameterApi.InspectParameters)
 
 			// Backup Strategy
-			cluster.GET("/:clusterId/strategy", backuprestore.GetBackupStrategy)
-			cluster.PUT("/:clusterId/strategy", backuprestore.SaveBackupStrategy)
+			cluster.GET("/:clusterId/strategy", metrics.HandleMetrics(constants.MetricsBackupQueryStrategy), backuprestore.GetBackupStrategy)
+			cluster.PUT("/:clusterId/strategy", metrics.HandleMetrics(constants.MetricsBackupModifyStrategy), backuprestore.SaveBackupStrategy)
 
 			//Import and Export
-			cluster.POST("/import", importexport.ImportData)
-			cluster.POST("/export", importexport.ExportData)
-			cluster.GET("/transport", importexport.QueryDataTransport)
-			cluster.DELETE("/transport/:recordId", importexport.DeleteDataTransportRecord)
+			cluster.POST("/import", metrics.HandleMetrics(constants.MetricsDataImport), importexport.ImportData)
+			cluster.POST("/export", metrics.HandleMetrics(constants.MetricsDataExport), importexport.ExportData)
+			cluster.GET("/transport", metrics.HandleMetrics(constants.MetricsDataExportImportQuery), importexport.QueryDataTransport)
+			cluster.DELETE("/transport/:recordId", metrics.HandleMetrics(constants.MetricsDataExportImportDelete), importexport.DeleteDataTransportRecord)
 		}
 
 		knowledge := apiV1.Group("/knowledges")
 		{
-			knowledge.GET("/", specs.ClusterKnowledge)
+			knowledge.GET("/", metrics.HandleMetrics(constants.MetricsPlatformQueryKnowledge), product.ClusterKnowledge)
 		}
 
 		backup := apiV1.Group("/backups")
@@ -131,9 +135,9 @@ func Route(g *gin.Engine) {
 			backup.Use(interceptor.VerifyIdentity)
 			backup.Use(interceptor.AuditLog())
 
-			backup.POST("/", backuprestore.Backup)
-			backup.GET("/", backuprestore.QueryBackupRecords)
-			backup.DELETE("/:backupId", backuprestore.DeleteBackup)
+			backup.POST("/", metrics.HandleMetrics(constants.MetricsBackupCreate), backuprestore.Backup)
+			backup.GET("/", metrics.HandleMetrics(constants.MetricsBackupQuery), backuprestore.QueryBackupRecords)
+			backup.DELETE("/:backupId", metrics.HandleMetrics(constants.MetricsBackupDelete), backuprestore.DeleteBackup)
 		}
 
 		changeFeeds := apiV1.Group("/changefeeds")
@@ -141,15 +145,15 @@ func Route(g *gin.Engine) {
 			changeFeeds.Use(interceptor.VerifyIdentity)
 			changeFeeds.Use(interceptor.AuditLog())
 
-			changeFeeds.POST("/", changefeed2.Create)
-			changeFeeds.POST("/:changeFeedTaskId/pause", changefeed2.Pause)
-			changeFeeds.POST("/:changeFeedTaskId/resume", changefeed2.Resume)
-			changeFeeds.POST("/:changeFeedTaskId/update", changefeed2.Update)
+			changeFeeds.POST("/", metrics.HandleMetrics(constants.MetricsCDCTaskCreate), changefeed.Create)
+			changeFeeds.POST("/:changeFeedTaskId/pause", metrics.HandleMetrics(constants.MetricsCDCTaskPause), changefeed.Pause)
+			changeFeeds.POST("/:changeFeedTaskId/resume", metrics.HandleMetrics(constants.MetricsCDCTaskPause), changefeed.Resume)
+			changeFeeds.POST("/:changeFeedTaskId/update", metrics.HandleMetrics(constants.MetricsCDCTaskUpdate), changefeed.Update)
 
-			changeFeeds.DELETE("/:changeFeedTaskId", changefeed2.Delete)
+			changeFeeds.DELETE("/:changeFeedTaskId", metrics.HandleMetrics(constants.MetricsCDCTaskDelete), changefeed.Delete)
 
-			changeFeeds.GET("/:changeFeedTaskId", changefeed2.Detail)
-			changeFeeds.GET("/", changefeed2.Query)
+			changeFeeds.GET("/:changeFeedTaskId/", metrics.HandleMetrics(constants.MetricsCDCTaskDetail), changefeed.Detail)
+			changeFeeds.GET("/", metrics.HandleMetrics(constants.MetricsCDCTaskQuery), changefeed.Query)
 		}
 
 		switchover := apiV1.Group("/switchover")
@@ -164,41 +168,63 @@ func Route(g *gin.Engine) {
 		{
 			flowworks.Use(interceptor.VerifyIdentity)
 			flowworks.Use(interceptor.AuditLog())
-			flowworks.GET("/", flowtaskApi.Query)
-			flowworks.GET("/:workFlowId", flowtaskApi.Detail)
+			flowworks.GET("/", metrics.HandleMetrics(constants.MetricsWorkFlowQuery), flowtaskApi.Query)
+			flowworks.GET("/:workFlowId", metrics.HandleMetrics(constants.MetricsWorkFlowDetail), flowtaskApi.Detail)
 		}
 
 		host := apiV1.Group("/resources")
 		{
 			host.Use(interceptor.VerifyIdentity)
 			host.Use(interceptor.AuditLog())
-			host.POST("hosts", resourceApi.ImportHosts)
-			host.GET("hosts", resourceApi.QueryHosts)
-			host.DELETE("hosts", resourceApi.RemoveHosts)
-			host.GET("hosts-template", resourceApi.DownloadHostTemplateFile)
-			host.GET("hierarchy", warehouseApi.GetHierarchy)
-			host.GET("stocks", warehouseApi.GetStocks)
-			host.PUT("host-reserved", resourceApi.UpdateHostReserved)
-			host.PUT("host-status", resourceApi.UpdateHostStatus)
-		}
-
-		log := apiV1.Group("/logs")
-		{
-			log.Use(interceptor.VerifyIdentity)
-			log.GET("/tidb/:clusterId", logApi.QueryClusterLog)
+			host.POST("hosts", metrics.HandleMetrics(constants.MetricsResourceImportHosts), resourceApi.ImportHosts)
+			host.GET("hosts", metrics.HandleMetrics(constants.MetricsResourceQueryHosts), resourceApi.QueryHosts)
+			host.DELETE("hosts", metrics.HandleMetrics(constants.MetricsResourceDeleteHost), resourceApi.RemoveHosts)
+			host.GET("hosts-template", metrics.HandleMetrics(constants.MetricsResourceDownloadHostTemplateFile), resourceApi.DownloadHostTemplateFile)
+			host.GET("hierarchy", metrics.HandleMetrics(constants.MetricsResourceQueryHierarchy), warehouseApi.GetHierarchy)
+			host.GET("stocks", metrics.HandleMetrics(constants.MetricsResourceQueryStocks), warehouseApi.GetStocks)
+			host.PUT("host-reserved", metrics.HandleMetrics(constants.MetricsResourceReservedHost), resourceApi.UpdateHostReserved)
+			host.PUT("host-status", metrics.HandleMetrics(constants.MetricsResourceModifyHostStatus), resourceApi.UpdateHostStatus)
 		}
 
 		paramGroups := apiV1.Group("/param-groups")
 		{
 			paramGroups.Use(interceptor.VerifyIdentity)
 			paramGroups.Use(interceptor.AuditLog())
-			paramGroups.GET("/", parametergroup.Query)
-			paramGroups.GET("/:paramGroupId", parametergroup.Detail)
-			paramGroups.POST("/", parametergroup.Create)
-			paramGroups.PUT("/:paramGroupId", parametergroup.Update)
-			paramGroups.DELETE("/:paramGroupId", parametergroup.Delete)
-			paramGroups.POST("/:paramGroupId/copy", parametergroup.Copy)
-			paramGroups.POST("/:paramGroupId/apply", parametergroup.Apply)
+			paramGroups.GET("/", metrics.HandleMetrics(constants.MetricsParameterGroupQuery), parametergroup.Query)
+			paramGroups.GET("/:paramGroupId", metrics.HandleMetrics(constants.MetricsParameterGroupDetail), parametergroup.Detail)
+			paramGroups.POST("/", metrics.HandleMetrics(constants.MetricsParameterGroupCreate), parametergroup.Create)
+			paramGroups.PUT("/:paramGroupId", metrics.HandleMetrics(constants.MetricsParameterGroupUpdate), parametergroup.Update)
+			paramGroups.DELETE("/:paramGroupId", metrics.HandleMetrics(constants.MetricsParameterGroupDelete), parametergroup.Delete)
+			paramGroups.POST("/:paramGroupId/copy", metrics.HandleMetrics(constants.MetricsParameterGroupCopy), parametergroup.Copy)
+			paramGroups.POST("/:paramGroupId/apply", metrics.HandleMetrics(constants.MetricsParameterGroupApply), parametergroup.Apply)
+		}
+
+		productGroup := apiV1.Group("/products")
+		{
+			productGroup.Use(interceptor.VerifyIdentity)
+			productGroup.Use(interceptor.AuditLog())
+			productGroup.POST("/", product.CreateProduct)
+			productGroup.DELETE("/", product.DeleteProduct)
+			productGroup.GET("/", product.QueryProducts)
+			productGroup.GET("/detail", product.QueryProductDetail)
+		}
+
+		zoneGroup := apiV1.Group("/zones")
+		{
+			zoneGroup.Use(interceptor.VerifyIdentity)
+			zoneGroup.Use(interceptor.AuditLog())
+			zoneGroup.POST("/", product.CreateZones)
+			zoneGroup.DELETE("/", product.DeleteZones)
+			zoneGroup.GET("/", product.QueryZones)
+		}
+
+		specGroup := apiV1.Group("/specs")
+		{
+			specGroup.Use(interceptor.VerifyIdentity)
+			specGroup.Use(interceptor.AuditLog())
+			specGroup.POST("/", product.CreateSpecs)
+			specGroup.DELETE("/", product.DeleteSpecs)
+			specGroup.GET("/", product.QuerySpecs)
 		}
 	}
 

@@ -32,3 +32,83 @@ type GetSystemConfigReq struct {
 type GetSystemConfigResp struct {
 	structs.SystemConfig
 }
+
+//CreateZonesReq create zone message, include vendor、region、zone
+type CreateZonesReq struct {
+	Zones []structs.ZoneInfo `json:"zones"`
+}
+type CreateZonesResp struct {
+}
+
+//QueryZonesReq query all zone information message, include vendor、region、zone
+type QueryZonesReq struct {
+}
+type QueryZonesResp struct {
+	Zones []structs.ZoneInfo `json:"zones"`
+}
+
+//DeleteZoneReq delete a zone message
+type DeleteZoneReq struct {
+	Zones []structs.ZoneInfo `json:"zone"`
+}
+type DeleteZoneResp struct {
+}
+
+//CreateProductReq create a product message
+type CreateProductReq struct {
+	ProductInfo structs.Product                    `json:"productInfo"`
+	Components  []structs.ProductComponentProperty `json:"components"`
+}
+type CreateProductResp struct {
+}
+
+//DeleteProductReq delete a product message
+type DeleteProductReq struct {
+	ProductInfo structs.Product `json:"productInfo"`
+}
+type DeleteProductResp struct {
+}
+
+//QueryProductsReq query all products message
+type QueryProductsReq struct {
+	VendorID        string `json:"vendorId" form:"vendorId"`
+	Status          string `json:"status" form:"status"`
+	InternalProduct int    `json:"internalProduct" form:"internalProduct"`
+}
+type QueryProductsResp struct {
+	Products []structs.Product `json:"products"`
+}
+
+//QueryProductDetailReq query product detail message
+type QueryProductDetailReq struct {
+	VendorID        string `json:"vendorId" form:"vendorId"`
+	RegionID        string `json:"regionId" form:"regionId"`
+	ProductID       string `json:"productId" form:"productId"`
+	Status          string `json:"status" form:"status"`
+	InternalProduct int    `json:"internalProduct" form:"internalProduct"`
+}
+type QueryProductDetailResp struct {
+	Products map[string]structs.ProductDetail `json:"products"`
+}
+
+// CreateSpecsReq component instance resource spec message
+//CreateSpecsReq create spec message
+type CreateSpecsReq struct {
+	Specs []structs.SpecInfo `json:"specs"`
+}
+type CreateSpecsResp struct {
+}
+
+//DeleteSpecsReq delete spec message
+type DeleteSpecsReq struct {
+	SpecIDs []string `json:"specIds"`
+}
+type DeleteSpecsResp struct {
+}
+
+//QuerySpecsReq query spec message
+type QuerySpecsReq struct {
+}
+type QuerySpecsResp struct {
+	Specs []structs.SpecInfo `json:"specs"`
+}

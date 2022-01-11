@@ -50,6 +50,7 @@ const (
 	ClusterMaintenanceUpgrading                    ClusterMaintenanceStatus = "Upgrading"
 	ClusterMaintenanceSwitching                    ClusterMaintenanceStatus = "Switching"
 	ClusterMaintenanceModifyParameterAndRestarting ClusterMaintenanceStatus = "ModifyParameterRestarting"
+	ClusterMaintenanceTakeover                     ClusterMaintenanceStatus = "Takeover"
 	ClusterMaintenanceNone                         ClusterMaintenanceStatus = ""
 )
 
@@ -64,7 +65,7 @@ const (
 	FlowImportData          = "ImportData"
 	FlowRestartCluster      = "RestartCluster"
 	FlowStopCluster         = "StopCluster"
-	FlowTakeoverCluster     = "TakeoverCluster"
+	FlowTakeoverCluster     = "BuildForTakeover"
 	FlowBuildLogConfig      = "BuildLogConfig"
 	FlowScaleOutCluster     = "ScaleOutCluster"
 	FlowScaleInCluster      = "ScaleInCluster"
@@ -124,7 +125,7 @@ type ClusterCloneStrategy string
 const (
 	ClusterTopologyClone ClusterCloneStrategy = "TopologyClone"
 	SnapShotClone        ClusterCloneStrategy = "Snapshot"
-	TiCDCSyncClone       ClusterCloneStrategy = "TiCDCSync"
+	CDCSyncClone         ClusterCloneStrategy = "CDCSync"
 )
 
 type BackupType string
@@ -156,7 +157,7 @@ const (
 )
 
 const (
-	DefaultBackupStoragePath       string = "em/backup"
+	DefaultBackupStoragePath       string = "nfs/em/backup"
 	DefaultBackupS3AccessKey       string = "minioadmin"
 	DefaultBackupS3SecretAccessKey string = "minioadmin"
 	DefaultBackupS3Endpoint        string = "http://minio.pingcap.net:9000"

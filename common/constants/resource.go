@@ -24,8 +24,7 @@
 package constants
 
 import (
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/errors"
 )
 
 type ArchType string
@@ -42,8 +41,23 @@ func ValidArchType(arch string) error {
 	if arch == string(ArchX86) || arch == string(ArchX8664) || arch == string(ArchArm) || arch == string(ArchArm64) {
 		return nil
 	}
-	return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_ARCH, "valid arch type: [%s|%s|%s|%s]",
+	return errors.NewEMErrorf(errors.TIEM_RESOURCE_INVALID_ARCH, "valid arch type: [%s|%s|%s|%s]",
 		string(ArchX86), string(ArchX8664), string(ArchArm), string(ArchArm64))
+}
+
+func GetArchAlias(arch ArchType) string {
+	switch arch {
+	case ArchArm:
+		fallthrough
+	case ArchArm64:
+		return "arm64"
+	case ArchX86:
+		fallthrough
+	case ArchX8664:
+		return "amd64"
+	default:
+		return ""
+	}
 }
 
 type HostStatus string
@@ -51,14 +65,20 @@ type HostStatus string
 //Definition of host status
 const (
 	HostWhatever HostStatus = "Whatever"
+	HostInit     HostStatus = "Init"
 	HostOnline   HostStatus = "Online"
 	HostOffline  HostStatus = "Offline"
+	HostFailed   HostStatus = "Failed"
+	HostDeleting HostStatus = "Deleting"
 	HostDeleted  HostStatus = "Deleted"
 )
 
 func (s HostStatus) IsValidStatus() bool {
 	return (s == HostOnline ||
 		s == HostOffline ||
+		s == HostInit ||
+		s == HostFailed ||
+		s == HostDeleting ||
 		s == HostDeleted)
 }
 
@@ -97,7 +117,7 @@ func ValidDiskType(diskType string) error {
 	if diskType == string(NVMeSSD) || diskType == string(SSD) || diskType == string(SATA) {
 		return nil
 	}
-	return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_PURPOSE, "valid disk type: [%s|%s|%s]",
+	return errors.NewEMErrorf(errors.TIEM_RESOURCE_INVALID_PURPOSE, "valid disk type: [%s|%s|%s]",
 		string(NVMeSSD), string(SSD), string(SATA))
 }
 
@@ -146,7 +166,7 @@ func ValidPurposeType(p string) error {
 	if p == string(PurposeCompute) || p == string(PurposeStorage) || p == string(PurposeSchedule) {
 		return nil
 	}
-	return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_PURPOSE, "valid purpose name: [%s|%s|%s]",
+	return errors.NewEMErrorf(errors.TIEM_RESOURCE_INVALID_PURPOSE, "valid purpose name: [%s|%s|%s]",
 		string(PurposeCompute), string(PurposeStorage), string(PurposeSchedule))
 }
 

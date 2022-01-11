@@ -48,7 +48,8 @@ type ImportHostsReq struct {
 }
 
 type ImportHostsResp struct {
-	HostIDS []string `json:"hostIds"`
+	FlowInfo []structs.AsyncTaskWorkFlowInfo `json:"flowInfo"`
+	HostIDS  []string                        `json:"hostIds"`
 }
 
 type DeleteHostsReq struct {
@@ -56,6 +57,7 @@ type DeleteHostsReq struct {
 }
 
 type DeleteHostsResp struct {
+	FlowInfo []structs.AsyncTaskWorkFlowInfo `json:"flowInfo"`
 }
 
 type UpdateHostReservedReq struct {

@@ -24,8 +24,12 @@
 package constants
 
 import (
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"time"
+)
+
+const (
+	TiEM string = "tiem"
 )
 
 //System log-related constants
@@ -73,7 +77,7 @@ func ValidProductID(p string) error {
 	if p == string(EMProductIDTiDB) || p == string(EMProductIDDataMigration) || p == string(EMProductIDEnterpriseManager) {
 		return nil
 	}
-	return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_PRODUCT_NAME, "valid product name: [%s|%s|%s]", string(EMProductIDTiDB), string(EMProductIDDataMigration), string(EMProductIDEnterpriseManager))
+	return errors.NewEMErrorf(errors.TIEM_RESOURCE_INVALID_PRODUCT_NAME, "valid product name: [%s|%s|%s]", string(EMProductIDTiDB), string(EMProductIDDataMigration), string(EMProductIDEnterpriseManager))
 }
 
 type EMProductComponentIDType string
@@ -90,7 +94,7 @@ const (
 	ComponentIDTiKV    EMProductComponentIDType = "TiKV"
 	ComponentIDPD      EMProductComponentIDType = "PD"
 	ComponentIDTiFlash EMProductComponentIDType = "TiFlash"
-	ComponentIDTiCDC   EMProductComponentIDType = "CDC"
+	ComponentIDCDC     EMProductComponentIDType = "CDC"
 
 	ComponentIDGrafana          EMProductComponentIDType = "Grafana"
 	ComponentIDPrometheus       EMProductComponentIDType = "Prometheus"
@@ -161,3 +165,5 @@ const (
 const (
 	MaxBatchQueryDataNumber int = 512
 )
+
+const DefaultTokenValidPeriod time.Duration = 4 * time.Hour

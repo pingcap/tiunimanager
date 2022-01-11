@@ -5,10 +5,9 @@ go 1.16
 require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
 	github.com/BurntSushi/toml v0.4.1
-	github.com/DATA-DOG/go-sqlmock v1.3.3
+	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/HdrHistogram/hdrhistogram-go v1.1.1 // indirect
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
-	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/asim/go-micro/plugins/registry/etcd/v3 v3.0.0-20210812172626-c7195aae9817
 	github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3 v3.0.0-20210812172626-c7195aae9817
 	github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3 v3.0.0-20210812172626-c7195aae9817
@@ -23,12 +22,12 @@ require (
 	github.com/go-playground/validator/v10 v10.4.1
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang/mock v1.6.0
-	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/golang/protobuf v1.5.2
+	github.com/google/goexpect v0.0.0-20210430020637-ab937bf7fd6f
 	github.com/google/uuid v1.3.0
 	github.com/labstack/gommon v0.3.0
 	github.com/lithammer/shortuuid v3.0.0+incompatible
 	github.com/micro/cli/v2 v2.1.2
-	github.com/mozillazg/go-pinyin v0.18.0
 	github.com/opentracing/basictracer-go v1.0.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pingcap/check v0.0.0-20200212061837-5e12011dc712
@@ -36,7 +35,9 @@ require (
 	github.com/pingcap/tiup v1.6.1
 	github.com/pkg/sftp v1.10.1
 	github.com/prometheus/client_golang v1.11.0
+	github.com/prometheus/common v0.30.0
 	github.com/robfig/cron v1.2.0
+	github.com/shirou/gopsutil v3.21.8+incompatible
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 	github.com/swaggo/files v0.0.0-20210815190702-a29dd2bc99b2

@@ -17,7 +17,7 @@ package workflow
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
@@ -40,13 +40,13 @@ func (m *WorkFlowReadWrite) CreateWorkFlow(ctx context.Context, flow *WorkFlow) 
 
 func (m *WorkFlowReadWrite) UpdateWorkFlow(ctx context.Context, flowId string, status string, flowContext string) (err error) {
 	if "" == flowId || "" == status {
-		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "")
 	}
 
 	flow := &WorkFlow{}
 	err = m.DB(ctx).First(flow, "id = ?", flowId).Error
 	if err != nil {
-		return framework.SimpleError(common.TIEM_FLOW_NOT_FOUND)
+		return errors.NewEMErrorf(errors.TIEM_FLOW_NOT_FOUND, "flow %s not found", flowId)
 	}
 
 	return m.DB(ctx).Model(flow).
@@ -56,19 +56,19 @@ func (m *WorkFlowReadWrite) UpdateWorkFlow(ctx context.Context, flowId string, s
 
 func (m *WorkFlowReadWrite) GetWorkFlow(ctx context.Context, flowId string) (flow *WorkFlow, err error) {
 	if "" == flowId {
-		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return nil, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "flow id is required")
 	}
 
 	flow = &WorkFlow{}
 	err = m.DB(ctx).First(flow, "id = ?", flowId).Error
 	if err != nil {
-		return nil, framework.SimpleError(common.TIEM_FLOW_NOT_FOUND)
+		return nil, errors.NewEMErrorf(errors.TIEM_FLOW_NOT_FOUND, "flow %s not found", flowId)
 	}
 	return flow, nil
 }
 
 func (m *WorkFlowReadWrite) QueryWorkFlows(ctx context.Context, bizId, fuzzyName, status string, page int, pageSize int) (flows []*WorkFlow, total int64, err error) {
-	flows = make([]*WorkFlow, pageSize)
+	flows = make([]*WorkFlow, 0)
 	query := m.DB(ctx).Model(&WorkFlow{})
 	if bizId != "" {
 		query = query.Where("biz_id = ?", bizId)
@@ -79,7 +79,7 @@ func (m *WorkFlowReadWrite) QueryWorkFlows(ctx context.Context, bizId, fuzzyName
 	if status != "" {
 		query = query.Where("status = ?", status)
 	}
-	err = query.Count(&total).Order("id desc").Offset(pageSize * (page - 1)).Limit(pageSize).Find(&flows).Error
+	err = query.Count(&total).Order("created_at desc").Offset(pageSize * (page - 1)).Limit(pageSize).Find(&flows).Error
 	return flows, total, err
 }
 
@@ -97,30 +97,36 @@ func (m *WorkFlowReadWrite) GetWorkFlowNode(ctx context.Context, nodeId string) 
 }
 
 func (m *WorkFlowReadWrite) UpdateWorkFlowDetail(ctx context.Context, flow *WorkFlow, nodes []*WorkFlowNode) (err error) {
-	err = m.UpdateWorkFlow(ctx, flow.ID, flow.Status, flow.Context)
-	if err != nil {
-		return err
-	}
-
-	for _, node := range nodes {
-		err = m.UpdateWorkFlowNode(ctx, node)
+	return m.DB(ctx).Transaction(func(tx *gorm.DB) error {
+		err = m.UpdateWorkFlow(ctx, flow.ID, flow.Status, flow.Context)
 		if err != nil {
+			framework.LogWithContext(ctx).Errorf("update workflow %+v failed %s", flow, err.Error())
+			tx.Rollback()
 			return err
 		}
-	}
 
-	return nil
+		for _, node := range nodes {
+			err = m.UpdateWorkFlowNode(ctx, node)
+			if err != nil {
+				framework.LogWithContext(ctx).Errorf("update workflow node %+v failed %s", node, err.Error())
+				tx.Rollback()
+				return err
+			}
+		}
+
+		return nil
+	})
 }
 
 func (m *WorkFlowReadWrite) QueryDetailWorkFlow(ctx context.Context, flowId string) (flow *WorkFlow, nodes []*WorkFlowNode, err error) {
 	if "" == flowId {
-		return nil, nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return nil, nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "empty flow id")
 	}
 
 	flow = &WorkFlow{}
 	err = m.DB(ctx).First(flow, "id = ?", flowId).Error
 	if err != nil {
-		return nil, nil, framework.SimpleError(common.TIEM_FLOW_NOT_FOUND)
+		return nil, nil, errors.NewEMErrorf(errors.TIEM_FLOW_NOT_FOUND, "flow %s not found", flowId)
 	}
 
 	err = m.DB(ctx).Where("parent_id = ?", flowId).Find(&nodes).Error

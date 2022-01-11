@@ -29,6 +29,8 @@ type CmdDeployReq struct {
 	ConfigStrYaml string
 	TimeoutS      int
 	TiUPPath      string
+	TiUPHome      string
+	Password      string
 	Flags         []string
 }
 
@@ -39,6 +41,8 @@ type CmdScaleOutReq struct {
 	ConfigStrYaml string
 	TimeoutS      int
 	TiUPPath      string
+	TiUPHome      string
+	Password      string
 	Flags         []string
 }
 
@@ -49,6 +53,7 @@ type CmdScaleInReq struct {
 	NodeId        string
 	TimeoutS      int
 	TiUPPath      string
+	TiUPHome      string
 	Flags         []string
 }
 
@@ -58,6 +63,7 @@ type CmdStartReq struct {
 	InstanceName  string
 	TimeoutS      int
 	TiUPPath      string
+	TiUPHome      string
 	Flags         []string
 }
 
@@ -66,6 +72,7 @@ type CmdListReq struct {
 	TaskID        uint64
 	TimeoutS      int
 	TiUPPath      string
+	TiUPHome      string
 	Flags         []string
 }
 
@@ -75,15 +82,12 @@ type CmdDestroyReq struct {
 	InstanceName  string
 	TimeoutS      int
 	TiUPPath      string
+	TiUPHome      string
 	Flags         []string
 }
 
 type CmdListResp struct {
 	ListRespStr string
-}
-
-type CmdGetAllTaskStatusResp struct {
-	Stats []TaskStatusMember
 }
 
 type CmdGetAllOperationStatusResp struct {
@@ -92,6 +96,7 @@ type CmdGetAllOperationStatusResp struct {
 
 type CmdDumplingReq struct {
 	TaskID   uint64
+	TiUPHome string
 	TimeoutS int
 	TiUPPath string
 	Flags    []string
@@ -101,6 +106,7 @@ type CmdLightningReq struct {
 	TaskID   uint64
 	TimeoutS int
 	TiUPPath string
+	TiUPHome string
 	Flags    []string
 }
 
@@ -196,6 +202,7 @@ type CmdTransferReq struct {
 	InstanceName  string
 	CollectorYaml string
 	RemotePath    string
+	TiUPHome      string
 	TimeoutS      int
 	TiUPPath      string
 	Flags         []string
@@ -208,6 +215,7 @@ type CmdUpgradeReq struct {
 	Version       string
 	TimeoutS      int
 	TiUPPath      string
+	TiUPHome      string
 	Flags         []string
 }
 
@@ -257,6 +265,7 @@ type CmdEditConfigReq struct {
 	TiUPComponent TiUPComponentTypeStr
 	InstanceName  string
 	NewTopo       *spec2.Specification
+	TiUPHome      string
 	TimeoutS      int
 	Flags         []string
 }
@@ -264,6 +273,7 @@ type CmdEditConfigReq struct {
 type CmdReloadConfigReq struct {
 	TiUPComponent TiUPComponentTypeStr
 	InstanceName  string
+	TiUPHome      string
 	TimeoutS      int
 	Flags         []string
 }
@@ -271,6 +281,7 @@ type CmdReloadConfigReq struct {
 type CmdClusterExecReq struct {
 	TiUPComponent TiUPComponentTypeStr
 	InstanceName  string
+	TiUPHome      string
 	TimeoutS      int
 	Flags         []string
 }
@@ -310,4 +321,75 @@ type ClusterSetDbPswReq struct {
 
 type ClusterSetDbPswResp struct {
 	Message string
+}
+
+type ChangeFeedCreateReq struct {
+	CDCAddress       string   `json:"-"`
+	ChangeFeedID     string   `json:"changefeed_id"`
+	SinkURI          string   `json:"sink_uri"`
+	StartTS          uint64   `json:"start_ts"`
+	TargetTS         uint64   `json:"target_ts"`
+	IgnoreTxnStartTS []uint64 `json:"ignore_txn_start_ts"`
+	FilterRules      []string `json:"filter_rules"`
+	SinkConfig       []string `json:"sink_config"`
+	MounterWorkerNum int      `json:"mounter_worker_num"`
+}
+
+type ChangeFeedUpdateReq struct {
+	ChangeFeedID     string   `json:"-"`
+	CDCAddress       string   `json:"-"`
+	SinkURI          string   `json:"sink_uri"`
+	TargetTS         int64    `json:"target_ts"`
+	FilterRules      []string `json:"filter_rules"`
+	IgnoreTxnStartTS []uint64 `json:"ignore_txn_start_ts"`
+	SinkConfig       []string `json:"sink_config"`
+	MounterWorkerNum int      `json:"mounter_worker_num"`
+}
+
+type ChangeFeedPauseReq struct {
+	ChangeFeedID string
+	CDCAddress   string
+}
+
+type ChangeFeedDeleteReq struct {
+	ChangeFeedID string
+	CDCAddress   string
+}
+
+type ChangeFeedResumeReq struct {
+	ChangeFeedID string
+	CDCAddress   string
+}
+
+type ChangeFeedCmdAcceptResp struct {
+	Accepted  bool
+	Succeed   bool
+	ErrorCode string `json:"error_code"`
+	ErrorMsg  string `json:"error_msg"`
+}
+
+type ChangeFeedQueryReq struct {
+	CDCAddress string
+	State      string
+}
+
+type ChangeFeedQueryResp struct {
+	Tasks []ChangeFeedInfo
+}
+
+type ChangeFeedDetailReq struct {
+	CDCAddress   string
+	ChangeFeedID string
+}
+
+type ChangeFeedDetailResp struct {
+	ChangeFeedInfo
+}
+
+type ChangeFeedInfo struct {
+	ChangeFeedID  string `json:"id"`
+	State         string `json:"state"`
+	CheckPointTSO uint64 `json:"checkpoint_tso"`
+	ResolvedTSO   uint64 `json:"resolved_tso"`
+	Error         string `json:"error"`
 }

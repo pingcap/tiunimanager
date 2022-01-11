@@ -22,17 +22,36 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
 	allocrecycle "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/allocator_recycler"
 	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	host_provider "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
+	"github.com/pingcap-inc/tiem/models/common"
 	resource_models "github.com/pingcap-inc/tiem/models/resource"
 	resourcepool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
+	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	mock_resource "github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
+	mock_initiator "github.com/pingcap-inc/tiem/test/mockresource/mockinitiator"
+	mock_workflow "github.com/pingcap-inc/tiem/test/mockworkflow"
+	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"
 )
+
+var emptyNode = func(task *wfModel.WorkFlowNode, context *workflow.FlowContext) error {
+	return nil
+}
+
+func getEmptyFlow(name string) *workflow.WorkFlowDefine {
+	return &workflow.WorkFlowDefine{
+		FlowName: name,
+		TaskNodes: map[string]*workflow.NodeDefine{
+			"start": {Name: "start", SuccessEvent: "done", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
+			"done":  {Name: "end", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
+			"fail":  {Name: "fail", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
+		},
+	}
+}
 
 func genHostInfo(hostName string) *structs.HostInfo {
 	host := structs.HostInfo{
@@ -91,33 +110,64 @@ func genHostRspFromDB(hostId, hostName string) *resourcepool.Host {
 	return &host
 }
 
+func doMockInitiator(mockInitiator *mock_initiator.MockHostInitiator) {
+	mockInitiator.EXPECT().Verify(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
+		return nil
+	}).AnyTimes()
+	mockInitiator.EXPECT().InstallSoftware(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []structs.HostInfo) error {
+		return nil
+	}).AnyTimes()
+}
 func Test_ImportHosts_Succeed(t *testing.T) {
 	fake_hostId := "xxxx-xxxx-yyyy-yyyy"
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockClient := mock_resource.NewMockReaderWriter(ctrl)
-	mockClient.EXPECT().Create(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []resourcepool.Host) ([]string, error) {
+	// Mock models readerwriter
+	ctrl1 := gomock.NewController(t)
+	defer ctrl1.Finish()
+	mockModels := mock_resource.NewMockReaderWriter(ctrl1)
+	mockModels.EXPECT().Create(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []resourcepool.Host) ([]string, error) {
 		if hosts[0].HostName == "TEST_HOST1" {
 			var hostIds []string
 			hostIds = append(hostIds, fake_hostId)
 			return hostIds, nil
 		} else {
-			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
+
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
 	file_hostprovider, ok := (hostprovider).(*(host_provider.FileHostProvider))
 	assert.True(t, ok)
-	file_hostprovider.SetResourceReaderWriter(mockClient)
+	file_hostprovider.SetResourceReaderWriter(mockModels)
+
+	// Mock host initiator
+	ctrl2 := gomock.NewController(t)
+	defer ctrl2.Finish()
+	mockInitiator := mock_initiator.NewMockHostInitiator(ctrl2)
+	doMockInitiator(mockInitiator)
+
+	resourceManager.GetResourcePool().SetHostInitiator(mockInitiator)
+
+	ctrl3 := gomock.NewController(t)
+	defer ctrl3.Finish()
+	workflowService := mock_workflow.NewMockWorkFlowService(ctrl3)
+	workflow.MockWorkFlowService(workflowService)
+	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
+	}, nil).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(3)
 
 	var hosts []structs.HostInfo
 	host := genHostInfo("TEST_HOST1")
 	hosts = append(hosts, *host)
 
-	hostIds, err := resourceManager.ImportHosts(context.TODO(), hosts)
+	flowIds, hostIds, err := resourceManager.ImportHosts(context.TODO(), hosts)
 	assert.Nil(t, err)
 
 	assert.Equal(t, fake_hostId, hostIds[0])
+	assert.Equal(t, "flow01", flowIds[0])
 }
 
 func Test_ImportHosts_Failed(t *testing.T) {
@@ -131,22 +181,43 @@ func Test_ImportHosts_Failed(t *testing.T) {
 			hostIds = append(hostIds, fake_hostId)
 			return hostIds, nil
 		} else {
-			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
+
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
 	file_hostprovider, ok := (hostprovider).(*(host_provider.FileHostProvider))
 	assert.True(t, ok)
 	file_hostprovider.SetResourceReaderWriter(mockClient)
 
+	// Mock host initiator
+	ctrl2 := gomock.NewController(t)
+	defer ctrl2.Finish()
+	mockInitiator := mock_initiator.NewMockHostInitiator(ctrl2)
+	doMockInitiator(mockInitiator)
+
+	resourceManager.GetResourcePool().SetHostInitiator(mockInitiator)
+
+	ctrl3 := gomock.NewController(t)
+	defer ctrl3.Finish()
+	workflowService := mock_workflow.NewMockWorkFlowService(ctrl3)
+	workflow.MockWorkFlowService(workflowService)
+	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
+	}, nil).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
 	var hosts []structs.HostInfo
 	host := genHostInfo("TEST_HOST2")
 	hosts = append(hosts, *host)
-	_, err := resourceManager.ImportHosts(context.TODO(), hosts)
+	flowIds, _, err := resourceManager.ImportHosts(context.TODO(), hosts)
 	assert.NotNil(t, err)
-	tiemErr, ok := err.(framework.TiEMError)
+	tiemErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, common.TIEM_PARAMETER_INVALID, tiemErr.GetCode())
+	assert.Equal(t, errors.TIEM_PARAMETER_INVALID, tiemErr.GetCode())
+	assert.Nil(t, flowIds)
 
 }
 
@@ -164,7 +235,7 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 			hosts = append(hosts, *dbhost)
 			return hosts, nil
 		} else {
-			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -195,24 +266,32 @@ func Test_DeleteHosts_Succeed(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_resource.NewMockReaderWriter(ctrl)
-	mockClient.EXPECT().Delete(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hostIds []string) error {
-		if hostIds[0] == fake_hostId1 && hostIds[1] == fake_hostId2 {
-			return nil
-		} else {
-			return framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
-		}
-	})
+	mockClient.EXPECT().UpdateHostStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
 	file_hostprovider, ok := (hostprovider).(*(host_provider.FileHostProvider))
 	assert.True(t, ok)
 	file_hostprovider.SetResourceReaderWriter(mockClient)
 
+	ctrl3 := gomock.NewController(t)
+	defer ctrl3.Finish()
+	workflowService := mock_workflow.NewMockWorkFlowService(ctrl3)
+	workflow.MockWorkFlowService(workflowService)
+	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
+	}, nil).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(4)
+
 	var hostIds []string
 	hostIds = append(hostIds, fake_hostId1)
 	hostIds = append(hostIds, fake_hostId2)
 
-	err := resourceManager.DeleteHosts(context.TODO(), hostIds)
+	flowIds, err := resourceManager.DeleteHosts(context.TODO(), hostIds)
 	assert.Nil(t, err)
+	assert.Equal(t, 2, len(flowIds))
 }
 
 func Test_UpdateHostReserved_Succeed(t *testing.T) {
@@ -229,7 +308,7 @@ func Test_UpdateHostReserved_Succeed(t *testing.T) {
 			host2.Reserved = reserved
 			return nil
 		} else {
-			return framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -261,7 +340,7 @@ func Test_UpdateHostStatus_Succeed(t *testing.T) {
 			host2.Status = status
 			return nil
 		} else {
-			return framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -312,7 +391,7 @@ func Test_GetHierarchy_Succeed(t *testing.T) {
 			items = append(items, item3)
 			return items, nil
 		} else {
-			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -354,7 +433,7 @@ func Test_GetStocks_Succeed(t *testing.T) {
 			stocks = append(stocks, stocks2)
 			return stocks, nil
 		} else {
-			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -388,7 +467,7 @@ func Test_AllocResources_Succeed(t *testing.T) {
 		if batchReq.BatchRequests[0].Applicant.HolderId == fake_holder_id && batchReq.BatchRequests[1].Applicant.RequestId == fake_request_id &&
 			batchReq.BatchRequests[0].Requires[0].Count == 1 && batchReq.BatchRequests[1].Requires[1].Require.PortReq[1].PortCnt == 2 {
 		} else {
-			return nil, framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 		var r resource_structs.Compute
 		r.Reqseq = 0
@@ -487,7 +566,7 @@ func Test_RecycleResources_Succeed(t *testing.T) {
 		if request.RecycleReqs[0].RecycleType == 2 && request.RecycleReqs[0].HolderID == fake_cluster_id {
 
 		} else {
-			return framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, "BadRequest")
+			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 		return nil
 	})

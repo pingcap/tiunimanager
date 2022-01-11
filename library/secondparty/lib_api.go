@@ -28,17 +28,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/pingcap-inc/tiem/util/http"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/spec"
-	util "github.com/pingcap-inc/tiem/library/util/http"
 )
 
 const (
-	PdApiUrl   = "/pd/api/v1/config"
-	TiKVApiUrl = "/config"
-	TiDBApiUrl = "/settings"
+	PdApiUrl     = "/pd/api/v1/config"
+	TiKVApiUrl   = "/config"
+	TiDBApiUrl   = "/settings"
+	CdcLogApiUrl = "/api/v1/log"
 )
 
 func (manager *SecondPartyManager) ApiEditConfig(ctx context.Context, apiEditConfigReq ApiEditConfigReq) (bool, error) {
@@ -51,7 +53,14 @@ func (manager *SecondPartyManager) ApiEditConfig(ctx context.Context, apiEditCon
 			framework.LogWithContext(ctx).Errorf("apieditconfig, request tidb api resp err: %v", err.Error())
 			return false, err
 		}
-		framework.LogWithContext(ctx).Infof("apieditconfig, request tidb api resp status code: %v, content length: %v", resp.StatusCode, resp.ContentLength)
+		if resp.StatusCode != http.StatusOK {
+			b, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return false, err
+			}
+			framework.LogWithContext(ctx).Errorf("apieditconfig, request tidb api resp status code: %v, content: %v", resp.StatusCode, string(b))
+			return false, errors.New(string(b))
+		}
 		return resp.StatusCode == http.StatusOK, nil
 	case spec.TiDBClusterComponent_TiKV:
 		url := fmt.Sprintf("http://%s:%d%s", apiEditConfigReq.InstanceHost, apiEditConfigReq.InstancePort, TiKVApiUrl)
@@ -60,7 +69,14 @@ func (manager *SecondPartyManager) ApiEditConfig(ctx context.Context, apiEditCon
 			framework.LogWithContext(ctx).Errorf("apieditconfig, request tikv api resp err: %v", err.Error())
 			return false, err
 		}
-		framework.LogWithContext(ctx).Infof("apieditconfig, request tikv api resp status code: %v, content length: %v", resp.StatusCode, resp.ContentLength)
+		if resp.StatusCode != http.StatusOK {
+			b, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return false, err
+			}
+			framework.LogWithContext(ctx).Errorf("apieditconfig, request tikv api resp status code: %v, content: %v", resp.StatusCode, string(b))
+			return false, errors.New(string(b))
+		}
 		return resp.StatusCode == http.StatusOK, nil
 	case spec.TiDBClusterComponent_PD:
 		url := fmt.Sprintf("http://%s:%d%s", apiEditConfigReq.InstanceHost, apiEditConfigReq.InstancePort, PdApiUrl)
@@ -69,10 +85,33 @@ func (manager *SecondPartyManager) ApiEditConfig(ctx context.Context, apiEditCon
 			framework.LogWithContext(ctx).Errorf("apieditconfig, request pd api resp err: %v", err.Error())
 			return false, err
 		}
-		framework.LogWithContext(ctx).Infof("apieditconfig, request pd api resp status code: %v, content length: %v", resp.StatusCode, resp.ContentLength)
+		if resp.StatusCode != http.StatusOK {
+			b, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return false, err
+			}
+			framework.LogWithContext(ctx).Errorf("apieditconfig, request pd api resp status code: %v, content: %v", resp.StatusCode, string(b))
+			return false, errors.New(string(b))
+		}
+		return resp.StatusCode == http.StatusOK, nil
+	case spec.TiDBClusterComponent_CDC:
+		url := fmt.Sprintf("http://%s:%d%s", apiEditConfigReq.InstanceHost, apiEditConfigReq.InstancePort, CdcLogApiUrl)
+		resp, err := util.PostJSON(url, apiEditConfigReq.ConfigMap, apiEditConfigReq.Headers)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("apieditconfig, request pd api resp err: %v", err.Error())
+			return false, err
+		}
+		if resp.StatusCode != http.StatusOK {
+			b, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return false, err
+			}
+			framework.LogWithContext(ctx).Errorf("apieditconfig, request pd api resp status code: %v, content: %v", resp.StatusCode, string(b))
+			return false, errors.New(string(b))
+		}
 		return resp.StatusCode == http.StatusOK, nil
 	default:
 		framework.LogWithContext(ctx).Warnf("apieditconfig, component %s api update parameters are not supported", apiEditConfigReq.TiDBClusterComponent)
-		return false, errors.New(fmt.Sprintf("Component %s API update parameters are not supported", apiEditConfigReq.TiDBClusterComponent))
+		return false, fmt.Errorf("component %s API update parameters are not supported", apiEditConfigReq.TiDBClusterComponent)
 	}
 }

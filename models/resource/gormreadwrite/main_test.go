@@ -17,12 +17,13 @@
 package gormreadwrite
 
 import (
-	"context"
+	mm "github.com/pingcap-inc/tiem/models/resource/management"
+	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"os"
 	"testing"
 
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/pingcap-inc/tiem/models/resource"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -49,7 +50,12 @@ func TestMain(m *testing.M) {
 			}
 			MetaDB = db
 			GormRW = NewGormResourceReadWrite(db)
-			GormRW.InitTables(context.Background())
+			MetaDB.AutoMigrate(new(resourcePool.Host))
+			MetaDB.AutoMigrate(new(resourcePool.Disk))
+			MetaDB.AutoMigrate(new(resourcePool.Label))
+			MetaDB.AutoMigrate(new(mm.UsedCompute))
+			MetaDB.AutoMigrate(new(mm.UsedPort))
+			MetaDB.AutoMigrate(new(mm.UsedDisk))
 			return nil
 		},
 	)

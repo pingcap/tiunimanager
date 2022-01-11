@@ -27,10 +27,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
+	"regexp"
+	"strings"
 	"syscall"
 	"time"
 
+	expect "github.com/google/goexpect"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
 
@@ -41,7 +45,7 @@ import (
 )
 
 func (manager *SecondPartyManager) ClusterDeploy(ctx context.Context, tiUPComponent TiUPComponentTypeStr,
-	instanceName string, version string, configStrYaml string, timeoutS int, flags []string, workFlowNodeID string) (
+	instanceName string, version string, configStrYaml string, timeoutS int, flags []string, workFlowNodeID string, password string) (
 	operationID string, err error) {
 	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("clusterdeploy "+
 		"tiupcomponent: %s, instancename: %s, version: %s, configstryaml: %s, timeout: %d, flags: %v, workflownodeid: "+
@@ -60,13 +64,15 @@ func (manager *SecondPartyManager) ClusterDeploy(ctx context.Context, tiUPCompon
 		deployReq.TimeoutS = timeoutS
 		deployReq.Flags = flags
 		deployReq.TiUPPath = manager.TiUPBinPath
+		deployReq.Password = password
+		deployReq.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 		manager.startTiUPDeployOperation(ctx, secondPartyOperation.ID, &deployReq)
 		return secondPartyOperation.ID, nil
 	}
 }
 
 func (manager *SecondPartyManager) startTiUPDeployOperation(ctx context.Context, operationID string, req *CmdDeployReq) {
-	topologyTmpFilePath, err := newTmpFileWithContent("tiem-topology", []byte(req.ConfigStrYaml))
+	topologyTmpFilePath, err := newTmpFileWithContent(topologyTmpFilePrefix, []byte(req.ConfigStrYaml))
 	if err != nil {
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: operationID,
@@ -82,12 +88,12 @@ func (manager *SecondPartyManager) startTiUPDeployOperation(ctx context.Context,
 		args = append(args, string(req.TiUPComponent), "deploy", req.InstanceName, req.Version, topologyTmpFilePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome, req.Password)
 	}()
 }
 
 func (manager *SecondPartyManager) ClusterScaleOut(ctx context.Context, tiUPComponent TiUPComponentTypeStr,
-	instanceName string, configStrYaml string, timeoutS int, flags []string, workFlowNodeID string) (
+	instanceName string, configStrYaml string, timeoutS int, flags []string, workFlowNodeID string, password string) (
 	operationID string, err error) {
 	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("clusterscaleout "+
 		"tiupcomponent: %s, instancename: %s, configstryaml: %s, timeout: %d, flags: %v, workflownodeid: %s",
@@ -105,13 +111,15 @@ func (manager *SecondPartyManager) ClusterScaleOut(ctx context.Context, tiUPComp
 		scaleOutReq.TimeoutS = timeoutS
 		scaleOutReq.Flags = flags
 		scaleOutReq.TiUPPath = manager.TiUPBinPath
+		scaleOutReq.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
+		scaleOutReq.Password = password
 		manager.startTiUPScaleOutOperation(ctx, secondPartyOperation.ID, &scaleOutReq)
 		return secondPartyOperation.ID, nil
 	}
 }
 
 func (manager *SecondPartyManager) startTiUPScaleOutOperation(ctx context.Context, operationID string, req *CmdScaleOutReq) {
-	topologyTmpFilePath, err := newTmpFileWithContent("tiem-topology", []byte(req.ConfigStrYaml))
+	topologyTmpFilePath, err := newTmpFileWithContent(topologyTmpFilePrefix, []byte(req.ConfigStrYaml))
 	if err != nil {
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: operationID,
@@ -127,7 +135,7 @@ func (manager *SecondPartyManager) startTiUPScaleOutOperation(ctx context.Contex
 		args = append(args, string(req.TiUPComponent), "scale-out", req.InstanceName, topologyTmpFilePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome, req.Password)
 	}()
 }
 
@@ -150,6 +158,7 @@ func (manager *SecondPartyManager) ClusterScaleIn(ctx context.Context, tiUPCompo
 		scaleInReq.TimeoutS = timeoutS
 		scaleInReq.Flags = flags
 		scaleInReq.TiUPPath = manager.TiUPBinPath
+		scaleInReq.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 		manager.startTiUPScaleInOperation(ctx, secondPartyOperation.ID, &scaleInReq)
 		return secondPartyOperation.ID, nil
 	}
@@ -160,7 +169,7 @@ func (manager *SecondPartyManager) startTiUPScaleInOperation(ctx context.Context
 		var args []string
 		args = append(args, string(req.TiUPComponent), "scale-in", req.InstanceName, "--node", req.NodeId)
 		args = append(args, req.Flags...)
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome, "")
 	}()
 }
 
@@ -180,6 +189,7 @@ func (manager *SecondPartyManager) ClusterStart(ctx context.Context, tiUPCompone
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
 		req.TiUPPath = manager.TiUPBinPath
+		req.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 		req.Flags = flags
 		manager.startTiUPStartOperation(ctx, secondPartyOperation.ID, &req)
 		return secondPartyOperation.ID, nil
@@ -192,7 +202,7 @@ func (manager *SecondPartyManager) startTiUPStartOperation(ctx context.Context, 
 		args = append(args, string(req.TiUPComponent), "start", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome, "")
 	}()
 }
 
@@ -212,6 +222,7 @@ func (manager *SecondPartyManager) ClusterRestart(ctx context.Context, tiUPCompo
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
 		req.TiUPPath = manager.TiUPBinPath
+		req.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 		req.Flags = flags
 		manager.startTiUPRestartOperation(ctx, secondPartyOperation.ID, &req)
 		return secondPartyOperation.ID, nil
@@ -224,7 +235,7 @@ func (manager *SecondPartyManager) startTiUPRestartOperation(ctx context.Context
 		args = append(args, string(req.TiUPComponent), "restart", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome, "")
 	}()
 }
 
@@ -244,6 +255,7 @@ func (manager *SecondPartyManager) ClusterStop(ctx context.Context, tiUPComponen
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
 		req.TiUPPath = manager.TiUPBinPath
+		req.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 		req.Flags = flags
 		manager.startTiUPStopOperation(ctx, secondPartyOperation.ID, &req)
 		return secondPartyOperation.ID, nil
@@ -256,7 +268,7 @@ func (manager *SecondPartyManager) startTiUPStopOperation(ctx context.Context, o
 		args = append(args, string(req.TiUPComponent), "stop", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome, "")
 	}()
 }
 
@@ -268,6 +280,7 @@ func (manager *SecondPartyManager) ClusterList(ctx context.Context, tiUPComponen
 	req.TiUPComponent = tiUPComponent
 	req.TimeoutS = timeoutS
 	req.TiUPPath = manager.TiUPBinPath
+	req.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 	req.Flags = flags
 	cmdListResp, err := manager.startTiUPListOperation(ctx, &req)
 	return &cmdListResp, err
@@ -293,6 +306,8 @@ func (manager *SecondPartyManager) startTiUPListOperation(ctx context.Context, r
 		cmd = exec.Command(req.TiUPPath, args...)
 		cancelFp = func() {}
 	}
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, fmt.Sprintf("TIUP_HOME=%s", req.TiUPHome))
 	defer cancelFp()
 	cmd.SysProcAttr = genSysProcAttr()
 	var out, stderr bytes.Buffer
@@ -324,6 +339,7 @@ func (manager *SecondPartyManager) ClusterDestroy(ctx context.Context, tiUPCompo
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
 		req.TiUPPath = manager.TiUPBinPath
+		req.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 		req.Flags = flags
 		manager.startTiUPDestroyOperation(ctx, secondPartyOperation.ID, &req)
 		return secondPartyOperation.ID, nil
@@ -336,7 +352,7 @@ func (manager *SecondPartyManager) startTiUPDestroyOperation(ctx context.Context
 		args = append(args, string(req.TiUPComponent), "destroy", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome, "")
 	}()
 }
 
@@ -348,7 +364,8 @@ func (manager *SecondPartyManager) ClusterDisplay(ctx context.Context, tiUPCompo
 	args = append(args, string(tiUPComponent), "display")
 	args = append(args, instanceName)
 	args = append(args, flags...)
-	result, err := manager.startSyncTiUPOperation(ctx, args, timeoutS)
+	tiUPHome := GetTiUPHomeForComponent(ctx, tiUPComponent)
+	result, err := manager.startSyncTiUPOperation(ctx, args, timeoutS, tiUPHome)
 	resp = &CmdDisplayResp{}
 	resp.DisplayRespString = result
 	return
@@ -374,6 +391,7 @@ func (manager *SecondPartyManager) ClusterUpgrade(ctx context.Context, tiUPCompo
 		req.TimeoutS = timeoutS
 		req.Flags = flags
 		req.TiUPPath = manager.TiUPBinPath
+		req.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 		manager.startTiUPUpgradeOperation(ctx, secondPartyOperation.ID, &req)
 		return secondPartyOperation.ID, nil
 	}
@@ -385,7 +403,7 @@ func (manager *SecondPartyManager) startTiUPUpgradeOperation(ctx context.Context
 		args = append(args, string(req.TiUPComponent), "upgrade", req.InstanceName, req.Version)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome, "")
 	}()
 }
 
@@ -396,8 +414,9 @@ func (manager *SecondPartyManager) ClusterShowConfig(ctx context.Context, req *C
 	args = append(args, string(req.TiUPComponent), "show-config")
 	args = append(args, req.InstanceName)
 	args = append(args, req.Flags...)
+	tiUPHome := GetTiUPHomeForComponent(ctx, req.TiUPComponent)
 
-	topoStr, err := manager.startSyncTiUPOperation(ctx, args, req.TimeoutS)
+	topoStr, err := manager.startSyncTiUPOperation(ctx, args, req.TimeoutS, tiUPHome)
 	if err != nil {
 		return nil, err
 	}
@@ -499,6 +518,7 @@ func (manager *SecondPartyManager) startTiUPEditGlobalConfigOperation(ctx contex
 		TiUPComponent: req.TiUPComponent,
 		InstanceName:  req.InstanceName,
 		NewTopo:       topo,
+		TiUPHome:      GetTiUPHomeForComponent(ctx, req.TiUPComponent),
 		TimeoutS:      req.TimeoutS,
 		Flags:         req.Flags,
 	}
@@ -666,6 +686,7 @@ func (manager *SecondPartyManager) startTiUPEditInstanceConfigOperation(ctx cont
 		TiUPComponent: req.TiUPComponent,
 		InstanceName:  req.InstanceName,
 		NewTopo:       topo,
+		TiUPHome:      GetTiUPHomeForComponent(ctx, req.TiUPComponent),
 		TimeoutS:      req.TimeoutS,
 		Flags:         req.Flags,
 	}
@@ -700,10 +721,10 @@ func (manager *SecondPartyManager) startTiUPEditConfigOperation(ctx context.Cont
 	go func() {
 		//defer os.Remove(topologyTmpFilePath)
 		var args []string
-		args = append(args, string(req.TiUPComponent), "edit-config", req.InstanceName, "-f", topologyTmpFilePath)
+		args = append(args, string(req.TiUPComponent), "edit-config", req.InstanceName, "--topology-file", topologyTmpFilePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, manager.TiUPBinPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, manager.TiUPBinPath, args, req.TimeoutS, req.TiUPHome, "")
 	}()
 }
 
@@ -717,6 +738,7 @@ func (manager *SecondPartyManager) ClusterReload(ctx context.Context, cmdReloadC
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
 	}
+	cmdReloadConfigReq.TiUPHome = GetTiUPHomeForComponent(ctx, cmdReloadConfigReq.TiUPComponent)
 	manager.startTiUPReloadOperation(ctx, secondPartyOperation.ID, &cmdReloadConfigReq)
 	return secondPartyOperation.ID, nil
 }
@@ -727,7 +749,7 @@ func (manager *SecondPartyManager) startTiUPReloadOperation(ctx context.Context,
 		args = append(args, string(req.TiUPComponent), "reload", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, manager.TiUPBinPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, manager.TiUPBinPath, args, req.TimeoutS, req.TiUPHome, "")
 	}()
 }
 
@@ -741,6 +763,7 @@ func (manager *SecondPartyManager) ClusterExec(ctx context.Context, cmdClusterEx
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
 	}
+	cmdClusterExecReq.TiUPHome = GetTiUPHomeForComponent(ctx, cmdClusterExecReq.TiUPComponent)
 	manager.startTiUPExecOperation(ctx, secondPartyOperation.ID, &cmdClusterExecReq)
 	return secondPartyOperation.ID, nil
 }
@@ -751,7 +774,7 @@ func (manager *SecondPartyManager) startTiUPExecOperation(ctx context.Context, o
 		args = append(args, string(req.TiUPComponent), "exec", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, manager.TiUPBinPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, manager.TiUPBinPath, args, req.TimeoutS, req.TiUPHome, "")
 	}()
 }
 
@@ -769,6 +792,7 @@ func (manager *SecondPartyManager) Dumpling(ctx context.Context, timeoutS int, f
 		dumplingReq.TimeoutS = timeoutS
 		dumplingReq.TiUPPath = manager.TiUPBinPath
 		dumplingReq.Flags = flags
+		dumplingReq.TiUPHome = GetTiUPHomeForComponent(ctx, DefaultComponentTypeStr)
 		manager.startTiUPDumplingOperation(ctx, secondPartyOperation.ID, &dumplingReq)
 		return secondPartyOperation.ID, nil
 	}
@@ -779,7 +803,7 @@ func (manager *SecondPartyManager) startTiUPDumplingOperation(ctx context.Contex
 		var args []string
 		args = append(args, "dumpling")
 		args = append(args, req.Flags...)
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome, "")
 	}()
 }
 
@@ -797,6 +821,7 @@ func (manager *SecondPartyManager) Lightning(ctx context.Context, timeoutS int, 
 		lightningReq.TimeoutS = timeoutS
 		lightningReq.TiUPPath = manager.TiUPBinPath
 		lightningReq.Flags = flags
+		lightningReq.TiUPHome = GetTiUPHomeForComponent(ctx, DefaultComponentTypeStr)
 		manager.startTiUPLightningOperation(ctx, secondPartyOperation.ID, &lightningReq)
 		return secondPartyOperation.ID, nil
 	}
@@ -807,7 +832,7 @@ func (manager *SecondPartyManager) startTiUPLightningOperation(ctx context.Conte
 		var args []string
 		args = append(args, "tidb-lightning")
 		args = append(args, req.Flags...)
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome, "")
 	}()
 }
 
@@ -828,6 +853,7 @@ func (manager *SecondPartyManager) Transfer(ctx context.Context, tiUPComponent T
 		req.InstanceName = instanceName
 		req.CollectorYaml = collectorYaml
 		req.RemotePath = remotePath
+		req.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
 		req.TimeoutS = timeoutS
 		req.Flags = flags
 		req.TiUPPath = manager.TiUPBinPath
@@ -837,7 +863,7 @@ func (manager *SecondPartyManager) Transfer(ctx context.Context, tiUPComponent T
 }
 
 func (manager *SecondPartyManager) startTiUPTransferOperation(ctx context.Context, operationID string, req *CmdTransferReq) {
-	collectorTmpFilePath, err := newTmpFileWithContent("tiem-collector", []byte(req.CollectorYaml))
+	collectorTmpFilePath, err := newTmpFileWithContent(collectorTmpFilePrefix, []byte(req.CollectorYaml))
 	if err != nil {
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: operationID,
@@ -852,7 +878,7 @@ func (manager *SecondPartyManager) startTiUPTransferOperation(ctx context.Contex
 		args = append(args, string(req.TiUPComponent), "push", req.InstanceName, collectorTmpFilePath, req.RemotePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome, "")
 	}()
 }
 
@@ -864,14 +890,15 @@ func (manager *SecondPartyManager) ClusterComponentCtl(ctx context.Context, str 
 	args = append(args, fmt.Sprintf("%s:%s", string(str), clusterVersion))
 	args = append(args, string(component))
 	args = append(args, flags...)
-	return manager.startSyncTiUPOperation(ctx, args, timeoutS)
+	tiUPHome := GetTiUPHomeForComponent(ctx, str)
+	return manager.startSyncTiUPOperation(ctx, args, timeoutS, tiUPHome)
 }
 
 func (manager *SecondPartyManager) startSyncTiUPOperation(ctx context.Context, args []string,
-	timeoutS int) (result string, err error) {
+	timeoutS int, tiUPHome string) (result string, err error) {
 	logInFunc := framework.LogWithContext(ctx)
-	logInFunc.Info("operation starts processing:", fmt.Sprintf("tiuppath:%s tiupargs:%v timeouts:%d",
-		manager.TiUPBinPath, args, timeoutS))
+	logInFunc.Info("operation starts processing:", fmt.Sprintf("TIUP_HOME=%s tiuppath:%s tiupargs:%v timeouts:%d",
+		tiUPHome, manager.TiUPBinPath, args, timeoutS))
 	var cmd *exec.Cmd
 	var cancelFp context.CancelFunc
 	if timeoutS != 0 {
@@ -882,6 +909,8 @@ func (manager *SecondPartyManager) startSyncTiUPOperation(ctx context.Context, a
 		cmd = exec.Command(manager.TiUPBinPath, args...)
 		cancelFp = func() {}
 	}
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, fmt.Sprintf("TIUP_HOME=%s", tiUPHome))
 	defer cancelFp()
 	cmd.SysProcAttr = genSysProcAttr()
 	var stderr bytes.Buffer
@@ -896,11 +925,11 @@ func (manager *SecondPartyManager) startSyncTiUPOperation(ctx context.Context, a
 }
 
 func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, operationID string, tiUPPath string,
-	tiUPArgs []string, TimeoutS int) (exitCh chan struct{}) {
+	tiUPArgs []string, TimeoutS int, tiUPHome string, password string) (exitCh chan struct{}) {
 	exitCh = make(chan struct{})
 	logInFunc := framework.LogWithContext(ctx).WithField("operation", operationID)
-	logInFunc.Info("operation starts processing:", fmt.Sprintf("tiuppath:%s tiupargs:%v timeouts:%d",
-		tiUPPath, tiUPArgs, TimeoutS))
+	logInFunc.Info("operation starts processing:", fmt.Sprintf("TIUP_HOME=%s tiuppath:%s tiupargs:%v timeouts:%d",
+		tiUPHome, tiUPPath, tiUPArgs, TimeoutS))
 	manager.operationStatusCh <- OperationStatusMember{
 		OperationID: operationID,
 		Status:      secondparty.OperationStatus_Processing,
@@ -909,33 +938,8 @@ func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, opera
 	}
 	go func() {
 		defer close(exitCh)
-		var cmd *exec.Cmd
-		var cancelFp context.CancelFunc
-		if TimeoutS != 0 {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(TimeoutS)*time.Second)
-			cancelFp = cancel
-			cmd = exec.CommandContext(ctx, tiUPPath, tiUPArgs...)
-		} else {
-			cmd = exec.Command(tiUPPath, tiUPArgs...)
-			cancelFp = func() {}
-		}
-		defer cancelFp()
-		cmd.SysProcAttr = genSysProcAttr()
-		var out, stderr bytes.Buffer
-		cmd.Stdout = &out
-		cmd.Stderr = &stderr
+		timeout := time.Duration(TimeoutS) * time.Second
 		t0 := time.Now()
-		if err := cmd.Start(); err != nil {
-			logInFunc.Errorf("cmd start err: %+v, errStr: %s", err, stderr.String())
-			manager.operationStatusCh <- OperationStatusMember{
-				OperationID: operationID,
-				Status:      secondparty.OperationStatus_Error,
-				Result:      "",
-				ErrorStr:    fmt.Sprintf("cmd start err: %+v, errStr: %s", err, stderr.String()),
-			}
-			return
-		}
-		logInFunc.Info("cmd started")
 		successFp := func() {
 			logInFunc.Info("operation finished, time cost", time.Since(t0))
 			manager.operationStatusCh <- OperationStatusMember{
@@ -945,33 +949,134 @@ func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, opera
 				ErrorStr:    "",
 			}
 		}
-		logInFunc.Info("cmd wait")
-		err := cmd.Wait()
-		if err != nil {
-			logInFunc.Errorf("cmd wait return with err: %+v, errStr: %s", err, stderr.String())
-			if exiterr, ok := err.(*exec.ExitError); ok {
-				if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-					if status.ExitStatus() == 0 {
-						successFp()
-						return
+
+		if password == "" {
+			var cmd *exec.Cmd
+			var cancelFp context.CancelFunc
+			if TimeoutS != 0 {
+				ctx, cancel := context.WithTimeout(context.Background(), timeout)
+				cancelFp = cancel
+				cmd = exec.CommandContext(ctx, tiUPPath, tiUPArgs...)
+			} else {
+				cmd = exec.Command(tiUPPath, tiUPArgs...)
+				cancelFp = func() {}
+			}
+			cmd.Env = os.Environ()
+			cmd.Env = append(cmd.Env, fmt.Sprintf("TIUP_HOME=%s", tiUPHome))
+			defer cancelFp()
+			cmd.SysProcAttr = genSysProcAttr()
+			var out, stderr bytes.Buffer
+			cmd.Stdout = &out
+			cmd.Stderr = &stderr
+
+			if err := cmd.Start(); err != nil {
+				logInFunc.Errorf("cmd start err: %+v, errStr: %s", err, stderr.String())
+				manager.operationStatusCh <- OperationStatusMember{
+					OperationID: operationID,
+					Status:      secondparty.OperationStatus_Error,
+					Result:      "",
+					ErrorStr:    fmt.Sprintf("cmd start err: %+v, errStr: %s", err, stderr.String()),
+				}
+				return
+			}
+			logInFunc.Info("cmd started and waiting")
+			err := cmd.Wait()
+			if err != nil {
+				logInFunc.Errorf("cmd wait return with err: %+v, errStr: %s", err, stderr.String())
+				if exiterr, ok := err.(*exec.ExitError); ok {
+					if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+						if status.ExitStatus() == 0 {
+							successFp()
+							return
+						}
 					}
 				}
+				logInFunc.Errorf("cmd wait return with err: %+v, errstr: %s, time cost: %v", err, stderr.String(),
+					time.Since(t0))
+				manager.operationStatusCh <- OperationStatusMember{
+					OperationID: operationID,
+					Status:      secondparty.OperationStatus_Error,
+					Result:      "",
+					ErrorStr: fmt.Sprintf("cmd wait return with err: %+v, errStr: %s, time cost: %v", err,
+						stderr.String(), time.Since(t0)),
+				}
+				return
+			} else {
+				logInFunc.Info("cmd wait return successfully")
+				successFp()
+				return
 			}
-			logInFunc.Errorf("cmd wait return with err: %+v, errstr: %s, time cost: %v", err, stderr.String(),
-				time.Since(t0))
-			manager.operationStatusCh <- OperationStatusMember{
-				OperationID: operationID,
-				Status:      secondparty.OperationStatus_Error,
-				Result:      "",
-				ErrorStr: fmt.Sprintf("cmd wait return with err: %+v, errStr: %s, time cost: %v", err,
-					stderr.String(), time.Since(t0)),
-			}
-			return
 		} else {
-			logInFunc.Info("cmd wait return successfully")
+
+			cmd := fmt.Sprintf("%s %s", tiUPPath, strings.Join(tiUPArgs, " "))
+			e, _, err := expect.Spawn(cmd, timeout, expect.Verbose(true), expect.SetEnv([]string{fmt.Sprintf("TIUP_HOME=%s", tiUPHome)}))
+			if err != nil {
+				logInFunc.Errorf("cmd(TIUP_HOME=%s %s) spawned return with err: %+v, time cost: %v", tiUPHome, cmd, err, time.Since(t0))
+				manager.operationStatusCh <- OperationStatusMember{
+					OperationID: operationID,
+					Status:      secondparty.OperationStatus_Error,
+					Result:      "",
+					ErrorStr:    fmt.Sprintf("cmd(TIUP_HOME=%s %s) spawned return with err: %+v, time cost: %v", tiUPHome, cmd, err, time.Since(t0)),
+				}
+				return
+			}
+			defer e.Close()
+
+			_, _, err = e.Expect(regexp.MustCompile(".*Input SSH password:"), timeout)
+			if err != nil {
+				logInFunc.Errorf("cmd(TIUP_HOME=%s %s) expect(Input SSH password:) return with err: %+v, time cost: %v", tiUPHome, cmd, err, time.Since(t0))
+				manager.operationStatusCh <- OperationStatusMember{
+					OperationID: operationID,
+					Status:      secondparty.OperationStatus_Error,
+					Result:      "",
+					ErrorStr:    fmt.Sprintf("cmd(TIUP_HOME=%s %s) expect(Input SSH password:) return with err: %+v, time cost: %v", tiUPHome, cmd, err, time.Since(t0)),
+				}
+				return
+			}
+			err = e.Send(fmt.Sprintf("%s\n", password))
+			if err != nil {
+				logInFunc.Errorf("cmd(TIUP_HOME=%s %s) sent password(%s) return with err: %+v, time cost: %v", tiUPHome, cmd, password, err, time.Since(t0))
+				manager.operationStatusCh <- OperationStatusMember{
+					OperationID: operationID,
+					Status:      secondparty.OperationStatus_Error,
+					Result:      "",
+					ErrorStr:    fmt.Sprintf("cmd(TIUP_HOME=%s %s) sent password(%s) return with err: %+v, time cost: %v", tiUPHome, cmd, password, err, time.Since(t0)),
+				}
+				return
+			}
+			_, _, err = e.Expect(regexp.MustCompile(".*successfully.*"), timeout)
+			if err != nil {
+				logInFunc.Errorf("cmd(TIUP_HOME=%s %s) expect(successfully) return with err: %+v, time cost: %v", tiUPHome, cmd, err, time.Since(t0))
+				manager.operationStatusCh <- OperationStatusMember{
+					OperationID: operationID,
+					Status:      secondparty.OperationStatus_Error,
+					Result:      "",
+					ErrorStr:    fmt.Sprintf("cmd(TIUP_HOME=%s %s) expect(successfully) return with err: %+v, time cost: %v", tiUPHome, cmd, err, time.Since(t0)),
+				}
+				return
+			}
+
+			logInFunc.Infof("cmd(%s) wait return successfully", cmd)
 			successFp()
 			return
 		}
 	}()
 	return exitCh
+}
+
+func GetTiUPHomeForComponent(ctx context.Context, tiUPComponent TiUPComponentTypeStr) string {
+	var component string
+	switch tiUPComponent {
+	case TiEMComponentTypeStr:
+		component = string(TiEMComponentTypeStr)
+	default:
+		component = string(DefaultComponentTypeStr)
+	}
+	tiUPConfig, err := models.GetTiUPConfigReaderWriter().QueryByComponentType(context.Background(), component)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("fail get tiup_home for %s: %s", component, err.Error())
+		return ""
+	} else {
+		return tiUPConfig.TiupHome
+	}
 }

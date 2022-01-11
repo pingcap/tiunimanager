@@ -27,6 +27,7 @@ type ReaderWriter interface {
 	Delete(ctx context.Context, clusterID string) (err error)
 	Get(ctx context.Context, clusterID string) (*Cluster, error)
 	GetMeta(ctx context.Context, clusterID string) (*Cluster, []*ClusterInstance, error)
+	GetRelations(ctx context.Context, clusterID string) ([]*ClusterRelation, error)
 
 	QueryMetas(ctx context.Context, filters Filters, pageReq structs.PageRequest) ([]*Result, structs.Page, error)
 
@@ -49,6 +50,18 @@ type ReaderWriter interface {
 	//  @return error
 	//
 	UpdateInstance(ctx context.Context, instances ...*ClusterInstance) error
+
+	//
+	// QueryInstancesByHost
+	// @Description: query all instances located at host
+	// @param ctx
+	// @param hostId
+	// @param typeFilter
+	// @param statusFilter
+	// @return []*ClusterInstance
+	// @return error
+	//
+	QueryInstancesByHost(ctx context.Context, hostId string, typeFilter []string, statusFilter []string) ([]*ClusterInstance, error)
 
 	//
 	// UpdateClusterInfo
@@ -96,5 +109,6 @@ type ReaderWriter interface {
 	DeleteRelation(ctx context.Context, relationID uint) error
 
 	CreateClusterTopologySnapshot(ctx context.Context, snapshot ClusterTopologySnapshot) error
-	GetLatestClusterTopologySnapshot(ctx context.Context, clusterID string) (ClusterTopologySnapshot, error)
+	GetCurrentClusterTopologySnapshot(ctx context.Context, clusterID string) (ClusterTopologySnapshot, error)
+	UpdateTopologySnapshotConfig(ctx context.Context, clusterID string, config string) error
 }

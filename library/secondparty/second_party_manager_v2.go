@@ -40,9 +40,9 @@ var Manager SecondPartyService
 type SecondPartyService interface {
 	Init()
 	ClusterDeploy(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string, version string,
-		configStrYaml string, timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error)
+		configStrYaml string, timeoutS int, flags []string, workFlowNodeID string, password string) (operationID string, err error)
 	ClusterScaleOut(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string, configStrYaml string,
-		timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error)
+		timeoutS int, flags []string, workFlowNodeID string, password string) (operationID string, err error)
 	ClusterScaleIn(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string, nodeId string,
 		timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error)
 	ClusterStart(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string, timeoutS int,
@@ -86,6 +86,13 @@ type SecondPartyService interface {
 	SetClusterDbPassword(ctx context.Context, req ClusterSetDbPswReq, workFlowNodeID string) error
 	ClusterComponentCtl(ctx context.Context, str TiUPComponentTypeStr, clusterVersion string,
 		component spec.TiDBClusterComponent, flags []string, timeoutS int) (string, error)
+	CreateChangeFeedTask(ctx context.Context, req ChangeFeedCreateReq) (resp ChangeFeedCmdAcceptResp, err error)
+	UpdateChangeFeedTask(ctx context.Context, req ChangeFeedUpdateReq) (resp ChangeFeedCmdAcceptResp, err error)
+	PauseChangeFeedTask(ctx context.Context, req ChangeFeedPauseReq) (resp ChangeFeedCmdAcceptResp, err error)
+	ResumeChangeFeedTask(ctx context.Context, req ChangeFeedResumeReq) (resp ChangeFeedCmdAcceptResp, err error)
+	DeleteChangeFeedTask(ctx context.Context, req ChangeFeedDeleteReq) (resp ChangeFeedCmdAcceptResp, err error)
+	QueryChangeFeedTasks(ctx context.Context, req ChangeFeedQueryReq) (resp ChangeFeedQueryResp, err error)
+	DetailChangeFeedTask(ctx context.Context, req ChangeFeedDetailReq) (ChangeFeedDetailResp, error)
 }
 
 type SecondPartyManager struct {

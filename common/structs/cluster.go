@@ -43,7 +43,7 @@ func (p *ClusterResourceParameterComputeResource) Equal(zone, spec, diskType str
 
 //ClusterResourceParameterCompute Component resource parameters when creating a cluster, including: compute resources, storage resources
 type ClusterResourceParameterCompute struct {
-	Type     string                                    `json:"componentType"` //TiDB/TiKV/PD/TiFlash/TiCDC/DM-Master/DM-Worker
+	Type     string                                    `json:"componentType"` //TiDB/TiKV/PD/TiFlash/CDC/DM-Master/DM-Worker
 	Count    int                                       `json:"totalNodeCount"`
 	Resource []ClusterResourceParameterComputeResource `json:"resource"`
 }
@@ -55,17 +55,17 @@ type ClusterResourceInfo struct {
 
 //CreateClusterParameter User input parameters when creating a cluster
 type CreateClusterParameter struct {
-	Name             string   `json:"clusterName"`
-	DBUser           string   `json:"dbUser"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
-	DBPassword       string   `json:"dbPassword"`
-	Type             string   `json:"clusterType"`
-	Version          string   `json:"clusterVersion"`
+	Name             string   `json:"clusterName" validate:"required,min=8,max=64,alphanum"`
+	DBUser           string   `json:"dbUser" validate:"max=32"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
+	DBPassword       string   `json:"dbPassword" validate:"required,min=8,max=32,alphanum"`
+	Type             string   `json:"clusterType" validate:"required,oneof=TiDB DM TiKV"`
+	Version          string   `json:"clusterVersion" validate:"required,startswith=v"`
 	Tags             []string `json:"tags"`
 	TLS              bool     `json:"tls"`
 	Copies           int      `json:"copies"`                                 //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
 	Exclusive        bool     `json:"exclusive" form:"exclusive"`             //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
-	Region           string   `json:"region" form:"region"`                   //The Region where the cluster is located
-	CpuArchitecture  string   `json:"cpuArchitecture" form:"cpuArchitecture"` //X86/X86_64/ARM
+	Region           string   `json:"region" form:"region" validate:"required,max=32"`                   //The Region where the cluster is located
+	CpuArchitecture  string   `json:"cpuArchitecture" form:"cpuArchitecture" validate:"required,oneof=X86 X86_64 ARM ARM64"` //X86/X86_64/ARM
 	ParameterGroupID string   `json:"parameterGroupID" form:"parameterGroupID"`
 }
 
@@ -79,6 +79,7 @@ type ClusterInfo struct {
 	DBUser                   string    `json:"dbUser"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
 	Tags                     []string  `json:"tags"`
 	TLS                      bool      `json:"tls"`
+	Region                   string    `json:"region"`
 	Status                   string    `json:"status"`
 	Role                     string    `json:"role"`
 	Copies                   int       `json:"copies"`                                 //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
@@ -109,7 +110,7 @@ type ClusterInstanceInfo struct {
 	Status       string          `json:"status"`
 	HostID       string          `json:"hostID"`
 	Addresses    []string        `json:"addresses"`
-	Ports        []int32			 `json:"ports"`
+	Ports        []int32         `json:"ports"`
 	CpuUsage     Usage           `json:"cpuUsage"`
 	MemoryUsage  Usage           `json:"memoryUsage"`
 	StorageUsage Usage           `json:"storageUsage"`
@@ -140,7 +141,7 @@ type BackupRecord struct {
 	BackupMode   string    `json:"backupMode"`
 	FilePath     string    `json:"filePath"`
 	Size         float32   `json:"size"`
-	BackupTSO    uint64    `json:"backupTso"`
+	BackupTSO    string    `json:"backupTso"`
 	Status       string    `json:"status"`
 	StartTime    time.Time `json:"startTime"`
 	EndTime      time.Time `json:"endTime"`
@@ -186,14 +187,8 @@ type ParameterRealValue struct {
 }
 
 type ClusterParameterSampleInfo struct {
-	ParamId        string             `json:"paramId" example:"1"`
-	Name           string             `json:"name" example:"log_level"`
-	InstanceType   string             `json:"instanceType" example:"TiDB"`
-	UpdateSource   int                `json:"updateSource" example:"0" enums:"0,1,2,3"`
-	SystemVariable string             `json:"systemVariable" example:"log.binlog_cache"`
-	Type           int                `json:"type" example:"0" enums:"0,1,2,3,4"`
-	HasApply       int                `json:"hasApply" example:"1" enums:"0,1"`
-	RealValue      ParameterRealValue `json:"realValue"`
+	ParamId   string             `json:"paramId" example:"1"`
+	RealValue ParameterRealValue `json:"realValue"`
 }
 
 type ClusterParameterInfo struct {
@@ -214,4 +209,11 @@ type ClusterParameterInfo struct {
 	Note           string             `json:"note" example:"binlog cache size"`
 	CreatedAt      int64              `json:"createTime" example:"1636698675"`
 	UpdatedAt      int64              `json:"updateTime" example:"1636698675"`
+}
+
+type ResourceStockCheckResult struct {
+	Type string `json:"componentType"`
+	Name string `json:"componentName"`
+	ClusterResourceParameterComputeResource
+	Enough bool `json:"enough"`
 }

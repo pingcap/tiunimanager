@@ -27,11 +27,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	em_errors "github.com/pingcap-inc/tiem/common/errors"
 	"strings"
 	"testing"
-
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
@@ -180,7 +178,7 @@ func TestSecondPartyManager_ShowBackUpInfoThruMetaDB_Fail1(t *testing.T) {
 	}
 	mockReaderWriter.EXPECT().Get(context.Background(), TestOperationID).Return(&secondPartyOperation, nil)
 	_, err = secondPartyManager2.ShowBackUpInfoThruMetaDB(context.TODO(), TestOperationID)
-	if err == nil || err.(framework.TiEMError).GetCode() != common.TIEM_UNMARSHAL_ERROR {
+	if err == nil || err.(em_errors.EMError).GetCode() != em_errors.TIEM_UNMARSHAL_ERROR {
 		t.Errorf("fail3")
 	}
 
@@ -283,4 +281,10 @@ func initForTestLibbr() {
 	secondPartyManager2.syncedOperationStatusMap = make(map[string]OperationStatusMapValue)
 	secondPartyManager2.operationStatusCh = make(chan OperationStatusMember, 1024)
 	secondPartyManager2.operationStatusMap = make(map[string]OperationStatusMapValue)
+}
+
+func resetVariable() {
+	clusterFacade = ClusterFacade{
+		DbConnParameter: dbConnParam,
+	}
 }

@@ -25,6 +25,7 @@ package parametergroup
 
 import (
 	"context"
+	"errors"
 	"os"
 	"testing"
 	"time"
@@ -307,7 +308,7 @@ func TestManager_DetailParameterGroup(t *testing.T) {
 	assert.NotEmpty(t, resp.ParamGroupID)
 }
 
-func TestManager_CopyParameterGroup(t *testing.T) {
+func TestManager_CopyParameterGroup_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -356,4 +357,57 @@ func TestManager_CopyParameterGroup(t *testing.T) {
 	assert.NotEmpty(t, resp)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, resp.ParamGroupID)
+}
+
+func TestManager_CopyParameterGroup_Error1(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+	models.SetParameterGroupReaderWriter(parameterGroupRW)
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+			return &parametergroup.ParameterGroup{ID: "1"}, []*parametergroup.ParamDetail{
+				{},
+			}, errors.New("failed to create parameter group")
+		})
+
+	_, err := manager.CopyParameterGroup(context.TODO(), message.CopyParameterGroupReq{
+		ParamGroupID: "1",
+		Name:         "copy_parameter_group",
+		Note:         "copy parameter group",
+	})
+	assert.Error(t, err)
+}
+
+func TestManager_CopyParameterGroup_Error2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+	models.SetParameterGroupReaderWriter(parameterGroupRW)
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+			return &parametergroup.ParameterGroup{ID: "1", Name: "default_parameter_group"}, []*parametergroup.ParamDetail{
+				{
+					Parameter: parametergroup.Parameter{
+						ID:             "1",
+						Category:       "basic",
+						Name:           "param1",
+						InstanceType:   "TiKV",
+						SystemVariable: "",
+						Type:           0,
+					},
+					DefaultValue: "10",
+					Note:         "test parameter",
+				},
+			}, nil
+		})
+
+	_, err := manager.CopyParameterGroup(context.TODO(), message.CopyParameterGroupReq{
+		ParamGroupID: "1",
+		Name:         "default_parameter_group",
+		Note:         "default parameter group",
+	})
+	assert.Error(t, err)
 }

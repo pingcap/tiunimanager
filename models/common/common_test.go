@@ -16,18 +16,26 @@
 package common
 
 import (
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
 	"testing"
+	"time"
 )
 
 type TestEntity struct {
 	Entity
-	name string
+	Name string `gorm:"uniqueIndex:myIndex"`
+	DeleteTime int64 `gorm:"uniqueIndex:myIndex"`
+}
+
+func (e *TestEntity) BeforeDelete(tx *gorm.DB) (err error) {
+	tx.Model(e).Update("delete_time", time.Now().Unix())
+	return nil
 }
 
 var baseDB *gorm.DB
@@ -35,7 +43,7 @@ var baseDB *gorm.DB
 func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
 	os.MkdirAll(testFilePath, 0755)
-	logins := framework.LogForkFile(common.LogFileSystem)
+	logins := framework.LogForkFile(constants.LogFileSystem)
 
 	defer func() {
 		os.RemoveAll(testFilePath)
@@ -44,7 +52,7 @@ func TestMain(m *testing.M) {
 
 	framework.InitBaseFrameworkForUt(framework.ClusterService,
 		func(d *framework.BaseFramework) error {
-			dbFile := testFilePath + common.DBDirPrefix + common.DatabaseFileName
+			dbFile := testFilePath + constants.DBDirPrefix + constants.DatabaseFileName
 			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 
 			if err != nil || db.Error != nil {
@@ -60,4 +68,62 @@ func TestMain(m *testing.M) {
 		},
 	)
 	os.Exit(m.Run())
+}
+
+func TestUniqueIndex(t *testing.T)  {
+	entity := &TestEntity{
+		Entity: Entity{
+			TenantId: "111",
+		},
+		Name: "aaa",
+	}
+
+	err := baseDB.Create(entity).Error
+	assert.NoError(t, err)
+
+	err = baseDB.Create(&TestEntity{
+		Entity: Entity{
+			TenantId: "111",
+		},
+		Name: "aaa",
+	}).Error
+	assert.Error(t, err)
+
+	baseDB.Delete(entity)
+
+	err = baseDB.Create(&TestEntity{
+		Entity: Entity{
+			TenantId: "111",
+		},
+		Name: "aaa",
+	}).Error
+	assert.NoError(t, err)
+}
+
+func TestFinalHash(t *testing.T) {
+	type args struct {
+		salt   string
+		passwd string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{"normal", args{salt: "&shgdjsdfgjhfgksdh", passwd: "Test12345678"}, false},
+		{"empty password", args{salt: "&shgdjsdfgjhfgksdh", passwd: ""}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := FinalHash(tt.args.salt, tt.args.passwd)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FinalHash() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if err == nil {
+				assert.NotEmpty(t, got)
+			}
+		})
+	}
 }

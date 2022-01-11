@@ -42,9 +42,10 @@ type BackupClusterDataResp struct {
 
 // DeleteBackupDataReq Delete a backup file based on the cluster ID and the ID of the backup file
 type DeleteBackupDataReq struct {
-	ClusterID  string `json:"clusterId"`
-	BackupMode string `json:"backupMode"`
-	BackupID   string `json:"backupId" swaggerignore:"true"`
+	ClusterID        string   `json:"clusterId"`
+	BackupMode       string   `json:"backupMode"`
+	BackupID         string   `json:"backupId" swaggerignore:"true"`
+	ExcludeBackupIDs []string `json:"excludeBackupId" swaggerignore:"true"`
 }
 
 // DeleteBackupDataResp Delete a backup file reply message
@@ -53,7 +54,7 @@ type DeleteBackupDataResp struct {
 
 // QueryBackupRecordsReq Query the list of backup files over time based on cluster ID
 type QueryBackupRecordsReq struct {
-	BackupID  string `json:"backupId"`
+	BackupID  string `json:"backupId" form:"backupId"`
 	ClusterID string `json:"clusterId" form:"clusterId"`
 	StartTime int64  `json:"startTime" form:"startTime"`
 	EndTime   int64  `json:"endTime" form:"endTime"`
@@ -62,7 +63,7 @@ type QueryBackupRecordsReq struct {
 
 // QueryBackupRecordsResp Query the return information of the backup file
 type QueryBackupRecordsResp struct {
-	BackupRecords []*structs.BackupRecord
+	BackupRecords []*structs.BackupRecord `json:"backupRecords"`
 }
 
 // SaveBackupStrategyReq Request to update backup data strategy

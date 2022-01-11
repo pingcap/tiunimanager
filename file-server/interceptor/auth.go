@@ -17,13 +17,17 @@
 package interceptor
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"encoding/json"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/file-server/controller"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
+	utils "github.com/pingcap-inc/tiem/util/stringutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/client"
-	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
+	"github.com/pingcap-inc/tiem/common/client"
 )
 
 const VisitorIdentityKey = "VisitorIdentity"
@@ -35,7 +39,6 @@ type VisitorIdentity struct {
 }
 
 func VerifyIdentity(c *gin.Context) {
-
 	bearerTokenStr := c.GetHeader("Authorization")
 
 	tokenString, err := utils.GetTokenFromBearer(bearerTokenStr)
@@ -43,26 +46,40 @@ func VerifyIdentity(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, err.Error())
 	}
 
-	path := c.Request.URL
-	req := clusterpb.VerifyIdentityRequest{TokenString: tokenString, Path: path.String()}
+	req := message.AccessibleReq {
+		TokenString: tokenString,
+	}
 
-	result, err := client.ClusterClient.VerifyIdentity(c, &req)
+	body, err := json.Marshal(req)
+	if err != nil {
+		framework.LogWithContext(c).Errorf("marshal request error: %s", err.Error())
+		c.Error(err)
+		c.Status(errors.TIEM_MARSHAL_ERROR.GetHttpCode())
+		c.Abort()
+	}
+
+	rpcResp, err := client.ClusterClient.VerifyIdentity(framework.NewMicroCtxFromGinCtx(c), &clusterservices.RpcRequest{Request: string(body)}, controller.DefaultTimeout)
 	if err != nil {
 		c.Error(err)
 		c.Status(http.StatusInternalServerError)
 		c.Abort()
-	} else if result.Status.Code != 0 {
-		c.Status(int(result.Status.Code))
+	} else if rpcResp.Code != int32(errors.TIEM_SUCCESS) {
+		framework.LogWithContext(c).Error(rpcResp.Message)
+		c.Error(err)
+		c.Status(errors.EM_ERROR_CODE(rpcResp.Code).GetHttpCode())
 		c.Abort()
 	} else {
-		c.Set(VisitorIdentityKey, &VisitorIdentity{
-			AccountId:   result.AccountId,
-			AccountName: result.AccountName,
-			TenantId:    result.TenantId,
-		})
-		c.Set(framework.TiEM_X_USER_ID_KEY, result.AccountId)
+		var result message.AccessibleResp
+		err = json.Unmarshal([]byte(rpcResp.Response), &result)
+		if err != nil {
+			framework.LogWithContext(c).Errorf("unmarshal get system config rpc response error: %s", err.Error())
+			c.Error(err)
+			c.Status(errors.TIEM_UNMARSHAL_ERROR.GetHttpCode())
+			c.Abort()
+		}
+		c.Set(framework.TiEM_X_USER_ID_KEY, result.AccountID)
 		c.Set(framework.TiEM_X_USER_NAME_KEY, result.AccountName)
-		c.Set(framework.TiEM_X_TENANT_ID_KEY, result.TenantId)
+		c.Set(framework.TiEM_X_TENANT_ID_KEY, result.TenantID)
 		c.Next()
 	}
 }

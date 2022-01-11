@@ -17,13 +17,13 @@ package controller
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
 
 	"encoding/json"
 
 	"github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 )
 
@@ -35,13 +35,13 @@ import (
 // @Parameter opts
 func InvokeRpcMethod(
 	ctx *gin.Context,
-	rpcMethod func(ctx context.Context, in *clusterpb.RpcRequest, opts ...client.CallOption) (*clusterpb.RpcResponse, error),
+	rpcMethod func(ctx context.Context, in *clusterservices.RpcRequest, opts ...client.CallOption) (*clusterservices.RpcResponse, error),
 	response interface{},
 	requestBody string,
 	opts ...client.CallOption) {
 
 	rpcResponse, err := rpcMethod(framework.NewMicroCtxFromGinCtx(ctx),
-		&clusterpb.RpcRequest{
+		&clusterservices.RpcRequest{
 			Request: requestBody,
 		},
 		opts...,
@@ -56,8 +56,8 @@ func InvokeRpcMethod(
 	}
 	HandleHttpResponse(ctx,
 		err,
-		func() (common.TIEM_ERROR_CODE, string) {
-			return common.TIEM_ERROR_CODE(rpcResponse.GetCode()), rpcResponse.GetMessage()
+		func() (errors.EM_ERROR_CODE, string) {
+			return errors.EM_ERROR_CODE(rpcResponse.GetCode()), rpcResponse.GetMessage()
 		},
 		func() (interface{}, error) {
 			err := json.Unmarshal([]byte(rpcResponse.Response), response)

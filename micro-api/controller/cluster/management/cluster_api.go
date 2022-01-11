@@ -17,9 +17,14 @@
 package management
 
 import (
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
+	"github.com/pingcap-inc/tiem/common/client"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
-
-	"github.com/pingcap-inc/tiem/library/client"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
@@ -56,44 +61,49 @@ func Create(c *gin.Context) {
 // @Produce application/json
 // @Security ApiKeyAuth
 // @Param createReq body cluster.CreateClusterReq true "preview request"
-// @Success 200 {object} controller.CommonResult{data=PreviewClusterRsp}
+// @Success 200 {object} controller.CommonResult{data=cluster.PreviewClusterResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/preview [post]
 func Preview(c *gin.Context) {
-	// todo refactor at last
-	//var req cluster.CreateClusterReq
-	//
-	//if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
-	//	_ = c.Error(err)
-	//	return
-	//}
-	//
-	//stockCheckResult := make([]StockCheckItem, 0)
-	//
-	//for _, group := range req.NodeDemandList {
-	//	for _, node := range group.DistributionItems {
-	//		stockCheckResult = append(stockCheckResult, StockCheckItem{
-	//			Region:           req.Region,
-	//			CpuArchitecture:  req.CpuArchitecture,
-	//			Component:        *knowledge.ClusterComponentFromCode(group.InstanceType),
-	//			DistributionItem: node,
-	//			// todo stock
-	//			Enough: true,
-	//		})
-	//	}
-	//}
-	//
-	//c.JSON(http.StatusOK, controller.Success(PreviewClusterRsp{
-	//	ClusterBaseInfo:     req.ClusterBaseInfo,
-	//	StockCheckResult:    stockCheckResult,
-	//	ClusterCommonDemand: req.ClusterCommonDemand,
-	//	CapabilityIndexes:   []ServiceCapabilityIndex{
-	//		//{"StorageCapability", "database storage capability", 800, "GB"},
-	//		//{"TPCC", "TPCC tmpC ", 523456, ""},
-	//	},
-	//}))
+	var req cluster.CreateClusterReq
+
+	err := c.ShouldBindBodyWith(&req, binding.JSON)
+	if err != nil {
+		framework.LogWithContext(c).Errorf("unmarshal request failed, %s", err.Error())
+		c.JSON(http.StatusBadRequest, controller.Fail(int(errors.TIEM_UNMARSHAL_ERROR), err.Error()))
+		return
+	}
+
+	err = validator.New().Struct(req)
+	if err != nil {
+		framework.LogWithContext(c).Errorf("validate request failed, %s", err.Error())
+		c.JSON(http.StatusBadRequest, controller.Fail(int(errors.TIEM_PARAMETER_INVALID), err.Error()))
+		return
+	}
+
+	resp := &cluster.PreviewClusterResp{
+		Region: req.Region,
+		CpuArchitecture: req.CpuArchitecture,
+		ClusterType: req.Type,
+		ClusterVersion: req.Version,
+		ClusterName: req.Name,
+		CapabilityIndexes: []structs.Index{},
+	}
+	stockCheckResult := make([]structs.ResourceStockCheckResult, 0)
+	for _, instance := range req.ResourceParameter.InstanceResource {
+		for _, resource := range instance.Resource {
+			stockCheckResult = append(stockCheckResult, structs.ResourceStockCheckResult{
+				Type: instance.Type,
+				Name: instance.Type,
+				ClusterResourceParameterComputeResource: resource,
+				Enough: true,
+			})
+		}
+	}
+	resp.StockCheckResult = stockCheckResult
+	c.JSON(http.StatusOK, controller.Success(resp))
 }
 
 // Query query clusters
@@ -260,7 +270,7 @@ func GetDashboardInfo(c *gin.Context) {
 	}
 }
 
-// DescribeMonitor describe monitoring link
+// GetMonitorInfo describe monitoring link
 // @Summary describe monitoring link
 // @Description describe monitoring link
 // @Tags cluster
@@ -273,11 +283,11 @@ func GetDashboardInfo(c *gin.Context) {
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/monitor [get]
-func DescribeMonitor(c *gin.Context) {
+func GetMonitorInfo(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.QueryMonitorInfoReq{
 		ClusterID: c.Param(ParamClusterID),
 	}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.GetDashboardInfo, &cluster.QueryMonitorInfoResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.GetMonitorInfo, &cluster.QueryMonitorInfoResp{},
 			requestBody,
 			controller.DefaultTimeout,
 		)

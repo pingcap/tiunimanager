@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -19,24 +18,34 @@ package framework
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/common"
+	"strings"
 	"time"
 
+	"github.com/pingcap-inc/tiem/common/constants"
+
+	clientv2 "go.etcd.io/etcd/client/v2"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 // EtcdTimeOut etcd time out
 const (
-	EtcdTimeOut = time.Second * 3
+	etcdTimeOut  = time.Second * 3
+	httpProtocol = "http://"
 )
 
-type EtcdClient struct {
+type EtcdClientV3 struct {
 	cli *clientv3.Client
 }
 
-var etcdClient *EtcdClient
+type EtcdClientV2 struct {
+	cli     clientv2.Client
+	keysAPI clientv2.KeysAPI
+}
 
-func InitEtcdClient(etcdAddress []string) *EtcdClient {
+var etcdClientV3 *EtcdClientV3
+var etcdClientV2 *EtcdClientV2
+
+func InitEtcdClient(etcdAddress []string) *EtcdClientV3 {
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints:   etcdAddress,
 		DialTimeout: 5 * time.Second,
@@ -46,38 +55,84 @@ func InitEtcdClient(etcdAddress []string) *EtcdClient {
 	}
 	// Wait for the ETCD server to be ready in a loop.
 	for {
-		ctx, cancel := context.WithTimeout(context.Background(), EtcdTimeOut)
+		ctx, cancel := context.WithTimeout(context.Background(), etcdTimeOut)
 		_, err = cli.MemberList(ctx)
 		cancel()
 		if err != nil {
-			LogForkFile(common.LogFileSystem).Warnf("connect etcd server [%v] failed, err: %v\n", etcdAddress, err)
+			LogForkFile(constants.LogFileSystem).Warnf("connect etcd server [%v] failed, err: %v\n", etcdAddress, err)
 			continue
 		}
 		break
 	}
-	etcdClient = &EtcdClient{cli: cli}
-	return etcdClient
+	etcdClientV3 = &EtcdClientV3{cli: cli}
+	return etcdClientV3
 }
 
-func (etcd *EtcdClient) Put(key, value string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), EtcdTimeOut)
+func (etcd *EtcdClientV3) Put(key, value string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), etcdTimeOut)
 	_, err := etcd.cli.Put(ctx, key, value)
 	defer cancel()
 	return err
 }
 
-func (etcd *EtcdClient) Get(key string) (*clientv3.GetResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), EtcdTimeOut)
+func (etcd *EtcdClientV3) Get(key string) (*clientv3.GetResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), etcdTimeOut)
 	resp, err := etcd.cli.Get(ctx, key)
 	defer cancel()
 	return resp, err
 }
 
-func (etcd *EtcdClient) Watch(key string, ops ...clientv3.OpOption) (clientv3.WatchChan, error) {
+func (etcd *EtcdClientV3) Watch(key string, ops ...clientv3.OpOption) (clientv3.WatchChan, error) {
 	rch := etcd.cli.Watch(context.Background(), key, ops...)
 	return rch, nil
 }
 
-func (etcd *EtcdClient) Lease() clientv3.Lease {
+func (etcd *EtcdClientV3) Lease() clientv3.Lease {
 	return clientv3.NewLease(etcd.cli)
+}
+
+func InitEtcdClientV2(etcdAddress []string) *EtcdClientV2 {
+	// Determine whether to include 'http://'
+	for i, addr := range etcdAddress {
+		if !strings.HasPrefix(addr, httpProtocol) {
+			etcdAddress[i] = httpProtocol + addr
+		}
+	}
+	cli, err := clientv2.New(clientv2.Config{
+		Endpoints: etcdAddress,
+		Transport: clientv2.DefaultTransport,
+		// set timeout per request to fail fast when the target endpoint is unavailable
+		HeaderTimeoutPerRequest: time.Second,
+	})
+	if err != nil {
+		panic(err)
+	}
+	keysAPI := clientv2.NewKeysAPI(cli)
+	etcdClientV2 = &EtcdClientV2{
+		cli:     cli,
+		keysAPI: keysAPI,
+	}
+	return etcdClientV2
+}
+
+func (etcd *EtcdClientV2) SetWithTtl(key, value string, ttl int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), etcdTimeOut)
+	options := &clientv2.SetOptions{}
+	if ttl > 0 {
+		options.TTL = time.Second * time.Duration(ttl)
+	}
+	_, err := etcd.keysAPI.Set(ctx, key, value, options)
+	defer cancel()
+	return err
+}
+
+func (etcd *EtcdClientV2) Set(key, value string) error {
+	return etcd.SetWithTtl(key, value, 0)
+}
+
+func (etcd *EtcdClientV2) Get(key string) (*clientv2.Response, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), etcdTimeOut)
+	resp, err := etcd.keysAPI.Get(ctx, key, nil)
+	defer cancel()
+	return resp, err
 }

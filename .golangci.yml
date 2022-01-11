@@ -18,6 +18,7 @@ linters:
     #- gosec
   disable:
     - errcheck
+    - govet
 
 linters-settings:
 

@@ -70,6 +70,16 @@ func TestImportExportReadWrite_UpdateDataTransportRecord(t *testing.T) {
 	assert.NoError(t, errGet)
 	assert.Equal(t, "end", recordGet.Status)
 	assert.Equal(t, true, recordGet.EndTime.Equal(endTime))
+
+	_, errGet = rw.GetDataTransportRecord(context.TODO(), "")
+	assert.Error(t, errGet)
+
+	errUpdate = rw.UpdateDataTransportRecord(context.TODO(), "", "end", endTime)
+	assert.Error(t, errUpdate)
+
+	errUpdate = rw.UpdateDataTransportRecord(context.TODO(), "aaaaa", "end", endTime)
+	assert.Error(t, errUpdate)
+
 }
 
 func TestImportExportReadWrite_QueryDataTransportRecords(t *testing.T) {
@@ -90,11 +100,23 @@ func TestImportExportReadWrite_QueryDataTransportRecords(t *testing.T) {
 	recordCreate, errCreate := rw.CreateDataTransportRecord(context.TODO(), record)
 	assert.NoError(t, errCreate)
 
-	recordQuery, total, errQuery := rw.QueryDataTransportRecords(context.TODO(), recordCreate.ID, "", false, 0, 0, 1, 10)
-	assert.NoError(t, errQuery)
-	assert.Equal(t, int64(1), total)
-	assert.Equal(t, recordCreate.ID, recordQuery[0].ID)
-	assert.Equal(t, recordCreate.StorageType, recordQuery[0].StorageType)
+	t.Run("normal", func(t *testing.T) {
+
+		recordQuery, total, errQuery := rw.QueryDataTransportRecords(context.TODO(), recordCreate.ID, "", false, 0, 0, 1, 10)
+		assert.NoError(t, errQuery)
+		assert.Equal(t, int64(1), total)
+		assert.Equal(t, recordCreate.ID, recordQuery[0].ID)
+		assert.Equal(t, recordCreate.StorageType, recordQuery[0].StorageType)
+	})
+
+	t.Run("empty", func(t *testing.T) {
+		recordQuery, total, errQuery := rw.QueryDataTransportRecords(context.TODO(), recordCreate.ID, "aaa", true, 11111111, 11111111111, 1, 10)
+		assert.NoError(t, errQuery)
+		assert.Equal(t, int64(1), total)
+		assert.Equal(t, recordCreate.ID, recordQuery[0].ID)
+		assert.Equal(t, recordCreate.StorageType, recordQuery[0].StorageType)
+	})
+
 }
 
 func TestImportExportReadWrite_DeleteDataTransportRecord(t *testing.T) {
@@ -121,4 +143,8 @@ func TestImportExportReadWrite_DeleteDataTransportRecord(t *testing.T) {
 	recordGet, errGet := rw.GetDataTransportRecord(context.TODO(), recordCreate.ID)
 	assert.Nil(t, recordGet)
 	assert.NotNil(t, errGet)
+
+	errDelete = rw.DeleteDataTransportRecord(context.TODO(), "")
+	assert.Error(t, errDelete)
+
 }

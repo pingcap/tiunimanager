@@ -240,7 +240,7 @@ func TestFlowManager_ListWorkFlows(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockFlowRW := mockworkflow.NewMockReaderWriter(ctrl)
-	mockFlowRW.EXPECT().QueryWorkFlows(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, int64(0), nil).AnyTimes()
+	mockFlowRW.EXPECT().QueryWorkFlows(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, int64(0), nil).AnyTimes()
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
 	manager := GetWorkFlowService()

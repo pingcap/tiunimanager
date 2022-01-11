@@ -113,9 +113,6 @@ func (mgr *RBACManager) AddRoleForUser(ctx context.Context, request message.AddR
 	framework.LogWithContext(ctx).Info("end BindRoleForUser")
 
 	//todo: check userId valid
-	if request.UserID == "" {
-		return resp, fmt.Errorf("invalid input empty userId")
-	}
 	if request.Role == "" {
 		return resp, fmt.Errorf("invalid input empty role")
 	}

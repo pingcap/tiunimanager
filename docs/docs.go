@@ -288,7 +288,8 @@ var doc = `{
                         "type": "string",
                         "example": "CLUSTER_ID_IN_TIEM__22",
                         "name": "clusterId",
-                        "in": "query"
+                        "in": "query",
+                        "required": true
                     },
                     {
                         "type": "integer",
@@ -4822,6 +4823,11 @@ var doc = `{
         },
         "cluster.CreateChangeFeedTaskReq": {
             "type": "object",
+            "required": [
+                "clusterId",
+                "downstreamType",
+                "name"
+            ],
             "properties": {
                 "clusterId": {
                     "type": "string",
@@ -5725,6 +5731,9 @@ var doc = `{
         },
         "cluster.UpdateChangeFeedTaskReq": {
             "type": "object",
+            "required": [
+                "name"
+            ],
             "properties": {
                 "downstream": {
                     "type": "object"
@@ -6407,6 +6416,10 @@ var doc = `{
         },
         "message.LoginReq": {
             "type": "object",
+            "required": [
+                "userName",
+                "userPassword"
+            ],
             "properties": {
                 "userName": {
                     "type": "string"

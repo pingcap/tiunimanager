@@ -96,8 +96,8 @@ type GetTokenResp struct {
 }
 
 type LoginReq struct {
-	UserName string  `json:"userName" form:"userName"`
-	Password string  `json:"userPassword" form:"userPassword"`
+	UserName string  `json:"userName" form:"userName" validate:"required,min=5,max=32,alphanum"`
+	Password string  `json:"userPassword" form:"userPassword" validate:"required,min=5,max=32,alphanum"`
 }
 
 type LoginResp struct {
@@ -107,7 +107,7 @@ type LoginResp struct {
 }
 
 type LogoutReq struct {
-	TokenString string   `json:"token" form:"token"`
+	TokenString string   `json:"token" form:"token" validate:"required,min=8,max=64,alphanum"`
 }
 
 type LogoutResp struct {
@@ -117,7 +117,7 @@ type LogoutResp struct {
 type AccessibleReq struct {
 	PathType string 	`json:"pathType" form:"pathType"`
 	Path string			`json:"path" form:"path"`
-	TokenString string 	`json:"tokenString" form:"tokenString"`
+	TokenString string 	`json:"tokenString" form:"tokenString" validate:"required,min=8,max=64,alphanum"`
 }
 
 type AccessibleResp struct {

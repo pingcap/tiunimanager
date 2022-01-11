@@ -21,11 +21,11 @@ import (
 )
 
 type CreateChangeFeedTaskReq struct {
-	Name           string      `json:"name" form:"name" example:"my_sync_name"`
-	ClusterID      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
+	Name           string      `json:"name" form:"name" example:"my_sync_name" validate:"required,min=4,max=64,alphanum"`
+	ClusterID      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22" validate:"required,min=8,max=64,alphanum"`
 	StartTS        string      `json:"startTS" form:"startTS" example:"415241823337054209"`
 	FilterRules    []string    `json:"rules" form:"rules" example:"*.*"`
-	DownstreamType string      `json:"downstreamType"  form:"downstreamType" example:"tidb" enums:"tidb,kafka,mysql"`
+	DownstreamType string      `json:"downstreamType"  form:"downstreamType" example:"tidb" enums:"tidb,kafka,mysql" validate:"required,oneof=tidb kafka mysql"`
 	Downstream     interface{} `json:"downstream" form:"downstream"`
 }
 
@@ -34,7 +34,7 @@ type CreateChangeFeedTaskResp struct {
 }
 
 type QueryChangeFeedTaskReq struct {
-	ClusterId string `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
+	ClusterId string `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22" validate:"required,min=8,max=64,alphanum"`
 	structs.PageRequest
 }
 
@@ -43,7 +43,7 @@ type QueryChangeFeedTaskResp struct {
 }
 
 type DetailChangeFeedTaskReq struct {
-	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIEM____22"`
+	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIEM____22" validate:"required,min=8,max=64,alphanum"`
 }
 
 type DetailChangeFeedTaskResp struct {
@@ -51,7 +51,7 @@ type DetailChangeFeedTaskResp struct {
 }
 
 type PauseChangeFeedTaskReq struct {
-	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIEM____22"`
+	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIEM____22" validate:"required,min=8,max=64,alphanum"`
 }
 
 type PauseChangeFeedTaskResp struct {
@@ -59,7 +59,7 @@ type PauseChangeFeedTaskResp struct {
 }
 
 type ResumeChangeFeedTaskReq struct {
-	ID string `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22"`
+	ID string `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22" validate:"required,min=8,max=64,alphanum"`
 }
 
 type ResumeChangeFeedTaskResp struct {
@@ -67,8 +67,8 @@ type ResumeChangeFeedTaskResp struct {
 }
 
 type UpdateChangeFeedTaskReq struct {
-	ID             string      `json:"id" form:"id" swaggerignore:"true"`
-	Name           string      `json:"name" form:"name" example:"my_sync_name"`
+	ID             string      `json:"id" form:"id" swaggerignore:"true" validate:"required,min=8,max=64,alphanum"`
+	Name           string      `json:"name" form:"name" example:"my_sync_name" validate:"required,min=4,max=64,alphanum"`
 	FilterRules    []string    `json:"rules" form:"rules" example:"*.*"`
 	DownstreamType string      `json:"downstreamType"  form:"downstreamType" example:"tidb" enums:"tidb,kafka,mysql"`
 	Downstream     interface{} `json:"downstream" form:"downstream"`
@@ -79,7 +79,7 @@ type UpdateChangeFeedTaskResp struct {
 }
 
 type DeleteChangeFeedTaskReq struct {
-	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIEM____22"`
+	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIEM____22" validate:"required,min=8,max=64,alphanum"`
 }
 
 type DeleteChangeFeedTaskResp struct {

@@ -17,20 +17,9 @@
 package management
 
 import (
-	"encoding/json"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/go-playground/validator/v10"
-	"github.com/pingcap-inc/tiem/common/client"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/knowledge"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/proto/clusterservices"
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/common/client"
+	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
 
@@ -57,50 +46,6 @@ func Create(c *gin.Context) {
 	}
 }
 
-// ScaleOutPreview preview cluster topology and capability
-// @Summary preview cluster topology and capability
-// @Description preview cluster topology and capability
-// @Tags cluster
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param clusterId path string true "cluster id"
-// @Param scaleOutReq body cluster.PreviewScaleOutClusterReq true "scale out request"
-// @Success 200 {object} controller.CommonResult{data=cluster.PreviewClusterResp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /clusters/{clusterId}/preview-scale-out [get]
-func ScaleOutPreview(c *gin.Context) {
-	var req cluster.PreviewScaleOutClusterReq
-
-	err := c.ShouldBindBodyWith(&req, binding.JSON)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("unmarshal request failed, %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(int(errors.TIEM_UNMARSHAL_ERROR), err.Error()))
-		return
-	}
-
-	err = validator.New().Struct(req)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("validate request failed, %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(int(errors.TIEM_PARAMETER_INVALID), err.Error()))
-		return
-	}
-
-	resp := &cluster.PreviewClusterResp{
-		CapabilityIndexes: []structs.Index{},
-	}
-	stockCheckResult, ok := preCheckStock(c, req.Region, req.CpuArchitecture, req.InstanceResource)
-
-	if ok {
-		resp.StockCheckResult = stockCheckResult
-		c.JSON(http.StatusOK, controller.Success(resp))
-	} else {
-		return
-	}
-}
-
 // Preview preview cluster topology and capability
 // @Summary preview cluster topology and capability
 // @Description preview cluster topology and capability
@@ -115,109 +60,11 @@ func ScaleOutPreview(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/preview [post]
 func Preview(c *gin.Context) {
-	var req cluster.CreateClusterReq
-
-	err := c.ShouldBindBodyWith(&req, binding.JSON)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("unmarshal request failed, %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(int(errors.TIEM_UNMARSHAL_ERROR), err.Error()))
-		return
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &cluster.CreateClusterReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.PreviewCluster, &cluster.PreviewClusterResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
-
-	err = validator.New().Struct(req)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("validate request failed, %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(int(errors.TIEM_PARAMETER_INVALID), err.Error()))
-		return
-	}
-
-	resp := &cluster.PreviewClusterResp{
-		Region: req.Region,
-		CpuArchitecture: req.CpuArchitecture,
-		ClusterType: req.Type,
-		ClusterVersion: req.Version,
-		ClusterName: req.Name,
-		CapabilityIndexes: []structs.Index{},
-	}
-	stockCheckResult, ok := preCheckStock(c, req.Region, req.CpuArchitecture, req.ResourceParameter.InstanceResource)
-
-	if ok {
-		resp.StockCheckResult = stockCheckResult
-		c.JSON(http.StatusOK, controller.Success(resp))
-	} else {
-		return
-	}
-}
-
-func preCheckStock(c *gin.Context, region string, arch string, instanceResource []structs.ClusterResourceParameterCompute) ([]structs.ResourceStockCheckResult, bool) {
-	requestBody, err := json.Marshal(&message.GetStocksReq {
-		Location: structs.Location {
-			Region: region,
-		},
-		HostFilter: structs.HostFilter{
-			Arch: arch,
-		},
-	})
-	if err != nil {
-		framework.LogWithContext(c).Error(err.Error())
-		c.JSON(errors.TIEM_MARSHAL_ERROR.GetHttpCode(), controller.Fail(int(errors.TIEM_MARSHAL_ERROR), err.Error()))
-		return nil, false
-	}
-
-	rpcResponse, err := client.ClusterClient.GetStocks(framework.NewMicroCtxFromGinCtx(c),
-		&clusterservices.RpcRequest{
-			Request: string(requestBody),
-		},
-	)
-	if err != nil {
-		framework.LogWithContext(c).Error(err.Error())
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
-		return nil, false
-	}
-	if rpcResponse.Code != int32(errors.TIEM_SUCCESS) {
-		framework.LogWithContext(c).Error(rpcResponse.Message)
-		c.JSON(errors.EM_ERROR_CODE(rpcResponse.Code).GetHttpCode(), controller.Fail(int(rpcResponse.Code), rpcResponse.Message))
-		return nil, false
-	}
-
-	stocks := &message.GetStocksResp{}
-	err = json.Unmarshal([]byte(rpcResponse.GetResponse()), stocks)
-	if err != nil {
-		framework.LogWithContext(c).Error(err.Error())
-		c.JSON(errors.TIEM_UNMARSHAL_ERROR.GetHttpCode(), controller.Fail(int(errors.TIEM_UNMARSHAL_ERROR), err.Error()))
-		return nil, false
-	}
-
-	result := make([]structs.ResourceStockCheckResult, 0)
-	for _, instance := range instanceResource {
-		for _, resource := range instance.Resource {
-			enough := true
-			if zoneResource, ok := stocks.Stocks[resource.Zone]; ok &&
-				zoneResource.FreeHostCount >= int32(resource.Count) &&
-				zoneResource.FreeDiskCount >= int32(resource.Count) &&
-				zoneResource.FreeCpuCores >= int32(knowledge.ParseCpu(resource.Spec) * resource.Count) &&
-				zoneResource.FreeMemory >= int32(knowledge.ParseMemory(resource.Spec) * resource.Count){
-
-				enough = true
-				// deduction
-				zoneResource.FreeHostCount = zoneResource.FreeHostCount - int32(resource.Count)
-				zoneResource.FreeDiskCount = zoneResource.FreeDiskCount - int32(resource.Count)
-				zoneResource.FreeCpuCores = zoneResource.FreeCpuCores - int32(knowledge.ParseCpu(resource.Spec) * resource.Count)
-				zoneResource.FreeMemory = zoneResource.FreeMemory - int32(knowledge.ParseMemory(resource.Spec) * resource.Count)
-
-			} else {
-				enough = false
-			}
-
-			result = append(result, structs.ResourceStockCheckResult {
-				Type: instance.Type,
-				Name: instance.Type,
-				ClusterResourceParameterComputeResource: resource,
-				Enough: enough,
-			})
-		}
-	}
-	return result, true
 }
 
 // Query query clusters
@@ -405,6 +252,31 @@ func GetMonitorInfo(c *gin.Context) {
 			requestBody,
 			controller.DefaultTimeout,
 		)
+	}
+}
+
+// ScaleOutPreview preview cluster topology and capability
+// @Summary preview cluster topology and capability
+// @Description preview cluster topology and capability
+// @Tags cluster
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
+// @Param scaleOutReq body cluster.ScaleOutClusterReq true "scale out request"
+// @Success 200 {object} controller.CommonResult{data=cluster.PreviewClusterResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/{clusterId}/preview-scale-out [get]
+func ScaleOutPreview(c *gin.Context) {
+	if body, ok := controller.HandleJsonRequestFromBody(c, &cluster.ScaleOutClusterReq{},
+		func(c *gin.Context, req interface{}) error {
+			req.(*cluster.ScaleOutClusterReq).ClusterID = c.Param(ParamClusterID)
+			return nil
+		}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.PreviewScaleOutCluster,
+			&cluster.PreviewClusterResp{}, body, controller.DefaultTimeout)
 	}
 }
 

@@ -422,22 +422,6 @@ definitions:
           $ref: '#/definitions/structs.ResourceStockCheckResult'
         type: array
     type: object
-  cluster.PreviewScaleOutClusterReq:
-    properties:
-      cpuArchitecture:
-        description: X86/X86_64/ARM
-        type: string
-      instanceResource:
-        items:
-          $ref: '#/definitions/structs.ClusterResourceParameterCompute'
-        type: array
-      region:
-        description: The Region where the cluster is located
-        type: string
-    required:
-    - cpuArchitecture
-    - region
-    type: object
   cluster.QueryBackupRecordsResp:
     properties:
       backupRecords:
@@ -3146,7 +3130,7 @@ paths:
         name: scaleOutReq
         required: true
         schema:
-          $ref: '#/definitions/cluster.PreviewScaleOutClusterReq'
+          $ref: '#/definitions/cluster.ScaleOutClusterReq'
       produces:
       - application/json
       responses:

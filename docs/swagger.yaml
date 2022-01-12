@@ -107,6 +107,10 @@ definitions:
       startTS:
         example: "415241823337054209"
         type: string
+    required:
+    - clusterId
+    - downstreamType
+    - name
     type: object
   cluster.CreateChangeFeedTaskResp:
     properties:
@@ -748,6 +752,8 @@ definitions:
         items:
           type: string
         type: array
+    required:
+    - name
     type: object
   cluster.UpdateChangeFeedTaskResp:
     properties:
@@ -1191,6 +1197,9 @@ definitions:
         type: string
       userPassword:
         type: string
+    required:
+    - userName
+    - userPassword
     type: object
   message.LoginResp:
     properties:
@@ -2348,6 +2357,7 @@ paths:
       - example: CLUSTER_ID_IN_TIEM__22
         in: query
         name: clusterId
+        required: true
         type: string
       - description: Current page location
         in: query

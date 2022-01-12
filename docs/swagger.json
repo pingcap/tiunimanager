@@ -274,7 +274,8 @@
                         "type": "string",
                         "example": "CLUSTER_ID_IN_TIEM__22",
                         "name": "clusterId",
-                        "in": "query"
+                        "in": "query",
+                        "required": true
                     },
                     {
                         "type": "integer",
@@ -4813,6 +4814,11 @@
         },
         "cluster.CreateChangeFeedTaskReq": {
             "type": "object",
+            "required": [
+                "clusterId",
+                "downstreamType",
+                "name"
+            ],
             "properties": {
                 "clusterId": {
                     "type": "string",
@@ -5716,6 +5722,9 @@
         },
         "cluster.UpdateChangeFeedTaskReq": {
             "type": "object",
+            "required": [
+                "name"
+            ],
             "properties": {
                 "downstream": {
                     "type": "object"
@@ -6398,6 +6407,10 @@
         },
         "message.LoginReq": {
             "type": "object",
+            "required": [
+                "userName",
+                "userPassword"
+            ],
             "properties": {
                 "userName": {
                     "type": "string"

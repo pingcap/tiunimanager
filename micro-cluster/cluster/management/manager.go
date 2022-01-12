@@ -30,6 +30,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"net"
 	"strconv"
+	"time"
 )
 
 const (
@@ -499,11 +500,12 @@ func openSftpClient(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.C
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			return nil
 		},
+		Timeout: time.Second * 3,
 	}
 
 	client, err := ssh.Dial("tcp", net.JoinHostPort(req.TiUPIp, strconv.Itoa(req.TiUPPort)), &conf)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("connect error, error: %s", err.Error())
+		framework.LogWithContext(ctx).Errorf("connection error: %s", err.Error())
 		return nil, nil, errors.WrapError(errors.TIEM_TAKEOVER_SSH_CONNECT_ERROR, "ssh dial error", err)
 	}
 
@@ -523,13 +525,18 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 	}
 
 	client, sftpClient, err := openSftpClient(ctx, req)
-	sftpClient.Close()
-	client.Close()
 
+	defer func() {
+		if sftpClient != nil {
+			sftpClient.Close()
+		}
+		if client != nil {
+			client.Close()
+		}
+	}()
 	if err != nil {
 		return
 	}
-
 	meta := &handler.ClusterMeta{}
 	if err = meta.BuildForTakeover(ctx, req.ClusterName, req.DBUser, req.DBPassword); err != nil {
 		framework.LogWithContext(ctx).Errorf(err.Error())

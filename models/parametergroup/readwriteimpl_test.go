@@ -313,10 +313,64 @@ func TestParameterGroupReadWrite_UpdateParameterGroup(t *testing.T) {
 			},
 		},
 		{
+			"parameter_group_id error",
+			args{
+				pg: &ParameterGroup{
+					ID:             groups[1].ID,
+					Name:           "update_param_group_2",
+					ClusterSpec:    "8C32G",
+					ClusterVersion: "5.2",
+					Note:           "update param group 2",
+				},
+				pgm: []*ParameterGroupMapping{
+					{
+						ParameterID:  "dsfsda",
+						DefaultValue: "22",
+						Note:         "test param 1",
+					},
+					{
+						ParameterID:  "dsfds",
+						DefaultValue: "32",
+						Note:         "test param 2",
+					},
+				},
+			},
+			false,
+			[]func(a args) bool{
+				func(a args) bool { return a.pg.ID != "" },
+			},
+		},
+		{
 			"idIsEmpty",
 			args{
 				pg: &ParameterGroup{
 					ID:             "",
+					Name:           "update_param_group_3",
+					ClusterSpec:    "8C32G",
+					ClusterVersion: "5.2",
+					Note:           "update param group 3",
+				},
+				pgm: []*ParameterGroupMapping{
+					{
+						ParameterID:  "",
+						DefaultValue: "22",
+						Note:         "test param 3",
+					},
+					{
+						ParameterID:  "",
+						DefaultValue: "32",
+						Note:         "test param 3",
+					},
+				},
+			},
+			true,
+			[]func(a args) bool{},
+		},
+		{
+			"idNotExisted",
+			args{
+				pg: &ParameterGroup{
+					ID:             "aaaaaaaaaaa",
 					Name:           "update_param_group_3",
 					ClusterSpec:    "8C32G",
 					ClusterVersion: "5.2",
@@ -479,6 +533,14 @@ func TestParameterGroupReadWrite_GetParameterGroup(t *testing.T) {
 			"idIsEmpty",
 			args{
 				id: "",
+			},
+			true,
+			[]func(a args, ret resp) bool{},
+		},
+		{
+			"idIsEmpty",
+			args{
+				id: "aaaa",
 			},
 			true,
 			[]func(a args, ret resp) bool{},
@@ -658,6 +720,14 @@ func TestParameterGroupReadWrite_DeleteParameter(t *testing.T) {
 				func(a args) bool { return a.id == "" },
 			},
 		},
+		{
+			"idIsEmpty",
+			args{
+				id: "aaaa",
+			},
+			true,
+			[]func(a args) bool{},
+		},
 	}
 
 	for _, tt := range tests {
@@ -736,6 +806,16 @@ func TestParameterGroupReadWrite_UpdateParameter(t *testing.T) {
 			[]func(a args) bool{
 				func(a args) bool { return a.p.ID != "" },
 			},
+		},
+		{
+			"idIsEmpty",
+			args{
+				p: &Parameter{
+					ID: "aaaa",
+				},
+			},
+			true,
+			[]func(a args) bool{},
 		},
 	}
 

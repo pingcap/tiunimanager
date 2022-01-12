@@ -72,7 +72,7 @@ func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, cl
 		Scan(&params).Error
 	if err != nil {
 		log.Errorf("find params by cluster id err: %v", err.Error())
-		err = errors.NewEMErrorf(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR.Explain())
+		err = errors.Error(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR)
 		return
 	}
 	return

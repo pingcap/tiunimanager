@@ -32,7 +32,7 @@ func TestOfNullable(t *testing.T) {
 	}{
 		{"normal", args{err: NewError(TIEM_UNRECOGNIZED_ERROR, "")}, &Optional{
 			last:  NewError(TIEM_UNRECOGNIZED_ERROR, ""),
-			broken: false,
+			broken: true,
 			allErrors: []error{ NewError(TIEM_UNRECOGNIZED_ERROR, "")},
 		}},
 	}
@@ -177,7 +177,7 @@ func TestOptional_Handle(t *testing.T) {
 		optional.If(func(err error) {
 			a = err.Error()
 		})
-		assert.Equal(t, "[10000]aaa", a)
+		assert.Contains(t, a, "[10000]")
 	})
 	t.Run("without error", func(t *testing.T) {
 		a := ""
@@ -188,6 +188,22 @@ func TestOptional_Handle(t *testing.T) {
 			a = err.Error()
 		})
 		assert.Equal(t, "", a)
+	})
+}
+
+func TestOptional_Map(t *testing.T) {
+	t.Run("with error", func(t *testing.T) {
+		assert.Contains(t, OfNullable(NewError(TIEM_UNRECOGNIZED_ERROR, "aaa")).
+			Map(func(err error) error {
+				return NewError(TIEM_MARSHAL_ERROR, "bbb")
+			}).Present().Error(), "[10004]")
+	})
+	t.Run("without error", func(t *testing.T) {
+		assert.NoError(t, OfNullable(nil).
+			Map(func(err error) error {
+				return NewError(TIEM_MARSHAL_ERROR, "bbb")
+			}).
+			Present())
 	})
 }
 
@@ -203,7 +219,8 @@ func TestOptional_If(t *testing.T) {
 		}, func() {
 			b = 5
 		})
-		assert.Equal(t, "[10000]aaa", a)
+		assert.Contains(t, a, "[10000]")
+		assert.Contains(t, a, "aaa")
 		assert.Equal(t, 0, b)
 	})
 	t.Run("without error", func(t *testing.T) {
@@ -247,3 +264,13 @@ func TestOptional_Present(t *testing.T) {
 		})
 	}
 }
+
+
+func TestOptional_IfPresent(t *testing.T) {
+	assert.True(t, OfNullable(NewError(TIEM_UNRECOGNIZED_ERROR, "")).IfPresent())
+	assert.False(t, OfNullable(NewError(TIEM_UNRECOGNIZED_ERROR, "")).IfNil())
+	assert.True(t, OfNullable(nil).IfNil())
+	assert.False(t, OfNullable(nil).IfPresent())
+
+}
+

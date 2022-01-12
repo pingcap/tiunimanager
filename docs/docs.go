@@ -2147,7 +2147,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/cluster.ScaleOutClusterReq"
+                            "$ref": "#/definitions/cluster.PreviewScaleOutClusterReq"
                         }
                     }
                 ],
@@ -5372,6 +5372,29 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/structs.ResourceStockCheckResult"
                     }
+                }
+            }
+        },
+        "cluster.PreviewScaleOutClusterReq": {
+            "type": "object",
+            "required": [
+                "cpuArchitecture",
+                "region"
+            ],
+            "properties": {
+                "cpuArchitecture": {
+                    "description": "X86/X86_64/ARM",
+                    "type": "string"
+                },
+                "instanceResource": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
+                    }
+                },
+                "region": {
+                    "description": "The Region where the cluster is located",
+                    "type": "string"
                 }
             }
         },

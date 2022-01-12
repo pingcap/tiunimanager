@@ -65,14 +65,14 @@ func Create(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param clusterId path string true "cluster id"
-// @Param scaleOutReq body cluster.ScaleOutClusterReq true "scale out request"
+// @Param scaleOutReq body cluster.PreviewScaleOutClusterReq true "scale out request"
 // @Success 200 {object} controller.CommonResult{data=cluster.PreviewClusterResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/preview-scale-out [get]
 func ScaleOutPreview(c *gin.Context) {
-	var req cluster.ScaleOutClusterReq
+	var req cluster.PreviewScaleOutClusterReq
 
 	err := c.ShouldBindBodyWith(&req, binding.JSON)
 	if err != nil {
@@ -91,7 +91,7 @@ func ScaleOutPreview(c *gin.Context) {
 	resp := &cluster.PreviewClusterResp{
 		CapabilityIndexes: []structs.Index{},
 	}
-	stockCheckResult, ok := preCheckStock(c, "", "", req.InstanceResource)
+	stockCheckResult, ok := preCheckStock(c, req.Region, req.CpuArchitecture, req.InstanceResource)
 
 	if ok {
 		resp.StockCheckResult = stockCheckResult

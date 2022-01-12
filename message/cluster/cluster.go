@@ -87,9 +87,18 @@ type ScaleInClusterResp struct {
 	ClusterID string `json:"clusterId"`
 }
 
+// PreviewScaleOutClusterReq Message for cluster expansion operation
+type PreviewScaleOutClusterReq struct {
+	ClusterID       string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
+	Region          string `json:"region" form:"region" validate:"required,max=32"`                                       //The Region where the cluster is located
+	CpuArchitecture string `json:"cpuArchitecture" form:"cpuArchitecture" validate:"required,oneof=X86 X86_64 ARM ARM64"` //X86/X86_64/ARM
+	structs.ClusterResourceInfo
+}
+
 // ScaleOutClusterReq Message for cluster expansion operation
 type ScaleOutClusterReq struct {
 	ClusterID string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
+
 	structs.ClusterResourceInfo
 }
 

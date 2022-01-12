@@ -238,7 +238,7 @@ func (rw *GormResourceReadWrite) GetHostItems(ctx context.Context, filter *struc
 func (rw *GormResourceReadWrite) GetHostStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks []structs.Stocks, err error) {
 	tx := rw.DB(ctx).Begin()
 	db := tx.Model(&rp.Host{}).Select(
-		"hosts.free_cpu_cores as free_cpu_cores, hosts.free_memory as free_memory, count(disks.id) as free_disk_count, sum(disks.capacity) as free_disk_capacity").Joins(
+		"hosts.az as zone, hosts.free_cpu_cores as free_cpu_cores, hosts.free_memory as free_memory, count(disks.id) as free_disk_count, sum(disks.capacity) as free_disk_capacity").Joins(
 		"left join disks on disks.host_id = hosts.id")
 	db, err = rw.locationFiltered(db, location)
 	if err != nil {

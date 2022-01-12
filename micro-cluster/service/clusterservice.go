@@ -974,7 +974,7 @@ func (handler *ClusterServiceHandler) GetStocks(ctx context.Context, req *cluste
 		stocks, err := handler.resourceManager.GetStocks(framework.NewBackgroundMicroCtx(ctx, false), location, hostFilter, diskFilter)
 		var rsp message.GetStocksResp
 		if err == nil {
-			rsp.Stocks = *stocks
+			rsp.Stocks = stocks
 		}
 		handleResponse(ctx, resp, err, rsp, nil)
 	}

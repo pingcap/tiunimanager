@@ -205,6 +205,7 @@ func Test_GetHostStocks(t *testing.T) {
 	t.Log(stocks)
 	assert.True(t, err == nil)
 	assert.Equal(t, 1, len(stocks))
+	assert.Equal(t, "Test_Region1,Test_Zone2", stocks[0].Zone)
 	assert.Equal(t, int32(32), stocks[0].FreeCpuCores)
 	assert.Equal(t, int32(64), stocks[0].FreeMemory)
 	assert.Equal(t, int32(3), stocks[0].FreeDiskCount)

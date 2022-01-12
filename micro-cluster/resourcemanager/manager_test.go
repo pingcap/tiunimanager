@@ -419,6 +419,7 @@ func Test_GetStocks_Succeed(t *testing.T) {
 	mockClient.EXPECT().GetHostStocks(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks []structs.Stocks, err error) {
 		if location.Region == "TEST_Region1" {
 			stocks1 := structs.Stocks{
+				Zone:             "TEST_Region1,TEST_Zone1",
 				FreeCpuCores:     2,
 				FreeMemory:       4,
 				FreeDiskCount:    2,
@@ -426,6 +427,7 @@ func Test_GetStocks_Succeed(t *testing.T) {
 			}
 			stocks = append(stocks, stocks1)
 			stocks2 := structs.Stocks{
+				Zone:             "TEST_Region1,TEST_Zone1",
 				FreeCpuCores:     1,
 				FreeMemory:       1,
 				FreeDiskCount:    1,
@@ -446,11 +448,11 @@ func Test_GetStocks_Succeed(t *testing.T) {
 
 	stocks, err := resourceManager.GetStocks(context.TODO(), &location, &structs.HostFilter{}, &structs.DiskFilter{})
 	assert.Nil(t, err)
-	assert.Equal(t, int32(2), stocks.FreeHostCount)
-	assert.Equal(t, int32(3), stocks.FreeCpuCores)
-	assert.Equal(t, int32(5), stocks.FreeMemory)
-	assert.Equal(t, int32(3), stocks.FreeDiskCount)
-	assert.Equal(t, int32(512), stocks.FreeDiskCapacity)
+	assert.Equal(t, int32(2), stocks["TEST_Region1,TEST_Zone1"].FreeHostCount)
+	assert.Equal(t, int32(3), stocks["TEST_Region1,TEST_Zone1"].FreeCpuCores)
+	assert.Equal(t, int32(5), stocks["TEST_Region1,TEST_Zone1"].FreeMemory)
+	assert.Equal(t, int32(3), stocks["TEST_Region1,TEST_Zone1"].FreeDiskCount)
+	assert.Equal(t, int32(512), stocks["TEST_Region1,TEST_Zone1"].FreeDiskCapacity)
 }
 
 func Test_AllocResources_Succeed(t *testing.T) {

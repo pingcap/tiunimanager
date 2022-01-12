@@ -188,9 +188,10 @@ type HierarchyTreeNode struct {
 }
 
 type Stocks struct {
-	FreeHostCount    int32 `json:"freeHostCount"`
-	FreeCpuCores     int32 `json:"freeCpuCores"`
-	FreeMemory       int32 `json:"freeMemory"`
-	FreeDiskCount    int32 `json:"freeDiskCount"`
-	FreeDiskCapacity int32 `json:"freeDiskCapacity"`
+	Zone             string `json:"zone"`
+	FreeHostCount    int32  `json:"freeHostCount"`
+	FreeCpuCores     int32  `json:"freeCpuCores"`
+	FreeMemory       int32  `json:"freeMemory"`
+	FreeDiskCount    int32  `json:"freeDiskCount"`
+	FreeDiskCapacity int32  `json:"freeDiskCapacity"`
 }

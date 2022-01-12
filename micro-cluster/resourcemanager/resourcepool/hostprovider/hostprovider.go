@@ -29,5 +29,5 @@ type HostProvider interface {
 	UpdateHostReserved(ctx context.Context, hostId []string, reserved bool) (err error)
 
 	GetHierarchy(ctx context.Context, filter *structs.HostFilter, level int, depth int) (root *structs.HierarchyTreeNode, err error)
-	GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (*structs.Stocks, error)
+	GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (map[string]*structs.Stocks, error)
 }

@@ -186,20 +186,26 @@ func (p *FileHostProvider) GetHierarchy(ctx context.Context, filter *structs.Hos
 	return root, nil
 }
 
-func (p *FileHostProvider) GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks *structs.Stocks, err error) {
+func (p *FileHostProvider) GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks map[string]*structs.Stocks, err error) {
 	log := framework.LogWithContext(ctx)
 	hostStocks, err := p.rw.GetHostStocks(ctx, location, hostFilter, diskFilter)
 	if err != nil {
 		log.Errorf("get host stocks on location %v, hostFilter %v, diskFilter %v failed, %v", *location, *hostFilter, *diskFilter, err)
 		return nil, err
 	}
-	stocks = new(structs.Stocks)
-	stocks.FreeHostCount = int32(len(hostStocks))
-	for _, stock := range hostStocks {
-		stocks.FreeCpuCores += int32(stock.FreeCpuCores)
-		stocks.FreeMemory += int32(stock.FreeMemory)
-		stocks.FreeDiskCount += int32(stock.FreeDiskCount)
-		stocks.FreeDiskCapacity += int32(stock.FreeDiskCapacity)
+	stocks = make(map[string]*structs.Stocks)
+	for i := range hostStocks {
+		if zoneStock, ok := stocks[hostStocks[i].Zone]; ok {
+			zoneStock.FreeHostCount++
+			zoneStock.FreeCpuCores += hostStocks[i].FreeCpuCores
+			zoneStock.FreeMemory += hostStocks[i].FreeMemory
+			zoneStock.FreeDiskCount += hostStocks[i].FreeDiskCount
+			zoneStock.FreeDiskCapacity += hostStocks[i].FreeDiskCapacity
+		} else {
+			// First host stock in the zone
+			hostStocks[i].FreeHostCount = 1
+			stocks[hostStocks[i].Zone] = &hostStocks[i]
+		}
 	}
 	return stocks, nil
 }

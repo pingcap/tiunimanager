@@ -107,7 +107,8 @@ func (req *GetStocksReq) GetDiskFilter() *structs.DiskFilter {
 }
 
 type GetStocksResp struct {
-	Stocks structs.Stocks `json:"stocks"`
+	// map[zone] -> stocks
+	Stocks map[string]*structs.Stocks `json:"stocks"`
 }
 
 type DownloadHostTemplateFileReq struct {

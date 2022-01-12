@@ -26,6 +26,8 @@ import (
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/common"
@@ -1148,6 +1150,10 @@ func TestPreviewCluster(t *testing.T) {
 
 	resourceRW := mockresource.NewMockReaderWriter(ctrl)
 	models.SetResourceReaderWriter(resourceRW)
+
+	provider := resourcepool.GetResourcePool().GetHostProvider().(*hostprovider.FileHostProvider)
+	provider.SetResourceReaderWriter(resourceRW)
+
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
 
@@ -1227,6 +1233,10 @@ func TestPreviewScaleOutCluster(t *testing.T) {
 
 	resourceRW := mockresource.NewMockReaderWriter(ctrl)
 	models.SetResourceReaderWriter(resourceRW)
+
+	provider := resourcepool.GetResourcePool().GetHostProvider().(*hostprovider.FileHostProvider)
+	provider.SetResourceReaderWriter(resourceRW)
+
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
 

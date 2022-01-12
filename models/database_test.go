@@ -41,7 +41,7 @@ func TestGetReaderWriter(t *testing.T) {
 
 	assert.NotEmpty(t, GetResourceReaderWriter())
 	SetResourceReaderWriter(nil)
-	assert.NotEmpty(t, GetResourceReaderWriter())
+	assert.Empty(t, GetResourceReaderWriter())
 
 	assert.NotEmpty(t, GetClusterReaderWriter())
 	SetClusterReaderWriter(nil)

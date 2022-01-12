@@ -22,8 +22,10 @@ import (
 	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
+	emerr "github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	changefeedModel "github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -35,6 +37,9 @@ const (
 	wfContextNewSyncChangeFeedTaskIDKey   string = "wfContextNewSyncChangeFeedTaskIDKey"
 	wfContextCancelDeferStackKey          string = "wfContextCancelDeferStackKey"
 	wfContextIsExecutingDeferStackFlagKey string = "wfContextIsExecutingDeferStackFlagKey"
+
+	wfContextOldMasterPreviousMaintenanceStatusKey string = "wfContextOldMasterPreviousMaintenanceStatusKey"
+	wfContextOldSlavePreviousMaintenanceStatusKey  string = "wfContextOldSlavePreviousMaintenanceStatusKey"
 )
 
 // wfGetReq workflow get request
@@ -146,6 +151,14 @@ func wfGetNewSyncChangeFeedTaskId(ctx *workflow.FlowContext) string {
 
 func wfSetNewSyncChangeFeedTaskId(ctx *workflow.FlowContext, newTaskID string) {
 	ctx.SetData(wfContextNewSyncChangeFeedTaskIDKey, newTaskID)
+}
+
+func wfGetOldMasterPreviousMaintenanceStatus(ctx *workflow.FlowContext) string {
+	return ctx.GetData(wfContextOldMasterPreviousMaintenanceStatusKey).(string)
+}
+
+func wfGetOldSlavePreviousMaintenanceStatus(ctx *workflow.FlowContext) string {
+	return ctx.GetData(wfContextOldSlavePreviousMaintenanceStatusKey).(string)
 }
 
 // wfnSetNewMasterReadWrite workflow node set new master read-write mode
@@ -587,7 +600,41 @@ func wfStepFinish(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) e
 		framework.LogWithContext(ctx).Warnf("%s remove old change feed task failed, id:%s, err:%s",
 			funcName, wfGetOldSyncChangeFeedTaskId(ctx), err)
 	}
-	return nil
+
+	errToRet := err
+	metaOfSource, err := handler.Get(ctx, wfGetOldMasterClusterId(ctx))
+	if err != nil {
+		errToRet = err
+		framework.LogWithContext(ctx).Warnf("%s get meta of cluster %s failed:%s",
+			funcName, wfGetOldMasterClusterId(ctx), err)
+		errToRet = emerr.NewEMErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
+			"get meta of %s failed, %s", wfGetOldMasterClusterId(ctx), err.Error())
+	} else {
+		previousStatus := constants.ClusterMaintenanceStatus(wfGetOldMasterPreviousMaintenanceStatus(ctx))
+		err := metaOfSource.EndMaintenance(ctx, previousStatus)
+		if err != nil {
+			errToRet = err
+			framework.LogWithContext(ctx).Errorf("end maintenance of cluster %s failed:%s", wfGetOldMasterClusterId(ctx), err.Error())
+		}
+	}
+
+	metaOfTarget, err := handler.Get(ctx, wfGetOldSlaveClusterId(ctx))
+	if err != nil {
+		errToRet = err
+		framework.LogWithContext(ctx).Warnf("%s get meta of cluster %s failed:%s",
+			funcName, wfGetOldSlaveClusterId(ctx), err)
+		errToRet = emerr.NewEMErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
+			"get meta of %s failed, %s", wfGetOldSlaveClusterId(ctx), err.Error())
+	} else {
+		previousStatus := constants.ClusterMaintenanceStatus(wfGetOldSlavePreviousMaintenanceStatus(ctx))
+		err := metaOfTarget.EndMaintenance(ctx, previousStatus)
+		if err != nil {
+			errToRet = err
+			framework.LogWithContext(ctx).Errorf("end maintenance of cluster %s failed:%s", wfGetOldSlaveClusterId(ctx), err.Error())
+		}
+	}
+
+	return errToRet
 }
 
 func wfStepFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {

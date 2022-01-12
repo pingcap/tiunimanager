@@ -40,6 +40,8 @@ func TestGetReaderWriter(t *testing.T) {
 	assert.Empty(t, GetImportExportReaderWriter())
 
 	assert.NotEmpty(t, GetResourceReaderWriter())
+	SetResourceReaderWriter(nil)
+	assert.NotEmpty(t, GetResourceReaderWriter())
 
 	assert.NotEmpty(t, GetClusterReaderWriter())
 	SetClusterReaderWriter(nil)

@@ -166,6 +166,12 @@ type Location struct {
 	HostIp string `json:"HostIp"`
 }
 
+type ImportCondition struct {
+	ReserveHost   bool `json:"reserved"`
+	SkipHostInit  bool `json:"skipHostInit"`
+	IgnoreWarings bool `json:"ignoreWarnings"`
+}
+
 type HostFilter struct {
 	HostID  string `json:"hostId" form:"hostId"`
 	Purpose string `json:"purpose" form:"purpose"`

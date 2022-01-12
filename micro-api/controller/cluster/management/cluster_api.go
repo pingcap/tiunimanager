@@ -149,10 +149,10 @@ func preCheckStock(c *gin.Context, region string, arch string, instanceResource 
 		for _, resource := range instance.Resource {
 			enough := true
 			if zoneResource, ok := stocks.Stocks[resource.Zone]; ok &&
-				zoneResource.FreeHostCount > int32(resource.Count) &&
-				zoneResource.FreeDiskCount > int32(resource.Count) &&
-				zoneResource.FreeCpuCores > int32(knowledge.ParseCpu(resource.Spec) * resource.Count) &&
-				zoneResource.FreeMemory > int32(knowledge.ParseMemory(resource.Spec) * resource.Count){
+				zoneResource.FreeHostCount >= int32(resource.Count) &&
+				zoneResource.FreeDiskCount >= int32(resource.Count) &&
+				zoneResource.FreeCpuCores >= int32(knowledge.ParseCpu(resource.Spec) * resource.Count) &&
+				zoneResource.FreeMemory >= int32(knowledge.ParseMemory(resource.Spec) * resource.Count){
 
 				enough = true
 				// deduction

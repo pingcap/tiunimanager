@@ -112,7 +112,7 @@ func TestImportExportReadWrite_QueryDataTransportRecords(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
 		_, count, errQuery := rw.QueryDataTransportRecords(context.TODO(), recordCreate.ID, "aaa", true, 11111111, 11111111111, 1, 10)
 		assert.NoError(t, errQuery)
-		assert.Equal(t, 0, count)
+		assert.Equal(t, int64(0), count)
 
 	})
 

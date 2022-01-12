@@ -66,8 +66,6 @@ func (m *Manager) Deploy(ctx context.Context, componentType TiUPComponentType, c
 }
 
 func (m *Manager) startAsyncOperation(ctx context.Context, id, home, tiUPArgs string, timeoutS int) {
-	logInFunc := framework.LogWithContext(ctx)
-
 	go func() {
 		cmd, cancelFunc := genCommand(home, m.TiUPBinPath, tiUPArgs, timeoutS)
 		var out, stderr bytes.Buffer
@@ -75,7 +73,6 @@ func (m *Manager) startAsyncOperation(ctx context.Context, id, home, tiUPArgs st
 		cmd.Stderr = &stderr
 		defer cancelFunc()
 
-		logInFunc.Info("operation starts")
 		t0 := time.Now()
 		if err := cmd.Start(); err != nil {
 			updateStatus(ctx, id, fmt.Sprintf("operation starts err: %+v, errStr: %s", err, stderr.String()), operation.Error, t0)
@@ -85,8 +82,8 @@ func (m *Manager) startAsyncOperation(ctx context.Context, id, home, tiUPArgs st
 
 		err := cmd.Wait()
 		if err != nil {
-			if exiterr, ok := err.(*exec.ExitError); ok {
-				if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+			if exitErr, ok := err.(*exec.ExitError); ok {
+				if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
 					if status.ExitStatus() == 0 {
 						updateStatus(ctx, id, "operation finished", operation.Finished, t0)
 						return
@@ -95,10 +92,10 @@ func (m *Manager) startAsyncOperation(ctx context.Context, id, home, tiUPArgs st
 			}
 			updateStatus(ctx, id, fmt.Sprintf("operation failed with err: %+v, errstr: %s", err, stderr.String()), operation.Error, t0)
 			return
-		} else {
-			updateStatus(ctx, id, "operation finished", operation.Finished, t0)
-			return
 		}
+
+		updateStatus(ctx, id, "operation finished", operation.Finished, t0)
+		return
 	}()
 }
 

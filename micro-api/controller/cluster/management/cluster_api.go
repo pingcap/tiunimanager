@@ -17,13 +17,17 @@
 package management
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/knowledge"
+	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -102,48 +106,65 @@ func Preview(c *gin.Context) {
 }
 
 func preCheckStock(c *gin.Context, region string, arch string, instanceResource []structs.ClusterResourceParameterCompute) ([]structs.ResourceStockCheckResult, bool) {
-	//requestBody, err := json.Marshal(&message.GetStocksReq {
-	//	Location: structs.Location {
-	//		Region: region,
-	//	},
-	//	HostFilter: structs.HostFilter{
-	//		Arch: arch,
-	//	},
-	//})
-	//if err != nil {
-	//	framework.LogWithContext(c).Error(err.Error())
-	//	c.JSON(errors.TIEM_MARSHAL_ERROR.GetHttpCode(), controller.Fail(int(errors.TIEM_MARSHAL_ERROR), err.Error()))
-	//	return nil, false
-	//}
-	//
-	//rpcResponse, err := client.ClusterClient.GetStocks(framework.NewMicroCtxFromGinCtx(c),
-	//	&clusterservices.RpcRequest{
-	//		Request: string(requestBody),
-	//	},
-	//)
-	//if err != nil {
-	//	framework.LogWithContext(c).Error(err.Error())
-	//	c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
-	//	return nil, false
-	//}
-	//if rpcResponse.Code != int32(errors.TIEM_SUCCESS) {
-	//	framework.LogWithContext(c).Error(rpcResponse.Message)
-	//	c.JSON(errors.EM_ERROR_CODE(rpcResponse.Code).GetHttpCode(), controller.Fail(int(rpcResponse.Code), rpcResponse.Message))
-	//	return nil, false
-	//}
-	//
-	//stocks := message.GetStocksResp{}
-	//err = json.Unmarshal([]byte(rpcResponse.GetResponse()), &stocks)
-	//if err != nil {
-	//	framework.LogWithContext(c).Error(err.Error())
-	//	c.JSON(errors.TIEM_UNMARSHAL_ERROR.GetHttpCode(), controller.Fail(int(errors.TIEM_UNMARSHAL_ERROR), err.Error()))
-	//	return nil, false
-	//}
-	//
+	requestBody, err := json.Marshal(&message.GetStocksReq {
+		Location: structs.Location {
+			Region: region,
+		},
+		HostFilter: structs.HostFilter{
+			Arch: arch,
+		},
+	})
+	if err != nil {
+		framework.LogWithContext(c).Error(err.Error())
+		c.JSON(errors.TIEM_MARSHAL_ERROR.GetHttpCode(), controller.Fail(int(errors.TIEM_MARSHAL_ERROR), err.Error()))
+		return nil, false
+	}
+
+	rpcResponse, err := client.ClusterClient.GetStocks(framework.NewMicroCtxFromGinCtx(c),
+		&clusterservices.RpcRequest{
+			Request: string(requestBody),
+		},
+	)
+	if err != nil {
+		framework.LogWithContext(c).Error(err.Error())
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+		return nil, false
+	}
+	if rpcResponse.Code != int32(errors.TIEM_SUCCESS) {
+		framework.LogWithContext(c).Error(rpcResponse.Message)
+		c.JSON(errors.EM_ERROR_CODE(rpcResponse.Code).GetHttpCode(), controller.Fail(int(rpcResponse.Code), rpcResponse.Message))
+		return nil, false
+	}
+
+	stocks := &message.GetStocksResp{}
+	err = json.Unmarshal([]byte(rpcResponse.GetResponse()), stocks)
+	if err != nil {
+		framework.LogWithContext(c).Error(err.Error())
+		c.JSON(errors.TIEM_UNMARSHAL_ERROR.GetHttpCode(), controller.Fail(int(errors.TIEM_UNMARSHAL_ERROR), err.Error()))
+		return nil, false
+	}
+
 	result := make([]structs.ResourceStockCheckResult, 0)
 	for _, instance := range instanceResource {
 		for _, resource := range instance.Resource {
 			enough := true
+			if zoneResource, ok := stocks.Stocks[resource.Zone]; ok &&
+				zoneResource.FreeHostCount > int32(resource.Count) &&
+				zoneResource.FreeDiskCount > int32(resource.Count) &&
+				zoneResource.FreeCpuCores > int32(knowledge.ParseCpu(resource.Spec) * resource.Count) &&
+				zoneResource.FreeMemory > int32(knowledge.ParseMemory(resource.Spec) * resource.Count){
+
+				enough = true
+				// deduction
+				zoneResource.FreeHostCount = zoneResource.FreeHostCount - int32(resource.Count)
+				zoneResource.FreeDiskCount = zoneResource.FreeDiskCount - int32(resource.Count)
+				zoneResource.FreeCpuCores = zoneResource.FreeCpuCores - int32(knowledge.ParseCpu(resource.Spec) * resource.Count)
+				zoneResource.FreeMemory = zoneResource.FreeMemory - int32(knowledge.ParseMemory(resource.Spec) * resource.Count)
+
+			} else {
+				enough = false
+			}
+
 			result = append(result, structs.ResourceStockCheckResult {
 				Type: instance.Type,
 				Name: instance.Type,

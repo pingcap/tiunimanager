@@ -305,3 +305,8 @@ type PreviewClusterResp struct {
 	StockCheckResult  []structs.ResourceStockCheckResult `json:"stockCheckResult"`
 	CapabilityIndexes []structs.Index      `json:"capabilityIndexes"`
 }
+
+type ScaleOutPreviewResp struct {
+	StockCheckResult  []structs.ResourceStockCheckResult `json:"stockCheckResult"`
+	CapabilityIndexes []structs.Index      `json:"capabilityIndexes"`
+}

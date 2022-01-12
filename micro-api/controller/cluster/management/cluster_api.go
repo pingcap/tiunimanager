@@ -57,6 +57,50 @@ func Create(c *gin.Context) {
 	}
 }
 
+// ScaleOutPreview preview cluster topology and capability
+// @Summary preview cluster topology and capability
+// @Description preview cluster topology and capability
+// @Tags cluster
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
+// @Param scaleOutReq body cluster.ScaleOutClusterReq true "scale out request"
+// @Success 200 {object} controller.CommonResult{data=cluster.PreviewClusterResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/{clusterId}/preview-scale-out [get]
+func ScaleOutPreview(c *gin.Context) {
+	var req cluster.ScaleOutClusterReq
+
+	err := c.ShouldBindBodyWith(&req, binding.JSON)
+	if err != nil {
+		framework.LogWithContext(c).Errorf("unmarshal request failed, %s", err.Error())
+		c.JSON(http.StatusBadRequest, controller.Fail(int(errors.TIEM_UNMARSHAL_ERROR), err.Error()))
+		return
+	}
+
+	err = validator.New().Struct(req)
+	if err != nil {
+		framework.LogWithContext(c).Errorf("validate request failed, %s", err.Error())
+		c.JSON(http.StatusBadRequest, controller.Fail(int(errors.TIEM_PARAMETER_INVALID), err.Error()))
+		return
+	}
+
+	resp := &cluster.PreviewClusterResp{
+		CapabilityIndexes: []structs.Index{},
+	}
+	stockCheckResult, ok := preCheckStock(c, "", "", req.InstanceResource)
+
+	if ok {
+		resp.StockCheckResult = stockCheckResult
+		c.JSON(http.StatusOK, controller.Success(resp))
+	} else {
+		return
+	}
+}
+
 // Preview preview cluster topology and capability
 // @Summary preview cluster topology and capability
 // @Description preview cluster topology and capability

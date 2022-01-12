@@ -3114,6 +3114,52 @@ paths:
       summary: inspect parameters
       tags:
       - cluster parameters
+  /clusters/{clusterId}/preview-scale-out:
+    get:
+      consumes:
+      - application/json
+      description: preview cluster topology and capability
+      parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: scale out request
+        in: body
+        name: scaleOutReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.ScaleOutClusterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.PreviewClusterResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: preview cluster topology and capability
+      tags:
+      - cluster
   /clusters/{clusterId}/restart:
     post:
       consumes:

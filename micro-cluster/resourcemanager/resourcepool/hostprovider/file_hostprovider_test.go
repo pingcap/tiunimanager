@@ -153,15 +153,15 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_resource.NewMockReaderWriter(ctrl)
-	mockClient.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, filter *structs.HostFilter, offset, limit int) (hosts []resourcepool.Host, err error) {
+	mockClient.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, filter *structs.HostFilter, offset, limit int) (hosts []resourcepool.Host, total int64, err error) {
 		assert.Equal(t, 20, offset)
 		assert.Equal(t, 10, limit)
 		if filter.HostID == fake_hostId {
 			dbhost := genHostRspFromDB(fake_hostId, fake_hostname)
 			hosts = append(hosts, *dbhost)
-			return hosts, nil
+			return hosts, 1, nil
 		} else {
-			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, 0, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := mockFileHostProvider(mockClient)
@@ -174,8 +174,9 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 		PageSize: 10,
 	}
 
-	hosts, err := hostprovider.QueryHosts(context.TODO(), filter, page)
+	hosts, total, err := hostprovider.QueryHosts(context.TODO(), filter, page)
 	assert.Nil(t, err)
+	assert.Equal(t, 1, int(total))
 
 	assert.Equal(t, fake_hostname, hosts[0].HostName)
 	assert.Equal(t, "TEST_REGION", hosts[0].Region)

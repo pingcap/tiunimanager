@@ -20,9 +20,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/pingcap-inc/tiem/metrics"
 	"github.com/pingcap-inc/tiem/proto/clusterservices"
-	"time"
 
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -890,12 +891,16 @@ func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, req *clust
 		filter := reqStruct.GetHostFilter()
 		page := reqStruct.GetPage()
 
-		hosts, err := handler.resourceManager.QueryHosts(framework.NewBackgroundMicroCtx(ctx, false), filter, page)
+		hosts, total, err := handler.resourceManager.QueryHosts(framework.NewBackgroundMicroCtx(ctx, false), filter, page)
 		var rsp message.QueryHostsResp
 		if err == nil {
 			rsp.Hosts = hosts
 		}
-		handleResponse(ctx, resp, err, rsp, nil)
+		handleResponse(ctx, resp, err, rsp, &clusterservices.RpcPage{
+			Page:     int32(page.Page),
+			PageSize: int32(page.PageSize),
+			Total:    int32(total),
+		})
 	}
 
 	return nil

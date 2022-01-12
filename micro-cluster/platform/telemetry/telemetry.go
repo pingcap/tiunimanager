@@ -27,6 +27,10 @@ package telemetry
 import (
 	"context"
 	"fmt"
+	"math"
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -34,7 +38,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
-	"github.com/pingcap-inc/tiem/util/http"
+	util "github.com/pingcap-inc/tiem/util/http"
 	arch "github.com/pingcap-inc/tiem/util/sys/linux"
 	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"github.com/pingcap-inc/tiem/util/versioninfo"
@@ -42,9 +46,6 @@ import (
 	client "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/prometheus/common/model"
 	"github.com/robfig/cron"
-	"math"
-	"net/http"
-	"time"
 )
 
 //TODO To move the const to the common
@@ -257,7 +258,7 @@ func (t *Manager) generateEMAccessStatistics(ctx context.Context) (usages []stru
 func (t *Manager) generateEMManagementHostsInfo(ctx context.Context) (nodes []structs.NodeInfo, er error) {
 
 	rw := models.GetResourceReaderWriter()
-	hosts, err := rw.Query(ctx, &structs.HostFilter{}, 0, math.MaxInt32)
+	hosts, _, err := rw.Query(ctx, &structs.HostFilter{}, 0, math.MaxInt32)
 	if err != nil {
 		framework.LogWithContext(ctx).Warningf("query hosts from database error %v", err)
 		return nil, errors.NewEMErrorf(TelemetryGenerateEMManagementHostsInfoDataError, "query hosts from database error %v", err)

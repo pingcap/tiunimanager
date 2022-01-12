@@ -110,19 +110,30 @@ func Test_Create_Dup_Host(t *testing.T) {
 }
 
 func Test_Create_Query_Host_Succeed(t *testing.T) {
-	hostIp := "192.168.999.999"
-	hostName := "Test_Host2"
-	id1, err := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", hostName, hostIp,
+	hostIp1 := "192.168.999.998"
+	hostName1 := "Test_Host1"
+	hostIp2 := "192.168.999.999"
+	hostName2 := "Test_Host2"
+	id1, err := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", hostName1, hostIp1,
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
 	assert.Nil(t, err)
-	hosts, err := GormRW.Query(context.TODO(), &structs.HostFilter{HostID: id1[0]}, 0, 3)
+	id2, err := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", hostName2, hostIp2,
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+	defer func() { _ = GormRW.Delete(context.TODO(), id2) }()
+	assert.Nil(t, err)
+	hosts, total, err := GormRW.Query(context.TODO(), &structs.HostFilter{HostID: id1[0]}, 0, 3)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(hosts))
+	assert.Equal(t, 1, int(total))
 	assert.Equal(t, id1[0], hosts[0].ID)
-	assert.Equal(t, hostName, hosts[0].HostName)
-	assert.Equal(t, hostIp, hosts[0].IP)
+	assert.Equal(t, hostName1, hosts[0].HostName)
+	assert.Equal(t, hostIp1, hosts[0].IP)
 	assert.Equal(t, 3, len(hosts[0].Disks))
+	hosts, total, err = GormRW.Query(context.TODO(), &structs.HostFilter{Purpose: string(constants.PurposeCompute)}, 0, 3)
+	assert.Nil(t, err)
+	assert.Equal(t, 2, int(total))
+	assert.Equal(t, 2, len(hosts))
 }
 
 func Test_UpdateHostReserved_Succeed(t *testing.T) {
@@ -130,11 +141,13 @@ func Test_UpdateHostReserved_Succeed(t *testing.T) {
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
 	assert.Nil(t, err)
-	hosts, err := GormRW.Query(context.TODO(), &structs.HostFilter{Arch: string(constants.ArchX8664), Status: string(constants.HostOnline)}, 0, 3)
+	hosts, total, err := GormRW.Query(context.TODO(), &structs.HostFilter{Arch: string(constants.ArchX8664), Status: string(constants.HostOnline)}, 0, 3)
 	assert.True(t, err == nil && len(hosts) == 1)
+	assert.Equal(t, 1, int(total))
 	assert.False(t, hosts[0].Reserved)
 	GormRW.UpdateHostReserved(context.TODO(), id1, true)
-	hosts, err = GormRW.Query(context.TODO(), &structs.HostFilter{Stat: string(constants.HostLoadLoadLess)}, 0, 3)
+	hosts, total, err = GormRW.Query(context.TODO(), &structs.HostFilter{Stat: string(constants.HostLoadLoadLess)}, 0, 3)
+	assert.Equal(t, 1, int(total))
 	assert.True(t, err == nil && len(hosts) == 1)
 	assert.True(t, hosts[0].Reserved)
 }
@@ -144,11 +157,13 @@ func Test_UpdateHostStatus_Succeed(t *testing.T) {
 		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
 	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
 	assert.Nil(t, err)
-	hosts, err := GormRW.Query(context.TODO(), &structs.HostFilter{Arch: string(constants.ArchX8664), Status: string(constants.HostOnline)}, 0, 3)
+	hosts, total, err := GormRW.Query(context.TODO(), &structs.HostFilter{Arch: string(constants.ArchX8664), Status: string(constants.HostOnline)}, 0, 3)
 	assert.True(t, err == nil && len(hosts) == 1)
+	assert.Equal(t, 1, int(total))
 	assert.Equal(t, string(constants.HostOnline), hosts[0].Status)
 	GormRW.UpdateHostStatus(context.TODO(), id1, string(constants.HostOffline))
-	hosts, err = GormRW.Query(context.TODO(), &structs.HostFilter{Purpose: string(constants.PurposeCompute)}, 0, 3)
+	hosts, total, err = GormRW.Query(context.TODO(), &structs.HostFilter{Purpose: string(constants.PurposeCompute)}, 0, 3)
+	assert.Equal(t, 1, int(total))
 	assert.True(t, err == nil && len(hosts) == 1)
 	assert.Equal(t, string(constants.HostOffline), hosts[0].Status)
 }

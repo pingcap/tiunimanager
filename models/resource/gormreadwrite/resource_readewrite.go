@@ -153,22 +153,22 @@ func (rw *GormResourceReadWrite) locationFiltered(db *gorm.DB, location *structs
 	return db, nil
 }
 
-func (rw *GormResourceReadWrite) Query(ctx context.Context, filter *structs.HostFilter, offset int, limit int) (hosts []rp.Host, err error) {
+func (rw *GormResourceReadWrite) Query(ctx context.Context, filter *structs.HostFilter, offset int, limit int) (hosts []rp.Host, total int64, err error) {
 	hosts = make([]rp.Host, 0)
-	db := rw.DB(ctx)
+	db := rw.DB(ctx).Model(&rp.Host{})
 	// Check Host Detail
 	if filter.HostID != "" {
-		err = db.Where("id = ?", filter.HostID).Find(&hosts).Error
+		err = db.Where("id = ?", filter.HostID).Count(&total).Find(&hosts).Error
 		if err != nil {
-			return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_HOST_NOT_FOUND, "query host %s error, %v", filter.HostID, err)
+			return nil, 0, errors.NewEMErrorf(errors.TIEM_RESOURCE_HOST_NOT_FOUND, "query host %s error, %v", filter.HostID, err)
 		}
 		return
 	}
 	db, err = rw.hostFiltered(db, filter)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	err = db.Offset(offset).Limit(limit).Find(&hosts).Error
+	err = db.Count(&total).Offset(offset).Limit(limit).Find(&hosts).Error
 	return
 }
 

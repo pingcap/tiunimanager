@@ -196,7 +196,7 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string) (flowI
 	return flowIds, nil
 }
 
-func (p *ResourcePool) QueryHosts(ctx context.Context, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, err error) {
+func (p *ResourcePool) QueryHosts(ctx context.Context, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, total int64, err error) {
 	return p.hostProvider.QueryHosts(ctx, filter, page)
 }
 

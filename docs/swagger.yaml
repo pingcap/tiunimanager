@@ -1178,7 +1178,10 @@ definitions:
   message.GetStocksResp:
     properties:
       stocks:
-        $ref: '#/definitions/structs.Stocks'
+        additionalProperties:
+          $ref: '#/definitions/structs.Stocks'
+        description: map[zone] -> stocks
+        type: object
     type: object
   message.ImportHostsResp:
     properties:
@@ -2114,6 +2117,8 @@ definitions:
         type: integer
       freeMemory:
         type: integer
+      zone:
+        type: string
     type: object
   structs.Usage:
     properties:

@@ -6398,7 +6398,11 @@ var doc = `{
             "type": "object",
             "properties": {
                 "stocks": {
-                    "$ref": "#/definitions/structs.Stocks"
+                    "description": "map[zone] -\u003e stocks",
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.Stocks"
+                    }
                 }
             }
         },
@@ -7741,6 +7745,9 @@ var doc = `{
                 },
                 "freeMemory": {
                     "type": "integer"
+                },
+                "zone": {
+                    "type": "string"
                 }
             }
         },

@@ -845,7 +845,7 @@ func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, req *clus
 	reqStruct := message.ImportHostsReq{}
 
 	if handleRequest(ctx, req, resp, &reqStruct) {
-		flowIds, hostIds, err := handler.resourceManager.ImportHosts(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.Hosts)
+		flowIds, hostIds, err := handler.resourceManager.ImportHosts(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.Hosts, &reqStruct.Condition)
 		var rsp message.ImportHostsResp
 		if err == nil {
 			rsp.HostIDS = hostIds
@@ -867,7 +867,7 @@ func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, req *clus
 	reqStruct := message.DeleteHostsReq{}
 
 	if handleRequest(ctx, req, resp, &reqStruct) {
-		flowIds, err := handler.resourceManager.DeleteHosts(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.HostIDs)
+		flowIds, err := handler.resourceManager.DeleteHosts(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.HostIDs, reqStruct.Force)
 		var rsp message.DeleteHostsResp
 		if err == nil {
 			for _, flowId := range flowIds {

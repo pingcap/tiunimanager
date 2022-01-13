@@ -23,6 +23,8 @@
 
 package structs
 
+import "github.com/pingcap-inc/tiem/common/constants"
+
 //SpecInfo information about spec
 type SpecInfo struct {
 	ID          string `json:"id"`   //ID of the resource specification
@@ -102,4 +104,12 @@ type ZoneInfo struct {
 type SystemConfig struct {
 	ConfigKey   string `json:"configKey"`
 	ConfigValue string `json:"configValue"`
+}
+
+// DBUserRole role information of the DBUser
+type DBUserRole struct {
+	ClusterType constants.EMProductIDType
+	RoleName    string
+	RoleType    constants.DBUserRoleType
+	Permission  []string
 }

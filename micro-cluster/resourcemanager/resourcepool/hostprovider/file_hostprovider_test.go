@@ -153,7 +153,7 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_resource.NewMockReaderWriter(ctrl)
-	mockClient.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, filter *structs.HostFilter, offset, limit int) (hosts []resourcepool.Host, total int64, err error) {
+	mockClient.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, location *structs.Location, filter *structs.HostFilter, offset, limit int) (hosts []resourcepool.Host, total int64, err error) {
 		assert.Equal(t, 20, offset)
 		assert.Equal(t, 10, limit)
 		if filter.HostID == fake_hostId {
@@ -174,7 +174,7 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 		PageSize: 10,
 	}
 
-	hosts, total, err := hostprovider.QueryHosts(context.TODO(), filter, page)
+	hosts, total, err := hostprovider.QueryHosts(context.TODO(), &structs.Location{}, filter, page)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, int(total))
 
@@ -322,6 +322,7 @@ func Test_GetStocks_Succeed(t *testing.T) {
 	mockClient.EXPECT().GetHostStocks(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks []structs.Stocks, err error) {
 		if location.Region == "TEST_Region1" {
 			stocks1 := structs.Stocks{
+				Zone:             "TEST_Region1,TEST_Zone1",
 				FreeCpuCores:     2,
 				FreeMemory:       4,
 				FreeDiskCount:    2,
@@ -329,6 +330,7 @@ func Test_GetStocks_Succeed(t *testing.T) {
 			}
 			stocks = append(stocks, stocks1)
 			stocks2 := structs.Stocks{
+				Zone:             "TEST_Region1,TEST_Zone1",
 				FreeCpuCores:     1,
 				FreeMemory:       1,
 				FreeDiskCount:    1,
@@ -346,9 +348,9 @@ func Test_GetStocks_Succeed(t *testing.T) {
 
 	stocks, err := hostprovider.GetStocks(context.TODO(), &location, &structs.HostFilter{}, &structs.DiskFilter{})
 	assert.Nil(t, err)
-	assert.Equal(t, int32(2), stocks.FreeHostCount)
-	assert.Equal(t, int32(3), stocks.FreeCpuCores)
-	assert.Equal(t, int32(5), stocks.FreeMemory)
-	assert.Equal(t, int32(3), stocks.FreeDiskCount)
-	assert.Equal(t, int32(512), stocks.FreeDiskCapacity)
+	assert.Equal(t, int32(2), stocks["TEST_Region1,TEST_Zone1"].FreeHostCount)
+	assert.Equal(t, int32(3), stocks["TEST_Region1,TEST_Zone1"].FreeCpuCores)
+	assert.Equal(t, int32(5), stocks["TEST_Region1,TEST_Zone1"].FreeMemory)
+	assert.Equal(t, int32(3), stocks["TEST_Region1,TEST_Zone1"].FreeDiskCount)
+	assert.Equal(t, int32(512), stocks["TEST_Region1,TEST_Zone1"].FreeDiskCapacity)
 }

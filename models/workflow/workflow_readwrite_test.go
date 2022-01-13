@@ -17,10 +17,11 @@ package workflow
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/models/common"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/stretchr/testify/assert"
 )
 
 var rw *WorkFlowReadWrite
@@ -80,7 +81,7 @@ func TestFlowReadWrite_QueryWorkFlows(t *testing.T) {
 	assert.Equal(t, flowCreate.ID, flowQuery[0].ID)
 	assert.NoError(t, errQuery)
 
-	_, total, _ = rw.QueryWorkFlows(context.TODO(), "fdasfdsa", "flowNameQuery", "fdsafdsaf", 0, 10)
+	_, _, _ = rw.QueryWorkFlows(context.TODO(), "fdasfdsa", "fakeBizType", "flowNameQuery", "fdsafdsaf", 0, 10)
 	assert.Equal(t, 0, 0)
 }
 

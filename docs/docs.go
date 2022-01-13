@@ -2115,6 +2115,82 @@ var doc = `{
                 }
             }
         },
+        "/clusters/{clusterId}/preview-scale-out": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "preview cluster topology and capability",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "preview cluster topology and capability",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "scale out request",
+                        "name": "scaleOutReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.ScaleOutClusterReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.PreviewClusterResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/clusters/{clusterId}/restart": {
             "post": {
                 "security": [
@@ -3719,6 +3795,26 @@ var doc = `{
                 ],
                 "summary": "Show all hosts list in TiEM",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "name": "HostIp",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "Rack",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "Region",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "Zone",
+                        "in": "query"
+                    },
                     {
                         "type": "string",
                         "name": "arch",
@@ -6400,7 +6496,11 @@ var doc = `{
             "type": "object",
             "properties": {
                 "stocks": {
-                    "$ref": "#/definitions/structs.Stocks"
+                    "description": "map[zone] -\u003e stocks",
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.Stocks"
+                    }
                 }
             }
         },
@@ -7764,6 +7864,9 @@ var doc = `{
                 },
                 "freeMemory": {
                     "type": "integer"
+                },
+                "zone": {
+                    "type": "string"
                 }
             }
         },

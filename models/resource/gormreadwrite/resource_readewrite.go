@@ -126,6 +126,10 @@ func (rw *GormResourceReadWrite) diskFiltered(db *gorm.DB, filter *structs.DiskF
 func (rw *GormResourceReadWrite) locationFiltered(db *gorm.DB, location *structs.Location) (*gorm.DB, error) {
 	var regionCode, zoneCode, rackCode string
 
+	if location.HostIp != "" {
+		db = db.Where("hosts.ip = ?", location.HostIp)
+	}
+
 	// Region field should be required for follower filter
 	if location.Region == "" {
 		return db, nil
@@ -146,14 +150,10 @@ func (rw *GormResourceReadWrite) locationFiltered(db *gorm.DB, location *structs
 		db = db.Where("hosts.rack = ?", rackCode)
 	}
 
-	if location.HostIp != "" {
-		db = db.Where("hosts.ip = ?", location.HostIp)
-	}
-
 	return db, nil
 }
 
-func (rw *GormResourceReadWrite) Query(ctx context.Context, filter *structs.HostFilter, offset int, limit int) (hosts []rp.Host, total int64, err error) {
+func (rw *GormResourceReadWrite) Query(ctx context.Context, location *structs.Location, filter *structs.HostFilter, offset int, limit int) (hosts []rp.Host, total int64, err error) {
 	hosts = make([]rp.Host, 0)
 	db := rw.DB(ctx).Model(&rp.Host{})
 	// Check Host Detail
@@ -163,6 +163,10 @@ func (rw *GormResourceReadWrite) Query(ctx context.Context, filter *structs.Host
 			return nil, 0, errors.NewErrorf(errors.TIEM_RESOURCE_HOST_NOT_FOUND, "query host %s error, %v", filter.HostID, err)
 		}
 		return
+	}
+	db, err = rw.locationFiltered(db, location)
+	if err != nil {
+		return nil, 0, err
 	}
 	db, err = rw.hostFiltered(db, filter)
 	if err != nil {
@@ -238,7 +242,7 @@ func (rw *GormResourceReadWrite) GetHostItems(ctx context.Context, filter *struc
 func (rw *GormResourceReadWrite) GetHostStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks []structs.Stocks, err error) {
 	tx := rw.DB(ctx).Begin()
 	db := tx.Model(&rp.Host{}).Select(
-		"hosts.free_cpu_cores as free_cpu_cores, hosts.free_memory as free_memory, count(disks.id) as free_disk_count, sum(disks.capacity) as free_disk_capacity").Joins(
+		"hosts.az as zone, hosts.free_cpu_cores as free_cpu_cores, hosts.free_memory as free_memory, count(disks.id) as free_disk_count, sum(disks.capacity) as free_disk_capacity").Joins(
 		"left join disks on disks.host_id = hosts.id")
 	db, err = rw.locationFiltered(db, location)
 	if err != nil {

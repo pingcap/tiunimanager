@@ -196,8 +196,8 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string) (flowI
 	return flowIds, nil
 }
 
-func (p *ResourcePool) QueryHosts(ctx context.Context, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, total int64, err error) {
-	return p.hostProvider.QueryHosts(ctx, filter, page)
+func (p *ResourcePool) QueryHosts(ctx context.Context, location *structs.Location, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, total int64, err error) {
+	return p.hostProvider.QueryHosts(ctx, location, filter, page)
 }
 
 func (p *ResourcePool) UpdateHostStatus(ctx context.Context, hostIds []string, status string) (err error) {
@@ -212,6 +212,6 @@ func (p *ResourcePool) GetHierarchy(ctx context.Context, filter *structs.HostFil
 	return p.hostProvider.GetHierarchy(ctx, filter, level, depth)
 }
 
-func (p *ResourcePool) GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks *structs.Stocks, err error) {
+func (p *ResourcePool) GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks map[string]*structs.Stocks, err error) {
 	return p.hostProvider.GetStocks(ctx, location, hostFilter, diskFilter)
 }

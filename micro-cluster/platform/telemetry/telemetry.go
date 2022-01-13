@@ -258,7 +258,7 @@ func (t *Manager) generateEMAccessStatistics(ctx context.Context) (usages []stru
 func (t *Manager) generateEMManagementHostsInfo(ctx context.Context) (nodes []structs.NodeInfo, er error) {
 
 	rw := models.GetResourceReaderWriter()
-	hosts, _, err := rw.Query(ctx, &structs.HostFilter{}, 0, math.MaxInt32)
+	hosts, _, err := rw.Query(ctx, &structs.Location{}, &structs.HostFilter{}, 0, math.MaxInt32)
 	if err != nil {
 		framework.LogWithContext(ctx).Warningf("query hosts from database error %v", err)
 		return nil, errors.NewErrorf(TelemetryGenerateEMManagementHostsInfoDataError, "query hosts from database error %v", err)

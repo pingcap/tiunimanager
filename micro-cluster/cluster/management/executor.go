@@ -19,6 +19,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
@@ -953,26 +954,25 @@ func readRemoteFile(ctx context.Context, sftp *sftp.Client, clusterHome string, 
 var validateHostInterval = 3 * time.Second
 var validateHostTimeout = 5 * time.Minute
 
-func mockStatus(ip string) string {
-	if ip == "127.0.0.1" {
-		return string(constants.HostOnline)
-	}
-	if ip == "127.0.0.2" {
-		return string(constants.HostOnline)
-	}
-	if ip == "127.0.0.3" {
-		return string(constants.HostInit)
-	}
-	return string(constants.HostFailed)
-}
-
 func validateHostStatus(node *workflowModel.WorkFlowNode, context *workflow.FlowContext, ip string) error {
 	ticker := time.NewTicker(validateHostInterval)
 	index := validateHostTimeout / validateHostInterval
 	for range ticker.C {
-		hostInfo := &structs.HostInfo {
-			Status: mockStatus(ip),
+		list, _, err := resourcepool.GetResourcePool().GetHostProvider().QueryHosts(context, &structs.Location{
+			HostIp: ip,
+		}, &structs.HostFilter{}, &structs.PageRequest{
+			Page: 1,
+			PageSize: 1,
+		})
+		if err != nil {
+			err = errors.WrapError(errors.TIEM_RESOURCE_HOST_NOT_FOUND, ip, err)
+			return err
 		}
+		if len(list) == 0 {
+			err = errors.WrapError(errors.TIEM_RESOURCE_HOST_NOT_FOUND, ip, err)
+			return err
+		}
+		hostInfo := list[0]
 		switch hostInfo.Status {
 		case string(constants.HostOnline):
 			node.Record(fmt.Sprintf("host %s status is online", ip))

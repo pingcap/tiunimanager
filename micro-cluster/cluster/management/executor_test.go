@@ -19,6 +19,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
+	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
+	"strconv"
+
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
 	"os"
 	"testing"
 	"time"
@@ -1824,8 +1830,20 @@ func Test_fetchTopologyFile(t *testing.T) {
 }
 
 func Test_validateHostsStatus(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	resourceRW := mockresource.NewMockReaderWriter(ctrl)
+	models.SetResourceReaderWriter(resourceRW)
+
+	provider := resourcepool.GetResourcePool().GetHostProvider().(*hostprovider.FileHostProvider)
+	provider.SetResourceReaderWriter(resourceRW)
 
 	t.Run("normal", func(t *testing.T) {
+		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host {
+			{Status: string(constants.HostOnline)},
+		}, int64(1), nil).Times(1)
+
 		node := &workflowModel.WorkFlowNode{}
 
 		context := &workflow.FlowContext {
@@ -1838,11 +1856,6 @@ func Test_validateHostsStatus(t *testing.T) {
 					{
 						HostIP: []string{
 							"127.0.0.1",
-						},
-					},
-					{
-						HostIP: []string{
-							"127.0.0.2",
 						},
 					},
 				},
@@ -1871,34 +1884,11 @@ func Test_validateHostsStatus(t *testing.T) {
 		err := validateHostsStatus(node, context)
 		assert.Error(t, err)
 	})
-	t.Run("timeout", func(t *testing.T) {
-		node := &workflowModel.WorkFlowNode{}
-		validateHostTimeout = time.Second * 6
-		context := &workflow.FlowContext {
-			Context: context.TODO(),
-			FlowData: map[string]interface{}{},
-		}
-		context.SetData(ContextClusterMeta, &handler.ClusterMeta {
-			Instances: map[string][]*management.ClusterInstance {
-				"TiDB": {
-					{
-						HostIP: []string{
-							"127.0.0.1",
-						},
-					},
-					{
-						HostIP: []string{
-							"127.0.0.3",
-						},
-					},
-				},
-			},
-		})
-		err := validateHostsStatus(node, context)
-		assert.Error(t, err)
-		assert.NotEmpty(t, node.Result)
-	})
 	t.Run("failed", func(t *testing.T) {
+		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host {
+			{Status: string(constants.HostFailed)},
+		}, int64(1), nil).Times(1)
+
 		node := &workflowModel.WorkFlowNode{}
 
 		context := &workflow.FlowContext {
@@ -1913,9 +1903,61 @@ func Test_validateHostsStatus(t *testing.T) {
 							"127.0.0.1",
 						},
 					},
+				},
+			},
+		})
+		err := validateHostsStatus(node, context)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), strconv.Itoa(int(errors.TIEM_RESOURCE_CREATE_HOST_ERROR)))
+	})
+
+	t.Run("init + succeed", func(t *testing.T) {
+		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host {
+			{Status: string(constants.HostInit)},
+		}, int64(1), nil).Times(1)
+
+		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host {
+			{Status: string(constants.HostOnline)},
+		}, int64(1), nil).Times(1)
+
+		node := &workflowModel.WorkFlowNode{}
+
+		context := &workflow.FlowContext {
+			Context: context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		context.SetData(ContextClusterMeta, &handler.ClusterMeta {
+			Instances: map[string][]*management.ClusterInstance {
+				"TiDB": {
 					{
 						HostIP: []string{
-							"127.0.0.4",
+							"127.0.0.1",
+						},
+					},
+				},
+			},
+		})
+		err := validateHostsStatus(node, context)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, node.Result)
+	})
+	t.Run("timeout", func(t *testing.T) {
+		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host {
+			{Status: string(constants.HostInit)},
+		}, int64(1), nil).Times(2)
+
+		node := &workflowModel.WorkFlowNode{}
+		validateHostTimeout = time.Second * 6
+		context := &workflow.FlowContext {
+			Context: context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		context.SetData(ContextClusterMeta, &handler.ClusterMeta {
+			Instances: map[string][]*management.ClusterInstance {
+				"TiDB": {
+					{
+						HostIP: []string{
+							"127.0.0.1",
 						},
 					},
 				},
@@ -1924,6 +1966,7 @@ func Test_validateHostsStatus(t *testing.T) {
 		err := validateHostsStatus(node, context)
 		assert.Error(t, err)
 		assert.NotEmpty(t, node.Result)
+		assert.Contains(t, node.Result, "importing")
 	})
 
 }

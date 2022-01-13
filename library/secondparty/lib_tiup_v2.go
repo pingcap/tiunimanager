@@ -380,7 +380,13 @@ func (manager *SecondPartyManager) Check(ctx context.Context, tiUPComponent TiUP
 	args = append(args, checkObject)
 	args = append(args, flags...)
 	tiUPHome := GetTiUPHomeForComponent(ctx, tiUPComponent)
-	result, err = manager.startSyncTiUPOperation(ctx, args, timeoutS, tiUPHome)
+	resp, err := manager.startSyncTiUPOperation(ctx, args, timeoutS, tiUPHome)
+	if err != nil {
+		return "", err
+	}
+
+	jsons := strings.Split(resp, "\n")
+	result = jsons[len(jsons)-2]
 	return
 }
 

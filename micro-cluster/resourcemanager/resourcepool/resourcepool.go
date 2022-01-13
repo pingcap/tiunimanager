@@ -230,11 +230,11 @@ func (p *ResourcePool) GetStocks(ctx context.Context, location *structs.Location
 }
 
 func (p *ResourcePool) selectImportFlowName(condition *structs.ImportCondition) (flowName string) {
-	if condition.ReserveHost {
-		flowName = rp_consts.FlowTakeOverHosts
+	if framework.Current.GetClientArgs().SkipHostInit || condition.SkipHostInit {
+		flowName = rp_consts.FlowImportHostsWithoutInit
 	} else {
-		if framework.Current.GetClientArgs().SkipHostInit || condition.SkipHostInit {
-			flowName = rp_consts.FlowImportHostsWithoutInit
+		if condition.ReserveHost {
+			flowName = rp_consts.FlowTakeOverHosts
 		} else {
 			flowName = rp_consts.FlowImportHosts
 		}

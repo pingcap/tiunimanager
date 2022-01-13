@@ -74,7 +74,8 @@ func Test_SelectImportFlowName(t *testing.T) {
 	}{
 		{"ImportFlow", structs.ImportCondition{ReserveHost: false, SkipHostInit: false}, want{rp_consts.FlowImportHosts}},
 		{"ImportFlowWithoutInit", structs.ImportCondition{ReserveHost: false, SkipHostInit: true}, want{rp_consts.FlowImportHostsWithoutInit}},
-		{"TakeOverFlow", structs.ImportCondition{ReserveHost: true}, want{rp_consts.FlowTakeOverHosts}},
+		{"TakeOverFlowWithoutInit", structs.ImportCondition{ReserveHost: true, SkipHostInit: true}, want{rp_consts.FlowImportHostsWithoutInit}},
+		{"TakeOverFlow", structs.ImportCondition{ReserveHost: true, SkipHostInit: false}, want{rp_consts.FlowTakeOverHosts}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {

@@ -55,7 +55,7 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 		framework.LogWithContext(ctx).Errorf("convert storage type failed, %s", err.Error())
 		return err
 	}
-	node.Record(fmt.Sprintf("convert storage type: %s ", storageType))
+	node.Record(fmt.Sprintf("convert storage type: %s; ", storageType))
 
 	clusterFacade := secondparty.ClusterFacade{
 		DbConnParameter: secondparty.DbConnParam{

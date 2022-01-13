@@ -181,20 +181,20 @@ func (manager *ProductManager) CreateProduct(ctx context.Context, request messag
 	var components []pt.ProductComponent
 	for _, item := range request.Components {
 		components = append(components, pt.ProductComponent{
-			VendorID:       request.ProductInfo.VendorID,
-			RegionID:       request.ProductInfo.RegionID,
-			ProductID:      request.ProductInfo.ID,
-			ProductVersion: request.ProductInfo.Version,
-			Arch:           request.ProductInfo.Arch,
-			ComponentID:    item.ID,
-			Name:           item.Name,
-			Status:         request.ProductInfo.Status,
-			PurposeType:    item.PurposeType,
-			StartPort:      item.StartPort,
-			EndPort:        item.EndPort,
-			MaxPort:        item.MaxPort,
-			MinInstance:    item.MinInstance,
-			MaxInstance:    item.MaxInstance,
+			VendorID:                request.ProductInfo.VendorID,
+			RegionID:                request.ProductInfo.RegionID,
+			ProductID:               request.ProductInfo.ID,
+			ProductVersion:          request.ProductInfo.Version,
+			Arch:                    request.ProductInfo.Arch,
+			ComponentID:             item.ID,
+			Name:                    item.Name,
+			Status:                  request.ProductInfo.Status,
+			PurposeType:             item.PurposeType,
+			StartPort:               item.StartPort,
+			EndPort:                 item.EndPort,
+			MaxPort:                 item.MaxPort,
+			MinInstance:             item.MinInstance,
+			MaxInstance:             item.MaxInstance,
 		})
 	}
 	err = rw.CreateProduct(ctx, product, components)

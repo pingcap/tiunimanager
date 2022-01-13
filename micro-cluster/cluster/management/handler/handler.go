@@ -879,11 +879,11 @@ func (p *ClusterMeta) GetClusterUserNamePasswd() *TiDBUserInfo {
 	}
 }
 
-// GetDBUserNamePasswd
+// GetDBUserNamePassword
 // @Description: get username and password of the different type user
 // @Receiver p
 // @return BDUser
-func (p *ClusterMeta) GetDBUserNamePasswd(roleTpye constants.DBRoleType) *user.DBUser {
+func (p *ClusterMeta) GetDBUserNamePassword(roleType constants.DBRoleType) *user.DBUser {
 	// todo
 	return &user.DBUser{}
 }

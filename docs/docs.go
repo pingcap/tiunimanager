@@ -3797,6 +3797,26 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "name": "HostIp",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "Rack",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "Region",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "Zone",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "arch",
                         "in": "query"
                     },

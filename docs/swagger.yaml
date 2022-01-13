@@ -4497,6 +4497,18 @@ paths:
       description: get hosts list
       parameters:
       - in: query
+        name: HostIp
+        type: string
+      - in: query
+        name: Rack
+        type: string
+      - in: query
+        name: Region
+        type: string
+      - in: query
+        name: Zone
+        type: string
+      - in: query
         name: arch
         type: string
       - in: query

@@ -30,6 +30,7 @@ import (
 type QueryHostsReq struct {
 	structs.PageRequest
 	structs.HostFilter
+	structs.Location
 }
 
 func (req *QueryHostsReq) GetHostFilter() *structs.HostFilter {
@@ -37,6 +38,9 @@ func (req *QueryHostsReq) GetHostFilter() *structs.HostFilter {
 }
 func (req *QueryHostsReq) GetPage() *structs.PageRequest {
 	return &(req.PageRequest)
+}
+func (req *QueryHostsReq) GetLocation() *structs.Location {
+	return &(req.Location)
 }
 
 type QueryHostsResp struct {

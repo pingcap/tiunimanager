@@ -446,7 +446,6 @@ func (c ClusterServiceHandler) PreviewScaleOutCluster(ctx context.Context, req *
 	return nil
 }
 
-
 func (c ClusterServiceHandler) RestoreNewCluster(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) (err error) {
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "RestoreNewCluster", int(resp.GetCode()))
@@ -921,8 +920,9 @@ func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, req *clust
 	if handleRequest(ctx, req, resp, &reqStruct) {
 		filter := reqStruct.GetHostFilter()
 		page := reqStruct.GetPage()
+		location := reqStruct.GetLocation()
 
-		hosts, total, err := handler.resourceManager.QueryHosts(framework.NewBackgroundMicroCtx(ctx, false), filter, page)
+		hosts, total, err := handler.resourceManager.QueryHosts(framework.NewBackgroundMicroCtx(ctx, false), location, filter, page)
 		var rsp message.QueryHostsResp
 		if err == nil {
 			rsp.Hosts = hosts

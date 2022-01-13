@@ -109,6 +109,6 @@ type SystemConfig struct {
 type DBUserRole struct {
 	ClusterType constants.EMProductIDType
 	RoleName    string
-	RoleType    constants.DBRoleType
+	RoleType    constants.DBUserRoleType
 	Permission  []string
 }

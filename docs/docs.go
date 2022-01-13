@@ -7720,6 +7720,12 @@ var doc = `{
                 },
                 "startPort": {
                     "type": "integer"
+                },
+                "suggestedInstancesCount": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },

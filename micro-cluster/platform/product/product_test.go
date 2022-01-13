@@ -451,7 +451,12 @@ func TestProductManager_QueryProducts(t *testing.T) {
 		prw.EXPECT().QueryProducts(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(products, nil).AnyTimes()
 		resp, err := mgr.QueryProducts(context.TODO(), msg)
 		assert.NoError(t, err)
-		assert.Equal(t, true, reflect.DeepEqual(resp.Products, products))
+		assert.Equal(t, 2, len(resp.Products))
+		assert.Equal(t, 2, len(resp.Products["CN-HANGZHOU"]))
+		assert.Equal(t, 2, len(resp.Products["CN-HANGZHOU"]["TiDB"]))
+		assert.Equal(t, 1, len(resp.Products["CN-HANGZHOU"]["TiDB"]["X86_64"]))
+		assert.Equal(t, "TiDB", resp.Products["CN-HANGZHOU"]["TiDB"]["X86_64"]["5.0.0"].Name)
+
 	})
 
 	t.Run("QueryProductsWithEmptyParameter", func(t *testing.T) {

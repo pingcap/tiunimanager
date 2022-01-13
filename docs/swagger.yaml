@@ -2032,6 +2032,10 @@ definitions:
         type: object
       startPort:
         type: integer
+      suggestedInstancesCount:
+        items:
+          type: integer
+        type: array
     type: object
   structs.ProductDetail:
     properties:

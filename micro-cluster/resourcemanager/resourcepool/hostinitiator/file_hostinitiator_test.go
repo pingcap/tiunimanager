@@ -216,3 +216,40 @@ func Test_LeaveEMCluster(t *testing.T) {
 	err := fileInitiator.LeaveEMCluster(ctx, "192.168.177.180:0")
 	assert.Nil(t, err)
 }
+
+func Test_BuildHostCheckResulsFromJson(t *testing.T) {
+	jsonStr := `{"result":[
+		{"node":"172.16.6.252","name":"os-version","status":"Pass","message":"OS is CentOS Linux 7 (Core) 7.6.1810"},
+		{"node":"172.16.6.252","name":"cpu-cores","status":"Pass","message":"number of CPU cores / threads: 4"},
+		{"node":"172.16.6.252","name":"cpu-governor","status":"Warn","message":"Unable to determine current CPU frequency governor policy"},
+		{"node":"172.16.6.252","name":"swap","status":"Fail","message":"swap is enabled, please disable it for best performance"},
+		{"node":"172.16.6.252","name":"memory","status":"Pass","message":"memory size is 8192MB"},
+		{"node":"172.16.6.252","name":"disk","status":"Warn","message":"mount point /home does not have 'noatime' option set"},
+		{"node":"172.16.6.252","name":"limits","status":"Fail","message":"soft limit of 'nofile' for user 'tidb' is not set or too low"},
+		{"node":"172.16.6.252","name":"limits","status":"Fail","message":"hard limit of 'nofile' for user 'tidb' is not set or too low"},
+		{"node":"172.16.6.252","name":"limits","status":"Fail","message":"soft limit of 'stack' for user 'tidb' is not set or too low"},
+		{"node":"172.16.6.252","name":"sysctl","status":"Fail","message":"fs.file-max = 790964, should be greater than 1000000"},
+		{"node":"172.16.6.252","name":"sysctl","status":"Fail","message":"net.core.somaxconn = 128, should be greater than 32768"},
+		{"node":"172.16.6.252","name":"sysctl","status":"Fail","message":"net.ipv4.tcp_syncookies = 1, should be 0"},
+		{"node":"172.16.6.252","name":"sysctl","status":"Fail","message":"vm.swappiness = 30, should be 0"},
+		{"node":"172.16.6.252","name":"selinux","status":"Pass","message":"SELinux is disabled"},
+		{"node":"172.16.6.252","name":"thp","status":"Fail","message":"THP is enabled, please disable it for best performance"},
+		{"node":"172.16.6.252","name":"command","status":"Fail","message":"numactl not usable, bash: numactl: command not found"},
+		{"node":"172.16.5.168","name":"exist","status":"Fail","message":"/home/tiem already exists"},
+		{"node":"172.16.5.168","name":"exist","status":"Fail","message":"/root already exists"},
+		{"node":"172.16.5.168","name":"os-version","status":"Pass","message":"OS is CentOS Linux 7 (Core) 7.6.1810"},
+		{"node":"172.16.5.168","name":"cpu-cores","status":"Pass","message":"number of CPU cores / threads: 8"},
+		{"node":"172.16.5.168","name":"cpu-governor","status":"Warn","message":"Unable to determine current CPU frequency governor policy"},
+		{"node":"172.16.5.168","name":"swap","status":"Fail","message":"swap is enabled, please disable it for best performance"},
+		{"node":"172.16.5.168","name":"memory","status":"Pass","message":"memory size is 16384MB"},
+		{"node":"172.16.5.168","name":"disk","status":"Warn","message":"mount point / does not have 'noatime' option set"},
+		{"node":"172.16.5.168","name":"disk","status":"Warn","message":"mount point /home does not have 'noatime' option set"},
+		{"node":"172.16.5.168","name":"selinux","status":"Pass","message":"SELinux is disabled"},
+		{"node":"172.16.5.168","name":"thp","status":"Pass","message":"THP is disabled"},
+		{"node":"172.16.5.168","name":"command","status":"Fail","message":"numactl not usable, bash: numactl: command not found"}]}`
+
+	var results hostCheckResults
+	err := (&results).buildFromJson(jsonStr)
+	assert.Nil(t, err)
+	assert.Equal(t, 28, len(results.Result))
+}

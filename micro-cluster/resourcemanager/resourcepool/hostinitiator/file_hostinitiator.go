@@ -18,6 +18,7 @@ package hostinitiator
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"strconv"
 	"strings"
 	"text/template"
@@ -281,4 +282,32 @@ func (p *templateScaleOut) generateTopologyConfig(ctx context.Context) (string, 
 
 func (p *FileHostInitiator) installTcpDump(ctx context.Context, hosts []structs.HostInfo) (err error) {
 	return nil
+}
+
+type hostCheckResults struct {
+	Result []hostCheckResult `json:"result"`
+}
+
+func (results *hostCheckResults) buildFromJson(resultStr string) (err error) {
+	return json.Unmarshal([]byte(resultStr), results)
+}
+
+func (results hostCheckResults) analyzeCheckResults() (sortedResult map[string][]hostCheckResult) {
+	sortedResult = make(map[string][]hostCheckResult)
+	for i := range results.Result {
+		if res, ok := sortedResult[results.Result[i].Status]; ok {
+			res = append(res, results.Result[i])
+		} else {
+			sortedResult[results.Result[i].Status] = []hostCheckResult{results.Result[i]}
+		}
+	}
+	return
+}
+
+// hostCheckResult represents the check result of each node
+type hostCheckResult struct {
+	Node    string `json:"node"`
+	Name    string `json:"name"`
+	Status  string `json:"status"`
+	Message string `json:"message"`
 }

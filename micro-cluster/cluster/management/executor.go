@@ -712,7 +712,7 @@ func syncConnectionKey(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 		getClusterSpaceInTiUP(context, clusterMeta.Cluster.ID),
 		"ssh/id_rsa")
 	if err != nil {
-		err = errors.NewEMErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "sync connection private key failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
+		err = errors.NewErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "sync connection private key failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
 		framework.LogWithContext(context).Errorf(err.Error())
 		return  err
 	}
@@ -720,7 +720,7 @@ func syncConnectionKey(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 		getClusterSpaceInTiUP(context, clusterMeta.Cluster.ID),
 		"ssh/id_rsa.pub")
 	if err != nil {
-		err = errors.NewEMErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "sync connection public key failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
+		err = errors.NewErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "sync connection public key failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
 		framework.LogWithContext(context).Errorf(err.Error())
 		return  err
 	}
@@ -742,7 +742,7 @@ func syncTopology(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 		getClusterSpaceInTiUP(context, clusterMeta.Cluster.ID),
 		"meta.yaml")
 	if err != nil {
-		err = errors.NewEMErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "read meta.yaml failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
+		err = errors.NewErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "read meta.yaml failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
 		framework.LogWithContext(context).Errorf(err.Error())
 		return  err
 	}
@@ -949,6 +949,74 @@ func readRemoteFile(ctx context.Context, sftp *sftp.Client, clusterHome string, 
 	}
 
 	return dataByte, nil
+}
+
+var validateHostInterval = 3 * time.Second
+var validateHostTimeout = 5 * time.Minute
+
+func mockStatus(ip string) string {
+	if ip == "127.0.0.1" {
+		return string(constants.HostOnline)
+	}
+	if ip == "127.0.0.2" {
+		return string(constants.HostOnline)
+	}
+	if ip == "127.0.0.3" {
+		return string(constants.HostInit)
+	}
+	return string(constants.HostFailed)
+}
+
+func validateHostStatus(node *workflowModel.WorkFlowNode, context *workflow.FlowContext, ip string) error {
+	ticker := time.NewTicker(validateHostInterval)
+	index := validateHostTimeout / validateHostInterval
+	for range ticker.C {
+		hostInfo := &structs.HostInfo {
+			Status: mockStatus(ip),
+		}
+		switch hostInfo.Status {
+		case string(constants.HostOnline):
+			node.Record(fmt.Sprintf("host %s status is online", ip))
+			ticker.Stop()
+			return nil
+		case string(constants.HostInit):
+			node.Record(fmt.Sprintf("importing host %s", ip))
+			index = index - 1
+			if index == 0 {
+				err := errors.NewErrorf(errors.TIEM_TASK_TIMEOUT, "importing host %s timeout", ip)
+				framework.LogWithContext(context).Error(err.Error())
+				ticker.Stop()
+				return err
+			}
+			break
+		default:
+			err := errors.NewErrorf(errors.TIEM_RESOURCE_CREATE_HOST_ERROR, "host %s status is %s", ip, hostInfo.Status)
+			framework.LogWithContext(context).Error(err.Error())
+			ticker.Stop()
+			return err
+		}
+	}
+	return nil
+}
+
+func validateHostsStatus(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	for _, component := range clusterMeta.Instances {
+		for _, instance := range component {
+			if len(instance.HostIP) > 0 {
+				ip := instance.HostIP[0]
+				err := validateHostStatus(node, context, ip)
+				if err != nil {
+					return err
+				}
+			} else {
+				err := errors.NewErrorf(errors.TIEM_INSTANCE_NOT_FOUND, "clusterInstance %s has no ip", instance.ID)
+				framework.LogWithContext(context).Errorf(err.Error())
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // rebuildTopologyFromConfig

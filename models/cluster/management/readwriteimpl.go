@@ -37,7 +37,7 @@ func (g *ClusterReadWrite) Create(ctx context.Context, cluster *Cluster) (*Clust
 		// duplicated name
 		existOrError := g.DB(ctx).Model(&Cluster{}).Where("name = ?", cluster.Name).First(&Cluster{}).Error
 		if existOrError == nil {
-			err = errors.NewEMErrorf(errors.TIEM_DUPLICATED_NAME, "%s:%s", errors.TIEM_DUPLICATED_NAME.Explain(), cluster.Name)
+			err = errors.NewErrorf(errors.TIEM_DUPLICATED_NAME, "%s:%s", errors.TIEM_DUPLICATED_NAME.Explain(), cluster.Name)
 		} else {
 			err = dbCommon.WrapDBError(err)
 		}

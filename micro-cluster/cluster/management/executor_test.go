@@ -1822,3 +1822,108 @@ func Test_rebuildTiupSpaceForCluster(t *testing.T) {
 func Test_fetchTopologyFile(t *testing.T) {
 
 }
+
+func Test_validateHostsStatus(t *testing.T) {
+
+	t.Run("normal", func(t *testing.T) {
+		node := &workflowModel.WorkFlowNode{}
+
+		context := &workflow.FlowContext {
+			Context: context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		context.SetData(ContextClusterMeta, &handler.ClusterMeta {
+			Instances: map[string][]*management.ClusterInstance {
+				"TiDB": {
+					{
+						HostIP: []string{
+							"127.0.0.1",
+						},
+					},
+					{
+						HostIP: []string{
+							"127.0.0.2",
+						},
+					},
+				},
+			},
+		})
+		err := validateHostsStatus(node, context)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, node.Result)
+	})
+	t.Run("ip not existed", func(t *testing.T) {
+		node := &workflowModel.WorkFlowNode{}
+
+		context := &workflow.FlowContext {
+			Context: context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		context.SetData(ContextClusterMeta, &handler.ClusterMeta {
+			Instances: map[string][]*management.ClusterInstance {
+				"TiDB": {
+					{
+						HostIP: []string{},
+					},
+				},
+			},
+		})
+		err := validateHostsStatus(node, context)
+		assert.Error(t, err)
+	})
+	t.Run("timeout", func(t *testing.T) {
+		node := &workflowModel.WorkFlowNode{}
+		validateHostTimeout = time.Second * 6
+		context := &workflow.FlowContext {
+			Context: context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		context.SetData(ContextClusterMeta, &handler.ClusterMeta {
+			Instances: map[string][]*management.ClusterInstance {
+				"TiDB": {
+					{
+						HostIP: []string{
+							"127.0.0.1",
+						},
+					},
+					{
+						HostIP: []string{
+							"127.0.0.3",
+						},
+					},
+				},
+			},
+		})
+		err := validateHostsStatus(node, context)
+		assert.Error(t, err)
+		assert.NotEmpty(t, node.Result)
+	})
+	t.Run("failed", func(t *testing.T) {
+		node := &workflowModel.WorkFlowNode{}
+
+		context := &workflow.FlowContext {
+			Context: context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		context.SetData(ContextClusterMeta, &handler.ClusterMeta {
+			Instances: map[string][]*management.ClusterInstance {
+				"TiDB": {
+					{
+						HostIP: []string{
+							"127.0.0.1",
+						},
+					},
+					{
+						HostIP: []string{
+							"127.0.0.4",
+						},
+					},
+				},
+			},
+		})
+		err := validateHostsStatus(node, context)
+		assert.Error(t, err)
+		assert.NotEmpty(t, node.Result)
+	})
+
+}

@@ -127,7 +127,7 @@ func (t *Manager) Report(ctx context.Context) error {
 	response, err = util.PostJSON(constants.TelemetryAPIEndpoint, map[string]interface{}{"EnterpriseManager": data}, nil)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("post telemetry data to %s error %v", constants.TelemetryAPIEndpoint, err)
-		return errors.NewEMErrorf(TelemetryPushDataToServiceError, "post telemetry data to %s error %v", constants.TelemetryAPIEndpoint, err)
+		return errors.NewErrorf(TelemetryPushDataToServiceError, "post telemetry data to %s error %v", constants.TelemetryAPIEndpoint, err)
 	}
 
 	// We don't even want to know any response body. Just close it.ignore error messages.
@@ -135,7 +135,7 @@ func (t *Manager) Report(ctx context.Context) error {
 
 	if response.StatusCode != http.StatusOK {
 		framework.LogWithContext(ctx).Errorf("post telemetry data to %s error, http code: %d", constants.TelemetryAPIEndpoint, response.StatusCode)
-		return errors.NewEMErrorf(TelemetryPushDataToServiceError, "post telemetry data to %s error,http code: %d", constants.TelemetryAPIEndpoint, response.StatusCode)
+		return errors.NewErrorf(TelemetryPushDataToServiceError, "post telemetry data to %s error,http code: %d", constants.TelemetryAPIEndpoint, response.StatusCode)
 	}
 	framework.LogWithContext(ctx).Infof("report telemetry data to %s successful", constants.TelemetryAPIEndpoint)
 	return nil
@@ -191,28 +191,28 @@ func (t *Manager) generateEMNodeInfo(ctx context.Context) (nodes []structs.NodeI
 	node.Os.Platform, node.Os.Family, node.Os.Version, err = arch.OSInfo(ctx)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get enterprise manager host os information error: %v", err)
-		return nil, errors.NewEMErrorf(TelemetryGenerateEnterpriseNodeInfoDataError, "get enterprise manager host os information error: %v", err)
+		return nil, errors.NewErrorf(TelemetryGenerateEnterpriseNodeInfoDataError, "get enterprise manager host os information error: %v", err)
 	}
 
 	//cpu information
 	node.Cpus.Num, node.Cpus.Sockets, node.Cpus.Cores, node.Cpus.Model, node.Cpus.HZ, err = arch.GetCpuInfo(ctx)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get enterprise manager host cpu information error: %v", err)
-		return nil, errors.NewEMErrorf(TelemetryGenerateEnterpriseNodeInfoDataError, "get enterprise manager host cpu information error: %v", err)
+		return nil, errors.NewErrorf(TelemetryGenerateEnterpriseNodeInfoDataError, "get enterprise manager host cpu information error: %v", err)
 	}
 
 	//load information
 	_, node.Loadavg15, err = arch.GetLoadavg(ctx)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get enterprise manager host load information error: %v", err)
-		return nil, errors.NewEMErrorf(TelemetryGenerateEnterpriseNodeInfoDataError, "get enterprise manager host load information error: %v", err)
+		return nil, errors.NewErrorf(TelemetryGenerateEnterpriseNodeInfoDataError, "get enterprise manager host load information error: %v", err)
 	}
 
 	//memory information
 	node.Memory.Total, node.Memory.Available, err = arch.GetVirtualMemory(ctx)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get enterprise manager host memory information error: %v", err)
-		return nil, errors.NewEMErrorf(TelemetryGenerateEnterpriseNodeInfoDataError, "get enterprise manager host memory information error: %v", err)
+		return nil, errors.NewErrorf(TelemetryGenerateEnterpriseNodeInfoDataError, "get enterprise manager host memory information error: %v", err)
 	}
 
 	//disk information(TBD)
@@ -233,7 +233,7 @@ func (t *Manager) generateEMAccessStatistics(ctx context.Context) (usages []stru
 	config, err := configRW.GetConfig(ctx, constants.ConfigPrometheusAddress)
 	if err != nil {
 		framework.LogWithContext(ctx).Warningf("query %s from system config error %v", constants.ConfigPrometheusAddress, err)
-		return usages, errors.NewEMErrorf(GetSystemConfigError, "query %s from system config error %v", constants.ConfigPrometheusAddress, err)
+		return usages, errors.NewErrorf(GetSystemConfigError, "query %s from system config error %v", constants.ConfigPrometheusAddress, err)
 	}
 	for _, item := range constants.EMMetrics {
 		promQL := fmt.Sprintf("%s%s{} by (%s)", constants.OpenAPIMetricsPrefix, item, constants.ComponentIDOpenAPIServer)
@@ -261,7 +261,7 @@ func (t *Manager) generateEMManagementHostsInfo(ctx context.Context) (nodes []st
 	hosts, _, err := rw.Query(ctx, &structs.HostFilter{}, 0, math.MaxInt32)
 	if err != nil {
 		framework.LogWithContext(ctx).Warningf("query hosts from database error %v", err)
-		return nil, errors.NewEMErrorf(TelemetryGenerateEMManagementHostsInfoDataError, "query hosts from database error %v", err)
+		return nil, errors.NewErrorf(TelemetryGenerateEMManagementHostsInfoDataError, "query hosts from database error %v", err)
 	}
 	//Currently, report the host ID, Memory, CPU Core, Arch,
 	//and then decide whether to add more metrics according to the operation situation.
@@ -287,7 +287,7 @@ func (t *Manager) generateEMManagementClusters(ctx context.Context) (clusters []
 	result, _, err := models.GetClusterReaderWriter().QueryMetas(ctx, filter, pr)
 	if err != nil {
 		framework.LogWithContext(ctx).Warningf("query clusters from database error %v", err)
-		return clusters, errors.NewEMErrorf(TelemetryGenerateEMManagementClustersInfoDataError, "query clusters from database error %v", err)
+		return clusters, errors.NewErrorf(TelemetryGenerateEMManagementClustersInfoDataError, "query clusters from database error %v", err)
 	}
 
 	//Populate the reported data structure with data from the database
@@ -328,7 +328,7 @@ func (t *Manager) isEnabledTelemetry(ctx context.Context) (error, bool) {
 	config, err := configRW.GetConfig(ctx, constants.ConfigTelemetrySwitch)
 	if err != nil {
 		framework.LogWithContext(ctx).Warningf("query %s from system config error %v", constants.ConfigTelemetrySwitch, err)
-		return errors.NewEMErrorf(GetSystemConfigError, "query %s from system config error %v", constants.ConfigTelemetrySwitch, err), false
+		return errors.NewErrorf(GetSystemConfigError, "query %s from system config error %v", constants.ConfigTelemetrySwitch, err), false
 	}
 	return nil, config.ConfigValue == constants.TelemetrySwitchEnable
 }

@@ -160,7 +160,7 @@ func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	framework.LogWithContext(context.Context).Infof(
 		"get scale out cluster %s task id: %s", cluster.ID, taskId)
 
-	node.Record(fmt.Sprintf("scale out cluster %s, version: %s, ", clusterMeta.Cluster.ID, cluster.Version))
+	node.Record(fmt.Sprintf("scale out cluster %s, version: %s ", clusterMeta.Cluster.ID, cluster.Version))
 	return nil
 }
 
@@ -571,7 +571,7 @@ func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	framework.LogWithContext(context.Context).Infof(
 		"get start cluster %s task id: %s", clusterMeta.Cluster.ID, taskId)
 
-	node.Record(fmt.Sprintf("start cluster %s, version: %s, ", clusterMeta.Cluster.ID, cluster.Version))
+	node.Record(fmt.Sprintf("start cluster %s, version: %s ", clusterMeta.Cluster.ID, cluster.Version))
 	return nil
 }
 
@@ -588,7 +588,7 @@ func syncBackupStrategy(node *workflowModel.WorkFlowNode, context *workflow.Flow
 			"get cluster %s backup strategy error: %s", sourceClusterMeta.Cluster.ID, err.Error())
 		return err
 	}
-	node.Record(fmt.Sprintf("get cluster %s backup strategy, ", clusterMeta.Cluster.ID))
+	node.Record(fmt.Sprintf("get cluster %s backup strategy ", clusterMeta.Cluster.ID))
 
 	if len(sourceStrategyRes.Strategy.BackupDate) == 0 {
 		framework.LogWithContext(context).Infof(

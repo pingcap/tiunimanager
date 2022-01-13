@@ -144,7 +144,7 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	}
 
 	framework.LogWithContext(ctx).Infof("call tiupmgr succee, exportTaskId: %s", exportTaskId)
-	node.Record(fmt.Sprintf("export data from cluster %s, host: %s, port: %d, ",
+	node.Record(fmt.Sprintf("export data from cluster %s, host: %s, port: %d ",
 				meta.Cluster.ID, tidbHost, tidbPort))
 	return nil
 }

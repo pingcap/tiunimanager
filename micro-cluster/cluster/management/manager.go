@@ -613,7 +613,9 @@ var takeoverClusterFlow = workflow.WorkFlowDefine{
 	},
 }
 
-func openSftpClient(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error) {
+type openSftpClientFunc func(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error)
+
+var openSftpClient openSftpClientFunc = func(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error) {
 	conf := ssh.ClientConfig{User: req.TiUPUserName,
 		Auth: []ssh.AuthMethod{ssh.Password(req.TiUPUserPassword)},
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {

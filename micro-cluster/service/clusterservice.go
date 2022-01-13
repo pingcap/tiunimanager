@@ -132,7 +132,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.parameterGroupManager = parametergroup.NewManager()
 	handler.clusterParameterManager = clusterParameter.NewManager()
 	handler.clusterManager = clusterManager.NewClusterManager()
-	handler.switchoverManager = switchoverManager.GetManager()
+	handler.switchoverManager = switchoverManager.GetManager(handler.changeFeedManager)
 	handler.systemConfigManager = config.NewSystemConfigManager()
 	handler.brManager = backuprestore.GetBRService()
 	handler.importexportManager = importexport.GetImportExportService()

@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -29,6 +30,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	tsoLib "github.com/pingcap-inc/tiem/library/util/tso"
 	"github.com/pingcap-inc/tiem/message/cluster"
+	changefeedMgrLib "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	"github.com/pingcap-inc/tiem/models"
 	changefeedModel "github.com/pingcap-inc/tiem/models/cluster/changefeed"
@@ -36,7 +38,9 @@ import (
 	"github.com/pingcap-inc/tiem/workflow"
 )
 
-type Manager struct{}
+type Manager struct {
+	changefeedMgr *changefeedMgrLib.Manager
+}
 
 func newManager() *Manager {
 	return &Manager{}
@@ -45,8 +49,9 @@ func newManager() *Manager {
 var mgr = newManager()
 var mgrOnceRegisterWorkFlow sync.Once
 
-func GetManager() *Manager {
+func GetManager(changefeedMgr *changefeedMgrLib.Manager) *Manager {
 	mgrOnceRegisterWorkFlow.Do(func() {
+		mgr.changefeedMgr = changefeedMgr
 		flowManager := workflow.GetWorkFlowService()
 		flowManager.RegisterWorkFlow(context.TODO(), constants.FlowMasterSlaveSwitchoverNormal, &workflow.WorkFlowDefine{
 			FlowName: constants.FlowMasterSlaveSwitchoverNormal,
@@ -260,7 +265,7 @@ func (p *Manager) checkClusterDetailedHealthStatus(ctx context.Context, clusterI
 }
 
 func (p *Manager) checkClusterReadWriteHealth(ctx context.Context, clusterID string) error {
-	userName, password, err := p.clusterGetMysqlUserNameAndPwd(ctx, clusterID)
+	userName, password, err := p.clusterGetCDCUserNameAndPwd(ctx, clusterID)
 	if err != nil {
 		return fmt.Errorf("failed to get cluster's mysql userName and password, err:%s", err)
 	}
@@ -286,6 +291,12 @@ func (p *Manager) clusterGetMysqlUserNameAndPwd(ctx context.Context, clusterID s
 			"clusterGetMysqlUserNameAndPwd get cluster record userName:%s password:%s err:%s", userName, password, err)
 		return userName, password, err
 	}
+}
+
+// with special `RESTRICTED_REPLICA_WRITER_ADMIN` privilege already set
+func (p *Manager) clusterGetCDCUserNameAndPwd(ctx context.Context, clusterID string) (userName, password string, err error) {
+	framework.LogWithContext(ctx).Info("clusterGetCDCUserNameAndPwd clusterID:", clusterID)
+	panic("NIY")
 }
 
 // addr: ip:port
@@ -352,60 +363,126 @@ func (p *Manager) convertPhysicalTimeToTSO(ctx context.Context, t time.Time) (ts
 }
 
 func (m *Manager) clusterGetRelationByMasterSlaveClusterId(ctx context.Context, masterClusterId, slaveClusterId string) (relation *clusterMgr.ClusterRelation, err error) {
-	panic("NIY")
-	return nil, nil
+	relations, err := models.GetClusterReaderWriter().GetRelations(ctx, slaveClusterId)
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range relations {
+		if v.SubjectClusterID == masterClusterId && v.RelationType == constants.ClusterRelationSlaveTo {
+			relation = v
+			break
+		}
+	}
+	if relation == nil {
+		err = fmt.Errorf("clusterGetRelationByMasterSlaveClusterId: master/slave relation not found, masterClusterID:%s, slaveClusterID:%s",
+			masterClusterId, slaveClusterId)
+	}
+	return relation, err
 }
 
 func (m *Manager) swapClusterRelationInDB(ctx context.Context, oldMasterClusterId, oldSlaveClusterId, newSyncChangeFeedTaskId string) error {
-	panic("NIY")
-	return nil
+	return models.GetClusterReaderWriter().SwapMasterSlaveRelation(ctx, oldMasterClusterId, oldSlaveClusterId, newSyncChangeFeedTaskId)
 }
 
 func (m *Manager) getAllChangeFeedTasksOnCluster(ctx context.Context, clusterId string) ([]*cluster.ChangeFeedTask, error) {
-	panic("NIY")
-	return nil, nil
+	req := cluster.QueryChangeFeedTaskReq{
+		ClusterId: clusterId,
+		PageRequest: structs.PageRequest{
+			Page:     0,
+			PageSize: 0,
+		},
+	}
+	tasks, _, err := mgr.changefeedMgr.Query(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	var myTasks []*cluster.ChangeFeedTask
+	for _, v := range tasks {
+		myTasks = append(myTasks, &v.ChangeFeedTask)
+	}
+	return myTasks, err
 }
 
 func (m *Manager) getChangeFeedTask(ctx context.Context, changeFeedTaskId string) (*cluster.ChangeFeedTask, error) {
-	panic("NIY")
-	return nil, nil
+	req := cluster.DetailChangeFeedTaskReq{
+		ID: changeFeedTaskId,
+	}
+	resp, err := mgr.changefeedMgr.Detail(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return &resp.ChangeFeedTask, err
 }
 
 func (m *Manager) createChangeFeedTask(ctx context.Context, task *cluster.ChangeFeedTask) (changeFeedTaskId string, err error) {
-	panic("NIY")
-	return "", nil
+	req := cluster.CreateChangeFeedTaskReq{
+		Name:           task.Name,
+		ClusterID:      task.ClusterID,
+		StartTS:        task.StartTS,
+		FilterRules:    task.FilterRules,
+		DownstreamType: task.DownstreamType,
+		Downstream:     task.Downstream,
+	}
+	resp, err := mgr.changefeedMgr.Create(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	return resp.ID, nil
 }
 
 func (m *Manager) pauseChangeFeedTask(ctx context.Context, changeFeedTaskId string) error {
-	panic("NIY")
-	return nil
+	req := cluster.PauseChangeFeedTaskReq{
+		ID: changeFeedTaskId,
+	}
+	_, err := mgr.changefeedMgr.Pause(ctx, req)
+	return err
 }
 
 func (m *Manager) resumeChangeFeedTask(ctx context.Context, changeFeedTaskId string) error {
-	panic("NIY")
-	return nil
+	req := cluster.ResumeChangeFeedTaskReq{
+		ID: changeFeedTaskId,
+	}
+	_, err := mgr.changefeedMgr.Resume(ctx, req)
+	return err
 }
 
 func (m *Manager) queryChangeFeedTask(ctx context.Context, changeFeedTaskId string) (*cluster.ChangeFeedTaskInfo, error) {
-	panic("NIY")
-	return nil, nil
+	req := cluster.DetailChangeFeedTaskReq{
+		ID: changeFeedTaskId,
+	}
+	resp, err := mgr.changefeedMgr.Detail(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return &resp.ChangeFeedTaskInfo, err
+}
+
+func (m *Manager) removeChangeFeedTask(ctx context.Context, changeFeedTaskId string) error {
+	req := cluster.DeleteChangeFeedTaskReq{
+		ID: changeFeedTaskId,
+	}
+	_, err := mgr.changefeedMgr.Delete(ctx, req)
+	return err
 }
 
 func (m *Manager) calcCheckpointedTimeFromChangeFeedTaskInfo(ctx context.Context, info *cluster.ChangeFeedTaskInfo) (time.Time, error) {
 	var t time.Time
-	panic("NIY")
+	tso, err := strconv.ParseUint(info.DownstreamSyncTS, 10, 64)
+	if err != nil {
+		return t, err
+	}
+	t, _ = tsoLib.ParseTS(tso)
 	return t, nil
 }
 
 func (m *Manager) queryChangeFeedTaskCheckpointedTime(ctx context.Context, changeFeedTaskId string) (time.Time, error) {
 	var t time.Time
-	panic("NIY")
-	return t, nil
-}
-
-func (m *Manager) removeChangeFeedTask(ctx context.Context, changeFeedTaskId string) error {
-	panic("NIY")
-	return nil
+	info, err := m.queryChangeFeedTask(ctx, changeFeedTaskId)
+	if err != nil {
+		return t, err
+	}
+	t, err = m.calcCheckpointedTimeFromChangeFeedTaskInfo(ctx, info)
+	return t, err
 }
 
 func (m *Manager) dupChangeFeedTaskStructWithTiDBDownStream(ctx context.Context, old *cluster.ChangeFeedTask) (*cluster.ChangeFeedTask, error) {

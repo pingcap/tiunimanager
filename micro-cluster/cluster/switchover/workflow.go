@@ -312,7 +312,7 @@ func wfnCreateReverseSyncChangeFeedTask(node *workflowModel.WorkFlowNode, ctx *w
 	var userName, password, ip string
 	var port int
 	var tls bool
-	userName, password, err = mgr.clusterGetMysqlUserNameAndPwd(ctx, wfGetNewSlaveClusterId(ctx))
+	userName, password, err = mgr.clusterGetCDCUserNameAndPwd(ctx, wfGetNewSlaveClusterId(ctx))
 	var err2 error
 	ip, port, err2 = mgr.clusterGetOneConnectIPPort(ctx, wfGetNewSlaveClusterId(ctx))
 	var err3 error

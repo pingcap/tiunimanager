@@ -19,11 +19,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
-	"time"
 )
 
 type GormChangeFeedReadWrite struct {
@@ -76,7 +77,6 @@ func (m *GormChangeFeedReadWrite) LockStatus(ctx context.Context, taskId string)
 	return dbCommon.WrapDBError(err)
 }
 
-
 func (m *GormChangeFeedReadWrite) UnlockStatus(ctx context.Context, taskId string, targetStatus constants.ChangeFeedStatus) error {
 	task, err := m.Get(ctx, taskId)
 	if err != nil {
@@ -128,9 +128,14 @@ func (m *GormChangeFeedReadWrite) QueryByClusterId(ctx context.Context, clusterI
 	}
 
 	tasks = make([]*ChangeFeedTask, length)
-
-	err = m.DB(ctx).Model(&ChangeFeedTask{}).
-		Where("cluster_id = ?", clusterId).
-		Order("created_at").Offset(offset).Limit(length).Find(&tasks).Count(&total).Error
+	if length == 0 {
+		err = m.DB(ctx).Model(&ChangeFeedTask{}).
+			Where("cluster_id = ?", clusterId).
+			Order("created_at").Offset(offset).Find(&tasks).Count(&total).Error
+	} else {
+		err = m.DB(ctx).Model(&ChangeFeedTask{}).
+			Where("cluster_id = ?", clusterId).
+			Order("created_at").Offset(offset).Limit(length).Find(&tasks).Count(&total).Error
+	}
 	return tasks, total, dbCommon.WrapDBError(err)
 }

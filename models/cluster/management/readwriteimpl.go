@@ -325,6 +325,36 @@ func (g *ClusterReadWrite) DeleteRelation(ctx context.Context, relationID uint) 
 	return dbCommon.WrapDBError(err)
 }
 
+func (g *ClusterReadWrite) SwapMasterSlaveRelation(ctx context.Context, oldMasterClusterId, oldSlaveClusterId, newSyncChangeFeedTaskId string) error {
+	tx := g.DB(ctx).Begin()
+
+	if err := tx.Error; err != nil {
+		return err
+	}
+
+	err := tx.Delete(&ClusterRelation{
+		RelationType:     constants.ClusterRelationSlaveTo,
+		ObjectClusterID:  oldSlaveClusterId,
+		SubjectClusterID: oldMasterClusterId,
+	}).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	err = tx.Create(&ClusterRelation{
+		RelationType:         constants.ClusterRelationSlaveTo,
+		ObjectClusterID:      oldMasterClusterId,
+		SubjectClusterID:     oldSlaveClusterId,
+		SyncChangeFeedTaskID: newSyncChangeFeedTaskId,
+	}).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return dbCommon.WrapDBError(tx.Commit().Error)
+}
+
 func (g *ClusterReadWrite) CreateClusterTopologySnapshot(ctx context.Context, snapshot ClusterTopologySnapshot) error {
 	if len(snapshot.ClusterID) == 0 || len(snapshot.TenantID) == 0 {
 		errInfo := fmt.Sprintf("CreateClusterTopologySnapshot failed : parameter invalid, ClusterID = %s, TenantID = %s", snapshot.ClusterID, snapshot.TenantID)
@@ -348,7 +378,7 @@ func (g *ClusterReadWrite) GetCurrentClusterTopologySnapshot(ctx context.Context
 		err = errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
 		return
 	}
-	
+
 	err = g.DB(ctx).Model(snapshot).Where("cluster_id = ?", clusterID).First(&snapshot).Error
 	err = dbCommon.WrapDBError(err)
 	return

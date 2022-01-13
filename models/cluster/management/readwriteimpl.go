@@ -366,6 +366,21 @@ func (g *ClusterReadWrite) UpdateTopologySnapshotConfig(ctx context.Context, clu
 	return dbCommon.WrapDBError(g.DB(ctx).Save(snapshot).Error)
 }
 
+func (g *ClusterReadWrite) ClearClusterPhysically(ctx context.Context, clusterID string) error {
+	got, err := g.Get(ctx, clusterID)
+	if err != nil {
+		return err
+	}
+	err = g.DB(ctx).Unscoped().Delete(got).Error
+	if err != nil {
+		return dbCommon.WrapDBError(err)
+	}
+
+	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&ClusterInstance{}).Error
+	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&ClusterTopologySnapshot{}).Error
+	return dbCommon.WrapDBError(err)
+}
+
 func NewClusterReadWrite(db *gorm.DB) *ClusterReadWrite {
 	return &ClusterReadWrite{
 		dbCommon.WrapDB(db),

@@ -215,6 +215,58 @@ func TestGormClusterReadWrite_Delete(t *testing.T) {
 	})
 }
 
+func TestGormClusterReadWrite_ClearClusterPhysically(t *testing.T) {
+	cluster := &Cluster{
+		Name: "test32431",
+		Entity: common.Entity{
+			TenantId: "111",
+		},
+		Tags: []string{"tag1", "tag2"},
+	}
+	got, _ := testRW.Create(context.TODO(), cluster)
+
+	testRW.UpdateInstance(context.TODO(), &ClusterInstance{
+		Entity: common.Entity{
+			TenantId: "111",
+		},
+		Type: "dsfds",
+		Version: "v5.0.0",
+		ClusterID: cluster.ID,
+	})
+	defer testRW.Delete(context.TODO(), got.ID)
+	cluster2 := &Cluster{
+		Name: "tesfasfdsaf",
+		Entity: common.Entity{
+			TenantId: "111",
+		},
+		Tags: []string{"tag1", "tag2"},
+	}
+	got2, _ := testRW.Create(context.TODO(), cluster2)
+	defer testRW.Delete(context.TODO(), got2.ID)
+
+	t.Run("normal", func(t *testing.T) {
+		err := testRW.DB(context.TODO()).Where("id = ?", cluster.ID).First(cluster).Error
+		assert.NoError(t, err)
+		err = testRW.ClearClusterPhysically(context.TODO(), cluster.ID)
+		assert.NoError(t, err)
+		err = testRW.DB(context.TODO()).Where("id = ?", cluster.ID).First(cluster).Error
+		assert.Error(t, err)
+		err = testRW.DB(context.TODO()).Where("cluster_id = ?", cluster.ID).First(&ClusterInstance{}).Error
+		assert.Error(t, err)
+		assert.NoError(t, testRW.DB(context.TODO()).Where("id = ?", cluster2.ID).First(cluster2).Error)
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		err := testRW.ClearClusterPhysically(context.TODO(), "whatever")
+		assert.Error(t, err)
+		assert.Equal(t, errors.TIEM_CLUSTER_NOT_FOUND, err.(errors.EMError).GetCode())
+
+		err = testRW.ClearClusterPhysically(context.TODO(), "")
+		assert.Error(t, err)
+		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
+	})
+}
+
 func TestGormClusterReadWrite_DeleteInstance(t *testing.T) {
 	instance := &ClusterInstance{
 		Entity: common.Entity{

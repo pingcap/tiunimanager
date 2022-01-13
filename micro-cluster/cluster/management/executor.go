@@ -827,6 +827,13 @@ func deleteCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 	return clusterMeta.Delete(context)
 }
 
+// clearClusterPhysically
+// @Description: delete cluster physically, If you don't know why you should use it, then don't use it
+func clearClusterPhysically(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	return clusterMeta.ClearClusterPhysically(context)
+}
+
 // freedClusterResource
 // @Description: freed all resource owned by cluster
 func freedClusterResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {

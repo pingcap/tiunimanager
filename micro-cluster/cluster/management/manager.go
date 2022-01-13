@@ -609,7 +609,7 @@ var takeoverClusterFlow = workflow.WorkFlowDefine{
 		"workingSpaceDone": {"testConnectivity", "success", "", workflow.SyncFuncNode, testConnectivity},
 		"success":          {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
 		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
-		"revert":           {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(deleteCluster)},
+		"revert":           {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(clearClusterPhysically)},
 	},
 }
 

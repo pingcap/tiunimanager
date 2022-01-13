@@ -4787,7 +4787,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/message.QueryRegionResp"
+                                            "$ref": "#/definitions/message.QueryZonesTreeResp"
                                         }
                                     }
                                 }
@@ -6675,17 +6675,6 @@ var doc = `{
                 }
             }
         },
-        "message.QueryRegionResp": {
-            "type": "object",
-            "properties": {
-                "vendors": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/structs.VendorWithRegion"
-                    }
-                }
-            }
-        },
         "message.QuerySpecsResp": {
             "type": "object",
             "properties": {
@@ -6724,6 +6713,17 @@ var doc = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.WorkFlowInfo"
+                    }
+                }
+            }
+        },
+        "message.QueryZonesTreeResp": {
+            "type": "object",
+            "properties": {
+                "vendors": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.VendorWithRegion"
                     }
                 }
             }

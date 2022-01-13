@@ -1356,6 +1356,27 @@ func TestDeleteCluster(t *testing.T) {
 
 }
 
+func TestDeleteClusterPhysically(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "111").Return(nil)
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "111",
+			},
+			Version: "v5.0.0",
+		},
+	})
+	err := clearClusterPhysically(&workflowModel.WorkFlowNode{}, flowContext)
+	assert.NoError(t, err)
+
+}
 func TestFreedClusterResource(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

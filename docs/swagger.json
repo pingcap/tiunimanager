@@ -4773,7 +4773,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/message.QueryRegionResp"
+                                            "$ref": "#/definitions/message.QueryZonesTreeResp"
                                         }
                                     }
                                 }
@@ -6661,17 +6661,6 @@
                 }
             }
         },
-        "message.QueryRegionResp": {
-            "type": "object",
-            "properties": {
-                "vendors": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/structs.VendorWithRegion"
-                    }
-                }
-            }
-        },
         "message.QuerySpecsResp": {
             "type": "object",
             "properties": {
@@ -6710,6 +6699,17 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.WorkFlowInfo"
+                    }
+                }
+            }
+        },
+        "message.QueryZonesTreeResp": {
+            "type": "object",
+            "properties": {
+                "vendors": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.VendorWithRegion"
                     }
                 }
             }

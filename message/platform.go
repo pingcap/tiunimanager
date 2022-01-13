@@ -40,11 +40,12 @@ type CreateZonesReq struct {
 type CreateZonesResp struct {
 }
 
-//QueryZonesReq query all zone information message, include vendor、region、zone
-type QueryZonesReq struct {
+//QueryRegionReq query all zone information message, include vendor、region、zone
+type QueryRegionReq struct {
 }
-type QueryZonesResp struct {
-	Zones []structs.ZoneInfo `json:"zones"`
+
+type QueryRegionResp struct {
+	Vendors map[string]structs.VendorWithRegion `json:"vendors" form:"vendors"`
 }
 
 //DeleteZoneReq delete a zone message
@@ -75,8 +76,10 @@ type QueryProductsReq struct {
 	Status          string `json:"status" form:"status"`
 	InternalProduct int    `json:"internalProduct" form:"internalProduct"`
 }
+
 type QueryProductsResp struct {
-	Products []structs.Product `json:"products"`
+	// arch version
+	Products map[string]map[string]map[string]map[string]structs.Product `json:"products"`
 }
 
 //QueryProductDetailReq query product detail message

@@ -1285,9 +1285,23 @@ definitions:
   message.QueryProductsResp:
     properties:
       products:
-        items:
-          $ref: '#/definitions/structs.Product'
-        type: array
+        additionalProperties:
+          additionalProperties:
+            additionalProperties:
+              additionalProperties:
+                $ref: '#/definitions/structs.Product'
+              type: object
+            type: object
+          type: object
+        description: arch version
+        type: object
+    type: object
+  message.QueryRegionResp:
+    properties:
+      vendors:
+        additionalProperties:
+          $ref: '#/definitions/structs.VendorWithRegion'
+        type: object
     type: object
   message.QuerySpecsResp:
     properties:
@@ -1314,13 +1328,6 @@ definitions:
       workFlows:
         items:
           $ref: '#/definitions/structs.WorkFlowInfo'
-        type: array
-    type: object
-  message.QueryZonesResp:
-    properties:
-      zones:
-        items:
-          $ref: '#/definitions/structs.ZoneInfo'
         type: array
     type: object
   message.UpdateHostReservedReq:
@@ -2058,6 +2065,13 @@ definitions:
         description: Version information of the product, e.g. v5.0.0
         type: string
     type: object
+  structs.RegionInfo:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   structs.ResourceStockCheckResult:
     properties:
       componentName:
@@ -2123,6 +2137,19 @@ definitions:
         type: number
       used:
         type: number
+    type: object
+  structs.VendorWithRegion:
+    properties:
+      id:
+        description: The value of the VendorID is similar to AWS
+        type: string
+      name:
+        description: The value of the Name is similar to AWS
+        type: string
+      regions:
+        additionalProperties:
+          $ref: '#/definitions/structs.RegionInfo'
+        type: object
     type: object
   structs.WorkFlowInfo:
     properties:
@@ -4938,39 +4965,6 @@ paths:
       summary: deleted zones
       tags:
       - platform
-    get:
-      consumes:
-      - application/json
-      description: queries all zones information
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.QueryZonesResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: queries all zones information
-      tags:
-      - platform
     post:
       consumes:
       - application/json
@@ -5009,6 +5003,40 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: created  zones
+      tags:
+      - platform
+  /zones/tree:
+    get:
+      consumes:
+      - application/json
+      description: queries all regions information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryRegionResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: queries all regions information
       tags:
       - platform
 securityDefinitions:

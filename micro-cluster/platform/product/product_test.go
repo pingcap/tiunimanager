@@ -242,7 +242,10 @@ func TestProductManager_QueryZones(t *testing.T) {
 		prw.EXPECT().QueryZones(gomock.Any()).Return(zones, nil).AnyTimes()
 		resp, err := mgr.QueryZones(context.TODO())
 		assert.NoError(t, err)
-		assert.Equal(t, true, reflect.DeepEqual(resp.Zones, zones))
+		assert.Equal(t, 1, len(resp.Vendors))
+		assert.Equal(t, "Aliyun", resp.Vendors["Aliyun"].VendorInfo.Name)
+		assert.Equal(t, 2, len(resp.Vendors["Aliyun"].Regions))
+		assert.Equal(t, "East China(Hangzhou)", resp.Vendors["Aliyun"].Regions["CN-HANGZHOU"].Name)
 	})
 
 	t.Run("QueryZonesWithEmptyParameter", func(t *testing.T) {

@@ -267,6 +267,7 @@ func validateRange(param ModifyClusterParameterInfo) bool {
 func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin modify parameters executor method")
 	defer framework.LogWithContext(ctx).Info("end modify parameters executor method")
+	clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
 
 	modifyParam := ctx.GetData(contextModifyParameters).(*ModifyParameter)
 	framework.LogWithContext(ctx).Debugf("got modify need reboot: %v, parameters size: %d", modifyParam.Reboot, len(modifyParam.Params))
@@ -280,6 +281,10 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 	for i, param := range modifyParam.Params {
 		// condition apply parameter and HasApply values is 0, then filter directly
 		if applyParameter != nil && param.HasApply != int(DirectApply) {
+			continue
+		}
+		// If it is a parameter of CDC, apply the parameter without installing CDC, then skip directly
+		if applyParameter != nil && param.InstanceType == string(constants.ComponentIDCDC) && len(clusterMeta.GetCDCClientAddresses()) == 0 {
 			continue
 		}
 		framework.LogWithContext(ctx).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.ClusterValue)
@@ -546,7 +551,6 @@ func convertRealParameterType(ctx *workflow.FlowContext, param ModifyClusterPara
 			if err != nil {
 				return nil, err
 			}
-			fmt.Println(num)
 			if num == 0 {
 				c += 1e-8
 			}

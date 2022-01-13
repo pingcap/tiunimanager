@@ -207,12 +207,12 @@ func Test_QueryHosts(t *testing.T) {
 	ctrl1 := gomock.NewController(t)
 	defer ctrl1.Finish()
 	mockProvider := mock_provider.NewMockHostProvider(ctrl1)
-	mockProvider.EXPECT().QueryHosts(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, filter *structs.HostFilter, page *structs.PageRequest) ([]structs.HostInfo, int64, error) {
+	mockProvider.EXPECT().QueryHosts(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, location *structs.Location, filter *structs.HostFilter, page *structs.PageRequest) ([]structs.HostInfo, int64, error) {
 		return []structs.HostInfo{{ID: "fake_hostId1"}}, 1, nil
 	})
 	resourcePool.SetHostProvider(mockProvider)
 
-	hosts, total, err := resourcePool.QueryHosts(context.TODO(), &structs.HostFilter{}, &structs.PageRequest{})
+	hosts, total, err := resourcePool.QueryHosts(context.TODO(), &structs.Location{}, &structs.HostFilter{}, &structs.PageRequest{})
 	assert.Nil(t, err)
 	assert.Equal(t, 1, int(total))
 	assert.Equal(t, 1, len(hosts))

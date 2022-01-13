@@ -163,7 +163,6 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 		return err
 	}
 	node.Record(fmt.Sprintf("update backup record %s of cluster %s ", record.ID, meta.Cluster.ID))
-	fmt.Println(node.Result)
 	return nil
 }
 

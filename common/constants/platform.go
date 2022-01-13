@@ -45,5 +45,4 @@ const (
 	BackupRestoreUser       DBRoleType = "EM_Backup_Restore"         // user for backup and restore
 	ParameterManagementUser DBRoleType = "EM_Parameter_Management"   // user for managing parameters
 	CDCDataSyncUser         DBRoleType = "CDC_Data_Sync"             // user for CDC data synchronization
-	SelfDefinedUser         DBRoleType = "Self_Defined"              // user for self defined by users
 )

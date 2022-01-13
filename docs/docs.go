@@ -3804,6 +3804,20 @@ var doc = `{
                         "in": "formData"
                     },
                     {
+                        "type": "string",
+                        "default": "false",
+                        "description": "whether to skip host init steps",
+                        "name": "skipHostInit",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "false",
+                        "description": "whether to ignore warings in init steps",
+                        "name": "ignorewarns",
+                        "in": "formData"
+                    },
+                    {
                         "type": "file",
                         "description": "hosts information in a xlsx file",
                         "name": "file",
@@ -6245,6 +6259,9 @@ var doc = `{
         "message.DeleteHostsReq": {
             "type": "object",
             "properties": {
+                "force": {
+                    "type": "boolean"
+                },
                 "hostIds": {
                     "type": "array",
                     "items": {

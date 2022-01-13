@@ -1074,6 +1074,8 @@ definitions:
     type: object
   message.DeleteHostsReq:
     properties:
+      force:
+        type: boolean
       hostIds:
         items:
           type: string
@@ -4499,6 +4501,16 @@ paths:
         description: whether hosts are reserved(won't be allocated) after import
         in: formData
         name: hostReserved
+        type: string
+      - default: "false"
+        description: whether to skip host init steps
+        in: formData
+        name: skipHostInit
+        type: string
+      - default: "false"
+        description: whether to ignore warings in init steps
+        in: formData
+        name: ignorewarns
         type: string
       - description: hosts information in a xlsx file
         in: formData

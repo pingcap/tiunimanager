@@ -87,9 +87,16 @@ type ScaleInClusterResp struct {
 	ClusterID string `json:"clusterId"`
 }
 
+// PreviewScaleOutClusterReq Message for cluster expansion operation
+type PreviewScaleOutClusterReq struct {
+	ClusterID       string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
+	structs.ClusterResourceInfo
+}
+
 // ScaleOutClusterReq Message for cluster expansion operation
 type ScaleOutClusterReq struct {
 	ClusterID string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
+
 	structs.ClusterResourceInfo
 }
 
@@ -302,6 +309,11 @@ type PreviewClusterResp struct {
 
 	ClusterName string `json:"clusterName"`
 
+	StockCheckResult  []structs.ResourceStockCheckResult `json:"stockCheckResult"`
+	CapabilityIndexes []structs.Index      `json:"capabilityIndexes"`
+}
+
+type ScaleOutPreviewResp struct {
 	StockCheckResult  []structs.ResourceStockCheckResult `json:"stockCheckResult"`
 	CapabilityIndexes []structs.Index      `json:"capabilityIndexes"`
 }

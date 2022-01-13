@@ -116,15 +116,15 @@ func DeleteZones(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param QueryRegionReq query message.QueryRegionReq true "query region request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.QueryRegionResp}
+// @Param QueryZonesTreeReq query message.QueryZonesTreeReq true "query region request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.QueryZonesTreeResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /zones/tree [get]
 func QueryZonesTree(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryRegionReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryZones, &message.QueryRegionResp{},
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryZonesTreeReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryZones, &message.QueryZonesTreeResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

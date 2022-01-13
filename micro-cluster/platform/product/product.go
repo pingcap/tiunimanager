@@ -76,7 +76,7 @@ func (manager *ProductManager) DeleteZones(ctx context.Context, request message.
 	return
 }
 
-func (manager *ProductManager) QueryZones(ctx context.Context) (resp message.QueryRegionResp, err error) {
+func (manager *ProductManager) QueryZones(ctx context.Context) (resp message.QueryZonesTreeResp, err error) {
 
 	log := framework.LogWithContext(ctx)
 	zones, queryError := models.GetProductReaderWriter().QueryZones(ctx)

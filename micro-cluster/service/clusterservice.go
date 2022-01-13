@@ -1043,7 +1043,7 @@ func (handler *ClusterServiceHandler) QueryZones(ctx context.Context, request *c
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "QueryZones", int(response.GetCode()))
 
-	req := message.QueryRegionReq{}
+	req := message.QueryZonesTreeReq{}
 	if handleRequest(ctx, request, response, &req) {
 		resp, err := handler.productManager.QueryZones(ctx)
 		handleResponse(ctx, response, err, resp, nil)

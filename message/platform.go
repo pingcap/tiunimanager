@@ -40,11 +40,11 @@ type CreateZonesReq struct {
 type CreateZonesResp struct {
 }
 
-//QueryRegionReq query all zone information message, include vendor、region、zone
-type QueryRegionReq struct {
+//QueryZonesTreeReq query all zone information message, include vendor、region、zone
+type QueryZonesTreeReq struct {
 }
 
-type QueryRegionResp struct {
+type QueryZonesTreeResp struct {
 	Vendors map[string]structs.VendorWithRegion `json:"vendors" form:"vendors"`
 }
 

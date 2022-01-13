@@ -167,7 +167,7 @@ func checkHostBeforeDelete(node *workflowModel.WorkFlowNode, ctx *workflow.FlowC
 		return err
 	}
 
-	hosts, _, err := resourcePool.QueryHosts(ctx, &structs.HostFilter{HostID: hostIds[0]}, &structs.PageRequest{})
+	hosts, _, err := resourcePool.QueryHosts(ctx, &structs.Location{}, &structs.HostFilter{HostID: hostIds[0]}, &structs.PageRequest{})
 	if err != nil {
 		log.Errorf("query hosts %v failed, %v", hostIds[0], err)
 		return err

@@ -2039,5 +2039,5 @@ func Test_fetchTopologyFile(t *testing.T) {
 	context.SetData(ContextTakeoverRequest, cluster.TakeoverClusterReq{})
 
 	err := fetchTopologyFile(node, context)
-	assert.Error(t, err)
+	assert.NoError(t, err)
 }

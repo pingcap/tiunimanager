@@ -942,7 +942,8 @@ func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 		Present()
 }
 
-func readRemoteFile(ctx context.Context, sftp *sftp.Client, clusterHome string, file string) ([]byte, error) {
+type readRemoteFileFunc func(ctx context.Context, sftp *sftp.Client, clusterHome string, file string) ([]byte, error)
+var readRemoteFile readRemoteFileFunc = func(ctx context.Context, sftp *sftp.Client, clusterHome string, file string) ([]byte, error) {
 	filePath := fmt.Sprintf("%s%s", clusterHome, file)
 	fileData, err := sftp.Open(filePath)
 	if err != nil {

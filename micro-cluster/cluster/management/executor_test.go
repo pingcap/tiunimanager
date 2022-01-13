@@ -21,6 +21,8 @@ import (
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
 	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
 	"strconv"
 
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
@@ -1846,10 +1848,6 @@ func Test_rebuildTiupSpaceForCluster(t *testing.T) {
 	})
 }
 
-func Test_fetchTopologyFile(t *testing.T) {
-
-}
-
 func Test_validateHostsStatus(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -1990,4 +1988,56 @@ func Test_validateHostsStatus(t *testing.T) {
 		assert.Contains(t, node.Result, "importing")
 	})
 
+}
+
+func Test_syncIncrData(t *testing.T) {
+	assert.Empty(t, syncIncrData(nil, nil))
+}
+
+func Test_fetchTopologyFile(t *testing.T) {
+	originalOpen := openSftpClient
+	openSftpClient = func(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error) {
+		return nil, nil, nil
+	}
+	defer func() {
+		openSftpClient = originalOpen
+	}()
+
+	originalRead := readRemoteFile
+	readRemoteFile = func(ctx context.Context, sftp *sftp.Client, clusterHome string, file string) ([]byte, error) {
+		return []byte{}, nil
+	}
+	defer func() {
+		readRemoteFile = originalRead
+	}()
+	node := &workflowModel.WorkFlowNode{}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(rw)
+
+	rw.EXPECT().CreateClusterTopologySnapshot(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	rw.EXPECT().UpdateTopologySnapshotConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
+	context := &workflow.FlowContext {
+		Context: context.TODO(),
+		FlowData: map[string]interface{}{},
+	}
+	context.SetData(ContextClusterMeta, &handler.ClusterMeta {
+		Cluster: &management.Cluster{},
+		Instances: map[string][]*management.ClusterInstance {
+			"TiDB": {
+				{
+					HostIP: []string{
+						"127.0.0.1",
+					},
+				},
+			},
+		},
+	})
+	context.SetData(ContextTakeoverRequest, cluster.TakeoverClusterReq{})
+
+	err := fetchTopologyFile(node, context)
+	assert.Error(t, err)
 }

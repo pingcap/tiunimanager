@@ -65,7 +65,7 @@ const (
 	FlowImportData          = "ImportData"
 	FlowRestartCluster      = "RestartCluster"
 	FlowStopCluster         = "StopCluster"
-	FlowTakeoverCluster     = "BuildForTakeover"
+	FlowTakeoverCluster     = "TakeoverCluster"
 	FlowBuildLogConfig      = "BuildLogConfig"
 	FlowScaleOutCluster     = "ScaleOutCluster"
 	FlowScaleInCluster      = "ScaleInCluster"

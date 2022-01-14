@@ -29,6 +29,7 @@ type WorkFlowInfo struct {
 	ID         string    `json:"id"`
 	Name       string    `json:"name"`
 	BizID      string    `json:"bizId"`
+	BizType    string    `json:"bizType"`
 	Status     string    `json:"status" enums:"Initializing,Processing,Finished,Error,Canceled"`
 	CreateTime time.Time `json:"createTime"`
 	UpdateTime time.Time `json:"updateTime"`

@@ -63,6 +63,15 @@ definitions:
         type: array
       tls:
         type: boolean
+    required:
+    - cloneStrategy
+    - clusterName
+    - clusterType
+    - clusterVersion
+    - cpuArchitecture
+    - dbPassword
+    - region
+    - sourceClusterId
     type: object
   cluster.CloneClusterResp:
     properties:
@@ -98,6 +107,10 @@ definitions:
       startTS:
         example: "415241823337054209"
         type: string
+    required:
+    - clusterId
+    - downstreamType
+    - name
     type: object
   cluster.CreateChangeFeedTaskResp:
     properties:
@@ -144,6 +157,13 @@ definitions:
         type: array
       tls:
         type: boolean
+    required:
+    - clusterName
+    - clusterType
+    - clusterVersion
+    - cpuArchitecture
+    - dbPassword
+    - region
     type: object
   cluster.CreateClusterResp:
     properties:
@@ -565,6 +585,14 @@ definitions:
         type: array
       tls:
         type: boolean
+    required:
+    - backupId
+    - clusterName
+    - clusterType
+    - clusterVersion
+    - cpuArchitecture
+    - dbPassword
+    - region
     type: object
   cluster.RestoreNewClusterResp:
     properties:
@@ -656,6 +684,15 @@ definitions:
       dbUser:
         example: root
         type: string
+    required:
+    - TiUPIp
+    - TiUPPath
+    - TiUPPort
+    - TiUPUserName
+    - TiUPUserPassword
+    - clusterName
+    - dbPassword
+    - dbUser
     type: object
   cluster.TakeoverClusterResp:
     properties:
@@ -715,6 +752,8 @@ definitions:
         items:
           type: string
         type: array
+    required:
+    - name
     type: object
   cluster.UpdateChangeFeedTaskResp:
     properties:
@@ -1139,7 +1178,10 @@ definitions:
   message.GetStocksResp:
     properties:
       stocks:
-        $ref: '#/definitions/structs.Stocks'
+        additionalProperties:
+          $ref: '#/definitions/structs.Stocks'
+        description: map[zone] -> stocks
+        type: object
     type: object
   message.ImportHostsResp:
     properties:
@@ -1158,6 +1200,9 @@ definitions:
         type: string
       userPassword:
         type: string
+    required:
+    - userName
+    - userPassword
     type: object
   message.LoginResp:
     properties:
@@ -2072,6 +2117,8 @@ definitions:
         type: integer
       freeMemory:
         type: integer
+      zone:
+        type: string
     type: object
   structs.Usage:
     properties:
@@ -2085,6 +2132,8 @@ definitions:
   structs.WorkFlowInfo:
     properties:
       bizId:
+        type: string
+      bizType:
         type: string
       createTime:
         type: string
@@ -2313,6 +2362,7 @@ paths:
       - example: CLUSTER_ID_IN_TIEM__22
         in: query
         name: clusterId
+        required: true
         type: string
       - description: Current page location
         in: query
@@ -3064,6 +3114,52 @@ paths:
       summary: inspect parameters
       tags:
       - cluster parameters
+  /clusters/{clusterId}/preview-scale-out:
+    get:
+      consumes:
+      - application/json
+      description: preview cluster topology and capability
+      parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: scale out request
+        in: body
+        name: scaleOutReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.ScaleOutClusterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.PreviewClusterResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: preview cluster topology and capability
+      tags:
+      - cluster
   /clusters/{clusterId}/restart:
     post:
       consumes:
@@ -4401,6 +4497,18 @@ paths:
       description: get hosts list
       parameters:
       - in: query
+        name: HostIp
+        type: string
+      - in: query
+        name: Rack
+        type: string
+      - in: query
+        name: Region
+        type: string
+      - in: query
+        name: Zone
+        type: string
+      - in: query
         name: arch
         type: string
       - in: query
@@ -4765,6 +4873,9 @@ paths:
       parameters:
       - in: query
         name: bizId
+        type: string
+      - in: query
+        name: bizType
         type: string
       - in: query
         name: flowName

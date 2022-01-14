@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Copyright (c)  2022 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
  * you may not use this file except in compliance with the License.           *
  * You may obtain a copy of the License at                                    *
@@ -13,21 +13,20 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package hostprovider
+package workflow
 
 import (
-	"context"
-
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-type HostProvider interface {
-	ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error)
-	DeleteHosts(ctx context.Context, hostIds []string) (err error)
-	QueryHosts(ctx context.Context, location *structs.Location, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, total int64, err error)
-	UpdateHostStatus(ctx context.Context, hostId []string, status string) (err error)
-	UpdateHostReserved(ctx context.Context, hostId []string, reserved bool) (err error)
-
-	GetHierarchy(ctx context.Context, filter *structs.HostFilter, level int, depth int) (root *structs.HierarchyTreeNode, err error)
-	GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (map[string]*structs.Stocks, error)
+func TestWorkFlow_Finished(t *testing.T) {
+	f := &WorkFlow{
+		Entity: common.Entity{
+			Status: constants.WorkFlowStatusFinished,
+		},
+	}
+	assert.True(t, f.Finished())
 }

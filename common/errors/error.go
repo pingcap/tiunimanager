@@ -63,11 +63,15 @@ func (e EMError) Is(err error) bool {
 }
 
 func (e EMError) Error() string {
-	if e.cause == nil {
-		return fmt.Sprintf("[%d]%s", e.GetCode(), e.GetMsg())
-	} else {
-		return fmt.Sprintf("[%d]%s, cause:%s", e.GetCode(), e.GetMsg(), e.GetCause().Error())
+	errInfo := fmt.Sprintln(fmt.Sprintf("[%d]%s", e.GetCode(), e.GetCodeText()))
+	if len(e.msg) > 0  {
+		errInfo = fmt.Sprintln(fmt.Sprintf("%s	%s", errInfo, e.msg))
 	}
+
+	if e.cause != nil {
+		errInfo = fmt.Sprintln(fmt.Sprintf("%s	cause: %s", errInfo, e.cause.Error()))
+	}
+	return errInfo
 }
 
 type EMErrorBuilder struct {

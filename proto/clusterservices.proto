@@ -3,6 +3,7 @@ option go_package = "./clusterservices/;clusterservices";
 
 service ClusterService {
     // Cluster manager module
+
     rpc CreateCluster(RpcRequest) returns (RpcResponse);
     rpc QueryCluster(RpcRequest) returns (RpcResponse);
     rpc DeleteCluster(RpcRequest) returns (RpcResponse);
@@ -13,6 +14,9 @@ service ClusterService {
     rpc ScaleOutCluster(RpcRequest) returns (RpcResponse);
     rpc ScaleInCluster(RpcRequest) returns (RpcResponse);
     rpc CloneCluster(RpcRequest) returns (RpcResponse);
+
+    rpc PreviewCluster(RpcRequest) returns (RpcResponse);
+    rpc PreviewScaleOutCluster(RpcRequest) returns (RpcResponse);
 
     rpc ImportData(RpcRequest) returns (RpcResponse);
     rpc ExportData(RpcRequest) returns (RpcResponse);

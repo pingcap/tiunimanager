@@ -26,12 +26,15 @@ import (
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/common"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	mock_br_service "github.com/pingcap-inc/tiem/test/mockbr"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
 	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -68,7 +71,7 @@ func TestAsyncMaintenance(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 		}, nil).AnyTimes()
@@ -88,7 +91,7 @@ func TestAsyncMaintenance(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 		}, fmt.Errorf("create workflow error")).AnyTimes()
@@ -107,7 +110,7 @@ func TestAsyncMaintenance(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 		}, nil).AnyTimes()
@@ -132,7 +135,7 @@ func TestManager_ScaleOut(t *testing.T) {
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 	}, nil).AnyTimes()
@@ -265,7 +268,7 @@ func TestManager_ScaleIn(t *testing.T) {
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 	}, nil).AnyTimes()
@@ -366,7 +369,7 @@ func TestManager_Clone(t *testing.T) {
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 	}, nil).AnyTimes()
@@ -476,7 +479,7 @@ func TestManager_CreateCluster(t *testing.T) {
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 	}, nil).AnyTimes()
@@ -579,7 +582,7 @@ func TestManager_StopCluster(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 		}, nil).AnyTimes()
@@ -636,7 +639,7 @@ func TestManager_RestartCluster(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 		}, nil).AnyTimes()
@@ -693,7 +696,7 @@ func TestManager_DeleteCluster(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 		}, nil).AnyTimes()
@@ -862,7 +865,7 @@ func TestManager_RestoreNewCluster(t *testing.T) {
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 	workflowService.EXPECT().RegisterWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 	}, nil).AnyTimes()
@@ -1138,4 +1141,155 @@ func TestManager_GetMonitorInfo(t *testing.T) {
 func TestNewClusterManager(t *testing.T) {
 	got := NewClusterManager()
 	assert.NotNil(t, got)
+
+}
+
+func TestPreviewCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	resourceRW := mockresource.NewMockReaderWriter(ctrl)
+	models.SetResourceReaderWriter(resourceRW)
+
+	provider := resourcepool.GetResourcePool().GetHostProvider().(*hostprovider.FileHostProvider)
+	provider.SetResourceReaderWriter(resourceRW)
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+
+	t.Run("normal", func(t *testing.T) {
+		clusterRW.EXPECT().QueryMetas(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*management.Result{
+		}, structs.Page{
+			Page: 1,
+			Total: 0,
+			PageSize: 1,
+		}, nil).Times(1)
+
+		resourceRW.EXPECT().GetHostStocks(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.Stocks{
+			{Zone: "Zone1", FreeHostCount:8, FreeCpuCores:8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
+			{Zone: "Zone2", FreeHostCount:8, FreeCpuCores:8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
+		}, nil).Times(1)
+
+		manager := &Manager{}
+		resp, err := manager.PreviewCluster(context.TODO(), cluster.CreateClusterReq {
+			CreateClusterParameter: structs.CreateClusterParameter{
+				Region: "111",
+				CpuArchitecture: "111",
+			},
+			ResourceParameter: structs.ClusterResourceInfo {
+				InstanceResource: []structs.ClusterResourceParameterCompute{
+					{Type: "TiDB", Count: 4, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Zone1", Count: 1, Spec: "4C8G", DiskCapacity: 1, DiskType: "SATA"},
+						{Zone: "Zone3", Count: 1, Spec: "4C8G", DiskCapacity: 1, DiskType: "SATA"},
+					}},
+					{Type: "TiKV", Count: 4, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Zone1", Count: 1, Spec: "4C8G", DiskCapacity: 1, DiskType: "SATA"},
+						{Zone: "Zone2", Count: 1, Spec: "4C8G", DiskCapacity: 1, DiskType: "SATA"},
+					}},
+				},
+			},
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, 4, len(resp.StockCheckResult))
+		assert.True(t, resp.StockCheckResult[0].Enough)
+		assert.False(t, resp.StockCheckResult[1].Enough)
+		assert.False(t, resp.StockCheckResult[2].Enough)
+		assert.True(t, resp.StockCheckResult[3].Enough)
+	})
+	t.Run("duplicated name", func(t *testing.T) {
+		clusterRW.EXPECT().QueryMetas(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*management.Result{}, structs.Page{
+			Page: 1,
+			Total: 1,
+			PageSize: 1,
+		}, nil).Times(1)
+		manager := &Manager{}
+		_, err := manager.PreviewCluster(context.TODO(), cluster.CreateClusterReq{
+		})
+		assert.Error(t, err)
+	})
+	t.Run("stock error", func(t *testing.T) {
+		clusterRW.EXPECT().QueryMetas(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*management.Result{
+		}, structs.Page{
+			Page: 1,
+			Total: 0,
+			PageSize: 1,
+		}, nil).Times(1)
+
+		resourceRW.EXPECT().GetHostStocks(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.Stocks{
+			{Zone: "Zone1", FreeHostCount:8, FreeCpuCores:8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
+			{Zone: "Zone2", FreeHostCount:8, FreeCpuCores:8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
+		}, errors.New("")).Times(1)
+
+		manager := &Manager{}
+		_, err := manager.PreviewCluster(context.TODO(), cluster.CreateClusterReq{
+		})
+		assert.Error(t, err)
+	})
+}
+
+func TestPreviewScaleOutCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	resourceRW := mockresource.NewMockReaderWriter(ctrl)
+	models.SetResourceReaderWriter(resourceRW)
+
+	provider := resourcepool.GetResourcePool().GetHostProvider().(*hostprovider.FileHostProvider)
+	provider.SetResourceReaderWriter(resourceRW)
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+
+	t.Run("normal", func(t *testing.T) {
+		clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster01"}}, []*management.ClusterInstance{}, nil).Times(1)
+
+		resourceRW.EXPECT().GetHostStocks(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.Stocks{
+			{Zone: "Zone1", FreeHostCount:8, FreeCpuCores:8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
+			{Zone: "Zone2", FreeHostCount:8, FreeCpuCores:8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
+		}, nil).Times(1)
+
+		manager := &Manager{}
+		resp, err := manager.PreviewScaleOutCluster(context.TODO(), cluster.ScaleOutClusterReq {
+			ClusterID: "111",
+			ClusterResourceInfo: structs.ClusterResourceInfo {
+				InstanceResource: []structs.ClusterResourceParameterCompute{
+					{Type: "TiDB", Count: 4, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Zone1", Count: 1, Spec: "4C8G", DiskCapacity: 1, DiskType: "SATA"},
+						{Zone: "Zone3", Count: 1, Spec: "4C8G", DiskCapacity: 1, DiskType: "SATA"},
+					}},
+					{Type: "TiKV", Count: 4, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Zone1", Count: 1, Spec: "4C8G", DiskCapacity: 1, DiskType: "SATA"},
+						{Zone: "Zone2", Count: 1, Spec: "4C8G", DiskCapacity: 1, DiskType: "SATA"},
+					}},
+				},
+			},
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, 4, len(resp.StockCheckResult))
+		assert.True(t, resp.StockCheckResult[0].Enough)
+		assert.False(t, resp.StockCheckResult[1].Enough)
+		assert.False(t, resp.StockCheckResult[2].Enough)
+		assert.True(t, resp.StockCheckResult[3].Enough)
+	})
+	t.Run("cluster is not existed", func(t *testing.T) {
+		clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster01"}}, []*management.ClusterInstance{}, errors.New("")).Times(1)
+
+		manager := &Manager{}
+		_, err := manager.PreviewScaleOutCluster(context.TODO(), cluster.ScaleOutClusterReq{
+		})
+		assert.Error(t, err)
+	})
+	t.Run("stock error", func(t *testing.T) {
+		clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster01"}}, []*management.ClusterInstance{}, nil).Times(1)
+
+		resourceRW.EXPECT().GetHostStocks(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.Stocks{
+			{Zone: "Zone1", FreeHostCount:8, FreeCpuCores:8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
+			{Zone: "Zone2", FreeHostCount:8, FreeCpuCores:8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
+		}, errors.New("")).Times(1)
+
+		manager := &Manager{}
+		_, err := manager.PreviewScaleOutCluster(context.TODO(), cluster.ScaleOutClusterReq{
+		})
+		assert.Error(t, err)
+	})
 }

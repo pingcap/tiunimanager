@@ -118,8 +118,8 @@ func TestManager_UpdateClusterParameters(t *testing.T) {
 			return mockCluster(), mockClusterInstances(), nil
 		})
 	clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, bizId string, flowName string) (*workflow.WorkFlowAggregation, error) {
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (*workflow.WorkFlowAggregation, error) {
 			return mockWorkFlowAggregation(), nil
 		})
 	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).AnyTimes()
@@ -175,8 +175,8 @@ func TestManager_ApplyParameterGroup_Success(t *testing.T) {
 			return mockCluster(), mockClusterInstances(), nil
 		})
 	clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, bizId string, flowName string) (*workflow.WorkFlowAggregation, error) {
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (*workflow.WorkFlowAggregation, error) {
 			return mockWorkFlowAggregation(), nil
 		})
 	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).AnyTimes()

@@ -72,7 +72,7 @@ func asyncMaintenance(ctx context.Context, meta *handler.ClusterMeta, data map[s
 		}
 	}
 
-	if flow, flowError := workflow.GetWorkFlowService().CreateWorkFlow(ctx, meta.Cluster.ID, flowName); flowError != nil {
+	if flow, flowError := workflow.GetWorkFlowService().CreateWorkFlow(ctx, meta.Cluster.ID, workflow.BizTypeCluster, flowName); flowError != nil {
 		framework.LogWithContext(ctx).Errorf("create flow %s failed, clusterID = %s, error = %s", flow.Flow.Name, meta.Cluster.ID, err.Error())
 		err = flowError
 		return
@@ -214,7 +214,7 @@ func validationParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCon
 				param.Name, param.RealValue.ClusterValue, param.Range))
 		}
 	}
-	node.Record("validate parameters successfully")
+	node.Record("validate parameters ")
 	return nil
 }
 
@@ -267,6 +267,7 @@ func validateRange(param ModifyClusterParameterInfo) bool {
 func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin modify parameters executor method")
 	defer framework.LogWithContext(ctx).Info("end modify parameters executor method")
+	clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
 
 	modifyParam := ctx.GetData(contextModifyParameters).(*ModifyParameter)
 	framework.LogWithContext(ctx).Debugf("got modify need reboot: %v, parameters size: %d", modifyParam.Reboot, len(modifyParam.Params))
@@ -282,6 +283,10 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		if applyParameter != nil && param.HasApply != int(DirectApply) {
 			continue
 		}
+		// If it is a parameter of CDC, apply the parameter without installing CDC, then skip directly
+		if applyParameter != nil && param.InstanceType == string(constants.ComponentIDCDC) && len(clusterMeta.GetCDCClientAddresses()) == 0 {
+			continue
+		}
 		framework.LogWithContext(ctx).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.ClusterValue)
 		// condition UpdateSource values is 2, then insert tiup and sql respectively
 		if param.UpdateSource == int(TiupAndSql) {
@@ -290,7 +295,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		} else {
 			putParameterContainer(paramContainer, param.UpdateSource, param)
 		}
-		node.Record(fmt.Sprintf("modify parameter %s in %s to %s", param.Name, param.InstanceType, param.RealValue.ClusterValue))
+		node.Record(fmt.Sprintf("modify parameter %s in %s to %s; ", param.Name, param.InstanceType, param.RealValue.ClusterValue))
 	}
 
 	for source, params := range paramContainer {
@@ -310,7 +315,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 			}
 		}
 	}
-	node.Record("modify parameters successfully")
+	node.Record("modify parameters ")
 	return nil
 }
 
@@ -546,7 +551,6 @@ func convertRealParameterType(ctx *workflow.FlowContext, param ModifyClusterPara
 			if err != nil {
 				return nil, err
 			}
-			fmt.Println(num)
 			if num == 0 {
 				c += 1e-8
 			}
@@ -608,7 +612,7 @@ func refreshParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		// loop get tiup exec status
 		return getTaskStatusByTaskId(ctx, node)
 	}
-	node.Record(fmt.Sprintf("refresh cluster %s parameters successfully", clusterMeta.Cluster.ID))
+	node.Record(fmt.Sprintf("refresh cluster %s parameters ", clusterMeta.Cluster.ID))
 	return nil
 }
 

@@ -143,7 +143,7 @@ func persistUpdateParameter(req *cluster.UpdateClusterParametersReq, ctx *workfl
 		b, err := json.Marshal(param.RealValue)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("failed to convert parameter realValue. req: %v, err: %v", req, err)
-			return errors.NewEMErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain())
+			return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain())
 		}
 		params[i] = &parameter.ClusterParameterMapping{
 			ClusterID:   req.ClusterID,
@@ -154,7 +154,7 @@ func persistUpdateParameter(req *cluster.UpdateClusterParametersReq, ctx *workfl
 	err := models.GetClusterParameterReaderWriter().UpdateClusterParameter(ctx, req.ClusterID, params)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("update cluster parameter req: %v, err: %v", req, err)
-		return errors.NewEMErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR.Explain())
+		return errors.NewErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR.Explain())
 	}
 	return nil
 }
@@ -171,7 +171,7 @@ func persistApplyParameter(req *message.ApplyParameterGroupReq, ctx *workflow.Fl
 	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId)
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain())
 	}
 
 	pgs := make([]*parameter.ClusterParameterMapping, len(params))
@@ -179,7 +179,7 @@ func persistApplyParameter(req *message.ApplyParameterGroupReq, ctx *workflow.Fl
 		realValue := structs.ParameterRealValue{ClusterValue: param.DefaultValue}
 		b, err := json.Marshal(realValue)
 		if err != nil {
-			return errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, errors.TIEM_PARAMETER_GROUP_APPLY_ERROR.Explain())
+			return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, errors.TIEM_PARAMETER_GROUP_APPLY_ERROR.Explain())
 		}
 		pgs[i] = &parameter.ClusterParameterMapping{
 			ClusterID:   req.ClusterID,
@@ -190,7 +190,7 @@ func persistApplyParameter(req *message.ApplyParameterGroupReq, ctx *workflow.Fl
 	err = models.GetClusterParameterReaderWriter().ApplyClusterParameter(ctx, req.ParamGroupId, req.ClusterID, pgs)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("apply parameter group convert resp err: %v", err)
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, errors.TIEM_PARAMETER_GROUP_APPLY_ERROR.Explain(), err)
+		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, errors.TIEM_PARAMETER_GROUP_APPLY_ERROR.Explain(), err)
 	}
 	return err
 }
@@ -210,11 +210,16 @@ func validationParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCon
 	for _, param := range modifyParam.Params {
 		// validate parameter value by range field
 		if !validateRange(param) {
-			return fmt.Errorf(fmt.Sprintf("Validation parameter %s failed, update value: %s, can take a range of values: %v",
-				param.Name, param.RealValue.ClusterValue, param.Range))
+			if len(param.Range) == 2 && (param.Type == int(Integer) || param.Type == int(Float)) {
+				return fmt.Errorf(fmt.Sprintf("Validation parameter %s failed, update value: %s, can take a range of values: %v",
+					param.Name, param.RealValue.ClusterValue, param.Range))
+			} else {
+				return fmt.Errorf(fmt.Sprintf("Validation parameter %s failed, update value: %s, optional values: %v",
+					param.Name, param.RealValue.ClusterValue, param.Range))
+			}
 		}
 	}
-	node.Record("validate parameters successfully")
+	node.Record("validate parameters ")
 	return nil
 }
 
@@ -224,16 +229,28 @@ func validationParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCon
 // @return bool
 func validateRange(param ModifyClusterParameterInfo) bool {
 	// Determine if range is nil or an expression, continue the loop directly
-	if param.Range == nil || len(param.Range) <= 1 {
+	if param.Range == nil || len(param.Range) == 0 {
 		return true
 	}
 	switch param.Type {
 	case int(Integer):
-		start, err1 := strconv.ParseInt(param.Range[0], 0, 64)
-		end, err2 := strconv.ParseInt(param.Range[1], 0, 64)
-		clusterValue, err3 := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)
-		if err1 == nil && err2 == nil && err3 == nil && clusterValue >= start && clusterValue <= end {
-			return true
+		if len(param.Range) == 2 {
+			// When the length is 2, then determine whether it is within the range of values
+			start, err1 := strconv.ParseInt(param.Range[0], 0, 64)
+			end, err2 := strconv.ParseInt(param.Range[1], 0, 64)
+			clusterValue, err3 := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)
+			if err1 == nil && err2 == nil && err3 == nil && clusterValue >= start && clusterValue <= end {
+				return true
+			}
+		} else {
+			// When the length is 1 or greater than 2, iterate through enumerated values to determine if they are equal
+			clusterValue, err := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)
+			for i := 0; i < len(param.Range); i++ {
+				val, err1 := strconv.ParseInt(param.Range[i], 0, 64)
+				if err == nil && err1 == nil && clusterValue == val {
+					return true
+				}
+			}
 		}
 	case int(String):
 		for _, enumValue := range param.Range {
@@ -267,6 +284,7 @@ func validateRange(param ModifyClusterParameterInfo) bool {
 func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin modify parameters executor method")
 	defer framework.LogWithContext(ctx).Info("end modify parameters executor method")
+	clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
 
 	modifyParam := ctx.GetData(contextModifyParameters).(*ModifyParameter)
 	framework.LogWithContext(ctx).Debugf("got modify need reboot: %v, parameters size: %d", modifyParam.Reboot, len(modifyParam.Params))
@@ -282,6 +300,10 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		if applyParameter != nil && param.HasApply != int(DirectApply) {
 			continue
 		}
+		// If it is a parameter of CDC, apply the parameter without installing CDC, then skip directly
+		if applyParameter != nil && param.InstanceType == string(constants.ComponentIDCDC) && len(clusterMeta.GetCDCClientAddresses()) == 0 {
+			continue
+		}
 		framework.LogWithContext(ctx).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.ClusterValue)
 		// condition UpdateSource values is 2, then insert tiup and sql respectively
 		if param.UpdateSource == int(TiupAndSql) {
@@ -290,7 +312,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		} else {
 			putParameterContainer(paramContainer, param.UpdateSource, param)
 		}
-		node.Record(fmt.Sprintf("modify parameter %s in %s to %s", param.Name, param.InstanceType, param.RealValue.ClusterValue))
+		node.Record(fmt.Sprintf("modify parameter %s in %s to %s; ", param.Name, param.InstanceType, param.RealValue.ClusterValue))
 	}
 
 	for source, params := range paramContainer {
@@ -310,7 +332,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 			}
 		}
 	}
-	node.Record("modify parameters successfully")
+	node.Record("modify parameters ")
 	return nil
 }
 
@@ -546,7 +568,6 @@ func convertRealParameterType(ctx *workflow.FlowContext, param ModifyClusterPara
 			if err != nil {
 				return nil, err
 			}
-			fmt.Println(num)
 			if num == 0 {
 				c += 1e-8
 			}
@@ -608,7 +629,7 @@ func refreshParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		// loop get tiup exec status
 		return getTaskStatusByTaskId(ctx, node)
 	}
-	node.Record(fmt.Sprintf("refresh cluster %s parameters successfully", clusterMeta.Cluster.ID))
+	node.Record(fmt.Sprintf("refresh cluster %s parameters ", clusterMeta.Cluster.ID))
 	return nil
 }
 
@@ -625,19 +646,19 @@ func getTaskStatusByTaskId(ctx *workflow.FlowContext, node *workflowModel.WorkFl
 	sequence := 0
 	for range ticker.C {
 		if sequence += 1; sequence > 200 {
-			return errors.NewEMErrorf(errors.TIEM_TASK_POLLING_TIME_OUT, errors.TIEM_TASK_POLLING_TIME_OUT.Explain())
+			return errors.NewErrorf(errors.TIEM_TASK_POLLING_TIME_OUT, errors.TIEM_TASK_POLLING_TIME_OUT.Explain())
 		}
 		framework.LogWithContext(ctx).Infof("polling node waiting, nodeId %s, nodeName %s", node.ID, node.Name)
 
 		resp, err := secondparty.Manager.GetOperationStatusByWorkFlowNodeID(ctx, node.ID)
 		if err != nil {
 			framework.LogWithContext(ctx).Error(err)
-			node.Fail(errors.NewEMErrorf(errors.TIEM_TASK_FAILED, errors.TIEM_TASK_FAILED.Explain()))
-			return errors.NewEMErrorf(errors.TIEM_TASK_FAILED, errors.TIEM_TASK_FAILED.Explain(), err)
+			node.Fail(errors.NewErrorf(errors.TIEM_TASK_FAILED, errors.TIEM_TASK_FAILED.Explain()))
+			return errors.NewErrorf(errors.TIEM_TASK_FAILED, errors.TIEM_TASK_FAILED.Explain(), err)
 		}
 		if resp.Status == secondparty2.OperationStatus_Error {
-			node.Fail(errors.NewEMErrorf(errors.TIEM_TASK_FAILED, resp.ErrorStr))
-			return errors.NewEMErrorf(errors.TIEM_TASK_FAILED, resp.ErrorStr)
+			node.Fail(errors.NewErrorf(errors.TIEM_TASK_FAILED, resp.ErrorStr))
+			return errors.NewErrorf(errors.TIEM_TASK_FAILED, resp.ErrorStr)
 		}
 		if resp.Status == secondparty2.OperationStatus_Finished {
 			node.Success(resp.Result)

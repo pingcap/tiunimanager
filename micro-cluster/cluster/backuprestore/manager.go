@@ -265,7 +265,7 @@ func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request cluster.D
 
 	if request.ClusterID == "" && request.BackupID == "" {
 		framework.LogWithContext(ctx).Errorf("invalid param clusterId and backupId empty")
-		return resp, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "invalid param clusterId and backupId empty")
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid param clusterId and backupId empty")
 	}
 
 	deleteRecordMap := make(map[string]*backuprestore.BackupRecord)

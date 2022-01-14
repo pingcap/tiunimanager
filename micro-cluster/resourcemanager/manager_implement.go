@@ -69,12 +69,12 @@ func (m *ResourceManager) ImportHosts(ctx context.Context, hosts []structs.HostI
 	return
 }
 
-func (m *ResourceManager) QueryHosts(ctx context.Context, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, total int64, err error) {
-	hosts, total, err = m.resourcePool.QueryHosts(ctx, filter, page)
+func (m *ResourceManager) QueryHosts(ctx context.Context, location *structs.Location, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, total int64, err error) {
+	hosts, total, err = m.resourcePool.QueryHosts(ctx, location, filter, page)
 	if err != nil {
-		framework.LogWithContext(ctx).Warnf("query hosts in filter %v failed from db service: %v", *filter, err)
+		framework.LogWithContext(ctx).Warnf("query hosts in location %v with filter %v failed from db service: %v", *location, *filter, err)
 	} else {
-		framework.LogWithContext(ctx).Infof("query %d hosts in filter %v succeed from db service.", len(hosts), *filter)
+		framework.LogWithContext(ctx).Infof("query %d hosts in location %v with filter %v succeed from db service.", len(hosts), *location, *filter)
 	}
 
 	return

@@ -80,7 +80,7 @@ func (h Host) IsLoadless() bool {
 func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
 	err = tx.Where("IP = ? and HOST_NAME = ?", h.IP, h.HostName).First(&Host{}).Error
 	if err == nil {
-		return em_errors.NewEMErrorf(em_errors.TIEM_RESOURCE_HOST_ALREADY_EXIST, "host %s(%s) is existed", h.HostName, h.IP)
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_HOST_ALREADY_EXIST, "host %s(%s) is existed", h.HostName, h.IP)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		h.ID = uuidutil.GenerateID()
@@ -95,7 +95,7 @@ func (h *Host) AfterCreate(tx *gorm.DB) (err error) {
 		disk.HostID = h.ID
 		err = tx.Create(&disk).Error
 		if err != nil {
-			return em_errors.NewEMErrorf(em_errors.TIEM_RESOURCE_CREATE_DISK_ERROR, "create disk %s for host %s(%s) failed, %v", disk.Name, h.HostName, h.IP, err)
+			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_CREATE_DISK_ERROR, "create disk %s for host %s(%s) failed, %v", disk.Name, h.HostName, h.IP, err)
 		}
 	}
 	return nil
@@ -105,11 +105,11 @@ func (h *Host) BeforeDelete(tx *gorm.DB) (err error) {
 	err = tx.Where("ID = ?", h.ID).First(h).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return em_errors.NewEMErrorf(em_errors.TIEM_RESOURCE_HOST_NOT_FOUND, "host %s is not found", h.ID)
+			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_HOST_NOT_FOUND, "host %s is not found", h.ID)
 		}
 	} else {
 		if h.IsInused() {
-			return em_errors.NewEMErrorf(em_errors.TIEM_RESOURCE_HOST_STILL_INUSED, "host %s is still in used", h.ID)
+			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_HOST_STILL_INUSED, "host %s is still in used", h.ID)
 		}
 	}
 

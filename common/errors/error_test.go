@@ -43,7 +43,7 @@ func TestNewError(t *testing.T) {
 }
 
 func TestNewEMErrorf(t *testing.T) {
-	err := NewEMErrorf(TIEM_MARSHAL_ERROR, "mymessage %d", 3333)
+	err := NewErrorf(TIEM_MARSHAL_ERROR, "mymessage %d", 3333)
 	assert.Error(t, err)
 	assert.Equal(t, TIEM_MARSHAL_ERROR, err.code)
 	assert.Equal(t, "mymessage 3333", err.GetMsg())

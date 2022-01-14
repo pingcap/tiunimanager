@@ -50,7 +50,11 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	rows := xlsx.GetRows("Host Information")
+	rows := xlsx.GetRows(ImportHostTemplateSheet)
+	if len(rows) == 0 {
+		errMsg := fmt.Sprintf("[%s] sheet not exist or has no valid data", ImportHostTemplateSheet)
+		return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+	}
 	var hosts []structs.HostInfo
 	for irow, row := range rows {
 		if irow > 0 {

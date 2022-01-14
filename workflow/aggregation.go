@@ -70,7 +70,7 @@ func (c FlowContext) SetData(key string, value interface{}) {
 func createFlowWork(ctx context.Context, bizId string, bizType string, define *WorkFlowDefine) (*WorkFlowAggregation, error) {
 	framework.LogWithContext(ctx).Infof("create flowwork %v for bizId %s", define, bizId)
 	if define == nil {
-		return nil, errors.NewEMErrorf(errors.TIEM_FLOW_NOT_FOUND, "empty workflow definition")
+		return nil, errors.NewErrorf(errors.TIEM_FLOW_NOT_FOUND, "empty workflow definition")
 	}
 	flowData := make(map[string]interface{})
 
@@ -132,7 +132,7 @@ func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDe
 	defer func() {
 		if r := recover(); r != nil {
 			framework.LogWithContext(flow.Context).Errorf("recover from workflow %s, node %s", flow.Flow.Name, node.Name)
-			execErr = errors.NewEMErrorf(errors.TIEM_PANIC, "%v", r)
+			execErr = errors.NewErrorf(errors.TIEM_PANIC, "%v", r)
 			node.Fail(execErr)
 		}
 	}()

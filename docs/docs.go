@@ -2115,6 +2115,82 @@ var doc = `{
                 }
             }
         },
+        "/clusters/{clusterId}/preview-scale-out": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "preview cluster topology and capability",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "preview cluster topology and capability",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "scale out request",
+                        "name": "scaleOutReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.ScaleOutClusterReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.PreviewClusterResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/clusters/{clusterId}/restart": {
             "post": {
                 "security": [
@@ -3731,6 +3807,11 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "hostIp",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "loadStat",
                         "in": "query"
                     },
@@ -3753,7 +3834,22 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "rack",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "region",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "zone",
                         "in": "query"
                     }
                 ],
@@ -3944,48 +4040,33 @@ var doc = `{
                 "summary": "Show the resources stocks",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "name": "Capacity",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "DiskStatus",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "DiskType",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "HostIp",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "Rack",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "Region",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "Zone",
-                        "in": "query"
-                    },
-                    {
                         "type": "string",
                         "name": "arch",
                         "in": "query"
                     },
                     {
+                        "type": "integer",
+                        "name": "capacity",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "diskStatus",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "diskType",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "name": "hostId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostIp",
                         "in": "query"
                     },
                     {
@@ -4000,7 +4081,22 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "rack",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "region",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "zone",
                         "in": "query"
                     }
                 ],
@@ -4540,62 +4636,6 @@ var doc = `{
             }
         },
         "/zones": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "queries all zones information",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "platform"
-                ],
-                "summary": "queries all zones information",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/message.QueryZonesResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            },
             "post": {
                 "security": [
                     {
@@ -4704,6 +4744,64 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/message.DeleteZoneResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/zones/tree": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "queries all regions information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "queries all regions information",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.QueryZonesTreeResp"
                                         }
                                     }
                                 }
@@ -6577,9 +6675,19 @@ var doc = `{
             "type": "object",
             "properties": {
                 "products": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.Product"
+                    "description": "arch version",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "$ref": "#/definitions/structs.Product"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -6626,13 +6734,13 @@ var doc = `{
                 }
             }
         },
-        "message.QueryZonesResp": {
+        "message.QueryZonesTreeResp": {
             "type": "object",
             "properties": {
-                "zones": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.ZoneInfo"
+                "vendors": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.VendorWithRegion"
                     }
                 }
             }
@@ -7282,16 +7390,16 @@ var doc = `{
         "structs.HierarchyTreeNode": {
             "type": "object",
             "properties": {
-                "Code": {
+                "code": {
                     "type": "string"
                 },
-                "Name": {
+                "name": {
                     "type": "string"
                 },
-                "Prefix": {
+                "prefix": {
                     "type": "string"
                 },
-                "SubNodes": {
+                "subNodes": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.HierarchyTreeNode"
@@ -7629,6 +7737,12 @@ var doc = `{
                 },
                 "startPort": {
                     "type": "integer"
+                },
+                "suggestedInstancesCount": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
@@ -7678,6 +7792,17 @@ var doc = `{
                 },
                 "version": {
                     "description": "Version information of the product, e.g. v5.0.0",
+                    "type": "string"
+                }
+            }
+        },
+        "structs.RegionInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -7779,6 +7904,25 @@ var doc = `{
                 },
                 "used": {
                     "type": "number"
+                }
+            }
+        },
+        "structs.VendorWithRegion": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "The value of the VendorID is similar to AWS",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The value of the Name is similar to AWS",
+                    "type": "string"
+                },
+                "regions": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.RegionInfo"
+                    }
                 }
             }
         },

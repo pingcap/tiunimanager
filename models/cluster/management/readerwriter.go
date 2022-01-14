@@ -110,4 +110,13 @@ type ReaderWriter interface {
 	CreateClusterTopologySnapshot(ctx context.Context, snapshot ClusterTopologySnapshot) error
 	GetCurrentClusterTopologySnapshot(ctx context.Context, clusterID string) (ClusterTopologySnapshot, error)
 	UpdateTopologySnapshotConfig(ctx context.Context, clusterID string, config string) error
+
+	//
+    // ClearClusterPhysically
+    // @Description: If you don't know why you should use it, then don't use it
+    // @param ctx
+    // @param clusterID
+    // @return err
+    //
+	ClearClusterPhysically(ctx context.Context, clusterID string) (err error)
 }

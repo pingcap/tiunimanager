@@ -3783,32 +3783,17 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "name": "HostIp",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "Rack",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "Region",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "Zone",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
                         "name": "arch",
                         "in": "query"
                     },
                     {
                         "type": "string",
                         "name": "hostId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostIp",
                         "in": "query"
                     },
                     {
@@ -3835,7 +3820,22 @@
                     },
                     {
                         "type": "string",
+                        "name": "rack",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "region",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "zone",
                         "in": "query"
                     }
                 ],
@@ -4026,48 +4026,33 @@
                 "summary": "Show the resources stocks",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "name": "Capacity",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "DiskStatus",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "DiskType",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "HostIp",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "Rack",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "Region",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "Zone",
-                        "in": "query"
-                    },
-                    {
                         "type": "string",
                         "name": "arch",
                         "in": "query"
                     },
                     {
+                        "type": "integer",
+                        "name": "capacity",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "diskStatus",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "diskType",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "name": "hostId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostIp",
                         "in": "query"
                     },
                     {
@@ -4082,7 +4067,22 @@
                     },
                     {
                         "type": "string",
+                        "name": "rack",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "region",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "zone",
                         "in": "query"
                     }
                 ],
@@ -7376,16 +7376,16 @@
         "structs.HierarchyTreeNode": {
             "type": "object",
             "properties": {
-                "Code": {
+                "code": {
                     "type": "string"
                 },
-                "Name": {
+                "name": {
                     "type": "string"
                 },
-                "Prefix": {
+                "prefix": {
                     "type": "string"
                 },
-                "SubNodes": {
+                "subNodes": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.HierarchyTreeNode"

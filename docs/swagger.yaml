@@ -1783,13 +1783,13 @@ definitions:
     type: object
   structs.HierarchyTreeNode:
     properties:
-      Code:
+      code:
         type: string
-      Name:
+      name:
         type: string
-      Prefix:
+      prefix:
         type: string
-      SubNodes:
+      subNodes:
         items:
           $ref: '#/definitions/structs.HierarchyTreeNode'
         type: array
@@ -4530,22 +4530,13 @@ paths:
       description: get hosts list
       parameters:
       - in: query
-        name: HostIp
-        type: string
-      - in: query
-        name: Rack
-        type: string
-      - in: query
-        name: Region
-        type: string
-      - in: query
-        name: Zone
-        type: string
-      - in: query
         name: arch
         type: string
       - in: query
         name: hostId
+        type: string
+      - in: query
+        name: hostIp
         type: string
       - in: query
         name: loadStat
@@ -4562,7 +4553,16 @@ paths:
         name: purpose
         type: string
       - in: query
+        name: rack
+        type: string
+      - in: query
+        name: region
+        type: string
+      - in: query
         name: status
+        type: string
+      - in: query
+        name: zone
         type: string
       produces:
       - application/json
@@ -4647,31 +4647,22 @@ paths:
       description: get resource stocks in specified conditions
       parameters:
       - in: query
-        name: Capacity
-        type: integer
-      - in: query
-        name: DiskStatus
-        type: string
-      - in: query
-        name: DiskType
-        type: string
-      - in: query
-        name: HostIp
-        type: string
-      - in: query
-        name: Rack
-        type: string
-      - in: query
-        name: Region
-        type: string
-      - in: query
-        name: Zone
-        type: string
-      - in: query
         name: arch
         type: string
       - in: query
+        name: capacity
+        type: integer
+      - in: query
+        name: diskStatus
+        type: string
+      - in: query
+        name: diskType
+        type: string
+      - in: query
         name: hostId
+        type: string
+      - in: query
+        name: hostIp
         type: string
       - in: query
         name: loadStat
@@ -4680,7 +4671,16 @@ paths:
         name: purpose
         type: string
       - in: query
+        name: rack
+        type: string
+      - in: query
+        name: region
+        type: string
+      - in: query
         name: status
+        type: string
+      - in: query
+        name: zone
         type: string
       produces:
       - application/json

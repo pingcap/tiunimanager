@@ -16,12 +16,9 @@
 package hostinitiator
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"strconv"
 	"strings"
-	"text/template"
 
 	"github.com/pingcap-inc/tiem/util/scp"
 	sshclient "github.com/pingcap-inc/tiem/util/ssh"
@@ -31,7 +28,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
-	resourceTemplate "github.com/pingcap-inc/tiem/resource/template"
 )
 
 type FileHostInitiator struct {
@@ -261,53 +257,6 @@ func (p *FileHostInitiator) setOffSwap(ctx context.Context, h *structs.HostInfo)
 	return nil
 }
 
-type templateScaleOut struct {
-	HostIPs []string
-}
-
-func (p *templateScaleOut) generateTopologyConfig(ctx context.Context) (string, error) {
-	t, err := template.New("import_topology.yaml").Parse(resourceTemplate.EMClusterScaleOut)
-	if err != nil {
-		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
-	}
-
-	topology := new(bytes.Buffer)
-	if err = t.Execute(topology, p); err != nil {
-		return "", errors.NewError(errors.TIEM_UNRECOGNIZED_ERROR, err.Error())
-	}
-	framework.LogWithContext(ctx).Infof("generate topology config: %s", topology.String())
-
-	return topology.String(), nil
-}
-
 func (p *FileHostInitiator) installTcpDump(ctx context.Context, hosts []structs.HostInfo) (err error) {
 	return nil
-}
-
-type hostCheckResults struct {
-	Result []hostCheckResult `json:"result"`
-}
-
-func (results *hostCheckResults) buildFromJson(resultStr string) (err error) {
-	return json.Unmarshal([]byte(resultStr), results)
-}
-
-func (results hostCheckResults) analyzeCheckResults() (sortedResult map[string]*[]hostCheckResult) {
-	sortedResult = make(map[string]*[]hostCheckResult)
-	for i := range results.Result {
-		if res, ok := sortedResult[results.Result[i].Status]; ok {
-			*res = append(*res, results.Result[i])
-		} else {
-			sortedResult[results.Result[i].Status] = &[]hostCheckResult{results.Result[i]}
-		}
-	}
-	return
-}
-
-// hostCheckResult represents the check result of each node
-type hostCheckResult struct {
-	Node    string `json:"node"`
-	Name    string `json:"name"`
-	Status  string `json:"status"`
-	Message string `json:"message"`
 }

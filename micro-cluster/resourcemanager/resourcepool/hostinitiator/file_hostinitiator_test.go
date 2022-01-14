@@ -248,7 +248,7 @@ func Test_BuildHostCheckResulsFromJson(t *testing.T) {
 		{"node":"172.16.5.168","name":"thp","status":"Pass","message":"THP is disabled"},
 		{"node":"172.16.5.168","name":"command","status":"Fail","message":"numactl not usable, bash: numactl: command not found"}]}`
 
-	var results hostCheckResults
+	var results checkHostResults
 	err := (&results).buildFromJson(jsonStr)
 	assert.Nil(t, err)
 	assert.Equal(t, 28, len(results.Result))

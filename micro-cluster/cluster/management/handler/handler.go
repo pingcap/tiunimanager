@@ -18,6 +18,7 @@ package handler
 import (
 	"bytes"
 	"context"
+	"github.com/pingcap-inc/tiem/models/platform/user"
 	"text/template"
 
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -878,6 +879,15 @@ func (p *ClusterMeta) GetClusterUserNamePasswd() *TiDBUserInfo {
 	}
 }
 
+// GetDBUserNamePassword
+// @Description: get username and password of the different type user
+// @Receiver p
+// @return BDUser
+func (p *ClusterMeta) GetDBUserNamePassword(roleType constants.DBUserRoleType) *user.DBUser {
+	// todo
+	return &user.DBUser{}
+}
+
 // UpdateMeta
 // @Description: update cluster meta, include cluster and all instances
 // @Receiver p
@@ -900,6 +910,15 @@ func (p *ClusterMeta) UpdateMeta(ctx context.Context) error {
 // @return error
 func (p *ClusterMeta) Delete(ctx context.Context) error {
 	return models.GetClusterReaderWriter().Delete(ctx, p.Cluster.ID)
+}
+
+// ClearClusterPhysically
+// @Description: delete cluster physically, If you don't know why you should use it, then don't use it
+// @Receiver p
+// @Parameter ctx
+// @return error
+func (p *ClusterMeta) ClearClusterPhysically(ctx context.Context) error {
+	return models.GetClusterReaderWriter().ClearClusterPhysically(ctx, p.Cluster.ID)
 }
 
 func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {

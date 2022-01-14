@@ -24,7 +24,7 @@ import (
 type HostProvider interface {
 	ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error)
 	DeleteHosts(ctx context.Context, hostIds []string) (err error)
-	QueryHosts(ctx context.Context, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, total int64, err error)
+	QueryHosts(ctx context.Context, location *structs.Location, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, total int64, err error)
 	UpdateHostStatus(ctx context.Context, hostId []string, status string) (err error)
 	UpdateHostReserved(ctx context.Context, hostId []string, reserved bool) (err error)
 

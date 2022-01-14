@@ -160,10 +160,10 @@ func (h HostInfo) IsLoadless() bool {
 }
 
 type Location struct {
-	Region string `json:"Region"`
-	Zone   string `json:"Zone"`
-	Rack   string `json:"Rack"`
-	HostIp string `json:"HostIp"`
+	Region string `json:"Region" form:"Region"`
+	Zone   string `json:"Zone" form:"Zone"`
+	Rack   string `json:"Rack" form:"Rack"`
+	HostIp string `json:"HostIp" form:"HostIp"`
 }
 
 type ImportCondition struct {

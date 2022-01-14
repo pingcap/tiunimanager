@@ -227,7 +227,7 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_resource.NewMockReaderWriter(ctrl)
-	mockClient.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, filter *structs.HostFilter, offset, limit int) (hosts []resourcepool.Host, total int64, err error) {
+	mockClient.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, location *structs.Location, filter *structs.HostFilter, offset, limit int) (hosts []resourcepool.Host, total int64, err error) {
 		assert.Equal(t, 20, offset)
 		assert.Equal(t, 10, limit)
 		if filter.HostID == fake_hostId {
@@ -251,7 +251,7 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 		PageSize: 10,
 	}
 
-	hosts, total, err := resourceManager.QueryHosts(context.TODO(), filter, page)
+	hosts, total, err := resourceManager.QueryHosts(context.TODO(), &structs.Location{}, filter, page)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, int(total))
 

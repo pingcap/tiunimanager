@@ -22,7 +22,7 @@ import (
 //
 // EMError
 // @Description: EM business error
-// Always get EMError from EMErrorBuilder.build(), limited to Error, NewEMError, NewEMErrorf, WrapError, ErrorBuilder().build()
+// Always get EMError from EMErrorBuilder.build(), limited to Error, NewEMError, NewErrorf, WrapError, ErrorBuilder().build()
 type EMError struct {
 	code  EM_ERROR_CODE
 	msg   string
@@ -37,7 +37,7 @@ func NewError(code EM_ERROR_CODE, msg string) EMError {
 	return ErrorBuilder().Code(code).Message(msg).Build()
 }
 
-func NewEMErrorf(code EM_ERROR_CODE, format string, a ...interface{}) EMError {
+func NewErrorf(code EM_ERROR_CODE, format string, a ...interface{}) EMError {
 	return ErrorBuilder().Code(code).Message(fmt.Sprintf(format, a...)).Build()
 }
 

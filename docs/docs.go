@@ -4622,62 +4622,6 @@ var doc = `{
             }
         },
         "/zones": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "queries all zones information",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "platform"
-                ],
-                "summary": "queries all zones information",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/message.QueryZonesResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            },
             "post": {
                 "security": [
                     {
@@ -4786,6 +4730,64 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/message.DeleteZoneResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/zones/tree": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "queries all regions information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "queries all regions information",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.QueryZonesTreeResp"
                                         }
                                     }
                                 }
@@ -6656,9 +6658,19 @@ var doc = `{
             "type": "object",
             "properties": {
                 "products": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.Product"
+                    "description": "arch version",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "$ref": "#/definitions/structs.Product"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -6705,13 +6717,13 @@ var doc = `{
                 }
             }
         },
-        "message.QueryZonesResp": {
+        "message.QueryZonesTreeResp": {
             "type": "object",
             "properties": {
-                "zones": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.ZoneInfo"
+                "vendors": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.VendorWithRegion"
                     }
                 }
             }
@@ -7708,6 +7720,12 @@ var doc = `{
                 },
                 "startPort": {
                     "type": "integer"
+                },
+                "suggestedInstancesCount": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
@@ -7757,6 +7775,17 @@ var doc = `{
                 },
                 "version": {
                     "description": "Version information of the product, e.g. v5.0.0",
+                    "type": "string"
+                }
+            }
+        },
+        "structs.RegionInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -7858,6 +7887,25 @@ var doc = `{
                 },
                 "used": {
                     "type": "number"
+                }
+            }
+        },
+        "structs.VendorWithRegion": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "The value of the VendorID is similar to AWS",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The value of the Name is similar to AWS",
+                    "type": "string"
+                },
+                "regions": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.RegionInfo"
+                    }
                 }
             }
         },

@@ -603,16 +603,19 @@ var takeoverClusterFlow = workflow.WorkFlowDefine{
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":            {"fetchTopologyFile", "fetched", "revert", workflow.SyncFuncNode, fetchTopologyFile},
 		"fetched":          {"rebuildTopologyFromConfig", "built", "revert", workflow.SyncFuncNode, rebuildTopologyFromConfig},
-		"built":            {"takeoverResource", "resourceDone", "revert", workflow.SyncFuncNode, takeoverResource},
+		"built":            {"validateHostsStatus", "importDone", "revert", workflow.SyncFuncNode, validateHostsStatus},
+		"importDone":       {"takeoverResource", "resourceDone", "revert", workflow.SyncFuncNode, takeoverResource},
 		"resourceDone":     {"rebuildTiupSpaceForCluster", "workingSpaceDone", "fail", workflow.SyncFuncNode, rebuildTiupSpaceForCluster},
 		"workingSpaceDone": {"testConnectivity", "success", "", workflow.SyncFuncNode, testConnectivity},
 		"success":          {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
 		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
-		"revert":           {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(deleteCluster)},
+		"revert":           {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(clearClusterPhysically)},
 	},
 }
 
-func openSftpClient(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error) {
+type openSftpClientFunc func(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error)
+
+var openSftpClient openSftpClientFunc = func(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error) {
 	conf := ssh.ClientConfig{User: req.TiUPUserName,
 		Auth: []ssh.AuthMethod{ssh.Password(req.TiUPUserPassword)},
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
@@ -658,6 +661,7 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 	meta := &handler.ClusterMeta{}
 	if err = meta.BuildForTakeover(ctx, req.ClusterName, req.DBUser, req.DBPassword); err != nil {
 		framework.LogWithContext(ctx).Errorf(err.Error())
+		return
 	}
 
 	data := map[string]interface{}{
@@ -780,7 +784,7 @@ func (p *Manager) GetMonitorInfo(ctx context.Context, req cluster.QueryMonitorIn
 
 func (p *Manager) restoreNewClusterPreCheck(ctx context.Context, req cluster.RestoreNewClusterReq) error {
 	if req.BackupID == "" {
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("restore new cluster input backupId empty"))
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("restore new cluster input backupId empty"))
 	}
 
 	brService := backuprestore.GetBRService()
@@ -792,13 +796,13 @@ func (p *Manager) restoreNewClusterPreCheck(ctx context.Context, req cluster.Res
 		},
 	})
 	if err != nil {
-		return errors.NewEMErrorf(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, err.Error())
+		return errors.NewErrorf(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, err.Error())
 	}
 	if len(resp.BackupRecords) <= 0 {
-		return errors.NewEMErrorf(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("backup recordId %s not found", req.BackupID))
+		return errors.NewErrorf(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("backup recordId %s not found", req.BackupID))
 	}
 	if resp.BackupRecords[0].Status != string(constants.ClusterBackupFinished) {
-		return errors.NewEMErrorf(errors.TIEM_BACKUP_RECORD_INVALID, fmt.Sprintf("backup record status invalid"))
+		return errors.NewErrorf(errors.TIEM_BACKUP_RECORD_INVALID, fmt.Sprintf("backup record status invalid"))
 	}
 
 	return nil

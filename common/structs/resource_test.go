@@ -102,7 +102,7 @@ func Test_GetTraitByName(t *testing.T) {
 		{"EM", string(constants.EMProductIDEnterpriseManager), want{trait: 0x0000000000000004, err: nil}},
 		{"Schedule", string(constants.PurposeSchedule), want{trait: 0x0000000000000020, err: nil}},
 		{"SSD", string(constants.SSD), want{trait: 0x0000000000000080, err: nil}},
-		{"ERROR", "InvalidName", want{trait: 0, err: errors.NewEMErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND,
+		{"ERROR", "InvalidName", want{trait: 0, err: errors.NewErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND,
 			"label type %v not found in system default labels", "InvalidName")}},
 	}
 	for _, tt := range tests {

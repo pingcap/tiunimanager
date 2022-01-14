@@ -912,6 +912,15 @@ func (p *ClusterMeta) Delete(ctx context.Context) error {
 	return models.GetClusterReaderWriter().Delete(ctx, p.Cluster.ID)
 }
 
+// ClearClusterPhysically
+// @Description: delete cluster physically, If you don't know why you should use it, then don't use it
+// @Receiver p
+// @Parameter ctx
+// @return error
+func (p *ClusterMeta) ClearClusterPhysically(ctx context.Context) error {
+	return models.GetClusterReaderWriter().ClearClusterPhysically(ctx, p.Cluster.ID)
+}
+
 func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
 	cluster, instances, err := models.GetClusterReaderWriter().GetMeta(ctx, clusterID)
 

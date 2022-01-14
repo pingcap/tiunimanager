@@ -38,7 +38,9 @@ import (
 	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
 	"github.com/pingcap-inc/tiem/workflow"
+	"github.com/pkg/sftp"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/crypto/ssh"
 	"testing"
 	"time"
 )
@@ -1293,3 +1295,130 @@ func TestPreviewScaleOutCluster(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func TestManager_openSftpClient(t *testing.T) {
+	t.Run("Dial err", func(t *testing.T) {
+		_, _, err := openSftpClient(context.TODO(), cluster.TakeoverClusterReq{})
+		assert.Error(t, err)
+	})
+}
+
+func TestManager_TakeoverCluster(t *testing.T) {
+	original := openSftpClient
+	defer func() {
+		openSftpClient = original
+	}()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	workflow.GetWorkFlowService().RegisterWorkFlow(context.TODO(), constants.FlowTakeoverCluster, getEmptyFlow(constants.FlowTakeoverCluster))
+	manager := Manager{}
+
+	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+	workflow.MockWorkFlowService(workflowService)
+	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
+	}, nil).AnyTimes()
+	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	t.Run("normal", func(t *testing.T) {
+		openSftpClient = func(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error) {
+			return nil, nil, nil
+		}
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq {
+			TiUPIp: "127.0.0.1",
+			TiUPPath: ".tiup/",
+			TiUPUserName: "root",
+			TiUPUserPassword: "aaa",
+			TiUPPort: 22,
+			ClusterName: "takeoverCluster",
+			DBUser: "dbUserName",
+			DBPassword: "password",
+		})
+		assert.NoError(t, err)
+	})
+
+	t.Run("build cluster fail", func(t *testing.T) {
+		openSftpClient = func(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error) {
+			return nil, nil, nil
+		}
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("fail")).AnyTimes()
+		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq {
+			TiUPIp: "127.0.0.1",
+			TiUPPath: ".tiup/",
+			TiUPUserName: "root",
+			TiUPUserPassword: "aaa",
+			TiUPPort: 22,
+			ClusterName: "takeoverCluster",
+			DBUser: "dbUserName",
+			DBPassword: "password",
+		})
+
+		assert.Error(t, err)
+	})
+
+	t.Run("no name", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq {
+			TiUPIp: "127.0.0.1",
+			TiUPPath: ".tiup/",
+			TiUPUserName: "root",
+			TiUPUserPassword: "aaa",
+			TiUPPort: 22,
+			DBUser: "dbUserName",
+			DBPassword: "password",
+		})
+		assert.Error(t, err)
+	})
+	t.Run("open fail", func(t *testing.T) {
+		openSftpClient = func(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error) {
+			return nil, nil, errors.New("")
+		}
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq {
+			TiUPIp: "127.0.0.1",
+			TiUPPath: ".tiup/",
+			TiUPUserName: "root",
+			TiUPUserPassword: "aaa",
+			TiUPPort: 22,
+			ClusterName: "takeoverCluster",
+			DBUser: "dbUserName",
+			DBPassword: "password",
+		})
+
+		assert.Error(t, err)
+	})
+	t.Run("async fail", func(t *testing.T) {
+		openSftpClient = func(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error) {
+			return nil, nil, nil
+		}
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("fail")).AnyTimes()
+		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq {
+			TiUPIp: "127.0.0.1",
+			TiUPPath: ".tiup/",
+			TiUPUserName: "root",
+			TiUPUserPassword: "aaa",
+			TiUPPort: 22,
+			ClusterName: "takeoverCluster",
+			DBUser: "dbUserName",
+			DBPassword: "password",
+		})
+
+		assert.Error(t, err)
+	})
+}
+

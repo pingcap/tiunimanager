@@ -149,7 +149,7 @@ func (mgr *WorkFlowManager) GetWorkFlowDefine(ctx context.Context, flowName stri
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
 		framework.LogWithContext(ctx).Errorf("WorkFlow %s not exist", flowName)
-		return nil, errors.NewEMErrorf(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
+		return nil, errors.NewErrorf(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
 	}
 	return flowDefine.(*WorkFlowDefine), nil
 }
@@ -157,7 +157,7 @@ func (mgr *WorkFlowManager) GetWorkFlowDefine(ctx context.Context, flowName stri
 func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, bizType string, flowName string) (*WorkFlowAggregation, error) {
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
-		return nil, errors.NewEMErrorf(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
+		return nil, errors.NewErrorf(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
 	}
 
 	flow, err := createFlowWork(ctx, bizId, bizType, flowDefine.(*WorkFlowDefine))

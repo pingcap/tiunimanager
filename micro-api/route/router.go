@@ -207,7 +207,7 @@ func Route(g *gin.Engine) {
 			zoneGroup.Use(interceptor.AuditLog())
 			zoneGroup.POST("/", product.CreateZones)
 			zoneGroup.DELETE("/", product.DeleteZones)
-			zoneGroup.GET("/", product.QueryZones)
+			zoneGroup.GET("/tree", product.QueryZonesTree)
 		}
 
 		specGroup := apiV1.Group("/specs")

@@ -143,7 +143,7 @@ func persistUpdateParameter(req *cluster.UpdateClusterParametersReq, ctx *workfl
 		b, err := json.Marshal(param.RealValue)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("failed to convert parameter realValue. req: %v, err: %v", req, err)
-			return errors.NewEMErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain())
+			return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain())
 		}
 		params[i] = &parameter.ClusterParameterMapping{
 			ClusterID:   req.ClusterID,
@@ -154,7 +154,7 @@ func persistUpdateParameter(req *cluster.UpdateClusterParametersReq, ctx *workfl
 	err := models.GetClusterParameterReaderWriter().UpdateClusterParameter(ctx, req.ClusterID, params)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("update cluster parameter req: %v, err: %v", req, err)
-		return errors.NewEMErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR.Explain())
+		return errors.NewErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR.Explain())
 	}
 	return nil
 }
@@ -171,7 +171,7 @@ func persistApplyParameter(req *message.ApplyParameterGroupReq, ctx *workflow.Fl
 	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId)
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain())
 	}
 
 	pgs := make([]*parameter.ClusterParameterMapping, len(params))
@@ -179,7 +179,7 @@ func persistApplyParameter(req *message.ApplyParameterGroupReq, ctx *workflow.Fl
 		realValue := structs.ParameterRealValue{ClusterValue: param.DefaultValue}
 		b, err := json.Marshal(realValue)
 		if err != nil {
-			return errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, errors.TIEM_PARAMETER_GROUP_APPLY_ERROR.Explain())
+			return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, errors.TIEM_PARAMETER_GROUP_APPLY_ERROR.Explain())
 		}
 		pgs[i] = &parameter.ClusterParameterMapping{
 			ClusterID:   req.ClusterID,
@@ -190,7 +190,7 @@ func persistApplyParameter(req *message.ApplyParameterGroupReq, ctx *workflow.Fl
 	err = models.GetClusterParameterReaderWriter().ApplyClusterParameter(ctx, req.ParamGroupId, req.ClusterID, pgs)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("apply parameter group convert resp err: %v", err)
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, errors.TIEM_PARAMETER_GROUP_APPLY_ERROR.Explain(), err)
+		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, errors.TIEM_PARAMETER_GROUP_APPLY_ERROR.Explain(), err)
 	}
 	return err
 }
@@ -629,19 +629,19 @@ func getTaskStatusByTaskId(ctx *workflow.FlowContext, node *workflowModel.WorkFl
 	sequence := 0
 	for range ticker.C {
 		if sequence += 1; sequence > 200 {
-			return errors.NewEMErrorf(errors.TIEM_TASK_POLLING_TIME_OUT, errors.TIEM_TASK_POLLING_TIME_OUT.Explain())
+			return errors.NewErrorf(errors.TIEM_TASK_POLLING_TIME_OUT, errors.TIEM_TASK_POLLING_TIME_OUT.Explain())
 		}
 		framework.LogWithContext(ctx).Infof("polling node waiting, nodeId %s, nodeName %s", node.ID, node.Name)
 
 		resp, err := secondparty.Manager.GetOperationStatusByWorkFlowNodeID(ctx, node.ID)
 		if err != nil {
 			framework.LogWithContext(ctx).Error(err)
-			node.Fail(errors.NewEMErrorf(errors.TIEM_TASK_FAILED, errors.TIEM_TASK_FAILED.Explain()))
-			return errors.NewEMErrorf(errors.TIEM_TASK_FAILED, errors.TIEM_TASK_FAILED.Explain(), err)
+			node.Fail(errors.NewErrorf(errors.TIEM_TASK_FAILED, errors.TIEM_TASK_FAILED.Explain()))
+			return errors.NewErrorf(errors.TIEM_TASK_FAILED, errors.TIEM_TASK_FAILED.Explain(), err)
 		}
 		if resp.Status == secondparty2.OperationStatus_Error {
-			node.Fail(errors.NewEMErrorf(errors.TIEM_TASK_FAILED, resp.ErrorStr))
-			return errors.NewEMErrorf(errors.TIEM_TASK_FAILED, resp.ErrorStr)
+			node.Fail(errors.NewErrorf(errors.TIEM_TASK_FAILED, resp.ErrorStr))
+			return errors.NewErrorf(errors.TIEM_TASK_FAILED, resp.ErrorStr)
 		}
 		if resp.Status == secondparty2.OperationStatus_Finished {
 			node.Success(resp.Result)

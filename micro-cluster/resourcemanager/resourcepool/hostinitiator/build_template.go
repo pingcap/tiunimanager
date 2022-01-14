@@ -19,67 +19,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"text/template"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/secondparty"
-	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	resourceTemplate "github.com/pingcap-inc/tiem/resource/template"
 )
-
-func (p *FileHostInitiator) Verify2(ctx context.Context, h *structs.HostInfo) (err error) {
-	log := framework.LogWithContext(ctx)
-	log.Infof("apply and verify host %v begins", *h)
-	tempateInfo := templateCheckHost{}
-	tempateInfo.buildCheckHostTemplateItems(h)
-
-	templateStr, err := tempateInfo.generateTopologyConfig(ctx)
-	if err != nil {
-		return err
-	}
-	ignoreWarnings, ok := ctx.Value(rp_consts.ContextIgnoreWarnings).(bool)
-	if !ok {
-		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, "get ignore warning flag from context failed")
-	}
-	log.Infof("apply and check cluster ignore warning (%v) on %s", ignoreWarnings, templateStr)
-
-	if rp_consts.SecondPartyReady {
-		resultStr, err := p.secondPartyServ.Check(ctx, secondparty.TiEMComponentTypeStr, templateStr, rp_consts.DefaultTiupTimeOut,
-			[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--apply", "--format", "json"})
-		if err != nil {
-			errMsg := fmt.Sprintf("call second serv to check host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
-			return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
-		}
-		framework.LogWithContext(ctx).Infof("check host %s %s for %v done", h.HostName, h.IP, tempateInfo)
-
-		// deal with the result
-		var results checkHostResults
-		(&results).buildFromJson(resultStr)
-		sortedResult := results.analyzeCheckResults()
-
-		pass := sortedResult["Pass"]
-		fails := sortedResult["Fail"]
-		warnings := sortedResult["Warn"]
-
-		if len(*fails) > 0 {
-			errMsg := fmt.Sprintf("check host %s %s has %d fails, %v", h.HostName, h.IP, len(*fails), *fails)
-			return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
-		}
-
-		if len(*warnings) > 0 && !ignoreWarnings {
-			errMsg := fmt.Sprintf("check host %s %s has %d warnings, %v", h.HostName, h.IP, len(*warnings), *warnings)
-			return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
-		}
-
-		log.Infof("check host %s %s has %d warnings and %d pass", h.HostName, h.IP, len(*warnings), len(*pass))
-	}
-
-	return nil
-}
 
 // template info to parse em cluster scale out yaml template file
 type templateScaleOut struct {

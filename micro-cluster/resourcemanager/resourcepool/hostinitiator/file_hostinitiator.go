@@ -17,8 +17,7 @@ package hostinitiator
 
 import (
 	"context"
-	"strconv"
-	"strings"
+	"fmt"
 
 	"github.com/pingcap-inc/tiem/util/scp"
 	sshclient "github.com/pingcap-inc/tiem/util/ssh"
@@ -65,43 +64,49 @@ func (p *FileHostInitiator) CopySSHID(ctx context.Context, h *structs.HostInfo) 
 
 func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (err error) {
 	log := framework.LogWithContext(ctx)
-	log.Infof("verify host %v begins", *h)
+	log.Infof("apply and verify host %v begins", *h)
+	tempateInfo := templateCheckHost{}
+	tempateInfo.buildCheckHostTemplateItems(h)
 
-	err = p.verifyConnect(ctx, h)
+	templateStr, err := tempateInfo.generateTopologyConfig(ctx)
 	if err != nil {
-		log.Errorf("verify host connect %s %s failed, %v", h.HostName, h.IP, err)
 		return err
 	}
-	defer p.closeSSHConnect()
-	/*
-		if err = p.verifyCpuMem(ctx, h); err != nil {
-			log.Errorf("verify host cpu memory %s %s failed, %v", h.HostName, h.IP, err)
-			return err
+	ignoreWarnings, ok := ctx.Value(rp_consts.ContextIgnoreWarnings).(bool)
+	if !ok {
+		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, "get ignore warning flag from context failed")
+	}
+	log.Infof("apply and check cluster ignore warning (%v) on %s", ignoreWarnings, templateStr)
+
+	if rp_consts.SecondPartyReady {
+		resultStr, err := p.secondPartyServ.Check(ctx, secondparty.TiEMComponentTypeStr, templateStr, rp_consts.DefaultTiupTimeOut,
+			[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--apply", "--format", "json"})
+		if err != nil {
+			errMsg := fmt.Sprintf("call second serv to check host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
+			return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
 		}
-	*/
-	if err = p.verifyDisks(ctx, h); err != nil {
-		log.Errorf("verify host disks %s %s failed, %v", h.HostName, h.IP, err)
-		return err
-	}
+		framework.LogWithContext(ctx).Infof("check host %s %s for %v done", h.HostName, h.IP, tempateInfo)
 
-	if err = p.verifyFS(ctx, h); err != nil {
-		log.Errorf("verify host file system %s %s failed, %v", h.HostName, h.IP, err)
-		return err
-	}
+		// deal with the result
+		var results checkHostResults
+		(&results).buildFromJson(resultStr)
+		sortedResult := results.analyzeCheckResults()
 
-	if err = p.verifySwap(ctx, h); err != nil {
-		log.Errorf("verify host swap %s %s failed, %v", h.HostName, h.IP, err)
-		return err
-	}
+		pass := sortedResult["Pass"]
+		fails := sortedResult["Fail"]
+		warnings := sortedResult["Warn"]
 
-	if err = p.verifyEnv(ctx, h); err != nil {
-		log.Errorf("verify host env %s %s failed, %v", h.HostName, h.IP, err)
-		return err
-	}
+		if len(*fails) > 0 {
+			errMsg := fmt.Sprintf("check host %s %s has %d fails, %v", h.HostName, h.IP, len(*fails), *fails)
+			return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
+		}
 
-	if err = p.verifyOSEnv(ctx, h); err != nil {
-		log.Errorf("verify host os env %s %s failed, %v", h.HostName, h.IP, err)
-		return err
+		if len(*warnings) > 0 && !ignoreWarnings {
+			errMsg := fmt.Sprintf("check host %s %s has %d warnings, %v", h.HostName, h.IP, len(*warnings), *warnings)
+			return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
+		}
+
+		log.Infof("check host %s %s has %d warnings and %d pass", h.HostName, h.IP, len(*warnings), len(*pass))
 	}
 
 	return nil
@@ -173,6 +178,7 @@ func (p *FileHostInitiator) LeaveEMCluster(ctx context.Context, nodeId string) (
 	return nil
 }
 
+/*
 func (p *FileHostInitiator) verifyConnect(ctx context.Context, h *structs.HostInfo) (err error) {
 	p.sshClient = sshclient.NewSSHClient(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd)
 	if err = p.sshClient.Connect(); err != nil {
@@ -187,65 +193,15 @@ func (p *FileHostInitiator) closeSSHConnect() {
 	}
 }
 
-func (p *FileHostInitiator) verifyCpuMem(ctx context.Context, h *structs.HostInfo) (err error) {
-	getArchCmd := "lscpu | grep 'Architecture:' | awk '{print $2}' | tr -d '\n'"
-	arch, err := p.sshClient.RunCommandsInSession([]string{getArchCmd})
-	if err != nil {
-		return err
-	}
-	if !strings.EqualFold(arch, h.Arch) {
-		return errors.NewErrorf(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, "Host %s [%s] arch %s is not as import %s", h.HostName, h.IP, arch, h.Arch)
-	}
-
-	getCpuCoresCmd := "lscpu | grep 'CPU(s):' | awk '{print $2}' | tr -d '\n'"
-	cpuCoreStr, err := p.sshClient.RunCommandsInSession([]string{getCpuCoresCmd})
-	if err != nil {
-		return err
-	}
-	cpuCores, err := strconv.Atoi(cpuCoreStr)
-	if err != nil {
-		return err
-	}
-	if cpuCores != int(h.CpuCores) {
-		framework.LogWithContext(ctx).Warnf("host %s [%s] cpuCores %d is not as import %d", h.HostName, h.IP, cpuCores, h.CpuCores)
-	}
-
-	getMemCmd := "free -g | grep 'Mem:' | awk '{print $2}' | tr -d '\n'"
-	memStr, err := p.sshClient.RunCommandsInSession([]string{getMemCmd})
-	if err != nil {
-		return err
-	}
-	mem, err := strconv.Atoi(memStr)
-	if err != nil {
-		return err
-	}
-	if mem != int(h.Memory) {
-		framework.LogWithContext(ctx).Warnf("host %s [%s] memory %d is not as import %d", h.HostName, h.IP, mem, h.Memory)
-	}
-	return nil
-}
-
-func (p *FileHostInitiator) verifyDisks(ctx context.Context, h *structs.HostInfo) (err error) {
-	return nil
-}
-
-func (p *FileHostInitiator) verifyFS(ctx context.Context, h *structs.HostInfo) (err error) {
-	return nil
-}
-
-func (p *FileHostInitiator) verifySwap(ctx context.Context, h *structs.HostInfo) (err error) {
-	return nil
-}
-
-func (p *FileHostInitiator) verifyEnv(ctx context.Context, h *structs.HostInfo) (err error) {
-	return nil
-}
-
-func (p *FileHostInitiator) verifyOSEnv(ctx context.Context, h *structs.HostInfo) (err error) {
-	return nil
-}
-
 func (p *FileHostInitiator) setOffSwap(ctx context.Context, h *structs.HostInfo) (err error) {
+	log := framework.LogWithContext(ctx)
+	err = p.verifyConnect(ctx, h)
+	if err != nil {
+		log.Errorf("verify host connect %s %s failed, %v", h.HostName, h.IP, err)
+		return err
+	}
+	defer p.closeSSHConnect()
+
 	changeConf := "echo 'vm.swappiness = 0'>> /etc/sysctl.conf"
 	flushCmd := "swapoff -a && swapon -a"
 	updateCmd := "sysctl -p"
@@ -256,6 +212,7 @@ func (p *FileHostInitiator) setOffSwap(ctx context.Context, h *structs.HostInfo)
 	framework.LogWithContext(ctx).Infof("host %s [%s] set off swap, %v", h.HostName, h.IP, result)
 	return nil
 }
+*/
 
 func (p *FileHostInitiator) installTcpDump(ctx context.Context, hosts []structs.HostInfo) (err error) {
 	return nil

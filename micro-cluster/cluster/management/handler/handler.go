@@ -18,8 +18,9 @@ package handler
 import (
 	"bytes"
 	"context"
-	"github.com/pingcap-inc/tiem/models/platform/user"
 	"text/template"
+
+	"github.com/pingcap-inc/tiem/models/platform/user"
 
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
@@ -883,9 +884,9 @@ func (p *ClusterMeta) GetClusterUserNamePasswd() *TiDBUserInfo {
 // @Description: get username and password of the different type user
 // @Receiver p
 // @return BDUser
-func (p *ClusterMeta) GetDBUserNamePassword(roleType constants.DBUserRoleType) *user.DBUser {
+func (p *ClusterMeta) GetDBUserNamePassword(ctx context.Context, roleType constants.DBUserRoleType) (*user.DBUser, error) {
 	// todo
-	return &user.DBUser{}
+	return &user.DBUser{}, nil
 }
 
 // UpdateMeta

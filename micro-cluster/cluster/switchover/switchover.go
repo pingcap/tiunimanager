@@ -296,7 +296,15 @@ func (p *Manager) clusterGetMysqlUserNameAndPwd(ctx context.Context, clusterID s
 // with special `RESTRICTED_REPLICA_WRITER_ADMIN` privilege already set
 func (p *Manager) clusterGetCDCUserNameAndPwd(ctx context.Context, clusterID string) (userName, password string, err error) {
 	framework.LogWithContext(ctx).Info("clusterGetCDCUserNameAndPwd clusterID:", clusterID)
-	panic("NIY")
+	m, err := handler.Get(ctx, clusterID)
+	if err != nil {
+		return "", "", err
+	}
+	user, err := m.GetDBUserNamePassword(ctx, constants.DBUserCDCDataSync)
+	if err != nil {
+		return "", "", err
+	}
+	return user.Name, user.Password, nil
 }
 
 // addr: ip:port

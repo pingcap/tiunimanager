@@ -34,28 +34,29 @@ import (
 func (p *FileHostInitiator) Verify2(ctx context.Context, h *structs.HostInfo) (err error) {
 	log := framework.LogWithContext(ctx)
 	log.Infof("apply and verify host %v begins", *h)
-	tempateInfo := checkHostTemplateItems{}
-	tempateInfo.buildHostCheckTemplateItems(h)
+	tempateInfo := templateCheckHost{}
+	tempateInfo.buildCheckHostTemplateItems(h)
 
 	templateStr, err := tempateInfo.generateTopologyConfig(ctx)
 	if err != nil {
 		return err
 	}
-	framework.LogWithContext(ctx).Infof("apply and check cluster on %s", templateStr)
-
-	workFlowNodeID, ok := ctx.Value(rp_consts.ContextWorkFlowNodeIDKey).(string)
-	if !ok || workFlowNodeID == "" {
-		return errors.NewErrorf(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, "get work flow node from context failed, %s, %v", workFlowNodeID, ok)
+	ignoreWarnings, ok := ctx.Value(rp_consts.ContextIgnoreWarnings).(bool)
+	if !ok {
+		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, "get ignore warning flag from context failed")
 	}
+	log.Infof("apply and check cluster ignore warning (%v) on %s", ignoreWarnings, templateStr)
+
 	if rp_consts.SecondPartyReady {
-		framework.LogWithContext(ctx).Infof("check host %s %s with work flow id %s", h.HostName, h.IP, workFlowNodeID)
 		resultStr, err := p.secondPartyServ.Check(ctx, secondparty.TiEMComponentTypeStr, templateStr, rp_consts.DefaultTiupTimeOut,
-			[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--format", "json"})
+			[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--apply", "--format", "json"})
 		if err != nil {
-			return errors.NewErrorf(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, "call second serv to check host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
+			errMsg := fmt.Sprintf("call second serv to check host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
+			return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
 		}
 		framework.LogWithContext(ctx).Infof("check host %s %s for %v done", h.HostName, h.IP, tempateInfo)
 
+		// deal with the result
 		var results checkHostResults
 		(&results).buildFromJson(resultStr)
 		sortedResult := results.analyzeCheckResults()
@@ -69,12 +70,18 @@ func (p *FileHostInitiator) Verify2(ctx context.Context, h *structs.HostInfo) (e
 			return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
 		}
 
+		if len(*warnings) > 0 && !ignoreWarnings {
+			errMsg := fmt.Sprintf("check host %s %s has %d warnings, %v", h.HostName, h.IP, len(*warnings), *warnings)
+			return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
+		}
+
 		log.Infof("check host %s %s has %d warnings and %d pass", h.HostName, h.IP, len(*warnings), len(*pass))
 	}
 
 	return nil
 }
 
+// template info to parse em cluster scale out yaml template file
 type templateScaleOut struct {
 	HostIPs []string
 }
@@ -94,6 +101,13 @@ func (p *templateScaleOut) generateTopologyConfig(ctx context.Context) (string, 
 	return topology.String(), nil
 }
 
+// template info to parse cluster check yaml template file
+type templateCheckHost struct {
+	TemplateItemsForCompute  []checkHostTemplateItem
+	TemplateItemsForSchedule []checkHostTemplateItem
+	TemplateItemsForStorage  []checkHostTemplateItem
+}
+
 type checkHostTemplateItem struct {
 	HostIP    string
 	DataDir   string
@@ -101,13 +115,8 @@ type checkHostTemplateItem struct {
 	Port1     int
 	Port2     int
 }
-type checkHostTemplateItems struct {
-	TemplateItemsForCompute  []checkHostTemplateItem
-	TemplateItemsForSchedule []checkHostTemplateItem
-	TemplateItemsForStorage  []checkHostTemplateItem
-}
 
-func (p *checkHostTemplateItems) buildHostCheckTemplateItems(h *structs.HostInfo) {
+func (p *templateCheckHost) buildCheckHostTemplateItems(h *structs.HostInfo) {
 	p.TemplateItemsForCompute = make([]checkHostTemplateItem, 0)
 	p.TemplateItemsForSchedule = make([]checkHostTemplateItem, 0)
 	p.TemplateItemsForStorage = make([]checkHostTemplateItem, 0)
@@ -125,8 +134,8 @@ func (p *checkHostTemplateItems) buildHostCheckTemplateItems(h *structs.HostInfo
 		if purpose == string(constants.PurposeCompute) {
 			for _, disk := range h.Disks {
 				p.TemplateItemsForCompute = append(p.TemplateItemsForCompute, checkHostTemplateItem{
-					HostIP:    h.IP,
-					DataDir:   disk.Path,
+					HostIP: h.IP,
+					// Only DeployDir for tidb
 					DeployDir: disk.Path,
 					Port1:     tidbPort,
 					Port2:     tidbStatusPort,
@@ -164,7 +173,7 @@ func (p *checkHostTemplateItems) buildHostCheckTemplateItems(h *structs.HostInfo
 	}
 }
 
-func (p *checkHostTemplateItems) generateTopologyConfig(ctx context.Context) (string, error) {
+func (p *templateCheckHost) generateTopologyConfig(ctx context.Context) (string, error) {
 	t, err := template.New("checkHost_topology").Parse(resourceTemplate.EMClusterCheck)
 	if err != nil {
 		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())

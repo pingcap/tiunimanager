@@ -59,8 +59,15 @@ func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 		log.Errorf("verify host failed for get flow context, %v", err)
 		return err
 	}
+	ignoreWarnings, err := getIgnoreWarningsFromFlowContext(ctx)
+	if err != nil {
+		log.Errorf("verify host failed for get flow context, %v", err)
+		return err
+	}
+	// Store ignoreWarnings for Verify results
+	wrapCtx := context.WithValue(ctx, rp_consts.ContextIgnoreWarnings, ignoreWarnings)
 	for _, host := range hosts {
-		err = resourcePool.hostInitiator.Verify(ctx, &host)
+		err = resourcePool.hostInitiator.Verify(wrapCtx, &host)
 		if err != nil {
 			log.Errorf("verify host %s %s failed, %v", host.HostName, host.IP, err)
 			return err
@@ -257,4 +264,14 @@ func getHostIDArrayFromFlowContext(ctx *workflow.FlowContext) (rp *ResourcePool,
 		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
 	return rp, hostIds, nil
+}
+
+func getIgnoreWarningsFromFlowContext(ctx *workflow.FlowContext) (ignoreWarnings bool, err error) {
+	var ok bool
+	ignoreWarnings, ok = ctx.GetData(rp_consts.ContextIgnoreWarnings).(bool)
+	if !ok {
+		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextIgnoreWarnings)
+		return ignoreWarnings, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
+	}
+	return ignoreWarnings, nil
 }

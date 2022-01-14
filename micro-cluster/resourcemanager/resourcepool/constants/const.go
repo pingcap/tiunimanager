@@ -30,6 +30,7 @@ const (
 	ContextHostInfoArrayKey  string = "hostInfoArray"
 	ContextHostIDArrayKey    string = "hostIDArray"
 	ContextWorkFlowNodeIDKey string = "resourceWorkFlowNodeID"
+	ContextIgnoreWarnings    string = "checkHostIgnoreWarns"
 )
 
 const (

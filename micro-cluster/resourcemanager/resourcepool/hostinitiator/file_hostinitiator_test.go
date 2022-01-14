@@ -252,4 +252,9 @@ func Test_BuildHostCheckResulsFromJson(t *testing.T) {
 	err := (&results).buildFromJson(jsonStr)
 	assert.Nil(t, err)
 	assert.Equal(t, 28, len(results.Result))
+
+	sortedResult := results.analyzeCheckResults()
+	assert.Equal(t, 5, len(*sortedResult["Warn"]))
+	assert.Equal(t, 14, len(*sortedResult["Fail"]))
+	assert.Equal(t, 9, len(*sortedResult["Pass"]))
 }

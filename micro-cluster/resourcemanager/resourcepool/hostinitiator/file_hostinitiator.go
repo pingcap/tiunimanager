@@ -292,13 +292,13 @@ func (results *hostCheckResults) buildFromJson(resultStr string) (err error) {
 	return json.Unmarshal([]byte(resultStr), results)
 }
 
-func (results hostCheckResults) analyzeCheckResults() (sortedResult map[string][]hostCheckResult) {
-	sortedResult = make(map[string][]hostCheckResult)
+func (results hostCheckResults) analyzeCheckResults() (sortedResult map[string]*[]hostCheckResult) {
+	sortedResult = make(map[string]*[]hostCheckResult)
 	for i := range results.Result {
 		if res, ok := sortedResult[results.Result[i].Status]; ok {
-			res = append(res, results.Result[i])
+			*res = append(*res, results.Result[i])
 		} else {
-			sortedResult[results.Result[i].Status] = []hostCheckResult{results.Result[i]}
+			sortedResult[results.Result[i].Status] = &[]hostCheckResult{results.Result[i]}
 		}
 	}
 	return

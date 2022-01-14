@@ -378,7 +378,7 @@ func preCheckStock(ctx context.Context, region string, arch string, instanceReso
 				zoneResource.FreeCpuCores = zoneResource.FreeCpuCores - int32(knowledge.ParseCpu(resource.Spec) * resource.Count)
 				zoneResource.FreeMemory = zoneResource.FreeMemory - int32(knowledge.ParseMemory(resource.Spec) * resource.Count)
 			} else {
-				framework.LogWithContext(ctx).Errorf("stock is not enough, instance: %v, stock %v", resource, stocks)
+				framework.LogWithContext(ctx).Warnf("stock is not enough, instance: %v, stock %v", resource, stocks)
 				enough = false
 			}
 

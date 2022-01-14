@@ -167,9 +167,9 @@ type Location struct {
 }
 
 type ImportCondition struct {
-	ReserveHost   bool `json:"reserved"`
-	SkipHostInit  bool `json:"skipHostInit"`
-	IgnoreWarings bool `json:"ignoreWarnings"`
+	ReserveHost   bool `json:"reserved" form:"reserved"`
+	SkipHostInit  bool `json:"skipHostInit" form:"skipHostInit"`
+	IgnoreWarings bool `json:"ignoreWarnings" form:"ignoreWarnings"`
 }
 
 type HostFilter struct {

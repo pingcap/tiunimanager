@@ -41,15 +41,22 @@ func (c CheckWritable) TableName() string {
 }
 
 // set cluster Read-Writeable to normal user and changeFeedTask's user
-func (p *Manager) clusterRestrictedReadOnlyOp(ctx context.Context, clusterID, addr, op string, setReadOnlyFlag bool) (readOnlyFlag bool, err error) {
+func (p *Manager) clusterRestrictedReadOnlyOp(ctx context.Context, clusterID, op string, setReadOnlyFlag bool) (readOnlyFlag bool, err error) {
 	funcName := "clusterRestrictedReadOnlyOp"
 	framework.LogWithContext(ctx).Infof("start %s", funcName)
 	defer framework.LogWithContext(ctx).Infof("exit %s", funcName)
+
 	if op == "set" || op == "get" {
 	} else {
 		framework.LogWithContext(ctx).Fatalf(
 			"%s clusterRestrictedReadOnlyOp clusterID:%s unknow op:%s", funcName, clusterID, op)
 	}
+
+	addr, err := p.clusterGetOneConnectAddress(ctx, clusterID)
+	if err != nil {
+		return false, fmt.Errorf("failed to get cluster's mysql access addr, err:%s", err)
+	}
+
 	name, pwd, err := mgr.clusterGetCDCUserNameAndPwd(ctx, clusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf(
@@ -74,16 +81,28 @@ func (p *Manager) clusterRestrictedReadOnlyOp(ctx context.Context, clusterID, ad
 		if setReadOnlyFlag {
 			value = 1
 		}
-		err = db.Exec(fmt.Sprintf("SET GLOBAL tidb_restricted_read_only = %d ;", value)).Error
+		sql := fmt.Sprintf("SET GLOBAL tidb_restricted_read_only = %d", value)
+		err = db.Exec(sql).Error
 		if err != nil {
 			return false, err
 		} else {
 			return setReadOnlyFlag, err
 		}
 	} else {
-
+		var retValue int
+		sql := "SELECT @@global.tidb_restricted_read_only"
+		err := db.Raw(sql).Scan(&retValue).Error
+		if err != nil {
+			return readOnlyFlag, err
+		}
+		if retValue == 0 {
+			return false, nil
+		} else if retValue == 1 {
+			return true, nil
+		} else {
+			return false, fmt.Errorf("clusterRestrictedReadOnlyOp got a unexpected tidb_restricted_read_only value %d", retValue)
+		}
 	}
-	return readOnlyFlag, nil
 }
 
 func (p *Manager) checkClusterWritable(ctx context.Context, clusterID, userName, pwd, addr string) error {

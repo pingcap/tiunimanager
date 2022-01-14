@@ -333,22 +333,25 @@ func (p *Manager) clusterGetTLSMode(ctx context.Context, clusterID string) (tls 
 }
 
 func (p *Manager) clusterGetReadWriteMode(ctx context.Context, clusterID string) (readOnlyFlag bool, err error) {
-	framework.LogWithContext(ctx).Errorf(
-		"function clusterGetReadWriteMode is not implemented yet, clusterId:%s", clusterID)
-	panic("NIY")
+	readOnlyFlag, err = mgr.clusterRestrictedReadOnlyOp(ctx, clusterID, "get", false)
+	return
 }
 
 // set cluster Readonly to normal user but still Read-Writeable to changeFeedTask's user
 func (p *Manager) clusterSetReadonly(ctx context.Context, clusterID string) error {
-	framework.LogWithContext(ctx).Warnf(
-		"function clusterSetReadonly now is only a dummy and not implemented yet, clusterId:%s", clusterID)
+	_, err := mgr.clusterRestrictedReadOnlyOp(ctx, clusterID, "set", true)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 // set cluster Read-Writeable to normal user and changeFeedTask's user
 func (p *Manager) clusterSetReadWrite(ctx context.Context, clusterID string) error {
-	framework.LogWithContext(ctx).Warnf(
-		"function clusterSetReadWrite now is only a dummy and not implemented yet, clusterId:%s", clusterID)
+	_, err := mgr.clusterRestrictedReadOnlyOp(ctx, clusterID, "set", false)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

@@ -58,8 +58,8 @@ func (m *ResourceManager) GetManagement() *management.Management {
 	return m.management
 }
 
-func (m *ResourceManager) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (flowIds []string, hostIds []string, err error) {
-	flowIds, hostIds, err = m.resourcePool.ImportHosts(ctx, hosts)
+func (m *ResourceManager) ImportHosts(ctx context.Context, hosts []structs.HostInfo, condition *structs.ImportCondition) (flowIds []string, hostIds []string, err error) {
+	flowIds, hostIds, err = m.resourcePool.ImportHosts(ctx, hosts, condition)
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("import hosts %v in batch failed from db service: %v", hosts, err)
 	} else {
@@ -80,8 +80,8 @@ func (m *ResourceManager) QueryHosts(ctx context.Context, location *structs.Loca
 	return
 }
 
-func (m *ResourceManager) DeleteHosts(ctx context.Context, hostIds []string) (flowIds []string, err error) {
-	flowIds, err = m.resourcePool.DeleteHosts(ctx, hostIds)
+func (m *ResourceManager) DeleteHosts(ctx context.Context, hostIds []string, force bool) (flowIds []string, err error) {
+	flowIds, err = m.resourcePool.DeleteHosts(ctx, hostIds, force)
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("delete %d hosts %v in failed from db service: %v", len(hostIds), hostIds, err)
 	} else {

@@ -142,6 +142,11 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 	return hosts, nil
 }
 
+func getBoolPostForm(c *gin.Context, field string, defaultValue string) (bool, error) {
+	inputStr := c.DefaultPostForm(field, defaultValue)
+	return strconv.ParseBool(inputStr)
+}
+
 // ImportHosts godoc
 // @Summary Import a batch of hosts to TiEM
 // @Description import hosts by xlsx file
@@ -150,17 +155,31 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param hostReserved formData string false "whether hosts are reserved(won't be allocated) after import" default(false)
+// @Param skipHostInit formData string false "whether to skip host init steps" default(false)
+// @Param ignorewarns formData string false "whether to ignore warings in init steps" default(false)
 // @Param file formData file true "hosts information in a xlsx file"
 // @Success 200 {object} controller.CommonResult{data=message.ImportHostsResp}
 // @Router /resources/hosts [post]
 func ImportHosts(c *gin.Context) {
-	reservedStr := c.DefaultPostForm("hostReserved", "false")
-	reserved, err := strconv.ParseBool(reservedStr)
+	reserved, err := getBoolPostForm(c, "hostReserved", "false")
 	if err != nil {
-		errmsg := fmt.Sprintf("GetFormData Error: %v", err)
+		errmsg := fmt.Sprintf("GetFormData hostReserved Error: %v", err)
 		setGinContextForInvalidParam(c, errmsg)
 		return
 	}
+	skipHostInit, err := getBoolPostForm(c, "skipHostInit", "false")
+	if err != nil {
+		errmsg := fmt.Sprintf("GetFormData skipHostInit Error: %v", err)
+		setGinContextForInvalidParam(c, errmsg)
+		return
+	}
+	ignoreWarings, err := getBoolPostForm(c, "ignorewarns", "false")
+	if err != nil {
+		errmsg := fmt.Sprintf("GetFormData ignorewarns Error: %v", err)
+		setGinContextForInvalidParam(c, errmsg)
+		return
+	}
+
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
 		errmsg := fmt.Sprintf("GetFormFile Error: %v", err)
@@ -176,6 +195,11 @@ func ImportHosts(c *gin.Context) {
 
 	requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, message.ImportHostsReq{
 		Hosts: hosts,
+		Condition: structs.ImportCondition{
+			ReserveHost:   reserved,
+			SkipHostInit:  skipHostInit,
+			IgnoreWarings: ignoreWarings,
+		},
 	})
 
 	if ok {

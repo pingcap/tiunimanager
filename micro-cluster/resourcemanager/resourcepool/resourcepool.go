@@ -65,7 +65,8 @@ func (p *ResourcePool) registerImportHostsWorkFlow(ctx context.Context, flowMana
 		flowManager.RegisterWorkFlow(ctx, rp_consts.FlowImportHosts, &workflow.WorkFlowDefine{
 			FlowName: rp_consts.FlowImportHosts,
 			TaskNodes: map[string]*workflow.NodeDefine{
-				"start":           {Name: "start", SuccessEvent: "configHosts", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: verifyHosts},
+				"start":           {Name: "start", SuccessEvent: "verifyHosts", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: authHosts},
+				"verifyHosts":     {Name: "verifyHosts", SuccessEvent: "configHosts", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: verifyHosts},
 				"configHosts":     {Name: "configHosts", SuccessEvent: "installSoftware", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: configHosts},
 				"installSoftware": {Name: "installSoftware", SuccessEvent: "joinEMCluster", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: installSoftware},
 				"joinEMCluster":   {Name: "joinEMCluster", SuccessEvent: "succeed", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: joinEmCluster},
@@ -131,7 +132,7 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 	var flows []*workflow.WorkFlowAggregation
 	flowManager := workflow.GetWorkFlowService()
 	for i, host := range hosts {
-		flow, err := flowManager.CreateWorkFlow(ctx, hostIds[i], rp_consts.FlowImportHosts)
+		flow, err := flowManager.CreateWorkFlow(ctx, hostIds[i], workflow.BizTypeHost, rp_consts.FlowImportHosts)
 		if err != nil {
 			errMsg := fmt.Sprintf("create %s workflow failed for host %s %s, %s", rp_consts.FlowImportHosts, host.HostName, host.IP, err.Error())
 			framework.LogWithContext(ctx).Errorln(errMsg)
@@ -168,7 +169,7 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string) (flowI
 	var flows []*workflow.WorkFlowAggregation
 	flowManager := workflow.GetWorkFlowService()
 	for _, hostId := range hostIds {
-		flow, err := flowManager.CreateWorkFlow(ctx, hostId, rp_consts.FlowDeleteHosts)
+		flow, err := flowManager.CreateWorkFlow(ctx, hostId, workflow.BizTypeHost, rp_consts.FlowDeleteHosts)
 		if err != nil {
 			errMsg := fmt.Sprintf("create %s workflow failed for host %s, %s", rp_consts.FlowDeleteHosts, hostId, err.Error())
 			framework.LogWithContext(ctx).Errorln(errMsg)
@@ -195,8 +196,8 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string) (flowI
 	return flowIds, nil
 }
 
-func (p *ResourcePool) QueryHosts(ctx context.Context, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, err error) {
-	return p.hostProvider.QueryHosts(ctx, filter, page)
+func (p *ResourcePool) QueryHosts(ctx context.Context, location *structs.Location, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, total int64, err error) {
+	return p.hostProvider.QueryHosts(ctx, location, filter, page)
 }
 
 func (p *ResourcePool) UpdateHostStatus(ctx context.Context, hostIds []string, status string) (err error) {
@@ -211,6 +212,6 @@ func (p *ResourcePool) GetHierarchy(ctx context.Context, filter *structs.HostFil
 	return p.hostProvider.GetHierarchy(ctx, filter, level, depth)
 }
 
-func (p *ResourcePool) GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks *structs.Stocks, err error) {
+func (p *ResourcePool) GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks map[string]*structs.Stocks, err error) {
 	return p.hostProvider.GetStocks(ctx, location, hostFilter, diskFilter)
 }

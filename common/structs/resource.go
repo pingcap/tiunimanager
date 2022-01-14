@@ -160,10 +160,10 @@ func (h HostInfo) IsLoadless() bool {
 }
 
 type Location struct {
-	Region string `json:"Region"`
-	Zone   string `json:"Zone"`
-	Rack   string `json:"Rack"`
-	HostIp string `json:"HostIp"`
+	Region string `json:"Region" form:"Region"`
+	Zone   string `json:"Zone" form:"Zone"`
+	Rack   string `json:"Rack" form:"Rack"`
+	HostIp string `json:"HostIp" form:"HostIp"`
 }
 
 type HostFilter struct {
@@ -188,9 +188,10 @@ type HierarchyTreeNode struct {
 }
 
 type Stocks struct {
-	FreeHostCount    int32 `json:"freeHostCount"`
-	FreeCpuCores     int32 `json:"freeCpuCores"`
-	FreeMemory       int32 `json:"freeMemory"`
-	FreeDiskCount    int32 `json:"freeDiskCount"`
-	FreeDiskCapacity int32 `json:"freeDiskCapacity"`
+	Zone             string `json:"zone"`
+	FreeHostCount    int32  `json:"freeHostCount"`
+	FreeCpuCores     int32  `json:"freeCpuCores"`
+	FreeMemory       int32  `json:"freeMemory"`
+	FreeDiskCount    int32  `json:"freeDiskCount"`
+	FreeDiskCapacity int32  `json:"freeDiskCapacity"`
 }

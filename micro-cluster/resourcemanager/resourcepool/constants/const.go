@@ -36,4 +36,7 @@ const (
 	FileBeatDeployDir = "/tiem-deploy"
 )
 
-const DefaultTiupTimeOut = 360
+const (
+	DefaultTiupTimeOut      = 360
+	DefaultCopySshIDTimeOut = 10
+)

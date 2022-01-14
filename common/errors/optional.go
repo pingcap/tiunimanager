@@ -23,7 +23,7 @@ type Optional struct {
 
 func OfNullable(err error) *Optional {
 	optional := &Optional{
-		broken: false,
+		broken: err != nil,
 	}
 	optional.addError(err)
 	return optional
@@ -70,6 +70,13 @@ func (p *Optional) If(handle func(err error)) *Optional {
 	return p
 }
 
+func (p *Optional) Map(handle func(err error) error) *Optional {
+	if p.last != nil && handle != nil {
+		p.addError(handle(p.last))
+	}
+	return p
+}
+
 func (p *Optional) Else(handle func()) *Optional {
 	if p.last == nil && handle != nil {
 		handle()
@@ -84,3 +91,12 @@ func (p *Optional) IfElse(errHandler func(err error), nilHandler func()) *Option
 func (p *Optional) Present() error {
 	return p.last
 }
+
+func (p *Optional) IfPresent() bool {
+	return p.last != nil
+}
+
+func (p *Optional) IfNil() bool {
+	return p.last == nil
+}
+

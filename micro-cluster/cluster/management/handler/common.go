@@ -38,6 +38,7 @@ import (
 
 const CheckMaxReplicaCmd = "SELECT MAX(replica_count) as max_replica_count FROM information_schema.tiflash_replica;"
 const DefaultTiupTimeOut = 360
+const DefaultPDMaxCount = 7
 
 type PlacementRules struct {
 	EnablePlacementRules string `json:"enable-placement-rules"`
@@ -60,6 +61,7 @@ func Contain(list interface{}, target interface{}) bool {
 
 // ScaleOutPreCheck
 // @Description when scale out TiFlash, check placement rules
+//				when scale out PD, suggest pd instances 1,3,5,7
 // @Parameter	cluster meta
 // @Parameter	computes
 // @Return		error
@@ -69,6 +71,15 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 	}
 
 	for _, component := range computes {
+		// Suggest PD instances 1, 3, 5, 7
+		if component.Type == string(constants.ComponentIDPD) {
+			pdCount := component.Count + len(meta.Instances[component.Type])
+			if (pdCount%2 == 0) || pdCount > DefaultPDMaxCount {
+				return errors.NewError(errors.TIEM_CHECK_PD_COUNT_ERROR, "Suggest PD instances [1, 3, 5, 7]")
+			}
+		}
+
+		// check placement rules
 		if component.Type == string(constants.ComponentIDTiFlash) {
 			var pdID string
 			for componentType, instances := range meta.Instances {
@@ -102,7 +113,9 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 
 // ScaleInPreCheck
 // @Description When scale in TiFlash, ensure the number of remaining TiFlash instances is
-//				greater than or equal to the maximum number of copies of all data tables
+//				greater than or equal to the maximum number of copies of all data tables;
+//				When scale in TiKV, ensure the number of remaining TiKV instances is greater than
+//				or equal to the copies
 // @Parameter	cluster meta
 // @Parameter	instance which will be deleted
 // @Return		error
@@ -114,6 +127,14 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 	if meta.IsComponentRequired(ctx, instance.Type) {
 		if len(meta.Instances[instance.Type]) <= 1 {
 			errMsg := fmt.Sprintf("instance %s is unique in cluster %s, can not delete it", instance.ID, meta.Cluster.ID)
+			framework.LogWithContext(ctx).Errorf(errMsg)
+			return errors.NewError(errors.TIEM_DELETE_INSTANCE_ERROR, errMsg)
+		}
+	}
+
+	if instance.Type == string(constants.ComponentIDTiKV) {
+		if len(meta.Instances[instance.Type])-1 < meta.Cluster.Copies {
+			errMsg := fmt.Sprintf("the number of remaining TiKV instances is less than the copies")
 			framework.LogWithContext(ctx).Errorf(errMsg)
 			return errors.NewError(errors.TIEM_DELETE_INSTANCE_ERROR, errMsg)
 		}

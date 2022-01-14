@@ -39,7 +39,7 @@ func (node *WorkFlowNode) Processing() {
 	node.Status = constants.WorkFlowStatusProcessing
 }
 
-var defaultSuccessInfo = "success"
+var defaultSuccessInfo = "Completed."
 
 func (node *WorkFlowNode) Record(result ...interface{}) {
 	if result == nil {

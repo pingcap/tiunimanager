@@ -111,6 +111,7 @@ func (p *Manager) ReverseBetweenClusters(ctx context.Context, sourceClusterID st
 	tasks, _, queryErr := models.GetChangeFeedReaderWriter().QueryByClusterId(ctx, sourceClusterID, 0, 20)
 	if queryErr != nil {
 		err = queryErr
+		return
 	}
 	for _, task := range tasks {
 		// check target, type, status

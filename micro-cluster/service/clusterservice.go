@@ -20,9 +20,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/pingcap-inc/tiem/metrics"
 	"github.com/pingcap-inc/tiem/proto/clusterservices"
-	"time"
 
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -409,6 +410,36 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterse
 
 	if handleRequest(ctx, req, resp, &request) {
 		result, err := c.clusterManager.CreateCluster(framework.NewBackgroundMicroCtx(ctx, false), request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (c ClusterServiceHandler) PreviewCluster(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) (err error) {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "PreviewCluster", int(resp.GetCode()))
+	defer handlePanic(ctx, "PreviewCluster", resp)
+
+	request := cluster.CreateClusterReq{}
+
+	if handleRequest(ctx, req, resp, &request) {
+		result, err := c.clusterManager.PreviewCluster(framework.NewBackgroundMicroCtx(ctx, false), request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (c ClusterServiceHandler) PreviewScaleOutCluster(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) (err error) {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "PreviewScaleOutCluster", int(resp.GetCode()))
+	defer handlePanic(ctx, "PreviewScaleOutCluster", resp)
+
+	request := cluster.ScaleOutClusterReq{}
+
+	if handleRequest(ctx, req, resp, &request) {
+		result, err := c.clusterManager.PreviewScaleOutCluster(framework.NewBackgroundMicroCtx(ctx, false), request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -889,13 +920,18 @@ func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, req *clust
 	if handleRequest(ctx, req, resp, &reqStruct) {
 		filter := reqStruct.GetHostFilter()
 		page := reqStruct.GetPage()
+		location := reqStruct.GetLocation()
 
-		hosts, err := handler.resourceManager.QueryHosts(framework.NewBackgroundMicroCtx(ctx, false), filter, page)
+		hosts, total, err := handler.resourceManager.QueryHosts(framework.NewBackgroundMicroCtx(ctx, false), location, filter, page)
 		var rsp message.QueryHostsResp
 		if err == nil {
 			rsp.Hosts = hosts
 		}
-		handleResponse(ctx, resp, err, rsp, nil)
+		handleResponse(ctx, resp, err, rsp, &clusterservices.RpcPage{
+			Page:     int32(page.Page),
+			PageSize: int32(page.PageSize),
+			Total:    int32(total),
+		})
 	}
 
 	return nil
@@ -969,7 +1005,7 @@ func (handler *ClusterServiceHandler) GetStocks(ctx context.Context, req *cluste
 		stocks, err := handler.resourceManager.GetStocks(framework.NewBackgroundMicroCtx(ctx, false), location, hostFilter, diskFilter)
 		var rsp message.GetStocksResp
 		if err == nil {
-			rsp.Stocks = *stocks
+			rsp.Stocks = stocks
 		}
 		handleResponse(ctx, resp, err, rsp, nil)
 	}
@@ -1007,7 +1043,7 @@ func (handler *ClusterServiceHandler) QueryZones(ctx context.Context, request *c
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "QueryZones", int(response.GetCode()))
 
-	req := message.QueryZonesReq{}
+	req := message.QueryZonesTreeReq{}
 	if handleRequest(ctx, request, response, &req) {
 		resp, err := handler.productManager.QueryZones(ctx)
 		handleResponse(ctx, response, err, resp, nil)

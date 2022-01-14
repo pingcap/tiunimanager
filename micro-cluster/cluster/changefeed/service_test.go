@@ -19,6 +19,7 @@ import (
 	"context"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
@@ -46,16 +47,13 @@ func TestManager_CreateBetweenClusters(t *testing.T) {
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.1"}, Ports: []int32{111}},
 		{Type: "TiDB", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.2"}, Ports: []int32{111}},
 	}, nil).AnyTimes()
+	clusterRW.EXPECT().GetMeta(gomock.Any(), "errorId").Return(&management.Cluster{}, []*management.ClusterInstance{
+		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.1"}, Ports: []int32{111}},
+		{Type: "TiDB", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.2"}, Ports: []int32{111}},
+	}, errors.Error(errors.TIEM_MARSHAL_ERROR)).AnyTimes()
+
 	changefeedRW := mockchangefeed.NewMockReaderWriter(ctrl)
 	models.SetChangeFeedReaderWriter(changefeedRW)
-	changefeedRW.EXPECT().Create(gomock.Any(),gomock.Any()).Return(&changefeed.ChangeFeedTask{
-		Entity: common.Entity{
-			ID: "11111",
-		},
-		Downstream: &changefeed.TiDBDownstream{
-		},
-
-	}, nil).AnyTimes()
 	changefeedRW.EXPECT().UnlockStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
@@ -67,10 +65,40 @@ func TestManager_CreateBetweenClusters(t *testing.T) {
 	}, nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
+		changefeedRW.EXPECT().Create(gomock.Any(),gomock.Any()).Return(&changefeed.ChangeFeedTask{
+			Entity: common.Entity{
+				ID: "11111",
+			},
+			Downstream: &changefeed.TiDBDownstream{
+			},
+
+		}, nil).Times(1)
+
 		id, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationCloneFrom)
 		assert.NoError(t, err)
 		assert.Equal(t, "11111", id)
 		time.Sleep(time.Millisecond * 10)
+	})
+	t.Run("error1", func(t *testing.T) {
+		_, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "errorId", "targetId", constants.ClusterRelationCloneFrom)
+		assert.Error(t, err)
+	})
+	t.Run("error2", func(t *testing.T) {
+		_, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "errorId", constants.ClusterRelationCloneFrom)
+		assert.Error(t, err)
+	})
+	t.Run("error3", func(t *testing.T) {
+		changefeedRW.EXPECT().Create(gomock.Any(),gomock.Any()).Return(&changefeed.ChangeFeedTask{
+			Entity: common.Entity{
+				ID: "11111",
+			},
+			Downstream: &changefeed.TiDBDownstream{
+			},
+
+		}, errors.Error(errors.TIEM_UNRECOGNIZED_ERROR)).AnyTimes()
+
+		_, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationCloneFrom)
+		assert.Error(t, err)
 	})
 }
 
@@ -88,50 +116,14 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.1"}, Ports: []int32{111}},
 		{Type: "TiDB", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.2"}, Ports: []int32{111}},
 	}, nil).AnyTimes()
+	clusterRW.EXPECT().GetMeta(gomock.Any(), "errorId").Return(&management.Cluster{}, []*management.ClusterInstance{
+		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.1"}, Ports: []int32{111}},
+		{Type: "TiDB", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.2"}, Ports: []int32{111}},
+	}, errors.Error(errors.TIEM_PARAMETER_INVALID)).AnyTimes()
+
 	changefeedRW := mockchangefeed.NewMockReaderWriter(ctrl)
 	models.SetChangeFeedReaderWriter(changefeedRW)
-	changefeedRW.EXPECT().Create(gomock.Any(),gomock.Any()).Return(&changefeed.ChangeFeedTask{
-		Entity: common.Entity{
-			ID: "11111",
-		},
-		Downstream: &changefeed.TiDBDownstream{
-		},
-
-	}, nil).AnyTimes()
 	changefeedRW.EXPECT().UnlockStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	changefeedRW.EXPECT().QueryByClusterId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*changefeed.ChangeFeedTask{
-		{
-			Entity: common.Entity{
-				Status: string(constants.ChangeFeedStatusNormal),
-				ID: "1111",
-			},
-			Type: "tidb",
-			ClusterId: "sourceId",
-			Downstream: &changefeed.TiDBDownstream{
-				TargetClusterId: "targetId",
-			},
-		},
-		{
-			Entity: common.Entity{
-				ID: "2222",
-			},
-			Type: "mysql",
-			ClusterId: "sourceId",
-			Downstream: &changefeed.MysqlDownstream{
-			},
-		},
-		{
-			Entity: common.Entity{
-				Status: string(constants.ChangeFeedStatusFinished),
-				ID:     "3333",
-			},
-			ClusterId: "sourceId",
-			Downstream: &changefeed.TiDBDownstream{
-				TargetClusterId: "targetId",
-			},
-		},
-	}, int64(3), nil).AnyTimes()
-	changefeedRW.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
 	secondparty.Manager = mockSecond
@@ -147,9 +139,133 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 	}, nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
+		changefeedRW.EXPECT().Create(gomock.Any(),gomock.Any()).Return(&changefeed.ChangeFeedTask{
+			Entity: common.Entity{
+				ID: "11111",
+			},
+			Downstream: &changefeed.TiDBDownstream{
+			},
+
+		}, nil).Times(1)
+		changefeedRW.EXPECT().QueryByClusterId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*changefeed.ChangeFeedTask{
+			{
+				Entity: common.Entity{
+					Status: string(constants.ChangeFeedStatusNormal),
+					ID: "1111",
+				},
+				Type: "tidb",
+				ClusterId: "sourceId",
+				Downstream: &changefeed.TiDBDownstream{
+					TargetClusterId: "targetId",
+				},
+			},
+			{
+				Entity: common.Entity{
+					ID: "2222",
+				},
+				Type: "mysql",
+				ClusterId: "sourceId",
+				Downstream: &changefeed.MysqlDownstream{
+				},
+			},
+			{
+				Entity: common.Entity{
+					Status: string(constants.ChangeFeedStatusFinished),
+					ID:     "3333",
+				},
+				ClusterId: "sourceId",
+				Downstream: &changefeed.TiDBDownstream{
+					TargetClusterId: "targetId",
+				},
+			},
+		}, int64(3), nil).Times(1)
+		changefeedRW.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
 		id, err := GetChangeFeedService().ReverseBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationCloneFrom)
 		assert.NoError(t, err)
 		assert.Equal(t, "11111", id)
 		time.Sleep(time.Millisecond * 10)
+	})
+
+	t.Run("get error", func(t *testing.T) {
+		_, err := GetChangeFeedService().ReverseBetweenClusters(context.TODO(), "errorId", "targetId", constants.ClusterRelationCloneFrom)
+		assert.Error(t, err)
+	})
+
+	t.Run("QueryByClusterId error", func(t *testing.T) {
+		changefeedRW.EXPECT().QueryByClusterId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*changefeed.ChangeFeedTask{
+			{
+				Entity: common.Entity{
+					Status: string(constants.ChangeFeedStatusNormal),
+					ID: "1111",
+				},
+				Type: "tidb",
+				ClusterId: "sourceId",
+				Downstream: &changefeed.TiDBDownstream{
+					TargetClusterId: "targetId",
+				},
+			},
+			{
+				Entity: common.Entity{
+					ID: "2222",
+				},
+				Type: "mysql",
+				ClusterId: "sourceId",
+				Downstream: &changefeed.MysqlDownstream{
+				},
+			},
+			{
+				Entity: common.Entity{
+					Status: string(constants.ChangeFeedStatusFinished),
+					ID:     "3333",
+				},
+				ClusterId: "sourceId",
+				Downstream: &changefeed.TiDBDownstream{
+					TargetClusterId: "targetId",
+				},
+			},
+		}, int64(3), errors.Error(errors.TIEM_UNMARSHAL_ERROR)).Times(1)
+
+		_, err := GetChangeFeedService().ReverseBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationCloneFrom)
+		assert.Error(t, err)
+	})
+
+	t.Run("error2", func(t *testing.T) {
+		changefeedRW.EXPECT().QueryByClusterId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*changefeed.ChangeFeedTask{
+			{
+				Entity: common.Entity{
+					Status: string(constants.ChangeFeedStatusNormal),
+					ID: "1111",
+				},
+				Type: "tidb",
+				ClusterId: "sourceId",
+				Downstream: &changefeed.TiDBDownstream{
+					TargetClusterId: "targetId",
+				},
+			},
+			{
+				Entity: common.Entity{
+					ID: "2222",
+				},
+				Type: "mysql",
+				ClusterId: "sourceId",
+				Downstream: &changefeed.MysqlDownstream{
+				},
+			},
+			{
+				Entity: common.Entity{
+					Status: string(constants.ChangeFeedStatusFinished),
+					ID:     "3333",
+				},
+				ClusterId: "sourceId",
+				Downstream: &changefeed.TiDBDownstream{
+					TargetClusterId: "targetId",
+				},
+			},
+		}, int64(3), nil).Times(1)
+		changefeedRW.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(errors.Error(errors.TIEM_PARAMETER_INVALID)).AnyTimes()
+
+		_, err := GetChangeFeedService().ReverseBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationCloneFrom)
+		assert.Error(t, err)
 	})
 }

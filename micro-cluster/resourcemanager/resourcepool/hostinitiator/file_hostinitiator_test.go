@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
@@ -27,6 +28,40 @@ import (
 	mock_ssh "github.com/pingcap-inc/tiem/test/mockutil/mocksshclientexecutor"
 	"github.com/stretchr/testify/assert"
 )
+
+func genHostInfo(hostName string, purpose string) *structs.HostInfo {
+	host := structs.HostInfo{
+		IP:       "192.168.56.11",
+		HostName: hostName,
+		OS:       "Centos",
+		Kernel:   "3.10",
+		Region:   "TEST_REGION",
+		AZ:       "TEST_AZ",
+		Rack:     "TEST_RACK",
+		Status:   string(constants.HostOnline),
+		Nic:      "10GE",
+		Purpose:  purpose,
+	}
+	host.Disks = append(host.Disks, structs.DiskInfo{
+		Name:     "sda",
+		Path:     "/",
+		Status:   string(constants.DiskReserved),
+		Capacity: 512,
+	})
+	host.Disks = append(host.Disks, structs.DiskInfo{
+		Name:     "sdb",
+		Path:     "/mnt/sdb",
+		Status:   string(constants.DiskAvailable),
+		Capacity: 1024,
+	})
+	host.Disks = append(host.Disks, structs.DiskInfo{
+		Name:     "sdc",
+		Path:     "/mnt/sdc",
+		Status:   string(constants.DiskAvailable),
+		Capacity: 1024,
+	})
+	return &host
+}
 
 func Test_CopySSHID(t *testing.T) {
 	fileInitiator := NewFileHostInitiator()
@@ -141,4 +176,30 @@ func Test_BuildHostCheckResulsFromJson(t *testing.T) {
 	assert.Equal(t, 5, len(*sortedResult["Warn"]))
 	assert.Equal(t, 14, len(*sortedResult["Fail"]))
 	assert.Equal(t, 9, len(*sortedResult["Pass"]))
+}
+
+func Test_BuildCheckHostTemplateItems(t *testing.T) {
+	host := genHostInfo("Test_Host1", "Compute,Storage,Schedule")
+	templateInfo := templateCheckHost{}
+	(&templateInfo).buildCheckHostTemplateItems(host)
+
+	assert.Equal(t, 2, len(templateInfo.TemplateItemsForCompute))
+	assert.Equal(t, 2, len(templateInfo.TemplateItemsForStorage))
+	assert.Equal(t, 2, len(templateInfo.TemplateItemsForSchedule))
+
+	t.Log(templateInfo)
+
+	assert.Equal(t, 10000, templateInfo.TemplateItemsForCompute[0].Port1)
+	assert.Equal(t, 11000, templateInfo.TemplateItemsForCompute[0].Port2)
+	assert.Equal(t, 10001, templateInfo.TemplateItemsForCompute[1].Port1)
+	assert.Equal(t, 11001, templateInfo.TemplateItemsForCompute[1].Port2)
+	assert.Equal(t, "/mnt/sdb", templateInfo.TemplateItemsForCompute[0].DeployDir)
+	assert.Equal(t, "", templateInfo.TemplateItemsForCompute[0].DataDir)
+	assert.Equal(t, "/mnt/sdc", templateInfo.TemplateItemsForCompute[1].DeployDir)
+	assert.Equal(t, "", templateInfo.TemplateItemsForCompute[1].DataDir)
+	assert.Equal(t, "/mnt/sdc", templateInfo.TemplateItemsForStorage[1].DataDir)
+
+	str, err := templateInfo.generateTopologyConfig(context.TODO())
+	assert.Nil(t, err)
+	t.Log(str)
 }

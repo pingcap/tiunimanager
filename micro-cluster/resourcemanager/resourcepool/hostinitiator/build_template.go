@@ -34,7 +34,7 @@ type templateScaleOut struct {
 }
 
 func (p *templateScaleOut) generateTopologyConfig(ctx context.Context) (string, error) {
-	t, err := template.New("import_topology.yaml").Parse(resourceTemplate.EMClusterScaleOut)
+	t, err := template.New("import_topology").Parse(resourceTemplate.EMClusterScaleOut)
 	if err != nil {
 		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
 	}
@@ -80,6 +80,9 @@ func (p *templateCheckHost) buildCheckHostTemplateItems(h *structs.HostInfo) {
 	for _, purpose := range purposes {
 		if purpose == string(constants.PurposeCompute) {
 			for _, disk := range h.Disks {
+				if disk.Status != string(constants.DiskAvailable) {
+					continue
+				}
 				p.TemplateItemsForCompute = append(p.TemplateItemsForCompute, checkHostTemplateItem{
 					HostIP: h.IP,
 					// Only DeployDir for tidb
@@ -93,6 +96,9 @@ func (p *templateCheckHost) buildCheckHostTemplateItems(h *structs.HostInfo) {
 		}
 		if purpose == string(constants.PurposeSchedule) {
 			for _, disk := range h.Disks {
+				if disk.Status != string(constants.DiskAvailable) {
+					continue
+				}
 				p.TemplateItemsForSchedule = append(p.TemplateItemsForSchedule, checkHostTemplateItem{
 					HostIP:    h.IP,
 					DataDir:   disk.Path,
@@ -106,6 +112,9 @@ func (p *templateCheckHost) buildCheckHostTemplateItems(h *structs.HostInfo) {
 		}
 		if purpose == string(constants.PurposeStorage) {
 			for _, disk := range h.Disks {
+				if disk.Status != string(constants.DiskAvailable) {
+					continue
+				}
 				p.TemplateItemsForStorage = append(p.TemplateItemsForStorage, checkHostTemplateItem{
 					HostIP:    h.IP,
 					DataDir:   disk.Path,

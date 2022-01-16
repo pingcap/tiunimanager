@@ -27,15 +27,15 @@ tikv_servers:
 {{ range .TemplateItemsForStorage -}}
   - host: {{ .HostIP }}
     data_dir: {{ .DataDir }}
-	deploy_dir: {{ .DeployDir }}
-	port: {{ .Port1 }}
-	status_port: {{ .Port2 }}
+    deploy_dir: {{ .DeployDir }}
+    port: {{ .Port1 }}
+    status_port: {{ .Port2 }}
 {{ end }}
 pd_servers:
 {{ range .TemplateItemsForSchedule -}}
   - host: {{ .HostIP }}
     data_dir: {{ .DataDir }}
-	deploy_dir: {{ .DeployDir }}
+    deploy_dir: {{ .DeployDir }}
     port: {{ .Port1 }}
     status_port: {{ .Port2 }}
 {{ end }}

@@ -21,6 +21,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
@@ -69,6 +70,71 @@ func Test_CopySSHID(t *testing.T) {
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
 	err := fileInitiator.CopySSHID(context.TODO(), &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"})
 	assert.NotNil(t, err)
+}
+
+func Test_Verify_ignoreWarings(t *testing.T) {
+	jsonStr := `{"result":[
+		{"node":"172.16.6.252","name":"os-version","status":"Pass","message":"OS is CentOS Linux 7 (Core) 7.6.1810"},
+		{"node":"172.16.6.252","name":"cpu-cores","status":"Pass","message":"number of CPU cores / threads: 4"},
+		{"node":"172.16.6.252","name":"cpu-governor","status":"Warn","message":"Unable to determine current CPU frequency governor policy"},
+		{"node":"172.16.6.252","name":"memory","status":"Pass","message":"memory size is 8192MB"},
+		{"node":"172.16.6.252","name":"disk","status":"Warn","message":"mount point /home does not have 'noatime' option set"},
+		{"node":"172.16.6.252","name":"selinux","status":"Pass","message":"SELinux is disabled"},
+		{"node":"172.16.5.168","name":"os-version","status":"Pass","message":"OS is CentOS Linux 7 (Core) 7.6.1810"},
+		{"node":"172.16.5.168","name":"cpu-cores","status":"Pass","message":"number of CPU cores / threads: 8"},
+		{"node":"172.16.5.168","name":"cpu-governor","status":"Warn","message":"Unable to determine current CPU frequency governor policy"},
+		{"node":"172.16.5.168","name":"memory","status":"Pass","message":"memory size is 16384MB"},
+		{"node":"172.16.5.168","name":"disk","status":"Warn","message":"mount point / does not have 'noatime' option set"},
+		{"node":"172.16.5.168","name":"disk","status":"Warn","message":"mount point /home does not have 'noatime' option set"},
+		{"node":"172.16.5.168","name":"selinux","status":"Pass","message":"SELinux is disabled"},
+		{"node":"172.16.5.168","name":"thp","status":"Pass","message":"THP is disabled"}]}`
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockSec := mock_secp.NewMockSecondPartyService(ctrl)
+	mockSec.EXPECT().Check(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
+
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSecondPartyServ(mockSec)
+
+	ctx := context.WithValue(context.TODO(), rp_consts.ContextIgnoreWarnings, true)
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	err := fileInitiator.Verify(ctx, &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180"})
+	assert.Nil(t, err)
+}
+
+func Test_Verify_Warings(t *testing.T) {
+	jsonStr := `{"result":[
+		{"node":"172.16.6.252","name":"os-version","status":"Pass","message":"OS is CentOS Linux 7 (Core) 7.6.1810"},
+		{"node":"172.16.6.252","name":"cpu-cores","status":"Pass","message":"number of CPU cores / threads: 4"},
+		{"node":"172.16.6.252","name":"cpu-governor","status":"Warn","message":"Unable to determine current CPU frequency governor policy"},
+		{"node":"172.16.6.252","name":"memory","status":"Pass","message":"memory size is 8192MB"},
+		{"node":"172.16.6.252","name":"disk","status":"Warn","message":"mount point /home does not have 'noatime' option set"},
+		{"node":"172.16.6.252","name":"selinux","status":"Pass","message":"SELinux is disabled"},
+		{"node":"172.16.5.168","name":"os-version","status":"Pass","message":"OS is CentOS Linux 7 (Core) 7.6.1810"},
+		{"node":"172.16.5.168","name":"cpu-cores","status":"Pass","message":"number of CPU cores / threads: 8"},
+		{"node":"172.16.5.168","name":"cpu-governor","status":"Warn","message":"Unable to determine current CPU frequency governor policy"},
+		{"node":"172.16.5.168","name":"memory","status":"Pass","message":"memory size is 16384MB"},
+		{"node":"172.16.5.168","name":"disk","status":"Warn","message":"mount point / does not have 'noatime' option set"},
+		{"node":"172.16.5.168","name":"disk","status":"Warn","message":"mount point /home does not have 'noatime' option set"},
+		{"node":"172.16.5.168","name":"selinux","status":"Pass","message":"SELinux is disabled"},
+		{"node":"172.16.5.168","name":"thp","status":"Pass","message":"THP is disabled"}]}`
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockSec := mock_secp.NewMockSecondPartyService(ctrl)
+	mockSec.EXPECT().Check(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
+
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSecondPartyServ(mockSec)
+
+	ctx := context.WithValue(context.TODO(), rp_consts.ContextIgnoreWarnings, false)
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	err := fileInitiator.Verify(ctx, &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180"})
+	assert.NotNil(t, err)
+	emErr, ok := err.(errors.EMError)
+	assert.True(t, ok)
+	assert.Equal(t, errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, emErr.GetCode())
 }
 
 func Test_SetConfig(t *testing.T) {

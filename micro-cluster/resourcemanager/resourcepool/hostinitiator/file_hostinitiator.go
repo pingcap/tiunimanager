@@ -92,21 +92,27 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 		(&results).buildFromJson(resultStr)
 		sortedResult := results.analyzeCheckResults()
 
-		pass := sortedResult["Pass"]
-		fails := sortedResult["Fail"]
-		warnings := sortedResult["Warn"]
-
-		if len(*fails) > 0 {
+		fails, hasFails := sortedResult["Fail"]
+		if hasFails {
 			errMsg := fmt.Sprintf("check host %s %s has %d fails, %v", h.HostName, h.IP, len(*fails), *fails)
 			return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
 		}
 
-		if len(*warnings) > 0 && !ignoreWarnings {
+		warnings, hasWarns := sortedResult["Warn"]
+		if hasWarns {
 			errMsg := fmt.Sprintf("check host %s %s has %d warnings, %v", h.HostName, h.IP, len(*warnings), *warnings)
-			return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
+			log.Warnln(errMsg)
+			if !ignoreWarnings {
+				return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
+			}
 		}
 
-		log.Infof("check host %s %s has %d warnings and %d pass", h.HostName, h.IP, len(*warnings), len(*pass))
+		pass, hasPasses := sortedResult["Pass"]
+		if hasPasses {
+			log.Infof("check host %s %s succeed, %v", h.HostName, h.IP, *pass)
+		} else {
+			log.Warnf("check host %s %s no pass", h.HostName, h.IP)
+		}
 	}
 
 	return nil

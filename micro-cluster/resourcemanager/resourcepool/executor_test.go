@@ -121,6 +121,7 @@ func Test_Verify(t *testing.T) {
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
 	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
+	flowContext.SetData(rp_consts.ContextIgnoreWarnings, false)
 
 	var node workflowModel.WorkFlowNode
 	err := verifyHosts(&node, flowContext)

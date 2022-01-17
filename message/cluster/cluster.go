@@ -50,7 +50,7 @@ type DeleteClusterReq struct {
 // DeleteClusterResp Reply message for delete a new cluster
 type DeleteClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
-	ClusterID         string `json:"clusterID"`
+	ClusterID string `json:"clusterID"`
 }
 
 // StopClusterReq Message for stop a new cluster
@@ -89,7 +89,7 @@ type ScaleInClusterResp struct {
 
 // PreviewScaleOutClusterReq Message for cluster expansion operation
 type PreviewScaleOutClusterReq struct {
-	ClusterID       string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
+	ClusterID string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
 	structs.ClusterResourceInfo
 }
 
@@ -133,7 +133,7 @@ type RestoreExistClusterResp struct {
 // CloneClusterReq Message for clone a new cluster
 type CloneClusterReq struct {
 	structs.CreateClusterParameter
-	CloneStrategy   string `json:"cloneStrategy" validate:"required"`   // specify clone strategy, include empty, snapshot and sync, default empty(option)
+	CloneStrategy   string `json:"cloneStrategy" validate:"required"`                // specify clone strategy, include empty, snapshot and sync, default empty(option)
 	SourceClusterID string `json:"sourceClusterId" validate:"required,min=8,max=64"` // specify source cluster id(require)
 }
 
@@ -269,6 +269,7 @@ type QueryClusterLogResp struct {
 
 type QueryClusterParametersReq struct {
 	ClusterID string `json:"clusterId" swaggerignore:"true"`
+	Name      string `json:"name" form:"name"`
 	structs.PageRequest
 }
 
@@ -310,10 +311,10 @@ type PreviewClusterResp struct {
 	ClusterName string `json:"clusterName"`
 
 	StockCheckResult  []structs.ResourceStockCheckResult `json:"stockCheckResult"`
-	CapabilityIndexes []structs.Index      `json:"capabilityIndexes"`
+	CapabilityIndexes []structs.Index                    `json:"capabilityIndexes"`
 }
 
 type ScaleOutPreviewResp struct {
 	StockCheckResult  []structs.ResourceStockCheckResult `json:"stockCheckResult"`
-	CapabilityIndexes []structs.Index      `json:"capabilityIndexes"`
+	CapabilityIndexes []structs.Index                    `json:"capabilityIndexes"`
 }

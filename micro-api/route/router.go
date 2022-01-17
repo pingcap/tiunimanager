@@ -116,6 +116,7 @@ func Route(g *gin.Engine) {
 			cluster.GET("/:clusterId/log", metrics.HandleMetrics(constants.MetricsClusterQueryLogParameter), logApi.QueryClusterLog)
 
 			// Scale cluster
+			cluster.GET("/:clusterId/preview-scale-out", metrics.HandleMetrics(constants.MetricsClusterPreviewScaleOut), clusterApi.ScaleOutPreview)
 			cluster.POST("/:clusterId/scale-out", metrics.HandleMetrics(constants.MetricsClusterScaleOut), clusterApi.ScaleOut)
 			cluster.POST("/:clusterId/scale-in", metrics.HandleMetrics(constants.MetricsClusterScaleIn), clusterApi.ScaleIn)
 
@@ -220,7 +221,7 @@ func Route(g *gin.Engine) {
 			zoneGroup.Use(interceptor.AuditLog())
 			zoneGroup.POST("/", product.CreateZones)
 			zoneGroup.DELETE("/", product.DeleteZones)
-			zoneGroup.GET("/", product.QueryZones)
+			zoneGroup.GET("/tree", product.QueryZonesTree)
 		}
 
 		specGroup := apiV1.Group("/specs")

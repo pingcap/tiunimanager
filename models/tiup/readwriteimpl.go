@@ -58,7 +58,7 @@ func (m *GormTiupConfigReadWrite) Create(ctx context.Context, componentType stri
 
 func (m *GormTiupConfigReadWrite) Update(ctx context.Context, updateTemplate *TiupConfig) error {
 	if "" == updateTemplate.ID {
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "id is nil for %+v", updateTemplate)
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "id is nil for %+v", updateTemplate)
 	}
 
 	return m.DB(ctx).Save(updateTemplate).Error

@@ -23,5 +23,10 @@ const (
 )
 
 const (
+	BizTypeCluster string = "cluster"
+	BizTypeHost    string = "host"
+)
+
+const (
 	maxPollingSequence int32 = 10 * 24 * 3600
 )

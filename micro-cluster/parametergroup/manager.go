@@ -71,7 +71,7 @@ func (m *Manager) CreateParameterGroup(ctx context.Context, req message.CreatePa
 	parameterGroup, err := models.GetParameterGroupReaderWriter().CreateParameterGroup(ctx, pg, pgm)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create parameter group req: %v, err: %v", req, err)
-		return resp, errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_CREATE_ERROR, errors.TIEM_PARAMETER_GROUP_CREATE_ERROR.Explain(), err)
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_CREATE_ERROR, errors.TIEM_PARAMETER_GROUP_CREATE_ERROR.Explain(), err)
 	}
 	resp = message.CreateParameterGroupResp{ParamGroupID: parameterGroup.ID}
 	return resp, nil
@@ -81,13 +81,13 @@ func (m *Manager) UpdateParameterGroup(ctx context.Context, req message.UpdatePa
 	group, _, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID)
 	if err != nil || group.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		err = errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
+		err = errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
 		return
 	}
 
 	// default parameter group not be modify.
 	if group.HasDefault == int(DEFAULT) {
-		return resp, errors.NewEMErrorf(errors.TIEM_DEFAULT_PARAM_GROUP_NOT_MODIFY, errors.TIEM_DEFAULT_PARAM_GROUP_NOT_MODIFY.Explain(), err)
+		return resp, errors.NewErrorf(errors.TIEM_DEFAULT_PARAM_GROUP_NOT_MODIFY, errors.TIEM_DEFAULT_PARAM_GROUP_NOT_MODIFY.Explain())
 	}
 
 	pg := &parametergroup.ParameterGroup{
@@ -108,7 +108,7 @@ func (m *Manager) UpdateParameterGroup(ctx context.Context, req message.UpdatePa
 	err = models.GetParameterGroupReaderWriter().UpdateParameterGroup(ctx, pg, pgm)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("update parameter group invoke metadb err: %v", err)
-		return resp, errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_UPDATE_ERROR, errors.TIEM_PARAMETER_GROUP_UPDATE_ERROR.Explain(), err)
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_UPDATE_ERROR, errors.TIEM_PARAMETER_GROUP_UPDATE_ERROR.Explain(), err)
 	}
 	resp = message.UpdateParameterGroupResp{ParamGroupID: req.ParamGroupID}
 	return resp, nil
@@ -118,18 +118,18 @@ func (m *Manager) DeleteParameterGroup(ctx context.Context, req message.DeletePa
 	pg, _, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID)
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		err = errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
+		err = errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
 		return
 	}
 
 	// default parameter group not be deleted.
 	if pg.HasDefault == int(DEFAULT) {
-		return resp, errors.NewEMErrorf(errors.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL, errors.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL.Explain(), err)
+		return resp, errors.NewErrorf(errors.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL, errors.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL.Explain())
 	}
 	err = models.GetParameterGroupReaderWriter().DeleteParameterGroup(ctx, pg.ID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("delete parameter group invoke metadb err: %v", err)
-		err = errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_ERROR, errors.TIEM_PARAMETER_GROUP_DELETE_ERROR.Explain(), err)
+		err = errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_ERROR, errors.TIEM_PARAMETER_GROUP_DELETE_ERROR.Explain(), err)
 		return
 	}
 	resp = message.DeleteParameterGroupResp{ParamGroupID: pg.ID}
@@ -141,7 +141,7 @@ func (m *Manager) QueryParameterGroup(ctx context.Context, req message.QueryPara
 	pgs, total, err := models.GetParameterGroupReaderWriter().QueryParameterGroup(ctx, req.Name, req.ClusterSpec, req.ClusterVersion, req.DBType, req.HasDefault, offset, req.PageSize)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("query parameter group req: %v, err: %v", req, err)
-		return resp, page, errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_QUERY_ERROR, errors.TIEM_PARAMETER_GROUP_QUERY_ERROR.Explain(), err)
+		return resp, page, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_QUERY_ERROR, errors.TIEM_PARAMETER_GROUP_QUERY_ERROR.Explain(), err)
 	}
 
 	resp = make([]message.QueryParameterGroupResp, len(pgs))
@@ -153,14 +153,14 @@ func (m *Manager) QueryParameterGroup(ctx context.Context, req message.QueryPara
 			pgm, err := models.GetParameterGroupReaderWriter().QueryParametersByGroupId(ctx, pg.ID)
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("query parameter group req: %v, err: %v", req, err)
-				return resp, page, errors.NewEMErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, errors.TIEM_PARAMETER_QUERY_ERROR.Explain(), err)
+				return resp, page, errors.NewErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, errors.TIEM_PARAMETER_QUERY_ERROR.Explain(), err)
 			}
 			params := make([]structs.ParameterGroupParameterInfo, len(pgm))
 			for j, param := range pgm {
 				pgi, err := convertParameterGroupParameterInfo(param)
 				if err != nil {
 					framework.LogWithContext(ctx).Errorf("failed to convert parameter group. req: %v, err: %v", req, err)
-					return resp, page, errors.NewEMErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
+					return resp, page, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
 				}
 				params[j] = pgi
 			}
@@ -180,7 +180,7 @@ func (m *Manager) DetailParameterGroup(ctx context.Context, req message.DetailPa
 	pg, pgm, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		return resp, errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
 	}
 	resp = message.DetailParameterGroupResp{ParameterGroupInfo: convertParameterGroupInfo(pg)}
 
@@ -188,7 +188,7 @@ func (m *Manager) DetailParameterGroup(ctx context.Context, req message.DetailPa
 	for i, param := range pgm {
 		pgi, err := convertParameterGroupParameterInfo(param)
 		if err != nil {
-			return resp, errors.NewEMErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
+			return resp, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
 		}
 		params[i] = pgi
 	}
@@ -201,13 +201,13 @@ func (m *Manager) CopyParameterGroup(ctx context.Context, req message.CopyParame
 	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID)
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		return resp, errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
 	}
 
 	// Determine if the name of the copy parameter group is modified
 	if pg.Name == req.Name {
 		framework.LogWithContext(ctx).Errorf("Parameter group name %s already exists", req.Name)
-		return resp, errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS, errors.TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS.Explain(), err)
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS, errors.TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS.Explain())
 	}
 
 	pgm := make([]*parametergroup.ParameterGroupMapping, len(params))
@@ -228,7 +228,7 @@ func (m *Manager) CopyParameterGroup(ctx context.Context, req message.CopyParame
 	parameterGroup, err := models.GetParameterGroupReaderWriter().CreateParameterGroup(ctx, pg, pgm)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("copy parameter group convert resp err: %v", err)
-		return resp, errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_COPY_ERROR, errors.TIEM_PARAMETER_GROUP_COPY_ERROR.Explain(), err)
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_COPY_ERROR, errors.TIEM_PARAMETER_GROUP_COPY_ERROR.Explain(), err)
 	}
 	resp = message.CopyParameterGroupResp{ParamGroupID: parameterGroup.ID}
 	return resp, nil

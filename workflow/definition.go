@@ -40,11 +40,12 @@ type NodeDefine struct {
 	Executor     NodeExecutor
 }
 
-func (define *WorkFlowDefine) getInstance(ctx context.Context, bizId string, data map[string]interface{}) *WorkFlowAggregation {
+func (define *WorkFlowDefine) getInstance(ctx context.Context, bizId string, bizType string, data map[string]interface{}) *WorkFlowAggregation {
 	return &WorkFlowAggregation{
 		Flow: &workflow.WorkFlow{
-			Name:  define.FlowName,
-			BizID: bizId,
+			Name:    define.FlowName,
+			BizID:   bizId,
+			BizType: bizType,
 			Entity: common.Entity{
 				Status:   constants.WorkFlowStatusInitializing,
 				TenantId: framework.GetTenantIDFromContext(ctx),

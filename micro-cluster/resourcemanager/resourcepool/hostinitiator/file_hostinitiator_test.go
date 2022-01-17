@@ -30,6 +30,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_CopySSHID(t *testing.T) {
+	fileInitiator := NewFileHostInitiator()
+
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	err := fileInitiator.CopySSHID(context.TODO(), &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"})
+	assert.NotNil(t, err)
+}
+
 func Test_VerifyCpuMem_Succeed(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -45,7 +53,7 @@ func Test_VerifyCpuMem_Succeed(t *testing.T) {
 		if strings.Contains(command, "Mem:") {
 			return "8", nil
 		}
-		return "", errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+		return "", errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 	}).Times(3)
 
 	fileInitiator := NewFileHostInitiator()
@@ -63,7 +71,7 @@ func Test_VerifyCpuMem_Failed(t *testing.T) {
 		if strings.Contains(command, "Architecture:") {
 			return "ARM64", nil
 		}
-		return "", errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+		return "", errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 	}).Times(1)
 
 	fileInitiator := NewFileHostInitiator()
@@ -183,7 +191,7 @@ func Test_JoinEMCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockSec := mock_secp.NewMockSecondPartyService(ctrl)
-	mockSec.EXPECT().ClusterScaleOut(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
+	mockSec.EXPECT().ClusterScaleOut(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSecondPartyServ(mockSec)

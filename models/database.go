@@ -284,6 +284,10 @@ func GetBRReaderWriter() backuprestore.ReaderWriter {
 	return defaultDb.brReaderWriter
 }
 
+func SetResourceReaderWriter(rw resource.ReaderWriter) {
+	defaultDb.resourceReaderWriter = rw
+}
+
 func GetResourceReaderWriter() resource.ReaderWriter {
 	return defaultDb.resourceReaderWriter
 }

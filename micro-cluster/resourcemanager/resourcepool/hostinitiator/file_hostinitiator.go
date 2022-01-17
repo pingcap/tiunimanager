@@ -18,10 +18,12 @@ package hostinitiator
 import (
 	"bytes"
 	"context"
-	"github.com/pingcap-inc/tiem/util/ssh"
 	"strconv"
 	"strings"
 	"text/template"
+
+	"github.com/pingcap-inc/tiem/util/scp"
+	sshclient "github.com/pingcap-inc/tiem/util/ssh"
 
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -49,6 +51,19 @@ func (p *FileHostInitiator) SetSSHClient(c sshclient.SSHClientExecutor) {
 
 func (p *FileHostInitiator) SetSecondPartyServ(s secondparty.SecondPartyService) {
 	p.secondPartyServ = s
+}
+
+func (p *FileHostInitiator) CopySSHID(ctx context.Context, h *structs.HostInfo) (err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infof("copy ssh id to host %s %s@%s", h.HostName, h.UserName, h.IP)
+
+	err = scp.CopySSHID(ctx, h.IP, h.UserName, h.Passwd, rp_consts.DefaultCopySshIDTimeOut)
+	if err != nil {
+		log.Errorf("copy ssh id to host %s %s@%s failed, %v", h.HostName, h.UserName, h.IP, err)
+		return err
+	}
+
+	return nil
 }
 
 func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (err error) {
@@ -124,15 +139,15 @@ func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.H
 
 	workFlowNodeID, ok := ctx.Value(rp_consts.ContextWorkFlowNodeIDKey).(string)
 	if !ok || workFlowNodeID == "" {
-		return errors.NewEMErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "get work flow node from context failed, %s, %v", workFlowNodeID, ok)
+		return errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "get work flow node from context failed, %s, %v", workFlowNodeID, ok)
 	}
 	if rp_consts.SecondPartyReady {
 		emClusterName := framework.Current.GetClientArgs().EMClusterName
 		framework.LogWithContext(ctx).Infof("join em cluster %s with work flow id %s", emClusterName, workFlowNodeID)
 		operationId, err := p.secondPartyServ.ClusterScaleOut(ctx, secondparty.TiEMComponentTypeStr, emClusterName, templateStr, rp_consts.DefaultTiupTimeOut,
-			[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, workFlowNodeID)
+			[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, workFlowNodeID, "")
 		if err != nil {
-			return errors.NewEMErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "join em cluster %s [%v] failed, %v", emClusterName, templateStr, err)
+			return errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "join em cluster %s [%v] failed, %v", emClusterName, templateStr, err)
 		}
 		framework.LogWithContext(ctx).Infof("join em cluster %s for %v in operationId %s", emClusterName, tempateInfo, operationId)
 	}
@@ -145,7 +160,7 @@ func (p *FileHostInitiator) LeaveEMCluster(ctx context.Context, nodeId string) (
 
 	workFlowNodeID, ok := ctx.Value(rp_consts.ContextWorkFlowNodeIDKey).(string)
 	if !ok || workFlowNodeID == "" {
-		return errors.NewEMErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "get work flow node from context failed, %s, %v", workFlowNodeID, ok)
+		return errors.NewErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "get work flow node from context failed, %s, %v", workFlowNodeID, ok)
 	}
 	if rp_consts.SecondPartyReady {
 		emClusterName := framework.Current.GetClientArgs().EMClusterName
@@ -153,7 +168,7 @@ func (p *FileHostInitiator) LeaveEMCluster(ctx context.Context, nodeId string) (
 		operationId, err := p.secondPartyServ.ClusterScaleIn(ctx, secondparty.TiEMComponentTypeStr, emClusterName, nodeId, rp_consts.DefaultTiupTimeOut,
 			[]string{"--yes"}, workFlowNodeID)
 		if err != nil {
-			return errors.NewEMErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "leave em cluster %s [%s] failed, %v", emClusterName, nodeId, err)
+			return errors.NewErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "leave em cluster %s [%s] failed, %v", emClusterName, nodeId, err)
 		}
 		framework.LogWithContext(ctx).Infof("leave em cluster %s for %s in operationId %s", emClusterName, nodeId, operationId)
 	}
@@ -182,7 +197,7 @@ func (p *FileHostInitiator) verifyCpuMem(ctx context.Context, h *structs.HostInf
 		return err
 	}
 	if !strings.EqualFold(arch, h.Arch) {
-		return errors.NewEMErrorf(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, "Host %s [%s] arch %s is not as import %s", h.HostName, h.IP, arch, h.Arch)
+		return errors.NewErrorf(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, "Host %s [%s] arch %s is not as import %s", h.HostName, h.IP, arch, h.Arch)
 	}
 
 	getCpuCoresCmd := "lscpu | grep 'CPU(s):' | awk '{print $2}' | tr -d '\n'"

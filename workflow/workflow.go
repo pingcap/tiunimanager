@@ -49,10 +49,11 @@ type WorkFlowService interface {
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter bizId
+	// @Parameter bizType
 	// @Parameter flowName
 	// @Return *WorkFlowAggregation
 	// @Return error
-	CreateWorkFlow(ctx context.Context, bizId string, flowName string) (*WorkFlowAggregation, error)
+	CreateWorkFlow(ctx context.Context, bizId string, bizType string, flowName string) (*WorkFlowAggregation, error)
 
 	// ListWorkFlows
 	// @Description: list workflows by condition
@@ -148,18 +149,18 @@ func (mgr *WorkFlowManager) GetWorkFlowDefine(ctx context.Context, flowName stri
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
 		framework.LogWithContext(ctx).Errorf("WorkFlow %s not exist", flowName)
-		return nil, errors.NewEMErrorf(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
+		return nil, errors.NewErrorf(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
 	}
 	return flowDefine.(*WorkFlowDefine), nil
 }
 
-func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, flowName string) (*WorkFlowAggregation, error) {
+func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, bizType string, flowName string) (*WorkFlowAggregation, error) {
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
-		return nil, errors.NewEMErrorf(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
+		return nil, errors.NewErrorf(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
 	}
 
-	flow, err := createFlowWork(ctx, bizId, flowDefine.(*WorkFlowDefine))
+	flow, err := createFlowWork(ctx, bizId, bizType, flowDefine.(*WorkFlowDefine))
 	if err != nil {
 		return nil, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, err.Error(), err)
 	}
@@ -167,7 +168,7 @@ func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, fl
 }
 
 func (mgr *WorkFlowManager) ListWorkFlows(ctx context.Context, request message.QueryWorkFlowsReq) (resp message.QueryWorkFlowsResp, page structs.Page, err error) {
-	flows, total, err := models.GetWorkFlowReaderWriter().QueryWorkFlows(ctx, request.BizID, request.FlowName, request.Status, request.Page, request.PageSize)
+	flows, total, err := models.GetWorkFlowReaderWriter().QueryWorkFlows(ctx, request.BizID, request.BizType, request.FlowName, request.Status, request.Page, request.PageSize)
 	if err != nil {
 		return resp, page, errors.WrapError(errors.TIEM_WORKFLOW_QUERY_FAILED, err.Error(), err)
 	}
@@ -178,6 +179,7 @@ func (mgr *WorkFlowManager) ListWorkFlows(ctx context.Context, request message.Q
 			ID:         flow.ID,
 			Name:       flow.Name,
 			BizID:      flow.BizID,
+			BizType:    flow.BizType,
 			Status:     flow.Status,
 			CreateTime: flow.CreatedAt,
 			UpdateTime: flow.UpdatedAt,
@@ -209,6 +211,7 @@ func (mgr *WorkFlowManager) DetailWorkFlow(ctx context.Context, request message.
 			ID:         flow.ID,
 			Name:       flow.Name,
 			BizID:      flow.BizID,
+			BizType:    flow.BizType,
 			Status:     flow.Status,
 			CreateTime: flow.CreatedAt,
 			UpdateTime: flow.UpdatedAt,

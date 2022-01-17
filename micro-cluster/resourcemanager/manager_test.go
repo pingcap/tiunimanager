@@ -152,7 +152,7 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 	workflowService := mock_workflow.NewMockWorkFlowService(ctrl3)
 	workflow.MockWorkFlowService(workflowService)
 	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
 	}, nil).AnyTimes()
@@ -163,7 +163,7 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 	host := genHostInfo("TEST_HOST1")
 	hosts = append(hosts, *host)
 
-	flowIds, hostIds, err := resourceManager.ImportHosts(context.TODO(), hosts)
+	flowIds, hostIds, err := resourceManager.ImportHosts(context.TODO(), hosts, &structs.ImportCondition{})
 	assert.Nil(t, err)
 
 	assert.Equal(t, fake_hostId, hostIds[0])
@@ -203,7 +203,7 @@ func Test_ImportHosts_Failed(t *testing.T) {
 	workflowService := mock_workflow.NewMockWorkFlowService(ctrl3)
 	workflow.MockWorkFlowService(workflowService)
 	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
 	}, nil).AnyTimes()
@@ -212,7 +212,7 @@ func Test_ImportHosts_Failed(t *testing.T) {
 	var hosts []structs.HostInfo
 	host := genHostInfo("TEST_HOST2")
 	hosts = append(hosts, *host)
-	flowIds, _, err := resourceManager.ImportHosts(context.TODO(), hosts)
+	flowIds, _, err := resourceManager.ImportHosts(context.TODO(), hosts, &structs.ImportCondition{})
 	assert.NotNil(t, err)
 	tiemErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
@@ -227,15 +227,15 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_resource.NewMockReaderWriter(ctrl)
-	mockClient.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, filter *structs.HostFilter, offset, limit int) (hosts []resourcepool.Host, err error) {
+	mockClient.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, location *structs.Location, filter *structs.HostFilter, offset, limit int) (hosts []resourcepool.Host, total int64, err error) {
 		assert.Equal(t, 20, offset)
 		assert.Equal(t, 10, limit)
 		if filter.HostID == fake_hostId {
 			dbhost := genHostRspFromDB(fake_hostId, fake_hostname)
 			hosts = append(hosts, *dbhost)
-			return hosts, nil
+			return hosts, 1, nil
 		} else {
-			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, 0, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -251,8 +251,9 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 		PageSize: 10,
 	}
 
-	hosts, err := resourceManager.QueryHosts(context.TODO(), filter, page)
+	hosts, total, err := resourceManager.QueryHosts(context.TODO(), &structs.Location{}, filter, page)
 	assert.Nil(t, err)
+	assert.Equal(t, 1, int(total))
 
 	assert.Equal(t, fake_hostname, hosts[0].HostName)
 	assert.Equal(t, "TEST_REGION", hosts[0].Region)
@@ -278,7 +279,7 @@ func Test_DeleteHosts_Succeed(t *testing.T) {
 	workflowService := mock_workflow.NewMockWorkFlowService(ctrl3)
 	workflow.MockWorkFlowService(workflowService)
 	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
 	}, nil).AnyTimes()
@@ -289,7 +290,7 @@ func Test_DeleteHosts_Succeed(t *testing.T) {
 	hostIds = append(hostIds, fake_hostId1)
 	hostIds = append(hostIds, fake_hostId2)
 
-	flowIds, err := resourceManager.DeleteHosts(context.TODO(), hostIds)
+	flowIds, err := resourceManager.DeleteHosts(context.TODO(), hostIds, false)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(flowIds))
 }
@@ -418,6 +419,7 @@ func Test_GetStocks_Succeed(t *testing.T) {
 	mockClient.EXPECT().GetHostStocks(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks []structs.Stocks, err error) {
 		if location.Region == "TEST_Region1" {
 			stocks1 := structs.Stocks{
+				Zone:             "TEST_Region1,TEST_Zone1",
 				FreeCpuCores:     2,
 				FreeMemory:       4,
 				FreeDiskCount:    2,
@@ -425,6 +427,7 @@ func Test_GetStocks_Succeed(t *testing.T) {
 			}
 			stocks = append(stocks, stocks1)
 			stocks2 := structs.Stocks{
+				Zone:             "TEST_Region1,TEST_Zone1",
 				FreeCpuCores:     1,
 				FreeMemory:       1,
 				FreeDiskCount:    1,
@@ -445,11 +448,11 @@ func Test_GetStocks_Succeed(t *testing.T) {
 
 	stocks, err := resourceManager.GetStocks(context.TODO(), &location, &structs.HostFilter{}, &structs.DiskFilter{})
 	assert.Nil(t, err)
-	assert.Equal(t, int32(2), stocks.FreeHostCount)
-	assert.Equal(t, int32(3), stocks.FreeCpuCores)
-	assert.Equal(t, int32(5), stocks.FreeMemory)
-	assert.Equal(t, int32(3), stocks.FreeDiskCount)
-	assert.Equal(t, int32(512), stocks.FreeDiskCapacity)
+	assert.Equal(t, int32(2), stocks["TEST_Region1,TEST_Zone1"].FreeHostCount)
+	assert.Equal(t, int32(3), stocks["TEST_Region1,TEST_Zone1"].FreeCpuCores)
+	assert.Equal(t, int32(5), stocks["TEST_Region1,TEST_Zone1"].FreeMemory)
+	assert.Equal(t, int32(3), stocks["TEST_Region1,TEST_Zone1"].FreeDiskCount)
+	assert.Equal(t, int32(512), stocks["TEST_Region1,TEST_Zone1"].FreeDiskCapacity)
 }
 
 func Test_AllocResources_Succeed(t *testing.T) {

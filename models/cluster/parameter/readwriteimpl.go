@@ -54,7 +54,7 @@ func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, cl
 	err = m.DB(ctx).Where("id = ?", clusterId).First(&cluster).Error
 	if err != nil {
 		log.Errorf("find params by cluster id err: %v, request cluster id: %v", err.Error(), clusterId)
-		err = errors.NewEMErrorf(errors.TIEM_CLUSTER_NOT_FOUND, errors.TIEM_CLUSTER_NOT_FOUND.Explain())
+		err = errors.NewErrorf(errors.TIEM_CLUSTER_NOT_FOUND, errors.TIEM_CLUSTER_NOT_FOUND.Explain())
 		return
 	}
 	paramGroupId = cluster.ParameterGroupID
@@ -67,12 +67,12 @@ func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, cl
 		Joins("left join parameters on parameters.id = cluster_parameter_mappings.parameter_id").
 		Joins("left join parameter_group_mappings on parameters.id = parameter_group_mappings.parameter_id").
 		Where("cluster_parameter_mappings.cluster_id = ? and parameter_group_mappings.parameter_group_id = ?", cluster.ID, paramGroupId).
-		Order("parameters.instance_type asc").
+		Order("parameters.instance_type desc").
 		Count(&total).Offset(offset).Limit(size).
 		Scan(&params).Error
 	if err != nil {
 		log.Errorf("find params by cluster id err: %v", err.Error())
-		err = errors.NewEMErrorf(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR.Explain())
+		err = errors.Error(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR)
 		return
 	}
 	return
@@ -82,7 +82,7 @@ func (m ClusterParameterReadWrite) UpdateClusterParameter(ctx context.Context, c
 	log := framework.LogWithContext(ctx)
 
 	if clusterId == "" {
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, errors.TIEM_PARAMETER_INVALID.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, errors.TIEM_PARAMETER_INVALID.Explain())
 	}
 
 	tx := m.DB(ctx).Begin()
@@ -96,7 +96,7 @@ func (m ClusterParameterReadWrite) UpdateClusterParameter(ctx context.Context, c
 		if err != nil {
 			log.Errorf("update cluster params err: %v", err.Error())
 			tx.Rollback()
-			return errors.NewEMErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR.Explain())
+			return errors.NewErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR.Explain())
 		}
 	}
 
@@ -108,7 +108,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	log := framework.LogWithContext(ctx)
 
 	if clusterId == "" || parameterGroupId == "" {
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, errors.TIEM_PARAMETER_INVALID.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, errors.TIEM_PARAMETER_INVALID.Explain())
 	}
 
 	tx := m.DB(ctx).Begin()
@@ -118,7 +118,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	if err != nil {
 		log.Errorf("apply param group err: %v", err.Error())
 		tx.Rollback()
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR, errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR, errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR.Explain())
 	}
 
 	// update clusters table
@@ -129,7 +129,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	if err != nil {
 		log.Errorf("apply param group err: %v", err.Error())
 		tx.Rollback()
-		return errors.NewEMErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR.Explain())
+		return errors.NewErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR.Explain())
 	}
 
 	// batch insert cluster_parameter_mapping table
@@ -142,7 +142,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	if err != nil {
 		log.Errorf("apply param group map err: %v, request param map: %v", err.Error(), params)
 		tx.Rollback()
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_CREATE_RELATION_PARAM_ERROR, errors.TIEM_PARAMETER_GROUP_CREATE_RELATION_PARAM_ERROR.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_CREATE_RELATION_PARAM_ERROR, errors.TIEM_PARAMETER_GROUP_CREATE_RELATION_PARAM_ERROR.Explain())
 	}
 
 	tx.Commit()

@@ -23,6 +23,8 @@
 
 package structs
 
+import "github.com/pingcap-inc/tiem/common/constants"
+
 //SpecInfo information about spec
 type SpecInfo struct {
 	ID          string `json:"id"`   //ID of the resource specification
@@ -47,15 +49,16 @@ type ComponentInstanceResourceSpec struct {
 
 // ProductComponentProperty Information about the components of the product, each of which consists of several different types of components
 type ProductComponentProperty struct {
-	ID          string                                   `json:"id"`          //ID of the product component, globally unique
-	Name        string                                   `json:"name"`        //Name of the product component, globally unique
-	PurposeType string                                   `json:"purposeType"` //The type of resources required by the product component at runtime, e.g. storage class
-	StartPort   int32                                    `json:"startPort"`
-	EndPort     int32                                    `json:"endPort"`
-	MaxPort     int32                                    `json:"maxPort"`
-	MinInstance int32                                    `json:"minInstance"` //Minimum number of instances of product components at runtime, e.g. at least 1 instance of PD, at least 3 instances of TiKV
-	MaxInstance int32                                    `json:"maxInstance"` //Maximum number of instances when the product component is running, e.g. PD can run up to 7 instances, other components have no upper limit
-	Spec        map[string]ComponentInstanceResourceSpec `json:"spec"`        //Information on the specifications of the resources online for the running of product components,organized by different Zone
+	ID                      string                                   `json:"id"`          //ID of the product component, globally unique
+	Name                    string                                   `json:"name"`        //Name of the product component, globally unique
+	PurposeType             string                                   `json:"purposeType"` //The type of resources required by the product component at runtime, e.g. storage class
+	StartPort               int32                                    `json:"startPort"`
+	EndPort                 int32                                    `json:"endPort"`
+	MaxPort                 int32                                    `json:"maxPort"`
+	MinInstance             int32                                    `json:"minInstance"` //Minimum number of instances of product components at runtime, e.g. at least 1 instance of PD, at least 3 instances of TiKV
+	MaxInstance             int32                                    `json:"maxInstance"` //Maximum number of instances when the product component is running, e.g. PD can run up to 7 instances, other components have no upper limit
+	SuggestedInstancesCount []int32                                  `json:"suggestedInstancesCount"`
+	Spec                    map[string]ComponentInstanceResourceSpec `json:"spec"` //Information on the specifications of the resources online for the running of product components,organized by different Zone
 }
 
 //ProductVersion Product version and component details, with each product categorized by version and supported CPU architecture
@@ -88,17 +91,25 @@ type Product struct {
 
 //ZoneInfo vendor & region & zone information provided by Enterprise Manager
 type ZoneInfo struct {
-	ZoneID     string `json:"zoneId"`     //The value of the ZoneID is similar to CN-HANGZHOU-H
-	ZoneName   string `json:"zoneName"`   //The value of the Name is similar to Hangzhou(H)
-	RegionID   string `json:"regionId"`   //The value of the RegionID is similar to CN-HANGZHOU
-	RegionName string `json:"regionName"` //The value of the Name is similar to East China(Hangzhou)
-	VendorID   string `json:"vendorId"`   //The value of the VendorID is similar to AWS
-	VendorName string `json:"vendorName"` //The value of the Name is similar to AWS
-	Comment    string `json:"comment"`
+	ZoneID     string `json:"zoneId" form:"zoneId"`         //The value of the ZoneID is similar to CN-HANGZHOU-H
+	ZoneName   string `json:"zoneName" form:"zoneName"`     //The value of the Name is similar to Hangzhou(H)
+	RegionID   string `json:"regionId" form:"regionId"`     //The value of the RegionID is similar to CN-HANGZHOU
+	RegionName string `json:"regionName" form:"regionName"` //The value of the Name is similar to East China(Hangzhou)
+	VendorID   string `json:"vendorId" form:"vendorId"`     //The value of the VendorID is similar to AWS
+	VendorName string `json:"vendorName" form:"vendorName"` //The value of the Name is similar to AWS
+	Comment    string `json:"comment" form:"comment"`
 }
 
 // SystemConfig system config of platform
 type SystemConfig struct {
 	ConfigKey   string `json:"configKey"`
 	ConfigValue string `json:"configValue"`
+}
+
+// DBUserRole role information of the DBUser
+type DBUserRole struct {
+	ClusterType constants.EMProductIDType
+	RoleName    string
+	RoleType    constants.DBUserRoleType
+	Permission  []string
 }

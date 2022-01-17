@@ -15,11 +15,10 @@
 
 package management
 
-import "gorm.io/gorm"
-
 type ClusterTopologySnapshot struct {
-	gorm.Model
-	TenantID  string `gorm:"not null;default:null;<-:create;size:64;comment:'tenant id';"`
-	ClusterID string `gorm:"not null;default:null;<-:create;size:64;comment:'cluster id';"`
-	Config    string `gorm:"not null;default:null;<-:create;type:text;comment:'yaml content of cluster topology';'"`
+	ClusterID  string `gorm:"primarykey;<-:create;size:64;comment:'cluster id';"`
+	TenantID   string `gorm:"not null;default:null;<-:create;size:64;comment:'tenant id';"`
+	Config     string `gorm:"type:text;comment:'yaml content of cluster topology';'"`
+	PublicKey  string `gorm:"not null;default:null;<-:create;type:text;comment:'connection public key';"`
+	PrivateKey string `gorm:"not null;default:null;<-:create;type:text;comment:'Connection private key';"`
 }

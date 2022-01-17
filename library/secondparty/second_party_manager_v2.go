@@ -40,9 +40,9 @@ var Manager SecondPartyService
 type SecondPartyService interface {
 	Init()
 	ClusterDeploy(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string, version string,
-		configStrYaml string, timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error)
+		configStrYaml string, timeoutS int, flags []string, workFlowNodeID string, password string) (operationID string, err error)
 	ClusterScaleOut(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string, configStrYaml string,
-		timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error)
+		timeoutS int, flags []string, workFlowNodeID string, password string) (operationID string, err error)
 	ClusterScaleIn(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string, nodeId string,
 		timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error)
 	ClusterStart(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string, timeoutS int,
@@ -68,6 +68,17 @@ type SecondPartyService interface {
 		operationID string, err error)
 	ClusterExec(ctx context.Context, cmdClusterExecReq CmdClusterExecReq, workFlowNodeID string) (
 		operationID string, err error)
+	// Check
+	// @Description: tiup cluster check
+	// @param ctx
+	// @param componentType
+	// @param checkObject, it could be cluster-name or topology-file
+	// @param flags[]
+	// @param timeoutS
+	// @return resp json string
+	// @return err
+	Check(ctx context.Context, tiUPComponent TiUPComponentTypeStr, checkObject string, timeoutS int,
+		flags []string) (result string, err error)
 	Dumpling(ctx context.Context, timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error)
 	Lightning(ctx context.Context, timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error)
 	Transfer(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string, collectorYaml string,

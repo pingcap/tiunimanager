@@ -42,4 +42,5 @@ const (
 const (
 	ImportHostTemplateFileName string = "hostInfo_template.xlsx"
 	ImportHostTemplateFilePath string = "./resource"
+	ImportHostTemplateSheet    string = "Host Information"
 )

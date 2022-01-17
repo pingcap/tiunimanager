@@ -18,6 +18,19 @@ package management
 import (
 	"context"
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
+	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
+	"strconv"
+
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
+	"os"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	structs2 "github.com/pingcap-inc/tiem/common/structs"
@@ -32,10 +45,12 @@ import (
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/cluster/parameter"
 	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiem/models/tiup"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	mock_br_service "github.com/pingcap-inc/tiem/test/mockbr"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclusterparameter"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mocktiupconfig"
 	mock_allocator_recycler "github.com/pingcap-inc/tiem/test/mockresource"
 	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
@@ -43,8 +58,6 @@ import (
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
-	"testing"
-	"time"
 )
 
 func TestPrepareResource(t *testing.T) {
@@ -87,7 +100,7 @@ func TestPrepareResource(t *testing.T) {
 					Type:         "TiDB",
 					Version:      "v5.0.0",
 					Ports:        []int32{10001, 10002, 10003, 10004},
-					HostIP:       []string{"127.0.0.1"},
+					HostIP:       []string{"127.0.0.1", "127.0.0.6"},
 					DiskType:     "SSD",
 					DiskCapacity: 128,
 				},
@@ -208,7 +221,7 @@ func TestScaleOutCluster(t *testing.T) {
 
 	mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
 	mockTiupManager.EXPECT().ClusterScaleOut(gomock.Any(), gomock.Any(), gomock.Any(),
-		gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
+		gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
 	secondparty.Manager = mockTiupManager
 
 	flowContext := workflow.NewFlowContext(context.TODO())
@@ -224,7 +237,7 @@ func TestScaleOutCluster(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
 		mockTiupManager.EXPECT().ClusterScaleOut(gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
 		secondparty.Manager = mockTiupManager
 
 		flowContext.SetData(ContextTopology, "test topology")
@@ -241,7 +254,7 @@ func TestScaleOutCluster(t *testing.T) {
 	t.Run("scale out fail", func(t *testing.T) {
 		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
 		mockTiupManager.EXPECT().ClusterScaleOut(gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", fmt.Errorf("fail")).AnyTimes()
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", fmt.Errorf("fail")).AnyTimes()
 		secondparty.Manager = mockTiupManager
 
 		flowContext.SetData(ContextTopology, "test topology")
@@ -310,12 +323,6 @@ func TestScaleInCluster(t *testing.T) {
 		flowContext.SetData(ContextInstanceID, "instance01")
 		err := scaleInCluster(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.NoError(t, err)
-	})
-
-	t.Run("can't delete", func(t *testing.T) {
-		flowContext.SetData(ContextInstanceID, "instance04")
-		err := scaleInCluster(&workflowModel.WorkFlowNode{}, flowContext)
-		assert.Error(t, err)
 	})
 
 	t.Run("not found", func(t *testing.T) {
@@ -485,6 +492,10 @@ func TestBackupBeforeDelete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "testCluster").Return(management.ClusterTopologySnapshot{}, nil).AnyTimes()
+
 	t.Run("normal", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
 		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
@@ -582,6 +593,25 @@ func TestBackupBeforeDelete(t *testing.T) {
 		err := backupBeforeDelete(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.NoError(t, err)
 	})
+
+	t.Run("skip", func(t *testing.T) {
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "skip",
+				},
+			},
+		})
+		flowContext.SetData(ContextDeleteRequest, cluster.DeleteClusterReq{AutoBackup: false})
+
+		clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "skip").Return(management.ClusterTopologySnapshot{}, errors.NewError(errors.TIEM_PANIC, "")).Times(1)
+		node := &workflowModel.WorkFlowNode{}
+		err := backupBeforeDelete(node, flowContext)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, node.Result)
+	})
+
 }
 
 func TestBackupSourceCluster(t *testing.T) {
@@ -930,7 +960,7 @@ func TestDeployCluster(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
 		mockTiupManager.EXPECT().ClusterDeploy(gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
 		secondparty.Manager = mockTiupManager
 
 		flowContext := workflow.NewFlowContext(context.TODO())
@@ -965,7 +995,7 @@ func TestDeployCluster(t *testing.T) {
 		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
 		mockTiupManager.EXPECT().ClusterDeploy(gomock.Any(), gomock.Any(), gomock.Any(),
 			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any()).Return("task01", fmt.Errorf("fail")).AnyTimes()
+			gomock.Any(), gomock.Any()).Return("task01", fmt.Errorf("fail")).AnyTimes()
 		secondparty.Manager = mockTiupManager
 
 		flowContext := workflow.NewFlowContext(context.TODO())
@@ -1245,6 +1275,9 @@ func TestStopCluster(t *testing.T) {
 func TestDestroyCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "testCluster").Return(management.ClusterTopologySnapshot{}, nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
 		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
@@ -1283,6 +1316,24 @@ func TestDestroyCluster(t *testing.T) {
 		err := destroyCluster(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
 	})
+
+	t.Run("skip", func(t *testing.T) {
+		clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "skip").Return(management.ClusterTopologySnapshot{}, errors.NewError(errors.TIEM_PANIC, "")).AnyTimes()
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "skip",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		node := &workflowModel.WorkFlowNode{}
+		err := destroyCluster(node, flowContext)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, node.Result)
+	})
 }
 
 func TestDeleteCluster(t *testing.T) {
@@ -1307,6 +1358,27 @@ func TestDeleteCluster(t *testing.T) {
 
 }
 
+func TestDeleteClusterPhysically(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "111").Return(nil)
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "111",
+			},
+			Version: "v5.0.0",
+		},
+	})
+	err := clearClusterPhysically(&workflowModel.WorkFlowNode{}, flowContext)
+	assert.NoError(t, err)
+
+}
 func TestFreedClusterResource(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -1418,7 +1490,7 @@ func Test_testConnectivity(t *testing.T) {
 		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
 			Cluster: &management.Cluster{
 				DBUser: "root",
-				DBPassword: "mypassword",
+				DBPassword: "fdasfsdafa",
 			},
 			Instances: map[string][]*management.ClusterInstance{
 				string(constants.ComponentIDTiDB) : {
@@ -1426,13 +1498,13 @@ func Test_testConnectivity(t *testing.T) {
 						Entity: common.Entity{
 							Status: string(constants.ClusterRunning),
 						},
-						HostIP: []string{"172.16.6.176"},
+						HostIP: []string{"172.16.5.148"},
 						Ports: []int32{10000},
 					},
 				},
 			},
 		})
-		err := testConnectivity(nil, ctx)
+		err := testConnectivity(&workflowModel.WorkFlowNode{}, ctx)
 		assert.NoError(t, err)
 	})
 	*/
@@ -1455,7 +1527,7 @@ func Test_testConnectivity(t *testing.T) {
 				},
 			},
 		})
-		err := testConnectivity(nil, ctx)
+		err := testConnectivity(&workflowModel.WorkFlowNode{}, ctx)
 		assert.Error(t, err)
 	})
 }
@@ -1517,7 +1589,7 @@ func Test_testRebuildTopologyFromConfig(t *testing.T) {
 		assert.NoError(t, err)
 		ctx.SetData(ContextTopologyConfig, bytes)
 
-		err = rebuildTopologyFromConfig(nil, ctx)
+		err = rebuildTopologyFromConfig(&workflowModel.WorkFlowNode{}, ctx)
 		assert.NoError(t, err)
 		assert.Equal(t, "v5.2.2", clusterMeta.Cluster.Version)
 		assert.NotEmpty(t, clusterMeta.Instances)
@@ -1605,4 +1677,367 @@ func TestTakeoverResource(t *testing.T) {
 		err := takeoverResource(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
 	})
+}
+
+func Test_syncTopology(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	tiupRW := mocktiupconfig.NewMockReaderWriter(ctrl)
+	models.SetTiUPConfigReaderWriter(tiupRW)
+	tiupRW.EXPECT().QueryByComponentType(gomock.Any(), gomock.Any()).Return(&tiup.TiupConfig{TiupHome: "testdata"}, nil).AnyTimes()
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().UpdateTopologySnapshotConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "111",
+			},
+			Version: "v5.0.0",
+		},
+	})
+
+	testFilePath := "testdata"
+	os.MkdirAll(testFilePath, 0755)
+
+	defer func() {
+		os.RemoveAll(testFilePath)
+		os.Remove(testFilePath)
+	}()
+	path := getClusterSpaceInTiUP(context.TODO(), "111")
+	os.MkdirAll(path, 0755)
+
+	t.Run("normal", func(t *testing.T) {
+		f, err := os.Create(path + "/meta.yaml")
+		f.Write([]byte{'a', 'b'})
+		defer f.Close()
+		defer os.RemoveAll(path)
+
+		err = syncTopology(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
+
+	t.Run("error", func(t *testing.T) {
+		err := syncTopology(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
+}
+
+func Test_syncConnectionKey(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	tiupRW := mocktiupconfig.NewMockReaderWriter(ctrl)
+	models.SetTiUPConfigReaderWriter(tiupRW)
+	tiupRW.EXPECT().QueryByComponentType(gomock.Any(), gomock.Any()).Return(&tiup.TiupConfig{TiupHome: "testdata"}, nil).AnyTimes()
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().CreateClusterTopologySnapshot(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "111",
+			},
+			Version: "v5.0.0",
+		},
+	})
+
+	testFilePath := "testdata"
+	os.MkdirAll(testFilePath, 0755)
+
+	defer func() {
+		os.RemoveAll(testFilePath)
+		os.Remove(testFilePath)
+	}()
+	path := getClusterSpaceInTiUP(context.TODO(), "111")
+	os.MkdirAll(path, 0755)
+
+	t.Run("normal", func(t *testing.T) {
+		os.MkdirAll(path + "/ssh", 0755)
+		defer os.RemoveAll(path + "/ssh")
+
+		f1, err := os.Create(path + "/ssh/id_rsa")
+		assert.NoError(t, err)
+		defer f1.Close()
+
+		f1.Write([]byte{'a', 'b'})
+
+		f2, err := os.Create(path + "/ssh/id_rsa.pub")
+		assert.NoError(t, err)
+		defer f2.Close()
+
+		f2.Write([]byte{'c', 'd'})
+
+
+		err = syncConnectionKey(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
+	t.Run("error", func(t *testing.T) {
+		err := syncConnectionKey(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
+	t.Run("without public", func(t *testing.T) {
+		os.MkdirAll(path + "/ssh", 0755)
+		defer os.RemoveAll(path + "/ssh")
+
+		f1, err := os.Create(path + "/ssh/id_rsa")
+		assert.NoError(t, err)
+		defer f1.Close()
+
+		f1.Write([]byte{'a', 'b'})
+
+		err = syncConnectionKey(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
+	t.Run("without private", func(t *testing.T) {
+		os.MkdirAll(path + "/ssh", 0755)
+		defer os.RemoveAll(path + "/ssh")
+
+		f2, err := os.Create(path + "/ssh/id_rsa.pub")
+		assert.NoError(t, err)
+		defer f2.Close()
+
+		f2.Write([]byte{'c', 'd'})
+
+		err = syncConnectionKey(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
+}
+
+func Test_rebuildTiupSpaceForCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	tiupRW := mocktiupconfig.NewMockReaderWriter(ctrl)
+	models.SetTiUPConfigReaderWriter(tiupRW)
+	tiupRW.EXPECT().QueryByComponentType(gomock.Any(), gomock.Any()).Return(&tiup.TiupConfig{
+		TiupHome: "testdata",
+	}, nil).AnyTimes()
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), gomock.Any()).Return(management.ClusterTopologySnapshot{
+		Config: "111",
+		PublicKey: "222",
+		PrivateKey: "333",
+	}, nil).AnyTimes()
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "111",
+			},
+			Version: "v5.0.0",
+		},
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		err := rebuildTiupSpaceForCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+		publicKey, err := os.ReadFile("testdata/storage/cluster/clusters/111/ssh/id_rsa.pub")
+		assert.NoError(t, err)
+		assert.Equal(t, "222", string(publicKey))
+	})
+}
+
+func Test_validateHostsStatus(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	resourceRW := mockresource.NewMockReaderWriter(ctrl)
+	models.SetResourceReaderWriter(resourceRW)
+
+	provider := resourcepool.GetResourcePool().GetHostProvider().(*hostprovider.FileHostProvider)
+	provider.SetResourceReaderWriter(resourceRW)
+
+	t.Run("normal", func(t *testing.T) {
+		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host {
+			{Status: string(constants.HostOnline)},
+		}, int64(1), nil).Times(1)
+
+		node := &workflowModel.WorkFlowNode{}
+
+		context := &workflow.FlowContext {
+			Context: context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		context.SetData(ContextClusterMeta, &handler.ClusterMeta {
+			Instances: map[string][]*management.ClusterInstance {
+				"TiDB": {
+					{
+						HostIP: []string{
+							"127.0.0.1",
+						},
+					},
+				},
+			},
+		})
+		err := validateHostsStatus(node, context)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, node.Result)
+	})
+	t.Run("ip not existed", func(t *testing.T) {
+		node := &workflowModel.WorkFlowNode{}
+
+		context := &workflow.FlowContext {
+			Context: context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		context.SetData(ContextClusterMeta, &handler.ClusterMeta {
+			Instances: map[string][]*management.ClusterInstance {
+				"TiDB": {
+					{
+						HostIP: []string{},
+					},
+				},
+			},
+		})
+		err := validateHostsStatus(node, context)
+		assert.Error(t, err)
+	})
+	t.Run("failed", func(t *testing.T) {
+		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host {
+			{Status: string(constants.HostFailed)},
+		}, int64(1), nil).Times(1)
+
+		node := &workflowModel.WorkFlowNode{}
+
+		context := &workflow.FlowContext {
+			Context: context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		context.SetData(ContextClusterMeta, &handler.ClusterMeta {
+			Instances: map[string][]*management.ClusterInstance {
+				"TiDB": {
+					{
+						HostIP: []string{
+							"127.0.0.1",
+						},
+					},
+				},
+			},
+		})
+		err := validateHostsStatus(node, context)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), strconv.Itoa(int(errors.TIEM_RESOURCE_CREATE_HOST_ERROR)))
+	})
+
+	t.Run("init + succeed", func(t *testing.T) {
+		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host {
+			{Status: string(constants.HostInit)},
+		}, int64(1), nil).Times(1)
+
+		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host {
+			{Status: string(constants.HostOnline)},
+		}, int64(1), nil).Times(1)
+
+		node := &workflowModel.WorkFlowNode{}
+
+		context := &workflow.FlowContext {
+			Context: context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		context.SetData(ContextClusterMeta, &handler.ClusterMeta {
+			Instances: map[string][]*management.ClusterInstance {
+				"TiDB": {
+					{
+						HostIP: []string{
+							"127.0.0.1",
+						},
+					},
+				},
+			},
+		})
+		err := validateHostsStatus(node, context)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, node.Result)
+	})
+	t.Run("timeout", func(t *testing.T) {
+		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host {
+			{Status: string(constants.HostInit)},
+		}, int64(1), nil).Times(2)
+
+		node := &workflowModel.WorkFlowNode{}
+		validateHostTimeout = time.Second * 6
+		context := &workflow.FlowContext {
+			Context: context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		context.SetData(ContextClusterMeta, &handler.ClusterMeta {
+			Instances: map[string][]*management.ClusterInstance {
+				"TiDB": {
+					{
+						HostIP: []string{
+							"127.0.0.1",
+						},
+					},
+				},
+			},
+		})
+		err := validateHostsStatus(node, context)
+		assert.Error(t, err)
+		assert.NotEmpty(t, node.Result)
+		assert.Contains(t, node.Result, "importing")
+	})
+
+}
+
+func Test_syncIncrData(t *testing.T) {
+	assert.Empty(t, syncIncrData(nil, nil))
+}
+
+func Test_fetchTopologyFile(t *testing.T) {
+	originalOpen := openSftpClient
+	openSftpClient = func(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error) {
+		return nil, nil, nil
+	}
+	defer func() {
+		openSftpClient = originalOpen
+	}()
+
+	originalRead := readRemoteFile
+	readRemoteFile = func(ctx context.Context, sftp *sftp.Client, clusterHome string, file string) ([]byte, error) {
+		return []byte{}, nil
+	}
+	defer func() {
+		readRemoteFile = originalRead
+	}()
+	node := &workflowModel.WorkFlowNode{}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(rw)
+
+	rw.EXPECT().CreateClusterTopologySnapshot(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	rw.EXPECT().UpdateTopologySnapshotConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
+	context := &workflow.FlowContext {
+		Context: context.TODO(),
+		FlowData: map[string]interface{}{},
+	}
+	context.SetData(ContextClusterMeta, &handler.ClusterMeta {
+		Cluster: &management.Cluster{},
+		Instances: map[string][]*management.ClusterInstance {
+			"TiDB": {
+				{
+					HostIP: []string{
+						"127.0.0.1",
+					},
+				},
+			},
+		},
+	})
+	context.SetData(ContextTakeoverRequest, cluster.TakeoverClusterReq{})
+
+	err := fetchTopologyFile(node, context)
+	assert.NoError(t, err)
 }

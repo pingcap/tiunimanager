@@ -53,13 +53,14 @@ type ReaderWriter interface {
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter bizId
+	// @Parameter bizType
 	// @Parameter fuzzyName
 	// @Parameter status
 	// @Parameter page
 	// @Parameter pageSize
 	// @Return []*WorkFlow
 	// @Return error
-	QueryWorkFlows(ctx context.Context, bizId, fuzzyName, status string, page int, pageSize int) (flows []*WorkFlow, total int64, err error)
+	QueryWorkFlows(ctx context.Context, bizId, bizType, fuzzyName, status string, page int, pageSize int) (flows []*WorkFlow, total int64, err error)
 
 	// CreateWorkFlowNode
 	// @Description: create new workflow node

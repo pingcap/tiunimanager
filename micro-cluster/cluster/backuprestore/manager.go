@@ -153,7 +153,7 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request cluster.BackupC
 	}()
 
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.FlowBackupCluster)
+	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, workflow.BizTypeCluster, constants.FlowBackupCluster)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
 		return resp, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, fmt.Sprintf("create %s workflow failed, %s", constants.FlowBackupCluster, err.Error()), err)
@@ -205,7 +205,7 @@ func (mgr *BRManager) RestoreExistCluster(ctx context.Context, request cluster.R
 	}
 
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.FlowRestoreExistCluster)
+	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, workflow.BizTypeCluster, constants.FlowRestoreExistCluster)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
 		return resp, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, fmt.Sprintf("create %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error()), err)
@@ -265,7 +265,7 @@ func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request cluster.D
 
 	if request.ClusterID == "" && request.BackupID == "" {
 		framework.LogWithContext(ctx).Errorf("invalid param clusterId and backupId empty")
-		return resp, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "invalid param clusterId and backupId empty")
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid param clusterId and backupId empty")
 	}
 
 	deleteRecordMap := make(map[string]*backuprestore.BackupRecord)

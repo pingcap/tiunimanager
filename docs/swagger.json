@@ -4429,11 +4429,11 @@
                 "parameters": [
                     {
                         "description": "create tenant request parameter",
-                        "name": "CreateTenantReqV1",
+                        "name": "CreateTenantReq",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/message.CreateTenantReqV1"
+                            "$ref": "#/definitions/message.CreateTenantReq"
                         }
                     }
                 ],
@@ -4449,7 +4449,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/message.CreateTenantRespV1"
+                                            "$ref": "#/definitions/message.CreateTenantResp"
                                         }
                                     }
                                 }
@@ -6801,7 +6801,7 @@
         "message.CreateSpecsResp": {
             "type": "object"
         },
-        "message.CreateTenantReqV1": {
+        "message.CreateTenantReq": {
             "type": "object",
             "properties": {
                 "id": {
@@ -6830,15 +6830,12 @@
                 }
             }
         },
-        "message.CreateTenantRespV1": {
+        "message.CreateTenantResp": {
             "type": "object"
         },
         "message.CreateUserReq": {
             "type": "object",
             "properties": {
-                "creator": {
-                    "type": "string"
-                },
                 "email": {
                     "type": "string"
                 },
@@ -7205,7 +7202,7 @@
         "message.LoginReq": {
             "type": "object",
             "properties": {
-                "userName": {
+                "userId": {
                     "type": "string"
                 },
                 "userPassword": {
@@ -7222,7 +7219,7 @@
                 "token": {
                     "type": "string"
                 },
-                "userName": {
+                "userId": {
                     "type": "string"
                 }
             }
@@ -7230,7 +7227,7 @@
         "message.LogoutResp": {
             "type": "object",
             "properties": {
-                "accountName": {
+                "userId": {
                     "type": "string"
                 }
             }

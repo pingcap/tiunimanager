@@ -38,15 +38,15 @@ import (
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param CreateTenantReqV1 body message.CreateTenantReqV1 true "create tenant request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.CreateTenantRespV1}
+// @Param CreateTenantReq body message.CreateTenantReq true "create tenant request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.CreateTenantResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /tenants/ [post]
 func CreateTenant(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.CreateTenantReqV1{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateTenant, &message.CreateTenantRespV1{},
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.CreateTenantReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateTenant, &message.CreateTenantResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

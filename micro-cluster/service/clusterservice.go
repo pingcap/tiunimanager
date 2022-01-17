@@ -27,9 +27,8 @@ import (
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/micro-cluster/platform/product"
+	"github.com/pingcap-inc/tiem/micro-cluster/user/account"
 	"github.com/pingcap-inc/tiem/micro-cluster/user/identification"
-	"github.com/pingcap-inc/tiem/micro-cluster/user/tenant"
-	"github.com/pingcap-inc/tiem/micro-cluster/user/userinfo"
 
 	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
 
@@ -60,8 +59,7 @@ type ClusterServiceHandler struct {
 	brManager               backuprestore.BRService
 	importexportManager     importexport.ImportExportService
 	clusterLogManager       *clusterLog.Manager
-	tenantManager           *tenant.Manager
-	accountManager          *userinfo.Manager
+	accountManager          *account.Manager
 	authManager             *identification.Manager
 	productManager          *product.ProductManager
 }
@@ -133,8 +131,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.brManager = backuprestore.GetBRService()
 	handler.importexportManager = importexport.GetImportExportService()
 	handler.clusterLogManager = clusterLog.NewManager()
-	handler.tenantManager = tenant.NewTenantManager()
-	handler.accountManager = userinfo.NewAccountManager()
+	handler.accountManager = account.NewAccountManager()
 	handler.authManager = identification.NewIdentificationManager()
 	handler.productManager = product.NewProductManager()
 
@@ -1173,9 +1170,9 @@ func (handler *ClusterServiceHandler) CreateTenant(ctx context.Context, request 
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "CreateTenant", int(response.GetCode()))
 
-	req := message.CreateTenantReqV1{}
+	req := message.CreateTenantReq{}
 	if handleRequest(ctx, request, response, &req) {
-		resp, err := handler.tenantManager.CreateTenant(ctx, req)
+		resp, err := handler.accountManager.CreateTenant(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 	return nil
@@ -1187,7 +1184,7 @@ func (handler *ClusterServiceHandler) DeleteTenant(ctx context.Context, request 
 
 	req := message.DeleteTenantReq{}
 	if handleRequest(ctx, request, response, &req) {
-		resp, err := handler.tenantManager.DeleteTenant(ctx, req)
+		resp, err := handler.accountManager.DeleteTenant(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 	return nil
@@ -1199,7 +1196,7 @@ func (handler *ClusterServiceHandler) GetTenant(ctx context.Context, request *cl
 
 	req := message.GetTenantReq{}
 	if handleRequest(ctx, request, response, &req) {
-		resp, err := handler.tenantManager.GetTenant(ctx, req)
+		resp, err := handler.accountManager.GetTenant(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 	return nil
@@ -1211,7 +1208,7 @@ func (handler *ClusterServiceHandler) QueryTenants(ctx context.Context, request 
 
 	req := message.QueryTenantReq{}
 	if handleRequest(ctx, request, response, &req) {
-		resp, err := handler.tenantManager.QueryTenants(ctx, req)
+		resp, err := handler.accountManager.QueryTenants(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 	return nil
@@ -1223,7 +1220,7 @@ func (handler *ClusterServiceHandler) UpdateTenantOnBoardingStatus(ctx context.C
 
 	req := message.UpdateTenantOnBoardingStatusReq{}
 	if handleRequest(ctx, request, response, &req) {
-		resp, err := handler.tenantManager.UpdateTenantOnBoardingStatus(ctx, req)
+		resp, err := handler.accountManager.UpdateTenantOnBoardingStatus(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 	return nil
@@ -1235,7 +1232,7 @@ func (handler *ClusterServiceHandler) UpdateTenantProfile(ctx context.Context, r
 
 	req := message.UpdateTenantProfileReq{}
 	if handleRequest(ctx, request, response, &req) {
-		resp, err := handler.tenantManager.UpdateTenantProfile(ctx, req)
+		resp, err := handler.accountManager.UpdateTenantProfile(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 	return nil

@@ -4443,11 +4443,11 @@ var doc = `{
                 "parameters": [
                     {
                         "description": "create tenant request parameter",
-                        "name": "CreateTenantReqV1",
+                        "name": "CreateTenantReq",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/message.CreateTenantReqV1"
+                            "$ref": "#/definitions/message.CreateTenantReq"
                         }
                     }
                 ],
@@ -4463,7 +4463,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/message.CreateTenantRespV1"
+                                            "$ref": "#/definitions/message.CreateTenantResp"
                                         }
                                     }
                                 }
@@ -6815,7 +6815,7 @@ var doc = `{
         "message.CreateSpecsResp": {
             "type": "object"
         },
-        "message.CreateTenantReqV1": {
+        "message.CreateTenantReq": {
             "type": "object",
             "properties": {
                 "id": {
@@ -6844,15 +6844,12 @@ var doc = `{
                 }
             }
         },
-        "message.CreateTenantRespV1": {
+        "message.CreateTenantResp": {
             "type": "object"
         },
         "message.CreateUserReq": {
             "type": "object",
             "properties": {
-                "creator": {
-                    "type": "string"
-                },
                 "email": {
                     "type": "string"
                 },
@@ -7219,7 +7216,7 @@ var doc = `{
         "message.LoginReq": {
             "type": "object",
             "properties": {
-                "userName": {
+                "userId": {
                     "type": "string"
                 },
                 "userPassword": {
@@ -7236,7 +7233,7 @@ var doc = `{
                 "token": {
                     "type": "string"
                 },
-                "userName": {
+                "userId": {
                     "type": "string"
                 }
             }
@@ -7244,7 +7241,7 @@ var doc = `{
         "message.LogoutResp": {
             "type": "object",
             "properties": {
-                "accountName": {
+                "userId": {
                     "type": "string"
                 }
             }

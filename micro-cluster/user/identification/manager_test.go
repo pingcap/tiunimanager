@@ -1,121 +1,232 @@
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ ******************************************************************************/
+
 package identification
 
 import (
-	"context"
+	ctx "context"
+	cryrand "crypto/rand"
+	"encoding/base64"
+	"fmt"
+	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/micro-cluster/user/userinfo"
 	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiem/models/user/account"
+	"github.com/pingcap-inc/tiem/models/user/identification"
+	"github.com/pingcap-inc/tiem/test/mockaccount"
+	"github.com/pingcap-inc/tiem/test/mockidentification"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
 
-var manager = &Manager{}
-var ma = &userinfo.Manager{}
+func genSaltAndHash(passwd string) (string, string, error) {
+	b := make([]byte, 16)
+	_, err := cryrand.Read(b)
 
-func TestManager_Login_v1(t *testing.T) {
-	te, _ := models.GetTenantReaderWriter().AddTenant(context.TODO(), "tenant", 0, 0)
-	_, err := ma.CreateAccount(context.TODO(), te, "testName", "123456789")
-	assert.Nil(t, err)
+	if err != nil {
+		return "", "", err
+	}
 
-	type args struct {
-		ctx     context.Context
-		request message.LoginReq
+	salt := base64.URLEncoding.EncodeToString(b)
+
+	finalHash, err := common.FinalHash(salt, passwd)
+
+	if err != nil {
+		return "", "", err
 	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{name: "normal", args: args{ctx: context.TODO(), request: message.LoginReq{UserName: "testName", Password: "123456789"}}, wantErr: false},
-		{name: "wrong username", args: args{ctx: context.TODO(), request: message.LoginReq{UserName: "name", Password: "123456789"}}, wantErr: true},
-		{name: "wrong password", args: args{ctx: context.TODO(), request: message.LoginReq{UserName: "testName", Password: "12345"}}, wantErr: true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotResp, err := manager.Login(tt.args.ctx, tt.args.request)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Login() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if err == nil {
-				assert.NotEmpty(t, gotResp.TokenString)
-			}
-		})
-	}
+	return salt, string(finalHash), nil
+}
+
+func TestManager_Login(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	manager := &Manager{}
+
+	t.Run("normal", func(t *testing.T) {
+		accountRW := mockaccount.NewMockReaderWriter(ctrl)
+		models.SetAccountReaderWriter(accountRW)
+
+		tokenRW := mockidentification.NewMockReaderWriter(ctrl)
+		models.SetTokenReaderWriter(tokenRW)
+		salt, hash, err := genSaltAndHash("123")
+		assert.NoError(t, err)
+		accountRW.EXPECT().GetUserByID(gomock.Any(), gomock.Any()).Return(&account.User{
+			ID:        "user01",
+			TenantID:  "tenant01",
+			Salt:      salt,
+			FinalHash: hash,
+		}, nil)
+
+		tokenRW.EXPECT().CreateToken(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any()).Return(&identification.Token{}, nil)
+		got, err := manager.Login(ctx.TODO(), message.LoginReq{UserID: "user01", Password: "123"})
+		assert.NoError(t, err)
+		assert.Equal(t, got.UserID, "user01")
+		assert.Equal(t, got.TenantID, "tenant01")
+	})
+
+	t.Run("get user fail", func(t *testing.T) {
+		accountRW := mockaccount.NewMockReaderWriter(ctrl)
+		models.SetAccountReaderWriter(accountRW)
+		accountRW.EXPECT().GetUserByID(gomock.Any(), gomock.Any()).Return(&account.User{
+			ID: "user01",
+		}, fmt.Errorf("get user fail"))
+
+		_, err := manager.Login(ctx.TODO(), message.LoginReq{UserID: "user01", Password: "123"})
+		assert.Error(t, err)
+	})
+
+	t.Run("check password fail", func(t *testing.T) {
+		accountRW := mockaccount.NewMockReaderWriter(ctrl)
+		models.SetAccountReaderWriter(accountRW)
+		salt, hash, err := genSaltAndHash("123")
+		assert.NoError(t, err)
+		accountRW.EXPECT().GetUserByID(gomock.Any(), gomock.Any()).Return(&account.User{
+			ID:        "user01",
+			TenantID:  "tenant01",
+			Salt:      salt,
+			FinalHash: hash,
+		}, nil)
+
+		_, err = manager.Login(ctx.TODO(), message.LoginReq{UserID: "user01", Password: ""})
+		assert.Error(t, err)
+	})
+
+	t.Run("password wrong", func(t *testing.T) {
+		accountRW := mockaccount.NewMockReaderWriter(ctrl)
+		models.SetAccountReaderWriter(accountRW)
+
+		salt, hash, err := genSaltAndHash("123")
+		assert.NoError(t, err)
+		accountRW.EXPECT().GetUserByID(gomock.Any(), gomock.Any()).Return(&account.User{
+			ID:        "user01",
+			TenantID:  "tenant01",
+			Salt:      salt,
+			FinalHash: hash,
+		}, nil)
+
+		_, err = manager.Login(ctx.TODO(), message.LoginReq{UserID: "user01", Password: "234"})
+		assert.Error(t, err)
+	})
+
+	t.Run("create token fail", func(t *testing.T) {
+		accountRW := mockaccount.NewMockReaderWriter(ctrl)
+		models.SetAccountReaderWriter(accountRW)
+
+		tokenRW := mockidentification.NewMockReaderWriter(ctrl)
+		models.SetTokenReaderWriter(tokenRW)
+		salt, hash, err := genSaltAndHash("123")
+		assert.NoError(t, err)
+		accountRW.EXPECT().GetUserByID(gomock.Any(), gomock.Any()).Return(&account.User{
+			ID:        "user01",
+			TenantID:  "tenant01",
+			Salt:      salt,
+			FinalHash: hash,
+		}, nil)
+
+		tokenRW.EXPECT().CreateToken(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any()).Return(nil, fmt.Errorf("create token fail"))
+		_, err = manager.Login(ctx.TODO(), message.LoginReq{UserID: "user01", Password: "123"})
+		assert.Error(t, err)
+	})
 }
 
 func TestManager_Logout(t *testing.T) {
-	te, _ := models.GetTenantReaderWriter().AddTenant(context.TODO(), "tenant", 0, 0)
-	_, err := ma.CreateAccount(context.TODO(), te, "test", "123456789")
-	assert.Nil(t, err)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	manager := &Manager{}
 
-	tokenString, _ := manager.Login(context.TODO(), message.LoginReq{UserName: "test", Password: "123456789"})
-	type args struct {
-		ctx context.Context
-		req message.LogoutReq
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{name: "normal", args: args{ctx: context.TODO(), req: message.LogoutReq{TokenString: tokenString.TokenString}}, wantErr: false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := manager.Logout(tt.args.ctx, tt.args.req)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Logout() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if err == nil {
-				assert.NotEmpty(t, got.AccountName)
-			}
-		})
-	}
+	t.Run("normal", func(t *testing.T) {
+		tokenRW := mockidentification.NewMockReaderWriter(ctrl)
+		models.SetTokenReaderWriter(tokenRW)
+
+		tokenRW.EXPECT().GetToken(gomock.Any(), gomock.Any()).Return(&identification.Token{
+			UserID:         "user01",
+			ExpirationTime: time.Now().Add(constants.DefaultTokenValidPeriod)}, nil)
+
+		got, err := manager.Logout(ctx.TODO(), message.LogoutReq{TokenString: "123"})
+		assert.NoError(t, err)
+		assert.Equal(t, got.UserID, "user01")
+	})
+
+	t.Run("get token fail", func(t *testing.T) {
+		tokenRW := mockidentification.NewMockReaderWriter(ctrl)
+		models.SetTokenReaderWriter(tokenRW)
+
+		tokenRW.EXPECT().GetToken(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("get fail"))
+
+		_, err := manager.Logout(ctx.TODO(), message.LogoutReq{TokenString: "123"})
+		assert.Error(t, err)
+	})
+
+	t.Run("token invalid", func(t *testing.T) {
+		tokenRW := mockidentification.NewMockReaderWriter(ctrl)
+		models.SetTokenReaderWriter(tokenRW)
+
+		tokenRW.EXPECT().GetToken(gomock.Any(), gomock.Any()).Return(&identification.Token{
+			UserID:         "user01",
+			ExpirationTime: time.Now()}, nil)
+
+		got, err := manager.Logout(ctx.TODO(), message.LogoutReq{TokenString: "123"})
+		assert.NoError(t, err)
+		assert.Equal(t, got.UserID, "")
+	})
 }
 
 func TestManager_Accessible(t *testing.T) {
-	models.GetTokenReaderWriter().AddToken(context.TODO(), "&vhgjkgsjksdas", "account", "accountID", "tenantID", time.Unix(2, 56).Add(constants.DefaultTokenValidPeriod))
-	models.GetTokenReaderWriter().AddToken(context.TODO(), "token", "account1", "accountID1", "tenantID1", time.Now().Add(constants.DefaultTokenValidPeriod))
-	type args struct {
-		ctx     context.Context
-		request message.AccessibleReq
-	}
-	tests := []struct {
-		name     string
-		args     args
-		wantErr  bool
-	}{
-		{"normal", args{ctx: context.TODO(), request: message.AccessibleReq{
-			PathType: "type",
-			Path: "path",
-			TokenString: "token",
-		}}, false},
-		{"invalid token", args{ctx: context.TODO(), request: message.AccessibleReq{
-			PathType: "type",
-			Path: "path",
-			TokenString: "&vhgjkgsjksdas",
-		}}, true},
-		{"token not found", args{ctx: context.TODO(), request: message.AccessibleReq{
-			PathType: "type",
-			Path: "path",
-			TokenString: "&vhgjs",
-		}}, true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotResp, err := manager.Accessible(tt.args.ctx, tt.args.request)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Accessible() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if err == nil {
-				assert.NotEmpty(t, gotResp.AccountID)
-				assert.NotEmpty(t, gotResp.TenantID)
-			}
-		})
-	}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	manager := &Manager{}
+
+	t.Run("normal", func(t *testing.T) {
+		tokenRW := mockidentification.NewMockReaderWriter(ctrl)
+		models.SetTokenReaderWriter(tokenRW)
+
+		tokenRW.EXPECT().GetToken(gomock.Any(), gomock.Any()).Return(&identification.Token{
+			UserID:         "user01",
+			TenantID:       "tenant01",
+			ExpirationTime: time.Now().Add(constants.DefaultTokenValidPeriod)}, nil)
+
+		got, err := manager.Accessible(ctx.TODO(), message.AccessibleReq{TokenString: "123"})
+		assert.NoError(t, err)
+		assert.Equal(t, got.UserID, "user01")
+	})
+
+	t.Run("get token fail", func(t *testing.T) {
+		tokenRW := mockidentification.NewMockReaderWriter(ctrl)
+		models.SetTokenReaderWriter(tokenRW)
+
+		tokenRW.EXPECT().GetToken(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("get fail"))
+
+		_, err := manager.Accessible(ctx.TODO(), message.AccessibleReq{TokenString: "123"})
+		assert.Error(t, err)
+	})
+
+	t.Run("token invalid", func(t *testing.T) {
+		tokenRW := mockidentification.NewMockReaderWriter(ctrl)
+		models.SetTokenReaderWriter(tokenRW)
+
+		tokenRW.EXPECT().GetToken(gomock.Any(), gomock.Any()).Return(&identification.Token{
+			UserID:         "user01",
+			TenantID:       "tenant01",
+			ExpirationTime: time.Now()}, nil)
+
+		_, err := manager.Accessible(ctx.TODO(), message.AccessibleReq{TokenString: "123"})
+		assert.Error(t, err)
+	})
 }

@@ -1,147 +1,401 @@
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ ******************************************************************************/
+
 package account
 
 import (
-	"context"
-	"github.com/pingcap-inc/tiem/models/common"
+	ctx "context"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestAccountReadWrite_AddAccount(t *testing.T) {
-	type args struct {
-		ctx       context.Context
-		tenantId  string
-		name      string
-		salt      string
-		finalHash string
-		status    int8
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr    bool
-	}{
-		{"normal", args{context.TODO(), "testID1", "testName1", "123", "15", 0}, false},
-		{"without tenantID", args{context.TODO(), "", "testName2", "12345", "234", 0}, true},
-		{"without name", args{context.TODO(), "testID3", "", "12345", "234", 0}, true},
-		{"without salt", args{context.TODO(), "testID4", "testName4", "", "234", 0}, true},
-		{"without finalHash", args{context.TODO(), "testID5", "testName5", "12345", "", 0}, true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := testRW.AddAccount(tt.args.ctx, tt.args.tenantId, tt.args.name, tt.args.salt, tt.args.finalHash, tt.args.status)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("AddAccount() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			if err == nil {
-				assert.NotEmpty(t, got.ID)
-			}
-		})
-	}
-}
-
-func TestAccountReadWrite_FindAccountByName(t *testing.T) {
-	account := &Account{
-		Entity:    common.Entity{TenantId: "testID", Status: "0"}, //todo: bug
-		Name:      "testName",
-		Salt:      "123",
-		FinalHash: "1234",
-	}
-	testRW.DB(context.TODO()).Create(account)
-	defer testRW.DB(context.TODO()).Delete(account)
-
-	type args struct {
-		ctx context.Context
-		name  string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{"normal", args{context.TODO(), account.Name}, false},
-		{"no record", args{context.TODO(), "findName"}, true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-
-			got, err := testRW.FindAccountByName(tt.args.ctx, tt.args.name)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("FindAccountById() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			if err == nil {
-				assert.NotEmpty(t, got.ID)
-			}
-		})
-	}
-}
-
-func TestAccountReadWrite_FindAccountById(t *testing.T) {
-	account := &Account{
-		Entity:    common.Entity{TenantId: "testID", Status: "0"},
-		Name:      "FindAccountById1",
-		Salt:      "123",
-		FinalHash: "1234",
-	}
-	testRW.DB(context.TODO()).Create(account)
-	defer testRW.DB(context.TODO()).Delete(account)
-
-	type args struct {
-		ctx context.Context
-		id  string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{"normal", args{context.TODO(), account.ID}, false},
-		{"no record", args{context.TODO(), "findID"}, true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := testRW.FindAccountById(tt.args.ctx, tt.args.id)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("FindAccountById() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			if err == nil {
-				assert.NotEmpty(t, got.ID)
-			}
-		})
-	}
-}
-
-func TestAccountReadWrite_FindAccountById_v2(t *testing.T) {
-	account := &Account{
-		Entity:    common.Entity{TenantId: "testID", Status: "0"}, //todo: bug
-		Name:      "FindAccountById_v2",
-		Salt:      "123",
-		FinalHash: "1234",
-	}
-	testRW.DB(context.TODO()).Create(account)
-	defer testRW.DB(context.TODO()).Delete(account)
-
+func TestAccountReadWrite_CreateUser(t *testing.T) {
+	t.Run("invalid parameter", func(t *testing.T) {
+		user := &User{ID: "", Name: ""}
+		_, err := testRW.CreateUser(ctx.TODO(), user)
+		assert.Error(t, err)
+	})
 
 	t.Run("normal", func(t *testing.T) {
-		err := testRW.DB(context.TODO()).Where("id = ?", account.ID).First(account).Error
+		user := &User{
+			ID:        "user01",
+			TenantID:  "tenant01",
+			Creator:   "admin",
+			Name:      "nick01",
+			Salt:      "salt",
+			FinalHash: "hash",
+			Email:     "email",
+			Phone:     "123",
+			Status:    "Normal",
+		}
+		got, err := testRW.CreateUser(ctx.TODO(), user)
 		assert.NoError(t, err)
-		_, err = testRW.FindAccountById(context.TODO(), account.ID)
+		assert.Equal(t, user.ID, got.ID)
+		err = testRW.DeleteUser(ctx.TODO(), "tenant01", "user01")
 		assert.NoError(t, err)
+	})
+}
+
+func TestAccountReadWrite_DeleteUser(t *testing.T) {
+	t.Run("invalid parameter", func(t *testing.T) {
+		err := testRW.DeleteUser(ctx.TODO(), "", "")
+		assert.Error(t, err)
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		user := &User{
+			ID:        "user02",
+			TenantID:  "tenant02",
+			Creator:   "admin",
+			Name:      "nick02",
+			Salt:      "salt",
+			FinalHash: "hash",
+			Email:     "email",
+			Phone:     "123",
+			Status:    "Normal",
+		}
+		got, err := testRW.CreateUser(ctx.TODO(), user)
+		assert.NoError(t, err)
+		assert.Equal(t, user.ID, got.ID)
+		err = testRW.DeleteUser(ctx.TODO(), "tenant02", "user02")
+		assert.NoError(t, err)
+	})
+}
+
+func TestAccountReadWrite_GetUser(t *testing.T) {
+	t.Run("invalid parameter", func(t *testing.T) {
+		_, err := testRW.GetUser(ctx.TODO(), "", "")
+		assert.Error(t, err)
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		_, err := testRW.FindAccountById(context.TODO(), "whatever")
+		_, err := testRW.GetUser(ctx.TODO(), "tenant01", "user01")
 		assert.Error(t, err)
+	})
 
-		_, err = testRW.FindAccountById(context.TODO(), "")
+	t.Run("normal", func(t *testing.T) {
+		user := &User{
+			ID:        "user03",
+			TenantID:  "tenant03",
+			Creator:   "admin",
+			Name:      "nick03",
+			Salt:      "salt",
+			FinalHash: "hash",
+			Email:     "email",
+			Phone:     "123",
+			Status:    "Normal",
+		}
+		_, err := testRW.CreateUser(ctx.TODO(), user)
+		assert.NoError(t, err)
+		got, err := testRW.GetUser(ctx.TODO(), "tenant03", "user03")
+		assert.NoError(t, err)
+		assert.Equal(t, user.ID, got.ID)
+		assert.Equal(t, user.TenantID, got.TenantID)
+		err = testRW.DeleteUser(ctx.TODO(), "tenant03", "user03")
+		assert.NoError(t, err)
+	})
+}
+
+func TestAccountReadWrite_GetUserByID(t *testing.T) {
+	t.Run("invalid parameter", func(t *testing.T) {
+		_, err := testRW.GetUserByID(ctx.TODO(), "")
 		assert.Error(t, err)
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		user := &User{
+			ID:        "user13",
+			TenantID:  "tenant13",
+			Creator:   "admin",
+			Name:      "nick13",
+			Salt:      "salt",
+			FinalHash: "hash",
+			Email:     "email",
+			Phone:     "123",
+			Status:    "Normal",
+		}
+		_, err := testRW.CreateUser(ctx.TODO(), user)
+		assert.NoError(t, err)
+		got, err := testRW.GetUserByID(ctx.TODO(), "user13")
+		assert.NoError(t, err)
+		assert.Equal(t, user.ID, got.ID)
+		assert.Equal(t, user.TenantID, got.TenantID)
+		err = testRW.DeleteUser(ctx.TODO(), "tenant13", "user13")
+		assert.NoError(t, err)
+	})
+}
+
+func TestAccountReadWrite_QueryUsers(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		user := &User{
+			ID:        "user04",
+			TenantID:  "tenant04",
+			Creator:   "admin",
+			Name:      "nick04",
+			Salt:      "salt",
+			FinalHash: "hash",
+			Email:     "email",
+			Phone:     "123",
+			Status:    "Normal",
+		}
+		_, err := testRW.CreateUser(ctx.TODO(), user)
+		assert.NoError(t, err)
+		got, err := testRW.QueryUsers(ctx.TODO())
+		assert.Equal(t, 1, len(got))
+		err = testRW.DeleteUser(ctx.TODO(), "tenant04", "user04")
+		assert.NoError(t, err)
+	})
+}
+
+func TestAccountReadWrite_UpdateUserStatus(t *testing.T) {
+	t.Run("invalid parameter", func(t *testing.T) {
+		err := testRW.UpdateUserStatus(ctx.TODO(), "", "", "")
+		assert.Error(t, err)
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		user := &User{
+			ID:        "user05",
+			TenantID:  "tenant05",
+			Creator:   "admin",
+			Name:      "nick05",
+			Salt:      "salt",
+			FinalHash: "hash",
+			Email:     "email",
+			Phone:     "123",
+			Status:    "Normal",
+		}
+		_, err := testRW.CreateUser(ctx.TODO(), user)
+		assert.NoError(t, err)
+		err = testRW.UpdateUserStatus(ctx.TODO(), "tenant05", "user05", "Deactivate")
+		assert.NoError(t, err)
+		got, err := testRW.GetUser(ctx.TODO(), "tenant05", "user05")
+		assert.NoError(t, err)
+		assert.Equal(t, got.Status, "Deactivate")
+		err = testRW.DeleteUser(ctx.TODO(), "tenant05", "user05")
+		assert.NoError(t, err)
+	})
+}
+
+func TestAccountReadWrite_UpdateUserProfile(t *testing.T) {
+	t.Run("invalid parameter", func(t *testing.T) {
+		err := testRW.UpdateUserProfile(ctx.TODO(), "", "", "", "")
+		assert.Error(t, err)
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		user := &User{
+			ID:        "user06",
+			TenantID:  "tenant06",
+			Creator:   "admin",
+			Name:      "nick06",
+			Salt:      "salt",
+			FinalHash: "hash",
+			Email:     "email",
+			Phone:     "123",
+			Status:    "Normal",
+		}
+		_, err := testRW.CreateUser(ctx.TODO(), user)
+		assert.NoError(t, err)
+		err = testRW.UpdateUserProfile(ctx.TODO(), "tenant06", "user06", "email01", "phone01")
+		assert.NoError(t, err)
+		err = testRW.DeleteUser(ctx.TODO(), "tenant06", "user06")
+		assert.NoError(t, err)
+	})
+}
+
+func TestAccountReadWrite_UpdateUserPassword(t *testing.T) {
+	t.Run("invalid parameter", func(t *testing.T) {
+		err := testRW.UpdateUserPassword(ctx.TODO(), "", "", "", "")
+		assert.Error(t, err)
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		user := &User{
+			ID:        "user07",
+			TenantID:  "tenant07",
+			Creator:   "admin",
+			Name:      "nick07",
+			Salt:      "salt",
+			FinalHash: "hash",
+			Email:     "email",
+			Phone:     "123",
+			Status:    "Normal",
+		}
+		_, err := testRW.CreateUser(ctx.TODO(), user)
+		assert.NoError(t, err)
+		err = testRW.UpdateUserPassword(ctx.TODO(), "tenant07", "user07", "salt01", "hash01")
+		assert.NoError(t, err)
+		err = testRW.DeleteUser(ctx.TODO(), "tenant07", "user07")
+		assert.NoError(t, err)
+	})
+}
+
+func TestAccountReadWrite_CreateTenant(t *testing.T) {
+	t.Run("invalid parameter", func(t *testing.T) {
+		_, err := testRW.CreateTenant(ctx.TODO(), &Tenant{ID: "", Name: ""})
+		assert.Error(t, err)
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		tenant := &Tenant{
+			ID:               "tenant01",
+			Creator:          "user",
+			Name:             "tenant01",
+			Status:           "Normal",
+			OnBoardingStatus: "On",
+		}
+		got, err := testRW.CreateTenant(ctx.TODO(), tenant)
+		assert.NoError(t, err)
+		assert.Equal(t, got.ID, tenant.ID)
+		err = testRW.DeleteTenant(ctx.TODO(), tenant.ID)
+		assert.NoError(t, err)
+	})
+}
+
+func TestAccountReadWrite_DeleteTenant(t *testing.T) {
+	t.Run("invalid parameter", func(t *testing.T) {
+		err := testRW.DeleteTenant(ctx.TODO(), "")
+		assert.Error(t, err)
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		tenant := &Tenant{
+			ID:               "tenant02",
+			Creator:          "user",
+			Name:             "tenant02",
+			Status:           "Normal",
+			OnBoardingStatus: "On",
+		}
+		got, err := testRW.CreateTenant(ctx.TODO(), tenant)
+		assert.NoError(t, err)
+		assert.Equal(t, got.ID, tenant.ID)
+		err = testRW.DeleteTenant(ctx.TODO(), tenant.ID)
+		assert.NoError(t, err)
+	})
+}
+
+func TestAccountReadWrite_GetTenant(t *testing.T) {
+	t.Run("invalid parameter", func(t *testing.T) {
+		_, err := testRW.GetTenant(ctx.TODO(), "")
+		assert.Error(t, err)
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		tenant := &Tenant{
+			ID:               "tenant03",
+			Creator:          "user",
+			Name:             "tenant03",
+			Status:           "Normal",
+			OnBoardingStatus: "On",
+		}
+		_, err := testRW.CreateTenant(ctx.TODO(), tenant)
+		assert.NoError(t, err)
+
+		got, err := testRW.GetTenant(ctx.TODO(), tenant.ID)
+		assert.NoError(t, err)
+		assert.Equal(t, got.ID, tenant.ID)
+		assert.Equal(t, got.Name, tenant.Name)
+		err = testRW.DeleteTenant(ctx.TODO(), tenant.ID)
+		assert.NoError(t, err)
+	})
+}
+
+func TestAccountReadWrite_QueryTenants(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		tenant := &Tenant{
+			ID:               "tenant04",
+			Creator:          "user",
+			Name:             "tenant04",
+			Status:           "Normal",
+			OnBoardingStatus: "On",
+		}
+		_, err := testRW.CreateTenant(ctx.TODO(), tenant)
+		assert.NoError(t, err)
+		got, err := testRW.QueryTenants(ctx.TODO())
+		assert.Equal(t, 1, len(got))
+		err = testRW.DeleteTenant(ctx.TODO(), tenant.ID)
+		assert.NoError(t, err)
+	})
+}
+
+func TestAccountReadWrite_UpdateTenantStatus(t *testing.T) {
+	t.Run("invalid parameter", func(t *testing.T) {
+		err := testRW.UpdateTenantStatus(ctx.TODO(), "", "")
+		assert.Error(t, err)
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		tenant := &Tenant{
+			ID:               "tenant05",
+			Creator:          "user",
+			Name:             "tenant05",
+			Status:           "Normal",
+			OnBoardingStatus: "On",
+		}
+		_, err := testRW.CreateTenant(ctx.TODO(), tenant)
+		assert.NoError(t, err)
+		err = testRW.UpdateTenantStatus(ctx.TODO(), tenant.ID, "Deactivate")
+		assert.NoError(t, err)
+		err = testRW.DeleteTenant(ctx.TODO(), tenant.ID)
+		assert.NoError(t, err)
+	})
+}
+
+func TestAccountReadWrite_UpdateTenantProfile(t *testing.T) {
+	t.Run("invalid parameter", func(t *testing.T) {
+		err := testRW.UpdateTenantProfile(ctx.TODO(), "", "", 0, 0, 0, 0)
+		assert.Error(t, err)
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		tenant := &Tenant{
+			ID:               "tenant06",
+			Creator:          "user",
+			Name:             "tenant06",
+			Status:           "Normal",
+			OnBoardingStatus: "On",
+		}
+		_, err := testRW.CreateTenant(ctx.TODO(), tenant)
+		assert.NoError(t, err)
+		err = testRW.UpdateTenantProfile(ctx.TODO(), tenant.ID, "tenant", 1, 1, 1, 1)
+		assert.NoError(t, err)
+		err = testRW.DeleteTenant(ctx.TODO(), tenant.ID)
+		assert.NoError(t, err)
+	})
+}
+
+func TestAccountReadWrite_UpdateTenantOnBoardingStatus(t *testing.T) {
+	t.Run("invalid parameter", func(t *testing.T) {
+		err := testRW.UpdateTenantOnBoardingStatus(ctx.TODO(), "", "")
+		assert.Error(t, err)
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		tenant := &Tenant{
+			ID:               "tenant07",
+			Creator:          "user",
+			Name:             "tenant07",
+			Status:           "Normal",
+			OnBoardingStatus: "On",
+		}
+		_, err := testRW.CreateTenant(ctx.TODO(), tenant)
+		assert.NoError(t, err)
+		err = testRW.UpdateTenantOnBoardingStatus(ctx.TODO(), tenant.ID, "Off")
+		assert.NoError(t, err)
+		err = testRW.DeleteTenant(ctx.TODO(), tenant.ID)
+		assert.NoError(t, err)
 	})
 }

@@ -21,19 +21,16 @@ import (
 )
 
 type ReaderWriter interface {
-	AddAccount(ctx context.Context, tenantId string, name string, salt string, finalHash string, status int8) (*Account, error)
-	FindAccountByName(ctx context.Context, name string) (*Account, error)
-	FindAccountById(ctx context.Context, id string) (*Account, error)
-
-	CreateUser(ctx context.Context, user User) (info *structs.UserInfo, err error)
+	CreateUser(ctx context.Context, user *User) (info *structs.UserInfo, err error)
 	DeleteUser(ctx context.Context, tenantID, userID string) error
 	QueryUsers(ctx context.Context) (userInfos map[string]structs.UserInfo, err error)
 	GetUser(ctx context.Context, tenantID, userID string) (userInfo structs.UserInfo, err error)
+	GetUserByID(ctx context.Context, userID string) (user *User, err error)
 	UpdateUserStatus(ctx context.Context, tenantID, userID string, status string) error
 	UpdateUserProfile(ctx context.Context, tenantID, userID, email, phone string) error
 	UpdateUserPassword(ctx context.Context, tenantID, userID, salt, finalHash string) error
 
-	CreateTenant(ctx context.Context, tenant Tenant) (info *structs.TenantInfo, err error)
+	CreateTenant(ctx context.Context, tenant *Tenant) (info *structs.TenantInfo, err error)
 	DeleteTenant(ctx context.Context, tenantID string) error
 	GetTenant(ctx context.Context, tenantID string) (tenant structs.TenantInfo, err error)
 	QueryTenants(ctx context.Context) (tenants map[string]structs.TenantInfo, err error)

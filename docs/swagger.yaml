@@ -956,7 +956,7 @@ definitions:
     type: object
   message.CreateSpecsResp:
     type: object
-  message.CreateTenantReqV1:
+  message.CreateTenantReq:
     properties:
       id:
         type: string
@@ -975,12 +975,10 @@ definitions:
       status:
         type: string
     type: object
-  message.CreateTenantRespV1:
+  message.CreateTenantResp:
     type: object
   message.CreateUserReq:
     properties:
-      creator:
-        type: string
       email:
         type: string
       id:
@@ -1223,7 +1221,7 @@ definitions:
     type: object
   message.LoginReq:
     properties:
-      userName:
+      userId:
         type: string
       userPassword:
         type: string
@@ -1234,12 +1232,12 @@ definitions:
         type: string
       token:
         type: string
-      userName:
+      userId:
         type: string
     type: object
   message.LogoutResp:
     properties:
-      accountName:
+      userId:
         type: string
     type: object
   message.QueryDataImportExportRecordsResp:
@@ -4981,10 +4979,10 @@ paths:
       parameters:
       - description: create tenant request parameter
         in: body
-        name: CreateTenantReqV1
+        name: CreateTenantReq
         required: true
         schema:
-          $ref: '#/definitions/message.CreateTenantReqV1'
+          $ref: '#/definitions/message.CreateTenantReq'
       produces:
       - application/json
       responses:
@@ -4995,7 +4993,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/message.CreateTenantRespV1'
+                  $ref: '#/definitions/message.CreateTenantResp'
               type: object
         "401":
           description: Unauthorized

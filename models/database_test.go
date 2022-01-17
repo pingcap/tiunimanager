@@ -65,10 +65,6 @@ func TestGetReaderWriter(t *testing.T) {
 	SetAccountReaderWriter(nil)
 	assert.Empty(t, GetAccountReaderWriter())
 
-	assert.NotEmpty(t, GetTenantReaderWriter())
-	SetTenantReaderWriter(nil)
-	assert.Empty(t, GetTenantReaderWriter())
-
 	assert.NotEmpty(t, GetTokenReaderWriter())
 	SetTokenReaderWriter(nil)
 	assert.Empty(t, GetTokenReaderWriter())

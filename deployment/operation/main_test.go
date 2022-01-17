@@ -29,8 +29,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/deployment"
-
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/util/uuidutil"
@@ -48,7 +46,7 @@ func TestMain(m *testing.M) {
 
 	framework.InitBaseFrameworkForUt("",
 		func(d *framework.BaseFramework) error {
-			dbFile := fmt.Sprintf("%s/storage/%s?_busy_timeout=60000", testTiUPHome, deployment.DatabaseFileName)
+			dbFile := fmt.Sprintf("%s/storage/%s?_busy_timeout=60000", testTiUPHome, "operation.db")
 			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 
 			if err != nil || db.Error != nil {

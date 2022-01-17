@@ -95,8 +95,7 @@ grafana_servers:
     default_theme: light
     org_name: Main Org.
     org_role: Viewer
-    config: 
-	  security.allow_embedding: true
+    config: {security.allow_embedding: true}
   {{ end }}
   {{ end }}
 {{ else if and (eq $key "Prometheus") (len $instances) }}

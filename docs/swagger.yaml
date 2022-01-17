@@ -3026,6 +3026,9 @@ paths:
         in: query
         name: pageSize
         type: integer
+      - in: query
+        name: paramName
+        type: string
       - description: clusterId
         in: path
         name: clusterId

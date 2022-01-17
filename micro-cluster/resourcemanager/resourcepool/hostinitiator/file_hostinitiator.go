@@ -184,30 +184,49 @@ func (p *FileHostInitiator) LeaveEMCluster(ctx context.Context, nodeId string) (
 	return nil
 }
 
-/*
-func (p *FileHostInitiator) verifyConnect(ctx context.Context, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) Prepare(ctx context.Context, h *structs.HostInfo) (err error) {
+	log := framework.LogWithContext(ctx)
+	err = p.connectToHost(ctx, h)
+	if err != nil {
+		log.Errorf("connect to host %s %s failed, %v", h.HostName, h.IP, err)
+		return err
+	}
+	defer p.closeConnect()
+
+	if err = p.installNumaCtl(ctx, h); err != nil {
+		errMsg := fmt.Sprintf("install numactl on host %s %s failed, %v", h.HostName, h.IP, err)
+		return errors.NewError(errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, errMsg)
+	}
+
+	if err = p.setOffSwap(ctx, h); err != nil {
+		errMsg := fmt.Sprintf("set off swap on host %s %s failed, %v", h.HostName, h.IP, err)
+		return errors.NewError(errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, errMsg)
+	}
+
+	return nil
+}
+
+func (p *FileHostInitiator) connectToHost(ctx context.Context, h *structs.HostInfo) (err error) {
+	if p.sshClient != nil {
+		errMsg := fmt.Sprintf("connect to %s %s failed, host initiator already has unclosed connect", h.HostName, h.IP)
+		return errors.NewError(errors.TIEM_RESOURCE_CONNECT_TO_HOST_ERROR, errMsg)
+	}
 	p.sshClient = sshclient.NewSSHClient(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd)
 	if err = p.sshClient.Connect(); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func (p *FileHostInitiator) closeSSHConnect() {
+func (p *FileHostInitiator) closeConnect() {
 	if p.sshClient != nil {
 		p.sshClient.Close()
+		p.sshClient = nil
 	}
 }
 
 func (p *FileHostInitiator) setOffSwap(ctx context.Context, h *structs.HostInfo) (err error) {
-	log := framework.LogWithContext(ctx)
-	err = p.verifyConnect(ctx, h)
-	if err != nil {
-		log.Errorf("verify host connect %s %s failed, %v", h.HostName, h.IP, err)
-		return err
-	}
-	defer p.closeSSHConnect()
-
 	changeConf := "echo 'vm.swappiness = 0'>> /etc/sysctl.conf"
 	flushCmd := "swapoff -a && swapon -a"
 	updateCmd := "sysctl -p"
@@ -218,7 +237,17 @@ func (p *FileHostInitiator) setOffSwap(ctx context.Context, h *structs.HostInfo)
 	framework.LogWithContext(ctx).Infof("host %s [%s] set off swap, %v", h.HostName, h.IP, result)
 	return nil
 }
-*/
+
+func (p *FileHostInitiator) installNumaCtl(ctx context.Context, h *structs.HostInfo) (err error) {
+	installNumaCtrlCmd := "yum install -y numactl"
+	result, err := p.sshClient.RunCommandsInSession([]string{installNumaCtrlCmd})
+	if err != nil {
+		return err
+	}
+	framework.LogWithContext(ctx).Infof("host %s [%s] install numactl, %v", h.HostName, h.IP, result)
+	return nil
+
+}
 
 func (p *FileHostInitiator) installTcpDump(ctx context.Context, hosts []structs.HostInfo) (err error) {
 	return nil

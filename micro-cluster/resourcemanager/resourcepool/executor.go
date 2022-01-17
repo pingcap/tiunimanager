@@ -50,6 +50,29 @@ func authHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err
 	return nil
 }
 
+func prepare(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infoln("begin prepare host env before verify")
+
+	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
+	if err != nil {
+		log.Errorf("verify host failed for get flow context, %v", err)
+		return err
+	}
+
+	for _, host := range hosts {
+		// install numactl and set swap off
+		err = resourcePool.hostInitiator.Prepare(ctx, &host)
+		if err != nil {
+			log.Errorf("prepare host %s %s failed, %v", host.HostName, host.IP, err)
+			return err
+		}
+		log.Infof("prepare host %v succeed", host)
+	}
+	node.Record("prepare hosts ")
+	return nil
+}
+
 func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin verifyHosts")

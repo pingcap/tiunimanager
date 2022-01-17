@@ -75,7 +75,7 @@ type QueryPermissionsForUserResp struct {
 
 type BindRolesForUserReq struct {
 	UserID string   `json:"userId"`
-	Roles  []string `json:"role"`
+	Roles  []string `json:"roles"`
 }
 
 type BindRolesForUserResp struct {

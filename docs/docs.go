@@ -6757,7 +6757,7 @@ var doc = `{
         "message.BindRolesForUserReq": {
             "type": "object",
             "properties": {
-                "role": {
+                "roles": {
                     "type": "array",
                     "items": {
                         "type": "string"

@@ -930,7 +930,7 @@ definitions:
     type: object
   message.BindRolesForUserReq:
     properties:
-      role:
+      roles:
         items:
           type: string
         type: array

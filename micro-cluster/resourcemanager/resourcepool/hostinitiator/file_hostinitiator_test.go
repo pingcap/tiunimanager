@@ -137,6 +137,76 @@ func Test_Verify_Warings(t *testing.T) {
 	assert.Equal(t, errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, emErr.GetCode())
 }
 
+func Test_Prepare_ConnectError(t *testing.T) {
+	fileInitiator := NewFileHostInitiator()
+
+	err := fileInitiator.Prepare(context.TODO(), &structs.HostInfo{IP: "666.666.66.66", UserName: "r00t", Passwd: "fake"})
+	assert.NotNil(t, err)
+	emErr, ok := err.(errors.EMError)
+	assert.True(t, ok)
+	assert.Equal(t, errors.TIEM_RESOURCE_CONNECT_TO_HOST_ERROR, emErr.GetCode())
+
+	assert.NotNil(t, fileInitiator.sshClient)
+	fileInitiator.closeConnect()
+	assert.Nil(t, fileInitiator.sshClient)
+}
+
+func Test_ConnectToHost(t *testing.T) {
+
+	fileInitiator := NewFileHostInitiator()
+
+	err := fileInitiator.connectToHost(context.TODO(), &structs.HostInfo{IP: "666.666.666.666", UserName: "r00t", Passwd: "fake"})
+	assert.NotNil(t, err)
+	emErr, ok := err.(errors.EMError)
+	assert.True(t, ok)
+	assert.Equal(t, errors.TIEM_RESOURCE_CONNECT_TO_HOST_ERROR, emErr.GetCode())
+
+	fileInitiator.closeConnect()
+	assert.Nil(t, fileInitiator.sshClient)
+
+}
+
+func Test_CloseConnect(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
+	mockClient.EXPECT().Close().Return()
+
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSSHClient(mockClient)
+	t.Logf("TEST_CLOSECONNECT:%v", fileInitiator.sshClient)
+
+	fileInitiator.closeConnect()
+
+	assert.Nil(t, fileInitiator.sshClient)
+}
+
+func Test_SetOffSwap(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
+	mockClient.EXPECT().RunCommandsInSession(gomock.Any()).Return("", nil)
+
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSSHClient(mockClient)
+
+	err := fileInitiator.setOffSwap(context.TODO(), &structs.HostInfo{IP: "666.666.666.666", UserName: "r00t", Passwd: "fake"})
+	assert.Nil(t, err)
+}
+
+func Test_installNumaCtl(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
+	mockClient.EXPECT().RunCommandsInSession(gomock.Any()).Return("", nil)
+
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSSHClient(mockClient)
+
+	err := fileInitiator.installNumaCtl(context.TODO(), &structs.HostInfo{IP: "666.666.666.666", UserName: "r00t", Passwd: "fake"})
+	assert.Nil(t, err)
+}
+
 func Test_SetConfig(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

@@ -48,7 +48,7 @@ func NewClusterParameterReadWrite(db *gorm.DB) *ClusterParameterReadWrite {
 	return m
 }
 
-func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, clusterId string, offset, size int) (paramGroupId string, params []*ClusterParamDetail, total int64, err error) {
+func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, clusterId, parameterName string, offset, size int) (paramGroupId string, params []*ClusterParamDetail, total int64, err error) {
 	log := framework.LogWithContext(ctx)
 	cluster := management.Cluster{}
 	err = m.DB(ctx).Where("id = ?", clusterId).First(&cluster).Error
@@ -59,15 +59,21 @@ func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, cl
 	}
 	paramGroupId = cluster.ParameterGroupID
 
-	err = m.DB(ctx).Model(&ClusterParameterMapping{}).
+	query := m.DB(ctx).Model(&ClusterParameterMapping{}).
 		Select("parameters.id, parameters.category, parameters.name, parameters.instance_type, parameters.system_variable, "+
 			"parameters.type, parameters.unit, parameters.range, parameters.has_reboot, parameters.has_apply, parameters.update_source, parameters.description, "+
 			"parameter_group_mappings.default_value, cluster_parameter_mappings.real_value, parameter_group_mappings.note, "+
 			"cluster_parameter_mappings.created_at, cluster_parameter_mappings.updated_at").
 		Joins("left join parameters on parameters.id = cluster_parameter_mappings.parameter_id").
 		Joins("left join parameter_group_mappings on parameters.id = parameter_group_mappings.parameter_id").
-		Where("cluster_parameter_mappings.cluster_id = ? and parameter_group_mappings.parameter_group_id = ?", cluster.ID, paramGroupId).
-		Order("parameters.instance_type desc").
+		Where("cluster_parameter_mappings.cluster_id = ? and parameter_group_mappings.parameter_group_id = ?", cluster.ID, paramGroupId)
+
+	// Fuzzy query by parameter name
+	if parameterName != "" {
+		query.Where("parameters.name like '%" + parameterName + "%'")
+	}
+
+	err = query.Order("parameters.instance_type desc").
 		Count(&total).Offset(offset).Limit(size).
 		Scan(&params).Error
 	if err != nil {

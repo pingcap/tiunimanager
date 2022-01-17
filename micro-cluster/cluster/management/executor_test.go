@@ -18,18 +18,20 @@ package management
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
 	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
-	"strconv"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -1140,8 +1142,8 @@ func TestSyncParameters(t *testing.T) {
 	clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
 	models.SetClusterParameterReaderWriter(clusterParameterRW)
 
-	clusterParameterRW.EXPECT().QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, clusterId string, offset, size int) (paramGroupId string, params []*parameter.ClusterParamDetail, total int64, err error) {
+	clusterParameterRW.EXPECT().QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, clusterId, name string, offset, size int) (paramGroupId string, params []*parameter.ClusterParamDetail, total int64, err error) {
 			return "1", []*parameter.ClusterParamDetail{}, 1, fmt.Errorf("query cluster fail")
 		})
 
@@ -1760,7 +1762,7 @@ func Test_syncConnectionKey(t *testing.T) {
 	os.MkdirAll(path, 0755)
 
 	t.Run("normal", func(t *testing.T) {
-		os.MkdirAll(path + "/ssh", 0755)
+		os.MkdirAll(path+"/ssh", 0755)
 		defer os.RemoveAll(path + "/ssh")
 
 		f1, err := os.Create(path + "/ssh/id_rsa")
@@ -1775,7 +1777,6 @@ func Test_syncConnectionKey(t *testing.T) {
 
 		f2.Write([]byte{'c', 'd'})
 
-
 		err = syncConnectionKey(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.NoError(t, err)
 	})
@@ -1784,7 +1785,7 @@ func Test_syncConnectionKey(t *testing.T) {
 		assert.Error(t, err)
 	})
 	t.Run("without public", func(t *testing.T) {
-		os.MkdirAll(path + "/ssh", 0755)
+		os.MkdirAll(path+"/ssh", 0755)
 		defer os.RemoveAll(path + "/ssh")
 
 		f1, err := os.Create(path + "/ssh/id_rsa")
@@ -1797,7 +1798,7 @@ func Test_syncConnectionKey(t *testing.T) {
 		assert.Error(t, err)
 	})
 	t.Run("without private", func(t *testing.T) {
-		os.MkdirAll(path + "/ssh", 0755)
+		os.MkdirAll(path+"/ssh", 0755)
 		defer os.RemoveAll(path + "/ssh")
 
 		f2, err := os.Create(path + "/ssh/id_rsa.pub")
@@ -1824,8 +1825,8 @@ func Test_rebuildTiupSpaceForCluster(t *testing.T) {
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
 	clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), gomock.Any()).Return(management.ClusterTopologySnapshot{
-		Config: "111",
-		PublicKey: "222",
+		Config:     "111",
+		PublicKey:  "222",
 		PrivateKey: "333",
 	}, nil).AnyTimes()
 
@@ -1859,18 +1860,18 @@ func Test_validateHostsStatus(t *testing.T) {
 	provider.SetResourceReaderWriter(resourceRW)
 
 	t.Run("normal", func(t *testing.T) {
-		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host {
+		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host{
 			{Status: string(constants.HostOnline)},
 		}, int64(1), nil).Times(1)
 
 		node := &workflowModel.WorkFlowNode{}
 
-		context := &workflow.FlowContext {
-			Context: context.TODO(),
+		context := &workflow.FlowContext{
+			Context:  context.TODO(),
 			FlowData: map[string]interface{}{},
 		}
-		context.SetData(ContextClusterMeta, &handler.ClusterMeta {
-			Instances: map[string][]*management.ClusterInstance {
+		context.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Instances: map[string][]*management.ClusterInstance{
 				"TiDB": {
 					{
 						HostIP: []string{
@@ -1887,12 +1888,12 @@ func Test_validateHostsStatus(t *testing.T) {
 	t.Run("ip not existed", func(t *testing.T) {
 		node := &workflowModel.WorkFlowNode{}
 
-		context := &workflow.FlowContext {
-			Context: context.TODO(),
+		context := &workflow.FlowContext{
+			Context:  context.TODO(),
 			FlowData: map[string]interface{}{},
 		}
-		context.SetData(ContextClusterMeta, &handler.ClusterMeta {
-			Instances: map[string][]*management.ClusterInstance {
+		context.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Instances: map[string][]*management.ClusterInstance{
 				"TiDB": {
 					{
 						HostIP: []string{},
@@ -1904,18 +1905,18 @@ func Test_validateHostsStatus(t *testing.T) {
 		assert.Error(t, err)
 	})
 	t.Run("failed", func(t *testing.T) {
-		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host {
+		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host{
 			{Status: string(constants.HostFailed)},
 		}, int64(1), nil).Times(1)
 
 		node := &workflowModel.WorkFlowNode{}
 
-		context := &workflow.FlowContext {
-			Context: context.TODO(),
+		context := &workflow.FlowContext{
+			Context:  context.TODO(),
 			FlowData: map[string]interface{}{},
 		}
-		context.SetData(ContextClusterMeta, &handler.ClusterMeta {
-			Instances: map[string][]*management.ClusterInstance {
+		context.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Instances: map[string][]*management.ClusterInstance{
 				"TiDB": {
 					{
 						HostIP: []string{
@@ -1931,22 +1932,22 @@ func Test_validateHostsStatus(t *testing.T) {
 	})
 
 	t.Run("init + succeed", func(t *testing.T) {
-		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host {
+		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host{
 			{Status: string(constants.HostInit)},
 		}, int64(1), nil).Times(1)
 
-		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host {
+		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host{
 			{Status: string(constants.HostOnline)},
 		}, int64(1), nil).Times(1)
 
 		node := &workflowModel.WorkFlowNode{}
 
-		context := &workflow.FlowContext {
-			Context: context.TODO(),
+		context := &workflow.FlowContext{
+			Context:  context.TODO(),
 			FlowData: map[string]interface{}{},
 		}
-		context.SetData(ContextClusterMeta, &handler.ClusterMeta {
-			Instances: map[string][]*management.ClusterInstance {
+		context.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Instances: map[string][]*management.ClusterInstance{
 				"TiDB": {
 					{
 						HostIP: []string{
@@ -1961,18 +1962,18 @@ func Test_validateHostsStatus(t *testing.T) {
 		assert.NotEmpty(t, node.Result)
 	})
 	t.Run("timeout", func(t *testing.T) {
-		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host {
+		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host{
 			{Status: string(constants.HostInit)},
 		}, int64(1), nil).Times(2)
 
 		node := &workflowModel.WorkFlowNode{}
 		validateHostTimeout = time.Second * 6
-		context := &workflow.FlowContext {
-			Context: context.TODO(),
+		context := &workflow.FlowContext{
+			Context:  context.TODO(),
 			FlowData: map[string]interface{}{},
 		}
-		context.SetData(ContextClusterMeta, &handler.ClusterMeta {
-			Instances: map[string][]*management.ClusterInstance {
+		context.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Instances: map[string][]*management.ClusterInstance{
 				"TiDB": {
 					{
 						HostIP: []string{
@@ -2020,13 +2021,13 @@ func Test_fetchTopologyFile(t *testing.T) {
 	rw.EXPECT().CreateClusterTopologySnapshot(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 	rw.EXPECT().UpdateTopologySnapshotConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
-	context := &workflow.FlowContext {
-		Context: context.TODO(),
+	context := &workflow.FlowContext{
+		Context:  context.TODO(),
 		FlowData: map[string]interface{}{},
 	}
-	context.SetData(ContextClusterMeta, &handler.ClusterMeta {
+	context.SetData(ContextClusterMeta, &handler.ClusterMeta{
 		Cluster: &management.Cluster{},
-		Instances: map[string][]*management.ClusterInstance {
+		Instances: map[string][]*management.ClusterInstance{
 			"TiDB": {
 				{
 					HostIP: []string{

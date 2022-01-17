@@ -1925,6 +1925,11 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "paramName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "clusterId",
                         "name": "clusterId",
                         "in": "path",

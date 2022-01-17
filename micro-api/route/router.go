@@ -66,7 +66,7 @@ func Route(g *gin.Engine) {
 		apiV1.Use(interceptor.GinTraceIDHandler())
 		apiV1.Use(interceptor.AccessLog(), gin.Recovery())
 
-		auth := apiV1.Group("/user")
+		auth := apiV1.Group("/auth")
 		{
 			auth.POST("/login", metrics.HandleMetrics(constants.MetricsUserLogin), userApi.Login)
 			auth.POST("/logout", metrics.HandleMetrics(constants.MetricsUserLogout), userApi.Logout)

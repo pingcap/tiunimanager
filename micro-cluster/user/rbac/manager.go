@@ -264,6 +264,12 @@ func (mgr *RBACManager) DeleteRole(ctx context.Context, request message.DeleteRo
 		framework.LogWithContext(ctx).Errorf("call enforcer DeleteRole failed %s", err.Error())
 		return resp, errors.WrapError(errors.TIEM_RBAC_ROLE_DELETE_FAILED, fmt.Sprintf("call enforcer DeleteRole failed"), err)
 	}
+
+	if _, err = mgr.enforcer.DeletePermissionsForUser(request.Role); err != nil {
+		framework.LogWithContext(ctx).Errorf("call enforcer DeletePermissionsForUser failed %s", err.Error())
+		return resp, errors.WrapError(errors.TIEM_RBAC_PERMISSION_DELETE_FAILED, fmt.Sprintf("call enforcer DeletePermissionsForUser failed"), err)
+	}
+
 	return
 }
 

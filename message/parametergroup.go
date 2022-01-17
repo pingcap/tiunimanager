@@ -43,6 +43,7 @@ type QueryParameterGroupResp struct {
 
 type DetailParameterGroupReq struct {
 	ParamGroupID string `json:"paramGroupId"`
+	ParamName    string `json:"paramName" form:"paramName"`
 }
 
 type DetailParameterGroupResp struct {

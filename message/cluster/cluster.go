@@ -269,7 +269,7 @@ type QueryClusterLogResp struct {
 
 type QueryClusterParametersReq struct {
 	ClusterID string `json:"clusterId" swaggerignore:"true"`
-	Name      string `json:"name" form:"name"`
+	ParamName string `json:"paramName" form:"paramName"`
 	structs.PageRequest
 }
 

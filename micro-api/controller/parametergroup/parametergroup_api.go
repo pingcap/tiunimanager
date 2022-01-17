@@ -65,6 +65,7 @@ const paramNameOfParameterGroupId = "paramGroupId"
 // @Produce json
 // @Security ApiKeyAuth
 // @Param paramGroupId path string true "parameter group id"
+// @Param queryReq query message.DetailParameterGroupReq false "query request"
 // @Success 200 {object} controller.CommonResult{data=message.DetailParameterGroupResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult

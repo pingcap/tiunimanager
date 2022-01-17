@@ -776,6 +776,9 @@ definitions:
         type: array
       reboot:
         type: boolean
+    required:
+    - params
+    - reboot
     type: object
   cluster.UpdateClusterParametersResp:
     properties:
@@ -904,6 +907,9 @@ definitions:
         type: string
       reboot:
         type: boolean
+    required:
+    - clusterId
+    - reboot
     type: object
   message.ApplyParameterGroupResp:
     properties:
@@ -925,6 +931,8 @@ definitions:
       note:
         example: copy param group
         type: string
+    required:
+    - name
     type: object
   message.CopyParameterGroupResp:
     properties:
@@ -968,6 +976,8 @@ definitions:
         items:
           $ref: '#/definitions/structs.ParameterGroupParameterSampleInfo'
         type: array
+    required:
+    - params
     type: object
   message.CreateParameterGroupResp:
     properties:
@@ -1375,6 +1385,8 @@ definitions:
         items:
           $ref: '#/definitions/structs.ParameterGroupParameterSampleInfo'
         type: array
+    required:
+    - params
     type: object
   message.UpdateParameterGroupResp:
     properties:
@@ -1674,6 +1686,9 @@ definitions:
         type: string
       realValue:
         $ref: '#/definitions/structs.ParameterRealValue'
+    required:
+    - paramId
+    - realValue
     type: object
   structs.ClusterResourceInfo:
     properties:
@@ -4054,6 +4069,9 @@ paths:
         in: path
         name: paramGroupId
         required: true
+        type: string
+      - in: query
+        name: paramName
         type: string
       produces:
       - application/json

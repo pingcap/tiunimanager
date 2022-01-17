@@ -36,9 +36,10 @@ type RBACService interface {
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
+	// @Parameter system
 	// @Return message.DeleteRoleResp
 	// @Return error
-	DeleteRole(ctx context.Context, request message.DeleteRoleReq) (resp message.DeleteRoleResp, err error)
+	DeleteRole(ctx context.Context, request message.DeleteRoleReq, system bool) (resp message.DeleteRoleResp, err error)
 
 	// QueryRoles
 	// @Description: query rbac roles by condition

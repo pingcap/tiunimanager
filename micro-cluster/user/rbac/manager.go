@@ -252,12 +252,14 @@ func (mgr *RBACManager) QueryRoles(ctx context.Context, request message.QueryRol
 	}
 }
 
-func (mgr *RBACManager) DeleteRole(ctx context.Context, request message.DeleteRoleReq) (resp message.DeleteRoleResp, err error) {
+func (mgr *RBACManager) DeleteRole(ctx context.Context, request message.DeleteRoleReq, system bool) (resp message.DeleteRoleResp, err error) {
 	framework.LogWithContext(ctx).Infof("begin DeleteRole, request: %+v", request)
 	framework.LogWithContext(ctx).Info("end DeleteRole")
 
-	if _, ok := constants.RbacRoleMap[request.Role]; ok {
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("default role %s can not delete", request.Role))
+	if !system {
+		if _, ok := constants.RbacRoleMap[request.Role]; ok {
+			return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("default role %s can not delete", request.Role))
+		}
 	}
 
 	if _, err = mgr.enforcer.DeletePermissionsForUser(request.Role); err != nil {

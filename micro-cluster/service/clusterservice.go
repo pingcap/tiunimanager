@@ -905,7 +905,7 @@ func (c *ClusterServiceHandler) DeleteRbacRole(ctx context.Context, req *cluster
 
 	deleteReq := message.DeleteRoleReq{}
 	if handleRequest(ctx, req, resp, &deleteReq) {
-		result, err := c.rbacManager.DeleteRole(framework.NewBackgroundMicroCtx(ctx, false), deleteReq)
+		result, err := c.rbacManager.DeleteRole(framework.NewBackgroundMicroCtx(ctx, false), deleteReq, false)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 

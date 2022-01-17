@@ -28,9 +28,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/pingcap-inc/tiem/util/http"
 	"io/ioutil"
 	"net/http"
+
+	util "github.com/pingcap-inc/tiem/util/http"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/spec"
@@ -58,8 +59,9 @@ func (manager *SecondPartyManager) ApiEditConfig(ctx context.Context, apiEditCon
 			if err != nil {
 				return false, err
 			}
-			framework.LogWithContext(ctx).Errorf("apieditconfig, request tidb api resp status code: %v, content: %v", resp.StatusCode, string(b))
-			return false, errors.New(string(b))
+			errMsg := fmt.Sprintf("request TiDB api response status code: %v, content: %v", resp.StatusCode, string(b))
+			framework.LogWithContext(ctx).Errorf("apieditconfig, %s", errMsg)
+			return false, errors.New(errMsg)
 		}
 		return resp.StatusCode == http.StatusOK, nil
 	case spec.TiDBClusterComponent_TiKV:
@@ -74,8 +76,9 @@ func (manager *SecondPartyManager) ApiEditConfig(ctx context.Context, apiEditCon
 			if err != nil {
 				return false, err
 			}
-			framework.LogWithContext(ctx).Errorf("apieditconfig, request tikv api resp status code: %v, content: %v", resp.StatusCode, string(b))
-			return false, errors.New(string(b))
+			errMsg := fmt.Sprintf("request TiKV api response status code: %v, content: %v", resp.StatusCode, string(b))
+			framework.LogWithContext(ctx).Errorf("apieditconfig, %s", errMsg)
+			return false, errors.New(errMsg)
 		}
 		return resp.StatusCode == http.StatusOK, nil
 	case spec.TiDBClusterComponent_PD:
@@ -90,8 +93,9 @@ func (manager *SecondPartyManager) ApiEditConfig(ctx context.Context, apiEditCon
 			if err != nil {
 				return false, err
 			}
-			framework.LogWithContext(ctx).Errorf("apieditconfig, request pd api resp status code: %v, content: %v", resp.StatusCode, string(b))
-			return false, errors.New(string(b))
+			errMsg := fmt.Sprintf("request PD api response status code: %v, content: %v", resp.StatusCode, string(b))
+			framework.LogWithContext(ctx).Errorf("apieditconfig, %s", errMsg)
+			return false, errors.New(errMsg)
 		}
 		return resp.StatusCode == http.StatusOK, nil
 	case spec.TiDBClusterComponent_CDC:
@@ -106,8 +110,9 @@ func (manager *SecondPartyManager) ApiEditConfig(ctx context.Context, apiEditCon
 			if err != nil {
 				return false, err
 			}
-			framework.LogWithContext(ctx).Errorf("apieditconfig, request pd api resp status code: %v, content: %v", resp.StatusCode, string(b))
-			return false, errors.New(string(b))
+			errMsg := fmt.Sprintf("request CDC api response status code: %v, content: %v", resp.StatusCode, string(b))
+			framework.LogWithContext(ctx).Errorf("apieditconfig, %s", errMsg)
+			return false, errors.New(errMsg)
 		}
 		return resp.StatusCode == http.StatusOK, nil
 	default:

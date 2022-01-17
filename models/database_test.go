@@ -40,6 +40,8 @@ func TestGetReaderWriter(t *testing.T) {
 	assert.Empty(t, GetImportExportReaderWriter())
 
 	assert.NotEmpty(t, GetResourceReaderWriter())
+	SetResourceReaderWriter(nil)
+	assert.Empty(t, GetResourceReaderWriter())
 
 	assert.NotEmpty(t, GetClusterReaderWriter())
 	SetClusterReaderWriter(nil)
@@ -69,9 +71,14 @@ func TestGetReaderWriter(t *testing.T) {
 	SetTokenReaderWriter(nil)
 	assert.Empty(t, GetTokenReaderWriter())
 
+	assert.NotEmpty(t, GetTiUPConfigReaderWriter())
+	SetTiUPConfigReaderWriter(nil)
+	assert.Empty(t, GetTiUPConfigReaderWriter())
+
 	assert.NotEmpty(t, GetProductReaderWriter())
 	SetProductReaderWriter(nil)
 	assert.Empty(t, GetProductReaderWriter())
+	MockDB()
 }
 
 func TestMain(m *testing.M) {

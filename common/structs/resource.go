@@ -160,10 +160,16 @@ func (h HostInfo) IsLoadless() bool {
 }
 
 type Location struct {
-	Region string `json:"Region"`
-	Zone   string `json:"Zone"`
-	Rack   string `json:"Rack"`
-	HostIp string `json:"HostIp"`
+	Region string `json:"region" form:"region"`
+	Zone   string `json:"zone" form:"zone"`
+	Rack   string `json:"rack" form:"rack"`
+	HostIp string `json:"hostIp" form:"hostIp"`
+}
+
+type ImportCondition struct {
+	ReserveHost   bool `json:"reserved" form:"reserved"`
+	SkipHostInit  bool `json:"skipHostInit" form:"skipHostInit"`
+	IgnoreWarings bool `json:"ignoreWarnings" form:"ignoreWarnings"`
 }
 
 type HostFilter struct {
@@ -175,22 +181,23 @@ type HostFilter struct {
 }
 
 type DiskFilter struct {
-	DiskType   string `json:"DiskType"`
-	DiskStatus string `json:"DiskStatus"`
-	Capacity   int32  `json:"Capacity"`
+	DiskType   string `json:"diskType" form:"diskType"`
+	DiskStatus string `json:"diskStatus" form:"diskStatus"`
+	Capacity   int32  `json:"capacity" form:"capacity"`
 }
 
 type HierarchyTreeNode struct {
-	Code     string               `json:"Code"`
-	Name     string               `json:"Name"`
-	Prefix   string               `json:"Prefix"`
-	SubNodes []*HierarchyTreeNode `json:"SubNodes"`
+	Code     string               `json:"code"`
+	Name     string               `json:"name"`
+	Prefix   string               `json:"prefix"`
+	SubNodes []*HierarchyTreeNode `json:"subNodes"`
 }
 
 type Stocks struct {
-	FreeHostCount    int32 `json:"freeHostCount"`
-	FreeCpuCores     int32 `json:"freeCpuCores"`
-	FreeMemory       int32 `json:"freeMemory"`
-	FreeDiskCount    int32 `json:"freeDiskCount"`
-	FreeDiskCapacity int32 `json:"freeDiskCapacity"`
+	Zone             string `json:"zone"`
+	FreeHostCount    int32  `json:"freeHostCount"`
+	FreeCpuCores     int32  `json:"freeCpuCores"`
+	FreeMemory       int32  `json:"freeMemory"`
+	FreeDiskCount    int32  `json:"freeDiskCount"`
+	FreeDiskCapacity int32  `json:"freeDiskCapacity"`
 }

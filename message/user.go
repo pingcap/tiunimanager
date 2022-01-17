@@ -29,8 +29,8 @@ import (
 
 // LoginReq login
 type LoginReq struct {
-	UserID   string `json:"userId" form:"userId"`
-	Password string `json:"userPassword" form:"userPassword"`
+	UserID   string `json:"userId" form:"userId" validate:"required,min=5,max=32"`
+	Password string `json:"userPassword" form:"userPassword" validate:"required,min=5,max=32"`
 }
 
 type LoginResp struct {
@@ -41,7 +41,7 @@ type LoginResp struct {
 
 // LogoutReq logout
 type LogoutReq struct {
-	TokenString string `json:"token" form:"token"`
+	TokenString string `json:"token" form:"token" validate:"required,min=8,max=64"`
 }
 
 type LogoutResp struct {
@@ -50,7 +50,7 @@ type LogoutResp struct {
 
 // AccessibleReq identify
 type AccessibleReq struct {
-	TokenString string `json:"tokenString" form:"tokenString"`
+	TokenString string `json:"tokenString" form:"tokenString" validate:"required,min=8,max=64"`
 }
 
 type AccessibleResp struct {

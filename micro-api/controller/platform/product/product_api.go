@@ -109,22 +109,22 @@ func DeleteZones(c *gin.Context) {
 	}
 }
 
-// QueryZones query all zones information
-// @Summary queries all zones information
-// @Description queries all zones information
+// QueryZonesTree query all regions information
+// @Summary queries all regions information
+// @Description queries all regions information
 // @Tags platform
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param QueryZonesReq query message.QueryZonesReq true "query zone request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.QueryZonesResp}
+// @Param QueryZonesTreeReq query message.QueryZonesTreeReq true "query region request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.QueryZonesTreeResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /zones [get]
-func QueryZones(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryZonesReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryZones, &message.QueryZonesResp{},
+// @Router /zones/tree [get]
+func QueryZonesTree(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryZonesTreeReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryZones, &message.QueryZonesTreeResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

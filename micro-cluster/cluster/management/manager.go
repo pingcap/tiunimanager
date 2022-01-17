@@ -22,14 +22,17 @@ import (
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"net"
 	"strconv"
+	"time"
 )
 
 const (
@@ -75,7 +78,7 @@ var scaleOutDefine = workflow.WorkFlowDefine{
 		"scaleOutDone":     {"syncTopology", "syncTopologyDone", "fail", workflow.SyncFuncNode, syncTopology},
 		"syncTopologyDone": {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
 		"onlineDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
+		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, endMaintenance)},
 	},
 }
 
@@ -131,7 +134,7 @@ var scaleInDefine = workflow.WorkFlowDefine{
 		"start":       {"scaleInCluster", "scaleInDone", "fail", workflow.PollingNode, scaleInCluster},
 		"scaleInDone": {"freeInstanceResource", "freeDone", "fail", workflow.SyncFuncNode, freeInstanceResource},
 		"freeDone":    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
+		"fail":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, endMaintenance)},
 	},
 }
 
@@ -303,6 +306,121 @@ func (p *Manager) CreateCluster(ctx context.Context, req cluster.CreateClusterRe
 
 	resp.ClusterID = meta.Cluster.ID
 	resp.WorkFlowID = flowID
+	return
+}
+
+// PreviewCluster
+// @Description: preview cluster
+// @Receiver p
+// @Parameter ctx
+// @Parameter req
+// @return resp
+// @return err
+func (p *Manager) PreviewCluster(ctx context.Context, req cluster.CreateClusterReq) (resp cluster.PreviewClusterResp, err error) {
+	_, total, _ := handler.Query(ctx, cluster.QueryClustersReq {
+		Name: req.Name,
+		PageRequest: structs.PageRequest{
+			Page: 1,
+			PageSize: 1,
+		},
+	})
+	if total > 0 {
+		err = errors.Error(errors.TIEM_DUPLICATED_NAME)
+		return
+	}
+
+	resp = cluster.PreviewClusterResp{
+		Region: req.Region,
+		CpuArchitecture: req.CpuArchitecture,
+		ClusterType: req.Type,
+		ClusterVersion: req.Version,
+		ClusterName: req.Name,
+		CapabilityIndexes: []structs.Index{},
+	}
+
+	checkResult, err := preCheckStock(ctx, req.Region, req.CpuArchitecture, req.ResourceParameter.InstanceResource)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("check stocks failed, err = %s", err.Error())
+		return
+	} else {
+		resp.StockCheckResult = checkResult
+	}
+
+	return
+}
+
+func preCheckStock(ctx context.Context, region string, arch string, instanceResource []structs.ClusterResourceParameterCompute) ([]structs.ResourceStockCheckResult, error) {
+	result := make([]structs.ResourceStockCheckResult, 0)
+
+	stocks, err := resourcepool.GetResourcePool().GetStocks(ctx, &structs.Location{
+		Region: region,
+	}, &structs.HostFilter{
+		Arch: arch,
+	}, &structs.DiskFilter{})
+
+	if err != nil {
+		return result, err
+	}
+	for _, instance := range instanceResource {
+		for _, resource := range instance.Resource {
+			enough := true
+			if zoneResource, ok := stocks[resource.Zone]; ok &&
+				zoneResource.FreeHostCount >= int32(resource.Count) &&
+				zoneResource.FreeDiskCount >= int32(resource.Count) &&
+				zoneResource.FreeCpuCores >= int32(knowledge.ParseCpu(resource.Spec) * resource.Count) &&
+				zoneResource.FreeMemory >= int32(knowledge.ParseMemory(resource.Spec) * resource.Count){
+
+				enough = true
+				// deduction
+				zoneResource.FreeHostCount = zoneResource.FreeHostCount - int32(resource.Count)
+				zoneResource.FreeDiskCount = zoneResource.FreeDiskCount - int32(resource.Count)
+				zoneResource.FreeCpuCores = zoneResource.FreeCpuCores - int32(knowledge.ParseCpu(resource.Spec) * resource.Count)
+				zoneResource.FreeMemory = zoneResource.FreeMemory - int32(knowledge.ParseMemory(resource.Spec) * resource.Count)
+
+			} else {
+				enough = false
+			}
+
+			result = append(result, structs.ResourceStockCheckResult {
+				Type: instance.Type,
+				Name: instance.Type,
+				ClusterResourceParameterComputeResource: resource,
+				Enough: enough,
+			})
+		}
+	}
+	return result, nil
+}
+
+// PreviewScaleOutCluster
+// @Description: preview
+// @Receiver p
+// @Parameter ctx
+// @Parameter req
+// @return resp
+// @return err
+func (p *Manager) PreviewScaleOutCluster(ctx context.Context, req cluster.ScaleOutClusterReq) (resp cluster.PreviewClusterResp, err error) {
+	clusterMeta, err := handler.Get(ctx, req.ClusterID)
+	if err != nil {
+		return
+	}
+	// todo validate
+	resp = cluster.PreviewClusterResp{
+		Region: clusterMeta.Cluster.Region,
+		CpuArchitecture: string(clusterMeta.Cluster.CpuArchitecture),
+		ClusterType: clusterMeta.Cluster.Type,
+		ClusterVersion: clusterMeta.Cluster.Version,
+		ClusterName: clusterMeta.Cluster.Name,
+		CapabilityIndexes: []structs.Index{},
+	}
+	checkResult, err := preCheckStock(ctx, clusterMeta.Cluster.Region, string(clusterMeta.Cluster.CpuArchitecture), req.InstanceResource)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("check stocks failed, err = %s", err.Error())
+		return
+	} else {
+		resp.StockCheckResult = checkResult
+	}
+
 	return
 }
 
@@ -483,27 +601,32 @@ func (p *Manager) RestartCluster(ctx context.Context, req cluster.RestartCluster
 var takeoverClusterFlow = workflow.WorkFlowDefine{
 	FlowName: constants.FlowTakeoverCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":            {"fetchTopologyFile", "fetched", "fail", workflow.SyncFuncNode, fetchTopologyFile},
-		"fetched":          {"rebuildTopologyFromConfig", "built", "fail", workflow.SyncFuncNode, rebuildTopologyFromConfig},
-		"built":            {"takeoverResource", "resourceDone", "fail", workflow.SyncFuncNode, takeoverResource},
+		"start":            {"fetchTopologyFile", "fetched", "revert", workflow.SyncFuncNode, fetchTopologyFile},
+		"fetched":          {"rebuildTopologyFromConfig", "built", "revert", workflow.SyncFuncNode, rebuildTopologyFromConfig},
+		"built":            {"validateHostsStatus", "importDone", "revert", workflow.SyncFuncNode, validateHostsStatus},
+		"importDone":       {"takeoverResource", "resourceDone", "revert", workflow.SyncFuncNode, takeoverResource},
 		"resourceDone":     {"rebuildTiupSpaceForCluster", "workingSpaceDone", "fail", workflow.SyncFuncNode, rebuildTiupSpaceForCluster},
 		"workingSpaceDone": {"testConnectivity", "success", "", workflow.SyncFuncNode, testConnectivity},
 		"success":          {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
 		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"revert":           {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(clearClusterPhysically)},
 	},
 }
 
-func openSftpClient(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error) {
+type openSftpClientFunc func(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error)
+
+var openSftpClient openSftpClientFunc = func(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error) {
 	conf := ssh.ClientConfig{User: req.TiUPUserName,
 		Auth: []ssh.AuthMethod{ssh.Password(req.TiUPUserPassword)},
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			return nil
 		},
+		Timeout: time.Second * 3,
 	}
 
 	client, err := ssh.Dial("tcp", net.JoinHostPort(req.TiUPIp, strconv.Itoa(req.TiUPPort)), &conf)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("connect error, error: %s", err.Error())
+		framework.LogWithContext(ctx).Errorf("connection error: %s", err.Error())
 		return nil, nil, errors.WrapError(errors.TIEM_TAKEOVER_SSH_CONNECT_ERROR, "ssh dial error", err)
 	}
 
@@ -523,16 +646,22 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 	}
 
 	client, sftpClient, err := openSftpClient(ctx, req)
-	sftpClient.Close()
-	client.Close()
 
+	defer func() {
+		if sftpClient != nil {
+			sftpClient.Close()
+		}
+		if client != nil {
+			client.Close()
+		}
+	}()
 	if err != nil {
 		return
 	}
-
 	meta := &handler.ClusterMeta{}
 	if err = meta.BuildForTakeover(ctx, req.ClusterName, req.DBUser, req.DBPassword); err != nil {
 		framework.LogWithContext(ctx).Errorf(err.Error())
+		return
 	}
 
 	data := map[string]interface{}{
@@ -567,7 +696,7 @@ func asyncMaintenance(ctx context.Context, meta *handler.ClusterMeta,
 		return "", err
 	}
 
-	flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, meta.Cluster.ID, flowName)
+	flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, meta.Cluster.ID, workflow.BizTypeCluster, flowName)
 	if err != nil {
 		meta.EndMaintenance(ctx, status)
 		framework.LogWithContext(ctx).Errorf(
@@ -655,7 +784,7 @@ func (p *Manager) GetMonitorInfo(ctx context.Context, req cluster.QueryMonitorIn
 
 func (p *Manager) restoreNewClusterPreCheck(ctx context.Context, req cluster.RestoreNewClusterReq) error {
 	if req.BackupID == "" {
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("restore new cluster input backupId empty"))
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("restore new cluster input backupId empty"))
 	}
 
 	brService := backuprestore.GetBRService()
@@ -667,13 +796,13 @@ func (p *Manager) restoreNewClusterPreCheck(ctx context.Context, req cluster.Res
 		},
 	})
 	if err != nil {
-		return errors.NewEMErrorf(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, err.Error())
+		return errors.NewErrorf(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, err.Error())
 	}
 	if len(resp.BackupRecords) <= 0 {
-		return errors.NewEMErrorf(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("backup recordId %s not found", req.BackupID))
+		return errors.NewErrorf(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("backup recordId %s not found", req.BackupID))
 	}
 	if resp.BackupRecords[0].Status != string(constants.ClusterBackupFinished) {
-		return errors.NewEMErrorf(errors.TIEM_BACKUP_RECORD_INVALID, fmt.Sprintf("backup record status invalid"))
+		return errors.NewErrorf(errors.TIEM_BACKUP_RECORD_INVALID, fmt.Sprintf("backup record status invalid"))
 	}
 
 	return nil

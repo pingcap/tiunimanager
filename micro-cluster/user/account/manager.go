@@ -47,7 +47,7 @@ func (p *Manager) CreateUser(ctx context.Context, request message.CreateUserReq)
 
 	user, err := rw.GetUser(ctx, request.TenantID, request.ID)
 	if err == nil && user.ID == request.ID {
-		return resp, errors.NewEMErrorf(errors.UserAlreadyExist, "user %s in tenant %s has exist", request.ID, request.TenantID)
+		return resp, errors.NewErrorf(errors.UserAlreadyExist, "user %s in tenant %s has exist", request.ID, request.TenantID)
 	} else if err.(errors.EMError).GetCode() == errors.UserNotExist {
 		user := &account.User{
 			ID:       request.ID,
@@ -61,7 +61,7 @@ func (p *Manager) CreateUser(ctx context.Context, request message.CreateUserReq)
 		err = user.GenSaltAndHash(request.Password)
 		if err != nil {
 			log.Errorf("create user %s in tenant %s error: %v", request.ID, request.TenantID, err)
-			return resp, errors.NewEMErrorf(errors.UserGenSaltAndHashValueFailed,
+			return resp, errors.NewErrorf(errors.UserGenSaltAndHashValueFailed,
 				"create user %s in tenant %s error: %v", request.ID, request.TenantID, err)
 		}
 		_, err = rw.CreateUser(ctx, user)
@@ -81,14 +81,14 @@ func (p *Manager) DeleteUser(ctx context.Context, request message.DeleteUserReq)
 	_, err := rw.GetUser(ctx, request.TenantID, request.ID)
 	if err != nil {
 		log.Errorf("delete user %s in tenant %s error: %v", request.ID, request.TenantID, err)
-		return resp, errors.NewEMErrorf(errors.UserNotExist,
+		return resp, errors.NewErrorf(errors.UserNotExist,
 			"delete user %s in tenant %s error: %v", request.ID, request.TenantID, err)
 	}
 
 	err = rw.DeleteUser(ctx, request.TenantID, request.ID)
 	if err != nil {
 		log.Errorf("delete user %s in tenant %s error: %v", request.ID, request.TenantID, err)
-		return resp, errors.NewEMErrorf(errors.DeleteUserFailed,
+		return resp, errors.NewErrorf(errors.DeleteUserFailed,
 			"delete user %s in tenant %s error: %v", request.ID, request.TenantID, err)
 	}
 	return resp, nil
@@ -100,7 +100,7 @@ func (p *Manager) GetUser(ctx context.Context, request message.GetUserReq) (resp
 	resp.User, err = rw.GetUser(ctx, request.TenantID, request.ID)
 	if err != nil {
 		log.Errorf("get user %s in tenant %s error: %v", request.ID, request.TenantID, err)
-		return resp, errors.NewEMErrorf(errors.UserNotExist,
+		return resp, errors.NewErrorf(errors.UserNotExist,
 			"get user %s in tenant %s error: %v", request.ID, request.TenantID, err)
 	}
 	return resp, err
@@ -112,7 +112,7 @@ func (p *Manager) QueryUsers(ctx context.Context, request message.QueryUserReq) 
 	resp.Users, err = rw.QueryUsers(ctx)
 	if err != nil {
 		log.Errorf("query all users error: %v", err)
-		return resp, errors.NewEMErrorf(errors.QueryUserScanRowError, "query all users error: %v", err)
+		return resp, errors.NewErrorf(errors.QueryUserScanRowError, "query all users error: %v", err)
 	}
 	return resp, err
 }
@@ -125,7 +125,7 @@ func (p *Manager) UpdateUserProfile(ctx context.Context, request message.UpdateU
 		errMsg := fmt.Sprintf("update user %s profile (email: %s phone: %s)  in tenant %s error: %v",
 			request.ID, request.Email, request.Phone, request.TenantID, err)
 		log.Errorf(errMsg)
-		return resp, errors.NewEMErrorf(errors.UpdateUserProfileFailed, errMsg)
+		return resp, errors.NewErrorf(errors.UpdateUserProfileFailed, errMsg)
 	}
 	return resp, err
 }
@@ -137,7 +137,7 @@ func (p *Manager) CreateTenant(ctx context.Context, request message.CreateTenant
 
 	tenant, err := rw.GetTenant(ctx, request.ID)
 	if err == nil && tenant.ID == request.ID {
-		return resp, errors.NewEMErrorf(errors.TenantAlreadyExist, "tenant %s has exist", request.ID)
+		return resp, errors.NewErrorf(errors.TenantAlreadyExist, "tenant %s has exist", request.ID)
 	} else if err.(errors.EMError).GetCode() == errors.TenantNotExist {
 		_, err = rw.CreateTenant(ctx,
 			&account.Tenant{
@@ -166,13 +166,13 @@ func (p *Manager) DeleteTenant(ctx context.Context, request message.DeleteTenant
 	_, err = rw.GetTenant(ctx, request.ID)
 	if err != nil {
 		log.Errorf("delete tenant %s error: %v", request.ID, err)
-		return resp, errors.NewEMErrorf(errors.TenantNotExist, "delete tenant %s error: %v", request.ID, err)
+		return resp, errors.NewErrorf(errors.TenantNotExist, "delete tenant %s error: %v", request.ID, err)
 	}
 
 	err = rw.DeleteTenant(ctx, request.ID)
 	if err != nil {
 		log.Errorf("delete tenant %s error: %v", request.ID, err)
-		return resp, errors.NewEMErrorf(errors.DeleteTenantFailed, "delete tenant %s error: %v", request.ID, err)
+		return resp, errors.NewErrorf(errors.DeleteTenantFailed, "delete tenant %s error: %v", request.ID, err)
 	}
 	return resp, err
 }
@@ -183,7 +183,7 @@ func (p *Manager) GetTenant(ctx context.Context, request message.GetTenantReq) (
 	resp.Info, err = rw.GetTenant(ctx, request.ID)
 	if err != nil {
 		log.Errorf("get tenant %s error: %v", request.ID, err)
-		return resp, errors.NewEMErrorf(errors.TenantNotExist, "get tenant %s error: %v", request.ID, err)
+		return resp, errors.NewErrorf(errors.TenantNotExist, "get tenant %s error: %v", request.ID, err)
 	}
 	return resp, err
 }
@@ -194,7 +194,7 @@ func (p *Manager) QueryTenants(ctx context.Context, request message.QueryTenantR
 	resp.Tenants, err = rw.QueryTenants(ctx)
 	if err != nil {
 		log.Errorf("query all tenants error: %v", err)
-		return resp, errors.NewEMErrorf(errors.QueryTenantScanRowError, "query all tenants error: %v", err)
+		return resp, errors.NewErrorf(errors.QueryTenantScanRowError, "query all tenants error: %v", err)
 	}
 	return resp, err
 }
@@ -205,7 +205,7 @@ func (p *Manager) UpdateTenantOnBoardingStatus(ctx context.Context, request mess
 	err = rw.UpdateTenantOnBoardingStatus(ctx, request.ID, request.OnBoardingStatus)
 	if err != nil {
 		log.Errorf("update tenant %s on boarding status error: %v", request.ID, err)
-		return resp, errors.NewEMErrorf(errors.UpdateTenantOnBoardingStatusFailed,
+		return resp, errors.NewErrorf(errors.UpdateTenantOnBoardingStatusFailed,
 			"update tenant %s on boarding status error: %v", request.ID, err)
 	}
 	return resp, err
@@ -219,7 +219,7 @@ func (p *Manager) UpdateTenantProfile(ctx context.Context, request message.Updat
 		errMsg := fmt.Sprintf("update tenant %s profile (Name: %s, MaxCluster: %d, MaxCPU: %d, MaxMemory: %d, MaxStorage: %d) error: %v",
 			request.ID, request.Name, request.MaxCluster, request.MaxCPU, request.MaxMemory, request.MaxStorage, err)
 		log.Errorf(errMsg)
-		return resp, errors.NewEMErrorf(errors.UpdateTenantOnBoardingStatusFailed, errMsg)
+		return resp, errors.NewErrorf(errors.UpdateTenantOnBoardingStatusFailed, errMsg)
 	}
 	return resp, err
 }

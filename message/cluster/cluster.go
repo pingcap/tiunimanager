@@ -268,7 +268,7 @@ type QueryClusterLogResp struct {
 }
 
 type QueryClusterParametersReq struct {
-	ClusterID string `json:"clusterId" swaggerignore:"true"`
+	ClusterID string `json:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
 	ParamName string `json:"paramName" form:"paramName"`
 	structs.PageRequest
 }
@@ -279,9 +279,9 @@ type QueryClusterParametersResp struct {
 }
 
 type UpdateClusterParametersReq struct {
-	ClusterID string                               `json:"clusterId" swaggerignore:"true"`
-	Params    []structs.ClusterParameterSampleInfo `json:"params"`
-	Reboot    bool                                 `json:"reboot"`
+	ClusterID string                               `json:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
+	Params    []structs.ClusterParameterSampleInfo `json:"params" validate:"required"`
+	Reboot    bool                                 `json:"reboot" validate:"required"`
 }
 
 type UpdateClusterParametersResp struct {
@@ -290,7 +290,7 @@ type UpdateClusterParametersResp struct {
 }
 
 type InspectClusterParametersReq struct {
-	ClusterID string `json:"clusterId"`
+	ClusterID string `json:"clusterId" validate:"required,min=8,max=64"`
 }
 
 type InspectClusterParametersResp struct {

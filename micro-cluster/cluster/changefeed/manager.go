@@ -300,8 +300,8 @@ func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTa
 	})
 
 	if detailError == nil {
-		resp.ChangeFeedTaskInfo.DownstreamSyncTS = strconv.FormatInt(int64(taskDetail.CheckPointTSO), 10)
-		resp.ChangeFeedTaskInfo.UpstreamUpdateTS = strconv.FormatInt(int64(currentTSO()), 10)
+		resp.ChangeFeedTaskInfo.AcceptDownstreamSyncTS(taskDetail.CheckPointTSO)
+		resp.ChangeFeedTaskInfo.AcceptUpstreamUpdateTS(currentTSO())
 	} else {
 		framework.LogWithContext(ctx).Errorf("detail change feed task err = %s", err)
 	}
@@ -344,11 +344,11 @@ func (p *Manager) Query(ctx context.Context, request cluster.QueryChangeFeedTask
 			ChangeFeedTaskInfo: parse(*task),
 		}
 
-		resp.ChangeFeedTaskInfo.UpstreamUpdateTS = strconv.FormatInt(int64(currentTSO()), 10)
+		resp.ChangeFeedTaskInfo.AcceptUpstreamUpdateTS(currentTSO())
 		if t, ok := cdcTaskInstanceMap[task.ID]; ok {
-			resp.DownstreamSyncTS = strconv.FormatInt(int64(t.CheckPointTSO), 10)
+			resp.AcceptDownstreamSyncTS(t.CheckPointTSO)
 		} else {
-			resp.DownstreamSyncTS = "0"
+			resp.AcceptDownstreamSyncTS(0)
 		}
 		resps = append(resps, resp)
 	}

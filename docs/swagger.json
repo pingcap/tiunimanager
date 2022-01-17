@@ -5112,9 +5112,17 @@
                     "type": "string",
                     "example": "415241823337054209"
                 },
+                "downstreamFetchUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
+                },
                 "downstreamSyncTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "downstreamSyncUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 },
                 "downstreamType": {
                     "type": "string",
@@ -5168,6 +5176,10 @@
                 "upstreamUpdateTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "upstreamUpdateUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 }
             }
         },
@@ -5411,9 +5423,17 @@
                     "type": "string",
                     "example": "415241823337054209"
                 },
+                "downstreamFetchUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
+                },
                 "downstreamSyncTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "downstreamSyncUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 },
                 "downstreamType": {
                     "type": "string",
@@ -5467,6 +5487,10 @@
                 "upstreamUpdateTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "upstreamUpdateUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 }
             }
         },

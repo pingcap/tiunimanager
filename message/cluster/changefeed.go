@@ -17,6 +17,7 @@ package cluster
 
 import (
 	"github.com/pingcap-inc/tiem/common/structs"
+	"strconv"
 	"time"
 )
 
@@ -161,8 +162,49 @@ type TiDBDownstream struct {
 
 type ChangeFeedTaskInfo struct {
 	ChangeFeedTask
-	UnSteady          bool   `json:"unsteady" form:"unsteady" example:"false"`
-	UpstreamUpdateTS  string `json:"upstreamUpdateTs" form:"upstreamUpdateTs" example:"415241823337054209"`
-	DownstreamFetchTS string `json:"downstreamFetchTs" form:"downstreamFetchTs" example:"415241823337054209"`
-	DownstreamSyncTS  string `json:"downstreamSyncTs" form:"downstreamSyncTs" example:"415241823337054209"`
+	UnSteady            bool   `json:"unsteady" form:"unsteady" example:"false"`
+	UpstreamUpdateTS    string `json:"upstreamUpdateTs" form:"upstreamUpdateTs" example:"415241823337054209"`
+	UpstreamUpdateUnix  int64  `json:"upstreamUpdateUnix" form:"upstreamUpdateUnix" example:"1642402879000"`
+	DownstreamFetchTS   string `json:"downstreamFetchTs" form:"downstreamFetchTs" example:"415241823337054209"`
+	DownstreamFetchUnix int64  `json:"downstreamFetchUnix" form:"downstreamFetchUnix" example:"1642402879000"`
+	DownstreamSyncTS    string `json:"downstreamSyncTs" form:"downstreamSyncTs" example:"415241823337054209"`
+	DownstreamSyncUnix  int64  `json:"downstreamSyncUnix" form:"downstreamSyncUnix" example:"1642402879000"`
 }
+
+func (p *ChangeFeedTaskInfo) AcceptUpstreamUpdateTS(ts uint64) {
+	if ts == 0 {
+		p.UpstreamUpdateTS = "0"
+		p.UpstreamUpdateUnix = 0
+	} else {
+		p.UpstreamUpdateTS = strconv.FormatInt(int64(ts), 10)
+		p.UpstreamUpdateUnix = parseTS(ts)
+	}
+}
+
+func (p *ChangeFeedTaskInfo) AcceptDownstreamFetchTS(ts uint64) {
+	if ts == 0 {
+		p.DownstreamFetchTS = "0"
+		p.DownstreamFetchUnix = 0
+	} else {
+		p.DownstreamFetchTS = strconv.FormatInt(int64(ts), 10)
+		p.DownstreamFetchUnix = parseTS(ts)
+	}
+}
+
+func (p *ChangeFeedTaskInfo) AcceptDownstreamSyncTS(ts uint64) {
+	if ts == 0 {
+		p.DownstreamSyncTS = "0"
+		p.DownstreamSyncUnix = 0
+	} else {
+		p.DownstreamSyncTS = strconv.FormatInt(int64(ts), 10)
+		p.DownstreamSyncUnix = parseTS(ts)
+	}
+
+}
+
+var physicalShiftBits = int64(18)
+
+func parseTS(ts uint64) (unix int64) {
+	return int64(ts >> physicalShiftBits)
+}
+

@@ -309,6 +309,18 @@ func (mgr *RBACManager) BindRolesForUser(ctx context.Context, request message.Bi
 			return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("conflict userId %s with role", request.UserID))
 		}
 	}
+	for _, reqRole := range request.Roles {
+		exist := false
+		for _, role := range roles {
+			if reqRole == role {
+				exist = true
+				break
+			}
+		}
+		if !exist {
+			return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("bind role %s not exist", reqRole))
+		}
+	}
 
 	if _, err = mgr.enforcer.AddRolesForUser(request.UserID, request.Roles); err != nil {
 		framework.LogWithContext(ctx).Errorf("call enforcer AddRolesForUser failed %s", err.Error())

@@ -42,7 +42,7 @@ type QueryParameterGroupResp struct {
 }
 
 type DetailParameterGroupReq struct {
-	ParamGroupID string `json:"paramGroupId" validate:"required,min=1,max=64"`
+	ParamGroupID string `json:"paramGroupId" swaggerignore:"true" validate:"required,min=1,max=64"`
 	ParamName    string `json:"paramName" form:"paramName"`
 }
 

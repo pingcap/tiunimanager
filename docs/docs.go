@@ -2974,6 +2974,11 @@ var doc = `{
                         "name": "paramGroupId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "paramName",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -5927,6 +5932,10 @@ var doc = `{
         },
         "cluster.UpdateClusterParametersReq": {
             "type": "object",
+            "required": [
+                "params",
+                "reboot"
+            ],
             "properties": {
                 "params": {
                     "type": "array",
@@ -6126,6 +6135,10 @@ var doc = `{
         },
         "message.ApplyParameterGroupReq": {
             "type": "object",
+            "required": [
+                "clusterId",
+                "reboot"
+            ],
             "properties": {
                 "clusterId": {
                     "type": "string",
@@ -6155,6 +6168,9 @@ var doc = `{
         },
         "message.CopyParameterGroupReq": {
             "type": "object",
+            "required": [
+                "name"
+            ],
             "properties": {
                 "name": {
                     "type": "string",
@@ -6177,6 +6193,9 @@ var doc = `{
         },
         "message.CreateParameterGroupReq": {
             "type": "object",
+            "required": [
+                "params"
+            ],
             "properties": {
                 "clusterSpec": {
                     "type": "string",
@@ -6810,6 +6829,9 @@ var doc = `{
         },
         "message.UpdateParameterGroupReq": {
             "type": "object",
+            "required": [
+                "params"
+            ],
             "properties": {
                 "clusterSpec": {
                     "type": "string",
@@ -7250,6 +7272,10 @@ var doc = `{
         },
         "structs.ClusterParameterSampleInfo": {
             "type": "object",
+            "required": [
+                "paramId",
+                "realValue"
+            ],
             "properties": {
                 "paramId": {
                     "type": "string",

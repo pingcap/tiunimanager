@@ -39,16 +39,20 @@ type RbacResource string
 
 var RbacResourceMap = map[string]RbacResource{
 	string(RbacResourceCluster):   RbacResourceCluster,
-	string(RbacResourceHost):      RbacResourceHost,
+	string(RbacResourceResource):  RbacResourceResource,
 	string(RbacResourceParameter): RbacResourceParameter,
 	string(RbacResourceUser):      RbacResourceUser,
+	string(RbacResourceCDC):       RbacResourceCDC,
+	string(RbacResourceProduct):   RbacResourceProduct,
 }
 
 const (
 	RbacResourceCluster   RbacResource = "cluster"
-	RbacResourceHost      RbacResource = "host"
+	RbacResourceResource  RbacResource = "resource"
 	RbacResourceParameter RbacResource = "parameter"
 	RbacResourceUser      RbacResource = "user"
+	RbacResourceCDC       RbacResource = "cdc"
+	RbacResourceProduct   RbacResource = "product"
 )
 
 // RbacRole Definition rbac role enum

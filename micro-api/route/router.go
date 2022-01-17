@@ -86,13 +86,13 @@ func Route(g *gin.Engine) {
 			rbac.Use(interceptor.VerifyIdentity)
 			rbac.Use(interceptor.AuditLog())
 			rbac.POST("/role/", metrics.HandleMetrics(constants.MetricsRbacCreateRole), rbacApi.CreateRbacRole)
-			rbac.GET("/role/", metrics.HandleMetrics(constants.MetricsRbacGetRole), rbacApi.GetRbacRoles)
-			rbac.POST("/role/bind", metrics.HandleMetrics(constants.MetricsRbacBindRoleForUser), rbacApi.BindRoleForUser)
+			rbac.GET("/role/", metrics.HandleMetrics(constants.MetricsRbacQueryRole), rbacApi.QueryRbacRoles)
+			rbac.POST("/role/bind", metrics.HandleMetrics(constants.MetricsRbacBindRolesForUser), rbacApi.BindRolesForUser)
 			rbac.DELETE("/role/unbind", metrics.HandleMetrics(constants.MetricsRbacUnbindRoleForUser), rbacApi.UnbindRoleForUser)
 			rbac.DELETE("/role/:role", metrics.HandleMetrics(constants.MetricsRbacDeleteRole), rbacApi.DeleteRbacRole)
 			rbac.POST("/permission/add", metrics.HandleMetrics(constants.MetricsRbacAddPermissionForRole), rbacApi.AddPermissionsForRole)
 			rbac.DELETE("/permission/delete", metrics.HandleMetrics(constants.MetricsRbacDeletePermissionForRole), rbacApi.DeletePermissionsForRole)
-			rbac.GET("/permission/:userId", metrics.HandleMetrics(constants.MetricsRbacGetPermissionForUser), rbacApi.GetPermissionsForUser)
+			rbac.GET("/permission/:userId", metrics.HandleMetrics(constants.MetricsRbacQueryPermissionForUser), rbacApi.QueryPermissionsForUser)
 			rbac.POST("/permission/check", metrics.HandleMetrics(constants.MetricsRbacCheckPermissionForUser), rbacApi.CheckPermissionForUser)
 		}
 

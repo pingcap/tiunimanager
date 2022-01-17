@@ -870,14 +870,14 @@ func (c *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *cluster
 	return nil
 }
 
-func (c *ClusterServiceHandler) BindRoleForUser(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+func (c *ClusterServiceHandler) BindRolesForUser(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "AddRoleForUser", int(resp.GetCode()))
-	defer handlePanic(ctx, "AddRoleForUser", resp)
+	defer metrics.HandleClusterMetrics(start, "BindRoleForUser", int(resp.GetCode()))
+	defer handlePanic(ctx, "BindRoleForUser", resp)
 
 	bindReq := message.BindRoleForUserReq{}
 	if handleRequest(ctx, req, resp, &bindReq) {
-		result, err := c.rbacManager.BindRoleForUser(framework.NewBackgroundMicroCtx(ctx, false), bindReq)
+		result, err := c.rbacManager.BindRolesForUser(framework.NewBackgroundMicroCtx(ctx, false), bindReq)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -914,8 +914,8 @@ func (c *ClusterServiceHandler) DeleteRbacRole(ctx context.Context, req *cluster
 
 func (c *ClusterServiceHandler) UnbindRoleForUser(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "DeleteRoleForUser", int(resp.GetCode()))
-	defer handlePanic(ctx, "DeleteRoleForUser", resp)
+	defer metrics.HandleClusterMetrics(start, "UnbindRoleForUser", int(resp.GetCode()))
+	defer handlePanic(ctx, "UnbindRoleForUser", resp)
 
 	unBindReq := message.UnbindRoleForUserReq{}
 	if handleRequest(ctx, req, resp, &unBindReq) {
@@ -954,14 +954,14 @@ func (c *ClusterServiceHandler) DeletePermissionsForRole(ctx context.Context, re
 	return nil
 }
 
-func (c *ClusterServiceHandler) GetPermissionsForUser(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+func (c *ClusterServiceHandler) QueryPermissionsForUser(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "GetPermissionsForUser", int(resp.GetCode()))
-	defer handlePanic(ctx, "GetPermissionsForUser", resp)
+	defer metrics.HandleClusterMetrics(start, "QueryPermissionsForUser", int(resp.GetCode()))
+	defer handlePanic(ctx, "QueryPermissionsForUser", resp)
 
-	getReq := message.GetPermissionsForUserReq{}
+	getReq := message.QueryPermissionsForUserReq{}
 	if handleRequest(ctx, req, resp, &getReq) {
-		result, err := c.rbacManager.GetPermissionsForUser(framework.NewBackgroundMicroCtx(ctx, false), getReq)
+		result, err := c.rbacManager.QueryPermissionsForUser(framework.NewBackgroundMicroCtx(ctx, false), getReq)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -982,14 +982,14 @@ func (c *ClusterServiceHandler) CheckPermissionForUser(ctx context.Context, req 
 	return nil
 }
 
-func (c *ClusterServiceHandler) GetRoles(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+func (c *ClusterServiceHandler) QueryRoles(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "GetRoles", int(resp.GetCode()))
-	defer handlePanic(ctx, "GetRoles", resp)
+	defer metrics.HandleClusterMetrics(start, "QueryRoles", int(resp.GetCode()))
+	defer handlePanic(ctx, "QueryRoles", resp)
 
-	getReq := message.GetRolesReq{}
+	getReq := message.QueryRolesReq{}
 	if handleRequest(ctx, req, resp, &getReq) {
-		result, err := c.rbacManager.GetRoles(framework.NewBackgroundMicroCtx(ctx, false), getReq)
+		result, err := c.rbacManager.QueryRoles(framework.NewBackgroundMicroCtx(ctx, false), getReq)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 

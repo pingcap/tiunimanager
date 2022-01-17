@@ -23,22 +23,22 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
 
-// GetRbacRoles
-// @Summary get rbac roles
-// @Description GetRbacRoles
-// @Tags rbac GetRbacRoles
+// QueryRbacRoles
+// @Summary query rbac roles
+// @Description QueryRoles
+// @Tags rbac QueryRoles
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
 // @Param role path string true "rbac role"
-// @Success 200 {object} controller.CommonResult{data=message.GetRolesResp}
+// @Success 200 {object} controller.CommonResult{data=message.QueryRolesResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /rbac/role/ [get]
-func GetRbacRoles(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.GetRolesReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.GetRoles, &message.GetRolesResp{},
+func QueryRbacRoles(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.QueryRolesReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryRoles, &message.QueryRolesResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -88,22 +88,22 @@ func DeleteRbacRole(c *gin.Context) {
 	}
 }
 
-// BindRoleForUser
-// @Summary bind user with role
-// @Description BindRoleForUser
-// @Tags rbac BindRoleForUser
+// BindRolesForUser
+// @Summary bind user with roles
+// @Description BindRolesForUser
+// @Tags rbac BindRolesForUser
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param bindReq body message.BindRoleForUserReq true "BindRoleForUser request"
-// @Success 200 {object} controller.CommonResult{data=message.BindRoleForUserResp}
+// @Param bindReq body message.BindRolesForUserReq true "BindRolesForUser request"
+// @Success 200 {object} controller.CommonResult{data=message.BindRolesForUserResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /rbac/role/bind [post]
-func BindRoleForUser(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.BindRoleForUserReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.BindRoleForUser, &message.BindRoleForUserResp{},
+func BindRolesForUser(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.BindRolesForUserReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.BindRolesForUser, &message.BindRolesForUserResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -172,24 +172,24 @@ func DeletePermissionsForRole(c *gin.Context) {
 	}
 }
 
-// GetPermissionsForUser
-// @Summary get permissions of user
-// @Description GetPermissionsForUser
-// @Tags rbac GetPermissionsForUser
+// QueryPermissionsForUser
+// @Summary query permissions of user
+// @Description QueryPermissionsForUser
+// @Tags rbac QueryPermissionsForUser
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
 // @Param userId path string true "rbac userId"
-// @Success 200 {object} controller.CommonResult{data=message.GetPermissionsForUserResp}
+// @Success 200 {object} controller.CommonResult{data=message.QueryPermissionsForUserResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /rbac/permission/{userId} [get]
-func GetPermissionsForUser(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.GetPermissionsForUserReq{
+func QueryPermissionsForUser(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.QueryPermissionsForUserReq{
 		UserID: c.Param("userId"),
 	}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.GetPermissionsForUser, &message.GetPermissionsForUserResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryPermissionsForUser, &message.QueryPermissionsForUserResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

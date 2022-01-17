@@ -40,10 +40,11 @@ type DeleteRoleReq struct {
 type DeleteRoleResp struct {
 }
 
-type GetRolesReq struct {
+type QueryRolesReq struct {
+	UserID string `json:"userId"`
 }
 
-type GetRolesResp struct {
+type QueryRolesResp struct {
 	Roles []string
 }
 
@@ -63,21 +64,21 @@ type DeletePermissionsForRoleReq struct {
 type DeletePermissionsForRoleResp struct {
 }
 
-type GetPermissionsForUserReq struct {
+type QueryPermissionsForUserReq struct {
 	UserID string `json:"userId"`
 }
 
-type GetPermissionsForUserResp struct {
+type QueryPermissionsForUserResp struct {
 	UserID      string                   `json:"userId"`
 	Permissions []structs.RbacPermission `json:"permissions"`
 }
 
-type BindRoleForUserReq struct {
-	UserID string `json:"userId"`
-	Role   string `json:"role"`
+type BindRolesForUserReq struct {
+	UserID string   `json:"userId"`
+	Roles  []string `json:"role"`
 }
 
-type BindRoleForUserResp struct {
+type BindRolesForUserResp struct {
 }
 
 type UnbindRoleForUserReq struct {

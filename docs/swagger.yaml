@@ -928,14 +928,16 @@ definitions:
         description: Asynchronous task workflow ID
         type: string
     type: object
-  message.BindRoleForUserReq:
+  message.BindRolesForUserReq:
     properties:
       role:
-        type: string
+        items:
+          type: string
+        type: array
       userId:
         type: string
     type: object
-  message.BindRoleForUserResp:
+  message.BindRolesForUserResp:
     type: object
   message.CheckPermissionForUserReq:
     properties:
@@ -1231,22 +1233,6 @@ definitions:
       root:
         $ref: '#/definitions/structs.HierarchyTreeNode'
     type: object
-  message.GetPermissionsForUserResp:
-    properties:
-      permissions:
-        items:
-          $ref: '#/definitions/structs.RbacPermission'
-        type: array
-      userId:
-        type: string
-    type: object
-  message.GetRolesResp:
-    properties:
-      roles:
-        items:
-          type: string
-        type: array
-    type: object
   message.GetStocksResp:
     properties:
       stocks:
@@ -1350,6 +1336,15 @@ definitions:
         example: 1636698675
         type: integer
     type: object
+  message.QueryPermissionsForUserResp:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/structs.RbacPermission'
+        type: array
+      userId:
+        type: string
+    type: object
   message.QueryProductDetailResp:
     properties:
       products:
@@ -1370,6 +1365,13 @@ definitions:
           type: object
         description: arch version
         type: object
+    type: object
+  message.QueryRolesResp:
+    properties:
+      roles:
+        items:
+          type: string
+        type: array
     type: object
   message.QuerySpecsResp:
     properties:
@@ -4482,7 +4484,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: GetPermissionsForUser
+      description: QueryPermissionsForUser
       parameters:
       - description: rbac userId
         in: path
@@ -4499,7 +4501,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/message.GetPermissionsForUserResp'
+                  $ref: '#/definitions/message.QueryPermissionsForUserResp'
               type: object
         "401":
           description: Unauthorized
@@ -4515,9 +4517,9 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: get permissions of user
+      summary: query permissions of user
       tags:
-      - rbac GetPermissionsForUser
+      - rbac QueryPermissionsForUser
   /rbac/permission/add:
     post:
       consumes:
@@ -4645,7 +4647,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: GetRbacRoles
+      description: QueryRoles
       parameters:
       - description: rbac role
         in: path
@@ -4662,7 +4664,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/message.GetRolesResp'
+                  $ref: '#/definitions/message.QueryRolesResp'
               type: object
         "401":
           description: Unauthorized
@@ -4678,9 +4680,9 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: get rbac roles
+      summary: query rbac roles
       tags:
-      - rbac GetRbacRoles
+      - rbac QueryRoles
     post:
       consumes:
       - application/json
@@ -4765,14 +4767,14 @@ paths:
     post:
       consumes:
       - application/json
-      description: BindRoleForUser
+      description: BindRolesForUser
       parameters:
-      - description: BindRoleForUser request
+      - description: BindRolesForUser request
         in: body
         name: bindReq
         required: true
         schema:
-          $ref: '#/definitions/message.BindRoleForUserReq'
+          $ref: '#/definitions/message.BindRolesForUserReq'
       produces:
       - application/json
       responses:
@@ -4783,7 +4785,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/message.BindRoleForUserResp'
+                  $ref: '#/definitions/message.BindRolesForUserResp'
               type: object
         "401":
           description: Unauthorized
@@ -4799,9 +4801,9 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: bind user with role
+      summary: bind user with roles
       tags:
-      - rbac BindRoleForUser
+      - rbac BindRolesForUser
   /rbac/user_role/delete:
     delete:
       consumes:

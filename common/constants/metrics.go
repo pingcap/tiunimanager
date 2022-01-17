@@ -89,15 +89,14 @@ const (
 	MetricsUserLogin                   MetricsType = "user/login"
 	MetricsUserLogout                  MetricsType = "user/logout"
 	MetricsUserProfile                 MetricsType = "user/profile"
-	MetricsRbacBindRoleForUser         MetricsType = "user/rbac/role/bind"
+	MetricsRbacBindRolesForUser        MetricsType = "user/rbac/role/bind"
 	MetricsRbacUnbindRoleForUser       MetricsType = "user/rbac/role/unbind"
-	MetricsRbacGetRole                 MetricsType = "user/rbac/role/"
+	MetricsRbacQueryRole               MetricsType = "user/rbac/role/"
 	MetricsRbacCreateRole              MetricsType = "user/rbac/role/create"
 	MetricsRbacDeleteRole              MetricsType = "user/rbac/role/delete"
-	MetricsRbacDeleteUser              MetricsType = "user/rbac/user/delete"
 	MetricsRbacAddPermissionForRole    MetricsType = "user/rbac/permission/add"
 	MetricsRbacDeletePermissionForRole MetricsType = "user/rbac/permission/delete"
-	MetricsRbacGetPermissionForUser    MetricsType = "user/rbac/permission/get"
+	MetricsRbacQueryPermissionForUser  MetricsType = "user/rbac/permission/"
 	MetricsRbacCheckPermissionForUser  MetricsType = "user/rbac/permission/check"
 
 	// MetricsWorkFlowQuery define workflow metrics

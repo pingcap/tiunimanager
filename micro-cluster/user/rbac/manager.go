@@ -74,8 +74,13 @@ func NewRBACManager() *RBACManager {
 	return mgr
 }
 
+/*
+	1. init role and permission
+	2. bind admin role for admin user
+*/
 func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 	framework.LogWithContext(ctx).Infof("begin init default rbac...")
+	// 1. init role and permission
 	// init admin role
 	framework.LogWithContext(ctx).Infof("begin init default rbac role %s ...", constants.RbacRoleAdmin)
 	mgr.CreateRole(ctx, message.CreateRoleReq{Role: string(constants.RbacRoleAdmin)}, true)
@@ -87,7 +92,7 @@ func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 	}}, true)
 	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleAdmin), Permissions: []structs.RbacPermission{
 		{
-			Resource: string(constants.RbacResourceHost),
+			Resource: string(constants.RbacResourceResource),
 			Action:   string(constants.RbacActionAll),
 		},
 	}}, true)
@@ -100,6 +105,18 @@ func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleAdmin), Permissions: []structs.RbacPermission{
 		{
 			Resource: string(constants.RbacResourceUser),
+			Action:   string(constants.RbacActionAll),
+		},
+	}}, true)
+	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleAdmin), Permissions: []structs.RbacPermission{
+		{
+			Resource: string(constants.RbacResourceCDC),
+			Action:   string(constants.RbacActionAll),
+		},
+	}}, true)
+	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleAdmin), Permissions: []structs.RbacPermission{
+		{
+			Resource: string(constants.RbacResourceProduct),
 			Action:   string(constants.RbacActionAll),
 		},
 	}}, true)
@@ -115,7 +132,7 @@ func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 	}}, true)
 	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleClusterManager), Permissions: []structs.RbacPermission{
 		{
-			Resource: string(constants.RbacResourceHost),
+			Resource: string(constants.RbacResourceResource),
 			Action:   string(constants.RbacActionRead),
 		},
 	}}, true)
@@ -128,6 +145,18 @@ func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleClusterManager), Permissions: []structs.RbacPermission{
 		{
 			Resource: string(constants.RbacResourceUser),
+			Action:   string(constants.RbacActionRead),
+		},
+	}}, true)
+	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleClusterManager), Permissions: []structs.RbacPermission{
+		{
+			Resource: string(constants.RbacResourceCDC),
+			Action:   string(constants.RbacActionRead),
+		},
+	}}, true)
+	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleClusterManager), Permissions: []structs.RbacPermission{
+		{
+			Resource: string(constants.RbacResourceProduct),
 			Action:   string(constants.RbacActionRead),
 		},
 	}}, true)
@@ -143,7 +172,7 @@ func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 	}}, true)
 	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRolePlatformManager), Permissions: []structs.RbacPermission{
 		{
-			Resource: string(constants.RbacResourceHost),
+			Resource: string(constants.RbacResourceResource),
 			Action:   string(constants.RbacActionAll),
 		},
 	}}, true)
@@ -159,6 +188,27 @@ func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 			Action:   string(constants.RbacActionAll),
 		},
 	}}, true)
+	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRolePlatformManager), Permissions: []structs.RbacPermission{
+		{
+			Resource: string(constants.RbacResourceCDC),
+			Action:   string(constants.RbacActionRead),
+		},
+	}}, true)
+	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRolePlatformManager), Permissions: []structs.RbacPermission{
+		{
+			Resource: string(constants.RbacResourceProduct),
+			Action:   string(constants.RbacActionAll),
+		},
+	}}, true)
+
+	// 2. bind admin role for admin user
+	adminUser, _ := models.GetAccountReaderWriter().FindAccountByName(ctx, "admin")
+	if adminUser != nil && adminUser.ID != "" {
+		mgr.BindRolesForUser(ctx, message.BindRolesForUserReq{UserID: adminUser.ID, Roles: []string{string(constants.RbacRoleAdmin)}})
+		framework.LogWithContext(ctx).Infof("bind admin role for userId %s", adminUser.ID)
+	} else {
+		framework.LogWithContext(ctx).Errorf("get empty adminUser %+v", adminUser)
+	}
 }
 
 func (mgr *RBACManager) CheckPermissionForUser(ctx context.Context, request message.CheckPermissionForUserReq) (resp message.CheckPermissionForUserResp, err error) {
@@ -179,13 +229,24 @@ func (mgr *RBACManager) CheckPermissionForUser(ctx context.Context, request mess
 	return message.CheckPermissionForUserResp{Result: true}, nil
 }
 
-func (mgr *RBACManager) GetRoles(ctx context.Context, request message.GetRolesReq) (resp message.GetRolesResp, err error) {
-	framework.LogWithContext(ctx).Infof("begin GetRoles, request: %+v", request)
-	framework.LogWithContext(ctx).Info("end GetRoles")
+func (mgr *RBACManager) QueryRoles(ctx context.Context, request message.QueryRolesReq) (resp message.QueryRolesResp, err error) {
+	framework.LogWithContext(ctx).Infof("begin QueryRoles, request: %+v", request)
+	framework.LogWithContext(ctx).Info("end QueryRoles")
 
-	return message.GetRolesResp{
-		Roles: mgr.enforcer.GetAllRoles(),
-	}, nil
+	if request.UserID == "" {
+		return message.QueryRolesResp{
+			Roles: mgr.enforcer.GetAllRoles(),
+		}, nil
+	} else {
+		roles, err := mgr.enforcer.GetRolesForUser(request.UserID)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("call enforcer GetRolesForUser failed %s", err.Error())
+			return resp, errors.WrapError(errors.TIEM_RBAC_ROLE_QUERY_FAILED, fmt.Sprintf("call enforcer GetRolesForUser failed"), err)
+		}
+		return message.QueryRolesResp{
+			Roles: roles,
+		}, nil
+	}
 }
 
 func (mgr *RBACManager) DeleteRole(ctx context.Context, request message.DeleteRoleReq) (resp message.DeleteRoleResp, err error) {
@@ -224,12 +285,12 @@ func (mgr *RBACManager) CreateRole(ctx context.Context, request message.CreateRo
 	return
 }
 
-func (mgr *RBACManager) BindRoleForUser(ctx context.Context, request message.BindRoleForUserReq) (resp message.BindRoleForUserResp, err error) {
-	framework.LogWithContext(ctx).Infof("begin BindRoleForUser, request: %+v", request)
-	framework.LogWithContext(ctx).Info("end BindRoleForUser")
+func (mgr *RBACManager) BindRolesForUser(ctx context.Context, request message.BindRolesForUserReq) (resp message.BindRolesForUserResp, err error) {
+	framework.LogWithContext(ctx).Infof("begin BindRolesForUser, request: %+v", request)
+	framework.LogWithContext(ctx).Info("end BindRolesForUser")
 
-	if request.Role == "" || request.UserID == "" {
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid input empty userId or role")
+	if len(request.Roles) == 0 || request.UserID == "" {
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid input empty userId or roles")
 	}
 	roles := mgr.enforcer.GetAllRoles()
 	for _, role := range roles {
@@ -238,9 +299,9 @@ func (mgr *RBACManager) BindRoleForUser(ctx context.Context, request message.Bin
 		}
 	}
 
-	if _, err = mgr.enforcer.AddRoleForUser(request.UserID, request.Role); err != nil {
-		framework.LogWithContext(ctx).Errorf("call enforcer AddRoleForUser failed %s", err.Error())
-		return resp, errors.WrapError(errors.TIEM_RBAC_ROLE_BIND_FAILED, fmt.Sprintf("call enforcer AddRoleForUser failed"), err)
+	if _, err = mgr.enforcer.AddRolesForUser(request.UserID, request.Roles); err != nil {
+		framework.LogWithContext(ctx).Errorf("call enforcer AddRolesForUser failed %s", err.Error())
+		return resp, errors.WrapError(errors.TIEM_RBAC_ROLE_BIND_FAILED, fmt.Sprintf("call enforcer AddRolesForUser failed"), err)
 	}
 	return resp, nil
 }
@@ -316,9 +377,9 @@ func (mgr *RBACManager) DeletePermissionsForRole(ctx context.Context, request me
 	return
 }
 
-func (mgr *RBACManager) GetPermissionsForUser(ctx context.Context, request message.GetPermissionsForUserReq) (resp message.GetPermissionsForUserResp, err error) {
-	framework.LogWithContext(ctx).Infof("begin GetPermissionsForUser, request: %+v", request)
-	framework.LogWithContext(ctx).Info("end GetPermissionsForUser")
+func (mgr *RBACManager) QueryPermissionsForUser(ctx context.Context, request message.QueryPermissionsForUserReq) (resp message.QueryPermissionsForUserResp, err error) {
+	framework.LogWithContext(ctx).Infof("begin QueryPermissionsForUserResp, request: %+v", request)
+	framework.LogWithContext(ctx).Info("end QueryPermissionsForUserResp")
 
 	roles, err := mgr.enforcer.GetRolesForUser(request.UserID)
 	if err != nil {

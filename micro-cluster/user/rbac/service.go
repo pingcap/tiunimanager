@@ -40,14 +40,14 @@ type RBACService interface {
 	// @Return error
 	DeleteRole(ctx context.Context, request message.DeleteRoleReq) (resp message.DeleteRoleResp, err error)
 
-	// GetRoles
-	// @Description: get rbac roles
+	// QueryRoles
+	// @Description: query rbac roles by condition
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
-	// @Return message.GetRolesResp
+	// @Return message.QueryRolesResp
 	// @Return error
-	GetRoles(ctx context.Context, request message.GetRolesReq) (resp message.GetRolesResp, err error)
+	QueryRoles(ctx context.Context, request message.QueryRolesReq) (resp message.QueryRolesResp, err error)
 
 	// CreateRole
 	// @Description: create rbac role
@@ -59,14 +59,14 @@ type RBACService interface {
 	// @Return error
 	CreateRole(ctx context.Context, request message.CreateRoleReq, system bool) (resp message.CreateRoleResp, err error)
 
-	// BindRoleForUser
-	// @Description: bind rbac role for user
+	// BindRolesForUser
+	// @Description: bind rbac roles for user
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
-	// @Return message.BindRoleForUserResp
+	// @Return message.BindRolesForUserResp
 	// @Return error
-	BindRoleForUser(ctx context.Context, request message.BindRoleForUserReq) (resp message.BindRoleForUserResp, err error)
+	BindRolesForUser(ctx context.Context, request message.BindRolesForUserReq) (resp message.BindRolesForUserResp, err error)
 
 	// UnbindRoleForUser
 	// @Description: unbind rbac role for user
@@ -96,12 +96,12 @@ type RBACService interface {
 	// @Return error
 	DeletePermissionsForRole(ctx context.Context, request message.DeletePermissionsForRoleReq) (resp message.DeletePermissionsForRoleResp, err error)
 
-	// GetPermissionsForUser
-	// @Description: get permissions for rbac user
+	// QueryPermissionsForUser
+	// @Description: query permissions for rbac user
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
-	// @Return message.GetPermissionsForUserResp
+	// @Return message.QueryPermissionsForUserResp
 	// @Return error
-	GetPermissionsForUser(ctx context.Context, request message.GetPermissionsForUserReq) (resp message.GetPermissionsForUserResp, err error)
+	QueryPermissionsForUser(ctx context.Context, request message.QueryPermissionsForUserReq) (resp message.QueryPermissionsForUserResp, err error)
 }

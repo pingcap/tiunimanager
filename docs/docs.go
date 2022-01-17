@@ -3810,7 +3810,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "GetPermissionsForUser",
+                "description": "QueryPermissionsForUser",
                 "consumes": [
                     "application/json"
                 ],
@@ -3818,9 +3818,9 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "rbac GetPermissionsForUser"
+                    "rbac QueryPermissionsForUser"
                 ],
-                "summary": "get permissions of user",
+                "summary": "query permissions of user",
                 "parameters": [
                     {
                         "type": "string",
@@ -3842,7 +3842,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/message.GetPermissionsForUserResp"
+                                            "$ref": "#/definitions/message.QueryPermissionsForUserResp"
                                         }
                                     }
                                 }
@@ -3877,7 +3877,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "GetRbacRoles",
+                "description": "QueryRoles",
                 "consumes": [
                     "application/json"
                 ],
@@ -3885,9 +3885,9 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "rbac GetRbacRoles"
+                    "rbac QueryRoles"
                 ],
-                "summary": "get rbac roles",
+                "summary": "query rbac roles",
                 "parameters": [
                     {
                         "type": "string",
@@ -3909,7 +3909,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/message.GetRolesResp"
+                                            "$ref": "#/definitions/message.QueryRolesResp"
                                         }
                                     }
                                 }
@@ -4011,7 +4011,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "BindRoleForUser",
+                "description": "BindRolesForUser",
                 "consumes": [
                     "application/json"
                 ],
@@ -4019,17 +4019,17 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "rbac BindRoleForUser"
+                    "rbac BindRolesForUser"
                 ],
-                "summary": "bind user with role",
+                "summary": "bind user with roles",
                 "parameters": [
                     {
-                        "description": "BindRoleForUser request",
+                        "description": "BindRolesForUser request",
                         "name": "bindReq",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/message.BindRoleForUserReq"
+                            "$ref": "#/definitions/message.BindRolesForUserReq"
                         }
                     }
                 ],
@@ -4045,7 +4045,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/message.BindRoleForUserResp"
+                                            "$ref": "#/definitions/message.BindRolesForUserResp"
                                         }
                                     }
                                 }
@@ -6754,18 +6754,21 @@ var doc = `{
                 }
             }
         },
-        "message.BindRoleForUserReq": {
+        "message.BindRolesForUserReq": {
             "type": "object",
             "properties": {
                 "role": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "userId": {
                     "type": "string"
                 }
             }
         },
-        "message.BindRoleForUserResp": {
+        "message.BindRolesForUserResp": {
             "type": "object"
         },
         "message.CheckPermissionForUserReq": {
@@ -7206,31 +7209,6 @@ var doc = `{
                 }
             }
         },
-        "message.GetPermissionsForUserResp": {
-            "type": "object",
-            "properties": {
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.RbacPermission"
-                    }
-                },
-                "userId": {
-                    "type": "string"
-                }
-            }
-        },
-        "message.GetRolesResp": {
-            "type": "object",
-            "properties": {
-                "roles": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
         "message.GetStocksResp": {
             "type": "object",
             "properties": {
@@ -7382,6 +7360,20 @@ var doc = `{
                 }
             }
         },
+        "message.QueryPermissionsForUserResp": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.RbacPermission"
+                    }
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
         "message.QueryProductDetailResp": {
             "type": "object",
             "properties": {
@@ -7410,6 +7402,17 @@ var doc = `{
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "message.QueryRolesResp": {
+            "type": "object",
+            "properties": {
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
                     }
                 }
             }

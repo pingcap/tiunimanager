@@ -875,7 +875,7 @@ func (c *ClusterServiceHandler) BindRolesForUser(ctx context.Context, req *clust
 	defer metrics.HandleClusterMetrics(start, "BindRoleForUser", int(resp.GetCode()))
 	defer handlePanic(ctx, "BindRoleForUser", resp)
 
-	bindReq := message.BindRoleForUserReq{}
+	bindReq := message.BindRolesForUserReq{}
 	if handleRequest(ctx, req, resp, &bindReq) {
 		result, err := c.rbacManager.BindRolesForUser(framework.NewBackgroundMicroCtx(ctx, false), bindReq)
 		handleResponse(ctx, resp, err, result, nil)

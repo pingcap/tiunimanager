@@ -202,7 +202,7 @@ func (p *ChangeFeedTaskInfo) AcceptDownstreamSyncTS(ts uint64) {
 
 }
 
-var physicalShiftBits = int64(18)
+var physicalShiftBits = 18
 
 func parseTS(ts uint64) (unix int64) {
 	return int64(ts >> physicalShiftBits)

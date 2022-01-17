@@ -46,7 +46,7 @@ func TestMain(m *testing.M) {
 
 	framework.InitBaseFrameworkForUt("",
 		func(d *framework.BaseFramework) error {
-			dbFile := fmt.Sprintf("%s/storage/%s?_busy_timeout=60000", testTiUPHome, "operation.db")
+			dbFile := fmt.Sprintf("%s/operation.db", testTiUPHome)
 			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 
 			if err != nil || db.Error != nil {

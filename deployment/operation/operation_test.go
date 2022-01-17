@@ -29,8 +29,6 @@ import (
 	"testing"
 )
 
-var operationIDs []string
-
 const (
 	TestWorkFlowID = "testworkflowid"
 )
@@ -45,7 +43,6 @@ func TestGormOperationReadWrite_Create_Fail(t *testing.T) {
 
 func TestGormOperationReadWrite_Create_Success(t *testing.T) {
 	operation1, err := testRW.Create(context.TODO(), "deploy", TestWorkFlowID)
-	operationIDs = append(operationIDs, operation1.ID)
 
 	if err != nil || operation1 == nil {
 		t.Errorf("Create() error: %v: operation1: %v", err, operation1)
@@ -59,7 +56,6 @@ func TestGormOperationReadWrite_Create_Success(t *testing.T) {
 
 func TestGormOperationReadWrite_Update_Fail(t *testing.T) {
 	operation1, err := testRW.Create(context.TODO(), "deploy", TestWorkFlowID)
-	operationIDs = append(operationIDs, operation1.ID)
 
 	if err != nil || operation1 == nil {
 		t.Errorf("Create() error: %v: operation1: %v", err, operation1)
@@ -76,7 +72,6 @@ func TestGormOperationReadWrite_Update_Fail(t *testing.T) {
 
 func TestGormOperationReadWrite_Update_Success(t *testing.T) {
 	operation1, err := testRW.Create(context.TODO(), "deploy", TestWorkFlowID)
-	operationIDs = append(operationIDs, operation1.ID)
 
 	if err != nil || operation1 == nil {
 		t.Errorf("Create() error: %v: operation1: %v", err, operation1)

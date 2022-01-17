@@ -79,7 +79,7 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 	log.Infof("apply and check cluster ignore warning (%v) on %s", ignoreWarnings, templateStr)
 
 	if rp_consts.SecondPartyReady {
-		resultStr, err := p.secondPartyServ.Check(ctx, secondparty.TiEMComponentTypeStr, templateStr, rp_consts.DefaultTiupTimeOut,
+		resultStr, err := p.secondPartyServ.Check(ctx, secondparty.ClusterComponentTypeStr, templateStr, rp_consts.DefaultTiupTimeOut,
 			[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--apply", "--format", "json"})
 		if err != nil {
 			errMsg := fmt.Sprintf("call second serv to check host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)

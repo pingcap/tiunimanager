@@ -227,9 +227,15 @@ definitions:
       downstreamFetchTs:
         example: "415241823337054209"
         type: string
+      downstreamFetchUnix:
+        example: 1642402879000
+        type: integer
       downstreamSyncTs:
         example: "415241823337054209"
         type: string
+      downstreamSyncUnix:
+        example: 1642402879000
+        type: integer
       downstreamType:
         enum:
         - tidb
@@ -270,6 +276,9 @@ definitions:
       upstreamUpdateTs:
         example: "415241823337054209"
         type: string
+      upstreamUpdateUnix:
+        example: 1642402879000
+        type: integer
     type: object
   cluster.Dispatcher:
     properties:
@@ -441,9 +450,15 @@ definitions:
       downstreamFetchTs:
         example: "415241823337054209"
         type: string
+      downstreamFetchUnix:
+        example: 1642402879000
+        type: integer
       downstreamSyncTs:
         example: "415241823337054209"
         type: string
+      downstreamSyncUnix:
+        example: 1642402879000
+        type: integer
       downstreamType:
         enum:
         - tidb
@@ -484,6 +499,9 @@ definitions:
       upstreamUpdateTs:
         example: "415241823337054209"
         type: string
+      upstreamUpdateUnix:
+        example: 1642402879000
+        type: integer
     type: object
   cluster.QueryClusterDetailResp:
     properties:

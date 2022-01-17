@@ -5140,9 +5140,17 @@ var doc = `{
                     "type": "string",
                     "example": "415241823337054209"
                 },
+                "downstreamFetchUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
+                },
                 "downstreamSyncTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "downstreamSyncUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 },
                 "downstreamType": {
                     "type": "string",
@@ -5196,6 +5204,10 @@ var doc = `{
                 "upstreamUpdateTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "upstreamUpdateUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 }
             }
         },
@@ -5439,9 +5451,17 @@ var doc = `{
                     "type": "string",
                     "example": "415241823337054209"
                 },
+                "downstreamFetchUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
+                },
                 "downstreamSyncTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "downstreamSyncUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 },
                 "downstreamType": {
                     "type": "string",
@@ -5495,6 +5515,10 @@ var doc = `{
                 "upstreamUpdateTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "upstreamUpdateUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 }
             }
         },

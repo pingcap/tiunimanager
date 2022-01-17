@@ -35,6 +35,7 @@ const (
 	MetricsClusterStart                 MetricsType = "cluster/start"
 	MetricsClusterRestart               MetricsType = "cluster/restart"
 	MetricsClusterScaleIn               MetricsType = "cluster/scale_in"
+	MetricsClusterPreviewScaleOut       MetricsType = "cluster/preview_scale_out"
 	MetricsClusterScaleOut              MetricsType = "cluster/scale_out"
 	MetricsClusterClone                 MetricsType = "cluster/clone"
 	MetricsClusterRestore               MetricsType = "cluster/restore"

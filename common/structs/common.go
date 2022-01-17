@@ -29,18 +29,22 @@ type Usage struct {
 	UsageRate float32 `json:"usageRate"`
 }
 
+type VendorWithRegion struct {
+	VendorInfo
+	Regions map[string]RegionInfo  `json:"regions" form:"regions"`
+}
+
+//VendorInfo vendor information provided by Enterprise Manager
+type VendorInfo struct {
+	ID   string `json:"id" form:"id"`     //The value of the VendorID is similar to AWS
+	Name string `json:"name" form:"name"` //The value of the Name is similar to AWS
+}
+
 // RegionInfo Information about the physical location of the cluster, the meaning of Region is the same as that of Cloud
 type RegionInfo struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
-
-/*
-// ZoneInfo Information about the physical location of the cluster, the meaning of Zone is the same as that of Cloud
-type ZoneInfo struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}*/
 
 // ProductSpecInfo Enterprise Manager product specification description information, mainly will be described by computing, storage are specifications
 type ProductSpecInfo struct {

@@ -371,6 +371,25 @@ func (manager *SecondPartyManager) ClusterDisplay(ctx context.Context, tiUPCompo
 	return
 }
 
+func (manager *SecondPartyManager) Check(ctx context.Context, tiUPComponent TiUPComponentTypeStr, checkObject string,
+	timeoutS int, flags []string) (result string, err error) {
+	framework.LogWithContext(ctx).Infof("check tiupcomponent: %s,  checkobject: %s, "+
+		"timeouts: %d, flags: %v", string(tiUPComponent), checkObject, timeoutS, flags)
+	var args []string
+	args = append(args, string(tiUPComponent), "check")
+	args = append(args, checkObject)
+	args = append(args, flags...)
+	tiUPHome := GetTiUPHomeForComponent(ctx, tiUPComponent)
+	resp, err := manager.startSyncTiUPOperation(ctx, args, timeoutS, tiUPHome)
+	if err != nil {
+		return "", err
+	}
+
+	jsons := strings.Split(resp, "\n")
+	result = jsons[len(jsons)-2]
+	return
+}
+
 func (manager *SecondPartyManager) ClusterUpgrade(ctx context.Context, tiUPComponent TiUPComponentTypeStr,
 	instanceName string, version string, timeoutS int, flags []string, workFlowNodeID string) (operationID string,
 	err error) {

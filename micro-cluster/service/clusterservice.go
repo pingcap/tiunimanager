@@ -20,16 +20,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/pingcap-inc/tiem/metrics"
 	"github.com/pingcap-inc/tiem/proto/clusterservices"
-	"time"
 
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/micro-cluster/platform/product"
+	"github.com/pingcap-inc/tiem/micro-cluster/user/account"
 	"github.com/pingcap-inc/tiem/micro-cluster/user/identification"
-	"github.com/pingcap-inc/tiem/micro-cluster/user/tenant"
-	"github.com/pingcap-inc/tiem/micro-cluster/user/userinfo"
 
 	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
 
@@ -60,8 +60,7 @@ type ClusterServiceHandler struct {
 	brManager               backuprestore.BRService
 	importexportManager     importexport.ImportExportService
 	clusterLogManager       *clusterLog.Manager
-	tenantManager           *tenant.Manager
-	accountManager          *userinfo.Manager
+	accountManager          *account.Manager
 	authManager             *identification.Manager
 	productManager          *product.ProductManager
 }
@@ -133,8 +132,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.brManager = backuprestore.GetBRService()
 	handler.importexportManager = importexport.GetImportExportService()
 	handler.clusterLogManager = clusterLog.NewManager()
-	handler.tenantManager = tenant.NewTenantManager()
-	handler.accountManager = userinfo.NewAccountManager()
+	handler.accountManager = account.NewAccountManager()
 	handler.authManager = identification.NewIdentificationManager()
 	handler.productManager = product.NewProductManager()
 
@@ -409,6 +407,36 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterse
 
 	if handleRequest(ctx, req, resp, &request) {
 		result, err := c.clusterManager.CreateCluster(framework.NewBackgroundMicroCtx(ctx, false), request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (c ClusterServiceHandler) PreviewCluster(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) (err error) {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "PreviewCluster", int(resp.GetCode()))
+	defer handlePanic(ctx, "PreviewCluster", resp)
+
+	request := cluster.CreateClusterReq{}
+
+	if handleRequest(ctx, req, resp, &request) {
+		result, err := c.clusterManager.PreviewCluster(framework.NewBackgroundMicroCtx(ctx, false), request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (c ClusterServiceHandler) PreviewScaleOutCluster(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) (err error) {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "PreviewScaleOutCluster", int(resp.GetCode()))
+	defer handlePanic(ctx, "PreviewScaleOutCluster", resp)
+
+	request := cluster.ScaleOutClusterReq{}
+
+	if handleRequest(ctx, req, resp, &request) {
+		result, err := c.clusterManager.PreviewScaleOutCluster(framework.NewBackgroundMicroCtx(ctx, false), request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -844,7 +872,7 @@ func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, req *clus
 	reqStruct := message.ImportHostsReq{}
 
 	if handleRequest(ctx, req, resp, &reqStruct) {
-		flowIds, hostIds, err := handler.resourceManager.ImportHosts(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.Hosts)
+		flowIds, hostIds, err := handler.resourceManager.ImportHosts(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.Hosts, &reqStruct.Condition)
 		var rsp message.ImportHostsResp
 		if err == nil {
 			rsp.HostIDS = hostIds
@@ -866,7 +894,7 @@ func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, req *clus
 	reqStruct := message.DeleteHostsReq{}
 
 	if handleRequest(ctx, req, resp, &reqStruct) {
-		flowIds, err := handler.resourceManager.DeleteHosts(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.HostIDs)
+		flowIds, err := handler.resourceManager.DeleteHosts(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.HostIDs, reqStruct.Force)
 		var rsp message.DeleteHostsResp
 		if err == nil {
 			for _, flowId := range flowIds {
@@ -889,13 +917,18 @@ func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, req *clust
 	if handleRequest(ctx, req, resp, &reqStruct) {
 		filter := reqStruct.GetHostFilter()
 		page := reqStruct.GetPage()
+		location := reqStruct.GetLocation()
 
-		hosts, err := handler.resourceManager.QueryHosts(framework.NewBackgroundMicroCtx(ctx, false), filter, page)
+		hosts, total, err := handler.resourceManager.QueryHosts(framework.NewBackgroundMicroCtx(ctx, false), location, filter, page)
 		var rsp message.QueryHostsResp
 		if err == nil {
 			rsp.Hosts = hosts
 		}
-		handleResponse(ctx, resp, err, rsp, nil)
+		handleResponse(ctx, resp, err, rsp, &clusterservices.RpcPage{
+			Page:     int32(page.Page),
+			PageSize: int32(page.PageSize),
+			Total:    int32(total),
+		})
 	}
 
 	return nil
@@ -969,7 +1002,7 @@ func (handler *ClusterServiceHandler) GetStocks(ctx context.Context, req *cluste
 		stocks, err := handler.resourceManager.GetStocks(framework.NewBackgroundMicroCtx(ctx, false), location, hostFilter, diskFilter)
 		var rsp message.GetStocksResp
 		if err == nil {
-			rsp.Stocks = *stocks
+			rsp.Stocks = stocks
 		}
 		handleResponse(ctx, resp, err, rsp, nil)
 	}
@@ -1007,7 +1040,7 @@ func (handler *ClusterServiceHandler) QueryZones(ctx context.Context, request *c
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "QueryZones", int(response.GetCode()))
 
-	req := message.QueryZonesReq{}
+	req := message.QueryZonesTreeReq{}
 	if handleRequest(ctx, request, response, &req) {
 		resp, err := handler.productManager.QueryZones(ctx)
 		handleResponse(ctx, response, err, resp, nil)
@@ -1173,9 +1206,9 @@ func (handler *ClusterServiceHandler) CreateTenant(ctx context.Context, request 
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "CreateTenant", int(response.GetCode()))
 
-	req := message.CreateTenantReqV1{}
+	req := message.CreateTenantReq{}
 	if handleRequest(ctx, request, response, &req) {
-		resp, err := handler.tenantManager.CreateTenant(ctx, req)
+		resp, err := handler.accountManager.CreateTenant(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 	return nil
@@ -1187,7 +1220,7 @@ func (handler *ClusterServiceHandler) DeleteTenant(ctx context.Context, request 
 
 	req := message.DeleteTenantReq{}
 	if handleRequest(ctx, request, response, &req) {
-		resp, err := handler.tenantManager.DeleteTenant(ctx, req)
+		resp, err := handler.accountManager.DeleteTenant(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 	return nil
@@ -1199,7 +1232,7 @@ func (handler *ClusterServiceHandler) GetTenant(ctx context.Context, request *cl
 
 	req := message.GetTenantReq{}
 	if handleRequest(ctx, request, response, &req) {
-		resp, err := handler.tenantManager.GetTenant(ctx, req)
+		resp, err := handler.accountManager.GetTenant(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 	return nil
@@ -1211,7 +1244,7 @@ func (handler *ClusterServiceHandler) QueryTenants(ctx context.Context, request 
 
 	req := message.QueryTenantReq{}
 	if handleRequest(ctx, request, response, &req) {
-		resp, err := handler.tenantManager.QueryTenants(ctx, req)
+		resp, err := handler.accountManager.QueryTenants(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 	return nil
@@ -1223,7 +1256,7 @@ func (handler *ClusterServiceHandler) UpdateTenantOnBoardingStatus(ctx context.C
 
 	req := message.UpdateTenantOnBoardingStatusReq{}
 	if handleRequest(ctx, request, response, &req) {
-		resp, err := handler.tenantManager.UpdateTenantOnBoardingStatus(ctx, req)
+		resp, err := handler.accountManager.UpdateTenantOnBoardingStatus(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 	return nil
@@ -1235,7 +1268,7 @@ func (handler *ClusterServiceHandler) UpdateTenantProfile(ctx context.Context, r
 
 	req := message.UpdateTenantProfileReq{}
 	if handleRequest(ctx, request, response, &req) {
-		resp, err := handler.tenantManager.UpdateTenantProfile(ctx, req)
+		resp, err := handler.accountManager.UpdateTenantProfile(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 	return nil

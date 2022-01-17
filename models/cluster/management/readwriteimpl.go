@@ -37,7 +37,7 @@ func (g *ClusterReadWrite) Create(ctx context.Context, cluster *Cluster) (*Clust
 		// duplicated name
 		existOrError := g.DB(ctx).Model(&Cluster{}).Where("name = ?", cluster.Name).First(&Cluster{}).Error
 		if existOrError == nil {
-			err = errors.NewEMErrorf(errors.TIEM_DUPLICATED_NAME, "%s:%s", errors.TIEM_DUPLICATED_NAME.Explain(), cluster.Name)
+			err = errors.NewErrorf(errors.TIEM_DUPLICATED_NAME, "%s:%s", errors.TIEM_DUPLICATED_NAME.Explain(), cluster.Name)
 		} else {
 			err = dbCommon.WrapDBError(err)
 		}
@@ -133,7 +133,7 @@ func (g *ClusterReadWrite) QueryMetas(ctx context.Context, filters Filters, page
 	clusters := make([]*Cluster, 0)
 
 	total := int64(0)
-	query := g.DB(ctx).Table("clusters").Where("tenant_id = ?", filters.TenantId)
+	query := g.DB(ctx).Table("clusters").Where("tenant_id = ?", filters.TenantId).Where("deleted_at is null")
 	if len(filters.ClusterIDs) > 0 {
 		query = query.Where("id in ?", filters.ClusterIDs)
 	}
@@ -364,6 +364,21 @@ func (g *ClusterReadWrite) UpdateTopologySnapshotConfig(ctx context.Context, clu
 	snapshot.Config = config
 
 	return dbCommon.WrapDBError(g.DB(ctx).Save(snapshot).Error)
+}
+
+func (g *ClusterReadWrite) ClearClusterPhysically(ctx context.Context, clusterID string) error {
+	got, err := g.Get(ctx, clusterID)
+	if err != nil {
+		return err
+	}
+	err = g.DB(ctx).Unscoped().Delete(got).Error
+	if err != nil {
+		return dbCommon.WrapDBError(err)
+	}
+
+	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&ClusterInstance{}).Error
+	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&ClusterTopologySnapshot{}).Error
+	return dbCommon.WrapDBError(err)
 }
 
 func NewClusterReadWrite(db *gorm.DB) *ClusterReadWrite {

@@ -28,7 +28,6 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
-	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	mm "github.com/pingcap-inc/tiem/models/resource/management"
 	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	"github.com/pingcap-inc/tiem/models/user/account"
@@ -141,7 +140,6 @@ func (p *database) initTables() (err error) {
 		new(parametergroup.ParameterGroup),
 		new(parametergroup.ParameterGroupMapping),
 		new(parameter.ClusterParameterMapping),
-		new(account.Account),
 		new(identification.Token),
 		new(tiup.TiupConfig),
 		new(resourcePool.Host),
@@ -177,80 +175,83 @@ func (p *database) initReaderWriters() {
 }
 
 func (p *database) initSystemData() {
-	tenant, err := defaultDb.accountReaderWriter.CreateTenant(context.TODO(), account.Tenant{ID: "admin", Name: "EM system administration",
-		Creator: "System", Status: string(constants.TenantStatusNormal), OnBoardingStatus: string(constants.TenantOnBoarding)})
+	tenant, err := defaultDb.accountReaderWriter.CreateTenant(context.TODO(),
+		&account.Tenant{
+			ID:               "admin",
+			Name:             "EM system administration",
+			Creator:          "System",
+			Status:           string(constants.TenantStatusNormal),
+			OnBoardingStatus: string(constants.TenantOnBoarding)})
 	if err != nil {
-		framework.LogWithContext(context.TODO()).Errorf("---%v", err)
+		framework.LogWithContext(context.TODO()).Errorf("create 'admin' tenant error: %v", err)
 		return
 	}
 
 	// todo determine if default data needed
-	if err == nil {
-		// system admin account
-		account := &account.Account{
-			Entity: dbCommon.Entity{
-				TenantId: tenant.ID,
-			},
-			Name: "admin",
+	// system admin account
+	user := &account.User{
+		ID:       "admin",
+		TenantID: tenant.ID,
+		Name:     "admin",
+		Creator:  "System",
+	}
+	user.GenSaltAndHash("admin")
+	defaultDb.accountReaderWriter.CreateUser(context.TODO(), user)
+
+	// label
+	for _, v := range structs.DefaultLabelTypes {
+		labelRecord := new(resourcePool.Label)
+		labelRecord.ConstructLabelRecord(&v)
+		if err = defaultDb.base.Create(labelRecord).Error; err != nil {
+			framework.LogForkFile(constants.LogFileSystem).Errorf("create label error: %s", err.Error())
+			return
 		}
-		account.GenSaltAndHash("admin")
-		defaultDb.accountReaderWriter.AddAccount(context.TODO(), tenant.ID, account.Name, account.Salt, account.FinalHash, 0)
+	}
 
-		// label
-		for _, v := range structs.DefaultLabelTypes {
-			labelRecord := new(resourcePool.Label)
-			labelRecord.ConstructLabelRecord(&v)
-			if err = defaultDb.base.Create(labelRecord).Error; err != nil {
-				framework.LogForkFile(constants.LogFileSystem).Errorf("create label error: %s", err.Error())
-				return
-			}
+	// system config
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStorageType, ConfigValue: string(constants.StorageTypeS3)})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStoragePath, ConfigValue: constants.DefaultBackupStoragePath})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3AccessKey, ConfigValue: constants.DefaultBackupS3AccessKey})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3SecretAccessKey, ConfigValue: constants.DefaultBackupS3SecretAccessKey})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3Endpoint, ConfigValue: constants.DefaultBackupS3Endpoint})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyExportShareStoragePath, ConfigValue: constants.DefaultExportPath})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyImportShareStoragePath, ConfigValue: constants.DefaultImportPath})
+
+	// batch import parameters & default parameter group sql
+	parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters.sql"
+	err = syscall.Access(parameterSqlFile, syscall.F_OK)
+	if !os.IsNotExist(err) {
+		sqls, err := ioutil.ReadFile(parameterSqlFile)
+		if err != nil {
+			framework.LogForkFile(constants.LogFileSystem).Errorf("batch import parameters failed, err = %s", err.Error())
+			return
 		}
-
-		// system config
-		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStorageType, ConfigValue: string(constants.StorageTypeS3)})
-		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStoragePath, ConfigValue: constants.DefaultBackupStoragePath})
-		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3AccessKey, ConfigValue: constants.DefaultBackupS3AccessKey})
-		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3SecretAccessKey, ConfigValue: constants.DefaultBackupS3SecretAccessKey})
-		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3Endpoint, ConfigValue: constants.DefaultBackupS3Endpoint})
-		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyExportShareStoragePath, ConfigValue: constants.DefaultExportPath})
-		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyImportShareStoragePath, ConfigValue: constants.DefaultImportPath})
-
-		// batch import parameters & default parameter group sql
-		parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters.sql"
-		err := syscall.Access(parameterSqlFile, syscall.F_OK)
-		if !os.IsNotExist(err) {
-			sqls, err := ioutil.ReadFile(parameterSqlFile)
-			if err != nil {
-				framework.LogForkFile(constants.LogFileSystem).Errorf("batch import parameters failed, err = %s", err.Error())
-				return
+		sqlArr := strings.Split(string(sqls), ";")
+		for _, sql := range sqlArr {
+			if strings.TrimSpace(sql) == "" {
+				continue
 			}
-			sqlArr := strings.Split(string(sqls), ";")
-			for _, sql := range sqlArr {
-				if strings.TrimSpace(sql) == "" {
-					continue
-				}
-				// exec import sql
-				defaultDb.base.Exec(sql)
-			}
+			// exec import sql
+			defaultDb.base.Exec(sql)
 		}
+	}
 
-		// import TiUP configs
-		tiUPSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/tiup_configs.sql"
-		err = syscall.Access(tiUPSqlFile, syscall.F_OK)
-		if !os.IsNotExist(err) {
-			sqls, err := ioutil.ReadFile(tiUPSqlFile)
-			if err != nil {
-				framework.LogForkFile(constants.LogFileSystem).Errorf("import tiupconfigs failed, err = %s", err.Error())
-				return
+	// import TiUP configs
+	tiUPSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/tiup_configs.sql"
+	err = syscall.Access(tiUPSqlFile, syscall.F_OK)
+	if !os.IsNotExist(err) {
+		sqls, err := ioutil.ReadFile(tiUPSqlFile)
+		if err != nil {
+			framework.LogForkFile(constants.LogFileSystem).Errorf("import tiupconfigs failed, err = %s", err.Error())
+			return
+		}
+		sqlArr := strings.Split(string(sqls), ";")
+		for _, sql := range sqlArr {
+			if strings.TrimSpace(sql) == "" {
+				continue
 			}
-			sqlArr := strings.Split(string(sqls), ";")
-			for _, sql := range sqlArr {
-				if strings.TrimSpace(sql) == "" {
-					continue
-				}
-				// exec import sql
-				defaultDb.base.Exec(sql)
-			}
+			// exec import sql
+			defaultDb.base.Exec(sql)
 		}
 	}
 }
@@ -281,6 +282,10 @@ func SetImportExportReaderWriter(rw importexport.ReaderWriter) {
 
 func GetBRReaderWriter() backuprestore.ReaderWriter {
 	return defaultDb.brReaderWriter
+}
+
+func SetResourceReaderWriter(rw resource.ReaderWriter) {
+	defaultDb.resourceReaderWriter = rw
 }
 
 func GetResourceReaderWriter() resource.ReaderWriter {

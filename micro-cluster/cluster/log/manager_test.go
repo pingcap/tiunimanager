@@ -63,8 +63,8 @@ func TestManager_BuildClusterLogConfig(t *testing.T) {
 		DoAndReturn(func(ctx context.Context, clusterID string) (*management.Cluster, []*management.ClusterInstance, error) {
 			return mockCluster(), mockClusterInstances(), nil
 		})
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, bizId string, flowName string) (*workflow.WorkFlowAggregation, error) {
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (*workflow.WorkFlowAggregation, error) {
 			return mockWorkFlowAggregation(), nil
 		})
 	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).AnyTimes()

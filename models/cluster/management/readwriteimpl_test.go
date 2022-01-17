@@ -215,6 +215,58 @@ func TestGormClusterReadWrite_Delete(t *testing.T) {
 	})
 }
 
+func TestGormClusterReadWrite_ClearClusterPhysically(t *testing.T) {
+	cluster := &Cluster{
+		Name: "test32431",
+		Entity: common.Entity{
+			TenantId: "111",
+		},
+		Tags: []string{"tag1", "tag2"},
+	}
+	got, _ := testRW.Create(context.TODO(), cluster)
+
+	testRW.UpdateInstance(context.TODO(), &ClusterInstance{
+		Entity: common.Entity{
+			TenantId: "111",
+		},
+		Type: "dsfds",
+		Version: "v5.0.0",
+		ClusterID: cluster.ID,
+	})
+	defer testRW.Delete(context.TODO(), got.ID)
+	cluster2 := &Cluster{
+		Name: "tesfasfdsaf",
+		Entity: common.Entity{
+			TenantId: "111",
+		},
+		Tags: []string{"tag1", "tag2"},
+	}
+	got2, _ := testRW.Create(context.TODO(), cluster2)
+	defer testRW.Delete(context.TODO(), got2.ID)
+
+	t.Run("normal", func(t *testing.T) {
+		err := testRW.DB(context.TODO()).Where("id = ?", cluster.ID).First(cluster).Error
+		assert.NoError(t, err)
+		err = testRW.ClearClusterPhysically(context.TODO(), cluster.ID)
+		assert.NoError(t, err)
+		err = testRW.DB(context.TODO()).Where("id = ?", cluster.ID).First(cluster).Error
+		assert.Error(t, err)
+		err = testRW.DB(context.TODO()).Where("cluster_id = ?", cluster.ID).First(&ClusterInstance{}).Error
+		assert.Error(t, err)
+		assert.NoError(t, testRW.DB(context.TODO()).Where("id = ?", cluster2.ID).First(cluster2).Error)
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		err := testRW.ClearClusterPhysically(context.TODO(), "whatever")
+		assert.Error(t, err)
+		assert.Equal(t, errors.TIEM_CLUSTER_NOT_FOUND, err.(errors.EMError).GetCode())
+
+		err = testRW.ClearClusterPhysically(context.TODO(), "")
+		assert.Error(t, err)
+		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
+	})
+}
+
 func TestGormClusterReadWrite_DeleteInstance(t *testing.T) {
 	instance := &ClusterInstance{
 		Entity: common.Entity{
@@ -580,6 +632,7 @@ func TestClusterReadWrite_QueryMetas(t *testing.T) {
 		})
 		assert.Error(t, err)
 	})
+
 	t.Run("empty filter", func(t *testing.T) {
 		_, page, err := testRW.QueryMetas(context.TODO(), Filters{
 			TenantId:      "1919",
@@ -609,6 +662,24 @@ func TestClusterReadWrite_QueryMetas(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 7, page.Total)
 		assert.Equal(t, 0, len(result))
+	})
+
+	t.Run("total", func(t *testing.T) {
+		cluster8 := mockCluster("ssssddddffff", "TiDB", constants.ClusterStopped, []string{"tag1"})
+		testRW.Delete(context.TODO(), cluster8)
+
+		_, page, err := testRW.QueryMetas(context.TODO(), Filters{
+			TenantId:      "1919",
+			NameLike:      "",
+			Tag:           "",
+			Type:          "",
+			StatusFilters: []constants.ClusterRunningStatus{},
+		}, structs.PageRequest{
+			Page:     1,
+			PageSize: 2,
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, 7, page.Total)
 	})
 }
 

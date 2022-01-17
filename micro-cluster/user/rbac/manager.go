@@ -83,7 +83,6 @@ func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 	// 1. init role and permission
 	// init admin role
 	framework.LogWithContext(ctx).Infof("begin init default rbac role %s ...", constants.RbacRoleAdmin)
-	mgr.DeleteRole(ctx, message.DeleteRoleReq{Role: string(constants.RbacRoleAdmin)}, true)
 	mgr.CreateRole(ctx, message.CreateRoleReq{Role: string(constants.RbacRoleAdmin)}, true)
 	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleAdmin), Permissions: []structs.RbacPermission{
 		{
@@ -124,7 +123,6 @@ func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 
 	// init cluster manager role
 	framework.LogWithContext(ctx).Infof("begin init default rbac role %s ...", constants.RbacRoleClusterManager)
-	mgr.DeleteRole(ctx, message.DeleteRoleReq{Role: string(constants.RbacRoleClusterManager)}, true)
 	mgr.CreateRole(ctx, message.CreateRoleReq{Role: string(constants.RbacRoleClusterManager)}, true)
 	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleClusterManager), Permissions: []structs.RbacPermission{
 		{
@@ -165,7 +163,6 @@ func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 
 	// init platform role
 	framework.LogWithContext(ctx).Infof("begin init default rbac role %s ...", constants.RbacRolePlatformManager)
-	mgr.DeleteRole(ctx, message.DeleteRoleReq{Role: string(constants.RbacRolePlatformManager)}, true)
 	mgr.CreateRole(ctx, message.CreateRoleReq{Role: string(constants.RbacRolePlatformManager)}, true)
 	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRolePlatformManager), Permissions: []structs.RbacPermission{
 		{

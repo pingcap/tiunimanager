@@ -154,6 +154,7 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 		flowManager.AddContext(flow, rp_consts.ContextResourcePoolKey, p)
 		flowManager.AddContext(flow, rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{host})
 		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostIds[i]})
+		flowManager.AddContext(flow, rp_consts.ContextIgnoreWarnings, condition.IgnoreWarings)
 
 		flows = append(flows, flow)
 		flowIds = append(flowIds, flow.Flow.ID)

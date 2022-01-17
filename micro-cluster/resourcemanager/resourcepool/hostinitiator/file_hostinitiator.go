@@ -227,10 +227,11 @@ func (p *FileHostInitiator) closeConnect() {
 }
 
 func (p *FileHostInitiator) setOffSwap(ctx context.Context, h *structs.HostInfo) (err error) {
-	changeConf := "echo 'vm.swappiness = 0'>> /etc/sysctl.conf"
+	checkExisted := "count=`cat /etc/sysctl.conf | grep -E '^vm.swappiness = 0$' | wc -l`"
+	changeConf := "if [ $count -eq 0 ] ; then echo 'vm.swappiness = 0'>> /etc/sysctl.conf; fi"
 	flushCmd := "swapoff -a && swapon -a"
 	updateCmd := "sysctl -p"
-	result, err := p.sshClient.RunCommandsInSession([]string{changeConf, flushCmd, updateCmd})
+	result, err := p.sshClient.RunCommandsInSession([]string{checkExisted, changeConf, flushCmd, updateCmd})
 	if err != nil {
 		return err
 	}

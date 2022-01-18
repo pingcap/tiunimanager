@@ -92,7 +92,7 @@ func Test_Verify_ignoreWarings(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockSec := mock_secp.NewMockSecondPartyService(ctrl)
-	mockSec.EXPECT().Check(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
+	mockSec.EXPECT().CheckTopo(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSecondPartyServ(mockSec)
@@ -123,7 +123,7 @@ func Test_Verify_Warings(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockSec := mock_secp.NewMockSecondPartyService(ctrl)
-	mockSec.EXPECT().Check(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
+	mockSec.EXPECT().CheckTopo(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSecondPartyServ(mockSec)

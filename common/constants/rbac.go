@@ -44,6 +44,8 @@ var RbacResourceMap = map[string]RbacResource{
 	string(RbacResourceUser):      RbacResourceUser,
 	string(RbacResourceCDC):       RbacResourceCDC,
 	string(RbacResourceProduct):   RbacResourceProduct,
+	string(RbacResourceSystem):    RbacResourceSystem,
+	string(RbacResourceWorkflow):  RbacResourceWorkflow,
 }
 
 const (
@@ -53,19 +55,21 @@ const (
 	RbacResourceUser      RbacResource = "user"
 	RbacResourceCDC       RbacResource = "cdc"
 	RbacResourceProduct   RbacResource = "product"
+	RbacResourceSystem    RbacResource = "system"
+	RbacResourceWorkflow  RbacResource = "workflow"
 )
 
 // RbacRole Definition rbac role enum
 type RbacRole string
 
 var RbacRoleMap = map[string]RbacRole{
-	string(RbacRoleAdmin):           RbacRoleAdmin,
-	string(RbacRoleClusterManager):  RbacRoleClusterManager,
-	string(RbacRolePlatformManager): RbacRolePlatformManager,
+	string(RbacRoleAdmin): RbacRoleAdmin,
+	//string(RbacRoleClusterManager):  RbacRoleClusterManager,
+	//string(RbacRolePlatformManager): RbacRolePlatformManager,
 }
 
 const (
-	RbacRoleAdmin           RbacRole = "admin"
-	RbacRoleClusterManager  RbacRole = "clusterManager"
-	RbacRolePlatformManager RbacRole = "platformManager"
+	RbacRoleAdmin RbacRole = "RBAC_ROLE_ADMIN"
+	//RbacRoleClusterManager  RbacRole = "RBAC_ROLE_CLUSTER_MANAGER"
+	//RbacRolePlatformManager RbacRole = "RBAC_ROLE_PLATFORM_MANAGER"
 )

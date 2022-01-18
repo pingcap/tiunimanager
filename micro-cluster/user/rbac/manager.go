@@ -120,88 +120,21 @@ func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 			Action:   string(constants.RbacActionAll),
 		},
 	}}, true)
-
-	// init cluster manager role
-	framework.LogWithContext(ctx).Infof("begin init default rbac role %s ...", constants.RbacRoleClusterManager)
-	mgr.CreateRole(ctx, message.CreateRoleReq{Role: string(constants.RbacRoleClusterManager)}, true)
-	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleClusterManager), Permissions: []structs.RbacPermission{
+	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleAdmin), Permissions: []structs.RbacPermission{
 		{
-			Resource: string(constants.RbacResourceCluster),
+			Resource: string(constants.RbacResourceSystem),
 			Action:   string(constants.RbacActionAll),
 		},
 	}}, true)
-	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleClusterManager), Permissions: []structs.RbacPermission{
+	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleAdmin), Permissions: []structs.RbacPermission{
 		{
-			Resource: string(constants.RbacResourceResource),
-			Action:   string(constants.RbacActionRead),
-		},
-	}}, true)
-	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleClusterManager), Permissions: []structs.RbacPermission{
-		{
-			Resource: string(constants.RbacResourceParameter),
-			Action:   string(constants.RbacActionRead),
-		},
-	}}, true)
-	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleClusterManager), Permissions: []structs.RbacPermission{
-		{
-			Resource: string(constants.RbacResourceUser),
-			Action:   string(constants.RbacActionRead),
-		},
-	}}, true)
-	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleClusterManager), Permissions: []structs.RbacPermission{
-		{
-			Resource: string(constants.RbacResourceCDC),
-			Action:   string(constants.RbacActionRead),
-		},
-	}}, true)
-	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleClusterManager), Permissions: []structs.RbacPermission{
-		{
-			Resource: string(constants.RbacResourceProduct),
-			Action:   string(constants.RbacActionRead),
-		},
-	}}, true)
-
-	// init platform role
-	framework.LogWithContext(ctx).Infof("begin init default rbac role %s ...", constants.RbacRolePlatformManager)
-	mgr.CreateRole(ctx, message.CreateRoleReq{Role: string(constants.RbacRolePlatformManager)}, true)
-	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRolePlatformManager), Permissions: []structs.RbacPermission{
-		{
-			Resource: string(constants.RbacResourceCluster),
-			Action:   string(constants.RbacActionRead),
-		},
-	}}, true)
-	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRolePlatformManager), Permissions: []structs.RbacPermission{
-		{
-			Resource: string(constants.RbacResourceResource),
-			Action:   string(constants.RbacActionAll),
-		},
-	}}, true)
-	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRolePlatformManager), Permissions: []structs.RbacPermission{
-		{
-			Resource: string(constants.RbacResourceParameter),
-			Action:   string(constants.RbacActionRead),
-		},
-	}}, true)
-	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRolePlatformManager), Permissions: []structs.RbacPermission{
-		{
-			Resource: string(constants.RbacResourceUser),
-			Action:   string(constants.RbacActionAll),
-		},
-	}}, true)
-	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRolePlatformManager), Permissions: []structs.RbacPermission{
-		{
-			Resource: string(constants.RbacResourceCDC),
-			Action:   string(constants.RbacActionRead),
-		},
-	}}, true)
-	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRolePlatformManager), Permissions: []structs.RbacPermission{
-		{
-			Resource: string(constants.RbacResourceProduct),
+			Resource: string(constants.RbacResourceWorkflow),
 			Action:   string(constants.RbacActionAll),
 		},
 	}}, true)
 
 	// 2. bind admin role for admin user
+	// todo: replace new account
 	adminUser, _ := models.GetAccountReaderWriter().FindAccountByName(ctx, "admin")
 	if adminUser != nil && adminUser.ID != "" {
 		mgr.BindRolesForUser(ctx, message.BindRolesForUserReq{UserID: adminUser.ID, Roles: []string{string(constants.RbacRoleAdmin)}})

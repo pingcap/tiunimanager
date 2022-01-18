@@ -25,7 +25,6 @@ type HostInitiator interface {
 	CopySSHID(ctx context.Context, h *structs.HostInfo) (err error)
 	Prepare(ctx context.Context, h *structs.HostInfo) (err error)
 	Verify(ctx context.Context, h *structs.HostInfo) (err error)
-	SetConfig(ctx context.Context, h *structs.HostInfo) (err error)
 	InstallSoftware(ctx context.Context, hosts []structs.HostInfo) (err error)
 	JoinEMCluster(ctx context.Context, hosts []structs.HostInfo) (err error)
 	LeaveEMCluster(ctx context.Context, nodeId string) (err error)

@@ -7104,6 +7104,9 @@ var doc = `{
         },
         "message.CreateTenantReq": {
             "type": "object",
+            "required": [
+                "id"
+            ],
             "properties": {
                 "id": {
                     "type": "string"
@@ -7136,6 +7139,11 @@ var doc = `{
         },
         "message.CreateUserReq": {
             "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
             "properties": {
                 "email": {
                     "type": "string"
@@ -7869,6 +7877,9 @@ var doc = `{
         },
         "message.UpdateUserPasswordReq": {
             "type": "object",
+            "required": [
+                "password"
+            ],
             "properties": {
                 "id": {
                     "type": "string"

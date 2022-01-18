@@ -36,6 +36,7 @@ type ParameterGroupParameterInfo struct {
 	HasApply       int      `json:"hasApply" example:"1" enums:"0,1"`
 	DefaultValue   string   `json:"defaultValue" example:"1"`
 	UpdateSource   int      `json:"updateSource" example:"0" enums:"0,1,2,3"`
+	ReadOnly       int      `json:"readOnly" example:"0" enums:"0,1"`
 	Description    string   `json:"description" example:"binlog cache size"`
 	Note           string   `json:"note" example:"binlog cache size"`
 	CreatedAt      int64    `json:"createTime" example:"1636698675"`

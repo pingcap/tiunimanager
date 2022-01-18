@@ -317,6 +317,7 @@ func convertParameterGroupParameterInfo(param *parametergroup.ParamDetail) (pgi 
 		HasApply:       param.HasApply,
 		DefaultValue:   param.DefaultValue,
 		UpdateSource:   param.UpdateSource,
+		ReadOnly:       param.ReadOnly,
 		Description:    param.Description,
 		Note:           param.Note,
 		CreatedAt:      param.CreatedAt.Unix(),

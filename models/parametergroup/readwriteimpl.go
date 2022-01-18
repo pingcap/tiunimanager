@@ -262,7 +262,7 @@ func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, p
 	query := m.DB(ctx).Model(&Parameter{}).
 		Select("parameters.id, parameters.category, parameters.name, parameters.instance_type, parameters.system_variable, "+
 			"parameters.type, parameters.unit, parameters.range, parameters.has_reboot, parameters.has_apply, "+
-			"parameters.update_source, parameters.description, parameter_group_mappings.default_value, parameter_group_mappings.note, "+
+			"parameters.update_source, parameters.read_only, parameters.description, parameter_group_mappings.default_value, parameter_group_mappings.note, "+
 			"parameter_group_mappings.created_at, parameter_group_mappings.updated_at").
 		Joins("left join parameter_group_mappings on parameters.id = parameter_group_mappings.parameter_id").
 		Where("parameter_group_mappings.parameter_group_id = ?", parameterGroupId)

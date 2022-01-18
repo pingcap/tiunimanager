@@ -251,6 +251,10 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		if applyParameter != nil && param.InstanceType == string(constants.ComponentIDCDC) && len(clusterMeta.GetCDCClientAddresses()) == 0 {
 			continue
 		}
+		// If the parameters are modified, read-only parameters are not allowed to be modified
+		if applyParameter == nil && param.ReadOnly == int(ReadOnly) {
+			return fmt.Errorf(fmt.Sprintf("Read-only parameters `%s.%s` are not allowed to be modified", param.Category, param.Name))
+		}
 		framework.LogWithContext(ctx).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.ClusterValue)
 		// condition UpdateSource values is 2, then insert tiup and sql respectively
 		if param.UpdateSource == int(TiupAndSql) {

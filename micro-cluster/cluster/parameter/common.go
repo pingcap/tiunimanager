@@ -63,6 +63,13 @@ const (
 	DirectApply
 )
 
+type ReadOnlyParameter int
+
+const (
+	ReadWriter ReadOnlyParameter = iota
+	ReadOnly
+)
+
 type ModifyParameter struct {
 	Reboot bool
 	Params []ModifyClusterParameterInfo
@@ -74,6 +81,7 @@ type ModifyClusterParameterInfo struct {
 	Name           string
 	InstanceType   string
 	UpdateSource   int
+	ReadOnly       int
 	SystemVariable string
 	Type           int
 	Range          []string

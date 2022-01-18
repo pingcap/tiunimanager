@@ -103,7 +103,7 @@ func (p *FileHostInitiator) Prepare(ctx context.Context, h *structs.HostInfo) (e
 	}
 
 	if !needInstallNumaCtl && !needSetSwap {
-		log.Infoln("no need to install numactl and set swap")
+		log.Infof("no need to install numactl and set swap for host %s %s", h.HostName, h.IP)
 		return nil
 	}
 
@@ -131,13 +131,6 @@ func (p *FileHostInitiator) Prepare(ctx context.Context, h *structs.HostInfo) (e
 	return nil
 }
 
-func (p *FileHostInitiator) SetConfig(ctx context.Context, h *structs.HostInfo) (err error) {
-	log := framework.LogWithContext(ctx)
-	log.Infof("apply host %s %s begins", h.HostName, h.IP)
-
-	return nil
-}
-
 func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (err error) {
 	log := framework.LogWithContext(ctx)
 	log.Infof("verify host %v begins", *h)
@@ -152,7 +145,7 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 	if !ok {
 		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, "get ignore warning flag from context failed")
 	}
-	log.Infof("check cluster ignore warning (%v) on %s", ignoreWarnings, templateStr)
+	log.Infof("verify host %s %s ignore warning (%t)", h.HostName, h.IP, ignoreWarnings)
 
 	resultStr, err := p.secondPartyServ.CheckTopo(ctx, secondparty.ClusterComponentTypeStr, templateStr, rp_consts.DefaultTiupTimeOut,
 		[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--format", "json"})
@@ -160,7 +153,7 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 		errMsg := fmt.Sprintf("call second serv to check host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
 		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
 	}
-	log.Infof("check host %s %s for %v done", h.HostName, h.IP, tempateInfo)
+	log.Infof("verify host %s %s for %v done", h.HostName, h.IP, tempateInfo)
 
 	// deal with the result
 	var results checkHostResults

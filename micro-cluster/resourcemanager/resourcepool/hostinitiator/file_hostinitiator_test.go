@@ -137,8 +137,38 @@ func Test_Verify_Warings(t *testing.T) {
 	assert.Equal(t, errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, emErr.GetCode())
 }
 
-func Test_Prepare_ConnectError(t *testing.T) {
+func Test_Prepare_NoError(t *testing.T) {
+	jsonStr := `{"result":[
+		{"node":"172.16.6.252","name":"os-version","status":"Pass","message":"OS is CentOS Linux 7 (Core) 7.6.1810"},
+		{"node":"172.16.6.252","name":"cpu-cores","status":"Pass","message":"number of CPU cores / threads: 4"},
+		{"node":"172.16.6.252","name":"cpu-governor","status":"Warn","message":"Unable to determine current CPU frequency governor policy"}]}
+		`
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockSec := mock_secp.NewMockSecondPartyService(ctrl)
+	mockSec.EXPECT().CheckTopo(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
+
 	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSecondPartyServ(mockSec)
+
+	err := fileInitiator.Prepare(context.TODO(), &structs.HostInfo{IP: "666.666.66.66", UserName: "r00t", Passwd: "fake"})
+	assert.Nil(t, err)
+}
+
+func Test_Prepare_ConnectError(t *testing.T) {
+	jsonStr := `{"result":[
+		{"node":"172.16.6.252","name":"os-version","status":"Pass","message":"OS is CentOS Linux 7 (Core) 7.6.1810"},
+		{"node":"172.16.6.252","name":"cpu-cores","status":"Pass","message":"number of CPU cores / threads: 4"},
+		{"node":"172.16.6.252","name":"cpu-governor","status":"Warn","message":"Unable to determine current CPU frequency governor policy"},
+		{"node":"172.16.6.252","name":"swap","status":"Fail","message":"swap is enabled, please disable it for best performance"}]}
+		`
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockSec := mock_secp.NewMockSecondPartyService(ctrl)
+	mockSec.EXPECT().CheckTopo(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
+
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSecondPartyServ(mockSec)
 
 	err := fileInitiator.Prepare(context.TODO(), &structs.HostInfo{IP: "666.666.66.66", UserName: "r00t", Passwd: "fake"})
 	assert.NotNil(t, err)
@@ -204,18 +234,6 @@ func Test_installNumaCtl(t *testing.T) {
 	fileInitiator.SetSSHClient(mockClient)
 
 	err := fileInitiator.installNumaCtl(context.TODO(), &structs.HostInfo{IP: "666.666.666.666", UserName: "r00t", Passwd: "fake"})
-	assert.Nil(t, err)
-}
-
-func Test_SetConfig(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
-	mockClient.EXPECT().RunCommandsInSession(gomock.Any()).Return("", nil).AnyTimes()
-
-	fileInitiator := NewFileHostInitiator()
-	fileInitiator.SetSSHClient(mockClient)
-	err := fileInitiator.SetConfig(context.TODO(), &structs.HostInfo{})
 	assert.Nil(t, err)
 }
 

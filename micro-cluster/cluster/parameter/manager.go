@@ -80,7 +80,7 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 	defer framework.LogWithContext(ctx).Infof("end query cluster parameters")
 
 	offset := (req.Page - 1) * req.PageSize
-	pgId, params, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, offset, req.PageSize)
+	pgId, params, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, req.ParamName, offset, req.PageSize)
 	if err != nil {
 		return resp, page, errors.NewErrorf(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR.Explain(), err)
 	}
@@ -140,7 +140,7 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 	defer framework.LogWithContext(ctx).Infof("end update cluster parameters")
 
 	// query cluster parameter by cluster id
-	pgId, paramDetails, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, 0, 0)
+	pgId, paramDetails, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, "", 0, 0)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("query cluster %s parameter error: %s", req.ClusterID, err.Error())
 		return
@@ -215,7 +215,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 	}
 
 	// Detail parameter group by id
-	_, pgm, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId)
+	_, pgm, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId, "")
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("detail parameter group %s from db error: %s", req.ParamGroupId, err.Error())
 		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain())

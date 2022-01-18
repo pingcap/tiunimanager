@@ -168,7 +168,7 @@ func persistApplyParameter(req *message.ApplyParameterGroupReq, ctx *workflow.Fl
 	framework.LogWithContext(ctx).Info("begin persist apply parameter executor method")
 	defer framework.LogWithContext(ctx).Info("end persist apply parameter executor method")
 
-	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId)
+	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId, "")
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
 		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain())

@@ -147,7 +147,7 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 			},
 
 		}, nil).Times(1)
-		changefeedRW.EXPECT().QueryByClusterId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*changefeed.ChangeFeedTask{
+		changefeedRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*changefeed.ChangeFeedTask{
 			{
 				Entity: common.Entity{
 					Status: string(constants.ChangeFeedStatusNormal),
@@ -193,7 +193,7 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 	})
 
 	t.Run("QueryByClusterId error", func(t *testing.T) {
-		changefeedRW.EXPECT().QueryByClusterId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*changefeed.ChangeFeedTask{
+		changefeedRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*changefeed.ChangeFeedTask{
 			{
 				Entity: common.Entity{
 					Status: string(constants.ChangeFeedStatusNormal),
@@ -231,7 +231,7 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 	})
 
 	t.Run("error2", func(t *testing.T) {
-		changefeedRW.EXPECT().QueryByClusterId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*changefeed.ChangeFeedTask{
+		changefeedRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*changefeed.ChangeFeedTask{
 			{
 				Entity: common.Entity{
 					Status: string(constants.ChangeFeedStatusNormal),

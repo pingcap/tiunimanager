@@ -372,8 +372,8 @@ func TestExecutor_persistParameter(t *testing.T) {
 	models.SetClusterParameterReaderWriter(clusterParameterRW)
 
 	t.Run("success", func(t *testing.T) {
-		parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any()).
-			DoAndReturn(func(ctx context.Context, parameterGroupId string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+		parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 				return &parametergroup.ParameterGroup{ID: "1"}, []*parametergroup.ParamDetail{
 					{
 						Parameter:    parametergroup.Parameter{ID: "1"},
@@ -438,8 +438,8 @@ func TestExecutor_persistApplyParameter(t *testing.T) {
 	models.SetClusterParameterReaderWriter(clusterParameterRW)
 
 	t.Run("success", func(t *testing.T) {
-		parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any()).
-			DoAndReturn(func(ctx context.Context, parameterGroupId string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+		parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 				return &parametergroup.ParameterGroup{ID: "1"}, []*parametergroup.ParamDetail{
 					{
 						Parameter:    parametergroup.Parameter{ID: "1"},

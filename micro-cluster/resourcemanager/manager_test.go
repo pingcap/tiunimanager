@@ -163,7 +163,7 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 	host := genHostInfo("TEST_HOST1")
 	hosts = append(hosts, *host)
 
-	flowIds, hostIds, err := resourceManager.ImportHosts(context.TODO(), hosts)
+	flowIds, hostIds, err := resourceManager.ImportHosts(context.TODO(), hosts, &structs.ImportCondition{})
 	assert.Nil(t, err)
 
 	assert.Equal(t, fake_hostId, hostIds[0])
@@ -212,7 +212,7 @@ func Test_ImportHosts_Failed(t *testing.T) {
 	var hosts []structs.HostInfo
 	host := genHostInfo("TEST_HOST2")
 	hosts = append(hosts, *host)
-	flowIds, _, err := resourceManager.ImportHosts(context.TODO(), hosts)
+	flowIds, _, err := resourceManager.ImportHosts(context.TODO(), hosts, &structs.ImportCondition{})
 	assert.NotNil(t, err)
 	tiemErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
@@ -290,7 +290,7 @@ func Test_DeleteHosts_Succeed(t *testing.T) {
 	hostIds = append(hostIds, fake_hostId1)
 	hostIds = append(hostIds, fake_hostId2)
 
-	flowIds, err := resourceManager.DeleteHosts(context.TODO(), hostIds)
+	flowIds, err := resourceManager.DeleteHosts(context.TODO(), hostIds, false)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(flowIds))
 }

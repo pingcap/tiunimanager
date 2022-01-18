@@ -17,12 +17,25 @@ package account
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/common/structs"
 )
 
 type ReaderWriter interface {
-	AddAccount(ctx context.Context, tenantId string, name string, salt string, finalHash string, status int8) (*Account, error)
-	FindAccountByName(ctx context.Context, name string) (*Account, error)
-	FindAccountById(ctx context.Context, id string) (*Account, error)
+	CreateUser(ctx context.Context, user *User, name, tenantID string) (*User, *UserLogin, *UserTenantRelation, error)
+	DeleteUser(ctx context.Context, userID string) error
+	GetUser(ctx context.Context, userID string) (userInfo structs.UserInfo, err error)
+	QueryUsers(ctx context.Context) (userInfos map[string]structs.UserInfo, err error)
+	UpdateUserStatus(ctx context.Context, userID string, status string) error
+	UpdateUserProfile(ctx context.Context, userID, nickname, email, phone string) error
+	UpdateUserPassword(ctx context.Context, userID, salt, finalHash string) error
+
+	GetUserByName(ctx context.Context, name string)(*User, error)
+
+	CreateTenant(ctx context.Context, tenant *Tenant) (info *structs.TenantInfo, err error)
+	DeleteTenant(ctx context.Context, tenantID string) error
+	GetTenant(ctx context.Context, tenantID string) (tenant structs.TenantInfo, err error)
+	QueryTenants(ctx context.Context) (tenants map[string]structs.TenantInfo, err error)
+	UpdateTenantStatus(ctx context.Context, tenantID, status string) error
+	UpdateTenantProfile(ctx context.Context, tenantID, name string, maxCluster, maxCPU, maxMemory, maxStorage int32) error
+	UpdateTenantOnBoardingStatus(ctx context.Context, tenantID, status string) error
 }
-
-

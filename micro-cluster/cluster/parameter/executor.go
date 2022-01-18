@@ -168,7 +168,7 @@ func persistApplyParameter(req *message.ApplyParameterGroupReq, ctx *workflow.Fl
 	framework.LogWithContext(ctx).Info("begin persist apply parameter executor method")
 	defer framework.LogWithContext(ctx).Info("end persist apply parameter executor method")
 
-	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId)
+	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId, "")
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
 		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain())
@@ -210,8 +210,13 @@ func validationParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCon
 	for _, param := range modifyParam.Params {
 		// validate parameter value by range field
 		if !validateRange(param) {
-			return fmt.Errorf(fmt.Sprintf("Validation parameter %s failed, update value: %s, can take a range of values: %v",
-				param.Name, param.RealValue.ClusterValue, param.Range))
+			if len(param.Range) == 2 && (param.Type == int(Integer) || param.Type == int(Float)) {
+				return fmt.Errorf(fmt.Sprintf("Validation parameter %s failed, update value: %s, can take a range of values: %v",
+					param.Name, param.RealValue.ClusterValue, param.Range))
+			} else {
+				return fmt.Errorf(fmt.Sprintf("Validation parameter %s failed, update value: %s, optional values: %v",
+					param.Name, param.RealValue.ClusterValue, param.Range))
+			}
 		}
 	}
 	node.Record("validate parameters ")
@@ -224,16 +229,28 @@ func validationParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCon
 // @return bool
 func validateRange(param ModifyClusterParameterInfo) bool {
 	// Determine if range is nil or an expression, continue the loop directly
-	if param.Range == nil || len(param.Range) <= 1 {
+	if param.Range == nil || len(param.Range) == 0 {
 		return true
 	}
 	switch param.Type {
 	case int(Integer):
-		start, err1 := strconv.ParseInt(param.Range[0], 0, 64)
-		end, err2 := strconv.ParseInt(param.Range[1], 0, 64)
-		clusterValue, err3 := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)
-		if err1 == nil && err2 == nil && err3 == nil && clusterValue >= start && clusterValue <= end {
-			return true
+		if len(param.Range) == 2 {
+			// When the length is 2, then determine whether it is within the range of values
+			start, err1 := strconv.ParseInt(param.Range[0], 0, 64)
+			end, err2 := strconv.ParseInt(param.Range[1], 0, 64)
+			clusterValue, err3 := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)
+			if err1 == nil && err2 == nil && err3 == nil && clusterValue >= start && clusterValue <= end {
+				return true
+			}
+		} else {
+			// When the length is 1 or greater than 2, iterate through enumerated values to determine if they are equal
+			clusterValue, err := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)
+			for i := 0; i < len(param.Range); i++ {
+				val, err1 := strconv.ParseInt(param.Range[i], 0, 64)
+				if err == nil && err1 == nil && clusterValue == val {
+					return true
+				}
+			}
 		}
 	case int(String):
 		for _, enumValue := range param.Range {
@@ -267,6 +284,7 @@ func validateRange(param ModifyClusterParameterInfo) bool {
 func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin modify parameters executor method")
 	defer framework.LogWithContext(ctx).Info("end modify parameters executor method")
+	clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
 
 	modifyParam := ctx.GetData(contextModifyParameters).(*ModifyParameter)
 	framework.LogWithContext(ctx).Debugf("got modify need reboot: %v, parameters size: %d", modifyParam.Reboot, len(modifyParam.Params))
@@ -280,6 +298,10 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 	for i, param := range modifyParam.Params {
 		// condition apply parameter and HasApply values is 0, then filter directly
 		if applyParameter != nil && param.HasApply != int(DirectApply) {
+			continue
+		}
+		// If it is a parameter of CDC, apply the parameter without installing CDC, then skip directly
+		if applyParameter != nil && param.InstanceType == string(constants.ComponentIDCDC) && len(clusterMeta.GetCDCClientAddresses()) == 0 {
 			continue
 		}
 		framework.LogWithContext(ctx).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.ClusterValue)
@@ -546,7 +568,6 @@ func convertRealParameterType(ctx *workflow.FlowContext, param ModifyClusterPara
 			if err != nil {
 				return nil, err
 			}
-			fmt.Println(num)
 			if num == 0 {
 				c += 1e-8
 			}

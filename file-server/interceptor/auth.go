@@ -77,9 +77,7 @@ func VerifyIdentity(c *gin.Context) {
 			c.Status(errors.TIEM_UNMARSHAL_ERROR.GetHttpCode())
 			c.Abort()
 		}
-		c.Set(framework.TiEM_X_USER_ID_KEY, result.AccountID)
-		c.Set(framework.TiEM_X_USER_NAME_KEY, result.AccountName)
-		c.Set(framework.TiEM_X_TENANT_ID_KEY, result.TenantID)
+		c.Set(framework.TiEM_X_USER_ID_KEY, result.UserID)
 		c.Next()
 	}
 }

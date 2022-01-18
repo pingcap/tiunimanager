@@ -371,22 +371,13 @@ func (manager *SecondPartyManager) ClusterDisplay(ctx context.Context, tiUPCompo
 	return
 }
 
-// check whether a flag is in flags slice
-func (manager *SecondPartyManager) hasFlag(flags []string, flag string) bool {
-	for _, item := range flags {
-		if item == flag {
-			return true
-		}
-	}
-	return false
-}
-
 // extract check result from tiup check cluster
-func (manager *SecondPartyManager) extractCheckResult(resultJsons []string, flags []string) (result string) {
-	if manager.hasFlag(flags, "--apply") {
-		result = resultJsons[len(resultJsons)-4]
-	} else {
-		result = resultJsons[len(resultJsons)-2]
+func (manager *SecondPartyManager) extractCheckResult(resultJsons []string) (result string) {
+	for _, jsonStr := range resultJsons {
+		if strings.HasPrefix(jsonStr, "{\"result\":") {
+			result = jsonStr
+			break
+		}
 	}
 	return
 }
@@ -412,7 +403,7 @@ func (manager *SecondPartyManager) CheckTopo(ctx context.Context, tiUPComponent 
 	}
 
 	jsons := strings.Split(resp, "\n")
-	result = manager.extractCheckResult(jsons, flags)
+	result = manager.extractCheckResult(jsons)
 	return
 }
 

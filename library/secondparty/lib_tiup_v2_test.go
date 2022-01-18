@@ -1023,31 +1023,6 @@ func TestSecondPartyManager_CheckTopo_WithTimeout(t *testing.T) {
 	}
 }
 
-func TestSecondePartyManager_HasFlag(t *testing.T) {
-	type want struct {
-		existed bool
-	}
-	tests := []struct {
-		testName string
-		flags    []string
-		flag     string
-		want     want
-	}{
-		{"Test_Existed", []string{"--user", "root", "--apply"}, "--apply", want{true}},
-		{"Test_Existed2", []string{"--apply"}, "--apply", want{true}},
-		{"Test_NotExisted", []string{"--user", "root", "--apply"}, "--i", want{false}},
-		{"Test_NotExisted", []string{}, "--apply", want{false}},
-	}
-	for _, tt := range tests {
-		t.Run(tt.testName, func(t *testing.T) {
-			existed := secondPartyManager1.hasFlag(tt.flags, tt.flag)
-			if existed != tt.want.existed {
-				t.Errorf("case contain flag %s . err(expected %v, actual %v)", tt.testName, tt.want.existed, existed)
-			}
-		})
-	}
-}
-
 func TestSecondePartyManager_ExtractCheckResult(t *testing.T) {
 	type want struct {
 		result string
@@ -1055,15 +1030,14 @@ func TestSecondePartyManager_ExtractCheckResult(t *testing.T) {
 	tests := []struct {
 		testName string
 		results  []string
-		flags    []string
 		want     want
 	}{
-		{"Test_WithoutApply", []string{"prefix", "prefix", "prefix", "result", "exit_code"}, []string{"--user", "root"}, want{"result"}},
-		{"Test_WitApply", []string{"prefix", "prefix", "prefix", "result", "prefix", "prefix", "exit_code"}, []string{"--user", "root", "--apply"}, want{"result"}},
+		{"Test_WithResult", []string{"{\"prefix\":", "{\"prefix\":", "{\"prefix\":", "{\"result\":", "{\"exit_code\":"}, want{"{\"result\":"}},
+		{"Test_WithoutResult", []string{"{\"prefix\":", "{\"prefix\":", "{\"prefix\":", "{\"exit_code\":"}, want{""}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			result := secondPartyManager1.extractCheckResult(tt.results, tt.flags)
+			result := secondPartyManager1.extractCheckResult(tt.results)
 			if result != tt.want.result {
 				t.Errorf("case extract check result %s . err(expected %v, actual %v)", tt.testName, tt.want.result, result)
 			}

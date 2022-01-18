@@ -26,21 +26,15 @@ package deployment
 
 import (
 	"context"
-	"errors"
 	"testing"
-
-	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/deployment/operation"
-	mockoperation "github.com/pingcap-inc/tiem/deployment/operation/mock"
 )
 
 const (
-	TestWorkFlowID  = "testworkflownodeid"
-	TestOperationID = "testoperationid"
-	TestClusterID   = "testclusterid"
-	TestVersion     = "v4.0.12"
-	TestTiUPHome    = "/root/.tiup"
-	TestTiDBTopo    = ""
+	TestWorkFlowID = "testworkflownodeid"
+	TestClusterID  = "testclusterid"
+	TestVersion    = "v4.0.12"
+	TestTiUPHome   = "/root/.tiup"
+	TestTiDBTopo   = "\nglobal:\n  user: tidb\n  group: tidb\n  ssh_port: 22\n  enable_tls: false\n  deploy_dir: -X4DGAFVRDi5KK-LmN05TA/tidb-deploy\n  data_dir: -X4DGAFVRDi5KK-LmN05TA/tidb-data\n  log_dir: -X4DGAFVRDi5KK-LmN05TA/tidb-log\n  os: linux\n\n  arch: amd64\n\nmonitored:\n  node_exporter_port: 11000\n  blackbox_exporter_port: 11001\n\npd_servers:\n  - host: 172.16.6.252\n    client_port: 10040\n    peer_port: 10041\n    deploy_dir: /mnt/path1/-X4DGAFVRDi5KK-LmN05TA/pd-deploy\n    data_dir: /mnt/path1/-X4DGAFVRDi5KK-LmN05TA/pd-data\n\nmonitoring_servers:\n  - host: 172.16.6.252\n    port: 10042\n    deploy_dir: /mnt/path1/-X4DGAFVRDi5KK-LmN05TA/prometheus-deploy\n    data_dir: /mnt/path1/-X4DGAFVRDi5KK-LmN05TA/prometheus-data\ngrafana_servers:\n  - host: 172.16.6.252\n    port: 10043\n    deploy_dir: /mnt/path1/-X4DGAFVRDi5KK-LmN05TA/grafana-deploy\n    anonymous_enable: true\n    default_theme: light\n    org_name: Main Org.\n    org_role: Viewer\nalertmanager_servers:\n  - host: 172.16.6.252\n    web_port: 10044\n    cluster_port: 10045\n    deploy_dir: /mnt/path1/-X4DGAFVRDi5KK-LmN05TA/alertmanagers-deploy\n    data_dir: /mnt/path1/-X4DGAFVRDi5KK-LmN05TA/alertmanagers-data\n\ntidb_servers:\n  - host: 172.16.6.252\n    port: 10000\n    status_port: 10001\n    deploy_dir: /mnt/path1/-X4DGAFVRDi5KK-LmN05TA/tidb-deploy\n\ntikv_servers:\n  - host: 172.16.6.252\n    port: 10020\n    status_port: 10021\n    deploy_dir: /mnt/path1/-X4DGAFVRDi5KK-LmN05TA/tikv-deploy\n    data_dir: /mnt/path1/-X4DGAFVRDi5KK-LmN05TA/tikv-data\n"
 )
 
 var manager *Manager
@@ -52,34 +46,10 @@ func init() {
 	MockDB()
 }
 
-func TestManager_Deploy_Fail(t *testing.T) {
-	expectedErr := errors.New("fail create operation record")
-
-	mockCtl := gomock.NewController(t)
-	mockReaderWriter := mockoperation.NewMockReaderWriter(mockCtl)
-	SetOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), CMDDeploy, TestWorkFlowID).Return(nil, expectedErr)
-
+func TestManager_Deploy(t *testing.T) {
 	_, err := manager.Deploy(context.TODO(), TiUPComponentTypeCluster, TestClusterID, TestVersion,
 		TestTiDBTopo, TestTiUPHome, TestWorkFlowID, []string{"-u", "root", "-i", "/root/.ssh/tiup_rsa"}, 360)
 	if err == nil {
-		t.Error("case: fail create second party operation intentionally. got nil err")
-	}
-}
-
-func TestManager_Deploy_Success(t *testing.T) {
-	op := &operation.Operation{
-		ID: TestOperationID,
-	}
-
-	mockCtl := gomock.NewController(t)
-	mockReaderWriter := mockoperation.NewMockReaderWriter(mockCtl)
-	SetOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), CMDDeploy, TestWorkFlowID).Return(op, nil)
-
-	id, err := manager.Deploy(context.TODO(), TiUPComponentTypeCluster, TestClusterID, TestVersion,
-		TestTiDBTopo, TestTiUPHome, TestWorkFlowID, []string{"-u", "root", "-i", "/root/.ssh/tiup_rsa"}, 360)
-	if id != TestOperationID || err != nil {
-		t.Errorf("case: create secondparty operation successfully and start asyncoperation. operationid(expected: %s, actual: %s), err(expected: %v, actual: %v)", TestOperationID, id, nil, err)
+		t.Error("err should not be nil")
 	}
 }

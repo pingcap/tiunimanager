@@ -45,9 +45,9 @@ const (
 
 type SSHClient struct {
 	sshHost     string
-	sshPort int
-	sshType SSHType
-	sshUser string
+	sshPort     int
+	sshType     SSHType
+	sshUser     string
 	sshPassword string
 	sshTimeout  time.Duration
 	sshKeyPath  string //path of id_rsa
@@ -101,7 +101,9 @@ func (c *SSHClient) Connect() (err error) {
 }
 
 func (c *SSHClient) Close() {
-	c.client.Close()
+	if c.client != nil {
+		c.client.Close()
+	}
 }
 
 func (c *SSHClient) RunCommandsInSession(commands []string) (result string, err error) {

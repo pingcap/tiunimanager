@@ -993,7 +993,7 @@ func TestSecondPartyManager_ClusterClusterDisplay_WithTimeout(t *testing.T) {
 	}
 }
 
-func TestSecondPartyManager_Check(t *testing.T) {
+func TestSecondPartyManager_CheckTopo(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	tiUPConfig := &tiup.TiupConfig{
 		TiupHome: "",
@@ -1002,13 +1002,13 @@ func TestSecondPartyManager_Check(t *testing.T) {
 	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
 	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 
-	_, err := secondPartyManager1.Check(context.TODO(), ClusterComponentTypeStr, "test-tidb", 0, []string{})
+	_, err := secondPartyManager1.CheckTopo(context.TODO(), ClusterComponentTypeStr, "test-tidb", 0, []string{})
 	if err == nil {
-		t.Errorf("case: cluster check. err(expected: not nil, actual: nil)")
+		t.Errorf("case: cluster checkTopo. err(expected: not nil, actual: nil)")
 	}
 }
 
-func TestSecondPartyManager_Check_WithTimeout(t *testing.T) {
+func TestSecondPartyManager_CheckTopo_WithTimeout(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	tiUPConfig := &tiup.TiupConfig{
 		TiupHome: "",
@@ -1017,9 +1017,31 @@ func TestSecondPartyManager_Check_WithTimeout(t *testing.T) {
 	models.SetTiUPConfigReaderWriter(mockTiUPConfigReaderWriter)
 	mockTiUPConfigReaderWriter.EXPECT().QueryByComponentType(context.Background(), string(DefaultComponentTypeStr)).Return(tiUPConfig, nil)
 
-	_, err := secondPartyManager1.Check(context.TODO(), ClusterComponentTypeStr, "test-tidb", 1, []string{})
+	_, err := secondPartyManager1.CheckTopo(context.TODO(), ClusterComponentTypeStr, "test-tidb", 1, []string{})
 	if err == nil {
-		t.Errorf("case: cluster check. err(expected: not nil, actual: nil)")
+		t.Errorf("case: cluster checkTopo. err(expected: not nil, actual: nil)")
+	}
+}
+
+func TestSecondePartyManager_ExtractCheckResult(t *testing.T) {
+	type want struct {
+		result string
+	}
+	tests := []struct {
+		testName string
+		results  []string
+		want     want
+	}{
+		{"Test_WithResult", []string{"{\"prefix\":", "{\"prefix\":", "{\"prefix\":", "{\"result\":", "{\"exit_code\":"}, want{"{\"result\":"}},
+		{"Test_WithoutResult", []string{"{\"prefix\":", "{\"prefix\":", "{\"prefix\":", "{\"exit_code\":"}, want{""}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.testName, func(t *testing.T) {
+			result := secondPartyManager1.extractCheckResult(tt.results)
+			if result != tt.want.result {
+				t.Errorf("case extract check result %s . err(expected %v, actual %v)", tt.testName, tt.want.result, result)
+			}
+		})
 	}
 }
 

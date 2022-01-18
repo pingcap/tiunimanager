@@ -131,7 +131,7 @@ func Test_ImportHosts(t *testing.T) {
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, flow *workflow.WorkFlowAggregation) error {
 		return nil
 	}).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(9)
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(12)
 
 	host1 := genHostInfo("Test_Host1")
 	host2 := genHostInfo("Test_Host2")

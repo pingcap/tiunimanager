@@ -149,3 +149,33 @@ func UpdateUserProfile(c *gin.Context) {
 			controller.DefaultTimeout)
 	}
 }
+
+// UpdateUserPassword update user password interface
+// @Summary update user password
+// @Description update user password
+// @Tags platform
+// @Accept application/json
+// @Produce application/json
+// @Security ApiKeyAuth
+// @Param userId path string true "user id"
+// @Param UpdateUserPasswordRequest body message.UpdateUserPasswordReq true "query user password request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.UpdateUserPasswordResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /users/{userId}/password [post]
+func UpdateUserPassword(c *gin.Context) {
+	var req message.UpdateUserPasswordReq
+
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
+		&req,
+		// append id in path to request
+		func(c *gin.Context, req interface{}) error {
+			req.(*message.UpdateUserPasswordReq).ID = c.Param("userId")
+			return nil
+		}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateUserPassword, &message.UpdateUserPasswordResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}

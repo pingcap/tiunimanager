@@ -86,14 +86,15 @@ const (
 	MetricsParameterGroupUpdate MetricsType = "parameter_group/update"
 
 	// MetricsUserLogin define user metrics
-	MetricsUserLogin         MetricsType = "user/login"
-	MetricsUserLogout        MetricsType = "user/logout"
-	MetricsUserProfile       MetricsType = "user/profile"
-	MetricsUserCreate        MetricsType = "user/create"
-	MetricsUserDelete        MetricsType = "user/delete"
-	MetricsUserGet           MetricsType = "user/get"
-	MetricsUserQuery         MetricsType = "user/query"
-	MetricsUserUpdateProfile MetricsType = "user/update_profile"
+	MetricsUserLogin          MetricsType = "user/login"
+	MetricsUserLogout         MetricsType = "user/logout"
+	MetricsUserProfile        MetricsType = "user/profile"
+	MetricsUserCreate         MetricsType = "user/create"
+	MetricsUserDelete         MetricsType = "user/delete"
+	MetricsUserGet            MetricsType = "user/get"
+	MetricsUserQuery          MetricsType = "user/query"
+	MetricsUserUpdateProfile  MetricsType = "user/update_profile"
+	MetricsUserUpdatePassword MetricsType = "user/password"
 
 	// MetricsTenantCreate define tenant metric
 	MetricsTenantCreate                 MetricsType = "tenant/create"

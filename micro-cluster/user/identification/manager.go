@@ -34,7 +34,7 @@ func NewIdentificationManager() *Manager {
 
 func (p *Manager) Login(ctx context.Context, request message.LoginReq) (message.LoginResp, error) {
 	resp := message.LoginResp{}
-	user, err := models.GetAccountReaderWriter().GetUserByID(ctx, request.UserID)
+	user, err := models.GetAccountReaderWriter().GetUserByName(ctx, request.Name)
 	if err != nil {
 		return resp, errors.NewError(errors.TIEM_LOGIN_FAILED, "incorrect username or password")
 	}
@@ -51,14 +51,13 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (message.
 	// create token
 	tokenString := uuid.New().String()
 	expirationTime := time.Now().Add(constants.DefaultTokenValidPeriod)
-	_, err = models.GetTokenReaderWriter().CreateToken(ctx, tokenString, user.ID, user.TenantID, expirationTime)
+	_, err = models.GetTokenReaderWriter().CreateToken(ctx, tokenString, user.ID, expirationTime)
 	if err != nil {
 		return resp, errors.WrapError(errors.TIEM_UNRECOGNIZED_ERROR, "login failed", err)
 	}
 
 	resp.TokenString = tokenString
 	resp.UserID = user.ID
-	resp.TenantID = user.TenantID
 
 	return resp, nil
 }
@@ -92,7 +91,6 @@ func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq)
 	}
 
 	resp.UserID = token.UserID
-	resp.TenantID = token.TenantID
 
 	return resp, nil
 }

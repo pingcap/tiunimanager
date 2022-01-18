@@ -23,15 +23,13 @@ import (
 
 func TestAccountReadWrite_CreateUser(t *testing.T) {
 	t.Run("invalid parameter", func(t *testing.T) {
-		user := &User{ID: "", Name: ""}
-		_, err := testRW.CreateUser(ctx.TODO(), user)
+		user := &User{Name: "nick"}
+		_, _, _, err := testRW.CreateUser(ctx.TODO(), user, "", "")
 		assert.Error(t, err)
 	})
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			ID:        "user01",
-			TenantID:  "tenant01",
 			Creator:   "admin",
 			Name:      "nick01",
 			Salt:      "salt",
@@ -40,24 +38,26 @@ func TestAccountReadWrite_CreateUser(t *testing.T) {
 			Phone:     "123",
 			Status:    "Normal",
 		}
-		got, err := testRW.CreateUser(ctx.TODO(), user)
+		got1, got2, got3, err := testRW.CreateUser(ctx.TODO(), user, "user", "tenant")
 		assert.NoError(t, err)
-		assert.Equal(t, user.ID, got.ID)
-		err = testRW.DeleteUser(ctx.TODO(), "tenant01", "user01")
+		assert.Equal(t, got1.Name, user.Name)
+		assert.Equal(t, got1.ID, got2.UserID)
+		assert.Equal(t, got2.LoginName, "user")
+		assert.Equal(t, got3.TenantID, "tenant")
+		assert.Equal(t, got1.ID, got3.UserID)
+		err = testRW.DeleteUser(ctx.TODO(), got1.ID)
 		assert.NoError(t, err)
 	})
 }
 
 func TestAccountReadWrite_DeleteUser(t *testing.T) {
 	t.Run("invalid parameter", func(t *testing.T) {
-		err := testRW.DeleteUser(ctx.TODO(), "", "")
+		err := testRW.DeleteUser(ctx.TODO(), "")
 		assert.Error(t, err)
 	})
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			ID:        "user02",
-			TenantID:  "tenant02",
 			Creator:   "admin",
 			Name:      "nick02",
 			Salt:      "salt",
@@ -66,29 +66,26 @@ func TestAccountReadWrite_DeleteUser(t *testing.T) {
 			Phone:     "123",
 			Status:    "Normal",
 		}
-		got, err := testRW.CreateUser(ctx.TODO(), user)
+		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user", "tenant")
 		assert.NoError(t, err)
-		assert.Equal(t, user.ID, got.ID)
-		err = testRW.DeleteUser(ctx.TODO(), "tenant02", "user02")
+		err = testRW.DeleteUser(ctx.TODO(), got.ID)
 		assert.NoError(t, err)
 	})
 }
 
 func TestAccountReadWrite_GetUser(t *testing.T) {
 	t.Run("invalid parameter", func(t *testing.T) {
-		_, err := testRW.GetUser(ctx.TODO(), "", "")
+		_, err := testRW.GetUser(ctx.TODO(), "")
 		assert.Error(t, err)
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		_, err := testRW.GetUser(ctx.TODO(), "tenant01", "user01")
+		_, err := testRW.GetUser(ctx.TODO(), "user01")
 		assert.Error(t, err)
 	})
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			ID:        "user03",
-			TenantID:  "tenant03",
 			Creator:   "admin",
 			Name:      "nick03",
 			Salt:      "salt",
@@ -97,27 +94,28 @@ func TestAccountReadWrite_GetUser(t *testing.T) {
 			Phone:     "123",
 			Status:    "Normal",
 		}
-		_, err := testRW.CreateUser(ctx.TODO(), user)
+		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user", "tenant")
 		assert.NoError(t, err)
-		got, err := testRW.GetUser(ctx.TODO(), "tenant03", "user03")
+		info, err := testRW.GetUser(ctx.TODO(), got.ID)
 		assert.NoError(t, err)
-		assert.Equal(t, user.ID, got.ID)
-		assert.Equal(t, user.TenantID, got.TenantID)
-		err = testRW.DeleteUser(ctx.TODO(), "tenant03", "user03")
+		assert.Equal(t, got.ID, info.ID)
+		assert.Equal(t, len(info.Name), 1)
+		assert.Equal(t, info.Name[0], "user")
+		assert.Equal(t, len(info.TenantID), 1)
+		assert.Equal(t, info.TenantID[0], "tenant")
+		err = testRW.DeleteUser(ctx.TODO(), got.ID)
 		assert.NoError(t, err)
 	})
 }
 
-func TestAccountReadWrite_GetUserByID(t *testing.T) {
+func TestAccountReadWrite_GetUserByName(t *testing.T) {
 	t.Run("invalid parameter", func(t *testing.T) {
-		_, err := testRW.GetUserByID(ctx.TODO(), "")
+		_, err := testRW.GetUserByName(ctx.TODO(), "")
 		assert.Error(t, err)
 	})
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			ID:        "user13",
-			TenantID:  "tenant13",
 			Creator:   "admin",
 			Name:      "nick13",
 			Salt:      "salt",
@@ -126,13 +124,12 @@ func TestAccountReadWrite_GetUserByID(t *testing.T) {
 			Phone:     "123",
 			Status:    "Normal",
 		}
-		_, err := testRW.CreateUser(ctx.TODO(), user)
+		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user", "tenant")
 		assert.NoError(t, err)
-		got, err := testRW.GetUserByID(ctx.TODO(), "user13")
+		info, err := testRW.GetUserByName(ctx.TODO(), "user")
 		assert.NoError(t, err)
-		assert.Equal(t, user.ID, got.ID)
-		assert.Equal(t, user.TenantID, got.TenantID)
-		err = testRW.DeleteUser(ctx.TODO(), "tenant13", "user13")
+		assert.Equal(t, info.ID, got.ID)
+		err = testRW.DeleteUser(ctx.TODO(), got.ID)
 		assert.NoError(t, err)
 	})
 }
@@ -140,8 +137,6 @@ func TestAccountReadWrite_GetUserByID(t *testing.T) {
 func TestAccountReadWrite_QueryUsers(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			ID:        "user04",
-			TenantID:  "tenant04",
 			Creator:   "admin",
 			Name:      "nick04",
 			Salt:      "salt",
@@ -150,25 +145,23 @@ func TestAccountReadWrite_QueryUsers(t *testing.T) {
 			Phone:     "123",
 			Status:    "Normal",
 		}
-		_, err := testRW.CreateUser(ctx.TODO(), user)
+		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user", "tenant")
 		assert.NoError(t, err)
-		got, err := testRW.QueryUsers(ctx.TODO())
-		assert.Equal(t, 1, len(got))
-		err = testRW.DeleteUser(ctx.TODO(), "tenant04", "user04")
+		infos, err := testRW.QueryUsers(ctx.TODO())
+		assert.Equal(t, 1, len(infos))
+		err = testRW.DeleteUser(ctx.TODO(), got.ID)
 		assert.NoError(t, err)
 	})
 }
 
 func TestAccountReadWrite_UpdateUserStatus(t *testing.T) {
 	t.Run("invalid parameter", func(t *testing.T) {
-		err := testRW.UpdateUserStatus(ctx.TODO(), "", "", "")
+		err := testRW.UpdateUserStatus(ctx.TODO(), "", "")
 		assert.Error(t, err)
 	})
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			ID:        "user05",
-			TenantID:  "tenant05",
 			Creator:   "admin",
 			Name:      "nick05",
 			Salt:      "salt",
@@ -177,14 +170,14 @@ func TestAccountReadWrite_UpdateUserStatus(t *testing.T) {
 			Phone:     "123",
 			Status:    "Normal",
 		}
-		_, err := testRW.CreateUser(ctx.TODO(), user)
+		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user", "tenant")
 		assert.NoError(t, err)
-		err = testRW.UpdateUserStatus(ctx.TODO(), "tenant05", "user05", "Deactivate")
+		err = testRW.UpdateUserStatus(ctx.TODO(), got.ID, "Deactivate")
 		assert.NoError(t, err)
-		got, err := testRW.GetUser(ctx.TODO(), "tenant05", "user05")
+		info, err := testRW.GetUser(ctx.TODO(), got.ID)
 		assert.NoError(t, err)
-		assert.Equal(t, got.Status, "Deactivate")
-		err = testRW.DeleteUser(ctx.TODO(), "tenant05", "user05")
+		assert.Equal(t, info.Status, "Deactivate")
+		err = testRW.DeleteUser(ctx.TODO(), got.ID)
 		assert.NoError(t, err)
 	})
 }
@@ -197,8 +190,6 @@ func TestAccountReadWrite_UpdateUserProfile(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			ID:        "user06",
-			TenantID:  "tenant06",
 			Creator:   "admin",
 			Name:      "nick06",
 			Salt:      "salt",
@@ -207,25 +198,23 @@ func TestAccountReadWrite_UpdateUserProfile(t *testing.T) {
 			Phone:     "123",
 			Status:    "Normal",
 		}
-		_, err := testRW.CreateUser(ctx.TODO(), user)
+		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user", "tenant")
 		assert.NoError(t, err)
-		err = testRW.UpdateUserProfile(ctx.TODO(), "tenant06", "user06", "email01", "phone01")
+		err = testRW.UpdateUserProfile(ctx.TODO(), got.ID, "user06", "email01", "phone01")
 		assert.NoError(t, err)
-		err = testRW.DeleteUser(ctx.TODO(), "tenant06", "user06")
+		err = testRW.DeleteUser(ctx.TODO(), got.ID)
 		assert.NoError(t, err)
 	})
 }
 
 func TestAccountReadWrite_UpdateUserPassword(t *testing.T) {
 	t.Run("invalid parameter", func(t *testing.T) {
-		err := testRW.UpdateUserPassword(ctx.TODO(), "", "", "", "")
+		err := testRW.UpdateUserPassword(ctx.TODO(), "", "", "")
 		assert.Error(t, err)
 	})
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			ID:        "user07",
-			TenantID:  "tenant07",
 			Creator:   "admin",
 			Name:      "nick07",
 			Salt:      "salt",
@@ -234,11 +223,11 @@ func TestAccountReadWrite_UpdateUserPassword(t *testing.T) {
 			Phone:     "123",
 			Status:    "Normal",
 		}
-		_, err := testRW.CreateUser(ctx.TODO(), user)
+		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user", "tenant")
 		assert.NoError(t, err)
-		err = testRW.UpdateUserPassword(ctx.TODO(), "tenant07", "user07", "salt01", "hash01")
+		err = testRW.UpdateUserPassword(ctx.TODO(), got.ID, "salt01", "hash01")
 		assert.NoError(t, err)
-		err = testRW.DeleteUser(ctx.TODO(), "tenant07", "user07")
+		err = testRW.DeleteUser(ctx.TODO(), got.ID)
 		assert.NoError(t, err)
 	})
 }

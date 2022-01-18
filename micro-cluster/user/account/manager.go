@@ -44,52 +44,46 @@ func (p *Manager) CreateUser(ctx context.Context, request message.CreateUserReq)
 	resp := message.CreateUserResp{}
 	log := framework.LogWithContext(ctx)
 	rw := models.GetAccountReaderWriter()
-
-	user, err := rw.GetUser(ctx, request.TenantID, request.ID)
-	if err == nil && user.ID == request.ID {
-		return resp, errors.NewErrorf(errors.UserAlreadyExist, "user %s in tenant %s has exist", request.ID, request.TenantID)
-	} else if err.(errors.EMError).GetCode() == errors.UserNotExist {
-		user := &account.User{
-			ID:       request.ID,
-			Name:     request.Name,
-			Status:   string(constants.UserStatusNormal),
-			TenantID: request.TenantID,
-			Email:    request.Email,
-			Phone:    request.Phone,
-			Creator:  framework.GetUserIDFromContext(ctx),
-		}
-		err = user.GenSaltAndHash(request.Password)
-		if err != nil {
-			log.Errorf("create user %s in tenant %s error: %v", request.ID, request.TenantID, err)
-			return resp, errors.NewErrorf(errors.UserGenSaltAndHashValueFailed,
-				"create user %s in tenant %s error: %v", request.ID, request.TenantID, err)
-		}
-		_, err = rw.CreateUser(ctx, user)
-		if nil != err {
-			log.Errorf("create user %s error: %v", request.ID, err)
-			return resp, err
-		}
+	user := &account.User{
+		Name:    request.Nickname,
+		Status:  string(constants.UserStatusNormal),
+		Email:   request.Email,
+		Phone:   request.Phone,
+		Creator: framework.GetUserIDFromContext(ctx),
+	}
+	err := user.GenSaltAndHash(request.Password)
+	if err != nil {
+		log.Errorf("user %s generate salt and hash error: %v", request.Name, err)
+		return resp, errors.NewErrorf(errors.UserGenSaltAndHashValueFailed,
+			"user %s generate salt and hash error: %v", request.Name, err)
 	}
 
-	return resp, err
+	_, _, _, err = rw.CreateUser(ctx, user, request.Name, request.TenantID)
+	if err != nil {
+		log.Errorf("create user %s error: %v", request.Name, err)
+		return resp, err
+	}
+
+	return resp, nil
 }
 
 func (p *Manager) DeleteUser(ctx context.Context, request message.DeleteUserReq) (message.DeleteUserResp, error) {
 	resp := message.DeleteUserResp{}
 	log := framework.LogWithContext(ctx)
 	rw := models.GetAccountReaderWriter()
-	_, err := rw.GetUser(ctx, request.TenantID, request.ID)
+
+	_, err := rw.GetUser(ctx, request.ID)
 	if err != nil {
-		log.Errorf("delete user %s in tenant %s error: %v", request.ID, request.TenantID, err)
+		log.Errorf("get user %s error: %v", request.ID, err)
 		return resp, errors.NewErrorf(errors.UserNotExist,
-			"delete user %s in tenant %s error: %v", request.ID, request.TenantID, err)
+			"get user %s error: %v", request.ID, err)
 	}
 
-	err = rw.DeleteUser(ctx, request.TenantID, request.ID)
+	err = rw.DeleteUser(ctx, request.ID)
 	if err != nil {
-		log.Errorf("delete user %s in tenant %s error: %v", request.ID, request.TenantID, err)
+		log.Errorf("delete user %s error: %v", request.ID, err)
 		return resp, errors.NewErrorf(errors.DeleteUserFailed,
-			"delete user %s in tenant %s error: %v", request.ID, request.TenantID, err)
+			"delete user %s error: %v", request.ID, err)
 	}
 	return resp, nil
 }
@@ -97,11 +91,11 @@ func (p *Manager) DeleteUser(ctx context.Context, request message.DeleteUserReq)
 func (p *Manager) GetUser(ctx context.Context, request message.GetUserReq) (resp message.GetUserResp, err error) {
 	log := framework.LogWithContext(ctx)
 	rw := models.GetAccountReaderWriter()
-	resp.User, err = rw.GetUser(ctx, request.TenantID, request.ID)
+	resp.User, err = rw.GetUser(ctx, request.ID)
 	if err != nil {
-		log.Errorf("get user %s in tenant %s error: %v", request.ID, request.TenantID, err)
+		log.Errorf("get user %s error: %v", request.ID, err)
 		return resp, errors.NewErrorf(errors.UserNotExist,
-			"get user %s in tenant %s error: %v", request.ID, request.TenantID, err)
+			"get user %s error: %v", request.ID, err)
 	}
 	return resp, err
 }
@@ -120,10 +114,30 @@ func (p *Manager) QueryUsers(ctx context.Context, request message.QueryUserReq) 
 func (p *Manager) UpdateUserProfile(ctx context.Context, request message.UpdateUserProfileReq) (resp message.UpdateUserProfileResp, err error) {
 	log := framework.LogWithContext(ctx)
 	rw := models.GetAccountReaderWriter()
-	err = rw.UpdateUserProfile(ctx, request.TenantID, request.ID, request.Email, request.Phone)
+	err = rw.UpdateUserProfile(ctx, request.ID, request.Nickname, request.Email, request.Phone)
 	if err != nil {
-		errMsg := fmt.Sprintf("update user %s profile (email: %s phone: %s)  in tenant %s error: %v",
-			request.ID, request.Email, request.Phone, request.TenantID, err)
+		errMsg := fmt.Sprintf("update user %s profile ( nickname: %s email: %s phone: %s) error: %v",
+			request.ID, request.Nickname, request.Email, request.Phone, err)
+		log.Errorf(errMsg)
+		return resp, errors.NewErrorf(errors.UpdateUserProfileFailed, errMsg)
+	}
+	return resp, err
+}
+
+func (p *Manager) UpdateUserPassword(ctx context.Context, request message.UpdateUserPasswordReq) (resp message.UpdateUserPasswordResp, err error) {
+	log := framework.LogWithContext(ctx)
+	rw := models.GetAccountReaderWriter()
+
+	user := &account.User{}
+	err = user.GenSaltAndHash(request.Password)
+	if err != nil {
+		log.Errorf("user %s generate salt and hash error: %v", request.ID, err)
+		return resp, errors.NewErrorf(errors.UserGenSaltAndHashValueFailed,
+			"user %s generate salt and hash error: %v", request.ID, err)
+	}
+	err = rw.UpdateUserPassword(ctx, request.ID, user.Salt, user.FinalHash)
+	if err != nil {
+		errMsg := fmt.Sprintf("update user %s password error: %v", request.ID, err)
 		log.Errorf(errMsg)
 		return resp, errors.NewErrorf(errors.UpdateUserProfileFailed, errMsg)
 	}

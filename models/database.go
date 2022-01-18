@@ -154,6 +154,8 @@ func (p *database) initTables() (err error) {
 		new(product.ProductComponent),
 		new(account.User),
 		new(account.Tenant),
+		new(account.UserLogin),
+		new(account.UserTenantRelation),
 	)
 }
 
@@ -190,13 +192,16 @@ func (p *database) initSystemData() {
 	// todo determine if default data needed
 	// system admin account
 	user := &account.User{
-		ID:       "admin",
-		TenantID: tenant.ID,
-		Name:     "admin",
-		Creator:  "System",
+		ID:      "admin",
+		Name:    "admin",
+		Creator: "System",
 	}
 	user.GenSaltAndHash("admin")
-	defaultDb.accountReaderWriter.CreateUser(context.TODO(), user)
+	_, _, _, err = defaultDb.accountReaderWriter.CreateUser(context.TODO(), user, "admin", tenant.ID)
+	if err != nil {
+		framework.LogWithContext(context.TODO()).Errorf("create 'admin' user error: %v", err)
+		return
+	}
 
 	// label
 	for _, v := range structs.DefaultLabelTypes {

@@ -29,14 +29,13 @@ import (
 
 // LoginReq login
 type LoginReq struct {
-	UserID   string `json:"userId" form:"userId" validate:"required,min=5,max=32"`
-	Password string `json:"userPassword" form:"userPassword" validate:"required,min=5,max=32"`
+	Name     string `json:"name" form:"name" validate:"required,min=5,max=32"`
+	Password string `json:"password" form:"password" validate:"required,min=5,max=32"`
 }
 
 type LoginResp struct {
 	TokenString string `json:"token" form:"token"`
 	UserID      string `json:"userId" form:"userId"`
-	TenantID    string `json:"tenantId" form:"tenantId"`
 }
 
 // LogoutReq logout
@@ -50,36 +49,34 @@ type LogoutResp struct {
 
 // AccessibleReq identify
 type AccessibleReq struct {
-	TokenString string `json:"tokenString" form:"tokenString" validate:"required,min=8,max=64"`
+	TokenString string `json:"token" form:"token" validate:"required,min=8,max=64"`
 }
 
 type AccessibleResp struct {
-	TenantID string `json:"tenantID" form:"tenantID"`
-	UserID   string `json:"userID" form:"userID"`
+	UserID   string `json:"userId" form:"userId"`
 }
 
 //CreateUserReq user message
 type CreateUserReq struct {
-	ID       string `json:"id"`
 	Name     string `json:"name"`
 	TenantID string `json:"tenantId"`
 	Email    string `json:"email"`
 	Phone    string `json:"phone"`
 	Password string `json:"password"`
+	Nickname string `json:"nickname"`
 }
+
 type CreateUserResp struct {
 }
 
 type DeleteUserReq struct {
-	ID       string `json:"id" swaggerignore:"true"`
-	TenantID string `json:"tenantId"`
+	ID string `json:"id" swaggerignore:"true"`
 }
 type DeleteUserResp struct {
 }
 
 type GetUserReq struct {
-	ID       string `json:"id" swaggerignore:"true"`
-	TenantID string `json:"tenantId" form:"tenantId"`
+	ID string `json:"id" swaggerignore:"true"`
 }
 type GetUserResp struct {
 	User structs.UserInfo `json:"user"`
@@ -94,8 +91,7 @@ type QueryUserResp struct {
 
 type UpdateUserProfileReq struct {
 	ID       string `json:"id" swaggerignore:"true"`
-	TenantID string `json:"tenantId"`
-	Name     string `json:"name"`
+	Nickname string `json:"nickname"`
 	Email    string `json:"email"`
 	Phone    string `json:"phone"`
 }
@@ -104,7 +100,6 @@ type UpdateUserProfileResp struct {
 
 type UpdateUserPasswordReq struct {
 	ID       string `json:"id"`
-	TenantID string `json:"tenantId"`
 	Password string `json:"password"`
 }
 type UpdateUserPasswordResp struct {

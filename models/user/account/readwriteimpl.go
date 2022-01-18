@@ -34,111 +34,179 @@ func NewAccountReadWrite(db *gorm.DB) *AccountReadWrite {
 	}
 }
 
-func (arw *AccountReadWrite) CreateUser(ctx context.Context, user *User) (*structs.UserInfo, error) {
-	if "" == user.ID || "" == user.Name {
+func (arw *AccountReadWrite) CreateUser(ctx context.Context, user *User, name, tenantID string) (*User, *UserLogin, *UserTenantRelation, error) {
+	if "" == name || "" == tenantID {
 		framework.LogWithContext(ctx).Errorf("create user %v, parameter invalid", user)
-		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "create user %v, parameter invalid", user)
+		return nil, nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "create user %v, parameter invalid", user)
 	}
-	return &structs.UserInfo{ID: user.ID, Name: user.Name, TenantID: user.TenantID}, arw.DB(ctx).Create(user).Error
-}
-
-func (arw *AccountReadWrite) DeleteUser(ctx context.Context, tenantID, userID string) error {
-	if "" == tenantID || "" == userID {
-		framework.LogWithContext(ctx).Errorf("delete user,tenantID: %s, userID: %s, parameter invalid", tenantID, userID)
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "delete user, tenantID: %s, userID: %s, parameter invalid", tenantID, userID)
-	}
-	return arw.DB(ctx).Where("tenant_id = ? AND id = ?", tenantID, userID).Unscoped().Delete(&User{}).Error
-}
-
-func (arw *AccountReadWrite) GetUser(ctx context.Context, tenantID, userID string) (structs.UserInfo, error) {
-	if "" == tenantID || "" == userID {
-		framework.LogWithContext(ctx).Errorf("get user profile, tenantID: %s, userID: %s, parameter invalid", tenantID, userID)
-		return structs.UserInfo{}, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
-			"get user profile, tenantID: %s, userID: %s, parameter invalid", tenantID, userID)
-	}
-	user := &User{}
-	err := arw.DB(ctx).First(user, "id = ? AND tenant_id = ?", userID, tenantID).Error
-	if err == gorm.ErrRecordNotFound {
-		return structs.UserInfo{}, errors.NewErrorf(errors.UserNotExist, "query user %s profile not found", userID)
-	}
+	// create user
+	err := arw.DB(ctx).Create(user).Error
 	if err != nil {
-		return structs.UserInfo{}, errors.NewErrorf(errors.QueryUserScanRowError,
-			"query user profile, tenantID: %s, userID:%s, scan data error: %v", tenantID, userID, err)
+		return nil, nil, nil, err
 	}
-	return structs.UserInfo{ID: user.ID, Name: user.Name, TenantID: user.TenantID,
-		Email: user.Email, Phone: user.Phone, Status: user.Status, CreateAt: user.CreatedAt, UpdateAt: user.UpdatedAt}, err
+
+	// create user login
+	userLogin := &UserLogin{
+		LoginName: name,
+		UserID:    user.ID,
+	}
+	err = arw.DB(ctx).Create(userLogin).Error
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	// create user tenant relation
+	relation := &UserTenantRelation{
+		UserID:   user.ID,
+		TenantID: tenantID,
+	}
+	err = arw.DB(ctx).Create(relation).Error
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return user, userLogin, relation, nil
 }
 
-func (arw *AccountReadWrite) GetUserByID(ctx context.Context, userID string) (*User, error) {
+func (arw *AccountReadWrite) DeleteUser(ctx context.Context, userID string) error {
 	if "" == userID {
-		framework.LogWithContext(ctx).Errorf("get user %s, parameter invaild", userID)
-		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "get user %s, parameter invaild", userID)
+		framework.LogWithContext(ctx).Errorf("delete user %s, parameter invalid", userID)
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "delete user %s, parameter invalid", userID)
+	}
+	// delete user
+	err := arw.DB(ctx).Where("id = ?", userID).Unscoped().Delete(&User{}).Error
+	if err != nil {
+		return err
+	}
+
+	// delete user login
+	err = arw.DB(ctx).Where("user_id = ?", userID).Unscoped().Delete(&UserLogin{}).Error
+	if err != nil {
+		return err
+	}
+
+	// delete user tenant relation
+	err = arw.DB(ctx).Where("user_id = ?", userID).Unscoped().Delete(&UserTenantRelation{}).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (arw *AccountReadWrite) GetUser(ctx context.Context, userID string) (structs.UserInfo, error) {
+	if "" == userID {
+		framework.LogWithContext(ctx).Errorf("get user %s profile, parameter invalid", userID)
+		return structs.UserInfo{}, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+			"get user %s profile, parameter invalid", userID)
 	}
 
 	user := &User{}
 	err := arw.DB(ctx).First(user, "id = ?", userID).Error
-	if err != nil {
-		return nil, errors.NewErrorf(errors.QueryUserScanRowError, "get user %s error: %v", userID, err)
+	if err == gorm.ErrRecordNotFound {
+		return structs.UserInfo{}, errors.NewErrorf(errors.UserNotExist, "query user %s profile not found", userID)
 	}
-	return user, nil
+
+	// get user login name
+	var loginNames []string
+	err = arw.DB(ctx).Table("user_logins").Select("login_name").Where("user_id = ?", userID).Find(&loginNames).Error
+	if err != nil {
+		return structs.UserInfo{}, err
+	}
+
+	// get user's tenant
+	var tenants []string
+	err = arw.DB(ctx).Table("user_tenant_relations").Select("tenant_id").Where("user_id = ?", userID).Find(&tenants).Error
+	if err != nil {
+		return structs.UserInfo{}, err
+	}
+
+	return structs.UserInfo{
+		ID:       user.ID,
+		Creator:  user.Creator,
+		Name:     loginNames,
+		TenantID: tenants,
+		Nickname: user.Name,
+		Email:    user.Email,
+		Phone:    user.Phone,
+		Status:   user.Status,
+		CreateAt: user.CreatedAt,
+		UpdateAt: user.UpdatedAt,
+	}, nil
 }
 
 func (arw *AccountReadWrite) QueryUsers(ctx context.Context) (map[string]structs.UserInfo, error) {
-	var info structs.UserInfo
 	userInfos := make(map[string]structs.UserInfo)
-	SQL := "SELECT id,name,tenant_id,status,email,phone,created_at,updated_at,creator FROM users;"
-	rows, err := arw.DB(ctx).Raw(SQL).Rows()
-	defer rows.Close()
+
+	var users []string
+	err := arw.DB(ctx).Table("users").Select("id").Find(&users).Error
 	if err != nil {
-		return nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "query all user error: %v, SQL: %s", err, SQL)
+		return userInfos, err
 	}
-	for rows.Next() {
-		err = rows.Scan(&info.ID, &info.Name, &info.TenantID, &info.Status, &info.Email, &info.Phone, &info.CreateAt, &info.UpdateAt, &info.Creator)
-		if err == nil {
-			_, ok := userInfos[info.ID]
-			if !ok {
-				userInfos[info.ID] = info
-			}
-		} else {
-			return nil, errors.NewErrorf(errors.QueryUserScanRowError, "query all user, scan data error: %v, SQL: %s", err, SQL)
+
+	for _, id := range users {
+		info, err := arw.GetUser(ctx, id)
+		if err != nil {
+			return userInfos, err
+		}
+		_, ok := userInfos[info.ID]
+		if !ok {
+			userInfos[info.ID] = info
 		}
 	}
-	return userInfos, err
+
+	return userInfos, nil
 }
 
-func (arw *AccountReadWrite) UpdateUserStatus(ctx context.Context, tenantID, userID string, status string) error {
-	if "" == tenantID || "" == userID {
-		framework.LogWithContext(ctx).Errorf("update user status,tenantID: %s, userID: %s, status: %s, parameter invalid", tenantID, userID, status)
+func (arw *AccountReadWrite) UpdateUserStatus(ctx context.Context, userID string, status string) error {
+	if "" == userID {
+		framework.LogWithContext(ctx).Errorf("update user %s status %s, parameter invalid", userID, status)
 		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
-			"update user status: tenantID: %s, userID:%s, status:%s, parameter invalid", tenantID, userID, status)
+			"update user %s status %s, parameter invalid", userID, status)
 	}
-	return arw.DB(ctx).Model(&User{}).Where("tenant_id = ? AND id = ?", tenantID, userID).Update("status", status).Error
+	return arw.DB(ctx).Model(&User{}).Where("id = ?", userID).Update("status", status).Error
 }
 
-func (arw *AccountReadWrite) UpdateUserProfile(ctx context.Context, tenantID, userID, email, phone string) error {
-	if "" == tenantID || "" == userID {
+func (arw *AccountReadWrite) UpdateUserProfile(ctx context.Context, userID, nickname, email, phone string) error {
+	if "" == userID {
 		framework.LogWithContext(ctx).Errorf(
-			"update user profile,tenantID: %s, userID: %s, email: %s, phone: %s, parameter invalid", tenantID, userID, email, phone)
+			"update user %s profile, nickname: %s, email: %s, phone: %s, parameter invalid", userID, nickname, email, phone)
 		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
-			"update user profile: tenantID: %s, userID:%s, email: %s, phone: %s, parameter invalid", tenantID, userID, email, phone)
+			"update user %s profile, nickname: %s, email: %s, phone: %s, parameter invalid", userID, nickname, email, phone)
 	}
-	user := &User{}
-	err := arw.DB(ctx).First(user, "id = ? AND tenant_id = ?", userID, tenantID).Error
+	return arw.DB(ctx).Model(&User{}).Where("id = ?", userID).Update("email", email).
+		Update("phone", phone).Update("name", nickname).Error
+}
+
+func (arw *AccountReadWrite) UpdateUserPassword(ctx context.Context, userID, salt, finalHash string) error {
+	if "" == userID {
+		framework.LogWithContext(ctx).Errorf(
+			"update user %s password, salt: %s, finalHash: %s, parameter invalid", userID, salt, finalHash)
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+			"update user %s password, salt: %s, finalHash: %s, parameter invalid", userID, salt, finalHash)
+	}
+	return arw.DB(ctx).Model(&User{}).Where("id = ?",
+		userID).Update("salt", salt).Update("final_hash", finalHash).Error
+}
+
+func (arw *AccountReadWrite) GetUserByName(ctx context.Context, name string) (*User, error) {
+	if "" == name {
+		framework.LogWithContext(ctx).Errorf("get user by name %s, parameter invalid", name)
+		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+			"get user by name %s, parameter invalid", name)
+	}
+	// find user_id by login name
+	userLogin := &UserLogin{}
+	err := arw.DB(ctx).First(userLogin, "login_name = ?", name).Error
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return arw.DB(ctx).Model(user).Update("email", email).Update("phone", phone).Error
-}
 
-func (arw *AccountReadWrite) UpdateUserPassword(ctx context.Context, tenantID, userID, salt, finalHash string) error {
-	if "" == tenantID || "" == userID {
-		framework.LogWithContext(ctx).Errorf(
-			"update user password,tenantID: %s, userID: %s, salt: %s, finalHash: %s, parameter invalid", tenantID, userID, salt, finalHash)
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
-			"update user password: tenantID: %s, userID:%s, salt: %s, finalHash: %s, parameter invalid", tenantID, userID, salt, finalHash)
+	user := &User{}
+	err = arw.DB(ctx).First(user, "id = ?", userLogin.UserID).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, errors.NewErrorf(errors.UserNotExist, "query user %s profile not found", userLogin.UserID)
 	}
-	return arw.DB(ctx).Model(&User{}).Where("tenant_id = ? AND id = ?",
-		tenantID, userID).Update("salt", salt).Update("final_hash", finalHash).Error
+	return user, nil
 }
 
 func (arw *AccountReadWrite) CreateTenant(ctx context.Context, tenant *Tenant) (*structs.TenantInfo, error) {

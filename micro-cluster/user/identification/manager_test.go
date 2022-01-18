@@ -65,29 +65,27 @@ func TestManager_Login(t *testing.T) {
 		models.SetTokenReaderWriter(tokenRW)
 		salt, hash, err := genSaltAndHash("123")
 		assert.NoError(t, err)
-		accountRW.EXPECT().GetUserByID(gomock.Any(), gomock.Any()).Return(&account.User{
+		accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(&account.User{
 			ID:        "user01",
-			TenantID:  "tenant01",
 			Salt:      salt,
 			FinalHash: hash,
 		}, nil)
 
-		tokenRW.EXPECT().CreateToken(gomock.Any(), gomock.Any(), gomock.Any(),
+		tokenRW.EXPECT().CreateToken(gomock.Any(), gomock.Any(),
 			gomock.Any(), gomock.Any()).Return(&identification.Token{}, nil)
-		got, err := manager.Login(ctx.TODO(), message.LoginReq{UserID: "user01", Password: "123"})
+		got, err := manager.Login(ctx.TODO(), message.LoginReq{Name: "user01", Password: "123"})
 		assert.NoError(t, err)
 		assert.Equal(t, got.UserID, "user01")
-		assert.Equal(t, got.TenantID, "tenant01")
 	})
 
 	t.Run("get user fail", func(t *testing.T) {
 		accountRW := mockaccount.NewMockReaderWriter(ctrl)
 		models.SetAccountReaderWriter(accountRW)
-		accountRW.EXPECT().GetUserByID(gomock.Any(), gomock.Any()).Return(&account.User{
+		accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(&account.User{
 			ID: "user01",
 		}, fmt.Errorf("get user fail"))
 
-		_, err := manager.Login(ctx.TODO(), message.LoginReq{UserID: "user01", Password: "123"})
+		_, err := manager.Login(ctx.TODO(), message.LoginReq{Name: "user01", Password: "123"})
 		assert.Error(t, err)
 	})
 
@@ -96,14 +94,13 @@ func TestManager_Login(t *testing.T) {
 		models.SetAccountReaderWriter(accountRW)
 		salt, hash, err := genSaltAndHash("123")
 		assert.NoError(t, err)
-		accountRW.EXPECT().GetUserByID(gomock.Any(), gomock.Any()).Return(&account.User{
+		accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(&account.User{
 			ID:        "user01",
-			TenantID:  "tenant01",
 			Salt:      salt,
 			FinalHash: hash,
 		}, nil)
 
-		_, err = manager.Login(ctx.TODO(), message.LoginReq{UserID: "user01", Password: ""})
+		_, err = manager.Login(ctx.TODO(), message.LoginReq{Name: "user01", Password: ""})
 		assert.Error(t, err)
 	})
 
@@ -113,14 +110,13 @@ func TestManager_Login(t *testing.T) {
 
 		salt, hash, err := genSaltAndHash("123")
 		assert.NoError(t, err)
-		accountRW.EXPECT().GetUserByID(gomock.Any(), gomock.Any()).Return(&account.User{
+		accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(&account.User{
 			ID:        "user01",
-			TenantID:  "tenant01",
 			Salt:      salt,
 			FinalHash: hash,
 		}, nil)
 
-		_, err = manager.Login(ctx.TODO(), message.LoginReq{UserID: "user01", Password: "234"})
+		_, err = manager.Login(ctx.TODO(), message.LoginReq{Name: "user01", Password: "234"})
 		assert.Error(t, err)
 	})
 
@@ -132,16 +128,15 @@ func TestManager_Login(t *testing.T) {
 		models.SetTokenReaderWriter(tokenRW)
 		salt, hash, err := genSaltAndHash("123")
 		assert.NoError(t, err)
-		accountRW.EXPECT().GetUserByID(gomock.Any(), gomock.Any()).Return(&account.User{
+		accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(&account.User{
 			ID:        "user01",
-			TenantID:  "tenant01",
 			Salt:      salt,
 			FinalHash: hash,
 		}, nil)
 
-		tokenRW.EXPECT().CreateToken(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+		tokenRW.EXPECT().CreateToken(gomock.Any(), gomock.Any(), gomock.Any(),
 			gomock.Any()).Return(nil, fmt.Errorf("create token fail"))
-		_, err = manager.Login(ctx.TODO(), message.LoginReq{UserID: "user01", Password: "123"})
+		_, err = manager.Login(ctx.TODO(), message.LoginReq{Name: "user01", Password: "123"})
 		assert.Error(t, err)
 	})
 }
@@ -199,7 +194,6 @@ func TestManager_Accessible(t *testing.T) {
 
 		tokenRW.EXPECT().GetToken(gomock.Any(), gomock.Any()).Return(&identification.Token{
 			UserID:         "user01",
-			TenantID:       "tenant01",
 			ExpirationTime: time.Now().Add(constants.DefaultTokenValidPeriod)}, nil)
 
 		got, err := manager.Accessible(ctx.TODO(), message.AccessibleReq{TokenString: "123"})
@@ -223,7 +217,6 @@ func TestManager_Accessible(t *testing.T) {
 
 		tokenRW.EXPECT().GetToken(gomock.Any(), gomock.Any()).Return(&identification.Token{
 			UserID:         "user01",
-			TenantID:       "tenant01",
 			ExpirationTime: time.Now()}, nil)
 
 		_, err := manager.Accessible(ctx.TODO(), message.AccessibleReq{TokenString: "123"})

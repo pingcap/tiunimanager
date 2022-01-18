@@ -20,6 +20,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"time"
@@ -27,7 +28,6 @@ import (
 
 type User struct {
 	ID        string    `gorm:"primarykey"`
-	TenantID  string    `gorm:"primarykey"`
 	Creator   string    `gorm:"default:null;not null;"`
 	Name      string    `gorm:"default:null;not null;uniqueIndex"`
 	Salt      string    `gorm:"default:null;not null;"` //password
@@ -35,6 +35,22 @@ type User struct {
 	Email     string    `gorm:"default:null"`
 	Phone     string    `gorm:"default:null"`
 	Status    string    `gorm:"not null;"`
+	CreatedAt time.Time `gorm:"<-:create"`
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt
+}
+
+type UserLogin struct {
+	LoginName string    `gorm:"primarykey"`
+	UserID    string    `gorm:"default:null;not null;"`
+	CreatedAt time.Time `gorm:"<-:create"`
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt
+}
+
+type UserTenantRelation struct {
+	UserID    string    `gorm:"primarykey"`
+	TenantID  string    `gorm:"primarykey"`
 	CreatedAt time.Time `gorm:"<-:create"`
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt
@@ -54,6 +70,15 @@ type Tenant struct {
 	UpdatedAt        time.Time
 	DeletedAt        gorm.DeletedAt
 }
+
+func (user *User) BeforeCreate(tx *gorm.DB) (err error) {
+	if len(user.ID) == 0 {
+		user.ID = uuidutil.GenerateID()
+	}
+
+	return nil
+}
+
 
 func (user *User) GenSaltAndHash(passwd string) error {
 	b := make([]byte, 16)

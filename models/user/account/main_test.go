@@ -57,6 +57,8 @@ func TestMain(m *testing.M) {
 			}
 			db.Migrator().CreateTable(User{})
 			db.Migrator().CreateTable(Tenant{})
+			db.Migrator().CreateTable(UserLogin{})
+			db.Migrator().CreateTable(UserTenantRelation{})
 
 			testRW = NewAccountReadWrite(db)
 			return nil

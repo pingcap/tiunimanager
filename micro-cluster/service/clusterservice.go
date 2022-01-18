@@ -1202,6 +1202,19 @@ func (handler *ClusterServiceHandler) UpdateUserProfile(ctx context.Context, req
 
 }
 
+func (handler *ClusterServiceHandler) UpdateUserPassword(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "UpdateUserPassword", int(response.GetCode()))
+
+	req := message.UpdateUserPasswordReq{}
+	if handleRequest(ctx, request, response, &req) {
+		resp, err := handler.accountManager.UpdateUserPassword(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+	return nil
+
+}
+
 func (handler *ClusterServiceHandler) CreateTenant(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "CreateTenant", int(response.GetCode()))

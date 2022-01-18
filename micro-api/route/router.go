@@ -66,7 +66,7 @@ func Route(g *gin.Engine) {
 		apiV1.Use(interceptor.GinTraceIDHandler())
 		apiV1.Use(interceptor.AccessLog(), gin.Recovery())
 
-		auth := apiV1.Group("/auth")
+		auth := apiV1.Group("/user")
 		{
 			auth.POST("/login", metrics.HandleMetrics(constants.MetricsUserLogin), userApi.Login)
 			auth.POST("/logout", metrics.HandleMetrics(constants.MetricsUserLogout), userApi.Logout)
@@ -79,7 +79,8 @@ func Route(g *gin.Engine) {
 			user.POST("/", metrics.HandleMetrics(constants.MetricsUserCreate), userApi.CreateUser)
 			user.DELETE("/:userId", metrics.HandleMetrics(constants.MetricsUserDelete), userApi.DeleteUser)
 			user.POST("/:userId/update_profile", metrics.HandleMetrics(constants.MetricsUserUpdateProfile), userApi.UpdateUserProfile)
-			user.GET("/:userId", metrics.HandleMetrics(constants.MetricsTenantGet), userApi.GetUser)
+			user.POST("/:userId/password", metrics.HandleMetrics(constants.MetricsUserUpdatePassword), userApi.UpdateUserPassword)
+			user.GET("/:userId", metrics.HandleMetrics(constants.MetricsUserGet), userApi.GetUser)
 			user.GET("/", metrics.HandleMetrics(constants.MetricsUserQuery), userApi.QueryUsers)
 		}
 

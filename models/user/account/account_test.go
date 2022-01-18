@@ -23,7 +23,6 @@ import (
 func TestUser_GenSaltAndHash_CheckPassword(t *testing.T) {
 	user := &User{
 		ID:       "user01",
-		TenantID: "tenant01",
 		Name:     "user",
 	}
 

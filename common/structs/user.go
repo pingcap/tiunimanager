@@ -51,10 +51,3 @@ type TenantInfo struct {
 	CreateAt         time.Time `json:"createAt"`
 	UpdateAt         time.Time `json:"updateAt"`
 }
-
-type RoleInfo struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Creator string `json:"creator"`
-	Status  string `json:"status"`
-}

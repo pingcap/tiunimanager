@@ -232,6 +232,18 @@ func (m ParameterGroupReadWrite) UpdateParameter(ctx context.Context, parameter 
 	return err
 }
 
+func (m ParameterGroupReadWrite) QueryParameters(ctx context.Context, offset, size int) (params []*Parameter, total int64, err error) {
+	params = make([]*Parameter, 0)
+	log := framework.LogWithContext(ctx)
+
+	err = m.DB(ctx).Model(&Parameter{}).Count(&total).Offset(offset).Limit(size).Find(&params).Error
+	if err != nil {
+		log.Errorf("list parameters err: %v", err.Error())
+		return nil, 0, errors.NewErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, errors.TIEM_PARAMETER_QUERY_ERROR.Explain())
+	}
+	return params, total, err
+}
+
 func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, parameterGroupId, parameterName string) (params []*ParamDetail, err error) {
 	log := framework.LogWithContext(ctx)
 

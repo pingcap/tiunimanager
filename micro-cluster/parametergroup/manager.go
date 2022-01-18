@@ -26,6 +26,9 @@ package parametergroup
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
 
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -50,6 +53,11 @@ const (
 )
 
 func (m *Manager) CreateParameterGroup(ctx context.Context, req message.CreateParameterGroupReq) (resp message.CreateParameterGroupResp, err error) {
+	// validation parameters
+	if err = validateParameter(ctx, req.Params); err != nil {
+		return resp, err
+	}
+
 	pg := &parametergroup.ParameterGroup{
 		Name:           req.Name,
 		ClusterSpec:    req.ClusterSpec,
@@ -78,6 +86,11 @@ func (m *Manager) CreateParameterGroup(ctx context.Context, req message.CreatePa
 }
 
 func (m *Manager) UpdateParameterGroup(ctx context.Context, req message.UpdateParameterGroupReq) (resp message.UpdateParameterGroupResp, err error) {
+	// validation parameters
+	if err = validateParameter(ctx, req.Params); err != nil {
+		return resp, err
+	}
+
 	group, _, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID, "")
 	if err != nil || group.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
@@ -232,6 +245,53 @@ func (m *Manager) CopyParameterGroup(ctx context.Context, req message.CopyParame
 	}
 	resp = message.CopyParameterGroupResp{ParamGroupID: parameterGroup.ID}
 	return resp, nil
+}
+
+// validateParameter
+// @Description: validate parameter by range
+// @Parameter ctx
+// @Parameter reqParams
+// @return err
+func validateParameter(ctx context.Context, reqParams []structs.ParameterGroupParameterSampleInfo) (err error) {
+	// query parameters list
+	params, total, err := models.GetParameterGroupReaderWriter().QueryParameters(ctx, 0, 0)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("query parameters list err: %v", err)
+		return errors.NewErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, errors.TIEM_PARAMETER_QUERY_ERROR.Explain(), err)
+	}
+	framework.LogWithContext(ctx).Debugf("validate parameters query count: %v", total)
+	// Iterate through the range of parameters to check if they are legal
+	for _, queryParam := range params {
+		for _, reqParam := range reqParams {
+			if queryParam.ID == reqParam.ID {
+				ranges := make([]string, 0)
+				if len(queryParam.Range) > 0 {
+					err = json.Unmarshal([]byte(queryParam.Range), &ranges)
+					if err != nil {
+						framework.LogWithContext(ctx).Errorf("failed to convert parameter range. range: %v, err: %v", queryParam.Range, err)
+						return err
+					}
+				}
+				if !parameter.ValidateRange(parameter.ModifyClusterParameterInfo{
+					ParamId:   reqParam.ID,
+					Type:      queryParam.Type,
+					Range:     ranges,
+					RealValue: structs.ParameterRealValue{ClusterValue: reqParam.DefaultValue},
+				}) {
+					if len(ranges) == 2 && (queryParam.Type == int(parameter.Integer) || queryParam.Type == int(parameter.Float)) {
+						return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+							fmt.Sprintf("Validation parameter %s failed, update value: %s, can take a range of values: %v",
+								queryParam.Name, reqParam.DefaultValue, ranges))
+					} else {
+						return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+							fmt.Sprintf("Validation parameter %s failed, update value: %s, optional values: %v",
+								queryParam.Name, reqParam.DefaultValue, ranges))
+					}
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func convertParameterGroupParameterInfo(param *parametergroup.ParamDetail) (pgi structs.ParameterGroupParameterInfo, err error) {

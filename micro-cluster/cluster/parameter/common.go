@@ -24,6 +24,8 @@
 package parameter
 
 import (
+	"strconv"
+
 	"github.com/pingcap-inc/tiem/common/structs"
 )
 
@@ -85,3 +87,56 @@ const (
 	NonReboot ClusterReboot = iota
 	Reboot
 )
+
+// ValidateRange
+// @Description: validate parameter value by range field
+// @Parameter param
+// @return bool
+func ValidateRange(param ModifyClusterParameterInfo) bool {
+	// Determine if range is nil or an expression, continue the loop directly
+	if param.Range == nil || len(param.Range) == 0 {
+		return true
+	}
+	switch param.Type {
+	case int(Integer):
+		if len(param.Range) == 2 {
+			// When the length is 2, then determine whether it is within the range of values
+			start, err1 := strconv.ParseInt(param.Range[0], 0, 64)
+			end, err2 := strconv.ParseInt(param.Range[1], 0, 64)
+			clusterValue, err3 := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)
+			if err1 == nil && err2 == nil && err3 == nil && clusterValue >= start && clusterValue <= end {
+				return true
+			}
+		} else {
+			// When the length is 1 or greater than 2, iterate through enumerated values to determine if they are equal
+			clusterValue, err := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)
+			for i := 0; i < len(param.Range); i++ {
+				val, err1 := strconv.ParseInt(param.Range[i], 0, 64)
+				if err == nil && err1 == nil && clusterValue == val {
+					return true
+				}
+			}
+		}
+	case int(String):
+		for _, enumValue := range param.Range {
+			if param.RealValue.ClusterValue == enumValue {
+				return true
+			}
+		}
+	case int(Boolean):
+		_, err := strconv.ParseBool(param.RealValue.ClusterValue)
+		if err == nil {
+			return true
+		}
+	case int(Float):
+		start, err1 := strconv.ParseFloat(param.Range[0], 64)
+		end, err2 := strconv.ParseFloat(param.Range[1], 64)
+		clusterValue, err3 := strconv.ParseFloat(param.RealValue.ClusterValue, 64)
+		if err1 == nil && err2 == nil && err3 == nil && clusterValue >= start && clusterValue <= end {
+			return true
+		}
+	case int(Array):
+		return true
+	}
+	return false
+}

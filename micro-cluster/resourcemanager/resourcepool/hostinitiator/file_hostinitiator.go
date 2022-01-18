@@ -117,6 +117,7 @@ func (p *FileHostInitiator) Prepare(ctx context.Context, h *structs.HostInfo) (e
 	if needInstallNumaCtl {
 		if err = p.installNumaCtl(ctx, h); err != nil {
 			errMsg := fmt.Sprintf("install numactl on host %s %s failed, %v", h.HostName, h.IP, err)
+			log.Errorln(errMsg)
 			return errors.NewError(errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, errMsg)
 		}
 	}
@@ -124,6 +125,7 @@ func (p *FileHostInitiator) Prepare(ctx context.Context, h *structs.HostInfo) (e
 	if needSetSwap {
 		if err = p.setOffSwap(ctx, h); err != nil {
 			errMsg := fmt.Sprintf("set off swap on host %s %s failed, %v", h.HostName, h.IP, err)
+			log.Errorln(errMsg)
 			return errors.NewError(errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, errMsg)
 		}
 	}
@@ -263,6 +265,7 @@ func (p *FileHostInitiator) closeConnect() {
 }
 
 func (p *FileHostInitiator) setOffSwap(ctx context.Context, h *structs.HostInfo) (err error) {
+	framework.LogWithContext(ctx).Infof("begin to set swap off on host %s %s", h.HostName, h.IP)
 	checkExisted := "count=`cat /etc/sysctl.conf | grep -E '^vm.swappiness = 0$' | wc -l`"
 	changeConf := "if [ $count -eq 0 ] ; then echo 'vm.swappiness = 0'>> /etc/sysctl.conf; fi"
 	flushCmd := "swapoff -a"
@@ -277,6 +280,7 @@ func (p *FileHostInitiator) setOffSwap(ctx context.Context, h *structs.HostInfo)
 }
 
 func (p *FileHostInitiator) installNumaCtl(ctx context.Context, h *structs.HostInfo) (err error) {
+	framework.LogWithContext(ctx).Infof("begin to install numactl on host %s %s", h.HostName, h.IP)
 	installNumaCtrlCmd := "yum install -y numactl"
 	result, err := p.sshClient.RunCommandsInSession([]string{installNumaCtrlCmd})
 	if err != nil {

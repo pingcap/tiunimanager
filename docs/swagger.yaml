@@ -1290,13 +1290,13 @@ definitions:
     type: object
   message.LoginReq:
     properties:
-      name:
+      userName:
         type: string
-      password:
+      userPassword:
         type: string
     required:
-    - name
-    - password
+    - userName
+    - userPassword
     type: object
   message.LoginResp:
     properties:

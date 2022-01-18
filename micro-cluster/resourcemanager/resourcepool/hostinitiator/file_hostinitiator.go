@@ -91,7 +91,7 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 		var results checkHostResults
 		(&results).buildFromJson(resultStr)
 		sortedResult := results.analyzeCheckResults()
-                log.Infof("build from json %s, get sorted result: %v", resultStr, sortedResult)
+		log.Infof("build from json %s, get sorted result: %v", resultStr, sortedResult)
 
 		fails, hasFails := sortedResult["Fail"]
 		if hasFails {

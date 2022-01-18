@@ -16,6 +16,7 @@ library/client/metadb
 library/framework/logs
 library/secondparty/logs
 test/
+deployment/operation/mock
 /template
 /nohup.out
 log/

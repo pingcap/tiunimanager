@@ -1911,6 +1911,11 @@
                     },
                     {
                         "type": "string",
+                        "name": "paramName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "clusterId",
                         "name": "clusterId",
                         "in": "path",
@@ -2955,6 +2960,11 @@
                         "name": "paramGroupId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "paramName",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -5943,9 +5953,17 @@
                     "type": "string",
                     "example": "415241823337054209"
                 },
+                "downstreamFetchUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
+                },
                 "downstreamSyncTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "downstreamSyncUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 },
                 "downstreamType": {
                     "type": "string",
@@ -5999,6 +6017,10 @@
                 "upstreamUpdateTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "upstreamUpdateUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 }
             }
         },
@@ -6242,9 +6264,17 @@
                     "type": "string",
                     "example": "415241823337054209"
                 },
+                "downstreamFetchUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
+                },
                 "downstreamSyncTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "downstreamSyncUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 },
                 "downstreamType": {
                     "type": "string",
@@ -6298,6 +6328,10 @@
                 "upstreamUpdateTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "upstreamUpdateUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 }
             }
         },
@@ -6701,6 +6735,10 @@
         },
         "cluster.UpdateClusterParametersReq": {
             "type": "object",
+            "required": [
+                "params",
+                "reboot"
+            ],
             "properties": {
                 "params": {
                     "type": "array",
@@ -6900,6 +6938,10 @@
         },
         "message.ApplyParameterGroupReq": {
             "type": "object",
+            "required": [
+                "clusterId",
+                "reboot"
+            ],
             "properties": {
                 "clusterId": {
                     "type": "string",
@@ -6929,6 +6971,9 @@
         },
         "message.CopyParameterGroupReq": {
             "type": "object",
+            "required": [
+                "name"
+            ],
             "properties": {
                 "name": {
                     "type": "string",
@@ -6951,6 +6996,9 @@
         },
         "message.CreateParameterGroupReq": {
             "type": "object",
+            "required": [
+                "params"
+            ],
             "properties": {
                 "clusterSpec": {
                     "type": "string",
@@ -7728,6 +7776,9 @@
         },
         "message.UpdateParameterGroupReq": {
             "type": "object",
+            "required": [
+                "params"
+            ],
             "properties": {
                 "clusterSpec": {
                     "type": "string",
@@ -8228,6 +8279,10 @@
         },
         "structs.ClusterParameterSampleInfo": {
             "type": "object",
+            "required": [
+                "paramId",
+                "realValue"
+            ],
             "properties": {
                 "paramId": {
                     "type": "string",

@@ -227,9 +227,15 @@ definitions:
       downstreamFetchTs:
         example: "415241823337054209"
         type: string
+      downstreamFetchUnix:
+        example: 1642402879000
+        type: integer
       downstreamSyncTs:
         example: "415241823337054209"
         type: string
+      downstreamSyncUnix:
+        example: 1642402879000
+        type: integer
       downstreamType:
         enum:
         - tidb
@@ -270,6 +276,9 @@ definitions:
       upstreamUpdateTs:
         example: "415241823337054209"
         type: string
+      upstreamUpdateUnix:
+        example: 1642402879000
+        type: integer
     type: object
   cluster.Dispatcher:
     properties:
@@ -441,9 +450,15 @@ definitions:
       downstreamFetchTs:
         example: "415241823337054209"
         type: string
+      downstreamFetchUnix:
+        example: 1642402879000
+        type: integer
       downstreamSyncTs:
         example: "415241823337054209"
         type: string
+      downstreamSyncUnix:
+        example: 1642402879000
+        type: integer
       downstreamType:
         enum:
         - tidb
@@ -484,6 +499,9 @@ definitions:
       upstreamUpdateTs:
         example: "415241823337054209"
         type: string
+      upstreamUpdateUnix:
+        example: 1642402879000
+        type: integer
     type: object
   cluster.QueryClusterDetailResp:
     properties:
@@ -776,6 +794,9 @@ definitions:
         type: array
       reboot:
         type: boolean
+    required:
+    - params
+    - reboot
     type: object
   cluster.UpdateClusterParametersResp:
     properties:
@@ -904,6 +925,9 @@ definitions:
         type: string
       reboot:
         type: boolean
+    required:
+    - clusterId
+    - reboot
     type: object
   message.ApplyParameterGroupResp:
     properties:
@@ -925,6 +949,8 @@ definitions:
       note:
         example: copy param group
         type: string
+    required:
+    - name
     type: object
   message.CopyParameterGroupResp:
     properties:
@@ -968,6 +994,8 @@ definitions:
         items:
           $ref: '#/definitions/structs.ParameterGroupParameterSampleInfo'
         type: array
+    required:
+    - params
     type: object
   message.CreateParameterGroupResp:
     properties:
@@ -1469,6 +1497,8 @@ definitions:
         items:
           $ref: '#/definitions/structs.ParameterGroupParameterSampleInfo'
         type: array
+    required:
+    - params
     type: object
   message.UpdateParameterGroupResp:
     properties:
@@ -1807,6 +1837,9 @@ definitions:
         type: string
       realValue:
         $ref: '#/definitions/structs.ParameterRealValue'
+    required:
+    - paramId
+    - realValue
     type: object
   structs.ClusterResourceInfo:
     properties:
@@ -3211,6 +3244,9 @@ paths:
         in: query
         name: pageSize
         type: integer
+      - in: query
+        name: paramName
+        type: string
       - description: clusterId
         in: path
         name: clusterId
@@ -4236,6 +4272,9 @@ paths:
         in: path
         name: paramGroupId
         required: true
+        type: string
+      - in: query
+        name: paramName
         type: string
       produces:
       - application/json

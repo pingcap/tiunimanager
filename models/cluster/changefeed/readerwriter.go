@@ -59,6 +59,21 @@ type ReaderWriter interface {
 	// @return err
 	QueryByClusterId(ctx context.Context, clusterId string, offset int, length int) (tasks []*ChangeFeedTask, total int64, err error)
 
+	//
+    // Query
+    // @Description:
+    // @param ctx
+    // @param clusterId
+    // @param taskType
+    // @param status
+    // @param offset
+    // @param length
+    // @return tasks
+    // @return total
+    // @return err
+    //
+	Query(ctx context.Context, clusterId string, taskType []constants.DownstreamType, status []constants.ChangeFeedStatus, offset int, length int) (tasks []*ChangeFeedTask, total int64, err error)
+
 	// LockStatus
 	// @Description: block changing status until task unlocked or lock expired
 	// @Receiver m

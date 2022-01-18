@@ -78,7 +78,7 @@ func (m *Manager) CreateParameterGroup(ctx context.Context, req message.CreatePa
 }
 
 func (m *Manager) UpdateParameterGroup(ctx context.Context, req message.UpdateParameterGroupReq) (resp message.UpdateParameterGroupResp, err error) {
-	group, _, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID)
+	group, _, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID, "")
 	if err != nil || group.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
 		err = errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
@@ -115,7 +115,7 @@ func (m *Manager) UpdateParameterGroup(ctx context.Context, req message.UpdatePa
 }
 
 func (m *Manager) DeleteParameterGroup(ctx context.Context, req message.DeleteParameterGroupReq) (resp message.DeleteParameterGroupResp, err error) {
-	pg, _, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID)
+	pg, _, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID, "")
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
 		err = errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
@@ -150,7 +150,7 @@ func (m *Manager) QueryParameterGroup(ctx context.Context, req message.QueryPara
 
 		// condition load parameter details
 		if req.HasDetail {
-			pgm, err := models.GetParameterGroupReaderWriter().QueryParametersByGroupId(ctx, pg.ID)
+			pgm, err := models.GetParameterGroupReaderWriter().QueryParametersByGroupId(ctx, pg.ID, "")
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("query parameter group req: %v, err: %v", req, err)
 				return resp, page, errors.NewErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, errors.TIEM_PARAMETER_QUERY_ERROR.Explain(), err)
@@ -177,7 +177,7 @@ func (m *Manager) QueryParameterGroup(ctx context.Context, req message.QueryPara
 }
 
 func (m *Manager) DetailParameterGroup(ctx context.Context, req message.DetailParameterGroupReq) (resp message.DetailParameterGroupResp, err error) {
-	pg, pgm, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID)
+	pg, pgm, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID, req.ParamName)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
 		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
@@ -198,7 +198,7 @@ func (m *Manager) DetailParameterGroup(ctx context.Context, req message.DetailPa
 
 func (m *Manager) CopyParameterGroup(ctx context.Context, req message.CopyParameterGroupReq) (resp message.CopyParameterGroupResp, err error) {
 	// get parameter group by id
-	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID)
+	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID, "")
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
 		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)

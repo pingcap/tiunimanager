@@ -81,7 +81,6 @@ func VerifyIdentity(c *gin.Context) {
 			c.Abort()
 		}
 		c.Set(framework.TiEM_X_USER_ID_KEY, result.UserID)
-		c.Set(framework.TiEM_X_TENANT_ID_KEY, result.TenantID)
 		c.Next()
 	}
 }

@@ -25,6 +25,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/user/account"
 	"github.com/pingcap-inc/tiem/test/mockaccount"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -39,45 +40,29 @@ func TestManager_CreateUser(t *testing.T) {
 		rw := mockaccount.NewMockReaderWriter(ctrl)
 		models.SetAccountReaderWriter(rw)
 
-		rw.EXPECT().GetUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(structs.UserInfo{},
-			errors.NewError(errors.UserNotExist, "user not exist"))
-		rw.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(&structs.UserInfo{}, nil)
+		rw.EXPECT().CreateUser(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&account.User{ID: "user01"}, nil, nil, nil)
 		ctx := &gin.Context{}
 		ctx.Set(framework.TiEM_X_USER_ID_KEY, "admin")
 		_, err := manager.CreateUser(framework.NewMicroCtxFromGinCtx(ctx), message.CreateUserReq{
-			ID:       "user01",
 			Name:     "user",
 			TenantID: "tenant",
 			Email:    "111@pingcap.com",
 			Phone:    "1234567",
 			Password: "123",
+			Nickname: "user01",
 		})
 		assert.NoError(t, err)
 	})
 
-	t.Run("user exist", func(t *testing.T) {
-		rw := mockaccount.NewMockReaderWriter(ctrl)
-		models.SetAccountReaderWriter(rw)
-
-		rw.EXPECT().GetUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(structs.UserInfo{ID: "user01"}, nil)
-		_, err := manager.CreateUser(ctx.TODO(), message.CreateUserReq{ID: "user01"})
-		assert.Error(t, err)
-	})
-
 	t.Run("gen password fail", func(t *testing.T) {
-		rw := mockaccount.NewMockReaderWriter(ctrl)
-		models.SetAccountReaderWriter(rw)
-
-		rw.EXPECT().GetUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(structs.UserInfo{},
-			errors.NewError(errors.UserNotExist, "user not exist"))
 		ctx := &gin.Context{}
 		ctx.Set(framework.TiEM_X_USER_ID_KEY, "admin")
 		_, err := manager.CreateUser(framework.NewMicroCtxFromGinCtx(ctx), message.CreateUserReq{
-			ID:       "user01",
 			Name:     "user",
 			TenantID: "tenant",
 			Email:    "111@pingcap.com",
 			Phone:    "1234567",
+			Nickname: "user01",
 		})
 		assert.Error(t, err)
 	})
@@ -86,18 +71,17 @@ func TestManager_CreateUser(t *testing.T) {
 		rw := mockaccount.NewMockReaderWriter(ctrl)
 		models.SetAccountReaderWriter(rw)
 
-		rw.EXPECT().GetUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(structs.UserInfo{},
-			errors.NewError(errors.UserNotExist, "user not exist"))
-		rw.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(&structs.UserInfo{}, fmt.Errorf("create user error"))
+		rw.EXPECT().CreateUser(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any()).Return(nil, nil, nil, fmt.Errorf("create user error"))
 		ctx := &gin.Context{}
 		ctx.Set(framework.TiEM_X_USER_ID_KEY, "admin")
 		_, err := manager.CreateUser(framework.NewMicroCtxFromGinCtx(ctx), message.CreateUserReq{
-			ID:       "",
-			Name:     "",
+			Name:     "user",
 			TenantID: "tenant",
 			Email:    "111@pingcap.com",
 			Phone:    "1234567",
 			Password: "123",
+			Nickname: "user01",
 		})
 		assert.Error(t, err)
 	})
@@ -112,12 +96,11 @@ func TestManager_DeleteUser(t *testing.T) {
 		rw := mockaccount.NewMockReaderWriter(ctrl)
 		models.SetAccountReaderWriter(rw)
 
-		rw.EXPECT().GetUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(structs.UserInfo{ID: "user01"}, nil)
-		rw.EXPECT().DeleteUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+		rw.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(structs.UserInfo{ID: "user01"}, nil)
+		rw.EXPECT().DeleteUser(gomock.Any(), gomock.Any()).Return(nil)
 
 		_, err := manager.DeleteUser(ctx.TODO(), message.DeleteUserReq{
-			ID:       "user01",
-			TenantID: "tenant01",
+			ID: "user01",
 		})
 		assert.NoError(t, err)
 	})
@@ -126,10 +109,9 @@ func TestManager_DeleteUser(t *testing.T) {
 		rw := mockaccount.NewMockReaderWriter(ctrl)
 		models.SetAccountReaderWriter(rw)
 
-		rw.EXPECT().GetUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(structs.UserInfo{}, fmt.Errorf("get fail"))
+		rw.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(structs.UserInfo{}, fmt.Errorf("get fail"))
 		_, err := manager.DeleteUser(ctx.TODO(), message.DeleteUserReq{
-			ID:       "user01",
-			TenantID: "tenant01",
+			ID: "user01",
 		})
 		assert.Error(t, err)
 	})
@@ -138,12 +120,11 @@ func TestManager_DeleteUser(t *testing.T) {
 		rw := mockaccount.NewMockReaderWriter(ctrl)
 		models.SetAccountReaderWriter(rw)
 
-		rw.EXPECT().GetUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(structs.UserInfo{ID: "user01"}, nil)
-		rw.EXPECT().DeleteUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("delete fail"))
+		rw.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(structs.UserInfo{ID: "user01"}, nil)
+		rw.EXPECT().DeleteUser(gomock.Any(), gomock.Any()).Return(fmt.Errorf("delete fail"))
 
 		_, err := manager.DeleteUser(ctx.TODO(), message.DeleteUserReq{
-			ID:       "user01",
-			TenantID: "tenant01",
+			ID: "user01",
 		})
 		assert.Error(t, err)
 	})
@@ -158,10 +139,9 @@ func TestManager_GetUser(t *testing.T) {
 		rw := mockaccount.NewMockReaderWriter(ctrl)
 		models.SetAccountReaderWriter(rw)
 
-		rw.EXPECT().GetUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(structs.UserInfo{ID: "user01"}, nil)
+		rw.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(structs.UserInfo{ID: "user01"}, nil)
 		_, err := manager.GetUser(ctx.TODO(), message.GetUserReq{
-			ID:       "user01",
-			TenantID: "tenant01",
+			ID: "user01",
 		})
 		assert.NoError(t, err)
 	})
@@ -170,10 +150,9 @@ func TestManager_GetUser(t *testing.T) {
 		rw := mockaccount.NewMockReaderWriter(ctrl)
 		models.SetAccountReaderWriter(rw)
 
-		rw.EXPECT().GetUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(structs.UserInfo{}, fmt.Errorf("get fail"))
+		rw.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(structs.UserInfo{}, fmt.Errorf("get fail"))
 		_, err := manager.GetUser(ctx.TODO(), message.GetUserReq{
-			ID:       "user01",
-			TenantID: "tenant01",
+			ID: "user01",
 		})
 		assert.Error(t, err)
 	})
@@ -214,10 +193,10 @@ func TestManager_UpdateUserProfile(t *testing.T) {
 
 		rw.EXPECT().UpdateUserProfile(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 		_, err := manager.UpdateUserProfile(ctx.TODO(), message.UpdateUserProfileReq{
-			TenantID: "tenant",
 			ID:       "user",
 			Email:    "123@pingcap.com",
 			Phone:    "1234",
+			Nickname: "user01",
 		})
 		assert.NoError(t, err)
 	})
@@ -228,10 +207,47 @@ func TestManager_UpdateUserProfile(t *testing.T) {
 
 		rw.EXPECT().UpdateUserProfile(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("update fail"))
 		_, err := manager.UpdateUserProfile(ctx.TODO(), message.UpdateUserProfileReq{
-			TenantID: "tenant",
 			ID:       "user",
 			Email:    "123@pingcap.com",
 			Phone:    "1234",
+			Nickname: "user01",
+		})
+		assert.Error(t, err)
+	})
+}
+
+func TestManager_UpdateUserPassword(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	manager := &Manager{}
+
+	t.Run("normal", func(t *testing.T) {
+		rw := mockaccount.NewMockReaderWriter(ctrl)
+		models.SetAccountReaderWriter(rw)
+
+		rw.EXPECT().UpdateUserPassword(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+		_, err := manager.UpdateUserPassword(ctx.TODO(), message.UpdateUserPasswordReq{
+			ID:       "user",
+			Password: "123",
+		})
+		assert.NoError(t, err)
+	})
+
+	t.Run("gen password fail", func(t *testing.T) {
+		_, err := manager.UpdateUserPassword(ctx.TODO(), message.UpdateUserPasswordReq{
+			ID: "user",
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("update password fail", func(t *testing.T) {
+		rw := mockaccount.NewMockReaderWriter(ctrl)
+		models.SetAccountReaderWriter(rw)
+
+		rw.EXPECT().UpdateUserPassword(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("update password fail"))
+		_, err := manager.UpdateUserPassword(ctx.TODO(), message.UpdateUserPasswordReq{
+			ID:       "user",
+			Password: "123",
 		})
 		assert.Error(t, err)
 	})

@@ -1925,6 +1925,11 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "paramName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "clusterId",
                         "name": "clusterId",
                         "in": "path",
@@ -2969,6 +2974,11 @@ var doc = `{
                         "name": "paramGroupId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "paramName",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -5141,6 +5151,82 @@ var doc = `{
                 }
             }
         },
+        "/users/{userId}/password": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "update user password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "update user password",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user id",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "query user password request parameter",
+                        "name": "UpdateUserPasswordRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UpdateUserPasswordReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UpdateUserPasswordResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/users/{userId}/update_profile": {
             "post": {
                 "security": [
@@ -5881,9 +5967,17 @@ var doc = `{
                     "type": "string",
                     "example": "415241823337054209"
                 },
+                "downstreamFetchUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
+                },
                 "downstreamSyncTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "downstreamSyncUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 },
                 "downstreamType": {
                     "type": "string",
@@ -5937,6 +6031,10 @@ var doc = `{
                 "upstreamUpdateTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "upstreamUpdateUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 }
             }
         },
@@ -6180,9 +6278,17 @@ var doc = `{
                     "type": "string",
                     "example": "415241823337054209"
                 },
+                "downstreamFetchUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
+                },
                 "downstreamSyncTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "downstreamSyncUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 },
                 "downstreamType": {
                     "type": "string",
@@ -6236,6 +6342,10 @@ var doc = `{
                 "upstreamUpdateTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "upstreamUpdateUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 }
             }
         },
@@ -6639,6 +6749,10 @@ var doc = `{
         },
         "cluster.UpdateClusterParametersReq": {
             "type": "object",
+            "required": [
+                "params",
+                "reboot"
+            ],
             "properties": {
                 "params": {
                     "type": "array",
@@ -6838,6 +6952,10 @@ var doc = `{
         },
         "message.ApplyParameterGroupReq": {
             "type": "object",
+            "required": [
+                "clusterId",
+                "reboot"
+            ],
             "properties": {
                 "clusterId": {
                     "type": "string",
@@ -6867,6 +6985,9 @@ var doc = `{
         },
         "message.CopyParameterGroupReq": {
             "type": "object",
+            "required": [
+                "name"
+            ],
             "properties": {
                 "name": {
                     "type": "string",
@@ -6889,6 +7010,9 @@ var doc = `{
         },
         "message.CreateParameterGroupReq": {
             "type": "object",
+            "required": [
+                "params"
+            ],
             "properties": {
                 "clusterSpec": {
                     "type": "string",
@@ -7016,10 +7140,10 @@ var doc = `{
                 "email": {
                     "type": "string"
                 },
-                "id": {
+                "name": {
                     "type": "string"
                 },
-                "name": {
+                "nickname": {
                     "type": "string"
                 },
                 "password": {
@@ -7235,12 +7359,7 @@ var doc = `{
             "type": "object"
         },
         "message.DeleteUserReq": {
-            "type": "object",
-            "properties": {
-                "tenantId": {
-                    "type": "string"
-                }
-            }
+            "type": "object"
         },
         "message.DeleteUserResp": {
             "type": "object"
@@ -7386,14 +7505,14 @@ var doc = `{
         "message.LoginReq": {
             "type": "object",
             "required": [
-                "userName",
-                "userPassword"
+                "name",
+                "password"
             ],
             "properties": {
-                "userId": {
+                "name": {
                     "type": "string"
                 },
-                "userPassword": {
+                "password": {
                     "type": "string"
                 }
             }
@@ -7401,9 +7520,6 @@ var doc = `{
         "message.LoginResp": {
             "type": "object",
             "properties": {
-                "tenantId": {
-                    "type": "string"
-                },
                 "token": {
                     "type": "string"
                 },
@@ -7674,6 +7790,9 @@ var doc = `{
         },
         "message.UpdateParameterGroupReq": {
             "type": "object",
+            "required": [
+                "params"
+            ],
             "properties": {
                 "clusterSpec": {
                     "type": "string",
@@ -7748,19 +7867,30 @@ var doc = `{
         "message.UpdateTenantProfileResp": {
             "type": "object"
         },
+        "message.UpdateUserPasswordReq": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.UpdateUserPasswordResp": {
+            "type": "object"
+        },
         "message.UpdateUserProfileReq": {
             "type": "object",
             "properties": {
                 "email": {
                     "type": "string"
                 },
-                "name": {
+                "nickname": {
                     "type": "string"
                 },
                 "phone": {
-                    "type": "string"
-                },
-                "tenantId": {
                     "type": "string"
                 }
             }
@@ -8163,6 +8293,10 @@ var doc = `{
         },
         "structs.ClusterParameterSampleInfo": {
             "type": "object",
+            "required": [
+                "paramId",
+                "realValue"
+            ],
             "properties": {
                 "paramId": {
                     "type": "string",
@@ -8887,7 +9021,6 @@ var doc = `{
                 }
             }
         },
-<<<<<<< HEAD
         "structs.UserInfo": {
             "type": "object",
             "properties": {
@@ -8904,6 +9037,12 @@ var doc = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "nickname": {
                     "type": "string"
                 },
                 "phone": {
@@ -8912,12 +9051,17 @@ var doc = `{
                 "status": {
                     "type": "string"
                 },
-                "tenantId": {
-                    "type": "string"
+                "tenantIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "updateAt": {
                     "type": "string"
-=======
+                }
+            }
+        },
         "structs.VendorWithRegion": {
             "type": "object",
             "properties": {
@@ -8934,7 +9078,6 @@ var doc = `{
                     "additionalProperties": {
                         "$ref": "#/definitions/structs.RegionInfo"
                     }
->>>>>>> upstream/sprint/20220130/sprint7
                 }
             }
         },

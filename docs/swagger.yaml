@@ -227,9 +227,15 @@ definitions:
       downstreamFetchTs:
         example: "415241823337054209"
         type: string
+      downstreamFetchUnix:
+        example: 1642402879000
+        type: integer
       downstreamSyncTs:
         example: "415241823337054209"
         type: string
+      downstreamSyncUnix:
+        example: 1642402879000
+        type: integer
       downstreamType:
         enum:
         - tidb
@@ -270,6 +276,9 @@ definitions:
       upstreamUpdateTs:
         example: "415241823337054209"
         type: string
+      upstreamUpdateUnix:
+        example: 1642402879000
+        type: integer
     type: object
   cluster.Dispatcher:
     properties:
@@ -441,9 +450,15 @@ definitions:
       downstreamFetchTs:
         example: "415241823337054209"
         type: string
+      downstreamFetchUnix:
+        example: 1642402879000
+        type: integer
       downstreamSyncTs:
         example: "415241823337054209"
         type: string
+      downstreamSyncUnix:
+        example: 1642402879000
+        type: integer
       downstreamType:
         enum:
         - tidb
@@ -484,6 +499,9 @@ definitions:
       upstreamUpdateTs:
         example: "415241823337054209"
         type: string
+      upstreamUpdateUnix:
+        example: 1642402879000
+        type: integer
     type: object
   cluster.QueryClusterDetailResp:
     properties:
@@ -776,6 +794,9 @@ definitions:
         type: array
       reboot:
         type: boolean
+    required:
+    - params
+    - reboot
     type: object
   cluster.UpdateClusterParametersResp:
     properties:
@@ -904,6 +925,9 @@ definitions:
         type: string
       reboot:
         type: boolean
+    required:
+    - clusterId
+    - reboot
     type: object
   message.ApplyParameterGroupResp:
     properties:
@@ -925,6 +949,8 @@ definitions:
       note:
         example: copy param group
         type: string
+    required:
+    - name
     type: object
   message.CopyParameterGroupResp:
     properties:
@@ -968,6 +994,8 @@ definitions:
         items:
           $ref: '#/definitions/structs.ParameterGroupParameterSampleInfo'
         type: array
+    required:
+    - params
     type: object
   message.CreateParameterGroupResp:
     properties:
@@ -1020,9 +1048,9 @@ definitions:
     properties:
       email:
         type: string
-      id:
-        type: string
       name:
+        type: string
+      nickname:
         type: string
       password:
         type: string
@@ -1163,9 +1191,6 @@ definitions:
   message.DeleteTenantResp:
     type: object
   message.DeleteUserReq:
-    properties:
-      tenantId:
-        type: string
     type: object
   message.DeleteUserResp:
     type: object
@@ -1265,18 +1290,16 @@ definitions:
     type: object
   message.LoginReq:
     properties:
-      userId:
+      name:
         type: string
-      userPassword:
+      password:
         type: string
     required:
-    - userName
-    - userPassword
+    - name
+    - password
     type: object
   message.LoginResp:
     properties:
-      tenantId:
-        type: string
       token:
         type: string
       userId:
@@ -1474,6 +1497,8 @@ definitions:
         items:
           $ref: '#/definitions/structs.ParameterGroupParameterSampleInfo'
         type: array
+    required:
+    - params
     type: object
   message.UpdateParameterGroupResp:
     properties:
@@ -1507,15 +1532,22 @@ definitions:
     type: object
   message.UpdateTenantProfileResp:
     type: object
+  message.UpdateUserPasswordReq:
+    properties:
+      id:
+        type: string
+      password:
+        type: string
+    type: object
+  message.UpdateUserPasswordResp:
+    type: object
   message.UpdateUserProfileReq:
     properties:
       email:
         type: string
-      name:
+      nickname:
         type: string
       phone:
-        type: string
-      tenantId:
         type: string
     type: object
   message.UpdateUserProfileResp:
@@ -1805,6 +1837,9 @@ definitions:
         type: string
       realValue:
         $ref: '#/definitions/structs.ParameterRealValue'
+    required:
+    - paramId
+    - realValue
     type: object
   structs.ClusterResourceInfo:
     properties:
@@ -2305,7 +2340,6 @@ definitions:
       used:
         type: number
     type: object
-<<<<<<< HEAD
   structs.UserInfo:
     properties:
       createAt:
@@ -2317,16 +2351,22 @@ definitions:
       id:
         type: string
       name:
+        items:
+          type: string
+        type: array
+      nickname:
         type: string
       phone:
         type: string
       status:
         type: string
-      tenantId:
-        type: string
+      tenantIds:
+        items:
+          type: string
+        type: array
       updateAt:
         type: string
-=======
+    type: object
   structs.VendorWithRegion:
     properties:
       id:
@@ -2339,7 +2379,6 @@ definitions:
         additionalProperties:
           $ref: '#/definitions/structs.RegionInfo'
         type: object
->>>>>>> upstream/sprint/20220130/sprint7
     type: object
   structs.WorkFlowInfo:
     properties:
@@ -3205,6 +3244,9 @@ paths:
         in: query
         name: pageSize
         type: integer
+      - in: query
+        name: paramName
+        type: string
       - description: clusterId
         in: path
         name: clusterId
@@ -4230,6 +4272,9 @@ paths:
         in: path
         name: paramGroupId
         required: true
+        type: string
+      - in: query
+        name: paramName
         type: string
       produces:
       - application/json
@@ -5486,6 +5531,52 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: get user profile
+      tags:
+      - platform
+  /users/{userId}/password:
+    post:
+      consumes:
+      - application/json
+      description: update user password
+      parameters:
+      - description: user id
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: query user password request parameter
+        in: body
+        name: UpdateUserPasswordRequest
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateUserPasswordReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateUserPasswordResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: update user password
       tags:
       - platform
   /users/{userId}/update_profile:

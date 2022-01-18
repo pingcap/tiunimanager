@@ -170,7 +170,7 @@ func (m ParameterGroupReadWrite) QueryParameterGroup(ctx context.Context, name, 
 	return groups, total, err
 }
 
-func (m ParameterGroupReadWrite) GetParameterGroup(ctx context.Context, parameterGroupId string) (group *ParameterGroup, params []*ParamDetail, err error) {
+func (m ParameterGroupReadWrite) GetParameterGroup(ctx context.Context, parameterGroupId, parameterName string) (group *ParameterGroup, params []*ParamDetail, err error) {
 	log := framework.LogWithContext(ctx)
 	if parameterGroupId == "" {
 		return nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, errors.TIEM_PARAMETER_INVALID.Explain())
@@ -184,7 +184,7 @@ func (m ParameterGroupReadWrite) GetParameterGroup(ctx context.Context, paramete
 		return nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_QUERY_ERROR, errors.TIEM_PARAMETER_GROUP_QUERY_ERROR.Explain())
 	}
 
-	params, err = m.QueryParametersByGroupId(ctx, parameterGroupId)
+	params, err = m.QueryParametersByGroupId(ctx, parameterGroupId, parameterName)
 	if err != nil {
 		log.Errorf("get param group err: %v", err.Error())
 		return nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, errors.TIEM_PARAMETER_QUERY_ERROR.Explain())
@@ -232,17 +232,23 @@ func (m ParameterGroupReadWrite) UpdateParameter(ctx context.Context, parameter 
 	return err
 }
 
-func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, parameterGroupId string) (params []*ParamDetail, err error) {
+func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, parameterGroupId, parameterName string) (params []*ParamDetail, err error) {
 	log := framework.LogWithContext(ctx)
 
-	err = m.DB(ctx).Model(&Parameter{}).
+	query := m.DB(ctx).Model(&Parameter{}).
 		Select("parameters.id, parameters.category, parameters.name, parameters.instance_type, parameters.system_variable, "+
 			"parameters.type, parameters.unit, parameters.range, parameters.has_reboot, parameters.has_apply, "+
 			"parameters.update_source, parameters.description, parameter_group_mappings.default_value, parameter_group_mappings.note, "+
 			"parameter_group_mappings.created_at, parameter_group_mappings.updated_at").
 		Joins("left join parameter_group_mappings on parameters.id = parameter_group_mappings.parameter_id").
-		Where("parameter_group_mappings.parameter_group_id = ?", parameterGroupId).
-		Order("parameters.instance_type desc").
+		Where("parameter_group_mappings.parameter_group_id = ?", parameterGroupId)
+
+	// Fuzzy query by parameter name
+	if parameterName != "" {
+		query.Where("parameters.name like '%" + parameterName + "%'")
+	}
+
+	err = query.Order("parameters.instance_type desc").
 		Scan(&params).Error
 	if err != nil {
 		log.Errorf("query parameters by group id err: %v", err.Error())

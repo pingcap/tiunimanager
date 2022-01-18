@@ -54,8 +54,8 @@ func TestManager_QueryClusterParameters(t *testing.T) {
 	clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
 	models.SetClusterParameterReaderWriter(clusterParameterRW)
 
-	clusterParameterRW.EXPECT().QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, clusterId string, offset, size int) (paramGroupId string, params []*parameter.ClusterParamDetail, total int64, err error) {
+	clusterParameterRW.EXPECT().QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, clusterId, name string, offset, size int) (paramGroupId string, params []*parameter.ClusterParamDetail, total int64, err error) {
 			return "1", []*parameter.ClusterParamDetail{
 				&parameter.ClusterParamDetail{
 					Parameter: parametergroup.Parameter{
@@ -95,8 +95,8 @@ func TestManager_UpdateClusterParameters(t *testing.T) {
 	configRW := mockconfig.NewMockReaderWriter(ctrl)
 	models.SetConfigReaderWriter(configRW)
 
-	clusterParameterRW.EXPECT().QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, clusterId string, offset, size int) (paramGroupId string, params []*parameter.ClusterParamDetail, total int64, err error) {
+	clusterParameterRW.EXPECT().QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, clusterId, name string, offset, size int) (paramGroupId string, params []*parameter.ClusterParamDetail, total int64, err error) {
 			return "1", []*parameter.ClusterParamDetail{
 				{
 					Parameter: parametergroup.Parameter{
@@ -151,8 +151,8 @@ func TestManager_ApplyParameterGroup_Success(t *testing.T) {
 	configRW := mockconfig.NewMockReaderWriter(ctrl)
 	models.SetConfigReaderWriter(configRW)
 
-	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, parameterGroupId string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 			return &parametergroup.ParameterGroup{ID: "1"}, []*parametergroup.ParamDetail{
 				{
 					Parameter: parametergroup.Parameter{

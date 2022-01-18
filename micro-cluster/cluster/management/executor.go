@@ -747,7 +747,7 @@ func syncTopology(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 		return  err
 	}
 
-	node.Record(fmt.Sprintf("sync topology config for cluster %s", clusterMeta.Cluster.ID), fmt.Sprintf("content: %s", metaYaml))
+	node.Record(fmt.Sprintf("sync topology config for cluster %s", clusterMeta.Cluster.ID), fmt.Sprintf("%s", metaYaml))
 	return models.GetClusterReaderWriter().UpdateTopologySnapshotConfig(context, clusterMeta.Cluster.ID, metaYaml)
 }
 

@@ -95,6 +95,7 @@ service ClusterService {
     rpc GetUser(RpcRequest) returns (RpcResponse);
     rpc QueryUsers(RpcRequest) returns (RpcResponse);
     rpc UpdateUserProfile(RpcRequest) returns (RpcResponse);
+    rpc UpdateUserPassword(RpcRequest) returns (RpcResponse);
     rpc CreateTenant(RpcRequest) returns (RpcResponse);
     rpc DeleteTenant(RpcRequest) returns (RpcResponse);
     rpc GetTenant(RpcRequest) returns (RpcResponse);

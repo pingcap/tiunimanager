@@ -371,15 +371,21 @@ func (manager *SecondPartyManager) ClusterDisplay(ctx context.Context, tiUPCompo
 	return
 }
 
-func (manager *SecondPartyManager) Check(ctx context.Context, tiUPComponent TiUPComponentTypeStr, checkObject string,
+func (manager *SecondPartyManager) CheckTopo(ctx context.Context, tiUPComponent TiUPComponentTypeStr, topoStr string,
 	timeoutS int, flags []string) (result string, err error) {
-	framework.LogWithContext(ctx).Infof("check tiupcomponent: %s,  checkobject: %s, "+
-		"timeouts: %d, flags: %v", string(tiUPComponent), checkObject, timeoutS, flags)
+	topologyTmpFilePath, err := newTmpFileWithContent(topologyTmpFilePrefix, []byte(topoStr))
+	if err != nil {
+		return "", err
+	}
+	framework.LogWithContext(ctx).Infof("check tiupcomponent: %s,  topostr: %s, "+
+		"timeouts: %d, flags: %v", string(tiUPComponent), topoStr, timeoutS, flags)
 	var args []string
 	args = append(args, string(tiUPComponent), "check")
-	args = append(args, checkObject)
+	args = append(args, topologyTmpFilePath)
 	args = append(args, flags...)
 	tiUPHome := GetTiUPHomeForComponent(ctx, tiUPComponent)
+
+	//defer os.Remove(topologyTmpFilePath)
 	resp, err := manager.startSyncTiUPOperation(ctx, args, timeoutS, tiUPHome)
 	if err != nil {
 		return "", err

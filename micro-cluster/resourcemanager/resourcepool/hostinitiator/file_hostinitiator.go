@@ -79,18 +79,19 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 	log.Infof("apply and check cluster ignore warning (%v) on %s", ignoreWarnings, templateStr)
 
 	if rp_consts.SecondPartyReady {
-		resultStr, err := p.secondPartyServ.Check(ctx, secondparty.ClusterComponentTypeStr, templateStr, rp_consts.DefaultTiupTimeOut,
+		resultStr, err := p.secondPartyServ.CheckTopo(ctx, secondparty.ClusterComponentTypeStr, templateStr, rp_consts.DefaultTiupTimeOut,
 			[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--apply", "--format", "json"})
 		if err != nil {
 			errMsg := fmt.Sprintf("call second serv to check host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
 			return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
 		}
-		framework.LogWithContext(ctx).Infof("check host %s %s for %v done", h.HostName, h.IP, tempateInfo)
+		log.Infof("check host %s %s for %v done", h.HostName, h.IP, tempateInfo)
 
 		// deal with the result
 		var results checkHostResults
 		(&results).buildFromJson(resultStr)
 		sortedResult := results.analyzeCheckResults()
+                log.Infof("build from json %s, get sorted result: %v", resultStr, sortedResult)
 
 		fails, hasFails := sortedResult["Fail"]
 		if hasFails {

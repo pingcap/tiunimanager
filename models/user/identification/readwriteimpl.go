@@ -1,3 +1,18 @@
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ ******************************************************************************/
+
 package identification
 
 import (
@@ -12,32 +27,30 @@ type TokenReadWrite struct {
 	dbCommon.GormDB
 }
 
-func (g *TokenReadWrite) AddToken(ctx context.Context, tokenString, accountName string, accountId, tenantId string, expirationTime time.Time) (*Token, error) {
+func (g *TokenReadWrite) CreateToken(ctx context.Context, tokenString, userID string, expirationTime time.Time) (*Token, error) {
 	if "" == tokenString /*|| "" == accountName || "" == accountId || "" == tenantId */ {
-		return nil, errors.Errorf("AddToken has invalid parameter, tokenString: %s, accountName: %s, tenantId: %s, accountId: %s", tokenString, accountName, tenantId, accountId)
+		return nil, errors.Errorf("AddToken has invalid parameter, tokenString: %s, userID: %s", tokenString, userID)
 	}
-	token, err := g.FindToken(ctx, tokenString)
+	token, err := g.GetToken(ctx, tokenString)
 	if err == nil && token.TokenString == tokenString {
 		token.ExpirationTime = expirationTime
 		err = g.DB(ctx).Save(&token).Error
 	} else {
 		token.TokenString = tokenString
-		token.AccountId = accountId
-		token.TenantId = tenantId
+		token.UserID = userID
 		token.ExpirationTime = expirationTime
-		token.AccountName = accountName
 		token.Status = 0
 		err = g.DB(ctx).Create(&token).Error
 	}
 	return token, err
 }
 
-func (g *TokenReadWrite) FindToken(ctx context.Context, tokenString string) (*Token, error) {
+func (g *TokenReadWrite) GetToken(ctx context.Context, tokenString string) (*Token, error) {
 	token := &Token{}
 	return token, g.DB(ctx).Where("token_string = ?", tokenString).First(token).Error
 }
 
-func NewTokenReadWrite(db *gorm.DB) *TokenReadWrite{
+func NewTokenReadWrite(db *gorm.DB) *TokenReadWrite {
 	return &TokenReadWrite{
 		dbCommon.WrapDB(db),
 	}

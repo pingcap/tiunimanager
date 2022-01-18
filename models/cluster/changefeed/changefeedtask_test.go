@@ -182,25 +182,49 @@ func TestGormChangeFeedReadWrite_LockStatus(t *testing.T) {
 	}
 }
 
-func TestGormChangeFeedReadWrite_QueryByClusterId(t *testing.T) {
-	t1, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: common.Entity{TenantId: "111"}, ClusterId: "6666"})
-	anotherCluster, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: common.Entity{TenantId: "111"}, ClusterId: "3121"})
-	deleted, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: common.Entity{TenantId: "111"}, ClusterId: "6666"})
-	t4, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: common.Entity{TenantId: "111"}, ClusterId: "6666", StartTS: int64(9999)})
-	t5, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: common.Entity{TenantId: "111"}, ClusterId: "6666"})
+func TestGormChangeFeedReadWrite_Query(t *testing.T) {
+	t1, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: common.Entity{TenantId: "111", Status: string(constants.ChangeFeedStatusStopped)}, ClusterId: "6666", StartTS: int64(1111), Type: constants.DownstreamTypeTiDB})
+	anotherCluster, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: common.Entity{TenantId: "111", Status: string(constants.ChangeFeedStatusStopped)}, ClusterId: "3121", Type: constants.DownstreamTypeTiDB})
+	deleted, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: common.Entity{TenantId: "111", Status: string(constants.ChangeFeedStatusStopped)}, ClusterId: "6666", Type: constants.DownstreamTypeTiDB})
+	t4, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: common.Entity{TenantId: "111", Status: string(constants.ChangeFeedStatusInitial)}, ClusterId: "6666", StartTS: int64(9999), Type: constants.DownstreamTypeKafka})
+	t5, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: common.Entity{TenantId: "111", Status: string(constants.ChangeFeedStatusNormal)}, ClusterId: "6666", StartTS: int64(5555), Type: constants.DownstreamTypeMysql})
 	defer testRW.Delete(context.TODO(), t1.ID)
 	defer testRW.Delete(context.TODO(), anotherCluster.ID)
 	testRW.DB(context.TODO()).Delete(deleted)
 	defer testRW.Delete(context.TODO(), t4.ID)
 	defer testRW.Delete(context.TODO(), t5.ID)
 
-	tasks, total, err := testRW.QueryByClusterId(context.TODO(), "6666", 0, 2)
-	assert.NoError(t, err)
-	assert.Equal(t, 3, int(total))
-	assert.Equal(t, 9999, int(tasks[1].StartTS))
+	t.Run("query by id", func(t *testing.T) {
+		tasks, total, err := testRW.QueryByClusterId(context.TODO(), "6666", 0, 2)
+		assert.NoError(t, err)
+		assert.Equal(t, 3, int(total))
+		assert.Equal(t, 9999, int(tasks[1].StartTS))
 
-	_, _, err = testRW.QueryByClusterId(context.TODO(), "", 0, 2)
-	assert.Error(t, err)
+		_, _, err = testRW.QueryByClusterId(context.TODO(), "", 0, 2)
+		assert.Error(t, err)
+	})
+	t.Run("type", func(t *testing.T) {
+		tasks, total, err := testRW.Query(context.TODO(), "6666", []constants.DownstreamType{constants.DownstreamTypeTiDB}, []constants.ChangeFeedStatus{constants.ChangeFeedStatusNormal, constants.ChangeFeedStatusInitial, constants.ChangeFeedStatusStopped}, 0, 8)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, int(total))
+		assert.Equal(t, 1111, int(tasks[0].StartTS))
+
+		tasks, total, err = testRW.Query(context.TODO(), "6666", []constants.DownstreamType{constants.DownstreamTypeTiDB,constants.DownstreamTypeMysql}, []constants.ChangeFeedStatus{}, 0, 8)
+		assert.NoError(t, err)
+		assert.Equal(t, 2, int(total))
+		assert.Equal(t, 5555, int(tasks[1].StartTS))
+	})
+	t.Run("status", func(t *testing.T) {
+		tasks, total, err := testRW.Query(context.TODO(), "6666", []constants.DownstreamType{}, []constants.ChangeFeedStatus{constants.ChangeFeedStatusNormal, constants.ChangeFeedStatusInitial}, 0, 8)
+		assert.NoError(t, err)
+		assert.Equal(t, 2, int(total))
+		assert.Equal(t, 9999, int(tasks[0].StartTS))
+
+		tasks, total, err = testRW.Query(context.TODO(), "6666", []constants.DownstreamType{constants.DownstreamTypeTiDB,constants.DownstreamTypeMysql,constants.DownstreamTypeKafka}, []constants.ChangeFeedStatus{constants.ChangeFeedStatusNormal}, 0, 8)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, int(total))
+		assert.Equal(t, 5555, int(tasks[0].StartTS))
+	})
 }
 
 func TestGormChangeFeedReadWrite_UnlockStatus(t *testing.T) {
@@ -326,13 +350,13 @@ func TestConvertStatus(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotStatus, err := constants.ConvertStatus(tt.args.s)
+			gotStatus, err := constants.ConvertChangeFeedStatus(tt.args.s)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ConvertStatus() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ConvertChangeFeedStatus() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if gotStatus != tt.wantStatus {
-				t.Errorf("ConvertStatus() gotStatus = %v, want %v", gotStatus, tt.wantStatus)
+				t.Errorf("ConvertChangeFeedStatus() gotStatus = %v, want %v", gotStatus, tt.wantStatus)
 			}
 		})
 	}

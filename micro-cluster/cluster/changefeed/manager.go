@@ -273,42 +273,6 @@ func currentTSO() uint64 {
 	return uint64((time.Now().UnixNano() / int64(time.Millisecond)) << 18)
 }
 
-func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTaskReq) (resp cluster.DetailChangeFeedTaskResp, err error) {
-	task, err := models.GetChangeFeedReaderWriter().Get(ctx, request.ID)
-	if err != nil {
-		return
-	}
-
-	if task.Status == constants.ChangeFeedStatusInitial.ToString() {
-		err = errors.NewError(errors.TIEM_CHANGE_FEED_NOT_FOUND, "change feed task has not been created")
-	}
-
-	clusterMeta, err:= handler.Get(ctx, task.ClusterId)
-	if err != nil {
-		return
-	}
-	cdcAddress := clusterMeta.GetCDCClientAddresses()
-	if len(cdcAddress) == 0 {
-		err = errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
-		return
-	}
-	resp.ChangeFeedTaskInfo = parse(*task)
-
-	taskDetail, detailError := secondparty.Manager.DetailChangeFeedTask(ctx, secondparty.ChangeFeedDetailReq{
-		CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
-		ChangeFeedID: task.ID,
-	})
-
-	if detailError == nil {
-		resp.ChangeFeedTaskInfo.AcceptDownstreamSyncTS(taskDetail.CheckPointTSO)
-		resp.ChangeFeedTaskInfo.AcceptUpstreamUpdateTS(currentTSO())
-	} else {
-		framework.LogWithContext(ctx).Errorf("detail change feed task err = %s", err)
-	}
-
-	return
-}
-
 func (p *Manager) Query(ctx context.Context, request cluster.QueryChangeFeedTaskReq) (resps []cluster.QueryChangeFeedTaskResp, total int, err error) {
 	clusterMeta, err:= handler.Get(ctx, request.ClusterId)
 	if err != nil {

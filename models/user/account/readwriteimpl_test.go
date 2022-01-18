@@ -21,6 +21,7 @@ import (
 	"testing"
 )
 
+
 func TestAccountReadWrite_CreateUser(t *testing.T) {
 	t.Run("invalid parameter", func(t *testing.T) {
 		user := &User{Name: "nick"}
@@ -314,7 +315,7 @@ func TestAccountReadWrite_QueryTenants(t *testing.T) {
 		_, err := testRW.CreateTenant(ctx.TODO(), tenant)
 		assert.NoError(t, err)
 		got, err := testRW.QueryTenants(ctx.TODO())
-		assert.Equal(t, 1, len(got))
+		assert.Equal(t, 2, len(got))
 		err = testRW.DeleteTenant(ctx.TODO(), tenant.ID)
 		assert.NoError(t, err)
 	})

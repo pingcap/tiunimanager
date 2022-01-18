@@ -16,6 +16,7 @@
 package account
 
 import (
+	ctx "context"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/util/uuidutil"
@@ -41,8 +42,8 @@ func TestMain(m *testing.M) {
 			newLogger := framework.New(
 				log.New(os.Stdout, "\r\n", log.LstdFlags),
 				framework.Config{
-					SlowThreshold: time.Second,
-					LogLevel:      framework.Info,
+					SlowThreshold:             time.Second,
+					LogLevel:                  framework.Info,
 					IgnoreRecordNotFoundError: true,
 				},
 			)
@@ -61,6 +62,13 @@ func TestMain(m *testing.M) {
 			db.Migrator().CreateTable(UserTenantRelation{})
 
 			testRW = NewAccountReadWrite(db)
+			testRW.CreateTenant(ctx.TODO(), &Tenant{
+				ID:               "tenant",
+				Creator:          "test",
+				Name:             "tenant01",
+				Status:           "Normal",
+				OnBoardingStatus: "On",
+			})
 			return nil
 		},
 	)

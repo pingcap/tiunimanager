@@ -39,8 +39,15 @@ func (arw *AccountReadWrite) CreateUser(ctx context.Context, user *User, name, t
 		framework.LogWithContext(ctx).Errorf("create user %v, parameter invalid", user)
 		return nil, nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "create user %v, parameter invalid", user)
 	}
+	// query tenant
+	_, err := arw.GetTenant(ctx, tenantID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("not found tenant %s", tenantID)
+		return nil, nil, nil, errors.NewErrorf(errors.TenantNotExist, "query tenant %s not found", tenantID)
+	}
+
 	// create user
-	err := arw.DB(ctx).Create(user).Error
+	err = arw.DB(ctx).Create(user).Error
 	if err != nil {
 		return nil, nil, nil, err
 	}

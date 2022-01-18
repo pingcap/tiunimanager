@@ -87,7 +87,7 @@ func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleAdmin), Permissions: []structs.RbacPermission{
 		{
 			Resource: string(constants.RbacResourceCluster),
-			Action:   string(constants.RbacActionCreate),
+			Action:   string(constants.RbacActionAll),
 		},
 	}}, true)
 	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleAdmin), Permissions: []structs.RbacPermission{

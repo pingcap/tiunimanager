@@ -76,7 +76,6 @@ func (m *GormChangeFeedReadWrite) LockStatus(ctx context.Context, taskId string)
 	return dbCommon.WrapDBError(err)
 }
 
-
 func (m *GormChangeFeedReadWrite) UnlockStatus(ctx context.Context, taskId string, targetStatus constants.ChangeFeedStatus) error {
 	task, err := m.Get(ctx, taskId)
 	if err != nil {
@@ -123,14 +122,27 @@ func (m *GormChangeFeedReadWrite) Get(ctx context.Context, taskId string) (*Chan
 }
 
 func (m *GormChangeFeedReadWrite) QueryByClusterId(ctx context.Context, clusterId string, offset int, length int) (tasks []*ChangeFeedTask, total int64, err error) {
+	return m.Query(ctx, clusterId, []constants.DownstreamType{}, []constants.ChangeFeedStatus{}, offset, length)
+}
+
+func (m *GormChangeFeedReadWrite) Query(ctx context.Context, clusterId string, taskTypes []constants.DownstreamType, statuses []constants.ChangeFeedStatus, offset int, length int) (tasks []*ChangeFeedTask, total int64, err error) {
 	if "" == clusterId {
 		return nil, 0, errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster id required")
 	}
 
 	tasks = make([]*ChangeFeedTask, length)
 
-	err = m.DB(ctx).Model(&ChangeFeedTask{}).
-		Where("cluster_id = ?", clusterId).
-		Order("created_at").Offset(offset).Limit(length).Find(&tasks).Count(&total).Error
+	query := m.DB(ctx).Model(&ChangeFeedTask{}).
+		Where("cluster_id = ?", clusterId).Where("deleted_at is null")
+
+	if len(taskTypes) > 0 {
+		query = query.Where("type in ?", taskTypes)
+	}
+
+	if len(statuses) > 0 {
+		query = query.Where("status in ?", statuses)
+	}
+
+	err = query.Order("created_at").Offset(offset).Limit(length).Find(&tasks).Count(&total).Error
 	return tasks, total, dbCommon.WrapDBError(err)
 }

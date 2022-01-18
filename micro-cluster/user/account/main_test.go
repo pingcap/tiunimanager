@@ -13,16 +13,16 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package tenant
+package account
 
 import (
-	"context"
+	"github.com/pingcap-inc/tiem/models"
+	"os"
+	"testing"
 )
 
-type ReaderWriter interface {
-	AddTenant(ctx context.Context, name string, tenantType, status int8) (*Tenant, error)
-	FindTenantByName(ctx context.Context, name string) (*Tenant, error)
-	FindTenantById(ctx context.Context, tenantID string) (*Tenant, error)
+func TestMain(m *testing.M) {
+	models.MockDB()
+
+	os.Exit(m.Run())
 }
-
-

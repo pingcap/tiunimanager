@@ -14,7 +14,7 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: user.go
+ * @File: user_api.go
  * @Description:
  * @Author: duanbing@pingcap.com
  * @Version: 1.0.0
@@ -24,119 +24,137 @@
 package message
 
 import (
-	"github.com/pingcap-inc/tiem/models/user/account"
-	"github.com/pingcap-inc/tiem/models/user/identification"
-	"github.com/pingcap-inc/tiem/models/user/tenant"
+	"github.com/pingcap-inc/tiem/common/structs"
 )
 
-type CreateAccountReq struct {
-	*tenant.Tenant
-	Name string `json:"name" form:"name" example:"default"`
-	Password string `json:"password" form:"password" example:"default"`
-}
-
-type CreateAccountResp struct {
-	account.Account
-}
-
-type FindAccountByNameReq struct {
-	Name string `json:"name" form:"name" example:"default"`
-}
-
-type FindAccountByNameResp struct {
-	account.Account
-}
-
-type CreateTenantReq struct {
-	Name string `json:"name" form:"name" example:"default"`
-}
-
-type CreateTenantResp struct {
-	tenant.Tenant
-}
-
-type FindTenantByNameReq struct {
-	Name string `json:"name" form:"name" example:"default"`
-}
-
-type FindTenantByNameResp struct {
-	tenant.Tenant
-}
-
-type FindTenantByIdReq struct {
-	ID string //Todo: gorm
-}
-
-type FindTenantByIdResp struct {
-	tenant.Tenant
-}
-
-type ProvideTokenReq struct {
-	*identification.Token
-}
-
-type ProvideTokenResp struct {
-	TokenString string
-}
-
-type ModifyTokenReq struct {
-	*identification.Token
-}
-
-type ModifyTokenResp struct {
-
-}
-
-type GetTokenReq struct {
-	TokenString string
-}
-
-type GetTokenResp struct {
-	identification.Token
-}
-
+// LoginReq login
 type LoginReq struct {
-	UserName string  `json:"userName" form:"userName" validate:"required,min=5,max=32"`
-	Password string  `json:"userPassword" form:"userPassword" validate:"required,min=5,max=32"`
+	Name     string `json:"userName" form:"userName" validate:"required,min=5,max=32"`
+	Password string `json:"userPassword" form:"userPassword" validate:"required,min=5,max=32"`
 }
 
 type LoginResp struct {
 	TokenString string `json:"token" form:"token"`
-	UserName    string `json:"userName" form:"userName"`
-	TenantId    string `json:"tenantId" form:"tenantId"`
+	UserID      string `json:"userId" form:"userId"`
 }
 
+// LogoutReq logout
 type LogoutReq struct {
-	TokenString string   `json:"token" form:"token" validate:"required,min=8,max=64"`
+	TokenString string `json:"token" form:"token" validate:"required,min=8,max=64"`
 }
 
 type LogoutResp struct {
-	AccountName string  `json:"accountName" form:"accountName"`
+	UserID string `json:"userId" form:"userId"`
 }
 
+// AccessibleReq identify
 type AccessibleReq struct {
-	PathType string 	`json:"pathType" form:"pathType"`
-	Path string			`json:"path" form:"path"`
-	TokenString string 	`json:"tokenString" form:"tokenString" validate:"required,min=8,max=64"`
+	TokenString string `json:"token" form:"token" validate:"required,min=8,max=64"`
 }
 
 type AccessibleResp struct {
-	TenantID string 		`json:"tenantID" form:"tenantID"`
-	AccountID string		`json:"accountID" form:"accountID"`
-	AccountName string		`json:"accountName" form:"accountName"`
+	UserID string `json:"userId" form:"userId"`
 }
 
-type CreateTokenReq struct {
-	AccountID string
-	AccountName string
-	TenantID string
+//CreateUserReq user message
+type CreateUserReq struct {
+	Name     string `json:"name" validate:"required,min=5,max=32"`
+	TenantID string `json:"tenantId"`
+	Email    string `json:"email" validate:"required,email"`
+	Phone    string `json:"phone"`
+	Password string `json:"password" validate:"required,min=5,max=32"`
+	Nickname string `json:"nickname"`
 }
 
-type CreateTokenResp struct {
-	identification.Token
+type CreateUserResp struct {
 }
 
-type UserProfile struct {
-	UserName string `json:"userName"`
-	TenantId string `json:"tenantId"`
+type DeleteUserReq struct {
+	ID string `json:"id" swaggerignore:"true"`
+}
+type DeleteUserResp struct {
+}
+
+type GetUserReq struct {
+	ID string `json:"id" swaggerignore:"true"`
+}
+type GetUserResp struct {
+	User structs.UserInfo `json:"user"`
+}
+
+type QueryUserReq struct {
+	structs.PageRequest
+}
+type QueryUserResp struct {
+	Users map[string]structs.UserInfo `json:"users"`
+}
+
+type UpdateUserProfileReq struct {
+	ID       string `json:"id" swaggerignore:"true"`
+	Nickname string `json:"nickname"`
+	Email    string `json:"email" validate:"email"`
+	Phone    string `json:"phone"`
+}
+type UpdateUserProfileResp struct {
+}
+
+type UpdateUserPasswordReq struct {
+	ID       string `json:"id"`
+	Password string `json:"password" validate:"required,min=5,max=32"`
+}
+type UpdateUserPasswordResp struct {
+}
+
+// CreateTenantReq Tenant message
+type CreateTenantReq struct {
+	ID               string `json:"id" validate:"required,min=5,max=32"`
+	Name             string `json:"name"`
+	Status           string `json:"status"`
+	OnBoardingStatus string `json:"onBoardingStatus"`
+	MaxCluster       int32  `json:"maxCluster"`
+	MaxCPU           int32  `json:"maxCpu"`
+	MaxMemory        int32  `json:"maxMemory"`
+	MaxStorage       int32  `json:"maxStorage"`
+}
+type CreateTenantResp struct {
+}
+
+type DeleteTenantReq struct {
+	ID string `json:"id"`
+}
+type DeleteTenantResp struct {
+}
+
+type GetTenantReq struct {
+	ID string `json:"id"`
+}
+
+type GetTenantResp struct {
+	Info structs.TenantInfo `json:"info"`
+}
+
+type QueryTenantReq struct {
+	structs.PageRequest
+}
+
+type QueryTenantResp struct {
+	Tenants map[string]structs.TenantInfo `json:"tenants"`
+}
+
+type UpdateTenantProfileReq struct {
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	MaxCluster int32  `json:"maxCluster"`
+	MaxCPU     int32  `json:"maxCpu"`
+	MaxMemory  int32  `json:"maxMemory"`
+	MaxStorage int32  `json:"maxStorage"`
+}
+type UpdateTenantProfileResp struct {
+}
+
+type UpdateTenantOnBoardingStatusReq struct {
+	ID               string `json:"id"`
+	OnBoardingStatus string `json:"onBoardingStatus"`
+}
+type UpdateTenantOnBoardingStatusResp struct {
 }

@@ -1,67 +1,45 @@
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ ******************************************************************************/
+
 package account
 
 import (
-	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestAccount_GenSaltAndHash(t *testing.T) {
-	type args struct {
-		passwd string
+func TestUser_GenSaltAndHash_CheckPassword(t *testing.T) {
+	user := &User{
+		ID:       "user01",
+		Name:     "user",
 	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{"normal1", args{passwd: "Test12345678"}, false},
-		{"normal2", args{passwd: "Testttttttt1111"}, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			account := &Account{
-				Entity:    common.Entity{TenantId: "testID", Status: "0"}, //todo: bug
-				Name:      "testName",
-				Salt:      "123",
-				FinalHash: "1234",
-			}
-			if err := account.GenSaltAndHash(tt.args.passwd); (err != nil) != tt.wantErr {
-				t.Errorf("GenSaltAndHash() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
 
-func TestAccount_CheckPassword(t *testing.T) {
-	account := &Account{
-		Entity:    common.Entity{TenantId: "testID", Status: "0"}, //todo: bug
-		Name:      "testName",
-		Salt:      "123",
-		FinalHash: "1234",
-	}
-	account.GenSaltAndHash("Test12345678")
+	err := user.GenSaltAndHash("12345")
+	assert.NoError(t, err)
 
-	type args struct {
-		passwd string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    bool
-		wantErr bool
-	}{
-		{"normal", args{passwd: "Test12345678"}, true, false},
-		{"empty password", args{passwd: ""}, false, true},
-		{"long password", args{passwd: "Test123456789123456789"}, false, true},
-		{"wrong password", args{passwd: "Testtest12345678"}, false, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := account.CheckPassword(tt.args.passwd)
-			if (err != nil) != tt.wantErr || got != tt.want {
-				t.Errorf("CheckPassword() error = %v, got = %v, wantErr %v, want %v", err, got, tt.wantErr, tt.want)
-				return
-			}
-		})
-	}
+	_, err = user.CheckPassword("")
+	assert.Error(t, err)
+
+	_, err = user.CheckPassword("123456789012345678901")
+	assert.Error(t, err)
+
+	got, err := user.CheckPassword("1234")
+	assert.NoError(t, err)
+	assert.False(t, got)
+
+	got, err = user.CheckPassword("12345")
+	assert.NoError(t, err)
+	assert.True(t, got)
 }

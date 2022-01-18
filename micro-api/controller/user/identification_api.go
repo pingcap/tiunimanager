@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -15,30 +14,57 @@
  *                                                                            *
  ******************************************************************************/
 
-package account
+package user
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	"github.com/pingcap-inc/tiem/micro-api/interceptor"
-	"net/http"
+	utils "github.com/pingcap-inc/tiem/util/stringutil"
 )
 
-// Profile user profile
-// @Summary user profile
-// @Description profile
+// Login login
+// @Summary login
+// @Description login
+// @Tags platform
+// @Accept application/json
+// @Produce application/json
+// @Param loginInfo body message.LoginReq true "login info"
+// @Header 200 {string} Token "DUISAFNDHIGADS"
+// @Success 200 {object} controller.CommonResult{data=message.LoginResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /user/login [post]
+func Login(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.LoginReq{}); ok {
+		respBody := &message.LoginResp{}
+		controller.InvokeRpcMethod(c, client.ClusterClient.Login, respBody,
+			requestBody,
+			controller.DefaultTimeout)
+		c.Header("Token", respBody.TokenString)
+	}
+}
+
+// Logout logout
+// @Summary logout
+// @Description logout
 // @Tags platform
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Success 200 {object} controller.CommonResult{data=message.UserProfile}
+// @Success 200 {object} controller.CommonResult{data=message.LogoutResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /user/profile [get]
-func Profile(c *gin.Context) {
-	v, _ := c.Get(interceptor.VisitorIdentityKey)
-
-	visitor, _ := v.(*interceptor.VisitorIdentity)
-	c.JSON(http.StatusOK, controller.Success(message.UserProfile{UserName: visitor.AccountName, TenantId: visitor.TenantId}))
+// @Router /user/logout [post]
+func Logout(c *gin.Context) {
+	bearerTokenStr := c.GetHeader("Authorization")
+	token , _ := utils.GetTokenFromBearer(bearerTokenStr)
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.LogoutReq{
+		TokenString: token,
+	}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.Logout, &message.LogoutResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
 }

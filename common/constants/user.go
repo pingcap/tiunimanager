@@ -14,7 +14,7 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: user.go
+ * @File: user_api.go
  * @Description:
  * @Author: duanbing@pingcap.com
  * @Version: 1.0.0
@@ -29,6 +29,12 @@ type TenantStatus string
 const (
 	TenantStatusNormal     TenantStatus = "Normal"
 	TenantStatusDeactivate TenantStatus = "Deactivate"
+)
+
+type TenantOnBoardingStatus string
+const (
+	TenantOnBoarding  TenantOnBoardingStatus = "On"
+	TenantOFFBoarding TenantOnBoardingStatus = "Off"
 )
 
 type UserStatus string
@@ -59,11 +65,3 @@ const (
 func (s CommonStatus) IsValid() bool {
 	return s == Valid
 }
-
-type TenantType int
-
-const (
-	SystemManagement  TenantType = 0
-	InstanceWorkspace TenantType = 1
-	PluginAccess      TenantType = 2
-)

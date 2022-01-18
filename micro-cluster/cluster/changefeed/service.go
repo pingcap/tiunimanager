@@ -19,8 +19,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
@@ -51,6 +53,15 @@ type Service interface {
 	// @return err
 	//
 	ReverseBetweenClusters(ctx context.Context, sourceClusterID string, targetClusterID string, relationType constants.ClusterRelationType) (ID string, err error)
+	//
+    // Detail
+    // @Description: query change feed task detail info
+    // @param ctx
+    // @param request
+    // @return resp
+    // @return err
+    //
+	Detail(ctx context.Context, request cluster.DetailChangeFeedTaskReq) (resp cluster.DetailChangeFeedTaskResp, err error)
 }
 
 func GetChangeFeedService() Service {
@@ -107,8 +118,7 @@ func (p *Manager) ReverseBetweenClusters(ctx context.Context, sourceClusterID st
 		return
 	}
 
-	// todo filter in db
-	tasks, _, queryErr := models.GetChangeFeedReaderWriter().QueryByClusterId(ctx, sourceClusterID, 0, 20)
+	tasks, _, queryErr := models.GetChangeFeedReaderWriter().Query(ctx, sourceClusterID, []constants.DownstreamType{constants.DownstreamTypeTiDB}, constants.UnfinishedChangeFeedStatus(), 0, 1000)
 	if queryErr != nil {
 		err = queryErr
 		return
@@ -136,4 +146,40 @@ func (p *Manager) ReverseBetweenClusters(ctx context.Context, sourceClusterID st
 	}
 
 	return p.CreateBetweenClusters(ctx, targetClusterID, sourceClusterID, relationType)
+}
+
+func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTaskReq) (resp cluster.DetailChangeFeedTaskResp, err error) {
+	task, err := models.GetChangeFeedReaderWriter().Get(ctx, request.ID)
+	if err != nil {
+		return
+	}
+
+	if task.Status == constants.ChangeFeedStatusInitial.ToString() {
+		err = errors.NewError(errors.TIEM_CHANGE_FEED_NOT_FOUND, "change feed task has not been created")
+	}
+
+	clusterMeta, err:= handler.Get(ctx, task.ClusterId)
+	if err != nil {
+		return
+	}
+	cdcAddress := clusterMeta.GetCDCClientAddresses()
+	if len(cdcAddress) == 0 {
+		err = errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
+		return
+	}
+	resp.ChangeFeedTaskInfo = parse(*task)
+
+	taskDetail, detailError := secondparty.Manager.DetailChangeFeedTask(ctx, secondparty.ChangeFeedDetailReq{
+		CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
+		ChangeFeedID: task.ID,
+	})
+
+	if detailError == nil {
+		resp.ChangeFeedTaskInfo.AcceptDownstreamSyncTS(taskDetail.CheckPointTSO)
+		resp.ChangeFeedTaskInfo.AcceptUpstreamUpdateTS(currentTSO())
+	} else {
+		framework.LogWithContext(ctx).Errorf("detail change feed task err = %s", err)
+	}
+
+	return
 }

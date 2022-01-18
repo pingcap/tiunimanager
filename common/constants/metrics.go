@@ -86,9 +86,23 @@ const (
 	MetricsParameterGroupUpdate MetricsType = "parameter_group/update"
 
 	// MetricsUserLogin define user metrics
-	MetricsUserLogin   MetricsType = "user/login"
-	MetricsUserLogout  MetricsType = "user/logout"
-	MetricsUserProfile MetricsType = "user/profile"
+	MetricsUserLogin          MetricsType = "user/login"
+	MetricsUserLogout         MetricsType = "user/logout"
+	MetricsUserProfile        MetricsType = "user/profile"
+	MetricsUserCreate         MetricsType = "user/create"
+	MetricsUserDelete         MetricsType = "user/delete"
+	MetricsUserGet            MetricsType = "user/get"
+	MetricsUserQuery          MetricsType = "user/query"
+	MetricsUserUpdateProfile  MetricsType = "user/update_profile"
+	MetricsUserUpdatePassword MetricsType = "user/password"
+
+	// MetricsTenantCreate define tenant metric
+	MetricsTenantCreate                 MetricsType = "tenant/create"
+	MetricsTenantDelete                 MetricsType = "tenant/delete"
+	MetricsTenantGet                    MetricsType = "tenant/get"
+	MetricsTenantQuery                  MetricsType = "tenant/query"
+	MetricsTenantUpdateProfile          MetricsType = "tenant/update_profile"
+	MetricsTenantUpdateOnBoardingStatus MetricsType = "tenant/update_on_boarding_status"
 
 	// MetricsWorkFlowQuery define workflow metrics
 	MetricsWorkFlowQuery  MetricsType = "workflow/query"

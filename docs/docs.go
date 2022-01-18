@@ -7505,14 +7505,14 @@ var doc = `{
         "message.LoginReq": {
             "type": "object",
             "required": [
-                "name",
-                "password"
+                "userName",
+                "userPassword"
             ],
             "properties": {
-                "name": {
+                "userName": {
                     "type": "string"
                 },
-                "password": {
+                "userPassword": {
                     "type": "string"
                 }
             }

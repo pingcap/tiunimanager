@@ -53,16 +53,16 @@ type AccessibleReq struct {
 }
 
 type AccessibleResp struct {
-	UserID   string `json:"userId" form:"userId"`
+	UserID string `json:"userId" form:"userId"`
 }
 
 //CreateUserReq user message
 type CreateUserReq struct {
-	Name     string `json:"name"`
+	Name     string `json:"name" validate:"required,min=5,max=32"`
 	TenantID string `json:"tenantId"`
-	Email    string `json:"email"`
+	Email    string `json:"email" validate:"required,email"`
 	Phone    string `json:"phone"`
-	Password string `json:"password"`
+	Password string `json:"password" validate:"required,min=5,max=32"`
 	Nickname string `json:"nickname"`
 }
 
@@ -92,7 +92,7 @@ type QueryUserResp struct {
 type UpdateUserProfileReq struct {
 	ID       string `json:"id" swaggerignore:"true"`
 	Nickname string `json:"nickname"`
-	Email    string `json:"email"`
+	Email    string `json:"email" validate:"email"`
 	Phone    string `json:"phone"`
 }
 type UpdateUserProfileResp struct {
@@ -100,14 +100,14 @@ type UpdateUserProfileResp struct {
 
 type UpdateUserPasswordReq struct {
 	ID       string `json:"id"`
-	Password string `json:"password"`
+	Password string `json:"password" validate:"required,min=5,max=32"`
 }
 type UpdateUserPasswordResp struct {
 }
 
 // CreateTenantReq Tenant message
 type CreateTenantReq struct {
-	ID               string `json:"id"`
+	ID               string `json:"id" validate:"required,min=5,max=32"`
 	Name             string `json:"name"`
 	Status           string `json:"status"`
 	OnBoardingStatus string `json:"onBoardingStatus"`

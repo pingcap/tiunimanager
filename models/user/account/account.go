@@ -29,7 +29,7 @@ import (
 type User struct {
 	ID        string    `gorm:"primarykey"`
 	Creator   string    `gorm:"default:null;not null;"`
-	Name      string    `gorm:"default:null;not null;uniqueIndex"`
+	Name      string    `gorm:"default:null;not null;"`
 	Salt      string    `gorm:"default:null;not null;"` //password
 	FinalHash string    `gorm:"default:null;not null"`
 	Email     string    `gorm:"default:null"`

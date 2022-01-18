@@ -29,8 +29,8 @@ import (
 
 // LoginReq login
 type LoginReq struct {
-	Name     string `json:"name" form:"name" validate:"required,min=5,max=32"`
-	Password string `json:"password" form:"password" validate:"required,min=5,max=32"`
+	Name     string `json:"userName" form:"userName" validate:"required,min=5,max=32"`
+	Password string `json:"userPassword" form:"userPassword" validate:"required,min=5,max=32"`
 }
 
 type LoginResp struct {

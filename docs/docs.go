@@ -5141,6 +5141,82 @@ var doc = `{
                 }
             }
         },
+        "/users/{userId}/password": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "update user password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "update user password",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user id",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "query user password request parameter",
+                        "name": "UpdateUserPasswordRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UpdateUserPasswordReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UpdateUserPasswordResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/users/{userId}/update_profile": {
             "post": {
                 "security": [
@@ -7016,10 +7092,10 @@ var doc = `{
                 "email": {
                     "type": "string"
                 },
-                "id": {
+                "name": {
                     "type": "string"
                 },
-                "name": {
+                "nickname": {
                     "type": "string"
                 },
                 "password": {
@@ -7235,12 +7311,7 @@ var doc = `{
             "type": "object"
         },
         "message.DeleteUserReq": {
-            "type": "object",
-            "properties": {
-                "tenantId": {
-                    "type": "string"
-                }
-            }
+            "type": "object"
         },
         "message.DeleteUserResp": {
             "type": "object"
@@ -7386,14 +7457,14 @@ var doc = `{
         "message.LoginReq": {
             "type": "object",
             "required": [
-                "userName",
-                "userPassword"
+                "name",
+                "password"
             ],
             "properties": {
-                "userId": {
+                "name": {
                     "type": "string"
                 },
-                "userPassword": {
+                "password": {
                     "type": "string"
                 }
             }
@@ -7401,9 +7472,6 @@ var doc = `{
         "message.LoginResp": {
             "type": "object",
             "properties": {
-                "tenantId": {
-                    "type": "string"
-                },
                 "token": {
                     "type": "string"
                 },
@@ -7748,19 +7816,30 @@ var doc = `{
         "message.UpdateTenantProfileResp": {
             "type": "object"
         },
+        "message.UpdateUserPasswordReq": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.UpdateUserPasswordResp": {
+            "type": "object"
+        },
         "message.UpdateUserProfileReq": {
             "type": "object",
             "properties": {
                 "email": {
                     "type": "string"
                 },
-                "name": {
+                "nickname": {
                     "type": "string"
                 },
                 "phone": {
-                    "type": "string"
-                },
-                "tenantId": {
                     "type": "string"
                 }
             }
@@ -8887,7 +8966,6 @@ var doc = `{
                 }
             }
         },
-<<<<<<< HEAD
         "structs.UserInfo": {
             "type": "object",
             "properties": {
@@ -8904,6 +8982,12 @@ var doc = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "nickname": {
                     "type": "string"
                 },
                 "phone": {
@@ -8912,12 +8996,17 @@ var doc = `{
                 "status": {
                     "type": "string"
                 },
-                "tenantId": {
-                    "type": "string"
+                "tenantIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "updateAt": {
                     "type": "string"
-=======
+                }
+            }
+        },
         "structs.VendorWithRegion": {
             "type": "object",
             "properties": {
@@ -8934,7 +9023,6 @@ var doc = `{
                     "additionalProperties": {
                         "$ref": "#/definitions/structs.RegionInfo"
                     }
->>>>>>> upstream/sprint/20220130/sprint7
                 }
             }
         },

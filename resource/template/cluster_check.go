@@ -17,14 +17,14 @@ package template
 
 var EMClusterCheck = `
  tidb_servers:
- {{ range .TemplateItemsForCompute -}}
+ {{ range .TemplateItemsForCompute }}
   - host: {{ .HostIP }}
     deploy_dir: {{ .DeployDir }}
     port: {{ .Port1 }}
     status_port: {{ .Port2 }}
 {{ end }}
 tikv_servers:
-{{ range .TemplateItemsForStorage -}}
+{{ range .TemplateItemsForStorage }}
   - host: {{ .HostIP }}
     data_dir: {{ .DataDir }}
     deploy_dir: {{ .DeployDir }}
@@ -32,7 +32,7 @@ tikv_servers:
     status_port: {{ .Port2 }}
 {{ end }}
 pd_servers:
-{{ range .TemplateItemsForSchedule -}}
+{{ range .TemplateItemsForSchedule }}
   - host: {{ .HostIP }}
     data_dir: {{ .DataDir }}
     deploy_dir: {{ .DeployDir }}

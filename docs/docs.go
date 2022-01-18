@@ -7104,6 +7104,9 @@ var doc = `{
         },
         "message.CreateTenantReq": {
             "type": "object",
+            "required": [
+                "id"
+            ],
             "properties": {
                 "id": {
                     "type": "string"
@@ -7136,6 +7139,11 @@ var doc = `{
         },
         "message.CreateUserReq": {
             "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
             "properties": {
                 "email": {
                     "type": "string"
@@ -7869,6 +7877,9 @@ var doc = `{
         },
         "message.UpdateUserPasswordReq": {
             "type": "object",
+            "required": [
+                "password"
+            ],
             "properties": {
                 "id": {
                     "type": "string"
@@ -8252,6 +8263,14 @@ var doc = `{
                         "1",
                         " 1000"
                     ]
+                },
+                "readOnly": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "example": 0
                 },
                 "realValue": {
                     "$ref": "#/definitions/structs.ParameterRealValue"
@@ -8669,6 +8688,14 @@ var doc = `{
                         "1",
                         " 1000"
                     ]
+                },
+                "readOnly": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "example": 0
                 },
                 "systemVariable": {
                     "type": "string",

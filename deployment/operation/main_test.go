@@ -44,7 +44,7 @@ func TestMain(m *testing.M) {
 
 	logins := framework.LogForkFile(constants.LogFileSystem)
 
-	framework.InitBaseFrameworkForUt("",
+	framework.InitBaseFrameworkForUt(framework.ClusterService,
 		func(d *framework.BaseFramework) error {
 			dbFile := fmt.Sprintf("%s/operation.db", testTiUPHome)
 			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})

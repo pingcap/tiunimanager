@@ -87,7 +87,7 @@ func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleAdmin), Permissions: []structs.RbacPermission{
 		{
 			Resource: string(constants.RbacResourceCluster),
-			Action:   string(constants.RbacActionAll),
+			Action:   string(constants.RbacActionCreate),
 		},
 	}}, true)
 	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleAdmin), Permissions: []structs.RbacPermission{
@@ -152,11 +152,11 @@ func (mgr *RBACManager) CheckPermissionForUser(ctx context.Context, request mess
 		result, err := mgr.enforcer.Enforce(request.UserID, permission.Resource, permission.Action)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("user %s check permission error: %s", request.UserID, err.Error())
-			return message.CheckPermissionForUserResp{Result: result}, errors.WrapError(errors.TIEM_RBAC_PERMISSION_CHECK_FAILED, fmt.Sprintf("user %s check permission failed", request.UserID), err)
+			return message.CheckPermissionForUserResp{Result: false}, errors.WrapError(errors.TIEM_RBAC_PERMISSION_CHECK_FAILED, fmt.Sprintf("user %s check permission failed", request.UserID), err)
 		}
 		if !result {
 			framework.LogWithContext(ctx).Infof("user %s check permission %+v failed", request.UserID, permission)
-			return message.CheckPermissionForUserResp{Result: result}, nil
+			return message.CheckPermissionForUserResp{Result: false}, nil
 		}
 	}
 	return message.CheckPermissionForUserResp{Result: true}, nil

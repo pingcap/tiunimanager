@@ -170,10 +170,11 @@ func (m ParameterGroupReadWrite) UpdateParameterGroup(ctx context.Context, pg *P
 	// Delete parameter mappings
 	if len(delParameters) > 0 {
 		for _, parameterId := range delParameters {
-			err = m.DeleteParameter(ctx, parameterId)
+			// delete parameter_group_mapping table
+			err = m.DB(ctx).Where("parameter_group_id = ? and parameter_id = ?", pg.ID, parameterId).Delete(&ParameterGroupMapping{}).Error
 			if err != nil {
 				tx.Rollback()
-				return err
+				return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR, err.Error())
 			}
 		}
 	}

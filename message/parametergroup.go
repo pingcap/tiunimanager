@@ -82,7 +82,7 @@ type UpdateParameterGroupReq struct {
 	Note           string                                      `json:"note" example:"default param group"`
 	Params         []structs.ParameterGroupParameterSampleInfo `json:"params" validate:"required"`
 	AddParams      []ParameterInfo                             `json:"addParams"`
-	DelParams      []string                                    `json:"delParams" example:"[1]"`
+	DelParams      []string                                    `json:"delParams" example:"1"`
 }
 
 type UpdateParameterGroupResp struct {

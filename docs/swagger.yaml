@@ -1643,7 +1643,7 @@ definitions:
         type: string
       delParams:
         example:
-        - '[1]'
+        - "1"
         items:
           type: string
         type: array

@@ -64,12 +64,8 @@ type RbacRole string
 
 var RbacRoleMap = map[string]RbacRole{
 	string(RbacRoleAdmin): RbacRoleAdmin,
-	//string(RbacRoleClusterManager):  RbacRoleClusterManager,
-	//string(RbacRolePlatformManager): RbacRolePlatformManager,
 }
 
 const (
 	RbacRoleAdmin RbacRole = "RBAC_ROLE_ADMIN"
-	//RbacRoleClusterManager  RbacRole = "RBAC_ROLE_CLUSTER_MANAGER"
-	//RbacRolePlatformManager RbacRole = "RBAC_ROLE_PLATFORM_MANAGER"
 )

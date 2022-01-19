@@ -317,7 +317,7 @@ func (mgr *RBACManager) DeletePermissionsForRole(ctx context.Context, request me
 		if !permission.CheckInvalid() {
 			err = fmt.Errorf("permission %+v is invaild", permission)
 			framework.LogWithContext(ctx).Errorf(err.Error())
-			return resp, errors.WrapError(errors.TIEM_PARAMETER_INVALID, "input parrameters invalid", err)
+			return resp, errors.WrapError(errors.TIEM_PARAMETER_INVALID, "input parameters invalid", err)
 		}
 	}
 	for _, permission := range request.Permissions {

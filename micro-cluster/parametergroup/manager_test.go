@@ -80,8 +80,9 @@ func TestManager_CreateParameterGroup(t *testing.T) {
 			}
 			return resp, 1, nil
 		})
-	parameterGroupRW.EXPECT().CreateParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, pg *parametergroup.ParameterGroup, pgm []*parametergroup.ParameterGroupMapping) (*parametergroup.ParameterGroup, error) {
+	parameterGroupRW.EXPECT().ExistsParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	parameterGroupRW.EXPECT().CreateParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, pg *parametergroup.ParameterGroup, pgm []*parametergroup.ParameterGroupMapping, addParams []message.ParameterInfo) (*parametergroup.ParameterGroup, error) {
 			resp := &parametergroup.ParameterGroup{
 				ID:             "1",
 				Name:           "test_parameter_group",
@@ -110,6 +111,24 @@ func TestManager_CreateParameterGroup(t *testing.T) {
 				ID:           "1",
 				DefaultValue: "10",
 				Note:         "test param",
+			},
+		},
+		AddParams: []message.ParameterInfo{
+			{
+				Category:       "log",
+				Name:           "binlog_cache",
+				InstanceType:   "TiDB",
+				SystemVariable: "log.binlog_cache",
+				Type:           0,
+				Unit:           "mb",
+				Range:          []string{"0", "1024"},
+				HasReboot:      0,
+				HasApply:       1,
+				UpdateSource:   0,
+				ReadOnly:       0,
+				Description:    "binlog cache",
+				DefaultValue:   "512",
+				Note:           "binlog cache",
 			},
 		},
 	})
@@ -141,8 +160,9 @@ func TestManager_UpdateParameterGroup_Success(t *testing.T) {
 		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 			return &parametergroup.ParameterGroup{ID: "1"}, nil, nil
 		})
-	parameterGroupRW.EXPECT().UpdateParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, pg *parametergroup.ParameterGroup, pgm []*parametergroup.ParameterGroupMapping) error {
+	parameterGroupRW.EXPECT().ExistsParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	parameterGroupRW.EXPECT().UpdateParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, pg *parametergroup.ParameterGroup, pgm []*parametergroup.ParameterGroupMapping, addParams []message.ParameterInfo, delParams []string) error {
 			return nil
 		})
 	resp, err := manager.UpdateParameterGroup(context.TODO(), message.UpdateParameterGroupReq{
@@ -158,6 +178,25 @@ func TestManager_UpdateParameterGroup_Success(t *testing.T) {
 				Note:         "test param",
 			},
 		},
+		AddParams: []message.ParameterInfo{
+			{
+				Category:       "log",
+				Name:           "binlog_cache",
+				InstanceType:   "TiDB",
+				SystemVariable: "log.binlog_cache",
+				Type:           0,
+				Unit:           "mb",
+				Range:          []string{"0", "1024"},
+				HasReboot:      0,
+				HasApply:       1,
+				UpdateSource:   0,
+				ReadOnly:       0,
+				Description:    "binlog cache",
+				DefaultValue:   "512",
+				Note:           "binlog cache",
+			},
+		},
+		DelParams: []string{},
 	})
 	assert.NotEmpty(t, resp)
 	assert.NoError(t, err)
@@ -356,8 +395,8 @@ func TestManager_CopyParameterGroup_Success(t *testing.T) {
 			}, nil
 		})
 
-	parameterGroupRW.EXPECT().CreateParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, pg *parametergroup.ParameterGroup, pgm []*parametergroup.ParameterGroupMapping) (*parametergroup.ParameterGroup, error) {
+	parameterGroupRW.EXPECT().CreateParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, pg *parametergroup.ParameterGroup, pgm []*parametergroup.ParameterGroupMapping, addParams []message.ParameterInfo) (*parametergroup.ParameterGroup, error) {
 			resp := &parametergroup.ParameterGroup{
 				ID:             "1",
 				Name:           "test_parameter_group",

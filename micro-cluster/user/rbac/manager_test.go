@@ -33,7 +33,7 @@ func TestRBACManager_CreateRole_case1(t *testing.T) {
 
 	accountRW := mock_account.NewMockReaderWriter(ctrl)
 	models.SetAccountReaderWriter(accountRW)
-	accountRW.EXPECT().FindAccountByName(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 
 	rbacService := GetRBACService()
 	_, errCreate := rbacService.CreateRole(context.TODO(), message.CreateRoleReq{Role: "testrole"}, false)
@@ -50,7 +50,7 @@ func TestRBACManager_CreateRole_case2(t *testing.T) {
 
 	accountRW := mock_account.NewMockReaderWriter(ctrl)
 	models.SetAccountReaderWriter(accountRW)
-	accountRW.EXPECT().FindAccountByName(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 
 	rbacService := GetRBACService()
 	_, errCreate := rbacService.CreateRole(context.TODO(), message.CreateRoleReq{Role: ""}, false)
@@ -66,7 +66,7 @@ func TestRBACManager_DeleteRole(t *testing.T) {
 
 	accountRW := mock_account.NewMockReaderWriter(ctrl)
 	models.SetAccountReaderWriter(accountRW)
-	accountRW.EXPECT().FindAccountByName(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 
 	rbacService := GetRBACService()
 	_, errDelete := rbacService.DeleteRole(context.TODO(), message.DeleteRoleReq{Role: "testrole"}, false)
@@ -86,7 +86,7 @@ func TestRBACManager_BindRolesForUser(t *testing.T) {
 
 	accountRW := mock_account.NewMockReaderWriter(ctrl)
 	models.SetAccountReaderWriter(accountRW)
-	accountRW.EXPECT().FindAccountByName(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 
 	rbacService := GetRBACService()
 	_, errBind1 := rbacService.BindRolesForUser(context.TODO(), message.BindRolesForUserReq{UserID: "testuser", Roles: []string{"testrole"}})
@@ -105,7 +105,7 @@ func TestRBACManager_AddPermissionsForRole(t *testing.T) {
 
 	accountRW := mock_account.NewMockReaderWriter(ctrl)
 	models.SetAccountReaderWriter(accountRW)
-	accountRW.EXPECT().FindAccountByName(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 
 	rbacService := GetRBACService()
 	_, errAdd1 := rbacService.AddPermissionsForRole(context.TODO(), message.AddPermissionsForRoleReq{Role: "", Permissions: []structs.RbacPermission{}}, false)
@@ -124,7 +124,7 @@ func TestRBACManager_DeletePermissionsForRole(t *testing.T) {
 
 	accountRW := mock_account.NewMockReaderWriter(ctrl)
 	models.SetAccountReaderWriter(accountRW)
-	accountRW.EXPECT().FindAccountByName(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 
 	rbacService := GetRBACService()
 	_, errDel1 := rbacService.DeletePermissionsForRole(context.TODO(), message.DeletePermissionsForRoleReq{Role: "", Permissions: []structs.RbacPermission{}})
@@ -143,7 +143,7 @@ func TestRBACManager_CheckPermissionForUser_case1(t *testing.T) {
 
 	accountRW := mock_account.NewMockReaderWriter(ctrl)
 	models.SetAccountReaderWriter(accountRW)
-	accountRW.EXPECT().FindAccountByName(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 
 	rbacService := GetRBACService()
 	resp, err := rbacService.CheckPermissionForUser(context.TODO(), message.CheckPermissionForUserReq{UserID: "user", Permissions: []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionRead)}}})
@@ -157,7 +157,7 @@ func TestRBACManager_CheckPermissionForUser_case2(t *testing.T) {
 
 	accountRW := mock_account.NewMockReaderWriter(ctrl)
 	models.SetAccountReaderWriter(accountRW)
-	accountRW.EXPECT().FindAccountByName(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 
 	rbacService := GetRBACService()
 	_, errCreate := rbacService.CreateRole(context.TODO(), message.CreateRoleReq{Role: "testrole"}, false)
@@ -197,7 +197,7 @@ func TestRBACManager_QueryPermissionsForUser(t *testing.T) {
 
 	accountRW := mock_account.NewMockReaderWriter(ctrl)
 	models.SetAccountReaderWriter(accountRW)
-	accountRW.EXPECT().FindAccountByName(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 
 	rbacService := GetRBACService()
 	_, errCreate := rbacService.CreateRole(context.TODO(), message.CreateRoleReq{Role: "testrole"}, false)

@@ -14,7 +14,7 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: user.go
+ * @File: user_api.go
  * @Description:
  * @Author: duanbing@pingcap.com
  * @Version: 1.0.0
@@ -23,8 +23,32 @@
 
 package structs
 
+import "time"
+
 type UserInfo struct {
-	ID       string `json:"accountId"`
-	TenantID string `json:"tenantId"`
-	Name     string `json:"accountName"`
+	ID              string    `json:"id"`
+	DefaultTenantID string    `json:"defaultTenantId"`
+	Name            []string  `json:"names"`
+	Creator         string    `json:"creator"`
+	TenantID        []string  `json:"tenantIds"`
+	Nickname        string    `json:"nickname"`
+	Email           string    `json:"email"`
+	Phone           string    `json:"phone"`
+	Status          string    `json:"status"`
+	CreateAt        time.Time `json:"createAt"`
+	UpdateAt        time.Time `json:"updateAt"`
+}
+
+type TenantInfo struct {
+	ID               string    `json:"id"`
+	Name             string    `json:"name"`
+	Creator          string    `json:"creator"`
+	Status           string    `json:"status"`
+	OnBoardingStatus string    `json:"onBoardingStatus"`
+	MaxCluster       int32     `json:"maxCluster"`
+	MaxCPU           int32     `json:"maxCpu"`
+	MaxMemory        int32     `json:"maxMemory"`
+	MaxStorage       int32     `json:"maxStorage"`
+	CreateAt         time.Time `json:"createAt"`
+	UpdateAt         time.Time `json:"updateAt"`
 }

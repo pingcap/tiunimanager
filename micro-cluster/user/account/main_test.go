@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -12,7 +11,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
-package tenant
+package account
+
+import (
+	"github.com/pingcap-inc/tiem/models"
+	"os"
+	"testing"
+)
+
+func TestMain(m *testing.M) {
+	models.MockDB()
+
+	os.Exit(m.Run())
+}

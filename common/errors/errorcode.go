@@ -190,6 +190,19 @@ const (
 	DeleteSpecsError              EM_ERROR_CODE = 70009
 	QuerySpecScanRowError         EM_ERROR_CODE = 70010
 
+	QueryUserScanRowError              EM_ERROR_CODE = 70604
+	QueryTenantScanRowError            EM_ERROR_CODE = 70605
+	TenantAlreadyExist                 EM_ERROR_CODE = 70606
+	TenantNotExist                     EM_ERROR_CODE = 70607
+	DeleteTenantFailed                 EM_ERROR_CODE = 70608
+	UpdateTenantOnBoardingStatusFailed EM_ERROR_CODE = 70609
+
+	UserAlreadyExist              EM_ERROR_CODE = 70610
+	UserGenSaltAndHashValueFailed EM_ERROR_CODE = 70611
+	UserNotExist                  EM_ERROR_CODE = 70612
+	DeleteUserFailed              EM_ERROR_CODE = 70613
+	UpdateUserProfileFailed       EM_ERROR_CODE = 70614
+
 	TIEM_CLUSTER_LOG_QUERY_FAILED EM_ERROR_CODE = 80300
 	TIEM_CLUSTER_LOG_TIME_AFTER   EM_ERROR_CODE = 80301
 )
@@ -378,4 +391,12 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	CreateSpecsError:              {"create specs failed", 500},
 	DeleteSpecsError:              {"delete specs failed", 500},
 	QuerySpecScanRowError:         {"query all specs failed", 401},
+
+	//user & tenant
+	QueryUserScanRowError:              {"query all users failed", 401},
+	QueryTenantScanRowError:            {"query all tenants failed", 401},
+	TenantAlreadyExist:                 {"tenant already exist", 401},
+	TenantNotExist:                     {"tenant not exist", 401},
+	DeleteTenantFailed:                 {"delete tenant failed", 401},
+	UpdateTenantOnBoardingStatusFailed: {"update tenant on boarding status failed", 401},
 }

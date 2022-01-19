@@ -32,9 +32,8 @@ import (
 	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
 	warehouseApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 	flowtaskApi "github.com/pingcap-inc/tiem/micro-api/controller/task/flowtask"
-	accountApi "github.com/pingcap-inc/tiem/micro-api/controller/user/account"
-	idApi "github.com/pingcap-inc/tiem/micro-api/controller/user/identification"
 	rbacApi "github.com/pingcap-inc/tiem/micro-api/controller/user/rbac"
+	userApi "github.com/pingcap-inc/tiem/micro-api/controller/user"
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -57,7 +56,6 @@ func Route(g *gin.Engine) {
 	web := g.Group("/web")
 	{
 		web.Use(interceptor.AccessLog(), gin.Recovery())
-		// 替换成静态文件
 		web.GET("/*any", controller.HelloPage)
 	}
 
@@ -68,17 +66,34 @@ func Route(g *gin.Engine) {
 		apiV1.Use(interceptor.GinTraceIDHandler())
 		apiV1.Use(interceptor.AccessLog(), gin.Recovery())
 
-		user := apiV1.Group("/user")
+		auth := apiV1.Group("/user")
 		{
-			user.POST("/login", metrics.HandleMetrics(constants.MetricsUserLogin), idApi.Login)
-			user.POST("/logout", metrics.HandleMetrics(constants.MetricsUserLogout), idApi.Logout)
+			auth.POST("/login", metrics.HandleMetrics(constants.MetricsUserLogin), userApi.Login)
+			auth.POST("/logout", metrics.HandleMetrics(constants.MetricsUserLogout), userApi.Logout)
 		}
 
-		profile := user.Group("")
+		user := apiV1.Group("/users")
 		{
-			profile.Use(interceptor.VerifyIdentity)
-			profile.Use(interceptor.AuditLog())
-			profile.GET("/profile", metrics.HandleMetrics(constants.MetricsUserProfile), accountApi.Profile)
+			user.Use(interceptor.VerifyIdentity)
+			user.Use(interceptor.AuditLog())
+			user.POST("/", metrics.HandleMetrics(constants.MetricsUserCreate), userApi.CreateUser)
+			user.DELETE("/:userId", metrics.HandleMetrics(constants.MetricsUserDelete), userApi.DeleteUser)
+			user.POST("/:userId/update_profile", metrics.HandleMetrics(constants.MetricsUserUpdateProfile), userApi.UpdateUserProfile)
+			user.POST("/:userId/password", metrics.HandleMetrics(constants.MetricsUserUpdatePassword), userApi.UpdateUserPassword)
+			user.GET("/:userId", metrics.HandleMetrics(constants.MetricsUserGet), userApi.GetUser)
+			user.GET("/", metrics.HandleMetrics(constants.MetricsUserQuery), userApi.QueryUsers)
+		}
+
+		tenant := apiV1.Group("/tenants")
+		{
+			tenant.Use(interceptor.VerifyIdentity)
+			tenant.Use(interceptor.AuditLog())
+			tenant.POST("/", metrics.HandleMetrics(constants.MetricsTenantCreate), userApi.CreateTenant)
+			tenant.DELETE("/:tenantId", metrics.HandleMetrics(constants.MetricsTenantDelete), userApi.DeleteTenant)
+			tenant.POST("/:tenantId/update_profile", metrics.HandleMetrics(constants.MetricsTenantUpdateProfile), userApi.UpdateTenantProfile)
+			tenant.POST("/:tenantId/update_on_boarding_status", metrics.HandleMetrics(constants.MetricsTenantUpdateOnBoardingStatus), userApi.UpdateTenantOnBoardingStatus)
+			tenant.GET("/:tenantId", metrics.HandleMetrics(constants.MetricsTenantGet), userApi.GetTenant)
+			tenant.GET("/", metrics.HandleMetrics(constants.MetricsTenantQuery), userApi.QueryTenants)
 		}
 
 		rbac := apiV1.Group("/rbac")

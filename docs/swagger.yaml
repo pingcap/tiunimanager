@@ -258,6 +258,9 @@ definitions:
       startTS:
         example: "415241823337054209"
         type: string
+      startUnix:
+        example: 1642402879000
+        type: integer
       status:
         enum:
         - Initial
@@ -481,6 +484,9 @@ definitions:
       startTS:
         example: "415241823337054209"
         type: string
+      startUnix:
+        example: 1642402879000
+        type: integer
       status:
         enum:
         - Initial
@@ -3377,7 +3383,7 @@ paths:
       tags:
       - cluster parameters
   /clusters/{clusterId}/preview-scale-out:
-    get:
+    post:
       consumes:
       - application/json
       description: preview cluster topology and capability

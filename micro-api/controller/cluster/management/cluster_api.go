@@ -268,7 +268,7 @@ func GetMonitorInfo(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters/{clusterId}/preview-scale-out [get]
+// @Router /clusters/{clusterId}/preview-scale-out [post]
 func ScaleOutPreview(c *gin.Context) {
 	if body, ok := controller.HandleJsonRequestFromBody(c, &cluster.ScaleOutClusterReq{},
 		func(c *gin.Context, req interface{}) error {

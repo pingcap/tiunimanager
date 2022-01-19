@@ -272,7 +272,7 @@ func checkAddParametersExists(ctx context.Context, addParams []message.Parameter
 			}
 			if existsParameter != nil && existsParameter.ID != "" {
 				return errors.NewErrorf(errors.TIEM_PARAMETER_ALREADY_EXISTS,
-					fmt.Sprintf("%s parameter `%s.%s already exists, parameter ID: %s`", param.InstanceType, param.Category, param.Name, existsParameter.ID))
+					fmt.Sprintf("%s parameter `%s.%s` already exists, parameter ID: %s", param.InstanceType, param.Category, param.Name, existsParameter.ID))
 			}
 		}
 	}

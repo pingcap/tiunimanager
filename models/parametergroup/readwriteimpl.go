@@ -322,7 +322,7 @@ func (m ParameterGroupReadWrite) GetParameter(ctx context.Context, parameterId s
 func (m ParameterGroupReadWrite) ExistsParameter(ctx context.Context, category, name, instanceType string) (parameter *Parameter, err error) {
 	log := framework.LogWithContext(ctx)
 	parameter = &Parameter{}
-	err = m.DB(ctx).Where("category = ? and name = ? and instance_type = ?", category, name, instanceType).First(&parameter).Error
+	err = m.DB(ctx).Model(&Parameter{}).Where("category = ? and name = ? and instance_type = ?", category, name, instanceType).Find(&parameter).Error
 	if err != nil {
 		log.Errorf("exists parameter err: %v", err.Error())
 		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, err.Error())

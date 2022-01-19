@@ -85,6 +85,17 @@ const (
 	MetricsParameterGroupDetail MetricsType = "parameter_group/detail"
 	MetricsParameterGroupUpdate MetricsType = "parameter_group/update"
 
+	// MetricsUserRbac define rbac metrics
+	MetricsRbacBindRolesForUser        MetricsType = "user/rbac/role/bind"
+	MetricsRbacUnbindRoleForUser       MetricsType = "user/rbac/role/unbind"
+	MetricsRbacQueryRole               MetricsType = "user/rbac/role/"
+	MetricsRbacCreateRole              MetricsType = "user/rbac/role/create"
+	MetricsRbacDeleteRole              MetricsType = "user/rbac/role/delete"
+	MetricsRbacAddPermissionForRole    MetricsType = "user/rbac/permission/add"
+	MetricsRbacDeletePermissionForRole MetricsType = "user/rbac/permission/delete"
+	MetricsRbacQueryPermissionForUser  MetricsType = "user/rbac/permission/"
+	MetricsRbacCheckPermissionForUser  MetricsType = "user/rbac/permission/check"
+
 	// MetricsUserLogin define user metrics
 	MetricsUserLogin          MetricsType = "user/login"
 	MetricsUserLogout         MetricsType = "user/logout"

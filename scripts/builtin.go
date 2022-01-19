@@ -91,5 +91,12 @@ var BuiltInZones = []structs.ZoneInfo {
 		ZoneName: "Zone2_2",
 		Comment: "test",
 	},
+}
+
+var BuiltInSpecs = []structs.SpecInfo {
+
+}
+
+var BuiltInProducts = []structs.Product {
 
 }

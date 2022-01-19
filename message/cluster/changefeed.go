@@ -163,12 +163,24 @@ type TiDBDownstream struct {
 type ChangeFeedTaskInfo struct {
 	ChangeFeedTask
 	UnSteady            bool   `json:"unsteady" form:"unsteady" example:"false"`
+	StartUnix           int64  `json:"startUnix" form:"startUnix" example:"1642402879000"`
 	UpstreamUpdateTS    string `json:"upstreamUpdateTs" form:"upstreamUpdateTs" example:"415241823337054209"`
 	UpstreamUpdateUnix  int64  `json:"upstreamUpdateUnix" form:"upstreamUpdateUnix" example:"1642402879000"`
 	DownstreamFetchTS   string `json:"downstreamFetchTs" form:"downstreamFetchTs" example:"415241823337054209"`
 	DownstreamFetchUnix int64  `json:"downstreamFetchUnix" form:"downstreamFetchUnix" example:"1642402879000"`
 	DownstreamSyncTS    string `json:"downstreamSyncTs" form:"downstreamSyncTs" example:"415241823337054209"`
 	DownstreamSyncUnix  int64  `json:"downstreamSyncUnix" form:"downstreamSyncUnix" example:"1642402879000"`
+}
+
+func (p *ChangeFeedTaskInfo) ConvertStartTS() {
+	if len(p.StartTS) == 0 || p.StartTS == "0" {
+		p.StartUnix = 0
+	} else {
+		ts, err := strconv.ParseInt(p.StartTS, 10, 64)
+		if err != nil {
+			p.StartUnix = parseTS(uint64(ts))
+		}
+	}
 }
 
 func (p *ChangeFeedTaskInfo) AcceptUpstreamUpdateTS(ts uint64) {

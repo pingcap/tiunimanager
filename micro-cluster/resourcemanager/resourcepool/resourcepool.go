@@ -153,7 +153,9 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 		flowManager.AddContext(flow, rp_consts.ContextResourcePoolKey, p)
 		flowManager.AddContext(flow, rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{host})
 		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostIds[i]})
-		flowManager.AddContext(flow, rp_consts.ContextIgnoreWarnings, condition.IgnoreWarings)
+		// Whether ignore warnings when verify host
+		ignoreWarnings := condition.IgnoreWarings || framework.Current.GetClientArgs().IgnoreHostWarns
+		flowManager.AddContext(flow, rp_consts.ContextIgnoreWarnings, ignoreWarnings)
 
 		flows = append(flows, flow)
 		flowIds = append(flowIds, flow.Flow.ID)

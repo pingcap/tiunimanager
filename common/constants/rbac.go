@@ -28,10 +28,10 @@ var RbacActionMap = map[string]RbacAction{
 
 const (
 	RbacActionAll    RbacAction = "*"
-	RbacActionRead   RbacAction = "read"
-	RbacActionCreate RbacAction = "create"
-	RbacActionUpdate RbacAction = "update"
-	RbacActionDelete RbacAction = "delete"
+	RbacActionRead   RbacAction = "READ"
+	RbacActionCreate RbacAction = "CREATE"
+	RbacActionUpdate RbacAction = "UPDATE"
+	RbacActionDelete RbacAction = "DELETE"
 )
 
 // RbacResource Definition rbac resource enum
@@ -49,14 +49,14 @@ var RbacResourceMap = map[string]RbacResource{
 }
 
 const (
-	RbacResourceCluster   RbacResource = "cluster"
-	RbacResourceResource  RbacResource = "resource"
-	RbacResourceParameter RbacResource = "parameter"
-	RbacResourceUser      RbacResource = "user"
-	RbacResourceCDC       RbacResource = "cdc"
-	RbacResourceProduct   RbacResource = "product"
-	RbacResourceSystem    RbacResource = "system"
-	RbacResourceWorkflow  RbacResource = "workflow"
+	RbacResourceCluster   RbacResource = "CLUSTER"
+	RbacResourceResource  RbacResource = "RESOURCE"
+	RbacResourceParameter RbacResource = "PARAMETER"
+	RbacResourceUser      RbacResource = "USER"
+	RbacResourceCDC       RbacResource = "CDC"
+	RbacResourceProduct   RbacResource = "PRODUCT"
+	RbacResourceSystem    RbacResource = "SYSTEM"
+	RbacResourceWorkflow  RbacResource = "WORKFLOW"
 )
 
 // RbacRole Definition rbac role enum

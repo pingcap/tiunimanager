@@ -5736,6 +5736,9 @@
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendor": {
+                    "type": "string"
                 }
             }
         },
@@ -5860,6 +5863,9 @@
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendor": {
+                    "type": "string"
                 }
             }
         },
@@ -6493,6 +6499,9 @@
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendor": {
+                    "type": "string"
                 }
             }
         },

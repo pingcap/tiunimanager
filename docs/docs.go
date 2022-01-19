@@ -5750,6 +5750,9 @@ var doc = `{
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendor": {
+                    "type": "string"
                 }
             }
         },
@@ -5874,6 +5877,9 @@ var doc = `{
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendor": {
+                    "type": "string"
                 }
             }
         },
@@ -6507,6 +6513,9 @@ var doc = `{
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendor": {
+                    "type": "string"
                 }
             }
         },

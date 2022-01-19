@@ -63,6 +63,8 @@ definitions:
         type: array
       tls:
         type: boolean
+      vendor:
+        type: string
     required:
     - cloneStrategy
     - clusterName
@@ -157,6 +159,8 @@ definitions:
         type: array
       tls:
         type: boolean
+      vendor:
+        type: string
     required:
     - clusterName
     - clusterType
@@ -609,6 +613,8 @@ definitions:
         type: array
       tls:
         type: boolean
+      vendor:
+        type: string
     required:
     - backupId
     - clusterName

@@ -1289,7 +1289,7 @@ func (handler *ClusterServiceHandler) CreateUser(ctx context.Context, request *c
 	defer metrics.HandleClusterMetrics(start, "CreateUser", int(response.GetCode()))
 
 	req := message.CreateUserReq{}
-	if handleRequest(ctx, request, response, &req) {
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceUser), Action: string(constants.RbacActionCreate)}}) {
 		resp, err := handler.accountManager.CreateUser(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
@@ -1302,7 +1302,7 @@ func (handler *ClusterServiceHandler) DeleteUser(ctx context.Context, request *c
 	defer metrics.HandleClusterMetrics(start, "DeleteUser", int(response.GetCode()))
 
 	req := message.DeleteUserReq{}
-	if handleRequest(ctx, request, response, &req) {
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceUser), Action: string(constants.RbacActionDelete)}}) {
 		resp, err := handler.accountManager.DeleteUser(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
@@ -1314,7 +1314,7 @@ func (handler *ClusterServiceHandler) GetUser(ctx context.Context, request *clus
 	defer metrics.HandleClusterMetrics(start, "GetUser", int(response.GetCode()))
 
 	req := message.GetUserReq{}
-	if handleRequest(ctx, request, response, &req) {
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceUser), Action: string(constants.RbacActionRead)}}) {
 		resp, err := handler.accountManager.GetUser(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
@@ -1326,7 +1326,7 @@ func (handler *ClusterServiceHandler) QueryUsers(ctx context.Context, request *c
 	defer metrics.HandleClusterMetrics(start, "QueryUsers", int(response.GetCode()))
 
 	req := message.QueryUserReq{}
-	if handleRequest(ctx, request, response, &req) {
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceUser), Action: string(constants.RbacActionRead)}}) {
 		resp, err := handler.accountManager.QueryUsers(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
@@ -1338,7 +1338,7 @@ func (handler *ClusterServiceHandler) UpdateUserProfile(ctx context.Context, req
 	defer metrics.HandleClusterMetrics(start, "UpdateUserProfile", int(response.GetCode()))
 
 	req := message.UpdateUserProfileReq{}
-	if handleRequest(ctx, request, response, &req) {
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceUser), Action: string(constants.RbacActionUpdate)}}) {
 		resp, err := handler.accountManager.UpdateUserProfile(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
@@ -1351,7 +1351,7 @@ func (handler *ClusterServiceHandler) UpdateUserPassword(ctx context.Context, re
 	defer metrics.HandleClusterMetrics(start, "UpdateUserPassword", int(response.GetCode()))
 
 	req := message.UpdateUserPasswordReq{}
-	if handleRequest(ctx, request, response, &req) {
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceUser), Action: string(constants.RbacActionUpdate)}}) {
 		resp, err := handler.accountManager.UpdateUserPassword(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
@@ -1364,7 +1364,7 @@ func (handler *ClusterServiceHandler) CreateTenant(ctx context.Context, request 
 	defer metrics.HandleClusterMetrics(start, "CreateTenant", int(response.GetCode()))
 
 	req := message.CreateTenantReq{}
-	if handleRequest(ctx, request, response, &req) {
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceUser), Action: string(constants.RbacActionCreate)}}) {
 		resp, err := handler.accountManager.CreateTenant(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
@@ -1376,7 +1376,7 @@ func (handler *ClusterServiceHandler) DeleteTenant(ctx context.Context, request 
 	defer metrics.HandleClusterMetrics(start, "DeleteTenant", int(response.GetCode()))
 
 	req := message.DeleteTenantReq{}
-	if handleRequest(ctx, request, response, &req) {
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceUser), Action: string(constants.RbacActionDelete)}}) {
 		resp, err := handler.accountManager.DeleteTenant(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
@@ -1388,7 +1388,7 @@ func (handler *ClusterServiceHandler) GetTenant(ctx context.Context, request *cl
 	defer metrics.HandleClusterMetrics(start, "GetTenant", int(response.GetCode()))
 
 	req := message.GetTenantReq{}
-	if handleRequest(ctx, request, response, &req) {
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceUser), Action: string(constants.RbacActionRead)}}) {
 		resp, err := handler.accountManager.GetTenant(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
@@ -1400,7 +1400,7 @@ func (handler *ClusterServiceHandler) QueryTenants(ctx context.Context, request 
 	defer metrics.HandleClusterMetrics(start, "QueryTenants", int(response.GetCode()))
 
 	req := message.QueryTenantReq{}
-	if handleRequest(ctx, request, response, &req) {
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceUser), Action: string(constants.RbacActionRead)}}) {
 		resp, err := handler.accountManager.QueryTenants(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
@@ -1412,7 +1412,7 @@ func (handler *ClusterServiceHandler) UpdateTenantOnBoardingStatus(ctx context.C
 	defer metrics.HandleClusterMetrics(start, "UpdateTenantOnBoardingStatus", int(response.GetCode()))
 
 	req := message.UpdateTenantOnBoardingStatusReq{}
-	if handleRequest(ctx, request, response, &req) {
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceUser), Action: string(constants.RbacActionUpdate)}}) {
 		resp, err := handler.accountManager.UpdateTenantOnBoardingStatus(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
@@ -1424,7 +1424,7 @@ func (handler *ClusterServiceHandler) UpdateTenantProfile(ctx context.Context, r
 	defer metrics.HandleClusterMetrics(start, "UpdateTenantProfile", int(response.GetCode()))
 
 	req := message.UpdateTenantProfileReq{}
-	if handleRequest(ctx, request, response, &req) {
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceUser), Action: string(constants.RbacActionUpdate)}}) {
 		resp, err := handler.accountManager.UpdateTenantProfile(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}

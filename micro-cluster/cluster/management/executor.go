@@ -1045,6 +1045,7 @@ func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workfl
 	clusterMeta.Cluster.Type = string(constants.EMProductIDTiDB)
 	clusterMeta.Cluster.Version = metadata.Version
 	clusterSpec := metadata.GetTopology().(*spec.Specification)
+	clusterMeta.Cluster.CpuArchitecture = constants.ConvertAlias(clusterSpec.GlobalOptions.Arch)
 	err = clusterMeta.ParseTopologyFromConfig(context, clusterSpec)
 	if err != nil {
 		framework.LogWithContext(context).Errorf(

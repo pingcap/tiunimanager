@@ -27,17 +27,18 @@ import (
 )
 
 type User struct {
-	ID        string    `gorm:"primarykey"`
-	Creator   string    `gorm:"default:null;not null;"`
-	Name      string    `gorm:"default:null;not null;"`
-	Salt      string    `gorm:"default:null;not null;"` //password
-	FinalHash string    `gorm:"default:null;not null"`
-	Email     string    `gorm:"default:null"`
-	Phone     string    `gorm:"default:null"`
-	Status    string    `gorm:"not null;"`
-	CreatedAt time.Time `gorm:"<-:create"`
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt
+	ID              string    `gorm:"primarykey"`
+	DefaultTenantID string    `gorm:"default:null;not null;"`
+	Creator         string    `gorm:"default:null;not null;"`
+	Name            string    `gorm:"default:null;not null;"`
+	Salt            string    `gorm:"default:null;not null;"` //password
+	FinalHash       string    `gorm:"default:null;not null"`
+	Email           string    `gorm:"default:null"`
+	Phone           string    `gorm:"default:null"`
+	Status          string    `gorm:"not null;"`
+	CreatedAt       time.Time `gorm:"<-:create"`
+	UpdatedAt       time.Time
+	DeletedAt       gorm.DeletedAt
 }
 
 type UserLogin struct {
@@ -78,7 +79,6 @@ func (user *User) BeforeCreate(tx *gorm.DB) (err error) {
 
 	return nil
 }
-
 
 func (user *User) GenSaltAndHash(passwd string) error {
 	b := make([]byte, 16)

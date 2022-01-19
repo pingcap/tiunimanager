@@ -40,6 +40,17 @@ service ClusterService {
     rpc Logout(RpcRequest) returns (RpcResponse);
     rpc VerifyIdentity(RpcRequest) returns (RpcResponse);
 
+    // Rbac
+    rpc BindRolesForUser(RpcRequest) returns (RpcResponse);
+    rpc QueryRoles(RpcRequest) returns (RpcResponse);
+    rpc CreateRbacRole(RpcRequest) returns (RpcResponse);
+    rpc DeleteRbacRole(RpcRequest) returns (RpcResponse);
+    rpc UnbindRoleForUser(RpcRequest) returns (RpcResponse);
+    rpc AddPermissionsForRole(RpcRequest) returns (RpcResponse);
+    rpc DeletePermissionsForRole(RpcRequest) returns (RpcResponse);
+    rpc QueryPermissionsForUser(RpcRequest) returns (RpcResponse);
+    rpc CheckPermissionForUser(RpcRequest) returns (RpcResponse);
+
     // resource manager module
     rpc ImportHosts(RpcRequest) returns (RpcResponse);
     rpc DeleteHosts(RpcRequest) returns (RpcResponse);

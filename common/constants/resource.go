@@ -38,11 +38,22 @@ const (
 )
 
 func ValidArchType(arch string) error {
-	if arch == string(ArchX86) || arch == string(ArchX8664) || arch == string(ArchArm) || arch == string(ArchArm64) {
+	if arch == string(ArchX86) || arch == string(ArchX8664) || arch == string(ArchArm) || arch == string(ArchArm64){
 		return nil
 	}
 	return errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_ARCH, "valid arch type: [%s|%s|%s|%s]",
 		string(ArchX86), string(ArchX8664), string(ArchArm), string(ArchArm64))
+}
+
+func ConvertAlias(arch string) (ArchType) {
+	switch arch {
+	case "arm64":
+		return ArchArm64
+	case "amd64":
+		return ArchX8664
+	default:
+		return ""
+	}
 }
 
 func GetArchAlias(arch ArchType) string {

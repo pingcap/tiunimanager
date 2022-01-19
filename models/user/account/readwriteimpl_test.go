@@ -21,25 +21,25 @@ import (
 	"testing"
 )
 
-
 func TestAccountReadWrite_CreateUser(t *testing.T) {
 	t.Run("invalid parameter", func(t *testing.T) {
 		user := &User{Name: "nick"}
-		_, _, _, err := testRW.CreateUser(ctx.TODO(), user, "", "")
+		_, _, _, err := testRW.CreateUser(ctx.TODO(), user, "")
 		assert.Error(t, err)
 	})
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			Creator:   "admin",
-			Name:      "nick01",
-			Salt:      "salt",
-			FinalHash: "hash",
-			Email:     "email",
-			Phone:     "123",
-			Status:    "Normal",
+			DefaultTenantID: "tenant",
+			Creator:         "admin",
+			Name:            "nick01",
+			Salt:            "salt",
+			FinalHash:       "hash",
+			Email:           "email",
+			Phone:           "123",
+			Status:          "Normal",
 		}
-		got1, got2, got3, err := testRW.CreateUser(ctx.TODO(), user, "user", "tenant")
+		got1, got2, got3, err := testRW.CreateUser(ctx.TODO(), user, "user")
 		assert.NoError(t, err)
 		assert.Equal(t, got1.Name, user.Name)
 		assert.Equal(t, got1.ID, got2.UserID)
@@ -59,15 +59,16 @@ func TestAccountReadWrite_DeleteUser(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			Creator:   "admin",
-			Name:      "nick02",
-			Salt:      "salt",
-			FinalHash: "hash",
-			Email:     "email",
-			Phone:     "123",
-			Status:    "Normal",
+			DefaultTenantID: "tenant",
+			Creator:         "admin",
+			Name:            "nick02",
+			Salt:            "salt",
+			FinalHash:       "hash",
+			Email:           "email",
+			Phone:           "123",
+			Status:          "Normal",
 		}
-		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user", "tenant")
+		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user")
 		assert.NoError(t, err)
 		err = testRW.DeleteUser(ctx.TODO(), got.ID)
 		assert.NoError(t, err)
@@ -87,15 +88,16 @@ func TestAccountReadWrite_GetUser(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			Creator:   "admin",
-			Name:      "nick03",
-			Salt:      "salt",
-			FinalHash: "hash",
-			Email:     "email",
-			Phone:     "123",
-			Status:    "Normal",
+			DefaultTenantID: "tenant",
+			Creator:         "admin",
+			Name:            "nick03",
+			Salt:            "salt",
+			FinalHash:       "hash",
+			Email:           "email",
+			Phone:           "123",
+			Status:          "Normal",
 		}
-		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user", "tenant")
+		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user")
 		assert.NoError(t, err)
 		info, err := testRW.GetUser(ctx.TODO(), got.ID)
 		assert.NoError(t, err)
@@ -117,15 +119,16 @@ func TestAccountReadWrite_GetUserByName(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			Creator:   "admin",
-			Name:      "nick13",
-			Salt:      "salt",
-			FinalHash: "hash",
-			Email:     "email",
-			Phone:     "123",
-			Status:    "Normal",
+			DefaultTenantID: "tenant",
+			Creator:         "admin",
+			Name:            "nick13",
+			Salt:            "salt",
+			FinalHash:       "hash",
+			Email:           "email",
+			Phone:           "123",
+			Status:          "Normal",
 		}
-		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user", "tenant")
+		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user")
 		assert.NoError(t, err)
 		info, err := testRW.GetUserByName(ctx.TODO(), "user")
 		assert.NoError(t, err)
@@ -138,15 +141,16 @@ func TestAccountReadWrite_GetUserByName(t *testing.T) {
 func TestAccountReadWrite_QueryUsers(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			Creator:   "admin",
-			Name:      "nick04",
-			Salt:      "salt",
-			FinalHash: "hash",
-			Email:     "email",
-			Phone:     "123",
-			Status:    "Normal",
+			DefaultTenantID: "tenant",
+			Creator:         "admin",
+			Name:            "nick04",
+			Salt:            "salt",
+			FinalHash:       "hash",
+			Email:           "email",
+			Phone:           "123",
+			Status:          "Normal",
 		}
-		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user", "tenant")
+		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user")
 		assert.NoError(t, err)
 		infos, err := testRW.QueryUsers(ctx.TODO())
 		assert.Equal(t, 1, len(infos))
@@ -163,15 +167,16 @@ func TestAccountReadWrite_UpdateUserStatus(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			Creator:   "admin",
-			Name:      "nick05",
-			Salt:      "salt",
-			FinalHash: "hash",
-			Email:     "email",
-			Phone:     "123",
-			Status:    "Normal",
+			DefaultTenantID: "tenant",
+			Creator:         "admin",
+			Name:            "nick05",
+			Salt:            "salt",
+			FinalHash:       "hash",
+			Email:           "email",
+			Phone:           "123",
+			Status:          "Normal",
 		}
-		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user", "tenant")
+		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user")
 		assert.NoError(t, err)
 		err = testRW.UpdateUserStatus(ctx.TODO(), got.ID, "Deactivate")
 		assert.NoError(t, err)
@@ -191,15 +196,16 @@ func TestAccountReadWrite_UpdateUserProfile(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			Creator:   "admin",
-			Name:      "nick06",
-			Salt:      "salt",
-			FinalHash: "hash",
-			Email:     "email",
-			Phone:     "123",
-			Status:    "Normal",
+			DefaultTenantID: "tenant",
+			Creator:         "admin",
+			Name:            "nick06",
+			Salt:            "salt",
+			FinalHash:       "hash",
+			Email:           "email",
+			Phone:           "123",
+			Status:          "Normal",
 		}
-		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user", "tenant")
+		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user")
 		assert.NoError(t, err)
 		err = testRW.UpdateUserProfile(ctx.TODO(), got.ID, "user06", "email01", "phone01")
 		assert.NoError(t, err)
@@ -216,15 +222,16 @@ func TestAccountReadWrite_UpdateUserPassword(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			Creator:   "admin",
-			Name:      "nick07",
-			Salt:      "salt",
-			FinalHash: "hash",
-			Email:     "email",
-			Phone:     "123",
-			Status:    "Normal",
+			DefaultTenantID: "tenant",
+			Creator:         "admin",
+			Name:            "nick07",
+			Salt:            "salt",
+			FinalHash:       "hash",
+			Email:           "email",
+			Phone:           "123",
+			Status:          "Normal",
 		}
-		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user", "tenant")
+		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user")
 		assert.NoError(t, err)
 		err = testRW.UpdateUserPassword(ctx.TODO(), got.ID, "salt01", "hash01")
 		assert.NoError(t, err)

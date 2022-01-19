@@ -34,18 +34,18 @@ type Foo2 struct {
 	Bar string `yaml:"bar"`
 }
 
-func Test_assert_false(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The test did not panic")
-		}
-	}()
-	assert(false)
-}
-
-func Test_assert_true(t *testing.T) {
-	assert(true)
-}
+//func Test_assert_false(t *testing.T) {
+//	defer func() {
+//		if r := recover(); r == nil {
+//			t.Errorf("The test did not panic")
+//		}
+//	}()
+//	assert(false)
+//}
+//
+//func Test_assert_true(t *testing.T) {
+//	assert(true)
+//}
 
 func Test_myPanic(t *testing.T) {
 	defer func() {

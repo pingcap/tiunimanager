@@ -30,7 +30,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	tsoLib "github.com/pingcap-inc/tiem/library/util/tso"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	changefeedMgrLib "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	"github.com/pingcap-inc/tiem/models"
 	changefeedModel "github.com/pingcap-inc/tiem/models/cluster/changefeed"
@@ -39,7 +38,7 @@ import (
 )
 
 type Manager struct {
-	changefeedMgr *changefeedMgrLib.Manager
+	changefeedMgr CDCManagerAPI
 }
 
 func newManager() *Manager {
@@ -49,7 +48,7 @@ func newManager() *Manager {
 var mgr = newManager()
 var mgrOnceRegisterWorkFlow sync.Once
 
-func GetManager(changefeedMgr *changefeedMgrLib.Manager) *Manager {
+func GetManager(changefeedMgr CDCManagerAPI) *Manager {
 	mgrOnceRegisterWorkFlow.Do(func() {
 		mgr.changefeedMgr = changefeedMgr
 		flowManager := workflow.GetWorkFlowService()

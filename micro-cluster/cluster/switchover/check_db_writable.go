@@ -71,7 +71,7 @@ func (p *Manager) clusterRestrictedReadOnlyOp(ctx context.Context, clusterID, op
 	mylog.Info("checkClusterWritable gorm.Open with dsn:", dsn)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		mylog.Warnf("%s gorm.Open err:", funcName, err)
+		mylog.Warnf("%s gorm.Open err:%s", funcName, err)
 		return readOnlyFlag, err
 	} else {
 		mylog.Debugf("%s gorm.Open success", funcName)

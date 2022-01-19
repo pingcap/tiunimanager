@@ -45,7 +45,7 @@ func (p *Manager) CreateUser(ctx context.Context, request message.CreateUserReq)
 	log := framework.LogWithContext(ctx)
 	rw := models.GetAccountReaderWriter()
 	user := &account.User{
-		CurrentTenantID: request.TenantID,
+		DefaultTenantID: request.TenantID,
 		Name:            request.Nickname,
 		Status:          string(constants.UserStatusNormal),
 		Email:           request.Email,

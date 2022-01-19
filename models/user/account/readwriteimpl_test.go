@@ -30,7 +30,7 @@ func TestAccountReadWrite_CreateUser(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			CurrentTenantID: "tenant",
+			DefaultTenantID: "tenant",
 			Creator:         "admin",
 			Name:            "nick01",
 			Salt:            "salt",
@@ -59,7 +59,7 @@ func TestAccountReadWrite_DeleteUser(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			CurrentTenantID: "tenant",
+			DefaultTenantID: "tenant",
 			Creator:         "admin",
 			Name:            "nick02",
 			Salt:            "salt",
@@ -88,7 +88,7 @@ func TestAccountReadWrite_GetUser(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			CurrentTenantID: "tenant",
+			DefaultTenantID: "tenant",
 			Creator:         "admin",
 			Name:            "nick03",
 			Salt:            "salt",
@@ -119,7 +119,7 @@ func TestAccountReadWrite_GetUserByName(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			CurrentTenantID: "tenant",
+			DefaultTenantID: "tenant",
 			Creator:         "admin",
 			Name:            "nick13",
 			Salt:            "salt",
@@ -141,7 +141,7 @@ func TestAccountReadWrite_GetUserByName(t *testing.T) {
 func TestAccountReadWrite_QueryUsers(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			CurrentTenantID: "tenant",
+			DefaultTenantID: "tenant",
 			Creator:         "admin",
 			Name:            "nick04",
 			Salt:            "salt",
@@ -167,7 +167,7 @@ func TestAccountReadWrite_UpdateUserStatus(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			CurrentTenantID: "tenant",
+			DefaultTenantID: "tenant",
 			Creator:         "admin",
 			Name:            "nick05",
 			Salt:            "salt",
@@ -196,7 +196,7 @@ func TestAccountReadWrite_UpdateUserProfile(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			CurrentTenantID: "tenant",
+			DefaultTenantID: "tenant",
 			Creator:         "admin",
 			Name:            "nick06",
 			Salt:            "salt",
@@ -222,7 +222,7 @@ func TestAccountReadWrite_UpdateUserPassword(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		user := &User{
-			CurrentTenantID: "tenant",
+			DefaultTenantID: "tenant",
 			Creator:         "admin",
 			Name:            "nick07",
 			Salt:            "salt",

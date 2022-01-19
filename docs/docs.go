@@ -7528,6 +7528,9 @@ var doc = `{
         "message.LoginResp": {
             "type": "object",
             "properties": {
+                "tenantId": {
+                    "type": "string"
+                },
                 "token": {
                     "type": "string"
                 },
@@ -9041,7 +9044,7 @@ var doc = `{
                 "creator": {
                     "type": "string"
                 },
-                "currentTenantId": {
+                "defaultTenantId": {
                     "type": "string"
                 },
                 "email": {

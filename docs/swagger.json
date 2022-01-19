@@ -7514,6 +7514,9 @@
         "message.LoginResp": {
             "type": "object",
             "properties": {
+                "tenantId": {
+                    "type": "string"
+                },
                 "token": {
                     "type": "string"
                 },
@@ -9027,7 +9030,7 @@
                 "creator": {
                     "type": "string"
                 },
-                "currentTenantId": {
+                "defaultTenantId": {
                     "type": "string"
                 },
                 "email": {

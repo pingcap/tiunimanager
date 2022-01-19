@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/common"
@@ -73,7 +72,7 @@ func TestManager_Login(t *testing.T) {
 		}, nil)
 
 		tokenRW.EXPECT().CreateToken(gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any()).Return(&identification.Token{}, nil)
+			gomock.Any(), gomock.Any(), gomock.Any()).Return(&identification.Token{}, nil)
 		got, err := manager.Login(ctx.TODO(), message.LoginReq{Name: "user01", Password: "123"})
 		assert.NoError(t, err)
 		assert.Equal(t, got.UserID, "user01")
@@ -136,7 +135,7 @@ func TestManager_Login(t *testing.T) {
 		}, nil)
 
 		tokenRW.EXPECT().CreateToken(gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any()).Return(nil, fmt.Errorf("create token fail"))
+			gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("create token fail"))
 		_, err = manager.Login(ctx.TODO(), message.LoginReq{Name: "user01", Password: "123"})
 		assert.Error(t, err)
 	})
@@ -193,15 +192,9 @@ func TestManager_Accessible(t *testing.T) {
 		tokenRW := mockidentification.NewMockReaderWriter(ctrl)
 		models.SetTokenReaderWriter(tokenRW)
 
-		accountRW := mockaccount.NewMockReaderWriter(ctrl)
-		models.SetAccountReaderWriter(accountRW)
-
 		tokenRW.EXPECT().GetToken(gomock.Any(), gomock.Any()).Return(&identification.Token{
 			UserID:         "user01",
 			ExpirationTime: time.Now().Add(constants.DefaultTokenValidPeriod)}, nil)
-
-		accountRW.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(
-			structs.UserInfo{CurrentTenantID: "tenant"}, nil)
 
 		got, err := manager.Accessible(ctx.TODO(), message.AccessibleReq{TokenString: "123"})
 		assert.NoError(t, err)

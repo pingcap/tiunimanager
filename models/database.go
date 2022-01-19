@@ -193,7 +193,7 @@ func (p *database) initSystemData() {
 	// system admin account
 	user := &account.User{
 		ID:              "admin",
-		CurrentTenantID: tenant.ID,
+		DefaultTenantID: tenant.ID,
 		Name:            "admin",
 		Creator:         "System",
 	}

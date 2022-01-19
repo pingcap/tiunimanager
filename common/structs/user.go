@@ -27,7 +27,7 @@ import "time"
 
 type UserInfo struct {
 	ID              string    `json:"id"`
-	CurrentTenantID string    `json:"currentTenantId"`
+	DefaultTenantID string    `json:"defaultTenantId"`
 	Name            []string  `json:"names"`
 	Creator         string    `json:"creator"`
 	TenantID        []string  `json:"tenantIds"`

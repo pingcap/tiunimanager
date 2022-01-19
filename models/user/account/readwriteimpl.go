@@ -40,10 +40,10 @@ func (arw *AccountReadWrite) CreateUser(ctx context.Context, user *User, name st
 		return nil, nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "create user %v, parameter invalid", user)
 	}
 	// query tenant
-	_, err := arw.GetTenant(ctx, user.CurrentTenantID)
+	_, err := arw.GetTenant(ctx, user.DefaultTenantID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("not found tenant %s", user.CurrentTenantID)
-		return nil, nil, nil, errors.NewErrorf(errors.TenantNotExist, "query tenant %s not found", user.CurrentTenantID)
+		framework.LogWithContext(ctx).Errorf("not found tenant %s", user.DefaultTenantID)
+		return nil, nil, nil, errors.NewErrorf(errors.TenantNotExist, "query tenant %s not found", user.DefaultTenantID)
 	}
 
 	// create user
@@ -65,7 +65,7 @@ func (arw *AccountReadWrite) CreateUser(ctx context.Context, user *User, name st
 	// create user tenant relation
 	relation := &UserTenantRelation{
 		UserID:   user.ID,
-		TenantID: user.CurrentTenantID,
+		TenantID: user.DefaultTenantID,
 	}
 	err = arw.DB(ctx).Create(relation).Error
 	if err != nil {
@@ -129,7 +129,7 @@ func (arw *AccountReadWrite) GetUser(ctx context.Context, userID string) (struct
 
 	return structs.UserInfo{
 		ID:              user.ID,
-		CurrentTenantID: user.CurrentTenantID,
+		DefaultTenantID: user.DefaultTenantID,
 		Creator:         user.Creator,
 		Name:            loginNames,
 		TenantID:        tenants,

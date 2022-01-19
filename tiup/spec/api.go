@@ -207,7 +207,7 @@ func (i *APIServerInstance) InitConfig(
 		return err
 	}
 	if _, _, err := e.Execute(ctx,
-		fmt.Sprintf("cp -r %s/bin/etc %s/", paths.Deploy, paths.Deploy),
+		fmt.Sprintf("cp -r %s/bin/resource %s/", paths.Deploy, paths.Deploy),
 		false); err != nil {
 		return err
 	}

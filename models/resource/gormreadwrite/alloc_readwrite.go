@@ -99,7 +99,7 @@ type Resource struct {
 	Path     string
 	Capacity int
 	Region   string
-	Zone     string
+	AZ       string
 	Rack     string
 	portRes  []*resource_structs.PortResource
 }
@@ -113,7 +113,7 @@ func (resource *Resource) toCompute() (result *resource_structs.Compute, err err
 		Passwd:   resource.Passwd,
 		Location: structs.Location{
 			Region: resource.Region,
-			Zone: resource.Zone,
+			Zone: resource.AZ,
 			Rack: resource.Rack,
 			HostIp: resource.Ip,
 		},

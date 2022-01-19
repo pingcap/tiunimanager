@@ -30,8 +30,16 @@ import (
 	"os"
 )
 
-func NewTmpFileWithContent(prefix, suffix string, content []byte) (fileName string, err error) {
-	tmpfile, err := ioutil.TempFile("", fmt.Sprintf("%s-*.%s", prefix, suffix))
+// NewTmpFileWithContent
+// @Description:
+// @Parameter dir
+// @Parameter prefix
+// @Parameter suffix
+// @Parameter content
+// @return fileName
+// @return err
+func NewTmpFileWithContent(dir, prefix, suffix string, content []byte) (fileName string, err error) {
+	tmpfile, err := ioutil.TempFile(dir, fmt.Sprintf("%s-*.%s", prefix, suffix))
 	if err != nil {
 		err = fmt.Errorf("fail to create temp file err: %v", err)
 		return "", err
@@ -50,3 +58,11 @@ func NewTmpFileWithContent(prefix, suffix string, content []byte) (fileName stri
 	}
 	return fileName, nil
 }
+
+//func Overwrite(fileName string, content []byte) error {
+//
+//}
+//
+//func Read(fileName string) (data string, err error) {
+//
+//}

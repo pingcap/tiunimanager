@@ -2121,7 +2121,7 @@ var doc = `{
             }
         },
         "/clusters/{clusterId}/preview-scale-out": {
-            "get": {
+            "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
@@ -6622,6 +6622,10 @@ var doc = `{
                     "type": "string",
                     "example": "415241823337054209"
                 },
+                "startUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
+                },
                 "status": {
                     "type": "string",
                     "enum": [
@@ -6932,6 +6936,10 @@ var doc = `{
                 "startTS": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "startUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 },
                 "status": {
                     "type": "string",

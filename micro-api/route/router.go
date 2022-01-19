@@ -131,7 +131,7 @@ func Route(g *gin.Engine) {
 			cluster.GET("/:clusterId/log", metrics.HandleMetrics(constants.MetricsClusterQueryLogParameter), logApi.QueryClusterLog)
 
 			// Scale cluster
-			cluster.GET("/:clusterId/preview-scale-out", metrics.HandleMetrics(constants.MetricsClusterPreviewScaleOut), clusterApi.ScaleOutPreview)
+			cluster.POST("/:clusterId/preview-scale-out", metrics.HandleMetrics(constants.MetricsClusterPreviewScaleOut), clusterApi.ScaleOutPreview)
 			cluster.POST("/:clusterId/scale-out", metrics.HandleMetrics(constants.MetricsClusterScaleOut), clusterApi.ScaleOut)
 			cluster.POST("/:clusterId/scale-in", metrics.HandleMetrics(constants.MetricsClusterScaleIn), clusterApi.ScaleIn)
 

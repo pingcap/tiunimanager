@@ -31,11 +31,11 @@ import (
 // Zone information provided by Enterprise Manager
 type Zone struct {
 	VendorID   string         `gorm:"primaryKey;size:32"`
-	VendorName string         `gorm:"primaryKey;size:32"`
+	VendorName string         `gorm:"size:32"`
 	RegionID   string         `gorm:"primaryKey;size:32"`
-	RegionName string         `gorm:"primaryKey;size:32"`
+	RegionName string         `gorm:"size:32"`
 	ZoneID     string         `gorm:"primaryKey;size:32"`
-	ZoneName   string         `gorm:"primaryKey;size:32"`
+	ZoneName   string         `gorm:"size:32"`
 	Comment    string         `gorm:"size:1024;"`
 	CreatedAt  time.Time      `gorm:"autoCreateTime;<-:create;->;"`
 	UpdatedAt  time.Time      `gorm:"autoUpdateTime"`

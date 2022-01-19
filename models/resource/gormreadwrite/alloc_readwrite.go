@@ -98,6 +98,9 @@ type Resource struct {
 	DiskName string
 	Path     string
 	Capacity int
+	Region   string
+	AZ       string
+	Rack     string
 	portRes  []*resource_structs.PortResource
 }
 
@@ -108,6 +111,12 @@ func (resource *Resource) toCompute() (result *resource_structs.Compute, err err
 		HostIp:   resource.Ip,
 		UserName: resource.UserName,
 		Passwd:   resource.Passwd,
+		Location: structs.Location{
+			Region: structs.GetDomainNameFromCode(resource.Region),
+			Zone: structs.GetDomainNameFromCode(resource.AZ),
+			Rack: structs.GetDomainNameFromCode(resource.Rack),
+			HostIp: resource.Ip,
+		},
 	}
 	result.ComputeRes.CpuCores = int32(resource.CpuCores)
 	result.ComputeRes.Memory = int32(resource.Memory)
@@ -152,7 +161,7 @@ func (rw *GormResourceReadWrite) allocResourceWithRR(ctx context.Context, tx *go
 	if needDisk {
 		var count int64
 		db := tx.Order("hosts.free_cpu_cores desc").Order("hosts.free_memory desc").Limit(int(require.Count)).Model(&rp.Disk{}).Select(
-			"disks.host_id, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", reqCores, reqMem).Joins(
+			"disks.host_id, hosts.host_name, hosts.region, hosts.az, hosts.rack, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", reqCores, reqMem).Joins(
 			"left join hosts on disks.host_id = hosts.id").Where("hosts.reserved = 0")
 		if excludedHosts == nil {
 			db.Count(&count)
@@ -179,7 +188,7 @@ func (rw *GormResourceReadWrite) allocResourceWithRR(ctx context.Context, tx *go
 	} else {
 		var count int64
 		db := tx.Order("hosts.free_cpu_cores desc").Order("hosts.free_memory desc").Limit(int(require.Count)).Model(&rp.Host{}).Select(
-			"id as host_id, host_name, ip, user_name, passwd, ? as cpu_cores, ? as memory", reqCores, reqMem).Where("reserved = 0")
+			"id as host_id, host_name, ip, region, az, rack, user_name, passwd, ? as cpu_cores, ? as memory", reqCores, reqMem).Where("reserved = 0")
 		if excludedHosts == nil {
 			db.Count(&count)
 		} else {
@@ -258,7 +267,7 @@ func (rw *GormResourceReadWrite) allocResourceInHost(ctx context.Context, tx *go
 
 	if needDisk {
 		db := tx.Order("disks.capacity").Limit(int(require.Count)).Model(&rp.Disk{}).Select(
-			"disks.host_id, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", reqCores, reqMem).Joins(
+			"disks.host_id, hosts.host_name, hosts.region, hosts.az, hosts.rack, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", reqCores, reqMem).Joins(
 			"left join hosts on disks.host_id = hosts.id").Where("hosts.ip = ?", hostIp).Count(&count)
 		// No Limit in Reserved == false in this strategy for a takeover operation
 		if !isTakeOver {
@@ -297,7 +306,7 @@ func (rw *GormResourceReadWrite) allocResourceInHost(ctx context.Context, tx *go
 			}
 		}
 	} else {
-		db := tx.Model(&rp.Host{}).Select("id as host_id, host_name, ip, user_name, passwd, ? as cpu_cores, ? as memory", reqCores, reqMem).Where("ip = ?", hostIp).Count(&count)
+		db := tx.Model(&rp.Host{}).Select("id as host_id, host_name, region, az, rack, ip, user_name, passwd, ? as cpu_cores, ? as memory", reqCores, reqMem).Where("ip = ?", hostIp).Count(&count)
 		// No Limit in Reserved == false in this strategy for a takeover operation
 		if !isTakeOver {
 			db = db.Where("hosts.reserved = 0").Count(&count)

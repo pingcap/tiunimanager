@@ -892,7 +892,7 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	req := context.GetData(ContextTakeoverRequest).(cluster.TakeoverClusterReq)
-	clusterHome := fmt.Sprintf("%sstorage/cluster/clusters/%s/", req.TiUPPath, clusterMeta.Cluster.ID)
+	clusterHome := fmt.Sprintf("%s/storage/cluster/clusters/%s/", req.TiUPPath, clusterMeta.Cluster.ID)
 
 	var sshClient *ssh.Client
 	var sftpClient *sftp.Client

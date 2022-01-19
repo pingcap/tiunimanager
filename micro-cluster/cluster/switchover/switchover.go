@@ -177,7 +177,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 		}
 	}
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, oldMasterId, flowName)
+	flow, err := flowManager.CreateWorkFlow(ctx, oldMasterId, workflow.BizTypeCluster, flowName)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", flowName, err.Error())
 		return resp, emerr.NewEMErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,

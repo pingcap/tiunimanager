@@ -100,6 +100,15 @@ type ReaderWriter interface {
 	// @return err
 	UpdateParameter(ctx context.Context, parameter *Parameter) (err error)
 
+	// QueryParameters
+	// @Description: query parameters list
+	// @param ctx
+	// @param offset
+	// @param size
+	// @return params
+	// @return err
+	QueryParameters(ctx context.Context, offset, size int) (params []*Parameter, total int64, err error)
+
 	// QueryParametersByGroupId
 	// @Description: query parameters by parameter group id
 	// @param ctx

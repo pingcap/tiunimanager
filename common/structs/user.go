@@ -26,16 +26,17 @@ package structs
 import "time"
 
 type UserInfo struct {
-	ID       string    `json:"id"`
-	Name     []string  `json:"name"`
-	Creator  string    `json:"creator"`
-	TenantID []string  `json:"tenantIds"`
-	Nickname string    `json:"nickname"`
-	Email    string    `json:"email"`
-	Phone    string    `json:"phone"`
-	Status   string    `json:"status"`
-	CreateAt time.Time `json:"createAt"`
-	UpdateAt time.Time `json:"updateAt"`
+	ID              string    `json:"id"`
+	DefaultTenantID string    `json:"defaultTenantId"`
+	Name            []string  `json:"names"`
+	Creator         string    `json:"creator"`
+	TenantID        []string  `json:"tenantIds"`
+	Nickname        string    `json:"nickname"`
+	Email           string    `json:"email"`
+	Phone           string    `json:"phone"`
+	Status          string    `json:"status"`
+	CreateAt        time.Time `json:"createAt"`
+	UpdateAt        time.Time `json:"updateAt"`
 }
 
 type TenantInfo struct {

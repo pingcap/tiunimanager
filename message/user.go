@@ -36,6 +36,7 @@ type LoginReq struct {
 type LoginResp struct {
 	TokenString string `json:"token" form:"token"`
 	UserID      string `json:"userId" form:"userId"`
+	TenantID    string `json:"tenantId" form:"tenantId"`
 }
 
 // LogoutReq logout
@@ -53,7 +54,8 @@ type AccessibleReq struct {
 }
 
 type AccessibleResp struct {
-	UserID string `json:"userId" form:"userId"`
+	UserID   string `json:"userId" form:"userId"`
+	TenantID string `json:"tenantId" form:"tenantId"`
 }
 
 //CreateUserReq user message

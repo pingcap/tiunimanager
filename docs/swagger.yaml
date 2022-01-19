@@ -1041,6 +1041,8 @@ definitions:
         type: string
       status:
         type: string
+    required:
+    - id
     type: object
   message.CreateTenantResp:
     type: object
@@ -1058,6 +1060,10 @@ definitions:
         type: string
       tenantId:
         type: string
+    required:
+    - email
+    - name
+    - password
     type: object
   message.CreateUserResp:
     type: object
@@ -1300,6 +1306,8 @@ definitions:
     type: object
   message.LoginResp:
     properties:
+      tenantId:
+        type: string
       token:
         type: string
       userId:
@@ -1538,6 +1546,8 @@ definitions:
         type: string
       password:
         type: string
+    required:
+    - password
     type: object
   message.UpdateUserPasswordResp:
     type: object
@@ -2346,11 +2356,13 @@ definitions:
         type: string
       creator:
         type: string
+      defaultTenantId:
+        type: string
       email:
         type: string
       id:
         type: string
-      name:
+      names:
         items:
           type: string
         type: array

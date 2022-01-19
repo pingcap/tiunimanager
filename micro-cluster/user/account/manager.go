@@ -45,11 +45,12 @@ func (p *Manager) CreateUser(ctx context.Context, request message.CreateUserReq)
 	log := framework.LogWithContext(ctx)
 	rw := models.GetAccountReaderWriter()
 	user := &account.User{
-		Name:    request.Nickname,
-		Status:  string(constants.UserStatusNormal),
-		Email:   request.Email,
-		Phone:   request.Phone,
-		Creator: framework.GetUserIDFromContext(ctx),
+		DefaultTenantID: request.TenantID,
+		Name:            request.Nickname,
+		Status:          string(constants.UserStatusNormal),
+		Email:           request.Email,
+		Phone:           request.Phone,
+		Creator:         framework.GetUserIDFromContext(ctx),
 	}
 	err := user.GenSaltAndHash(request.Password)
 	if err != nil {
@@ -58,7 +59,7 @@ func (p *Manager) CreateUser(ctx context.Context, request message.CreateUserReq)
 			"user %s generate salt and hash error: %v", request.Name, err)
 	}
 
-	_, _, _, err = rw.CreateUser(ctx, user, request.Name, request.TenantID)
+	_, _, _, err = rw.CreateUser(ctx, user, request.Name)
 	if err != nil {
 		log.Errorf("create user %s error: %v", request.Name, err)
 		return resp, err

@@ -27,9 +27,9 @@ type TokenReadWrite struct {
 	dbCommon.GormDB
 }
 
-func (g *TokenReadWrite) CreateToken(ctx context.Context, tokenString, userID string, expirationTime time.Time) (*Token, error) {
-	if "" == tokenString /*|| "" == accountName || "" == accountId || "" == tenantId */ {
-		return nil, errors.Errorf("AddToken has invalid parameter, tokenString: %s, userID: %s", tokenString, userID)
+func (g *TokenReadWrite) CreateToken(ctx context.Context, tokenString, userID, tenantID string, expirationTime time.Time) (*Token, error) {
+	if "" == tokenString || "" == userID || "" == tenantID {
+		return nil, errors.Errorf("AddToken has invalid parameter, tokenString: %s, userID: %s, tenantID: %s", tokenString, userID, tenantID)
 	}
 	token, err := g.GetToken(ctx, tokenString)
 	if err == nil && token.TokenString == tokenString {
@@ -38,6 +38,7 @@ func (g *TokenReadWrite) CreateToken(ctx context.Context, tokenString, userID st
 	} else {
 		token.TokenString = tokenString
 		token.UserID = userID
+		token.TenantID = tenantID
 		token.ExpirationTime = expirationTime
 		token.Status = 0
 		err = g.DB(ctx).Create(&token).Error

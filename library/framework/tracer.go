@@ -330,11 +330,6 @@ func GetUserIDFromContext(ctx context.Context) string {
 	return getStringValueFromContext(ctx, TiEM_X_USER_ID_KEY)
 }
 
-// GetUserNameFromContext Get UserName from ctx
-func GetUserNameFromContext(ctx context.Context) string {
-	return getStringValueFromContext(ctx, TiEM_X_USER_NAME_KEY)
-}
-
 // GetTenantIDFromContext Get TenantID from ctx
 func GetTenantIDFromContext(ctx context.Context) string {
 	return getStringValueFromContext(ctx, TiEM_X_TENANT_ID_KEY)

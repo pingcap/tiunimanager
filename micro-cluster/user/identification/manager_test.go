@@ -72,7 +72,7 @@ func TestManager_Login(t *testing.T) {
 		}, nil)
 
 		tokenRW.EXPECT().CreateToken(gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any()).Return(&identification.Token{}, nil)
+			gomock.Any(), gomock.Any(), gomock.Any()).Return(&identification.Token{}, nil)
 		got, err := manager.Login(ctx.TODO(), message.LoginReq{Name: "user01", Password: "123"})
 		assert.NoError(t, err)
 		assert.Equal(t, got.UserID, "user01")
@@ -135,7 +135,7 @@ func TestManager_Login(t *testing.T) {
 		}, nil)
 
 		tokenRW.EXPECT().CreateToken(gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any()).Return(nil, fmt.Errorf("create token fail"))
+			gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("create token fail"))
 		_, err = manager.Login(ctx.TODO(), message.LoginReq{Name: "user01", Password: "123"})
 		assert.Error(t, err)
 	})

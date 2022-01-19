@@ -418,5 +418,6 @@ func parse(task changefeed.ChangeFeedTask) cluster.ChangeFeedTaskInfo {
 		},
 		UnSteady: task.Locked(),
 	}
+	info.ConvertStartTS()
 	return info
 }

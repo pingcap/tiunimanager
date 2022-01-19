@@ -8640,7 +8640,7 @@ var doc = `{
                         "type": "string"
                     },
                     "example": [
-                        "[1]"
+                        "1"
                     ]
                 },
                 "name": {

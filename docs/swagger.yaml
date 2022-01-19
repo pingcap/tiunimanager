@@ -960,6 +960,10 @@ definitions:
     type: object
   message.CreateParameterGroupReq:
     properties:
+      addParams:
+        items:
+          $ref: '#/definitions/message.ParameterInfo'
+        type: array
       clusterSpec:
         example: 8C16G
         type: string
@@ -1316,6 +1320,53 @@ definitions:
       userId:
         type: string
     type: object
+  message.ParameterInfo:
+    properties:
+      category:
+        example: log
+        type: string
+      defaultValue:
+        example: "1024"
+        type: string
+      description:
+        example: binlog size
+        type: string
+      hasApply:
+        example: 1
+        type: integer
+      hasReboot:
+        example: 0
+        type: integer
+      instanceType:
+        example: TiDB
+        type: string
+      name:
+        example: binlog_size
+        type: string
+      note:
+        type: string
+      range:
+        example:
+        - '[]'
+        items:
+          type: string
+        type: array
+      readOnly:
+        example: 0
+        type: integer
+      systemVariable:
+        example: log.binlog_size
+        type: string
+      type:
+        example: 0
+        type: integer
+      unit:
+        example: mb
+        type: string
+      updateSource:
+        example: 0
+        type: integer
+    type: object
   message.QueryDataImportExportRecordsResp:
     properties:
       transportRecords:
@@ -1487,12 +1538,22 @@ definitions:
     type: object
   message.UpdateParameterGroupReq:
     properties:
+      addParams:
+        items:
+          $ref: '#/definitions/message.ParameterInfo'
+        type: array
       clusterSpec:
         example: 8C16G
         type: string
       clusterVersion:
         example: v5.0
         type: string
+      delParams:
+        example:
+        - '[1]'
+        items:
+          type: string
+        type: array
       name:
         example: 8C16GV4_default
         type: string
@@ -2151,6 +2212,9 @@ definitions:
       paramId:
         example: "123"
         type: string
+    required:
+    - defaultValue
+    - paramId
     type: object
   structs.ParameterRealValue:
     properties:

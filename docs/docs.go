@@ -7014,6 +7014,12 @@ var doc = `{
                 "params"
             ],
             "properties": {
+                "addParams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/message.ParameterInfo"
+                    }
+                },
                 "clusterSpec": {
                     "type": "string",
                     "example": "8C16G"
@@ -7544,6 +7550,71 @@ var doc = `{
                 }
             }
         },
+        "message.ParameterInfo": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "log"
+                },
+                "defaultValue": {
+                    "type": "string",
+                    "example": "1024"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "binlog size"
+                },
+                "hasApply": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "hasReboot": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "instanceType": {
+                    "type": "string",
+                    "example": "TiDB"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "binlog_size"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "range": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[]"
+                    ]
+                },
+                "readOnly": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "systemVariable": {
+                    "type": "string",
+                    "example": "log.binlog_size"
+                },
+                "type": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "mb"
+                },
+                "updateSource": {
+                    "type": "integer",
+                    "example": 0
+                }
+            }
+        },
         "message.QueryDataImportExportRecordsResp": {
             "type": "object",
             "properties": {
@@ -7802,6 +7873,12 @@ var doc = `{
                 "params"
             ],
             "properties": {
+                "addParams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/message.ParameterInfo"
+                    }
+                },
                 "clusterSpec": {
                     "type": "string",
                     "example": "8C16G"
@@ -7809,6 +7886,15 @@ var doc = `{
                 "clusterVersion": {
                     "type": "string",
                     "example": "v5.0"
+                },
+                "delParams": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[1]"
+                    ]
                 },
                 "name": {
                     "type": "string",
@@ -8734,6 +8820,10 @@ var doc = `{
         },
         "structs.ParameterGroupParameterSampleInfo": {
             "type": "object",
+            "required": [
+                "defaultValue",
+                "paramId"
+            ],
             "properties": {
                 "defaultValue": {
                     "type": "string",

@@ -177,7 +177,7 @@ func (p *ChangeFeedTaskInfo) ConvertStartTS() {
 		p.StartUnix = 0
 	} else {
 		ts, err := strconv.ParseInt(p.StartTS, 10, 64)
-		if err != nil {
+		if err == nil {
 			p.StartUnix = parseTS(uint64(ts))
 		}
 	}

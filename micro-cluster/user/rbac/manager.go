@@ -221,7 +221,7 @@ func (mgr *RBACManager) CreateRole(ctx context.Context, request message.CreateRo
 
 	if _, err = mgr.enforcer.AddRoleForUser("", request.Role); err != nil {
 		framework.LogWithContext(ctx).Errorf("call enforcer AddRoleForUser failed %s", err.Error())
-		return resp, errors.WrapError(errors.TIEM_RBAC_USER_CREATE_FAILED, fmt.Sprintf("call enforcer AddRoleForUser failed"), err)
+		return resp, errors.WrapError(errors.TIEM_RBAC_ROLE_CREATE_FAILED, fmt.Sprintf("call enforcer AddRoleForUser failed"), err)
 	}
 	return
 }

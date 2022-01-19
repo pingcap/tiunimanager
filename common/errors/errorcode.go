@@ -243,7 +243,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_USER_NOT_FOUND:                {"user not found", 404},
 	TIEM_ACCESS_TOKEN_EXPIRED:          {"access token has been expired", 401},
 	TIEM_LOGIN_FAILED:                  {"incorrect username or password", 400},
-	TIEM_RBAC_PERMISSION_CHECK_FAILED:  {"rbac permission check failed", 400},
+	TIEM_RBAC_PERMISSION_CHECK_FAILED:  {"rbac permission check failed", 403},
 	TIEM_RBAC_PERMISSION_ADD_FAILED:    {"rbac permission add failed", 500},
 	TIEM_RBAC_PERMISSION_DELETE_FAILED: {"rbac permission delete failed", 500},
 	TIEM_RBAC_PERMISSION_QUERY_FAILED:  {"rbac permission query failed", 500},

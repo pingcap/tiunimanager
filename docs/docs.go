@@ -8299,10 +8299,7 @@ var doc = `{
                     "type": "array",
                     "items": {
                         "type": "string"
-                    },
-                    "example": [
-                        "[]"
-                    ]
+                    }
                 },
                 "readOnly": {
                     "type": "integer",

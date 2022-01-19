@@ -132,7 +132,7 @@ type ParameterInfo struct {
 	SystemVariable string   `json:"systemVariable" example:"log.binlog_size"`
 	Type           int      `json:"type" example:"0"`
 	Unit           string   `json:"unit" example:"mb"`
-	Range          []string `json:"range" example:"[]"`
+	Range          []string `json:"range" example:""`
 	HasReboot      int      `json:"hasReboot" example:"0"`
 	HasApply       int      `json:"hasApply" example:"1"`
 	UpdateSource   int      `json:"updateSource" example:"0"`

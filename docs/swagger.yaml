@@ -1410,8 +1410,6 @@ definitions:
       note:
         type: string
       range:
-        example:
-        - '[]'
         items:
           type: string
         type: array

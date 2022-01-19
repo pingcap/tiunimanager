@@ -25,11 +25,12 @@ package parameter
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"os"
 	"strconv"
 	"testing"
+
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 
 	common2 "github.com/pingcap-inc/tiem/models/common"
 
@@ -103,7 +104,7 @@ func buildParamGroup(count uint, params []*parametergroup.Parameter) (pgs []*par
 				Note:         "test param " + strconv.Itoa(j),
 			}
 		}
-		pg, err := parameterGroupRW.CreateParameterGroup(context.TODO(), pgs[i], pgm)
+		pg, err := parameterGroupRW.CreateParameterGroup(context.TODO(), pgs[i], pgm, nil)
 		if err != nil {
 			return pgs, err
 		}

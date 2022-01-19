@@ -59,6 +59,7 @@ type CreateParameterGroupReq struct {
 	GroupType      int                                         `json:"groupType" example:"1" enums:"1,2"`
 	Note           string                                      `json:"note" example:"default param group"`
 	Params         []structs.ParameterGroupParameterSampleInfo `json:"params" validate:"required"`
+	AddParams      []ParameterInfo                             `json:"addParams"`
 }
 
 type CreateParameterGroupResp struct {
@@ -80,6 +81,8 @@ type UpdateParameterGroupReq struct {
 	ClusterSpec    string                                      `json:"clusterSpec" example:"8C16G"`
 	Note           string                                      `json:"note" example:"default param group"`
 	Params         []structs.ParameterGroupParameterSampleInfo `json:"params" validate:"required"`
+	AddParams      []ParameterInfo                             `json:"addParams"`
+	DelParams      []string                                    `json:"delParams" example:"[1]"`
 }
 
 type UpdateParameterGroupResp struct {
@@ -120,4 +123,21 @@ type ParameterGroupInfo struct {
 	CreatedAt      int64                                 `json:"createTime" example:"1636698675"`
 	UpdatedAt      int64                                 `json:"updateTime" example:"1636698675"`
 	Params         []structs.ParameterGroupParameterInfo `json:"params"`
+}
+
+type ParameterInfo struct {
+	Category       string   `json:"category" example:"log"`
+	Name           string   `json:"name" example:"binlog_size"`
+	InstanceType   string   `json:"instanceType" example:"TiDB"`
+	SystemVariable string   `json:"systemVariable" example:"log.binlog_size"`
+	Type           int      `json:"type" example:"0"`
+	Unit           string   `json:"unit" example:"mb"`
+	Range          []string `json:"range" example:""`
+	HasReboot      int      `json:"hasReboot" example:"0"`
+	HasApply       int      `json:"hasApply" example:"1"`
+	UpdateSource   int      `json:"updateSource" example:"0"`
+	ReadOnly       int      `json:"readOnly" example:"0"`
+	Description    string   `json:"description" example:"binlog size"`
+	DefaultValue   string   `json:"defaultValue" example:"1024"`
+	Note           string   `json:"note"`
 }

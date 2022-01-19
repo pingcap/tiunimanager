@@ -25,11 +25,13 @@ package parametergroup
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"os"
 	"strconv"
 	"testing"
+
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 	"gorm.io/driver/sqlite"
@@ -71,7 +73,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func buildParamGroup(count uint, params []*Parameter) (pgs []*ParameterGroup, err error) {
+func buildParamGroup(count uint, params []*Parameter, addParams []message.ParameterInfo) (pgs []*ParameterGroup, err error) {
 	pgs = make([]*ParameterGroup, count)
 	for i := range pgs {
 		pgs[i] = &ParameterGroup{
@@ -91,7 +93,7 @@ func buildParamGroup(count uint, params []*Parameter) (pgs []*ParameterGroup, er
 				Note:         "test param " + strconv.Itoa(j),
 			}
 		}
-		pg, err := testRW.CreateParameterGroup(context.TODO(), pgs[i], pgm)
+		pg, err := testRW.CreateParameterGroup(context.TODO(), pgs[i], pgm, addParams)
 		if err != nil {
 			return pgs, err
 		}

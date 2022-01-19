@@ -75,8 +75,14 @@ func (m *Manager) CreateParameterGroup(ctx context.Context, req message.CreatePa
 			Note:         param.Note,
 		}
 	}
+
+	// Check for the existence of extended parameters added when creating a parameter group
+	if err = checkAddParametersExists(ctx, req.AddParams); err != nil {
+		return resp, err
+	}
+
 	// invoke database reader writer.
-	parameterGroup, err := models.GetParameterGroupReaderWriter().CreateParameterGroup(ctx, pg, pgm)
+	parameterGroup, err := models.GetParameterGroupReaderWriter().CreateParameterGroup(ctx, pg, pgm, req.AddParams)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create parameter group req: %v, err: %v", req, err)
 		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_CREATE_ERROR, errors.TIEM_PARAMETER_GROUP_CREATE_ERROR.Explain(), err)
@@ -103,6 +109,11 @@ func (m *Manager) UpdateParameterGroup(ctx context.Context, req message.UpdatePa
 		return resp, errors.NewErrorf(errors.TIEM_DEFAULT_PARAM_GROUP_NOT_MODIFY, errors.TIEM_DEFAULT_PARAM_GROUP_NOT_MODIFY.Explain())
 	}
 
+	// Check for the existence of extended parameters added when creating a parameter group
+	if err = checkAddParametersExists(ctx, req.AddParams); err != nil {
+		return resp, err
+	}
+
 	pg := &parametergroup.ParameterGroup{
 		ID:             req.ParamGroupID,
 		Name:           req.Name,
@@ -118,7 +129,7 @@ func (m *Manager) UpdateParameterGroup(ctx context.Context, req message.UpdatePa
 			Note:         param.Note,
 		}
 	}
-	err = models.GetParameterGroupReaderWriter().UpdateParameterGroup(ctx, pg, pgm)
+	err = models.GetParameterGroupReaderWriter().UpdateParameterGroup(ctx, pg, pgm, req.AddParams, req.DelParams)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("update parameter group invoke metadb err: %v", err)
 		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_UPDATE_ERROR, errors.TIEM_PARAMETER_GROUP_UPDATE_ERROR.Explain(), err)
@@ -238,13 +249,34 @@ func (m *Manager) CopyParameterGroup(ctx context.Context, req message.CopyParame
 	pg.Note = req.Note
 	// copy parameter group HasDefault values is 2
 	pg.HasDefault = int(CUSTOM)
-	parameterGroup, err := models.GetParameterGroupReaderWriter().CreateParameterGroup(ctx, pg, pgm)
+	parameterGroup, err := models.GetParameterGroupReaderWriter().CreateParameterGroup(ctx, pg, pgm, nil)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("copy parameter group convert resp err: %v", err)
 		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_COPY_ERROR, errors.TIEM_PARAMETER_GROUP_COPY_ERROR.Explain(), err)
 	}
 	resp = message.CopyParameterGroupResp{ParamGroupID: parameterGroup.ID}
 	return resp, nil
+}
+
+// checkAddParametersExists
+// @Description: check add parameters exists.
+// @Parameter ctx
+// @Parameter addParams
+// @return err
+func checkAddParametersExists(ctx context.Context, addParams []message.ParameterInfo) (err error) {
+	if len(addParams) > 0 {
+		for _, param := range addParams {
+			existsParameter, err := models.GetParameterGroupReaderWriter().ExistsParameter(ctx, param.Category, param.Name, param.InstanceType)
+			if err != nil {
+				return err
+			}
+			if existsParameter != nil && existsParameter.ID != "" {
+				return errors.NewErrorf(errors.TIEM_PARAMETER_ALREADY_EXISTS,
+					fmt.Sprintf("%s parameter `%s.%s` already exists, parameter ID: %s", param.InstanceType, param.Category, param.Name, existsParameter.ID))
+			}
+		}
+	}
+	return nil
 }
 
 // validateParameter

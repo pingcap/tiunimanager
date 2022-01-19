@@ -44,7 +44,7 @@ type ParameterGroupParameterInfo struct {
 }
 
 type ParameterGroupParameterSampleInfo struct {
-	ID           string `json:"paramId" example:"123"`
-	DefaultValue string `json:"defaultValue" example:"1"`
+	ID           string `json:"paramId" example:"123" validate:"required,min=1,max=64"`
+	DefaultValue string `json:"defaultValue" example:"1" validate:"required"`
 	Note         string `json:"description" example:"binlog cache size"`
 }

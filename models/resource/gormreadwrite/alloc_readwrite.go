@@ -112,9 +112,9 @@ func (resource *Resource) toCompute() (result *resource_structs.Compute, err err
 		UserName: resource.UserName,
 		Passwd:   resource.Passwd,
 		Location: structs.Location{
-			Region: resource.Region,
-			Zone: resource.AZ,
-			Rack: resource.Rack,
+			Region: structs.GetDomainNameFromCode(resource.Region),
+			Zone: structs.GetDomainNameFromCode(resource.AZ),
+			Rack: structs.GetDomainNameFromCode(resource.Rack),
 			HostIp: resource.Ip,
 		},
 	}

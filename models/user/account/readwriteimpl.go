@@ -34,16 +34,16 @@ func NewAccountReadWrite(db *gorm.DB) *AccountReadWrite {
 	}
 }
 
-func (arw *AccountReadWrite) CreateUser(ctx context.Context, user *User, name, tenantID string) (*User, *UserLogin, *UserTenantRelation, error) {
-	if "" == name || "" == tenantID {
+func (arw *AccountReadWrite) CreateUser(ctx context.Context, user *User, name string) (*User, *UserLogin, *UserTenantRelation, error) {
+	if "" == name {
 		framework.LogWithContext(ctx).Errorf("create user %v, parameter invalid", user)
 		return nil, nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "create user %v, parameter invalid", user)
 	}
 	// query tenant
-	_, err := arw.GetTenant(ctx, tenantID)
+	_, err := arw.GetTenant(ctx, user.CurrentTenantID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("not found tenant %s", tenantID)
-		return nil, nil, nil, errors.NewErrorf(errors.TenantNotExist, "query tenant %s not found", tenantID)
+		framework.LogWithContext(ctx).Errorf("not found tenant %s", user.CurrentTenantID)
+		return nil, nil, nil, errors.NewErrorf(errors.TenantNotExist, "query tenant %s not found", user.CurrentTenantID)
 	}
 
 	// create user
@@ -65,7 +65,7 @@ func (arw *AccountReadWrite) CreateUser(ctx context.Context, user *User, name, t
 	// create user tenant relation
 	relation := &UserTenantRelation{
 		UserID:   user.ID,
-		TenantID: tenantID,
+		TenantID: user.CurrentTenantID,
 	}
 	err = arw.DB(ctx).Create(relation).Error
 	if err != nil {
@@ -128,16 +128,17 @@ func (arw *AccountReadWrite) GetUser(ctx context.Context, userID string) (struct
 	}
 
 	return structs.UserInfo{
-		ID:       user.ID,
-		Creator:  user.Creator,
-		Name:     loginNames,
-		TenantID: tenants,
-		Nickname: user.Name,
-		Email:    user.Email,
-		Phone:    user.Phone,
-		Status:   user.Status,
-		CreateAt: user.CreatedAt,
-		UpdateAt: user.UpdatedAt,
+		ID:              user.ID,
+		CurrentTenantID: user.CurrentTenantID,
+		Creator:         user.Creator,
+		Name:            loginNames,
+		TenantID:        tenants,
+		Nickname:        user.Name,
+		Email:           user.Email,
+		Phone:           user.Phone,
+		Status:          user.Status,
+		CreateAt:        user.CreatedAt,
+		UpdateAt:        user.UpdatedAt,
 	}, nil
 }
 

@@ -21,7 +21,7 @@ import (
 )
 
 type ReaderWriter interface {
-	CreateUser(ctx context.Context, user *User, name, tenantID string) (*User, *UserLogin, *UserTenantRelation, error)
+	CreateUser(ctx context.Context, user *User, name string) (*User, *UserLogin, *UserTenantRelation, error)
 	DeleteUser(ctx context.Context, userID string) error
 	GetUser(ctx context.Context, userID string) (userInfo structs.UserInfo, err error)
 	QueryUsers(ctx context.Context) (userInfos map[string]structs.UserInfo, err error)

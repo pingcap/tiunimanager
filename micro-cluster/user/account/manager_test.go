@@ -40,7 +40,7 @@ func TestManager_CreateUser(t *testing.T) {
 		rw := mockaccount.NewMockReaderWriter(ctrl)
 		models.SetAccountReaderWriter(rw)
 
-		rw.EXPECT().CreateUser(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&account.User{ID: "user01"}, nil, nil, nil)
+		rw.EXPECT().CreateUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(&account.User{ID: "user01"}, nil, nil, nil)
 		ctx := &gin.Context{}
 		ctx.Set(framework.TiEM_X_USER_ID_KEY, "admin")
 		_, err := manager.CreateUser(framework.NewMicroCtxFromGinCtx(ctx), message.CreateUserReq{
@@ -71,7 +71,7 @@ func TestManager_CreateUser(t *testing.T) {
 		rw := mockaccount.NewMockReaderWriter(ctrl)
 		models.SetAccountReaderWriter(rw)
 
-		rw.EXPECT().CreateUser(gomock.Any(), gomock.Any(), gomock.Any(),
+		rw.EXPECT().CreateUser(gomock.Any(), gomock.Any(),
 			gomock.Any()).Return(nil, nil, nil, fmt.Errorf("create user error"))
 		ctx := &gin.Context{}
 		ctx.Set(framework.TiEM_X_USER_ID_KEY, "admin")

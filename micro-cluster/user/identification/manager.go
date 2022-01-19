@@ -90,7 +90,13 @@ func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq)
 		return resp, errors.Error(errors.TIEM_ACCESS_TOKEN_EXPIRED)
 	}
 
+	info, err := models.GetAccountReaderWriter().GetUser(ctx, token.UserID)
+	if err != nil {
+		return resp, err
+	}
+
 	resp.UserID = token.UserID
+	resp.TenantID = info.CurrentTenantID
 
 	return resp, nil
 }

@@ -192,12 +192,13 @@ func (p *database) initSystemData() {
 	// todo determine if default data needed
 	// system admin account
 	user := &account.User{
-		ID:      "admin",
-		Name:    "admin",
-		Creator: "System",
+		ID:              "admin",
+		CurrentTenantID: tenant.ID,
+		Name:            "admin",
+		Creator:         "System",
 	}
 	user.GenSaltAndHash("admin")
-	_, _, _, err = defaultDb.accountReaderWriter.CreateUser(context.TODO(), user, "admin", tenant.ID)
+	_, _, _, err = defaultDb.accountReaderWriter.CreateUser(context.TODO(), user, "admin")
 	if err != nil {
 		framework.LogWithContext(context.TODO()).Errorf("create 'admin' user error: %v", err)
 		return

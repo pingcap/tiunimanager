@@ -27,6 +27,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/pingcap-inc/tiem/models/cluster/management"
+
 	"github.com/pingcap-inc/tiem/util/uuidutil"
 
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -52,7 +54,7 @@ func NewParameterGroupReadWrite(db *gorm.DB) *ParameterGroupReadWrite {
 func (m ParameterGroupReadWrite) CreateParameterGroup(ctx context.Context, pg *ParameterGroup, pgm []*ParameterGroupMapping) (*ParameterGroup, error) {
 	log := framework.LogWithContext(ctx)
 	if pg.Name == "" || pg.ClusterSpec == "" || pg.ClusterVersion == "" {
-		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, errors.TIEM_PARAMETER_INVALID.Explain())
+		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "name or clusterSpec or cluster version is empty")
 	}
 
 	tx := m.DB(ctx).Begin()
@@ -65,7 +67,7 @@ func (m ParameterGroupReadWrite) CreateParameterGroup(ctx context.Context, pg *P
 	if err != nil {
 		log.Errorf("add param group err: %v, request param: %v", err.Error(), pg)
 		tx.Rollback()
-		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_CREATE_ERROR, errors.TIEM_PARAMETER_GROUP_CREATE_ERROR.Explain())
+		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_CREATE_ERROR, err.Error())
 	}
 
 	// batch insert parameter_group_mapping table
@@ -78,7 +80,7 @@ func (m ParameterGroupReadWrite) CreateParameterGroup(ctx context.Context, pg *P
 	if err != nil {
 		log.Errorf("add param group map err: %v, request param map: %v", err.Error(), pgm)
 		tx.Rollback()
-		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_CREATE_ERROR, errors.TIEM_PARAMETER_GROUP_CREATE_ERROR.Explain())
+		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_CREATE_ERROR, err.Error())
 	}
 	tx.Commit()
 	return pg, nil
@@ -87,17 +89,27 @@ func (m ParameterGroupReadWrite) CreateParameterGroup(ctx context.Context, pg *P
 func (m ParameterGroupReadWrite) DeleteParameterGroup(ctx context.Context, parameterGroupId string) (err error) {
 	log := framework.LogWithContext(ctx)
 	if parameterGroupId == "" {
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, errors.TIEM_PARAMETER_INVALID.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "parameter group id is empty")
 	}
-
 	tx := m.DB(ctx).Begin()
 
+	// check if the parameter group manages the cluster
+	var total int64 = 0
+	err = m.DB(ctx).Model(&management.Cluster{}).Count(&total).Where("parameter_group_id = ?", parameterGroupId).Find(&management.Cluster{}).Error
+	if err != nil {
+		log.Errorf("query cluster count err: %v, request param id: %v", err.Error(), parameterGroupId)
+		tx.Rollback()
+		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR, err.Error())
+	}
+	if total > 0 {
+		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_RELATION_CLUSTER_NOT_DEL, "")
+	}
 	// delete parameter_group_mapping table
 	err = m.DB(ctx).Where("parameter_group_id = ?", parameterGroupId).Delete(&ParameterGroupMapping{}).Error
 	if err != nil {
 		log.Errorf("delete param group map err: %v, request param id: %v", err.Error(), parameterGroupId)
 		tx.Rollback()
-		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR, errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR, err.Error())
 	}
 
 	// delete parameter_group table
@@ -105,7 +117,7 @@ func (m ParameterGroupReadWrite) DeleteParameterGroup(ctx context.Context, param
 	if err != nil {
 		log.Errorf("delete param group err: %v, request param id: %v", err.Error(), parameterGroupId)
 		tx.Rollback()
-		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_ERROR, errors.TIEM_PARAMETER_GROUP_DELETE_ERROR.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_ERROR, err.Error())
 	}
 	tx.Commit()
 	return
@@ -115,7 +127,7 @@ func (m ParameterGroupReadWrite) UpdateParameterGroup(ctx context.Context, pg *P
 	log := framework.LogWithContext(ctx)
 
 	if pg.ID == "" {
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, errors.TIEM_PARAMETER_INVALID.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "id is empty")
 	}
 
 	tx := m.DB(ctx).Begin()
@@ -125,7 +137,7 @@ func (m ParameterGroupReadWrite) UpdateParameterGroup(ctx context.Context, pg *P
 	if err != nil {
 		log.Errorf("update param group err: %v, request param: %v", err.Error(), pg)
 		tx.Rollback()
-		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_UPDATE_ERROR, errors.TIEM_PARAMETER_GROUP_UPDATE_ERROR.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_UPDATE_ERROR, err.Error())
 	}
 
 	// range update parameter_group_mapping table
@@ -135,7 +147,7 @@ func (m ParameterGroupReadWrite) UpdateParameterGroup(ctx context.Context, pg *P
 		if err != nil {
 			log.Errorf("update param group map err: %v, request param map: %v", err.Error(), pgm)
 			tx.Rollback()
-			return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_UPDATE_RELATION_PARAM_ERROR, errors.TIEM_PARAMETER_GROUP_UPDATE_RELATION_PARAM_ERROR.Explain())
+			return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_UPDATE_RELATION_PARAM_ERROR, err.Error())
 		}
 	}
 	tx.Commit()
@@ -165,7 +177,7 @@ func (m ParameterGroupReadWrite) QueryParameterGroup(ctx context.Context, name, 
 	err = query.Order("created_at desc").Count(&total).Offset(offset).Limit(size).Find(&groups).Error
 	if err != nil {
 		log.Errorf("list param group err: %v", err.Error())
-		return nil, 0, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_QUERY_ERROR, errors.TIEM_PARAMETER_GROUP_QUERY_ERROR.Explain())
+		return nil, 0, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_QUERY_ERROR, err.Error())
 	}
 	return groups, total, err
 }
@@ -173,7 +185,7 @@ func (m ParameterGroupReadWrite) QueryParameterGroup(ctx context.Context, name, 
 func (m ParameterGroupReadWrite) GetParameterGroup(ctx context.Context, parameterGroupId, parameterName string) (group *ParameterGroup, params []*ParamDetail, err error) {
 	log := framework.LogWithContext(ctx)
 	if parameterGroupId == "" {
-		return nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, errors.TIEM_PARAMETER_INVALID.Explain())
+		return nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "parameter group id is empty")
 	}
 
 	group = &ParameterGroup{}
@@ -181,13 +193,13 @@ func (m ParameterGroupReadWrite) GetParameterGroup(ctx context.Context, paramete
 
 	if err != nil {
 		log.Errorf("get param group err: %v", err.Error())
-		return nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_QUERY_ERROR, errors.TIEM_PARAMETER_GROUP_QUERY_ERROR.Explain())
+		return nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_QUERY_ERROR, err.Error())
 	}
 
 	params, err = m.QueryParametersByGroupId(ctx, parameterGroupId, parameterName)
 	if err != nil {
 		log.Errorf("get param group err: %v", err.Error())
-		return nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, errors.TIEM_PARAMETER_QUERY_ERROR.Explain())
+		return nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, err.Error())
 	}
 	return
 }
@@ -195,14 +207,14 @@ func (m ParameterGroupReadWrite) GetParameterGroup(ctx context.Context, paramete
 func (m ParameterGroupReadWrite) CreateParameter(ctx context.Context, parameter *Parameter) (*Parameter, error) {
 	log := framework.LogWithContext(ctx)
 	if parameter.Category == "" || parameter.Name == "" || parameter.InstanceType == "" {
-		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, errors.TIEM_PARAMETER_INVALID.Explain())
+		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "category or name or instanceType is empty")
 	}
 	// gen id
 	parameter.ID = uuidutil.GenerateID()
 	err := m.DB(ctx).Create(parameter).Error
 	if err != nil {
 		log.Errorf("add param err: %v, request param: %v", err.Error(), parameter)
-		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_CREATE_ERROR, errors.TIEM_PARAMETER_CREATE_ERROR.Explain())
+		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_CREATE_ERROR, err.Error())
 	}
 	return parameter, err
 }
@@ -212,7 +224,7 @@ func (m ParameterGroupReadWrite) DeleteParameter(ctx context.Context, parameterI
 	err = m.DB(ctx).Where("id = ?", parameterId).Delete(&Parameter{}).Error
 	if err != nil {
 		log.Errorf("delete param err: %v, request param id: %v", err.Error(), parameterId)
-		return errors.NewErrorf(errors.TIEM_PARAMETER_CREATE_ERROR, errors.TIEM_PARAMETER_CREATE_ERROR.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_CREATE_ERROR, err.Error())
 	}
 	return nil
 }
@@ -221,15 +233,27 @@ func (m ParameterGroupReadWrite) UpdateParameter(ctx context.Context, parameter 
 	log := framework.LogWithContext(ctx)
 
 	if parameter.ID == "" {
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, errors.TIEM_PARAMETER_INVALID.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "parameter id is empty")
 	}
 
 	err = m.DB(ctx).Where("id = ?", parameter.ID).Updates(parameter).Error
 	if err != nil {
 		log.Errorf("update param err: %v, request param id: %v, param object: %v", err.Error(), parameter.ID, parameter)
-		return errors.NewErrorf(errors.TIEM_PARAMETER_UPDATE_ERROR, errors.TIEM_PARAMETER_UPDATE_ERROR.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_UPDATE_ERROR, err.Error())
 	}
 	return err
+}
+
+func (m ParameterGroupReadWrite) QueryParameters(ctx context.Context, offset, size int) (params []*Parameter, total int64, err error) {
+	params = make([]*Parameter, 0)
+	log := framework.LogWithContext(ctx)
+
+	err = m.DB(ctx).Model(&Parameter{}).Count(&total).Offset(offset).Limit(size).Find(&params).Error
+	if err != nil {
+		log.Errorf("list parameters err: %v", err.Error())
+		return nil, 0, errors.NewErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, err.Error())
+	}
+	return params, total, err
 }
 
 func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, parameterGroupId, parameterName string) (params []*ParamDetail, err error) {
@@ -238,7 +262,7 @@ func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, p
 	query := m.DB(ctx).Model(&Parameter{}).
 		Select("parameters.id, parameters.category, parameters.name, parameters.instance_type, parameters.system_variable, "+
 			"parameters.type, parameters.unit, parameters.range, parameters.has_reboot, parameters.has_apply, "+
-			"parameters.update_source, parameters.description, parameter_group_mappings.default_value, parameter_group_mappings.note, "+
+			"parameters.update_source, parameters.read_only, parameters.description, parameter_group_mappings.default_value, parameter_group_mappings.note, "+
 			"parameter_group_mappings.created_at, parameter_group_mappings.updated_at").
 		Joins("left join parameter_group_mappings on parameters.id = parameter_group_mappings.parameter_id").
 		Where("parameter_group_mappings.parameter_group_id = ?", parameterGroupId)
@@ -252,7 +276,7 @@ func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, p
 		Scan(&params).Error
 	if err != nil {
 		log.Errorf("query parameters by group id err: %v", err.Error())
-		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, errors.TIEM_PARAMETER_QUERY_ERROR.Explain())
+		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, err.Error())
 	}
 	return
 }
@@ -263,7 +287,7 @@ func (m ParameterGroupReadWrite) GetParameter(ctx context.Context, parameterId s
 	err = m.DB(ctx).Where("id = ?", parameterId).First(&parameter).Error
 	if err != nil {
 		log.Errorf("load param err: %v, request param id: %v", err.Error(), parameterId)
-		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_DETAIL_ERROR, errors.TIEM_PARAMETER_DETAIL_ERROR.Explain())
+		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_DETAIL_ERROR, err.Error())
 	}
 	return parameter, err
 }

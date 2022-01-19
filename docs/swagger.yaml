@@ -1817,6 +1817,12 @@ definitions:
         items:
           type: string
         type: array
+      readOnly:
+        enum:
+        - 0
+        - 1
+        example: 0
+        type: integer
       realValue:
         $ref: '#/definitions/structs.ParameterRealValue'
       systemVariable:
@@ -2109,6 +2115,12 @@ definitions:
         items:
           type: string
         type: array
+      readOnly:
+        enum:
+        - 0
+        - 1
+        example: 0
+        type: integer
       systemVariable:
         example: log.log_level
         type: string

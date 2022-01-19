@@ -235,7 +235,7 @@ func TestExecutor_validationParameters(t *testing.T) {
 
 func TestExecutor_validateRange(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		validated := validateRange(ModifyClusterParameterInfo{
+		validated := ValidateRange(ModifyClusterParameterInfo{
 			ParamId:        "1",
 			Name:           "test_param_1",
 			InstanceType:   "TiDB",
@@ -248,7 +248,7 @@ func TestExecutor_validateRange(t *testing.T) {
 		})
 		assert.EqualValues(t, true, validated)
 
-		validated = validateRange(ModifyClusterParameterInfo{
+		validated = ValidateRange(ModifyClusterParameterInfo{
 			ParamId:        "2",
 			Name:           "test_param_2",
 			InstanceType:   "TiDB",
@@ -261,7 +261,7 @@ func TestExecutor_validateRange(t *testing.T) {
 		})
 		assert.EqualValues(t, true, validated)
 
-		validated = validateRange(ModifyClusterParameterInfo{
+		validated = ValidateRange(ModifyClusterParameterInfo{
 			ParamId:        "3",
 			Name:           "test_param_3",
 			InstanceType:   "TiDB",
@@ -274,7 +274,7 @@ func TestExecutor_validateRange(t *testing.T) {
 		})
 		assert.EqualValues(t, true, validated)
 
-		validated = validateRange(ModifyClusterParameterInfo{
+		validated = ValidateRange(ModifyClusterParameterInfo{
 			ParamId:        "4",
 			Name:           "test_param_4",
 			InstanceType:   "TiDB",
@@ -286,7 +286,7 @@ func TestExecutor_validateRange(t *testing.T) {
 			RealValue:      structs.ParameterRealValue{ClusterValue: "3.14"},
 		})
 
-		validated = validateRange(ModifyClusterParameterInfo{
+		validated = ValidateRange(ModifyClusterParameterInfo{
 			ParamId:        "5",
 			Name:           "test_param_5",
 			InstanceType:   "TiDB",

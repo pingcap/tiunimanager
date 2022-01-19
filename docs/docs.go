@@ -8275,6 +8275,14 @@ var doc = `{
                         " 1000"
                     ]
                 },
+                "readOnly": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "example": 0
+                },
                 "realValue": {
                     "$ref": "#/definitions/structs.ParameterRealValue"
                 },
@@ -8691,6 +8699,14 @@ var doc = `{
                         "1",
                         " 1000"
                     ]
+                },
+                "readOnly": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "example": 0
                 },
                 "systemVariable": {
                     "type": "string",

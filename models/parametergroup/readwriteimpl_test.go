@@ -26,6 +26,8 @@ package parametergroup
 import (
 	"context"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParameterGroupReadWrite_CreateParameterGroup(t *testing.T) {
@@ -905,6 +907,50 @@ func TestParameterGroupReadWrite_GetParameter(t *testing.T) {
 			for i, assert := range tt.wants {
 				if !assert(tt.args, param) {
 					t.Errorf("GetParameter() test error, testname = %v, assert %v, args = %v, got param = %v", tt.name, i, tt.args, param)
+				}
+			}
+		})
+	}
+}
+
+func TestParameterGroupReadWrite_QueryParameter(t *testing.T) {
+	_, err := buildParams(2)
+	if err != nil {
+		t.Errorf("TestParameterGroupReadWrite_QueryParameter() test error, build params err.")
+		return
+	}
+
+	type args struct{}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+		wants   []func(a args, p []*Parameter) bool
+	}{
+		{
+			"normal",
+			args{},
+			false,
+			[]func(a args, p []*Parameter) bool{
+				func(a args, p []*Parameter) bool { return len(p) > 0 },
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			params, total, err := testRW.QueryParameters(context.TODO(), 0, 10)
+			assert.True(t, int(total) > 0)
+			if err != nil {
+				if tt.wantErr {
+					return
+				}
+				t.Errorf("QueryParameters() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			for i, assert := range tt.wants {
+				if !assert(tt.args, params) {
+					t.Errorf("QueryParameters() test error, testname = %v, assert %v, args = %v, got params = %v", tt.name, i, tt.args, params)
 				}
 			}
 		})

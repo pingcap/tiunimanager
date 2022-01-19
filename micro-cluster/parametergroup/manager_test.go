@@ -68,6 +68,18 @@ func TestManager_CreateParameterGroup(t *testing.T) {
 
 	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
 	models.SetParameterGroupReaderWriter(parameterGroupRW)
+	parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, offset, size int) (params []*parametergroup.Parameter, total int64, err error) {
+			resp := []*parametergroup.Parameter{
+				{
+					ID:    "1",
+					Type:  0,
+					Unit:  "",
+					Range: "[\"0\", \"10\"]",
+				},
+			}
+			return resp, 1, nil
+		})
 	parameterGroupRW.EXPECT().CreateParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
 		DoAndReturn(func(ctx context.Context, pg *parametergroup.ParameterGroup, pgm []*parametergroup.ParameterGroupMapping) (*parametergroup.ParameterGroup, error) {
 			resp := &parametergroup.ParameterGroup{
@@ -113,6 +125,18 @@ func TestManager_UpdateParameterGroup_Success(t *testing.T) {
 	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
 	models.SetParameterGroupReaderWriter(parameterGroupRW)
 
+	parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, offset, size int) (params []*parametergroup.Parameter, total int64, err error) {
+			resp := []*parametergroup.Parameter{
+				{
+					ID:    "1",
+					Type:  0,
+					Unit:  "",
+					Range: "[\"0\", \"10\"]",
+				},
+			}
+			return resp, 1, nil
+		})
 	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
 		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 			return &parametergroup.ParameterGroup{ID: "1"}, nil, nil
@@ -146,7 +170,7 @@ func TestManager_UpdateParameterGroup_Error1(t *testing.T) {
 
 	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
 	models.SetParameterGroupReaderWriter(parameterGroupRW)
-
+	parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
 		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 			return &parametergroup.ParameterGroup{ID: "1", HasDefault: 1}, nil, nil
@@ -174,7 +198,7 @@ func TestManager_UpdateParameterGroup_Error2(t *testing.T) {
 
 	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
 	models.SetParameterGroupReaderWriter(parameterGroupRW)
-
+	parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
 		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 			return &parametergroup.ParameterGroup{ID: "", HasDefault: 1}, nil, nil
@@ -410,4 +434,92 @@ func TestManager_CopyParameterGroup_Error2(t *testing.T) {
 		Note:         "default parameter group",
 	})
 	assert.Error(t, err)
+}
+
+func TestManager_validateParameter(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+	models.SetParameterGroupReaderWriter(parameterGroupRW)
+	t.Run("normal", func(t *testing.T) {
+		parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, offset, size int) (params []*parametergroup.Parameter, total int64, err error) {
+				resp := []*parametergroup.Parameter{
+					{
+						ID:    "1",
+						Type:  0,
+						Unit:  "",
+						Range: "[\"0\", \"10\"]",
+					},
+				}
+				return resp, 1, nil
+			})
+		err := validateParameter(context.TODO(), []structs.ParameterGroupParameterSampleInfo{
+			{
+				ID:           "1",
+				DefaultValue: "5",
+				Note:         "test",
+			},
+		})
+		assert.NoError(t, err)
+	})
+	t.Run("query parameters error", func(t *testing.T) {
+		parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, offset, size int) (params []*parametergroup.Parameter, total int64, err error) {
+				return nil, 1, errors.New("query parameters error")
+			})
+		err := validateParameter(context.TODO(), []structs.ParameterGroupParameterSampleInfo{
+			{
+				ID:           "1",
+				DefaultValue: "5",
+				Note:         "test",
+			},
+		})
+		assert.Error(t, err)
+	})
+	t.Run("range validate error", func(t *testing.T) {
+		parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, offset, size int) (params []*parametergroup.Parameter, total int64, err error) {
+				resp := []*parametergroup.Parameter{
+					{
+						ID:    "1",
+						Type:  0,
+						Unit:  "",
+						Range: "[\"0\", \"10\"]",
+					},
+				}
+				return resp, 1, nil
+			})
+		err := validateParameter(context.TODO(), []structs.ParameterGroupParameterSampleInfo{
+			{
+				ID:           "1",
+				DefaultValue: "20",
+				Note:         "test",
+			},
+		})
+		assert.Error(t, err)
+	})
+	t.Run("range validate error 2", func(t *testing.T) {
+		parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, offset, size int) (params []*parametergroup.Parameter, total int64, err error) {
+				resp := []*parametergroup.Parameter{
+					{
+						ID:    "1",
+						Type:  0,
+						Unit:  "",
+						Range: "[\"10\"]",
+					},
+				}
+				return resp, 1, nil
+			})
+		err := validateParameter(context.TODO(), []structs.ParameterGroupParameterSampleInfo{
+			{
+				ID:           "1",
+				DefaultValue: "20",
+				Note:         "test",
+			},
+		})
+		assert.Error(t, err)
+	})
 }

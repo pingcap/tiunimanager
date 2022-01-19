@@ -188,7 +188,7 @@ func (rw *GormResourceReadWrite) allocResourceWithRR(ctx context.Context, tx *go
 	} else {
 		var count int64
 		db := tx.Order("hosts.free_cpu_cores desc").Order("hosts.free_memory desc").Limit(int(require.Count)).Model(&rp.Host{}).Select(
-			"id as host_id, host_name, ip, user_name, passwd, ? as cpu_cores, ? as memory", reqCores, reqMem).Where("reserved = 0")
+			"id as host_id, host_name, ip, region, az, rack, user_name, passwd, ? as cpu_cores, ? as memory", reqCores, reqMem).Where("reserved = 0")
 		if excludedHosts == nil {
 			db.Count(&count)
 		} else {
@@ -306,7 +306,7 @@ func (rw *GormResourceReadWrite) allocResourceInHost(ctx context.Context, tx *go
 			}
 		}
 	} else {
-		db := tx.Model(&rp.Host{}).Select("id as host_id, host_name, ip, user_name, passwd, ? as cpu_cores, ? as memory", reqCores, reqMem).Where("ip = ?", hostIp).Count(&count)
+		db := tx.Model(&rp.Host{}).Select("id as host_id, host_name, region, az, rack, ip, user_name, passwd, ? as cpu_cores, ? as memory", reqCores, reqMem).Where("ip = ?", hostIp).Count(&count)
 		// No Limit in Reserved == false in this strategy for a takeover operation
 		if !isTakeOver {
 			db = db.Where("hosts.reserved = 0").Count(&count)

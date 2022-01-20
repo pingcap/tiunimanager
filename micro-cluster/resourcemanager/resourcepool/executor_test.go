@@ -221,17 +221,9 @@ func Test_CheckHostBeforeDeleted_Succeed(t *testing.T) {
 	models.MockDB()
 	resourcePool := GetResourcePool()
 
-	// Mock host initiator
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockProvider := mock_provider.NewMockHostProvider(ctrl)
-	mockProvider.EXPECT().QueryHosts(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.HostInfo{*genHostInfo("Test_Host1")}, int64(1), nil)
-
-	resourcePool.SetHostProvider(mockProvider)
-
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
-	flowContext.SetData(rp_consts.ContextHostIDArrayKey, []string{"fake-host-id"})
+	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{ID: "fake-host-id", HostName: "Test_Host1", IP: "192.199.254.22", Status: string(constants.HostOnline), Stat: string(constants.HostLoadLoadLess)}})
 
 	var node workflowModel.WorkFlowNode
 	err := checkHostBeforeDelete(&node, flowContext)
@@ -248,19 +240,10 @@ func Test_CheckHostBeforeDeleted_Fail(t *testing.T) {
 	models.MockDB()
 	resourcePool := GetResourcePool()
 
-	// Mock host initiator
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockProvider := mock_provider.NewMockHostProvider(ctrl)
-	host := genHostInfo("Test_Host1")
-	host.Stat = string(constants.HostLoadInUsed)
-	mockProvider.EXPECT().QueryHosts(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.HostInfo{*host}, int64(1), nil)
-
-	resourcePool.SetHostProvider(mockProvider)
-
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
 	flowContext.SetData(rp_consts.ContextHostIDArrayKey, []string{"fake-host-id"})
+	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{ID: "fake-host-id", HostName: "Test_Host1", IP: "192.199.254.22", Status: string(constants.HostOnline), Stat: string(constants.HostLoadInUsed)}})
 
 	var node workflowModel.WorkFlowNode
 	err := checkHostBeforeDelete(&node, flowContext)

@@ -16,8 +16,8 @@
 package template
 
 var EMClusterCheck = `
- tidb_servers:
- {{ range .TemplateItemsForCompute }}
+tidb_servers:
+{{ range .TemplateItemsForCompute }}
   - host: {{ .HostIP }}
     deploy_dir: {{ .DeployDir }}
     port: {{ .Port1 }}
@@ -36,7 +36,7 @@ pd_servers:
   - host: {{ .HostIP }}
     data_dir: {{ .DataDir }}
     deploy_dir: {{ .DeployDir }}
-    port: {{ .Port1 }}
-    status_port: {{ .Port2 }}
+    client_port: {{ .Port1 }}
+    peer_port: {{ .Port2 }}
 {{ end }}
  `

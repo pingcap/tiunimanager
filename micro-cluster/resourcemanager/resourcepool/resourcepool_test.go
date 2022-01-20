@@ -98,7 +98,7 @@ func Test_SelectDeleteFlowName(t *testing.T) {
 		want     want
 	}{
 		{"DeleteFlow", &structs.HostInfo{IP: "192.168.6.6", Status: string(constants.HostOnline)}, false, want{rp_consts.FlowDeleteHosts}},
-		{"DeleteFailHostFlow", &structs.HostInfo{IP: "192.168.6.6", Status: string(constants.HostFailed)}, false, want{rp_consts.FlowDeleteHosts}},
+		{"DeleteFailHostFlow", &structs.HostInfo{IP: "192.168.6.6", Status: string(constants.HostFailed)}, false, want{rp_consts.FlowDeleteHostsByForce}},
 		{"DeleteFlowByForce", &structs.HostInfo{IP: "192.168.6.6", Status: string(constants.HostOnline)}, true, want{rp_consts.FlowDeleteHostsByForce}},
 	}
 	for _, tt := range tests {
@@ -153,6 +153,11 @@ func Test_DeleteHosts(t *testing.T) {
 	defer ctrl1.Finish()
 	mockProvider := mock_provider.NewMockHostProvider(ctrl1)
 	mockProvider.EXPECT().UpdateHostStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	mockProvider.EXPECT().QueryHosts(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+		[]structs.HostInfo{{ID: "hostId", Status: string(constants.HostOnline), Stat: string(constants.HostLoadLoadLess)}},
+		int64(1),
+		nil,
+	).Times(3)
 	resourcePool.SetHostProvider(mockProvider)
 
 	ctrl2 := gomock.NewController(t)
@@ -166,7 +171,7 @@ func Test_DeleteHosts(t *testing.T) {
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, flow *workflow.WorkFlowAggregation) error {
 		return nil
 	}).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(6)
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(9)
 
 	flowIds, err := resourcePool.DeleteHosts(context.TODO(), []string{"hostId1", "hostId2", "hostId3"}, false)
 	assert.Equal(t, 3, len(flowIds))

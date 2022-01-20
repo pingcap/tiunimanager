@@ -179,7 +179,7 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 	var flows []*workflow.WorkFlowAggregation
 	flowManager := workflow.GetWorkFlowService()
 	for _, hostId := range hostIds {
-		hosts, _, err := resourcePool.QueryHosts(ctx, &structs.Location{}, &structs.HostFilter{HostID: hostId}, &structs.PageRequest{})
+		hosts, _, err := p.QueryHosts(ctx, &structs.Location{}, &structs.HostFilter{HostID: hostId}, &structs.PageRequest{})
 		if err != nil {
 			errMsg := fmt.Sprintf("query host %v failed, %v", hostId, err)
 			framework.LogWithContext(ctx).Errorln(errMsg)

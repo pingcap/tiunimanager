@@ -204,8 +204,6 @@ func checkHostBeforeDelete(node *workflowModel.WorkFlowNode, ctx *workflow.FlowC
 	}
 	log.Infof("check host %s before delete succeed", hosts[0].ID)
 
-	// Set host info to context for leave em cluster executor
-	ctx.SetData(rp_consts.ContextHostInfoArrayKey, hosts)
 	node.Record(fmt.Sprintf("check host %s before delete ", hosts[0].ID))
 
 	return nil

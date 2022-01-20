@@ -18,7 +18,6 @@ package management
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"strconv"
 
 	"github.com/pingcap-inc/tiem/common/errors"

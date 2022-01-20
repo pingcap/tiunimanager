@@ -895,6 +895,11 @@ type TiDBUserInfo struct {
 // @return BDUser
 func (p *ClusterMeta) GetDBUserNamePassword(ctx context.Context, roleType constants.DBUserRoleType) (*management.DBUser, error) {
 	user := p.DBUsers[string(roleType)]
+	if user == nil {
+		msg := fmt.Sprintf("get %s user from cluser %s failed, empty user", roleType, p.Cluster.ID)
+		framework.LogWithContext(ctx).Errorf(msg)
+		return user, errors.NewError(errors.TIEM_USER_NOT_FOUND, msg)
+	}
 	return user, nil
 }
 

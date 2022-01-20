@@ -109,7 +109,6 @@ func (g *ClusterReadWrite) GetMeta(ctx context.Context, clusterID string) (clust
 		return
 	}
 
-	users = make([]*DBUser, 0)
 	users, err = g.GetDBUser(ctx, clusterID)
 	if err != nil {
 		err = dbCommon.WrapDBError(err)
@@ -183,8 +182,11 @@ func (g *ClusterReadWrite) QueryMetas(ctx context.Context, filters Filters, page
 			return nil, page, err
 		}
 
-		users := make([]*DBUser, 0)
-		users, err = g.GetDBUser(ctx, c.ID)
+		users, err := g.GetDBUser(ctx, c.ID)
+		if err != nil {
+			err = dbCommon.WrapDBError(err)
+			return nil, page, err
+		}
 		results = append(results, &Result{
 			Cluster:   c,
 			Instances: instances,
@@ -344,7 +346,7 @@ func (g *ClusterReadWrite) CreateClusterTopologySnapshot(ctx context.Context, sn
 		return errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
 	}
 	if len(snapshot.PrivateKey) == 0 || len(snapshot.PublicKey) == 0 {
-		errInfo := fmt.Sprintf("CreateClusterTopologySnapshot failed : connection key required")
+		errInfo := "CreateClusterTopologySnapshot failed : connection key required"
 		framework.LogWithContext(ctx).Error(errInfo)
 		return errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
 	}
@@ -373,6 +375,7 @@ func (g *ClusterReadWrite) UpdateTopologySnapshotConfig(ctx context.Context, clu
 		errInfo := "update cluster topology snapshot failed : record not found"
 		framework.LogWithContext(ctx).Error(errInfo)
 		err = errors.NewError(errors.TIEM_CLUSTER_NOT_FOUND, errInfo)
+		return err
 	}
 	snapshot.Config = config
 

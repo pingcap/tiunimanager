@@ -489,7 +489,6 @@ func TestProductManager_QueryProductDetail(t *testing.T) {
 		InternalProduct: constants.EMInternalProductNo,
 	}
 	t.Run("QueryProductDetail", func(t *testing.T) {
-
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
 
@@ -497,71 +496,7 @@ func TestProductManager_QueryProductDetail(t *testing.T) {
 			Product    structs.Product
 			Components []structs.ProductComponentProperty
 		}
-		args := []Args{
-			{Product: products[0], Components: TiDBALIYUNHZX8650Components},
-			{Product: products[1], Components: TiDBALIYUNHZARM6451Components}}
-
 		Products := make(map[string]structs.ProductDetail)
-		for _, arg := range args {
-			var ok bool
-			var detail structs.ProductDetail
-			var productVersion structs.ProductVersion
-			var productComponentInfo structs.ProductComponentProperty
-			var components map[string]structs.ProductComponentProperty
-			info := arg.Product
-			detail, ok = Products[info.ID]
-			if !ok {
-				Products[info.ID] = structs.ProductDetail{ID: info.ID, Name: info.Name, Versions: make(map[string]structs.ProductVersion)}
-				detail, _ = Products[info.ID]
-			}
-
-			//Query whether the product version information is already in Versions,
-			//if it already exists, then directly modify the relevant data structure
-			productVersion, ok = detail.Versions[info.Version]
-			if !ok {
-				detail.Versions[info.Version] = structs.ProductVersion{Version: info.Version, Arch: make(map[string]map[string]structs.ProductComponentProperty)}
-				productVersion, _ = detail.Versions[info.Version]
-			}
-
-			//Query whether the product arch information is already in archs,
-			//if it already exists, then directly modify the relevant data structure
-			components, ok = productVersion.Arch[info.Arch]
-			if !ok {
-				productVersion.Arch[info.Arch] = make(map[string]structs.ProductComponentProperty)
-				components, _ = productVersion.Arch[info.Arch]
-			}
-
-			for _, item := range arg.Components {
-				productComponentInfo, ok = components[item.ID]
-				if !ok {
-					components[item.ID] = structs.ProductComponentProperty{ID: item.ID, Name: item.Name, PurposeType: item.PurposeType,
-						StartPort: item.StartPort, EndPort: item.EndPort, MaxPort: item.MaxPort, MinInstance: item.MinInstance, MaxInstance: item.MaxInstance, Spec: make(map[string]structs.ComponentInstanceResourceSpec)}
-					productComponentInfo, _ = components[item.ID]
-
-					var tmpSpecs []structs.SpecInfo
-
-					if item.PurposeType == string(constants.PurposeSchedule) {
-						tmpSpecs = scheduleSpecs
-					} else if item.PurposeType == string(constants.PurposeCompute) {
-						tmpSpecs = computeSpecs
-					} else if item.PurposeType == string(constants.PurposeStorage) {
-						tmpSpecs = storageSpecs
-					}
-					for _, ss := range tmpSpecs {
-						_, ok = productComponentInfo.Spec[ss.ID]
-						if !ok {
-							productComponentInfo.Spec[ss.ID] = structs.ComponentInstanceResourceSpec{
-								ID:       ss.ID,
-								Name:     ss.Name,
-								CPU:      ss.CPU,
-								Memory:   ss.Memory,
-								DiskType: ss.DiskType,
-							}
-						}
-					}
-				}
-			}
-		}
 
 		prw.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(Products, nil).AnyTimes()
 		resp, err := mgr.QueryProductDetail(context.TODO(), msg)

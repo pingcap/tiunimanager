@@ -686,13 +686,13 @@ func TestProductReadWriter_DeleteProduct(t *testing.T) {
 }
 
 func TestProductReadWriter_QueryProductDetail(t *testing.T) {
+
 	t.Run("QueryProductDetailWithEmptyParameter", func(t *testing.T) {
 		_, err := prw.QueryProductDetail(context.TODO(), "", "", "", constants.ProductStatusOffline, constants.EMInternalProductYes)
 		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
 
 	t.Run("QueryProductDetail", func(t *testing.T) {
-		//init specs
 		var specs []Spec
 		specs = append(specs, StorageSpecs...)
 		specs = append(specs, ComputeSpecs...)
@@ -705,13 +705,14 @@ func TestProductReadWriter_QueryProductDetail(t *testing.T) {
 		assert.NoError(t, err)
 
 		//storage all products
-		Products := make(map[string]structs.ProductDetail)
 
 		TiDBHZ50X8664 := Product{VendorID: AliYun, RegionID: CNHangzhou, ProductID: TiDB, Version: TiDBVersion50, Arch: string(constants.ArchX8664), Status: string(constants.ProductStatusOnline), Internal: constants.EMInternalProductNo}
 		TiDBHZ51ARM64 := Product{VendorID: AliYun, RegionID: CNHangzhou, ProductID: TiDB, Version: TiDBVersion51, Arch: string(constants.ArchArm64), Status: string(constants.ProductStatusOnline), Internal: constants.EMInternalProductNo}
 		TiDBBJ50X8664 := Product{VendorID: AliYun, RegionID: CNBeijing, ProductID: TiDB, Version: TiDBVersion50, Arch: string(constants.ArchX8664), Status: string(constants.ProductStatusOnline), Internal: constants.EMInternalProductNo}
 		TiDBBJ51X8664 := Product{VendorID: AliYun, RegionID: CNBeijing, ProductID: TiDB, Version: TiDBVersion51, Arch: string(constants.ArchX8664), Status: string(constants.ProductStatusOnline), Internal: constants.EMInternalProductNo}
 		EMHHZ10X8664 := Product{VendorID: AliYun, RegionID: CNHangzhou, ProductID: EnterpriseManager, Version: EnterpriseManagerVersion, Arch: string(constants.ArchX8664), Status: string(constants.ProductStatusOnline), Internal: constants.EMInternalProductYes}
+
+		//init specs
 		type Args struct {
 			Product    Product
 			Components []ProductComponent
@@ -725,156 +726,21 @@ func TestProductReadWriter_QueryProductDetail(t *testing.T) {
 		for _, arg := range args {
 			err = prw.CreateProduct(context.TODO(), arg.Product, arg.Components)
 			assert.NoError(t, err)
-			var ok bool
-			var detail structs.ProductDetail
-			var productVersion structs.ProductVersion
-			var productComponentInfo structs.ProductComponentProperty
-			var components map[string]structs.ProductComponentProperty
-			info := arg.Product
-			if err == nil {
-				detail, ok = Products[info.ProductID]
-				if !ok {
-					Products[info.ProductID] = structs.ProductDetail{ID: info.ProductID, Name: info.Name, Versions: make(map[string]structs.ProductVersion)}
-					detail, _ = Products[info.ProductID]
-				}
 
-				//Query whether the product version information is already in Versions,
-				//if it already exists, then directly modify the relevant data structure
-				productVersion, ok = detail.Versions[info.Version]
-				if !ok {
-					detail.Versions[info.Version] = structs.ProductVersion{Version: info.Version, Arch: make(map[string]map[string]structs.ProductComponentProperty)}
-					productVersion, _ = detail.Versions[info.Version]
-				}
-
-				//Query whether the product arch information is already in archs,
-				//if it already exists, then directly modify the relevant data structure
-				components, ok = productVersion.Arch[info.Arch]
-				if !ok {
-					productVersion.Arch[info.Arch] = make(map[string]structs.ProductComponentProperty)
-					components, _ = productVersion.Arch[info.Arch]
-				}
-
-				for _, item := range arg.Components {
-					productComponentInfo, ok = components[item.ComponentID]
-					if !ok {
-						components[item.ComponentID] = structs.ProductComponentProperty{ID: item.ComponentID, Name: item.Name, PurposeType: item.PurposeType,
-							StartPort: item.StartPort, EndPort: item.EndPort, MaxPort: item.MaxPort, MinInstance: item.MinInstance, MaxInstance: item.MaxInstance, Spec: make(map[string]structs.ComponentInstanceResourceSpec)}
-						productComponentInfo, _ = components[item.ComponentID]
-
-						var tmpSpecs []Spec
-
-						if item.PurposeType == string(constants.PurposeSchedule) {
-							tmpSpecs = ScheduleSpecs
-						} else if item.PurposeType == string(constants.PurposeCompute) {
-							tmpSpecs = ComputeSpecs
-						} else if item.PurposeType == string(constants.PurposeStorage) {
-							tmpSpecs = StorageSpecs
-						} else {
-							assert.FailNow(t, "invalid purpose type: %s", item.PurposeType)
-						}
-						for _, ss := range tmpSpecs {
-							_, ok = productComponentInfo.Spec[ss.ID]
-							if !ok {
-								productComponentInfo.Spec[ss.ID] = structs.ComponentInstanceResourceSpec{
-									ID:       ss.ID,
-									Name:     ss.Name,
-									CPU:      ss.CPU,
-									Memory:   ss.Memory,
-									DiskType: ss.DiskType,
-								}
-							}
-						}
-					}
-				}
-			}
 		}
 
 		actualDetail, er := prw.QueryProductDetail(context.TODO(), AliYun, CNHangzhou, TiDB, constants.ProductStatusOnline, constants.EMInternalProductNo)
 		assert.NoError(t, er)
+		assert.Equal(t, 1, len(actualDetail))
+
 		actualBJDetail, e := prw.QueryProductDetail(context.TODO(), AliYun, CNBeijing, TiDB, constants.ProductStatusOnline, constants.EMInternalProductNo)
 		assert.NoError(t, e)
-		assert.Equal(t, 1, len(actualDetail))
+		assert.Equal(t, 1, len(actualBJDetail))
+
 		EMDetail, er := prw.QueryProductDetail(context.TODO(), AliYun, CNHangzhou, EnterpriseManager, constants.ProductStatusOnline, constants.EMInternalProductYes)
+		assert.NoError(t, er)
+		assert.Equal(t, 1, len(EMDetail))
 
-		for key, value := range actualBJDetail {
-			detail, bok := actualDetail[key]
-			if !bok {
-				actualDetail[key] = value
-				detail, _ = actualDetail[key]
-			}
-			for vkey, vvalue := range value.Versions {
-				version, vok := detail.Versions[vkey]
-				if !vok {
-					detail.Versions[vkey] = vvalue
-					version = detail.Versions[vkey]
-				}
-
-				for akey, avalue := range vvalue.Arch {
-					_, aok := version.Arch[akey]
-					if !aok {
-						version.Arch[akey] = avalue
-					}
-				}
-			}
-		}
-
-		for key, value := range EMDetail {
-			_, bok := actualDetail[key]
-			if !bok {
-				actualDetail[key] = value
-			}
-		}
-		assert.Equal(t, len(Products), len(actualDetail))
-
-		/*pjson,_ := json.Marshal(Products)
-		ajson,_ := json.Marshal(actualDetail)
-		fmt.Printf("pjosn:%s\n",pjson)
-		fmt.Printf("ajosn:%s\n",ajson)*/
-
-		for key, value := range actualDetail {
-			detail, bok := Products[key]
-			assert.Equal(t, true, bok)
-			assert.Equal(t, detail.ID, value.ID)
-			assert.Equal(t, detail.Name, value.Name)
-			assert.Equal(t, len(detail.Versions), len(value.Versions))
-
-			for vkey, vvalue := range value.Versions {
-				version, vok := detail.Versions[vkey]
-				assert.Equal(t, true, vok)
-				assert.Equal(t, version.Version, vvalue.Version)
-				assert.Equal(t, len(version.Arch), len(vvalue.Arch))
-
-				for akey, avalue := range vvalue.Arch {
-					arch, aok := version.Arch[akey]
-					assert.Equal(t, true, aok)
-					assert.Equal(t, len(arch), len(avalue))
-
-					for ckey, cvalue := range avalue {
-						component, cok := arch[ckey]
-						assert.Equal(t, true, cok)
-						assert.Equal(t, component.ID, cvalue.ID)
-						assert.Equal(t, component.Name, cvalue.Name)
-						assert.Equal(t, component.PurposeType, cvalue.PurposeType)
-						assert.Equal(t, component.EndPort, cvalue.EndPort)
-						assert.Equal(t, component.MaxInstance, cvalue.MaxInstance)
-						assert.Equal(t, component.MinInstance, cvalue.MinInstance)
-						assert.Equal(t, component.MaxPort, cvalue.MaxPort)
-						assert.Equal(t, component.StartPort, cvalue.StartPort)
-						assert.Equal(t, len(component.Spec), len(cvalue.Spec))
-
-						for skey, svalue := range cvalue.Spec {
-							spec, sok := component.Spec[skey]
-							assert.Equal(t, true, sok)
-							assert.Equal(t, spec.ID, svalue.ID)
-							assert.Equal(t, spec.Name, svalue.Name)
-							assert.Equal(t, spec.CPU, svalue.CPU)
-							assert.Equal(t, spec.Memory, svalue.Memory)
-							assert.Equal(t, spec.DiskType, svalue.DiskType)
-						}
-					}
-				}
-			}
-		}
 		prw.DB(context.TODO()).Exec("DELETE FROM specs")
 		prw.DB(context.TODO()).Exec("DELETE FROM product_components")
 		prw.DB(context.TODO()).Exec("DELETE FROM products")

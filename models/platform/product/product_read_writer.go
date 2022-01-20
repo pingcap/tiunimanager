@@ -353,19 +353,19 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			//if it already exists, then directly modify the relevant data structure
 
 			componentExisted := false
-			for i, v := range components {
-				if v.ID == info.ID {
+			for i, _ := range components {
+				if components[i].ID == info.ID {
 					componentExisted = true
 					zoneExisted := false
-					for _, z := range v.AvailableZones {
-						if spec.ZoneID == z.ZoneID {
-							z.Specs = append(z.Specs, spec)
+					for j, _ := range components[i].AvailableZones {
+						if spec.ZoneID == components[i].AvailableZones[j].ZoneID {
+							components[i].AvailableZones[j].Specs = append(components[i].AvailableZones[j].Specs, spec)
 							zoneExisted = true
 							break
 						}
 					}
 					if !zoneExisted {
-						components[i].AvailableZones = append(v.AvailableZones, structs.ComponentInstanceZoneWithSpecs{ZoneID: spec.ZoneID, ZoneName: spec.ZoneName, Specs: []structs.ComponentInstanceResourceSpec{spec}})
+						components[i].AvailableZones = append(components[i].AvailableZones, structs.ComponentInstanceZoneWithSpecs{ZoneID: spec.ZoneID, ZoneName: spec.ZoneName, Specs: []structs.ComponentInstanceResourceSpec{spec}})
 					}
 					break
 				}

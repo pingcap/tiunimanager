@@ -363,26 +363,28 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			//Query whether the product component information is already in Components,
 			//if it already exists, then directly modify the relevant data structure
 
-			//productComponentInfo := structs.ProductComponentProperty{}
-			//for _, v := range components {
-			//	if i == 0 {
-			//
-			//	}
-			//}
-			//productComponentInfo, ok = components[info.ID]
-			//if !ok {
-			//	components = append(components, structs.ProductComponentProperty{ID: info.ID, Name: info.Name, PurposeType: info.PurposeType,
-			//		StartPort: info.StartPort, EndPort: info.EndPort, MaxPort: info.MaxPort, MinInstance: info.MinInstance, MaxInstance: info.MaxInstance, Spec: make(map[string]structs.ComponentInstanceResourceSpec)})
-			//	components[info.ID] =
-			//	productComponentInfo, _ = components[info.ID]
-			//}
-			//
-			////Query whether the product component specification information is already in Specifications,
-			////if it already exists, then directly modify the relevant data structure
-			//_, ok = productComponentInfo.Spec[spec.ID]
-			//if !ok {
-			//	productComponentInfo.Spec[spec.ID] = spec
-			//}
+			componentExisted := false
+			for _, v := range components {
+				if v.ID == info.ID {
+					componentExisted = true
+					zoneExisted := false
+					for _, z := range v.AvailableZones {
+						if spec.ZoneID == z.ZoneID {
+							z.Specs = append(z.Specs, spec)
+							zoneExisted = true
+						}
+					}
+					if !zoneExisted {
+						v.AvailableZones = append(v.AvailableZones, structs.ComponentInstanceZoneWithSpecs{ZoneID: spec.ZoneID, ZoneName: spec.ZoneName, Specs: []structs.ComponentInstanceResourceSpec{spec}})
+					}
+					break
+				}
+			}
+			if !componentExisted {
+				productComponentInfo = structs.ProductComponentProperty{ID: info.ID, Name: info.Name, PurposeType: info.PurposeType,
+							StartPort: info.StartPort, EndPort: info.EndPort, MaxPort: info.MaxPort, MinInstance: info.MinInstance, MaxInstance: info.MaxInstance, AvailableZones: []structs.ComponentInstanceZoneWithSpecs{{ZoneID: spec.ZoneID, ZoneName: spec.ZoneName, Specs: []structs.ComponentInstanceResourceSpec{spec}}}}
+				components = append(components, productComponentInfo)
+			}
 		}
 	}
 	return products, err

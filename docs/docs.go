@@ -9249,6 +9249,23 @@ var doc = `{
                 }
             }
         },
+        "structs.ComponentInstanceZoneWithSpecs": {
+            "type": "object",
+            "properties": {
+                "specs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ComponentInstanceResourceSpec"
+                    }
+                },
+                "zoneId": {
+                    "type": "string"
+                },
+                "zoneName": {
+                    "type": "string"
+                }
+            }
+        },
         "structs.DataImportExportRecordInfo": {
             "type": "object",
             "properties": {
@@ -9651,6 +9668,13 @@ var doc = `{
         "structs.ProductComponentProperty": {
             "type": "object",
             "properties": {
+                "availableZones": {
+                    "description": "Information on the specifications of the resources online for the running of product components,organized by different Zone",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ComponentInstanceZoneWithSpecs"
+                    }
+                },
                 "endPort": {
                     "type": "integer"
                 },
@@ -9676,13 +9700,6 @@ var doc = `{
                 "purposeType": {
                     "description": "The type of resources required by the product component at runtime, e.g. storage class",
                     "type": "string"
-                },
-                "spec": {
-                    "description": "Information on the specifications of the resources online for the running of product components,organized by different Zone",
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/structs.ComponentInstanceResourceSpec"
-                    }
                 },
                 "startPort": {
                     "type": "integer"
@@ -9733,8 +9750,8 @@ var doc = `{
                     "description": "Arch information of the product, e.g. X86/X86_64",
                     "type": "object",
                     "additionalProperties": {
-                        "type": "object",
-                        "additionalProperties": {
+                        "type": "array",
+                        "items": {
                             "$ref": "#/definitions/structs.ProductComponentProperty"
                         }
                     }

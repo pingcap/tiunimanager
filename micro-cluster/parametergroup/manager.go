@@ -61,7 +61,7 @@ func (m *Manager) CreateParameterGroup(ctx context.Context, req message.CreatePa
 	pg := &parametergroup.ParameterGroup{
 		Name:           req.Name,
 		ClusterSpec:    req.ClusterSpec,
-		HasDefault:     req.HasDefault,
+		HasDefault:     int(CUSTOM), // The created parameter group is a custom parameter group
 		DBType:         req.DBType,
 		GroupType:      req.GroupType,
 		ClusterVersion: req.ClusterVersion,

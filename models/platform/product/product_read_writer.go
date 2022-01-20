@@ -285,18 +285,7 @@ func (p *ProductReadWriter) QueryProductDetail(ctx context.Context, vendorID, re
 		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "query product detail invalid parameter, vendorID: %s, regionID:%s, productID: %s,status: %s, internal: %d",
 			vendorID, regionID, productID, status, internal)
 	}
-	/*	SQL := `SELECT t2.zone_id,t2.zone_name,t1.name,t1.version,t1.arch,
-		t4.id,t4.name,t4.disk_type,t4.cpu,t4.memory,t3.component_id,t3.name,t3.purpose_type,t3.start_port,t3.end_port,
-		t3.max_port,t3.max_instance,t3.min_instance FROM products t1,zones t2,product_components t3,specs t4,vendors t5
-		WHERE t1.vendor_id = t5.vendor_id AND t1.vendor_id = ?
-		AND t1.region_id=t2.region_id AND t1.region_id= ?
-		AND t1.Internal = ?
-		AND t1.version=t3.product_version
-		AND t1.product_id=t3.product_id AND t1.product_id = ?
-		AND t3.purpose_type=t4.purpose_type
-		AND t1.arch=t4.arch
-		AND t2.zone_id =t4.zone_id
-		AND t1.status = ? AND t3.status = ? AND t4.status = ?;`*/
+
 	SQL := `SELECT t2.zone_id,t2.zone_name,t1.name,t1.version,t1.arch,
 t4.id,t4.name,t4.disk_type,t4.cpu,t4.memory,t3.component_id,t3.name,t3.purpose_type,t3.start_port,t3.end_port,
 t3.max_port,t3.max_instance,t3.min_instance FROM products t1,zones t2,product_components t3,specs t4
@@ -357,8 +346,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			//if it already exists, then directly modify the relevant data structure
 			components, ok = productVersion.Arch[arch]
 			if !ok {
-				productVersion.Arch[arch] = make([]structs.ProductComponentProperty, 0)
-				components, _ = productVersion.Arch[arch]
+				components = make([]structs.ProductComponentProperty, 0)
 			}
 
 			//Query whether the product component information is already in Components,
@@ -386,6 +374,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 							StartPort: info.StartPort, EndPort: info.EndPort, MaxPort: info.MaxPort, MinInstance: info.MinInstance, MaxInstance: info.MaxInstance, AvailableZones: []structs.ComponentInstanceZoneWithSpecs{{ZoneID: spec.ZoneID, ZoneName: spec.ZoneName, Specs: []structs.ComponentInstanceResourceSpec{spec}}}}
 				components = append(components, productComponentInfo)
 			}
+			productVersion.Arch[arch] = components
 		}
 	}
 

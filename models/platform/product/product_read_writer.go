@@ -371,7 +371,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			}
 			if !componentExisted {
 				productComponentInfo = structs.ProductComponentProperty{ID: info.ID, Name: info.Name, PurposeType: info.PurposeType,
-							StartPort: info.StartPort, EndPort: info.EndPort, MaxPort: info.MaxPort, MinInstance: info.MinInstance, MaxInstance: info.MaxInstance, AvailableZones: []structs.ComponentInstanceZoneWithSpecs{{ZoneID: spec.ZoneID, ZoneName: spec.ZoneName, Specs: []structs.ComponentInstanceResourceSpec{spec}}}}
+							StartPort: info.StartPort, EndPort: info.EndPort, MaxPort: info.MaxPort, MinInstance: info.MinInstance, MaxInstance: info.MaxInstance, SuggestedInstancesCount: constants.EMProductComponentIDType(info.ID).SuggestedNodeCount(), AvailableZones: []structs.ComponentInstanceZoneWithSpecs{{ZoneID: spec.ZoneID, ZoneName: spec.ZoneName, Specs: []structs.ComponentInstanceResourceSpec{spec}}}}
 				components = append(components, productComponentInfo)
 			}
 			productVersion.Arch[arch] = components
@@ -394,7 +394,6 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 	}
 	return products, err
 }
-
 
 type ComponentSortWrapper struct {
 	infos []structs.ProductComponentProperty

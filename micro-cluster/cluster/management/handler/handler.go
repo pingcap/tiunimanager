@@ -18,6 +18,8 @@ package handler
 import (
 	"bytes"
 	"context"
+	"database/sql"
+	"math/rand"
 	"github.com/pingcap-inc/tiem/models/platform/user"
 	"sort"
 	"strings"
@@ -43,6 +45,7 @@ import (
 type ClusterMeta struct {
 	Cluster              *management.Cluster
 	Instances            map[string][]*management.ClusterInstance
+	DBUsers              map[string]*management.DBUser
 	NodeExporterPort     int32
 	BlackboxExporterPort int32
 }
@@ -60,6 +63,7 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 			Status:   string(constants.ClusterInitializing),
 		},
 		Name:              param.Name,
+		// todo
 		DBPassword:        param.DBPassword,
 		Type:              param.Type,
 		Version:           param.Version,
@@ -76,6 +80,7 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 		MaintainWindow:    "",
 	}
 	// default user
+	// todo
 	if len(param.DBUser) == 0 {
 		p.Cluster.DBUser = "root"
 	} else {
@@ -100,6 +105,8 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbUser 
 			Status:   string(constants.ClusterRunning),
 		},
 		Name:           name,
+		// todo: role?
+		//Users:         map[constants.DBUserRoleType]user.DBUser{constants.Root: {Name: dbUser, Password: dbPassword}},
 		DBUser:         dbUser,
 		DBPassword:     dbPassword,
 		Tags:           []string{TagTakeover},
@@ -581,6 +588,7 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 			Status:   string(constants.ClusterInitializing),
 		},
 		Name:              parameter.Name,       // user specify (required)
+		// todo
 		DBUser:            parameter.DBUser,     // user specify (required)
 		DBPassword:        parameter.DBPassword, // user specify (required)
 		Region:            parameter.Region,     // user specify (required)
@@ -669,6 +677,10 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 
 func (p *ClusterMeta) GetRelations(ctx context.Context) ([]*management.ClusterRelation, error) {
 	return models.GetClusterReaderWriter().GetRelations(ctx, p.Cluster.ID)
+}
+
+func (p *ClusterMeta) GetDBUsers(ctx context.Context) ([]*management.DBUser, error){
+	return models.GetClusterReaderWriter().GetDBUser(ctx, p.Cluster.ID)
 }
 
 // StartMaintenance
@@ -874,6 +886,7 @@ type TiDBUserInfo struct {
 // @Description: get tidb cluster username and password
 // @Receiver p
 // @return []TiDBUserInfo
+// todo: delete
 func (p *ClusterMeta) GetClusterUserNamePasswd() *TiDBUserInfo {
 	return &TiDBUserInfo{
 		ClusterID: p.Cluster.ID,
@@ -886,9 +899,14 @@ func (p *ClusterMeta) GetClusterUserNamePasswd() *TiDBUserInfo {
 // @Description: get username and password of the different type user
 // @Receiver p
 // @return BDUser
-func (p *ClusterMeta) GetDBUserNamePassword(roleType constants.DBUserRoleType) *user.DBUser {
-	// todo
-	return &user.DBUser{}
+func (p *ClusterMeta) GetDBUserNamePassword(ctx context.Context, roleType constants.DBUserRoleType) (*management.DBUser, error) {
+	clusterMeta, err := Get(ctx, p.Cluster.ID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get clusterMeta failed, clusterID = %s, errors = %s", p.Cluster.ID, err)
+		return nil, err
+	}
+	user := clusterMeta.DBUsers[string(roleType)]
+	return user, nil
 }
 
 // UpdateMeta
@@ -925,13 +943,13 @@ func (p *ClusterMeta) ClearClusterPhysically(ctx context.Context) error {
 }
 
 func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
-	cluster, instances, err := models.GetClusterReaderWriter().GetMeta(ctx, clusterID)
+	cluster, instances, users, err := models.GetClusterReaderWriter().GetMeta(ctx, clusterID)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return buildMeta(cluster, instances), err
+	return buildMeta(cluster, instances, users), err
 }
 
 func (p *ClusterMeta) acceptInstances(instances []*management.ClusterInstance) {
@@ -949,11 +967,23 @@ func (p *ClusterMeta) acceptInstances(instances []*management.ClusterInstance) {
 	p.Instances = instancesMap
 }
 
-func buildMeta(cluster *management.Cluster, instances []*management.ClusterInstance) *ClusterMeta {
+func (p *ClusterMeta) acceptDBUsers(users []*management.DBUser) {
+	usersMap := make(map[string]*management.DBUser)
+
+	if len(users) > 0 {
+		for _, user := range users {
+			usersMap[user.RoleType] = user
+		}
+	}
+	p.DBUsers = usersMap
+}
+
+func buildMeta(cluster *management.Cluster, instances []*management.ClusterInstance, users []*management.DBUser) *ClusterMeta {
 	meta := &ClusterMeta{
 		Cluster: cluster,
 	}
 	meta.acceptInstances(instances)
+	meta.acceptDBUsers(users)
 	return meta
 }
 
@@ -990,7 +1020,7 @@ func Query(ctx context.Context, req cluster.QueryClustersReq) (resp cluster.Quer
 	// build cluster info
 	resp.Clusters = make([]structs.ClusterInfo, 0)
 	for _, v := range result {
-		meta := buildMeta(v.Cluster, v.Instances)
+		meta := buildMeta(v.Cluster, v.Instances, v.Users)
 		resp.Clusters = append(resp.Clusters, meta.DisplayClusterInfo(ctx))
 	}
 
@@ -1055,6 +1085,7 @@ func (p *ClusterMeta) DisplayClusterInfo(ctx context.Context) structs.ClusterInf
 		Name:            cluster.Name,
 		Type:            cluster.Type,
 		Version:         cluster.Version,
+		// todo
 		DBUser:          cluster.DBUser,
 		Tags:            cluster.Tags,
 		TLS:             cluster.TLS,
@@ -1184,4 +1215,22 @@ func (pw InstanceWrapper) Swap(i, j int) {
 }
 func (pw InstanceWrapper) Less(i, j int) bool {
 	return pw.by(&pw.infos[i], &pw.infos[j])
+}
+
+// GetRandomString get random password
+func GetRandomString(n int) string {
+	randBytes := make([]byte, n/2)
+	rand.Read(randBytes)
+	return fmt.Sprintf("%x", randBytes)
+}
+
+
+func ExecCommandThruSQL(ctx context.Context, db *sql.DB, sqlCommand string) error {
+	logInFunc := framework.LogWithContext(ctx)
+	_, err := db.Exec(sqlCommand)
+	if err != nil {
+		logInFunc.Errorf("execute sql command %s error: %s", sqlCommand, err.Error())
+		return err
+	}
+	return nil
 }

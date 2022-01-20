@@ -6323,7 +6323,7 @@
                     "type": "string"
                 },
                 "dbUser": {
-                    "description": "The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
+                    "description": "todo",
                     "type": "string"
                 },
                 "exclusive": {
@@ -6451,7 +6451,7 @@
                     "type": "string"
                 },
                 "dbUser": {
-                    "description": "The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
+                    "description": "todo",
                     "type": "string"
                 },
                 "exclusive": {
@@ -7087,7 +7087,7 @@
                     "type": "string"
                 },
                 "dbUser": {
-                    "description": "The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
+                    "description": "todo",
                     "type": "string"
                 },
                 "exclusive": {

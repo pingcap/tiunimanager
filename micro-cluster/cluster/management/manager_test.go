@@ -41,6 +41,7 @@ import (
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/pkg/sftp"
 	"github.com/stretchr/testify/assert"
+	"reflect"
 	"golang.org/x/crypto/ssh"
 	"testing"
 	"time"
@@ -1527,4 +1528,40 @@ func TestManager_TakeoverCluster(t *testing.T) {
 
 		assert.Error(t, err)
 	})
+}
+
+
+func TestGenerateDBUser(t *testing.T) {
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "testCluster",
+			},
+			Version: "v5.0.0",
+		},
+	})
+	clusterMeta := flowContext.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	type args struct {
+		context *workflow.FlowContext
+		roleTyp constants.DBUserRoleType
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		// TODO: Add test cases.
+		{"normal", args{flowContext, constants.DBUserBackupRestore}, clusterMeta.Cluster.ID},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GenerateDBUser(tt.args.context, tt.args.roleTyp); !reflect.DeepEqual(got.ClusterID, tt.want) {
+				t.Errorf("GenerateDBUser() = %v, want %v", got, tt.want)
+			} else {
+				fmt.Println(got)
+				fmt.Println(got.ID)
+			}
+		})
+	}
 }

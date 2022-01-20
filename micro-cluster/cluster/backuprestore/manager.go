@@ -30,6 +30,7 @@ import (
 	dbModel "github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/workflow"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -413,7 +414,15 @@ func (mgr *BRManager) backupClusterPreCheck(ctx context.Context, request cluster
 			return fmt.Errorf("get and check conifg %s failed", constants.ConfigKeyBackupS3SecretAccessKey)
 		}
 	case string(constants.StorageTypeNFS):
-		break
+		absPath, err := filepath.Abs(storagePathCfg.ConfigValue)
+		if err != nil {
+			return fmt.Errorf("backup nfs path %s is not vaild", storagePathCfg.ConfigValue)
+		}
+		if !mgr.checkFilePathExists(absPath) {
+			if err = os.MkdirAll(absPath, os.ModePerm); err != nil {
+				return fmt.Errorf("make backup nfs path %s failed, %s", absPath, err.Error())
+			}
+		}
 	default:
 		return fmt.Errorf("conifg %s value %s is unknow", constants.ConfigKeyBackupStorageType, storageTypeCfg.ConfigValue)
 	}
@@ -463,4 +472,12 @@ func (mgr *BRManager) saveBackupStrategyPreCheck(ctx context.Context, request cl
 
 func (mgr *BRManager) getBackupPath(backupPath, clusterId string, time time.Time, backupType string) string {
 	return fmt.Sprintf("%s/%s/%s_%s", backupPath, clusterId, time.Format("2006-01-02_15:04:05"), backupType)
+}
+
+func (mgr *BRManager) checkFilePathExists(path string) bool {
+	_, err := os.Stat(path)
+	if err != nil {
+		return os.IsExist(err)
+	}
+	return true
 }

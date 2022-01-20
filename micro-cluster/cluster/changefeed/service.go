@@ -77,8 +77,12 @@ func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID str
 	if err != nil {
 		return
 	}
-
 	address := targetCluster.GetClusterConnectAddresses()[0]
+
+	user, err := targetCluster.GetDBUserNamePassword(ctx, constants.DBUserCDCDataSync)
+	if err != nil {
+		return
+	}
 
 	task := &changefeed.ChangeFeedTask {
 		Entity: dbCommon.Entity{
@@ -93,8 +97,8 @@ func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID str
 		Downstream: &changefeed.TiDBDownstream{
 			Ip: address.IP,
 			Port: address.Port,
-			Username: targetCluster.GetClusterUserNamePasswd().UserName,
-			Password: targetCluster.GetClusterUserNamePasswd().Password,
+			Username: user.Name,
+			Password: user.Password,
 			TargetClusterId: targetClusterID,
 		},
 	}

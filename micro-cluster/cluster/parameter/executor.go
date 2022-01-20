@@ -318,22 +318,27 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 	}
 	tidbServer := tidbServers[rand.Intn(len(tidbServers))]
 	framework.LogWithContext(ctx).Infof("get cluster [%s] tidb server from meta, %+v", clusterMeta.Cluster.ID, tidbServers)
-	tidbUserInfo := clusterMeta.GetClusterUserNamePasswd()
-	if len(tidbUserInfo.UserName) == 0 {
-		framework.LogWithContext(ctx).Errorf("get cluster [%s] user info from meta, %+v", clusterMeta.Cluster.ID, tidbUserInfo)
+
+	tidbUserInfo, err := clusterMeta.GetDBUserNamePassword(ctx, constants.DBUserParameterManagement)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get cluster %s user info from meta falied, %s ", clusterMeta.Cluster.ID, err.Error())
+		return err
+	}
+	if tidbUserInfo == nil {
+		framework.LogWithContext(ctx).Errorf("get cluster [%s] user info from meta", clusterMeta.Cluster.ID)
 		return fmt.Errorf("get cluster user name from meta failed, empty address")
 	}
 
 	req := secondparty.ClusterEditConfigReq{
 		DbConnParameter: secondparty.DbConnParam{
-			Username: tidbUserInfo.UserName,
+			Username: tidbUserInfo.Name,
 			Password: tidbUserInfo.Password,
 			IP:       tidbServer.IP,
 			Port:     strconv.Itoa(tidbServer.Port),
 		},
 		ComponentConfigs: configs,
 	}
-	err := secondparty.Manager.EditClusterConfig(ctx, req, node.ID)
+	err = secondparty.Manager.EditClusterConfig(ctx, req, node.ID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call secondparty sql edit cluster config err = %s", err.Error())
 		return err

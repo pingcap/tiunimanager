@@ -119,10 +119,37 @@ type ReaderWriter interface {
     // @return err
     //
 	ClearClusterPhysically(ctx context.Context, clusterID string) (err error)
-
+	//
+	// CreateDBUser
+	// @Description: create cluster users
+	// @param ctx
+	// @param user
+	// @return error
+	//
 	CreateDBUser(ctx context.Context, user *DBUser) error
+	//
+	// GetDBUser
+	// @Description: get cluster users by clusterID
+	// @param ctx
+	// @param clusterID
+	// @return []*DBUser
+	// @return error
+	//
 	GetDBUser(ctx context.Context, clusterID string) ([]*DBUser, error)
-	// todo
-	//UpdateDBUser(ctx context.Context, clusterID string, user *DBUser) err
+	//
+	// UpdateDBUser
+	// @Description: update cluster users
+	// @param ctx
+	// @param user
+	// @return error
+	//
+	UpdateDBUser(ctx context.Context, user *DBUser) error
+	//
+	// DeleteDBUser
+	// @Description: delete cluster users
+	// @param ctx
+	// @param ID
+	// @return error
+	//
 	DeleteDBUser(ctx context.Context, ID uint) error
 }

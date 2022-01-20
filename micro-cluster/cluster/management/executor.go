@@ -44,6 +44,7 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
+	utilsql "github.com/pingcap-inc/tiem/util/api/tidb/sql"
 	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
@@ -984,7 +985,7 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		Port:     strconv.Itoa(tidbServerPort),
 	}
 
-	err := UpdateDBUserPassword(context, conn, rootUser.Name, rootUser.Password, node.ID)
+	err := utilsql.UpdateDBUserPassword(context, conn, rootUser.Name, rootUser.Password, node.ID)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s set user %s password error: %s", clusterMeta.Cluster.ID, rootUser.Name, err.Error())
@@ -1009,10 +1010,10 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 
 	for _, rt := range roleType {
 		dbUser := GenerateDBUser(context, rt)
-		err = CreateDBUser(context, conn, dbUser, node.ID)
+		err = utilsql.CreateDBUser(context, conn, dbUser, node.ID)
 		if err != nil {
 			framework.LogWithContext(context.Context).Errorf(
-				"cluster %s create user %s error: %s", clusterMeta.Cluster.ID, dbUser.Name, err.Error())
+				"cluster %s create user %s error: %s", clusterMeta.Cluster.ID, dbUser.Name, err)
 			return err
 		}
 		err = models.GetClusterReaderWriter().CreateDBUser(context, dbUser)
@@ -1318,83 +1319,6 @@ func testConnectivity(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 			node.Record(fmt.Sprintf("test TiDB server %s:%d connection ", connectAddress.IP, connectAddress.Port))
 		}).
 		Present()
-}
-
-func CreateDBUser(ctx context.Context, connec secondparty.DbConnParam, user *management.DBUser, workFlowNodeID string) error {
-	logInFunc := framework.LogWithContext(ctx).WithField("bizid", workFlowNodeID)
-	logInFunc.Infof("createDBUser, user: %v, bizId: %s", user, workFlowNodeID)
-
-	// connect database
-	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", connec.Username, connec.Password, connec.IP, connec.Port))
-	if err != nil {
-		logInFunc.Error("conn tidb error", err)
-		return err
-	}
-	defer db.Close()
-
-	// execute sql command of creating user
-	createSqlCommand := fmt.Sprintf("CREATE USER '%s'@'%s' IDENTIFIED BY '%s'", user.Name, "%", user.Password)
-	err = handler.ExecCommandThruSQL(ctx, db, createSqlCommand)
-	if err != nil {
-		return err
-	}
-
-	//	execute sql command of granting privileges to user
-	grantSqlCommand := fmt.Sprintf("GRANT %s ON %s.%s TO %s@%s IDENTIFIED BY \"%s\"",
-		constants.DBUserPermission[constants.DBUserRoleType(user.RoleType)], user.Name, "%", "*", "*", user.Password)
-	err = handler.ExecCommandThruSQL(ctx, db, grantSqlCommand)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-
-func UpdateDBUserPassword(ctx context.Context, connec secondparty.DbConnParam, name string, password string, workFlowNodeID string) error {
-	logInFunc := framework.LogWithContext(ctx).WithField("bizid", workFlowNodeID)
-	logInFunc.Infof("UpdateDBUserPassword, name: %v, bizId: %s", name, workFlowNodeID)
-
-	// connect database
-	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", connec.Username, connec.Password, connec.IP, connec.Port))
-	if err != nil {
-		logInFunc.Error("conn tidb error", err)
-		return err
-	}
-	defer db.Close()
-
-	//execute sql command
-	sqlCommand := fmt.Sprintf("ALTER USER '%s'@'%s' IDENTIFIED BY '%s'", name, "%", password)
-	err = handler.ExecCommandThruSQL(ctx, db, sqlCommand)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-
-func DeleteDBUser(ctx context.Context, connec secondparty.DbConnParam, name string, workFlowNodeID string) error {
-	logInFunc := framework.LogWithContext(ctx).WithField("bizid", workFlowNodeID)
-	logInFunc.Infof("DeleteDBUser, name: %v, bizId: %s", name, workFlowNodeID)
-
-	// connect database
-	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", connec.Username, connec.Password, connec.IP, connec.Port))
-	if err != nil {
-		logInFunc.Error("conn tidb error", err)
-		return err
-	}
-	defer db.Close()
-
-	//execute sql command
-	sqlCommand := fmt.Sprintf("DROP USER '%s'@'%s'", name, "%")
-	err = handler.ExecCommandThruSQL(ctx, db, sqlCommand)
-
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func GenerateDBUser(context *workflow.FlowContext, roleTyp constants.DBUserRoleType) *management.DBUser {

@@ -328,12 +328,17 @@ func TestGormClusterReadWrite_GetMeta(t *testing.T) {
 		{Entity: common.Entity{TenantId: "111"}, ClusterID: got.ID, Type: "PD", Version: "v5.0.0"},
 	}
 	err := testRW.UpdateInstance(context.TODO(), instances...)
+	users := []*DBUser{
+		{ClusterID: got.ID, Name: "root", Password: "12222", RoleType: string(constants.Root)},
+	}
+	err = testRW.UpdateDBUser(context.TODO(), users[0])
 	assert.NoError(t, err)
 
-	gotCluster, gotInstances, err := testRW.GetMeta(context.TODO(), got.ID)
+	gotCluster, gotInstances, gotUsers, err := testRW.GetMeta(context.TODO(), got.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, gotCluster.Tags, gotCluster.Tags)
 	assert.Equal(t, 2, len(gotInstances))
+	assert.Equal(t, 1, len(gotUsers))
 }
 
 func TestGormClusterReadWrite_UpdateBaseInfo(t *testing.T) {
@@ -401,7 +406,7 @@ func TestGormClusterReadWrite_UpdateInstance(t *testing.T) {
 	}
 	err := testRW.UpdateInstance(context.TODO(), instances...)
 	assert.NoError(t, err)
-	_, gotInstances, err := testRW.GetMeta(context.TODO(), got.ID)
+	_, gotInstances, _, err := testRW.GetMeta(context.TODO(), got.ID)
 	assert.NoError(t, err)
 	gotInstances[0].Status = string(constants.ClusterRunning)
 	gotInstances[0].HostIP = []string{"127.0.0.1", "127.0.0.2"}
@@ -417,7 +422,7 @@ func TestGormClusterReadWrite_UpdateInstance(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	_, gotInstances, err = testRW.GetMeta(context.TODO(), got.ID)
+	_, gotInstances, _, err = testRW.GetMeta(context.TODO(), got.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, string(constants.ClusterRunning), gotInstances[0].Status)
 	assert.Equal(t, []string{"127.0.0.1", "127.0.0.2"}, gotInstances[0].HostIP)
@@ -893,7 +898,6 @@ func TestClusterReadWrite_DeleteDBUser(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
 		{"normal", args{context.TODO(), user.ID}, false},
 		{"no record", args{context.TODO(), 7}, true},
 	}

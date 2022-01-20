@@ -75,8 +75,6 @@ func mockCluster() *management.Cluster {
 	return &management.Cluster{
 		Entity:            common.Entity{ID: "123", TenantId: "1", Status: "1"},
 		Name:              "testCluster",
-		DBUser:            "root",
-		DBPassword:        "123",
 		Type:              "0",
 		Version:           "5.0",
 		TLS:               false,

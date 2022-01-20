@@ -7721,14 +7721,6 @@ var doc = `{
                     ],
                     "example": 1
                 },
-                "hasDefault": {
-                    "type": "integer",
-                    "enum": [
-                        1,
-                        2
-                    ],
-                    "example": 1
-                },
                 "name": {
                     "type": "string",
                     "example": "8C16GV4_default"

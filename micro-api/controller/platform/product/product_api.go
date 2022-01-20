@@ -79,7 +79,7 @@ func ClusterKnowledge(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /zones [post]
+// @Router /zones/ [post]
 func CreateZones(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.CreateZonesReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateZones, &message.CreateZonesResp{},
@@ -100,7 +100,7 @@ func CreateZones(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /zones [delete]
+// @Router /zones/ [delete]
 func DeleteZones(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.DeleteZoneReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteZone, &message.DeleteZoneResp{},
@@ -226,7 +226,7 @@ func QueryProductDetail(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /specs [post]
+// @Router /specs/ [post]
 func CreateSpecs(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.CreateSpecsReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateSpecs, &message.CreateSpecsResp{},
@@ -247,7 +247,7 @@ func CreateSpecs(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /specs [delete]
+// @Router /specs/ [delete]
 func DeleteSpecs(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.DeleteSpecsReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteSpecs, &message.DeleteSpecsResp{},
@@ -268,7 +268,7 @@ func DeleteSpecs(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /specs [get]
+// @Router /specs/ [get]
 func QuerySpecs(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QuerySpecsReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.QuerySpecs, &message.QuerySpecsResp{},

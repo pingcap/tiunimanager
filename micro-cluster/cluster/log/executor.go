@@ -171,18 +171,18 @@ func buildCollectorClusterLogConfig(ctx ctx.Context, clusterInfos []*handler.Ins
 				cfg.TiFlash = buildCollectorModuleDetail(clusterID, server.IP, logPath)
 			}
 
-			// TiCDC modules
+			// CDC modules
 			if server.InstanceType == constants.ComponentIDCDC {
 				if len(server.LogDir) == 0 {
 					continue
 				}
 				logPath := server.LogDir + "/cdc.log"
 				// multiple instances of the same cluster
-				if len(cfg.TiCDC.Var.Paths) > 0 {
-					cfg.TiCDC.Var.Paths = append(cfg.TiCDC.Var.Paths, logPath)
+				if len(cfg.CDC.Var.Paths) > 0 {
+					cfg.CDC.Var.Paths = append(cfg.CDC.Var.Paths, logPath)
 					continue
 				}
-				cfg.TiCDC = buildCollectorModuleDetail(clusterID, server.IP, logPath)
+				cfg.CDC = buildCollectorModuleDetail(clusterID, server.IP, logPath)
 			}
 		}
 

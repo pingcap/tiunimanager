@@ -49,22 +49,29 @@ type ComponentInstanceResourceSpec struct {
 
 // ProductComponentProperty Information about the components of the product, each of which consists of several different types of components
 type ProductComponentProperty struct {
-	ID                      string                                   `json:"id"`          //ID of the product component, globally unique
-	Name                    string                                   `json:"name"`        //Name of the product component, globally unique
-	PurposeType             string                                   `json:"purposeType"` //The type of resources required by the product component at runtime, e.g. storage class
-	StartPort               int32                                    `json:"startPort"`
-	EndPort                 int32                                    `json:"endPort"`
-	MaxPort                 int32                                    `json:"maxPort"`
-	MinInstance             int32                                    `json:"minInstance"` //Minimum number of instances of product components at runtime, e.g. at least 1 instance of PD, at least 3 instances of TiKV
-	MaxInstance             int32                                    `json:"maxInstance"` //Maximum number of instances when the product component is running, e.g. PD can run up to 7 instances, other components have no upper limit
-	SuggestedInstancesCount []int32                                  `json:"suggestedInstancesCount"`
-	Spec                    map[string]ComponentInstanceResourceSpec `json:"spec"` //Information on the specifications of the resources online for the running of product components,organized by different Zone
+	ID                      string                           `json:"id"`          //ID of the product component, globally unique
+	Name                    string                           `json:"name"`        //Name of the product component, globally unique
+	PurposeType             string                           `json:"purposeType"` //The type of resources required by the product component at runtime, e.g. storage class
+	StartPort               int32                            `json:"startPort"`
+	EndPort                 int32                            `json:"endPort"`
+	MaxPort                 int32                            `json:"maxPort"`
+	MinInstance             int32                            `json:"minInstance"` //Minimum number of instances of product components at runtime, e.g. at least 1 instance of PD, at least 3 instances of TiKV
+	MaxInstance             int32                            `json:"maxInstance"` //Maximum number of instances when the product component is running, e.g. PD can run up to 7 instances, other components have no upper limit
+	SuggestedInstancesCount []int32                          `json:"suggestedInstancesCount"`
+	AvailableZones          []ComponentInstanceZoneWithSpecs `json:"availableZones"` //Information on the specifications of the resources online for the running of product components,organized by different Zone
+}
+
+// ComponentInstanceZoneWithSpecs Specs group by zone
+type ComponentInstanceZoneWithSpecs struct {
+	ZoneID   string `json:"zoneId"`
+	ZoneName string `json:"zoneName"`
+	Specs    []ComponentInstanceResourceSpec  `json:"specs"`
 }
 
 //ProductVersion Product version and component details, with each product categorized by version and supported CPU architecture
 type ProductVersion struct {
 	Version string                                         `json:"version"` //Version information of the product, e.g. v5.0.0
-	Arch    map[string]map[string]ProductComponentProperty `json:"arch"`    //Arch information of the product, e.g. X86/X86_64
+	Arch    map[string][]ProductComponentProperty `json:"arch"`    //Arch information of the product, e.g. X86/X86_64
 	//Components map[string]ProductComponentProperty `json:"components"` //Component Info of the product
 }
 

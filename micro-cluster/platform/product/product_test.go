@@ -75,7 +75,7 @@ var TiDBALIYUNHZX8650Components = []structs.ProductComponentProperty{
 	{ID: "TiKV", Name: "Storage Engine", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
 	{ID: "TiFlash", Name: "Column Storage Engine", PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 1, MaxInstance: 10240},
 	{ID: "PD", Name: "Schedule Engine", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 7},
-	{ID: "TiCDC", Name: "CDC", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
+	{ID: "CDC", Name: "CDC", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
 	{ID: "Grafana", Name: "Monitor GUI", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 	{ID: "Prometheus", Name: "Monitor", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 	{ID: "AlertManger", Name: "Alert", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
@@ -89,7 +89,7 @@ var TiDBALIYUNBJX8650Components = []structs.ProductComponentProperty{
 	{ID: "TiKV", Name: "Storage Engine", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
 	{ID: "TiFlash", Name: "Column Storage Engine", PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 1, MaxInstance: 10240},
 	{ID: "PD", Name: "Schedule Engine", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 7},
-	{ID: "TiCDC", Name: "CDC", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
+	{ID: "CDC", Name: "CDC", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
 	{ID: "Grafana", Name: "Monitor GUI", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 	{ID: "Prometheus", Name: "Monitor", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 	{ID: "AlertManger", Name: "Alert", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
@@ -103,7 +103,7 @@ var TiDBALIYUNBJX8651Components = []structs.ProductComponentProperty{
 	{ID: "TiKV", Name: "Storage Engine", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
 	{ID: "TiFlash", Name: "Column Storage Engine", PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 1, MaxInstance: 10240},
 	{ID: "PD", Name: "Schedule Engine", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 7},
-	{ID: "TiCDC", Name: "CDC", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
+	{ID: "CDC", Name: "CDC", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
 	{ID: "Grafana", Name: "Monitor GUI", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 	{ID: "Prometheus", Name: "Monitor", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 	{ID: "AlertManger", Name: "Alert", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
@@ -117,7 +117,7 @@ var TiDBALIYUNHZARM6451Components = []structs.ProductComponentProperty{
 	{ID: "TiKV", Name: "Storage Engine", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
 	{ID: "TiFlash", Name: "Column Storage Engine", PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 1, MaxInstance: 10240},
 	{ID: "PD", Name: "Schedule Engine", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 7},
-	{ID: "TiCDC", Name: "CDC", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
+	{ID: "CDC", Name: "CDC", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
 	{ID: "Grafana", Name: "Monitor GUI", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 	{ID: "Prometheus", Name: "Monitor", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 	{ID: "AlertManger", Name: "Alert", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
@@ -489,7 +489,6 @@ func TestProductManager_QueryProductDetail(t *testing.T) {
 		InternalProduct: constants.EMInternalProductNo,
 	}
 	t.Run("QueryProductDetail", func(t *testing.T) {
-
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
 
@@ -497,71 +496,7 @@ func TestProductManager_QueryProductDetail(t *testing.T) {
 			Product    structs.Product
 			Components []structs.ProductComponentProperty
 		}
-		args := []Args{
-			{Product: products[0], Components: TiDBALIYUNHZX8650Components},
-			{Product: products[1], Components: TiDBALIYUNHZARM6451Components}}
-
 		Products := make(map[string]structs.ProductDetail)
-		for _, arg := range args {
-			var ok bool
-			var detail structs.ProductDetail
-			var productVersion structs.ProductVersion
-			var productComponentInfo structs.ProductComponentProperty
-			var components map[string]structs.ProductComponentProperty
-			info := arg.Product
-			detail, ok = Products[info.ID]
-			if !ok {
-				Products[info.ID] = structs.ProductDetail{ID: info.ID, Name: info.Name, Versions: make(map[string]structs.ProductVersion)}
-				detail, _ = Products[info.ID]
-			}
-
-			//Query whether the product version information is already in Versions,
-			//if it already exists, then directly modify the relevant data structure
-			productVersion, ok = detail.Versions[info.Version]
-			if !ok {
-				detail.Versions[info.Version] = structs.ProductVersion{Version: info.Version, Arch: make(map[string]map[string]structs.ProductComponentProperty)}
-				productVersion, _ = detail.Versions[info.Version]
-			}
-
-			//Query whether the product arch information is already in archs,
-			//if it already exists, then directly modify the relevant data structure
-			components, ok = productVersion.Arch[info.Arch]
-			if !ok {
-				productVersion.Arch[info.Arch] = make(map[string]structs.ProductComponentProperty)
-				components, _ = productVersion.Arch[info.Arch]
-			}
-
-			for _, item := range arg.Components {
-				productComponentInfo, ok = components[item.ID]
-				if !ok {
-					components[item.ID] = structs.ProductComponentProperty{ID: item.ID, Name: item.Name, PurposeType: item.PurposeType,
-						StartPort: item.StartPort, EndPort: item.EndPort, MaxPort: item.MaxPort, MinInstance: item.MinInstance, MaxInstance: item.MaxInstance, Spec: make(map[string]structs.ComponentInstanceResourceSpec)}
-					productComponentInfo, _ = components[item.ID]
-
-					var tmpSpecs []structs.SpecInfo
-
-					if item.PurposeType == string(constants.PurposeSchedule) {
-						tmpSpecs = scheduleSpecs
-					} else if item.PurposeType == string(constants.PurposeCompute) {
-						tmpSpecs = computeSpecs
-					} else if item.PurposeType == string(constants.PurposeStorage) {
-						tmpSpecs = storageSpecs
-					}
-					for _, ss := range tmpSpecs {
-						_, ok = productComponentInfo.Spec[ss.ID]
-						if !ok {
-							productComponentInfo.Spec[ss.ID] = structs.ComponentInstanceResourceSpec{
-								ID:       ss.ID,
-								Name:     ss.Name,
-								CPU:      ss.CPU,
-								Memory:   ss.Memory,
-								DiskType: ss.DiskType,
-							}
-						}
-					}
-				}
-			}
-		}
 
 		prw.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(Products, nil).AnyTimes()
 		resp, err := mgr.QueryProductDetail(context.TODO(), msg)

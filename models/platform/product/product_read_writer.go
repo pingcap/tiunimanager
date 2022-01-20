@@ -407,7 +407,7 @@ func (pw ComponentSortWrapper) Len() int {
 func (pw ComponentSortWrapper) Swap(i, j int){
 	pw.infos[i], pw.infos[j] = pw.infos[j], pw.infos[i]
 }
-func (pw ComponentSortWrapper) Less(i, j int) bool { // 重写 Less() 方法
+func (pw ComponentSortWrapper) Less(i, j int) bool {
 	return pw.by(&pw.infos[i], &pw.infos[j])
 }
 

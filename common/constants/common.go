@@ -107,6 +107,10 @@ const (
 	ComponentIDFileServer    EMProductComponentIDType = "file-server"
 )
 
+// SuggestedNodeCount
+// @Description: get suggested node count
+// @Receiver p
+// @return []int32
 func (p EMProductComponentIDType) SuggestedNodeCount() []int32 {
 	switch p {
 	case ComponentIDPD:

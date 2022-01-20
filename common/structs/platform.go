@@ -61,6 +61,7 @@ type ProductComponentProperty struct {
 	AvailableZones          []ComponentInstanceZoneWithSpecs `json:"availableZones"` //Information on the specifications of the resources online for the running of product components,organized by different Zone
 }
 
+// ComponentInstanceZoneWithSpecs Specs group by zone
 type ComponentInstanceZoneWithSpecs struct {
 	ZoneID   string `json:"zoneId"`
 	ZoneName string `json:"zoneName"`

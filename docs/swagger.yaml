@@ -1030,12 +1030,6 @@ definitions:
         - 2
         example: 1
         type: integer
-      hasDefault:
-        enum:
-        - 1
-        - 2
-        example: 1
-        type: integer
       name:
         example: 8C16GV4_default
         type: string

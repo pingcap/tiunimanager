@@ -53,7 +53,6 @@ type DetailParameterGroupResp struct {
 type CreateParameterGroupReq struct {
 	Name           string                                      `json:"name" example:"8C16GV4_default"`
 	DBType         int                                         `json:"dbType" example:"1" enums:"1,2"`
-	HasDefault     int                                         `json:"hasDefault" example:"1" enums:"1,2"`
 	ClusterVersion string                                      `json:"clusterVersion" example:"v5.0"`
 	ClusterSpec    string                                      `json:"clusterSpec" example:"8C16G"`
 	GroupType      int                                         `json:"groupType" example:"1" enums:"1,2"`

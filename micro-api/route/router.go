@@ -26,13 +26,13 @@ import (
 	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
 	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
-	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
-
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
+	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
 	"github.com/pingcap-inc/tiem/micro-api/controller/platform/product"
 	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
 	warehouseApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 	flowtaskApi "github.com/pingcap-inc/tiem/micro-api/controller/task/flowtask"
+	rbacApi "github.com/pingcap-inc/tiem/micro-api/controller/user/rbac"
 	userApi "github.com/pingcap-inc/tiem/micro-api/controller/user"
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
@@ -96,6 +96,21 @@ func Route(g *gin.Engine) {
 			tenant.GET("/", metrics.HandleMetrics(constants.MetricsTenantQuery), userApi.QueryTenants)
 		}
 
+		rbac := apiV1.Group("/rbac")
+		{
+			rbac.Use(interceptor.VerifyIdentity)
+			rbac.Use(interceptor.AuditLog())
+			rbac.POST("/role/", metrics.HandleMetrics(constants.MetricsRbacCreateRole), rbacApi.CreateRbacRole)
+			rbac.GET("/role/", metrics.HandleMetrics(constants.MetricsRbacQueryRole), rbacApi.QueryRbacRoles)
+			rbac.POST("/role/bind", metrics.HandleMetrics(constants.MetricsRbacBindRolesForUser), rbacApi.BindRolesForUser)
+			rbac.DELETE("/role/unbind", metrics.HandleMetrics(constants.MetricsRbacUnbindRoleForUser), rbacApi.UnbindRoleForUser)
+			rbac.DELETE("/role/:role", metrics.HandleMetrics(constants.MetricsRbacDeleteRole), rbacApi.DeleteRbacRole)
+			rbac.POST("/permission/add", metrics.HandleMetrics(constants.MetricsRbacAddPermissionForRole), rbacApi.AddPermissionsForRole)
+			rbac.DELETE("/permission/delete", metrics.HandleMetrics(constants.MetricsRbacDeletePermissionForRole), rbacApi.DeletePermissionsForRole)
+			rbac.GET("/permission/:userId", metrics.HandleMetrics(constants.MetricsRbacQueryPermissionForUser), rbacApi.QueryPermissionsForUser)
+			rbac.POST("/permission/check", metrics.HandleMetrics(constants.MetricsRbacCheckPermissionForUser), rbacApi.CheckPermissionForUser)
+		}
+
 		cluster := apiV1.Group("/clusters")
 		{
 			cluster.Use(interceptor.VerifyIdentity)
@@ -116,7 +131,7 @@ func Route(g *gin.Engine) {
 			cluster.GET("/:clusterId/log", metrics.HandleMetrics(constants.MetricsClusterQueryLogParameter), logApi.QueryClusterLog)
 
 			// Scale cluster
-			cluster.GET("/:clusterId/preview-scale-out", metrics.HandleMetrics(constants.MetricsClusterPreviewScaleOut), clusterApi.ScaleOutPreview)
+			cluster.POST("/:clusterId/preview-scale-out", metrics.HandleMetrics(constants.MetricsClusterPreviewScaleOut), clusterApi.ScaleOutPreview)
 			cluster.POST("/:clusterId/scale-out", metrics.HandleMetrics(constants.MetricsClusterScaleOut), clusterApi.ScaleOut)
 			cluster.POST("/:clusterId/scale-in", metrics.HandleMetrics(constants.MetricsClusterScaleIn), clusterApi.ScaleIn)
 

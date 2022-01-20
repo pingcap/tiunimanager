@@ -2121,7 +2121,7 @@ var doc = `{
             }
         },
         "/clusters/{clusterId}/preview-scale-out": {
-            "get": {
+            "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
@@ -3579,6 +3579,619 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/message.QueryProductDetailResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/rbac/permission/add": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "AddPermissionsForRole",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac AddPermissionsForRole"
+                ],
+                "summary": "add permissions for role",
+                "parameters": [
+                    {
+                        "description": "AddPermissionsForRole request",
+                        "name": "addPermissionsForRoleReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.AddPermissionsForRoleReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.AddPermissionsForRoleResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/rbac/permission/check": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "CheckPermissionForUser",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac CheckPermissionForUser"
+                ],
+                "summary": "check permissions of user",
+                "parameters": [
+                    {
+                        "description": "CheckPermissionForUser request",
+                        "name": "checkPermissionForUserReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.CheckPermissionForUserReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.CheckPermissionForUserResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/rbac/permission/delete": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "DeletePermissionsForRole",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac DeletePermissionsForRole"
+                ],
+                "summary": "delete permissions for role",
+                "parameters": [
+                    {
+                        "description": "DeleteRoleForUser request",
+                        "name": "deletePermissionsForRoleReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.DeletePermissionsForRoleReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.DeletePermissionsForRoleResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/rbac/permission/{userId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "QueryPermissionsForUser",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac QueryPermissionsForUser"
+                ],
+                "summary": "query permissions of user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "rbac userId",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.QueryPermissionsForUserResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/rbac/role/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "QueryRoles",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac QueryRoles"
+                ],
+                "summary": "query rbac roles",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "rbac role",
+                        "name": "role",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.QueryRolesResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "CreateRbacRole",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac CreateRbacRole"
+                ],
+                "summary": "create rbac role",
+                "parameters": [
+                    {
+                        "description": "CreateRole request",
+                        "name": "createReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.CreateRoleReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.CreateRoleResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/rbac/role/bind": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "BindRolesForUser",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac BindRolesForUser"
+                ],
+                "summary": "bind user with roles",
+                "parameters": [
+                    {
+                        "description": "BindRolesForUser request",
+                        "name": "bindReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.BindRolesForUserReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.BindRolesForUserResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/rbac/role/{role}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "DeleteRbacRole",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac DeleteRbacRole"
+                ],
+                "summary": "delete rbac role",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "rbac role",
+                        "name": "role",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.DeleteRoleResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/rbac/user_role/delete": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "UnbindRoleForUser",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac UnbindRoleForUser"
+                ],
+                "summary": "unbind rbac role from user",
+                "parameters": [
+                    {
+                        "description": "UnbindRoleForUser request",
+                        "name": "deleteRoleForUserReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UnbindRoleForUserReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UnbindRoleForUserResp"
                                         }
                                     }
                                 }
@@ -5750,6 +6363,9 @@ var doc = `{
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendor": {
+                    "type": "string"
                 }
             }
         },
@@ -5874,6 +6490,9 @@ var doc = `{
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendor": {
+                    "type": "string"
                 }
             }
         },
@@ -6008,6 +6627,10 @@ var doc = `{
                 "startTS": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "startUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 },
                 "status": {
                     "type": "string",
@@ -6320,6 +6943,10 @@ var doc = `{
                     "type": "string",
                     "example": "415241823337054209"
                 },
+                "startUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
+                },
                 "status": {
                     "type": "string",
                     "enum": [
@@ -6499,6 +7126,9 @@ var doc = `{
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendor": {
+                    "type": "string"
                 }
             }
         },
@@ -6950,6 +7580,23 @@ var doc = `{
                 }
             }
         },
+        "message.AddPermissionsForRoleReq": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.RbacPermission"
+                    }
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.AddPermissionsForRoleResp": {
+            "type": "object"
+        },
         "message.ApplyParameterGroupReq": {
             "type": "object",
             "required": [
@@ -6980,6 +7627,45 @@ var doc = `{
                 "workFlowId": {
                     "description": "Asynchronous task workflow ID",
                     "type": "string"
+                }
+            }
+        },
+        "message.BindRolesForUserReq": {
+            "type": "object",
+            "properties": {
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.BindRolesForUserResp": {
+            "type": "object"
+        },
+        "message.CheckPermissionForUserReq": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.RbacPermission"
+                    }
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.CheckPermissionForUserResp": {
+            "type": "object",
+            "properties": {
+                "result": {
+                    "type": "boolean"
                 }
             }
         },
@@ -7014,6 +7700,12 @@ var doc = `{
                 "params"
             ],
             "properties": {
+                "addParams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/message.ParameterInfo"
+                    }
+                },
                 "clusterSpec": {
                     "type": "string",
                     "example": "8C16G"
@@ -7086,6 +7778,17 @@ var doc = `{
             }
         },
         "message.CreateProductResp": {
+            "type": "object"
+        },
+        "message.CreateRoleReq": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.CreateRoleResp": {
             "type": "object"
         },
         "message.CreateSpecsReq": {
@@ -7330,6 +8033,23 @@ var doc = `{
                 }
             }
         },
+        "message.DeletePermissionsForRoleReq": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.RbacPermission"
+                    }
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.DeletePermissionsForRoleResp": {
+            "type": "object"
+        },
         "message.DeleteProductReq": {
             "type": "object",
             "properties": {
@@ -7339,6 +8059,9 @@ var doc = `{
             }
         },
         "message.DeleteProductResp": {
+            "type": "object"
+        },
+        "message.DeleteRoleResp": {
             "type": "object"
         },
         "message.DeleteSpecsReq": {
@@ -7547,6 +8270,68 @@ var doc = `{
                 }
             }
         },
+        "message.ParameterInfo": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "log"
+                },
+                "defaultValue": {
+                    "type": "string",
+                    "example": "1024"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "binlog size"
+                },
+                "hasApply": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "hasReboot": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "instanceType": {
+                    "type": "string",
+                    "example": "TiDB"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "binlog_size"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "range": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "readOnly": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "systemVariable": {
+                    "type": "string",
+                    "example": "log.binlog_size"
+                },
+                "type": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "mb"
+                },
+                "updateSource": {
+                    "type": "integer",
+                    "example": 0
+                }
+            }
+        },
         "message.QueryDataImportExportRecordsResp": {
             "type": "object",
             "properties": {
@@ -7632,6 +8417,20 @@ var doc = `{
                 }
             }
         },
+        "message.QueryPermissionsForUserResp": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.RbacPermission"
+                    }
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
         "message.QueryProductDetailResp": {
             "type": "object",
             "properties": {
@@ -7660,6 +8459,17 @@ var doc = `{
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "message.QueryRolesResp": {
+            "type": "object",
+            "properties": {
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
                     }
                 }
             }
@@ -7765,6 +8575,20 @@ var doc = `{
                 }
             }
         },
+        "message.UnbindRoleForUserReq": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.UnbindRoleForUserResp": {
+            "type": "object"
+        },
         "message.UpdateHostReservedReq": {
             "type": "object",
             "properties": {
@@ -7805,6 +8629,12 @@ var doc = `{
                 "params"
             ],
             "properties": {
+                "addParams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/message.ParameterInfo"
+                    }
+                },
                 "clusterSpec": {
                     "type": "string",
                     "example": "8C16G"
@@ -7812,6 +8642,15 @@ var doc = `{
                 "clusterVersion": {
                     "type": "string",
                     "example": "v5.0"
+                },
+                "delParams": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "1"
+                    ]
                 },
                 "name": {
                     "type": "string",
@@ -8267,6 +9106,14 @@ var doc = `{
                         " 1000"
                     ]
                 },
+                "readOnly": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "example": 0
+                },
                 "realValue": {
                     "$ref": "#/definitions/structs.ParameterRealValue"
                 },
@@ -8684,6 +9531,14 @@ var doc = `{
                         " 1000"
                     ]
                 },
+                "readOnly": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "example": 0
+                },
                 "systemVariable": {
                     "type": "string",
                     "example": "log.log_level"
@@ -8721,6 +9576,10 @@ var doc = `{
         },
         "structs.ParameterGroupParameterSampleInfo": {
             "type": "object",
+            "required": [
+                "defaultValue",
+                "paramId"
+            ],
             "properties": {
                 "defaultValue": {
                     "type": "string",
@@ -8882,6 +9741,17 @@ var doc = `{
                 },
                 "version": {
                     "description": "Version information of the product, e.g. v5.0.0",
+                    "type": "string"
+                }
+            }
+        },
+        "structs.RbacPermission": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "resource": {
                     "type": "string"
                 }
             }

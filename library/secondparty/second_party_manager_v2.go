@@ -132,7 +132,6 @@ func (manager *SecondPartyManager) GetOperationStatus(ctx context.Context, opera
 		err = fmt.Errorf("secondPartyOperation:%v, err:%v", secondPartyOperation, err)
 		return
 	} else {
-		assert(secondPartyOperation.ID == operationID)
 		resp.Status = secondPartyOperation.Status
 		resp.Result = secondPartyOperation.Result
 		resp.ErrorStr = secondPartyOperation.ErrorStr

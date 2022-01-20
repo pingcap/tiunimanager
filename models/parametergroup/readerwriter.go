@@ -23,7 +23,11 @@
 
 package parametergroup
 
-import "context"
+import (
+	"context"
+
+	"github.com/pingcap-inc/tiem/message"
+)
 
 // ReaderWriter
 // @Description: parameter group reader and writer interface
@@ -34,9 +38,10 @@ type ReaderWriter interface {
 	// @param ctx
 	// @param pg
 	// @param pgm
+	// @param addParameters
 	// @return *ParameterGroup
 	// @return error
-	CreateParameterGroup(ctx context.Context, pg *ParameterGroup, pgm []*ParameterGroupMapping) (*ParameterGroup, error)
+	CreateParameterGroup(ctx context.Context, pg *ParameterGroup, pgm []*ParameterGroupMapping, addParameters []message.ParameterInfo) (*ParameterGroup, error)
 
 	// DeleteParameterGroup
 	// @Description: delete a parameter group
@@ -50,8 +55,10 @@ type ReaderWriter interface {
 	// @param ctx
 	// @param pg
 	// @param pgm
+	// @param addParameters
+	// @param delParameters
 	// @return err
-	UpdateParameterGroup(ctx context.Context, pg *ParameterGroup, pgm []*ParameterGroupMapping) (err error)
+	UpdateParameterGroup(ctx context.Context, pg *ParameterGroup, pgm []*ParameterGroupMapping, addParameters []message.ParameterInfo, delParameters []string) (err error)
 
 	// QueryParameterGroup
 	// @Description: query parameter group list
@@ -100,6 +107,15 @@ type ReaderWriter interface {
 	// @return err
 	UpdateParameter(ctx context.Context, parameter *Parameter) (err error)
 
+	// QueryParameters
+	// @Description: query parameters list
+	// @param ctx
+	// @param offset
+	// @param size
+	// @return params
+	// @return err
+	QueryParameters(ctx context.Context, offset, size int) (params []*Parameter, total int64, err error)
+
 	// QueryParametersByGroupId
 	// @Description: query parameters by parameter group id
 	// @param ctx
@@ -116,4 +132,12 @@ type ReaderWriter interface {
 	// @return parameter
 	// @return err
 	GetParameter(ctx context.Context, parameterId string) (parameter *Parameter, err error)
+
+	// ExistsParameter
+	// @Description: determine if the parameter exists
+	// @param ctx
+	// @param category
+	// @param name
+	// @param instanceType
+	ExistsParameter(ctx context.Context, category, name, instanceType string) (parameter *Parameter, err error)
 }

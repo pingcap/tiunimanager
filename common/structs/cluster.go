@@ -62,8 +62,9 @@ type CreateClusterParameter struct {
 	Version          string   `json:"clusterVersion" validate:"required,startswith=v"`
 	Tags             []string `json:"tags"`
 	TLS              bool     `json:"tls"`
-	Copies           int      `json:"copies"`                                                                                //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
-	Exclusive        bool     `json:"exclusive" form:"exclusive"`                                                            //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+	Copies           int      `json:"copies"`                     //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
+	Exclusive        bool     `json:"exclusive" form:"exclusive"` //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+	Vendor           string   `json:"vendor" form:"vendor"`
 	Region           string   `json:"region" form:"region" validate:"required,max=32"`                                       //The Region where the cluster is located
 	CpuArchitecture  string   `json:"cpuArchitecture" form:"cpuArchitecture" validate:"required,oneof=X86 X86_64 ARM ARM64"` //X86/X86_64/ARM
 	ParameterGroupID string   `json:"parameterGroupID" form:"parameterGroupID"`
@@ -119,6 +120,8 @@ type ClusterInstanceInfo struct {
 	Spec         ProductSpecInfo `json:"spec"` //??
 	Zone         ZoneInfo        `json:"zone"` //??
 }
+
+
 
 // ClusterTopologyInfo Topology of the cluster
 type ClusterTopologyInfo struct {
@@ -203,6 +206,7 @@ type ClusterParameterInfo struct {
 	HasReboot      int                `json:"hasReboot" example:"0" enums:"0,1"`
 	HasApply       int                `json:"hasApply" example:"1" enums:"0,1"`
 	UpdateSource   int                `json:"updateSource" example:"0" enums:"0,1,2,3"`
+	ReadOnly       int                `json:"readOnly" example:"0" enums:"0,1"`
 	DefaultValue   string             `json:"defaultValue" example:"1"`
 	RealValue      ParameterRealValue `json:"realValue"`
 	Description    string             `json:"description" example:"binlog cache size"`

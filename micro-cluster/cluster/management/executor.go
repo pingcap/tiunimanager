@@ -989,7 +989,7 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	req := context.GetData(ContextTakeoverRequest).(cluster.TakeoverClusterReq)
-	clusterHome := fmt.Sprintf("%sstorage/cluster/clusters/%s/", req.TiUPPath, clusterMeta.Cluster.ID)
+	clusterHome := fmt.Sprintf("%s/storage/cluster/clusters/%s/", req.TiUPPath, clusterMeta.Cluster.ID)
 
 	var sshClient *ssh.Client
 	var sftpClient *sftp.Client
@@ -1147,6 +1147,7 @@ func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workfl
 	clusterMeta.Cluster.Type = string(constants.EMProductIDTiDB)
 	clusterMeta.Cluster.Version = metadata.Version
 	clusterSpec := metadata.GetTopology().(*spec.Specification)
+	clusterMeta.Cluster.CpuArchitecture = constants.ConvertAlias(clusterSpec.GlobalOptions.Arch)
 	err = clusterMeta.ParseTopologyFromConfig(context, clusterSpec)
 	if err != nil {
 		framework.LogWithContext(context).Errorf(

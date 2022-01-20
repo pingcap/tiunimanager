@@ -25,7 +25,7 @@ type ReaderWriter interface {
 	Create(ctx context.Context, cluster *Cluster) (*Cluster, error)
 	Delete(ctx context.Context, clusterID string) (err error)
 	Get(ctx context.Context, clusterID string) (*Cluster, error)
-	GetMeta(ctx context.Context, clusterID string) (*Cluster, []*ClusterInstance, error)
+	GetMeta(ctx context.Context, clusterID string) (*Cluster, []*ClusterInstance, []*DBUser, error)
 	GetRelations(ctx context.Context, clusterID string) ([]*ClusterRelation, error)
 
 	QueryMetas(ctx context.Context, filters Filters, pageReq structs.PageRequest) ([]*Result, structs.Page, error)
@@ -119,4 +119,10 @@ type ReaderWriter interface {
     // @return err
     //
 	ClearClusterPhysically(ctx context.Context, clusterID string) (err error)
+
+	CreateDBUser(ctx context.Context, user *DBUser) error
+	GetDBUser(ctx context.Context, clusterID string) ([]*DBUser, error)
+	// todo
+	//UpdateDBUser(ctx context.Context, clusterID string, user *DBUser) err
+	DeleteDBUser(ctx context.Context, ID uint) error
 }

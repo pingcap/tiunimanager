@@ -31,6 +31,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
+	"sort"
 )
 
 type ProductReadWriterInterface interface {
@@ -387,7 +388,38 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			}
 		}
 	}
+
+	for _, product := range products {
+		for _, v := range product.Versions {
+			for key, a := range v.Arch {
+				componentSortWrapper := ComponentSortWrapper{
+					infos: a,
+					by: func(p, q *structs.ProductComponentProperty) bool {
+						return constants.EMProductComponentIDType(p.ID).SortWeight() > constants.EMProductComponentIDType(q.ID).SortWeight()
+					},
+				}
+				sort.Sort(componentSortWrapper)
+				v.Arch[key] = componentSortWrapper.infos
+			}
+		}
+	}
 	return products, err
+}
+
+
+type ComponentSortWrapper struct {
+	infos []structs.ProductComponentProperty
+	by func(p, q *structs.ProductComponentProperty) bool
+}
+
+func (pw ComponentSortWrapper) Len() int {
+	return len(pw.infos)
+}
+func (pw ComponentSortWrapper) Swap(i, j int){
+	pw.infos[i], pw.infos[j] = pw.infos[j], pw.infos[i]
+}
+func (pw ComponentSortWrapper) Less(i, j int) bool { // 重写 Less() 方法
+	return pw.by(&pw.infos[i], &pw.infos[j])
 }
 
 // QueryProductComponentProperty Query the properties of a product component,For creating, expanding and shrinking clusters only

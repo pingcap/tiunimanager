@@ -38,6 +38,7 @@ type Cluster struct {
 	ParameterGroupID  string                             `gorm:"comment: parameter group id"`
 	Copies            int                                `gorm:"comment: copies"`
 	Exclusive         bool                               `gorm:"comment: exclusive"`
+	Vendor            string                             `gorm:"comment: vendorID"`
 	Region            string                             `gorm:"comment: region location"`
 	CpuArchitecture   constants.ArchType                 `gorm:"not null;type:varchar(64);comment:'user name of the cluster''"`
 	MaintenanceStatus constants.ClusterMaintenanceStatus `gorm:"not null;type:varchar(64);comment:'user name of the cluster''"`

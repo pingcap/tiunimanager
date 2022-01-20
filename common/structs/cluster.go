@@ -77,6 +77,7 @@ type ClusterInfo struct {
 	Name                     string    `json:"clusterName"`
 	Type                     string    `json:"clusterType"`
 	Version                  string    `json:"clusterVersion"`
+	Vendor                   string    `json:"vendor" form:"vendor"`
 	DBUser                   string    `json:"dbUser"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
 	Tags                     []string  `json:"tags"`
 	TLS                      bool      `json:"tls"`

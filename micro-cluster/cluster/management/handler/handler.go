@@ -897,12 +897,12 @@ type TiDBUserInfo struct {
 // @Receiver p
 // @return BDUser
 func (p *ClusterMeta) GetDBUserNamePassword(ctx context.Context, roleType constants.DBUserRoleType) (*management.DBUser, error) {
-	clusterMeta, err := Get(ctx, p.Cluster.ID)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("get clusterMeta failed, clusterID = %s, errors = %s", p.Cluster.ID, err)
-		return nil, err
+	user := p.DBUsers[string(roleType)]
+	if user == nil {
+		msg := fmt.Sprintf("get %s user from cluser %s failed, empty user", roleType, p.Cluster.ID)
+		framework.LogWithContext(ctx).Errorf(msg)
+		return user, errors.NewError(errors.TIEM_USER_NOT_FOUND, msg)
 	}
-	user := clusterMeta.DBUsers[string(roleType)]
 	return user, nil
 }
 

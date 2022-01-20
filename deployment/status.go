@@ -15,46 +15,78 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: tempFile
+ * @File: status
  * @Description:
  * @Author: shenhaibo@pingcap.com
  * @Version: 1.0.0
- * @Date: 2022/1/11
+ * @Date: 2022/1/20
 *******************************************************************************/
 
-package disk
+package deployment
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
+
+	"github.com/pingcap-inc/tiem/util/disk"
+
+	"gorm.io/gorm"
 )
 
-// CreateWithContent
-// @Description:
-// @Parameter dir
-// @Parameter prefix
-// @Parameter suffix
-// @Parameter content
-// @return fileName
-// @return err
-func CreateWithContent(dir, prefix, suffix string, content []byte) (fileName string, err error) {
-	file, err := ioutil.TempFile(dir, fmt.Sprintf("%s-*.%s", prefix, suffix))
+type Status string
+
+const (
+	Init       Status = "init"
+	Processing Status = "processing"
+	Finished   Status = "finished"
+	Error      Status = "error"
+)
+
+// Operation Record information about each TiUP operation
+type Operation struct {
+	ID         string    `gorm:"primaryKey;"`
+	Type       string    `gorm:"not null;comment:'second party operation of type, eg: deploy, start, stop...'"`
+	WorkFlowID string    `gorm:"not null;index;comment:'workflow ID of operation'"`
+	Status     Status    `gorm:"default:null"`
+	Result     string    `gorm:"default:null"`
+	ErrorStr   string    `gorm:"size:8192;comment:'operation error msg'"`
+	CreatedAt  time.Time `gorm:"<-:create"`
+	UpdatedAt  time.Time
+	DeletedAt  gorm.DeletedAt `gorm:"index"`
+}
+
+func Create(tiUPHome string, op Operation) (fileName string, err error) {
+	b, err := json.Marshal(op)
 	if err != nil {
-		err = fmt.Errorf("fail to create temp file err: %v", err)
 		return "", err
 	}
-	fileName = file.Name()
-	var ct int
-	ct, err = file.Write(content)
-	if err != nil || ct != len(content) {
-		file.Close()
-		os.Remove(fileName)
-		err = fmt.Errorf("fail to write content to temp file %s, err: %v, length of content: %d, writed: %d", fileName, err, len(content), ct)
-		return "", err
+
+	fileName, err = disk.CreateWithContent(fmt.Sprintf("%s/storage", tiUPHome), "operation", "json", b)
+	return
+}
+
+func Update(fileName string, op Operation) error {
+	b, err := json.Marshal(op)
+	if err != nil {
+		return err
 	}
-	if err := file.Close(); err != nil {
-		panic(fmt.Sprintln("fail to close temp file ", fileName))
+
+	return ioutil.WriteFile(fileName, b, 0644)
+}
+
+func Read(fileName string) (op Operation, err error) {
+	data, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return
 	}
-	return fileName, nil
+
+	err = json.Unmarshal(data, &op)
+	return
+}
+
+func Delete(filename string) error {
+	return os.Remove(filename)
 }

@@ -49,7 +49,7 @@ type Manager struct {
 func (m *Manager) Deploy(ctx context.Context, componentType TiUPComponentType, clusterID, version, configYaml, home,
 	workFlowID string, args []string, timeout int) (ID string, err error) {
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
-	configYamlFilePath, err := disk.NewTmpFileWithContent("", "em-topology", "yaml", []byte(configYaml))
+	configYamlFilePath, err := disk.CreateWithContent("", "em-topology", "yaml", []byte(configYaml))
 	if err != nil {
 		return "", err
 	}

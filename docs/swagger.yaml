@@ -1832,6 +1832,8 @@ definitions:
         type: string
       userId:
         type: string
+      vendor:
+        type: string
       whitelist:
         items:
           type: string

@@ -8920,6 +8920,9 @@ var doc = `{
                 "userId": {
                     "type": "string"
                 },
+                "vendor": {
+                    "type": "string"
+                },
                 "whitelist": {
                     "type": "array",
                     "items": {

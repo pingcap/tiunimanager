@@ -6337,7 +6337,7 @@ var doc = `{
                     "type": "string"
                 },
                 "dbUser": {
-                    "description": "todo ?",
+                    "description": "todo delete?",
                     "type": "string"
                 },
                 "exclusive": {
@@ -8894,7 +8894,6 @@ var doc = `{
                     "$ref": "#/definitions/structs.Usage"
                 },
                 "tags": {
-                    "description": "DBUser                   string    ` + "`" + `json:\"dbUser\"` + "`" + ` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -8910,6 +8909,7 @@ var doc = `{
                     "type": "string"
                 },
                 "vendor": {
+                    "description": "DBUser                   string    ` + "`" + `json:\"dbUser\"` + "`" + ` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
                     "type": "string"
                 },
                 "whitelist": {

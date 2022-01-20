@@ -176,15 +176,18 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 }
 
 func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force bool) (flowIds []string, err error) {
-	err = p.UpdateHostStatus(ctx, hostIds, string(constants.HostDeleting))
-	if err != nil {
-		return nil, err
-	}
 	var flows []*workflow.WorkFlowAggregation
 	flowManager := workflow.GetWorkFlowService()
-	flowName := p.selectDeleteFlowName(force)
-	framework.LogWithContext(ctx).Infof("delete hosts select %s", flowName)
 	for _, hostId := range hostIds {
+		hosts, _, err := resourcePool.QueryHosts(ctx, &structs.Location{}, &structs.HostFilter{HostID: hostId}, &structs.PageRequest{})
+		if err != nil {
+			errMsg := fmt.Sprintf("query host %v failed, %v", hostId, err)
+			framework.LogWithContext(ctx).Errorln(errMsg)
+			return nil, errors.WrapError(errors.TIEM_RESOURCE_DELETE_HOST_ERROR, errMsg, err)
+		}
+		flowName := p.selectDeleteFlowName(&hosts[0], force)
+		framework.LogWithContext(ctx).Infof("delete host %s select %s", hostId, flowName)
+
 		flow, err := flowManager.CreateWorkFlow(ctx, hostId, workflow.BizTypeHost, flowName)
 		if err != nil {
 			errMsg := fmt.Sprintf("create %s workflow failed for host %s, %s", flowName, hostId, err.Error())
@@ -194,9 +197,15 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 
 		flowManager.AddContext(flow, rp_consts.ContextResourcePoolKey, p)
 		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostId})
+		flowManager.AddContext(flow, rp_consts.ContextHostInfoArrayKey, hosts)
 
 		flows = append(flows, flow)
 		flowIds = append(flowIds, flow.Flow.ID)
+	}
+
+	err = p.UpdateHostStatus(ctx, hostIds, string(constants.HostDeleting))
+	if err != nil {
+		return nil, err
 	}
 
 	go func() {
@@ -245,8 +254,8 @@ func (p *ResourcePool) selectImportFlowName(condition *structs.ImportCondition) 
 	return
 }
 
-func (p *ResourcePool) selectDeleteFlowName(force bool) (flowName string) {
-	if framework.Current.GetClientArgs().SkipHostInit || force {
+func (p *ResourcePool) selectDeleteFlowName(host *structs.HostInfo, force bool) (flowName string) {
+	if framework.Current.GetClientArgs().SkipHostInit || force || host.Status == string(constants.HostFailed) {
 		flowName = rp_consts.FlowDeleteHostsByForce
 	} else {
 		flowName = rp_consts.FlowDeleteHosts

@@ -191,15 +191,9 @@ func checkHostBeforeDelete(node *workflowModel.WorkFlowNode, ctx *workflow.FlowC
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin check hosts before delete")
 
-	resourcePool, hostIds, err := getHostIDArrayFromFlowContext(ctx)
+	_, hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
-		log.Errorf("delete hosts failed for get flow context, %v", err)
-		return err
-	}
-
-	hosts, _, err := resourcePool.QueryHosts(ctx, &structs.Location{}, &structs.HostFilter{HostID: hostIds[0]}, &structs.PageRequest{})
-	if err != nil {
-		log.Errorf("query hosts %v failed, %v", hostIds[0], err)
+		log.Errorf("delete hosts failed for get host info from flow context, %v", err)
 		return err
 	}
 
@@ -208,11 +202,11 @@ func checkHostBeforeDelete(node *workflowModel.WorkFlowNode, ctx *workflow.FlowC
 		log.Errorln(errMsg)
 		return errors.NewError(errors.TIEM_RESOURCE_HOST_STILL_INUSED, errMsg)
 	}
-	log.Infof("check host %s before delete succeed", hostIds[0])
+	log.Infof("check host %s before delete succeed", hosts[0].ID)
 
 	// Set host info to context for leave em cluster executor
 	ctx.SetData(rp_consts.ContextHostInfoArrayKey, hosts)
-	node.Record(fmt.Sprintf("check host %s before delete ", hostIds[0]))
+	node.Record(fmt.Sprintf("check host %s before delete ", hosts[0].ID))
 
 	return nil
 }

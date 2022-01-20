@@ -93,15 +93,17 @@ func Test_SelectDeleteFlowName(t *testing.T) {
 	}
 	tests := []struct {
 		testName string
+		host     *structs.HostInfo
 		force    bool
 		want     want
 	}{
-		{"DeleteFlow", false, want{rp_consts.FlowDeleteHosts}},
-		{"DeleteFlowByForce", true, want{rp_consts.FlowDeleteHostsByForce}},
+		{"DeleteFlow", &structs.HostInfo{IP: "192.168.6.6", Status: string(constants.HostOnline)}, false, want{rp_consts.FlowDeleteHosts}},
+		{"DeleteFailHostFlow", &structs.HostInfo{IP: "192.168.6.6", Status: string(constants.HostFailed)}, false, want{rp_consts.FlowDeleteHosts}},
+		{"DeleteFlowByForce", &structs.HostInfo{IP: "192.168.6.6", Status: string(constants.HostOnline)}, true, want{rp_consts.FlowDeleteHostsByForce}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			flowName := resourcePool.selectDeleteFlowName(tt.force)
+			flowName := resourcePool.selectDeleteFlowName(tt.host, tt.force)
 			assert.Equal(t, tt.want.flowName, flowName)
 		})
 	}

@@ -6323,7 +6323,7 @@
                     "type": "string"
                 },
                 "dbUser": {
-                    "description": "todo",
+                    "description": "todo ?",
                     "type": "string"
                 },
                 "exclusive": {
@@ -6451,7 +6451,7 @@
                     "type": "string"
                 },
                 "dbUser": {
-                    "description": "todo",
+                    "description": "todo ?",
                     "type": "string"
                 },
                 "exclusive": {
@@ -7087,7 +7087,7 @@
                     "type": "string"
                 },
                 "dbUser": {
-                    "description": "todo",
+                    "description": "todo ?",
                     "type": "string"
                 },
                 "exclusive": {
@@ -8833,10 +8833,6 @@
                 "createTime": {
                     "type": "string"
                 },
-                "dbUser": {
-                    "description": "The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
-                    "type": "string"
-                },
                 "deleteTime": {
                     "type": "string"
                 },
@@ -8882,6 +8878,7 @@
                     "$ref": "#/definitions/structs.Usage"
                 },
                 "tags": {
+                    "description": "DBUser                   string    `json:\"dbUser\"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
                     "type": "array",
                     "items": {
                         "type": "string"

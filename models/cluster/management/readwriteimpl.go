@@ -188,7 +188,7 @@ func (g *ClusterReadWrite) QueryMetas(ctx context.Context, filters Filters, page
 		results = append(results, &Result{
 			Cluster:   c,
 			Instances: instances,
-			Users: users,
+			DBUsers: users,
 		})
 	}
 	return results, page, nil
@@ -414,7 +414,10 @@ func (g *ClusterReadWrite) DeleteDBUser(ctx context.Context, ID uint) error {
 	return dbCommon.WrapDBError(err)
 }
 
-
+func (g *ClusterReadWrite) UpdateDBUser(ctx context.Context, user *DBUser) error {
+	g.DB(ctx).Save(user)
+	return nil
+}
 
 func NewClusterReadWrite(db *gorm.DB) *ClusterReadWrite {
 	return &ClusterReadWrite{

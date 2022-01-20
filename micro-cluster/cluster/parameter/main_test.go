@@ -70,6 +70,14 @@ func mockClusterMeta() *handler.ClusterMeta {
 			"PD":   mockClusterInstances(),
 			"CDC":  mockClusterInstances(),
 		},
+		DBUsers: map[string]*management.DBUser{
+			string(constants.Root): &management.DBUser{
+				ClusterID: "id",
+				Name:      constants.DBUserName[constants.Root],
+				Password:  "12345678",
+				RoleType: string(constants.Root),
+			},
+		},
 		NodeExporterPort:     9091,
 		BlackboxExporterPort: 9092,
 	}
@@ -79,8 +87,6 @@ func mockCluster() *management.Cluster {
 	return &management.Cluster{
 		Entity:            common.Entity{ID: "123", TenantId: "1", Status: "1"},
 		Name:              "testCluster",
-		DBUser:            "root",
-		DBPassword:        "123",
 		Type:              "0",
 		Version:           "5.0",
 		TLS:               false,

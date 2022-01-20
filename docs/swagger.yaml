@@ -41,7 +41,7 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: todo
+        description: todo ?
         type: string
       exclusive:
         description: Whether the newly created cluster is exclusive to physical resources,
@@ -137,7 +137,7 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: todo
+        description: todo ?
         type: string
       exclusive:
         description: Whether the newly created cluster is exclusive to physical resources,
@@ -590,7 +590,7 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: todo
+        description: todo ?
         type: string
       exclusive:
         description: Whether the newly created cluster is exclusive to physical resources,
@@ -1775,10 +1775,6 @@ definitions:
         $ref: '#/definitions/structs.Usage'
       createTime:
         type: string
-      dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
-        type: string
       deleteTime:
         type: string
       exclusive:
@@ -1812,6 +1808,9 @@ definitions:
       storageUsage:
         $ref: '#/definitions/structs.Usage'
       tags:
+        description: DBUser                   string    `json:"dbUser"` //The username
+          and password for the newly created database cluster, default is the root
+          user, which is not valid for Data Migration clusters
         items:
           type: string
         type: array

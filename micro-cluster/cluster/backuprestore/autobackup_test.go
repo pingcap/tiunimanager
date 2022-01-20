@@ -58,7 +58,7 @@ func Test_AutoBackup_doBackup(t *testing.T) {
 			ID:       "id-xxxx",
 			TenantId: "tid-xxx",
 		},
-	}, make([]*management.ClusterInstance, 0), nil).AnyTimes()
+	}, make([]*management.ClusterInstance, 0), make([]*management.DBUser, 0), nil).AnyTimes()
 	clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	mockBRService := mock_br_service.NewMockBRService(ctrl)

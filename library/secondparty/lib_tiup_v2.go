@@ -173,6 +173,38 @@ func (manager *SecondPartyManager) startTiUPScaleInOperation(ctx context.Context
 	}()
 }
 
+func (manager *SecondPartyManager) ClusterPrune(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string,
+	timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error) {
+	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("clusterprune "+
+		"tiupcomponent: %s, instancename: %s, timeout: %d, flags: %v, workflownodeid: %s",
+		string(tiUPComponent), instanceName, timeoutS, flags, workFlowNodeID)
+	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
+		secondparty.OperationType_ClusterPrune, workFlowNodeID)
+	if secondPartyOperation == nil || err != nil {
+		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
+		return "", err
+	} else {
+		var pruneReq CmdPruneReq
+		pruneReq.TiUPComponent = tiUPComponent
+		pruneReq.InstanceName = instanceName
+		pruneReq.TimeoutS = timeoutS
+		pruneReq.Flags = flags
+		pruneReq.TiUPPath = manager.TiUPBinPath
+		pruneReq.TiUPHome = GetTiUPHomeForComponent(ctx, tiUPComponent)
+		manager.startTiUPPruneOperation(ctx, secondPartyOperation.ID, &pruneReq)
+		return secondPartyOperation.ID, nil
+	}
+}
+
+func (manager *SecondPartyManager) startTiUPPruneOperation(ctx context.Context, operationID string, req *CmdPruneReq) {
+	go func() {
+		var args []string
+		args = append(args, string(req.TiUPComponent), "prune", req.InstanceName)
+		args = append(args, req.Flags...)
+		<-manager.startTiUPOperation(ctx, operationID, req.TiUPPath, args, req.TimeoutS, req.TiUPHome, "")
+	}()
+}
+
 func (manager *SecondPartyManager) ClusterStart(ctx context.Context, tiUPComponent TiUPComponentTypeStr,
 	instanceName string, timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error) {
 	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("clusterstart "+

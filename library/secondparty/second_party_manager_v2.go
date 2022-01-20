@@ -45,6 +45,8 @@ type SecondPartyService interface {
 		timeoutS int, flags []string, workFlowNodeID string, password string) (operationID string, err error)
 	ClusterScaleIn(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string, nodeId string,
 		timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error)
+	ClusterPrune(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string,
+		timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error)
 	ClusterStart(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string, timeoutS int,
 		flags []string, workFlowNodeID string) (operationID string, err error)
 	ClusterRestart(ctx context.Context, tiUPComponent TiUPComponentTypeStr, instanceName string, timeoutS int,

@@ -145,8 +145,10 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 		if len(address) <= 0 {
 			return errors.NewError(errors.TIEM_CONNECT_TIDB_ERROR, "component TiDB not found!")
 		}
+		// todo: get root
+		rootUser, _ := meta.GetDBUserNamePassword(ctx, constants.Root)
 		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql",
-			meta.Cluster.DBUser, meta.Cluster.DBPassword, address[0].IP, address[0].Port))
+			rootUser.Name, rootUser.Password, address[0].IP, address[0].Port))
 		if err != nil {
 			return errors.WrapError(errors.TIEM_CONNECT_TIDB_ERROR, err.Error(), err)
 		}

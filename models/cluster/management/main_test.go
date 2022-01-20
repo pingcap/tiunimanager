@@ -47,6 +47,7 @@ func TestMain(m *testing.M) {
 			db.Migrator().CreateTable(ClusterRelation{})
 			db.Migrator().CreateTable(ClusterInstance{})
 			db.Migrator().CreateTable(ClusterTopologySnapshot{})
+			db.Migrator().CreateTable(DBUser{})
 
 			testRW = NewClusterReadWrite(db)
 			return nil

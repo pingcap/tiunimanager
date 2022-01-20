@@ -18,8 +18,11 @@ package handler
 import (
 	"context"
 	"errors"
+	"fmt"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
+	"strings"
 	"testing"
 	"time"
 
@@ -1397,4 +1400,41 @@ func TestClusterMeta_GenerateTakeoverResourceRequirements(t *testing.T) {
 		assert.Equal(t, 12, len(requirements))
 		assert.Equal(t, len(requirements), len(instances))
 	})
+}
+
+func TestExecCommandThruSQL(t *testing.T) {
+	sqlCommand := "ALTER USER 'root'@'%' IDENTIFIED BY '12345678'"
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	mock.ExpectExec(sqlCommand).
+		WillReturnError(fmt.Errorf("some error"))
+	mock.ExpectRollback()
+
+	err = ExecCommandThruSQL(context.TODO(), db, sqlCommand)
+	if err == nil || !strings.Contains(err.Error(), "some error") {
+		t.Errorf("err(%s) should contain 'some error'", err.Error())
+	}
+}
+
+func TestGetRandomString(t *testing.T) {
+	type args struct {
+		n int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{"normal", args{10}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := GetRandomString(tt.args.n)
+			fmt.Println(got)
+		})
+	}
 }

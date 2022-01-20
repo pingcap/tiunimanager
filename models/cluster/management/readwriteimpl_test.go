@@ -17,12 +17,14 @@ package management
 
 import (
 	"context"
+	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestGormClusterReadWrite_MaintenanceStatus(t *testing.T) {
@@ -749,4 +751,109 @@ func TestClusterReadWrite_QueryInstancesByHost(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(result))
 	})
+}
+
+func TestClusterReadWrite_CreateDBUser(t *testing.T) {
+	user := &DBUser{
+		ClusterID:                "clusterid",
+		Name:                     "testName",
+		Password:                 "ppppppp",
+		RoleType:                 string(constants.DBUserBackupRestore),
+		LastPasswordGenerateTime: time.Now(),
+	}
+	type args struct {
+		ctx  context.Context
+		user *DBUser
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"normal", args{context.TODO(), user}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := testRW.CreateDBUser(tt.args.ctx, tt.args.user); (err != nil) != tt.wantErr {
+				t.Errorf("CreateDBUser() error = %v, wantErr %v", err, tt.wantErr)
+			} else {
+				assert.NotEmpty(t, user.ID)
+				assert.NotEmpty(t, user.CreatedAt)
+			}
+		})
+	}
+}
+
+func TestClusterReadWrite_GetDBUser(t *testing.T) {
+	user := DBUser{
+		ClusterID:                "clusterid",
+		Name:                     "testName",
+		Password:                 "ppppppp",
+		RoleType:                 string(constants.DBUserBackupRestore),
+		LastPasswordGenerateTime: time.Now(),
+	}
+	testRW.CreateDBUser(context.TODO(), &user)
+	defer testRW.DeleteDBUser(context.TODO(), user.ID)
+	type args struct {
+		ctx       context.Context
+		clusterID string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{"normal", args{context.TODO(), user.ClusterID}, false},
+		{"wrong clusterID", args{context.TODO(), "testID"}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := testRW.GetDBUser(tt.args.ctx, tt.args.clusterID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetDBUser() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if len(got) != 0 {
+				fmt.Println(got[0].ID, len(got))
+				assert.NotEmpty(t, got[0].ID)
+				assert.NotEmpty(t, got[0].CreatedAt)
+			}
+		})
+	}
+}
+
+func TestClusterReadWrite_DeleteDBUser(t *testing.T) {
+	user := DBUser{
+		ClusterID:                "clusterid",
+		Name:                     "testName",
+		Password:                 "ppppppp",
+		RoleType:                 string(constants.DBUserBackupRestore),
+		LastPasswordGenerateTime: time.Now(),
+	}
+	testRW.CreateDBUser(context.TODO(), &user)
+	type args struct {
+		ctx context.Context
+		ID  uint
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{"normal", args{context.TODO(), user.ID}, false},
+		{"no record", args{context.TODO(), 7}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := testRW.DeleteDBUser(tt.args.ctx, tt.args.ID); (err != nil) != tt.wantErr {
+				t.Errorf("DeleteDBUser() error = %v, wantErr %v", err, tt.wantErr)
+			} else {
+				got, _ := testRW.GetDBUser(context.TODO(), user.ClusterID)
+				fmt.Println(got)
+				assert.Empty(t, got)
+			}
+		})
+	}
 }

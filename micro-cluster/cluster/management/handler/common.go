@@ -39,10 +39,38 @@ import (
 const CheckMaxReplicaCmd = "SELECT MAX(replica_count) as max_replica_count FROM information_schema.tiflash_replica;"
 const DefaultTiupTimeOut = 360
 const DefaultPDMaxCount = 7
+const CheckInstanceStatusTimeout = 30 * 24 * time.Hour
+const CheckInstanceStatusInterval = 10 * time.Second
 
 type PlacementRules struct {
 	EnablePlacementRules string `json:"enable-placement-rules"`
 }
+
+type StoreInfos struct {
+	Stores []StoreInfo `json:"stores"`
+}
+
+type StoreInfo struct {
+	Store struct {
+		ID        int    `json:"id"`
+		Address   string `json:"address"`
+		StateName string `json:"state_name"`
+	} `json:"store"`
+	Status struct {
+		RegionCount int `json:"region_count"`
+		LeaderCount int `json:"leader_count"`
+	} `json:"status"`
+}
+
+type StoreStatus string
+
+const (
+	StoreUp         StoreStatus = "Up"
+	StoreDisconnect StoreStatus = "Disconnect"
+	StoreDown       StoreStatus = "Down"
+	StoreOffline    StoreStatus = "Offline"
+	StoreTombstone  StoreStatus = "Tombstone"
+)
 
 func Contain(list interface{}, target interface{}) bool {
 	if reflect.TypeOf(list).Kind() == reflect.Slice || reflect.TypeOf(list).Kind() == reflect.Array {
@@ -81,14 +109,11 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 
 		// check placement rules
 		if component.Type == string(constants.ComponentIDTiFlash) {
-			var pdID string
-			for componentType, instances := range meta.Instances {
-				if componentType == string(constants.ComponentIDPD) {
-					pdID = strings.Join([]string{instances[0].HostIP[0],
-						strconv.Itoa(int(instances[0].Ports[0]))}, ":")
-					break
-				}
+			pdAddress := meta.GetPDClientAddresses()
+			if len(pdAddress) <= 0 {
+				return errors.NewError(errors.TIEM_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
 			}
+			pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
 
 			config, err := secondparty.Manager.ClusterComponentCtl(ctx, secondparty.CTLComponentTypeStr,
 				meta.Cluster.Version, spec.ComponentPD, []string{"-u", pdID, "config", "show", "replication"}, DefaultTiupTimeOut)

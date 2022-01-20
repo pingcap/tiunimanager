@@ -132,9 +132,10 @@ var scaleInDefine = workflow.WorkFlowDefine{
 	FlowName: constants.FlowScaleInCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":       {"scaleInCluster", "scaleInDone", "fail", workflow.PollingNode, scaleInCluster},
-		"scaleInDone": {"freeInstanceResource", "freeDone", "fail", workflow.SyncFuncNode, freeInstanceResource},
+		"scaleInDone": {"checkInstanceStatus", "checkDone", "fail", workflow.SyncFuncNode, checkInstanceStatus},
+		"checkDone":   {"freeInstanceResource", "freeDone", "fail", workflow.SyncFuncNode, freeInstanceResource},
 		"freeDone":    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, endMaintenance)},
+		"fail":        {"fail", "", "", workflow.SyncFuncNode, endMaintenance},
 	},
 }
 
@@ -317,10 +318,10 @@ func (p *Manager) CreateCluster(ctx context.Context, req cluster.CreateClusterRe
 // @return resp
 // @return err
 func (p *Manager) PreviewCluster(ctx context.Context, req cluster.CreateClusterReq) (resp cluster.PreviewClusterResp, err error) {
-	_, total, _ := handler.Query(ctx, cluster.QueryClustersReq {
+	_, total, _ := handler.Query(ctx, cluster.QueryClustersReq{
 		Name: req.Name,
 		PageRequest: structs.PageRequest{
-			Page: 1,
+			Page:     1,
 			PageSize: 1,
 		},
 	})
@@ -330,11 +331,11 @@ func (p *Manager) PreviewCluster(ctx context.Context, req cluster.CreateClusterR
 	}
 
 	resp = cluster.PreviewClusterResp{
-		Region: req.Region,
-		CpuArchitecture: req.CpuArchitecture,
-		ClusterType: req.Type,
-		ClusterVersion: req.Version,
-		ClusterName: req.Name,
+		Region:            req.Region,
+		CpuArchitecture:   req.CpuArchitecture,
+		ClusterType:       req.Type,
+		ClusterVersion:    req.Version,
+		ClusterName:       req.Name,
 		CapabilityIndexes: []structs.Index{},
 	}
 
@@ -368,25 +369,25 @@ func preCheckStock(ctx context.Context, region string, arch string, instanceReso
 			if zoneResource, ok := stocks[resource.Zone]; ok &&
 				zoneResource.FreeHostCount >= int32(resource.Count) &&
 				zoneResource.FreeDiskCount >= int32(resource.Count) &&
-				zoneResource.FreeCpuCores >= int32(knowledge.ParseCpu(resource.Spec) * resource.Count) &&
-				zoneResource.FreeMemory >= int32(knowledge.ParseMemory(resource.Spec) * resource.Count){
+				zoneResource.FreeCpuCores >= int32(knowledge.ParseCpu(resource.Spec)*resource.Count) &&
+				zoneResource.FreeMemory >= int32(knowledge.ParseMemory(resource.Spec)*resource.Count) {
 
 				enough = true
 				// deduction
 				zoneResource.FreeHostCount = zoneResource.FreeHostCount - int32(resource.Count)
 				zoneResource.FreeDiskCount = zoneResource.FreeDiskCount - int32(resource.Count)
-				zoneResource.FreeCpuCores = zoneResource.FreeCpuCores - int32(knowledge.ParseCpu(resource.Spec) * resource.Count)
-				zoneResource.FreeMemory = zoneResource.FreeMemory - int32(knowledge.ParseMemory(resource.Spec) * resource.Count)
+				zoneResource.FreeCpuCores = zoneResource.FreeCpuCores - int32(knowledge.ParseCpu(resource.Spec)*resource.Count)
+				zoneResource.FreeMemory = zoneResource.FreeMemory - int32(knowledge.ParseMemory(resource.Spec)*resource.Count)
 			} else {
 				framework.LogWithContext(ctx).Warnf("stock is not enough, instance: %v, stock %v", resource, stocks)
 				enough = false
 			}
 
-			result = append(result, structs.ResourceStockCheckResult {
-				Type: instance.Type,
-				Name: instance.Type,
+			result = append(result, structs.ResourceStockCheckResult{
+				Type:                                    instance.Type,
+				Name:                                    instance.Type,
 				ClusterResourceParameterComputeResource: resource,
-				Enough: enough,
+				Enough:                                  enough,
 			})
 		}
 	}
@@ -407,11 +408,11 @@ func (p *Manager) PreviewScaleOutCluster(ctx context.Context, req cluster.ScaleO
 	}
 	// todo validate
 	resp = cluster.PreviewClusterResp{
-		Region: clusterMeta.Cluster.Region,
-		CpuArchitecture: string(clusterMeta.Cluster.CpuArchitecture),
-		ClusterType: clusterMeta.Cluster.Type,
-		ClusterVersion: clusterMeta.Cluster.Version,
-		ClusterName: clusterMeta.Cluster.Name,
+		Region:            clusterMeta.Cluster.Region,
+		CpuArchitecture:   string(clusterMeta.Cluster.CpuArchitecture),
+		ClusterType:       clusterMeta.Cluster.Type,
+		ClusterVersion:    clusterMeta.Cluster.Version,
+		ClusterName:       clusterMeta.Cluster.Name,
 		CapabilityIndexes: []structs.Index{},
 	}
 	checkResult, err := preCheckStock(ctx, clusterMeta.Cluster.Region, string(clusterMeta.Cluster.CpuArchitecture), req.InstanceResource)

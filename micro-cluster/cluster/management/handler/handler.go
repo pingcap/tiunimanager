@@ -21,6 +21,8 @@ import (
 	"math/rand"
 	"sort"
 	"strings"
+	"database/sql"
+	"math/rand"
 	"text/template"
 
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -895,7 +897,12 @@ type TiDBUserInfo struct {
 // @Receiver p
 // @return BDUser
 func (p *ClusterMeta) GetDBUserNamePassword(ctx context.Context, roleType constants.DBUserRoleType) (*management.DBUser, error) {
-	user := p.DBUsers[string(roleType)]
+	clusterMeta, err := Get(ctx, p.Cluster.ID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get clusterMeta failed, clusterID = %s, errors = %s", p.Cluster.ID, err)
+		return nil, err
+	}
+	user := clusterMeta.DBUsers[string(roleType)]
 	return user, nil
 }
 

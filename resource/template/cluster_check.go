@@ -19,23 +19,23 @@ var EMClusterCheck = `
 tidb_servers:
 {{ range .TemplateItemsForCompute }}
   - host: {{ .HostIP }}
-    deploy_dir: {{ .DeployDir }}
+    deploy_dir: {{ .DeployDir }}/tidb_deploy
     port: {{ .Port1 }}
     status_port: {{ .Port2 }}
 {{ end }}
 tikv_servers:
 {{ range .TemplateItemsForStorage }}
   - host: {{ .HostIP }}
-    data_dir: {{ .DataDir }}
-    deploy_dir: {{ .DeployDir }}
+    data_dir: {{ .DataDir }}/tikv_data
+    deploy_dir: {{ .DeployDir }}/tikv_deploy
     port: {{ .Port1 }}
     status_port: {{ .Port2 }}
 {{ end }}
 pd_servers:
 {{ range .TemplateItemsForSchedule }}
   - host: {{ .HostIP }}
-    data_dir: {{ .DataDir }}
-    deploy_dir: {{ .DeployDir }}
+    data_dir: {{ .DataDir }}/pd_data
+    deploy_dir: {{ .DeployDir }}/pd_deploy
     client_port: {{ .Port1 }}
     peer_port: {{ .Port2 }}
 {{ end }}

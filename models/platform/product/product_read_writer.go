@@ -313,13 +313,14 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 	var spec structs.ComponentInstanceResourceSpec
 	var info, productComponentInfo structs.ProductComponentProperty
 	var productName, version, arch string
-	var components map[string]structs.ProductComponentProperty
+	var components []structs.ProductComponentProperty
 	products = make(map[string]structs.ProductDetail)
 	rows, err := p.DB(ctx).Raw(SQL, vendorID, regionID, internal, productID, status, constants.ProductSpecStatusOnline, constants.ProductSpecStatusOnline).Rows()
 	defer rows.Close()
 	log := framework.LogWithContext(ctx)
 	log.Debugf("QueryProductDetail SQL: %s vendorID:%s, regionID: %s productID: %s, internal: %d, status: %s, execute result, error: %v",
 		SQL, vendorID, regionID, productID, internal, status, err)
+
 	if err == nil {
 		for rows.Next() {
 			//Read a row of data and store it in a temporary variable
@@ -347,7 +348,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			//if it already exists, then directly modify the relevant data structure
 			productVersion, ok = detail.Versions[version]
 			if !ok {
-				detail.Versions[version] = structs.ProductVersion{Version: version, Arch: make(map[string]map[string]structs.ProductComponentProperty)}
+				detail.Versions[version] = structs.ProductVersion{Version: version, Arch: make(map[string][]structs.ProductComponentProperty)}
 				productVersion, _ = detail.Versions[version]
 			}
 
@@ -355,25 +356,33 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			//if it already exists, then directly modify the relevant data structure
 			components, ok = productVersion.Arch[arch]
 			if !ok {
-				productVersion.Arch[arch] = make(map[string]structs.ProductComponentProperty)
+				productVersion.Arch[arch] = make([]structs.ProductComponentProperty, 0)
 				components, _ = productVersion.Arch[arch]
 			}
 
 			//Query whether the product component information is already in Components,
 			//if it already exists, then directly modify the relevant data structure
-			productComponentInfo, ok = components[info.ID]
-			if !ok {
-				components[info.ID] = structs.ProductComponentProperty{ID: info.ID, Name: info.Name, PurposeType: info.PurposeType,
-					StartPort: info.StartPort, EndPort: info.EndPort, MaxPort: info.MaxPort, MinInstance: info.MinInstance, MaxInstance: info.MaxInstance, Spec: make(map[string]structs.ComponentInstanceResourceSpec)}
-				productComponentInfo, _ = components[info.ID]
-			}
 
-			//Query whether the product component specification information is already in Specifications,
-			//if it already exists, then directly modify the relevant data structure
-			_, ok = productComponentInfo.Spec[spec.ID]
-			if !ok {
-				productComponentInfo.Spec[spec.ID] = spec
-			}
+			//productComponentInfo := structs.ProductComponentProperty{}
+			//for _, v := range components {
+			//	if i == 0 {
+			//
+			//	}
+			//}
+			//productComponentInfo, ok = components[info.ID]
+			//if !ok {
+			//	components = append(components, structs.ProductComponentProperty{ID: info.ID, Name: info.Name, PurposeType: info.PurposeType,
+			//		StartPort: info.StartPort, EndPort: info.EndPort, MaxPort: info.MaxPort, MinInstance: info.MinInstance, MaxInstance: info.MaxInstance, Spec: make(map[string]structs.ComponentInstanceResourceSpec)})
+			//	components[info.ID] =
+			//	productComponentInfo, _ = components[info.ID]
+			//}
+			//
+			////Query whether the product component specification information is already in Specifications,
+			////if it already exists, then directly modify the relevant data structure
+			//_, ok = productComponentInfo.Spec[spec.ID]
+			//if !ok {
+			//	productComponentInfo.Spec[spec.ID] = spec
+			//}
 		}
 	}
 	return products, err

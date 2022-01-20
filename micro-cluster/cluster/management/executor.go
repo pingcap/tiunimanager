@@ -235,7 +235,7 @@ func checkInstanceStatus(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	storeID := ""
 	totalRegionCount := 0
 	for _, info := range storeInfos.Stores {
-		if info.Store.Address == address && info.Store.StateName == string(handler.StoreOffline) {
+		if info.Store.Address == address {
 			storeID = strconv.Itoa(info.Store.ID)
 			totalRegionCount = info.Status.RegionCount
 		}
@@ -264,7 +264,12 @@ func checkInstanceStatus(node *workflowModel.WorkFlowNode, context *workflow.Flo
 			return errors.WrapError(errors.TIEM_UNMARSHAL_ERROR,
 				fmt.Sprintf("parse TiKV or TiFlash store status error: %s", err.Error()), err)
 		}
-		node.Record(fmt.Sprintf("scale in progress: %f\n", float64(totalRegionCount - storeInfo.Status.RegionCount)/float64(totalRegionCount)))
+		if totalRegionCount == 0 {
+			node.Record("scale in progress: 100%")
+		} else {
+			node.Record(fmt.Sprintf("scale in progress: %d%%\n",
+				int(float64(totalRegionCount-storeInfo.Status.RegionCount)/float64(totalRegionCount)*100)))
+		}
 		if storeInfo.Store.StateName == string(handler.StoreTombstone) {
 			break
 		}

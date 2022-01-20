@@ -27,6 +27,7 @@ func TestTokenReadWrite_CreateToken(t *testing.T) {
 	token := &Token{
 		TokenString: "testToken",
 		UserID:      "accountID",
+		TenantID:    "tenantID",
 	}
 	testRW.DB(context.TODO()).Create(token)
 	defer testRW.DB(context.TODO()).Delete(token)
@@ -50,7 +51,7 @@ func TestTokenReadWrite_CreateToken(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := testRW.CreateToken(tt.args.ctx, tt.args.tokenString, tt.args.accountId, tt.args.expirationTime)
+			got, err := testRW.CreateToken(tt.args.ctx, tt.args.tokenString, tt.args.accountId, tt.args.tenantId, tt.args.expirationTime)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AddToken() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -66,6 +67,7 @@ func TestTokenReadWrite_GetToken(t *testing.T) {
 	token := &Token{
 		TokenString: "token",
 		UserID:      "accountID",
+		TenantID:    "tenantID",
 	}
 	testRW.DB(context.TODO()).Create(token)
 	defer testRW.DB(context.TODO()).Delete(token)

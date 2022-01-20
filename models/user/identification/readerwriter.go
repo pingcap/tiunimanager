@@ -21,6 +21,6 @@ import (
 )
 
 type ReaderWriter interface {
-	CreateToken(ctx context.Context, tokenString, userID string, expirationTime time.Time) (*Token, error)
+	CreateToken(ctx context.Context, tokenString, userID, tenantID string, expirationTime time.Time) (*Token, error)
 	GetToken(ctx context.Context, tokenString string) (*Token, error)
 }

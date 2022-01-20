@@ -13,6 +13,8 @@ require (
 	github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3 v3.0.0-20210812172626-c7195aae9817
 	github.com/asim/go-micro/v3 v3.5.2
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
+	github.com/casbin/casbin/v2 v2.40.6 // indirect
+	github.com/casbin/gorm-adapter/v3 v3.4.6 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/elastic/go-elasticsearch/v7 v7.15.0
 	github.com/gin-contrib/cors v1.3.1
@@ -47,6 +49,7 @@ require (
 	github.com/uber/jaeger-client-go v2.29.1+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	github.com/unrolled/secure v1.0.9
+	go.etcd.io/etcd/client/pkg/v3 v3.5.0 // indirect
 	go.etcd.io/etcd/client/v2 v2.305.0
 	go.etcd.io/etcd/client/v3 v3.5.0
 	go.etcd.io/etcd/server/v3 v3.5.0
@@ -63,5 +66,5 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/sqlite v1.1.4
-	gorm.io/gorm v1.22.2
+	gorm.io/gorm v1.22.3
 )

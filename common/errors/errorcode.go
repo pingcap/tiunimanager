@@ -92,6 +92,16 @@ const (
 	TIEM_ACCESS_TOKEN_EXPIRED EM_ERROR_CODE = 70602
 	TIEM_LOGIN_FAILED         EM_ERROR_CODE = 70603
 
+	TIEM_RBAC_PERMISSION_CHECK_FAILED  EM_ERROR_CODE = 70650
+	TIEM_RBAC_PERMISSION_ADD_FAILED    EM_ERROR_CODE = 70651
+	TIEM_RBAC_PERMISSION_DELETE_FAILED EM_ERROR_CODE = 70652
+	TIEM_RBAC_PERMISSION_QUERY_FAILED  EM_ERROR_CODE = 70653
+	TIEM_RBAC_ROLE_CREATE_FAILED       EM_ERROR_CODE = 70654
+	TIEM_RBAC_ROLE_DELETE_FAILED       EM_ERROR_CODE = 70655
+	TIEM_RBAC_ROLE_QUERY_FAILED        EM_ERROR_CODE = 70656
+	TIEM_RBAC_ROLE_BIND_FAILED         EM_ERROR_CODE = 70657
+	TIEM_RBAC_ROLE_UNBIND_FAILED       EM_ERROR_CODE = 70658
+
 	// dashboard && monitor
 	TIEM_DASHBOARD_NOT_FOUND EM_ERROR_CODE = 80100
 
@@ -148,12 +158,14 @@ const (
 	TIEM_CLUSTER_PARAMETER_QUERY_ERROR               EM_ERROR_CODE = 20514
 	TIEM_CLUSTER_PARAMETER_UPDATE_ERROR              EM_ERROR_CODE = 20515
 	TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS         EM_ERROR_CODE = 20516
+	TIEM_PARAMETER_GROUP_RELATION_CLUSTER_NOT_DEL    EM_ERROR_CODE = 20517
 
-	TIEM_PARAMETER_QUERY_ERROR  EM_ERROR_CODE = 20520
-	TIEM_PARAMETER_CREATE_ERROR EM_ERROR_CODE = 20521
-	TIEM_PARAMETER_DELETE_ERROR EM_ERROR_CODE = 20522
-	TIEM_PARAMETER_DETAIL_ERROR EM_ERROR_CODE = 20523
-	TIEM_PARAMETER_UPDATE_ERROR EM_ERROR_CODE = 20524
+	TIEM_PARAMETER_QUERY_ERROR    EM_ERROR_CODE = 20520
+	TIEM_PARAMETER_CREATE_ERROR   EM_ERROR_CODE = 20521
+	TIEM_PARAMETER_DELETE_ERROR   EM_ERROR_CODE = 20522
+	TIEM_PARAMETER_DETAIL_ERROR   EM_ERROR_CODE = 20523
+	TIEM_PARAMETER_UPDATE_ERROR   EM_ERROR_CODE = 20524
+	TIEM_PARAMETER_ALREADY_EXISTS EM_ERROR_CODE = 20525
 
 	TIEM_CHANGE_FEED_NOT_FOUND              EM_ERROR_CODE = 21201
 	TIEM_CHANGE_FEED_DUPLICATE_ID           EM_ERROR_CODE = 21202
@@ -227,10 +239,20 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_MARSHAL_ERROR:      {"marshal error", 500},
 	TIEM_UNMARSHAL_ERROR:    {"marshal error", 500},
 
-	TIEM_UNAUTHORIZED_USER:    {"unauthorized", 401},
-	TIEM_USER_NOT_FOUND:       {"user not found", 404},
-	TIEM_ACCESS_TOKEN_EXPIRED: {"access token has been expired", 401},
-	TIEM_LOGIN_FAILED:         {"incorrect username or password", 400},
+	// user
+	TIEM_UNAUTHORIZED_USER:             {"unauthorized", 401},
+	TIEM_USER_NOT_FOUND:                {"user not found", 404},
+	TIEM_ACCESS_TOKEN_EXPIRED:          {"access token has been expired", 401},
+	TIEM_LOGIN_FAILED:                  {"incorrect username or password", 400},
+	TIEM_RBAC_PERMISSION_CHECK_FAILED:  {"rbac permission check failed", 403},
+	TIEM_RBAC_PERMISSION_ADD_FAILED:    {"rbac permission add failed", 500},
+	TIEM_RBAC_PERMISSION_DELETE_FAILED: {"rbac permission delete failed", 500},
+	TIEM_RBAC_PERMISSION_QUERY_FAILED:  {"rbac permission query failed", 500},
+	TIEM_RBAC_ROLE_CREATE_FAILED:       {"rbac role create failed", 500},
+	TIEM_RBAC_ROLE_QUERY_FAILED:        {"rbac role query failed", 500},
+	TIEM_RBAC_ROLE_DELETE_FAILED:       {"rbac role delete failed", 500},
+	TIEM_RBAC_ROLE_BIND_FAILED:         {"rbac role bind user failed", 500},
+	TIEM_RBAC_ROLE_UNBIND_FAILED:       {"rbac role unbind user failed", 500},
 
 	TIEM_METADB_SERVER_CALL_ERROR:  {"call metadb-Server failed", 500},
 	TIEM_CLUSTER_SERVER_CALL_ERROR: {"call cluster-Server failed", 500},
@@ -336,12 +358,14 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_CLUSTER_PARAMETER_QUERY_ERROR:               {"Failed to query cluster parameters", 500},
 	TIEM_CLUSTER_PARAMETER_UPDATE_ERROR:              {"Failed to update cluster parameters", 500},
 	TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS:         {"Parameter group name already exists", 500},
+	TIEM_PARAMETER_GROUP_RELATION_CLUSTER_NOT_DEL:    {"Parameter group association clusters cannot be deleted", 500},
 
-	TIEM_PARAMETER_QUERY_ERROR:  {"Failed to query parameter by parameter group id", 500},
-	TIEM_PARAMETER_CREATE_ERROR: {"Failed to create parameter", 500},
-	TIEM_PARAMETER_DELETE_ERROR: {"Failed to delete parameter", 500},
-	TIEM_PARAMETER_DETAIL_ERROR: {"Failed to detail parameter", 500},
-	TIEM_PARAMETER_UPDATE_ERROR: {"Failed to update parameter", 500},
+	TIEM_PARAMETER_QUERY_ERROR:    {"Failed to query parameter by parameter group id", 500},
+	TIEM_PARAMETER_CREATE_ERROR:   {"Failed to create parameter", 500},
+	TIEM_PARAMETER_DELETE_ERROR:   {"Failed to delete parameter", 500},
+	TIEM_PARAMETER_DETAIL_ERROR:   {"Failed to detail parameter", 500},
+	TIEM_PARAMETER_UPDATE_ERROR:   {"Failed to update parameter", 500},
+	TIEM_PARAMETER_ALREADY_EXISTS: {"The parameter already exists", 500},
 
 	// change feed
 	TIEM_CHANGE_FEED_NOT_FOUND:              {"Change feed task is not found", 404},

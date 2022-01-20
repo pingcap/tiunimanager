@@ -206,6 +206,7 @@ type ClusterParameterInfo struct {
 	HasReboot      int                `json:"hasReboot" example:"0" enums:"0,1"`
 	HasApply       int                `json:"hasApply" example:"1" enums:"0,1"`
 	UpdateSource   int                `json:"updateSource" example:"0" enums:"0,1,2,3"`
+	ReadOnly       int                `json:"readOnly" example:"0" enums:"0,1"`
 	DefaultValue   string             `json:"defaultValue" example:"1"`
 	RealValue      ParameterRealValue `json:"realValue"`
 	Description    string             `json:"description" example:"binlog cache size"`

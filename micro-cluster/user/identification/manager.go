@@ -51,13 +51,14 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (message.
 	// create token
 	tokenString := uuid.New().String()
 	expirationTime := time.Now().Add(constants.DefaultTokenValidPeriod)
-	_, err = models.GetTokenReaderWriter().CreateToken(ctx, tokenString, user.ID, expirationTime)
+	_, err = models.GetTokenReaderWriter().CreateToken(ctx, tokenString, user.ID, user.DefaultTenantID, expirationTime)
 	if err != nil {
 		return resp, errors.WrapError(errors.TIEM_UNRECOGNIZED_ERROR, "login failed", err)
 	}
 
 	resp.TokenString = tokenString
 	resp.UserID = user.ID
+	resp.TenantID = user.DefaultTenantID
 
 	return resp, nil
 }
@@ -91,6 +92,7 @@ func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq)
 	}
 
 	resp.UserID = token.UserID
+	resp.TenantID = token.TenantID
 
 	return resp, nil
 }

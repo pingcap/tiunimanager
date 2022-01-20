@@ -4118,7 +4118,7 @@
                 }
             }
         },
-        "/specs": {
+        "/specs/": {
             "get": {
                 "security": [
                     {
@@ -5448,7 +5448,7 @@
                 }
             }
         },
-        "/zones": {
+        "/zones/": {
             "post": {
                 "security": [
                     {

@@ -4132,7 +4132,7 @@ var doc = `{
                 }
             }
         },
-        "/specs": {
+        "/specs/": {
             "get": {
                 "security": [
                     {
@@ -5462,7 +5462,7 @@ var doc = `{
                 }
             }
         },
-        "/zones": {
+        "/zones/": {
             "post": {
                 "security": [
                     {

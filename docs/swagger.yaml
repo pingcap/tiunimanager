@@ -4943,7 +4943,7 @@ paths:
       summary: Show the resources stocks
       tags:
       - resource
-  /specs:
+  /specs/:
     delete:
       consumes:
       - application/json
@@ -5740,7 +5740,7 @@ paths:
       summary: show details of a flow work
       tags:
       - task
-  /zones:
+  /zones/:
     delete:
       consumes:
       - application/json

@@ -213,7 +213,12 @@ func checkInstanceStatus(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		instance.Type != string(constants.ComponentIDTiFlash) {
 		return nil
 	}
-	address := strings.Join([]string{instance.HostIP[0], strconv.Itoa(int(instance.Ports[0]))}, ":")
+	var address string
+	if instance.Type == string(constants.ComponentIDTiKV) {
+		address = strings.Join([]string{instance.HostIP[0], strconv.Itoa(int(instance.Ports[0]))}, ":")
+	} else if instance.Type == string(constants.ComponentIDTiFlash) {
+		address = strings.Join([]string{instance.HostIP[0], strconv.Itoa(int(instance.Ports[2]))}, ":") // specify server port
+	}
 
 	pdAddress := clusterMeta.GetPDClientAddresses()
 	if len(pdAddress) <= 0 {
@@ -222,7 +227,8 @@ func checkInstanceStatus(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
 
 	config, err := secondparty.Manager.ClusterComponentCtl(context.Context, secondparty.CTLComponentTypeStr,
-		clusterMeta.Cluster.Version, spec.ComponentPD, []string{"-u", pdID, "store"}, handler.DefaultTiupTimeOut)
+		clusterMeta.Cluster.Version, spec.ComponentPD, []string{"-u", pdID, "store",
+			"--state", "Tombstone,Up,Offline"}, handler.DefaultTiupTimeOut)
 	if err != nil {
 		return err
 	}
@@ -265,9 +271,9 @@ func checkInstanceStatus(node *workflowModel.WorkFlowNode, context *workflow.Flo
 				fmt.Sprintf("parse TiKV or TiFlash store status error: %s", err.Error()), err)
 		}
 		if totalRegionCount == 0 {
-			node.Record("scale in progress: 100%")
+			node.RecordAndPersist("scale in progress: 100%")
 		} else {
-			node.Record(fmt.Sprintf("scale in progress: %d%%\n",
+			node.RecordAndPersist(fmt.Sprintf("scale in progress: %d%%",
 				int(float64(totalRegionCount-storeInfo.Status.RegionCount)/float64(totalRegionCount)*100)))
 		}
 		if storeInfo.Store.StateName == string(handler.StoreTombstone) {

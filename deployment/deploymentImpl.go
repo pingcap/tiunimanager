@@ -86,8 +86,7 @@ func (m *Manager) Deploy(ctx context.Context, componentType TiUPComponentType, c
 func (m *Manager) startAsyncOperation(ctx context.Context, id, home, tiUPArgs string, timeoutS int) {
 	go func() {
 		cmd, cancelFunc := genCommand(home, m.TiUPBinPath, tiUPArgs, timeoutS)
-		var out, stderr bytes.Buffer
-		cmd.Stdout = &out
+		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
 		defer cancelFunc()
 
@@ -121,9 +120,9 @@ func genCommand(home, tiUPBinPath, tiUPArgs string, timeoutS int) (cmd *exec.Cmd
 	if timeoutS != 0 {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutS)*time.Second)
 		cancelFunc = cancel
-		cmd = exec.CommandContext(ctx, tiUPBinPath, tiUPArgs)
+		cmd = exec.CommandContext(ctx, tiUPBinPath, strings.Fields(tiUPArgs)...)
 	} else {
-		cmd = exec.Command(tiUPBinPath, tiUPArgs)
+		cmd = exec.Command(tiUPBinPath, strings.Fields(tiUPArgs)...)
 		cancelFunc = func() {}
 	}
 	cmd.Env = os.Environ()
@@ -145,6 +144,11 @@ func updateStatus(ctx context.Context, operationID, msg string, status Status, t
 	}
 
 	op.Status = status
+	if status == Error {
+		op.ErrorStr = msg
+	} else {
+		op.Result = msg
+	}
 	err = Update(operationID, op)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("Fail update %s to %s: %v", operationID, status, err)

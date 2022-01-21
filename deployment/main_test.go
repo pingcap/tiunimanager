@@ -29,40 +29,20 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/deployment/operation"
-
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/util/uuidutil"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
-var testRW *operation.GormOperationReadWrite
+const (
+	TestWorkFlowID = "testworkflowid"
+	TestResult     = "testresult"
+	TestErrorStr   = "testerrorstr"
+)
+
+var testTiUPHome string
 
 func TestMain(m *testing.M) {
-	testTiUPHome := "testdata/" + uuidutil.ShortId()
-	os.MkdirAll(testTiUPHome, 0755)
-
-	logins := framework.LogForkFile(constants.LogFileSystem)
-
-	framework.InitBaseFrameworkForUt(framework.ClusterService,
-		func(d *framework.BaseFramework) error {
-			dbFile := fmt.Sprintf("%s/operation.db", testTiUPHome)
-			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
-
-			if err != nil || db.Error != nil {
-				logins.Fatalf("open database failed, filepath: %s database error: %v, meta database error: %v", dbFile, err, db.Error)
-				return err
-			} else {
-				logins.Infof("open database succeed, filepath: %s", dbFile)
-			}
-			db.Migrator().CreateTable(operation.Operation{})
-
-			testRW = operation.NewGormOperationReadWrite(db)
-			return nil
-		},
-	)
+	testTiUPHome = "testdata/" + uuidutil.ShortId()
+	os.MkdirAll(fmt.Sprintf("%s/storage", testTiUPHome), 0755)
 	code := m.Run()
 	os.RemoveAll("testdata/")
 	os.RemoveAll("logs/")

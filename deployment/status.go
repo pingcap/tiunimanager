@@ -29,11 +29,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"time"
 
 	"github.com/pingcap-inc/tiem/util/disk"
-
-	"gorm.io/gorm"
 )
 
 type Status string
@@ -47,15 +44,11 @@ const (
 
 // Operation Record information about each TiUP operation
 type Operation struct {
-	ID         string    `gorm:"primaryKey;"`
-	Type       string    `gorm:"not null;comment:'second party operation of type, eg: deploy, start, stop...'"`
-	WorkFlowID string    `gorm:"not null;index;comment:'workflow ID of operation'"`
-	Status     Status    `gorm:"default:null"`
-	Result     string    `gorm:"default:null"`
-	ErrorStr   string    `gorm:"size:8192;comment:'operation error msg'"`
-	CreatedAt  time.Time `gorm:"<-:create"`
-	UpdatedAt  time.Time
-	DeletedAt  gorm.DeletedAt `gorm:"index"`
+	Type       string `json:"type"`         // operation of type, eg: deploy, start, stop...
+	WorkFlowID string `json:"work_flow_id"` // workflow ID which operation belongs to
+	Status     Status `json:"status"`
+	Result     string `json:"result"` // operation error message
+	ErrorStr   string `json:"error_str"`
 }
 
 func Create(tiUPHome string, op Operation) (fileName string, err error) {

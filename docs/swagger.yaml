@@ -2306,7 +2306,7 @@ definitions:
       defaultValue:
         example: "1"
         type: string
-      description:
+      note:
         example: binlog cache size
         type: string
       paramId:

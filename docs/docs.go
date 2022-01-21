@@ -9597,7 +9597,7 @@ var doc = `{
                     "type": "string",
                     "example": "1"
                 },
-                "description": {
+                "note": {
                     "type": "string",
                     "example": "binlog cache size"
                 },

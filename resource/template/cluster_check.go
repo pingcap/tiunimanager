@@ -16,6 +16,7 @@
 package template
 
 var EMClusterCheck = `
+{{ if (len .TemplateItemsForCompute) }}
 tidb_servers:
 {{ range .TemplateItemsForCompute }}
   - host: {{ .HostIP }}
@@ -23,6 +24,8 @@ tidb_servers:
     port: {{ .Port1 }}
     status_port: {{ .Port2 }}
 {{ end }}
+{{ end }}
+{{ if (len .TemplateItemsForStorage) }}
 tikv_servers:
 {{ range .TemplateItemsForStorage }}
   - host: {{ .HostIP }}
@@ -31,6 +34,8 @@ tikv_servers:
     port: {{ .Port1 }}
     status_port: {{ .Port2 }}
 {{ end }}
+{{ end }}
+{{ if (len .TemplateItemsForSchedule) }}
 pd_servers:
 {{ range .TemplateItemsForSchedule }}
   - host: {{ .HostIP }}
@@ -39,4 +44,5 @@ pd_servers:
     client_port: {{ .Port1 }}
     peer_port: {{ .Port2 }}
 {{ end }}
- `
+{{ end }}
+`

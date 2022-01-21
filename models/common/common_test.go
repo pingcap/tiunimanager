@@ -136,14 +136,14 @@ func TestPassword(t *testing.T) {
 				TenantId: "111",
 			},
 			Name: "createpassword",
-			Password: "abcd",
+			Password: "N&HIO(*(&#Y*&HNS&D*#*GF*RS*FY&DF",
 		}).Error
 		assert.NoError(t, err)
 
 		result := &TestEntity{}
 		err = baseDB.Model(&TestEntity{}).Where("name = ?", "createpassword").First(result).Error
 		assert.NoError(t, err)
-		assert.Equal(t, "abcd", string(result.Password))
+		assert.Equal(t, "N&HIO(*(&#Y*&HNS&D*#*GF*RS*FY&DF", string(result.Password))
 	})
 	t.Run("update", func(t *testing.T) {
 		a := &TestEntity{

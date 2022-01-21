@@ -119,7 +119,7 @@ func genFakeHost(region, zone, rack, hostName, ip string, freeCpuCores, freeMemo
 		HostName:     hostName,
 		IP:           ip,
 		UserName:     "root",
-		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
+		Passwd:       "admin2",
 		Status:       string(constants.HostOnline),
 		Stat:         string(constants.HostLoadLoadLess),
 		Arch:         "X86",

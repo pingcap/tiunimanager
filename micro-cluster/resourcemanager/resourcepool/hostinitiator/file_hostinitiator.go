@@ -18,6 +18,7 @@ package hostinitiator
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/pingcap-inc/tiem/util/scp"
 	sshclient "github.com/pingcap-inc/tiem/util/ssh"
@@ -87,48 +88,13 @@ func (p *FileHostInitiator) Prepare(ctx context.Context, h *structs.HostInfo) (e
 	sortedResult := results.analyzeCheckResults()
 	log.Infof("build from result json get sorted result: %v", sortedResult)
 
-	fails, hasFails := sortedResult["Fail"]
-	var needInstallNumaCtl = false
-	var needSetSwap = false
-	if hasFails {
-		for _, fail := range *fails {
-			if fail.Name == "command" {
-				needInstallNumaCtl = true
-			}
-			if fail.Name == "swap" {
-				needSetSwap = true
-			}
-		}
-		log.Infof("after apply host %s %s, needInstallNumaCtl: %v, needSetSwap: %v", h.HostName, h.IP, needInstallNumaCtl, needSetSwap)
-	}
-
-	if !needInstallNumaCtl && !needSetSwap {
-		log.Infof("no need to install numactl and set swap for host %s %s", h.HostName, h.IP)
-		return nil
-	}
-
-	err = p.connectToHost(ctx, h)
+	err = p.autoFix(ctx, h, sortedResult)
 	if err != nil {
-		log.Errorf("connect to host %s %s failed, %v", h.HostName, h.IP, err)
+		log.Errorf("auto fix host %s %s failed, %v", h.HostName, h.IP, err)
 		return err
 	}
-	defer p.closeConnect()
 
-	if needInstallNumaCtl {
-		if err = p.installNumaCtl(ctx, h); err != nil {
-			errMsg := fmt.Sprintf("install numactl on host %s %s failed, %v", h.HostName, h.IP, err)
-			log.Errorln(errMsg)
-			return errors.NewError(errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, errMsg)
-		}
-	}
-
-	if needSetSwap {
-		if err = p.setOffSwap(ctx, h); err != nil {
-			errMsg := fmt.Sprintf("set off swap on host %s %s failed, %v", h.HostName, h.IP, err)
-			log.Errorln(errMsg)
-			return errors.NewError(errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, errMsg)
-		}
-	}
+	log.Infof("prepare for host %s %s succeed", h.HostName, h.IP)
 
 	return nil
 }
@@ -163,13 +129,13 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 	sortedResult := results.analyzeCheckResults()
 	log.Infof("build from json %s, get sorted result: %v", resultStr, sortedResult)
 
-	fails, hasFails := sortedResult["Fail"]
+	fails, hasFails := sortedResult[string(Fail)]
 	if hasFails {
 		errMsg := fmt.Sprintf("check host %s %s has %d fails, %v", h.HostName, h.IP, len(*fails), *fails)
 		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
 	}
 
-	warnings, hasWarns := sortedResult["Warn"]
+	warnings, hasWarns := sortedResult[string(Warn)]
 	if hasWarns {
 		errMsg := fmt.Sprintf("check host %s %s has %d warnings, %v", h.HostName, h.IP, len(*warnings), *warnings)
 		log.Warnln(errMsg)
@@ -178,7 +144,7 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 		}
 	}
 
-	pass, hasPasses := sortedResult["Pass"]
+	pass, hasPasses := sortedResult[string(Pass)]
 	if hasPasses {
 		log.Infof("check host %s %s succeed, %v", h.HostName, h.IP, *pass)
 	} else {
@@ -291,6 +257,158 @@ func (p *FileHostInitiator) installNumaCtl(ctx context.Context, h *structs.HostI
 
 }
 
+func (p *FileHostInitiator) remountFS(ctx context.Context, h *structs.HostInfo, path string, opts []string) (err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infof("begin to remount path %s by adding opts %s on host %s %s", path, opts, h.HostName, h.IP)
+	addingOpts := strings.Join(opts, ",")
+	getMountInfoCmd := fmt.Sprintf("sed -n '\\# %s #p' /etc/fstab", path)
+	result, err := p.sshClient.RunCommandsInSession([]string{getMountInfoCmd})
+	if err != nil {
+		log.Errorf("host %s %s execute command %s failed, %v", h.HostName, h.IP, getMountInfoCmd, err)
+		return err
+	}
+	// result should be "/dev/mapper/centos-root /data    xfs     defaults        0 0"
+	mountInfo := strings.Split(result, " ")
+	originOpts := mountInfo[3]
+	targetOpts := fmt.Sprintf("%s,%s", originOpts, addingOpts)
+	updateFsTabCmd := fmt.Sprintf("sed -i '\\# %s #s#%s#%s#g' /etc/fstab", path, originOpts, targetOpts)
+	log.Infof("update fstab on host %s %s, using %s", h.HostName, h.IP, updateFsTabCmd)
+	remountCMD := fmt.Sprintf("mount -o remount %s", path)
+	result, err = p.sshClient.RunCommandsInSession([]string{updateFsTabCmd, remountCMD})
+	if err != nil {
+		return err
+	}
+	log.Infof("host %s [%s] remout %s by adding %s, %v", h.HostName, h.IP, path, addingOpts, result)
+	return nil
+
+}
+
 func (p *FileHostInitiator) installTcpDump(ctx context.Context, hosts []structs.HostInfo) (err error) {
+	return nil
+}
+
+func (p *FileHostInitiator) getRemountInfoFromMsg(ctx context.Context, msg string) (mountPoint string, option string, err error) {
+	warnExample := "mount point /xx/xx does not have 'xxx' option set"
+	exampleFields := strings.Split(warnExample, " ")
+	msgFields := strings.Split(msg, " ")
+	if len(msgFields) != len(exampleFields) {
+		errMsg := fmt.Sprintf("remount warning message [%s] has a different format as expected [%s]", msg, warnExample)
+		framework.LogWithContext(ctx).Errorln(errMsg)
+		return "", "", errors.NewError(errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, errMsg)
+	}
+	mountPoint = msgFields[2]
+	option = strings.Trim(msgFields[6], "'")
+	if option != "noatime" && option != "nodelalloc" {
+		errMsg := fmt.Sprintf("remount option %s is not expected, should be 'noatime' or 'nodelalloc'", option)
+		framework.LogWithContext(ctx).Errorln(errMsg)
+		return "", "", errors.NewError(errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, errMsg)
+	}
+	return
+}
+
+func (p *FileHostInitiator) addRemountOpts(remount map[string]map[string]struct{}, path string, opt string) {
+	if opts, ok := remount[path]; !ok {
+		remount[path] = make(map[string]struct{})
+		remount[path][opt] = struct{}{}
+	} else {
+		if _, exist := opts[opt]; !exist {
+			opts[opt] = struct{}{}
+		}
+	}
+}
+
+func (p *FileHostInitiator) autoFix(ctx context.Context, h *structs.HostInfo, sortedResult map[string]*[]checkHostResult) (err error) {
+	log := framework.LogWithContext(ctx)
+	var needInstallNumaCtl = false
+	var needSetSwap = false
+	var needRemount = false
+
+	// mount point -> adding remount opts
+	remount := map[string]map[string]struct{}{}
+
+	fails, hasFails := sortedResult[string(Fail)]
+	if hasFails {
+		for _, fail := range *fails {
+			// xx.xx.xx.xx  command         Fail    numactl not usable, bash: numactl: command not found
+			if fail.Name == "command" {
+				needInstallNumaCtl = true
+			}
+			// xx.xx.xx.xx  swap            Fail    swap is enabled, please disable it for best performance
+			if fail.Name == "swap" {
+				needSetSwap = true
+			}
+			// xx.xx.xx.xx  disk            Fail    mount point /data does not have 'nodelalloc' option set
+			if fail.Name == "disk" && strings.HasPrefix(fail.Message, "mount point") {
+				needRemount = true
+				path, opt, err := p.getRemountInfoFromMsg(ctx, fail.Message)
+				if err != nil {
+					log.Errorf("extract remount info for host %s %s failed, %v", h.HostName, h.IP, err)
+					return err
+				}
+				p.addRemountOpts(remount, path, opt)
+			}
+		}
+	}
+
+	warns, hasWarns := sortedResult[string(Warn)]
+	if hasWarns {
+		for _, warning := range *warns {
+			// xx.xx.xx.xx  disk            Warn    mount point /data does not have 'noatime' option set
+			if warning.Name == "disk" && strings.HasPrefix(warning.Message, "mount point") {
+				needRemount = true
+				path, opt, err := p.getRemountInfoFromMsg(ctx, warning.Message)
+				if err != nil {
+					log.Errorf("extract remount info for host %s %s failed, %v", h.HostName, h.IP, err)
+					return err
+				}
+				p.addRemountOpts(remount, path, opt)
+			}
+		}
+	}
+	log.Infof("after apply host %s %s, needInstallNumaCtl: %v, needSetSwap: %v, needRemount: %v", h.HostName, h.IP, needInstallNumaCtl, needSetSwap, needRemount)
+
+	if !needInstallNumaCtl && !needSetSwap && !needRemount {
+		log.Infof("no need to auto fix for host %s %s", h.HostName, h.IP)
+		return nil
+	}
+
+	err = p.connectToHost(ctx, h)
+	if err != nil {
+		log.Errorf("connect to host %s %s failed, %v", h.HostName, h.IP, err)
+		return err
+	}
+	defer p.closeConnect()
+
+	if needInstallNumaCtl {
+		if err = p.installNumaCtl(ctx, h); err != nil {
+			errMsg := fmt.Sprintf("install numactl on host %s %s failed, %v", h.HostName, h.IP, err)
+			log.Errorln(errMsg)
+			return errors.NewError(errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, errMsg)
+		}
+	}
+
+	if needSetSwap {
+		if err = p.setOffSwap(ctx, h); err != nil {
+			errMsg := fmt.Sprintf("set off swap on host %s %s failed, %v", h.HostName, h.IP, err)
+			log.Errorln(errMsg)
+			return errors.NewError(errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, errMsg)
+		}
+	}
+
+	if needRemount {
+		log.Infof("remount host %s %s with %v", h.HostName, h.IP, remount)
+		for path, opts := range remount {
+			var remountOpts []string
+			for opt := range opts {
+				remountOpts = append(remountOpts, opt)
+			}
+			if err = p.remountFS(ctx, h, path, remountOpts); err != nil {
+				errMsg := fmt.Sprintf("remount host %s %s path %s adding opts [%v] failed, %v", h.HostName, h.IP, path, remountOpts, err)
+				log.Errorln(errMsg)
+				return errors.NewError(errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, errMsg)
+			}
+		}
+	}
+
 	return nil
 }

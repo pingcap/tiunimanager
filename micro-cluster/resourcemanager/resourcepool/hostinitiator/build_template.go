@@ -164,6 +164,14 @@ func (results checkHostResults) analyzeCheckResults() (sortedResult map[string]*
 	return
 }
 
+type ResultStatus string
+
+const (
+	Pass ResultStatus = "Pass"
+	Warn ResultStatus = "Warn"
+	Fail ResultStatus = "Fail"
+)
+
 // hostCheckResult represents the check result of each node
 type checkHostResult struct {
 	Node    string `json:"node"`

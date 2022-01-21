@@ -268,7 +268,7 @@ func (p *FileHostInitiator) remountFS(ctx context.Context, h *structs.HostInfo, 
 		return err
 	}
 	// result should be "/dev/mapper/centos-root /data    xfs     defaults        0 0"
-	mountInfo := strings.Split(result, " ")
+	mountInfo := strings.Fields(result)
 	originOpts := mountInfo[3]
 	targetOpts := fmt.Sprintf("%s,%s", originOpts, addingOpts)
 	updateFsTabCmd := fmt.Sprintf("sed -i '\\# %s #s#%s#%s#g' /etc/fstab", path, originOpts, targetOpts)

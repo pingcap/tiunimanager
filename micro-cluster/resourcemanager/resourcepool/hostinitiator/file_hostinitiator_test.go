@@ -17,6 +17,7 @@ package hostinitiator
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -237,6 +238,29 @@ func Test_installNumaCtl(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func Test_Remount(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
+	mockClient.EXPECT().RunCommandsInSession(gomock.Any()).DoAndReturn(func(commands []string) (string, error) {
+		if strings.HasPrefix(commands[0], "sed -n") {
+			return "/dev/mapper/centos-root /data    xfs     defaults        0 0", nil
+		} else if strings.HasPrefix(commands[0], "sed -i") {
+			fields := strings.Split(commands[0], "#")
+			assert.Equal(t, "defaults,nodelalloc,noatime", fields[4])
+			return "", nil
+		}
+		return "", nil
+	}).Times(2)
+
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSSHClient(mockClient)
+
+	err := fileInitiator.remountFS(context.TODO(), &structs.HostInfo{IP: "666.666.666.666", UserName: "r00t", Passwd: "fake"}, "/data", []string{"nodelalloc", "noatime"})
+	assert.Nil(t, err)
+
+}
+
 func Test_GenerateTopologyConfig(t *testing.T) {
 	template_struct := templateScaleOut{}
 	template_struct.HostIPs = append(template_struct.HostIPs, "192.168.177.177")
@@ -356,4 +380,48 @@ func Test_BuildCheckHostTemplateItems(t *testing.T) {
 	str, err := templateInfo.generateTopologyConfig(context.TODO())
 	assert.Nil(t, err)
 	t.Log(str)
+}
+
+func Test_GetRemountInfoFromMsg(t *testing.T) {
+	fileInitiator := NewFileHostInitiator()
+	message1 := "mount point /data does not have 'nodelalloc' option set"
+	mountPoint1, opt1, err := fileInitiator.getRemountInfoFromMsg(context.TODO(), message1)
+	assert.Nil(t, err)
+	assert.Equal(t, "/data", mountPoint1)
+	assert.Equal(t, "nodelalloc", opt1)
+
+	message2 := "mount point /data does not have 'noatime' option set"
+	mountPoint2, opt2, err := fileInitiator.getRemountInfoFromMsg(context.TODO(), message2)
+	assert.Nil(t, err)
+	assert.Equal(t, "/data", mountPoint2)
+	assert.Equal(t, "noatime", opt2)
+
+	message3 := "mount point /data does not have 'noatime'"
+	_, _, err = fileInitiator.getRemountInfoFromMsg(context.TODO(), message3)
+	assert.NotNil(t, err)
+	emErr, ok := err.(errors.EMError)
+	assert.True(t, ok)
+	assert.Equal(t, errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, emErr.GetCode())
+
+	message4 := "mount point /data does not have 'cached'"
+	_, _, err = fileInitiator.getRemountInfoFromMsg(context.TODO(), message4)
+	assert.NotNil(t, err)
+	emErr, ok = err.(errors.EMError)
+	assert.True(t, ok)
+	assert.Equal(t, errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, emErr.GetCode())
+}
+
+func Test_AddRemountOpts(t *testing.T) {
+	fileInitiator := NewFileHostInitiator()
+	remount := map[string]map[string]struct{}{}
+	fileInitiator.addRemountOpts(remount, "/data1", "noatime")
+	fileInitiator.addRemountOpts(remount, "/data2", "nodelalloc")
+	opts1, ok := remount["/data1"]
+	assert.True(t, ok)
+	_, ok = opts1["noatime"]
+	assert.True(t, ok)
+	opts2, ok := remount["/data2"]
+	assert.True(t, ok)
+	_, ok = opts2["nodelalloc"]
+	assert.True(t, ok)
 }

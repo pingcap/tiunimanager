@@ -46,11 +46,12 @@ const (
 type Operation struct {
 	Type       string `json:"type"`         // operation of type, eg: deploy, start, stop...
 	WorkFlowID string `json:"work_flow_id"` // workflow ID which operation belongs to
-	Status     Status `json:"status"`
-	Result     string `json:"result"` // operation error message
+	Status     Status `json:"status"`       // operation status
+	Result     string `json:"result"`       // operation error message
 	ErrorStr   string `json:"error_str"`
 }
 
+// Create an operation record
 func Create(tiUPHome string, op Operation) (fileName string, err error) {
 	b, err := json.Marshal(op)
 	if err != nil {
@@ -61,6 +62,7 @@ func Create(tiUPHome string, op Operation) (fileName string, err error) {
 	return
 }
 
+// Update an operation record
 func Update(fileName string, op Operation) error {
 	b, err := json.Marshal(op)
 	if err != nil {
@@ -70,6 +72,7 @@ func Update(fileName string, op Operation) error {
 	return ioutil.WriteFile(fileName, b, 0644)
 }
 
+// Read an operation record
 func Read(fileName string) (op Operation, err error) {
 	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
@@ -80,6 +83,7 @@ func Read(fileName string) (op Operation, err error) {
 	return
 }
 
+// Delete an operation Record
 func Delete(filename string) error {
 	return os.Remove(filename)
 }

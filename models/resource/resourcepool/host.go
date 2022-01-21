@@ -32,7 +32,7 @@ type Host struct {
 	ID           string          `json:"hostId" gorm:"primaryKey"`
 	IP           string          `json:"ip" gorm:"not null"`
 	UserName     string          `json:"userName,omitempty" gorm:"size:32"`
-	Passwd       common.Password `json:"passwd,omitempty" gorm:"size:32"`
+	Passwd       common.Password `json:"passwd,omitempty" gorm:"size:128"`
 	HostName     string          `json:"hostName" gorm:"size:255"`
 	Status       string          `json:"status" gorm:"index;default:Online"` // Host Status
 	Stat         string          `json:"stat" gorm:"index;default:LoadLess"` // Host Resource Stat

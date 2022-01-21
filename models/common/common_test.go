@@ -31,6 +31,7 @@ type TestEntity struct {
 	Entity
 	Name string `gorm:"uniqueIndex:myIndex"`
 	DeleteTime int64 `gorm:"uniqueIndex:myIndex"`
+	Password Password  `gorm:"password"`
 }
 
 func (e *TestEntity) BeforeDelete(tx *gorm.DB) (err error) {
@@ -126,4 +127,40 @@ func TestFinalHash(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPassword(t *testing.T) {
+	t.Run("create", func(t *testing.T) {
+		err := baseDB.Create(&TestEntity{
+			Entity: Entity{
+				TenantId: "111",
+			},
+			Name: "createpassword",
+			Password: "N&HIO(*(&#Y*&HNS&D*#*GF*RS*FY&DF",
+		}).Error
+		assert.NoError(t, err)
+
+		result := &TestEntity{}
+		err = baseDB.Model(&TestEntity{}).Where("name = ?", "createpassword").First(result).Error
+		assert.NoError(t, err)
+		assert.Equal(t, "N&HIO(*(&#Y*&HNS&D*#*GF*RS*FY&DF", string(result.Password))
+	})
+	t.Run("update", func(t *testing.T) {
+		a := &TestEntity{
+			Entity: Entity{
+				TenantId: "111",
+			},
+			Name: "updatepassword",
+			Password: "abcd",
+		}
+		baseDB.Create(a)
+		a.Password = "dddd"
+		err := baseDB.Model(a).Save(a).Error
+		assert.NoError(t, err)
+
+		result := &TestEntity{}
+		err = baseDB.Model(&TestEntity{}).Where("name = ?", "updatepassword").First(result).Error
+		assert.NoError(t, err)
+		assert.Equal(t, "dddd", string(result.Password))
+	})
 }

@@ -1054,6 +1054,9 @@ func adjustParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 		Params: []structs.ClusterParameterSampleInfo{
 			{ParamId: "max-replicas", RealValue: structs.ParameterRealValue {
 				ClusterValue: strconv.Itoa(clusterMeta.Cluster.Copies),
+				InstanceValue: []*structs.ClusterInstanceParameterValue{
+					{ID: string(constants.ComponentIDPD), Value: strconv.Itoa(clusterMeta.Cluster.Copies)},
+				},
 			}},
 		},
 		Reboot: true,

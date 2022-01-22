@@ -2186,6 +2186,12 @@ func Test_applyParameterGroup(t *testing.T) {
 	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
 	models.SetParameterGroupReaderWriter(parameterGroupRW)
 	parameterGroupRW.EXPECT().
+		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.2", 1, 1, gomock.Any(), gomock.Any()).
+		Return([]*parametergroup.ParameterGroup{
+			{},
+	}, int64(0), nil).AnyTimes()
+
+	parameterGroupRW.EXPECT().
 		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.1", 1, 1, gomock.Any(), gomock.Any()).
 		Return([]*parametergroup.ParameterGroup{}, int64(0), nil).AnyTimes()
 

@@ -2079,11 +2079,11 @@ func Test_applyParameterGroup(t *testing.T) {
 	models.SetParameterGroupReaderWriter(parameterGroupRW)
 	parameterGroupRW.EXPECT().
 		QueryParameterGroup(context.TODO(), gomock.Any(), gomock.Any(), "v5.1", 1, 1, gomock.Any(), gomock.Any()).
-		Return([]parametergroup.ParameterGroup{}, nil, nil).AnyTimes()
+		Return([]*parametergroup.ParameterGroup{}, int64(0), nil).AnyTimes()
 
 	parameterGroupRW.EXPECT().
 		QueryParameterGroup(context.TODO(), gomock.Any(), gomock.Any(), "v5.0", 1, 1, gomock.Any(), gomock.Any()).
-		Return(nil, nil, errors.Error(errors.TIEM_PANIC)).AnyTimes()
+		Return(nil, int64(0), errors.Error(errors.TIEM_PANIC)).AnyTimes()
 
 	t.Run("query group error", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())

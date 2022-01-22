@@ -897,7 +897,7 @@ func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
 
-	if len(cluster.ParameterGroupID) > 0  {
+	if len(cluster.ParameterGroupID) > 0 {
 		resp, err := parameter.NewManager().ApplyParameterGroup(context, message.ApplyParameterGroupReq {
 			ParamGroupId: cluster.ParameterGroupID,
 			ClusterID: cluster.ID,

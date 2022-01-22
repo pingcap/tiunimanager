@@ -44,6 +44,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Deprecated: Use Manager.Deploy instead.
 func (manager *SecondPartyManager) ClusterDeploy(ctx context.Context, tiUPComponent TiUPComponentTypeStr,
 	instanceName string, version string, configStrYaml string, timeoutS int, flags []string, workFlowNodeID string, password string) (
 	operationID string, err error) {
@@ -92,6 +93,7 @@ func (manager *SecondPartyManager) startTiUPDeployOperation(ctx context.Context,
 	}()
 }
 
+// Deprecated: Use Manager.ScaleOut instead.
 func (manager *SecondPartyManager) ClusterScaleOut(ctx context.Context, tiUPComponent TiUPComponentTypeStr,
 	instanceName string, configStrYaml string, timeoutS int, flags []string, workFlowNodeID string, password string) (
 	operationID string, err error) {
@@ -139,6 +141,7 @@ func (manager *SecondPartyManager) startTiUPScaleOutOperation(ctx context.Contex
 	}()
 }
 
+// Deprecated: Use Manager.ScaleIn instead.
 func (manager *SecondPartyManager) ClusterScaleIn(ctx context.Context, tiUPComponent TiUPComponentTypeStr,
 	instanceName string, nodeId string, timeoutS int, flags []string, workFlowNodeID string) (operationID string,
 	err error) {
@@ -205,6 +208,7 @@ func (manager *SecondPartyManager) startTiUPPruneOperation(ctx context.Context, 
 	}()
 }
 
+// Deprecated: Use Manager.Start instead.
 func (manager *SecondPartyManager) ClusterStart(ctx context.Context, tiUPComponent TiUPComponentTypeStr,
 	instanceName string, timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error) {
 	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("clusterstart "+
@@ -238,6 +242,7 @@ func (manager *SecondPartyManager) startTiUPStartOperation(ctx context.Context, 
 	}()
 }
 
+// Deprecated: Use Manager.Restart instead.
 func (manager *SecondPartyManager) ClusterRestart(ctx context.Context, tiUPComponent TiUPComponentTypeStr,
 	instanceName string, timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error) {
 	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("clusterrestart "+
@@ -304,6 +309,7 @@ func (manager *SecondPartyManager) startTiUPStopOperation(ctx context.Context, o
 	}()
 }
 
+// Deprecated: Use Manager.List instead.
 func (manager *SecondPartyManager) ClusterList(ctx context.Context, tiUPComponent TiUPComponentTypeStr, timeoutS int,
 	flags []string) (resp *CmdListResp, err error) {
 	framework.LogWithContext(ctx).Infof("clusterlist tiupComponent: %s, timeout: %d, flags: %v",
@@ -355,6 +361,7 @@ func (manager *SecondPartyManager) startTiUPListOperation(ctx context.Context, r
 	return
 }
 
+// Deprecated: Use Manager.Destroy instead.
 func (manager *SecondPartyManager) ClusterDestroy(ctx context.Context, tiUPComponent TiUPComponentTypeStr,
 	instanceName string, timeoutS int, flags []string, workFlowNodeID string) (operationID string, err error) {
 	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("clusterdestroy "+
@@ -388,6 +395,7 @@ func (manager *SecondPartyManager) startTiUPDestroyOperation(ctx context.Context
 	}()
 }
 
+// Deprecated: Use Manager.Display instead.
 func (manager *SecondPartyManager) ClusterDisplay(ctx context.Context, tiUPComponent TiUPComponentTypeStr,
 	instanceName string, timeoutS int, flags []string) (resp *CmdDisplayResp, err error) {
 	framework.LogWithContext(ctx).Infof("clusterdisplay tiupcomponent: %s,  instanceName: %s, "+
@@ -422,6 +430,7 @@ func (manager *SecondPartyManager) Check(ctx context.Context, tiUPComponent TiUP
 	return
 }
 
+// Deprecated: Use Manager.Upgrade instead.
 func (manager *SecondPartyManager) ClusterUpgrade(ctx context.Context, tiUPComponent TiUPComponentTypeStr,
 	instanceName string, version string, timeoutS int, flags []string, workFlowNodeID string) (operationID string,
 	err error) {
@@ -458,6 +467,7 @@ func (manager *SecondPartyManager) startTiUPUpgradeOperation(ctx context.Context
 	}()
 }
 
+// Deprecated: Use Manager.ShowConfig instead.
 func (manager *SecondPartyManager) ClusterShowConfig(ctx context.Context, req *CmdShowConfigReq) (
 	resp *CmdShowConfigResp, err error) {
 	framework.LogWithContext(ctx).Infof("clustershowconfig cmdshowconfigreq: %v", req)
@@ -483,6 +493,7 @@ func (manager *SecondPartyManager) ClusterShowConfig(ctx context.Context, req *C
 	return
 }
 
+// Deprecated: Use Manager.EditConfig instead.
 func (manager *SecondPartyManager) ClusterEditGlobalConfig(ctx context.Context,
 	cmdEditGlobalConfigReq CmdEditGlobalConfigReq, workFlowNodeID string) (string, error) {
 	framework.LogWithContext(ctx).Infof("clustereditglobalconfig cmdeditglobalconfigreq: %v, workflownodeid: %s",
@@ -576,6 +587,7 @@ func (manager *SecondPartyManager) startTiUPEditGlobalConfigOperation(ctx contex
 	manager.startTiUPEditConfigOperation(ctx, cmdEditConfigReq, operationID)
 }
 
+// Deprecated: Use Manager.EditConfig instead.
 func (manager *SecondPartyManager) ClusterEditInstanceConfig(ctx context.Context,
 	cmdEditInstanceConfigReq CmdEditInstanceConfigReq, workFlowNodeID string) (string, error) {
 	framework.LogWithContext(ctx).Infof("clustereditinstanceConfig cmdeditinstanceconfigreq: %v, "+
@@ -779,6 +791,7 @@ func (manager *SecondPartyManager) startTiUPEditConfigOperation(ctx context.Cont
 	}()
 }
 
+// Deprecated: Use Manager.Reload instead.
 func (manager *SecondPartyManager) ClusterReload(ctx context.Context, cmdReloadConfigReq CmdReloadConfigReq,
 	workFlowNodeID string) (operationID string, err error) {
 	framework.LogWithContext(ctx).Infof("clusterreload cmdreloadconfigreq: %v, workflownodeid: %s",
@@ -804,6 +817,7 @@ func (manager *SecondPartyManager) startTiUPReloadOperation(ctx context.Context,
 	}()
 }
 
+// Deprecated: Use Manager.Exec instead.
 func (manager *SecondPartyManager) ClusterExec(ctx context.Context, cmdClusterExecReq CmdClusterExecReq,
 	workFlowNodeID string) (operationID string, err error) {
 	framework.LogWithContext(ctx).Infof("clusterexec cmdclusterexecreq: %v, workflownodeid: %s",
@@ -829,6 +843,7 @@ func (manager *SecondPartyManager) startTiUPExecOperation(ctx context.Context, o
 	}()
 }
 
+// Deprecated: Use Manager.Dumpling instead.
 func (manager *SecondPartyManager) Dumpling(ctx context.Context, timeoutS int, flags []string, workFlowNodeID string) (
 	operationID string, err error) {
 	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("dumpling, timeouts: %d, "+
@@ -858,6 +873,7 @@ func (manager *SecondPartyManager) startTiUPDumplingOperation(ctx context.Contex
 	}()
 }
 
+// Deprecated: Use Manager.Lightning instead.
 func (manager *SecondPartyManager) Lightning(ctx context.Context, timeoutS int, flags []string, workFlowNodeID string) (
 	operationID string, err error) {
 	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("lightning, timeouts: %d, "+
@@ -887,6 +903,7 @@ func (manager *SecondPartyManager) startTiUPLightningOperation(ctx context.Conte
 	}()
 }
 
+// Deprecated: Use Manager.Push instead.
 func (manager *SecondPartyManager) Transfer(ctx context.Context, tiUPComponent TiUPComponentTypeStr,
 	instanceName string, collectorYaml string, remotePath string, timeoutS int, flags []string, workFlowNodeID string) (
 	operationID string, err error) {
@@ -933,6 +950,7 @@ func (manager *SecondPartyManager) startTiUPTransferOperation(ctx context.Contex
 	}()
 }
 
+// Deprecated: Use Manager.Ctl instead.
 func (manager *SecondPartyManager) ClusterComponentCtl(ctx context.Context, str TiUPComponentTypeStr,
 	clusterVersion string, component spec.TiDBClusterComponent, flags []string, timeoutS int) (string, error) {
 	framework.LogWithContext(ctx).Infof("clustercomponentctl tiupcomponent: %s,  clusterversion: %s. "+

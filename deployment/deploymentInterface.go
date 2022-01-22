@@ -111,6 +111,18 @@ type Interface interface {
 	// @return ID
 	// @return err
 	Start(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error)
+	// Stop
+	// @Description:
+	// @param ctx
+	// @param componentType
+	// @param clusterID
+	// @param home
+	// @param workFlowID
+	// @param args[]
+	// @param timeout
+	// @return ID
+	// @return err
+	Stop(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error)
 	// Restart
 	// @Description:
 	// @param ctx
@@ -215,6 +227,22 @@ type Interface interface {
 	// @return ID
 	// @return err
 	EditInstanceConfig(ctx context.Context, componentType TiUPComponentType, clusterID, component, host, home, workFlowID string, config map[string]interface{}, args []string, port, timeout int) (ID string, err error)
+	// EditConfig
+	// @Description:
+	// @param ctx
+	// @param componentType
+	// @param clusterID
+	// @param component
+	// @param host
+	// @param home
+	// @param workFlowID
+	// @param config
+	// @param args[]
+	// @param port
+	// @param timeout
+	// @return ID
+	// @return err
+	EditConfig(ctx context.Context, componentType TiUPComponentType, clusterID, configYaml, home, workFlowID string, args []string, timeout int) (ID string, err error)
 	// List
 	// @Description:
 	// @param ctx
@@ -249,7 +277,7 @@ type Interface interface {
 	// @param timeout
 	// @return spec
 	// @return err
-	ShowConfig(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (spec *spec.Specification, err error)
+	ShowConfig(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (result string, err error)
 	// Dumpling
 	// @Description:
 	// @param ctx
@@ -296,7 +324,7 @@ type Interface interface {
 	// @param timeout
 	// @return ID
 	// @return err
-	Ctl(ctx context.Context, componentType TiUPComponentType, version, component, home, workFlowID string, args []string, timeout int) (ID string, err error)
+	Ctl(ctx context.Context, componentType TiUPComponentType, version, component, home string, args []string, timeout int) (result string, err error)
 	// Exec
 	// @Description:
 	// @param ctx
@@ -307,5 +335,5 @@ type Interface interface {
 	// @param timeout
 	// @return result
 	// @return err
-	Exec(ctx context.Context, componentType TiUPComponentType, home, workFlowID string, args []string, timeout int) (result string, err error)
+	Exec(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error)
 }

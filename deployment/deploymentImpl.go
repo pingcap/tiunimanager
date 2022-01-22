@@ -37,7 +37,6 @@ import (
 	"github.com/pingcap-inc/tiem/util/disk"
 
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap/tiup/pkg/cluster/spec"
 )
 
 type Manager struct {
@@ -62,16 +61,325 @@ func (m *Manager) Deploy(ctx context.Context, componentType TiUPComponentType, c
 	workFlowID string, args []string, timeout int) (ID string, err error) {
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 	// todo: delete the outdated topo file
-	configYamlFilePath, err := disk.CreateWithContent("", "em-topology", "yaml", []byte(configYaml))
+	configYamlFilePath, err := disk.CreateWithContent("", "tidb-deploy-topology", "yaml", []byte(configYaml))
 	if err != nil {
 		return "", err
 	}
 
-	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %s %s %d %s", componentType, CMDDeploy, clusterID, version, configYamlFilePath, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %s %s %d %s", componentType, CMDDeploy, clusterID, version, configYamlFilePath,
+		strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
 	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
 
 	id, err := Create(home, Operation{
 		Type:       CMDDeploy,
+		WorkFlowID: workFlowID,
+		Status:     Init,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
+	return id, nil
+}
+
+func (m *Manager) Start(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDStart, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	id, err := Create(home, Operation{
+		Type:       CMDStart,
+		WorkFlowID: workFlowID,
+		Status:     Init,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
+	return id, nil
+}
+
+func (m *Manager) Stop(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDStop, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	id, err := Create(home, Operation{
+		Type:       CMDStop,
+		WorkFlowID: workFlowID,
+		Status:     Init,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
+	return id, nil
+}
+
+func (m *Manager) Restart(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDRestart, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	id, err := Create(home, Operation{
+		Type:       CMDRestart,
+		WorkFlowID: workFlowID,
+		Status:     Init,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
+	return id, nil
+}
+
+func (m *Manager) Upgrade(ctx context.Context, componentType TiUPComponentType, clusterID, version, home, workFlowID string, args []string, timeout int) (ID string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %s %d %s", componentType, CMDUpgrade, clusterID, version, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	id, err := Create(home, Operation{
+		Type:       CMDUpgrade,
+		WorkFlowID: workFlowID,
+		Status:     Init,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
+	return id, nil
+}
+
+func (m *Manager) ScaleIn(ctx context.Context, componentType TiUPComponentType, clusterID, nodeID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %s %s %d", componentType, CMDScaleIn, clusterID, CMDNode, nodeID, strings.Join(args, " "), FlagWaitTimeout, timeout)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	id, err := Create(home, Operation{
+		Type:       CMDScaleIn,
+		WorkFlowID: workFlowID,
+		Status:     Init,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
+	return id, nil
+}
+
+func (m *Manager) ScaleOut(ctx context.Context, componentType TiUPComponentType, clusterID, configYaml, home, workFlowID string, args []string, timeout int) (ID string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+	// todo: delete the outdated topo file
+	configYamlFilePath, err := disk.CreateWithContent("", "tidb-scale-out-topology", "yaml", []byte(configYaml))
+	if err != nil {
+		return "", err
+	}
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %s %d %s", componentType, CMDScaleOut, clusterID, configYamlFilePath, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	id, err := Create(home, Operation{
+		Type:       CMDScaleOut,
+		WorkFlowID: workFlowID,
+		Status:     Init,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
+	return id, nil
+}
+
+func (m *Manager) Destroy(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDDestroy, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	id, err := Create(home, Operation{
+		Type:       CMDDestroy,
+		WorkFlowID: workFlowID,
+		Status:     Init,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
+	return id, nil
+}
+
+func (m *Manager) Reload(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDReload, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	id, err := Create(home, Operation{
+		Type:       CMDReload,
+		WorkFlowID: workFlowID,
+		Status:     Init,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
+	return id, nil
+}
+
+func (m *Manager) EditClusterConfig(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, configs map[string]map[string]interface{}, args []string, timeout int) (ID string, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Manager) EditInstanceConfig(ctx context.Context, componentType TiUPComponentType, clusterID, component, host, home, workFlowID string, config map[string]interface{}, args []string, port, timeout int) (ID string, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Manager) EditConfig(ctx context.Context, componentType TiUPComponentType, clusterID, configYaml, home, workFlowID string, args []string, timeout int) (ID string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+	// todo: delete the outdated topo file
+	configYamlFilePath, err := disk.CreateWithContent("", "tidb-edit-config-topology", "yaml", []byte(configYaml))
+	if err != nil {
+		return "", err
+	}
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %s %s %d %s", componentType, CMDEditConfig, clusterID, CMDTopologyFile, configYamlFilePath, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	id, err := Create(home, Operation{
+		Type:       CMDEditConfig,
+		WorkFlowID: workFlowID,
+		Status:     Init,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
+	return id, nil
+}
+
+func (m *Manager) List(ctx context.Context, componentType TiUPComponentType, home, workFlowID string, args []string, timeout int) (result string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %d %s", componentType, CMDList, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	return m.startSyncOperation(home, tiUPArgs, timeout)
+}
+
+func (m *Manager) Display(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (result string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDDisplay, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	return m.startSyncOperation(home, tiUPArgs, timeout)
+}
+
+func (m *Manager) ShowConfig(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (result string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDShowConfig, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	return m.startSyncOperation(home, tiUPArgs, timeout)
+}
+
+func (m *Manager) Dumpling(ctx context.Context, home, workFlowID string, args []string, timeout int) (ID string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+
+	tiUPArgs := fmt.Sprintf("%s %s", CMDDumpling, strings.Join(args, " "))
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	id, err := Create(home, Operation{
+		Type:       CMDDumpling,
+		WorkFlowID: workFlowID,
+		Status:     Init,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
+	return id, nil
+}
+
+func (m *Manager) Lightning(ctx context.Context, home, workFlowID string, args []string, timeout int) (ID string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+
+	tiUPArgs := fmt.Sprintf("%s %s", CMDLightning, strings.Join(args, " "))
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	id, err := Create(home, Operation{
+		Type:       CMDLightning,
+		WorkFlowID: workFlowID,
+		Status:     Init,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
+	return id, nil
+}
+
+func (m *Manager) Push(ctx context.Context, componentType TiUPComponentType, clusterID, collectorYaml, remotePath, home, workFlowID string, args []string, timeout int) (ID string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+	// todo: delete the outdated topo file
+	configYamlFilePath, err := disk.CreateWithContent("", "tidb-push-topology", "yaml", []byte(collectorYaml))
+	if err != nil {
+		return "", err
+	}
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %s %s %d %s", componentType, CMDPush, clusterID, configYamlFilePath, remotePath, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	id, err := Create(home, Operation{
+		Type:       CMDPush,
+		WorkFlowID: workFlowID,
+		Status:     Init,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
+	return id, nil
+}
+
+func (m *Manager) Ctl(ctx context.Context, componentType TiUPComponentType, version, component, home string, args []string, timeout int) (result string, err error) {
+	logInFunc := framework.LogWithContext(ctx)
+
+	tiUPArgs := fmt.Sprintf("%s:%s %s %s", string(componentType), version, component, strings.Join(args, " "))
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	return m.startSyncOperation(home, tiUPArgs, timeout)
+}
+
+func (m *Manager) Exec(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDExec, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	id, err := Create(home, Operation{
+		Type:       CMDExec,
 		WorkFlowID: workFlowID,
 		Status:     Init,
 	})
@@ -116,6 +424,19 @@ func (m *Manager) startAsyncOperation(ctx context.Context, id, home, tiUPArgs st
 	}()
 }
 
+func (m *Manager) startSyncOperation(home, tiUPArgs string, timeoutS int) (result string, err error) {
+	cmd, cancelFunc := genCommand(home, m.TiUPBinPath, tiUPArgs, timeoutS)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	defer cancelFunc()
+
+	data, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
 func genCommand(home, tiUPBinPath, tiUPArgs string, timeoutS int) (cmd *exec.Cmd, cancelFunc context.CancelFunc) {
 	if timeoutS != 0 {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutS)*time.Second)
@@ -153,89 +474,4 @@ func updateStatus(ctx context.Context, operationID, msg string, status Status, t
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("Fail update %s to %s: %v", operationID, status, err)
 	}
-}
-
-func (m *Manager) Start(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) Restart(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) Upgrade(ctx context.Context, componentType TiUPComponentType, clusterID, version, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) ScaleIn(ctx context.Context, componentType TiUPComponentType, clusterID, nodeID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) ScaleOut(ctx context.Context, componentType TiUPComponentType, clusterID, configYaml, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) Destroy(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) Reload(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) EditClusterConfig(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, configs map[string]map[string]interface{}, args []string, timeout int) (ID string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) EditInstanceConfig(ctx context.Context, componentType TiUPComponentType, clusterID, component, host, home, workFlowID string, config map[string]interface{}, args []string, port, timeout int) (ID string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) List(ctx context.Context, componentType TiUPComponentType, home, workFlowID string, args []string, timeout int) (result string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) Display(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (result string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) ShowConfig(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (spec *spec.Specification, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) Dumpling(ctx context.Context, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) Lightning(ctx context.Context, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) Push(ctx context.Context, componentType TiUPComponentType, clusterID, collectorYaml, remotePath, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) Ctl(ctx context.Context, componentType TiUPComponentType, version, component, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) Exec(ctx context.Context, componentType TiUPComponentType, home, workFlowID string, args []string, timeout int) (result string, err error) {
-	//TODO implement me
-	panic("implement me")
 }

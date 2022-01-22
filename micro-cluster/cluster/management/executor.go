@@ -20,6 +20,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -897,21 +898,36 @@ func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
 
-	if len(cluster.ParameterGroupID) > 0 {
-		resp, err := parameter.NewManager().ApplyParameterGroup(context, message.ApplyParameterGroupReq {
-			ParamGroupId: cluster.ParameterGroupID,
-			ClusterID: cluster.ID,
-		}, false)
+	parameterGroupID :=  cluster.ParameterGroupID
+	if len(parameterGroupID) == 0 {
+		node.Record("parameter group id is empty")
+		groups, _, err := parametergroup.NewManager().QueryParameterGroup(context, message.QueryParameterGroupReq {
+			DBType: 1,
+			HasDefault: 1,
+			ClusterVersion: clusterMeta.GetMinorVersion(),
+		})
 		if err != nil {
 			return err
 		}
-		if err = handler.WaitWorkflow(context.Context, resp.WorkFlowID, 10*time.Second, 30*24*time.Hour); err != nil {
-			framework.LogWithContext(context).Errorf("apply parameter group %s workflow error: %s", cluster.ParameterGroupID, err)
-			return err
+		if len(groups) == 0 {
+			return errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_DATA, "no default group found for cluster %s, type = %s, version = %s", cluster.ID, cluster.Type, clusterMeta.GetMinorVersion())
 		}
-		node.Record(fmt.Sprintf("apply parameter group %s for cluster %s ", cluster.ParameterGroupID, cluster.ID))
+
+		node.Record(fmt.Sprintf("default parameter group %s will be applied to cluster %s", parameterGroupID, cluster.ID))
 	}
-	node.Record("parameter group id is empty")
+
+	resp, err := parameter.NewManager().ApplyParameterGroup(context, message.ApplyParameterGroupReq {
+		ParamGroupId: cluster.ParameterGroupID,
+		ClusterID: cluster.ID,
+	}, false)
+	if err != nil {
+		return err
+	}
+	if err = handler.WaitWorkflow(context.Context, resp.WorkFlowID, 10*time.Second, 30*24*time.Hour); err != nil {
+		framework.LogWithContext(context).Errorf("apply parameter group %s workflow error: %s", cluster.ParameterGroupID, err)
+		return err
+	}
+	node.Record(fmt.Sprintf("apply parameter group %s for cluster %s ", cluster.ParameterGroupID, cluster.ID))
 	return nil
 }
 
@@ -923,7 +939,7 @@ func initParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	resp, err := parameter.NewManager().UpdateClusterParameters(context, cluster.UpdateClusterParametersReq{
 		ClusterID: clusterMeta.Cluster.ID,
 		Params: []structs.ClusterParameterSampleInfo{
-			{ParamId: "max-replicas", RealValue: structs.ParameterRealValue{
+			{ParamId: "max-replicas", RealValue: structs.ParameterRealValue {
 				ClusterValue: strconv.Itoa(clusterMeta.Cluster.Copies),
 			}},
 		},

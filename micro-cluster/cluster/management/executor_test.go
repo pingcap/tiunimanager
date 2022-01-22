@@ -616,6 +616,32 @@ func TestBackupBeforeDelete(t *testing.T) {
 
 }
 
+func TestApplyParameterGroup(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	t.Run("normal", func(t *testing.T) {
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				ParameterGroupID: "211",
+			},
+		})
+		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+		workflow.MockWorkFlowService(workflowService)
+		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
+		workflowService.EXPECT().DetailWorkFlow(gomock.Any(), gomock.Any()).Return(
+			message.QueryWorkFlowDetailResp{
+				Info: &structs2.WorkFlowInfo{
+					Status: constants.WorkFlowStatusFinished}}, nil).AnyTimes()
+		
+	})
+
+}
+
 func TestBackupSourceCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

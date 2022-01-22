@@ -20,6 +20,7 @@ import (
 	"context"
 	"github.com/pingcap-inc/tiem/models/platform/user"
 	"sort"
+	"strings"
 	"text/template"
 
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -1026,6 +1027,24 @@ func QueryInstanceLogInfo(ctx context.Context, hostId string, typeFilter []strin
 		}
 	}
 	return
+}
+
+func (p *ClusterMeta) GetMajorVersion() string {
+	return strings.Split(p.Cluster.Version, ".")[0]
+
+}
+
+func (p *ClusterMeta) GetMinorVersion() string {
+	numbers := strings.Split(p.Cluster.Version, ".")
+	if len(numbers) > 1 {
+		return fmt.Sprintf("%s.%s", numbers[0], numbers[1])
+	} else {
+		return fmt.Sprintf(numbers[0])
+	}
+}
+
+func (p *ClusterMeta) GetRevision() string {
+	return p.Cluster.Version
 }
 
 func (p *ClusterMeta) DisplayClusterInfo(ctx context.Context) structs.ClusterInfo {

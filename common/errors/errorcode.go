@@ -31,6 +31,8 @@ const (
 	TIEM_TASK_CONFLICT             EM_ERROR_CODE = 9993
 	TIEM_TASK_CANCELED             EM_ERROR_CODE = 9992
 
+	TIEM_SYSTEM_MISSING_DATA         EM_ERROR_CODE = 9899
+
 	TIEM_UNRECOGNIZED_ERROR EM_ERROR_CODE = 10000
 	TIEM_PARAMETER_INVALID  EM_ERROR_CODE = 10001
 	TIEM_SQL_ERROR          EM_ERROR_CODE = 10002
@@ -257,6 +259,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 
 	TIEM_METADB_SERVER_CALL_ERROR:  {"call metadb-Server failed", 500},
 	TIEM_CLUSTER_SERVER_CALL_ERROR: {"call cluster-Server failed", 500},
+	TIEM_SYSTEM_MISSING_DATA:       {"missing system data", 500},
 
 	TIEM_TASK_TIMEOUT:          {"task timeout", 500},
 	TIEM_FLOW_NOT_FOUND:        {"flow not found", 500},

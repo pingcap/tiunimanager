@@ -26,16 +26,6 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 )
 
-type creatingRuleWrapper struct {
-	req     *cluster.CreateClusterReq
-	product *structs.ProductDetail
-	rule    func(req *cluster.CreateClusterReq, product *structs.ProductDetail) error
-}
-
-func (p creatingRuleWrapper) validate() error {
-	return p.rule(p.req, p.product)
-}
-
 var creatingRules = []func(req *cluster.CreateClusterReq, product *structs.ProductDetail) error {
 	func(req *cluster.CreateClusterReq, product *structs.ProductDetail) error {
 		if _, ok := product.Versions[req.Version]; !ok {
@@ -66,7 +56,7 @@ var creatingRules = []func(req *cluster.CreateClusterReq, product *structs.Produ
 					}
 				}
 				if !matched {
-					return errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "count of components %s should be in %v", property.ID, property.SuggestedInstancesCount)
+					return errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "the total number of %s should be  in %v", property.ID, property.SuggestedInstancesCount)
 				}
 			}
 		}
@@ -91,11 +81,7 @@ func validateCreating(ctx context.Context, req *cluster.CreateClusterReq) error 
 	} else {
 		for _, v := range creatingRules {
 			optionalError.BreakIf(func() error {
-				return creatingRuleWrapper{
-					req:     req,
-					product: &product,
-					rule:    v,
-				}.validate()
+				return v(req, &product)
 			})
 		}
 	}

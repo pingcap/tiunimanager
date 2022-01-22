@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
+	em_errors "github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/message/cluster"
@@ -488,6 +489,12 @@ func TestManager_CreateCluster(t *testing.T) {
 	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
+		validator = func(ctx context.Context, req *cluster.CreateClusterReq) error {
+			return nil
+		}
+		defer func() {
+			validator = validateCreating
+		}()
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
@@ -511,6 +518,12 @@ func TestManager_CreateCluster(t *testing.T) {
 	})
 
 	t.Run("build cluster fail", func(t *testing.T) {
+		validator = func(ctx context.Context, req *cluster.CreateClusterReq) error {
+			return nil
+		}
+		defer func() {
+			validator = validateCreating
+		}()
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("fail")).AnyTimes()
@@ -533,6 +546,12 @@ func TestManager_CreateCluster(t *testing.T) {
 	})
 
 	t.Run("no computes", func(t *testing.T) {
+		validator = func(ctx context.Context, req *cluster.CreateClusterReq) error {
+			return nil
+		}
+		defer func() {
+			validator = validateCreating
+		}()
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
@@ -541,6 +560,12 @@ func TestManager_CreateCluster(t *testing.T) {
 	})
 
 	t.Run("async fail", func(t *testing.T) {
+		validator = func(ctx context.Context, req *cluster.CreateClusterReq) error {
+			return nil
+		}
+		defer func() {
+			validator = validateCreating
+		}()
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
@@ -562,6 +587,20 @@ func TestManager_CreateCluster(t *testing.T) {
 		})
 		assert.Error(t, err)
 	})
+
+	t.Run("validate", func(t *testing.T) {
+		validator = func(ctx context.Context, req *cluster.CreateClusterReq) error {
+			return em_errors.Error(em_errors.TIEM_PARAMETER_INVALID)
+		}
+		defer func() {
+			validator = validateCreating
+		}()
+
+		_, err := manager.CreateCluster(context.TODO(), cluster.CreateClusterReq{
+		})
+		assert.Error(t, err)
+	})
+
 }
 
 func TestManager_StopCluster(t *testing.T) {
@@ -1159,7 +1198,55 @@ func TestPreviewCluster(t *testing.T) {
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
 
+	t.Run("duplicated name", func(t *testing.T) {
+		clusterRW.EXPECT().QueryMetas(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*management.Result{}, structs.Page{
+			Page: 1,
+			Total: 1,
+			PageSize: 1,
+		}, nil).Times(1)
+		manager := &Manager{}
+		_, err := manager.PreviewCluster(context.TODO(), cluster.CreateClusterReq{
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("validate", func(t *testing.T) {
+		clusterRW.EXPECT().QueryMetas(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*management.Result{
+		}, structs.Page{
+			Page: 1,
+			Total: 0,
+			PageSize: 1,
+		}, nil).Times(1)
+
+		manager := &Manager{}
+		_, err := manager.PreviewCluster(context.TODO(), cluster.CreateClusterReq {
+			CreateClusterParameter: structs.CreateClusterParameter{
+				Region: "111",
+				CpuArchitecture: "111",
+			},
+			ResourceParameter: structs.ClusterResourceInfo {
+				InstanceResource: []structs.ClusterResourceParameterCompute{
+					{Type: "TiDB", Count: 4, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Zone1", Count: 1, Spec: "4C8G", DiskCapacity: 1, DiskType: "SATA"},
+						{Zone: "Zone3", Count: 1, Spec: "4C8G", DiskCapacity: 1, DiskType: "SATA"},
+					}},
+					{Type: "TiKV", Count: 4, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Zone1", Count: 1, Spec: "4C8G", DiskCapacity: 1, DiskType: "SATA"},
+						{Zone: "Zone2", Count: 1, Spec: "4C8G", DiskCapacity: 1, DiskType: "SATA"},
+					}},
+				},
+			},
+		})
+		assert.Error(t, err)
+	})
+
 	t.Run("normal", func(t *testing.T) {
+		validator = func(ctx context.Context, req *cluster.CreateClusterReq) error {
+			return nil
+		}
+		defer func() {
+			validator = validateCreating
+		}()
 		clusterRW.EXPECT().QueryMetas(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*management.Result{
 		}, structs.Page{
 			Page: 1,
@@ -1198,17 +1285,7 @@ func TestPreviewCluster(t *testing.T) {
 		assert.False(t, resp.StockCheckResult[2].Enough)
 		assert.True(t, resp.StockCheckResult[3].Enough)
 	})
-	t.Run("duplicated name", func(t *testing.T) {
-		clusterRW.EXPECT().QueryMetas(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*management.Result{}, structs.Page{
-			Page: 1,
-			Total: 1,
-			PageSize: 1,
-		}, nil).Times(1)
-		manager := &Manager{}
-		_, err := manager.PreviewCluster(context.TODO(), cluster.CreateClusterReq{
-		})
-		assert.Error(t, err)
-	})
+
 	t.Run("stock error", func(t *testing.T) {
 		clusterRW.EXPECT().QueryMetas(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*management.Result{
 		}, structs.Page{
@@ -1217,6 +1294,12 @@ func TestPreviewCluster(t *testing.T) {
 			PageSize: 1,
 		}, nil).Times(1)
 
+		validator = func(ctx context.Context, req *cluster.CreateClusterReq) error {
+			return nil
+		}
+		defer func() {
+			validator = validateCreating
+		}()
 		resourceRW.EXPECT().GetHostStocks(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.Stocks{
 			{Zone: "Zone1", FreeHostCount:8, FreeCpuCores:8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
 			{Zone: "Zone2", FreeHostCount:8, FreeCpuCores:8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},

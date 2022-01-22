@@ -280,6 +280,10 @@ var createClusterFlow = workflow.WorkFlowDefine{
 // @return resp
 // @return err
 func (p *Manager) CreateCluster(ctx context.Context, req cluster.CreateClusterReq) (resp cluster.CreateClusterResp, err error) {
+	err = validator(ctx, &req)
+	if err != nil {
+		return
+	}
 	meta := &handler.ClusterMeta{}
 	if err = meta.BuildCluster(ctx, req.CreateClusterParameter); err != nil {
 		framework.LogWithContext(ctx).Errorf("build cluster %s error: %s", req.Name, err.Error())
@@ -329,6 +333,10 @@ func (p *Manager) PreviewCluster(ctx context.Context, req cluster.CreateClusterR
 		return
 	}
 
+	err = validator(ctx, &req)
+	if err != nil {
+		return
+	}
 	resp = cluster.PreviewClusterResp{
 		Region: req.Region,
 		CpuArchitecture: req.CpuArchitecture,

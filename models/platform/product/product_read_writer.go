@@ -377,6 +377,9 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			}
 			productVersion.Arch[arch] = components
 		}
+	} else {
+		return nil, errors.NewErrorf(errors.QueryProductsScanRowError, "query product detail scan data error: %v, vendorID: %s, regionID:%s, productID: %s,status: %s, internal: %d",
+			err, vendorID, regionID, productID, status, internal)
 	}
 
 	for _, product := range products {

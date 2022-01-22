@@ -18,6 +18,7 @@ package management
 import (
 	"context"
 	"fmt"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockparametergroup"
 	"strconv"
 
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -637,7 +638,7 @@ func TestApplyParameterGroup(t *testing.T) {
 			message.QueryWorkFlowDetailResp{
 				Info: &structs2.WorkFlowInfo{
 					Status: constants.WorkFlowStatusFinished}}, nil).AnyTimes()
-		
+
 	})
 
 }
@@ -2067,4 +2068,32 @@ func Test_fetchTopologyFile(t *testing.T) {
 
 	err := fetchTopologyFile(node, context)
 	assert.NoError(t, err)
+}
+
+func Test_applyParameterGroup(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+	models.SetParameterGroupReaderWriter(parameterGroupRW)
+	parameterGroupRW.EXPECT().
+		QueryParameterGroup(context.TODO(), gomock.Any(), gomock.Any(), "v5.2", 1, 1, gomock.Any(), gomock.Any()).
+		Return().AnyTimes()
+
+	parameterGroupRW.EXPECT().
+		QueryParameterGroup(context.TODO(), gomock.Any(), gomock.Any(), "v4.9", 1, 1, gomock.Any(), gomock.Any()).
+		Return().AnyTimes()
+
+	t.Run("normal", func(t *testing.T) {
+		ctx := workflow.NewFlowContext(context.TODO())
+		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "1111",
+				},
+				Version: "v5.2.2",
+				ParameterGroupID: "",
+			},
+		})
+	})
 }

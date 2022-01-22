@@ -910,7 +910,11 @@ func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.Flo
 			return err
 		}
 		if len(groups) == 0 {
-			return errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_DATA, "no default group found for cluster %s, type = %s, version = %s", cluster.ID, cluster.Type, clusterMeta.GetMinorVersion())
+			msg := fmt.Sprintf("no default group found for cluster %s, type = %s, version = %s", cluster.ID, cluster.Type, clusterMeta.GetMinorVersion())
+			framework.LogWithContext(context).Errorf(msg)
+			return errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_DATA, msg)
+		} else {
+			parameterGroupID = groups[0].ParamGroupID
 		}
 
 		node.Record(fmt.Sprintf("default parameter group %s will be applied to cluster %s", parameterGroupID, cluster.ID))

@@ -43,7 +43,7 @@ func HandleHttpResponse(c *gin.Context, err error,
 	withData func() (interface{}, error), withPage func() Page) {
 	if err != nil {
 		framework.LogWithContext(c).Error(err.Error())
-		c.JSON(http.StatusInternalServerError, Fail(500, err.Error()))
+		c.JSON(http.StatusInternalServerError, Fail(int(errors.TIEM_CLUSTER_SERVER_CALL_ERROR), err.Error()))
 		return
 	}
 
@@ -59,7 +59,7 @@ func HandleHttpResponse(c *gin.Context, err error,
 	data, err := withData()
 	if err != nil {
 		framework.LogWithContext(c).Error(err.Error())
-		c.JSON(http.StatusInternalServerError, Fail(500, err.Error()))
+		c.JSON(http.StatusInternalServerError, Fail(int(errors.TIEM_UNRECOGNIZED_ERROR), err.Error()))
 		return
 	}
 	if withPage != nil {
@@ -67,25 +67,6 @@ func HandleHttpResponse(c *gin.Context, err error,
 	} else {
 		c.JSON(http.StatusOK, Success(data))
 	}
-}
-
-func BuildCommonResult(code int, message string, data interface{}) (result *CommonResult) {
-	result = &CommonResult{}
-	result.Code = code
-	result.Message = message
-	result.Data = data
-
-	return
-}
-
-func BuildResultWithPage(code int, message string, page *Page, data interface{}) (result *ResultWithPage) {
-	result = &ResultWithPage{}
-	result.Code = code
-	result.Message = message
-	result.Data = data
-	result.Page = *page
-
-	return
 }
 
 func Success(data interface{}) *CommonResult {

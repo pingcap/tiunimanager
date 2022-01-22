@@ -54,6 +54,11 @@ func (node *WorkFlowNode) Record(result ...interface{}) {
 	}
 }
 
+func (node *WorkFlowNode) RecordAndPersist(result ...interface{}) {
+	// todo: persist record
+	node.Record(result)
+}
+
 func (node *WorkFlowNode) Success(result ...interface{}) {
 	node.Record(result...)
 

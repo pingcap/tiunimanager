@@ -211,11 +211,11 @@ func validationParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCon
 		// validate parameter value by range field
 		if !ValidateRange(param) {
 			if len(param.Range) == 2 && (param.Type == int(Integer) || param.Type == int(Float)) {
-				return fmt.Errorf(fmt.Sprintf("Validation parameter %s failed, update value: %s, can take a range of values: %v",
-					param.Name, param.RealValue.ClusterValue, param.Range))
+				return fmt.Errorf(fmt.Sprintf("Validation parameter `%s.%s` failed, update value: %s, can take a range of values: %v",
+					param.Category, param.Name, param.RealValue.ClusterValue, param.Range))
 			} else {
-				return fmt.Errorf(fmt.Sprintf("Validation parameter %s failed, update value: %s, optional values: %v",
-					param.Name, param.RealValue.ClusterValue, param.Range))
+				return fmt.Errorf(fmt.Sprintf("Validation parameter `%s.%s` failed, update value: %s, optional values: %v",
+					param.Category, param.Name, param.RealValue.ClusterValue, param.Range))
 			}
 		}
 	}

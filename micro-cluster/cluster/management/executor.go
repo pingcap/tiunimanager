@@ -18,6 +18,7 @@ package management
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
@@ -114,7 +115,7 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		if len(ins.HostIP) > 1 {
 			hostIP = append(hostIP, ins.HostIP...)
 			node.Record(fmt.Sprintf("type: %s, zone: %s, host IP: %s; ", ins.Type, ins.Zone, strings.Join(hostIP, ", ")))
-		}else{
+		} else {
 			node.Record(fmt.Sprintf("type: %s, zone: %s, host IP: %s; ", ins.Type, ins.Zone, ins.HostIP[0]))
 		}
 	}
@@ -194,6 +195,113 @@ func scaleInCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 		"get scale in cluster %s task id: %s", clusterMeta.Cluster.ID, taskId)
 
 	node.Record(fmt.Sprintf("scale in cluster %s ", clusterMeta.Cluster.ID))
+	return nil
+}
+
+// checkInstanceStatus
+// @Description: if scale in TiFlash or TiKV, check instance status
+func checkInstanceStatus(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	instanceID := context.GetData(ContextInstanceID).(string)
+
+	instance, err := clusterMeta.GetInstance(context.Context, instanceID)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster %s has no instance %s", clusterMeta.Cluster.ID, instanceID)
+		return err
+	}
+
+	if instance.Type != string(constants.ComponentIDTiKV) &&
+		instance.Type != string(constants.ComponentIDTiFlash) {
+		return nil
+	}
+	var address string
+	if instance.Type == string(constants.ComponentIDTiKV) {
+		address = strings.Join([]string{instance.HostIP[0], strconv.Itoa(int(instance.Ports[0]))}, ":")
+	} else if instance.Type == string(constants.ComponentIDTiFlash) {
+		address = strings.Join([]string{instance.HostIP[0], strconv.Itoa(int(instance.Ports[2]))}, ":") // specify server port
+	}
+
+	pdAddress := clusterMeta.GetPDClientAddresses()
+	if len(pdAddress) <= 0 {
+		return errors.NewError(errors.TIEM_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
+	}
+	pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
+
+	config, err := secondparty.Manager.ClusterComponentCtl(context.Context, secondparty.CTLComponentTypeStr,
+		clusterMeta.Cluster.Version, spec.ComponentPD, []string{"-u", pdID, "store",
+			"--state", "Tombstone,Up,Offline"}, handler.DefaultTiupTimeOut)
+	if err != nil {
+		return err
+	}
+	storeInfos := &handler.StoreInfos{}
+	if err = json.Unmarshal([]byte(config), storeInfos); err != nil {
+		return errors.WrapError(errors.TIEM_UNMARSHAL_ERROR,
+			fmt.Sprintf("parse TiKV or TiFlash store status error: %s", err.Error()), err)
+	}
+
+	storeID := ""
+	totalRegionCount := 0
+	for _, info := range storeInfos.Stores {
+		if info.Store.Address == address {
+			storeID = strconv.Itoa(info.Store.ID)
+			totalRegionCount = info.Status.RegionCount
+		}
+	}
+	if len(storeID) <= 0 {
+		return errors.NewError(errors.TIEM_STORE_NOT_FOUND_ERROR, "TiKV or TiFlash store not found")
+	}
+
+	index := int(handler.CheckInstanceStatusTimeout / handler.CheckInstanceStatusInterval)
+	ticker := time.NewTicker(handler.CheckInstanceStatusInterval)
+
+	for range ticker.C {
+		pdAddress := clusterMeta.GetPDClientAddresses()
+		if len(pdAddress) <= 0 {
+			return errors.NewError(errors.TIEM_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
+		}
+		pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
+
+		config, err := secondparty.Manager.ClusterComponentCtl(context.Context, secondparty.CTLComponentTypeStr,
+			clusterMeta.Cluster.Version, spec.ComponentPD, []string{"-u", pdID, "store", storeID}, handler.DefaultTiupTimeOut)
+		if err != nil {
+			return err
+		}
+		storeInfo := &handler.StoreInfo{}
+		if err = json.Unmarshal([]byte(config), storeInfo); err != nil {
+			return errors.WrapError(errors.TIEM_UNMARSHAL_ERROR,
+				fmt.Sprintf("parse TiKV or TiFlash store status error: %s", err.Error()), err)
+		}
+		if totalRegionCount == 0 {
+			node.RecordAndPersist("scale in progress: 100%")
+		} else {
+			node.RecordAndPersist(fmt.Sprintf("scale in progress: %d%%",
+				int(float64(totalRegionCount-storeInfo.Status.RegionCount)/float64(totalRegionCount)*100)))
+		}
+		if storeInfo.Store.StateName == string(handler.StoreTombstone) {
+			break
+		}
+		// timeout
+		index -= 1
+		if index == 0 {
+			return errors.NewError(errors.TIEM_CHECK_INSTANCE_TIEMOUT_ERROR,
+				fmt.Sprintf("check instnace %s status timeout", instance.ID))
+		}
+	}
+
+	framework.LogWithContext(context.Context).Infof(
+		"prune cluster %s, delete instance %s", clusterMeta.Cluster.ID, instanceID)
+	taskId, err := secondparty.Manager.ClusterPrune(
+		context.Context, secondparty.ClusterComponentTypeStr, clusterMeta.Cluster.ID,
+		handler.DefaultTiupTimeOut, []string{"--yes"}, node.ID)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster %s prune error: %s", clusterMeta.Cluster.ID, err.Error())
+		return err
+	}
+	framework.LogWithContext(context.Context).Infof(
+		"get prune cluster %s task id: %s", clusterMeta.Cluster.ID, taskId)
+
 	return nil
 }
 
@@ -663,7 +771,7 @@ func asyncBuildLog(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
 	log.GetService().BuildClusterLogConfig(context, clusterMeta.Cluster.ID)
-	node.Record(fmt.Sprintf("rebuild log config for cluster %s ",clusterMeta.Cluster.ID))
+	node.Record(fmt.Sprintf("rebuild log config for cluster %s ", clusterMeta.Cluster.ID))
 	return nil
 }
 
@@ -716,7 +824,7 @@ func syncConnectionKey(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 	if err != nil {
 		err = errors.NewErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "sync connection private key failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
 		framework.LogWithContext(context).Errorf(err.Error())
-		return  err
+		return err
 	}
 	publicKey, err := readTiUPFile(context,
 		getClusterSpaceInTiUP(context, clusterMeta.Cluster.ID),
@@ -724,13 +832,13 @@ func syncConnectionKey(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 	if err != nil {
 		err = errors.NewErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "sync connection public key failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
 		framework.LogWithContext(context).Errorf(err.Error())
-		return  err
+		return err
 	}
 	err = models.GetClusterReaderWriter().CreateClusterTopologySnapshot(context, management.ClusterTopologySnapshot{
-		ClusterID: clusterMeta.Cluster.ID,
-		TenantID: clusterMeta.Cluster.TenantId,
+		ClusterID:  clusterMeta.Cluster.ID,
+		TenantID:   clusterMeta.Cluster.TenantId,
 		PrivateKey: privateKey,
-		PublicKey: publicKey,
+		PublicKey:  publicKey,
 	})
 
 	return err
@@ -746,7 +854,7 @@ func syncTopology(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	if err != nil {
 		err = errors.NewErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "read meta.yaml failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
 		framework.LogWithContext(context).Errorf(err.Error())
-		return  err
+		return err
 	}
 
 	node.Record(fmt.Sprintf("sync topology config for cluster %s", clusterMeta.Cluster.ID), fmt.Sprintf("%s", metaYaml))
@@ -968,8 +1076,12 @@ func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 	var sshClient *ssh.Client
 	var sftpClient *sftp.Client
 	defer func() {
-		if sshClient != nil{ sshClient.Close() }
-		if sftpClient != nil{ sftpClient.Close() }
+		if sshClient != nil {
+			sshClient.Close()
+		}
+		if sftpClient != nil {
+			sftpClient.Close()
+		}
 	}()
 
 	return errors.OfNullable(nil).
@@ -995,10 +1107,10 @@ func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 		}).
 		BreakIf(func() error {
 			return models.GetClusterReaderWriter().CreateClusterTopologySnapshot(context, management.ClusterTopologySnapshot{
-				ClusterID: clusterMeta.Cluster.ID,
-				TenantID: clusterMeta.Cluster.TenantId,
+				ClusterID:  clusterMeta.Cluster.ID,
+				TenantID:   clusterMeta.Cluster.TenantId,
 				PrivateKey: string(context.GetData(ContextPrivateKey).([]byte)),
-				PublicKey: string(context.GetData(ContextPublicKey).([]byte)),
+				PublicKey:  string(context.GetData(ContextPublicKey).([]byte)),
 			})
 		}).
 		BreakIf(func() error {
@@ -1008,12 +1120,13 @@ func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 			framework.LogWithContext(context).Errorf("fetch topology of cluster %s failed, err = %s", clusterMeta.Cluster.ID, err.Error())
 		}).
 		Else(func() {
-			node.Record("fetch topology of cluster " + clusterMeta.Cluster.ID, string(context.GetData(ContextTopologyConfig).([]byte)))
+			node.Record("fetch topology of cluster "+clusterMeta.Cluster.ID, string(context.GetData(ContextTopologyConfig).([]byte)))
 		}).
 		Present()
 }
 
 type readRemoteFileFunc func(ctx context.Context, sftp *sftp.Client, clusterHome string, file string) ([]byte, error)
+
 var readRemoteFile readRemoteFileFunc = func(ctx context.Context, sftp *sftp.Client, clusterHome string, file string) ([]byte, error) {
 	filePath := fmt.Sprintf("%s%s", clusterHome, file)
 	fileData, err := sftp.Open(filePath)
@@ -1040,7 +1153,7 @@ func validateHostStatus(node *workflowModel.WorkFlowNode, context *workflow.Flow
 		list, _, err := resourcepool.GetResourcePool().GetHostProvider().QueryHosts(context, &structs.Location{
 			HostIp: ip,
 		}, &structs.HostFilter{}, &structs.PageRequest{
-			Page: 1,
+			Page:     1,
 			PageSize: 1,
 		})
 		if err != nil {
@@ -1141,7 +1254,7 @@ func rebuildTiupSpaceForCluster(node *workflowModel.WorkFlowNode, context *workf
 	}
 
 	home := getClusterSpaceInTiUP(context, clusterMeta.Cluster.ID)
-	err = os.MkdirAll(home + "ssh", 0750)
+	err = os.MkdirAll(home+"ssh", 0750)
 	if err != nil {
 		framework.LogWithContext(context).Errorf("mkdir for cluster %s failed, err = %s", clusterMeta.Cluster.ID, err.Error())
 		return err

@@ -101,7 +101,6 @@ func TestManager_CreateParameterGroup(t *testing.T) {
 	resp, err := manager.CreateParameterGroup(context.TODO(), message.CreateParameterGroupReq{
 		Name:           "test_parameter_group",
 		DBType:         1,
-		HasDefault:     1,
 		ClusterVersion: "5.0",
 		ClusterSpec:    "8C16G",
 		GroupType:      1,

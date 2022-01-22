@@ -1030,12 +1030,6 @@ definitions:
         - 2
         example: 1
         type: integer
-      hasDefault:
-        enum:
-        - 1
-        - 2
-        example: 1
-        type: integer
       name:
         example: 8C16GV4_default
         type: string
@@ -2312,7 +2306,7 @@ definitions:
       defaultValue:
         example: "1"
         type: string
-      description:
+      note:
         example: binlog cache size
         type: string
       paramId:

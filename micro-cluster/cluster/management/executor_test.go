@@ -2071,6 +2071,114 @@ func Test_fetchTopologyFile(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestCheckInstanceStatus(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "testCluster",
+			},
+			Version: "v5.0.0",
+			Type:    "TiDB",
+		},
+		Instances: map[string][]*management.ClusterInstance{
+			"TiDB": {
+				{
+					Entity: common.Entity{
+						ID: "instance01",
+					},
+					Type:   "TiDB",
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8001},
+				},
+			},
+			"TiKV": {
+				{
+					Entity: common.Entity{
+						ID: "instance02",
+					},
+					Type:   "TiKV",
+					HostIP: []string{"127.0.0.2"},
+					Ports:  []int32{8001},
+				},
+			},
+			"PD": {
+				{
+					Entity: common.Entity{
+						ID:     "instance03",
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Type:   "PD",
+					HostIP: []string{"127.0.0.3"},
+					Ports:  []int32{8001},
+				},
+			},
+		},
+	})
+
+	mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+	mockTiupManager.EXPECT().ClusterComponentCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+		[]string{"-u", "127.0.0.3:8001", "store", "--state", "Tombstone,Up,Offline"}, gomock.Any()).Return(`
+{
+  "count": 3,
+  "stores": [
+    {
+      "store": {
+        "id": 1,
+        "address": "127.0.0.2:8001",
+        "state_name": "Offline"
+      },
+      "status": {
+        "leader_count": 0,
+        "region_count": 1
+      }
+    },
+    {
+      "store": {
+        "id": 4,
+        "address": "172.16.4.187:10020",
+        "state_name": "Up"
+      },
+      "status": {
+        "leader_count": 1,
+        "region_count": 1
+      }
+    },
+    {
+      "store": {
+        "id": 1001,
+        "address": "172.16.4.187:10022",
+        "state_name": "Up"
+      },
+      "status": {
+        "leader_count": 0,
+        "region_count": 1
+      }
+    }
+  ]
+}`, nil)
+	mockTiupManager.EXPECT().ClusterComponentCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), []string{"-u", "127.0.0.3:8001", "store", "1"}, gomock.Any()).Return(`
+{
+  "store": {
+    "id": 1,
+    "address": "127.0.0.2:8001",
+    "state_name": "Tombstone"
+  },
+  "status": {
+    "leader_count": 0,
+    "region_count": 0
+  }
+}`, nil)
+	mockTiupManager.EXPECT().ClusterPrune(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil)
+	secondparty.Manager = mockTiupManager
+	flowContext.SetData(ContextInstanceID, "instance02")
+	err := checkInstanceStatus(&workflowModel.WorkFlowNode{}, flowContext)
+	assert.NoError(t, err)
+}
+
 func Test_applyParameterGroup(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

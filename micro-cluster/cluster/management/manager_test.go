@@ -153,7 +153,15 @@ func TestManager_ScaleOut(t *testing.T) {
 		models.SetClusterReaderWriter(clusterRW)
 
 		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
-			{},
+			{
+				Entity: common.Entity{
+					ID:     "instance",
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Type: "PD",
+				HostIP: []string{"127.0.0.1"},
+				Ports:  []int32{4000},
+			},
 			{},
 		}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
@@ -167,8 +175,8 @@ func TestManager_ScaleOut(t *testing.T) {
 					{Type: "TiKV", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
 						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
 					}},
-					{Type: "PD", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
-						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					{Type: "PD", Count: 2, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 2},
 					}},
 					{Type: "TiFlash", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
 						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
@@ -183,7 +191,15 @@ func TestManager_ScaleOut(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().GetMeta(gomock.Any(), "112").Return(&management.Cluster{}, []*management.ClusterInstance{
-			{},
+			{
+				Entity: common.Entity{
+					ID:     "instance",
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Type: "PD",
+				HostIP: []string{"127.0.0.1"},
+				Ports:  []int32{4000},
+			},
 			{},
 		}, fmt.Errorf("not found cluster"))
 		_, err := manager.ScaleOut(context.TODO(), cluster.ScaleOutClusterReq{
@@ -200,7 +216,15 @@ func TestManager_ScaleOut(t *testing.T) {
 		models.SetClusterReaderWriter(clusterRW)
 
 		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
-			{},
+			{
+				Entity: common.Entity{
+					ID:     "instance",
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Type: "PD",
+				HostIP: []string{"127.0.0.1"},
+				Ports:  []int32{4000},
+			},
 			{},
 		}, nil).AnyTimes()
 		mockTiup.EXPECT().ClusterComponentCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
@@ -227,7 +251,15 @@ func TestManager_ScaleOut(t *testing.T) {
 		models.SetClusterReaderWriter(clusterRW)
 
 		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
-			{},
+			{
+				Entity: common.Entity{
+					ID:     "instance",
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Type: "PD",
+				HostIP: []string{"127.0.0.1"},
+				Ports:  []int32{4000},
+			},
 			{},
 		}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("fail")).AnyTimes()
@@ -241,8 +273,8 @@ func TestManager_ScaleOut(t *testing.T) {
 					{Type: "TiKV", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
 						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
 					}},
-					{Type: "PD", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
-						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					{Type: "PD", Count: 2, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 2},
 					}},
 					{Type: "TiFlash", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
 						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},

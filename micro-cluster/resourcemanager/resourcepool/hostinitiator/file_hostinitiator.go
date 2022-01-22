@@ -288,9 +288,9 @@ func (p *FileHostInitiator) installTcpDump(ctx context.Context, hosts []structs.
 }
 
 func (p *FileHostInitiator) getRemountInfoFromMsg(ctx context.Context, msg string) (mountPoint string, option string, err error) {
-	warnExample := "mount point /xx/xx does not have 'xxx' option set"
-	exampleFields := strings.Split(warnExample, " ")
-	msgFields := strings.Split(msg, " ")
+	warnExample := "mount point /xx/xx does not have 'xxx' option set, auto fixing not supported"
+	exampleFields := strings.Fields(warnExample)
+	msgFields := strings.Fields(msg)
 	if len(msgFields) != len(exampleFields) {
 		errMsg := fmt.Sprintf("remount warning message [%s] has a different format as expected [%s]", msg, warnExample)
 		framework.LogWithContext(ctx).Errorln(errMsg)

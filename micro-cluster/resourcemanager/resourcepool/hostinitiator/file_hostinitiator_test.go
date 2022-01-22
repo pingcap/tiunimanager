@@ -384,26 +384,26 @@ func Test_BuildCheckHostTemplateItems(t *testing.T) {
 
 func Test_GetRemountInfoFromMsg(t *testing.T) {
 	fileInitiator := NewFileHostInitiator()
-	message1 := "mount point /data does not have 'nodelalloc' option set"
+	message1 := "mount point /data does not have 'nodelalloc' option set, auto fixing not supported"
 	mountPoint1, opt1, err := fileInitiator.getRemountInfoFromMsg(context.TODO(), message1)
 	assert.Nil(t, err)
 	assert.Equal(t, "/data", mountPoint1)
 	assert.Equal(t, "nodelalloc", opt1)
 
-	message2 := "mount point /data does not have 'noatime' option set"
+	message2 := "mount point /data does not have 'noatime' option set, auto fixing not supported"
 	mountPoint2, opt2, err := fileInitiator.getRemountInfoFromMsg(context.TODO(), message2)
 	assert.Nil(t, err)
 	assert.Equal(t, "/data", mountPoint2)
 	assert.Equal(t, "noatime", opt2)
 
-	message3 := "mount point /data does not have 'noatime'"
+	message3 := "mount point /data does not have 'noatime', auto fixing not supported"
 	_, _, err = fileInitiator.getRemountInfoFromMsg(context.TODO(), message3)
 	assert.NotNil(t, err)
 	emErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
 	assert.Equal(t, errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, emErr.GetCode())
 
-	message4 := "mount point /data does not have 'cached'"
+	message4 := "mount point /data does not have 'cached', auto fixing not supported"
 	_, _, err = fileInitiator.getRemountInfoFromMsg(context.TODO(), message4)
 	assert.NotNil(t, err)
 	emErr, ok = err.(errors.EMError)

@@ -280,8 +280,8 @@ type QueryClusterParametersResp struct {
 
 type UpdateClusterParametersReq struct {
 	ClusterID string                               `json:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
-	Params    []structs.ClusterParameterSampleInfo `json:"params" validate:"required"`
-	Reboot    bool                                 `json:"reboot" validate:"required"`
+	Params    []structs.ClusterParameterSampleInfo `json:"params" form:"params" validate:"required"`
+	Reboot    bool                                 `json:"reboot" form:"reboot"`
 }
 
 type UpdateClusterParametersResp struct {

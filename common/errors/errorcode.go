@@ -31,6 +31,8 @@ const (
 	TIEM_TASK_CONFLICT             EM_ERROR_CODE = 9993
 	TIEM_TASK_CANCELED             EM_ERROR_CODE = 9992
 
+	TIEM_SYSTEM_MISSING_DATA         EM_ERROR_CODE = 9899
+
 	TIEM_UNRECOGNIZED_ERROR EM_ERROR_CODE = 10000
 	TIEM_PARAMETER_INVALID  EM_ERROR_CODE = 10001
 	TIEM_SQL_ERROR          EM_ERROR_CODE = 10002
@@ -43,8 +45,9 @@ const (
 	// cluster
 	TIEM_DUPLICATED_NAME             EM_ERROR_CODE = 20101
 	TIEM_INVALID_TOPOLOGY            EM_ERROR_CODE = 20102
-	TIEM_UNSUPPPORT_PRODUCT          EM_ERROR_CODE = 20103
+	TIEM_UNSUPPORT_PRODUCT           EM_ERROR_CODE = 20103
 	TIEM_CLUSTER_RESOURCE_NOT_ENOUGH EM_ERROR_CODE = 20104
+	TIEM_CLUSTER_METADATA_BROKEN     EM_ERROR_CODE = 20105
 
 	TIEM_TAKEOVER_SSH_CONNECT_ERROR     EM_ERROR_CODE = 20201
 	TIEM_TAKEOVER_SFTP_ERROR            EM_ERROR_CODE = 20110
@@ -178,7 +181,6 @@ const (
 	TIEM_CHECK_PLACEMENT_RULES_ERROR      EM_ERROR_CODE = 20802
 	TIEM_CHECK_TIFLASH_MAX_REPLICAS_ERROR EM_ERROR_CODE = 20803
 	TIEM_SCAN_MAX_REPLICA_COUNT_ERROR     EM_ERROR_CODE = 20804
-	TIEM_CHECK_PD_COUNT_ERROR             EM_ERROR_CODE = 20805
 	TIEM_PD_NOT_FOUND_ERROR               EM_ERROR_CODE = 20806
 	TIEM_CHECK_INSTANCE_TIEMOUT_ERROR     EM_ERROR_CODE = 20807
 	TIEM_STORE_NOT_FOUND_ERROR            EM_ERROR_CODE = 20808
@@ -259,6 +261,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 
 	TIEM_METADB_SERVER_CALL_ERROR:  {"call metadb-Server failed", 500},
 	TIEM_CLUSTER_SERVER_CALL_ERROR: {"call cluster-Server failed", 500},
+	TIEM_SYSTEM_MISSING_DATA:       {"missing system data", 500},
 
 	TIEM_TASK_TIMEOUT:          {"task timeout", 500},
 	TIEM_FLOW_NOT_FOUND:        {"flow not found", 500},
@@ -269,9 +272,10 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 
 	TIEM_DUPLICATED_NAME:              {"duplicated cluster name", 400},
 	TIEM_INVALID_TOPOLOGY:             {"invalid cluster topology", 400},
-	TIEM_UNSUPPPORT_PRODUCT:           {"unsupported cluster type or version", 400},
+	TIEM_UNSUPPORT_PRODUCT:            {"unsupported cluster product", 400},
 	TIEM_CLUSTER_RESOURCE_NOT_ENOUGH:  {"host resource is not enough", 500},
 	TIEM_CLUSTER_MAINTENANCE_CONFLICT: {"maintenance status conflict", 409},
+	TIEM_CLUSTER_METADATA_BROKEN:      {"cluster meta is incomplete", 400},
 
 	// cluster management
 	TIEM_TAKEOVER_SSH_CONNECT_ERROR: {"ssh connect failed", 500},

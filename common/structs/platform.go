@@ -23,7 +23,9 @@
 
 package structs
 
-import "github.com/pingcap-inc/tiem/common/constants"
+import (
+	"github.com/pingcap-inc/tiem/common/constants"
+)
 
 //SpecInfo information about spec
 type SpecInfo struct {

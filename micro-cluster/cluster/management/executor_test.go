@@ -18,6 +18,8 @@ package management
 import (
 	"context"
 	"fmt"
+	"github.com/pingcap-inc/tiem/models/parametergroup"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockparametergroup"
 	"strconv"
 
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -612,6 +614,32 @@ func TestBackupBeforeDelete(t *testing.T) {
 		err := backupBeforeDelete(node, flowContext)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, node.Result)
+	})
+
+}
+
+func TestApplyParameterGroup(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	t.Run("normal", func(t *testing.T) {
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				ParameterGroupID: "211",
+			},
+		})
+		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+		workflow.MockWorkFlowService(workflowService)
+		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
+		workflowService.EXPECT().DetailWorkFlow(gomock.Any(), gomock.Any()).Return(
+			message.QueryWorkFlowDetailResp{
+				Info: &structs2.WorkFlowInfo{
+					Status: constants.WorkFlowStatusFinished}}, nil).AnyTimes()
+
 	})
 
 }
@@ -2149,4 +2177,107 @@ func TestCheckInstanceStatus(t *testing.T) {
 	flowContext.SetData(ContextInstanceID, "instance02")
 	err := checkInstanceStatus(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.NoError(t, err)
+}
+
+func Test_applyParameterGroup(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+	models.SetParameterGroupReaderWriter(parameterGroupRW)
+	parameterGroupRW.EXPECT().
+		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.2", 1, 1, gomock.Any(), gomock.Any()).
+		Return([]*parametergroup.ParameterGroup{
+			{},
+	}, int64(0), nil).AnyTimes()
+
+	parameterGroupRW.EXPECT().
+		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.1", 1, 1, gomock.Any(), gomock.Any()).
+		Return([]*parametergroup.ParameterGroup{}, int64(0), nil).AnyTimes()
+
+	parameterGroupRW.EXPECT().
+		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.0", 1, 1, gomock.Any(), gomock.Any()).
+		Return(nil, int64(0), errors.Error(errors.TIEM_PANIC)).AnyTimes()
+
+	t.Run("query group error", func(t *testing.T) {
+		ctx := workflow.NewFlowContext(context.TODO())
+		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "1111",
+				},
+				Version: "v5.0.0",
+				ParameterGroupID: "",
+			},
+		})
+		err := applyParameterGroup(&workflowModel.WorkFlowNode{}, ctx)
+		assert.Error(t, err)
+	})
+	t.Run("query group empty", func(t *testing.T) {
+		ctx := workflow.NewFlowContext(context.TODO())
+		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "1111",
+				},
+				Version: "v5.1.22",
+				ParameterGroupID: "",
+			},
+		})
+		err := applyParameterGroup(&workflowModel.WorkFlowNode{}, ctx)
+		assert.Error(t, err)
+	})
+}
+
+func Test_adjustParameters(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	parameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
+	models.SetClusterParameterReaderWriter(parameterRW)
+
+	t.Run("query parameter error", func(t *testing.T) {
+		ctx := workflow.NewFlowContext(context.TODO())
+		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "1111",
+				},
+				Version: "v5.1.22",
+				ParameterGroupID: "",
+			},
+		})
+		parameterRW.EXPECT().
+			QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return("111", nil, int64(0), errors.Error(errors.TIEM_PANIC)).
+			Times(1)
+
+		err := adjustParameters(&workflowModel.WorkFlowNode{}, ctx)
+		assert.Error(t, err)
+	})
+	t.Run("query parameter empty", func(t *testing.T) {
+		ctx := workflow.NewFlowContext(context.TODO())
+		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "1111",
+				},
+				Version: "v5.1.22",
+				ParameterGroupID: "",
+			},
+		})
+		parameterRW.EXPECT().
+			QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return("111", []*parameter.ClusterParamDetail{
+				{Parameter: parametergroup.Parameter{
+					ID: "aaa",
+					Name: "aaa",
+				}},
+		}, int64(0), nil).
+			Times(1)
+
+		err := adjustParameters(&workflowModel.WorkFlowNode{}, ctx)
+		assert.Error(t, err)
+	})
+
 }

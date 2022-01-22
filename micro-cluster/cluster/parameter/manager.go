@@ -205,7 +205,7 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 	return resp, nil
 }
 
-func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyParameterGroupReq) (resp message.ApplyParameterGroupResp, err error) {
+func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyParameterGroupReq, maintenanceStatusChange bool) (resp message.ApplyParameterGroupResp, err error) {
 	framework.LogWithContext(ctx).Infof("begin apply cluster parameters, request: %+v", req)
 	defer framework.LogWithContext(ctx).Infof("end apply cluster parameters")
 
@@ -253,7 +253,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 	data := make(map[string]interface{})
 	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: params}
 	data[contextApplyParameterInfo] = &req
-	data[contextMaintenanceStatusChange] = true
+	data[contextMaintenanceStatusChange] = maintenanceStatusChange
 	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("cluster %s update cluster parameters aync maintenance workflow error: %s", req.ClusterID, err.Error())

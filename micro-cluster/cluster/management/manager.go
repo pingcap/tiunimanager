@@ -258,18 +258,20 @@ func (p *Manager) Clone(ctx context.Context, request cluster.CloneClusterReq) (r
 var createClusterFlow = workflow.WorkFlowDefine{
 	FlowName: constants.FlowCreateCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":                 {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
-		"resourceDone":          {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
-		"configDone":            {"deployCluster", "deployDone", "fail", workflow.PollingNode, deployCluster},
-		"deployDone":            {"syncConnectionKey", "syncConnectionKeyDone", "failAfterDeploy", workflow.SyncFuncNode, syncConnectionKey},
-		"syncConnectionKeyDone": {"syncTopology", "syncTopologyDone", "failAfterDeploy", workflow.SyncFuncNode, syncTopology},
-		"syncTopologyDone":      {"startupCluster", "startupDone", "failAfterDeploy", workflow.PollingNode, startCluster},
-		"startupDone":           {"setClusterOnline", "onlineDone", "failAfterDeploy", workflow.SyncFuncNode, setClusterOnline},
-		"onlineDone":            {"initAccount", "initDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseAccount},
-		"initDone":              {"testConnectivity", "success", "", workflow.SyncFuncNode, testConnectivity},
-		"success":               {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"fail":                  {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
-		"failAfterDeploy":       {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"start":                   {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
+		"resourceDone":            {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
+		"configDone":              {"deployCluster", "deployDone", "fail", workflow.PollingNode, deployCluster},
+		"deployDone":              {"syncConnectionKey", "syncConnectionKeyDone", "failAfterDeploy", workflow.SyncFuncNode, syncConnectionKey},
+		"syncConnectionKeyDone":   {"syncTopology", "syncTopologyDone", "failAfterDeploy", workflow.SyncFuncNode, syncTopology},
+		"syncTopologyDone":        {"startupCluster", "startupDone", "failAfterDeploy", workflow.PollingNode, startCluster},
+		"startupDone":             {"setClusterOnline", "onlineDone", "failAfterDeploy", workflow.SyncFuncNode, setClusterOnline},
+		"onlineDone":              {"initAccount", "initAccountDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseAccount},
+		"initAccountDone":         {"applyParameterGroup", "applyParameterGroupDone", "failAfterDeploy", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
+		"applyParameterGroupDone": {"adjustParameters", "initParametersDone", "failAfterDeploy", workflow.SyncFuncNode, adjustParameters},
+		"initParametersDone":      {"testConnectivity", "success", "", workflow.SyncFuncNode, testConnectivity},
+		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
+		"fail":                    {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
+		"failAfterDeploy":         {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -281,6 +283,10 @@ var createClusterFlow = workflow.WorkFlowDefine{
 // @return resp
 // @return err
 func (p *Manager) CreateCluster(ctx context.Context, req cluster.CreateClusterReq) (resp cluster.CreateClusterResp, err error) {
+	err = validator(ctx, &req)
+	if err != nil {
+		return
+	}
 	meta := &handler.ClusterMeta{}
 	if err = meta.BuildCluster(ctx, req.CreateClusterParameter); err != nil {
 		framework.LogWithContext(ctx).Errorf("build cluster %s error: %s", req.Name, err.Error())
@@ -330,6 +336,10 @@ func (p *Manager) PreviewCluster(ctx context.Context, req cluster.CreateClusterR
 		return
 	}
 
+	err = validator(ctx, &req)
+	if err != nil {
+		return
+	}
 	resp = cluster.PreviewClusterResp{
 		Region:            req.Region,
 		CpuArchitecture:   req.CpuArchitecture,
@@ -406,6 +416,7 @@ func (p *Manager) PreviewScaleOutCluster(ctx context.Context, req cluster.ScaleO
 	if err != nil {
 		return
 	}
+
 	// todo validate
 	resp = cluster.PreviewClusterResp{
 		Region:            clusterMeta.Cluster.Region,

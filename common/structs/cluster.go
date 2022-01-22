@@ -23,7 +23,10 @@
 
 package structs
 
-import "time"
+import (
+	"github.com/pingcap-inc/tiem/common/constants"
+	"time"
+)
 
 //ClusterResourceParameterComputeResource Single component resource parameters when creating a cluster
 type ClusterResourceParameterComputeResource struct {
@@ -51,6 +54,15 @@ type ClusterResourceParameterCompute struct {
 //ClusterResourceInfo Resource information for creating database cluster input
 type ClusterResourceInfo struct {
 	InstanceResource []ClusterResourceParameterCompute `json:"instanceResource"`
+}
+
+func (p ClusterResourceInfo) GetComponentCount(idType constants.EMProductComponentIDType) int32 {
+	for _, i := range p.InstanceResource {
+		if i.Type == string(idType) {
+			return int32(i.Count)
+		}
+	}
+	return 0
 }
 
 //CreateClusterParameter User input parameters when creating a cluster

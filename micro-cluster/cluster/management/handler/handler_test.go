@@ -1469,3 +1469,16 @@ func TestClusterMeta_GenerateTakeoverResourceRequirements(t *testing.T) {
 		assert.Equal(t, len(requirements), len(instances))
 	})
 }
+
+func TestClusterMeta_GetVersion(t *testing.T) {
+	meta := ClusterMeta{
+		Cluster: &management.Cluster{
+			Version: "v5.2.2",
+		},
+	}
+
+	assert.Equal(t, "v5", meta.GetMajorVersion())
+	assert.Equal(t, "v5.2", meta.GetMinorVersion())
+	assert.Equal(t, "v5.2.2", meta.GetRevision())
+
+}

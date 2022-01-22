@@ -1006,8 +1006,7 @@ func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
 
-	parameterGroupID :=  cluster.ParameterGroupID
-	if len(parameterGroupID) == 0 {
+	if len(cluster.ParameterGroupID) == 0 {
 		node.Record("parameter group id is empty")
 		groups, _, err := parametergroup.NewManager().QueryParameterGroup(context, message.QueryParameterGroupReq {
 			DBType: 1,
@@ -1022,10 +1021,12 @@ func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.Flo
 			framework.LogWithContext(context).Errorf(msg)
 			return errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_DATA, msg)
 		} else {
-			parameterGroupID = groups[0].ParamGroupID
-		}
+			cluster.ParameterGroupID = groups[0].ParamGroupID
 
-		node.Record(fmt.Sprintf("default parameter group %s will be applied to cluster %s", parameterGroupID, cluster.ID))
+			errMsg := fmt.Sprintf("default parameter group %s will be applied to cluster %s", cluster.ParameterGroupID, cluster.ID)
+			framework.LogWithContext(context).Info(errMsg)
+			node.Record(errMsg)
+		}
 	}
 
 	resp, err := parameter.NewManager().ApplyParameterGroup(context, message.ApplyParameterGroupReq {

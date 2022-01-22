@@ -212,7 +212,7 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 				flow.handleTaskError(node, nodeDefine)
 				return false
 			}
-			framework.LogWithContext(flow.Context).Infof("polling node waiting, sequence %d, nodeId %s, nodeName %s", sequence, node.ID, node.Name)
+			framework.LogWithContext(flow.Context).Debugf("polling node waiting, sequence %d, nodeId %s, nodeName %s", sequence, node.ID, node.Name)
 
 			resp, err := secondparty.Manager.GetOperationStatusByWorkFlowNodeID(flow.Context, node.ID)
 			if err != nil {

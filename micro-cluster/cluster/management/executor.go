@@ -524,7 +524,7 @@ func setClusterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 		return err
 	}
 	framework.LogWithContext(context.Context).Infof(
-		"set cluster %s status into failure successfully", clusterMeta.Cluster.ID)
+		"set cluster %s status into failure", clusterMeta.Cluster.ID)
 	node.Record(fmt.Sprintf("set cluster %s status into %v ", clusterMeta.Cluster.ID, constants.ClusterFailure))
 	return nil
 }
@@ -1044,9 +1044,9 @@ func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	return nil
 }
 
-// initParameters
-// @Description: apply parameter group to cluster
-func initParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+// adjustParameters
+// @Description: adjust parameters
+func adjustParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
 	resp, err := parameter.NewManager().UpdateClusterParameters(context, cluster.UpdateClusterParametersReq{
@@ -1056,6 +1056,7 @@ func initParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 				ClusterValue: strconv.Itoa(clusterMeta.Cluster.Copies),
 			}},
 		},
+		Reboot: true,
 	}, false)
 	if err != nil {
 		return err

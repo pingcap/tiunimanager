@@ -18,6 +18,7 @@ package hostinitiator
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/pingcap-inc/tiem/util/scp"
 	sshclient "github.com/pingcap-inc/tiem/util/ssh"
@@ -36,7 +37,7 @@ type FileHostInitiator struct {
 
 func NewFileHostInitiator() *FileHostInitiator {
 	hostInitiator := new(FileHostInitiator)
-	hostInitiator.sshClient = nil
+	hostInitiator.sshClient = sshclient.SSHExecutor{}
 	hostInitiator.secondPartyServ = secondparty.Manager
 	return hostInitiator
 }
@@ -139,7 +140,12 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 		errMsg := fmt.Sprintf("check host %s %s has %d warnings, %v", h.HostName, h.IP, len(*warnings), *warnings)
 		log.Warnln(errMsg)
 		if !ignoreWarnings {
-			return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
+			ignoreCpuGovWarn, err := p.passCpuGovernorWarn(ctx, h, warnings)
+			if err == nil && ignoreCpuGovWarn {
+				log.Infof("ignore cpu governor warning for vm %s %s", h.HostName, h.IP)
+			} else {
+				return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
+			}
 		}
 	}
 
@@ -211,4 +217,46 @@ func (p *FileHostInitiator) LeaveEMCluster(ctx context.Context, nodeId string) (
 
 func (p *FileHostInitiator) installTcpDump(ctx context.Context, hosts []structs.HostInfo) (err error) {
 	return nil
+}
+
+func (p *FileHostInitiator) passCpuGovernorWarn(ctx context.Context, h *structs.HostInfo, warnings *[]checkHostResult) (ok bool, err error) {
+	log := framework.LogWithContext(ctx)
+	var needCheckVM = false
+	if len(*warnings) == 1 {
+		// xx.xx.xx.xx  cpu-governor    Warn    Unable to determine current CPU frequency governor policy
+		if (*warnings)[0].Name == "cpu-governor" && strings.HasPrefix((*warnings)[0].Message, "Unable to determine") {
+			needCheckVM = true
+		}
+	}
+	log.Infof("need check vm (%v) for host %s %s", needCheckVM, h.HostName, h.IP)
+	if needCheckVM {
+		isVm, err := p.isVirtualMachine(ctx, h)
+		if err == nil && isVm {
+			return true, nil
+		} else {
+			return false, err
+		}
+	}
+	return false, nil
+}
+
+func (p *FileHostInitiator) isVirtualMachine(ctx context.Context, h *structs.HostInfo) (isVM bool, err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infof("begin to check host manufacturer on host %s %s", h.HostName, h.IP)
+	vmManufacturer := []string{"QEMU", "XEN", "KVM", "VMWARE", "VIRTUALBOX", "VBOX", "ORACLE", "MICROSOFT", "ZVM", "BOCHS", "PARALLELS", "UML"}
+	dmidecodeCmd := "dmidecode -s system-manufacturer"
+	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, rp_consts.DefaultCopySshIDTimeOut, []string{dmidecodeCmd})
+	if err != nil {
+		log.Errorf("execute %s on host %s %s failed, %v", dmidecodeCmd, h.HostName, h.IP, err)
+		return false, err
+	}
+	isVM = false
+	for _, vm := range vmManufacturer {
+		if strings.EqualFold(result, vm) {
+			isVM = true
+			break
+		}
+	}
+	log.Infof("host %s [%s] manufacturer is %s, should be VM (%v)", h.HostName, h.IP, result, isVM)
+	return isVM, nil
 }

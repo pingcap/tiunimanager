@@ -83,13 +83,6 @@ func (p *FileHostInitiator) autoFix(ctx context.Context, h *structs.HostInfo, so
 		return nil
 	}
 
-	err = p.connectToHost(ctx, h)
-	if err != nil {
-		log.Errorf("connect to host %s %s failed, %v", h.HostName, h.IP, err)
-		return err
-	}
-	defer p.closeConnect()
-
 	if needInstallNumaCtl {
 		if err = p.installNumaCtl(ctx, h); err != nil {
 			errMsg := fmt.Sprintf("install numactl on host %s %s failed, %v", h.HostName, h.IP, err)
@@ -124,26 +117,6 @@ func (p *FileHostInitiator) autoFix(ctx context.Context, h *structs.HostInfo, so
 	return nil
 }
 
-func (p *FileHostInitiator) connectToHost(ctx context.Context, h *structs.HostInfo) (err error) {
-	if p.sshClient != nil {
-		errMsg := fmt.Sprintf("connect to %s %s failed, host initiator already has unclosed connect", h.HostName, h.IP)
-		return errors.NewError(errors.TIEM_RESOURCE_CONNECT_TO_HOST_ERROR, errMsg)
-	}
-	p.sshClient = sshclient.NewSSHClient(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd)
-	if err = p.sshClient.Connect(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (p *FileHostInitiator) closeConnect() {
-	if p.sshClient != nil {
-		p.sshClient.Close()
-		p.sshClient = nil
-	}
-}
-
 func (p *FileHostInitiator) setOffSwap(ctx context.Context, h *structs.HostInfo) (err error) {
 	framework.LogWithContext(ctx).Infof("begin to set swap off on host %s %s", h.HostName, h.IP)
 	checkExisted := "count=`cat /etc/sysctl.conf | grep -E '^vm.swappiness = 0$' | wc -l`"
@@ -151,7 +124,7 @@ func (p *FileHostInitiator) setOffSwap(ctx context.Context, h *structs.HostInfo)
 	flushCmd := "swapoff -a"
 	updateCmd := "sysctl -p"
 	fstabCmd := "sed -i '/swap/s/^\\(.*\\)$/#\\1/g' /etc/fstab"
-	result, err := p.sshClient.RunCommandsInSession([]string{checkExisted, changeConf, flushCmd, updateCmd, fstabCmd})
+	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, rp_consts.DefaultCopySshIDTimeOut, []string{checkExisted, changeConf, flushCmd, updateCmd, fstabCmd})
 	if err != nil {
 		return err
 	}
@@ -162,13 +135,12 @@ func (p *FileHostInitiator) setOffSwap(ctx context.Context, h *structs.HostInfo)
 func (p *FileHostInitiator) installNumaCtl(ctx context.Context, h *structs.HostInfo) (err error) {
 	framework.LogWithContext(ctx).Infof("begin to install numactl on host %s %s", h.HostName, h.IP)
 	installNumaCtrlCmd := "yum install -y numactl"
-	result, err := p.sshClient.RunCommandsInSession([]string{installNumaCtrlCmd})
+	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, rp_consts.DefaultCopySshIDTimeOut, []string{installNumaCtrlCmd})
 	if err != nil {
 		return err
 	}
 	framework.LogWithContext(ctx).Infof("host %s [%s] install numactl, %v", h.HostName, h.IP, result)
 	return nil
-
 }
 
 func (p *FileHostInitiator) remountFS(ctx context.Context, h *structs.HostInfo, path string, opts []string) (err error) {
@@ -176,7 +148,7 @@ func (p *FileHostInitiator) remountFS(ctx context.Context, h *structs.HostInfo, 
 	log.Infof("begin to remount path %s by adding opts %s on host %s %s", path, opts, h.HostName, h.IP)
 	addingOpts := strings.Join(opts, ",")
 	getMountInfoCmd := fmt.Sprintf("sed -n '\\# %s #p' /etc/fstab", path)
-	result, err := p.sshClient.RunCommandsInSession([]string{getMountInfoCmd})
+	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, rp_consts.DefaultCopySshIDTimeOut, []string{getMountInfoCmd})
 	if err != nil {
 		log.Errorf("host %s %s execute command %s failed, %v", h.HostName, h.IP, getMountInfoCmd, err)
 		return err
@@ -188,7 +160,7 @@ func (p *FileHostInitiator) remountFS(ctx context.Context, h *structs.HostInfo, 
 	updateFsTabCmd := fmt.Sprintf("sed -i '\\# %s #s#%s#%s#g' /etc/fstab", path, originOpts, targetOpts)
 	log.Infof("update fstab on host %s %s, using %s", h.HostName, h.IP, updateFsTabCmd)
 	remountCMD := fmt.Sprintf("mount -o remount %s", path)
-	result, err = p.sshClient.RunCommandsInSession([]string{updateFsTabCmd, remountCMD})
+	result, err = p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, rp_consts.DefaultCopySshIDTimeOut, []string{updateFsTabCmd, remountCMD})
 	if err != nil {
 		return err
 	}

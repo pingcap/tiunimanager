@@ -31,9 +31,20 @@ import (
 )
 
 type SSHClientExecutor interface {
-	Connect() (err error)
-	Close()
-	RunCommandsInSession(commands []string) (result string, err error)
+	RunCommandsInRemoteHost(host string, port int, sshType SSHType, user, passwd string, timeoutS int, commands []string) (result string, err error)
+}
+
+type SSHExecutor struct{}
+
+func (client SSHExecutor) RunCommandsInRemoteHost(host string, port int, sshType SSHType, user, passwd string, timeoutS int, commands []string) (result string, err error) {
+	c := new(SSHClient)
+	c.InitSSHClient(host, port, sshType, user, passwd, timeoutS)
+	if err = c.Connect(); err != nil {
+		return "", err
+	}
+	defer c.Close()
+
+	return c.RunCommandsInSession(commands)
 }
 
 type SSHType string
@@ -55,16 +66,15 @@ type SSHClient struct {
 	client *ssh.Client
 }
 
-func NewSSHClient(host string, port int, sshType SSHType, user, passwd string) *SSHClient {
-	return &SSHClient{
-		sshHost:     host,
-		sshPort:     port,
-		sshType:     sshType,
-		sshUser:     user,
-		sshPassword: passwd,
-		sshTimeout:  time.Second, // default time 1s
-		sshKeyPath:  filepath.Join(os.Getenv("HOME"), ".ssh", "id_rsa"),
-	}
+func (c *SSHClient) InitSSHClient(host string, port int, sshType SSHType, user, passwd string, timeoutS int) {
+	c.sshHost = host
+	c.sshPort = port
+	c.sshType = sshType
+	c.sshUser = user
+	c.sshPassword = passwd
+
+	c.sshTimeout = time.Duration(timeoutS) * time.Second
+	c.sshKeyPath = filepath.Join(os.Getenv("HOME"), ".ssh", "id_rsa")
 }
 
 func (c *SSHClient) SetConnTimeOut(t time.Duration) {

@@ -2077,23 +2077,39 @@ func Test_applyParameterGroup(t *testing.T) {
 	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
 	models.SetParameterGroupReaderWriter(parameterGroupRW)
 	parameterGroupRW.EXPECT().
-		QueryParameterGroup(context.TODO(), gomock.Any(), gomock.Any(), "v5.2", 1, 1, gomock.Any(), gomock.Any()).
-		Return().AnyTimes()
+		QueryParameterGroup(context.TODO(), gomock.Any(), gomock.Any(), "v5.1", 1, 1, gomock.Any(), gomock.Any()).
+		Return([]message.QueryParameterGroupResp{{}}, nil, nil).AnyTimes()
 
 	parameterGroupRW.EXPECT().
-		QueryParameterGroup(context.TODO(), gomock.Any(), gomock.Any(), "v4.9", 1, 1, gomock.Any(), gomock.Any()).
-		Return().AnyTimes()
+		QueryParameterGroup(context.TODO(), gomock.Any(), gomock.Any(), "v5.0", 1, 1, gomock.Any(), gomock.Any()).
+		Return(nil, nil, errors.Error(errors.TIEM_PANIC)).AnyTimes()
 
-	t.Run("normal", func(t *testing.T) {
+	t.Run("query group error", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
 		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version: "v5.2.2",
+				Version: "v5.0.0",
 				ParameterGroupID: "",
 			},
 		})
+		err := applyParameterGroup(&workflowModel.WorkFlowNode{}, ctx)
+		assert.Error(t, err)
+	})
+	t.Run("query group empty", func(t *testing.T) {
+		ctx := workflow.NewFlowContext(context.TODO())
+		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "1111",
+				},
+				Version: "v5.1.22",
+				ParameterGroupID: "",
+			},
+		})
+		err := applyParameterGroup(&workflowModel.WorkFlowNode{}, ctx)
+		assert.Error(t, err)
 	})
 }

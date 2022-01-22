@@ -19,6 +19,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -860,6 +861,7 @@ func freedClusterResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 	return nil
 }
 
+
 // initDatabaseAccount
 // @Description: init database account for new cluster
 func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
@@ -886,6 +888,30 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		"cluster %s init database account successfully", clusterMeta.Cluster.ID)
 
 	node.Record(fmt.Sprintf("cluster %s init database account ", clusterMeta.Cluster.ID))
+	return nil
+}
+
+// applyParameterGroup
+// @Description: apply parameter group to cluster
+func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	cluster := clusterMeta.Cluster
+
+	if len(cluster.ParameterGroupID) > 0  {
+		resp, err := parameter.NewManager().ApplyParameterGroup(context, message.ApplyParameterGroupReq {
+			ParamGroupId: cluster.ParameterGroupID,
+			ClusterID: cluster.ID,
+		}, false)
+		if err != nil {
+			return err
+		}
+		if err = handler.WaitWorkflow(context.Context, resp.WorkFlowID, 10*time.Second, 30*24*time.Hour); err != nil {
+			framework.LogWithContext(context).Errorf("apply parameter group %s workflow error: %s", cluster.ParameterGroupID, err)
+			return err
+		}
+		node.Record(fmt.Sprintf("apply parameter group %s for cluster %s ", cluster.ParameterGroupID, cluster.ID))
+	}
+	node.Record("parameter group id is empty")
 	return nil
 }
 

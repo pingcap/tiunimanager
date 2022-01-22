@@ -340,7 +340,7 @@ func (handler *ClusterServiceHandler) ApplyParameterGroup(ctx context.Context, r
 	request := &message.ApplyParameterGroupReq{}
 
 	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceParameter), Action: string(constants.RbacActionUpdate)}}) {
-		result, err := handler.clusterParameterManager.ApplyParameterGroup(framework.NewBackgroundMicroCtx(ctx, false), *request)
+		result, err := handler.clusterParameterManager.ApplyParameterGroup(framework.NewBackgroundMicroCtx(ctx, false), *request, true)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 	return nil

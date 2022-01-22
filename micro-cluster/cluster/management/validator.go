@@ -64,7 +64,7 @@ var creatingRules = []func(req *cluster.CreateClusterReq, product *structs.Produ
 					}
 				}
 				if !matched {
-					return errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "the total number of %s should be  in %v", property.ID, property.SuggestedInstancesCount)
+					return errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "the total number of %s should be in %v", property.ID, property.SuggestedInstancesCount)
 				}
 			}
 		}

@@ -1049,10 +1049,28 @@ func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.Flo
 func adjustParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
-	resp, err := parameter.NewManager().UpdateClusterParameters(context, cluster.UpdateClusterParametersReq{
+	paramResp, _, err := parameter.NewManager().QueryClusterParameters(context, cluster.QueryClusterParametersReq {
+		ClusterID: clusterMeta.Cluster.ID,
+		ParamName: "max-replicas",
+	})
+
+	if err != nil {
+		return err
+	}
+	paramId := ""
+	for _, param := range paramResp.Params {
+		if param.Name == "max-replicas" {
+			paramId = param.ParamId
+		}
+	}
+
+	if len(paramId) == 0 {
+		return errors.NewError(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, "no parameter found by name max-replicas")
+	}
+	resp, err := parameter.NewManager().UpdateClusterParameters(context, cluster.UpdateClusterParametersReq {
 		ClusterID: clusterMeta.Cluster.ID,
 		Params: []structs.ClusterParameterSampleInfo{
-			{ParamId: "max-replicas", RealValue: structs.ParameterRealValue {
+			{ParamId: paramId, RealValue: structs.ParameterRealValue {
 				ClusterValue: strconv.Itoa(clusterMeta.Cluster.Copies),
 			}},
 		},

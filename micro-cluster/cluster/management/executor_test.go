@@ -18,6 +18,7 @@ package management
 import (
 	"context"
 	"fmt"
+	"github.com/pingcap-inc/tiem/models/parametergroup"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockparametergroup"
 	"strconv"
 
@@ -2078,7 +2079,7 @@ func Test_applyParameterGroup(t *testing.T) {
 	models.SetParameterGroupReaderWriter(parameterGroupRW)
 	parameterGroupRW.EXPECT().
 		QueryParameterGroup(context.TODO(), gomock.Any(), gomock.Any(), "v5.1", 1, 1, gomock.Any(), gomock.Any()).
-		Return([]message.QueryParameterGroupResp{{}}, nil, nil).AnyTimes()
+		Return([]parametergroup.ParameterGroup{}, nil, nil).AnyTimes()
 
 	parameterGroupRW.EXPECT().
 		QueryParameterGroup(context.TODO(), gomock.Any(), gomock.Any(), "v5.0", 1, 1, gomock.Any(), gomock.Any()).

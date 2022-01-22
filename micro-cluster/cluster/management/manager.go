@@ -416,6 +416,15 @@ func (p *Manager) PreviewScaleOutCluster(ctx context.Context, req cluster.ScaleO
 	if err != nil {
 		return
 	}
+
+	// When scale out TiFlash, Judge whether enable-placement-rules is true
+	err = handler.ScaleOutPreCheck(ctx, clusterMeta, req.InstanceResource)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"check cluster %s scale out error: %s", clusterMeta.Cluster.ID, err.Error())
+		return
+	}
+
 	// todo validate
 	resp = cluster.PreviewClusterResp{
 		Region:            clusterMeta.Cluster.Region,

@@ -642,7 +642,7 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 			reboot = true
 		}
 	}
-	response, err := parameter.NewManager().UpdateClusterParameters(context.Context, cluster.UpdateClusterParametersReq{
+	response, err := parameter.NewManager().UpdateClusterParameters(context.Context, cluster.UpdateClusterParametersReq {
 		ClusterID: clusterMeta.Cluster.ID,
 		Params:    targetParams,
 		Reboot:    reboot,
@@ -912,6 +912,31 @@ func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		node.Record(fmt.Sprintf("apply parameter group %s for cluster %s ", cluster.ParameterGroupID, cluster.ID))
 	}
 	node.Record("parameter group id is empty")
+	return nil
+}
+
+// initParameters
+// @Description: apply parameter group to cluster
+func initParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+
+	resp, err := parameter.NewManager().UpdateClusterParameters(context, cluster.UpdateClusterParametersReq{
+		ClusterID: clusterMeta.Cluster.ID,
+		Params: []structs.ClusterParameterSampleInfo{
+			{ParamId: "max-replicas", RealValue: structs.ParameterRealValue{
+				ClusterValue: strconv.Itoa(clusterMeta.Cluster.Copies),
+			}},
+		},
+	}, false)
+	if err != nil {
+		return err
+	}
+	if err = handler.WaitWorkflow(context.Context, resp.WorkFlowID, 10*time.Second, 30*24*time.Hour); err != nil {
+		framework.LogWithContext(context).Errorf("update parameter workflow error: %s", err)
+		return err
+	}
+	node.Record(fmt.Sprintf("init parameter for cluster %s ", clusterMeta.Cluster.ID))
+
 	return nil
 }
 

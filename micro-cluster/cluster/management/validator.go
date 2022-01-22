@@ -40,6 +40,14 @@ var creatingRules = []func(req *cluster.CreateClusterReq, product *structs.Produ
 		return nil
 	},
 	func(req *cluster.CreateClusterReq, product *structs.ProductDetail) error {
+		// TiKV
+		count := req.ResourceParameter.GetComponentCount(constants.ComponentIDTiKV)
+		if count < int32(req.Copies) {
+			return errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "count of TiKV = %d, is less than copies %d", count, req.Copies)
+		}
+		return nil
+	},
+	func(req *cluster.CreateClusterReq, product *structs.ProductDetail) error {
 		for _, property := range product.Versions[req.Version].Arch[req.CpuArchitecture] {
 			count := req.ResourceParameter.GetComponentCount(constants.EMProductComponentIDType(property.ID))
 			if count > property.MaxInstance {

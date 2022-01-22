@@ -370,7 +370,7 @@ func Test_validateCreating(t *testing.T) {
 			ResourceParameter: structs.ClusterResourceInfo{
 				InstanceResource: []structs.ClusterResourceParameterCompute{
 					{Type: "TiDB", Count: 4},
-					{Type: "TiKV", Count: 4},
+					{Type: "TiKV", Count: 5},
 					{Type: "PD", Count: 5},
 				},
 			},

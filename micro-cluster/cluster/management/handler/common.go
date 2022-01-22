@@ -103,7 +103,7 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 		if component.Type == string(constants.ComponentIDPD) {
 			pdCount := component.Count + len(meta.Instances[component.Type])
 			if (pdCount%2 == 0) || pdCount > DefaultPDMaxCount {
-				return errors.NewError(errors.TIEM_CHECK_PD_COUNT_ERROR, "Suggest PD instances [1, 3, 5, 7]")
+				return errors.NewError(errors.TIEM_INVALID_TOPOLOGY, "Suggest PD instances [1, 3, 5, 7]")
 			}
 		}
 

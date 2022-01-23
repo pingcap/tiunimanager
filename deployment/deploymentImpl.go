@@ -391,6 +391,11 @@ func (m *Manager) Exec(ctx context.Context, componentType TiUPComponentType, clu
 	return id, nil
 }
 
+func (m *Manager) GetStatus(ctx context.Context, ID string) (op Operation, err error) {
+	framework.LogWithContext(ctx).Infof("getstatus for operationid: %s", ID)
+	return Read(ID)
+}
+
 func (m *Manager) startAsyncOperation(ctx context.Context, id, home, tiUPArgs string, timeoutS int) {
 	go func() {
 		cmd, cancelFunc := genCommand(home, m.TiUPBinPath, tiUPArgs, timeoutS)

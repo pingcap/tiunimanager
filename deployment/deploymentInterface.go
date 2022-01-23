@@ -336,4 +336,11 @@ type Interface interface {
 	// @return result
 	// @return err
 	Exec(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error)
+	// GetStatus
+	// @Description:
+	// @param ctx
+	// @param operationID
+	// @return resp
+	// @return err
+	GetStatus(ctx context.Context, operationID string) (op Operation, err error)
 }

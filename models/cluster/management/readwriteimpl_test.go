@@ -813,7 +813,7 @@ func TestClusterReadWrite_QueryInstancesByHost(t *testing.T) {
 func TestClusterReadWrite_CreateDBUser(t *testing.T) {
 	user := &DBUser{
 		ClusterID:                "clusterid",
-		Name:                     "testName",
+		Name:                     "testName1",
 		Password:                 "ppppppp",
 		RoleType:                 string(constants.DBUserBackupRestore),
 		LastPasswordGenerateTime: time.Now(),
@@ -844,7 +844,7 @@ func TestClusterReadWrite_CreateDBUser(t *testing.T) {
 func TestClusterReadWrite_GetDBUser(t *testing.T) {
 	user := DBUser{
 		ClusterID:                "clusterid",
-		Name:                     "testName",
+		Name:                     "testName2",
 		Password:                 "ppppppp",
 		RoleType:                 string(constants.DBUserBackupRestore),
 		LastPasswordGenerateTime: time.Now(),
@@ -883,7 +883,7 @@ func TestClusterReadWrite_GetDBUser(t *testing.T) {
 func TestClusterReadWrite_DeleteDBUser(t *testing.T) {
 	user := DBUser{
 		ClusterID:                "clusterid",
-		Name:                     "testName",
+		Name:                     "tttt",
 		Password:                 "ppppppp",
 		RoleType:                 string(constants.DBUserBackupRestore),
 		LastPasswordGenerateTime: time.Now(),

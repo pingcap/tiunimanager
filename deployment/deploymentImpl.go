@@ -159,25 +159,6 @@ func (m *Manager) Upgrade(ctx context.Context, componentType TiUPComponentType, 
 	return id, nil
 }
 
-func (m *Manager) ScaleIn(ctx context.Context, componentType TiUPComponentType, clusterID, nodeID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
-
-	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %s %s %d", componentType, CMDScaleIn, clusterID, CMDNode, nodeID, strings.Join(args, " "), FlagWaitTimeout, timeout)
-	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
-
-	id, err := Create(home, Operation{
-		Type:       CMDScaleIn,
-		WorkFlowID: workFlowID,
-		Status:     Init,
-	})
-	if err != nil {
-		return "", err
-	}
-
-	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
-	return id, nil
-}
-
 func (m *Manager) ScaleOut(ctx context.Context, componentType TiUPComponentType, clusterID, configYaml, home, workFlowID string, args []string, timeout int) (ID string, err error) {
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 	// todo: delete the outdated topo file
@@ -191,6 +172,25 @@ func (m *Manager) ScaleOut(ctx context.Context, componentType TiUPComponentType,
 
 	id, err := Create(home, Operation{
 		Type:       CMDScaleOut,
+		WorkFlowID: workFlowID,
+		Status:     Init,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
+	return id, nil
+}
+
+func (m *Manager) ScaleIn(ctx context.Context, componentType TiUPComponentType, clusterID, nodeID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %s %s %d %s", componentType, CMDScaleIn, clusterID, CMDNode, nodeID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	id, err := Create(home, Operation{
+		Type:       CMDScaleIn,
 		WorkFlowID: workFlowID,
 		Status:     Init,
 	})

@@ -83,6 +83,18 @@ func (m *Manager) Deploy(ctx context.Context, componentType TiUPComponentType, c
 	return id, nil
 }
 
+// Start
+// @Description: wrapper of `tiup <component> start`, <component> can be 'cluster', 'dm'
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter clusterID
+// @Parameter home
+// @Parameter workFlowID
+// @Parameter args
+// @Parameter timeout
+// @return ID, operation id to help check the status
+// @return err
 func (m *Manager) Start(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
@@ -102,6 +114,18 @@ func (m *Manager) Start(ctx context.Context, componentType TiUPComponentType, cl
 	return id, nil
 }
 
+// Stop
+// @Description: wrapper of `tiup <component> stop`, <component> can be 'cluster', 'dm'
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter clusterID
+// @Parameter home
+// @Parameter workFlowID
+// @Parameter args
+// @Parameter timeout
+// @return ID, operation id to help check the status
+// @return err
 func (m *Manager) Stop(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
@@ -121,6 +145,18 @@ func (m *Manager) Stop(ctx context.Context, componentType TiUPComponentType, clu
 	return id, nil
 }
 
+// Restart
+// @Description: wrapper of `tiup <component> restart`, <component> can be 'cluster', 'dm'
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter clusterID
+// @Parameter home
+// @Parameter workFlowID
+// @Parameter args
+// @Parameter timeout
+// @return ID, operation id to help check the status
+// @return err
 func (m *Manager) Restart(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
@@ -140,6 +176,19 @@ func (m *Manager) Restart(ctx context.Context, componentType TiUPComponentType, 
 	return id, nil
 }
 
+// Upgrade
+// @Description: wrapper of `tiup <component> upgrade`, <component> can be 'cluster', 'dm'
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter clusterID
+// @Parameter version
+// @Parameter home
+// @Parameter workFlowID
+// @Parameter args
+// @Parameter timeout
+// @return ID, operation id to help check the status
+// @return err
 func (m *Manager) Upgrade(ctx context.Context, componentType TiUPComponentType, clusterID, version, home, workFlowID string, args []string, timeout int) (ID string, err error) {
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
@@ -159,6 +208,19 @@ func (m *Manager) Upgrade(ctx context.Context, componentType TiUPComponentType, 
 	return id, nil
 }
 
+// ScaleOut
+// @Description: wrapper of `tiup <component> scale-out`, <component> can be 'cluster', 'dm'
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter clusterID
+// @Parameter configYaml
+// @Parameter home
+// @Parameter workFlowID
+// @Parameter args
+// @Parameter timeout
+// @return ID, operation id to help check the status
+// @return err
 func (m *Manager) ScaleOut(ctx context.Context, componentType TiUPComponentType, clusterID, configYaml, home, workFlowID string, args []string, timeout int) (ID string, err error) {
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 	// todo: delete the outdated topo file
@@ -183,6 +245,19 @@ func (m *Manager) ScaleOut(ctx context.Context, componentType TiUPComponentType,
 	return id, nil
 }
 
+// ScaleIn
+// @Description: wrapper of `tiup <component> scale-in`, <component> can be 'cluster', 'dm'
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter clusterID
+// @Parameter nodeID
+// @Parameter home
+// @Parameter workFlowID
+// @Parameter args
+// @Parameter timeout
+// @return ID, operation id to help check the status
+// @return err
 func (m *Manager) ScaleIn(ctx context.Context, componentType TiUPComponentType, clusterID, nodeID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
@@ -202,6 +277,18 @@ func (m *Manager) ScaleIn(ctx context.Context, componentType TiUPComponentType, 
 	return id, nil
 }
 
+// Destroy
+// @Description: wrapper of `tiup <component> destroy`, <component> can be 'cluster', 'dm'
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter clusterID
+// @Parameter home
+// @Parameter workFlowID
+// @Parameter args
+// @Parameter timeout
+// @return ID, operation id to help check the status
+// @return err
 func (m *Manager) Destroy(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
@@ -221,35 +308,19 @@ func (m *Manager) Destroy(ctx context.Context, componentType TiUPComponentType, 
 	return id, nil
 }
 
-func (m *Manager) Reload(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
-
-	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDReload, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
-	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
-
-	id, err := Create(home, Operation{
-		Type:       CMDReload,
-		WorkFlowID: workFlowID,
-		Status:     Init,
-	})
-	if err != nil {
-		return "", err
-	}
-
-	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
-	return id, nil
-}
-
-func (m *Manager) EditClusterConfig(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, configs map[string]map[string]interface{}, args []string, timeout int) (ID string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m *Manager) EditInstanceConfig(ctx context.Context, componentType TiUPComponentType, clusterID, component, host, home, workFlowID string, config map[string]interface{}, args []string, port, timeout int) (ID string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
+// EditConfig
+// @Description: wrapper of `tiup <component> edit-config`, <component> can be 'cluster', 'dm'
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter clusterID
+// @Parameter configYaml
+// @Parameter home
+// @Parameter workFlowID
+// @Parameter args
+// @Parameter timeout
+// @return ID, operation id to help check the status
+// @return err
 func (m *Manager) EditConfig(ctx context.Context, componentType TiUPComponentType, clusterID, configYaml, home, workFlowID string, args []string, timeout int) (ID string, err error) {
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 	// todo: delete the outdated topo file
@@ -274,6 +345,87 @@ func (m *Manager) EditConfig(ctx context.Context, componentType TiUPComponentTyp
 	return id, nil
 }
 
+// Reload
+// @Description: wrapper of `tiup <component> reload`, <component> can be 'cluster', 'dm'
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter clusterID
+// @Parameter home
+// @Parameter workFlowID
+// @Parameter args
+// @Parameter timeout
+// @return ID, operation id to help check the status
+// @return err
+func (m *Manager) Reload(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDReload, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	id, err := Create(home, Operation{
+		Type:       CMDReload,
+		WorkFlowID: workFlowID,
+		Status:     Init,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
+	return id, nil
+}
+
+// EditClusterConfig
+// @Description:
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter clusterID
+// @Parameter home
+// @Parameter workFlowID
+// @Parameter configs
+// @Parameter args
+// @Parameter timeout
+// @return ID
+// @return err
+func (m *Manager) EditClusterConfig(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, configs map[string]map[string]interface{}, args []string, timeout int) (ID string, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+// EditInstanceConfig
+// @Description:
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter clusterID
+// @Parameter component
+// @Parameter host
+// @Parameter home
+// @Parameter workFlowID
+// @Parameter config
+// @Parameter args
+// @Parameter port
+// @Parameter timeout
+// @return ID
+// @return err
+func (m *Manager) EditInstanceConfig(ctx context.Context, componentType TiUPComponentType, clusterID, component, host, home, workFlowID string, config map[string]interface{}, args []string, port, timeout int) (ID string, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+// List
+// @Description: wrapper of `tiup <component> list`, <component> can be 'cluster', 'dm'
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter home
+// @Parameter workFlowID
+// @Parameter args
+// @Parameter timeout
+// @return result, the response from command
+// @return err
 func (m *Manager) List(ctx context.Context, componentType TiUPComponentType, home, workFlowID string, args []string, timeout int) (result string, err error) {
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
@@ -283,6 +435,18 @@ func (m *Manager) List(ctx context.Context, componentType TiUPComponentType, hom
 	return m.startSyncOperation(home, tiUPArgs, timeout)
 }
 
+// Display
+// @Description: wrapper of `tiup <component> display`, <component> can be 'cluster', 'dm'
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter clusterID
+// @Parameter home
+// @Parameter workFlowID
+// @Parameter args
+// @Parameter timeout
+// @return result, the response from command
+// @return err
 func (m *Manager) Display(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (result string, err error) {
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
@@ -292,6 +456,18 @@ func (m *Manager) Display(ctx context.Context, componentType TiUPComponentType, 
 	return m.startSyncOperation(home, tiUPArgs, timeout)
 }
 
+// ShowConfig
+// @Description: wrapper of `tiup <component> show-config`, <component> can be 'cluster', 'dm'
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter clusterID
+// @Parameter home
+// @Parameter workFlowID
+// @Parameter args
+// @Parameter timeout
+// @return result, the response from command
+// @return err
 func (m *Manager) ShowConfig(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (result string, err error) {
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
@@ -301,6 +477,16 @@ func (m *Manager) ShowConfig(ctx context.Context, componentType TiUPComponentTyp
 	return m.startSyncOperation(home, tiUPArgs, timeout)
 }
 
+// Dumpling
+// @Description: wrapper of `tiup dumpling`
+// @Receiver m
+// @Parameter ctx
+// @Parameter home
+// @Parameter workFlowID
+// @Parameter args
+// @Parameter timeout
+// @return ID, operation id to help check the status
+// @return err
 func (m *Manager) Dumpling(ctx context.Context, home, workFlowID string, args []string, timeout int) (ID string, err error) {
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
@@ -320,6 +506,16 @@ func (m *Manager) Dumpling(ctx context.Context, home, workFlowID string, args []
 	return id, nil
 }
 
+// Lightning
+// @Description: wrapper of `tiup lightning`
+// @Receiver m
+// @Parameter ctx
+// @Parameter home
+// @Parameter workFlowID
+// @Parameter args
+// @Parameter timeout
+// @return ID, operation id to help check the status
+// @return err
 func (m *Manager) Lightning(ctx context.Context, home, workFlowID string, args []string, timeout int) (ID string, err error) {
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
@@ -339,6 +535,20 @@ func (m *Manager) Lightning(ctx context.Context, home, workFlowID string, args [
 	return id, nil
 }
 
+// Push
+// @Description: wrapper of `tiup cluster push`
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter clusterID
+// @Parameter collectorYaml
+// @Parameter remotePath
+// @Parameter home
+// @Parameter workFlowID
+// @Parameter args
+// @Parameter timeout
+// @return ID, operation id to help check the status
+// @return err
 func (m *Manager) Push(ctx context.Context, componentType TiUPComponentType, clusterID, collectorYaml, remotePath, home, workFlowID string, args []string, timeout int) (ID string, err error) {
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 	// todo: delete the outdated topo file
@@ -363,6 +573,18 @@ func (m *Manager) Push(ctx context.Context, componentType TiUPComponentType, clu
 	return id, nil
 }
 
+// Ctl
+// @Description: wrapper of `tiup ctl:<TiDB version> <TiDB component>`
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter version
+// @Parameter component
+// @Parameter home
+// @Parameter args
+// @Parameter timeout
+// @return result
+// @return err
 func (m *Manager) Ctl(ctx context.Context, componentType TiUPComponentType, version, component, home string, args []string, timeout int) (result string, err error) {
 	logInFunc := framework.LogWithContext(ctx)
 
@@ -372,6 +594,18 @@ func (m *Manager) Ctl(ctx context.Context, componentType TiUPComponentType, vers
 	return m.startSyncOperation(home, tiUPArgs, timeout)
 }
 
+// Exec
+// @Description: wrapper of `tiup <component> exec`, <component> can be 'cluster', 'dm'
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter clusterID
+// @Parameter home
+// @Parameter workFlowID
+// @Parameter args
+// @Parameter timeout
+// @return ID, operation id to help check the status
+// @return err
 func (m *Manager) Exec(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
@@ -391,6 +625,13 @@ func (m *Manager) Exec(ctx context.Context, componentType TiUPComponentType, clu
 	return id, nil
 }
 
+// GetStatus
+// @Description: get status for async operation
+// @Receiver m
+// @Parameter ctx
+// @Parameter ID
+// @return op
+// @return err
 func (m *Manager) GetStatus(ctx context.Context, ID string) (op Operation, err error) {
 	framework.LogWithContext(ctx).Infof("getstatus for operationid: %s", ID)
 	return Read(ID)

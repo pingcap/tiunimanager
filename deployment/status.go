@@ -69,7 +69,7 @@ func Update(fileName string, op Operation) error {
 		return err
 	}
 
-	return ioutil.WriteFile(fileName, b, 0644)
+	return ioutil.WriteFile(fileName, b, 0600)
 }
 
 // Read an operation record

@@ -199,8 +199,8 @@ func TestManager_ApplyParameterGroup_Failed(t *testing.T) {
 	clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterManagementRW)
 	clusterManagementRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, clusterID string) (*management.Cluster, []*management.ClusterInstance, error) {
-			return nil, nil, errors.Parse("cluster id is null")
+		DoAndReturn(func(ctx context.Context, clusterID string) (*management.Cluster, []*management.ClusterInstance, []*management.DBUser, error) {
+			return nil, nil, nil, errors.Parse("cluster id is null")
 		})
 	_, err := mockManager.ApplyParameterGroup(context.TODO(), message.ApplyParameterGroupReq{
 		ParamGroupId: "",

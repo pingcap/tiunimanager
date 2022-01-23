@@ -53,6 +53,8 @@ func TestManager_Create(t *testing.T) {
 	clusterRW.EXPECT().GetMeta(gomock.Any(), "clusterId").Return(&management.Cluster{}, []*management.ClusterInstance{
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.2"}, Ports: []int32{111}},
+	}, []*management.DBUser{
+		{ClusterID: "clusterId", Name: "root", Password: "123455678", RoleType: string(constants.Root)},
 	}, nil).AnyTimes()
 
 	changefeedRW := mockchangefeed.NewMockReaderWriter(ctrl)
@@ -101,6 +103,8 @@ func TestManager_Delete(t *testing.T) {
 	clusterRW.EXPECT().GetMeta(gomock.Any(), "clusterId").Return(&management.Cluster{}, []*management.ClusterInstance{
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.2"}, Ports: []int32{111}},
+	}, []*management.DBUser{
+		{ClusterID: "clusterId", Name: "root", Password: "123455678", RoleType: string(constants.Root)},
 	}, nil).AnyTimes()
 
 	changefeedRW := mockchangefeed.NewMockReaderWriter(ctrl)
@@ -143,6 +147,8 @@ func TestManager_Pause(t *testing.T) {
 	clusterRW.EXPECT().GetMeta(gomock.Any(), "clusterId").Return(&management.Cluster{}, []*management.ClusterInstance{
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.2"}, Ports: []int32{111}},
+	},  []*management.DBUser{
+		{ClusterID: "clusterId", Name: "root", Password: "123455678", RoleType: string(constants.Root)},
 	}, nil).AnyTimes()
 
 	changefeedRW := mockchangefeed.NewMockReaderWriter(ctrl)
@@ -221,10 +227,14 @@ func TestManager_Resume(t *testing.T) {
 	clusterRW.EXPECT().GetMeta(gomock.Any(), "clusterId").Return(&management.Cluster{}, []*management.ClusterInstance{
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.2"}, Ports: []int32{111}},
+	}, []*management.DBUser{
+		{ClusterID: "clusterId", Name: "root", Password: "123455678", RoleType: string(constants.Root)},
 	}, nil).AnyTimes()
 	clusterRW.EXPECT().GetMeta(gomock.Any(), "errorId").Return(&management.Cluster{}, []*management.ClusterInstance{
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.2"}, Ports: []int32{111}},
+	}, []*management.DBUser{
+		{ClusterID: "clusterId", Name: "root", Password: "123455678", RoleType: string(constants.Root)},
 	}, errors.Error(errors.TIEM_UNMARSHAL_ERROR)).AnyTimes()
 
 	changefeedRW := mockchangefeed.NewMockReaderWriter(ctrl)
@@ -299,6 +309,8 @@ func TestManager_Update(t *testing.T) {
 	clusterRW.EXPECT().GetMeta(gomock.Any(), "clusterId").Return(&management.Cluster{}, []*management.ClusterInstance{
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.2"}, Ports: []int32{111}},
+	}, []*management.DBUser{
+		{ClusterID: "clusterId", Name: "root", Password: "123455678", RoleType: string(constants.Root)},
 	}, nil).AnyTimes()
 
 	changefeedRW := mockchangefeed.NewMockReaderWriter(ctrl)
@@ -382,6 +394,8 @@ func TestManager_Query(t *testing.T) {
 	clusterRW.EXPECT().GetMeta(gomock.Any(), "clusterId").Return(&management.Cluster{}, []*management.ClusterInstance{
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.2"}, Ports: []int32{111}},
+	}, []*management.DBUser{
+		{ClusterID: "clusterId", Name: "root", Password: "123455678", RoleType: string(constants.Root)},
 	}, nil).AnyTimes()
 
 	changefeedRW := mockchangefeed.NewMockReaderWriter(ctrl)
@@ -447,6 +461,8 @@ func TestManager_Detail(t *testing.T) {
 	clusterRW.EXPECT().GetMeta(gomock.Any(), "clusterId").Return(&management.Cluster{}, []*management.ClusterInstance{
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.2"}, Ports: []int32{111}},
+	}, []*management.DBUser{
+		{ClusterID: "clusterId", Name: "root", Password: "123455678", RoleType: string(constants.Root)},
 	}, nil).AnyTimes()
 
 	changefeedRW := mockchangefeed.NewMockReaderWriter(ctrl)
@@ -646,10 +662,14 @@ func Test_ClusterError(t *testing.T) {
 	clusterRW.EXPECT().GetMeta(gomock.Any(), "NotFound").Return(&management.Cluster{}, []*management.ClusterInstance{
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.2"}, Ports: []int32{111}},
+	}, []*management.DBUser{
+		{ClusterID: "NotFound", Name: "root", Password: "123455678", RoleType: string(constants.Root)},
 	}, errors.Error(errors.TIEM_MARSHAL_ERROR)).AnyTimes()
 
 	clusterRW.EXPECT().GetMeta(gomock.Any(), "WithoutCDC").Return(&management.Cluster{}, []*management.ClusterInstance{
 		{Type: "PD", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.2"}, Ports: []int32{111}},
+	}, []*management.DBUser{
+		{ClusterID: "WithoutCDC", Name: "root", Password: "123455678", RoleType: string(constants.Root)},
 	}, nil).AnyTimes()
 
 

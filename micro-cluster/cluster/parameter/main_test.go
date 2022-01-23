@@ -128,6 +128,35 @@ func mockClusterInstances() []*management.ClusterInstance {
 	}
 }
 
+func mockDBUsers() []*management.DBUser {
+	return []*management.DBUser{
+		{
+			ClusterID: "clusterId",
+			Name: "backup",
+			Password: "123455678",
+			RoleType: string(constants.DBUserBackupRestore),
+		},
+		{
+			ClusterID: "clusterId",
+			Name: "root",
+			Password: "123455678",
+			RoleType: string(constants.Root),
+		},
+		{
+			ClusterID: "clusterId",
+			Name: "parameter",
+			Password: "123455678",
+			RoleType: string(constants.DBUserParameterManagement),
+		},
+		{
+			ClusterID: "clusterId",
+			Name: "data_sync",
+			Password: "123455678",
+			RoleType: string(constants.DBUserCDCDataSync),
+		},
+	}
+}
+
 func mockModifyParameter() *ModifyParameter {
 	return &ModifyParameter{
 		Reboot: false,

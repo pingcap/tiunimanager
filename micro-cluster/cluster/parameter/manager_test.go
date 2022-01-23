@@ -171,8 +171,8 @@ func TestManager_ApplyParameterGroup_Success(t *testing.T) {
 			}, nil
 		})
 	clusterManagementRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, clusterID string) (*management.Cluster, []*management.ClusterInstance, error) {
-			return mockCluster(), mockClusterInstances(), nil
+		DoAndReturn(func(ctx context.Context, clusterID string) (*management.Cluster, []*management.ClusterInstance, []*management.DBUser, error) {
+			return mockCluster(), mockClusterInstances(), mockDBUsers(), nil
 		})
 	clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).

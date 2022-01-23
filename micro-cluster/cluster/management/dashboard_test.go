@@ -112,7 +112,7 @@ func TestGetDashboardInfo(t *testing.T) {
 			Password:  "12345678",
 			RoleType: string(constants.Root),
 		},
-	}, nil).Times(3)
+	}, nil).Times(1)
 
 	_, err := GetDashboardInfo(context.TODO(), cluster.GetDashboardInfoReq{ClusterID: "2145635758"})
 	assert.Error(t, err)
@@ -189,7 +189,7 @@ func TestGetDashboardInfo(t *testing.T) {
 			Password:  "12345678",
 			RoleType: string(constants.Root),
 		},
-	}, errors.Error(errors.TIEM_MARSHAL_ERROR)).Times(2)
+	}, errors.Error(errors.TIEM_MARSHAL_ERROR)).Times(1)
 	_, err = GetDashboardInfo(context.TODO(), cluster.GetDashboardInfoReq{ClusterID: "2145635758"})
 	assert.Error(t, err)
 }

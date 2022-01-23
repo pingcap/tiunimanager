@@ -56,8 +56,8 @@ var DBUserName = map[DBUserRoleType]string {
 }
 
 var DBUserPermission  = map[DBUserRoleType]string {
-	Root:                     "ALL PRIVILEGES",
-	DBUserBackupRestore:       "",
-	DBUserParameterManagement: "",
-	DBUserCDCDataSync:         "",
+	Root:                      "ALL PRIVILEGES",
+	DBUserBackupRestore:       "ALL PRIVILEGES",
+	DBUserParameterManagement: "ALL PRIVILEGES",
+	DBUserCDCDataSync:         "ALL PRIVILEGES",
 }

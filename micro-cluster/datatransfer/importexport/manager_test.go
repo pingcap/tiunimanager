@@ -59,7 +59,9 @@ func TestImportExportManager_ExportData_case1(t *testing.T) {
 			ID:       "id-xxxx",
 			TenantId: "tid-xxx",
 		},
-	}, make([]*management.ClusterInstance, 0), nil).AnyTimes()
+	}, make([]*management.ClusterInstance, 0), []*management.DBUser{
+		{ClusterID: "clusterId", Name: "root", Password: "123455678", RoleType: string(constants.Root)},
+	}, nil).AnyTimes()
 	clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
@@ -117,7 +119,9 @@ func TestImportExportManager_ExportData_case2(t *testing.T) {
 			ID:       "id-xxxx",
 			TenantId: "tid-xxx",
 		},
-	}, make([]*management.ClusterInstance, 0), nil).AnyTimes()
+	}, make([]*management.ClusterInstance, 0), []*management.DBUser{
+		{ClusterID: "clusterId", Name: "root", Password: "123455678", RoleType: string(constants.Root)},
+	}, nil).AnyTimes()
 	clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
@@ -300,7 +304,9 @@ func TestImportExportManager_ImportData_case1(t *testing.T) {
 			ID:       "id-xxxx",
 			TenantId: "tid-xxx",
 		},
-	}, make([]*management.ClusterInstance, 0), nil).AnyTimes()
+	}, make([]*management.ClusterInstance, 0), []*management.DBUser{
+		{ClusterID: "clusterId", Name: "root", Password: "123455678", RoleType: string(constants.Root)},
+	}, nil).AnyTimes()
 	clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
@@ -419,7 +425,9 @@ func TestImportExportManager_ImportData_case3(t *testing.T) {
 			ID:       "id-xxxx",
 			TenantId: "tid-xxx",
 		},
-	}, make([]*management.ClusterInstance, 0), make([]*management.DBUser, 0), nil).AnyTimes()
+	}, make([]*management.ClusterInstance, 0), []*management.DBUser{
+		{ClusterID: "clusterId", Name: "root", Password: "123455678", RoleType: string(constants.Root)},
+	}, nil).AnyTimes()
 	clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	configService := mockconfig.NewMockReaderWriter(ctrl)

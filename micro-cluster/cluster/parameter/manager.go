@@ -28,6 +28,8 @@ import (
 	"encoding/json"
 	"sync"
 
+	"github.com/pingcap-inc/tiem/models/cluster/parameter"
+
 	"github.com/pingcap-inc/tiem/proto/clusterservices"
 
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -266,6 +268,44 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 		AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
 			WorkFlowID: workflowID,
 		},
+	}
+	return resp, nil
+}
+
+func (m *Manager) PersistApplyParameterGroup(ctx context.Context, req message.ApplyParameterGroupReq, hasEmptyValue bool) (resp message.ApplyParameterGroupResp, err error) {
+	framework.LogWithContext(ctx).Infof("begin persist apply cluster parameters, request: %+v", req)
+	defer framework.LogWithContext(ctx).Infof("end persist apply cluster parameters")
+	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId, "")
+	if err != nil || pg.ID == "" {
+		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, err.Error())
+	}
+
+	pgs := make([]*parameter.ClusterParameterMapping, len(params))
+	for i, param := range params {
+		value := ""
+		if !hasEmptyValue {
+			value = param.DefaultValue
+		}
+		realValue := structs.ParameterRealValue{ClusterValue: value}
+		b, err := json.Marshal(realValue)
+		if err != nil {
+			return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, err.Error())
+		}
+		pgs[i] = &parameter.ClusterParameterMapping{
+			ClusterID:   req.ClusterID,
+			ParameterID: param.ID,
+			RealValue:   string(b),
+		}
+	}
+	err = models.GetClusterParameterReaderWriter().ApplyClusterParameter(ctx, req.ParamGroupId, req.ClusterID, pgs)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("apply parameter group convert resp err: %v", err)
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, err.Error())
+	}
+	resp = message.ApplyParameterGroupResp{
+		ClusterID:    req.ClusterID,
+		ParamGroupID: req.ParamGroupId,
 	}
 	return resp, nil
 }

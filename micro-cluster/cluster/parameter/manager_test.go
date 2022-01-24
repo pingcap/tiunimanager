@@ -210,6 +210,48 @@ func TestManager_ApplyParameterGroup_Failed(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestManager_PersistApplyParameterGroup(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+	models.SetParameterGroupReaderWriter(parameterGroupRW)
+	clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
+	models.SetClusterParameterReaderWriter(clusterParameterRW)
+
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+			return &parametergroup.ParameterGroup{ID: "1"}, []*parametergroup.ParamDetail{
+				{
+					Parameter: parametergroup.Parameter{
+						ID:             "1",
+						Name:           "param1",
+						InstanceType:   "TiDB",
+						SystemVariable: "",
+						Type:           0,
+						HasApply:       1,
+						UpdateSource:   0,
+						Range:          "[\"0\", \"1024\"]",
+					},
+					DefaultValue: "1",
+					Note:         "param1",
+				},
+			}, nil
+		})
+	clusterParameterRW.EXPECT().ApplyClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId string, clusterId string, param []*parameter.ClusterParameterMapping) error {
+			return nil
+		})
+
+	resp, err := mockManager.PersistApplyParameterGroup(context.TODO(), message.ApplyParameterGroupReq{
+		ParamGroupId: "1",
+		ClusterID:    "1",
+		Reboot:       false,
+	}, false)
+	assert.NotEmpty(t, resp)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, resp.ParamGroupID)
+}
+
 func TestManager_InspectClusterParameters(t *testing.T) {
 	parameters, err := mockManager.InspectClusterParameters(context.TODO(), cluster.InspectClusterParametersReq{ClusterID: "1"})
 	assert.NoError(t, err)

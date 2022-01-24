@@ -1,18 +1,18 @@
-/*
- * Copyright (c)  2022 PingCAP, Inc.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
+/******************************************************************************
+ * Copyright (c)  2022 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ *                                                                            *
+ ******************************************************************************/
 
 /*******************************************************************************
  * @File: deploymentInterface
@@ -26,6 +26,7 @@ package deployment
 
 import (
 	"context"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 )
@@ -80,6 +81,7 @@ const (
 	CMDLightning    = "tidb-lightning"
 	CMDTopologyFile = "--topology-file"
 	CMDPush         = "push"
+	FlagWaitTimeout = "--wait-timeout"
 )
 
 type Interface interface {
@@ -109,6 +111,18 @@ type Interface interface {
 	// @return ID
 	// @return err
 	Start(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error)
+	// Stop
+	// @Description:
+	// @param ctx
+	// @param componentType
+	// @param clusterID
+	// @param home
+	// @param workFlowID
+	// @param args[]
+	// @param timeout
+	// @return ID
+	// @return err
+	Stop(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error)
 	// Restart
 	// @Description:
 	// @param ctx
@@ -184,20 +198,7 @@ type Interface interface {
 	// @return ID
 	// @return err
 	Reload(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error)
-	// EditClusterConfig
-	// @Description:
-	// @param ctx
-	// @param componentType
-	// @param clusterID
-	// @param home
-	// @param workFlowID
-	// @param configs
-	// @param args[]
-	// @param timeout
-	// @return ID
-	// @return err
-	EditClusterConfig(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, configs map[string]map[string]interface{}, args []string, timeout int) (ID string, err error)
-	// EditInstanceConfig
+	// EditConfig
 	// @Description:
 	// @param ctx
 	// @param componentType
@@ -212,7 +213,7 @@ type Interface interface {
 	// @param timeout
 	// @return ID
 	// @return err
-	EditInstanceConfig(ctx context.Context, componentType TiUPComponentType, clusterID, component, host, home, workFlowID string, config map[string]interface{}, args []string, port, timeout int) (ID string, err error)
+	EditConfig(ctx context.Context, componentType TiUPComponentType, clusterID, configYaml, home, workFlowID string, args []string, timeout int) (ID string, err error)
 	// List
 	// @Description:
 	// @param ctx
@@ -247,7 +248,7 @@ type Interface interface {
 	// @param timeout
 	// @return spec
 	// @return err
-	ShowConfig(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (spec *spec.Specification, err error)
+	ShowConfig(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (result string, err error)
 	// Dumpling
 	// @Description:
 	// @param ctx
@@ -294,7 +295,7 @@ type Interface interface {
 	// @param timeout
 	// @return ID
 	// @return err
-	Ctl(ctx context.Context, componentType TiUPComponentType, version, component, home, workFlowID string, args []string, timeout int) (ID string, err error)
+	Ctl(ctx context.Context, componentType TiUPComponentType, version, component, home string, args []string, timeout int) (result string, err error)
 	// Exec
 	// @Description:
 	// @param ctx
@@ -305,5 +306,12 @@ type Interface interface {
 	// @param timeout
 	// @return result
 	// @return err
-	Exec(ctx context.Context, componentType TiUPComponentType, home, workFlowID string, args []string, timeout int) (result string, err error)
+	Exec(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error)
+	// GetStatus
+	// @Description:
+	// @param ctx
+	// @param operationID
+	// @return resp
+	// @return err
+	GetStatus(ctx context.Context, operationID string) (op Operation, err error)
 }

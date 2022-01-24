@@ -282,6 +282,7 @@ type UpdateClusterParametersReq struct {
 	ClusterID string                               `json:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
 	Params    []structs.ClusterParameterSampleInfo `json:"params" validate:"required"`
 	Reboot    bool                                 `json:"reboot" validate:"required"`
+	Nodes     []string                             `json:"nodes" swaggerignore:"true"`
 }
 
 type UpdateClusterParametersResp struct {

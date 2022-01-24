@@ -187,7 +187,7 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 	}
 
 	data := make(map[string]interface{})
-	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: params}
+	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: params, Nodes: req.Nodes}
 	data[contextUpdateParameterInfo] = &req
 	data[contextMaintenanceStatusChange] = maintenanceStatusChange
 	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
@@ -251,7 +251,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 
 	// Get modify parameters
 	data := make(map[string]interface{})
-	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: params}
+	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: params, Nodes: req.Nodes}
 	data[contextApplyParameterInfo] = &req
 	data[contextMaintenanceStatusChange] = true
 	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)

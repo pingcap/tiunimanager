@@ -46,11 +46,6 @@ func CopySSHID(ctx context.Context, ip string, user string, password string, tim
 	cmd := fmt.Sprintf("ssh-copy-id %s@%s", user, ip)
 	logInFunc.Infof("copysshid: %s", cmd)
 
-	if CheckCopiedSSHID(ctx, ip, user, password) {
-		logInFunc.Infof("cmd(%s) already copied", cmd)
-		return nil
-	}
-
 	e, _, err := expect.Spawn(cmd, timeout, expect.Verbose(true))
 	if err != nil {
 		logInFunc.Errorf("cmd(%s) spawned return with err: %+v", cmd, err)
@@ -58,62 +53,28 @@ func CopySSHID(ctx context.Context, ip string, user string, password string, tim
 	}
 	defer e.Close()
 
-	_, _, err = e.Expect(regexp.MustCompile(".*yes/no.*"), timeout)
+	_, _, idx, err := e.ExpectSwitchCase(
+		[]expect.Caser{
+			// All keys were skipped because they already exist on the remote system
+			&expect.Case{R: regexp.MustCompile(`.*already exist.*`), T: expect.OK()},
+			// Are you sure you want to continue connecting (yes/no/[fingerprint])?
+			&expect.Case{R: regexp.MustCompile(`.*yes/no.*`), S: "yes\n", T: expect.Next(), Rt: 1},
+			// \rroot@172.16.6.216's password:
+			&expect.Case{R: regexp.MustCompile(`.*password.*`), S: fmt.Sprintf("%s\n", password), T: expect.Next(), Rt: 1},
+			// Number of key(s) added:
+			&expect.Case{R: regexp.MustCompile(`.*added.*`), T: expect.OK()},
+		}, timeout)
+
 	if err != nil {
-		logInFunc.Warnf("cmd(%s) expect(yes/no req) return with err: %+v", cmd, err)
+		logInFunc.Errorf("cmd(%s) expect return with err: %+v", cmd, err)
+		return
+	}
+
+	if idx == 0 {
+		logInFunc.Infof("cmd(%s) already copied\n", cmd)
 	} else {
-		err = e.Send("yes\n")
-		if err != nil {
-			logInFunc.Errorf("cmd(%s) respond yes to (yes/no req) return with err: %+v", cmd, err)
-			return
-		}
+		logInFunc.Infof("cmd(%s) keys successfully added\n", cmd)
 	}
 
-	_, _, err = e.Expect(regexp.MustCompile(".*password.*"), timeout)
-	if err != nil {
-		logInFunc.Errorf("cmd(%s) expect(password req) return with err: %+v", cmd, err)
-		return
-	}
-	err = e.Send(fmt.Sprintf("%s\n", password))
-	if err != nil {
-		logInFunc.Errorf("cmd(%s) respond password to (password req) return with err: %+v", cmd, err)
-		return
-	}
-
-	_, _, err = e.Expect(regexp.MustCompile(".*added.*"), timeout)
-	if err != nil {
-		logInFunc.Errorf("cmd(%s) expect(keys added) return with err: %+v", cmd, err)
-		return
-	}
-
-	logInFunc.Infof("cmd(%s) keys successfully added", cmd)
 	return nil
-}
-
-// CheckCopiedSSHID
-// @Description: check 'ssh-copy-id <user>@<ip>' has been done
-// @Parameter ip
-// @Parameter user
-// @Parameter password
-// @return bool
-func CheckCopiedSSHID(ctx context.Context, ip string, user string, password string) bool {
-	logInFunc := framework.LogWithContext(ctx)
-	timeout := time.Duration(1) * time.Second
-	cmd := fmt.Sprintf("ssh-copy-id %s@%s", user, ip)
-	logInFunc.Infof("checkcopiedsshid: %s", cmd)
-
-	e, _, err := expect.Spawn(cmd, timeout, expect.Verbose(true))
-	if err != nil {
-		logInFunc.Errorf("cmd(%s) spawned return with err: %+v", cmd, err)
-		return false
-	}
-	defer e.Close()
-
-	_, _, err = e.Expect(regexp.MustCompile(".*already exist.*"), timeout)
-	if err != nil {
-		logInFunc.Infof("cmd(%s) expect(keys added) return with err: %+v, which means not copied yet", cmd, err)
-		return false
-	} else {
-		return true
-	}
 }

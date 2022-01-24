@@ -90,7 +90,7 @@ func CopySSHID(ctx context.Context, ip string, user string, password string, tim
 	return nil
 }
 
-// CopySSHID
+// CheckCopiedSSHID
 // @Description: check 'ssh-copy-id <user>@<ip>' has been done
 // @Parameter ip
 // @Parameter user

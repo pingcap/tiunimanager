@@ -16,11 +16,9 @@
 package hostinitiator
 
 import (
-	"bytes"
 	"context"
-	"strconv"
+	"fmt"
 	"strings"
-	"text/template"
 
 	"github.com/pingcap-inc/tiem/util/scp"
 	sshclient "github.com/pingcap-inc/tiem/util/ssh"
@@ -30,7 +28,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
-	resourceTemplate "github.com/pingcap-inc/tiem/resource/template"
 )
 
 type FileHostInitiator struct {
@@ -40,7 +37,7 @@ type FileHostInitiator struct {
 
 func NewFileHostInitiator() *FileHostInitiator {
 	hostInitiator := new(FileHostInitiator)
-	hostInitiator.sshClient = nil
+	hostInitiator.sshClient = sshclient.SSHExecutor{}
 	hostInitiator.secondPartyServ = secondparty.Manager
 	return hostInitiator
 }
@@ -66,54 +63,98 @@ func (p *FileHostInitiator) CopySSHID(ctx context.Context, h *structs.HostInfo) 
 	return nil
 }
 
-func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) Prepare(ctx context.Context, h *structs.HostInfo) (err error) {
 	log := framework.LogWithContext(ctx)
-	log.Infof("verify host %v begins", *h)
+	log.Infof("prepare for host %s %s begins", h.HostName, h.IP)
 
-	err = p.verifyConnect(ctx, h)
+	tempateInfo := templateCheckHost{}
+	tempateInfo.buildCheckHostTemplateItems(h)
+
+	templateStr, err := tempateInfo.generateTopologyConfig(ctx)
 	if err != nil {
-		log.Errorf("verify host connect %s %s failed, %v", h.HostName, h.IP, err)
-		return err
-	}
-	defer p.closeSSHConnect()
-	/*
-		if err = p.verifyCpuMem(ctx, h); err != nil {
-			log.Errorf("verify host cpu memory %s %s failed, %v", h.HostName, h.IP, err)
-			return err
-		}
-	*/
-	if err = p.verifyDisks(ctx, h); err != nil {
-		log.Errorf("verify host disks %s %s failed, %v", h.HostName, h.IP, err)
 		return err
 	}
 
-	if err = p.verifyFS(ctx, h); err != nil {
-		log.Errorf("verify host file system %s %s failed, %v", h.HostName, h.IP, err)
+	resultStr, err := p.secondPartyServ.CheckTopo(ctx, secondparty.ClusterComponentTypeStr, templateStr, rp_consts.DefaultTiupTimeOut,
+		[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--apply", "--format", "json"})
+	if err != nil {
+		errMsg := fmt.Sprintf("call second serv to apply host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
+		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
+	}
+	log.Infof("apply host %s %s done, %s", h.HostName, h.IP, resultStr)
+
+	var results checkHostResults
+	(&results).buildFromJson(resultStr)
+	sortedResult := results.analyzeCheckResults()
+	log.Infof("build from result json get sorted result: %v", sortedResult)
+
+	err = p.autoFix(ctx, h, sortedResult)
+	if err != nil {
+		log.Errorf("auto fix host %s %s failed, %v", h.HostName, h.IP, err)
 		return err
 	}
 
-	if err = p.verifySwap(ctx, h); err != nil {
-		log.Errorf("verify host swap %s %s failed, %v", h.HostName, h.IP, err)
-		return err
-	}
-
-	if err = p.verifyEnv(ctx, h); err != nil {
-		log.Errorf("verify host env %s %s failed, %v", h.HostName, h.IP, err)
-		return err
-	}
-
-	if err = p.verifyOSEnv(ctx, h); err != nil {
-		log.Errorf("verify host os env %s %s failed, %v", h.HostName, h.IP, err)
-		return err
-	}
+	log.Infof("prepare for host %s %s succeed", h.HostName, h.IP)
 
 	return nil
 }
 
-func (p *FileHostInitiator) SetConfig(ctx context.Context, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (err error) {
 	log := framework.LogWithContext(ctx)
-	log.Infof("set host config %v begins", *h)
-	defer log.Infof("set host %s %s config end, %v", h.HostName, h.IP, err)
+	log.Infof("verify host %v begins", *h)
+	tempateInfo := templateCheckHost{}
+	tempateInfo.buildCheckHostTemplateItems(h)
+
+	templateStr, err := tempateInfo.generateTopologyConfig(ctx)
+	if err != nil {
+		return err
+	}
+	ignoreWarnings, ok := ctx.Value(rp_consts.ContextIgnoreWarnings).(bool)
+	if !ok {
+		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, "get ignore warning flag from context failed")
+	}
+	log.Infof("verify host %s %s ignore warning (%t)", h.HostName, h.IP, ignoreWarnings)
+
+	resultStr, err := p.secondPartyServ.CheckTopo(ctx, secondparty.ClusterComponentTypeStr, templateStr, rp_consts.DefaultTiupTimeOut,
+		[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--format", "json"})
+	if err != nil {
+		errMsg := fmt.Sprintf("call second serv to check host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
+		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
+	}
+	log.Infof("verify host %s %s for %v done", h.HostName, h.IP, tempateInfo)
+
+	// deal with the result
+	var results checkHostResults
+	(&results).buildFromJson(resultStr)
+	sortedResult := results.analyzeCheckResults()
+	log.Infof("build from json %s, get sorted result: %v", resultStr, sortedResult)
+
+	fails, hasFails := sortedResult[string(Fail)]
+	if hasFails {
+		errMsg := fmt.Sprintf("check host %s %s has %d fails, %v", h.HostName, h.IP, len(*fails), *fails)
+		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
+	}
+
+	warnings, hasWarns := sortedResult[string(Warn)]
+	if hasWarns {
+		errMsg := fmt.Sprintf("check host %s %s has %d warnings, %v", h.HostName, h.IP, len(*warnings), *warnings)
+		log.Warnln(errMsg)
+		if !ignoreWarnings {
+			ignoreCpuGovWarn, err := p.passCpuGovernorWarn(ctx, h, warnings)
+			if err == nil && ignoreCpuGovWarn {
+				log.Infof("ignore cpu governor warning for vm %s %s", h.HostName, h.IP)
+			} else {
+				return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
+			}
+		}
+	}
+
+	pass, hasPasses := sortedResult[string(Pass)]
+	if hasPasses {
+		log.Infof("check host %s %s succeed, %v", h.HostName, h.IP, *pass)
+	} else {
+		log.Warnf("check host %s %s no pass", h.HostName, h.IP)
+	}
 
 	return nil
 }
@@ -141,16 +182,15 @@ func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.H
 	if !ok || workFlowNodeID == "" {
 		return errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "get work flow node from context failed, %s, %v", workFlowNodeID, ok)
 	}
-	if rp_consts.SecondPartyReady {
-		emClusterName := framework.Current.GetClientArgs().EMClusterName
-		framework.LogWithContext(ctx).Infof("join em cluster %s with work flow id %s", emClusterName, workFlowNodeID)
-		operationId, err := p.secondPartyServ.ClusterScaleOut(ctx, secondparty.TiEMComponentTypeStr, emClusterName, templateStr, rp_consts.DefaultTiupTimeOut,
-			[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, workFlowNodeID, "")
-		if err != nil {
-			return errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "join em cluster %s [%v] failed, %v", emClusterName, templateStr, err)
-		}
-		framework.LogWithContext(ctx).Infof("join em cluster %s for %v in operationId %s", emClusterName, tempateInfo, operationId)
+
+	emClusterName := framework.Current.GetClientArgs().EMClusterName
+	framework.LogWithContext(ctx).Infof("join em cluster %s with work flow id %s", emClusterName, workFlowNodeID)
+	operationId, err := p.secondPartyServ.ClusterScaleOut(ctx, secondparty.TiEMComponentTypeStr, emClusterName, templateStr, rp_consts.DefaultTiupTimeOut,
+		[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, workFlowNodeID, "")
+	if err != nil {
+		return errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "join em cluster %s [%v] failed, %v", emClusterName, templateStr, err)
 	}
+	framework.LogWithContext(ctx).Infof("join em cluster %s for %v in operationId %s", emClusterName, tempateInfo, operationId)
 
 	return nil
 }
@@ -162,123 +202,61 @@ func (p *FileHostInitiator) LeaveEMCluster(ctx context.Context, nodeId string) (
 	if !ok || workFlowNodeID == "" {
 		return errors.NewErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "get work flow node from context failed, %s, %v", workFlowNodeID, ok)
 	}
-	if rp_consts.SecondPartyReady {
-		emClusterName := framework.Current.GetClientArgs().EMClusterName
-		framework.LogWithContext(ctx).Infof("leave em cluster %s with work flow id %s", emClusterName, workFlowNodeID)
-		operationId, err := p.secondPartyServ.ClusterScaleIn(ctx, secondparty.TiEMComponentTypeStr, emClusterName, nodeId, rp_consts.DefaultTiupTimeOut,
-			[]string{"--yes"}, workFlowNodeID)
-		if err != nil {
-			return errors.NewErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "leave em cluster %s [%s] failed, %v", emClusterName, nodeId, err)
-		}
-		framework.LogWithContext(ctx).Infof("leave em cluster %s for %s in operationId %s", emClusterName, nodeId, operationId)
-	}
 
-	return nil
-}
-
-func (p *FileHostInitiator) verifyConnect(ctx context.Context, h *structs.HostInfo) (err error) {
-	p.sshClient = sshclient.NewSSHClient(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd)
-	if err = p.sshClient.Connect(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (p *FileHostInitiator) closeSSHConnect() {
-	if p.sshClient != nil {
-		p.sshClient.Close()
-	}
-}
-
-func (p *FileHostInitiator) verifyCpuMem(ctx context.Context, h *structs.HostInfo) (err error) {
-	getArchCmd := "lscpu | grep 'Architecture:' | awk '{print $2}' | tr -d '\n'"
-	arch, err := p.sshClient.RunCommandsInSession([]string{getArchCmd})
+	emClusterName := framework.Current.GetClientArgs().EMClusterName
+	framework.LogWithContext(ctx).Infof("leave em cluster %s with work flow id %s", emClusterName, workFlowNodeID)
+	operationId, err := p.secondPartyServ.ClusterScaleIn(ctx, secondparty.TiEMComponentTypeStr, emClusterName, nodeId, rp_consts.DefaultTiupTimeOut,
+		[]string{"--yes"}, workFlowNodeID)
 	if err != nil {
-		return err
+		return errors.NewErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "leave em cluster %s [%s] failed, %v", emClusterName, nodeId, err)
 	}
-	if !strings.EqualFold(arch, h.Arch) {
-		return errors.NewErrorf(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, "Host %s [%s] arch %s is not as import %s", h.HostName, h.IP, arch, h.Arch)
-	}
+	framework.LogWithContext(ctx).Infof("leave em cluster %s for %s in operationId %s", emClusterName, nodeId, operationId)
 
-	getCpuCoresCmd := "lscpu | grep 'CPU(s):' | awk '{print $2}' | tr -d '\n'"
-	cpuCoreStr, err := p.sshClient.RunCommandsInSession([]string{getCpuCoresCmd})
-	if err != nil {
-		return err
-	}
-	cpuCores, err := strconv.Atoi(cpuCoreStr)
-	if err != nil {
-		return err
-	}
-	if cpuCores != int(h.CpuCores) {
-		framework.LogWithContext(ctx).Warnf("host %s [%s] cpuCores %d is not as import %d", h.HostName, h.IP, cpuCores, h.CpuCores)
-	}
-
-	getMemCmd := "free -g | grep 'Mem:' | awk '{print $2}' | tr -d '\n'"
-	memStr, err := p.sshClient.RunCommandsInSession([]string{getMemCmd})
-	if err != nil {
-		return err
-	}
-	mem, err := strconv.Atoi(memStr)
-	if err != nil {
-		return err
-	}
-	if mem != int(h.Memory) {
-		framework.LogWithContext(ctx).Warnf("host %s [%s] memory %d is not as import %d", h.HostName, h.IP, mem, h.Memory)
-	}
 	return nil
-}
-
-func (p *FileHostInitiator) verifyDisks(ctx context.Context, h *structs.HostInfo) (err error) {
-	return nil
-}
-
-func (p *FileHostInitiator) verifyFS(ctx context.Context, h *structs.HostInfo) (err error) {
-	return nil
-}
-
-func (p *FileHostInitiator) verifySwap(ctx context.Context, h *structs.HostInfo) (err error) {
-	return nil
-}
-
-func (p *FileHostInitiator) verifyEnv(ctx context.Context, h *structs.HostInfo) (err error) {
-	return nil
-}
-
-func (p *FileHostInitiator) verifyOSEnv(ctx context.Context, h *structs.HostInfo) (err error) {
-	return nil
-}
-
-func (p *FileHostInitiator) setOffSwap(ctx context.Context, h *structs.HostInfo) (err error) {
-	changeConf := "echo 'vm.swappiness = 0'>> /etc/sysctl.conf"
-	flushCmd := "swapoff -a && swapon -a"
-	updateCmd := "sysctl -p"
-	result, err := p.sshClient.RunCommandsInSession([]string{changeConf, flushCmd, updateCmd})
-	if err != nil {
-		return err
-	}
-	framework.LogWithContext(ctx).Infof("host %s [%s] set off swap, %v", h.HostName, h.IP, result)
-	return nil
-}
-
-type templateScaleOut struct {
-	HostIPs []string
-}
-
-func (p *templateScaleOut) generateTopologyConfig(ctx context.Context) (string, error) {
-	t, err := template.New("import_topology.yaml").Parse(resourceTemplate.EMClusterScaleOut)
-	if err != nil {
-		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
-	}
-
-	topology := new(bytes.Buffer)
-	if err = t.Execute(topology, p); err != nil {
-		return "", errors.NewError(errors.TIEM_UNRECOGNIZED_ERROR, err.Error())
-	}
-	framework.LogWithContext(ctx).Infof("generate topology config: %s", topology.String())
-
-	return topology.String(), nil
 }
 
 func (p *FileHostInitiator) installTcpDump(ctx context.Context, hosts []structs.HostInfo) (err error) {
 	return nil
+}
+
+func (p *FileHostInitiator) passCpuGovernorWarn(ctx context.Context, h *structs.HostInfo, warnings *[]checkHostResult) (ok bool, err error) {
+	log := framework.LogWithContext(ctx)
+	var needCheckVM = false
+	if len(*warnings) == 1 {
+		// xx.xx.xx.xx  cpu-governor    Warn    Unable to determine current CPU frequency governor policy
+		if (*warnings)[0].Name == "cpu-governor" && strings.HasPrefix((*warnings)[0].Message, "Unable to determine") {
+			needCheckVM = true
+		}
+	}
+	log.Infof("need check vm (%v) for host %s %s", needCheckVM, h.HostName, h.IP)
+	if needCheckVM {
+		isVm, err := p.isVirtualMachine(ctx, h)
+		if err == nil && isVm {
+			return true, nil
+		} else {
+			return false, err
+		}
+	}
+	return false, nil
+}
+
+func (p *FileHostInitiator) isVirtualMachine(ctx context.Context, h *structs.HostInfo) (isVM bool, err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infof("begin to check host manufacturer on host %s %s", h.HostName, h.IP)
+	vmManufacturer := []string{"QEMU", "XEN", "KVM", "VMWARE", "VIRTUALBOX", "VBOX", "ORACLE", "MICROSOFT", "ZVM", "BOCHS", "PARALLELS", "UML"}
+	dmidecodeCmd := "dmidecode -s system-manufacturer | tr -d '\n'"
+	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, rp_consts.DefaultCopySshIDTimeOut, []string{dmidecodeCmd})
+	if err != nil {
+		log.Errorf("execute %s on host %s %s failed, %v", dmidecodeCmd, h.HostName, h.IP, err)
+		return false, err
+	}
+	isVM = false
+	for _, vm := range vmManufacturer {
+		if strings.EqualFold(result, vm) {
+			isVM = true
+			break
+		}
+	}
+	log.Infof("host %s [%s] manufacturer is %s, should be VM (%v)", h.HostName, h.IP, result, isVM)
+	return isVM, nil
 }

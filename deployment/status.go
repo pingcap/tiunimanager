@@ -45,6 +45,7 @@ const (
 // Operation Record information about each TiUP operation
 type Operation struct {
 	Type       string `json:"type"`         // operation of type, eg: deploy, start, stop...
+	Operation  string `json:"operation"`    // full amount of Command record, which can be used for playback after subsequent system reboots.
 	WorkFlowID string `json:"work_flow_id"` // workflow ID which operation belongs to
 	Status     Status `json:"status"`       // operation status
 	Result     string `json:"result"`       // operation error message

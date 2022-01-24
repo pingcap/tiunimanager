@@ -37,6 +37,7 @@ func TestStatus(t *testing.T) {
 	t.Run("Create", func(t *testing.T) {
 		op := Operation{
 			Type:       CMDDeploy,
+			Operation:  TestOperation,
 			WorkFlowID: TestWorkFlowID,
 			Status:     Init,
 			Result:     TestResult,
@@ -49,6 +50,7 @@ func TestStatus(t *testing.T) {
 	t.Run("Update", func(t *testing.T) {
 		op := Operation{
 			Type:       CMDDeploy,
+			Operation:  TestOperation,
 			WorkFlowID: TestWorkFlowID,
 			Status:     Init,
 			Result:     TestResult,
@@ -69,6 +71,7 @@ func TestStatus(t *testing.T) {
 	t.Run("Delete", func(t *testing.T) {
 		op := Operation{
 			Type:       CMDDeploy,
+			Operation:  TestOperation,
 			WorkFlowID: TestWorkFlowID,
 			Status:     Init,
 			Result:     TestResult,

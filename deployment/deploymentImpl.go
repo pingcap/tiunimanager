@@ -68,10 +68,12 @@ func (m *Manager) Deploy(ctx context.Context, componentType TiUPComponentType, c
 
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %s %s %d %s", componentType, CMDDeploy, clusterID, version, configYamlFilePath,
 		strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
-	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDDeploy,
+		Operation:  op,
 		WorkFlowID: workFlowID,
 		Status:     Init,
 	})
@@ -99,10 +101,12 @@ func (m *Manager) Start(ctx context.Context, componentType TiUPComponentType, cl
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDStart, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
-	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDStart,
+		Operation:  op,
 		WorkFlowID: workFlowID,
 		Status:     Init,
 	})
@@ -130,10 +134,12 @@ func (m *Manager) Stop(ctx context.Context, componentType TiUPComponentType, clu
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDStop, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
-	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDStop,
+		Operation:  op,
 		WorkFlowID: workFlowID,
 		Status:     Init,
 	})
@@ -161,10 +167,12 @@ func (m *Manager) Restart(ctx context.Context, componentType TiUPComponentType, 
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDRestart, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
-	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDRestart,
+		Operation:  op,
 		WorkFlowID: workFlowID,
 		Status:     Init,
 	})
@@ -193,10 +201,12 @@ func (m *Manager) Upgrade(ctx context.Context, componentType TiUPComponentType, 
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %s %d %s", componentType, CMDUpgrade, clusterID, version, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
-	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDUpgrade,
+		Operation:  op,
 		WorkFlowID: workFlowID,
 		Status:     Init,
 	})
@@ -230,10 +240,12 @@ func (m *Manager) ScaleOut(ctx context.Context, componentType TiUPComponentType,
 	}
 
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %s %d %s", componentType, CMDScaleOut, clusterID, configYamlFilePath, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
-	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDScaleOut,
+		Operation:  op,
 		WorkFlowID: workFlowID,
 		Status:     Init,
 	})
@@ -262,10 +274,12 @@ func (m *Manager) ScaleIn(ctx context.Context, componentType TiUPComponentType, 
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %s %s %d %s", componentType, CMDScaleIn, clusterID, CMDNode, nodeID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
-	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDScaleIn,
+		Operation:  op,
 		WorkFlowID: workFlowID,
 		Status:     Init,
 	})
@@ -293,10 +307,12 @@ func (m *Manager) Destroy(ctx context.Context, componentType TiUPComponentType, 
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDDestroy, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
-	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDDestroy,
+		Operation:  op,
 		WorkFlowID: workFlowID,
 		Status:     Init,
 	})
@@ -330,10 +346,12 @@ func (m *Manager) EditConfig(ctx context.Context, componentType TiUPComponentTyp
 	}
 
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %s %s %d %s", componentType, CMDEditConfig, clusterID, CMDTopologyFile, configYamlFilePath, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
-	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDEditConfig,
+		Operation:  op,
 		WorkFlowID: workFlowID,
 		Status:     Init,
 	})
@@ -361,10 +379,12 @@ func (m *Manager) Reload(ctx context.Context, componentType TiUPComponentType, c
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDReload, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
-	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDReload,
+		Operation:  op,
 		WorkFlowID: workFlowID,
 		Status:     Init,
 	})
@@ -491,10 +511,12 @@ func (m *Manager) Dumpling(ctx context.Context, home, workFlowID string, args []
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
 	tiUPArgs := fmt.Sprintf("%s %s", CMDDumpling, strings.Join(args, " "))
-	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDDumpling,
+		Operation:  op,
 		WorkFlowID: workFlowID,
 		Status:     Init,
 	})
@@ -520,10 +542,12 @@ func (m *Manager) Lightning(ctx context.Context, home, workFlowID string, args [
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
 	tiUPArgs := fmt.Sprintf("%s %s", CMDLightning, strings.Join(args, " "))
-	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDLightning,
+		Operation:  op,
 		WorkFlowID: workFlowID,
 		Status:     Init,
 	})
@@ -558,10 +582,12 @@ func (m *Manager) Push(ctx context.Context, componentType TiUPComponentType, clu
 	}
 
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %s %s %d %s", componentType, CMDPush, clusterID, configYamlFilePath, remotePath, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
-	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDPush,
+		Operation:  op,
 		WorkFlowID: workFlowID,
 		Status:     Init,
 	})
@@ -610,10 +636,12 @@ func (m *Manager) Exec(ctx context.Context, componentType TiUPComponentType, clu
 	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDExec, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
-	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDExec,
+		Operation:  op,
 		WorkFlowID: workFlowID,
 		Status:     Init,
 	})

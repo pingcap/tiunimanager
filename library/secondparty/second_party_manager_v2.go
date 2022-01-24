@@ -65,16 +65,16 @@ type SecondPartyService interface {
 		workFlowNodeID string) (string, error)
 	ClusterExec(ctx context.Context, cmdClusterExecReq CmdClusterExecReq, workFlowNodeID string) (
 		operationID string, err error)
-	// Check
-	// @Description: tiup cluster check
+	// CheckTopo
+	// @Description: tiup cluster check topo
 	// @param ctx
 	// @param componentType
-	// @param checkObject, it could be cluster-name or topology-file
+	// @param topoStr
 	// @param flags[]
 	// @param timeoutS
 	// @return resp json string
 	// @return err
-	Check(ctx context.Context, tiUPComponent TiUPComponentTypeStr, checkObject string, timeoutS int,
+	CheckTopo(ctx context.Context, tiUPComponent TiUPComponentTypeStr, topoStr string, timeoutS int,
 		flags []string) (result string, err error)
 	ClusterList(ctx context.Context, tiUPComponent TiUPComponentTypeStr, timeoutS int, flags []string) (
 		resp *CmdListResp, err error)

@@ -22,6 +22,9 @@ import (
 
 // ClientArgs Client startup parameter structure
 //  Host Host ip address. e.g.: 127.0.0.1
+//  EnableHttps enable https for openapi, default false
+//  SkipHostInit Skip initialize host when importing, default false
+//  IgnoreHostWarns Ignore host warnings when importing, default false
 //  Port Micro service management port.
 //  MetricsPort Monitoring port exposed by the service, default by 4121.
 //  RestPort Restful api port. micro-api specific args.
@@ -36,6 +39,7 @@ type ClientArgs struct {
 	Host                 string
 	EnableHttps          bool
 	SkipHostInit         bool
+	IgnoreHostWarns      bool
 	Port                 int
 	MetricsPort          int
 	RegistryClientPort   int
@@ -68,6 +72,12 @@ func AllFlags(receiver *ClientArgs) []cli.Flag {
 			Value:       false,
 			Usage:       "Skip initialize host when importing.",
 			Destination: &receiver.SkipHostInit,
+		},
+		&cli.BoolFlag{
+			Name:        "ignore-host-warns",
+			Value:       false,
+			Usage:       "Ignore host warnings when importing.",
+			Destination: &receiver.IgnoreHostWarns,
 		},
 		&cli.IntFlag{
 			Name:        "port",

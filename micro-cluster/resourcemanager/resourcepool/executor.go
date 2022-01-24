@@ -50,6 +50,29 @@ func authHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err
 	return nil
 }
 
+func prepare(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infoln("begin prepare host env before verify")
+
+	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
+	if err != nil {
+		log.Errorf("verify host failed for get flow context, %v", err)
+		return err
+	}
+
+	for _, host := range hosts {
+		// install numactl and set swap off
+		err = resourcePool.hostInitiator.Prepare(ctx, &host)
+		if err != nil {
+			log.Errorf("prepare host %s %s failed, %v", host.HostName, host.IP, err)
+			return err
+		}
+		log.Infof("prepare host %v succeed", host)
+	}
+	node.Record("prepare hosts ")
+	return nil
+}
+
 func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin verifyHosts")
@@ -59,8 +82,15 @@ func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 		log.Errorf("verify host failed for get flow context, %v", err)
 		return err
 	}
+	ignoreWarnings, err := getIgnoreWarningsFromFlowContext(ctx)
+	if err != nil {
+		log.Errorf("verify host failed for get flow context, %v", err)
+		return err
+	}
+	// Store ignoreWarnings for Verify results
+	wrapCtx := context.WithValue(ctx, rp_consts.ContextIgnoreWarnings, ignoreWarnings)
 	for _, host := range hosts {
-		err = resourcePool.hostInitiator.Verify(ctx, &host)
+		err = resourcePool.hostInitiator.Verify(wrapCtx, &host)
 		if err != nil {
 			log.Errorf("verify host %s %s failed, %v", host.HostName, host.IP, err)
 			return err
@@ -161,15 +191,9 @@ func checkHostBeforeDelete(node *workflowModel.WorkFlowNode, ctx *workflow.FlowC
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin check hosts before delete")
 
-	resourcePool, hostIds, err := getHostIDArrayFromFlowContext(ctx)
+	_, hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
-		log.Errorf("delete hosts failed for get flow context, %v", err)
-		return err
-	}
-
-	hosts, _, err := resourcePool.QueryHosts(ctx, &structs.Location{}, &structs.HostFilter{HostID: hostIds[0]}, &structs.PageRequest{})
-	if err != nil {
-		log.Errorf("query hosts %v failed, %v", hostIds[0], err)
+		log.Errorf("delete hosts failed for get host info from flow context, %v", err)
 		return err
 	}
 
@@ -178,11 +202,9 @@ func checkHostBeforeDelete(node *workflowModel.WorkFlowNode, ctx *workflow.FlowC
 		log.Errorln(errMsg)
 		return errors.NewError(errors.TIEM_RESOURCE_HOST_STILL_INUSED, errMsg)
 	}
-	log.Infof("check host %s before delete succeed", hostIds[0])
+	log.Infof("check host %s before delete succeed", hosts[0].ID)
 
-	// Set host info to context for leave em cluster executor
-	ctx.SetData(rp_consts.ContextHostInfoArrayKey, hosts)
-	node.Record(fmt.Sprintf("check host %s before delete ", hostIds[0]))
+	node.Record(fmt.Sprintf("check host %s before delete ", hosts[0].ID))
 
 	return nil
 }
@@ -257,4 +279,14 @@ func getHostIDArrayFromFlowContext(ctx *workflow.FlowContext) (rp *ResourcePool,
 		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
 	return rp, hostIds, nil
+}
+
+func getIgnoreWarningsFromFlowContext(ctx *workflow.FlowContext) (ignoreWarnings bool, err error) {
+	var ok bool
+	ignoreWarnings, ok = ctx.GetData(rp_consts.ContextIgnoreWarnings).(bool)
+	if !ok {
+		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextIgnoreWarnings)
+		return ignoreWarnings, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
+	}
+	return ignoreWarnings, nil
 }

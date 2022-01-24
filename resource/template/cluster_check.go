@@ -13,32 +13,36 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package constants
+package template
 
-const (
-	FlowImportHosts            string = "ImportHosts"            // A normal flow to import hosts
-	FlowImportHostsWithoutInit string = "ImportHostsWithoutInit" // import hosts without initialization
-	FlowTakeOverHosts          string = "TakeOverHosts"          // A flow to take over hosts
-	FlowDeleteHosts            string = "DeleteHosts"            // A normal flow to delete hosts
-	FlowDeleteHostsByForce     string = "DeleteHostsByForce"     // delete hosts by force - without uninstall filebeat .etc.
-)
-
-const (
-	ContextResourcePoolKey   string = "resourcePool"
-	ContextHostInfoArrayKey  string = "hostInfoArray"
-	ContextHostIDArrayKey    string = "hostIDArray"
-	ContextWorkFlowNodeIDKey string = "resourceWorkFlowNodeID"
-	ContextIgnoreWarnings    string = "checkHostIgnoreWarns"
-)
-
-const (
-	HostSSHPort       = 22
-	HostFileBeatPort  = 0
-	FileBeatDataDir   = "/tiem-data"
-	FileBeatDeployDir = "/tiem-deploy"
-)
-
-const (
-	DefaultTiupTimeOut      = 360
-	DefaultCopySshIDTimeOut = 10
-)
+var EMClusterCheck = `
+{{ if (len .TemplateItemsForCompute) }}
+tidb_servers:
+{{ range .TemplateItemsForCompute }}
+  - host: {{ .HostIP }}
+    deploy_dir: {{ .DeployDir }}/tidb_deploy
+    port: {{ .Port1 }}
+    status_port: {{ .Port2 }}
+{{ end }}
+{{ end }}
+{{ if (len .TemplateItemsForStorage) }}
+tikv_servers:
+{{ range .TemplateItemsForStorage }}
+  - host: {{ .HostIP }}
+    data_dir: {{ .DataDir }}/tikv_data
+    deploy_dir: {{ .DeployDir }}/tikv_deploy
+    port: {{ .Port1 }}
+    status_port: {{ .Port2 }}
+{{ end }}
+{{ end }}
+{{ if (len .TemplateItemsForSchedule) }}
+pd_servers:
+{{ range .TemplateItemsForSchedule }}
+  - host: {{ .HostIP }}
+    data_dir: {{ .DataDir }}/pd_data
+    deploy_dir: {{ .DeployDir }}/pd_deploy
+    client_port: {{ .Port1 }}
+    peer_port: {{ .Port2 }}
+{{ end }}
+{{ end }}
+`

@@ -198,35 +198,6 @@ type Interface interface {
 	// @return ID
 	// @return err
 	Reload(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error)
-	// EditClusterConfig
-	// @Description:
-	// @param ctx
-	// @param componentType
-	// @param clusterID
-	// @param home
-	// @param workFlowID
-	// @param configs
-	// @param args[]
-	// @param timeout
-	// @return ID
-	// @return err
-	EditClusterConfig(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, configs map[string]map[string]interface{}, args []string, timeout int) (ID string, err error)
-	// EditInstanceConfig
-	// @Description:
-	// @param ctx
-	// @param componentType
-	// @param clusterID
-	// @param component
-	// @param host
-	// @param home
-	// @param workFlowID
-	// @param config
-	// @param args[]
-	// @param port
-	// @param timeout
-	// @return ID
-	// @return err
-	EditInstanceConfig(ctx context.Context, componentType TiUPComponentType, clusterID, component, host, home, workFlowID string, config map[string]interface{}, args []string, port, timeout int) (ID string, err error)
 	// EditConfig
 	// @Description:
 	// @param ctx

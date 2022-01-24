@@ -396,45 +396,6 @@ func (m *Manager) Reload(ctx context.Context, componentType TiUPComponentType, c
 	return id, nil
 }
 
-// EditClusterConfig
-// @Description:
-// @Receiver m
-// @Parameter ctx
-// @Parameter componentType
-// @Parameter clusterID
-// @Parameter home
-// @Parameter workFlowID
-// @Parameter configs
-// @Parameter args
-// @Parameter timeout
-// @return ID
-// @return err
-func (m *Manager) EditClusterConfig(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, configs map[string]map[string]interface{}, args []string, timeout int) (ID string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-// EditInstanceConfig
-// @Description:
-// @Receiver m
-// @Parameter ctx
-// @Parameter componentType
-// @Parameter clusterID
-// @Parameter component
-// @Parameter host
-// @Parameter home
-// @Parameter workFlowID
-// @Parameter config
-// @Parameter args
-// @Parameter port
-// @Parameter timeout
-// @return ID
-// @return err
-func (m *Manager) EditInstanceConfig(ctx context.Context, componentType TiUPComponentType, clusterID, component, host, home, workFlowID string, config map[string]interface{}, args []string, port, timeout int) (ID string, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 // List
 // @Description: wrapper of `tiup <component> list`, <component> can be 'cluster', 'dm'
 // @Receiver m

@@ -59,7 +59,7 @@ func CopySSHID(ctx context.Context, ip string, user string, password string, tim
 			&expect.Case{R: regexp.MustCompile(`.*already exist.*`), T: expect.OK()},
 			// Are you sure you want to continue connecting (yes/no/[fingerprint])?
 			&expect.Case{R: regexp.MustCompile(`.*yes/no.*`), S: "yes\n", T: expect.Next(), Rt: 1},
-			// \rroot@172.16.6.216's password:
+			// \rroot@xx.xx.xx.xx's password:
 			&expect.Case{R: regexp.MustCompile(`.*password.*`), S: fmt.Sprintf("%s\n", password), T: expect.Next(), Rt: 1},
 			// Number of key(s) added:
 			&expect.Case{R: regexp.MustCompile(`.*added.*`), T: expect.OK()},

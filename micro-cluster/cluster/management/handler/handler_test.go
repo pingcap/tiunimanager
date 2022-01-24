@@ -1487,24 +1487,6 @@ func TestClusterMeta_GetVersion(t *testing.T) {
 }
 
 
-func TestExecCommandThruSQL(t *testing.T) {
-	sqlCommand := "ALTER USER 'root'@'%' IDENTIFIED BY '12345678'"
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-	defer db.Close()
-
-	mock.ExpectExec(sqlCommand).
-		WillReturnError(fmt.Errorf("some error"))
-	mock.ExpectRollback()
-
-	err = utilsql.ExecCommandThruSQL(context.TODO(), db, sqlCommand)
-	if err == nil || !strings.Contains(err.Error(), "some error") {
-		t.Errorf("err(%s) should contain 'some error'", err.Error())
-	}
-}
-
 func TestGetRandomString(t *testing.T) {
 	type args struct {
 		n int

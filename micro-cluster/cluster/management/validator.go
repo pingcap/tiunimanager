@@ -26,7 +26,7 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 )
 
-var creatingRules = []func(req *cluster.CreateClusterReq, product *structs.ProductDetail) error {
+var creatingRules = []func(req *cluster.CreateClusterReq, product *structs.ProductDetail) error{
 	func(req *cluster.CreateClusterReq, product *structs.ProductDetail) error {
 		if _, ok := product.Versions[req.Version]; !ok {
 			return errors.NewErrorf(errors.TIEM_UNSUPPORT_PRODUCT, "version %s is not supported", req.Version)
@@ -73,6 +73,7 @@ var creatingRules = []func(req *cluster.CreateClusterReq, product *structs.Produ
 }
 
 var validator = validateCreating
+
 func validateCreating(ctx context.Context, req *cluster.CreateClusterReq) error {
 	optionalError := errors.OfNullable(nil)
 	products, err := models.GetProductReaderWriter().QueryProductDetail(ctx, req.Vendor, req.Region, req.Type, constants.ProductStatusOnline, constants.EMInternalProductNo)

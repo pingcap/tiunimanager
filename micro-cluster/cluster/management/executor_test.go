@@ -2189,7 +2189,7 @@ func Test_applyParameterGroup(t *testing.T) {
 		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.2", 1, 1, gomock.Any(), gomock.Any()).
 		Return([]*parametergroup.ParameterGroup{
 			{},
-	}, int64(0), nil).AnyTimes()
+		}, int64(0), nil).AnyTimes()
 
 	parameterGroupRW.EXPECT().
 		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.1", 1, 1, gomock.Any(), gomock.Any()).
@@ -2206,7 +2206,7 @@ func Test_applyParameterGroup(t *testing.T) {
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version: "v5.0.0",
+				Version:          "v5.0.0",
 				ParameterGroupID: "",
 			},
 		})
@@ -2220,7 +2220,7 @@ func Test_applyParameterGroup(t *testing.T) {
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version: "v5.1.22",
+				Version:          "v5.1.22",
 				ParameterGroupID: "",
 			},
 		})
@@ -2243,7 +2243,7 @@ func Test_adjustParameters(t *testing.T) {
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version: "v5.1.22",
+				Version:          "v5.1.22",
 				ParameterGroupID: "",
 			},
 		})
@@ -2262,7 +2262,7 @@ func Test_adjustParameters(t *testing.T) {
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version: "v5.1.22",
+				Version:          "v5.1.22",
 				ParameterGroupID: "",
 			},
 		})
@@ -2270,10 +2270,10 @@ func Test_adjustParameters(t *testing.T) {
 			QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return("111", []*parameter.ClusterParamDetail{
 				{Parameter: parametergroup.Parameter{
-					ID: "aaa",
+					ID:   "aaa",
 					Name: "aaa",
 				}},
-		}, int64(0), nil).
+			}, int64(0), nil).
 			Times(1)
 
 		err := adjustParameters(&workflowModel.WorkFlowNode{}, ctx)

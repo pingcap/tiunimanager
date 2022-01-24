@@ -75,7 +75,7 @@ build_cluster_server:
 build_file_server:
 	@echo "build file-server start."
 	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${FILE_SERVER_BINARY} file-server/*.go
-	@echo "build file-server sucessufully."
+	@echo "build file-server successfully."
 
 #2. R&D to test the code themselves for compliance before submitting it
 devselfcheck:

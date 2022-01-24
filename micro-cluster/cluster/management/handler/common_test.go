@@ -65,6 +65,11 @@ func TestScaleOutPreCheck(t *testing.T) {
 			Instances: map[string][]*management.ClusterInstance{
 				"PD": {
 					{
+						Entity: common.Entity{
+							ID:     "instance",
+							Status: string(constants.ClusterInstanceRunning),
+						},
+						Type:   "PD",
 						HostIP: []string{"127.0.0.1"},
 						Ports:  []int32{4000},
 					},
@@ -90,6 +95,11 @@ func TestScaleOutPreCheck(t *testing.T) {
 			Instances: map[string][]*management.ClusterInstance{
 				"PD": {
 					{
+						Entity: common.Entity{
+							ID:     "instance",
+							Status: string(constants.ClusterInstanceRunning),
+						},
+						Type:   "PD",
 						HostIP: []string{"127.0.0.1"},
 						Ports:  []int32{4000},
 					},

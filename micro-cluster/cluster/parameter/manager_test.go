@@ -186,7 +186,7 @@ func TestManager_ApplyParameterGroup_Success(t *testing.T) {
 		ParamGroupId: "1",
 		ClusterID:    "1",
 		Reboot:       false,
-	})
+	}, true)
 	assert.NotEmpty(t, resp)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, resp.ParamGroupID)
@@ -206,7 +206,7 @@ func TestManager_ApplyParameterGroup_Failed(t *testing.T) {
 		ParamGroupId: "",
 		ClusterID:    "",
 		Reboot:       false,
-	})
+	}, true)
 	assert.Error(t, err)
 }
 

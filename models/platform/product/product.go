@@ -59,8 +59,8 @@ type ProductComponent struct {
 	StartPort      int32          `gorm:"comment:'starting value of the port opened by the component'"`
 	EndPort        int32          `gorm:"comment:'ending value of the port opened by the component'"`
 	MaxPort        int32          `gorm:"comment:'maximum number of ports that can be opened by the component'"`
-	MinInstance    int32          `gorm:"default:1;comment:'minimum number of instances started by the component'"`
-	MaxInstance    int32          `gorm:"default:10240;comment:'PD: 1、3、5、7，Prometheus：1，AlertManger：1，Grafana'"`
+	MinInstance    int32          `gorm:"default:0;comment:'minimum number of instances started by the component'"`
+	MaxInstance    int32          `gorm:"default:128;comment:'PD: 1、3、5、7，Prometheus：1，AlertManger：1，Grafana'"`
 	CreatedAt      time.Time      `gorm:"autoCreateTime;<-:create;->;"`
 	UpdatedAt      time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt      gorm.DeletedAt `gorm:""`

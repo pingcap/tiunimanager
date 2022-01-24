@@ -31,6 +31,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
+	"sort"
 )
 
 type ProductReadWriterInterface interface {
@@ -284,18 +285,7 @@ func (p *ProductReadWriter) QueryProductDetail(ctx context.Context, vendorID, re
 		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "query product detail invalid parameter, vendorID: %s, regionID:%s, productID: %s,status: %s, internal: %d",
 			vendorID, regionID, productID, status, internal)
 	}
-	/*	SQL := `SELECT t2.zone_id,t2.zone_name,t1.name,t1.version,t1.arch,
-		t4.id,t4.name,t4.disk_type,t4.cpu,t4.memory,t3.component_id,t3.name,t3.purpose_type,t3.start_port,t3.end_port,
-		t3.max_port,t3.max_instance,t3.min_instance FROM products t1,zones t2,product_components t3,specs t4,vendors t5
-		WHERE t1.vendor_id = t5.vendor_id AND t1.vendor_id = ?
-		AND t1.region_id=t2.region_id AND t1.region_id= ?
-		AND t1.Internal = ?
-		AND t1.version=t3.product_version
-		AND t1.product_id=t3.product_id AND t1.product_id = ?
-		AND t3.purpose_type=t4.purpose_type
-		AND t1.arch=t4.arch
-		AND t2.zone_id =t4.zone_id
-		AND t1.status = ? AND t3.status = ? AND t4.status = ?;`*/
+
 	SQL := `SELECT t2.zone_id,t2.zone_name,t1.name,t1.version,t1.arch,
 t4.id,t4.name,t4.disk_type,t4.cpu,t4.memory,t3.component_id,t3.name,t3.purpose_type,t3.start_port,t3.end_port,
 t3.max_port,t3.max_instance,t3.min_instance FROM products t1,zones t2,product_components t3,specs t4
@@ -313,13 +303,14 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 	var spec structs.ComponentInstanceResourceSpec
 	var info, productComponentInfo structs.ProductComponentProperty
 	var productName, version, arch string
-	var components map[string]structs.ProductComponentProperty
+	var components []structs.ProductComponentProperty
 	products = make(map[string]structs.ProductDetail)
 	rows, err := p.DB(ctx).Raw(SQL, vendorID, regionID, internal, productID, status, constants.ProductSpecStatusOnline, constants.ProductSpecStatusOnline).Rows()
 	defer rows.Close()
 	log := framework.LogWithContext(ctx)
 	log.Debugf("QueryProductDetail SQL: %s vendorID:%s, regionID: %s productID: %s, internal: %d, status: %s, execute result, error: %v",
 		SQL, vendorID, regionID, productID, internal, status, err)
+
 	if err == nil {
 		for rows.Next() {
 			//Read a row of data and store it in a temporary variable
@@ -347,7 +338,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			//if it already exists, then directly modify the relevant data structure
 			productVersion, ok = detail.Versions[version]
 			if !ok {
-				detail.Versions[version] = structs.ProductVersion{Version: version, Arch: make(map[string]map[string]structs.ProductComponentProperty)}
+				detail.Versions[version] = structs.ProductVersion{Version: version, Arch: make(map[string][]structs.ProductComponentProperty)}
 				productVersion, _ = detail.Versions[version]
 			}
 
@@ -355,28 +346,72 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			//if it already exists, then directly modify the relevant data structure
 			components, ok = productVersion.Arch[arch]
 			if !ok {
-				productVersion.Arch[arch] = make(map[string]structs.ProductComponentProperty)
-				components, _ = productVersion.Arch[arch]
+				components = make([]structs.ProductComponentProperty, 0)
 			}
 
 			//Query whether the product component information is already in Components,
 			//if it already exists, then directly modify the relevant data structure
-			productComponentInfo, ok = components[info.ID]
-			if !ok {
-				components[info.ID] = structs.ProductComponentProperty{ID: info.ID, Name: info.Name, PurposeType: info.PurposeType,
-					StartPort: info.StartPort, EndPort: info.EndPort, MaxPort: info.MaxPort, MinInstance: info.MinInstance, MaxInstance: info.MaxInstance, Spec: make(map[string]structs.ComponentInstanceResourceSpec)}
-				productComponentInfo, _ = components[info.ID]
-			}
 
-			//Query whether the product component specification information is already in Specifications,
-			//if it already exists, then directly modify the relevant data structure
-			_, ok = productComponentInfo.Spec[spec.ID]
-			if !ok {
-				productComponentInfo.Spec[spec.ID] = spec
+			componentExisted := false
+			for i, _ := range components {
+				if components[i].ID == info.ID {
+					componentExisted = true
+					zoneExisted := false
+					for j, _ := range components[i].AvailableZones {
+						if spec.ZoneID == components[i].AvailableZones[j].ZoneID {
+							components[i].AvailableZones[j].Specs = append(components[i].AvailableZones[j].Specs, spec)
+							zoneExisted = true
+							break
+						}
+					}
+					if !zoneExisted {
+						components[i].AvailableZones = append(components[i].AvailableZones, structs.ComponentInstanceZoneWithSpecs{ZoneID: spec.ZoneID, ZoneName: spec.ZoneName, Specs: []structs.ComponentInstanceResourceSpec{spec}})
+					}
+					break
+				}
+			}
+			if !componentExisted {
+				productComponentInfo = structs.ProductComponentProperty{ID: info.ID, Name: info.Name, PurposeType: info.PurposeType,
+					StartPort: info.StartPort, EndPort: info.EndPort, MaxPort: info.MaxPort, MinInstance: info.MinInstance, MaxInstance: info.MaxInstance, SuggestedInstancesCount: constants.EMProductComponentIDType(info.ID).SuggestedNodeCount(), AvailableZones: []structs.ComponentInstanceZoneWithSpecs{{ZoneID: spec.ZoneID, ZoneName: spec.ZoneName, Specs: []structs.ComponentInstanceResourceSpec{spec}}}}
+				components = append(components, productComponentInfo)
+			}
+			productVersion.Arch[arch] = components
+		}
+	} else {
+		return nil, errors.NewErrorf(errors.QueryProductsScanRowError, "query product detail scan data error: %v, vendorID: %s, regionID:%s, productID: %s,status: %s, internal: %d",
+			err, vendorID, regionID, productID, status, internal)
+	}
+
+	for _, product := range products {
+		for _, v := range product.Versions {
+			for key, a := range v.Arch {
+				componentSortWrapper := ComponentSortWrapper{
+					infos: a,
+					by: func(p, q *structs.ProductComponentProperty) bool {
+						return constants.EMProductComponentIDType(p.ID).SortWeight() > constants.EMProductComponentIDType(q.ID).SortWeight()
+					},
+				}
+				sort.Sort(componentSortWrapper)
+				v.Arch[key] = componentSortWrapper.infos
 			}
 		}
 	}
 	return products, err
+}
+
+type ComponentSortWrapper struct {
+	infos []structs.ProductComponentProperty
+	by    func(p, q *structs.ProductComponentProperty) bool
+}
+
+func (pw ComponentSortWrapper) Len() int {
+	return len(pw.infos)
+}
+func (pw ComponentSortWrapper) Swap(i, j int) {
+	pw.infos[i], pw.infos[j] = pw.infos[j], pw.infos[i]
+}
+func (pw ComponentSortWrapper) Less(i, j int) bool {
+	return pw.by(&pw.infos[i], &pw.infos[j])
 }
 
 // QueryProductComponentProperty Query the properties of a product component,For creating, expanding and shrinking clusters only

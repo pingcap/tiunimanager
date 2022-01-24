@@ -132,9 +132,10 @@ var scaleInDefine = workflow.WorkFlowDefine{
 	FlowName: constants.FlowScaleInCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":       {"scaleInCluster", "scaleInDone", "fail", workflow.PollingNode, scaleInCluster},
-		"scaleInDone": {"freeInstanceResource", "freeDone", "fail", workflow.SyncFuncNode, freeInstanceResource},
+		"scaleInDone": {"checkInstanceStatus", "checkDone", "fail", workflow.SyncFuncNode, checkInstanceStatus},
+		"checkDone":   {"freeInstanceResource", "freeDone", "fail", workflow.SyncFuncNode, freeInstanceResource},
 		"freeDone":    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, endMaintenance)},
+		"fail":        {"fail", "", "", workflow.SyncFuncNode, endMaintenance},
 	},
 }
 
@@ -257,18 +258,20 @@ func (p *Manager) Clone(ctx context.Context, request cluster.CloneClusterReq) (r
 var createClusterFlow = workflow.WorkFlowDefine{
 	FlowName: constants.FlowCreateCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":                 {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
-		"resourceDone":          {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
-		"configDone":            {"deployCluster", "deployDone", "fail", workflow.PollingNode, deployCluster},
-		"deployDone":            {"syncConnectionKey", "syncConnectionKeyDone", "failAfterDeploy", workflow.SyncFuncNode, syncConnectionKey},
-		"syncConnectionKeyDone": {"syncTopology", "syncTopologyDone", "failAfterDeploy", workflow.SyncFuncNode, syncTopology},
-		"syncTopologyDone":      {"startupCluster", "startupDone", "failAfterDeploy", workflow.PollingNode, startCluster},
-		"startupDone":           {"setClusterOnline", "onlineDone", "failAfterDeploy", workflow.SyncFuncNode, setClusterOnline},
-		"onlineDone":            {"initAccount", "initDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseAccount},
-		"initDone":              {"testConnectivity", "success", "", workflow.SyncFuncNode, testConnectivity},
-		"success":               {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"fail":                  {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
-		"failAfterDeploy":       {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"start":                   {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
+		"resourceDone":            {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
+		"configDone":              {"deployCluster", "deployDone", "fail", workflow.PollingNode, deployCluster},
+		"deployDone":              {"syncConnectionKey", "syncConnectionKeyDone", "failAfterDeploy", workflow.SyncFuncNode, syncConnectionKey},
+		"syncConnectionKeyDone":   {"syncTopology", "syncTopologyDone", "failAfterDeploy", workflow.SyncFuncNode, syncTopology},
+		"syncTopologyDone":        {"startupCluster", "startupDone", "failAfterDeploy", workflow.PollingNode, startCluster},
+		"startupDone":             {"setClusterOnline", "onlineDone", "failAfterDeploy", workflow.SyncFuncNode, setClusterOnline},
+		"onlineDone":              {"initAccount", "initAccountDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseAccount},
+		"initAccountDone":         {"applyParameterGroup", "applyParameterGroupDone", "failAfterDeploy", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
+		"applyParameterGroupDone": {"adjustParameters", "initParametersDone", "failAfterDeploy", workflow.SyncFuncNode, adjustParameters},
+		"initParametersDone":      {"testConnectivity", "success", "", workflow.SyncFuncNode, testConnectivity},
+		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
+		"fail":                    {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
+		"failAfterDeploy":         {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -280,6 +283,10 @@ var createClusterFlow = workflow.WorkFlowDefine{
 // @return resp
 // @return err
 func (p *Manager) CreateCluster(ctx context.Context, req cluster.CreateClusterReq) (resp cluster.CreateClusterResp, err error) {
+	err = validator(ctx, &req)
+	if err != nil {
+		return
+	}
 	meta := &handler.ClusterMeta{}
 	if err = meta.BuildCluster(ctx, req.CreateClusterParameter); err != nil {
 		framework.LogWithContext(ctx).Errorf("build cluster %s error: %s", req.Name, err.Error())
@@ -317,10 +324,10 @@ func (p *Manager) CreateCluster(ctx context.Context, req cluster.CreateClusterRe
 // @return resp
 // @return err
 func (p *Manager) PreviewCluster(ctx context.Context, req cluster.CreateClusterReq) (resp cluster.PreviewClusterResp, err error) {
-	_, total, _ := handler.Query(ctx, cluster.QueryClustersReq {
+	_, total, _ := handler.Query(ctx, cluster.QueryClustersReq{
 		Name: req.Name,
 		PageRequest: structs.PageRequest{
-			Page: 1,
+			Page:     1,
 			PageSize: 1,
 		},
 	})
@@ -329,12 +336,16 @@ func (p *Manager) PreviewCluster(ctx context.Context, req cluster.CreateClusterR
 		return
 	}
 
+	err = validator(ctx, &req)
+	if err != nil {
+		return
+	}
 	resp = cluster.PreviewClusterResp{
-		Region: req.Region,
-		CpuArchitecture: req.CpuArchitecture,
-		ClusterType: req.Type,
-		ClusterVersion: req.Version,
-		ClusterName: req.Name,
+		Region:            req.Region,
+		CpuArchitecture:   req.CpuArchitecture,
+		ClusterType:       req.Type,
+		ClusterVersion:    req.Version,
+		ClusterName:       req.Name,
 		CapabilityIndexes: []structs.Index{},
 	}
 
@@ -368,25 +379,25 @@ func preCheckStock(ctx context.Context, region string, arch string, instanceReso
 			if zoneResource, ok := stocks[resource.Zone]; ok &&
 				zoneResource.FreeHostCount >= int32(resource.Count) &&
 				zoneResource.FreeDiskCount >= int32(resource.Count) &&
-				zoneResource.FreeCpuCores >= int32(knowledge.ParseCpu(resource.Spec) * resource.Count) &&
-				zoneResource.FreeMemory >= int32(knowledge.ParseMemory(resource.Spec) * resource.Count){
+				zoneResource.FreeCpuCores >= int32(knowledge.ParseCpu(resource.Spec)*resource.Count) &&
+				zoneResource.FreeMemory >= int32(knowledge.ParseMemory(resource.Spec)*resource.Count) {
 
 				enough = true
 				// deduction
 				zoneResource.FreeHostCount = zoneResource.FreeHostCount - int32(resource.Count)
 				zoneResource.FreeDiskCount = zoneResource.FreeDiskCount - int32(resource.Count)
-				zoneResource.FreeCpuCores = zoneResource.FreeCpuCores - int32(knowledge.ParseCpu(resource.Spec) * resource.Count)
-				zoneResource.FreeMemory = zoneResource.FreeMemory - int32(knowledge.ParseMemory(resource.Spec) * resource.Count)
+				zoneResource.FreeCpuCores = zoneResource.FreeCpuCores - int32(knowledge.ParseCpu(resource.Spec)*resource.Count)
+				zoneResource.FreeMemory = zoneResource.FreeMemory - int32(knowledge.ParseMemory(resource.Spec)*resource.Count)
 			} else {
 				framework.LogWithContext(ctx).Warnf("stock is not enough, instance: %v, stock %v", resource, stocks)
 				enough = false
 			}
 
-			result = append(result, structs.ResourceStockCheckResult {
-				Type: instance.Type,
-				Name: instance.Type,
+			result = append(result, structs.ResourceStockCheckResult{
+				Type:                                    instance.Type,
+				Name:                                    instance.Type,
 				ClusterResourceParameterComputeResource: resource,
-				Enough: enough,
+				Enough:                                  enough,
 			})
 		}
 	}
@@ -405,13 +416,14 @@ func (p *Manager) PreviewScaleOutCluster(ctx context.Context, req cluster.ScaleO
 	if err != nil {
 		return
 	}
+
 	// todo validate
 	resp = cluster.PreviewClusterResp{
-		Region: clusterMeta.Cluster.Region,
-		CpuArchitecture: string(clusterMeta.Cluster.CpuArchitecture),
-		ClusterType: clusterMeta.Cluster.Type,
-		ClusterVersion: clusterMeta.Cluster.Version,
-		ClusterName: clusterMeta.Cluster.Name,
+		Region:            clusterMeta.Cluster.Region,
+		CpuArchitecture:   string(clusterMeta.Cluster.CpuArchitecture),
+		ClusterType:       clusterMeta.Cluster.Type,
+		ClusterVersion:    clusterMeta.Cluster.Version,
+		ClusterName:       clusterMeta.Cluster.Name,
 		CapabilityIndexes: []structs.Index{},
 	}
 	checkResult, err := preCheckStock(ctx, clusterMeta.Cluster.Region, string(clusterMeta.Cluster.CpuArchitecture), req.InstanceResource)

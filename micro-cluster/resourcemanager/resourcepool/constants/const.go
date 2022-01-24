@@ -15,8 +15,6 @@
 
 package constants
 
-const SecondPartyReady = true
-
 const (
 	FlowImportHosts            string = "ImportHosts"            // A normal flow to import hosts
 	FlowImportHostsWithoutInit string = "ImportHostsWithoutInit" // import hosts without initialization
@@ -30,6 +28,7 @@ const (
 	ContextHostInfoArrayKey  string = "hostInfoArray"
 	ContextHostIDArrayKey    string = "hostIDArray"
 	ContextWorkFlowNodeIDKey string = "resourceWorkFlowNodeID"
+	ContextIgnoreWarnings    string = "checkHostIgnoreWarns"
 )
 
 const (

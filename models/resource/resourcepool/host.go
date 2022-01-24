@@ -17,7 +17,7 @@ package resourcepool
 
 import (
 	"errors"
-	crypto "github.com/pingcap-inc/tiem/util/encrypt"
+	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"strings"
 	"time"
@@ -29,31 +29,31 @@ import (
 )
 
 type Host struct {
-	ID           string `json:"hostId" gorm:"primaryKey"`
-	IP           string `json:"ip" gorm:"not null"`
-	UserName     string `json:"userName,omitempty" gorm:"size:32"`
-	Passwd       string `json:"passwd,omitempty" gorm:"size:32"`
-	HostName     string `json:"hostName" gorm:"size:255"`
-	Status       string `json:"status" gorm:"index;default:Online"` // Host Status
-	Stat         string `json:"stat" gorm:"index;default:LoadLess"` // Host Resource Stat
-	Arch         string `json:"arch" gorm:"index"`                  // x86 or arm64
-	OS           string `json:"os" gorm:"size:32"`
-	Kernel       string `json:"kernel" gorm:"size:32"`
-	Spec         string `json:"spec"`               // Host Spec, init while importing
-	CpuCores     int32  `json:"cpuCores"`           // Host cpu cores spec, init while importing
-	Memory       int32  `json:"memory"`             // Host memory, init while importing
-	FreeCpuCores int32  `json:"freeCpuCores"`       // Unused CpuCore, used for allocation
-	FreeMemory   int32  `json:"freeMemory"`         // Unused memory size, Unit:GB, used for allocation
-	Nic          string `json:"nic" gorm:"size:32"` // Host network type: 1GE or 10GE
-	Region       string `json:"region" gorm:"size:32"`
-	AZ           string `json:"az" gorm:"index"`
-	Rack         string `json:"rack" gorm:"index"`
-	ClusterType  string `json:"clusterType" gorm:"index"` // What Cluster is the host used for? [database/datamigration]
-	Purpose      string `json:"purpose" gorm:"index"`     // What Purpose is the host used for? [compute/storage/schedule]
-	DiskType     string `json:"diskType" gorm:"index"`    // Disk type of this host [sata/ssd/nvme_ssd]
-	Reserved     bool   `json:"reserved" gorm:"index"`    // Whether this host is reserved - will not be allocated
-	Traits       int64  `json:"traits" gorm:"index"`      // Traits of labels
-	Disks        []Disk `json:"disks" gorm:"-"`
+	ID           string          `json:"hostId" gorm:"primaryKey"`
+	IP           string          `json:"ip" gorm:"not null"`
+	UserName     string          `json:"userName,omitempty" gorm:"size:32"`
+	Passwd       common.Password `json:"passwd,omitempty" gorm:"size:256"`
+	HostName     string          `json:"hostName" gorm:"size:255"`
+	Status       string          `json:"status" gorm:"index;default:Online"` // Host Status
+	Stat         string          `json:"stat" gorm:"index;default:LoadLess"` // Host Resource Stat
+	Arch         string          `json:"arch" gorm:"index"`                  // x86 or arm64
+	OS           string          `json:"os" gorm:"size:32"`
+	Kernel       string          `json:"kernel" gorm:"size:32"`
+	Spec         string          `json:"spec"`               // Host Spec, init while importing
+	CpuCores     int32           `json:"cpuCores"`           // Host cpu cores spec, init while importing
+	Memory       int32           `json:"memory"`             // Host memory, init while importing
+	FreeCpuCores int32           `json:"freeCpuCores"`       // Unused CpuCore, used for allocation
+	FreeMemory   int32           `json:"freeMemory"`         // Unused memory size, Unit:GB, used for allocation
+	Nic          string          `json:"nic" gorm:"size:32"` // Host network type: 1GE or 10GE
+	Region       string          `json:"region" gorm:"size:32"`
+	AZ           string          `json:"az" gorm:"index"`
+	Rack         string          `json:"rack" gorm:"index"`
+	ClusterType  string          `json:"clusterType" gorm:"index"` // What Cluster is the host used for? [database/datamigration]
+	Purpose      string          `json:"purpose" gorm:"index"`     // What Purpose is the host used for? [compute/storage/schedule]
+	DiskType     string          `json:"diskType" gorm:"index"`    // Disk type of this host [sata/ssd/nvme_ssd]
+	Reserved     bool            `json:"reserved" gorm:"index"`    // Whether this host is reserved - will not be allocated
+	Traits       int64           `json:"traits" gorm:"index"`      // Traits of labels
+	Disks        []Disk          `json:"disks" gorm:"-"`
 	//UsedDisks    []UsedDisk     `json:"-" gorm:"-"`
 	//UsedComputes []UsedCompute  `json:"-" gorm:"-"`
 	//UsedPorts    []UsedPort     `json:"-" gorm:"-"`
@@ -135,11 +135,7 @@ func (h *Host) ConstructFromHostInfo(src *structs.HostInfo) error {
 	h.HostName = src.HostName
 	h.IP = src.IP
 	h.UserName = src.UserName
-	passwd, err := crypto.AesEncryptCFB(src.Passwd)
-	if err != nil {
-		return err
-	}
-	h.Passwd = passwd
+	h.Passwd = common.Password(src.Passwd)
 	h.Arch = src.Arch
 	h.OS = src.OS
 	h.Kernel = src.Kernel

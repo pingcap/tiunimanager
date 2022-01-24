@@ -4745,7 +4745,7 @@ var doc = `{
                 }
             }
         },
-        "/specs": {
+        "/specs/": {
             "get": {
                 "security": [
                     {
@@ -6075,7 +6075,7 @@ var doc = `{
                 }
             }
         },
-        "/zones": {
+        "/zones/": {
             "post": {
                 "security": [
                     {
@@ -6363,6 +6363,9 @@ var doc = `{
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendor": {
+                    "type": "string"
                 }
             }
         },
@@ -6487,6 +6490,9 @@ var doc = `{
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendor": {
+                    "type": "string"
                 }
             }
         },
@@ -7120,6 +7126,9 @@ var doc = `{
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendor": {
+                    "type": "string"
                 }
             }
         },
@@ -8903,6 +8912,9 @@ var doc = `{
                 "userId": {
                     "type": "string"
                 },
+                "vendor": {
+                    "type": "string"
+                },
                 "whitelist": {
                     "type": "array",
                     "items": {
@@ -9223,6 +9235,23 @@ var doc = `{
                 "name": {
                     "description": "Name of the instance resource specification,eg: TiDB.c1.large",
                     "type": "string"
+                },
+                "zoneId": {
+                    "type": "string"
+                },
+                "zoneName": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.ComponentInstanceZoneWithSpecs": {
+            "type": "object",
+            "properties": {
+                "specs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ComponentInstanceResourceSpec"
+                    }
                 },
                 "zoneId": {
                     "type": "string"
@@ -9568,7 +9597,7 @@ var doc = `{
                     "type": "string",
                     "example": "1"
                 },
-                "description": {
+                "note": {
                     "type": "string",
                     "example": "binlog cache size"
                 },
@@ -9634,6 +9663,13 @@ var doc = `{
         "structs.ProductComponentProperty": {
             "type": "object",
             "properties": {
+                "availableZones": {
+                    "description": "Information on the specifications of the resources online for the running of product components,organized by different Zone",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ComponentInstanceZoneWithSpecs"
+                    }
+                },
                 "endPort": {
                     "type": "integer"
                 },
@@ -9659,13 +9695,6 @@ var doc = `{
                 "purposeType": {
                     "description": "The type of resources required by the product component at runtime, e.g. storage class",
                     "type": "string"
-                },
-                "spec": {
-                    "description": "Information on the specifications of the resources online for the running of product components,organized by different Zone",
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/structs.ComponentInstanceResourceSpec"
-                    }
                 },
                 "startPort": {
                     "type": "integer"
@@ -9716,8 +9745,8 @@ var doc = `{
                     "description": "Arch information of the product, e.g. X86/X86_64",
                     "type": "object",
                     "additionalProperties": {
-                        "type": "object",
-                        "additionalProperties": {
+                        "type": "array",
+                        "items": {
                             "$ref": "#/definitions/structs.ProductComponentProperty"
                         }
                     }

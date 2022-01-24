@@ -63,6 +63,8 @@ definitions:
         type: array
       tls:
         type: boolean
+      vendor:
+        type: string
     required:
     - cloneStrategy
     - clusterName
@@ -157,6 +159,8 @@ definitions:
         type: array
       tls:
         type: boolean
+      vendor:
+        type: string
     required:
     - clusterName
     - clusterType
@@ -609,6 +613,8 @@ definitions:
         type: array
       tls:
         type: boolean
+      vendor:
+        type: string
     required:
     - backupId
     - clusterName
@@ -1820,6 +1826,8 @@ definitions:
         type: string
       userId:
         type: string
+      vendor:
+        type: string
       whitelist:
         items:
           type: string
@@ -2047,6 +2055,17 @@ definitions:
       name:
         description: 'Name of the instance resource specification,eg: TiDB.c1.large'
         type: string
+      zoneId:
+        type: string
+      zoneName:
+        type: string
+    type: object
+  structs.ComponentInstanceZoneWithSpecs:
+    properties:
+      specs:
+        items:
+          $ref: '#/definitions/structs.ComponentInstanceResourceSpec'
+        type: array
       zoneId:
         type: string
       zoneName:
@@ -2287,7 +2306,7 @@ definitions:
       defaultValue:
         example: "1"
         type: string
-      description:
+      note:
         example: binlog cache size
         type: string
       paramId:
@@ -2335,6 +2354,12 @@ definitions:
     type: object
   structs.ProductComponentProperty:
     properties:
+      availableZones:
+        description: Information on the specifications of the resources online for
+          the running of product components,organized by different Zone
+        items:
+          $ref: '#/definitions/structs.ComponentInstanceZoneWithSpecs'
+        type: array
       endPort:
         type: integer
       id:
@@ -2357,12 +2382,6 @@ definitions:
         description: The type of resources required by the product component at runtime,
           e.g. storage class
         type: string
-      spec:
-        additionalProperties:
-          $ref: '#/definitions/structs.ComponentInstanceResourceSpec'
-        description: Information on the specifications of the resources online for
-          the running of product components,organized by different Zone
-        type: object
       startPort:
         type: integer
       suggestedInstancesCount:
@@ -2396,9 +2415,9 @@ definitions:
     properties:
       arch:
         additionalProperties:
-          additionalProperties:
+          items:
             $ref: '#/definitions/structs.ProductComponentProperty'
-          type: object
+          type: array
         description: Arch information of the product, e.g. X86/X86_64
         type: object
       version:
@@ -5462,7 +5481,7 @@ paths:
       summary: Show the resources stocks
       tags:
       - resource
-  /specs:
+  /specs/:
     delete:
       consumes:
       - application/json
@@ -6259,7 +6278,7 @@ paths:
       summary: show details of a flow work
       tags:
       - task
-  /zones:
+  /zones/:
     delete:
       consumes:
       - application/json

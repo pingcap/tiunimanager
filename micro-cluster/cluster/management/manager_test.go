@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
+	em_errors "github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/message/cluster"
@@ -152,7 +153,15 @@ func TestManager_ScaleOut(t *testing.T) {
 		models.SetClusterReaderWriter(clusterRW)
 
 		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
-			{},
+			{
+				Entity: common.Entity{
+					ID:     "instance",
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Type:   "PD",
+				HostIP: []string{"127.0.0.1"},
+				Ports:  []int32{4000},
+			},
 			{},
 		}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
@@ -166,8 +175,8 @@ func TestManager_ScaleOut(t *testing.T) {
 					{Type: "TiKV", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
 						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
 					}},
-					{Type: "PD", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
-						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					{Type: "PD", Count: 2, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 2},
 					}},
 					{Type: "TiFlash", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
 						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
@@ -182,7 +191,15 @@ func TestManager_ScaleOut(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().GetMeta(gomock.Any(), "112").Return(&management.Cluster{}, []*management.ClusterInstance{
-			{},
+			{
+				Entity: common.Entity{
+					ID:     "instance",
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Type:   "PD",
+				HostIP: []string{"127.0.0.1"},
+				Ports:  []int32{4000},
+			},
 			{},
 		}, fmt.Errorf("not found cluster"))
 		_, err := manager.ScaleOut(context.TODO(), cluster.ScaleOutClusterReq{
@@ -199,7 +216,15 @@ func TestManager_ScaleOut(t *testing.T) {
 		models.SetClusterReaderWriter(clusterRW)
 
 		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
-			{},
+			{
+				Entity: common.Entity{
+					ID:     "instance",
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Type:   "PD",
+				HostIP: []string{"127.0.0.1"},
+				Ports:  []int32{4000},
+			},
 			{},
 		}, nil).AnyTimes()
 		mockTiup.EXPECT().ClusterComponentCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
@@ -226,7 +251,15 @@ func TestManager_ScaleOut(t *testing.T) {
 		models.SetClusterReaderWriter(clusterRW)
 
 		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
-			{},
+			{
+				Entity: common.Entity{
+					ID:     "instance",
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Type:   "PD",
+				HostIP: []string{"127.0.0.1"},
+				Ports:  []int32{4000},
+			},
 			{},
 		}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("fail")).AnyTimes()
@@ -240,8 +273,8 @@ func TestManager_ScaleOut(t *testing.T) {
 					{Type: "TiKV", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
 						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
 					}},
-					{Type: "PD", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
-						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					{Type: "PD", Count: 2, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 2},
 					}},
 					{Type: "TiFlash", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
 						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
@@ -488,6 +521,12 @@ func TestManager_CreateCluster(t *testing.T) {
 	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
+		validator = func(ctx context.Context, req *cluster.CreateClusterReq) error {
+			return nil
+		}
+		defer func() {
+			validator = validateCreating
+		}()
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
@@ -511,6 +550,12 @@ func TestManager_CreateCluster(t *testing.T) {
 	})
 
 	t.Run("build cluster fail", func(t *testing.T) {
+		validator = func(ctx context.Context, req *cluster.CreateClusterReq) error {
+			return nil
+		}
+		defer func() {
+			validator = validateCreating
+		}()
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("fail")).AnyTimes()
@@ -533,6 +578,12 @@ func TestManager_CreateCluster(t *testing.T) {
 	})
 
 	t.Run("no computes", func(t *testing.T) {
+		validator = func(ctx context.Context, req *cluster.CreateClusterReq) error {
+			return nil
+		}
+		defer func() {
+			validator = validateCreating
+		}()
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
@@ -541,6 +592,12 @@ func TestManager_CreateCluster(t *testing.T) {
 	})
 
 	t.Run("async fail", func(t *testing.T) {
+		validator = func(ctx context.Context, req *cluster.CreateClusterReq) error {
+			return nil
+		}
+		defer func() {
+			validator = validateCreating
+		}()
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
@@ -562,6 +619,19 @@ func TestManager_CreateCluster(t *testing.T) {
 		})
 		assert.Error(t, err)
 	})
+
+	t.Run("validate", func(t *testing.T) {
+		validator = func(ctx context.Context, req *cluster.CreateClusterReq) error {
+			return em_errors.Error(em_errors.TIEM_PARAMETER_INVALID)
+		}
+		defer func() {
+			validator = validateCreating
+		}()
+
+		_, err := manager.CreateCluster(context.TODO(), cluster.CreateClusterReq{})
+		assert.Error(t, err)
+	})
+
 }
 
 func TestManager_StopCluster(t *testing.T) {
@@ -1159,26 +1229,71 @@ func TestPreviewCluster(t *testing.T) {
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
 
+	t.Run("duplicated name", func(t *testing.T) {
+		clusterRW.EXPECT().QueryMetas(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*management.Result{}, structs.Page{
+			Page:     1,
+			Total:    1,
+			PageSize: 1,
+		}, nil).Times(1)
+		manager := &Manager{}
+		_, err := manager.PreviewCluster(context.TODO(), cluster.CreateClusterReq{})
+		assert.Error(t, err)
+	})
+
+	t.Run("validate", func(t *testing.T) {
+		clusterRW.EXPECT().QueryMetas(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*management.Result{}, structs.Page{
+			Page:     1,
+			Total:    0,
+			PageSize: 1,
+		}, nil).Times(1)
+
+		manager := &Manager{}
+		_, err := manager.PreviewCluster(context.TODO(), cluster.CreateClusterReq{
+			CreateClusterParameter: structs.CreateClusterParameter{
+				Region:          "111",
+				CpuArchitecture: "111",
+			},
+			ResourceParameter: structs.ClusterResourceInfo{
+				InstanceResource: []structs.ClusterResourceParameterCompute{
+					{Type: "TiDB", Count: 4, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Zone1", Count: 1, Spec: "4C8G", DiskCapacity: 1, DiskType: "SATA"},
+						{Zone: "Zone3", Count: 1, Spec: "4C8G", DiskCapacity: 1, DiskType: "SATA"},
+					}},
+					{Type: "TiKV", Count: 4, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Zone1", Count: 1, Spec: "4C8G", DiskCapacity: 1, DiskType: "SATA"},
+						{Zone: "Zone2", Count: 1, Spec: "4C8G", DiskCapacity: 1, DiskType: "SATA"},
+					}},
+				},
+			},
+		})
+		assert.Error(t, err)
+	})
+
 	t.Run("normal", func(t *testing.T) {
-		clusterRW.EXPECT().QueryMetas(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*management.Result{
-		}, structs.Page{
-			Page: 1,
-			Total: 0,
+		validator = func(ctx context.Context, req *cluster.CreateClusterReq) error {
+			return nil
+		}
+		defer func() {
+			validator = validateCreating
+		}()
+		clusterRW.EXPECT().QueryMetas(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*management.Result{}, structs.Page{
+			Page:     1,
+			Total:    0,
 			PageSize: 1,
 		}, nil).Times(1)
 
 		resourceRW.EXPECT().GetHostStocks(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.Stocks{
-			{Zone: "Zone1", FreeHostCount:8, FreeCpuCores:8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
-			{Zone: "Zone2", FreeHostCount:8, FreeCpuCores:8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
+			{Zone: "Zone1", FreeHostCount: 8, FreeCpuCores: 8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
+			{Zone: "Zone2", FreeHostCount: 8, FreeCpuCores: 8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
 		}, nil).Times(1)
 
 		manager := &Manager{}
-		resp, err := manager.PreviewCluster(context.TODO(), cluster.CreateClusterReq {
+		resp, err := manager.PreviewCluster(context.TODO(), cluster.CreateClusterReq{
 			CreateClusterParameter: structs.CreateClusterParameter{
-				Region: "111",
+				Region:          "111",
 				CpuArchitecture: "111",
 			},
-			ResourceParameter: structs.ClusterResourceInfo {
+			ResourceParameter: structs.ClusterResourceInfo{
 				InstanceResource: []structs.ClusterResourceParameterCompute{
 					{Type: "TiDB", Count: 4, Resource: []structs.ClusterResourceParameterComputeResource{
 						{Zone: "Zone1", Count: 1, Spec: "4C8G", DiskCapacity: 1, DiskType: "SATA"},
@@ -1198,33 +1313,27 @@ func TestPreviewCluster(t *testing.T) {
 		assert.False(t, resp.StockCheckResult[2].Enough)
 		assert.True(t, resp.StockCheckResult[3].Enough)
 	})
-	t.Run("duplicated name", func(t *testing.T) {
-		clusterRW.EXPECT().QueryMetas(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*management.Result{}, structs.Page{
-			Page: 1,
-			Total: 1,
-			PageSize: 1,
-		}, nil).Times(1)
-		manager := &Manager{}
-		_, err := manager.PreviewCluster(context.TODO(), cluster.CreateClusterReq{
-		})
-		assert.Error(t, err)
-	})
+
 	t.Run("stock error", func(t *testing.T) {
-		clusterRW.EXPECT().QueryMetas(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*management.Result{
-		}, structs.Page{
-			Page: 1,
-			Total: 0,
+		clusterRW.EXPECT().QueryMetas(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*management.Result{}, structs.Page{
+			Page:     1,
+			Total:    0,
 			PageSize: 1,
 		}, nil).Times(1)
 
+		validator = func(ctx context.Context, req *cluster.CreateClusterReq) error {
+			return nil
+		}
+		defer func() {
+			validator = validateCreating
+		}()
 		resourceRW.EXPECT().GetHostStocks(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.Stocks{
-			{Zone: "Zone1", FreeHostCount:8, FreeCpuCores:8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
-			{Zone: "Zone2", FreeHostCount:8, FreeCpuCores:8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
+			{Zone: "Zone1", FreeHostCount: 8, FreeCpuCores: 8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
+			{Zone: "Zone2", FreeHostCount: 8, FreeCpuCores: 8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
 		}, errors.New("")).Times(1)
 
 		manager := &Manager{}
-		_, err := manager.PreviewCluster(context.TODO(), cluster.CreateClusterReq{
-		})
+		_, err := manager.PreviewCluster(context.TODO(), cluster.CreateClusterReq{})
 		assert.Error(t, err)
 	})
 }
@@ -1246,14 +1355,14 @@ func TestPreviewScaleOutCluster(t *testing.T) {
 		clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster01"}}, []*management.ClusterInstance{}, nil).Times(1)
 
 		resourceRW.EXPECT().GetHostStocks(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.Stocks{
-			{Zone: "Zone1", FreeHostCount:8, FreeCpuCores:8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
-			{Zone: "Zone2", FreeHostCount:8, FreeCpuCores:8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
+			{Zone: "Zone1", FreeHostCount: 8, FreeCpuCores: 8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
+			{Zone: "Zone2", FreeHostCount: 8, FreeCpuCores: 8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
 		}, nil).Times(1)
 
 		manager := &Manager{}
-		resp, err := manager.PreviewScaleOutCluster(context.TODO(), cluster.ScaleOutClusterReq {
+		resp, err := manager.PreviewScaleOutCluster(context.TODO(), cluster.ScaleOutClusterReq{
 			ClusterID: "111",
-			ClusterResourceInfo: structs.ClusterResourceInfo {
+			ClusterResourceInfo: structs.ClusterResourceInfo{
 				InstanceResource: []structs.ClusterResourceParameterCompute{
 					{Type: "TiDB", Count: 4, Resource: []structs.ClusterResourceParameterComputeResource{
 						{Zone: "Zone1", Count: 1, Spec: "4C8G", DiskCapacity: 1, DiskType: "SATA"},
@@ -1277,21 +1386,19 @@ func TestPreviewScaleOutCluster(t *testing.T) {
 		clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster01"}}, []*management.ClusterInstance{}, errors.New("")).Times(1)
 
 		manager := &Manager{}
-		_, err := manager.PreviewScaleOutCluster(context.TODO(), cluster.ScaleOutClusterReq{
-		})
+		_, err := manager.PreviewScaleOutCluster(context.TODO(), cluster.ScaleOutClusterReq{})
 		assert.Error(t, err)
 	})
 	t.Run("stock error", func(t *testing.T) {
 		clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster01"}}, []*management.ClusterInstance{}, nil).Times(1)
 
 		resourceRW.EXPECT().GetHostStocks(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.Stocks{
-			{Zone: "Zone1", FreeHostCount:8, FreeCpuCores:8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
-			{Zone: "Zone2", FreeHostCount:8, FreeCpuCores:8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
+			{Zone: "Zone1", FreeHostCount: 8, FreeCpuCores: 8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
+			{Zone: "Zone2", FreeHostCount: 8, FreeCpuCores: 8, FreeMemory: 8, FreeDiskCount: 8, FreeDiskCapacity: 8},
 		}, errors.New("")).Times(1)
 
 		manager := &Manager{}
-		_, err := manager.PreviewScaleOutCluster(context.TODO(), cluster.ScaleOutClusterReq{
-		})
+		_, err := manager.PreviewScaleOutCluster(context.TODO(), cluster.ScaleOutClusterReq{})
 		assert.Error(t, err)
 	})
 }
@@ -1331,15 +1438,15 @@ func TestManager_TakeoverCluster(t *testing.T) {
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq {
-			TiUPIp: "127.0.0.1",
-			TiUPPath: ".tiup/",
-			TiUPUserName: "root",
+		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq{
+			TiUPIp:           "127.0.0.1",
+			TiUPPath:         ".tiup/",
+			TiUPUserName:     "root",
 			TiUPUserPassword: "aaa",
-			TiUPPort: 22,
-			ClusterName: "takeoverCluster",
-			DBUser: "dbUserName",
-			DBPassword: "password",
+			TiUPPort:         22,
+			ClusterName:      "takeoverCluster",
+			DBUser:           "dbUserName",
+			DBPassword:       "password",
 		})
 		assert.NoError(t, err)
 	})
@@ -1351,15 +1458,15 @@ func TestManager_TakeoverCluster(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("fail")).AnyTimes()
-		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq {
-			TiUPIp: "127.0.0.1",
-			TiUPPath: ".tiup/",
-			TiUPUserName: "root",
+		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq{
+			TiUPIp:           "127.0.0.1",
+			TiUPPath:         ".tiup/",
+			TiUPUserName:     "root",
 			TiUPUserPassword: "aaa",
-			TiUPPort: 22,
-			ClusterName: "takeoverCluster",
-			DBUser: "dbUserName",
-			DBPassword: "password",
+			TiUPPort:         22,
+			ClusterName:      "takeoverCluster",
+			DBUser:           "dbUserName",
+			DBPassword:       "password",
 		})
 
 		assert.Error(t, err)
@@ -1369,14 +1476,14 @@ func TestManager_TakeoverCluster(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
-		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq {
-			TiUPIp: "127.0.0.1",
-			TiUPPath: ".tiup/",
-			TiUPUserName: "root",
+		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq{
+			TiUPIp:           "127.0.0.1",
+			TiUPPath:         ".tiup/",
+			TiUPUserName:     "root",
 			TiUPUserPassword: "aaa",
-			TiUPPort: 22,
-			DBUser: "dbUserName",
-			DBPassword: "password",
+			TiUPPort:         22,
+			DBUser:           "dbUserName",
+			DBPassword:       "password",
 		})
 		assert.Error(t, err)
 	})
@@ -1386,15 +1493,15 @@ func TestManager_TakeoverCluster(t *testing.T) {
 		}
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq {
-			TiUPIp: "127.0.0.1",
-			TiUPPath: ".tiup/",
-			TiUPUserName: "root",
+		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq{
+			TiUPIp:           "127.0.0.1",
+			TiUPPath:         ".tiup/",
+			TiUPUserName:     "root",
 			TiUPUserPassword: "aaa",
-			TiUPPort: 22,
-			ClusterName: "takeoverCluster",
-			DBUser: "dbUserName",
-			DBPassword: "password",
+			TiUPPort:         22,
+			ClusterName:      "takeoverCluster",
+			DBUser:           "dbUserName",
+			DBPassword:       "password",
 		})
 
 		assert.Error(t, err)
@@ -1407,18 +1514,17 @@ func TestManager_TakeoverCluster(t *testing.T) {
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("fail")).AnyTimes()
-		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq {
-			TiUPIp: "127.0.0.1",
-			TiUPPath: ".tiup/",
-			TiUPUserName: "root",
+		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq{
+			TiUPIp:           "127.0.0.1",
+			TiUPPath:         ".tiup/",
+			TiUPUserName:     "root",
 			TiUPUserPassword: "aaa",
-			TiUPPort: 22,
-			ClusterName: "takeoverCluster",
-			DBUser: "dbUserName",
-			DBPassword: "password",
+			TiUPPort:         22,
+			ClusterName:      "takeoverCluster",
+			DBUser:           "dbUserName",
+			DBPassword:       "password",
 		})
 
 		assert.Error(t, err)
 	})
 }
-

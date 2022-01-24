@@ -19,6 +19,8 @@ import (
 	"bytes"
 	"context"
 	"github.com/pingcap-inc/tiem/models/platform/user"
+	"sort"
+	"strings"
 	"text/template"
 
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -68,6 +70,7 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 		Copies:            param.Copies,
 		Exclusive:         param.Exclusive,
 		Region:            param.Region,
+		Vendor:            param.Vendor,
 		CpuArchitecture:   constants.ArchType(param.CpuArchitecture),
 		MaintenanceStatus: constants.ClusterMaintenanceNone,
 		MaintainWindow:    "",
@@ -1026,6 +1029,24 @@ func QueryInstanceLogInfo(ctx context.Context, hostId string, typeFilter []strin
 	return
 }
 
+func (p *ClusterMeta) GetMajorVersion() string {
+	return strings.Split(p.Cluster.Version, ".")[0]
+
+}
+
+func (p *ClusterMeta) GetMinorVersion() string {
+	numbers := strings.Split(p.Cluster.Version, ".")
+	if len(numbers) > 1 {
+		return fmt.Sprintf("%s.%s", numbers[0], numbers[1])
+	} else {
+		return fmt.Sprintf(numbers[0])
+	}
+}
+
+func (p *ClusterMeta) GetRevision() string {
+	return p.Cluster.Version
+}
+
 func (p *ClusterMeta) DisplayClusterInfo(ctx context.Context) structs.ClusterInfo {
 	cluster := p.Cluster
 	clusterInfo := &structs.ClusterInfo{
@@ -1037,6 +1058,7 @@ func (p *ClusterMeta) DisplayClusterInfo(ctx context.Context) structs.ClusterInf
 		DBUser:          cluster.DBUser,
 		Tags:            cluster.Tags,
 		TLS:             cluster.TLS,
+		Vendor:          cluster.Vendor,
 		Region:          cluster.Region,
 		Status:          cluster.Status,
 		Copies:          cluster.Copies,
@@ -1139,5 +1161,27 @@ func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterT
 		}
 		resourceInfo.InstanceResource = append(resourceInfo.InstanceResource, instanceResource)
 	}
+
+	instanceWrapper := InstanceWrapper{topologyInfo.Topology, func(p, q *structs.ClusterInstanceInfo) bool {
+		return constants.EMProductComponentIDType(p.Type).SortWeight() > constants.EMProductComponentIDType(q.Type).SortWeight()
+	}}
+	sort.Sort(instanceWrapper)
+
+	topologyInfo.Topology = instanceWrapper.infos
 	return *topologyInfo, *resourceInfo
+}
+
+type InstanceWrapper struct {
+	infos []structs.ClusterInstanceInfo
+	by    func(p, q *structs.ClusterInstanceInfo) bool
+}
+
+func (pw InstanceWrapper) Len() int {
+	return len(pw.infos)
+}
+func (pw InstanceWrapper) Swap(i, j int) {
+	pw.infos[i], pw.infos[j] = pw.infos[j], pw.infos[i]
+}
+func (pw InstanceWrapper) Less(i, j int) bool {
+	return pw.by(&pw.infos[i], &pw.infos[j])
 }

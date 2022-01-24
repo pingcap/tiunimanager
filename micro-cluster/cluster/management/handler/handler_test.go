@@ -20,6 +20,7 @@ import (
 	"errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
+	"sort"
 	"testing"
 	"time"
 
@@ -1032,6 +1033,19 @@ func TestClusterMeta_Display(t *testing.T) {
 			MaintenanceStatus: constants.ClusterMaintenanceCreating,
 		},
 		Instances: map[string][]*management.ClusterInstance{
+			"Prometheus": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone:     "zone1",
+					CpuCores: 4,
+					Memory:   8,
+					Type:     "Prometheus",
+					Version:  "v5.0.0",
+					HostIP:   []string{"127.0.0.1"},
+				},
+			},
 			"TiDB": {
 				{
 					Entity: common.Entity{
@@ -1084,6 +1098,21 @@ func TestClusterMeta_Display(t *testing.T) {
 					HostIP:   []string{"127.0.0.1"},
 				},
 			},
+
+			"Grafana": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone:     "zone1",
+					CpuCores: 4,
+					Memory:   8,
+					Type:     "Grafana",
+					Version:  "v5.0.0",
+					HostIP:   []string{"127.4.5.6"},
+					Ports:    []int32{888},
+				},
+			},
 			"TiKV": {
 				{
 					Entity: common.Entity{
@@ -1131,20 +1160,6 @@ func TestClusterMeta_Display(t *testing.T) {
 					Ports:    []int32{1},
 				},
 			},
-			"Grafana": {
-				{
-					Entity: common.Entity{
-						Status: string(constants.ClusterInstanceRunning),
-					},
-					Zone:     "zone1",
-					CpuCores: 4,
-					Memory:   8,
-					Type:     "Grafana",
-					Version:  "v5.0.0",
-					HostIP:   []string{"127.4.5.6"},
-					Ports:    []int32{888},
-				},
-			},
 			"AlertManger": {
 				{
 					Entity: common.Entity{
@@ -1157,19 +1172,6 @@ func TestClusterMeta_Display(t *testing.T) {
 					Version:  "v5.0.0",
 					HostIP:   []string{"127.0.0.1"},
 					Ports:    []int32{999},
-				},
-			},
-			"Prometheus": {
-				{
-					Entity: common.Entity{
-						Status: string(constants.ClusterInstanceRunning),
-					},
-					Zone:     "zone1",
-					CpuCores: 4,
-					Memory:   8,
-					Type:     "Prometheus",
-					Version:  "v5.0.0",
-					HostIP:   []string{"127.0.0.1"},
 				},
 			},
 		},
@@ -1203,6 +1205,42 @@ func TestClusterMeta_Display(t *testing.T) {
 		assert.Equal(t, 2, resource.InstanceResource[0].Resource[0].Count)
 		assert.Equal(t, 1, resource.InstanceResource[1].Resource[1].Count)
 	})
+}
+
+func TestInstanceSort(t *testing.T) {
+	instanceWrapper := InstanceWrapper{[]structs.ClusterInstanceInfo{
+		{Type: "TiDB", ID: "2"},
+		{Type: "PD", ID: "0"},
+		{Type: "CDC", ID: "8"},
+		{Type: "TiDB", ID: "3"},
+		{Type: "TiKV", ID: "4"},
+		{Type: "file-server", ID: "16"},
+		{Type: "Grafana", ID: "9"},
+		{Type: "Prometheus", ID: "10"},
+		{Type: "TiKV", ID: "5"},
+		{Type: "TiFlash", ID: "6"},
+		{Type: "PD", ID: "1"},
+		{Type: "TiFlash", ID: "7"},
+		{Type: "BlackboxExporter", ID: "13"},
+		{Type: "AlertManger", ID: "11"},
+		{Type: "NodeExporter", ID: "12"},
+		{Type: "cluster-server", ID: "14"},
+		{Type: "openapi-server", ID: "15"},
+	}, func(p, q *structs.ClusterInstanceInfo) bool {
+		return constants.EMProductComponentIDType(p.Type).SortWeight() > constants.EMProductComponentIDType(q.Type).SortWeight()
+	}}
+	sort.Sort(instanceWrapper)
+
+	assert.Equal(t, 17, instanceWrapper.Len())
+	assert.Equal(t, "0", instanceWrapper.infos[0].ID)
+	assert.Equal(t, "1", instanceWrapper.infos[1].ID)
+	assert.Equal(t, "2", instanceWrapper.infos[2].ID)
+	assert.Equal(t, "4", instanceWrapper.infos[4].ID)
+	assert.Equal(t, "5", instanceWrapper.infos[5].ID)
+	assert.Equal(t, "7", instanceWrapper.infos[7].ID)
+	assert.Equal(t, "9", instanceWrapper.infos[9].ID)
+	assert.Equal(t, "13", instanceWrapper.infos[13].ID)
+	assert.Equal(t, "16", instanceWrapper.infos[16].ID)
 }
 
 func TestClusterMeta_Query(t *testing.T) {
@@ -1341,32 +1379,32 @@ func TestQueryInstanceLogInfo(t *testing.T) {
 
 func mockSpec() *spec.Specification {
 	return &spec.Specification{
-		TiDBServers:  []*spec.TiDBSpec {
+		TiDBServers: []*spec.TiDBSpec{
 			{Host: "127.0.0.1", Port: 1, StatusPort: 2},
 			{Host: "127.0.0.2", Port: 3, StatusPort: 4},
 		},
-		TiKVServers:  []*spec.TiKVSpec {
+		TiKVServers: []*spec.TiKVSpec{
 			{Host: "127.0.0.4", Port: 5, StatusPort: 6},
 			{Host: "127.0.0.5", Port: 7, StatusPort: 8},
 		},
-		TiFlashServers:  []*spec.TiFlashSpec {
+		TiFlashServers: []*spec.TiFlashSpec{
 			{Host: "127.0.0.6", TCPPort: 9, HTTPPort: 10, FlashServicePort: 11, FlashProxyPort: 12, FlashProxyStatusPort: 13, StatusPort: 14},
 		},
-		CDCServers:  []*spec.CDCSpec {
+		CDCServers: []*spec.CDCSpec{
 			{Host: "127.0.0.7", Port: 15},
 			{Host: "127.0.0.8", Port: 16},
 		},
-		PDServers:  []*spec.PDSpec {
+		PDServers: []*spec.PDSpec{
 			{Host: "127.0.0.9", ClientPort: 17, PeerPort: 18},
 			{Host: "127.0.0.10", ClientPort: 19, PeerPort: 20},
 		},
-		Grafanas:  []*spec.GrafanaSpec {
+		Grafanas: []*spec.GrafanaSpec{
 			{Host: "127.0.0.11", Port: 21},
 		},
-		Alertmanagers:  []*spec.AlertmanagerSpec {
+		Alertmanagers: []*spec.AlertmanagerSpec{
 			{Host: "127.0.0.12", WebPort: 22, ClusterPort: 23},
 		},
-		Monitors:  []*spec.PrometheusSpec {
+		Monitors: []*spec.PrometheusSpec{
 			{Host: "127.0.0.13", Port: 24},
 		},
 	}
@@ -1384,7 +1422,7 @@ func TestClusterMeta_ParseTopologyFromConfig(t *testing.T) {
 		meta := &ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
-					ID: "clusterId",
+					ID:       "clusterId",
 					TenantId: "tenantId",
 				},
 				Version: "v5.2.2",
@@ -1416,16 +1454,29 @@ func TestClusterMeta_GenerateTakeoverResourceRequirements(t *testing.T) {
 		meta := &ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
-					ID: "clusterId",
+					ID:       "clusterId",
 					TenantId: "tenantId",
 				},
 				Version: "v5.2.2",
 			},
 		}
-        err := meta.ParseTopologyFromConfig(context.TODO(), mockSpec())
-        assert.NoError(t, err)
-        requirements, instances := meta.GenerateTakeoverResourceRequirements(context.TODO())
+		err := meta.ParseTopologyFromConfig(context.TODO(), mockSpec())
+		assert.NoError(t, err)
+		requirements, instances := meta.GenerateTakeoverResourceRequirements(context.TODO())
 		assert.Equal(t, 12, len(requirements))
 		assert.Equal(t, len(requirements), len(instances))
 	})
+}
+
+func TestClusterMeta_GetVersion(t *testing.T) {
+	meta := ClusterMeta{
+		Cluster: &management.Cluster{
+			Version: "v5.2.2",
+		},
+	}
+
+	assert.Equal(t, "v5", meta.GetMajorVersion())
+	assert.Equal(t, "v5.2", meta.GetMinorVersion())
+	assert.Equal(t, "v5.2.2", meta.GetRevision())
+
 }

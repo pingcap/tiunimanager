@@ -73,6 +73,7 @@ const (
 type ModifyParameter struct {
 	Reboot bool
 	Params []ModifyClusterParameterInfo
+	Nodes  []string
 }
 
 type ModifyClusterParameterInfo struct {

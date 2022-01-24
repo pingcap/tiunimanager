@@ -65,9 +65,9 @@ func (p *ResourcePool) registerImportHostsWorkFlow(ctx context.Context, flowMana
 	flowManager.RegisterWorkFlow(ctx, rp_consts.FlowImportHosts, &workflow.WorkFlowDefine{
 		FlowName: rp_consts.FlowImportHosts,
 		TaskNodes: map[string]*workflow.NodeDefine{
-			"start":           {Name: "start", SuccessEvent: "verifyHosts", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: authHosts},
-			"verifyHosts":     {Name: "verifyHosts", SuccessEvent: "configHosts", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: verifyHosts},
-			"configHosts":     {Name: "configHosts", SuccessEvent: "installSoftware", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: configHosts},
+			"start":           {Name: "start", SuccessEvent: "prepare", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: authHosts},
+			"prepare":         {Name: "prepare", SuccessEvent: "verifyHosts", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: prepare},
+			"verifyHosts":     {Name: "verifyHosts", SuccessEvent: "installSoftware", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: verifyHosts},
 			"installSoftware": {Name: "installSoftware", SuccessEvent: "joinEMCluster", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: installSoftware},
 			"joinEMCluster":   {Name: "joinEMCluster", SuccessEvent: "succeed", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: joinEmCluster},
 			"succeed":         {Name: "succeed", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsOnline},
@@ -153,6 +153,9 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 		flowManager.AddContext(flow, rp_consts.ContextResourcePoolKey, p)
 		flowManager.AddContext(flow, rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{host})
 		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostIds[i]})
+		// Whether ignore warnings when verify host
+		ignoreWarnings := condition.IgnoreWarings || framework.Current.GetClientArgs().IgnoreHostWarns
+		flowManager.AddContext(flow, rp_consts.ContextIgnoreWarnings, ignoreWarnings)
 
 		flows = append(flows, flow)
 		flowIds = append(flowIds, flow.Flow.ID)
@@ -173,15 +176,18 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 }
 
 func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force bool) (flowIds []string, err error) {
-	err = p.UpdateHostStatus(ctx, hostIds, string(constants.HostDeleting))
-	if err != nil {
-		return nil, err
-	}
 	var flows []*workflow.WorkFlowAggregation
 	flowManager := workflow.GetWorkFlowService()
-	flowName := p.selectDeleteFlowName(force)
-	framework.LogWithContext(ctx).Infof("delete hosts select %s", flowName)
 	for _, hostId := range hostIds {
+		hosts, _, err := p.QueryHosts(ctx, &structs.Location{}, &structs.HostFilter{HostID: hostId}, &structs.PageRequest{})
+		if err != nil {
+			errMsg := fmt.Sprintf("query host %v failed, %v", hostId, err)
+			framework.LogWithContext(ctx).Errorln(errMsg)
+			return nil, errors.WrapError(errors.TIEM_RESOURCE_DELETE_HOST_ERROR, errMsg, err)
+		}
+		flowName := p.selectDeleteFlowName(&hosts[0], force)
+		framework.LogWithContext(ctx).Infof("delete host %s select %s", hostId, flowName)
+
 		flow, err := flowManager.CreateWorkFlow(ctx, hostId, workflow.BizTypeHost, flowName)
 		if err != nil {
 			errMsg := fmt.Sprintf("create %s workflow failed for host %s, %s", flowName, hostId, err.Error())
@@ -191,9 +197,15 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 
 		flowManager.AddContext(flow, rp_consts.ContextResourcePoolKey, p)
 		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostId})
+		flowManager.AddContext(flow, rp_consts.ContextHostInfoArrayKey, hosts)
 
 		flows = append(flows, flow)
 		flowIds = append(flowIds, flow.Flow.ID)
+	}
+
+	err = p.UpdateHostStatus(ctx, hostIds, string(constants.HostDeleting))
+	if err != nil {
+		return nil, err
 	}
 
 	go func() {
@@ -242,8 +254,8 @@ func (p *ResourcePool) selectImportFlowName(condition *structs.ImportCondition) 
 	return
 }
 
-func (p *ResourcePool) selectDeleteFlowName(force bool) (flowName string) {
-	if framework.Current.GetClientArgs().SkipHostInit || force {
+func (p *ResourcePool) selectDeleteFlowName(host *structs.HostInfo, force bool) (flowName string) {
+	if framework.Current.GetClientArgs().SkipHostInit || force || host.Status == string(constants.HostFailed) {
 		flowName = rp_consts.FlowDeleteHostsByForce
 	} else {
 		flowName = rp_consts.FlowDeleteHosts

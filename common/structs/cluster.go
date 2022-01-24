@@ -134,8 +134,6 @@ type ClusterInstanceInfo struct {
 	Zone         ZoneInfo        `json:"zone"` //??
 }
 
-
-
 // ClusterTopologyInfo Topology of the cluster
 type ClusterTopologyInfo struct {
 	Topology []ClusterInstanceInfo `json:"topology"`

@@ -1472,3 +1472,17 @@ func testConnectivity(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 		}).
 		Present()
 }
+
+func initDatabaseData(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+
+	backupID := context.GetData(ContextBackupID)
+	if backupID != nil && len(backupID.(string)) > 0{
+		node.Record(fmt.Sprintf("recover data from backup record %s for cluster %s", backupID, clusterMeta.Cluster.ID))
+		// todo @chencheng
+	} else {
+		node.Record("no specified data source, skip")
+	}
+
+	return nil
+}

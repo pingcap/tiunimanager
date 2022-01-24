@@ -99,9 +99,10 @@ type CopyParameterGroupResp struct {
 }
 
 type ApplyParameterGroupReq struct {
-	ParamGroupId string `json:"paramGroupId" example:"123" swaggerignore:"true" validate:"required,min=1,max=64"`
-	ClusterID    string `json:"clusterId" example:"123" validate:"required,min=8,max=64"`
-	Reboot       bool   `json:"reboot" validate:"required"`
+	ParamGroupId string   `json:"paramGroupId" example:"123" swaggerignore:"true" validate:"required,min=1,max=64"`
+	ClusterID    string   `json:"clusterId" example:"123" validate:"required,min=8,max=64"`
+	Reboot       bool     `json:"reboot"`
+	Nodes        []string `json:"nodes" swaggerignore:"true"`
 }
 
 type ApplyParameterGroupResp struct {

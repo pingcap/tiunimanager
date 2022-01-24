@@ -7599,8 +7599,7 @@ var doc = `{
         "message.ApplyParameterGroupReq": {
             "type": "object",
             "required": [
-                "clusterId",
-                "reboot"
+                "clusterId"
             ],
             "properties": {
                 "clusterId": {

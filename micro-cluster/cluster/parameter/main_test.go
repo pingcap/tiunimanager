@@ -198,6 +198,7 @@ func mockModifyParameter() *ModifyParameter {
 				RealValue:      structs.ParameterRealValue{ClusterValue: "info"},
 			},
 		},
+		Nodes: []string{"172.16.1.12:9000", "172.16.1.12:9001"},
 	}
 }
 

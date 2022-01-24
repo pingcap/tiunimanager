@@ -564,11 +564,18 @@ func refreshParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 	clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
 	// need tiup reload config
 	if modifyParam.Reboot {
+		flags := make([]string, 0)
+		// Check for partial node instances
+		if modifyParam.Nodes != nil && len(modifyParam.Nodes) > 0 {
+			flags = append(flags, "-N")
+			flags = append(flags, strings.Join(modifyParam.Nodes, ","))
+		}
+
 		req := secondparty.CmdReloadConfigReq{
 			TiUPComponent: secondparty.ClusterComponentTypeStr,
 			InstanceName:  clusterMeta.Cluster.ID,
 			TimeoutS:      0,
-			Flags:         []string{},
+			Flags:         flags,
 		}
 		reloadId, err := secondparty.Manager.ClusterReload(ctx, req, node.ID)
 		if err != nil {

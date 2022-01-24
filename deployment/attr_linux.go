@@ -1,5 +1,8 @@
+//go:build linux
+// +build linux
+
 /******************************************************************************
- * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Copyright (c)  2022 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
  * you may not use this file except in compliance with the License.           *
  * You may obtain a copy of the License at                                    *
@@ -11,21 +14,23 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
+ *                                                                            *
  ******************************************************************************/
 
-package hostinitiator
+/*******************************************************************************
+ * @File: attr_linux
+ * @Description:
+ * @Author: shenhaibo@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2022/1/11
+*******************************************************************************/
 
-import (
-	"context"
+package deployment
 
-	"github.com/pingcap-inc/tiem/common/structs"
-)
+import "syscall"
 
-type HostInitiator interface {
-	CopySSHID(ctx context.Context, h *structs.HostInfo) (err error)
-	Prepare(ctx context.Context, h *structs.HostInfo) (err error)
-	Verify(ctx context.Context, h *structs.HostInfo) (err error)
-	InstallSoftware(ctx context.Context, hosts []structs.HostInfo) (err error)
-	JoinEMCluster(ctx context.Context, hosts []structs.HostInfo) (err error)
-	LeaveEMCluster(ctx context.Context, nodeId string) (err error)
+func genSysProcAttr() *syscall.SysProcAttr {
+	return &syscall.SysProcAttr{
+		Pdeathsig: syscall.SIGTERM,
+	}
 }

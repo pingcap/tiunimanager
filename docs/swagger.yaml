@@ -949,7 +949,6 @@ definitions:
         type: boolean
     required:
     - clusterId
-    - reboot
     type: object
   message.ApplyParameterGroupResp:
     properties:

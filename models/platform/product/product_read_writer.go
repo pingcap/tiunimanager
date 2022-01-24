@@ -372,7 +372,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			}
 			if !componentExisted {
 				productComponentInfo = structs.ProductComponentProperty{ID: info.ID, Name: info.Name, PurposeType: info.PurposeType,
-							StartPort: info.StartPort, EndPort: info.EndPort, MaxPort: info.MaxPort, MinInstance: info.MinInstance, MaxInstance: info.MaxInstance, SuggestedInstancesCount: constants.EMProductComponentIDType(info.ID).SuggestedNodeCount(), AvailableZones: []structs.ComponentInstanceZoneWithSpecs{{ZoneID: spec.ZoneID, ZoneName: spec.ZoneName, Specs: []structs.ComponentInstanceResourceSpec{spec}}}}
+					StartPort: info.StartPort, EndPort: info.EndPort, MaxPort: info.MaxPort, MinInstance: info.MinInstance, MaxInstance: info.MaxInstance, SuggestedInstancesCount: constants.EMProductComponentIDType(info.ID).SuggestedNodeCount(), AvailableZones: []structs.ComponentInstanceZoneWithSpecs{{ZoneID: spec.ZoneID, ZoneName: spec.ZoneName, Specs: []structs.ComponentInstanceResourceSpec{spec}}}}
 				components = append(components, productComponentInfo)
 			}
 			productVersion.Arch[arch] = components
@@ -401,13 +401,13 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 
 type ComponentSortWrapper struct {
 	infos []structs.ProductComponentProperty
-	by func(p, q *structs.ProductComponentProperty) bool
+	by    func(p, q *structs.ProductComponentProperty) bool
 }
 
 func (pw ComponentSortWrapper) Len() int {
 	return len(pw.infos)
 }
-func (pw ComponentSortWrapper) Swap(i, j int){
+func (pw ComponentSortWrapper) Swap(i, j int) {
 	pw.infos[i], pw.infos[j] = pw.infos[j], pw.infos[i]
 }
 func (pw ComponentSortWrapper) Less(i, j int) bool {

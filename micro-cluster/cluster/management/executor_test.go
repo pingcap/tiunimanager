@@ -1562,6 +1562,61 @@ func Test_testConnectivity(t *testing.T) {
 	})
 }
 
+func Test_initDatabaseData(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		ctx := workflow.NewFlowContext(context.TODO())
+		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				DBUser:     "root",
+				DBPassword: "ssssssss",
+			},
+			Instances: map[string][]*management.ClusterInstance{
+				string(constants.ComponentIDTiDB): {
+					{
+						Entity: common.Entity{
+							Status: string(constants.ClusterRunning),
+						},
+						HostIP: []string{"172.16.6.176"},
+						Ports:  []int32{10000},
+					},
+				},
+			},
+		})
+
+		ctx.SetData(ContextBackupID, "iddddd")
+
+		node := &workflowModel.WorkFlowNode{}
+		err := initDatabaseData(node, ctx)
+		assert.NoError(t, err)
+		assert.Contains(t, node.Result, "recover data from backup record")
+	})
+	t.Run("skip", func(t *testing.T) {
+		ctx := workflow.NewFlowContext(context.TODO())
+		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				DBUser:     "root",
+				DBPassword: "ssssssss",
+			},
+			Instances: map[string][]*management.ClusterInstance{
+				string(constants.ComponentIDTiDB): {
+					{
+						Entity: common.Entity{
+							Status: string(constants.ClusterRunning),
+						},
+						HostIP: []string{"172.16.6.176"},
+						Ports:  []int32{10000},
+					},
+				},
+			},
+		})
+
+		node := &workflowModel.WorkFlowNode{}
+		err := initDatabaseData(node, ctx)
+		assert.NoError(t, err)
+		assert.Contains(t, node.Result, "skip")
+	})
+}
+
 func Test_testRebuildTopologyFromConfig(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -2189,7 +2244,7 @@ func Test_applyParameterGroup(t *testing.T) {
 		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.2", 1, 1, gomock.Any(), gomock.Any()).
 		Return([]*parametergroup.ParameterGroup{
 			{},
-	}, int64(0), nil).AnyTimes()
+		}, int64(0), nil).AnyTimes()
 
 	parameterGroupRW.EXPECT().
 		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.1", 1, 1, gomock.Any(), gomock.Any()).
@@ -2206,7 +2261,7 @@ func Test_applyParameterGroup(t *testing.T) {
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version: "v5.0.0",
+				Version:          "v5.0.0",
 				ParameterGroupID: "",
 			},
 		})
@@ -2220,7 +2275,7 @@ func Test_applyParameterGroup(t *testing.T) {
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version: "v5.1.22",
+				Version:          "v5.1.22",
 				ParameterGroupID: "",
 			},
 		})
@@ -2243,7 +2298,7 @@ func Test_adjustParameters(t *testing.T) {
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version: "v5.1.22",
+				Version:          "v5.1.22",
 				ParameterGroupID: "",
 			},
 		})
@@ -2262,7 +2317,7 @@ func Test_adjustParameters(t *testing.T) {
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version: "v5.1.22",
+				Version:          "v5.1.22",
 				ParameterGroupID: "",
 			},
 		})
@@ -2270,10 +2325,10 @@ func Test_adjustParameters(t *testing.T) {
 			QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return("111", []*parameter.ClusterParamDetail{
 				{Parameter: parametergroup.Parameter{
-					ID: "aaa",
+					ID:   "aaa",
 					Name: "aaa",
 				}},
-		}, int64(0), nil).
+			}, int64(0), nil).
 			Times(1)
 
 		err := adjustParameters(&workflowModel.WorkFlowNode{}, ctx)

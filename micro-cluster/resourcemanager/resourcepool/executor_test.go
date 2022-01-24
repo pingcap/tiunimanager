@@ -57,6 +57,30 @@ func Test_AuthHost(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func Test_Prepare(t *testing.T) {
+	models.MockDB()
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	resourcePool := GetResourcePool()
+
+	// Mock host initiator
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockInitiator := mock_initiator.NewMockHostInitiator(ctrl)
+	mockInitiator.EXPECT().Prepare(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
+		return nil
+	})
+
+	resourcePool.SetHostInitiator(mockInitiator)
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
+	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
+
+	var node workflowModel.WorkFlowNode
+	err := prepare(&node, flowContext)
+	assert.Nil(t, err)
+}
+
 func Test_InstallSoftware(t *testing.T) {
 	models.MockDB()
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
@@ -121,6 +145,7 @@ func Test_Verify(t *testing.T) {
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
 	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
+	flowContext.SetData(rp_consts.ContextIgnoreWarnings, false)
 
 	var node workflowModel.WorkFlowNode
 	err := verifyHosts(&node, flowContext)
@@ -196,17 +221,9 @@ func Test_CheckHostBeforeDeleted_Succeed(t *testing.T) {
 	models.MockDB()
 	resourcePool := GetResourcePool()
 
-	// Mock host initiator
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockProvider := mock_provider.NewMockHostProvider(ctrl)
-	mockProvider.EXPECT().QueryHosts(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.HostInfo{*genHostInfo("Test_Host1")}, int64(1), nil)
-
-	resourcePool.SetHostProvider(mockProvider)
-
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
-	flowContext.SetData(rp_consts.ContextHostIDArrayKey, []string{"fake-host-id"})
+	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{ID: "fake-host-id", HostName: "Test_Host1", IP: "192.199.254.22", Status: string(constants.HostOnline), Stat: string(constants.HostLoadLoadLess)}})
 
 	var node workflowModel.WorkFlowNode
 	err := checkHostBeforeDelete(&node, flowContext)
@@ -223,19 +240,10 @@ func Test_CheckHostBeforeDeleted_Fail(t *testing.T) {
 	models.MockDB()
 	resourcePool := GetResourcePool()
 
-	// Mock host initiator
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockProvider := mock_provider.NewMockHostProvider(ctrl)
-	host := genHostInfo("Test_Host1")
-	host.Stat = string(constants.HostLoadInUsed)
-	mockProvider.EXPECT().QueryHosts(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.HostInfo{*host}, int64(1), nil)
-
-	resourcePool.SetHostProvider(mockProvider)
-
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
 	flowContext.SetData(rp_consts.ContextHostIDArrayKey, []string{"fake-host-id"})
+	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{ID: "fake-host-id", HostName: "Test_Host1", IP: "192.199.254.22", Status: string(constants.HostOnline), Stat: string(constants.HostLoadInUsed)}})
 
 	var node workflowModel.WorkFlowNode
 	err := checkHostBeforeDelete(&node, flowContext)

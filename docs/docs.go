@@ -7380,8 +7380,7 @@ var doc = `{
         "cluster.UpdateClusterParametersReq": {
             "type": "object",
             "required": [
-                "params",
-                "reboot"
+                "params"
             ],
             "properties": {
                 "params": {

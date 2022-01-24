@@ -808,7 +808,6 @@ definitions:
         type: boolean
     required:
     - params
-    - reboot
     type: object
   cluster.UpdateClusterParametersResp:
     properties:

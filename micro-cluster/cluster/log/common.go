@@ -87,7 +87,7 @@ type CollectorClusterLogConfig struct {
 	PD      CollectorModuleDetail `json:"pd" yaml:"pd"`
 	TiKV    CollectorModuleDetail `json:"tikv" yaml:"tikv"`
 	TiFlash CollectorModuleDetail `json:"tiflash" yaml:"tiflash"`
-	CDC     CollectorModuleDetail `json:"cdc" yaml:"cdc"`
+	CDC     CollectorModuleDetail `json:"ticdc" yaml:"ticdc"`
 }
 
 type CollectorModuleDetail struct {

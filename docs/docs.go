@@ -7380,8 +7380,7 @@ var doc = `{
         "cluster.UpdateClusterParametersReq": {
             "type": "object",
             "required": [
-                "params",
-                "reboot"
+                "params"
             ],
             "properties": {
                 "params": {
@@ -7600,8 +7599,7 @@ var doc = `{
         "message.ApplyParameterGroupReq": {
             "type": "object",
             "required": [
-                "clusterId",
-                "reboot"
+                "clusterId"
             ],
             "properties": {
                 "clusterId": {

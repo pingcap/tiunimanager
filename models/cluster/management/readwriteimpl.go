@@ -422,28 +422,6 @@ func (g *ClusterReadWrite) UpdateDBUser(ctx context.Context, user *DBUser) error
 	return nil
 }
 
-func (g *ClusterReadWrite) CreateDBUser(ctx context.Context, user *DBUser) error {
-	err := g.DB(ctx).Create(user).Error
-	return dbCommon.WrapDBError(err)
-}
-
-func (g *ClusterReadWrite) GetDBUser(ctx context.Context, clusterID string) ([]*DBUser, error) {
-	users := make([]*DBUser, 0)
-	err := g.DB(ctx).Model(&DBUser{}).Where("cluster_id = ? ", clusterID).Find(&users).Error
-	if err != nil {
-		err = dbCommon.WrapDBError(err)
-	}
-	return users, err
-}
-
-func (g *ClusterReadWrite) DeleteDBUser(ctx context.Context, ID uint) error {
-	user := &DBUser{}
-	err := g.DB(ctx).First(user, "id = ?", ID).Delete(user).Error
-	return dbCommon.WrapDBError(err)
-}
-
-
-
 func NewClusterReadWrite(db *gorm.DB) *ClusterReadWrite {
 	return &ClusterReadWrite{
 		dbCommon.WrapDB(db),

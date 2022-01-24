@@ -18,10 +18,8 @@ package handler
 import (
 	"bytes"
 	"context"
-	"math/rand"
 	"sort"
 	"strings"
-	"database/sql"
 	"math/rand"
 	"text/template"
 

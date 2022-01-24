@@ -18,9 +18,9 @@ package management
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"github.com/pingcap-inc/tiem/models/parametergroup"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockparametergroup"
+	"reflect"
 	"strconv"
 
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -1583,8 +1583,8 @@ func Test_initDatabaseData(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
 		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
 			Cluster: &management.Cluster{
-				DBUser:     "root",
-				DBPassword: "ssssssss",
+				//DBUser:     "root",
+				//DBPassword: "ssssssss",
 			},
 			Instances: map[string][]*management.ClusterInstance{
 				string(constants.ComponentIDTiDB): {
@@ -1595,6 +1595,14 @@ func Test_initDatabaseData(t *testing.T) {
 						HostIP: []string{"172.16.6.176"},
 						Ports:  []int32{10000},
 					},
+				},
+			},
+			DBUsers: map[string]*management.DBUser{
+				string(constants.Root): {
+					ClusterID: "testID",
+					Name:      "root",
+					Password:  "ssssssss",
+					RoleType: string(constants.Root),
 				},
 			},
 		})
@@ -1610,8 +1618,8 @@ func Test_initDatabaseData(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
 		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
 			Cluster: &management.Cluster{
-				DBUser:     "root",
-				DBPassword: "ssssssss",
+				//DBUser:     "root",
+				//DBPassword: "ssssssss",
 			},
 			Instances: map[string][]*management.ClusterInstance{
 				string(constants.ComponentIDTiDB): {
@@ -1622,6 +1630,14 @@ func Test_initDatabaseData(t *testing.T) {
 						HostIP: []string{"172.16.6.176"},
 						Ports:  []int32{10000},
 					},
+				},
+			},
+			DBUsers: map[string]*management.DBUser{
+				string(constants.Root): {
+					ClusterID: "testID",
+					Name:      "root",
+					Password:  "ssssssss",
+					RoleType: string(constants.Root),
 				},
 			},
 		})
@@ -2379,17 +2395,7 @@ func init() {
 	}
 }
 
-func TestDBUserManager_CreateDBUser(t *testing.T) {
-	UpdateDBUserPassword(context.TODO(), dbConnParam1, "root", "12345678", "testworkflownodeid")
-	dbConnParam1.Password = "12345678"
-	user1 := &management.DBUser{
-		ClusterID:                "clusterID",
-		Name:                     "backup",
-		Password:                 handler.GetRandomString(10),
-		RoleType:                 string(constants.DBUserBackupRestore),
 
-		LastPasswordGenerateTime: time.Now(),
-	}
 func TestGenerateDBUser(t *testing.T) {
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{

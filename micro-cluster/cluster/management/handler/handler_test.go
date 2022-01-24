@@ -21,9 +21,10 @@ import (
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/pingcap-inc/tiem/message/cluster"
+	utilsql "github.com/pingcap-inc/tiem/util/api/tidb/sql"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
-	"strings"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -1498,7 +1499,7 @@ func TestExecCommandThruSQL(t *testing.T) {
 		WillReturnError(fmt.Errorf("some error"))
 	mock.ExpectRollback()
 
-	err = ExecCommandThruSQL(context.TODO(), db, sqlCommand)
+	err = utilsql.ExecCommandThruSQL(context.TODO(), db, sqlCommand)
 	if err == nil || !strings.Contains(err.Error(), "some error") {
 		t.Errorf("err(%s) should contain 'some error'", err.Error())
 	}

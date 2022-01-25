@@ -1841,7 +1841,7 @@ func Test_syncTopology(t *testing.T) {
 		defer f.Close()
 		defer os.RemoveAll(path)
 
-		err = syncTopology(&workflowModel.WorkFlowNode{}, flowContext)
+		err := syncTopology(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.NoError(t, err)
 	})
 

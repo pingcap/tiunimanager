@@ -99,6 +99,8 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbUser 
 			TenantId: framework.GetTenantIDFromContext(ctx),
 			Status:   string(constants.ClusterRunning),
 		},
+		// todo get from takeover request
+		Vendor: "Local",
 		Name:           name,
 		DBUser:         dbUser,
 		DBPassword:     dbPassword,

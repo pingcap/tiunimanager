@@ -467,7 +467,7 @@ func TestExecutor_persistApplyParameter(t *testing.T) {
 			ParamGroupId: "1",
 			ClusterID:    "123",
 			Reboot:       false,
-		}, applyCtx)
+		}, applyCtx, false)
 		assert.NoError(t, err)
 	})
 }

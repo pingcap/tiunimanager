@@ -28,8 +28,6 @@ import (
 	"encoding/json"
 	"sync"
 
-	"github.com/pingcap-inc/tiem/models/cluster/parameter"
-
 	"github.com/pingcap-inc/tiem/proto/clusterservices"
 
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -82,7 +80,7 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 	defer framework.LogWithContext(ctx).Infof("end query cluster parameters")
 
 	offset := (req.Page - 1) * req.PageSize
-	pgId, params, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, req.ParamName, offset, req.PageSize)
+	pgId, params, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, req.ParamName, req.InstanceType, offset, req.PageSize)
 	if err != nil {
 		return resp, page, errors.NewErrorf(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR.Explain(), err)
 	}
@@ -143,7 +141,7 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 	defer framework.LogWithContext(ctx).Infof("end update cluster parameters")
 
 	// query cluster parameter by cluster id
-	pgId, paramDetails, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, "", 0, 0)
+	pgId, paramDetails, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, "", "", 0, 0)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("query cluster %s parameter error: %s", req.ClusterID, err.Error())
 		return
@@ -273,35 +271,8 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 }
 
 func (m *Manager) PersistApplyParameterGroup(ctx context.Context, req message.ApplyParameterGroupReq, hasEmptyValue bool) (resp message.ApplyParameterGroupResp, err error) {
-	framework.LogWithContext(ctx).Infof("begin persist apply cluster parameters, request: %+v", req)
-	defer framework.LogWithContext(ctx).Infof("end persist apply cluster parameters")
-	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId, "")
-	if err != nil || pg.ID == "" {
-		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, err.Error())
-	}
-
-	pgs := make([]*parameter.ClusterParameterMapping, len(params))
-	for i, param := range params {
-		value := ""
-		if !hasEmptyValue {
-			value = param.DefaultValue
-		}
-		realValue := structs.ParameterRealValue{ClusterValue: value}
-		b, err := json.Marshal(realValue)
-		if err != nil {
-			return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, err.Error())
-		}
-		pgs[i] = &parameter.ClusterParameterMapping{
-			ClusterID:   req.ClusterID,
-			ParameterID: param.ID,
-			RealValue:   string(b),
-		}
-	}
-	err = models.GetClusterParameterReaderWriter().ApplyClusterParameter(ctx, req.ParamGroupId, req.ClusterID, pgs)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("apply parameter group convert resp err: %v", err)
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, err.Error())
+	if err = persistApplyParameter(&req, ctx, hasEmptyValue); err != nil {
+		return resp, err
 	}
 	resp = message.ApplyParameterGroupResp{
 		ClusterID:    req.ClusterID,

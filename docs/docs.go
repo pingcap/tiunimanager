@@ -1912,6 +1912,11 @@ var doc = `{
                 "summary": "query parameters of a cluster",
                 "parameters": [
                     {
+                        "type": "string",
+                        "name": "instanceType",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Current page location",
                         "name": "page",

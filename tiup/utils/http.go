@@ -46,22 +46,40 @@ func Get(reqURL string, reqParams map[string]string, headers map[string]string) 
 	return string(response)
 }
 
+func PUT(reqURL string, reqParams map[string]interface{}, headers map[string]string) string {
+	requestBody, realContentType := getReader(reqParams, "application/json", nil)
+	httpRequest, _ := http.NewRequest("PUT", reqURL, requestBody)
+	httpRequest.Header.Add("Content-Type", realContentType)
+	if headers != nil {
+		for k, v := range headers {
+			httpRequest.Header.Add(k, v)
+		}
+	}
+	resp, err := httpClient.Do(httpRequest)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+	response, _ := io.ReadAll(resp.Body)
+	return string(response)
+}
+
 // PostForm implements HTTP POST with form
-func PostForm(reqURL string, reqParams map[string]string, headers map[string]string) string {
+func PostForm(reqURL string, reqParams map[string]interface{}, headers map[string]string) string {
 	return post(reqURL, reqParams, "application/x-www-form-urlencoded", nil, headers)
 }
 
 // PostJSON implements HTTP POST with JSON format
-func PostJSON(reqURL string, reqParams map[string]string, headers map[string]string) string {
+func PostJSON(reqURL string, reqParams map[string]interface{}, headers map[string]string) string {
 	return post(reqURL, reqParams, "application/json", nil, headers)
 }
 
 // PostFile implements HTTP POST with file
-func PostFile(reqURL string, reqParams map[string]string, files []UploadFile, headers map[string]string) string {
+func PostFile(reqURL string, reqParams map[string]interface{}, files []UploadFile, headers map[string]string) string {
 	return post(reqURL, reqParams, "multipart/form-data", files, headers)
 }
 
-func post(reqURL string, reqParams map[string]string, contentType string, files []UploadFile, headers map[string]string) string {
+func post(reqURL string, reqParams map[string]interface{}, contentType string, files []UploadFile, headers map[string]string) string {
 	requestBody, realContentType := getReader(reqParams, contentType, files)
 	httpRequest, _ := http.NewRequest("POST", reqURL, requestBody)
 	httpRequest.Header.Add("Content-Type", realContentType)
@@ -79,7 +97,7 @@ func post(reqURL string, reqParams map[string]string, contentType string, files 
 	return string(response)
 }
 
-func getReader(reqParams map[string]string, contentType string, files []UploadFile) (io.Reader, string) {
+func getReader(reqParams map[string]interface{}, contentType string, files []UploadFile) (io.Reader, string) {
 	if strings.Index(contentType, "json") > -1 {
 		bytesData, _ := json.Marshal(reqParams)
 		return bytes.NewReader(bytesData), contentType
@@ -99,7 +117,7 @@ func getReader(reqParams map[string]string, contentType string, files []UploadFi
 			file.Close()
 		}
 		for k, v := range reqParams {
-			if err := writer.WriteField(k, v); err != nil {
+			if err := writer.WriteField(k, v.(string)); err != nil {
 				panic(err)
 			}
 		}
@@ -110,7 +128,7 @@ func getReader(reqParams map[string]string, contentType string, files []UploadFi
 	} else {
 		urlValues := url.Values{}
 		for key, val := range reqParams {
-			urlValues.Set(key, val)
+			urlValues.Set(key, val.(string))
 		}
 		reqBody := urlValues.Encode()
 		return strings.NewReader(reqBody), contentType

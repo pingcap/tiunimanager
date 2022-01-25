@@ -135,31 +135,13 @@ func Start(
 			if !inst.IgnoreMonitorAgent() {
 				uniqueHosts.Insert(inst.GetHost())
 			}
+			// init elasticsearch index settings
+			if comp.Name() == spec.ComponentElasticSearchServer {
+				initElasticSearch(tlsCfg, inst)
+			}
 			// init kibana index patterns
 			if comp.Name() == spec.ComponentKibana {
-				// loop get kibana status
-				for {
-					client := tiuputils.NewHTTPClient(2*time.Second, tlsCfg)
-					_, err := client.Get(context.TODO(), fmt.Sprintf("http://%s:%d/status", inst.GetHost(), inst.GetPort()))
-					if err == nil {
-						break
-					}
-					time.Sleep(2 * time.Second)
-					log.Debugf("check kibana status error: %s", err.Error())
-				}
-
-				path := "/api/saved_objects/_import?overwrite=true"
-				url := fmt.Sprintf("http://%s:%d%s", inst.GetHost(), inst.GetPort(), path)
-				log.Debugf("init kibana index patterns url: %s", url)
-
-				uploads := make([]utils.UploadFile, 0)
-				uploads = append(uploads, utils.UploadFile{
-					Name:     "file",
-					Filepath: inst.DeployDir() + "/bin/index_patterns.ndjson",
-				})
-				headers := map[string]string{"kbn-xsrf": "reporting"}
-				resp := utils.PostFile(url, map[string]string{}, uploads, headers)
-				log.Debugf("init kibana index patterns response: %s", resp)
+				initKibana(tlsCfg, inst)
 			}
 		}
 	}
@@ -173,6 +155,59 @@ func Start(
 		hosts = append(hosts, host)
 	}
 	return StartMonitored(ctx, hosts, noAgentHosts, monitoredOptions, options.OptTimeout)
+}
+
+func initElasticSearch(tlsCfg *tls.Config, inst spec.Instance) {
+	// loop get es status
+	for {
+		client := tiuputils.NewHTTPClient(2*time.Second, tlsCfg)
+		_, err := client.Get(context.TODO(), fmt.Sprintf("http://%s:%d/_cat", inst.GetHost(), inst.GetPort()))
+		if err == nil {
+			break
+		}
+		time.Sleep(2 * time.Second)
+		log.Debugf("check elasticsearch status error: %s", err.Error())
+	}
+	path := "/_template/custom_em"
+	url := fmt.Sprintf("http://%s:%d%s", inst.GetHost(), inst.GetPort(), path)
+	log.Debugf("init elasticsearch index template url: %s", url)
+
+	content := map[string]interface{}{}
+	params := map[string]int64{}
+	// set setting max_result_window by indices settings
+	params["max_result_window"] = 100000000
+	content["index_patterns"] = []string{"em-*"}
+	content["settings"] = params
+	log.Debugf("init elasticsearch index template params: %s", content)
+	resp := utils.PUT(url, content, map[string]string{})
+	log.Debugf("init elasticsearch index template response: %s", resp)
+
+}
+
+func initKibana(tlsCfg *tls.Config, inst spec.Instance) {
+	// loop get kibana status
+	for {
+		client := tiuputils.NewHTTPClient(2*time.Second, tlsCfg)
+		_, err := client.Get(context.TODO(), fmt.Sprintf("http://%s:%d/status", inst.GetHost(), inst.GetPort()))
+		if err == nil {
+			break
+		}
+		time.Sleep(2 * time.Second)
+		log.Debugf("check kibana status error: %s", err.Error())
+	}
+
+	path := "/api/saved_objects/_import?overwrite=true"
+	url := fmt.Sprintf("http://%s:%d%s", inst.GetHost(), inst.GetPort(), path)
+	log.Debugf("init kibana index patterns url: %s", url)
+
+	uploads := make([]utils.UploadFile, 0)
+	uploads = append(uploads, utils.UploadFile{
+		Name:     "file",
+		Filepath: inst.DeployDir() + "/bin/index_patterns.ndjson",
+	})
+	headers := map[string]string{"kbn-xsrf": "reporting"}
+	resp := utils.PostFile(url, map[string]interface{}{}, uploads, headers)
+	log.Debugf("init kibana index patterns response: %s", resp)
 }
 
 // Stop the cluster.

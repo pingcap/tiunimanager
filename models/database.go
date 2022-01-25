@@ -17,13 +17,14 @@ package models
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/models/user/rbac"
 	"io/ioutil"
 	"os"
 	"strings"
 	"syscall"
 
 	"github.com/pingcap-inc/tiem/models/platform/product"
+	"github.com/pingcap-inc/tiem/models/user/rbac"
+	gormopentracing "gorm.io/plugin/opentracing"
 
 	"github.com/pingcap-inc/tiem/models/tiup"
 
@@ -87,6 +88,15 @@ func Open(fw *framework.BaseFramework, reentry bool) error {
 	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{
 		//Logger: newLogger,
 	})
+	db.Use(gormopentracing.New(
+		gormopentracing.WithSqlParameters(false),
+		gormopentracing.WithCreateOpName("em.db.create"),
+		gormopentracing.WithDeleteOpName("em.db.delete"),
+		gormopentracing.WithQueryOpName("em.db.query"),
+		gormopentracing.WithRawOpName("em.db.raw"),
+		gormopentracing.WithRowOpName("em.db.row"),
+		gormopentracing.WithUpdateOpName("em.db.update"),
+	))
 
 	if err != nil || db.Error != nil {
 		logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)

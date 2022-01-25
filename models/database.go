@@ -75,7 +75,7 @@ type database struct {
 func Open(fw *framework.BaseFramework, reentry bool) error {
 	dbFile := fw.GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName + "?_busy_timeout=60000"
 	logins := framework.LogForkFile(constants.LogFileSystem)
-	// todo tidb?
+
 	//newLogger := framework.New(
 	//	log.New(os.Stdout, "\r\n", log.LstdFlags),
 	//	framework.Config{

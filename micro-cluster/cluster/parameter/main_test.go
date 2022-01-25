@@ -145,6 +145,7 @@ func mockModifyParameter() *ModifyParameter {
 				HasApply:       1,
 				SystemVariable: "",
 				Type:           0,
+				Range:          []string{"2"},
 				RealValue:      structs.ParameterRealValue{ClusterValue: "2"},
 			},
 			{

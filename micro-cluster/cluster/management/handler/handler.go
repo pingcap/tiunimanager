@@ -18,10 +18,11 @@ package handler
 import (
 	"bytes"
 	"context"
-	"github.com/pingcap-inc/tiem/models/platform/user"
 	"sort"
 	"strings"
 	"text/template"
+
+	"github.com/pingcap-inc/tiem/models/platform/user"
 
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
@@ -794,6 +795,25 @@ func (p *ClusterMeta) GetPDClientAddresses() []ComponentAddress {
 // @return []ComponentAddress
 func (p *ClusterMeta) GetCDCClientAddresses() []ComponentAddress {
 	instances := p.Instances[string(constants.ComponentIDCDC)]
+	address := make([]ComponentAddress, 0)
+
+	for _, instance := range instances {
+		if instance.Status == string(constants.ClusterInstanceRunning) {
+			address = append(address, ComponentAddress{
+				IP:   instance.HostIP[0],
+				Port: int(instance.Ports[0]),
+			})
+		}
+	}
+	return address
+}
+
+// GetTiFlashClientAddresses
+// @Description: communication address for TiFlash Servers to connect.
+// @Receiver p
+// @return []ComponentAddress
+func (p *ClusterMeta) GetTiFlashClientAddresses() []ComponentAddress {
+	instances := p.Instances[string(constants.ComponentIDTiFlash)]
 	address := make([]ComponentAddress, 0)
 
 	for _, instance := range instances {

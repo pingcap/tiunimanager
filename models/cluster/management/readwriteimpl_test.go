@@ -914,3 +914,39 @@ func TestClusterReadWrite_DeleteDBUser(t *testing.T) {
 		})
 	}
 }
+
+func TestClusterReadWrite_UpdateDBUser(t *testing.T) {
+	user := DBUser{
+		ClusterID:                "clusterid",
+		Name:                     "update",
+		Password:                 "ppppppp",
+		RoleType:                 string(constants.DBUserBackupRestore),
+		LastPasswordGenerateTime: time.Now(),
+	}
+	testRW.CreateDBUser(context.TODO(), &user)
+	defer testRW.Delete(context.TODO(), user.ClusterID)
+	users, _ := testRW.GetDBUser(context.TODO(), user.ClusterID)
+	users[0].Password = "12345"
+	type args struct {
+		ctx  context.Context
+		user *DBUser
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"normal", args{context.TODO(), users[0]}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := testRW.UpdateDBUser(tt.args.ctx, tt.args.user); (err != nil) != tt.wantErr {
+				t.Errorf("UpdateDBUser() error = %v, wantErr %v", err, tt.wantErr)
+			} else {
+				got, err := testRW.GetDBUser(tt.args.ctx, tt.args.user.ClusterID)
+				assert.NoError(t, err)
+				assert.Equal(t, got[0].Password, "12345")
+			}
+		})
+	}
+}

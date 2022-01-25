@@ -121,7 +121,7 @@ func persistParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 	applyParameterReq := ctx.GetData(contextApplyParameterInfo)
 
 	if applyParameterReq != nil {
-		return persistApplyParameter(applyParameterReq.(*message.ApplyParameterGroupReq), ctx)
+		return persistApplyParameter(applyParameterReq.(*message.ApplyParameterGroupReq), ctx, false)
 	}
 	if updateParameterReq != nil {
 		return persistUpdateParameter(updateParameterReq.(*cluster.UpdateClusterParametersReq), ctx)
@@ -163,23 +163,28 @@ func persistUpdateParameter(req *cluster.UpdateClusterParametersReq, ctx *workfl
 // @Description: persist apply parameter
 // @Parameter node
 // @Parameter ctx
+// @Parameter hasEmptyValue
 // @return error
-func persistApplyParameter(req *message.ApplyParameterGroupReq, ctx *workflow.FlowContext) error {
+func persistApplyParameter(req *message.ApplyParameterGroupReq, ctx context.Context, hasEmptyValue bool) error {
 	framework.LogWithContext(ctx).Info("begin persist apply parameter executor method")
 	defer framework.LogWithContext(ctx).Info("end persist apply parameter executor method")
 
 	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId, "")
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, err.Error())
 	}
 
 	pgs := make([]*parameter.ClusterParameterMapping, len(params))
 	for i, param := range params {
-		realValue := structs.ParameterRealValue{ClusterValue: param.DefaultValue}
+		clusterValue := ""
+		if !hasEmptyValue {
+			clusterValue = param.DefaultValue
+		}
+		realValue := structs.ParameterRealValue{ClusterValue: clusterValue}
 		b, err := json.Marshal(realValue)
 		if err != nil {
-			return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, errors.TIEM_PARAMETER_GROUP_APPLY_ERROR.Explain())
+			return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, err.Error())
 		}
 		pgs[i] = &parameter.ClusterParameterMapping{
 			ClusterID:   req.ClusterID,
@@ -190,7 +195,7 @@ func persistApplyParameter(req *message.ApplyParameterGroupReq, ctx *workflow.Fl
 	err = models.GetClusterParameterReaderWriter().ApplyClusterParameter(ctx, req.ParamGroupId, req.ClusterID, pgs)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("apply parameter group convert resp err: %v", err)
-		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, errors.TIEM_PARAMETER_GROUP_APPLY_ERROR.Explain(), err)
+		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, err.Error())
 	}
 	return err
 }

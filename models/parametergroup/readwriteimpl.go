@@ -190,11 +190,11 @@ func (m ParameterGroupReadWrite) QueryParameterGroup(ctx context.Context, name, 
 	if name != "" {
 		query = query.Where("name like '%" + name + "%'")
 	}
+	if clusterVersion != "" {
+		query = query.Where("cluster_version like '%" + clusterVersion + "%'")
+	}
 	if clusterSpec != "" {
 		query = query.Where("cluster_spec = ?", clusterSpec)
-	}
-	if clusterVersion != "" {
-		query = query.Where("cluster_version = ?", clusterVersion)
 	}
 	if dbType > 0 {
 		query = query.Where("db_type = ?", dbType)

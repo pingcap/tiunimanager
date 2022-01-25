@@ -132,7 +132,7 @@ func TestClusterParameterReadWrite_QueryClusterParameter(t *testing.T) {
 				t.Errorf("ApplyClusterParameter() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			paramGroupId, params, total, err := clusterParameterRW.QueryClusterParameter(context.TODO(), tt.args.clusterId, "param", tt.args.offset, tt.args.size)
+			paramGroupId, params, total, err := clusterParameterRW.QueryClusterParameter(context.TODO(), tt.args.clusterId, "param", "TiKV", tt.args.offset, tt.args.size)
 			if err != nil {
 				if tt.wantErr {
 					return

@@ -268,8 +268,9 @@ type QueryClusterLogResp struct {
 }
 
 type QueryClusterParametersReq struct {
-	ClusterID string `json:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
-	ParamName string `json:"paramName" form:"paramName"`
+	ClusterID    string `json:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
+	ParamName    string `json:"paramName" form:"paramName"`
+	InstanceType string `json:"instanceType" form:"instanceType"`
 	structs.PageRequest
 }
 

@@ -18,10 +18,11 @@ package management
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/pingcap-inc/tiem/models/parametergroup"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockparametergroup"
 	"reflect"
-	"strconv"
 
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
@@ -1169,8 +1170,8 @@ func TestSyncParameters(t *testing.T) {
 	clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
 	models.SetClusterParameterReaderWriter(clusterParameterRW)
 
-	clusterParameterRW.EXPECT().QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, clusterId, name string, offset, size int) (paramGroupId string, params []*parameter.ClusterParamDetail, total int64, err error) {
+	clusterParameterRW.EXPECT().QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, clusterId, name, instanceType string, offset, size int) (paramGroupId string, params []*parameter.ClusterParamDetail, total int64, err error) {
 			return "1", []*parameter.ClusterParamDetail{}, 1, fmt.Errorf("query cluster fail")
 		})
 
@@ -2342,7 +2343,7 @@ func Test_adjustParameters(t *testing.T) {
 			},
 		})
 		parameterRW.EXPECT().
-			QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return("111", nil, int64(0), errors.Error(errors.TIEM_PANIC)).
 			Times(1)
 
@@ -2361,7 +2362,7 @@ func Test_adjustParameters(t *testing.T) {
 			},
 		})
 		parameterRW.EXPECT().
-			QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return("111", []*parameter.ClusterParamDetail{
 				{Parameter: parametergroup.Parameter{
 					ID:   "aaa",

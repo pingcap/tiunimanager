@@ -1836,7 +1836,7 @@ func Test_syncTopology(t *testing.T) {
 	os.MkdirAll(path, 0755)
 
 	t.Run("normal", func(t *testing.T) {
-		f, err := os.Create(path + "/meta.yaml")
+		f, _ := os.Create(path + "/meta.yaml")
 		f.Write([]byte{'a', 'b'})
 		defer f.Close()
 		defer os.RemoveAll(path)

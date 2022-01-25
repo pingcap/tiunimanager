@@ -37,7 +37,6 @@ import (
 var secondPartyManager3 *SecondPartyManager
 var dbConnParam3 DbConnParam
 var req ClusterEditConfigReq
-var manager *SecondPartyManager
 
 func init() {
 	secondPartyManager3 = &SecondPartyManager{}

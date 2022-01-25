@@ -19,12 +19,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	utilsql "github.com/pingcap-inc/tiem/util/api/tidb/sql"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"sort"
-	"strings"
 	"testing"
 	"time"
 

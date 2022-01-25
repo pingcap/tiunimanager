@@ -18,9 +18,9 @@ package handler
 import (
 	"bytes"
 	"context"
+	"math/rand"
 	"sort"
 	"strings"
-	"math/rand"
 	"text/template"
 
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -76,7 +76,7 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 		MaintainWindow:    "",
 	}
 	// set root user in clusterMeta
-	p.DBUsers = make(map[string]*management.DBUser, 0)
+	p.DBUsers = make(map[string]*management.DBUser)
 	p.DBUsers[string(constants.Root)] = &management.DBUser{
 		ClusterID: p.Cluster.ID,
 		Name:      constants.DBUserName[constants.Root],
@@ -110,7 +110,7 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbUser 
 		MaintainWindow: "",
 	}
 	// todo: root user?
-	p.DBUsers = make(map[string]*management.DBUser, 0)
+	p.DBUsers = make(map[string]*management.DBUser)
 	p.DBUsers[string(constants.Root)] = &management.DBUser{
 		ClusterID: p.Cluster.ID,
 		Name:      constants.DBUserName[constants.Root],
@@ -604,7 +604,7 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 		MaintenanceStatus: constants.ClusterMaintenanceNone,
 		MaintainWindow:    p.Cluster.MaintainWindow,
 	}
-	meta.DBUsers = make(map[string]*management.DBUser, 0)
+	meta.DBUsers = make(map[string]*management.DBUser)
 	meta.DBUsers[string(constants.Root)] = &management.DBUser{
 		ClusterID: p.Cluster.ID, // todo: which ID
 		Name:      constants.DBUserName[constants.Root],

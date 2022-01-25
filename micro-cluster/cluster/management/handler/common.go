@@ -159,7 +159,7 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 
 	if instance.Type == string(constants.ComponentIDTiKV) {
 		if len(meta.Instances[instance.Type])-1 < meta.Cluster.Copies {
-			errMsg := fmt.Sprintf("the number of remaining TiKV instances is less than the copies")
+			errMsg := "the number of remaining TiKV instances is less than the copies"
 			framework.LogWithContext(ctx).Errorf(errMsg)
 			return errors.NewError(errors.TIEM_DELETE_INSTANCE_ERROR, errMsg)
 		}

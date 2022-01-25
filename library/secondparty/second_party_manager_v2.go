@@ -100,7 +100,6 @@ type SecondPartyService interface {
 
 	ApiEditConfig(ctx context.Context, apiEditConfigReq ApiEditConfigReq) (bool, error)
 	EditClusterConfig(ctx context.Context, req ClusterEditConfigReq, workFlowNodeID string) error
-	SetClusterDbPassword(ctx context.Context, req ClusterSetDbPswReq, workFlowNodeID string) error
 	CreateChangeFeedTask(ctx context.Context, req ChangeFeedCreateReq) (resp ChangeFeedCmdAcceptResp, err error)
 	UpdateChangeFeedTask(ctx context.Context, req ChangeFeedUpdateReq) (resp ChangeFeedCmdAcceptResp, err error)
 	PauseChangeFeedTask(ctx context.Context, req ChangeFeedPauseReq) (resp ChangeFeedCmdAcceptResp, err error)

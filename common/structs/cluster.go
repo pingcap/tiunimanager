@@ -67,7 +67,8 @@ func (p ClusterResourceInfo) GetComponentCount(idType constants.EMProductCompone
 
 //CreateClusterParameter User input parameters when creating a cluster
 type CreateClusterParameter struct {
-	Name             string   `json:"clusterName" validate:"required,min=8,max=64"`
+	Name string `json:"clusterName" validate:"required,min=8,max=64"`
+	// todo delete?
 	DBUser           string   `json:"dbUser" validate:"max=32"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
 	DBPassword       string   `json:"dbPassword" validate:"required,min=8,max=32"`
 	Type             string   `json:"clusterType" validate:"required,oneof=TiDB DM TiKV"`
@@ -84,13 +85,13 @@ type CreateClusterParameter struct {
 
 // ClusterInfo Cluster details information
 type ClusterInfo struct {
-	ID                       string    `json:"clusterId"`
-	UserID                   string    `json:"userId"`
-	Name                     string    `json:"clusterName"`
-	Type                     string    `json:"clusterType"`
-	Version                  string    `json:"clusterVersion"`
+	ID      string `json:"clusterId"`
+	UserID  string `json:"userId"`
+	Name    string `json:"clusterName"`
+	Type    string `json:"clusterType"`
+	Version string `json:"clusterVersion"`
+	//DBUser                   string    `json:"dbUser"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
 	Vendor                   string    `json:"vendor" form:"vendor"`
-	DBUser                   string    `json:"dbUser"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
 	Tags                     []string  `json:"tags"`
 	TLS                      bool      `json:"tls"`
 	Region                   string    `json:"region"`

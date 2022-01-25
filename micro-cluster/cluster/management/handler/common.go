@@ -159,7 +159,7 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 
 	if instance.Type == string(constants.ComponentIDTiKV) {
 		if len(meta.Instances[instance.Type])-1 < meta.Cluster.Copies {
-			errMsg := fmt.Sprintf("the number of remaining TiKV instances is less than the copies")
+			errMsg := "the number of remaining TiKV instances is less than the copies"
 			framework.LogWithContext(ctx).Errorf(errMsg)
 			return errors.NewError(errors.TIEM_DELETE_INSTANCE_ERROR, errMsg)
 		}
@@ -170,8 +170,9 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 		if len(address) <= 0 {
 			return errors.NewError(errors.TIEM_CONNECT_TIDB_ERROR, "component TiDB not found!")
 		}
+		rootUser, _ := meta.GetDBUserNamePassword(ctx, constants.Root)
 		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql",
-			meta.Cluster.DBUser, meta.Cluster.DBPassword, address[0].IP, address[0].Port))
+			rootUser.Name, rootUser.Password, address[0].IP, address[0].Port))
 		if err != nil {
 			return errors.WrapError(errors.TIEM_CONNECT_TIDB_ERROR, err.Error(), err)
 		}

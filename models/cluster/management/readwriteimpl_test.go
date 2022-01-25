@@ -17,12 +17,14 @@ package management
 
 import (
 	"context"
+	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestGormClusterReadWrite_MaintenanceStatus(t *testing.T) {
@@ -326,12 +328,17 @@ func TestGormClusterReadWrite_GetMeta(t *testing.T) {
 		{Entity: common.Entity{TenantId: "111"}, ClusterID: got.ID, Type: "PD", Version: "v5.0.0"},
 	}
 	err := testRW.UpdateInstance(context.TODO(), instances...)
+	users := []*DBUser{
+		{ClusterID: got.ID, Name: "root", Password: "12222", RoleType: string(constants.Root)},
+	}
+	err = testRW.UpdateDBUser(context.TODO(), users[0])
 	assert.NoError(t, err)
 
-	gotCluster, gotInstances, err := testRW.GetMeta(context.TODO(), got.ID)
+	gotCluster, gotInstances, gotUsers, err := testRW.GetMeta(context.TODO(), got.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, gotCluster.Tags, gotCluster.Tags)
 	assert.Equal(t, 2, len(gotInstances))
+	assert.Equal(t, 1, len(gotUsers))
 }
 
 func TestGormClusterReadWrite_UpdateBaseInfo(t *testing.T) {
@@ -399,7 +406,7 @@ func TestGormClusterReadWrite_UpdateInstance(t *testing.T) {
 	}
 	err := testRW.UpdateInstance(context.TODO(), instances...)
 	assert.NoError(t, err)
-	_, gotInstances, err := testRW.GetMeta(context.TODO(), got.ID)
+	_, gotInstances, _, err := testRW.GetMeta(context.TODO(), got.ID)
 	assert.NoError(t, err)
 	gotInstances[0].Status = string(constants.ClusterRunning)
 	gotInstances[0].HostIP = []string{"127.0.0.1", "127.0.0.2"}
@@ -415,7 +422,7 @@ func TestGormClusterReadWrite_UpdateInstance(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	_, gotInstances, err = testRW.GetMeta(context.TODO(), got.ID)
+	_, gotInstances, _, err = testRW.GetMeta(context.TODO(), got.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, string(constants.ClusterRunning), gotInstances[0].Status)
 	assert.Equal(t, []string{"127.0.0.1", "127.0.0.2"}, gotInstances[0].HostIP)
@@ -801,4 +808,145 @@ func TestClusterReadWrite_QueryInstancesByHost(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(result))
 	})
+}
+
+func TestClusterReadWrite_CreateDBUser(t *testing.T) {
+	user := &DBUser{
+		ClusterID:                "clusterid",
+		Name:                     "testName1",
+		Password:                 "ppppppp",
+		RoleType:                 string(constants.DBUserBackupRestore),
+		LastPasswordGenerateTime: time.Now(),
+	}
+	type args struct {
+		ctx  context.Context
+		user *DBUser
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"normal", args{context.TODO(), user}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := testRW.CreateDBUser(tt.args.ctx, tt.args.user); (err != nil) != tt.wantErr {
+				t.Errorf("CreateDBUser() error = %v, wantErr %v", err, tt.wantErr)
+			} else {
+				assert.NotEmpty(t, user.ID)
+				assert.NotEmpty(t, user.CreatedAt)
+			}
+		})
+	}
+}
+
+func TestClusterReadWrite_GetDBUser(t *testing.T) {
+	user := DBUser{
+		ClusterID:                "clusterid",
+		Name:                     "testName2",
+		Password:                 "ppppppp",
+		RoleType:                 string(constants.DBUserBackupRestore),
+		LastPasswordGenerateTime: time.Now(),
+	}
+	testRW.CreateDBUser(context.TODO(), &user)
+	defer testRW.DeleteDBUser(context.TODO(), user.ID)
+	type args struct {
+		ctx       context.Context
+		clusterID string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{"normal", args{context.TODO(), user.ClusterID}, false},
+		{"wrong clusterID", args{context.TODO(), "testID"}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := testRW.GetDBUser(tt.args.ctx, tt.args.clusterID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetDBUser() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if len(got) != 0 {
+				fmt.Println(got[0].ID, len(got))
+				assert.NotEmpty(t, got[0].ID)
+				assert.NotEmpty(t, got[0].CreatedAt)
+			}
+		})
+	}
+}
+
+func TestClusterReadWrite_DeleteDBUser(t *testing.T) {
+	user := DBUser{
+		ClusterID:                "clusterid",
+		Name:                     "12333",
+		Password:                 "ppppppp",
+		RoleType:                 string(constants.DBUserBackupRestore),
+		LastPasswordGenerateTime: time.Now(),
+	}
+	testRW.CreateDBUser(context.TODO(), &user)
+	type args struct {
+		ctx context.Context
+		ID  uint
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"normal", args{context.TODO(), user.ID}, false},
+		{"no record", args{context.TODO(), 7}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := testRW.DeleteDBUser(tt.args.ctx, tt.args.ID); (err != nil) != tt.wantErr {
+				t.Errorf("DeleteDBUser() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			//else {
+			//	got, _ := testRW.GetDBUser(context.TODO(), user.ClusterID)
+			//	fmt.Println(got)
+			//	assert.Empty(t, got)
+			//}
+		})
+	}
+}
+
+func TestClusterReadWrite_UpdateDBUser(t *testing.T) {
+	user := DBUser{
+		ClusterID:                "clusterid",
+		Name:                     "update",
+		Password:                 "ppppppp",
+		RoleType:                 string(constants.DBUserBackupRestore),
+		LastPasswordGenerateTime: time.Now(),
+	}
+	testRW.CreateDBUser(context.TODO(), &user)
+	defer testRW.Delete(context.TODO(), user.ClusterID)
+	users, _ := testRW.GetDBUser(context.TODO(), user.ClusterID)
+	users[0].Password = "12345"
+	type args struct {
+		ctx  context.Context
+		user *DBUser
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"normal", args{context.TODO(), users[0]}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := testRW.UpdateDBUser(tt.args.ctx, tt.args.user); (err != nil) != tt.wantErr {
+				t.Errorf("UpdateDBUser() error = %v, wantErr %v", err, tt.wantErr)
+			} else {
+				got, err := testRW.GetDBUser(tt.args.ctx, tt.args.user.ClusterID)
+				assert.NoError(t, err)
+				assert.Equal(t, got[0].Password, "12345")
+			}
+		})
+	}
 }

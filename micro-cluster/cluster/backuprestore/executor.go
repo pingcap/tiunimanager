@@ -55,8 +55,12 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 	tidbServerPort := tidbAddress[0].Port
 	node.Record(fmt.Sprintf("get cluster %s tidb address: %s:%d ", meta.Cluster.ID, tidbServerHost, tidbServerPort))
 
-	tidbUserInfo := meta.GetClusterUserNamePasswd()
-	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta, %+v", meta.Cluster.ID, tidbUserInfo)
+	tidbUserInfo, err := meta.GetDBUserNamePassword(ctx, constants.DBUserBackupRestore)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get cluster %s user info from meta falied, %s ", meta.Cluster.ID, err.Error())
+		return err
+	}
+	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta", meta.Cluster.ID)
 
 	storageType, err := convertBrStorageType(record.StorageType)
 	if err != nil {
@@ -67,7 +71,7 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 
 	clusterFacade := secondparty.ClusterFacade{
 		DbConnParameter: secondparty.DbConnParam{
-			Username: tidbUserInfo.UserName,
+			Username: tidbUserInfo.Name,
 			Password: tidbUserInfo.Password,
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),
@@ -137,8 +141,12 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	tidbServerPort := tidbServers[0].Port
 	node.Record(fmt.Sprintf("get cluster %s tidb address: %s:%d ", meta.Cluster.ID, tidbServerHost, tidbServerPort))
 
-	tidbUserInfo := meta.GetClusterUserNamePasswd()
-	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta, %+v", meta.Cluster.ID, tidbUserInfo)
+	tidbUserInfo, err := meta.GetDBUserNamePassword(ctx, constants.DBUserBackupRestore)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get cluster %s user info from meta falied, %s ", meta.Cluster.ID, err.Error())
+		return err
+	}
+	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta", meta.Cluster.ID)
 
 	storageType, err := convertBrStorageType(record.StorageType)
 	if err != nil {
@@ -149,7 +157,7 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 
 	clusterFacade := secondparty.ClusterFacade{
 		DbConnParameter: secondparty.DbConnParam{
-			Username: tidbUserInfo.UserName,
+			Username: tidbUserInfo.Name,
 			Password: tidbUserInfo.Password,
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),

@@ -15,19 +15,16 @@
 
 package management
 
-import "github.com/pingcap-inc/tiem/common/constants"
+import (
+	"gorm.io/gorm"
+	"time"
+)
 
-type Filters struct {
-	ClusterIDs    []string
-	TenantId      string
-	NameLike      string
-	Type          string
-	StatusFilters []constants.ClusterRunningStatus
-	Tag           string
-}
-
-type Result struct {
-	Cluster   *Cluster
-	Instances []*ClusterInstance
-	DBUsers   []*DBUser
+type DBUser struct {
+	gorm.Model
+	ClusterID                string     `gorm:"not null;type:varchar(22);default:null"`
+	Name                     string     `gorm:"default:null;not null;uniqueIndex;comment:'name of the user'"`
+	Password                 string     `gorm:"not null;size:64;comment:'password of the user'"`
+	RoleType                 string     `gorm:"not null;size:64;comment:'role type of the user'"`
+	LastPasswordGenerateTime time.Time
 }

@@ -26,6 +26,7 @@ package tiup
 
 import (
 	"context"
+	"fmt"
 	"testing"
 )
 
@@ -46,6 +47,7 @@ func TestGormMirrorReadWrite(t *testing.T) {
 	config2, err := testRW.Get(context.TODO(), "")
 	if err == nil {
 		t.Error("Deliberately Get error got nil")
+		fmt.Println(config2)
 	}
 
 	// get success
@@ -58,6 +60,7 @@ func TestGormMirrorReadWrite(t *testing.T) {
 	config2, err = testRW.QueryByComponentType(context.TODO(), "")
 	if err == nil {
 		t.Error("Deliberately Query error got nil")
+		fmt.Println(config2)
 	}
 
 	// query success

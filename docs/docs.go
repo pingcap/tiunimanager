@@ -6342,7 +6342,7 @@ var doc = `{
                     "type": "string"
                 },
                 "dbUser": {
-                    "description": "The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
+                    "description": "todo delete?",
                     "type": "string"
                 },
                 "exclusive": {
@@ -6470,7 +6470,7 @@ var doc = `{
                     "type": "string"
                 },
                 "dbUser": {
-                    "description": "The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
+                    "description": "todo delete?",
                     "type": "string"
                 },
                 "exclusive": {
@@ -7106,7 +7106,7 @@ var doc = `{
                     "type": "string"
                 },
                 "dbUser": {
-                    "description": "The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
+                    "description": "todo delete?",
                     "type": "string"
                 },
                 "exclusive": {
@@ -8852,10 +8852,6 @@ var doc = `{
                 "createTime": {
                     "type": "string"
                 },
-                "dbUser": {
-                    "description": "The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
-                    "type": "string"
-                },
                 "deleteTime": {
                     "type": "string"
                 },
@@ -8916,6 +8912,7 @@ var doc = `{
                     "type": "string"
                 },
                 "vendor": {
+                    "description": "DBUser                   string    ` + "`" + `json:\"dbUser\"` + "`" + ` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
                     "type": "string"
                 },
                 "whitelist": {

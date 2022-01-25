@@ -46,3 +46,18 @@ const (
 	DBUserParameterManagement DBUserRoleType = "EM_Parameter_Management"   // user for managing parameters
 	DBUserCDCDataSync         DBUserRoleType = "CDC_Data_Sync"             // user for CDC data synchronization
 )
+
+
+var DBUserName = map[DBUserRoleType]string {
+	Root:                      "root",
+	DBUserBackupRestore:       "EM_Backup_Restore",
+	DBUserParameterManagement: "EM_Parameter_Management",
+	DBUserCDCDataSync:         "CDC_Data_Sync",
+}
+
+var DBUserPermission  = map[DBUserRoleType]string {
+	Root:                      "ALL PRIVILEGES",
+	DBUserBackupRestore:       "ALL PRIVILEGES",
+	DBUserParameterManagement: "ALL PRIVILEGES",
+	DBUserCDCDataSync:         "ALL PRIVILEGES, RESTRICTED_REPLICA_WRITER_ADMIN",
+}

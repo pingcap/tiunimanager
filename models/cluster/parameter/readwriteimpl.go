@@ -48,7 +48,7 @@ func NewClusterParameterReadWrite(db *gorm.DB) *ClusterParameterReadWrite {
 	return m
 }
 
-func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, clusterId, parameterName string, offset, size int) (paramGroupId string, params []*ClusterParamDetail, total int64, err error) {
+func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, clusterId, parameterName, instanceType string, offset, size int) (paramGroupId string, params []*ClusterParamDetail, total int64, err error) {
 	log := framework.LogWithContext(ctx)
 	cluster := management.Cluster{}
 	err = m.DB(ctx).Where("id = ?", clusterId).First(&cluster).Error
@@ -71,6 +71,9 @@ func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, cl
 	// Fuzzy query by parameter name
 	if parameterName != "" {
 		query.Where("parameters.name like '%" + parameterName + "%'")
+	}
+	if instanceType != "" {
+		query.Where("parameters.instance_type = ?", instanceType)
 	}
 
 	err = query.Order("parameters.instance_type desc").

@@ -48,6 +48,12 @@ func CreateDBUser(ctx context.Context, connec secondparty.DbConnParam, user *man
 		return err
 	}
 
+	// save
+	flushCommand := "FLUSH PRIVILEGES"
+	err = ExecCommandThruSQL(ctx, db, flushCommand)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

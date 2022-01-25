@@ -18,9 +18,10 @@ package management
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/pingcap-inc/tiem/models/parametergroup"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockparametergroup"
-	"strconv"
 
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
@@ -1170,8 +1171,8 @@ func TestSyncParameters(t *testing.T) {
 	clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
 	models.SetClusterParameterReaderWriter(clusterParameterRW)
 
-	clusterParameterRW.EXPECT().QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, clusterId, name string, offset, size int) (paramGroupId string, params []*parameter.ClusterParamDetail, total int64, err error) {
+	clusterParameterRW.EXPECT().QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, clusterId, name, instanceType string, offset, size int) (paramGroupId string, params []*parameter.ClusterParamDetail, total int64, err error) {
 			return "1", []*parameter.ClusterParamDetail{}, 1, fmt.Errorf("query cluster fail")
 		})
 
@@ -2244,7 +2245,7 @@ func Test_applyParameterGroup(t *testing.T) {
 		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.2", 1, 1, gomock.Any(), gomock.Any()).
 		Return([]*parametergroup.ParameterGroup{
 			{},
-	}, int64(0), nil).AnyTimes()
+		}, int64(0), nil).AnyTimes()
 
 	parameterGroupRW.EXPECT().
 		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.1", 1, 1, gomock.Any(), gomock.Any()).
@@ -2261,7 +2262,7 @@ func Test_applyParameterGroup(t *testing.T) {
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version: "v5.0.0",
+				Version:          "v5.0.0",
 				ParameterGroupID: "",
 			},
 		})
@@ -2275,7 +2276,7 @@ func Test_applyParameterGroup(t *testing.T) {
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version: "v5.1.22",
+				Version:          "v5.1.22",
 				ParameterGroupID: "",
 			},
 		})
@@ -2298,12 +2299,12 @@ func Test_adjustParameters(t *testing.T) {
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version: "v5.1.22",
+				Version:          "v5.1.22",
 				ParameterGroupID: "",
 			},
 		})
 		parameterRW.EXPECT().
-			QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return("111", nil, int64(0), errors.Error(errors.TIEM_PANIC)).
 			Times(1)
 
@@ -2317,18 +2318,18 @@ func Test_adjustParameters(t *testing.T) {
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version: "v5.1.22",
+				Version:          "v5.1.22",
 				ParameterGroupID: "",
 			},
 		})
 		parameterRW.EXPECT().
-			QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return("111", []*parameter.ClusterParamDetail{
 				{Parameter: parametergroup.Parameter{
-					ID: "aaa",
+					ID:   "aaa",
 					Name: "aaa",
 				}},
-		}, int64(0), nil).
+			}, int64(0), nil).
 			Times(1)
 
 		err := adjustParameters(&workflowModel.WorkFlowNode{}, ctx)

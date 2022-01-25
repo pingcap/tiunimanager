@@ -44,7 +44,7 @@ type Cluster struct {
 	MaintenanceStatus constants.ClusterMaintenanceStatus `gorm:"not null;type:varchar(64);comment:'user name of the cluster''"`
 	MaintainWindow    string                             `gorm:"not null;type:varchar(64);comment:'maintain window''"`
 	// only for database
-	DeleteTime        int64                              `gorm:"uniqueIndex:uniqueName"`
+	DeleteTime int64 `gorm:"uniqueIndex:uniqueName"`
 }
 
 func (t *Cluster) BeforeSave(tx *gorm.DB) (err error) {

@@ -65,14 +65,14 @@ type ProductComponentProperty struct {
 
 // ComponentInstanceZoneWithSpecs Specs group by zone
 type ComponentInstanceZoneWithSpecs struct {
-	ZoneID   string `json:"zoneId"`
-	ZoneName string `json:"zoneName"`
-	Specs    []ComponentInstanceResourceSpec  `json:"specs"`
+	ZoneID   string                          `json:"zoneId"`
+	ZoneName string                          `json:"zoneName"`
+	Specs    []ComponentInstanceResourceSpec `json:"specs"`
 }
 
 //ProductVersion Product version and component details, with each product categorized by version and supported CPU architecture
 type ProductVersion struct {
-	Version string                                         `json:"version"` //Version information of the product, e.g. v5.0.0
+	Version string                                `json:"version"` //Version information of the product, e.g. v5.0.0
 	Arch    map[string][]ProductComponentProperty `json:"arch"`    //Arch information of the product, e.g. X86/X86_64
 	//Components map[string]ProductComponentProperty `json:"components"` //Component Info of the product
 }

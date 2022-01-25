@@ -808,7 +808,6 @@ definitions:
         type: boolean
     required:
     - params
-    - reboot
     type: object
   cluster.UpdateClusterParametersResp:
     properties:
@@ -950,7 +949,6 @@ definitions:
         type: boolean
     required:
     - clusterId
-    - reboot
     type: object
   message.ApplyParameterGroupResp:
     properties:
@@ -3429,6 +3427,9 @@ paths:
       - application/json
       description: query parameters of a cluster
       parameters:
+      - in: query
+        name: instanceType
+        type: string
       - description: Current page location
         in: query
         name: page

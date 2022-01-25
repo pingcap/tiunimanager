@@ -80,7 +80,7 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 	defer framework.LogWithContext(ctx).Infof("end query cluster parameters")
 
 	offset := (req.Page - 1) * req.PageSize
-	pgId, params, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, req.ParamName, offset, req.PageSize)
+	pgId, params, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, req.ParamName, req.InstanceType, offset, req.PageSize)
 	if err != nil {
 		return resp, page, errors.NewErrorf(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR.Explain(), err)
 	}
@@ -141,7 +141,7 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 	defer framework.LogWithContext(ctx).Infof("end update cluster parameters")
 
 	// query cluster parameter by cluster id
-	pgId, paramDetails, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, "", 0, 0)
+	pgId, paramDetails, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, "", "", 0, 0)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("query cluster %s parameter error: %s", req.ClusterID, err.Error())
 		return
@@ -187,7 +187,7 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 	}
 
 	data := make(map[string]interface{})
-	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: params}
+	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: params, Nodes: req.Nodes}
 	data[contextUpdateParameterInfo] = &req
 	data[contextMaintenanceStatusChange] = maintenanceStatusChange
 	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
@@ -251,7 +251,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 
 	// Get modify parameters
 	data := make(map[string]interface{})
-	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: params}
+	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: params, Nodes: req.Nodes}
 	data[contextApplyParameterInfo] = &req
 	data[contextMaintenanceStatusChange] = maintenanceStatusChange
 	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
@@ -266,6 +266,17 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 		AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
 			WorkFlowID: workflowID,
 		},
+	}
+	return resp, nil
+}
+
+func (m *Manager) PersistApplyParameterGroup(ctx context.Context, req message.ApplyParameterGroupReq, hasEmptyValue bool) (resp message.ApplyParameterGroupResp, err error) {
+	if err = persistApplyParameter(&req, ctx, hasEmptyValue); err != nil {
+		return resp, err
+	}
+	resp = message.ApplyParameterGroupResp{
+		ClusterID:    req.ClusterID,
+		ParamGroupID: req.ParamGroupId,
 	}
 	return resp, nil
 }

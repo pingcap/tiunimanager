@@ -29,9 +29,9 @@ import (
 
 type TestEntity struct {
 	Entity
-	Name string `gorm:"uniqueIndex:myIndex"`
-	DeleteTime int64 `gorm:"uniqueIndex:myIndex"`
-	Password Password  `gorm:"password"`
+	Name       string   `gorm:"uniqueIndex:myIndex"`
+	DeleteTime int64    `gorm:"uniqueIndex:myIndex"`
+	Password   Password `gorm:"password"`
 }
 
 func (e *TestEntity) BeforeDelete(tx *gorm.DB) (err error) {
@@ -71,7 +71,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestUniqueIndex(t *testing.T)  {
+func TestUniqueIndex(t *testing.T) {
 	entity := &TestEntity{
 		Entity: Entity{
 			TenantId: "111",
@@ -135,7 +135,7 @@ func TestPassword(t *testing.T) {
 			Entity: Entity{
 				TenantId: "111",
 			},
-			Name: "createpassword",
+			Name:     "createpassword",
 			Password: "N&HIO(*(&#Y*&HNS&D*#*GF*RS*FY&DF",
 		}).Error
 		assert.NoError(t, err)
@@ -150,7 +150,7 @@ func TestPassword(t *testing.T) {
 			Entity: Entity{
 				TenantId: "111",
 			},
-			Name: "updatepassword",
+			Name:     "updatepassword",
 			Password: "abcd",
 		}
 		baseDB.Create(a)

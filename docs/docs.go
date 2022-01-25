@@ -1912,6 +1912,11 @@ var doc = `{
                 "summary": "query parameters of a cluster",
                 "parameters": [
                     {
+                        "type": "string",
+                        "name": "instanceType",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Current page location",
                         "name": "page",
@@ -7380,8 +7385,7 @@ var doc = `{
         "cluster.UpdateClusterParametersReq": {
             "type": "object",
             "required": [
-                "params",
-                "reboot"
+                "params"
             ],
             "properties": {
                 "params": {
@@ -7600,8 +7604,7 @@ var doc = `{
         "message.ApplyParameterGroupReq": {
             "type": "object",
             "required": [
-                "clusterId",
-                "reboot"
+                "clusterId"
             ],
             "properties": {
                 "clusterId": {

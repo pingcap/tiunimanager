@@ -751,7 +751,7 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 			reboot = true
 		}
 	}
-	response, err := parameter.NewManager().UpdateClusterParameters(context.Context, cluster.UpdateClusterParametersReq {
+	response, err := parameter.NewManager().UpdateClusterParameters(context.Context, cluster.UpdateClusterParametersReq{
 		ClusterID: clusterMeta.Cluster.ID,
 		Params:    targetParams,
 		Reboot:    reboot,
@@ -970,7 +970,6 @@ func freedClusterResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 	return nil
 }
 
-
 // initDatabaseAccount
 // @Description: init database account for new cluster
 func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
@@ -1008,9 +1007,9 @@ func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.Flo
 
 	if len(cluster.ParameterGroupID) == 0 {
 		node.Record("parameter group id is empty")
-		groups, _, err := parametergroup.NewManager().QueryParameterGroup(context, message.QueryParameterGroupReq {
-			DBType: 1,
-			HasDefault: 1,
+		groups, _, err := parametergroup.NewManager().QueryParameterGroup(context, message.QueryParameterGroupReq{
+			DBType:         1,
+			HasDefault:     1,
 			ClusterVersion: clusterMeta.GetMinorVersion(),
 		})
 		if err != nil {
@@ -1029,9 +1028,9 @@ func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		}
 	}
 
-	resp, err := parameter.NewManager().ApplyParameterGroup(context, message.ApplyParameterGroupReq {
+	resp, err := parameter.NewManager().ApplyParameterGroup(context, message.ApplyParameterGroupReq{
 		ParamGroupId: cluster.ParameterGroupID,
-		ClusterID: cluster.ID,
+		ClusterID:    cluster.ID,
 	}, false)
 	if err != nil {
 		return err
@@ -1049,7 +1048,7 @@ func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.Flo
 func adjustParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
-	paramResp, _, err := parameter.NewManager().QueryClusterParameters(context, cluster.QueryClusterParametersReq {
+	paramResp, _, err := parameter.NewManager().QueryClusterParameters(context, cluster.QueryClusterParametersReq{
 		ClusterID: clusterMeta.Cluster.ID,
 		ParamName: "max-replicas",
 	})
@@ -1067,10 +1066,10 @@ func adjustParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 	if len(paramId) == 0 {
 		return errors.NewError(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, "no parameter found by name max-replicas")
 	}
-	resp, err := parameter.NewManager().UpdateClusterParameters(context, cluster.UpdateClusterParametersReq {
+	resp, err := parameter.NewManager().UpdateClusterParameters(context, cluster.UpdateClusterParametersReq{
 		ClusterID: clusterMeta.Cluster.ID,
 		Params: []structs.ClusterParameterSampleInfo{
-			{ParamId: paramId, RealValue: structs.ParameterRealValue {
+			{ParamId: paramId, RealValue: structs.ParameterRealValue{
 				ClusterValue: strconv.Itoa(clusterMeta.Cluster.Copies),
 			}},
 		},

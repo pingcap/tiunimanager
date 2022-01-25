@@ -43,13 +43,12 @@ func Test_validateCreating(t *testing.T) {
 
 	t.Run("unsupported product", func(t *testing.T) {
 		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
-			"DM": {
-			},
+			"DM": {},
 		}, nil).Times(1)
-		err := validateCreating(context.TODO(), &cluster.CreateClusterReq {
-			 CreateClusterParameter: structs.CreateClusterParameter{
-			 	Type: "TiDB",
-			 },
+		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{
+			CreateClusterParameter: structs.CreateClusterParameter{
+				Type: "TiDB",
+			},
 		})
 		assert.Error(t, err)
 		assert.Equal(t, errors.TIEM_UNSUPPORT_PRODUCT, err.(errors.EMError).GetCode())
@@ -63,9 +62,9 @@ func Test_validateCreating(t *testing.T) {
 				},
 			},
 		}, nil).Times(1)
-		err := validateCreating(context.TODO(), &cluster.CreateClusterReq {
+		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{
 			CreateClusterParameter: structs.CreateClusterParameter{
-				Type: "TiDB",
+				Type:    "TiDB",
 				Version: "v5.2.2",
 			},
 		})
@@ -79,19 +78,17 @@ func Test_validateCreating(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty {
-							"amd64": {
-
-							},
+						Arch: map[string][]structs.ProductComponentProperty{
+							"amd64": {},
 						},
 					},
 				},
 			},
 		}, nil).Times(1)
-		err := validateCreating(context.TODO(), &cluster.CreateClusterReq {
+		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{
 			CreateClusterParameter: structs.CreateClusterParameter{
-				Type: "TiDB",
-				Version: "v5.2.2",
+				Type:            "TiDB",
+				Version:         "v5.2.2",
 				CpuArchitecture: "x86_64",
 			},
 		})
@@ -105,30 +102,30 @@ func Test_validateCreating(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty {
+						Arch: map[string][]structs.ProductComponentProperty{
 							"x86_64": {
 								{
-									ID: "TiDB",
-									MinInstance: 1,
-									MaxInstance: 8,
+									ID:                      "TiDB",
+									MinInstance:             1,
+									MaxInstance:             8,
 									SuggestedInstancesCount: []int32{},
 								},
 								{
-									ID: "TiKV",
-									MinInstance: 1,
-									MaxInstance: 8,
+									ID:                      "TiKV",
+									MinInstance:             1,
+									MaxInstance:             8,
 									SuggestedInstancesCount: []int32{},
 								},
 								{
-									ID: "PD",
-									MinInstance: 1,
-									MaxInstance: 8,
+									ID:                      "PD",
+									MinInstance:             1,
+									MaxInstance:             8,
 									SuggestedInstancesCount: []int32{},
 								},
 								{
-									ID: "TiFlash",
-									MinInstance: 1,
-									MaxInstance: 8,
+									ID:                      "TiFlash",
+									MinInstance:             1,
+									MaxInstance:             8,
 									SuggestedInstancesCount: []int32{},
 								},
 							},
@@ -137,10 +134,10 @@ func Test_validateCreating(t *testing.T) {
 				},
 			},
 		}, nil).Times(1)
-		err := validateCreating(context.TODO(), &cluster.CreateClusterReq {
+		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{
 			CreateClusterParameter: structs.CreateClusterParameter{
-				Type: "TiDB",
-				Version: "v5.2.2",
+				Type:            "TiDB",
+				Version:         "v5.2.2",
 				CpuArchitecture: "x86_64",
 			},
 			ResourceParameter: structs.ClusterResourceInfo{
@@ -159,30 +156,30 @@ func Test_validateCreating(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty {
+						Arch: map[string][]structs.ProductComponentProperty{
 							"x86_64": {
 								{
-									ID: "TiDB",
-									MinInstance: 1,
-									MaxInstance: 8,
+									ID:                      "TiDB",
+									MinInstance:             1,
+									MaxInstance:             8,
 									SuggestedInstancesCount: []int32{},
 								},
 								{
-									ID: "TiKV",
-									MinInstance: 1,
-									MaxInstance: 8,
+									ID:                      "TiKV",
+									MinInstance:             1,
+									MaxInstance:             8,
 									SuggestedInstancesCount: []int32{},
 								},
 								{
-									ID: "PD",
-									MinInstance: 1,
-									MaxInstance: 8,
-									SuggestedInstancesCount: []int32{1,3,5,7},
+									ID:                      "PD",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{1, 3, 5, 7},
 								},
 								{
-									ID: "TiFlash",
-									MinInstance: 0,
-									MaxInstance: 8,
+									ID:                      "TiFlash",
+									MinInstance:             0,
+									MaxInstance:             8,
 									SuggestedInstancesCount: []int32{},
 								},
 							},
@@ -191,10 +188,10 @@ func Test_validateCreating(t *testing.T) {
 				},
 			},
 		}, nil).Times(1)
-		err := validateCreating(context.TODO(), &cluster.CreateClusterReq {
+		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{
 			CreateClusterParameter: structs.CreateClusterParameter{
-				Type: "TiDB",
-				Version: "v5.2.2",
+				Type:            "TiDB",
+				Version:         "v5.2.2",
 				CpuArchitecture: "x86_64",
 			},
 			ResourceParameter: structs.ClusterResourceInfo{
@@ -213,30 +210,30 @@ func Test_validateCreating(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty {
+						Arch: map[string][]structs.ProductComponentProperty{
 							"x86_64": {
 								{
-									ID: "TiDB",
-									MinInstance: 1,
-									MaxInstance: 8,
+									ID:                      "TiDB",
+									MinInstance:             1,
+									MaxInstance:             8,
 									SuggestedInstancesCount: []int32{},
 								},
 								{
-									ID: "TiKV",
-									MinInstance: 1,
-									MaxInstance: 8,
+									ID:                      "TiKV",
+									MinInstance:             1,
+									MaxInstance:             8,
 									SuggestedInstancesCount: []int32{},
 								},
 								{
-									ID: "PD",
-									MinInstance: 1,
-									MaxInstance: 8,
-									SuggestedInstancesCount: []int32{1,3,5,7},
+									ID:                      "PD",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{1, 3, 5, 7},
 								},
 								{
-									ID: "TiFlash",
-									MinInstance: 0,
-									MaxInstance: 8,
+									ID:                      "TiFlash",
+									MinInstance:             0,
+									MaxInstance:             8,
 									SuggestedInstancesCount: []int32{},
 								},
 							},
@@ -245,12 +242,12 @@ func Test_validateCreating(t *testing.T) {
 				},
 			},
 		}, nil).Times(1)
-		err := validateCreating(context.TODO(), &cluster.CreateClusterReq {
+		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{
 			CreateClusterParameter: structs.CreateClusterParameter{
-				Type: "TiDB",
-				Version: "v5.2.2",
+				Type:            "TiDB",
+				Version:         "v5.2.2",
 				CpuArchitecture: "x86_64",
-				Copies: 5,
+				Copies:          5,
 			},
 			ResourceParameter: structs.ClusterResourceInfo{
 				InstanceResource: []structs.ClusterResourceParameterCompute{
@@ -270,30 +267,30 @@ func Test_validateCreating(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty {
+						Arch: map[string][]structs.ProductComponentProperty{
 							"x86_64": {
 								{
-									ID: "TiDB",
-									MinInstance: 1,
-									MaxInstance: 8,
+									ID:                      "TiDB",
+									MinInstance:             1,
+									MaxInstance:             8,
 									SuggestedInstancesCount: []int32{},
 								},
 								{
-									ID: "TiKV",
-									MinInstance: 1,
-									MaxInstance: 8,
+									ID:                      "TiKV",
+									MinInstance:             1,
+									MaxInstance:             8,
 									SuggestedInstancesCount: []int32{},
 								},
 								{
-									ID: "PD",
-									MinInstance: 1,
-									MaxInstance: 8,
-									SuggestedInstancesCount: []int32{1,3,5,7},
+									ID:                      "PD",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{1, 3, 5, 7},
 								},
 								{
-									ID: "TiFlash",
-									MinInstance: 0,
-									MaxInstance: 8,
+									ID:                      "TiFlash",
+									MinInstance:             0,
+									MaxInstance:             8,
 									SuggestedInstancesCount: []int32{},
 								},
 							},
@@ -302,13 +299,12 @@ func Test_validateCreating(t *testing.T) {
 				},
 			},
 		}, nil).Times(1)
-		err := validateCreating(context.TODO(), &cluster.CreateClusterReq {
+		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{
 			CreateClusterParameter: structs.CreateClusterParameter{
-				Type: "TiDB",
-				Version: "v5.2.2",
+				Type:            "TiDB",
+				Version:         "v5.2.2",
 				CpuArchitecture: "x86_64",
-				Copies: 3,
-
+				Copies:          3,
 			},
 			ResourceParameter: structs.ClusterResourceInfo{
 				InstanceResource: []structs.ClusterResourceParameterCompute{
@@ -328,30 +324,30 @@ func Test_validateCreating(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty {
+						Arch: map[string][]structs.ProductComponentProperty{
 							"x86_64": {
 								{
-									ID: "TiDB",
-									MinInstance: 1,
-									MaxInstance: 8,
+									ID:                      "TiDB",
+									MinInstance:             1,
+									MaxInstance:             8,
 									SuggestedInstancesCount: []int32{},
 								},
 								{
-									ID: "TiKV",
-									MinInstance: 1,
-									MaxInstance: 8,
+									ID:                      "TiKV",
+									MinInstance:             1,
+									MaxInstance:             8,
 									SuggestedInstancesCount: []int32{},
 								},
 								{
-									ID: "PD",
-									MinInstance: 1,
-									MaxInstance: 8,
-									SuggestedInstancesCount: []int32{1,3,5,7},
+									ID:                      "PD",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{1, 3, 5, 7},
 								},
 								{
-									ID: "TiFlash",
-									MinInstance: 0,
-									MaxInstance: 8,
+									ID:                      "TiFlash",
+									MinInstance:             0,
+									MaxInstance:             8,
 									SuggestedInstancesCount: []int32{},
 								},
 							},
@@ -360,12 +356,12 @@ func Test_validateCreating(t *testing.T) {
 				},
 			},
 		}, nil).Times(1)
-		err := validateCreating(context.TODO(), &cluster.CreateClusterReq {
+		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{
 			CreateClusterParameter: structs.CreateClusterParameter{
-				Type: "TiDB",
-				Version: "v5.2.2",
+				Type:            "TiDB",
+				Version:         "v5.2.2",
 				CpuArchitecture: "x86_64",
-				Copies: 5,
+				Copies:          5,
 			},
 			ResourceParameter: structs.ClusterResourceInfo{
 				InstanceResource: []structs.ClusterResourceParameterCompute{

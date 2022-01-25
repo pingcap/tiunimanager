@@ -1006,25 +1006,9 @@ func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	cluster := clusterMeta.Cluster
 
 	if len(cluster.ParameterGroupID) == 0 {
-		node.Record("parameter group id is empty")
-		groups, _, err := parametergroup.NewManager().QueryParameterGroup(context, message.QueryParameterGroupReq{
-			DBType:         1,
-			HasDefault:     1,
-			ClusterVersion: clusterMeta.GetMinorVersion(),
-		})
+		err := chooseParameterGroup(clusterMeta, node, context)
 		if err != nil {
 			return err
-		}
-		if len(groups) == 0 {
-			msg := fmt.Sprintf("no default group found for cluster %s, type = %s, version = %s", cluster.ID, cluster.Type, clusterMeta.GetMinorVersion())
-			framework.LogWithContext(context).Errorf(msg)
-			return errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_DATA, msg)
-		} else {
-			cluster.ParameterGroupID = groups[0].ParamGroupID
-
-			errMsg := fmt.Sprintf("default parameter group %s will be applied to cluster %s", cluster.ParameterGroupID, cluster.ID)
-			framework.LogWithContext(context).Info(errMsg)
-			node.Record(errMsg)
 		}
 	}
 
@@ -1032,6 +1016,54 @@ func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		ParamGroupId: cluster.ParameterGroupID,
 		ClusterID:    cluster.ID,
 	}, false)
+	if err != nil {
+		return err
+	}
+	if err = handler.WaitWorkflow(context.Context, resp.WorkFlowID, 10*time.Second, 30*24*time.Hour); err != nil {
+		framework.LogWithContext(context).Errorf("apply parameter group %s workflow error: %s", cluster.ParameterGroupID, err)
+		return err
+	}
+	node.Record(fmt.Sprintf("apply parameter group %s for cluster %s ", cluster.ParameterGroupID, cluster.ID))
+	return nil
+}
+
+func chooseParameterGroup(clusterMeta *handler.ClusterMeta, node *workflowModel.WorkFlowNode, context *workflow.FlowContext) (err error) {
+	node.Record("parameter group id is empty")
+	groups, _, err := parametergroup.NewManager().QueryParameterGroup(context, message.QueryParameterGroupReq{
+		DBType:         1,
+		HasDefault:     1,
+		ClusterVersion: clusterMeta.GetMinorVersion(),
+	})
+	if err != nil {
+		return err
+	}
+	if len(groups) == 0 {
+		msg := fmt.Sprintf("no default group found for cluster %s, type = %s, version = %s", clusterMeta.Cluster.ID, clusterMeta.Cluster.Type, clusterMeta.GetMinorVersion())
+		framework.LogWithContext(context).Errorf(msg)
+		return errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_DATA, msg)
+	} else {
+		clusterMeta.Cluster.ParameterGroupID = groups[0].ParamGroupID
+		msg := fmt.Sprintf("default parameter group %s will be applied to cluster %s", clusterMeta.Cluster.ParameterGroupID, clusterMeta.Cluster.ID)
+		framework.LogWithContext(context).Info(msg)
+		node.Record(msg)
+		return nil
+	}
+}
+
+// applyParameterGroupForTakeover
+// @Description: apply parameter group to cluster locally, without editing real config
+func applyParameterGroupForTakeover(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	cluster := clusterMeta.Cluster
+
+	err := chooseParameterGroup(clusterMeta, node, context)
+	if err != nil {
+		return err
+	}
+	resp, err := parameter.NewManager().PersistApplyParameterGroup(context, message.ApplyParameterGroupReq{
+		ParamGroupId: cluster.ParameterGroupID,
+		ClusterID:    cluster.ID,
+	}, true)
 	if err != nil {
 		return err
 	}

@@ -1501,22 +1501,21 @@ func TestInitDatabaseAccount(t *testing.T) {
 	})
 
 	t.Run("normal", func(t *testing.T) {
-		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-		// todo
-		mockTiupManager.EXPECT().SetClusterDbPassword(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		secondparty.Manager = mockTiupManager
+		//mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+		//mockTiupManager.EXPECT().(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		//secondparty.Manager = mockTiupManager
 		err := initDatabaseAccount(&workflowModel.WorkFlowNode{}, flowContext)
 		//assert.NoError(t, err)
 		fmt.Println(err)
 	})
 
 	t.Run("init fail", func(t *testing.T) {
-		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-		// todo
-		mockTiupManager.EXPECT().SetClusterDbPassword(gomock.Any(),
-			gomock.Any(), gomock.Any()).Return(fmt.Errorf("init fail")).AnyTimes()
-		secondparty.Manager = mockTiupManager
+	//	mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+	//	mockTiupManager.EXPECT().SetClusterDbPassword(gomock.Any(),
+	//		gomock.Any(), gomock.Any()).Return(fmt.Errorf("init fail")).AnyTimes()
+	//	secondparty.Manager = mockTiupManager
 		err := initDatabaseAccount(&workflowModel.WorkFlowNode{}, flowContext)
+		fmt.Println(err)
 		assert.Error(t, err)
 	})
 }
@@ -1549,10 +1548,10 @@ func Test_testConnectivity(t *testing.T) {
 	t.Run("error", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
 		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
-			//Cluster: &management.Cluster{
-			//	DBUser:     "root",
-			//	DBPassword: "wrong",
-			//},
+			Cluster: &management.Cluster{
+				//DBUser:     "root",
+				//DBPassword: "wrong",
+			},
 			Instances: map[string][]*management.ClusterInstance{
 				string(constants.ComponentIDTiDB): {
 					{
@@ -1574,6 +1573,7 @@ func Test_testConnectivity(t *testing.T) {
 			},
 		})
 		err := testConnectivity(&workflowModel.WorkFlowNode{}, ctx)
+		fmt.Println(err)
 		assert.Error(t, err)
 	})
 }

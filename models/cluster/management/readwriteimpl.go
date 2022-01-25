@@ -93,7 +93,7 @@ func (g *ClusterReadWrite) Get(ctx context.Context, clusterID string) (*Cluster,
 
 }
 
-func (g *ClusterReadWrite) GetMeta(ctx context.Context, clusterID string) (cluster *Cluster, instances []*ClusterInstance, err error) {
+func (g *ClusterReadWrite) GetMeta(ctx context.Context, clusterID string) (cluster *Cluster, instances []*ClusterInstance, users []*DBUser, err error) {
 	cluster, err = g.Get(ctx, clusterID)
 
 	if err != nil {
@@ -104,9 +104,18 @@ func (g *ClusterReadWrite) GetMeta(ctx context.Context, clusterID string) (clust
 	instances = make([]*ClusterInstance, 0)
 
 	err = g.DB(ctx).Model(&ClusterInstance{}).Where("cluster_id = ?", clusterID).Find(&instances).Error
-	err = dbCommon.WrapDBError(err)
-	return
+	if err != nil {
+		err = dbCommon.WrapDBError(err)
+		return
+	}
 
+	users, err = g.GetDBUser(ctx, clusterID)
+	if err != nil {
+		err = dbCommon.WrapDBError(err)
+		return
+	}
+
+	return
 }
 
 func (g *ClusterReadWrite) GetRelations(ctx context.Context, clusterID string) ([]*ClusterRelation, error) {
@@ -119,6 +128,7 @@ func (g *ClusterReadWrite) GetRelations(ctx context.Context, clusterID string) (
 	return relations, err
 }
 
+// todo
 func (g *ClusterReadWrite) QueryMetas(ctx context.Context, filters Filters, pageReq structs.PageRequest) ([]*Result, structs.Page, error) {
 	page := structs.Page{
 		Page:     pageReq.Page,
@@ -173,9 +183,15 @@ func (g *ClusterReadWrite) QueryMetas(ctx context.Context, filters Filters, page
 			return nil, page, err
 		}
 
+		users, err := g.GetDBUser(ctx, c.ID)
+		if err != nil {
+			err = dbCommon.WrapDBError(err)
+			return nil, page, err
+		}
 		results = append(results, &Result{
 			Cluster:   c,
 			Instances: instances,
+			DBUsers:   users,
 		})
 	}
 	return results, page, nil
@@ -331,7 +347,7 @@ func (g *ClusterReadWrite) CreateClusterTopologySnapshot(ctx context.Context, sn
 		return errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
 	}
 	if len(snapshot.PrivateKey) == 0 || len(snapshot.PublicKey) == 0 {
-		errInfo := fmt.Sprintf("CreateClusterTopologySnapshot failed : connection key required")
+		errInfo := "CreateClusterTopologySnapshot failed : connection key required"
 		framework.LogWithContext(ctx).Error(errInfo)
 		return errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
 	}
@@ -347,7 +363,7 @@ func (g *ClusterReadWrite) GetCurrentClusterTopologySnapshot(ctx context.Context
 		err = errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
 		return
 	}
-	
+
 	err = g.DB(ctx).Model(snapshot).Where("cluster_id = ?", clusterID).First(&snapshot).Error
 	err = dbCommon.WrapDBError(err)
 	return
@@ -360,6 +376,7 @@ func (g *ClusterReadWrite) UpdateTopologySnapshotConfig(ctx context.Context, clu
 		errInfo := "update cluster topology snapshot failed : record not found"
 		framework.LogWithContext(ctx).Error(errInfo)
 		err = errors.NewError(errors.TIEM_CLUSTER_NOT_FOUND, errInfo)
+		return err
 	}
 	snapshot.Config = config
 
@@ -377,8 +394,36 @@ func (g *ClusterReadWrite) ClearClusterPhysically(ctx context.Context, clusterID
 	}
 
 	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&ClusterInstance{}).Error
+	if err != nil {
+		return dbCommon.WrapDBError(err)
+	}
 	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&ClusterTopologySnapshot{}).Error
 	return dbCommon.WrapDBError(err)
+}
+
+func (g *ClusterReadWrite) CreateDBUser(ctx context.Context, user *DBUser) error {
+	err := g.DB(ctx).Create(user).Error
+	return dbCommon.WrapDBError(err)
+}
+
+func (g *ClusterReadWrite) GetDBUser(ctx context.Context, clusterID string) ([]*DBUser, error) {
+	users := make([]*DBUser, 0)
+	err := g.DB(ctx).Model(&DBUser{}).Where("cluster_id = ? ", clusterID).Find(&users).Error
+	if err != nil {
+		err = dbCommon.WrapDBError(err)
+	}
+	return users, err
+}
+
+func (g *ClusterReadWrite) DeleteDBUser(ctx context.Context, ID uint) error {
+	user := &DBUser{}
+	err := g.DB(ctx).First(user, "id = ?", ID).Delete(user).Error
+	return dbCommon.WrapDBError(err)
+}
+
+func (g *ClusterReadWrite) UpdateDBUser(ctx context.Context, user *DBUser) error {
+	g.DB(ctx).Save(user)
+	return nil
 }
 
 func NewClusterReadWrite(db *gorm.DB) *ClusterReadWrite {

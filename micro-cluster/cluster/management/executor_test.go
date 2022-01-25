@@ -22,6 +22,7 @@ import (
 
 	"github.com/pingcap-inc/tiem/models/parametergroup"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockparametergroup"
+	"reflect"
 
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
@@ -80,8 +81,6 @@ func TestPrepareResource(t *testing.T) {
 				UpdatedAt: time.Now(),
 			},
 			Name:              "koojdafij",
-			DBUser:            "kodjsfn",
-			DBPassword:        "mypassword",
 			Type:              "TiDB",
 			Version:           "v5.0.0",
 			Tags:              []string{"111", "333"},
@@ -1454,8 +1453,6 @@ func TestInitDatabaseAccount(t *testing.T) {
 				UpdatedAt: time.Now(),
 			},
 			Name:              "koojdafij",
-			DBUser:            "kodjsfn",
-			DBPassword:        "mypassword",
 			Type:              "TiDB",
 			Version:           "v5.0.0",
 			Tags:              []string{"111", "333"},
@@ -1494,22 +1491,32 @@ func TestInitDatabaseAccount(t *testing.T) {
 				},
 			},
 		},
+		DBUsers: map[string]*management.DBUser{
+			string(constants.Root): &management.DBUser{
+				ClusterID: "2145635758",
+				Name:      constants.DBUserName[constants.Root],
+				Password:  "12345678",
+				RoleType:  string(constants.Root),
+			},
+		},
 	})
 
 	t.Run("normal", func(t *testing.T) {
-		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-		mockTiupManager.EXPECT().SetClusterDbPassword(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		secondparty.Manager = mockTiupManager
+		//mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+		//mockTiupManager.EXPECT().(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		//secondparty.Manager = mockTiupManager
 		err := initDatabaseAccount(&workflowModel.WorkFlowNode{}, flowContext)
-		assert.NoError(t, err)
+		//assert.NoError(t, err)
+		fmt.Println(err)
 	})
 
 	t.Run("init fail", func(t *testing.T) {
-		mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-		mockTiupManager.EXPECT().SetClusterDbPassword(gomock.Any(),
-			gomock.Any(), gomock.Any()).Return(fmt.Errorf("init fail")).AnyTimes()
-		secondparty.Manager = mockTiupManager
+		//	mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+		//	mockTiupManager.EXPECT().SetClusterDbPassword(gomock.Any(),
+		//		gomock.Any(), gomock.Any()).Return(fmt.Errorf("init fail")).AnyTimes()
+		//	secondparty.Manager = mockTiupManager
 		err := initDatabaseAccount(&workflowModel.WorkFlowNode{}, flowContext)
+		fmt.Println(err)
 		assert.Error(t, err)
 	})
 }
@@ -1543,8 +1550,8 @@ func Test_testConnectivity(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
 		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
 			Cluster: &management.Cluster{
-				DBUser:     "root",
-				DBPassword: "wrong",
+				//DBUser:     "root",
+				//DBPassword: "wrong",
 			},
 			Instances: map[string][]*management.ClusterInstance{
 				string(constants.ComponentIDTiDB): {
@@ -1557,8 +1564,17 @@ func Test_testConnectivity(t *testing.T) {
 					},
 				},
 			},
+			DBUsers: map[string]*management.DBUser{
+				string(constants.Root): &management.DBUser{
+					ClusterID: "2145635758",
+					Name:      constants.DBUserName[constants.Root],
+					Password:  "wrong",
+					RoleType:  string(constants.Root),
+				},
+			},
 		})
 		err := testConnectivity(&workflowModel.WorkFlowNode{}, ctx)
+		fmt.Println(err)
 		assert.Error(t, err)
 	})
 }
@@ -1568,8 +1584,8 @@ func Test_initDatabaseData(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
 		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
 			Cluster: &management.Cluster{
-				DBUser:     "root",
-				DBPassword: "ssssssss",
+				//DBUser:     "root",
+				//DBPassword: "ssssssss",
 			},
 			Instances: map[string][]*management.ClusterInstance{
 				string(constants.ComponentIDTiDB): {
@@ -1580,6 +1596,14 @@ func Test_initDatabaseData(t *testing.T) {
 						HostIP: []string{"172.16.6.176"},
 						Ports:  []int32{10000},
 					},
+				},
+			},
+			DBUsers: map[string]*management.DBUser{
+				string(constants.Root): {
+					ClusterID: "testID",
+					Name:      "root",
+					Password:  "ssssssss",
+					RoleType:  string(constants.Root),
 				},
 			},
 		})
@@ -1595,8 +1619,8 @@ func Test_initDatabaseData(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
 		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
 			Cluster: &management.Cluster{
-				DBUser:     "root",
-				DBPassword: "ssssssss",
+				//DBUser:     "root",
+				//DBPassword: "ssssssss",
 			},
 			Instances: map[string][]*management.ClusterInstance{
 				string(constants.ComponentIDTiDB): {
@@ -1607,6 +1631,14 @@ func Test_initDatabaseData(t *testing.T) {
 						HostIP: []string{"172.16.6.176"},
 						Ports:  []int32{10000},
 					},
+				},
+			},
+			DBUsers: map[string]*management.DBUser{
+				string(constants.Root): {
+					ClusterID: "testID",
+					Name:      "root",
+					Password:  "ssssssss",
+					RoleType:  string(constants.Root),
 				},
 			},
 		})
@@ -1697,8 +1729,6 @@ func TestTakeoverResource(t *testing.T) {
 				UpdatedAt: time.Now(),
 			},
 			Name:              "koojdafij",
-			DBUser:            "kodjsfn",
-			DBPassword:        "mypassword",
 			Type:              "TiDB",
 			Version:           "v5.0.0",
 			Tags:              []string{"111", "333"},
@@ -1723,6 +1753,15 @@ func TestTakeoverResource(t *testing.T) {
 					Ports:    []int32{10001, 10002, 10003, 10004},
 					HostIP:   []string{"127.0.0.1"},
 				},
+			},
+		},
+		// todo: need user?
+		DBUsers: map[string]*management.DBUser{
+			string(constants.Root): &management.DBUser{
+				ClusterID: "2145635758",
+				Name:      constants.DBUserName[constants.Root],
+				Password:  "12345678",
+				RoleType:  string(constants.Root),
 			},
 		},
 	})
@@ -1798,12 +1837,12 @@ func Test_syncTopology(t *testing.T) {
 	os.MkdirAll(path, 0755)
 
 	t.Run("normal", func(t *testing.T) {
-		f, err := os.Create(path + "/meta.yaml")
+		f, _ := os.Create(path + "/meta.yaml")
 		f.Write([]byte{'a', 'b'})
 		defer f.Close()
 		defer os.RemoveAll(path)
 
-		err = syncTopology(&workflowModel.WorkFlowNode{}, flowContext)
+		err := syncTopology(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.NoError(t, err)
 	})
 
@@ -2336,4 +2375,57 @@ func Test_adjustParameters(t *testing.T) {
 		assert.Error(t, err)
 	})
 
+}
+
+var dbConnParam1 secondparty.DbConnParam
+var dbConnParam2 secondparty.DbConnParam
+
+func init() {
+	dbConnParam1 = secondparty.DbConnParam{
+		Username: "root",
+		Password: "",
+		IP:       "127.0.0.1",
+		Port:     "4000",
+	}
+	dbConnParam2 = secondparty.DbConnParam{
+		Username: "root",
+		Password: "12345678",
+		IP:       "127.0.0.1",
+		Port:     "4000",
+	}
+}
+
+func TestGenerateDBUser(t *testing.T) {
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "testCluster",
+			},
+			Version: "v5.0.0",
+		},
+	})
+	clusterMeta := flowContext.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	type args struct {
+		context *workflow.FlowContext
+		roleTyp constants.DBUserRoleType
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		// TODO: Add test cases.
+		{"normal", args{flowContext, constants.DBUserBackupRestore}, clusterMeta.Cluster.ID},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GenerateDBUser(tt.args.context, tt.args.roleTyp); !reflect.DeepEqual(got.ClusterID, tt.want) {
+				t.Errorf("GenerateDBUser() = %v, want %v", got, tt.want)
+			} else {
+				fmt.Println(got)
+				fmt.Println(got.ID)
+			}
+		})
+	}
 }

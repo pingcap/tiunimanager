@@ -70,6 +70,32 @@ func mockClusterMeta() *handler.ClusterMeta {
 			"PD":   mockClusterInstances(),
 			"CDC":  mockClusterInstances(),
 		},
+		DBUsers: map[string]*management.DBUser{
+			string(constants.Root): &management.DBUser{
+				ClusterID: "id",
+				Name:      constants.DBUserName[constants.Root],
+				Password:  "12345678",
+				RoleType:  string(constants.Root),
+			},
+			string(constants.DBUserBackupRestore): &management.DBUser{
+				ClusterID: "id",
+				Name:      constants.DBUserName[constants.DBUserBackupRestore],
+				Password:  "12345678",
+				RoleType:  string(constants.DBUserBackupRestore),
+			},
+			string(constants.DBUserParameterManagement): &management.DBUser{
+				ClusterID: "id",
+				Name:      constants.DBUserName[constants.DBUserParameterManagement],
+				Password:  "12345678",
+				RoleType:  string(constants.DBUserParameterManagement),
+			},
+			string(constants.DBUserCDCDataSync): &management.DBUser{
+				ClusterID: "id",
+				Name:      constants.DBUserName[constants.DBUserCDCDataSync],
+				Password:  "12345678",
+				RoleType:  string(constants.DBUserCDCDataSync),
+			},
+		},
 		NodeExporterPort:     9091,
 		BlackboxExporterPort: 9092,
 	}
@@ -79,8 +105,6 @@ func mockCluster() *management.Cluster {
 	return &management.Cluster{
 		Entity:            common.Entity{ID: "123", TenantId: "1", Status: "1"},
 		Name:              "testCluster",
-		DBUser:            "root",
-		DBPassword:        "123",
 		Type:              "0",
 		Version:           "5.0",
 		TLS:               false,
@@ -118,6 +142,35 @@ func mockClusterInstances() []*management.ClusterInstance {
 			DiskPath:     "/tmp",
 			HostInfo:     "host",
 			PortInfo:     "port",
+		},
+	}
+}
+
+func mockDBUsers() []*management.DBUser {
+	return []*management.DBUser{
+		{
+			ClusterID: "clusterId",
+			Name:      "backup",
+			Password:  "123455678",
+			RoleType:  string(constants.DBUserBackupRestore),
+		},
+		{
+			ClusterID: "clusterId",
+			Name:      "root",
+			Password:  "123455678",
+			RoleType:  string(constants.Root),
+		},
+		{
+			ClusterID: "clusterId",
+			Name:      "parameter",
+			Password:  "123455678",
+			RoleType:  string(constants.DBUserParameterManagement),
+		},
+		{
+			ClusterID: "clusterId",
+			Name:      "data_sync",
+			Password:  "123455678",
+			RoleType:  string(constants.DBUserCDCDataSync),
 		},
 	}
 }

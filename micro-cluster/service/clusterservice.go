@@ -20,8 +20,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/constants"
 	"time"
+
+	"github.com/pingcap-inc/tiem/common/constants"
 
 	"github.com/pingcap-inc/tiem/metrics"
 	"github.com/pingcap-inc/tiem/micro-cluster/user/rbac"
@@ -548,7 +549,7 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterser
 	request := cluster.QueryClustersReq{}
 
 	if handleRequest(ctx, req, resp, &request, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionRead)}}) {
-		result, total, err := c.clusterManager.QueryCluster(framework.NewBackgroundMicroCtx(ctx, false), request)
+		result, total, err := c.clusterManager.QueryCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, &clusterservices.RpcPage{
 			Page:     int32(request.Page),
 			PageSize: int32(request.PageSize),
@@ -847,7 +848,7 @@ func (c *ClusterServiceHandler) Login(ctx context.Context, req *clusterservices.
 
 	loginReq := message.LoginReq{}
 	if handleRequest(ctx, req, resp, &loginReq, []structs.RbacPermission{}) {
-		result, err := c.authManager.Login(framework.NewBackgroundMicroCtx(ctx, false), loginReq)
+		result, err := c.authManager.Login(ctx, loginReq)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -875,7 +876,7 @@ func (c *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *cluster
 
 	verReq := message.AccessibleReq{}
 	if handleRequest(ctx, req, resp, &verReq, []structs.RbacPermission{}) {
-		result, err := c.authManager.Accessible(framework.NewBackgroundMicroCtx(ctx, false), verReq)
+		result, err := c.authManager.Accessible(ctx, verReq)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 

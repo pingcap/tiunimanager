@@ -3427,6 +3427,9 @@ paths:
       - application/json
       description: query parameters of a cluster
       parameters:
+      - in: query
+        name: instanceType
+        type: string
       - description: Current page location
         in: query
         name: page

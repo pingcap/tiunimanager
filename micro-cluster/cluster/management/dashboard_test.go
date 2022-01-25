@@ -105,12 +105,12 @@ func TestGetDashboardInfo(t *testing.T) {
 			Ports:    []int32{30001, 30002, 30003, 30004},
 			HostIP:   []string{"127.0.0.3"},
 		},
-	}, []*management.DBUser {
+	}, []*management.DBUser{
 		{
 			ClusterID: "2145635758",
 			Name:      constants.DBUserName[constants.Root],
 			Password:  "12345678",
-			RoleType: string(constants.Root),
+			RoleType:  string(constants.Root),
 		},
 	}, nil).Times(1)
 
@@ -182,12 +182,12 @@ func TestGetDashboardInfo(t *testing.T) {
 			Ports:    []int32{30001, 30002, 30003, 30004},
 			HostIP:   []string{"127.0.0.3"},
 		},
-	}, []*management.DBUser {
+	}, []*management.DBUser{
 		{
 			ClusterID: "2145635758",
 			Name:      constants.DBUserName[constants.Root],
 			Password:  "12345678",
-			RoleType: string(constants.Root),
+			RoleType:  string(constants.Root),
 		},
 	}, errors.Error(errors.TIEM_MARSHAL_ERROR)).Times(1)
 	_, err = GetDashboardInfo(context.TODO(), cluster.GetDashboardInfoReq{ClusterID: "2145635758"})
@@ -202,4 +202,3 @@ func Test_getDashboardUrlFromCluster(t *testing.T) {
 	})
 	assert.Error(t, err)
 }
-

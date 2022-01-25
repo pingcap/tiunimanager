@@ -1005,9 +1005,9 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 
 	// create built-in users
 	roleType := []constants.DBUserRoleType{
-				constants.DBUserBackupRestore,
-				constants.DBUserParameterManagement,
-				constants.DBUserCDCDataSync,
+		constants.DBUserBackupRestore,
+		constants.DBUserParameterManagement,
+		constants.DBUserCDCDataSync,
 	}
 
 	for _, rt := range roleType {
@@ -1393,8 +1393,8 @@ func testConnectivity(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 
 	return errors.OfNullable(nil).
 		BreakIf(func() error {
-		user := clusterMeta.DBUsers[string(constants.Root)] // todo
-		sqlDB, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql", user.Name, user.Password, connectAddress.IP, connectAddress.Port))
+			user := clusterMeta.DBUsers[string(constants.Root)] // todo
+			sqlDB, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql", user.Name, user.Password, connectAddress.IP, connectAddress.Port))
 			db = sqlDB
 			return err
 		}).
@@ -1428,7 +1428,7 @@ func initDatabaseData(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
 	backupID := context.GetData(ContextBackupID)
-	if backupID != nil && len(backupID.(string)) > 0{
+	if backupID != nil && len(backupID.(string)) > 0 {
 		node.Record(fmt.Sprintf("recover data from backup record %s for cluster %s", backupID, clusterMeta.Cluster.ID))
 		// todo @chencheng
 	} else {

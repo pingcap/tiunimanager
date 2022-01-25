@@ -144,7 +144,7 @@ func TestScaleInPreCheck(t *testing.T) {
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.Root],
 				Password:  "12345678",
-				RoleType: string(constants.Root),
+				RoleType:  string(constants.Root),
 			},
 		}}
 		instance := &management.ClusterInstance{Type: string(constants.ComponentIDTiFlash)}

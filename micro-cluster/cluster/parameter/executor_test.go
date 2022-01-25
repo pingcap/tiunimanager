@@ -37,13 +37,9 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/structs"
 
-	"github.com/pingcap-inc/tiem/message/cluster"
-
 	"github.com/pingcap-inc/tiem/models/cluster/parameter"
 
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclusterparameter"
-
-	"github.com/pingcap-inc/tiem/models/parametergroup"
 
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockparametergroup"
@@ -51,7 +47,6 @@ import (
 	"github.com/alecthomas/assert"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	"github.com/pingcap-inc/tiem/message"
 	secondparty2 "github.com/pingcap-inc/tiem/models/workflow/secondparty"
 	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -326,11 +321,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, mockModifyParameter())
-		modifyCtx.SetData(contextApplyParameterInfo, &message.ApplyParameterGroupReq{
-			ParamGroupId: "1",
-			ClusterID:    "123",
-			Reboot:       true,
-		})
+		modifyCtx.SetData(contextHasApplyParameter, true)
 		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
 		assert.NoError(t, err)
 	})
@@ -372,16 +363,6 @@ func TestExecutor_persistParameter(t *testing.T) {
 	models.SetClusterParameterReaderWriter(clusterParameterRW)
 
 	t.Run("success", func(t *testing.T) {
-		parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
-			DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
-				return &parametergroup.ParameterGroup{ID: "1"}, []*parametergroup.ParamDetail{
-					{
-						Parameter:    parametergroup.Parameter{ID: "1"},
-						DefaultValue: "10",
-						Note:         "param1",
-					},
-				}, nil
-			})
 		clusterParameterRW.EXPECT().ApplyClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			DoAndReturn(func(ctx context.Context, parameterGroupId string, clusterId string, param []*parameter.ClusterParameterMapping) error {
 				return nil
@@ -393,10 +374,7 @@ func TestExecutor_persistParameter(t *testing.T) {
 		}
 		applyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		applyCtx.SetData(contextModifyParameters, mockModifyParameter())
-		applyCtx.SetData(contextApplyParameterInfo, &message.ApplyParameterGroupReq{
-			ParamGroupId: "1",
-			ClusterID:    "123",
-		})
+		applyCtx.SetData(contextHasApplyParameter, true)
 		err := persistParameter(mockWorkFlowAggregation().CurrentNode, applyCtx)
 		assert.NoError(t, err)
 	})
@@ -420,96 +398,8 @@ func TestExecutor_persistParameter2(t *testing.T) {
 		}
 		applyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		applyCtx.SetData(contextModifyParameters, mockModifyParameter())
-		applyCtx.SetData(contextUpdateParameterInfo, &cluster.UpdateClusterParametersReq{
-			ClusterID: "123",
-		})
+		applyCtx.SetData(contextHasApplyParameter, false)
 		err := persistParameter(mockWorkFlowAggregation().CurrentNode, applyCtx)
-		assert.NoError(t, err)
-	})
-}
-
-func TestExecutor_persistApplyParameter(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
-	models.SetParameterGroupReaderWriter(parameterGroupRW)
-	clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
-	models.SetClusterParameterReaderWriter(clusterParameterRW)
-
-	t.Run("success", func(t *testing.T) {
-		parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
-			DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
-				return &parametergroup.ParameterGroup{ID: "1"}, []*parametergroup.ParamDetail{
-					{
-						Parameter:    parametergroup.Parameter{ID: "1"},
-						DefaultValue: "10",
-						Note:         "param1",
-					},
-				}, nil
-			})
-		clusterParameterRW.EXPECT().ApplyClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-			DoAndReturn(func(ctx context.Context, parameterGroupId string, clusterId string, param []*parameter.ClusterParameterMapping) error {
-				return nil
-			})
-
-		applyCtx := &workflow.FlowContext{
-			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
-		}
-		applyCtx.SetData(contextClusterMeta, mockClusterMeta())
-		applyCtx.SetData(contextModifyParameters, mockModifyParameter())
-		applyCtx.SetData(contextApplyParameterInfo, &message.ApplyParameterGroupReq{
-			ParamGroupId: "1",
-			ClusterID:    "123",
-		})
-		err := persistApplyParameter(&message.ApplyParameterGroupReq{
-			ParamGroupId: "1",
-			ClusterID:    "123",
-			Reboot:       false,
-		}, applyCtx, false)
-		assert.NoError(t, err)
-	})
-}
-
-func TestExecutor_persistUpdateParameter(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
-	models.SetClusterParameterReaderWriter(clusterParameterRW)
-
-	t.Run("success", func(t *testing.T) {
-		clusterParameterRW.EXPECT().UpdateClusterParameter(gomock.Any(), gomock.Any(), gomock.Any()).
-			DoAndReturn(func(ctx context.Context, clusterId string, params []*parameter.ClusterParameterMapping) (err error) {
-				return nil
-			})
-
-		applyCtx := &workflow.FlowContext{
-			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
-		}
-		applyCtx.SetData(contextClusterMeta, mockClusterMeta())
-		applyCtx.SetData(contextModifyParameters, mockModifyParameter())
-		applyCtx.SetData(contextUpdateParameterInfo, &cluster.UpdateClusterParametersReq{
-			ClusterID: "123",
-			Params: []structs.ClusterParameterSampleInfo{
-				{
-					ParamId:   "1",
-					RealValue: structs.ParameterRealValue{ClusterValue: "info"},
-				},
-			},
-		})
-		err := persistUpdateParameter(&cluster.UpdateClusterParametersReq{
-			ClusterID: "123",
-			Reboot:    false,
-			Params: []structs.ClusterParameterSampleInfo{
-				{
-					ParamId:   "1",
-					RealValue: structs.ParameterRealValue{ClusterValue: "info"},
-				},
-			},
-		}, applyCtx)
 		assert.NoError(t, err)
 	})
 }

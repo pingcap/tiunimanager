@@ -123,29 +123,29 @@ type DBUserRole struct {
 	Permission  string
 }
 
-var DBUserRoleRecords = map[constants.DBUserRoleType]DBUserRole {
+var DBUserRoleRecords = map[constants.DBUserRoleType]DBUserRole{
 	constants.Root: DBUserRole{
 		ClusterType: constants.EMProductIDTiDB,
-		RoleName: "root",
-		RoleType: constants.Root,
-		Permission: constants.DBUserPermission[constants.Root],
+		RoleName:    "root",
+		RoleType:    constants.Root,
+		Permission:  constants.DBUserPermission[constants.Root],
 	},
 	constants.DBUserBackupRestore: DBUserRole{
 		ClusterType: constants.EMProductIDTiDB,
-		RoleName: "backup_restore",
-		RoleType: constants.DBUserBackupRestore,
-		Permission: constants.DBUserPermission[constants.DBUserBackupRestore],
+		RoleName:    "backup_restore",
+		RoleType:    constants.DBUserBackupRestore,
+		Permission:  constants.DBUserPermission[constants.DBUserBackupRestore],
 	},
 	constants.DBUserParameterManagement: DBUserRole{
 		ClusterType: constants.EMProductIDTiDB,
-		RoleName: "parameter_management",
-		RoleType: constants.DBUserParameterManagement,
-		Permission: constants.DBUserPermission[constants.DBUserParameterManagement],
+		RoleName:    "parameter_management",
+		RoleType:    constants.DBUserParameterManagement,
+		Permission:  constants.DBUserPermission[constants.DBUserParameterManagement],
 	},
 	constants.DBUserCDCDataSync: DBUserRole{
 		ClusterType: constants.EMProductIDTiDB,
-		RoleName: "data_sync",
-		RoleType: constants.DBUserCDCDataSync,
-		Permission: constants.DBUserPermission[constants.DBUserCDCDataSync],
+		RoleName:    "data_sync",
+		RoleType:    constants.DBUserCDCDataSync,
+		Permission:  constants.DBUserPermission[constants.DBUserCDCDataSync],
 	},
 }

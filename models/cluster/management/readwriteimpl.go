@@ -127,6 +127,7 @@ func (g *ClusterReadWrite) GetRelations(ctx context.Context, clusterID string) (
 
 	return relations, err
 }
+
 // todo
 func (g *ClusterReadWrite) QueryMetas(ctx context.Context, filters Filters, pageReq structs.PageRequest) ([]*Result, structs.Page, error) {
 	page := structs.Page{
@@ -190,7 +191,7 @@ func (g *ClusterReadWrite) QueryMetas(ctx context.Context, filters Filters, page
 		results = append(results, &Result{
 			Cluster:   c,
 			Instances: instances,
-			DBUsers: users,
+			DBUsers:   users,
 		})
 	}
 	return results, page, nil
@@ -362,7 +363,7 @@ func (g *ClusterReadWrite) GetCurrentClusterTopologySnapshot(ctx context.Context
 		err = errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
 		return
 	}
-	
+
 	err = g.DB(ctx).Model(snapshot).Where("cluster_id = ?", clusterID).First(&snapshot).Error
 	err = dbCommon.WrapDBError(err)
 	return

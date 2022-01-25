@@ -86,7 +86,7 @@ func TestExecutor_backupCluster(t *testing.T) {
 				ClusterID: "cls-test",
 				Name:      constants.DBUserName[constants.DBUserBackupRestore],
 				Password:  "12345678",
-				RoleType: string(constants.DBUserBackupRestore),
+				RoleType:  string(constants.DBUserBackupRestore),
 			},
 		},
 	})
@@ -167,7 +167,7 @@ func TestExecutor_restoreFromSrcCluster(t *testing.T) {
 				ClusterID: "cls-test",
 				Name:      constants.DBUserName[constants.DBUserBackupRestore],
 				Password:  "12345678",
-				RoleType: string(constants.DBUserBackupRestore),
+				RoleType:  string(constants.DBUserBackupRestore),
 			},
 		},
 	})

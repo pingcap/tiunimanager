@@ -39,23 +39,23 @@ const (
 )
 
 type DBUserRoleType string
+
 // DBUser role type
 const (
-	Root                      DBUserRoleType = "Root"                      // root
-	DBUserBackupRestore       DBUserRoleType = "EM_Backup_Restore"         // user for backup and restore
-	DBUserParameterManagement DBUserRoleType = "EM_Parameter_Management"   // user for managing parameters
-	DBUserCDCDataSync         DBUserRoleType = "CDC_Data_Sync"             // user for CDC data synchronization
+	Root                      DBUserRoleType = "Root"                    // root
+	DBUserBackupRestore       DBUserRoleType = "EM_Backup_Restore"       // user for backup and restore
+	DBUserParameterManagement DBUserRoleType = "EM_Parameter_Management" // user for managing parameters
+	DBUserCDCDataSync         DBUserRoleType = "CDC_Data_Sync"           // user for CDC data synchronization
 )
 
-
-var DBUserName = map[DBUserRoleType]string {
+var DBUserName = map[DBUserRoleType]string{
 	Root:                      "root",
 	DBUserBackupRestore:       "EM_Backup_Restore",
 	DBUserParameterManagement: "EM_Parameter_Management",
 	DBUserCDCDataSync:         "CDC_Data_Sync",
 }
 
-var DBUserPermission  = map[DBUserRoleType]string {
+var DBUserPermission = map[DBUserRoleType]string{
 	Root:                      "ALL PRIVILEGES",
 	DBUserBackupRestore:       "ALL PRIVILEGES",
 	DBUserParameterManagement: "ALL PRIVILEGES",

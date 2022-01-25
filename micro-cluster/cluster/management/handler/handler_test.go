@@ -777,12 +777,12 @@ func TestClusterMeta_Get(t *testing.T) {
 			Ports:  []int32{111},
 		},
 	}, []*management.DBUser{
-			{
-				ClusterID: "111",
-				Name:      constants.DBUserName[constants.Root],
-				Password:  "12345678",
-				RoleType: string(constants.Root),
-			}}, nil)
+		{
+			ClusterID: "111",
+			Name:      constants.DBUserName[constants.Root],
+			Password:  "12345678",
+			RoleType:  string(constants.Root),
+		}}, nil)
 
 	rw.EXPECT().GetMeta(gomock.Any(), "222").Return(nil, nil, nil, errors.New("empty"))
 
@@ -1271,7 +1271,7 @@ func mockResult(name string) []*management.Result {
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
 			},
-			Name:              name,
+			Name: name,
 			//DBUser:            "kodjsfn",
 			Type:              "TiDB",
 			Version:           "v5.0.0",
@@ -1348,11 +1348,10 @@ func mockResult(name string) []*management.Result {
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.Root],
 				Password:  "12345678",
-				RoleType: string(constants.Root),
+				RoleType:  string(constants.Root),
 			},
 		},
 	}
-
 
 	return []*management.Result{one}
 }
@@ -1482,7 +1481,6 @@ func TestClusterMeta_GetVersion(t *testing.T) {
 	assert.Equal(t, "v5.2.2", meta.GetRevision())
 
 }
-
 
 func TestGetRandomString(t *testing.T) {
 	type args struct {

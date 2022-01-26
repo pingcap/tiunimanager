@@ -70,7 +70,7 @@ func TestFlowManager_RegisterWorkFlow(t *testing.T) {
 	assert.Equal(t, "nodeName1", define.TaskNodes["start"].Name)
 	assert.Equal(t, "nodeName2", define.TaskNodes["nodeName1Done"].Name)
 	assert.Equal(t, "end", define.TaskNodes["nodeName2Done"].Name)
-	assert.Equal(t, "fail", define.TaskNodes["fail"].Name)
+	assert.Equal(t, "end", define.TaskNodes["fail"].Name)
 }
 
 func TestFlowManager_Start_case1(t *testing.T) {

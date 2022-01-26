@@ -73,7 +73,7 @@ var modifyParametersDefine = workflow.WorkFlowDefine{
 		"validationDone": {"modifyParameter", "modifyDone", "fail", workflow.SyncFuncNode, modifyParameters},
 		"modifyDone":     {"refreshParameter", "refreshDone", "fail", workflow.SyncFuncNode, refreshParameter},
 		"refreshDone":    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(defaultEnd, persistParameter)},
-		"fail":           {"fail", "", "", workflow.SyncFuncNode, defaultEnd},
+		"fail":           {"end", "", "", workflow.SyncFuncNode, defaultEnd},
 	},
 }
 

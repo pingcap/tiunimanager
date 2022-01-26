@@ -48,7 +48,7 @@ func getEmptyFlow(name string) *workflow.WorkFlowDefine {
 		TaskNodes: map[string]*workflow.NodeDefine{
 			"start": {Name: "start", SuccessEvent: "done", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
 			"done":  {Name: "end", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
-			"fail":  {Name: "fail", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
+			"fail":  {Name: "end", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
 		},
 	}
 }

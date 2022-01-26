@@ -1074,6 +1074,7 @@ func chooseParameterGroup(clusterMeta *handler.ClusterMeta, node *workflowModel.
 	if len(groups) == 0 {
 		msg := fmt.Sprintf("no default group found for cluster %s, type = %s, version = %s", clusterMeta.Cluster.ID, clusterMeta.Cluster.Type, clusterMeta.GetMinorVersion())
 		framework.LogWithContext(context).Errorf(msg)
+		node.Record(msg)
 		return errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_DATA, msg)
 	} else {
 		clusterMeta.Cluster.ParameterGroupID = groups[0].ParamGroupID

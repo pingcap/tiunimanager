@@ -61,7 +61,7 @@ func (define *WorkFlowDefine) getNodeNameList() []string {
 	var nodeNames []string
 	node := define.TaskNodes["start"]
 
-	for node != nil && node.Name != "end" && node.Name != "fail" {
+	for node != nil {
 		nodeNames = append(nodeNames, node.Name)
 		node = define.TaskNodes[node.SuccessEvent]
 	}

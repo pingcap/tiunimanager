@@ -62,7 +62,7 @@ func NewImportExportManager() *ImportExportManager {
 			"start":            {"exportDataFromCluster", "exportDataDone", "fail", workflow.PollingNode, exportDataFromCluster},
 			"exportDataDone":   {"updateDataExportRecord", "updateRecordDone", "fail", workflow.SyncFuncNode, updateDataExportRecord},
 			"updateRecordDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-			"fail":             {"fail", "", "", workflow.SyncFuncNode, exportDataFailed},
+			"fail":             {"end", "", "", workflow.SyncFuncNode, exportDataFailed},
 		},
 	})
 	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowImportData, &workflow.WorkFlowDefine{
@@ -72,7 +72,7 @@ func NewImportExportManager() *ImportExportManager {
 			"buildConfigDone":  {"importDataToCluster", "importDataDone", "fail", workflow.PollingNode, importDataToCluster},
 			"importDataDone":   {"updateDataImportRecord", "updateRecordDone", "fail", workflow.SyncFuncNode, updateDataImportRecord},
 			"updateRecordDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-			"fail":             {"fail", "", "", workflow.SyncFuncNode, importDataFailed},
+			"fail":             {"end", "", "", workflow.SyncFuncNode, importDataFailed},
 		},
 	})
 

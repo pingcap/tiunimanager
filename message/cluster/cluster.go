@@ -188,7 +188,6 @@ type TakeoverClusterReq struct {
 	TiUPUserPassword string `json:"TiUPUserPassword" example:"password" form:"TiUPUserPassword" validate:"required"`
 	TiUPPath         string `json:"TiUPPath" example:".tiup/" form:"TiUPPath" validate:"required"`
 	ClusterName      string `json:"clusterName" example:"myClusterName" form:"clusterName" validate:"required"`
-	DBUser           string `json:"dbUser" example:"root" form:"dbUser" validate:"required"`
 	DBPassword       string `json:"dbPassword" example:"myPassword" form:"dbPassword" validate:"required"`
 }
 

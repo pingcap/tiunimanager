@@ -1068,9 +1068,7 @@ func freedClusterResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 	return nil
 }
 
-// initDatabaseAccount
-// @Description: init database account for new cluster
-func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+func initRootAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
 	tidbServerHost := clusterMeta.GetClusterConnectAddresses()[0].IP
@@ -1097,8 +1095,23 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		return err
 	}
 	node.Record(fmt.Sprintf("init user %s for cluster %s ", rootUser.Name, clusterMeta.Cluster.ID))
-	// update connection parameter
-	conn.Password = rootUser.Password
+	return nil
+}
+
+// initDatabaseAccount
+// @Description: init database account for new cluster
+func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) (err error) {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+
+	tidbServerHost := clusterMeta.GetClusterConnectAddresses()[0].IP
+	tidbServerPort := clusterMeta.GetClusterConnectAddresses()[0].Port
+
+	conn := secondparty.DbConnParam{
+		Username: clusterMeta.DBUsers[string(constants.Root)].Name,
+		Password: clusterMeta.DBUsers[string(constants.Root)].Password,
+		IP:       tidbServerHost,
+		Port:     strconv.Itoa(tidbServerPort),
+	}
 
 	// create built-in users
 	roleType := []constants.DBUserRoleType{

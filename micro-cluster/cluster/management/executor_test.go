@@ -1582,6 +1582,9 @@ func Test_testConnectivity(t *testing.T) {
 }
 
 func Test_initDatabaseData(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	t.Run("normal", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
 		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
@@ -1611,6 +1614,16 @@ func Test_initDatabaseData(t *testing.T) {
 		})
 
 		ctx.SetData(ContextBackupID, "iddddd")
+
+		brService := mock_br_service.NewMockBRService(ctrl)
+		backuprestore.MockBRService(brService)
+		brService.EXPECT().RestoreExistCluster(gomock.Any(),
+			gomock.Any(), false).Return(
+			cluster.RestoreExistClusterResp{
+				AsyncTaskWorkFlowInfo: structs2.AsyncTaskWorkFlowInfo{
+					WorkFlowID: "111",
+				},
+			}, nil)
 
 		node := &workflowModel.WorkFlowNode{}
 		err := initDatabaseData(node, ctx)

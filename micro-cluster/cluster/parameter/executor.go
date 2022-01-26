@@ -165,11 +165,11 @@ func validationParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCon
 		// validate parameter value by range field
 		if !ValidateRange(param) {
 			if len(param.Range) == 2 && (param.Type == int(Integer) || param.Type == int(Float)) {
-				return fmt.Errorf(fmt.Sprintf("Validation parameter `%s.%s` failed, update value: %s, can take a range of values: %v",
-					param.Category, param.Name, param.RealValue.ClusterValue, param.Range))
+				return fmt.Errorf(fmt.Sprintf("Validation parameter `%s` failed, update value: %s, can take a range of values: %v",
+					DisplayFullParameterName(param.Category, param.Name), param.RealValue.ClusterValue, param.Range))
 			} else {
-				return fmt.Errorf(fmt.Sprintf("Validation parameter `%s.%s` failed, update value: %s, optional values: %v",
-					param.Category, param.Name, param.RealValue.ClusterValue, param.Range))
+				return fmt.Errorf(fmt.Sprintf("Validation parameter `%s` failed, update value: %s, optional values: %v",
+					DisplayFullParameterName(param.Category, param.Name), param.RealValue.ClusterValue, param.Range))
 			}
 		}
 	}
@@ -215,7 +215,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		}
 		// If the parameters are modified, read-only parameters are not allowed to be modified
 		if applyParameter == nil && param.ReadOnly == int(ReadOnly) {
-			return fmt.Errorf(fmt.Sprintf("Read-only parameters `%s.%s` are not allowed to be modified", param.Category, param.Name))
+			return fmt.Errorf(fmt.Sprintf("Read-only parameters `%s` are not allowed to be modified", DisplayFullParameterName(param.Category, param.Name)))
 		}
 		framework.LogWithContext(ctx).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.ClusterValue)
 		// condition UpdateSource values is 2, then insert tiup and sql respectively
@@ -225,7 +225,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		} else {
 			putParameterContainer(paramContainer, param.UpdateSource, param)
 		}
-		node.Record(fmt.Sprintf("modify parameter `%s.%s` in %s to %s; ", param.Category, param.Name, param.InstanceType, param.RealValue.ClusterValue))
+		node.Record(fmt.Sprintf("modify parameter `%s` in %s to %s; ", DisplayFullParameterName(param.Category, param.Name), param.InstanceType, param.RealValue.ClusterValue))
 	}
 
 	for source, params := range paramContainer {

@@ -639,7 +639,7 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 	}
 
 	// write cluster into db
-	got, err := models.GetClusterReaderWriter().Create(ctx, meta.Cluster);
+	got, err := models.GetClusterReaderWriter().Create(ctx, meta.Cluster)
 	if err != nil {
 		return nil, err
 	}

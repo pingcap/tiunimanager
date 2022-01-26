@@ -178,7 +178,7 @@ func mockDBUsers() []*management.DBUser {
 func mockModifyParameter() *ModifyParameter {
 	return &ModifyParameter{
 		Reboot: false,
-		Params: []ModifyClusterParameterInfo{
+		Params: []*ModifyClusterParameterInfo{
 			{
 				ParamId:        "1",
 				Name:           "test_param_1",

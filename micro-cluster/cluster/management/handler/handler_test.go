@@ -485,7 +485,7 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 	models.SetClusterReaderWriter(rw)
 
 	rw.EXPECT().CreateRelation(gomock.Any(), gomock.Any()).Return(nil)
-	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil)
+	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster01"}}, nil)
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{

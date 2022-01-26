@@ -206,7 +206,8 @@ var cloneDefine = workflow.WorkFlowDefine{
 		"persistDone":            {"syncBackupStrategy", "syncBackupStrategyDone", "failAfterDeploy", workflow.SyncFuncNode, syncBackupStrategy},
 		"syncBackupStrategyDone": {"syncParameters", "syncParametersDone", "failAfterDeploy", workflow.SyncFuncNode, syncParameters},
 		"syncParametersDone":     {"waitSyncParam", "waitSyncParamDone", "failAfterDeploy", workflow.SyncFuncNode, waitWorkFlow},
-		"waitSyncParamDone":      {"restoreCluster", "restoreClusterDone", "failAfterDeploy", workflow.SyncFuncNode, restoreCluster},
+		"waitSyncParamDone":      {"adjustParameters", "initParametersDone", "failAfterDeploy", workflow.SyncFuncNode, adjustParameters},
+		"initParametersDone":     {"restoreCluster", "restoreClusterDone", "failAfterDeploy", workflow.SyncFuncNode, restoreCluster},
 		"restoreClusterDone":     {"waitRestore", "waitRestoreDone", "failAfterDeploy", workflow.SyncFuncNode, waitWorkFlow},
 		"waitRestoreDone":        {"syncIncrData", "syncIncrDataDone", "failAfterDeploy", workflow.SyncFuncNode, syncIncrData},
 		"syncIncrDataDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(recoverSourceClusterGCTime, persistCluster, endMaintenance, asyncBuildLog)},
@@ -238,7 +239,7 @@ func (p *Manager) Clone(ctx context.Context, request cluster.CloneClusterReq) (r
 	}
 
 	// When use CDCSyncClone strategy to clone cluster, source cluster must have CDC
-	err = handler.ClonePreCheck(ctx, sourceClusterMeta, request.CloneStrategy)
+	err = handler.ClonePreCheck(ctx, sourceClusterMeta, clusterMeta, request.CloneStrategy)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"check cluster %s clone error: %s", sourceClusterMeta.Cluster.ID, err.Error())

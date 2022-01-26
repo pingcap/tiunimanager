@@ -209,12 +209,18 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 
 // ClonePreCheck
 // When use CDCSyncClone strategy to clone cluster, source cluster must have CDC
-func ClonePreCheck(ctx context.Context, sourceMeta *ClusterMeta, cloneStrategy string) error {
+func ClonePreCheck(ctx context.Context, sourceMeta *ClusterMeta, meta *ClusterMeta, cloneStrategy string) error {
 	if cloneStrategy == string(constants.CDCSyncClone) {
 		if _, ok := sourceMeta.Instances[string(constants.ComponentIDCDC)]; !ok {
 			return errors.NewErrorf(errors.TIEM_CDC_NOT_FOUND,
 				"cluster %s not found CDC, which cloned by %s", sourceMeta.Cluster.ID, cloneStrategy)
 		}
+	}
+
+	if len(meta.Instances[string(constants.ComponentIDTiKV)]) < meta.Cluster.Copies {
+		errMsg := "the number of TiKV instances is less than the copies"
+		framework.LogWithContext(ctx).Errorf(errMsg)
+		return errors.NewError(errors.TIEM_CLONE_TIKV_ERROR, errMsg)
 	}
 	return nil
 }

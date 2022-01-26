@@ -188,6 +188,7 @@ const (
 
 	TIEM_CHECK_CLUSTER_VERSION_ERROR EM_ERROR_CODE = 21301
 	TIEM_CDC_NOT_FOUND               EM_ERROR_CODE = 21302
+	TIEM_CLONE_TIKV_ERROR            EM_ERROR_CODE = 21303
 
 	CreateZonesError              EM_ERROR_CODE = 70001
 	DeleteZonesError              EM_ERROR_CODE = 70002

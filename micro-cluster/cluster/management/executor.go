@@ -729,43 +729,57 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*handler.ClusterMeta)
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
-	sourceResponse, _, err := parameter.NewManager().QueryClusterParameters(context.Context,
-		cluster.QueryClusterParametersReq{ClusterID: sourceClusterMeta.Cluster.ID})
-	if err != nil {
-		framework.LogWithContext(context.Context).Errorf(
-			"query cluster %s parameters error: %s", sourceClusterMeta.Cluster.ID, err.Error())
-		return err
+	if clusterMeta.Cluster.ParameterGroupID == sourceClusterMeta.Cluster.ParameterGroupID {
+		sourceResponse, _, err := parameter.NewManager().QueryClusterParameters(context.Context,
+			cluster.QueryClusterParametersReq{ClusterID: sourceClusterMeta.Cluster.ID})
+		if err != nil {
+			framework.LogWithContext(context.Context).Errorf(
+				"query cluster %s parameters error: %s", sourceClusterMeta.Cluster.ID, err.Error())
+			return err
+		}
+
+		targetParams := make([]structs.ClusterParameterSampleInfo, 0)
+		reboot := false
+		for _, param := range sourceResponse.Params {
+			// if parameter is variable which related os(such as temp dir in os), can not update it
+			if param.HasApply == int(parameter.ModifyApply) {
+				continue
+			}
+			targetParam := structs.ClusterParameterSampleInfo{
+				ParamId:   param.ParamId,
+				RealValue: param.RealValue,
+			}
+			targetParams = append(targetParams, targetParam)
+			if param.HasReboot == int(parameter.Reboot) {
+				reboot = true
+			}
+		}
+		response, err := parameter.NewManager().UpdateClusterParameters(context.Context, cluster.UpdateClusterParametersReq{
+			ClusterID: clusterMeta.Cluster.ID,
+			Params:    targetParams,
+			Reboot:    reboot,
+		}, false)
+		if err != nil {
+			framework.LogWithContext(context.Context).Errorf(
+				"update cluster %s parameters error: %s", clusterMeta.Cluster.ID, err.Error())
+			return err
+		}
+		context.SetData(ContextWorkflowID, response.WorkFlowID)
+		node.Record(fmt.Sprintf("update cluster %s parameters with source cluster %s parameters ",
+			clusterMeta.Cluster.ID, sourceClusterMeta.Cluster.ID))
+	} else {
+		resp, err := parameter.NewManager().ApplyParameterGroup(context, message.ApplyParameterGroupReq{
+			ParamGroupId: clusterMeta.Cluster.ParameterGroupID,
+			ClusterID:    clusterMeta.Cluster.ID,
+		}, false)
+		if err != nil {
+			return err
+		}
+		context.SetData(ContextWorkflowID, resp.WorkFlowID)
+		node.Record(fmt.Sprintf("cluster %s apply parameter group %s",
+			clusterMeta.Cluster.ID, clusterMeta.Cluster.ParameterGroupID))
 	}
 
-	targetParams := make([]structs.ClusterParameterSampleInfo, 0)
-	reboot := false
-	for _, param := range sourceResponse.Params {
-		// if parameter is variable which related os(such as temp dir in os), can not update it
-		if param.HasApply == int(parameter.ModifyApply) {
-			continue
-		}
-		targetParam := structs.ClusterParameterSampleInfo{
-			ParamId:   param.ParamId,
-			RealValue: param.RealValue,
-		}
-		targetParams = append(targetParams, targetParam)
-		if param.HasReboot == int(parameter.Reboot) {
-			reboot = true
-		}
-	}
-	response, err := parameter.NewManager().UpdateClusterParameters(context.Context, cluster.UpdateClusterParametersReq{
-		ClusterID: clusterMeta.Cluster.ID,
-		Params:    targetParams,
-		Reboot:    reboot,
-	}, false)
-	if err != nil {
-		framework.LogWithContext(context.Context).Errorf(
-			"update cluster %s parameters error: %s", clusterMeta.Cluster.ID, err.Error())
-		return err
-	}
-	context.SetData(ContextWorkflowID, response.WorkFlowID)
-
-	node.Record(fmt.Sprintf("update cluster %s parameters ", clusterMeta.Cluster.ID))
 	return nil
 }
 
@@ -892,6 +906,8 @@ func syncIncrData(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 		if err != nil {
 			return err
 		}
+		node.RecordAndPersist(fmt.Sprintf("upstream update timestamp(uut) %dms, downstream update timestamp(dut) %dms, stop condition(uut - dut): %dms",
+			response.UpstreamUpdateUnix, response.DownstreamSyncUnix, stop))
 		if response.UpstreamUpdateUnix-response.DownstreamSyncUnix <= stop {
 			framework.LogWithContext(context.Context).Infof("changefeed task %s sync successfully!", taskID)
 			return nil

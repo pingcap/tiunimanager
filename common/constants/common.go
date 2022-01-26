@@ -93,7 +93,7 @@ func ValidProvidedVendor(p string) error {
 	if p == string(Local) || p == string(AWS) {
 		return nil
 	}
-	return errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_VENDOR_NAME, "valid vendor name: [%s|%s|%s]", string(Local), string(AWS))
+	return errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_VENDOR_NAME, "valid vendor name: [%s|%s]", string(Local), string(AWS))
 }
 
 type EMProductComponentIDType string

@@ -201,18 +201,27 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		if applyParameter != nil && param.HasApply != int(DirectApply) {
 			continue
 		}
-		// If it is a parameter of CDC, apply the parameter without installing CDC, then skip directly
-		if applyParameter != nil && param.InstanceType == string(constants.ComponentIDCDC) && len(clusterMeta.GetCDCClientAddresses()) == 0 {
-			// The real value is set to an unknown empty value
-			param.RealValue.ClusterValue = ""
-			continue
+		if param.InstanceType == string(constants.ComponentIDCDC) && len(clusterMeta.GetCDCClientAddresses()) == 0 {
+			// If it is a parameter of CDC, apply the parameter without installing CDC, then skip directly
+			if applyParameter != nil {
+				// The real value is set to an unknown empty value
+				param.RealValue.ClusterValue = ""
+				continue
+			} else {
+				return fmt.Errorf("get %s address from meta failed, empty address", constants.ComponentIDCDC)
+			}
 		}
-		// If it is a parameter of TiFlash, apply the parameter without installing TiFlash, then skip directly
-		if applyParameter != nil && param.InstanceType == string(constants.ComponentIDTiFlash) && len(clusterMeta.GetTiFlashClientAddresses()) == 0 {
-			// The real value is set to an unknown empty value
-			param.RealValue.ClusterValue = ""
-			continue
+		if param.InstanceType == string(constants.ComponentIDTiFlash) && len(clusterMeta.GetTiFlashClientAddresses()) == 0 {
+			// If it is a parameter of TiFlash, apply the parameter without installing TiFlash, then skip directly
+			if applyParameter != nil {
+				// The real value is set to an unknown empty value
+				param.RealValue.ClusterValue = ""
+				continue
+			} else {
+				return fmt.Errorf("get %s address from meta failed, empty address", constants.ComponentIDTiFlash)
+			}
 		}
+
 		// If the parameters are modified, read-only parameters are not allowed to be modified
 		if applyParameter == nil && param.ReadOnly == int(ReadOnly) {
 			return fmt.Errorf(fmt.Sprintf("Read-only parameters `%s` are not allowed to be modified", DisplayFullParameterName(param.Category, param.Name)))

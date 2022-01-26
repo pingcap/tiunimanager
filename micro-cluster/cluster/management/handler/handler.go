@@ -111,16 +111,21 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbPassw
 	}
 	got, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
 	if err == nil {
-		framework.LogWithContext(ctx).Infof("takeover cluster %s succeed, id = %s", p.Cluster.Name, got.ID)
 		// set root user in clusterMeta
 		p.DBUsers = make(map[string]*management.DBUser)
-		p.DBUsers[string(constants.Root)] = &management.DBUser{
-			ClusterID: got.ID,
-			Name:      constants.DBUserName[constants.Root],
-			Password:  dbPassword,
-			RoleType:  string(constants.Root),
+		err = models.GetClusterReaderWriter().CreateDBUser(ctx, p.DBUsers[string(constants.Root)])
+		if err == nil {
+			rootUser := &management.DBUser{
+				ClusterID: got.ID,
+				Name:      constants.DBUserName[constants.Root],
+				Password:  dbPassword,
+				RoleType:  string(constants.Root),
+			}
+			p.DBUsers[string(constants.Root)] = rootUser
 		}
-	} else {
+	}
+
+	if err != nil {
 		framework.LogWithContext(ctx).Errorf("takeover cluster %s failed, err : %s", p.Cluster.Name, err.Error())
 	}
 	return err

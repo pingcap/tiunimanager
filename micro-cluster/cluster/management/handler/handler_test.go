@@ -1513,6 +1513,8 @@ func TestClusterMeta_BuildForTakeover(t *testing.T) {
 	meta := &ClusterMeta{}
 
 	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "1234"}}, nil)
+	rw.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
 	err := meta.BuildForTakeover(context.TODO(), "test", "1234")
 	assert.NoError(t, err)
 	//assert.Equal(t, meta.Cluster.Name, params.Name)

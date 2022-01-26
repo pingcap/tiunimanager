@@ -57,7 +57,7 @@ var DBUserName = map[DBUserRoleType]string{
 
 var DBUserPermission = map[DBUserRoleType][]string{
 	Root:                      {"ALL PRIVILEGES"},
-	DBUserBackupRestore:       {"BACKUP_ADMIN,RESTORE_ADMIN"},
-	DBUserParameterManagement: {"CONFIG,RELOAD,SYSTEM_VARIABLES_ADMIN"},
+	DBUserBackupRestore:       {"ALL PRIVILEGES", "BACKUP_ADMIN,RESTORE_ADMIN"},
+	DBUserParameterManagement: {"ALL PRIVILEGES", "CONFIG,RELOAD,SYSTEM_VARIABLES_ADMIN"},
 	DBUserCDCDataSync:         {"ALL PRIVILEGES", "RESTRICTED_REPLICA_WRITER_ADMIN"},
 }

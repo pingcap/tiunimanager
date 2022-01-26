@@ -605,13 +605,6 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 		MaintenanceStatus: constants.ClusterMaintenanceNone,
 		MaintainWindow:    p.Cluster.MaintainWindow,
 	}
-	meta.DBUsers = make(map[string]*management.DBUser)
-	meta.DBUsers[string(constants.Root)] = &management.DBUser{
-		ClusterID: p.Cluster.ID, // todo: which ID
-		Name:      constants.DBUserName[constants.Root],
-		Password:  parameter.DBPassword,
-		RoleType:  string(constants.Root),
-	}
 
 	// if user specify cluster version
 	if len(parameter.Version) > 0 {
@@ -647,10 +640,18 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 	}
 
 	// write cluster into db
-	if _, err := models.GetClusterReaderWriter().Create(ctx, meta.Cluster); err != nil {
+	got, err := models.GetClusterReaderWriter().Create(ctx, meta.Cluster);
+	if err != nil {
 		return nil, err
 	}
-
+	// set root user
+	meta.DBUsers = make(map[string]*management.DBUser)
+	meta.DBUsers[string(constants.Root)] = &management.DBUser{
+		ClusterID: got.ID,
+		Name:      constants.DBUserName[constants.Root],
+		Password:  parameter.DBPassword,
+		RoleType:  string(constants.Root),
+	}
 	// clone instances
 	meta.Instances = make(map[string][]*management.ClusterInstance)
 	for componentType, components := range p.Instances {

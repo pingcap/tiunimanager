@@ -161,7 +161,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 					int32(server.ClientPort),
 					int32(server.PeerPort),
 				}
-			}).SetPresetDir(server.DeployDir, server.DataDir, server.DeployDir))
+			}).SetPresetDir(server.DeployDir, server.DataDir, server.LogDir))
 		}
 	}
 	if len(specs.TiDBServers) > 0 {
@@ -173,7 +173,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 					int32(server.Port),
 					int32(server.StatusPort),
 				}
-			}).SetPresetDir(server.DeployDir, "", server.DeployDir))
+			}).SetPresetDir(server.DeployDir, "", server.LogDir))
 		}
 	}
 	if len(specs.TiKVServers) > 0 {
@@ -185,7 +185,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 					int32(server.Port),
 					int32(server.StatusPort),
 				}
-			}).SetPresetDir(server.DeployDir, server.DataDir, server.DeployDir))
+			}).SetPresetDir(server.DeployDir, server.DataDir, server.LogDir))
 		}
 	}
 	if len(specs.TiFlashServers) > 0 {
@@ -201,7 +201,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 					int32(server.FlashProxyStatusPort),
 					int32(server.StatusPort),
 				}
-			}).SetPresetDir(server.DeployDir, server.DataDir, server.DeployDir))
+			}).SetPresetDir(server.DeployDir, server.DataDir, server.LogDir))
 		}
 	}
 	if len(specs.CDCServers) > 0 {
@@ -212,7 +212,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 				return []int32{
 					int32(server.Port),
 				}
-			}).SetPresetDir(server.DeployDir, server.DataDir, server.DeployDir))
+			}).SetPresetDir(server.DeployDir, server.DataDir, server.LogDir))
 		}
 	}
 	if len(specs.Grafanas) > 0 {
@@ -223,7 +223,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 				return []int32{
 					int32(server.Port),
 				}
-			}).SetPresetDir(server.DeployDir, "", server.DeployDir))
+			}).SetPresetDir(server.DeployDir, "", ""))
 		}
 	}
 	if len(specs.Alertmanagers) > 0 {
@@ -235,7 +235,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 					int32(server.WebPort),
 					int32(server.ClusterPort),
 				}
-			}).SetPresetDir(server.DeployDir, server.DataDir, server.DeployDir))
+			}).SetPresetDir(server.DeployDir, server.DataDir, server.LogDir))
 		}
 	}
 	if len(specs.Monitors) > 0 {
@@ -246,7 +246,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 				return []int32{
 					int32(server.Port),
 				}
-			}).SetPresetDir(server.DeployDir, server.DataDir, server.DeployDir))
+			}).SetPresetDir(server.DeployDir, server.DataDir, server.LogDir))
 		}
 	}
 

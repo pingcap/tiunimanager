@@ -1060,16 +1060,14 @@ func QueryInstanceLogInfo(ctx context.Context, hostId string, typeFilter []strin
 
 	infos = make([]*InstanceLogInfo, 0)
 	for _, instance := range instances {
-		if len(instance.DiskPath) > 0 {
-			infos = append(infos, &InstanceLogInfo{
-				ClusterID:    instance.ClusterID,
-				InstanceType: constants.EMProductComponentIDType(instance.Type),
-				IP:           instance.HostIP[0],
-				DataDir:      instance.GetDataDir(),
-				DeployDir:    instance.GetDeployDir(),
-				LogDir:       instance.GetLogDir(),
-			})
-		}
+		infos = append(infos, &InstanceLogInfo{
+			ClusterID:    instance.ClusterID,
+			InstanceType: constants.EMProductComponentIDType(instance.Type),
+			IP:           instance.HostIP[0],
+			DataDir:      instance.GetDataDir(),
+			DeployDir:    instance.GetDeployDir(),
+			LogDir:       instance.GetLogDir(),
+		})
 	}
 	return
 }

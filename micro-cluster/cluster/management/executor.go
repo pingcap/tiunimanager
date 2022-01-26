@@ -46,6 +46,7 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
+	utilsql "github.com/pingcap-inc/tiem/util/api/tidb/sql"
 	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
@@ -974,23 +975,56 @@ func freedClusterResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 // @Description: init database account for new cluster
 func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
-	cluster := clusterMeta.Cluster
 
 	tidbServerHost := clusterMeta.GetClusterConnectAddresses()[0].IP
 	tidbServerPort := clusterMeta.GetClusterConnectAddresses()[0].Port
-	req := secondparty.ClusterSetDbPswReq{
-		DbConnParameter: secondparty.DbConnParam{
-			Username: cluster.DBUser,
-			Password: cluster.DBPassword,
-			IP:       tidbServerHost,
-			Port:     strconv.Itoa(tidbServerPort),
-		},
+
+	rootUser := clusterMeta.DBUsers[string(constants.Root)]
+	conn := secondparty.DbConnParam{
+		Username: rootUser.Name,
+		Password: "",
+		IP:       tidbServerHost,
+		Port:     strconv.Itoa(tidbServerPort),
 	}
-	err := secondparty.Manager.SetClusterDbPassword(context, req, node.ID)
+
+	err := utilsql.UpdateDBUserPassword(context, conn, rootUser.Name, rootUser.Password, node.ID)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
-			"cluster %s init database account error: %s", clusterMeta.Cluster.ID, err.Error())
+			"cluster %s set user %s password error: %s", clusterMeta.Cluster.ID, rootUser.Name, err.Error())
 		return err
+	}
+	err = models.GetClusterReaderWriter().CreateDBUser(context, rootUser)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster %s add user %s error: %s", clusterMeta.Cluster.ID, rootUser.Name, err.Error())
+		return err
+	}
+	node.Record(fmt.Sprintf("init user %s for cluster %s ", rootUser.Name, clusterMeta.Cluster.ID))
+	// update connection parameter
+	conn.Password = rootUser.Password
+
+	// create built-in users
+	roleType := []constants.DBUserRoleType{
+		constants.DBUserBackupRestore,
+		constants.DBUserParameterManagement,
+		constants.DBUserCDCDataSync,
+	}
+
+	for _, rt := range roleType {
+		dbUser := GenerateDBUser(context, rt)
+		err = utilsql.CreateDBUser(context, conn, dbUser, node.ID)
+		if err != nil {
+			framework.LogWithContext(context.Context).Errorf(
+				"cluster %s create user %s error: %s", clusterMeta.Cluster.ID, dbUser.Name, err)
+			return err
+		}
+		err = models.GetClusterReaderWriter().CreateDBUser(context, dbUser)
+		if err != nil {
+			framework.LogWithContext(context.Context).Errorf(
+				"cluster %s add user %s error: %s", clusterMeta.Cluster.ID, dbUser.Name, err.Error())
+			return err
+		}
+		node.Record(fmt.Sprintf("init user %s for cluster %s ", dbUser.Name, clusterMeta.Cluster.ID))
 	}
 	framework.LogWithContext(context.Context).Infof(
 		"cluster %s init database account successfully", clusterMeta.Cluster.ID)
@@ -1391,7 +1425,8 @@ func testConnectivity(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 
 	return errors.OfNullable(nil).
 		BreakIf(func() error {
-			sqlDB, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql", clusterMeta.Cluster.DBUser, clusterMeta.Cluster.DBPassword, connectAddress.IP, connectAddress.Port))
+			user := clusterMeta.DBUsers[string(constants.Root)] // todo
+			sqlDB, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql", user.Name, user.Password, connectAddress.IP, connectAddress.Port))
 			db = sqlDB
 			return err
 		}).
@@ -1408,11 +1443,24 @@ func testConnectivity(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 		Present()
 }
 
+func GenerateDBUser(context *workflow.FlowContext, roleTyp constants.DBUserRoleType) *management.DBUser {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	cluster := clusterMeta.Cluster
+
+	dbUser := &management.DBUser{
+		ClusterID:                cluster.ID,
+		Name:                     constants.DBUserName[roleTyp],
+		Password:                 handler.GetRandomString(10),
+		RoleType:                 string(roleTyp),
+		LastPasswordGenerateTime: time.Now(),
+	}
+	return dbUser
+}
 func initDatabaseData(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
 	backupID := context.GetData(ContextBackupID)
-	if backupID != nil && len(backupID.(string)) > 0{
+	if backupID != nil && len(backupID.(string)) > 0 {
 		node.Record(fmt.Sprintf("recover data from backup record %s for cluster %s", backupID, clusterMeta.Cluster.ID))
 		// todo @chencheng
 	} else {

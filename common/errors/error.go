@@ -63,13 +63,13 @@ func (e EMError) Is(err error) bool {
 }
 
 func (e EMError) Error() string {
-	errInfo := fmt.Sprintln(fmt.Sprintf("[%d]%s", e.GetCode(), e.GetCodeText()))
-	if len(e.msg) > 0  {
-		errInfo = fmt.Sprintln(fmt.Sprintf("%s	%s", errInfo, e.msg))
+	errInfo := fmt.Sprintf("[%d]%s", e.GetCode(), e.GetCodeText())
+	if len(e.msg) > 0 {
+		errInfo = fmt.Sprintf("%s	%s", errInfo, e.msg)
 	}
 
 	if e.cause != nil {
-		errInfo = fmt.Sprintln(fmt.Sprintf("%s	cause: %s", errInfo, e.cause.Error()))
+		errInfo = fmt.Sprintf("%s	cause: %s", errInfo, e.cause.Error())
 	}
 	return errInfo
 }
@@ -96,7 +96,7 @@ func (t EMErrorBuilder) Message(msg string) EMErrorBuilder {
 	return t
 }
 
-func (t EMErrorBuilder) Format(format string, args... interface{}) EMErrorBuilder {
+func (t EMErrorBuilder) Format(format string, args ...interface{}) EMErrorBuilder {
 	t.template.msg = fmt.Sprintf(format, args...)
 	return t
 }

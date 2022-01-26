@@ -81,6 +81,14 @@ func TestExecutor_backupCluster(t *testing.T) {
 				},
 			},
 		},
+		DBUsers: map[string]*management.DBUser{
+			string(constants.DBUserBackupRestore): &management.DBUser{
+				ClusterID: "cls-test",
+				Name:      constants.DBUserName[constants.DBUserBackupRestore],
+				Password:  "12345678",
+				RoleType:  string(constants.DBUserBackupRestore),
+			},
+		},
 	})
 	err := backupCluster(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
@@ -152,6 +160,14 @@ func TestExecutor_restoreFromSrcCluster(t *testing.T) {
 					HostIP: []string{"127.0.0.1"},
 					Ports:  []int32{8000},
 				},
+			},
+		},
+		DBUsers: map[string]*management.DBUser{
+			string(constants.DBUserBackupRestore): &management.DBUser{
+				ClusterID: "cls-test",
+				Name:      constants.DBUserName[constants.DBUserBackupRestore],
+				Password:  "12345678",
+				RoleType:  string(constants.DBUserBackupRestore),
 			},
 		},
 	})

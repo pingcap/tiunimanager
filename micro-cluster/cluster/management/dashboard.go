@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
@@ -52,15 +53,19 @@ func GetDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) 
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, errMsg, err)
 	}
 
-	tidbUserInfo := meta.GetClusterUserNamePasswd()
-	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta, %+v", meta.Cluster.ID, tidbUserInfo)
+	tidbUserInfo, err := meta.GetDBUserNamePassword(ctx, constants.Root)
+	if err != nil {
+		return resp, errors.WrapError(errors.TIEM_USER_NOT_FOUND,
+			fmt.Sprintf("get cluster %s user info from meta failed: %s", request.ClusterID, err.Error()), err)
+	}
+	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta", meta.Cluster.ID)
 
 	url, err := getDashboardUrlFromCluster(ctx, meta)
 	if err != nil {
 		return resp, errors.WrapError(errors.TIEM_DASHBOARD_NOT_FOUND,
 			fmt.Sprintf("find cluster %s dashboard failed: %s", request.ClusterID, err.Error()), err)
 	}
-	token, err := getLoginToken(ctx, url, tidbUserInfo.UserName, tidbUserInfo.Password)
+	token, err := getLoginToken(ctx, url, tidbUserInfo.Name, tidbUserInfo.Password)
 	if err != nil {
 		return resp, errors.WrapError(errors.TIEM_DASHBOARD_NOT_FOUND,
 			fmt.Sprintf("get cluster %s dashboard login token failed: %s", request.ClusterID, err.Error()), err)

@@ -139,6 +139,13 @@ func TestScaleInPreCheck(t *testing.T) {
 					Ports:  []int32{8001},
 				},
 			},
+		}, DBUsers: map[string]*management.DBUser{
+			string(constants.Root): {
+				ClusterID: "id",
+				Name:      constants.DBUserName[constants.Root],
+				Password:  "12345678",
+				RoleType:  string(constants.Root),
+			},
 		}}
 		instance := &management.ClusterInstance{Type: string(constants.ComponentIDTiFlash)}
 		err := ScaleInPreCheck(ctx.TODO(), meta, instance)

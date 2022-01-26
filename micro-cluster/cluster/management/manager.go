@@ -674,7 +674,7 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 		return
 	}
 	meta := &handler.ClusterMeta{}
-	if err = meta.BuildForTakeover(ctx, req.ClusterName, req.DBUser, req.DBPassword); err != nil {
+	if err = meta.BuildForTakeover(ctx, req.ClusterName, req.DBPassword); err != nil {
 		framework.LogWithContext(ctx).Errorf(err.Error())
 		return
 	}

@@ -113,16 +113,15 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbPassw
 	if err == nil {
 		// set root user in clusterMeta
 		p.DBUsers = make(map[string]*management.DBUser)
-		err = models.GetClusterReaderWriter().CreateDBUser(ctx, p.DBUsers[string(constants.Root)])
-		if err == nil {
-			rootUser := &management.DBUser{
-				ClusterID: got.ID,
-				Name:      constants.DBUserName[constants.Root],
-				Password:  dbPassword,
-				RoleType:  string(constants.Root),
-			}
-			p.DBUsers[string(constants.Root)] = rootUser
+		rootUser := &management.DBUser{
+			ClusterID: got.ID,
+			Name:      constants.DBUserName[constants.Root],
+			Password:  dbPassword,
+			RoleType:  string(constants.Root),
 		}
+		p.DBUsers[string(constants.Root)] = rootUser
+
+		err = models.GetClusterReaderWriter().CreateDBUser(ctx, p.DBUsers[string(constants.Root)])
 	}
 
 	if err != nil {

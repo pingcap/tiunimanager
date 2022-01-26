@@ -24,6 +24,7 @@
 package parameter
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -149,4 +150,16 @@ func ValidateRange(param ModifyClusterParameterInfo) bool {
 		return true
 	}
 	return false
+}
+
+// DisplayFullParameterName
+// @Description: display full parameter name
+// @Parameter category
+// @Parameter name
+// @return string
+func DisplayFullParameterName(category, name string) string {
+	if category == "basic" {
+		return name
+	}
+	return fmt.Sprintf("%s.%s", category, name)
 }

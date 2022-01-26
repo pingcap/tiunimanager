@@ -41,6 +41,8 @@ const DefaultTiupTimeOut = 360
 const DefaultPDMaxCount = 7
 const CheckInstanceStatusTimeout = 30 * 24 * time.Hour
 const CheckInstanceStatusInterval = 10 * time.Second
+const GetGCLifeTimeCmd = `SELECT VARIABLE_VALUE as gc_life_time FROM mysql.GLOBAL_VARIABLES WHERE VARIABLE_NAME="tidb_gc_life_time";`
+const DefaultMaxGCLifeTime = "720h"
 
 type PlacementRules struct {
 	EnablePlacementRules string `json:"enable-placement-rules"`
@@ -136,6 +138,23 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 	return nil
 }
 
+func CreateSQLLink(ctx context.Context, meta *ClusterMeta) (*sql.DB, error) {
+	if meta == nil {
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "parameter is invalid")
+	}
+	address := meta.GetClusterConnectAddresses()
+	if len(address) <= 0 {
+		return nil, errors.NewError(errors.TIEM_CONNECT_TIDB_ERROR, "component TiDB not found!")
+	}
+	rootUser, _ := meta.GetDBUserNamePassword(ctx, constants.Root)
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql",
+		rootUser.Name, rootUser.Password, address[0].IP, address[0].Port))
+	if err != nil {
+		return nil, errors.WrapError(errors.TIEM_CONNECT_TIDB_ERROR, err.Error(), err)
+	}
+	return db, nil
+}
+
 // ScaleInPreCheck
 // @Description When scale in TiFlash, ensure the number of remaining TiFlash instances is
 //				greater than or equal to the maximum number of copies of all data tables;
@@ -166,13 +185,7 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 	}
 
 	if instance.Type == string(constants.ComponentIDTiFlash) {
-		address := meta.GetClusterConnectAddresses()
-		if len(address) <= 0 {
-			return errors.NewError(errors.TIEM_CONNECT_TIDB_ERROR, "component TiDB not found!")
-		}
-		rootUser, _ := meta.GetDBUserNamePassword(ctx, constants.Root)
-		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql",
-			rootUser.Name, rootUser.Password, address[0].IP, address[0].Port))
+		db, err := CreateSQLLink(ctx, meta)
 		if err != nil {
 			return errors.WrapError(errors.TIEM_CONNECT_TIDB_ERROR, err.Error(), err)
 		}
@@ -191,6 +204,18 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 		}
 	}
 
+	return nil
+}
+
+// ClonePreCheck
+// When use CDCSyncClone strategy to clone cluster, source cluster must have CDC
+func ClonePreCheck(ctx context.Context, sourceMeta *ClusterMeta, cloneStrategy string) error {
+	if cloneStrategy == string(constants.CDCSyncClone) {
+		if _, ok := sourceMeta.Instances[string(constants.ComponentIDCDC)]; !ok {
+			return errors.NewErrorf(errors.TIEM_CDC_NOT_FOUND,
+				"cluster %s not found CDC, which cloned by %s", sourceMeta.Cluster.ID, cloneStrategy)
+		}
+	}
 	return nil
 }
 

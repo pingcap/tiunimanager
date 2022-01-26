@@ -3777,6 +3777,45 @@ paths:
       tags:
       - cluster
   /clusters/{clusterId}/strategy:
+    get:
+      consumes:
+      - application/json
+      description: show the backup strategy of a cluster
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.GetBackupStrategyResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: show the backup strategy of a cluster
+      tags:
+      - cluster backup
     put:
       consumes:
       - application/json
@@ -3820,46 +3859,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: save the backup strategy of a cluster
-      tags:
-      - cluster backup
-  /clusters/{clusterId}/strategy/:
-    get:
-      consumes:
-      - application/json
-      description: show the backup strategy of a cluster
-      parameters:
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.GetBackupStrategyResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: show the backup strategy of a cluster
       tags:
       - cluster backup
   /clusters/clone:

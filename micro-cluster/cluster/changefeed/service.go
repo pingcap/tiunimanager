@@ -65,7 +65,16 @@ type Service interface {
 }
 
 func GetChangeFeedService() Service {
-	return GetManager()
+	serviceOnce.Do(func() {
+		if service == nil {
+			service = &Manager{}
+		}
+	})
+	return service
+}
+
+func MockChangeFeedService(s Service) {
+	service = s
 }
 
 func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID string, targetClusterID string, relationType constants.ClusterRelationType) (ID string, err error) {

@@ -201,6 +201,7 @@ func (b *BaseFramework) loadCert() *tls.Config {
 func (b *BaseFramework) initMicroService() {
 	server := server.NewServer(
 		server.Name(string(b.serviceMeta.ServiceName)),
+		server.WrapHandler(NewMicroHandlerWrapper()),
 		server.WrapHandler(prometheus.NewHandlerWrapper()),
 		server.WrapHandler(opentracing.NewHandlerWrapper(*b.trace)),
 		server.WrapHandler(logWrapper(b)),

@@ -35,6 +35,8 @@ import (
 
 var manager *Manager
 var once sync.Once
+var service Service
+var serviceOnce sync.Once
 
 type Manager struct{}
 

@@ -77,7 +77,6 @@ func TestManager_CreateBetweenClusters(t *testing.T) {
 			},
 			Downstream: &changefeed.TiDBDownstream{},
 		}, nil).Times(1)
-
 		id, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationCloneFrom)
 		assert.NoError(t, err)
 		assert.Equal(t, "11111", id)

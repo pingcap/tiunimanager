@@ -1427,13 +1427,31 @@ func GenerateDBUser(context *workflow.FlowContext, roleTyp constants.DBUserRoleT
 func initDatabaseData(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
-	backupID := context.GetData(ContextBackupID)
-	if backupID != nil && len(backupID.(string)) > 0 {
+	backupIDData := context.GetData(ContextBackupID)
+	if backupIDData != nil && len(backupIDData.(string)) > 0 {
+		backupID := context.GetData(ContextBackupID).(string)
 		node.Record(fmt.Sprintf("recover data from backup record %s for cluster %s", backupID, clusterMeta.Cluster.ID))
-		// todo @chencheng
+
+		restoreResponse, err := backuprestore.GetBRService().RestoreExistCluster(context.Context,
+			cluster.RestoreExistClusterReq{
+				ClusterID: clusterMeta.Cluster.ID,
+				BackupID:  backupID,
+			}, false)
+		if err != nil {
+			framework.LogWithContext(context.Context).Errorf("do restore for cluster %s by backup id %s error: %s", clusterMeta.Cluster.ID, backupID, err.Error())
+			return fmt.Errorf("do restore for cluster %s by backup id %s error: %s", clusterMeta.Cluster.ID, backupID, err.Error())
+		}
+
+		context.SetData(ContextWorkflowID, restoreResponse.WorkFlowID)
+		node.Record(fmt.Sprintf("do restore for cluster %s, backup ID: %s ", clusterMeta.Cluster.ID, backupID))
+		return nil
 	} else {
 		node.Record("no specified data source, skip")
 	}
 
 	return nil
+}
+
+func waitInitDatabaseData(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	return waitWorkFlow(node, context)
 }

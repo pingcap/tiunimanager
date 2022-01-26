@@ -18,6 +18,8 @@ package management
 import (
 	"context"
 	"fmt"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
+	"github.com/pingcap-inc/tiem/test/mockchangefeed"
 	"strconv"
 
 	"github.com/pingcap-inc/tiem/models/parametergroup"
@@ -2115,7 +2117,43 @@ func Test_validateHostsStatus(t *testing.T) {
 }
 
 func Test_syncIncrData(t *testing.T) {
-	assert.Empty(t, syncIncrData(nil, nil))
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "cluster01",
+			},
+		},
+	})
+	flowContext.SetData(ContextSourceClusterMeta, &handler.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "cluster02",
+			},
+		},
+	})
+	flowContext.SetData(ContextCloneStrategy, string(constants.CDCSyncClone))
+
+	t.Run("normal", func(t *testing.T) {
+		service := mockchangefeed.NewMockService(ctrl)
+		changefeed.MockChangeFeedService(service)
+
+		service.EXPECT().CreateBetweenClusters(gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any()).Return("task01", nil)
+		flowContext.SetData(ContextGCLifeTime, "10m0s")
+		service.EXPECT().Detail(gomock.Any(), gomock.Any()).Return(
+			cluster.DetailChangeFeedTaskResp{
+				ChangeFeedTaskInfo: cluster.ChangeFeedTaskInfo{
+					UpstreamUpdateUnix: 12000,
+					DownstreamSyncUnix: 11000,
+				}}, nil)
+		err := syncIncrData(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
+
 }
 
 func Test_fetchTopologyFile(t *testing.T) {

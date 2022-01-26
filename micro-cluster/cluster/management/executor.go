@@ -806,7 +806,7 @@ func restoreCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	return nil
 }
 
-func ModifySourceClusterGCTime(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+func modifySourceClusterGCTime(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*handler.ClusterMeta)
 	cloneStrategy := context.GetData(ContextCloneStrategy).(string)
 
@@ -839,7 +839,7 @@ func ModifySourceClusterGCTime(node *workflowModel.WorkFlowNode, context *workfl
 	return nil
 }
 
-func RecoverSourceClusterGCTime(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+func recoverSourceClusterGCTime(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*handler.ClusterMeta)
 	if context.GetData(ContextGCLifeTime) == nil {
 		framework.LogWithContext(context.Context).Infof(

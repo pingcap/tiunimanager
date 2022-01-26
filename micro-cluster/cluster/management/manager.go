@@ -193,7 +193,7 @@ var cloneDefine = workflow.WorkFlowDefine{
 	FlowName: constants.FlowCloneCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":                  {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
-		"resourceDone":           {"modifySourceClusterGCTime", "modifyGCTimeDone", "fail", workflow.SyncFuncNode, ModifySourceClusterGCTime},
+		"resourceDone":           {"modifySourceClusterGCTime", "modifyGCTimeDone", "fail", workflow.SyncFuncNode, modifySourceClusterGCTime},
 		"modifyGCTimeDone":       {"backupSourceCluster", "backupDone", "fail", workflow.SyncFuncNode, backupSourceCluster},
 		"backupDone":             {"waitBackup", "waitBackupDone", "fail", workflow.SyncFuncNode, waitWorkFlow},
 		"waitBackupDone":         {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
@@ -210,9 +210,9 @@ var cloneDefine = workflow.WorkFlowDefine{
 		"waitSyncParamDone":      {"restoreCluster", "restoreClusterDone", "failAfterDeploy", workflow.SyncFuncNode, restoreCluster},
 		"restoreClusterDone":     {"waitRestore", "waitRestoreDone", "failAfterDeploy", workflow.SyncFuncNode, waitWorkFlow},
 		"waitRestoreDone":        {"syncIncrData", "syncIncrDataDone", "failAfterDeploy", workflow.SyncFuncNode, syncIncrData},
-		"syncIncrDataDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(RecoverSourceClusterGCTime, persistCluster, endMaintenance, asyncBuildLog)},
-		"fail":                   {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(RecoverSourceClusterGCTime, setClusterFailure, revertResourceAfterFailure, endMaintenance)},
-		"failAfterDeploy":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(RecoverSourceClusterGCTime, setClusterFailure, endMaintenance)},
+		"syncIncrDataDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(recoverSourceClusterGCTime, persistCluster, endMaintenance, asyncBuildLog)},
+		"fail":                   {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(recoverSourceClusterGCTime, setClusterFailure, revertResourceAfterFailure, endMaintenance)},
+		"failAfterDeploy":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(recoverSourceClusterGCTime, setClusterFailure, endMaintenance)},
 	},
 }
 

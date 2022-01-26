@@ -205,6 +205,151 @@ func TestScaleInPreCheck(t *testing.T) {
 
 func TestClonePreCheck(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
+		sourceMeta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
+			string(constants.ComponentIDCDC): {
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8001},
+				},
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8002},
+				},
+			},
+			string(constants.ComponentIDTiKV): {
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8001},
+				},
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8002},
+				},
+			},
+		},
+		}
+		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
+			string(constants.ComponentIDCDC): {
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8001},
+				},
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8002},
+				},
+			},
+			string(constants.ComponentIDTiKV): {
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8001},
+				},
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8002},
+				},
+			},
+		},
+		}
+		err := ClonePreCheck(ctx.TODO(), sourceMeta, meta, string(constants.CDCSyncClone))
+		assert.NoError(t, err)
+	})
+
+	t.Run("cdc fail", func(t *testing.T) {
+		sourceMeta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
+			string(constants.ComponentIDTiDB): {
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8001},
+				},
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8002},
+				},
+			},
+			string(constants.ComponentIDTiKV): {
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8001},
+				},
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8002},
+				},
+			},
+		},
+		}
+		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
+			string(constants.ComponentIDTiDB): {
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8001},
+				},
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8002},
+				},
+			},
+			string(constants.ComponentIDTiKV): {
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8001},
+				},
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8002},
+				},
+			},
+		},
+		}
+		err := ClonePreCheck(ctx.TODO(), sourceMeta, meta, string(constants.CDCSyncClone))
+		assert.Error(t, err)
+	})
+
+	t.Run("copies fail", func(t *testing.T) {
+		sourceMeta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 3}, Instances: map[string][]*management.ClusterInstance{
+			string(constants.ComponentIDCDC): {
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8001},
+				},
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8002},
+				},
+			},
+			string(constants.ComponentIDTiKV): {
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8001},
+				},
+				{
+					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8002},
+				},
+			},
+		},
+		}
 		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 3}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDCDC): {
 				{
@@ -218,15 +363,7 @@ func TestClonePreCheck(t *testing.T) {
 					Ports:  []int32{8002},
 				},
 			},
-		},
-		}
-		err := ClonePreCheck(ctx.TODO(), meta, string(constants.CDCSyncClone))
-		assert.NoError(t, err)
-	})
-
-	t.Run("fail", func(t *testing.T) {
-		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 3}, Instances: map[string][]*management.ClusterInstance{
-			string(constants.ComponentIDTiDB): {
+			string(constants.ComponentIDTiKV): {
 				{
 					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
 					HostIP: []string{"127.0.0.1"},
@@ -240,7 +377,7 @@ func TestClonePreCheck(t *testing.T) {
 			},
 		},
 		}
-		err := ClonePreCheck(ctx.TODO(), meta, string(constants.CDCSyncClone))
+		err := ClonePreCheck(ctx.TODO(), sourceMeta, meta, string(constants.CDCSyncClone))
 		assert.Error(t, err)
 	})
 }

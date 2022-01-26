@@ -72,10 +72,10 @@ func Test_SelectImportFlowName(t *testing.T) {
 		cond     structs.ImportCondition
 		want     want
 	}{
-		{"ImportFlow", structs.ImportCondition{ReserveHost: false, SkipHostInit: false}, want{rp_consts.FlowImportHosts}},
-		{"ImportFlowWithoutInit", structs.ImportCondition{ReserveHost: false, SkipHostInit: true}, want{rp_consts.FlowImportHostsWithoutInit}},
-		{"TakeOverFlowWithoutInit", structs.ImportCondition{ReserveHost: true, SkipHostInit: true}, want{rp_consts.FlowImportHostsWithoutInit}},
-		{"TakeOverFlow", structs.ImportCondition{ReserveHost: true, SkipHostInit: false}, want{rp_consts.FlowTakeOverHosts}},
+		{"ImportFlow", structs.ImportCondition{HostPool: string(constants.GeneralPool), SkipHostInit: false}, want{rp_consts.FlowImportHosts}},
+		{"ImportFlowWithoutInit", structs.ImportCondition{HostPool: string(constants.GeneralPool), SkipHostInit: true}, want{rp_consts.FlowImportHostsWithoutInit}},
+		{"TakeOverFlowWithoutInit", structs.ImportCondition{HostPool: string(constants.ReservedPool), SkipHostInit: true}, want{rp_consts.FlowImportHostsWithoutInit}},
+		{"TakeOverFlow", structs.ImportCondition{HostPool: string(constants.ReservedPool), SkipHostInit: false}, want{rp_consts.FlowTakeOverHosts}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
@@ -138,7 +138,7 @@ func Test_ImportHosts(t *testing.T) {
 	host1 := genHostInfo("Test_Host1")
 	host2 := genHostInfo("Test_Host2")
 	host3 := genHostInfo("Test_Host3")
-	flowIds, hostIds, err := resourcePool.ImportHosts(context.TODO(), []structs.HostInfo{*host1, *host2, *host3}, &structs.ImportCondition{ReserveHost: false, SkipHostInit: false, IgnoreWarings: true})
+	flowIds, hostIds, err := resourcePool.ImportHosts(context.TODO(), []structs.HostInfo{*host1, *host2, *host3}, &structs.ImportCondition{HostPool: string(constants.GeneralPool), SkipHostInit: false, IgnoreWarings: true})
 	assert.Equal(t, 3, len(flowIds))
 	assert.Equal(t, 3, len(hostIds))
 	assert.Nil(t, err)

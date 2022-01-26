@@ -45,7 +45,7 @@ func setGinContextForInvalidParam(c *gin.Context, errmsg string) {
 	c.JSON(errors.TIEM_PARAMETER_INVALID.GetHttpCode(), controller.Fail(int(errors.TIEM_PARAMETER_INVALID), errmsg))
 }
 
-func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
+func importExcelFile(r io.Reader, pool string) ([]structs.HostInfo, error) {
 	xlsx, err := excelize.OpenReader(r)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,8 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 	for irow, row := range rows {
 		if irow > 0 {
 			var host structs.HostInfo
-			host.Reserved = reserved
+			host.Reserved = false
+			host.Pool = pool
 			host.HostName = row[HOSTNAME_FIELD]
 			addr := net.ParseIP(row[IP_FILED])
 			if addr == nil {
@@ -147,6 +148,15 @@ func getBoolPostForm(c *gin.Context, field string, defaultValue string) (bool, e
 	return strconv.ParseBool(inputStr)
 }
 
+func getPoolPostForm(c *gin.Context, field string, defaultValue string) (pool string, err error) {
+	pool = c.DefaultPostForm(field, defaultValue)
+	err = constants.IsValidHostPool(pool)
+	if err != nil {
+		return "", err
+	}
+	return pool, nil
+}
+
 // ImportHosts godoc
 // @Summary Import a batch of hosts to TiEM
 // @Description import hosts by xlsx file
@@ -154,14 +164,14 @@ func getBoolPostForm(c *gin.Context, field string, defaultValue string) (bool, e
 // @Accept mpfd
 // @Produce json
 // @Security ApiKeyAuth
-// @Param hostReserved formData string false "whether hosts are reserved(won't be allocated) after import" default(false)
-// @Param skipHostInit formData string false "whether to skip host init steps" default(false)
-// @Param ignorewarns formData string false "whether to ignore warings in init steps" default(false)
+// @Param pool formData string false "host belongs to which pool" default(GeneralPool) Enums(GeneralPool, ExclusivePool, ReservedPool, ElasticPool)
+// @Param skipHostInit formData string false "whether to skip host init steps" default(false) Enums(false, true)
+// @Param ignorewarns formData string false "whether to ignore warings in init steps" default(false) Enums(false, true)
 // @Param file formData file true "hosts information in a xlsx file"
 // @Success 200 {object} controller.CommonResult{data=message.ImportHostsResp}
 // @Router /resources/hosts [post]
 func ImportHosts(c *gin.Context) {
-	reserved, err := getBoolPostForm(c, "hostReserved", "false")
+	pool, err := getPoolPostForm(c, "pool", string(constants.GeneralPool))
 	if err != nil {
 		errmsg := fmt.Sprintf("GetFormData hostReserved Error: %v", err)
 		setGinContextForInvalidParam(c, errmsg)
@@ -186,7 +196,7 @@ func ImportHosts(c *gin.Context) {
 		setGinContextForInvalidParam(c, errmsg)
 		return
 	}
-	hosts, err := importExcelFile(file, reserved)
+	hosts, err := importExcelFile(file, pool)
 	if err != nil {
 		errmsg := fmt.Sprintf("Import File Error: %v", err)
 		setGinContextForInvalidParam(c, errmsg)
@@ -196,7 +206,7 @@ func ImportHosts(c *gin.Context) {
 	requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, message.ImportHostsReq{
 		Hosts: hosts,
 		Condition: structs.ImportCondition{
-			ReserveHost:   reserved,
+			HostPool:      pool,
 			SkipHostInit:  skipHostInit,
 			IgnoreWarings: ignoreWarings,
 		},

@@ -17,10 +17,11 @@ package resourcepool
 
 import (
 	"errors"
-	"github.com/pingcap-inc/tiem/models/common"
-	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"strings"
 	"time"
+
+	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	em_errors "github.com/pingcap-inc/tiem/common/errors"
@@ -52,6 +53,7 @@ type Host struct {
 	Purpose      string          `json:"purpose" gorm:"index"`     // What Purpose is the host used for? [compute/storage/schedule]
 	DiskType     string          `json:"diskType" gorm:"index"`    // Disk type of this host [sata/ssd/nvme_ssd]
 	Reserved     bool            `json:"reserved" gorm:"index"`    // Whether this host is reserved - will not be allocated
+	Pool         string          `json:"pool" gorm:"index"`        // Host belongs to which pool
 	Traits       int64           `json:"traits" gorm:"index"`      // Traits of labels
 	Disks        []Disk          `json:"disks" gorm:"-"`
 	//UsedDisks    []UsedDisk     `json:"-" gorm:"-"`
@@ -154,6 +156,7 @@ func (h *Host) ConstructFromHostInfo(src *structs.HostInfo) error {
 	h.Purpose = src.Purpose
 	h.DiskType = src.DiskType
 	h.Reserved = src.Reserved
+	h.Pool = src.Pool
 	h.Traits = src.Traits
 	for _, disk := range src.Disks {
 		h.Disks = append(h.Disks, Disk{
@@ -190,6 +193,7 @@ func (h *Host) ToHostInfo(dst *structs.HostInfo) {
 	dst.CreatedAt = h.CreatedAt.Unix()
 	dst.UpdatedAt = h.UpdatedAt.Unix()
 	dst.Reserved = h.Reserved
+	dst.Pool = h.Pool
 	dst.Traits = h.Traits
 	dst.SysLabels = structs.GetLabelNamesByTraits(dst.Traits)
 	for _, disk := range h.Disks {

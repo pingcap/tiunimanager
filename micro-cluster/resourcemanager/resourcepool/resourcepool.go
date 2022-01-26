@@ -245,7 +245,7 @@ func (p *ResourcePool) selectImportFlowName(condition *structs.ImportCondition) 
 	if framework.Current.GetClientArgs().SkipHostInit || condition.SkipHostInit {
 		flowName = rp_consts.FlowImportHostsWithoutInit
 	} else {
-		if condition.ReserveHost {
+		if condition.HostPool == string(constants.ReservedPool) {
 			flowName = rp_consts.FlowTakeOverHosts
 		} else {
 			flowName = rp_consts.FlowImportHosts

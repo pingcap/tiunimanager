@@ -38,14 +38,14 @@ const (
 )
 
 func ValidArchType(arch string) error {
-	if arch == string(ArchX86) || arch == string(ArchX8664) || arch == string(ArchArm) || arch == string(ArchArm64){
+	if arch == string(ArchX86) || arch == string(ArchX8664) || arch == string(ArchArm) || arch == string(ArchArm64) {
 		return nil
 	}
 	return errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_ARCH, "valid arch type: [%s|%s|%s|%s]",
 		string(ArchX86), string(ArchX8664), string(ArchArm), string(ArchArm64))
 }
 
-func ConvertAlias(arch string) (ArchType) {
+func ConvertAlias(arch string) ArchType {
 	switch arch {
 	case "arm64":
 		return ArchArm64
@@ -69,6 +69,24 @@ func GetArchAlias(arch ArchType) string {
 	default:
 		return ""
 	}
+}
+
+type HostPool string
+
+// Host belongs to which pool
+const (
+	GeneralPool   HostPool = "GeneralPool"   // General pool for allocation
+	ExclusivePool HostPool = "ExclusivePool" // pool for exclusive deployment
+	ReservedPool  HostPool = "ReservedPool"  // pool for taken over hosts
+	ElasticPool   HostPool = "ElasticPool"   // pool for auto scale-in/scale-out
+)
+
+func IsValidHostPool(p string) error {
+	if p == string(GeneralPool) || p == string(ExclusivePool) || p == string(ReservedPool) || p == string(ElasticPool) {
+		return nil
+	}
+	return errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_POOL, "valid pool name: [%s|%s|%s|%s]",
+		string(GeneralPool), string(ExclusivePool), string(ReservedPool), string(ElasticPool))
 }
 
 type HostStatus string

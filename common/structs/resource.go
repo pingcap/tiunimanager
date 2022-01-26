@@ -104,6 +104,7 @@ type HostInfo struct {
 	Purpose      string     `json:"purpose"`     // What Purpose is the host used for? [compute/storage/general]
 	DiskType     string     `json:"diskType"`    // Disk type of this host [sata/ssd/nvme_ssd]
 	Reserved     bool       `json:"reserved"`    // Whether this host is reserved - will not be allocated
+	Pool         string     `json:"pool"`        // Host belongs to which pool
 	Traits       int64      `json:"traits"`      // Traits of labels
 	SysLabels    []string   `json:"sysLabels"`
 	CreatedAt    int64      `json:"createTime"`
@@ -167,9 +168,9 @@ type Location struct {
 }
 
 type ImportCondition struct {
-	ReserveHost   bool `json:"reserved" form:"reserved"`
-	SkipHostInit  bool `json:"skipHostInit" form:"skipHostInit"`
-	IgnoreWarings bool `json:"ignoreWarnings" form:"ignoreWarnings"`
+	HostPool      string `json:"pool" form:"pool"`
+	SkipHostInit  bool   `json:"skipHostInit" form:"skipHostInit"`
+	IgnoreWarings bool   `json:"ignoreWarnings" form:"ignoreWarnings"`
 }
 
 type HostFilter struct {

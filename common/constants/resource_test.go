@@ -94,6 +94,30 @@ func Test_ValidStatus(t *testing.T) {
 	}
 }
 
+func Test_ValidPool(t *testing.T) {
+	type want struct {
+		err error
+	}
+	tests := []struct {
+		testName string
+		pool     string
+		want     want
+	}{
+		{"Test_General", string(GeneralPool), want{nil}},
+		{"Test_Exclusive", string(ExclusivePool), want{nil}},
+		{"Test_Reserved", string(ReservedPool), want{nil}},
+		{"Test_Elastic", string(ElasticPool), want{nil}},
+		{"Test_Others", "Unknown", want{errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_POOL, "valid pool name: [%s|%s|%s|%s]",
+			string(GeneralPool), string(ExclusivePool), string(ReservedPool), string(ElasticPool))}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.testName, func(t *testing.T) {
+			valid := IsValidHostPool(tt.pool)
+			assert.Equal(t, tt.want.err, valid)
+		})
+	}
+}
+
 func Test_ValidLoadStatus(t *testing.T) {
 	type want struct {
 		valid bool

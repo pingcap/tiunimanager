@@ -74,7 +74,7 @@ type ModifyParameter struct {
 	ClusterID    string
 	ParamGroupId string
 	Reboot       bool
-	Params       []ModifyClusterParameterInfo
+	Params       []*ModifyClusterParameterInfo
 	Nodes        []string
 }
 
@@ -103,7 +103,7 @@ const (
 // @Description: validate parameter value by range field
 // @Parameter param
 // @return bool
-func ValidateRange(param ModifyClusterParameterInfo) bool {
+func ValidateRange(param *ModifyClusterParameterInfo) bool {
 	// Determine if range is nil or an expression, continue the loop directly
 	if param.Range == nil || len(param.Range) == 0 {
 		return true

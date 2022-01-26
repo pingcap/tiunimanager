@@ -304,7 +304,7 @@ func validateParameter(ctx context.Context, reqParams []structs.ParameterGroupPa
 						return err
 					}
 				}
-				if !parameter.ValidateRange(parameter.ModifyClusterParameterInfo{
+				if !parameter.ValidateRange(&parameter.ModifyClusterParameterInfo{
 					ParamId:   reqParam.ID,
 					Type:      queryParam.Type,
 					Range:     ranges,

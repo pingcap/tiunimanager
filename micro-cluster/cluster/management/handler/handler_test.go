@@ -51,7 +51,7 @@ func TestClusterMeta_BuildCluster(t *testing.T) {
 	}
 	meta := &ClusterMeta{}
 
-	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{}, nil)
+	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "1234"}}, nil)
 
 	err := meta.BuildCluster(context.TODO(), params)
 	assert.NoError(t, err)
@@ -61,6 +61,8 @@ func TestClusterMeta_BuildCluster(t *testing.T) {
 	assert.Equal(t, meta.Cluster.TLS, params.TLS)
 	assert.Equal(t, meta.Cluster.Tags, params.Tags)
 	assert.Equal(t, meta.DBUsers[string(constants.Root)].Password, params.DBPassword)
+	assert.NotEmpty(t, meta.DBUsers[string(constants.Root)].ClusterID)
+	assert.Equal(t, meta.DBUsers[string(constants.Root)].ClusterID, "1234")
 }
 
 func TestClusterMeta_AddInstances(t *testing.T) {
@@ -1501,4 +1503,67 @@ func TestGetRandomString(t *testing.T) {
 			fmt.Println(got)
 		})
 	}
+}
+
+func TestClusterMeta_BuildForTakeover(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(rw)
+
+	meta := &ClusterMeta{}
+
+	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "1234"}}, nil)
+	err := meta.BuildForTakeover(context.TODO(), "test", "root", "1234")
+	assert.NoError(t, err)
+	//assert.Equal(t, meta.Cluster.Name, params.Name)
+	//assert.Equal(t, meta.Cluster.Type, params.Type)
+	//assert.Equal(t, meta.Cluster.Version, params.Version)
+	//assert.Equal(t, meta.Cluster.TLS, params.TLS)
+	//assert.Equal(t, meta.Cluster.Tags, params.Tags)
+	//assert.Equal(t, meta.DBUsers[string(constants.Root)].Password, params.DBPassword)
+	assert.NotEmpty(t, meta.DBUsers[string(constants.Root)].ClusterID)
+	assert.Equal(t, meta.DBUsers[string(constants.Root)].ClusterID, "1234")
+
+	//cluster := &management.Cluster{
+	//	Entity: common.Entity{
+	//		ID: "123",
+	//		TenantId: "tttt",
+	//	},
+	//	Name: "testName",
+	//	OwnerId: "oooo",
+	//}
+	//instance := make(map[string][]*management.ClusterInstance)
+	//user := make(map[string]*management.DBUser)
+	//type args struct {
+	//	ctx        context.Context
+	//	name       string
+	//	dbUser     string
+	//	dbPassword string
+	//}
+	//tests := []struct {
+	//	name    string
+	//	args    args
+	//	wantErr bool
+	//}{
+	//	// TODO: Add test cases.
+	//	{"normal", args{context.TODO(), "test", "root", "1234567"},false},
+	//}
+	//for _, tt := range tests {
+	//	t.Run(tt.name, func(t *testing.T) {
+	//		p := &ClusterMeta{
+	//			Cluster:              cluster,
+	//			Instances:            instance,
+	//			DBUsers:              user,
+	//		}
+	//		if err := p.BuildForTakeover(tt.args.ctx, tt.args.name, tt.args.dbUser, tt.args.dbPassword); (err != nil) != tt.wantErr {
+	//			t.Errorf("BuildForTakeover() error = %v, wantErr %v", err, tt.wantErr)
+	//		} else {
+	//			fmt.Println(p.Cluster.ID, p.DBUsers[string(constants.Root)].ID)
+	//
+	//			assert.Equal(t, p.Cluster.ID, p.DBUsers[string(constants.Root)].ID)
+	//			assert.NotEmpty(t, p.DBUsers[string(constants.Root)].ID)
+	//		}
+	//	})
+	//}
 }

@@ -102,7 +102,7 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbUser 
 			TenantId: framework.GetTenantIDFromContext(ctx),
 			Status:   string(constants.ClusterRunning),
 		},
-		Name:           name,
+		Name: name,
 		//DBUser:         dbUser,
 		//DBPassword:     dbPassword,
 		Tags:           []string{TagTakeover},
@@ -591,12 +591,12 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 			TenantId: framework.GetTenantIDFromContext(ctx),
 			Status:   string(constants.ClusterInitializing),
 		},
-		Name:              parameter.Name,       // user specify (required)
-		Region:            parameter.Region,     // user specify (required)
-		Type:              p.Cluster.Type,       // user not specify
-		Version:           p.Cluster.Version,    // user specify (option)
-		Tags:              p.Cluster.Tags,       // user specify (option)
-		TLS:               p.Cluster.TLS,        // user specify (option)
+		Name:              parameter.Name,    // user specify (required)
+		Region:            parameter.Region,  // user specify (required)
+		Type:              p.Cluster.Type,    // user not specify
+		Version:           p.Cluster.Version, // user specify (option)
+		Tags:              p.Cluster.Tags,    // user specify (option)
+		TLS:               p.Cluster.TLS,     // user specify (option)
 		OwnerId:           framework.GetUserIDFromContext(ctx),
 		ParameterGroupID:  p.Cluster.ParameterGroupID, // user specify (option)
 		Copies:            p.Cluster.Copies,           // user specify (option)
@@ -688,7 +688,7 @@ func (p *ClusterMeta) GetRelations(ctx context.Context) ([]*management.ClusterRe
 	return models.GetClusterReaderWriter().GetRelations(ctx, p.Cluster.ID)
 }
 
-func (p *ClusterMeta) GetDBUsers(ctx context.Context) ([]*management.DBUser, error){
+func (p *ClusterMeta) GetDBUsers(ctx context.Context) ([]*management.DBUser, error) {
 	return models.GetClusterReaderWriter().GetDBUser(ctx, p.Cluster.ID)
 }
 
@@ -815,6 +815,25 @@ func (p *ClusterMeta) GetPDClientAddresses() []ComponentAddress {
 // @return []ComponentAddress
 func (p *ClusterMeta) GetCDCClientAddresses() []ComponentAddress {
 	instances := p.Instances[string(constants.ComponentIDCDC)]
+	address := make([]ComponentAddress, 0)
+
+	for _, instance := range instances {
+		if instance.Status == string(constants.ClusterInstanceRunning) {
+			address = append(address, ComponentAddress{
+				IP:   instance.HostIP[0],
+				Port: int(instance.Ports[0]),
+			})
+		}
+	}
+	return address
+}
+
+// GetTiFlashClientAddresses
+// @Description: communication address for TiFlash Servers to connect.
+// @Receiver p
+// @return []ComponentAddress
+func (p *ClusterMeta) GetTiFlashClientAddresses() []ComponentAddress {
+	instances := p.Instances[string(constants.ComponentIDTiFlash)]
 	address := make([]ComponentAddress, 0)
 
 	for _, instance := range instances {

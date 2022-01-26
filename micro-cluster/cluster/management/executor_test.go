@@ -1496,7 +1496,7 @@ func TestInitDatabaseAccount(t *testing.T) {
 				ClusterID: "2145635758",
 				Name:      constants.DBUserName[constants.Root],
 				Password:  "12345678",
-				RoleType: string(constants.Root),
+				RoleType:  string(constants.Root),
 			},
 		},
 	})
@@ -1511,10 +1511,10 @@ func TestInitDatabaseAccount(t *testing.T) {
 	})
 
 	t.Run("init fail", func(t *testing.T) {
-	//	mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	//	mockTiupManager.EXPECT().SetClusterDbPassword(gomock.Any(),
-	//		gomock.Any(), gomock.Any()).Return(fmt.Errorf("init fail")).AnyTimes()
-	//	secondparty.Manager = mockTiupManager
+		//	mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+		//	mockTiupManager.EXPECT().SetClusterDbPassword(gomock.Any(),
+		//		gomock.Any(), gomock.Any()).Return(fmt.Errorf("init fail")).AnyTimes()
+		//	secondparty.Manager = mockTiupManager
 		err := initDatabaseAccount(&workflowModel.WorkFlowNode{}, flowContext)
 		fmt.Println(err)
 		assert.Error(t, err)
@@ -1569,7 +1569,7 @@ func Test_testConnectivity(t *testing.T) {
 					ClusterID: "2145635758",
 					Name:      constants.DBUserName[constants.Root],
 					Password:  "wrong",
-					RoleType: string(constants.Root),
+					RoleType:  string(constants.Root),
 				},
 			},
 		})
@@ -1580,6 +1580,9 @@ func Test_testConnectivity(t *testing.T) {
 }
 
 func Test_initDatabaseData(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	t.Run("normal", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
 		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
@@ -1603,12 +1606,22 @@ func Test_initDatabaseData(t *testing.T) {
 					ClusterID: "testID",
 					Name:      "root",
 					Password:  "ssssssss",
-					RoleType: string(constants.Root),
+					RoleType:  string(constants.Root),
 				},
 			},
 		})
 
 		ctx.SetData(ContextBackupID, "iddddd")
+
+		brService := mock_br_service.NewMockBRService(ctrl)
+		backuprestore.MockBRService(brService)
+		brService.EXPECT().RestoreExistCluster(gomock.Any(),
+			gomock.Any(), false).Return(
+			cluster.RestoreExistClusterResp{
+				AsyncTaskWorkFlowInfo: structs2.AsyncTaskWorkFlowInfo{
+					WorkFlowID: "111",
+				},
+			}, nil)
 
 		node := &workflowModel.WorkFlowNode{}
 		err := initDatabaseData(node, ctx)
@@ -1638,7 +1651,7 @@ func Test_initDatabaseData(t *testing.T) {
 					ClusterID: "testID",
 					Name:      "root",
 					Password:  "ssssssss",
-					RoleType: string(constants.Root),
+					RoleType:  string(constants.Root),
 				},
 			},
 		})
@@ -1761,7 +1774,7 @@ func TestTakeoverResource(t *testing.T) {
 				ClusterID: "2145635758",
 				Name:      constants.DBUserName[constants.Root],
 				Password:  "12345678",
-				RoleType: string(constants.Root),
+				RoleType:  string(constants.Root),
 			},
 		},
 	})
@@ -2377,7 +2390,6 @@ func Test_adjustParameters(t *testing.T) {
 
 }
 
-
 var dbConnParam1 secondparty.DbConnParam
 var dbConnParam2 secondparty.DbConnParam
 
@@ -2395,7 +2407,6 @@ func init() {
 		Port:     "4000",
 	}
 }
-
 
 func TestGenerateDBUser(t *testing.T) {
 	flowContext := workflow.NewFlowContext(context.TODO())

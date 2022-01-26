@@ -779,12 +779,12 @@ func TestClusterMeta_Get(t *testing.T) {
 			Ports:  []int32{111},
 		},
 	}, []*management.DBUser{
-			{
-				ClusterID: "111",
-				Name:      constants.DBUserName[constants.Root],
-				Password:  "12345678",
-				RoleType: string(constants.Root),
-			}}, nil)
+		{
+			ClusterID: "111",
+			Name:      constants.DBUserName[constants.Root],
+			Password:  "12345678",
+			RoleType:  string(constants.Root),
+		}}, nil)
 
 	rw.EXPECT().GetMeta(gomock.Any(), "222").Return(nil, nil, nil, errors.New("empty"))
 
@@ -1350,11 +1350,10 @@ func mockResult(name string) []*management.Result {
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.Root],
 				Password:  "12345678",
-				RoleType: string(constants.Root),
+				RoleType:  string(constants.Root),
 			},
 		},
 	}
-
 
 	return []*management.Result{one}
 }
@@ -1485,7 +1484,6 @@ func TestClusterMeta_GetVersion(t *testing.T) {
 
 }
 
-
 func TestGetRandomString(t *testing.T) {
 	type args struct {
 		n int
@@ -1504,6 +1502,7 @@ func TestGetRandomString(t *testing.T) {
 		})
 	}
 }
+
 
 func TestClusterMeta_BuildForTakeover(t *testing.T) {
 	ctrl := gomock.NewController(t)

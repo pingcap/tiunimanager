@@ -28,6 +28,8 @@ import (
 	"encoding/json"
 	"sync"
 
+	"github.com/pingcap-inc/tiem/models/cluster/parameter"
+
 	"github.com/pingcap-inc/tiem/proto/clusterservices"
 
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -187,8 +189,7 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 	}
 
 	data := make(map[string]interface{})
-	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: params, Nodes: req.Nodes}
-	data[contextUpdateParameterInfo] = &req
+	data[contextModifyParameters] = &ModifyParameter{ClusterID: req.ClusterID, Reboot: req.Reboot, Params: params, Nodes: req.Nodes}
 	data[contextMaintenanceStatusChange] = maintenanceStatusChange
 	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
 	if err != nil {
@@ -251,8 +252,8 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 
 	// Get modify parameters
 	data := make(map[string]interface{})
-	data[contextModifyParameters] = &ModifyParameter{Reboot: req.Reboot, Params: params, Nodes: req.Nodes}
-	data[contextApplyParameterInfo] = &req
+	data[contextModifyParameters] = &ModifyParameter{ClusterID: req.ClusterID, Reboot: req.Reboot, Params: params, Nodes: req.Nodes}
+	data[contextHasApplyParameter] = true
 	data[contextMaintenanceStatusChange] = maintenanceStatusChange
 	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
 	if err != nil {
@@ -271,8 +272,33 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 }
 
 func (m *Manager) PersistApplyParameterGroup(ctx context.Context, req message.ApplyParameterGroupReq, hasEmptyValue bool) (resp message.ApplyParameterGroupResp, err error) {
-	if err = persistApplyParameter(&req, ctx, hasEmptyValue); err != nil {
-		return resp, err
+	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId, "")
+	if err != nil || pg.ID == "" {
+		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, err.Error())
+	}
+
+	pgs := make([]*parameter.ClusterParameterMapping, len(params))
+	for i, param := range params {
+		value := ""
+		if !hasEmptyValue {
+			value = param.DefaultValue
+		}
+		realValue := structs.ParameterRealValue{ClusterValue: value}
+		b, err := json.Marshal(realValue)
+		if err != nil {
+			return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, err.Error())
+		}
+		pgs[i] = &parameter.ClusterParameterMapping{
+			ClusterID:   req.ClusterID,
+			ParameterID: param.ID,
+			RealValue:   string(b),
+		}
+	}
+	err = models.GetClusterParameterReaderWriter().ApplyClusterParameter(ctx, req.ParamGroupId, req.ClusterID, pgs)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("apply parameter group convert resp err: %v", err)
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, err.Error())
 	}
 	resp = message.ApplyParameterGroupResp{
 		ClusterID:    req.ClusterID,

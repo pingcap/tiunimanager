@@ -31,7 +31,6 @@ func TestExecCommandThruSQL(t *testing.T) {
 	}
 }
 
-
 var dbConnParam1 secondparty.DbConnParam
 var dbConnParam2 secondparty.DbConnParam
 

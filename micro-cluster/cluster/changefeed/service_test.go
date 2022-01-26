@@ -67,17 +67,15 @@ func TestManager_CreateBetweenClusters(t *testing.T) {
 
 	mockSecond.EXPECT().CreateChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
 		Accepted: true,
-		Succeed: true,
+		Succeed:  true,
 	}, nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
-		changefeedRW.EXPECT().Create(gomock.Any(),gomock.Any()).Return(&changefeed.ChangeFeedTask{
+		changefeedRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&changefeed.ChangeFeedTask{
 			Entity: common.Entity{
 				ID: "11111",
 			},
-			Downstream: &changefeed.TiDBDownstream{
-			},
-
+			Downstream: &changefeed.TiDBDownstream{},
 		}, nil).Times(1)
 
 		id, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationCloneFrom)
@@ -94,13 +92,11 @@ func TestManager_CreateBetweenClusters(t *testing.T) {
 		assert.Error(t, err)
 	})
 	t.Run("error3", func(t *testing.T) {
-		changefeedRW.EXPECT().Create(gomock.Any(),gomock.Any()).Return(&changefeed.ChangeFeedTask{
+		changefeedRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&changefeed.ChangeFeedTask{
 			Entity: common.Entity{
 				ID: "11111",
 			},
-			Downstream: &changefeed.TiDBDownstream{
-			},
-
+			Downstream: &changefeed.TiDBDownstream{},
 		}, errors.Error(errors.TIEM_UNRECOGNIZED_ERROR)).AnyTimes()
 
 		_, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationCloneFrom)
@@ -142,30 +138,28 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 
 	mockSecond.EXPECT().CreateChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
 		Accepted: true,
-		Succeed: true,
+		Succeed:  true,
 	}, nil).AnyTimes()
 
 	mockSecond.EXPECT().DeleteChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
 		Accepted: true,
-		Succeed: true,
+		Succeed:  true,
 	}, nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
-		changefeedRW.EXPECT().Create(gomock.Any(),gomock.Any()).Return(&changefeed.ChangeFeedTask{
+		changefeedRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&changefeed.ChangeFeedTask{
 			Entity: common.Entity{
 				ID: "11111",
 			},
-			Downstream: &changefeed.TiDBDownstream{
-			},
-
+			Downstream: &changefeed.TiDBDownstream{},
 		}, nil).Times(1)
 		changefeedRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*changefeed.ChangeFeedTask{
 			{
 				Entity: common.Entity{
 					Status: string(constants.ChangeFeedStatusNormal),
-					ID: "1111",
+					ID:     "1111",
 				},
-				Type: "tidb",
+				Type:      "tidb",
 				ClusterId: "sourceId",
 				Downstream: &changefeed.TiDBDownstream{
 					TargetClusterId: "targetId",
@@ -175,10 +169,9 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 				Entity: common.Entity{
 					ID: "2222",
 				},
-				Type: "mysql",
-				ClusterId: "sourceId",
-				Downstream: &changefeed.MysqlDownstream{
-				},
+				Type:       "mysql",
+				ClusterId:  "sourceId",
+				Downstream: &changefeed.MysqlDownstream{},
 			},
 			{
 				Entity: common.Entity{
@@ -209,9 +202,9 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 			{
 				Entity: common.Entity{
 					Status: string(constants.ChangeFeedStatusNormal),
-					ID: "1111",
+					ID:     "1111",
 				},
-				Type: "tidb",
+				Type:      "tidb",
 				ClusterId: "sourceId",
 				Downstream: &changefeed.TiDBDownstream{
 					TargetClusterId: "targetId",
@@ -221,10 +214,9 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 				Entity: common.Entity{
 					ID: "2222",
 				},
-				Type: "mysql",
-				ClusterId: "sourceId",
-				Downstream: &changefeed.MysqlDownstream{
-				},
+				Type:       "mysql",
+				ClusterId:  "sourceId",
+				Downstream: &changefeed.MysqlDownstream{},
 			},
 			{
 				Entity: common.Entity{
@@ -247,9 +239,9 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 			{
 				Entity: common.Entity{
 					Status: string(constants.ChangeFeedStatusNormal),
-					ID: "1111",
+					ID:     "1111",
 				},
-				Type: "tidb",
+				Type:      "tidb",
 				ClusterId: "sourceId",
 				Downstream: &changefeed.TiDBDownstream{
 					TargetClusterId: "targetId",
@@ -259,10 +251,9 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 				Entity: common.Entity{
 					ID: "2222",
 				},
-				Type: "mysql",
-				ClusterId: "sourceId",
-				Downstream: &changefeed.MysqlDownstream{
-				},
+				Type:       "mysql",
+				ClusterId:  "sourceId",
+				Downstream: &changefeed.MysqlDownstream{},
 			},
 			{
 				Entity: common.Entity{

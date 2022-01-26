@@ -112,12 +112,12 @@ type ReaderWriter interface {
 	UpdateTopologySnapshotConfig(ctx context.Context, clusterID string, config string) error
 
 	//
-    // ClearClusterPhysically
-    // @Description: If you don't know why you should use it, then don't use it
-    // @param ctx
-    // @param clusterID
-    // @return err
-    //
+	// ClearClusterPhysically
+	// @Description: If you don't know why you should use it, then don't use it
+	// @param ctx
+	// @param clusterID
+	// @return err
+	//
 	ClearClusterPhysically(ctx context.Context, clusterID string) (err error)
 	//
 	// CreateDBUser

@@ -185,4 +185,3 @@ func Test_execShowWarningsThruSQL(t *testing.T) {
 		t.Errorf("err not nil")
 	}
 }
-

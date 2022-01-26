@@ -32,9 +32,8 @@ import (
 const (
 	contextClusterMeta             = "ClusterMeta"
 	contextModifyParameters        = "ModifyParameters"
-	contextApplyParameterInfo      = "ApplyParameterInfo"
-	contextUpdateParameterInfo     = "UpdateParameterInfo"
-	contextMaintenanceStatusChange = "maintenanceStatusChange"
+	contextHasApplyParameter       = "HasApplyParameter"
+	contextMaintenanceStatusChange = "MaintenanceStatusChange"
 )
 
 type UpdateParameterSource int
@@ -71,9 +70,11 @@ const (
 )
 
 type ModifyParameter struct {
-	Reboot bool
-	Params []ModifyClusterParameterInfo
-	Nodes  []string
+	ClusterID    string
+	ParamGroupId string
+	Reboot       bool
+	Params       []ModifyClusterParameterInfo
+	Nodes        []string
 }
 
 type ModifyClusterParameterInfo struct {

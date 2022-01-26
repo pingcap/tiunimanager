@@ -126,7 +126,7 @@ func TestGormClusterReadWrite_Create(t *testing.T) {
 		_, err := testRW.Create(context.TODO(), &Cluster{
 			Name: "test other error",
 			Entity: common.Entity{
-				Status:   string(constants.ClusterRunning),
+				Status: string(constants.ClusterRunning),
 			},
 			Tags: []string{"tag1", "tag2"},
 		})
@@ -179,8 +179,8 @@ func TestGormClusterReadWrite_Delete(t *testing.T) {
 		Entity: common.Entity{
 			TenantId: "111",
 		},
-		Type: "dsfds",
-		Version: "v5.0.0",
+		Type:      "dsfds",
+		Version:   "v5.0.0",
 		ClusterID: cluster.ID,
 	})
 	defer testRW.Delete(context.TODO(), got.ID)
@@ -231,8 +231,8 @@ func TestGormClusterReadWrite_ClearClusterPhysically(t *testing.T) {
 		Entity: common.Entity{
 			TenantId: "111",
 		},
-		Type: "dsfds",
-		Version: "v5.0.0",
+		Type:      "dsfds",
+		Version:   "v5.0.0",
 		ClusterID: cluster.ID,
 	})
 	defer testRW.Delete(context.TODO(), got.ID)
@@ -528,7 +528,6 @@ func TestGormClusterReadWrite_ClusterTopologySnapshot(t *testing.T) {
 
 		_, err = testRW.GetCurrentClusterTopologySnapshot(context.TODO(), "")
 		assert.Error(t, err)
-
 
 		_, err = testRW.GetCurrentClusterTopologySnapshot(context.TODO(), "222")
 		assert.NoError(t, err)

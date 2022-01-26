@@ -120,27 +120,27 @@ func mockDBUsers() []*management.DBUser {
 	return []*management.DBUser{
 		{
 			ClusterID: "123",
-			Name: "backup",
-			Password: "123455678",
-			RoleType: string(constants.DBUserBackupRestore),
+			Name:      "backup",
+			Password:  "123455678",
+			RoleType:  string(constants.DBUserBackupRestore),
 		},
 		{
 			ClusterID: "123",
-			Name: "root",
-			Password: "123455678",
-			RoleType: string(constants.Root),
+			Name:      "root",
+			Password:  "123455678",
+			RoleType:  string(constants.Root),
 		},
 		{
 			ClusterID: "123",
-			Name: "parameter",
-			Password: "123455678",
-			RoleType: string(constants.DBUserParameterManagement),
+			Name:      "parameter",
+			Password:  "123455678",
+			RoleType:  string(constants.DBUserParameterManagement),
 		},
 		{
 			ClusterID: "123",
-			Name: "data_sync",
-			Password: "123455678",
-			RoleType: string(constants.DBUserCDCDataSync),
+			Name:      "data_sync",
+			Password:  "123455678",
+			RoleType:  string(constants.DBUserCDCDataSync),
 		},
 	}
 }

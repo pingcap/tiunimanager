@@ -111,7 +111,7 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 		FlowData: map[string]interface{}{},
 	}
 
-	v, err := convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
+	v, err := convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
 		ParamId:   "1",
 		Name:      "param1",
 		Type:      0,
@@ -120,7 +120,7 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, 1, v)
 
-	v, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
+	v, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
 		ParamId:   "2",
 		Name:      "param2",
 		Type:      1,
@@ -129,7 +129,7 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, "debug", v)
 
-	v, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
+	v, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
 		ParamId:   "3",
 		Name:      "param3",
 		Type:      2,
@@ -138,7 +138,7 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, true, v)
 
-	v, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
+	v, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
 		ParamId:   "4",
 		Name:      "param4",
 		Type:      3,
@@ -147,7 +147,7 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, 3.00, math.Trunc(v.(float64)))
 
-	v, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
+	v, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
 		ParamId:   "5",
 		Name:      "param5",
 		Type:      4,
@@ -164,7 +164,7 @@ func TestExecutor_convertRealParameterType_Error(t *testing.T) {
 		FlowData: map[string]interface{}{},
 	}
 
-	_, err := convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
+	_, err := convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
 		ParamId:   "2",
 		Name:      "param2",
 		Type:      2,
@@ -172,7 +172,7 @@ func TestExecutor_convertRealParameterType_Error(t *testing.T) {
 	})
 	assert.Error(t, err)
 
-	_, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
+	_, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
 		ParamId:   "3",
 		Name:      "param3",
 		Type:      3,
@@ -180,7 +180,7 @@ func TestExecutor_convertRealParameterType_Error(t *testing.T) {
 	})
 	assert.Error(t, err)
 
-	_, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
+	_, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
 		ParamId:   "5",
 		Name:      "param5",
 		Type:      0,
@@ -208,7 +208,7 @@ func TestExecutor_validationParameters(t *testing.T) {
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
-			Params: []ModifyClusterParameterInfo{
+			Params: []*ModifyClusterParameterInfo{
 				{
 					ParamId:        "1",
 					Name:           "test_param_1",
@@ -230,7 +230,7 @@ func TestExecutor_validationParameters(t *testing.T) {
 
 func TestExecutor_validateRange(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		validated := ValidateRange(ModifyClusterParameterInfo{
+		validated := ValidateRange(&ModifyClusterParameterInfo{
 			ParamId:        "1",
 			Name:           "test_param_1",
 			InstanceType:   "TiDB",
@@ -243,7 +243,7 @@ func TestExecutor_validateRange(t *testing.T) {
 		})
 		assert.EqualValues(t, true, validated)
 
-		validated = ValidateRange(ModifyClusterParameterInfo{
+		validated = ValidateRange(&ModifyClusterParameterInfo{
 			ParamId:        "2",
 			Name:           "test_param_2",
 			InstanceType:   "TiDB",
@@ -256,7 +256,7 @@ func TestExecutor_validateRange(t *testing.T) {
 		})
 		assert.EqualValues(t, true, validated)
 
-		validated = ValidateRange(ModifyClusterParameterInfo{
+		validated = ValidateRange(&ModifyClusterParameterInfo{
 			ParamId:        "3",
 			Name:           "test_param_3",
 			InstanceType:   "TiDB",
@@ -269,7 +269,7 @@ func TestExecutor_validateRange(t *testing.T) {
 		})
 		assert.EqualValues(t, true, validated)
 
-		validated = ValidateRange(ModifyClusterParameterInfo{
+		validated = ValidateRange(&ModifyClusterParameterInfo{
 			ParamId:        "4",
 			Name:           "test_param_4",
 			InstanceType:   "TiDB",
@@ -281,7 +281,7 @@ func TestExecutor_validateRange(t *testing.T) {
 			RealValue:      structs.ParameterRealValue{ClusterValue: "3.14"},
 		})
 
-		validated = ValidateRange(ModifyClusterParameterInfo{
+		validated = ValidateRange(&ModifyClusterParameterInfo{
 			ParamId:        "5",
 			Name:           "test_param_5",
 			InstanceType:   "TiDB",

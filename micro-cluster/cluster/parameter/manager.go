@@ -72,7 +72,8 @@ var modifyParametersDefine = workflow.WorkFlowDefine{
 		"start":          {"validationParameter", "validationDone", "fail", workflow.SyncFuncNode, validationParameter},
 		"validationDone": {"modifyParameter", "modifyDone", "fail", workflow.SyncFuncNode, modifyParameters},
 		"modifyDone":     {"refreshParameter", "refreshDone", "fail", workflow.SyncFuncNode, refreshParameter},
-		"refreshDone":    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(defaultEnd, persistParameter)},
+		"refreshDone":    {"persistParameter", "persistDone", "fail", workflow.SyncFuncNode, persistParameter},
+		"persistDone":    {"end", "", "", workflow.SyncFuncNode, defaultEnd},
 		"fail":           {"fail", "", "", workflow.SyncFuncNode, defaultEnd},
 	},
 }
@@ -157,7 +158,7 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 		return
 	}
 
-	params := make([]ModifyClusterParameterInfo, 0)
+	params := make([]*ModifyClusterParameterInfo, 0)
 
 	// Iterate to get the complete information of the modified parameters
 	for _, detail := range paramDetails {
@@ -171,7 +172,7 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 						return
 					}
 				}
-				params = append(params, ModifyClusterParameterInfo{
+				params = append(params, &ModifyClusterParameterInfo{
 					ParamId:        param.ParamId,
 					Category:       detail.Category,
 					Name:           detail.Name,
@@ -225,7 +226,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 	}
 
 	// Constructing clusterParameter.ModifyParameter objects
-	params := make([]ModifyClusterParameterInfo, len(pgm))
+	params := make([]*ModifyClusterParameterInfo, len(pgm))
 	for i, param := range pgm {
 		ranges := make([]string, 0)
 		if len(param.Range) > 0 {
@@ -235,7 +236,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 				return
 			}
 		}
-		params[i] = ModifyClusterParameterInfo{
+		params[i] = &ModifyClusterParameterInfo{
 			ParamId:        param.ID,
 			Category:       param.Category,
 			Name:           param.Name,

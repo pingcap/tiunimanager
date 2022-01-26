@@ -65,10 +65,11 @@ func mockClusterMeta() *handler.ClusterMeta {
 	return &handler.ClusterMeta{
 		Cluster: mockCluster(),
 		Instances: map[string][]*management.ClusterInstance{
-			"TiDB": mockClusterInstances(),
-			"TiKV": mockClusterInstances(),
-			"PD":   mockClusterInstances(),
-			"CDC":  mockClusterInstances(),
+			"TiDB":    mockClusterInstances(),
+			"TiKV":    mockClusterInstances(),
+			"PD":      mockClusterInstances(),
+			"CDC":     mockClusterInstances(),
+			"TiFlash": mockClusterInstances(),
 		},
 		DBUsers: map[string]*management.DBUser{
 			string(constants.Root): &management.DBUser{

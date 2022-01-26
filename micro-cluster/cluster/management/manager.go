@@ -49,6 +49,7 @@ const (
 	ContextPrivateKey        = "PrivateKey"
 	ContextDeleteRequest     = "DeleteRequest"
 	ContextTakeoverRequest   = "TakeoverRequest"
+	ContextGCLifeTime        = "GCLifeTime"
 )
 
 type Manager struct{}
@@ -191,7 +192,8 @@ var cloneDefine = workflow.WorkFlowDefine{
 	FlowName: constants.FlowCloneCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":                  {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
-		"resourceDone":           {"backupSourceCluster", "backupDone", "fail", workflow.SyncFuncNode, backupSourceCluster},
+		"resourceDone":           {"modifySourceClusterGCTime", "modifyGCTimeDone", "fail", workflow.SyncFuncNode, modifySourceClusterGCTime},
+		"modifyGCTimeDone":       {"backupSourceCluster", "backupDone", "fail", workflow.SyncFuncNode, backupSourceCluster},
 		"backupDone":             {"waitBackup", "waitBackupDone", "fail", workflow.SyncFuncNode, waitWorkFlow},
 		"waitBackupDone":         {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
 		"configDone":             {"deployCluster", "deployDone", "fail", workflow.PollingNode, deployCluster},
@@ -207,9 +209,9 @@ var cloneDefine = workflow.WorkFlowDefine{
 		"waitSyncParamDone":      {"restoreCluster", "restoreClusterDone", "failAfterDeploy", workflow.SyncFuncNode, restoreCluster},
 		"restoreClusterDone":     {"waitRestore", "waitRestoreDone", "failAfterDeploy", workflow.SyncFuncNode, waitWorkFlow},
 		"waitRestoreDone":        {"syncIncrData", "syncIncrDataDone", "failAfterDeploy", workflow.SyncFuncNode, syncIncrData},
-		"syncIncrDataDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"fail":                   {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
-		"failAfterDeploy":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"syncIncrDataDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(recoverSourceClusterGCTime, persistCluster, endMaintenance, asyncBuildLog)},
+		"fail":                   {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(recoverSourceClusterGCTime, setClusterFailure, revertResourceAfterFailure, endMaintenance)},
+		"failAfterDeploy":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(recoverSourceClusterGCTime, setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -232,6 +234,14 @@ func (p *Manager) Clone(ctx context.Context, request cluster.CloneClusterReq) (r
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"clone cluster %s meta error: %s", sourceClusterMeta.Cluster.ID, err.Error())
+		return
+	}
+
+	// When use CDCSyncClone strategy to clone cluster, source cluster must have CDC
+	err = handler.ClonePreCheck(ctx, sourceClusterMeta, request.CloneStrategy)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"check cluster %s clone error: %s", sourceClusterMeta.Cluster.ID, err.Error())
 		return
 	}
 

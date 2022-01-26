@@ -129,6 +129,10 @@ func ValidateRange(param ModifyClusterParameterInfo) bool {
 			}
 		}
 	case int(String):
+		// If the parameter is a string type and the range length is 1, it means it is an expression or a fixed display value
+		if len(param.Range) <= 1 {
+			return true
+		}
 		for _, enumValue := range param.Range {
 			if param.RealValue.ClusterValue == enumValue {
 				return true

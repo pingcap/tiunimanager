@@ -110,15 +110,15 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbPassw
 		MaintainWindow: "",
 	}
 
-	p.DBUsers = make(map[string]*management.DBUser)
-	p.DBUsers[string(constants.Root)] = &management.DBUser{
-		ClusterID: p.Cluster.ID,
-		Name:      constants.DBUserName[constants.Root],
-		Password:  dbPassword,
-		RoleType:  string(constants.Root),
-	}
 	_, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
 	if err == nil {
+		p.DBUsers = make(map[string]*management.DBUser)
+		p.DBUsers[string(constants.Root)] = &management.DBUser{
+			ClusterID: p.Cluster.ID,
+			Name:      constants.DBUserName[constants.Root],
+			Password:  dbPassword,
+			RoleType:  string(constants.Root),
+		}
 		framework.LogWithContext(ctx).Infof("takeover cluster %s succeed, id = %s", p.Cluster.Name, p.Cluster.ID)
 	} else {
 		framework.LogWithContext(ctx).Errorf("takeover cluster %s failed, err : %s", p.Cluster.Name, err.Error())
@@ -604,13 +604,6 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 		MaintenanceStatus: constants.ClusterMaintenanceNone,
 		MaintainWindow:    p.Cluster.MaintainWindow,
 	}
-	meta.DBUsers = make(map[string]*management.DBUser)
-	meta.DBUsers[string(constants.Root)] = &management.DBUser{
-		ClusterID: p.Cluster.ID, // todo: which ID
-		Name:      constants.DBUserName[constants.Root],
-		Password:  parameter.DBPassword,
-		RoleType:  string(constants.Root),
-	}
 
 	// if user specify cluster version
 	if len(parameter.Version) > 0 {
@@ -648,6 +641,14 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 	// write cluster into db
 	if _, err := models.GetClusterReaderWriter().Create(ctx, meta.Cluster); err != nil {
 		return nil, err
+	}
+
+	meta.DBUsers = make(map[string]*management.DBUser)
+	meta.DBUsers[string(constants.Root)] = &management.DBUser{
+		ClusterID: meta.Cluster.ID, // todo: which ID
+		Name:      constants.DBUserName[constants.Root],
+		Password:  parameter.DBPassword,
+		RoleType:  string(constants.Root),
 	}
 
 	// clone instances

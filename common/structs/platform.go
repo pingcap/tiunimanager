@@ -120,7 +120,7 @@ type DBUserRole struct {
 	ClusterType constants.EMProductIDType
 	RoleName    string
 	RoleType    constants.DBUserRoleType
-	Permission  string
+	Permission  []string
 }
 
 var DBUserRoleRecords = map[constants.DBUserRoleType]DBUserRole{

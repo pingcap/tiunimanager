@@ -2375,6 +2375,123 @@ func Test_applyParameterGroup(t *testing.T) {
 	})
 }
 
+func Test_chooseParameterGroup(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+	models.SetParameterGroupReaderWriter(parameterGroupRW)
+	parameterGroupRW.EXPECT().
+		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.2", 1, 1, gomock.Any(), gomock.Any()).
+		Return([]*parametergroup.ParameterGroup{
+			{},
+		}, int64(0), nil).AnyTimes()
+
+	parameterGroupRW.EXPECT().
+		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.1", 1, 1, gomock.Any(), gomock.Any()).
+		Return([]*parametergroup.ParameterGroup{}, int64(0), nil).AnyTimes()
+
+	parameterGroupRW.EXPECT().
+		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.0", 1, 1, gomock.Any(), gomock.Any()).
+		Return(nil, int64(0), errors.Error(errors.TIEM_PANIC)).AnyTimes()
+
+	t.Run("normal", func(t *testing.T) {
+		ctx := workflow.NewFlowContext(context.TODO())
+		node := &workflowModel.WorkFlowNode{}
+		err := chooseParameterGroup(&handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "1111",
+				},
+				Version:          "v5.2.3",
+				Type: "TiDB",
+			},
+		}, node, ctx)
+		assert.NoError(t, err)
+		assert.Contains(t, node.Result, "parameter group id is empty")
+		assert.Contains(t, node.Result, "will be applied to cluster")
+	})
+	t.Run("empty", func(t *testing.T) {
+		ctx := workflow.NewFlowContext(context.TODO())
+		node := &workflowModel.WorkFlowNode{}
+		err := chooseParameterGroup(&handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "1111",
+				},
+				Version:          "v5.1.9",
+				Type: "TiDB",
+			},
+		}, node, ctx)
+		assert.Error(t, err)
+		assert.Contains(t, node.Result, "no default group found")
+	})
+	t.Run("error", func(t *testing.T) {
+		ctx := workflow.NewFlowContext(context.TODO())
+		node := &workflowModel.WorkFlowNode{}
+		err := chooseParameterGroup(&handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "1111",
+				},
+				Version:          "v5.0.1",
+				Type: "TiDB",
+			},
+		}, node, ctx)
+		assert.Error(t, err)
+	})
+}
+
+func Test_Test_applyParameterGroupForTakeover(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+	models.SetParameterGroupReaderWriter(parameterGroupRW)
+	parameterGroupRW.EXPECT().
+		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.2", 1, 1, gomock.Any(), gomock.Any()).
+		Return([]*parametergroup.ParameterGroup{
+			{},
+		}, int64(0), nil).AnyTimes()
+
+	parameterGroupRW.EXPECT().
+		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.1", 1, 1, gomock.Any(), gomock.Any()).
+		Return([]*parametergroup.ParameterGroup{}, int64(0), nil).AnyTimes()
+
+	parameterGroupRW.EXPECT().
+		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.0", 1, 1, gomock.Any(), gomock.Any()).
+		Return(nil, int64(0), errors.Error(errors.TIEM_PANIC)).AnyTimes()
+
+	t.Run("query group error", func(t *testing.T) {
+		ctx := workflow.NewFlowContext(context.TODO())
+		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "1111",
+				},
+				Version:          "v5.0.0",
+				ParameterGroupID: "",
+			},
+		})
+		err := applyParameterGroupForTakeover(&workflowModel.WorkFlowNode{}, ctx)
+		assert.Error(t, err)
+	})
+	t.Run("query group empty", func(t *testing.T) {
+		ctx := workflow.NewFlowContext(context.TODO())
+		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "1111",
+				},
+				Version:          "v5.1.22",
+				ParameterGroupID: "",
+			},
+		})
+		err := applyParameterGroupForTakeover(&workflowModel.WorkFlowNode{}, ctx)
+		assert.Error(t, err)
+	})
+}
+
 func Test_adjustParameters(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

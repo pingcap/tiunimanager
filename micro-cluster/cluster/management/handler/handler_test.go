@@ -1513,7 +1513,9 @@ func TestClusterMeta_BuildForTakeover(t *testing.T) {
 	meta := &ClusterMeta{}
 
 	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "1234"}}, nil)
-	err := meta.BuildForTakeover(context.TODO(), "test", "root", "1234")
+	rw.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	err := meta.BuildForTakeover(context.TODO(), "test", "1234")
 	assert.NoError(t, err)
 	//assert.Equal(t, meta.Cluster.Name, params.Name)
 	//assert.Equal(t, meta.Cluster.Type, params.Type)
@@ -1565,4 +1567,31 @@ func TestClusterMeta_BuildForTakeover(t *testing.T) {
 	//		}
 	//	})
 	//}
+}
+
+func TestClusterMeta_IsTakenOver(t *testing.T) {
+	t.Run("empty", func(t *testing.T) {
+		meta := ClusterMeta{
+			Cluster: &management.Cluster{
+
+			},
+		}
+		assert.False(t, meta.IsTakenOver())
+	})
+	t.Run("true", func(t *testing.T) {
+		meta := ClusterMeta{
+			Cluster: &management.Cluster{
+				Tags: []string{"aaa", TagTakeover,"bbb"},
+			},
+		}
+		assert.True(t, meta.IsTakenOver())
+	})
+	t.Run("false", func(t *testing.T) {
+		meta := ClusterMeta{
+			Cluster: &management.Cluster{
+				Tags: []string{"aaa", "bbb"},
+			},
+		}
+		assert.False(t, meta.IsTakenOver())
+	})
 }

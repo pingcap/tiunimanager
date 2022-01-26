@@ -56,7 +56,7 @@ func getEmptyFlow(name string) *workflow.WorkFlowDefine {
 		TaskNodes: map[string]*workflow.NodeDefine{
 			"start": {"start", "done", "fail", workflow.SyncFuncNode, emptyNode},
 			"done":  {"end", "", "", workflow.SyncFuncNode, emptyNode},
-			"fail":  {"fail", "", "", workflow.SyncFuncNode, emptyNode},
+			"fail":  {"end", "", "", workflow.SyncFuncNode, emptyNode},
 		},
 	}
 }
@@ -1450,6 +1450,7 @@ func TestManager_TakeoverCluster(t *testing.T) {
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		clusterRW.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq{
 			TiUPIp:           "127.0.0.1",
 			TiUPPath:         ".tiup/",
@@ -1457,7 +1458,6 @@ func TestManager_TakeoverCluster(t *testing.T) {
 			TiUPUserPassword: "aaa",
 			TiUPPort:         22,
 			ClusterName:      "takeoverCluster",
-			DBUser:           "dbUserName",
 			DBPassword:       "password",
 		})
 		assert.NoError(t, err)
@@ -1470,6 +1470,7 @@ func TestManager_TakeoverCluster(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("fail")).AnyTimes()
+		clusterRW.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq{
 			TiUPIp:           "127.0.0.1",
 			TiUPPath:         ".tiup/",
@@ -1477,7 +1478,6 @@ func TestManager_TakeoverCluster(t *testing.T) {
 			TiUPUserPassword: "aaa",
 			TiUPPort:         22,
 			ClusterName:      "takeoverCluster",
-			DBUser:           "dbUserName",
 			DBPassword:       "password",
 		})
 
@@ -1488,13 +1488,13 @@ func TestManager_TakeoverCluster(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
+		clusterRW.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq{
 			TiUPIp:           "127.0.0.1",
 			TiUPPath:         ".tiup/",
 			TiUPUserName:     "root",
 			TiUPUserPassword: "aaa",
 			TiUPPort:         22,
-			DBUser:           "dbUserName",
 			DBPassword:       "password",
 		})
 		assert.Error(t, err)
@@ -1504,6 +1504,7 @@ func TestManager_TakeoverCluster(t *testing.T) {
 			return nil, nil, errors.New("")
 		}
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		clusterRW.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		models.SetClusterReaderWriter(clusterRW)
 		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq{
 			TiUPIp:           "127.0.0.1",
@@ -1512,7 +1513,6 @@ func TestManager_TakeoverCluster(t *testing.T) {
 			TiUPUserPassword: "aaa",
 			TiUPPort:         22,
 			ClusterName:      "takeoverCluster",
-			DBUser:           "dbUserName",
 			DBPassword:       "password",
 		})
 
@@ -1526,6 +1526,7 @@ func TestManager_TakeoverCluster(t *testing.T) {
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("fail")).AnyTimes()
+		clusterRW.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq{
 			TiUPIp:           "127.0.0.1",
 			TiUPPath:         ".tiup/",
@@ -1533,7 +1534,6 @@ func TestManager_TakeoverCluster(t *testing.T) {
 			TiUPUserPassword: "aaa",
 			TiUPPort:         22,
 			ClusterName:      "takeoverCluster",
-			DBUser:           "dbUserName",
 			DBPassword:       "password",
 		})
 

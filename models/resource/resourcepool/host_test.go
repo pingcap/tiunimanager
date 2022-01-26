@@ -17,9 +17,10 @@
 package resourcepool
 
 import (
-	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"os"
 	"testing"
+
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -126,7 +127,7 @@ func genFakeHost(region, zone, rack, hostName, ip string, freeCpuCores, freeMemo
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
 		CpuCores:     freeCpuCores,
-		Memory:       freeCpuCores,
+		Memory:       freeMemory,
 		FreeCpuCores: freeCpuCores,
 		FreeMemory:   freeMemory,
 		Nic:          "1GE",
@@ -172,11 +173,15 @@ func Test_Host_Hooks(t *testing.T) {
 
 func Test_ConstructFromHostInfo(t *testing.T) {
 	src := structs.HostInfo{
-		IP:       "192.168.999.999",
-		UserName: "root",
-		Region:   "TEST_Region1",
-		AZ:       "TEST_Zone1",
-		Rack:     "TEST_Rack1",
+		IP:           "192.168.999.999",
+		UserName:     "root",
+		Region:       "TEST_Region1",
+		AZ:           "TEST_Zone1",
+		Rack:         "TEST_Rack1",
+		CpuCores:     8,
+		Memory:       16,
+		UsedCpuCores: 4,
+		UsedMemory:   10,
 		Disks: []structs.DiskInfo{
 			{Name: "sda", Path: "/", Capacity: 256, Status: string(constants.DiskReserved), Type: string(constants.SSD)},
 			{Name: "sdb", Path: "/", Capacity: 256, Status: string(constants.DiskAvailable), Type: string(constants.NVMeSSD)},
@@ -189,6 +194,8 @@ func Test_ConstructFromHostInfo(t *testing.T) {
 	assert.Equal(t, "TEST_Region1", dst.Region)
 	assert.Equal(t, "TEST_Region1,TEST_Zone1", dst.AZ)
 	assert.Equal(t, "TEST_Region1,TEST_Zone1,TEST_Rack1", dst.Rack)
+	assert.Equal(t, int32(4), dst.FreeCpuCores)
+	assert.Equal(t, int32(6), dst.FreeMemory)
 	assert.Equal(t, 2, len(dst.Disks))
 }
 
@@ -196,10 +203,17 @@ func Test_ToHostInfo(t *testing.T) {
 	src := genFakeHost("Region1", "Region1,Zone1", "Region1,Zone1,Rack1", "TEST_HOST1", "192.168.999.999", 32, 64,
 		string(constants.EMProductIDDataMigration), string(constants.PurposeSchedule), string(constants.NVMeSSD))
 
+	src.FreeCpuCores = 0
+	src.FreeMemory = 28
+	src.Stat = string(constants.HostLoadInUsed)
+
 	var dst structs.HostInfo
 	src.ToHostInfo(&dst)
 	assert.Equal(t, "Region1", dst.Region)
 	assert.Equal(t, "Zone1", dst.AZ)
 	assert.Equal(t, "Rack1", dst.Rack)
 	assert.Equal(t, 2, len(dst.Disks))
+	assert.Equal(t, int32(32), dst.UsedCpuCores)
+	assert.Equal(t, int32(36), dst.UsedMemory)
+	assert.Equal(t, string(constants.HostLoadComputeExhaust), dst.Stat)
 }

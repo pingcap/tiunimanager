@@ -1192,17 +1192,14 @@ func applyParameterGroupForTakeover(node *workflowModel.WorkFlowNode, context *w
 	if err != nil {
 		return err
 	}
-	resp, err := parameter.NewManager().PersistApplyParameterGroup(context, message.ApplyParameterGroupReq{
+	_, err = parameter.NewManager().PersistApplyParameterGroup(context, message.ApplyParameterGroupReq{
 		ParamGroupId: cluster.ParameterGroupID,
 		ClusterID:    cluster.ID,
 	}, true)
 	if err != nil {
 		return err
 	}
-	if err = handler.WaitWorkflow(context.Context, resp.WorkFlowID, 10*time.Second, 30*24*time.Hour); err != nil {
-		framework.LogWithContext(context).Errorf("apply parameter group %s workflow error: %s", cluster.ParameterGroupID, err)
-		return err
-	}
+
 	node.Record(fmt.Sprintf("apply parameter group %s for cluster %s ", cluster.ParameterGroupID, cluster.ID))
 	return nil
 }

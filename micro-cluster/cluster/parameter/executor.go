@@ -228,9 +228,6 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		node.Record(fmt.Sprintf("modify parameter `%s` in %s to %s; ", DisplayFullParameterName(param.Category, param.Name), param.InstanceType, param.RealValue.ClusterValue))
 	}
 
-	testModify := ctx.GetData(contextModifyParameters).(*ModifyParameter)
-	fmt.Println(testModify)
-
 	for source, params := range paramContainer {
 		framework.LogWithContext(ctx).Debugf("loop current param container source: %v, params size: %d", source, len(params))
 		switch source.(int) {

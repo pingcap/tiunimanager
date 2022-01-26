@@ -42,7 +42,7 @@ func CreateDBUser(ctx context.Context, connec secondparty.DbConnParam, user *man
 	//	execute sql command of granting privileges to user
 	for _, permission := range constants.DBUserPermission[constants.DBUserRoleType(user.RoleType)] {
 		grantSqlCommand := fmt.Sprintf("GRANT %s ON %s.%s TO '%s'@'%s' IDENTIFIED BY '%s'",
-			permission, user.Name, "%", "*", "*", user.Password)
+			permission, "*", "*", user.Name, "%", user.Password)
 		err = ExecCommandThruSQL(ctx, db, grantSqlCommand)
 		if err != nil {
 			return err

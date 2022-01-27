@@ -32,8 +32,8 @@ import (
 	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
 	warehouseApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 	flowtaskApi "github.com/pingcap-inc/tiem/micro-api/controller/task/flowtask"
-	rbacApi "github.com/pingcap-inc/tiem/micro-api/controller/user/rbac"
 	userApi "github.com/pingcap-inc/tiem/micro-api/controller/user"
+	rbacApi "github.com/pingcap-inc/tiem/micro-api/controller/user/rbac"
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -62,8 +62,8 @@ func Route(g *gin.Engine) {
 	// api
 	apiV1 := g.Group("/api/v1")
 	{
-		apiV1.Use(interceptor.GinOpenTracing())
 		apiV1.Use(interceptor.GinTraceIDHandler())
+		apiV1.Use(interceptor.GinOpenTracing())
 		apiV1.Use(interceptor.AccessLog(), gin.Recovery())
 
 		auth := apiV1.Group("/user")

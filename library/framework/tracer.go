@@ -177,10 +177,11 @@ func NewBackgroundTask(fromCtx context.Context, operationName string, fn func(co
 	} else {
 		fromTraceID = GetTraceIDFromContext(fromCtx)
 	}
-	newCtx := newBackgroundMicroCtx(fromCtx, true)
+	newCtx := newBackgroundMicroCtx(fromCtx, false)
 	span := getCurrentTracer().StartSpan(operationName)
 	span.LogKV("spawn-from", currentCtxInfo)
 	newCtx = opentracing.ContextWithSpan(newCtx, span)
+	span.SetTag(TiEM_X_TRACE_ID_KEY, GetTraceIDFromContext(newCtx))
 	currentTraceID := getStringValueFromMicroContext(newCtx, TiEM_X_TRACE_ID_KEY)
 	t := &BackgroundTask{
 		fromCtx:        fromCtx,

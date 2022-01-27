@@ -426,17 +426,8 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 			framework.LogWithContext(ctx).Errorf("convert real parameter type err = %s", err.Error())
 			return err
 		}
-		if param.InstanceType == string(constants.ComponentIDTiDB) || param.InstanceType == string(constants.ComponentIDTiKV) {
-			var configKey = ""
-			if param.Category != "basic" {
-				configKey = param.Category + "." + param.Name
-			} else {
-				configKey = param.Name
-			}
-			cm[configKey] = clusterValue
-		} else {
-			cm[param.Name] = clusterValue
-		}
+		// display full parameter name
+		cm[DisplayFullParameterName(param.Category, param.Name)] = clusterValue
 		configs[i] = secondparty.GlobalComponentConfig{
 			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.InstanceType)),
 			ConfigMap:            cm,

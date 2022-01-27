@@ -728,7 +728,6 @@ func syncBackupStrategy(node *workflowModel.WorkFlowNode, context *workflow.Flow
 func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*handler.ClusterMeta)
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
-
 	if clusterMeta.Cluster.ParameterGroupID == sourceClusterMeta.Cluster.ParameterGroupID {
 		sourceResponse, _, err := parameter.NewManager().QueryClusterParameters(context.Context,
 			cluster.QueryClusterParametersReq{ClusterID: sourceClusterMeta.Cluster.ID})
@@ -767,17 +766,6 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 		context.SetData(ContextWorkflowID, response.WorkFlowID)
 		node.Record(fmt.Sprintf("update cluster %s parameters with source cluster %s parameters ",
 			clusterMeta.Cluster.ID, sourceClusterMeta.Cluster.ID))
-	} else {
-		resp, err := parameter.NewManager().ApplyParameterGroup(context, message.ApplyParameterGroupReq{
-			ParamGroupId: clusterMeta.Cluster.ParameterGroupID,
-			ClusterID:    clusterMeta.Cluster.ID,
-		}, false)
-		if err != nil {
-			return err
-		}
-		context.SetData(ContextWorkflowID, resp.WorkFlowID)
-		node.Record(fmt.Sprintf("cluster %s apply parameter group %s",
-			clusterMeta.Cluster.ID, clusterMeta.Cluster.ParameterGroupID))
 	}
 
 	return nil

@@ -19,6 +19,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -28,7 +30,6 @@ import (
 	dbModel "github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/workflow"
 	secondpartyModel "github.com/pingcap-inc/tiem/models/workflow/secondparty"
-	"time"
 )
 
 // WorkFlowAggregation workflow aggregation with workflow definition and nodes
@@ -95,7 +96,20 @@ func (flow *WorkFlowAggregation) start(ctx context.Context) {
 }
 
 func (flow *WorkFlowAggregation) asyncStart(ctx context.Context) {
-	go flow.start(ctx)
+	//operationName: em.cluster.ClusterService.Login workflow.11121231
+	operationName := fmt.Sprintf(
+		"%s.%s workflow.%s",
+		framework.GetMicroServiceNameFromContext(ctx),
+		framework.GetMicroEndpointNameFromContext(ctx),
+		flow.Flow.ID,
+	)
+	framework.StartBackgroundTask(
+		ctx, operationName,
+		func(ctx context.Context) error {
+			flow.start(ctx)
+			return nil
+		},
+	)
 }
 
 func (flow *WorkFlowAggregation) destroy(ctx context.Context, reason string) {

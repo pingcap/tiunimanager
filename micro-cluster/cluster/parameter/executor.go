@@ -189,6 +189,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 
 	modifyParam := ctx.GetData(contextModifyParameters).(*ModifyParameter)
 	framework.LogWithContext(ctx).Debugf("got modify need reboot: %v, parameters size: %d", modifyParam.Reboot, len(modifyParam.Params))
+	maintenanceStatusChange := ctx.GetData(contextMaintenanceStatusChange)
 
 	// Get the apply parameter object
 	applyParameter := ctx.GetData(contextHasApplyParameter)
@@ -223,6 +224,10 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		}
 		// If it is an apply parameter with an empty parameter value, it is skipped directly
 		if applyParameter != nil && strings.TrimSpace(param.RealValue.ClusterValue) == "" {
+			continue
+		}
+		// If the parameter is modified and is triggered by another workflow and the parameter value is empty, then skip directly
+		if applyParameter == nil && maintenanceStatusChange != nil && !maintenanceStatusChange.(bool) && strings.TrimSpace(param.RealValue.ClusterValue) == "" {
 			continue
 		}
 

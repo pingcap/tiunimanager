@@ -312,7 +312,7 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 	req := secondparty.ClusterEditConfigReq{
 		DbConnParameter: secondparty.DbConnParam{
 			Username: tidbUserInfo.Name,
-			Password: tidbUserInfo.Password,
+			Password: string(tidbUserInfo.Password),
 			IP:       tidbServer.IP,
 			Port:     strconv.Itoa(tidbServer.Port),
 		},

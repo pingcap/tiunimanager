@@ -72,7 +72,7 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 	clusterFacade := secondparty.ClusterFacade{
 		DbConnParameter: secondparty.DbConnParam{
 			Username: tidbUserInfo.Name,
-			Password: tidbUserInfo.Password,
+			Password: string(tidbUserInfo.Password),
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),
 		},
@@ -158,7 +158,7 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	clusterFacade := secondparty.ClusterFacade{
 		DbConnParameter: secondparty.DbConnParam{
 			Username: tidbUserInfo.Name,
-			Password: tidbUserInfo.Password,
+			Password: string(tidbUserInfo.Password),
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),
 		},

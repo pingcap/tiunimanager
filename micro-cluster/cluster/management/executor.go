@@ -24,6 +24,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
+	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
@@ -1088,7 +1089,7 @@ func initRootAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		Port:     strconv.Itoa(tidbServerPort),
 	}
 
-	err := utilsql.UpdateDBUserPassword(context, conn, rootUser.Name, rootUser.Password, node.ID)
+	err := utilsql.UpdateDBUserPassword(context, conn, rootUser.Name, string(rootUser.Password), node.ID)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s set user %s password error: %s", clusterMeta.Cluster.ID, rootUser.Name, err.Error())
@@ -1114,7 +1115,7 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 
 	conn := secondparty.DbConnParam{
 		Username: clusterMeta.DBUsers[string(constants.Root)].Name,
-		Password: clusterMeta.DBUsers[string(constants.Root)].Password,
+		Password: string(clusterMeta.DBUsers[string(constants.Root)].Password),
 		IP:       tidbServerHost,
 		Port:     strconv.Itoa(tidbServerPort),
 	}
@@ -1564,7 +1565,7 @@ func GenerateDBUser(context *workflow.FlowContext, roleTyp constants.DBUserRoleT
 	dbUser := &management.DBUser{
 		ClusterID:                cluster.ID,
 		Name:                     constants.DBUserName[roleTyp],
-		Password:                 meta.GetRandomString(10),
+		Password:                 common.Password(meta.GetRandomString(10)),
 		RoleType:                 string(roleTyp),
 		LastPasswordGenerateTime: time.Now(),
 	}

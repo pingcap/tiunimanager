@@ -8,6 +8,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
+	"github.com/pingcap-inc/tiem/models/common"
 	"strings"
 	"testing"
 	"time"
@@ -55,7 +56,7 @@ func TestDBUserManager_CreateDBUser(t *testing.T) {
 	user1 := &management.DBUser{
 		ClusterID:                "clusterID",
 		Name:                     "backup",
-		Password:                 meta.GetRandomString(10),
+		Password:                 common.Password(meta.GetRandomString(10)),
 		RoleType:                 string(constants.DBUserBackupRestore),
 		LastPasswordGenerateTime: time.Now(),
 	}
@@ -96,7 +97,7 @@ func TestDBUserManager_DeleteDBUser(t *testing.T) {
 	user1 := &management.DBUser{
 		ClusterID:                "clusterID",
 		Name:                     "backup",
-		Password:                 meta.GetRandomString(10),
+		Password:                 common.Password(meta.GetRandomString(10)),
 		RoleType:                 string(constants.DBUserBackupRestore),
 		LastPasswordGenerateTime: time.Now(),
 	}

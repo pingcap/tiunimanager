@@ -4461,6 +4461,9 @@ paths:
         required: true
         type: string
       - in: query
+        name: instanceType
+        type: string
+      - in: query
         name: paramName
         type: string
       produces:

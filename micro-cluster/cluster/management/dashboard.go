@@ -65,7 +65,7 @@ func GetDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) 
 		return resp, errors.WrapError(errors.TIEM_DASHBOARD_NOT_FOUND,
 			fmt.Sprintf("find cluster %s dashboard failed: %s", request.ClusterID, err.Error()), err)
 	}
-	token, err := getLoginToken(ctx, url, tidbUserInfo.Name, tidbUserInfo.Password)
+	token, err := getLoginToken(ctx, url, tidbUserInfo.Name, string(tidbUserInfo.Password))
 	if err != nil {
 		return resp, errors.WrapError(errors.TIEM_DASHBOARD_NOT_FOUND,
 			fmt.Sprintf("get cluster %s dashboard login token failed: %s", request.ClusterID, err.Error()), err)

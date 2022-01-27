@@ -2980,6 +2980,11 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "instanceType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "paramName",
                         "in": "query"
                     }

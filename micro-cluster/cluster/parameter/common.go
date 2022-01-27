@@ -26,6 +26,7 @@ package parameter
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/pingcap-inc/tiem/common/structs"
 )
@@ -103,9 +104,13 @@ const (
 // @Description: validate parameter value by range field
 // @Parameter param
 // @return bool
-func ValidateRange(param *ModifyClusterParameterInfo) bool {
+func ValidateRange(param *ModifyClusterParameterInfo, hasModify bool) bool {
 	// Determine if range is nil or an expression, continue the loop directly
 	if param.Range == nil || len(param.Range) == 0 {
+		return true
+	}
+	// If it is a modified parameter workflow, the value empty is skipped
+	if hasModify && strings.TrimSpace(param.RealValue.ClusterValue) == "" {
 		return true
 	}
 	switch param.Type {

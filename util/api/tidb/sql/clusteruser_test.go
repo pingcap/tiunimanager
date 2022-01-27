@@ -6,7 +6,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"strings"
 	"testing"
@@ -55,7 +55,7 @@ func TestDBUserManager_CreateDBUser(t *testing.T) {
 	user1 := &management.DBUser{
 		ClusterID:                "clusterID",
 		Name:                     "backup",
-		Password:                 handler.GetRandomString(10),
+		Password:                 meta.GetRandomString(10),
 		RoleType:                 string(constants.DBUserBackupRestore),
 		LastPasswordGenerateTime: time.Now(),
 	}
@@ -96,7 +96,7 @@ func TestDBUserManager_DeleteDBUser(t *testing.T) {
 	user1 := &management.DBUser{
 		ClusterID:                "clusterID",
 		Name:                     "backup",
-		Password:                 handler.GetRandomString(10),
+		Password:                 meta.GetRandomString(10),
 		RoleType:                 string(constants.DBUserBackupRestore),
 		LastPasswordGenerateTime: time.Now(),
 	}

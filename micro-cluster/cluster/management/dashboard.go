@@ -25,7 +25,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap/tiup/pkg/crypto/rand"
 	"io/ioutil"
 	"net/http"
@@ -46,7 +46,7 @@ type loginResponse struct {
 const loginUrlSuffix string = "api/user/login"
 
 func GetDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) (resp cluster.GetDashboardInfoResp, err error) {
-	meta, err := handler.Get(ctx, request.ClusterID)
+	meta, err := meta.Get(ctx, request.ClusterID)
 	if err != nil {
 		errMsg := fmt.Sprintf("get cluster %s meta failed: %s", request.ClusterID, err.Error())
 		framework.LogWithContext(ctx).Errorf(errMsg)
@@ -77,7 +77,7 @@ func GetDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) 
 	return resp, nil
 }
 
-func getDashboardUrlFromCluster(ctx context.Context, meta *handler.ClusterMeta) (string, error) {
+func getDashboardUrlFromCluster(ctx context.Context, meta *meta.ClusterMeta) (string, error) {
 	pdAddress := meta.GetPDClientAddresses()
 	if len(pdAddress) == 0 {
 		framework.LogWithContext(ctx).Errorf("get pd address from meta failed, empty address")

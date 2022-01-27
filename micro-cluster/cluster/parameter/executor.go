@@ -39,7 +39,7 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/parameter"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 	secondparty2 "github.com/pingcap-inc/tiem/models/workflow/secondparty"
@@ -59,7 +59,7 @@ import (
 // @Parameter flowName
 // @return flowID
 // @return err
-func asyncMaintenance(ctx context.Context, meta *handler.ClusterMeta, data map[string]interface{}, status constants.ClusterMaintenanceStatus, flowName string) (flowID string, err error) {
+func asyncMaintenance(ctx context.Context, meta *meta.ClusterMeta, data map[string]interface{}, status constants.ClusterMaintenanceStatus, flowName string) (flowID string, err error) {
 	// condition maintenance status change
 	if data[contextMaintenanceStatusChange].(bool) {
 		if err = meta.StartMaintenance(ctx, status); err != nil {
@@ -93,7 +93,7 @@ func defaultEnd(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) err
 	framework.LogWithContext(ctx).Info("begin default end executor method")
 	defer framework.LogWithContext(ctx).Info("end default end executor method")
 
-	clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
+	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
 	maintenanceStatusChange := ctx.GetData(contextMaintenanceStatusChange).(bool)
 	if maintenanceStatusChange {
 		if err := clusterMeta.EndMaintenance(ctx, clusterMeta.Cluster.MaintenanceStatus); err != nil {
@@ -185,7 +185,7 @@ func validationParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCon
 func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin modify parameters executor method")
 	defer framework.LogWithContext(ctx).Info("end modify parameters executor method")
-	clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
+	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
 
 	modifyParam := ctx.GetData(contextModifyParameters).(*ModifyParameter)
 	framework.LogWithContext(ctx).Debugf("got modify need reboot: %v, parameters size: %d", modifyParam.Reboot, len(modifyParam.Params))
@@ -281,7 +281,7 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 		}
 	}
 
-	clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
+	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
 	tidbServers := clusterMeta.GetClusterConnectAddresses()
 	if len(tidbServers) == 0 {
 		framework.LogWithContext(ctx).Errorf("get tidb connect address from meta failed, empty address")
@@ -347,7 +347,7 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 				}
 				cm[configKey] = clusterValue
 			}
-			clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
+			clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
 
 			// Get the instance host and port of the component based on the topology
 			servers := make(map[string]uint)
@@ -417,7 +417,7 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 	framework.LogWithContext(ctx).Info("begin tiup edit config executor method")
 	defer framework.LogWithContext(ctx).Info("end tiup edit config executor method")
 
-	clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
+	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
 	configs := make([]secondparty.GlobalComponentConfig, len(params))
 	for i, param := range params {
 		cm := map[string]interface{}{}
@@ -537,7 +537,7 @@ func refreshParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 	modifyParam := ctx.GetData(contextModifyParameters).(*ModifyParameter)
 	framework.LogWithContext(ctx).Debugf("got modify need reboot: %v, params size: %d", modifyParam.Reboot, len(modifyParam.Params))
 
-	clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
+	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
 	// need tiup reload config
 	if modifyParam.Reboot {
 		flags := make([]string, 0)

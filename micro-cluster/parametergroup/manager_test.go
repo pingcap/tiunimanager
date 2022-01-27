@@ -155,8 +155,8 @@ func TestManager_UpdateParameterGroup_Success(t *testing.T) {
 			}
 			return resp, 1, nil
 		})
-	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName, instanceType string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 			return &parametergroup.ParameterGroup{ID: "1"}, nil, nil
 		})
 	parameterGroupRW.EXPECT().ExistsParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
@@ -209,8 +209,8 @@ func TestManager_UpdateParameterGroup_Error1(t *testing.T) {
 	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
 	models.SetParameterGroupReaderWriter(parameterGroupRW)
 	parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName, instanceType string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 			return &parametergroup.ParameterGroup{ID: "1", HasDefault: 1}, nil, nil
 		})
 	_, err := manager.UpdateParameterGroup(context.TODO(), message.UpdateParameterGroupReq{
@@ -237,8 +237,8 @@ func TestManager_UpdateParameterGroup_Error2(t *testing.T) {
 	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
 	models.SetParameterGroupReaderWriter(parameterGroupRW)
 	parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName, instanceType string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 			return &parametergroup.ParameterGroup{ID: "", HasDefault: 1}, nil, nil
 		})
 	_, err := manager.UpdateParameterGroup(context.TODO(), message.UpdateParameterGroupReq{
@@ -264,8 +264,8 @@ func TestManager_DeleteParameterGroup_Success(t *testing.T) {
 
 	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
 	models.SetParameterGroupReaderWriter(parameterGroupRW)
-	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName, instanceType string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 			return &parametergroup.ParameterGroup{ID: "1"}, nil, nil
 		})
 	parameterGroupRW.EXPECT().DeleteParameterGroup(gomock.Any(), gomock.Any()).
@@ -284,8 +284,8 @@ func TestManager_DeleteParameterGroup_Error(t *testing.T) {
 
 	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
 	models.SetParameterGroupReaderWriter(parameterGroupRW)
-	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName, instanceType string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 			return &parametergroup.ParameterGroup{ID: ""}, nil, nil
 		})
 	_, err := manager.DeleteParameterGroup(context.TODO(), message.DeleteParameterGroupReq{ParamGroupID: ""})
@@ -316,8 +316,8 @@ func TestManager_QueryParameterGroup(t *testing.T) {
 				},
 			}, 1, nil
 		})
-	parameterGroupRW.EXPECT().QueryParametersByGroupId(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (params []*parametergroup.ParamDetail, err error) {
+	parameterGroupRW.EXPECT().QueryParametersByGroupId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName, instanceType string) (params []*parametergroup.ParamDetail, err error) {
 			return []*parametergroup.ParamDetail{
 				{
 					Parameter: parametergroup.Parameter{
@@ -354,8 +354,8 @@ func TestManager_DetailParameterGroup(t *testing.T) {
 
 	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
 	models.SetParameterGroupReaderWriter(parameterGroupRW)
-	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName, instanceType string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 			return &parametergroup.ParameterGroup{ID: "1"}, []*parametergroup.ParamDetail{
 				{
 					Parameter:    parametergroup.Parameter{ID: "1"},
@@ -376,8 +376,8 @@ func TestManager_CopyParameterGroup_Success(t *testing.T) {
 
 	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
 	models.SetParameterGroupReaderWriter(parameterGroupRW)
-	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName, instanceType string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 			return &parametergroup.ParameterGroup{ID: "1"}, []*parametergroup.ParamDetail{
 				{
 					Parameter: parametergroup.Parameter{
@@ -427,8 +427,8 @@ func TestManager_CopyParameterGroup_Error1(t *testing.T) {
 
 	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
 	models.SetParameterGroupReaderWriter(parameterGroupRW)
-	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName, instanceType string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 			return &parametergroup.ParameterGroup{ID: "1"}, []*parametergroup.ParamDetail{
 				{},
 			}, errors.New("failed to create parameter group")
@@ -448,8 +448,8 @@ func TestManager_CopyParameterGroup_Error2(t *testing.T) {
 
 	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
 	models.SetParameterGroupReaderWriter(parameterGroupRW)
-	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName, instanceType string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 			return &parametergroup.ParameterGroup{ID: "1", Name: "default_parameter_group"}, []*parametergroup.ParamDetail{
 				{
 					Parameter: parametergroup.Parameter{

@@ -151,8 +151,8 @@ func TestManager_ApplyParameterGroup_Success(t *testing.T) {
 	configRW := mockconfig.NewMockReaderWriter(ctrl)
 	models.SetConfigReaderWriter(configRW)
 
-	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName, instanceType string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 			return &parametergroup.ParameterGroup{ID: "1"}, []*parametergroup.ParamDetail{
 				{
 					Parameter: parametergroup.Parameter{
@@ -218,8 +218,8 @@ func TestManager_PersistApplyParameterGroup(t *testing.T) {
 	clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
 	models.SetClusterParameterReaderWriter(clusterParameterRW)
 
-	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName, instanceType string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 			return &parametergroup.ParameterGroup{ID: "1"}, []*parametergroup.ParamDetail{
 				{
 					Parameter: parametergroup.Parameter{

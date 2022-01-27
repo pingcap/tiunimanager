@@ -210,7 +210,7 @@ func (m ParameterGroupReadWrite) QueryParameterGroup(ctx context.Context, name, 
 	return groups, total, err
 }
 
-func (m ParameterGroupReadWrite) GetParameterGroup(ctx context.Context, parameterGroupId, parameterName string) (group *ParameterGroup, params []*ParamDetail, err error) {
+func (m ParameterGroupReadWrite) GetParameterGroup(ctx context.Context, parameterGroupId, parameterName, instanceType string) (group *ParameterGroup, params []*ParamDetail, err error) {
 	log := framework.LogWithContext(ctx)
 	if parameterGroupId == "" {
 		return nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "parameter group id is empty")
@@ -224,7 +224,7 @@ func (m ParameterGroupReadWrite) GetParameterGroup(ctx context.Context, paramete
 		return nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_QUERY_ERROR, err.Error())
 	}
 
-	params, err = m.QueryParametersByGroupId(ctx, parameterGroupId, parameterName)
+	params, err = m.QueryParametersByGroupId(ctx, parameterGroupId, parameterName, instanceType)
 	if err != nil {
 		log.Errorf("get param group err: %v", err.Error())
 		return nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, err.Error())
@@ -284,7 +284,7 @@ func (m ParameterGroupReadWrite) QueryParameters(ctx context.Context, offset, si
 	return params, total, err
 }
 
-func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, parameterGroupId, parameterName string) (params []*ParamDetail, err error) {
+func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, parameterGroupId, parameterName, instanceType string) (params []*ParamDetail, err error) {
 	log := framework.LogWithContext(ctx)
 
 	query := m.DB(ctx).Model(&Parameter{}).
@@ -298,6 +298,9 @@ func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, p
 	// Fuzzy query by parameter name
 	if parameterName != "" {
 		query.Where("parameters.name like '%" + parameterName + "%'")
+	}
+	if instanceType != "" {
+		query.Where("parameters.instance_type = ?", instanceType)
 	}
 
 	err = query.Order("parameters.instance_type desc").

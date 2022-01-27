@@ -727,7 +727,7 @@ func syncBackupStrategy(node *workflowModel.WorkFlowNode, context *workflow.Flow
 }
 
 func updateClusterParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
 	types := make([]string, 0)
 	nodes := make([]string, 0)
 	for instanceType, instances := range clusterMeta.Instances {
@@ -735,7 +735,7 @@ func updateClusterParameters(node *workflowModel.WorkFlowNode, context *workflow
 		for _, instance := range instances {
 			instanceStatus = append(instanceStatus, instance.Status)
 		}
-		if !handler.Contain(instanceStatus, string(constants.ClusterInstanceRunning)) {
+		if !meta.Contain(instanceStatus, string(constants.ClusterInstanceRunning)) {
 			types = append(types, instanceType)
 			for _, instance := range instances {
 				nodes = append(nodes, strings.Join([]string{instance.HostIP[0], strconv.Itoa(int(instance.Ports[0]))}, ":"))
@@ -784,7 +784,7 @@ func updateClusterParameters(node *workflowModel.WorkFlowNode, context *workflow
 				"update cluster %s parameters error: %s", clusterMeta.Cluster.ID, err.Error())
 			return err
 		}
-		if err = handler.WaitWorkflow(context.Context, response.WorkFlowID, 10*time.Second, 30*24*time.Hour); err != nil {
+		if err = meta.WaitWorkflow(context.Context, response.WorkFlowID, 10*time.Second, 30*24*time.Hour); err != nil {
 			framework.LogWithContext(context).Errorf("update cluster %s parameters workflow error: %s", clusterMeta.Cluster.ID, err)
 			return err
 		}

@@ -68,7 +68,7 @@ endif
 LINUX     := "Linux"
 MAC       := "Darwin"
 
-PACKAGE_LIST  := go list ./...| grep -vE "docs|proto|micro-cluster/cluster/backuprestore|micro-cluster/service|util|micro-cluster/registry|micro-cluster/platform/telemetry|library/framework|micro-api|file-server|test/mock|deprecated|util/scp"
+PACKAGE_LIST  := go list ./...| grep -vE "docs|proto|common|message|micro-cluster/cluster/backuprestore|micro-cluster/service|util|micro-cluster/registry|micro-cluster/platform/telemetry|library/framework|micro-api|file-server|test/mock|deprecated|util/scp"
 PACKAGES  ?= $$($(PACKAGE_LIST))
 #PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/pingcap/$(PROJECT)||'
 PACKAGE_DIRECTORIES := $(PACKAGE_LIST)

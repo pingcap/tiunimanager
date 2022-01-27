@@ -25,6 +25,7 @@ package log
 
 import (
 	ctx "context"
+	"fmt"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 
@@ -46,6 +47,7 @@ func collectorClusterLogConfig(node *workflowModel.WorkFlowNode, ctx *workflow.F
 	hosts := listClusterHosts(clusterMeta)
 	framework.LogWithContext(ctx).Infof("cluster [%s] list host: %v", clusterMeta.Cluster.ID, hosts)
 
+	node.Record("get instance log info")
 	for hostID, hostIP := range hosts {
 		instances, err := handler.QueryInstanceLogInfo(ctx, hostID, []string{}, []string{})
 		if err != nil {
@@ -53,6 +55,9 @@ func collectorClusterLogConfig(node *workflowModel.WorkFlowNode, ctx *workflow.F
 			return err
 		}
 
+		for _, i := range instances {
+			node.Record(fmt.Sprintf("HostIP: %s, log dir : %s", i.IP, i.LogDir))
+		}
 		collectorConfigs, err := buildCollectorClusterLogConfig(ctx, instances)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("build collector cluster log config err： %v", err)

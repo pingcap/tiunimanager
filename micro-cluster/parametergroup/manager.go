@@ -272,7 +272,7 @@ func checkAddParametersExists(ctx context.Context, addParams []message.Parameter
 			}
 			if existsParameter != nil && existsParameter.ID != "" {
 				return errors.NewErrorf(errors.TIEM_PARAMETER_ALREADY_EXISTS,
-					fmt.Sprintf("%s parameter `%s.%s` already exists, parameter ID: %s", param.InstanceType, param.Category, param.Name, existsParameter.ID))
+					fmt.Sprintf("%s parameter `%s` already exists, parameter ID: %s", param.InstanceType, parameter.DisplayFullParameterName(param.Category, param.Name), existsParameter.ID))
 			}
 		}
 	}
@@ -304,20 +304,20 @@ func validateParameter(ctx context.Context, reqParams []structs.ParameterGroupPa
 						return err
 					}
 				}
-				if !parameter.ValidateRange(parameter.ModifyClusterParameterInfo{
+				if !parameter.ValidateRange(&parameter.ModifyClusterParameterInfo{
 					ParamId:   reqParam.ID,
 					Type:      queryParam.Type,
 					Range:     ranges,
 					RealValue: structs.ParameterRealValue{ClusterValue: reqParam.DefaultValue},
-				}) {
+				}, false) {
 					if len(ranges) == 2 && (queryParam.Type == int(parameter.Integer) || queryParam.Type == int(parameter.Float)) {
 						return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
-							fmt.Sprintf("Validation parameter `%s.%s` failed, update value: %s, can take a range of values: %v",
-								queryParam.Category, queryParam.Name, reqParam.DefaultValue, ranges))
+							fmt.Sprintf("Validation %s parameter `%s` failed, update value: %s, can take a range of values: %v",
+								queryParam.InstanceType, parameter.DisplayFullParameterName(queryParam.Category, queryParam.Name), reqParam.DefaultValue, ranges))
 					} else {
 						return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
-							fmt.Sprintf("Validation parameter `%s.%s` failed, update value: %s, optional values: %v",
-								queryParam.Category, queryParam.Name, reqParam.DefaultValue, ranges))
+							fmt.Sprintf("Validation %s parameter `%s` failed, update value: %s, optional values: %v",
+								queryParam.InstanceType, parameter.DisplayFullParameterName(queryParam.Category, queryParam.Name), reqParam.DefaultValue, ranges))
 					}
 				}
 			}

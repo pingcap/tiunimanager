@@ -105,14 +105,14 @@ func (m ParameterGroupReadWrite) DeleteParameterGroup(ctx context.Context, param
 
 	// check if the parameter group manages the cluster
 	var total int64 = 0
-	err = m.DB(ctx).Model(&management.Cluster{}).Count(&total).Where("parameter_group_id = ?", parameterGroupId).Find(&management.Cluster{}).Error
+	err = m.DB(ctx).Model(&management.Cluster{}).Where("parameter_group_id = ?", parameterGroupId).Count(&total).Error
 	if err != nil {
 		log.Errorf("query cluster count err: %v, request param id: %v", err.Error(), parameterGroupId)
 		tx.Rollback()
 		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR, err.Error())
 	}
 	if total > 0 {
-		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_RELATION_CLUSTER_NOT_DEL, "")
+		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_RELATION_CLUSTER_NOT_DEL, "parameter group id: %s", parameterGroupId)
 	}
 	// delete parameter_group_mapping table
 	err = m.DB(ctx).Where("parameter_group_id = ?", parameterGroupId).Delete(&ParameterGroupMapping{}).Error

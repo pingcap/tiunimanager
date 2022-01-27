@@ -61,6 +61,8 @@ func importExcelFile(r io.Reader, pool string) ([]structs.HostInfo, error) {
 			var host structs.HostInfo
 			host.Reserved = false
 			host.Pool = pool
+			// Only Local Vendor hosts imported by template file
+			host.Vendor = string(constants.Local)
 			host.HostName = row[HOSTNAME_FIELD]
 			addr := net.ParseIP(row[IP_FILED])
 			if addr == nil {
@@ -86,14 +88,14 @@ func importExcelFile(r io.Reader, pool string) ([]structs.HostInfo, error) {
 				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 			}
 			host.CpuCores = int32(coreNum)
-			host.FreeCpuCores = host.CpuCores
+			host.UsedCpuCores = 0
 			mem, err := (strconv.Atoi(row[MEM_FIELD]))
 			if err != nil {
 				errMsg := fmt.Sprintf("Row %d get memory(%s) failed, %v", irow, row[MEM_FIELD], err)
 				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 			}
 			host.Memory = int32(mem)
-			host.FreeMemory = host.Memory
+			host.UsedMemory = 0
 			host.Nic = row[NIC_FIELD]
 
 			if err = constants.ValidProductID(row[CLUSTER_TYPE_FIELD]); err != nil {

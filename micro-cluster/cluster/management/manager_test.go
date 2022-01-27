@@ -56,7 +56,7 @@ func getEmptyFlow(name string) *workflow.WorkFlowDefine {
 		TaskNodes: map[string]*workflow.NodeDefine{
 			"start": {"start", "done", "fail", workflow.SyncFuncNode, emptyNode},
 			"done":  {"end", "", "", workflow.SyncFuncNode, emptyNode},
-			"fail":  {"fail", "", "", workflow.SyncFuncNode, emptyNode},
+			"fail":  {"end", "", "", workflow.SyncFuncNode, emptyNode},
 		},
 	}
 }
@@ -425,7 +425,7 @@ func TestManager_Clone(t *testing.T) {
 				RoleType:  string(constants.Root),
 			},
 		}, nil).AnyTimes()
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().CreateRelation(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
@@ -493,7 +493,7 @@ func TestManager_Clone(t *testing.T) {
 			{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
 			{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
 		}, make([]*management.DBUser, 0), nil).AnyTimes()
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().CreateRelation(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("fail")).AnyTimes()
@@ -536,7 +536,7 @@ func TestManager_CreateCluster(t *testing.T) {
 		}()
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		_, err := manager.CreateCluster(context.TODO(), cluster.CreateClusterReq{
 			ResourceParameter: structs.ClusterResourceInfo{
@@ -593,7 +593,7 @@ func TestManager_CreateCluster(t *testing.T) {
 		}()
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		_, err := manager.CreateCluster(context.TODO(), cluster.CreateClusterReq{})
 		assert.Error(t, err)
 	})
@@ -607,7 +607,7 @@ func TestManager_CreateCluster(t *testing.T) {
 		}()
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("fail")).AnyTimes()
 		_, err := manager.CreateCluster(context.TODO(), cluster.CreateClusterReq{
 			ResourceParameter: structs.ClusterResourceInfo{
@@ -970,7 +970,7 @@ func TestManager_RestoreNewCluster(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		_, err := manager.RestoreNewCluster(context.TODO(), cluster.RestoreNewClusterReq{
 			ResourceParameter: structs.ClusterResourceInfo{
@@ -1017,7 +1017,7 @@ func TestManager_RestoreNewCluster(t *testing.T) {
 	t.Run("no computes", func(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		_, err := manager.RestoreNewCluster(context.TODO(), cluster.RestoreNewClusterReq{})
 		assert.Error(t, err)
 	})
@@ -1025,7 +1025,7 @@ func TestManager_RestoreNewCluster(t *testing.T) {
 	t.Run("async fail", func(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("fail")).AnyTimes()
 		_, err := manager.RestoreNewCluster(context.TODO(), cluster.RestoreNewClusterReq{
 			ResourceParameter: structs.ClusterResourceInfo{
@@ -1448,8 +1448,9 @@ func TestManager_TakeoverCluster(t *testing.T) {
 		}
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		clusterRW.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq{
 			TiUPIp:           "127.0.0.1",
 			TiUPPath:         ".tiup/",
@@ -1457,7 +1458,6 @@ func TestManager_TakeoverCluster(t *testing.T) {
 			TiUPUserPassword: "aaa",
 			TiUPPort:         22,
 			ClusterName:      "takeoverCluster",
-			DBUser:           "dbUserName",
 			DBPassword:       "password",
 		})
 		assert.NoError(t, err)
@@ -1470,6 +1470,7 @@ func TestManager_TakeoverCluster(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("fail")).AnyTimes()
+		clusterRW.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq{
 			TiUPIp:           "127.0.0.1",
 			TiUPPath:         ".tiup/",
@@ -1477,7 +1478,6 @@ func TestManager_TakeoverCluster(t *testing.T) {
 			TiUPUserPassword: "aaa",
 			TiUPPort:         22,
 			ClusterName:      "takeoverCluster",
-			DBUser:           "dbUserName",
 			DBPassword:       "password",
 		})
 
@@ -1487,14 +1487,14 @@ func TestManager_TakeoverCluster(t *testing.T) {
 	t.Run("no name", func(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
+		clusterRW.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq{
 			TiUPIp:           "127.0.0.1",
 			TiUPPath:         ".tiup/",
 			TiUPUserName:     "root",
 			TiUPUserPassword: "aaa",
 			TiUPPort:         22,
-			DBUser:           "dbUserName",
 			DBPassword:       "password",
 		})
 		assert.Error(t, err)
@@ -1504,6 +1504,7 @@ func TestManager_TakeoverCluster(t *testing.T) {
 			return nil, nil, errors.New("")
 		}
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		clusterRW.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		models.SetClusterReaderWriter(clusterRW)
 		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq{
 			TiUPIp:           "127.0.0.1",
@@ -1512,7 +1513,6 @@ func TestManager_TakeoverCluster(t *testing.T) {
 			TiUPUserPassword: "aaa",
 			TiUPPort:         22,
 			ClusterName:      "takeoverCluster",
-			DBUser:           "dbUserName",
 			DBPassword:       "password",
 		})
 
@@ -1524,8 +1524,9 @@ func TestManager_TakeoverCluster(t *testing.T) {
 		}
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("fail")).AnyTimes()
+		clusterRW.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq{
 			TiUPIp:           "127.0.0.1",
 			TiUPPath:         ".tiup/",
@@ -1533,7 +1534,6 @@ func TestManager_TakeoverCluster(t *testing.T) {
 			TiUPUserPassword: "aaa",
 			TiUPPort:         22,
 			ClusterName:      "takeoverCluster",
-			DBUser:           "dbUserName",
 			DBPassword:       "password",
 		})
 

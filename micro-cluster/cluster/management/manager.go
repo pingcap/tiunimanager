@@ -49,6 +49,7 @@ const (
 	ContextPrivateKey        = "PrivateKey"
 	ContextDeleteRequest     = "DeleteRequest"
 	ContextTakeoverRequest   = "TakeoverRequest"
+	ContextGCLifeTime        = "GCLifeTime"
 )
 
 type Manager struct{}
@@ -59,7 +60,6 @@ func NewClusterManager() *Manager {
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowScaleOutCluster, &scaleOutDefine)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowScaleInCluster, &scaleInDefine)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowCreateCluster, &createClusterFlow)
-	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowRestoreNewCluster, &restoreNewClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowDeleteCluster, &deleteClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowRestartCluster, &restartClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowStopCluster, &stopClusterFlow)
@@ -78,7 +78,7 @@ var scaleOutDefine = workflow.WorkFlowDefine{
 		"scaleOutDone":     {"syncTopology", "syncTopologyDone", "fail", workflow.SyncFuncNode, syncTopology},
 		"syncTopologyDone": {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
 		"onlineDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, endMaintenance)},
+		"fail":             {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, endMaintenance)},
 	},
 }
 
@@ -135,7 +135,7 @@ var scaleInDefine = workflow.WorkFlowDefine{
 		"scaleInDone": {"checkInstanceStatus", "checkDone", "fail", workflow.SyncFuncNode, checkInstanceStatus},
 		"checkDone":   {"freeInstanceResource", "freeDone", "fail", workflow.SyncFuncNode, freeInstanceResource},
 		"freeDone":    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":        {"fail", "", "", workflow.SyncFuncNode, endMaintenance},
+		"fail":        {"end", "", "", workflow.SyncFuncNode, endMaintenance},
 	},
 }
 
@@ -191,26 +191,29 @@ func (p *Manager) ScaleIn(ctx context.Context, request cluster.ScaleInClusterReq
 var cloneDefine = workflow.WorkFlowDefine{
 	FlowName: constants.FlowCloneCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":                  {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
-		"resourceDone":           {"backupSourceCluster", "backupDone", "fail", workflow.SyncFuncNode, backupSourceCluster},
-		"backupDone":             {"waitBackup", "waitBackupDone", "fail", workflow.SyncFuncNode, waitWorkFlow},
-		"waitBackupDone":         {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
-		"configDone":             {"deployCluster", "deployDone", "fail", workflow.PollingNode, deployCluster},
-		"deployDone":             {"syncConnectionKey", "syncConnectionKeyDone", "failAfterDeploy", workflow.SyncFuncNode, syncConnectionKey},
-		"syncConnectionKeyDone":  {"syncTopology", "syncTopologyDone", "failAfterDeploy", workflow.SyncFuncNode, syncTopology},
-		"syncTopologyDone":       {"startCluster", "startDone", "fail", workflow.PollingNode, startCluster},
-		"startDone":              {"setClusterOnline", "onlineDone", "failAfterDeploy", workflow.SyncFuncNode, setClusterOnline},
-		"onlineDone":             {"initAccount", "initDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseAccount},
-		"initDone":               {"persistCluster", "persistDone", "failAfterDeploy", workflow.SyncFuncNode, persistCluster},
-		"persistDone":            {"syncBackupStrategy", "syncBackupStrategyDone", "failAfterDeploy", workflow.SyncFuncNode, syncBackupStrategy},
-		"syncBackupStrategyDone": {"syncParameters", "syncParametersDone", "failAfterDeploy", workflow.SyncFuncNode, syncParameters},
-		"syncParametersDone":     {"waitSyncParam", "waitSyncParamDone", "failAfterDeploy", workflow.SyncFuncNode, waitWorkFlow},
-		"waitSyncParamDone":      {"restoreCluster", "restoreClusterDone", "failAfterDeploy", workflow.SyncFuncNode, restoreCluster},
-		"restoreClusterDone":     {"waitRestore", "waitRestoreDone", "failAfterDeploy", workflow.SyncFuncNode, waitWorkFlow},
-		"waitRestoreDone":        {"syncIncrData", "syncIncrDataDone", "failAfterDeploy", workflow.SyncFuncNode, syncIncrData},
-		"syncIncrDataDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"fail":                   {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
-		"failAfterDeploy":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"start":                   {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
+		"resourceDone":            {"modifySourceClusterGCTime", "modifyGCTimeDone", "fail", workflow.SyncFuncNode, modifySourceClusterGCTime},
+		"modifyGCTimeDone":        {"backupSourceCluster", "backupDone", "fail", workflow.SyncFuncNode, backupSourceCluster},
+		"backupDone":              {"waitBackup", "waitBackupDone", "fail", workflow.SyncFuncNode, waitWorkFlow},
+		"waitBackupDone":          {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
+		"configDone":              {"deployCluster", "deployDone", "fail", workflow.PollingNode, deployCluster},
+		"deployDone":              {"syncConnectionKey", "syncConnectionKeyDone", "failAfterDeploy", workflow.SyncFuncNode, syncConnectionKey},
+		"syncConnectionKeyDone":   {"syncTopology", "syncTopologyDone", "failAfterDeploy", workflow.SyncFuncNode, syncTopology},
+		"syncTopologyDone":        {"startCluster", "startDone", "fail", workflow.PollingNode, startCluster},
+		"startDone":               {"setClusterOnline", "onlineDone", "failAfterDeploy", workflow.SyncFuncNode, setClusterOnline},
+		"onlineDone":              {"initRootAccount", "initRootAccountDone", "failAfterDeploy", workflow.SyncFuncNode, initRootAccount},
+		"initRootAccountDone":     {"initAccount", "initAccountDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseAccount},
+		"initAccountDone":         {"applyParameterGroup", "applyParameterGroupDone", "failAfterDeploy", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
+		"applyParameterGroupDone": {"syncBackupStrategy", "syncBackupStrategyDone", "failAfterDeploy", workflow.SyncFuncNode, syncBackupStrategy},
+		"syncBackupStrategyDone":  {"syncParameters", "syncParametersDone", "failAfterDeploy", workflow.SyncFuncNode, syncParameters},
+		"syncParametersDone":      {"waitSyncParam", "waitSyncParamDone", "failAfterDeploy", workflow.SyncFuncNode, waitWorkFlow},
+		"waitSyncParamDone":       {"adjustParameters", "initParametersDone", "failAfterDeploy", workflow.SyncFuncNode, adjustParameters},
+		"initParametersDone":      {"restoreCluster", "restoreClusterDone", "failAfterDeploy", workflow.SyncFuncNode, restoreCluster},
+		"restoreClusterDone":      {"waitRestore", "waitRestoreDone", "failAfterDeploy", workflow.SyncFuncNode, waitWorkFlow},
+		"waitRestoreDone":         {"syncIncrData", "syncIncrDataDone", "failAfterDeploy", workflow.SyncFuncNode, syncIncrData},
+		"syncIncrDataDone":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(recoverSourceClusterGCTime, persistCluster, endMaintenance, asyncBuildLog)},
+		"fail":                    {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(recoverSourceClusterGCTime, setClusterFailure, revertResourceAfterFailure, endMaintenance)},
+		"failAfterDeploy":         {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(recoverSourceClusterGCTime, setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -233,6 +236,14 @@ func (p *Manager) Clone(ctx context.Context, request cluster.CloneClusterReq) (r
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"clone cluster %s meta error: %s", sourceClusterMeta.Cluster.ID, err.Error())
+		return
+	}
+
+	// When use CDCSyncClone strategy to clone cluster, source cluster must have CDC
+	err = handler.ClonePreCheck(ctx, sourceClusterMeta, clusterMeta, request.CloneStrategy)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"check cluster %s clone error: %s", sourceClusterMeta.Cluster.ID, err.Error())
 		return
 	}
 
@@ -265,14 +276,16 @@ var createClusterFlow = workflow.WorkFlowDefine{
 		"syncConnectionKeyDone":   {"syncTopology", "syncTopologyDone", "failAfterDeploy", workflow.SyncFuncNode, syncTopology},
 		"syncTopologyDone":        {"startupCluster", "startupDone", "failAfterDeploy", workflow.PollingNode, startCluster},
 		"startupDone":             {"setClusterOnline", "onlineDone", "failAfterDeploy", workflow.SyncFuncNode, setClusterOnline},
-		"onlineDone":              {"initAccount", "initAccountDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseAccount},
-		"initAccountDone":         {"applyParameterGroup", "applyParameterGroupDone", "failAfterDeploy", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
+		"onlineDone":              {"initRootAccount", "initRootAccountDone", "failAfterDeploy", workflow.SyncFuncNode, initRootAccount},
+		"initRootAccountDone":     {"initDatabaseAccount", "initDatabaseAccountDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseAccount},
+		"initDatabaseAccountDone": {"applyParameterGroup", "applyParameterGroupDone", "failAfterDeploy", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
 		"applyParameterGroupDone": {"adjustParameters", "initParametersDone", "failAfterDeploy", workflow.SyncFuncNode, adjustParameters},
-		"initParametersDone":      {"testConnectivity", "testConnectivityDone", "", workflow.SyncFuncNode, testConnectivity},
-		"testConnectivityDone":    {"initDatabaseData", "success", "", workflow.SyncFuncNode, initDatabaseData},
+		"initParametersDone":      {"testConnectivity", "testConnectivityDone", "failAfterDeploy", workflow.SyncFuncNode, testConnectivity},
+		"testConnectivityDone":    {"initDatabaseData", "initDataDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseData},
+		"initDataDone":            {"waitInitDatabaseData", "success", "failAfterDeploy", workflow.SyncFuncNode, waitInitDatabaseData},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"fail":                    {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
-		"failAfterDeploy":         {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
+		"failAfterDeploy":         {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -304,6 +317,50 @@ func (p *Manager) CreateCluster(ctx context.Context, req cluster.CreateClusterRe
 
 	data := map[string]interface{}{
 		ContextClusterMeta: meta,
+	}
+	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceCreating, createClusterFlow.FlowName, data)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"cluster %s async maintenance error: %s", meta.Cluster.ID, err.Error())
+		return
+	}
+
+	resp.ClusterID = meta.Cluster.ID
+	resp.WorkFlowID = flowID
+	return
+}
+
+// RestoreNewCluster
+// @Description: restore a new cluster by backup record
+// @Receiver m
+// @Parameter ctx
+// @Parameter request
+// @Return cluster.RestoreNewClusterResp
+// @Return error
+func (p *Manager) RestoreNewCluster(ctx context.Context, req cluster.RestoreNewClusterReq) (resp cluster.RestoreNewClusterResp, err error) {
+	meta := &handler.ClusterMeta{}
+
+	if err = p.restoreNewClusterPreCheck(ctx, req); err != nil {
+		framework.LogWithContext(ctx).Errorf("restore new cluster precheck failed: %s", err.Error())
+		return
+	}
+
+	if err = meta.BuildCluster(ctx, req.CreateClusterParameter); err != nil {
+		framework.LogWithContext(ctx).Errorf("build cluster %s error: %s", req.Name, err.Error())
+		return
+	}
+	if err = meta.AddInstances(ctx, req.ResourceParameter.InstanceResource); err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"add instances into cluster %s topology error: %s", meta.Cluster.ID, err.Error())
+		return
+	}
+	if err = meta.AddDefaultInstances(ctx); err != nil {
+		return
+	}
+
+	data := map[string]interface{}{
+		ContextClusterMeta: meta,
+		ContextBackupID:    req.BackupID,
 	}
 	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceCreating, createClusterFlow.FlowName, data)
 	if err != nil {
@@ -438,77 +495,13 @@ func (p *Manager) PreviewScaleOutCluster(ctx context.Context, req cluster.ScaleO
 	return
 }
 
-var restoreNewClusterFlow = workflow.WorkFlowDefine{
-	FlowName: constants.FlowRestoreNewCluster,
-	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":                 {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
-		"resourceDone":          {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
-		"configDone":            {"deployCluster", "deployDone", "fail", workflow.PollingNode, deployCluster},
-		"deployDone":            {"syncConnectionKey", "syncConnectionKeyDone", "failAfterDeploy", workflow.SyncFuncNode, syncConnectionKey},
-		"syncConnectionKeyDone": {"syncTopology", "syncTopologyDone", "failAfterDeploy", workflow.SyncFuncNode, syncTopology},
-		"syncTopologyDone":      {"startupCluster", "startupDone", "failAfterDeploy", workflow.PollingNode, startCluster},
-		"startupDone":           {"setClusterOnline", "onlineDone", "failAfterDeploy", workflow.SyncFuncNode, setClusterOnline},
-		"onlineDone":            {"initAccount", "initDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseAccount},
-		"initDone":              {"persistCluster", "persistDone", "failAfterDeploy", workflow.SyncFuncNode, persistCluster},
-		"persistDone":           {"restoreData", "restoreDone", "failAfterDeploy", workflow.SyncFuncNode, restoreNewCluster},
-		"restoreDone":           {"waitWorkFlow", "waitDone", "failAfterDeploy", workflow.SyncFuncNode, waitWorkFlow},
-		"waitDone":              {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"fail":                  {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
-		"failAfterDeploy":       {"failAfterDeploy", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
-	},
-}
-
-// RestoreNewCluster
-// @Description: restore a new cluster by backup record
-// @Receiver m
-// @Parameter ctx
-// @Parameter request
-// @Return cluster.RestoreNewClusterResp
-// @Return error
-func (p *Manager) RestoreNewCluster(ctx context.Context, req cluster.RestoreNewClusterReq) (resp cluster.RestoreNewClusterResp, err error) {
-	meta := &handler.ClusterMeta{}
-
-	if err = p.restoreNewClusterPreCheck(ctx, req); err != nil {
-		framework.LogWithContext(ctx).Errorf("restore new cluster precheck failed: %s", err.Error())
-		return
-	}
-
-	if err = meta.BuildCluster(ctx, req.CreateClusterParameter); err != nil {
-		framework.LogWithContext(ctx).Errorf("build cluster %s error: %s", req.Name, err.Error())
-		return
-	}
-	if err = meta.AddInstances(ctx, req.ResourceParameter.InstanceResource); err != nil {
-		framework.LogWithContext(ctx).Errorf(
-			"add instances into cluster %s topology error: %s", meta.Cluster.ID, err.Error())
-		return
-	}
-	if err = meta.AddDefaultInstances(ctx); err != nil {
-		return
-	}
-
-	data := map[string]interface{}{
-		ContextClusterMeta: meta,
-		ContextBackupID:    req.BackupID,
-	}
-	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceRestore, restoreNewClusterFlow.FlowName, data)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf(
-			"cluster %s async maintenance error: %s", meta.Cluster.ID, err.Error())
-		return
-	}
-
-	resp.ClusterID = meta.Cluster.ID
-	resp.WorkFlowID = flowID
-	return
-}
-
 var stopClusterFlow = workflow.WorkFlowDefine{
 	FlowName: constants.FlowStopCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":       {"clusterStop", "stopDone", "fail", workflow.PollingNode, stopCluster},
 		"stopDone":    {"setClusterOffline", "offlineDone", "fail", workflow.SyncFuncNode, setClusterOffline},
 		"offlineDone": {"end", "", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"fail":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -543,7 +536,7 @@ var deleteClusterFlow = workflow.WorkFlowDefine{
 		"destroyClusterDone": {"freedClusterResource", "freedResourceDone", "fail", workflow.SyncFuncNode, freedClusterResource},
 		"freedResourceDone":  {"clearBackupData", "clearDone", "fail", workflow.SyncFuncNode, clearBackupData},
 		"clearDone":          {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(deleteCluster)},
-		"fail":               {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"fail":               {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -585,7 +578,7 @@ var restartClusterFlow = workflow.WorkFlowDefine{
 		"start":      {"startCluster", "startDone", "fail", workflow.PollingNode, startCluster},
 		"startDone":  {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
 		"onlineDone": {"end", "", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":       {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"fail":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -615,15 +608,17 @@ func (p *Manager) RestartCluster(ctx context.Context, req cluster.RestartCluster
 var takeoverClusterFlow = workflow.WorkFlowDefine{
 	FlowName: constants.FlowTakeoverCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":            {"fetchTopologyFile", "fetched", "revert", workflow.SyncFuncNode, fetchTopologyFile},
-		"fetched":          {"rebuildTopologyFromConfig", "built", "revert", workflow.SyncFuncNode, rebuildTopologyFromConfig},
-		"built":            {"validateHostsStatus", "importDone", "revert", workflow.SyncFuncNode, validateHostsStatus},
-		"importDone":       {"takeoverResource", "resourceDone", "revert", workflow.SyncFuncNode, takeoverResource},
-		"resourceDone":     {"rebuildTiupSpaceForCluster", "workingSpaceDone", "fail", workflow.SyncFuncNode, rebuildTiupSpaceForCluster},
-		"workingSpaceDone": {"testConnectivity", "success", "", workflow.SyncFuncNode, testConnectivity},
-		"success":          {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
-		"revert":           {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(clearClusterPhysically)},
+		"start":                   {"fetchTopologyFile", "fetched", "revert", workflow.SyncFuncNode, fetchTopologyFile},
+		"fetched":                 {"rebuildTopologyFromConfig", "built", "revert", workflow.SyncFuncNode, rebuildTopologyFromConfig},
+		"built":                   {"validateHostsStatus", "importDone", "revert", workflow.SyncFuncNode, validateHostsStatus},
+		"importDone":              {"takeoverResource", "resourceDone", "revert", workflow.SyncFuncNode, takeoverResource},
+		"resourceDone":            {"rebuildTiupSpaceForCluster", "workingSpaceDone", "fail", workflow.SyncFuncNode, rebuildTiupSpaceForCluster},
+		"workingSpaceDone":        {"applyParameterGroup", "applyParameterGroupDone", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroupForTakeover)},
+		"applyParameterGroupDone": {"initDatabaseAccount", "initDatabaseAccountDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseAccount},
+		"initDatabaseAccountDone": {"testConnectivity", "success", "", workflow.SyncFuncNode, testConnectivity},
+		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
+		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"revert":                  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(clearClusterPhysically)},
 	},
 }
 
@@ -673,7 +668,7 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 		return
 	}
 	meta := &handler.ClusterMeta{}
-	if err = meta.BuildForTakeover(ctx, req.ClusterName, req.DBUser, req.DBPassword); err != nil {
+	if err = meta.BuildForTakeover(ctx, req.ClusterName, req.DBPassword); err != nil {
 		framework.LogWithContext(ctx).Errorf(err.Error())
 		return
 	}

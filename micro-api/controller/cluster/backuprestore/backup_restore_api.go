@@ -56,7 +56,7 @@ func Backup(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters/{clusterId}/strategy/ [get]
+// @Router /clusters/{clusterId}/strategy [get]
 func GetBackupStrategy(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.GetBackupStrategyReq{
 		ClusterID: c.Param("clusterId"),

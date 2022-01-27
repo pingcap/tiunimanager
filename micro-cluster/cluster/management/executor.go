@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
 	"github.com/pkg/sftp"
@@ -727,44 +728,48 @@ func syncBackupStrategy(node *workflowModel.WorkFlowNode, context *workflow.Flow
 func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*handler.ClusterMeta)
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	if clusterMeta.Cluster.ParameterGroupID == sourceClusterMeta.Cluster.ParameterGroupID {
+		targetParams := make([]structs.ClusterParameterSampleInfo, 0)
+		reboot := false
+		for instanceType, _ := range sourceClusterMeta.Instances {
+			sourceResponse, _, err := parameter.NewManager().QueryClusterParameters(context.Context,
+				cluster.QueryClusterParametersReq{ClusterID: sourceClusterMeta.Cluster.ID, InstanceType: instanceType})
+			if err != nil {
+				framework.LogWithContext(context.Context).Errorf(
+					"query cluster %s parameters error: %s", sourceClusterMeta.Cluster.ID, err.Error())
+				return err
+			}
 
-	sourceResponse, _, err := parameter.NewManager().QueryClusterParameters(context.Context,
-		cluster.QueryClusterParametersReq{ClusterID: sourceClusterMeta.Cluster.ID})
-	if err != nil {
-		framework.LogWithContext(context.Context).Errorf(
-			"query cluster %s parameters error: %s", sourceClusterMeta.Cluster.ID, err.Error())
-		return err
+			for _, param := range sourceResponse.Params {
+				// if parameter is variable which related os(such as temp dir in os), can not update it
+				if param.HasApply == int(parameter.ModifyApply) {
+					continue
+				}
+				targetParam := structs.ClusterParameterSampleInfo{
+					ParamId:   param.ParamId,
+					RealValue: param.RealValue,
+				}
+				targetParams = append(targetParams, targetParam)
+				if param.HasReboot == int(parameter.Reboot) {
+					reboot = true
+				}
+			}
+		}
+		response, err := parameter.NewManager().UpdateClusterParameters(context.Context, cluster.UpdateClusterParametersReq{
+			ClusterID: clusterMeta.Cluster.ID,
+			Params:    targetParams,
+			Reboot:    reboot,
+		}, false)
+		if err != nil {
+			framework.LogWithContext(context.Context).Errorf(
+				"update cluster %s parameters error: %s", clusterMeta.Cluster.ID, err.Error())
+			return err
+		}
+		context.SetData(ContextWorkflowID, response.WorkFlowID)
+		node.Record(fmt.Sprintf("update cluster %s parameters with source cluster %s parameters ",
+			clusterMeta.Cluster.ID, sourceClusterMeta.Cluster.ID))
 	}
 
-	targetParams := make([]structs.ClusterParameterSampleInfo, 0)
-	reboot := false
-	for _, param := range sourceResponse.Params {
-		// if parameter is variable which related os(such as temp dir in os), can not update it
-		if param.HasApply == int(parameter.ModifyApply) {
-			continue
-		}
-		targetParam := structs.ClusterParameterSampleInfo{
-			ParamId:   param.ParamId,
-			RealValue: param.RealValue,
-		}
-		targetParams = append(targetParams, targetParam)
-		if param.HasReboot == int(parameter.Reboot) {
-			reboot = true
-		}
-	}
-	response, err := parameter.NewManager().UpdateClusterParameters(context.Context, cluster.UpdateClusterParametersReq{
-		ClusterID: clusterMeta.Cluster.ID,
-		Params:    targetParams,
-		Reboot:    reboot,
-	}, false)
-	if err != nil {
-		framework.LogWithContext(context.Context).Errorf(
-			"update cluster %s parameters error: %s", clusterMeta.Cluster.ID, err.Error())
-		return err
-	}
-	context.SetData(ContextWorkflowID, response.WorkFlowID)
-
-	node.Record(fmt.Sprintf("update cluster %s parameters ", clusterMeta.Cluster.ID))
 	return nil
 }
 
@@ -805,7 +810,105 @@ func restoreCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	return nil
 }
 
+func modifySourceClusterGCTime(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*handler.ClusterMeta)
+	cloneStrategy := context.GetData(ContextCloneStrategy).(string)
+
+	if cloneStrategy == string(constants.ClusterTopologyClone) {
+		return nil
+	}
+
+	db, err := handler.CreateSQLLink(context.Context, sourceClusterMeta)
+	if err != nil {
+		return errors.WrapError(errors.TIEM_CONNECT_TIDB_ERROR, err.Error(), err)
+	}
+	defer db.Close()
+
+	var GCLifeTime sql.NullString
+	err = db.QueryRow(handler.GetGCLifeTimeCmd).Scan(&GCLifeTime)
+	if err != nil {
+		return err
+	}
+	if !GCLifeTime.Valid {
+		return errors.NewErrorf(errors.TIEM_UNRECOGNIZED_ERROR,
+			"cluster %s not found tidb_gc_life_time", sourceClusterMeta.Cluster.ID)
+	}
+	_, err = db.ExecContext(context.Context, "set global tidb_gc_life_time=?;", handler.DefaultMaxGCLifeTime)
+	if err != nil {
+		return err
+	}
+
+	context.SetData(ContextGCLifeTime, GCLifeTime.String)
+
+	return nil
+}
+
+func recoverSourceClusterGCTime(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*handler.ClusterMeta)
+	if context.GetData(ContextGCLifeTime) == nil {
+		framework.LogWithContext(context.Context).Infof(
+			"cluster %s not modify tidb_gc_life_time", sourceClusterMeta.Cluster.ID)
+		return nil
+	}
+
+	db, err := handler.CreateSQLLink(context.Context, sourceClusterMeta)
+	if err != nil {
+		return errors.WrapError(errors.TIEM_CONNECT_TIDB_ERROR, err.Error(), err)
+	}
+	defer db.Close()
+
+	_, err = db.ExecContext(context.Context, "set global tidb_gc_life_time=?;",
+		context.GetData(ContextGCLifeTime).(string))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func syncIncrData(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*handler.ClusterMeta)
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	cloneStrategy := context.GetData(ContextCloneStrategy).(string)
+
+	if cloneStrategy != string(constants.CDCSyncClone) {
+		return nil
+	}
+	// create cdc sync and wait for syncing ready
+	taskID, err := changefeed.GetChangeFeedService().CreateBetweenClusters(context.Context,
+		sourceClusterMeta.Cluster.ID, clusterMeta.Cluster.ID, constants.ClusterRelationCloneFrom)
+	if err != nil {
+		return err
+	}
+	gcLifeTime, err := time.ParseDuration(context.GetData(ContextGCLifeTime).(string))
+	if err != nil {
+		return err
+	}
+
+	timeout := 30 * 24 * time.Hour
+	interval := 10 * time.Second
+	stopCondition := gcLifeTime / 2
+	index := int(timeout.Seconds() / interval.Seconds())
+	stop := stopCondition.Milliseconds()
+	ticker := time.NewTicker(interval)
+	for range ticker.C {
+		response, err := changefeed.GetChangeFeedService().Detail(context.Context, cluster.DetailChangeFeedTaskReq{ID: taskID})
+		if err != nil {
+			return err
+		}
+		node.RecordAndPersist(fmt.Sprintf("upstream update timestamp(uut) %dms, downstream update timestamp(dut) %dms, stop condition(uut - dut): %dms",
+			response.UpstreamUpdateUnix, response.DownstreamSyncUnix, stop))
+		if response.UpstreamUpdateUnix-response.DownstreamSyncUnix <= stop {
+			framework.LogWithContext(context.Context).Infof("changefeed task %s sync successfully!", taskID)
+			return nil
+		}
+		index -= 1
+		if index == 0 {
+			return errors.NewError(errors.TIEM_UNRECOGNIZED_ERROR,
+				fmt.Sprintf("wait changefeed task %s timeout", taskID))
+		}
+	}
+
 	return nil
 }
 
@@ -971,9 +1074,7 @@ func freedClusterResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 	return nil
 }
 
-// initDatabaseAccount
-// @Description: init database account for new cluster
-func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+func initRootAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
 	tidbServerHost := clusterMeta.GetClusterConnectAddresses()[0].IP
@@ -1000,8 +1101,23 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		return err
 	}
 	node.Record(fmt.Sprintf("init user %s for cluster %s ", rootUser.Name, clusterMeta.Cluster.ID))
-	// update connection parameter
-	conn.Password = rootUser.Password
+	return nil
+}
+
+// initDatabaseAccount
+// @Description: init database account for new cluster
+func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) (err error) {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+
+	tidbServerHost := clusterMeta.GetClusterConnectAddresses()[0].IP
+	tidbServerPort := clusterMeta.GetClusterConnectAddresses()[0].Port
+
+	conn := secondparty.DbConnParam{
+		Username: clusterMeta.DBUsers[string(constants.Root)].Name,
+		Password: clusterMeta.DBUsers[string(constants.Root)].Password,
+		IP:       tidbServerHost,
+		Port:     strconv.Itoa(tidbServerPort),
+	}
 
 	// create built-in users
 	roleType := []constants.DBUserRoleType{
@@ -1040,25 +1156,9 @@ func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	cluster := clusterMeta.Cluster
 
 	if len(cluster.ParameterGroupID) == 0 {
-		node.Record("parameter group id is empty")
-		groups, _, err := parametergroup.NewManager().QueryParameterGroup(context, message.QueryParameterGroupReq{
-			DBType:         1,
-			HasDefault:     1,
-			ClusterVersion: clusterMeta.GetMinorVersion(),
-		})
+		err := chooseParameterGroup(clusterMeta, node, context)
 		if err != nil {
 			return err
-		}
-		if len(groups) == 0 {
-			msg := fmt.Sprintf("no default group found for cluster %s, type = %s, version = %s", cluster.ID, cluster.Type, clusterMeta.GetMinorVersion())
-			framework.LogWithContext(context).Errorf(msg)
-			return errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_DATA, msg)
-		} else {
-			cluster.ParameterGroupID = groups[0].ParamGroupID
-
-			errMsg := fmt.Sprintf("default parameter group %s will be applied to cluster %s", cluster.ParameterGroupID, cluster.ID)
-			framework.LogWithContext(context).Info(errMsg)
-			node.Record(errMsg)
 		}
 	}
 
@@ -1073,6 +1173,52 @@ func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		framework.LogWithContext(context).Errorf("apply parameter group %s workflow error: %s", cluster.ParameterGroupID, err)
 		return err
 	}
+	node.Record(fmt.Sprintf("apply parameter group %s for cluster %s ", cluster.ParameterGroupID, cluster.ID))
+	return nil
+}
+
+func chooseParameterGroup(clusterMeta *handler.ClusterMeta, node *workflowModel.WorkFlowNode, context *workflow.FlowContext) (err error) {
+	node.Record("parameter group id is empty")
+	groups, _, err := parametergroup.NewManager().QueryParameterGroup(context, message.QueryParameterGroupReq{
+		DBType:         1,
+		HasDefault:     1,
+		ClusterVersion: clusterMeta.GetMinorVersion(),
+	})
+	if err != nil {
+		return err
+	}
+	if len(groups) == 0 {
+		msg := fmt.Sprintf("no default group found for cluster %s, type = %s, version = %s", clusterMeta.Cluster.ID, clusterMeta.Cluster.Type, clusterMeta.GetMinorVersion())
+		framework.LogWithContext(context).Errorf(msg)
+		node.Record(msg)
+		return errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_DATA, msg)
+	} else {
+		clusterMeta.Cluster.ParameterGroupID = groups[0].ParamGroupID
+		msg := fmt.Sprintf("default parameter group %s will be applied to cluster %s", clusterMeta.Cluster.ParameterGroupID, clusterMeta.Cluster.ID)
+		framework.LogWithContext(context).Info(msg)
+		node.Record(msg)
+		return nil
+	}
+}
+
+// applyParameterGroupForTakeover
+// @Description: apply parameter group to cluster locally, without editing real config
+func applyParameterGroupForTakeover(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	cluster := clusterMeta.Cluster
+
+	err := chooseParameterGroup(clusterMeta, node, context)
+	if err != nil {
+		return err
+	}
+	_, err = parameter.NewManager().PersistApplyParameterGroup(context, message.ApplyParameterGroupReq{
+		ParamGroupId: cluster.ParameterGroupID,
+		ClusterID:    cluster.ID,
+	}, true)
+	if err != nil {
+		return err
+	}
+
 	node.Record(fmt.Sprintf("apply parameter group %s for cluster %s ", cluster.ParameterGroupID, cluster.ID))
 	return nil
 }
@@ -1427,13 +1573,31 @@ func GenerateDBUser(context *workflow.FlowContext, roleTyp constants.DBUserRoleT
 func initDatabaseData(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
-	backupID := context.GetData(ContextBackupID)
-	if backupID != nil && len(backupID.(string)) > 0 {
+	backupIDData := context.GetData(ContextBackupID)
+	if backupIDData != nil && len(backupIDData.(string)) > 0 {
+		backupID := context.GetData(ContextBackupID).(string)
 		node.Record(fmt.Sprintf("recover data from backup record %s for cluster %s", backupID, clusterMeta.Cluster.ID))
-		// todo @chencheng
+
+		restoreResponse, err := backuprestore.GetBRService().RestoreExistCluster(context.Context,
+			cluster.RestoreExistClusterReq{
+				ClusterID: clusterMeta.Cluster.ID,
+				BackupID:  backupID,
+			}, false)
+		if err != nil {
+			framework.LogWithContext(context.Context).Errorf("do restore for cluster %s by backup id %s error: %s", clusterMeta.Cluster.ID, backupID, err.Error())
+			return fmt.Errorf("do restore for cluster %s by backup id %s error: %s", clusterMeta.Cluster.ID, backupID, err.Error())
+		}
+
+		context.SetData(ContextWorkflowID, restoreResponse.WorkFlowID)
+		node.Record(fmt.Sprintf("do restore for cluster %s, backup ID: %s ", clusterMeta.Cluster.ID, backupID))
+		return nil
 	} else {
 		node.Record("no specified data source, skip")
 	}
 
 	return nil
+}
+
+func waitInitDatabaseData(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	return waitWorkFlow(node, context)
 }

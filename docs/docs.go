@@ -2488,6 +2488,71 @@ var doc = `{
             }
         },
         "/clusters/{clusterId}/strategy": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "show the backup strategy of a cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster backup"
+                ],
+                "summary": "show the backup strategy of a cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.GetBackupStrategyResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            },
             "put": {
                 "security": [
                     {
@@ -2536,73 +2601,6 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/cluster.SaveBackupStrategyResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/clusters/{clusterId}/strategy/": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "show the backup strategy of a cluster",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster backup"
-                ],
-                "summary": "show the backup strategy of a cluster",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "clusterId",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/cluster.GetBackupStrategyResp"
                                         }
                                     }
                                 }
@@ -9378,7 +9376,7 @@ var doc = `{
                     "type": "integer"
                 },
                 "diskType": {
-                    "description": "Disk type of this host [sata/ssd/nvme_ssd]",
+                    "description": "Disk type of this host [SATA/SSD/NVMeSSD]",
                     "type": "string"
                 },
                 "disks": {
@@ -9386,14 +9384,6 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/structs.DiskInfo"
                     }
-                },
-                "freeCpuCores": {
-                    "description": "Unused CpuCore, used for allocation",
-                    "type": "integer"
-                },
-                "freeMemory": {
-                    "description": "Unused memory size, Unit:GB, used for allocation",
-                    "type": "integer"
                 },
                 "hostId": {
                     "type": "string"
@@ -9426,7 +9416,7 @@ var doc = `{
                     "type": "string"
                 },
                 "purpose": {
-                    "description": "What Purpose is the host used for? [compute/storage/general]",
+                    "description": "What Purpose is the host used for? [compute/storage/schedule]",
                     "type": "string"
                 },
                 "rack": {
@@ -9460,7 +9450,18 @@ var doc = `{
                 "updateTime": {
                     "type": "integer"
                 },
+                "usedCpuCores": {
+                    "description": "Unused CpuCore, used for allocation",
+                    "type": "integer"
+                },
+                "usedMemory": {
+                    "description": "Unused memory size, Unit:GiB, used for allocation",
+                    "type": "integer"
+                },
                 "userName": {
+                    "type": "string"
+                },
+                "vendor": {
                     "type": "string"
                 }
             }

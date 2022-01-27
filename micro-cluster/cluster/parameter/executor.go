@@ -163,13 +163,13 @@ func validationParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCon
 
 	for _, param := range modifyParam.Params {
 		// validate parameter value by range field
-		if !ValidateRange(param) {
+		if !ValidateRange(param, true) {
 			if len(param.Range) == 2 && (param.Type == int(Integer) || param.Type == int(Float)) {
-				return fmt.Errorf(fmt.Sprintf("Validation parameter `%s.%s` failed, update value: %s, can take a range of values: %v",
-					param.Category, param.Name, param.RealValue.ClusterValue, param.Range))
+				return fmt.Errorf(fmt.Sprintf("Validation parameter `%s` failed, update value: %s, can take a range of values: %v",
+					DisplayFullParameterName(param.Category, param.Name), param.RealValue.ClusterValue, param.Range))
 			} else {
-				return fmt.Errorf(fmt.Sprintf("Validation parameter `%s.%s` failed, update value: %s, optional values: %v",
-					param.Category, param.Name, param.RealValue.ClusterValue, param.Range))
+				return fmt.Errorf(fmt.Sprintf("Validation parameter `%s` failed, update value: %s, optional values: %v",
+					DisplayFullParameterName(param.Category, param.Name), param.RealValue.ClusterValue, param.Range))
 			}
 		}
 	}
@@ -189,33 +189,51 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 
 	modifyParam := ctx.GetData(contextModifyParameters).(*ModifyParameter)
 	framework.LogWithContext(ctx).Debugf("got modify need reboot: %v, parameters size: %d", modifyParam.Reboot, len(modifyParam.Params))
+	maintenanceStatusChange := ctx.GetData(contextMaintenanceStatusChange)
 
 	// Get the apply parameter object
 	applyParameter := ctx.GetData(contextHasApplyParameter)
 	framework.LogWithContext(ctx).Debugf("modify parameter get apply parameter: %v", applyParameter)
 
 	// grouping by parameter source
-	paramContainer := make(map[interface{}][]ModifyClusterParameterInfo)
+	paramContainer := make(map[interface{}][]*ModifyClusterParameterInfo)
 	for i, param := range modifyParam.Params {
 		// condition apply parameter and HasApply values is 0, then filter directly
 		if applyParameter != nil && param.HasApply != int(DirectApply) {
 			continue
 		}
-		// If it is a parameter of CDC, apply the parameter without installing CDC, then skip directly
-		if applyParameter != nil && param.InstanceType == string(constants.ComponentIDCDC) && len(clusterMeta.GetCDCClientAddresses()) == 0 {
-			// The real value is set to an unknown empty value
-			param.RealValue.ClusterValue = ""
+		if param.InstanceType == string(constants.ComponentIDCDC) && len(clusterMeta.GetCDCClientAddresses()) == 0 {
+			// If it is a parameter of CDC, apply the parameter without installing CDC, then skip directly
+			if applyParameter != nil {
+				// The real value is set to an unknown empty value
+				param.RealValue.ClusterValue = ""
+				continue
+			} else {
+				return fmt.Errorf("get %s address from meta failed, empty address", constants.ComponentIDCDC)
+			}
+		}
+		if param.InstanceType == string(constants.ComponentIDTiFlash) && len(clusterMeta.GetTiFlashClientAddresses()) == 0 {
+			// If it is a parameter of TiFlash, apply the parameter without installing TiFlash, then skip directly
+			if applyParameter != nil {
+				// The real value is set to an unknown empty value
+				param.RealValue.ClusterValue = ""
+				continue
+			} else {
+				return fmt.Errorf("get %s address from meta failed, empty address", constants.ComponentIDTiFlash)
+			}
+		}
+		// If it is an apply parameter with an empty parameter value, it is skipped directly
+		if applyParameter != nil && strings.TrimSpace(param.RealValue.ClusterValue) == "" {
 			continue
 		}
-		// If it is a parameter of TiFlash, apply the parameter without installing TiFlash, then skip directly
-		if applyParameter != nil && param.InstanceType == string(constants.ComponentIDTiFlash) && len(clusterMeta.GetTiFlashClientAddresses()) == 0 {
-			// The real value is set to an unknown empty value
-			param.RealValue.ClusterValue = ""
+		// If the parameter is modified and is triggered by another workflow and the parameter value is empty, then skip directly
+		if applyParameter == nil && maintenanceStatusChange != nil && !maintenanceStatusChange.(bool) && strings.TrimSpace(param.RealValue.ClusterValue) == "" {
 			continue
 		}
+
 		// If the parameters are modified, read-only parameters are not allowed to be modified
 		if applyParameter == nil && param.ReadOnly == int(ReadOnly) {
-			return fmt.Errorf(fmt.Sprintf("Read-only parameters `%s.%s` are not allowed to be modified", param.Category, param.Name))
+			return fmt.Errorf(fmt.Sprintf("Read-only parameters `%s` are not allowed to be modified", DisplayFullParameterName(param.Category, param.Name)))
 		}
 		framework.LogWithContext(ctx).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.ClusterValue)
 		// condition UpdateSource values is 2, then insert tiup and sql respectively
@@ -225,7 +243,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		} else {
 			putParameterContainer(paramContainer, param.UpdateSource, param)
 		}
-		node.Record(fmt.Sprintf("modify parameter `%s.%s` in %s to %s; ", param.Category, param.Name, param.InstanceType, param.RealValue.ClusterValue))
+		node.Record(fmt.Sprintf("modify parameter `%s` in %s to %s; ", DisplayFullParameterName(param.Category, param.Name), param.InstanceType, param.RealValue.ClusterValue))
 	}
 
 	for source, params := range paramContainer {
@@ -254,7 +272,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 // @Parameter ctx
 // @Parameter params
 // @return error
-func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, params []ModifyClusterParameterInfo) error {
+func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, params []*ModifyClusterParameterInfo) error {
 	framework.LogWithContext(ctx).Info("begin sql edit config executor method")
 	defer framework.LogWithContext(ctx).Info("end sql edit config executor method")
 
@@ -313,11 +331,11 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 // @Parameter ctx
 // @Parameter params
 // @return error
-func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, params []ModifyClusterParameterInfo) error {
+func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, params []*ModifyClusterParameterInfo) error {
 	framework.LogWithContext(ctx).Info("begin api edit config executor method")
 	defer framework.LogWithContext(ctx).Info("end api edit config executor method")
 
-	compContainer := make(map[interface{}][]ModifyClusterParameterInfo)
+	compContainer := make(map[interface{}][]*ModifyClusterParameterInfo)
 	for i, param := range params {
 		framework.LogWithContext(ctx).Debugf("loop %d api componet type: %v, param name: %v", i, param.InstanceType, param.Name)
 		putParameterContainer(compContainer, param.InstanceType, param)
@@ -404,7 +422,7 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 // @Parameter node
 // @Parameter params
 // @return error
-func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, params []ModifyClusterParameterInfo) error {
+func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, params []*ModifyClusterParameterInfo) error {
 	framework.LogWithContext(ctx).Info("begin tiup edit config executor method")
 	defer framework.LogWithContext(ctx).Info("end tiup edit config executor method")
 
@@ -417,17 +435,8 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 			framework.LogWithContext(ctx).Errorf("convert real parameter type err = %s", err.Error())
 			return err
 		}
-		if param.InstanceType == string(constants.ComponentIDTiDB) || param.InstanceType == string(constants.ComponentIDTiKV) {
-			var configKey = ""
-			if param.Category != "basic" {
-				configKey = param.Category + "." + param.Name
-			} else {
-				configKey = param.Name
-			}
-			cm[configKey] = clusterValue
-		} else {
-			cm[param.Name] = clusterValue
-		}
+		// display full parameter name
+		cm[DisplayFullParameterName(param.Category, param.Name)] = clusterValue
 		configs[i] = secondparty.GlobalComponentConfig{
 			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.InstanceType)),
 			ConfigMap:            cm,
@@ -457,7 +466,7 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 // @Parameter param
 // @return interface{}
 // @return error
-func convertRealParameterType(ctx *workflow.FlowContext, param ModifyClusterParameterInfo) (interface{}, error) {
+func convertRealParameterType(ctx *workflow.FlowContext, param *ModifyClusterParameterInfo) (interface{}, error) {
 	switch param.Type {
 	case int(Integer):
 		c, err := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)
@@ -509,10 +518,10 @@ func convertRealParameterType(ctx *workflow.FlowContext, param ModifyClusterPara
 // @Parameter paramContainer
 // @Parameter key
 // @Parameter param
-func putParameterContainer(paramContainer map[interface{}][]ModifyClusterParameterInfo, key interface{}, param ModifyClusterParameterInfo) {
+func putParameterContainer(paramContainer map[interface{}][]*ModifyClusterParameterInfo, key interface{}, param *ModifyClusterParameterInfo) {
 	params := paramContainer[key]
 	if params == nil {
-		paramContainer[key] = []ModifyClusterParameterInfo{param}
+		paramContainer[key] = []*ModifyClusterParameterInfo{param}
 	} else {
 		params = append(params, param)
 		paramContainer[key] = params

@@ -2145,18 +2145,12 @@ definitions:
       createTime:
         type: integer
       diskType:
-        description: Disk type of this host [sata/ssd/nvme_ssd]
+        description: Disk type of this host [SATA/SSD/NVMeSSD]
         type: string
       disks:
         items:
           $ref: '#/definitions/structs.DiskInfo'
         type: array
-      freeCpuCores:
-        description: Unused CpuCore, used for allocation
-        type: integer
-      freeMemory:
-        description: Unused memory size, Unit:GB, used for allocation
-        type: integer
       hostId:
         type: string
       hostName:
@@ -2179,7 +2173,7 @@ definitions:
       passwd:
         type: string
       purpose:
-        description: What Purpose is the host used for? [compute/storage/general]
+        description: What Purpose is the host used for? [compute/storage/schedule]
         type: string
       rack:
         type: string
@@ -2203,7 +2197,15 @@ definitions:
         type: integer
       updateTime:
         type: integer
+      usedCpuCores:
+        description: Unused CpuCore, used for allocation
+        type: integer
+      usedMemory:
+        description: Unused memory size, Unit:GiB, used for allocation
+        type: integer
       userName:
+        type: string
+      vendor:
         type: string
     type: object
   structs.Index:
@@ -3777,6 +3779,45 @@ paths:
       tags:
       - cluster
   /clusters/{clusterId}/strategy:
+    get:
+      consumes:
+      - application/json
+      description: show the backup strategy of a cluster
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.GetBackupStrategyResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: show the backup strategy of a cluster
+      tags:
+      - cluster backup
     put:
       consumes:
       - application/json
@@ -3820,46 +3861,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: save the backup strategy of a cluster
-      tags:
-      - cluster backup
-  /clusters/{clusterId}/strategy/:
-    get:
-      consumes:
-      - application/json
-      description: show the backup strategy of a cluster
-      parameters:
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.GetBackupStrategyResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: show the backup strategy of a cluster
       tags:
       - cluster backup
   /clusters/clone:

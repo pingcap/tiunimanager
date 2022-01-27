@@ -75,18 +75,18 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 		MaintenanceStatus: constants.ClusterMaintenanceNone,
 		MaintainWindow:    "",
 	}
-	// set root user in clusterMeta
-	p.DBUsers = make(map[string]*management.DBUser)
-	p.DBUsers[string(constants.Root)] = &management.DBUser{
-		ClusterID: p.Cluster.ID,
-		Name:      constants.DBUserName[constants.Root],
-		Password:  param.DBPassword,
-		RoleType:  string(constants.Root),
-	}
-
-	_, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
+	got, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
 	if err == nil {
-		framework.LogWithContext(ctx).Infof("create cluster %s succeed, id = %s", p.Cluster.Name, p.Cluster.ID)
+		framework.LogWithContext(ctx).Infof("create cluster %s succeed, id = %s", p.Cluster.Name, got.ID)
+		// set root user in clusterMeta
+		p.DBUsers = make(map[string]*management.DBUser)
+		p.DBUsers[string(constants.Root)] = &management.DBUser{
+			ClusterID: got.ID,
+			Name:      constants.DBUserName[constants.Root],
+			Password:  param.DBPassword,
+			RoleType:  string(constants.Root),
+		}
+		//fmt.Println("got: ",got.ID, "user: ", p.DBUsers[string(constants.Root)].ClusterID)
 	} else {
 		framework.LogWithContext(ctx).Errorf("create cluster %s failed, err : %s", p.Cluster.Name, err.Error())
 	}
@@ -95,32 +95,36 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 
 var TagTakeover = "takeover"
 
-func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbUser string, dbPassword string) error {
+func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbPassword string) error {
 	p.Cluster = &management.Cluster{
 		Entity: dbCommon.Entity{
 			ID:       name,
 			TenantId: framework.GetTenantIDFromContext(ctx),
 			Status:   string(constants.ClusterRunning),
 		},
+		// todo get from takeover request
+		Vendor: "Local",
 		Name: name,
-		//DBUser:         dbUser,
-		//DBPassword:     dbPassword,
 		Tags:           []string{TagTakeover},
 		OwnerId:        framework.GetUserIDFromContext(ctx),
 		MaintainWindow: "",
 	}
-	// todo: root user?
-	p.DBUsers = make(map[string]*management.DBUser)
-	p.DBUsers[string(constants.Root)] = &management.DBUser{
-		ClusterID: p.Cluster.ID,
-		Name:      constants.DBUserName[constants.Root],
-		Password:  dbPassword,
-		RoleType:  string(constants.Root),
-	}
-	_, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
+	got, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
 	if err == nil {
-		framework.LogWithContext(ctx).Infof("takeover cluster %s succeed, id = %s", p.Cluster.Name, p.Cluster.ID)
-	} else {
+		// set root user in clusterMeta
+		p.DBUsers = make(map[string]*management.DBUser)
+		rootUser := &management.DBUser{
+			ClusterID: got.ID,
+			Name:      constants.DBUserName[constants.Root],
+			Password:  dbPassword,
+			RoleType:  string(constants.Root),
+		}
+		p.DBUsers[string(constants.Root)] = rootUser
+
+		err = models.GetClusterReaderWriter().CreateDBUser(ctx, p.DBUsers[string(constants.Root)])
+	}
+
+	if err != nil {
 		framework.LogWithContext(ctx).Errorf("takeover cluster %s failed, err : %s", p.Cluster.Name, err.Error())
 	}
 	return err
@@ -161,7 +165,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 					int32(server.ClientPort),
 					int32(server.PeerPort),
 				}
-			}))
+			}).SetPresetDir(server.DeployDir, server.DataDir, server.LogDir))
 		}
 	}
 	if len(specs.TiDBServers) > 0 {
@@ -173,7 +177,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 					int32(server.Port),
 					int32(server.StatusPort),
 				}
-			}))
+			}).SetPresetDir(server.DeployDir, "", server.LogDir))
 		}
 	}
 	if len(specs.TiKVServers) > 0 {
@@ -185,7 +189,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 					int32(server.Port),
 					int32(server.StatusPort),
 				}
-			}))
+			}).SetPresetDir(server.DeployDir, server.DataDir, server.LogDir))
 		}
 	}
 	if len(specs.TiFlashServers) > 0 {
@@ -201,7 +205,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 					int32(server.FlashProxyStatusPort),
 					int32(server.StatusPort),
 				}
-			}))
+			}).SetPresetDir(server.DeployDir, server.DataDir, server.LogDir))
 		}
 	}
 	if len(specs.CDCServers) > 0 {
@@ -212,7 +216,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 				return []int32{
 					int32(server.Port),
 				}
-			}))
+			}).SetPresetDir(server.DeployDir, server.DataDir, server.LogDir))
 		}
 	}
 	if len(specs.Grafanas) > 0 {
@@ -223,7 +227,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 				return []int32{
 					int32(server.Port),
 				}
-			}))
+			}).SetPresetDir(server.DeployDir, "", ""))
 		}
 	}
 	if len(specs.Alertmanagers) > 0 {
@@ -235,7 +239,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 					int32(server.WebPort),
 					int32(server.ClusterPort),
 				}
-			}))
+			}).SetPresetDir(server.DeployDir, server.DataDir, server.LogDir))
 		}
 	}
 	if len(specs.Monitors) > 0 {
@@ -246,7 +250,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 				return []int32{
 					int32(server.Port),
 				}
-			}))
+			}).SetPresetDir(server.DeployDir, server.DataDir, server.LogDir))
 		}
 	}
 
@@ -604,13 +608,6 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 		MaintenanceStatus: constants.ClusterMaintenanceNone,
 		MaintainWindow:    p.Cluster.MaintainWindow,
 	}
-	meta.DBUsers = make(map[string]*management.DBUser)
-	meta.DBUsers[string(constants.Root)] = &management.DBUser{
-		ClusterID: p.Cluster.ID, // todo: which ID
-		Name:      constants.DBUserName[constants.Root],
-		Password:  parameter.DBPassword,
-		RoleType:  string(constants.Root),
-	}
 
 	// if user specify cluster version
 	if len(parameter.Version) > 0 {
@@ -646,10 +643,18 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 	}
 
 	// write cluster into db
-	if _, err := models.GetClusterReaderWriter().Create(ctx, meta.Cluster); err != nil {
+	got, err := models.GetClusterReaderWriter().Create(ctx, meta.Cluster)
+	if err != nil {
 		return nil, err
 	}
-
+	// set root user
+	meta.DBUsers = make(map[string]*management.DBUser)
+	meta.DBUsers[string(constants.Root)] = &management.DBUser{
+		ClusterID: got.ID,
+		Name:      constants.DBUserName[constants.Root],
+		Password:  parameter.DBPassword,
+		RoleType:  string(constants.Root),
+	}
 	// clone instances
 	meta.Instances = make(map[string][]*management.ClusterInstance)
 	for componentType, components := range p.Instances {
@@ -1059,18 +1064,27 @@ func QueryInstanceLogInfo(ctx context.Context, hostId string, typeFilter []strin
 
 	infos = make([]*InstanceLogInfo, 0)
 	for _, instance := range instances {
-		if len(instance.DiskPath) > 0 {
-			infos = append(infos, &InstanceLogInfo{
-				ClusterID:    instance.ClusterID,
-				InstanceType: constants.EMProductComponentIDType(instance.Type),
-				IP:           instance.HostIP[0],
-				DataDir:      instance.GetDataDir(),
-				DeployDir:    instance.GetDeployDir(),
-				LogDir:       instance.GetLogDir(),
-			})
-		}
+		infos = append(infos, &InstanceLogInfo{
+			ClusterID:    instance.ClusterID,
+			InstanceType: constants.EMProductComponentIDType(instance.Type),
+			IP:           instance.HostIP[0],
+			DataDir:      instance.GetDataDir(),
+			DeployDir:    instance.GetDeployDir(),
+			LogDir:       instance.GetLogDir(),
+		})
 	}
 	return
+}
+
+func (p *ClusterMeta) IsTakenOver() bool {
+	if len(p.Cluster.Tags) > 0 {
+		for _, tag := range p.Cluster.Tags {
+			if tag == TagTakeover {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (p *ClusterMeta) GetMajorVersion() string {

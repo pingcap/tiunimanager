@@ -65,10 +65,11 @@ func mockClusterMeta() *handler.ClusterMeta {
 	return &handler.ClusterMeta{
 		Cluster: mockCluster(),
 		Instances: map[string][]*management.ClusterInstance{
-			"TiDB": mockClusterInstances(),
-			"TiKV": mockClusterInstances(),
-			"PD":   mockClusterInstances(),
-			"CDC":  mockClusterInstances(),
+			"TiDB":    mockClusterInstances(),
+			"TiKV":    mockClusterInstances(),
+			"PD":      mockClusterInstances(),
+			"CDC":     mockClusterInstances(),
+			"TiFlash": mockClusterInstances(),
 		},
 		DBUsers: map[string]*management.DBUser{
 			string(constants.Root): &management.DBUser{
@@ -178,7 +179,7 @@ func mockDBUsers() []*management.DBUser {
 func mockModifyParameter() *ModifyParameter {
 	return &ModifyParameter{
 		Reboot: false,
-		Params: []ModifyClusterParameterInfo{
+		Params: []*ModifyClusterParameterInfo{
 			{
 				ParamId:        "1",
 				Name:           "test_param_1",

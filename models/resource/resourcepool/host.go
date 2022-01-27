@@ -46,6 +46,7 @@ type Host struct {
 	FreeCpuCores int32           `json:"freeCpuCores"`       // Unused CpuCore, used for allocation
 	FreeMemory   int32           `json:"freeMemory"`         // Unused memory size, Unit:GB, used for allocation
 	Nic          string          `json:"nic" gorm:"size:32"` // Host network type: 1GE or 10GE
+	Vendor       string          `json:"vendor" gorm:"size:32"`
 	Region       string          `json:"region" gorm:"size:32"`
 	AZ           string          `json:"az" gorm:"index"`
 	Rack         string          `json:"rack" gorm:"index"`
@@ -141,12 +142,13 @@ func (h *Host) ConstructFromHostInfo(src *structs.HostInfo) error {
 	h.Arch = src.Arch
 	h.OS = src.OS
 	h.Kernel = src.Kernel
-	h.FreeCpuCores = src.FreeCpuCores
-	h.FreeMemory = src.FreeMemory
+	h.FreeCpuCores = (src.CpuCores - src.UsedCpuCores)
+	h.FreeMemory = (src.Memory - src.UsedMemory)
 	h.Spec = src.GetSpecString()
 	h.CpuCores = src.CpuCores
 	h.Memory = src.Memory
 	h.Nic = src.Nic
+	h.Vendor = src.Vendor
 	h.Region = src.Region
 	h.AZ = structs.GenDomainCodeByName(h.Region, src.AZ)
 	h.Rack = structs.GenDomainCodeByName(h.AZ, src.Rack)
@@ -177,12 +179,13 @@ func (h *Host) ToHostInfo(dst *structs.HostInfo) {
 	dst.Arch = h.Arch
 	dst.OS = h.OS
 	dst.Kernel = h.Kernel
-	dst.FreeCpuCores = h.FreeCpuCores
-	dst.FreeMemory = h.FreeMemory
+	dst.UsedCpuCores = (h.CpuCores - h.FreeCpuCores)
+	dst.UsedMemory = (h.Memory - h.FreeMemory)
 	dst.Spec = h.Spec
 	dst.CpuCores = h.CpuCores
 	dst.Memory = h.Memory
 	dst.Nic = h.Nic
+	dst.Vendor = h.Vendor
 	dst.Region = h.Region
 	dst.AZ = structs.GetDomainNameFromCode(h.AZ)
 	dst.Rack = structs.GetDomainNameFromCode(h.Rack)

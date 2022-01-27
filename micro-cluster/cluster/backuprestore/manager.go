@@ -24,7 +24,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	dbModel "github.com/pingcap-inc/tiem/models/common"
@@ -104,7 +104,7 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request cluster.BackupC
 		return resp, errors.WrapError(errors.TIEM_BACKUP_SYSTEM_CONFIG_INVAILD, fmt.Sprintf("get conifg %s failed: %s", constants.ConfigKeyBackupStoragePath, err.Error()), err)
 	}
 
-	meta, err := handler.Get(ctx, request.ClusterID)
+	meta, err := meta.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
@@ -178,7 +178,7 @@ func (mgr *BRManager) RestoreExistCluster(ctx context.Context, request cluster.R
 	framework.LogWithContext(ctx).Infof("Begin RestoreExistCluster, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End RestoreExistCluster")
 
-	meta, err := handler.Get(ctx, request.ClusterID)
+	meta, err := meta.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
@@ -345,7 +345,7 @@ func (mgr *BRManager) SaveBackupStrategy(ctx context.Context, request cluster.Sa
 		return resp, errors.WrapError(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("save backup strategy precheck failed, %s", err.Error()), err)
 	}
 
-	meta, err := handler.Get(ctx, request.ClusterID)
+	meta, err := meta.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get cluster %s meta failed, %s", request.ClusterID, err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)

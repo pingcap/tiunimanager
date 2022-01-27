@@ -13,7 +13,7 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package handler
+package meta
 
 import (
 	"bytes"
@@ -83,7 +83,7 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 		p.DBUsers[string(constants.Root)] = &management.DBUser{
 			ClusterID: got.ID,
 			Name:      constants.DBUserName[constants.Root],
-			Password:  param.DBPassword,
+			Password:  dbCommon.Password(param.DBPassword),
 			RoleType:  string(constants.Root),
 		}
 		//fmt.Println("got: ",got.ID, "user: ", p.DBUsers[string(constants.Root)].ClusterID)
@@ -116,7 +116,7 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbPassw
 		rootUser := &management.DBUser{
 			ClusterID: got.ID,
 			Name:      constants.DBUserName[constants.Root],
-			Password:  dbPassword,
+			Password: dbCommon.Password(dbPassword),
 			RoleType:  string(constants.Root),
 		}
 		p.DBUsers[string(constants.Root)] = rootUser
@@ -652,7 +652,7 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 	meta.DBUsers[string(constants.Root)] = &management.DBUser{
 		ClusterID: got.ID,
 		Name:      constants.DBUserName[constants.Root],
-		Password:  parameter.DBPassword,
+		Password:  dbCommon.Password(parameter.DBPassword),
 		RoleType:  string(constants.Root),
 	}
 	// clone instances

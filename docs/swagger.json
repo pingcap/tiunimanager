@@ -7230,8 +7230,7 @@
                 "TiUPUserName",
                 "TiUPUserPassword",
                 "clusterName",
-                "dbPassword",
-                "dbUser"
+                "dbPassword"
             ],
             "properties": {
                 "TiUPIp": {
@@ -7261,10 +7260,6 @@
                 "dbPassword": {
                     "type": "string",
                     "example": "myPassword"
-                },
-                "dbUser": {
-                    "type": "string",
-                    "example": "root"
                 }
             }
         },

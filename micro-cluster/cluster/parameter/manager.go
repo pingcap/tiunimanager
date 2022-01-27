@@ -36,7 +36,7 @@ import (
 
 	"github.com/pingcap-inc/tiem/message"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -152,7 +152,7 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 	framework.LogWithContext(ctx).Infof("query cluster %s parameter group id: %s, total size: %d", req.ClusterID, pgId, total)
 
 	// Get cluster info and topology from db based by clusterID
-	clusterMeta, err := handler.Get(ctx, req.ClusterID)
+	clusterMeta, err := meta.Get(ctx, req.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluser%s meta from db error: %s", req.ClusterID, err.Error())
 		return
@@ -212,7 +212,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 	defer framework.LogWithContext(ctx).Infof("end apply cluster parameters")
 
 	// Get cluster info and topology from db based by clusterID
-	clusterMeta, err := handler.Get(ctx, req.ClusterID)
+	clusterMeta, err := meta.Get(ctx, req.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluser%s meta from db error: %s", req.ClusterID, err.Error())
 		return

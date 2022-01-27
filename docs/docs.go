@@ -7244,8 +7244,7 @@ var doc = `{
                 "TiUPUserName",
                 "TiUPUserPassword",
                 "clusterName",
-                "dbPassword",
-                "dbUser"
+                "dbPassword"
             ],
             "properties": {
                 "TiUPIp": {
@@ -7275,10 +7274,6 @@ var doc = `{
                 "dbPassword": {
                     "type": "string",
                     "example": "myPassword"
-                },
-                "dbUser": {
-                    "type": "string",
-                    "example": "root"
                 }
             }
         },

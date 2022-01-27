@@ -20,7 +20,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/common"
@@ -52,7 +52,7 @@ func TestExecutor_buildDataImportConfig(t *testing.T) {
 	pd[0].HostIP = []string{"127.0.0.1", "127.0.0.2"}
 	pd[0].Ports = []int32{4000, 4001}
 	instanceMap[string(constants.ComponentIDPD)] = pd
-	flowContext.SetData(contextClusterMetaKey, &handler.ClusterMeta{
+	flowContext.SetData(contextClusterMetaKey, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{ID: "xxx"},
 		},
@@ -158,7 +158,7 @@ func TestExecutor_exportDataFromCluster(t *testing.T) {
 	tidb[0].HostIP = []string{"127.0.0.1", "127.0.0.2"}
 	tidb[0].Ports = []int32{4000, 4001}
 	instanceMap[string(constants.ComponentIDTiDB)] = tidb
-	flowContext.SetData(contextClusterMetaKey, &handler.ClusterMeta{
+	flowContext.SetData(contextClusterMetaKey, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "cls-test",

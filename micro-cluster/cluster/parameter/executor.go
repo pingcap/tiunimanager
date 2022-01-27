@@ -163,7 +163,7 @@ func validationParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCon
 
 	for _, param := range modifyParam.Params {
 		// validate parameter value by range field
-		if !ValidateRange(param) {
+		if !ValidateRange(param, true) {
 			if len(param.Range) == 2 && (param.Type == int(Integer) || param.Type == int(Float)) {
 				return fmt.Errorf(fmt.Sprintf("Validation parameter `%s` failed, update value: %s, can take a range of values: %v",
 					DisplayFullParameterName(param.Category, param.Name), param.RealValue.ClusterValue, param.Range))
@@ -220,6 +220,10 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 			} else {
 				return fmt.Errorf("get %s address from meta failed, empty address", constants.ComponentIDTiFlash)
 			}
+		}
+		// If it is an apply parameter with an empty parameter value, it is skipped directly
+		if applyParameter != nil && strings.TrimSpace(param.RealValue.ClusterValue) == "" {
+			continue
 		}
 
 		// If the parameters are modified, read-only parameters are not allowed to be modified

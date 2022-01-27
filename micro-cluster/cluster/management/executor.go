@@ -728,6 +728,7 @@ func syncBackupStrategy(node *workflowModel.WorkFlowNode, context *workflow.Flow
 func updateClusterParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	types := make([]string, 0)
+	nodes := make([]string, 0)
 	for instanceType, instances := range clusterMeta.Instances {
 		instanceStatus := make([]string, 0)
 		for _, instance := range instances {
@@ -735,13 +736,59 @@ func updateClusterParameters(node *workflowModel.WorkFlowNode, context *workflow
 		}
 		if !handler.Contain(instanceStatus, string(constants.ClusterInstanceRunning)) {
 			types = append(types, instanceType)
+			for _, instance := range instances {
+				nodes = append(nodes, strings.Join([]string{instance.HostIP[0], strconv.Itoa(int(instance.Ports[0]))}, ":"))
+			}
 		}
 	}
-/*
-	for _, instanceType := range types {
-		parametergroup.NewManager().DetailParameterGroup(context.Context, )
+	if len(types) > 0 {
+		targetParams := make([]structs.ClusterParameterSampleInfo, 0)
+		reboot := false
+		for _, instanceType := range types {
+			response, err := parametergroup.NewManager().DetailParameterGroup(context.Context,
+				message.DetailParameterGroupReq{
+					ParamGroupID: clusterMeta.Cluster.ParameterGroupID,
+					InstanceType: instanceType,
+				})
+			if err != nil {
+				return err
+			}
+
+			for _, param := range response.Params {
+				// if parameter is variable which related os(such as temp dir in os), can not update it
+				if param.HasApply == int(parameter.ModifyApply) {
+					continue
+				}
+				targetParam := structs.ClusterParameterSampleInfo{
+					ParamId: param.ID,
+					RealValue: structs.ParameterRealValue{
+						ClusterValue: param.DefaultValue,
+					},
+				}
+				targetParams = append(targetParams, targetParam)
+				if param.HasReboot == int(parameter.Reboot) {
+					reboot = true
+				}
+			}
+		}
+
+		response, err := parameter.NewManager().UpdateClusterParameters(context.Context, cluster.UpdateClusterParametersReq{
+			ClusterID: clusterMeta.Cluster.ID,
+			Params:    targetParams,
+			Reboot:    reboot,
+			Nodes:     nodes,
+		}, false)
+		if err != nil {
+			framework.LogWithContext(context.Context).Errorf(
+				"update cluster %s parameters error: %s", clusterMeta.Cluster.ID, err.Error())
+			return err
+		}
+		if err = handler.WaitWorkflow(context.Context, response.WorkFlowID, 10*time.Second, 30*24*time.Hour); err != nil {
+			framework.LogWithContext(context).Errorf("update cluster %s parameters workflow error: %s", clusterMeta.Cluster.ID, err)
+			return err
+		}
 	}
-*/
+	node.Record(fmt.Sprintf("update cluster %s parameters complete", clusterMeta.Cluster.ID))
 	return nil
 }
 

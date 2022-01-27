@@ -725,6 +725,26 @@ func syncBackupStrategy(node *workflowModel.WorkFlowNode, context *workflow.Flow
 	return nil
 }
 
+func updateClusterParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	types := make([]string, 0)
+	for instanceType, instances := range clusterMeta.Instances {
+		instanceStatus := make([]string, 0)
+		for _, instance := range instances {
+			instanceStatus = append(instanceStatus, instance.Status)
+		}
+		if !handler.Contain(instanceStatus, string(constants.ClusterInstanceRunning)) {
+			types = append(types, instanceType)
+		}
+	}
+/*
+	for _, instanceType := range types {
+		parametergroup.NewManager().DetailParameterGroup(context.Context, )
+	}
+*/
+	return nil
+}
+
 func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*handler.ClusterMeta)
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)

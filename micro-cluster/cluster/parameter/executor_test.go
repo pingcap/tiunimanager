@@ -240,7 +240,7 @@ func TestExecutor_validateRange(t *testing.T) {
 			Type:           0,
 			Range:          []string{"1", "10"},
 			RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
-		})
+		}, true)
 		assert.EqualValues(t, true, validated)
 
 		validated = ValidateRange(&ModifyClusterParameterInfo{
@@ -253,7 +253,7 @@ func TestExecutor_validateRange(t *testing.T) {
 			Type:           1,
 			Range:          []string{"debug", "info", "warn", "error"},
 			RealValue:      structs.ParameterRealValue{ClusterValue: "info"},
-		})
+		}, true)
 		assert.EqualValues(t, true, validated)
 
 		validated = ValidateRange(&ModifyClusterParameterInfo{
@@ -266,7 +266,7 @@ func TestExecutor_validateRange(t *testing.T) {
 			Type:           2,
 			Range:          []string{"true", "false"},
 			RealValue:      structs.ParameterRealValue{ClusterValue: "true"},
-		})
+		}, true)
 		assert.EqualValues(t, true, validated)
 
 		validated = ValidateRange(&ModifyClusterParameterInfo{
@@ -279,7 +279,7 @@ func TestExecutor_validateRange(t *testing.T) {
 			Type:           3,
 			Range:          []string{"0.1", "5.2"},
 			RealValue:      structs.ParameterRealValue{ClusterValue: "3.14"},
-		})
+		}, true)
 
 		validated = ValidateRange(&ModifyClusterParameterInfo{
 			ParamId:        "5",
@@ -291,7 +291,7 @@ func TestExecutor_validateRange(t *testing.T) {
 			Type:           4,
 			Range:          []string{"[]", "[]"},
 			RealValue:      structs.ParameterRealValue{ClusterValue: "[]"},
-		})
+		}, true)
 		assert.EqualValues(t, true, validated)
 	})
 }

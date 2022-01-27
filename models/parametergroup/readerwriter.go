@@ -80,10 +80,11 @@ type ReaderWriter interface {
 	// @param ctx
 	// @param parameterGroupId
 	// @param parameterName
+	// @param instanceType
 	// @return group
 	// @return params
 	// @return err
-	GetParameterGroup(ctx context.Context, parameterGroupId, parameterName string) (group *ParameterGroup, params []*ParamDetail, err error)
+	GetParameterGroup(ctx context.Context, parameterGroupId, parameterName, instanceType string) (group *ParameterGroup, params []*ParamDetail, err error)
 
 	// CreateParameter
 	// @Description: create a new parameter
@@ -121,9 +122,10 @@ type ReaderWriter interface {
 	// @param ctx
 	// @param parameterGroupId
 	// @param parameterName
+	// @param instanceType
 	// @return params
 	// @return err
-	QueryParametersByGroupId(ctx context.Context, parameterGroupId, parameterName string) (params []*ParamDetail, err error)
+	QueryParametersByGroupId(ctx context.Context, parameterGroupId, parameterName, instanceType string) (params []*ParamDetail, err error)
 
 	// GetParameter
 	// @Description: get parameter by id

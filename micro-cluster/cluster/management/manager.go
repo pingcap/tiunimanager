@@ -77,7 +77,7 @@ var scaleOutDefine = workflow.WorkFlowDefine{
 		"configDone":       {"scaleOutCluster", "scaleOutDone", "fail", workflow.PollingNode, scaleOutCluster},
 		"scaleOutDone":     {"syncTopology", "syncTopologyDone", "fail", workflow.SyncFuncNode, syncTopology},
 		"syncTopologyDone": {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
-		"onlineDone":       {"updateClusterParameters", "updateDone", "fail", workflow.PollingNode, workflow.CompositeExecutor(persistCluster, updateClusterParameters)},
+		"onlineDone":       {"updateClusterParameters", "updateDone", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, updateClusterParameters)},
 		"updateDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
 		"fail":             {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, endMaintenance)},
 	},

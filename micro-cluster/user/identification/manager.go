@@ -1,13 +1,29 @@
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ ******************************************************************************/
+
 package identification
 
 import (
 	"context"
+	"github.com/google/uuid"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/user/identification"
-	"time"
 )
 
 type Manager struct{}
@@ -16,100 +32,67 @@ func NewIdentificationManager() *Manager {
 	return &Manager{}
 }
 
-func (p *Manager) Login(ctx context.Context, request message.LoginReq) (resp message.LoginResp, err error) {
-	a, err := models.GetAccountReaderWriter().FindAccountByName(ctx, request.UserName)
-
+func (p *Manager) Login(ctx context.Context, request message.LoginReq) (message.LoginResp, error) {
+	resp := message.LoginResp{}
+	user, err := models.GetAccountReaderWriter().GetUserByName(ctx, request.Name)
 	if err != nil {
-		err = errors.NewError(errors.TIEM_USER_NOT_FOUND, "user not found")
-		return
+		return resp, errors.NewError(errors.TIEM_LOGIN_FAILED, "incorrect username or password")
 	}
 
-	loginSuccess, err := a.CheckPassword(request.Password)
+	loginSuccess, err := user.CheckPassword(request.Password)
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized", err)
-		return
+		return resp, errors.WrapError(errors.TIEM_LOGIN_FAILED, "incorrect username or password", err)
 	}
 
 	if !loginSuccess {
-		err = errors.NewError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized")
-		return
+		return resp, errors.NewError(errors.TIEM_LOGIN_FAILED, "incorrect username or password")
 	}
 
-	req := message.CreateTokenReq{
-		AccountID:   a.ID,
-		AccountName: a.Name,
-		TenantID:    a.TenantId,
-	}
-	token, err := p.CreateToken(ctx, req)
-
+	// create token
+	tokenString := uuid.New().String()
+	expirationTime := time.Now().Add(constants.DefaultTokenValidPeriod)
+	_, err = models.GetTokenReaderWriter().CreateToken(ctx, tokenString, user.ID, user.DefaultTenantID, expirationTime)
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized", err)
-		return
-	} else {
-		resp.TokenString = token.TokenString
-		resp.UserName = token.AccountName
-		resp.TenantId = token.TenantId
+		return resp, errors.WrapError(errors.TIEM_UNRECOGNIZED_ERROR, "login failed", err)
 	}
 
-	return
+	resp.TokenString = tokenString
+	resp.UserID = user.ID
+	resp.TenantID = user.DefaultTenantID
+
+	return resp, nil
 }
 
-// Logout
 func (p *Manager) Logout(ctx context.Context, req message.LogoutReq) (message.LogoutResp, error) {
-	token, err := GetToken(ctx, message.GetTokenReq(req))
-
+	resp := message.LogoutResp{UserID: ""}
+	token, err := models.GetTokenReaderWriter().GetToken(ctx, req.TokenString)
 	if err != nil {
-
-		return message.LogoutResp{AccountName: ""}, errors.NewError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized")
-	} else if !token.IsValid() {
-		return message.LogoutResp{AccountName: ""}, nil
-	} else {
-		accountName := token.AccountName
-		token.Destroy()
-
-		err := Modify(ctx, message.ModifyTokenReq{Token: &token.Token})
-		if err != nil {
-			return message.LogoutResp{AccountName: ""}, err
-		}
-
-		return message.LogoutResp{AccountName: accountName}, nil
+		return resp, errors.NewError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized")
 	}
-}
-
-var SkipAuth = true
-
-// Accessible
-func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq) (resp message.AccessibleResp, err error) {
-
-	req := message.GetTokenReq{TokenString: request.TokenString}
-	token, err := GetToken(ctx, req)
-
-	if err != nil {
-		return
-	}
-
-	resp.AccountID = token.AccountId
-	resp.AccountName = token.AccountName
-	resp.TenantID = token.TenantId
 
 	if !token.IsValid() {
-		err = errors.NewError(errors.TIEM_UNAUTHORIZED_USER, "invalid token")
-		return
+		return resp, nil
 	}
 
-	return
+	resp.UserID = token.UserID
+	token.Destroy()
+
+	return resp, nil
 }
 
-func (p *Manager) CreateToken(ctx context.Context, request message.CreateTokenReq) (message.CreateTokenResp, error) {
-	token := identification.Token{
-		AccountName:    request.AccountName,
-		AccountId:      request.AccountID,
-		TenantId:       request.TenantID,
-		ExpirationTime: time.Now().Add(constants.DefaultTokenValidPeriod),
+func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq) (message.AccessibleResp, error) {
+	resp := message.AccessibleResp{}
+	token, err := models.GetTokenReaderWriter().GetToken(ctx, request.TokenString)
+	if err != nil {
+		return resp, err
 	}
 
-	req := message.ProvideTokenReq{Token: &token}
-	tokenString, err := Provide(ctx, req)
-	token.TokenString = tokenString.TokenString
-	return message.CreateTokenResp{Token: token}, err
+	if !token.IsValid() {
+		return resp, errors.Error(errors.TIEM_ACCESS_TOKEN_EXPIRED)
+	}
+
+	resp.UserID = token.UserID
+	resp.TenantID = token.TenantID
+
+	return resp, nil
 }

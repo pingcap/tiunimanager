@@ -23,11 +23,11 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/proto/clusterservices"
+	utils "github.com/pingcap-inc/tiem/util/stringutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/common/client"
-	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
 )
 
 const VisitorIdentityKey = "VisitorIdentity"
@@ -46,7 +46,7 @@ func VerifyIdentity(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, err.Error())
 	}
 
-	req := message.AccessibleReq {
+	req := message.AccessibleReq{
 		TokenString: tokenString,
 	}
 
@@ -77,8 +77,7 @@ func VerifyIdentity(c *gin.Context) {
 			c.Status(errors.TIEM_UNMARSHAL_ERROR.GetHttpCode())
 			c.Abort()
 		}
-		c.Set(framework.TiEM_X_USER_ID_KEY, result.AccountID)
-		c.Set(framework.TiEM_X_USER_NAME_KEY, result.AccountName)
+		c.Set(framework.TiEM_X_USER_ID_KEY, result.UserID)
 		c.Set(framework.TiEM_X_TENANT_ID_KEY, result.TenantID)
 		c.Next()
 	}

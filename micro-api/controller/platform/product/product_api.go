@@ -18,12 +18,13 @@ package product
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	"net/http"
 )
 
 // ClusterKnowledge show cluster knowledge
@@ -78,9 +79,9 @@ func ClusterKnowledge(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /zones [post]
+// @Router /zones/ [post]
 func CreateZones(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.CreateZonesReq{}); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.CreateZonesReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateZones, &message.CreateZonesResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -99,30 +100,31 @@ func CreateZones(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /zones [delete]
+// @Router /zones/ [delete]
 func DeleteZones(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.DeleteZoneReq{}); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.DeleteZoneReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteZone, &message.DeleteZoneResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
 }
 
-// QueryZones query all zones information
-// @Summary queries all zones information
-// @Description queries all zones information
+// QueryZonesTree query all regions information
+// @Summary queries all regions information
+// @Description queries all regions information
 // @Tags platform
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Success 200 {object} controller.CommonResult{data=message.QueryZonesResp}
+// @Param QueryZonesTreeReq query message.QueryZonesTreeReq true "query region request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.QueryZonesTreeResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /zones [get]
-func QueryZones(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.QueryZonesReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryZones, &message.QueryZonesResp{},
+// @Router /zones/tree [get]
+func QueryZonesTree(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryZonesTreeReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryZones, &message.QueryZonesTreeResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -142,7 +144,7 @@ func QueryZones(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /products/ [post]
 func CreateProduct(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.CreateProductReq{}); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.CreateProductReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateProduct, &message.CreateProductResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -163,7 +165,7 @@ func CreateProduct(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /products/ [delete]
 func DeleteProduct(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.DeleteProductReq{}); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.DeleteProductReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteProduct, &message.DeleteProductResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -184,7 +186,7 @@ func DeleteProduct(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /products/ [get]
 func QueryProducts(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.QueryProductsReq{}); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryProductsReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.QueryProducts, &message.QueryProductsResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -205,7 +207,7 @@ func QueryProducts(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /products/detail [get]
 func QueryProductDetail(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.QueryProductDetailReq{}); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryProductDetailReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.QueryProductDetail, &message.QueryProductDetailResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -224,9 +226,9 @@ func QueryProductDetail(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /specs [post]
+// @Router /specs/ [post]
 func CreateSpecs(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.CreateSpecsReq{}); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.CreateSpecsReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateSpecs, &message.CreateSpecsResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -245,9 +247,9 @@ func CreateSpecs(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /specs [delete]
+// @Router /specs/ [delete]
 func DeleteSpecs(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.DeleteSpecsReq{}); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.DeleteSpecsReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteSpecs, &message.DeleteSpecsResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -261,13 +263,14 @@ func DeleteSpecs(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
+// @Param QuerySpecsReq query message.QuerySpecsReq true "query specs reqeust parameter"
 // @Success 200 {object} controller.CommonResult{data=message.QuerySpecsResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /specs [get]
+// @Router /specs/ [get]
 func QuerySpecs(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.QuerySpecsReq{}); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QuerySpecsReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.QuerySpecs, &message.QuerySpecsResp{},
 			requestBody,
 			controller.DefaultTimeout)

@@ -60,7 +60,7 @@ func TestFlowManager_RegisterWorkFlow(t *testing.T) {
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
 				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", SyncFuncNode, doFail},
+				"fail":          {"end", "", "", SyncFuncNode, doFail},
 			},
 		})
 
@@ -70,7 +70,7 @@ func TestFlowManager_RegisterWorkFlow(t *testing.T) {
 	assert.Equal(t, "nodeName1", define.TaskNodes["start"].Name)
 	assert.Equal(t, "nodeName2", define.TaskNodes["nodeName1Done"].Name)
 	assert.Equal(t, "end", define.TaskNodes["nodeName2Done"].Name)
-	assert.Equal(t, "fail", define.TaskNodes["fail"].Name)
+	assert.Equal(t, "end", define.TaskNodes["fail"].Name)
 }
 
 func TestFlowManager_Start_case1(t *testing.T) {
@@ -91,14 +91,14 @@ func TestFlowManager_Start_case1(t *testing.T) {
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
 				"nodeName2Done": {"end", "", "", SyncFuncNode, CompositeExecutor(doFail, defaultSuccess)},
-				"fail":          {"fail", "", "", SyncFuncNode, doFail},
+				"fail":          {"end", "", "", SyncFuncNode, doFail},
 			},
 		})
 
 	_, errRegister := manager.GetWorkFlowDefine(context.TODO(), "flowName")
 	assert.NoError(t, errRegister)
 
-	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
+	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", BizTypeCluster, "flowName")
 	assert.NoError(t, errCreate)
 	errStart := manager.Start(context.TODO(), flow)
 	assert.NoError(t, errStart)
@@ -126,14 +126,14 @@ func TestFlowManager_Start_case2(t *testing.T) {
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", PollingNode, doNodeName2},
 				"nodeName2Done": {"end", "", "", SyncFuncNode, CompositeExecutor(doFail, defaultSuccess)},
-				"fail":          {"fail", "", "", SyncFuncNode, doFail},
+				"fail":          {"end", "", "", SyncFuncNode, doFail},
 			},
 		})
 
 	_, errRegister := manager.GetWorkFlowDefine(context.TODO(), "flowName")
 	assert.NoError(t, errRegister)
 
-	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
+	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", BizTypeCluster, "flowName")
 	assert.NoError(t, errCreate)
 	errStart := manager.Start(context.TODO(), flow)
 	assert.NoError(t, errStart)
@@ -157,14 +157,14 @@ func TestFlowManager_AddContext(t *testing.T) {
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
 				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", SyncFuncNode, doFail},
+				"fail":          {"end", "", "", SyncFuncNode, doFail},
 			},
 		})
 
 	_, errRegister := manager.GetWorkFlowDefine(context.TODO(), "flowName")
 	assert.NoError(t, errRegister)
 
-	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
+	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", BizTypeCluster, "flowName")
 	assert.NoError(t, errCreate)
 
 	manager.AddContext(flow, "key", "value")
@@ -189,14 +189,14 @@ func TestFlowManager_Destroy(t *testing.T) {
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
 				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", SyncFuncNode, doFail},
+				"fail":          {"end", "", "", SyncFuncNode, doFail},
 			},
 		})
 
 	_, errRegister := manager.GetWorkFlowDefine(context.TODO(), "flowName")
 	assert.NoError(t, errRegister)
 
-	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
+	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", BizTypeCluster, "flowName")
 	assert.NoError(t, errCreate)
 
 	errDestroy := manager.Destroy(context.TODO(), flow, "reason")
@@ -221,14 +221,14 @@ func TestFlowManager_Complete(t *testing.T) {
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
 				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", SyncFuncNode, doFail},
+				"fail":          {"end", "", "", SyncFuncNode, doFail},
 			},
 		})
 
 	_, errRegister := manager.GetWorkFlowDefine(context.TODO(), "flowName")
 	assert.NoError(t, errRegister)
 
-	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
+	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", BizTypeCluster, "flowName")
 	assert.NoError(t, errCreate)
 
 	manager.Complete(context.TODO(), flow, true)
@@ -240,7 +240,7 @@ func TestFlowManager_ListWorkFlows(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockFlowRW := mockworkflow.NewMockReaderWriter(ctrl)
-	mockFlowRW.EXPECT().QueryWorkFlows(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, int64(0), nil).AnyTimes()
+	mockFlowRW.EXPECT().QueryWorkFlows(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, int64(0), nil).AnyTimes()
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
 	manager := GetWorkFlowService()
@@ -266,7 +266,7 @@ func TestFlowManager_DetailWorkFlow(t *testing.T) {
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
 				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", SyncFuncNode, doFail},
+				"fail":          {"end", "", "", SyncFuncNode, doFail},
 			},
 		})
 
@@ -292,14 +292,14 @@ func TestFlowManager_AsyncStart(t *testing.T) {
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
 				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", SyncFuncNode, doFail},
+				"fail":          {"end", "", "", SyncFuncNode, doFail},
 			},
 		})
 
 	_, errRegister := manager.GetWorkFlowDefine(context.TODO(), "flowName")
 	assert.NoError(t, errRegister)
 
-	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
+	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", BizTypeCluster, "flowName")
 	assert.NoError(t, errCreate)
 	errStart := manager.AsyncStart(context.TODO(), flow)
 	assert.NoError(t, errStart)

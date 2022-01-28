@@ -15,20 +15,30 @@
 
 package constants
 
-const SecondPartyReady = true
+const (
+	FlowImportHosts            string = "ImportHosts"            // A normal flow to import hosts
+	FlowImportHostsWithoutInit string = "ImportHostsWithoutInit" // import hosts without initialization
+	FlowTakeOverHosts          string = "TakeOverHosts"          // A flow to take over hosts
+	FlowDeleteHosts            string = "DeleteHosts"            // A normal flow to delete hosts
+	FlowDeleteHostsByForce     string = "DeleteHostsByForce"     // delete hosts by force - without uninstall filebeat .etc.
+)
 
 const (
-	FlowImportHosts          string = "ImportHosts"
 	ContextResourcePoolKey   string = "resourcePool"
-	ContextImportHostInfoKey string = "importHostInfo"
-	ContextImportHostIDsKey  string = "importHostIDs"
-	ContextWorkFlowNodeIDKey string = "importHostsWorkFlowNodeID"
+	ContextHostInfoArrayKey  string = "hostInfoArray"
+	ContextHostIDArrayKey    string = "hostIDArray"
+	ContextWorkFlowNodeIDKey string = "resourceWorkFlowNodeID"
+	ContextIgnoreWarnings    string = "checkHostIgnoreWarns"
 )
 
 const (
 	HostSSHPort       = 22
+	HostFileBeatPort  = 0
 	FileBeatDataDir   = "/tiem-data"
 	FileBeatDeployDir = "/tiem-deploy"
 )
 
-const DefaultTiupTimeOut = 360
+const (
+	DefaultTiupTimeOut      = 360
+	DefaultCopySshIDTimeOut = 10
+)

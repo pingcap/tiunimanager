@@ -35,7 +35,7 @@ func Test_ValidArchType(t *testing.T) {
 		{"Test_X86_64", "X86_64", want{nil}},
 		{"Test_ARM", "ARM", want{nil}},
 		{"Test_ARM64", "ARM64", want{nil}},
-		{"Test_Fail", "x86", want{errors.NewEMErrorf(errors.TIEM_RESOURCE_INVALID_ARCH, "valid arch type: [%s|%s|%s|%s]",
+		{"Test_Fail", "x86", want{errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_ARCH, "valid arch type: [%s|%s|%s|%s]",
 			string(ArchX86), string(ArchX8664), string(ArchArm), string(ArchArm64))}},
 	}
 	for _, tt := range tests {
@@ -83,6 +83,7 @@ func Test_ValidStatus(t *testing.T) {
 		{"Test_Deleted", HostDeleted, want{true}},
 		{"Test_Init", HostInit, want{true}},
 		{"Test_Failed", HostFailed, want{true}},
+		{"Test_Deleting", HostDeleting, want{true}},
 		{"Test_OtherStatus", HostWhatever, want{false}},
 	}
 	for _, tt := range tests {
@@ -154,7 +155,7 @@ func Test_ValidDiskType(t *testing.T) {
 		{"Test_NVMeSSD", "NVMeSSD", want{nil}},
 		{"Test_SSD", "SSD", want{nil}},
 		{"Test_SATA", "SATA", want{nil}},
-		{"Test_Fail", "sata", want{errors.NewEMErrorf(errors.TIEM_RESOURCE_INVALID_PURPOSE, "valid disk type: [%s|%s|%s]",
+		{"Test_Fail", "sata", want{errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_PURPOSE, "valid disk type: [%s|%s|%s]",
 			string(NVMeSSD), string(SSD), string(SATA))}},
 	}
 	for _, tt := range tests {
@@ -177,7 +178,7 @@ func Test_ValidPurposeType(t *testing.T) {
 		{"Test_Compute", "Compute", want{nil}},
 		{"Test_Storage", "Storage", want{nil}},
 		{"Test_Schedule", "Schedule", want{nil}},
-		{"Test_Fail", "sata", want{errors.NewEMErrorf(errors.TIEM_RESOURCE_INVALID_PURPOSE, "valid purpose name: [%s|%s|%s]",
+		{"Test_Fail", "sata", want{errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_PURPOSE, "valid purpose name: [%s|%s|%s]",
 			string(PurposeCompute), string(PurposeStorage), string(PurposeSchedule))}},
 	}
 	for _, tt := range tests {

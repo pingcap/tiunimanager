@@ -18,6 +18,7 @@ package service
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/proto/clusterservices"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -44,7 +45,7 @@ func Test_handleRequest(t *testing.T) {
 		}
 		resp := &clusterservices.RpcResponse{}
 		data := TestStruct{}
-		succeed := handleRequest(context.TODO(), req, resp, &data)
+		succeed := handleRequest(context.TODO(), req, resp, &data, []structs.RbacPermission{})
 		assert.True(t, succeed)
 	})
 	t.Run("unmarshal error", func(t *testing.T) {
@@ -53,7 +54,7 @@ func Test_handleRequest(t *testing.T) {
 		}
 		resp := &clusterservices.RpcResponse{}
 		data := TestStruct{}
-		succeed := handleRequest(context.TODO(), req, resp, &data)
+		succeed := handleRequest(context.TODO(), req, resp, &data, []structs.RbacPermission{})
 		assert.False(t, succeed)
 		assert.Equal(t, int32(errors.TIEM_UNMARSHAL_ERROR), resp.Code)
 	})
@@ -113,20 +114,18 @@ func Test_handleResponse(t *testing.T) {
 
 func Test_handlePanic(t *testing.T) {
 	t.Run("succeed", func(t *testing.T) {
-		resp := &clusterservices.RpcResponse{
-		}
+		resp := &clusterservices.RpcResponse{}
 
-		func () {
+		func() {
 			defer handlePanic(context.TODO(), "create", resp)
 		}()
 		assert.Equal(t, int32(0), resp.Code)
 		assert.Empty(t, resp.Message)
 	})
 	t.Run("panic", func(t *testing.T) {
-		resp := &clusterservices.RpcResponse{
-		}
+		resp := &clusterservices.RpcResponse{}
 
-		func () {
+		func() {
 			defer handlePanic(context.TODO(), "create", resp)
 			panic("aaa")
 		}()

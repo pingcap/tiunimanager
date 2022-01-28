@@ -30,6 +30,7 @@ type CmdDeployReq struct {
 	TimeoutS      int
 	TiUPPath      string
 	TiUPHome      string
+	Password      string
 	Flags         []string
 }
 
@@ -41,6 +42,7 @@ type CmdScaleOutReq struct {
 	TimeoutS      int
 	TiUPPath      string
 	TiUPHome      string
+	Password      string
 	Flags         []string
 }
 
@@ -49,6 +51,16 @@ type CmdScaleInReq struct {
 	TaskID        uint64
 	InstanceName  string
 	NodeId        string
+	TimeoutS      int
+	TiUPPath      string
+	TiUPHome      string
+	Flags         []string
+}
+
+type CmdPruneReq struct {
+	TiUPComponent TiUPComponentTypeStr
+	TaskID        uint64
+	InstanceName  string
 	TimeoutS      int
 	TiUPPath      string
 	TiUPHome      string

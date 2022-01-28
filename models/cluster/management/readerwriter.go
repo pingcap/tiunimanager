@@ -25,7 +25,7 @@ type ReaderWriter interface {
 	Create(ctx context.Context, cluster *Cluster) (*Cluster, error)
 	Delete(ctx context.Context, clusterID string) (err error)
 	Get(ctx context.Context, clusterID string) (*Cluster, error)
-	GetMeta(ctx context.Context, clusterID string) (*Cluster, []*ClusterInstance, error)
+	GetMeta(ctx context.Context, clusterID string) (*Cluster, []*ClusterInstance, []*DBUser, error)
 	GetRelations(ctx context.Context, clusterID string) ([]*ClusterRelation, error)
 
 	QueryMetas(ctx context.Context, filters Filters, pageReq structs.PageRequest) ([]*Result, structs.Page, error)
@@ -108,5 +108,48 @@ type ReaderWriter interface {
 	DeleteRelation(ctx context.Context, relationID uint) error
 
 	CreateClusterTopologySnapshot(ctx context.Context, snapshot ClusterTopologySnapshot) error
-	GetLatestClusterTopologySnapshot(ctx context.Context, clusterID string) (ClusterTopologySnapshot, error)
+	GetCurrentClusterTopologySnapshot(ctx context.Context, clusterID string) (ClusterTopologySnapshot, error)
+	UpdateTopologySnapshotConfig(ctx context.Context, clusterID string, config string) error
+
+	//
+	// ClearClusterPhysically
+	// @Description: If you don't know why you should use it, then don't use it
+	// @param ctx
+	// @param clusterID
+	// @return err
+	//
+	ClearClusterPhysically(ctx context.Context, clusterID string) (err error)
+	//
+	// CreateDBUser
+	// @Description: create cluster users
+	// @param ctx
+	// @param user
+	// @return error
+	//
+	CreateDBUser(ctx context.Context, user *DBUser) error
+	//
+	// GetDBUser
+	// @Description: get cluster users by clusterID
+	// @param ctx
+	// @param clusterID
+	// @return []*DBUser
+	// @return error
+	//
+	GetDBUser(ctx context.Context, clusterID string) ([]*DBUser, error)
+	//
+	// UpdateDBUser
+	// @Description: update cluster users
+	// @param ctx
+	// @param user
+	// @return error
+	//
+	UpdateDBUser(ctx context.Context, user *DBUser) error
+	//
+	// DeleteDBUser
+	// @Description: delete cluster users
+	// @param ctx
+	// @param ID
+	// @return error
+	//
+	DeleteDBUser(ctx context.Context, ID uint) error
 }

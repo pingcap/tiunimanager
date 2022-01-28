@@ -39,12 +39,9 @@ func (node *WorkFlowNode) Processing() {
 	node.Status = constants.WorkFlowStatusProcessing
 }
 
-var defaultSuccessInfo = "success"
+var defaultSuccessInfo = "Completed."
 
-func (node *WorkFlowNode) Success(result ...interface{}) {
-	node.Status = constants.WorkFlowStatusFinished
-	node.EndTime = time.Now()
-
+func (node *WorkFlowNode) Record(result ...interface{}) {
 	if result == nil {
 		result = []interface{}{defaultSuccessInfo}
 	}
@@ -57,8 +54,20 @@ func (node *WorkFlowNode) Success(result ...interface{}) {
 	}
 }
 
+func (node *WorkFlowNode) RecordAndPersist(result ...interface{}) {
+	// todo: persist record
+	node.Record(result)
+}
+
+func (node *WorkFlowNode) Success(result ...interface{}) {
+	node.Record(result...)
+
+	node.Status = constants.WorkFlowStatusFinished
+	node.EndTime = time.Now()
+}
+
 func (node *WorkFlowNode) Fail(e error) {
 	node.Status = constants.WorkFlowStatusError
 	node.EndTime = time.Now()
-	node.Result = e.Error()
+	node.Record(e.Error())
 }

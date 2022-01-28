@@ -75,7 +75,7 @@ var TiDBALIYUNHZX8650Components = []structs.ProductComponentProperty{
 	{ID: "TiKV", Name: "Storage Engine", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
 	{ID: "TiFlash", Name: "Column Storage Engine", PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 1, MaxInstance: 10240},
 	{ID: "PD", Name: "Schedule Engine", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 7},
-	{ID: "TiCDC", Name: "CDC", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
+	{ID: "CDC", Name: "CDC", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
 	{ID: "Grafana", Name: "Monitor GUI", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 	{ID: "Prometheus", Name: "Monitor", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 	{ID: "AlertManger", Name: "Alert", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
@@ -89,7 +89,7 @@ var TiDBALIYUNBJX8650Components = []structs.ProductComponentProperty{
 	{ID: "TiKV", Name: "Storage Engine", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
 	{ID: "TiFlash", Name: "Column Storage Engine", PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 1, MaxInstance: 10240},
 	{ID: "PD", Name: "Schedule Engine", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 7},
-	{ID: "TiCDC", Name: "CDC", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
+	{ID: "CDC", Name: "CDC", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
 	{ID: "Grafana", Name: "Monitor GUI", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 	{ID: "Prometheus", Name: "Monitor", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 	{ID: "AlertManger", Name: "Alert", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
@@ -103,7 +103,7 @@ var TiDBALIYUNBJX8651Components = []structs.ProductComponentProperty{
 	{ID: "TiKV", Name: "Storage Engine", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
 	{ID: "TiFlash", Name: "Column Storage Engine", PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 1, MaxInstance: 10240},
 	{ID: "PD", Name: "Schedule Engine", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 7},
-	{ID: "TiCDC", Name: "CDC", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
+	{ID: "CDC", Name: "CDC", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
 	{ID: "Grafana", Name: "Monitor GUI", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 	{ID: "Prometheus", Name: "Monitor", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 	{ID: "AlertManger", Name: "Alert", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
@@ -117,7 +117,7 @@ var TiDBALIYUNHZARM6451Components = []structs.ProductComponentProperty{
 	{ID: "TiKV", Name: "Storage Engine", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
 	{ID: "TiFlash", Name: "Column Storage Engine", PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 1, MaxInstance: 10240},
 	{ID: "PD", Name: "Schedule Engine", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 7},
-	{ID: "TiCDC", Name: "CDC", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
+	{ID: "CDC", Name: "CDC", PurposeType: "Schedule", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 1, MaxInstance: 512},
 	{ID: "Grafana", Name: "Monitor GUI", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 	{ID: "Prometheus", Name: "Monitor", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 	{ID: "AlertManger", Name: "Alert", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
@@ -183,7 +183,7 @@ func TestProductManager_CreateZones(t *testing.T) {
 	t.Run("CreateZonesWithEmptyParameter", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().CreateZones(gomock.Any(), gomock.Any()).Return(errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
+		prw.EXPECT().CreateZones(gomock.Any(), gomock.Any()).Return(errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
 		_, err := mgr.CreateZones(context.TODO(), msg)
 		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
@@ -191,7 +191,7 @@ func TestProductManager_CreateZones(t *testing.T) {
 	t.Run("CreateZonesWithDBError", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().CreateZones(gomock.Any(), gomock.Any()).Return(errors.NewEMErrorf(errors.CreateZonesError, "create zone failed")).AnyTimes()
+		prw.EXPECT().CreateZones(gomock.Any(), gomock.Any()).Return(errors.NewErrorf(errors.CreateZonesError, "create zone failed")).AnyTimes()
 		_, err := mgr.CreateZones(context.TODO(), msg)
 		assert.Equal(t, errors.CreateZonesError, err.(errors.EMError).GetCode())
 	})
@@ -217,7 +217,7 @@ func TestProductManager_DeleteZones(t *testing.T) {
 	t.Run("DeleteZonesWithEmptyParameter", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().DeleteZones(gomock.Any(), gomock.Any()).Return(errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
+		prw.EXPECT().DeleteZones(gomock.Any(), gomock.Any()).Return(errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
 		_, err := mgr.DeleteZones(context.TODO(), msg)
 		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
@@ -225,7 +225,7 @@ func TestProductManager_DeleteZones(t *testing.T) {
 	t.Run("DeleteZonesWithDBError", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().DeleteZones(gomock.Any(), gomock.Any()).Return(errors.NewEMErrorf(errors.DeleteZonesError, "delete zone failed")).AnyTimes()
+		prw.EXPECT().DeleteZones(gomock.Any(), gomock.Any()).Return(errors.NewErrorf(errors.DeleteZonesError, "delete zone failed")).AnyTimes()
 		_, err := mgr.DeleteZones(context.TODO(), msg)
 		assert.Equal(t, errors.DeleteZonesError, err.(errors.EMError).GetCode())
 	})
@@ -242,13 +242,16 @@ func TestProductManager_QueryZones(t *testing.T) {
 		prw.EXPECT().QueryZones(gomock.Any()).Return(zones, nil).AnyTimes()
 		resp, err := mgr.QueryZones(context.TODO())
 		assert.NoError(t, err)
-		assert.Equal(t, true, reflect.DeepEqual(resp.Zones, zones))
+		assert.Equal(t, 1, len(resp.Vendors))
+		assert.Equal(t, "Aliyun", resp.Vendors["Aliyun"].VendorInfo.Name)
+		assert.Equal(t, 2, len(resp.Vendors["Aliyun"].Regions))
+		assert.Equal(t, "East China(Hangzhou)", resp.Vendors["Aliyun"].Regions["CN-HANGZHOU"].Name)
 	})
 
 	t.Run("QueryZonesWithEmptyParameter", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().QueryZones(gomock.Any()).Return(make([]structs.ZoneInfo, 0), errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
+		prw.EXPECT().QueryZones(gomock.Any()).Return(make([]structs.ZoneInfo, 0), errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
 		_, err := mgr.QueryZones(context.TODO())
 		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
@@ -256,7 +259,7 @@ func TestProductManager_QueryZones(t *testing.T) {
 	t.Run("QueryZonesWithDBError", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().QueryZones(gomock.Any()).Return(make([]structs.ZoneInfo, 0), errors.NewEMErrorf(errors.QueryZoneScanRowError, "scan data database error")).AnyTimes()
+		prw.EXPECT().QueryZones(gomock.Any()).Return(make([]structs.ZoneInfo, 0), errors.NewErrorf(errors.QueryZoneScanRowError, "scan data database error")).AnyTimes()
 		_, err := mgr.QueryZones(context.TODO())
 		assert.Equal(t, errors.QueryZoneScanRowError, err.(errors.EMError).GetCode())
 	})
@@ -283,7 +286,7 @@ func TestProductManager_CreateSpecs(t *testing.T) {
 	t.Run("CreateSpecsWithEmptyParameter", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().CreateSpecs(gomock.Any(), gomock.Any()).Return(errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
+		prw.EXPECT().CreateSpecs(gomock.Any(), gomock.Any()).Return(errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
 		_, err := mgr.CreateSpecs(context.TODO(), msg)
 		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
@@ -291,7 +294,7 @@ func TestProductManager_CreateSpecs(t *testing.T) {
 	t.Run("CreateSpecsWithDBError", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().CreateSpecs(gomock.Any(), gomock.Any()).Return(errors.NewEMErrorf(errors.CreateSpecsError, "create zone failed")).AnyTimes()
+		prw.EXPECT().CreateSpecs(gomock.Any(), gomock.Any()).Return(errors.NewErrorf(errors.CreateSpecsError, "create zone failed")).AnyTimes()
 		_, err := mgr.CreateSpecs(context.TODO(), msg)
 		assert.Equal(t, errors.CreateSpecsError, err.(errors.EMError).GetCode())
 	})
@@ -318,7 +321,7 @@ func TestProductManager_DeleteSpecs(t *testing.T) {
 	t.Run("DeleteSpecsWithEmptyParameter", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().DeleteSpecs(gomock.Any(), gomock.Any()).Return(errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
+		prw.EXPECT().DeleteSpecs(gomock.Any(), gomock.Any()).Return(errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
 		_, err := mgr.DeleteSpecs(context.TODO(), msg)
 		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
@@ -326,7 +329,7 @@ func TestProductManager_DeleteSpecs(t *testing.T) {
 	t.Run("DeleteSpecsWithDBError", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().DeleteSpecs(gomock.Any(), gomock.Any()).Return(errors.NewEMErrorf(errors.DeleteSpecsError, "delete zone failed")).AnyTimes()
+		prw.EXPECT().DeleteSpecs(gomock.Any(), gomock.Any()).Return(errors.NewErrorf(errors.DeleteSpecsError, "delete zone failed")).AnyTimes()
 		_, err := mgr.DeleteSpecs(context.TODO(), msg)
 		assert.Equal(t, errors.DeleteSpecsError, err.(errors.EMError).GetCode())
 	})
@@ -349,7 +352,7 @@ func TestProductManager_QuerySpecs(t *testing.T) {
 	t.Run("QuerySpecsWithEmptyParameter", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().QuerySpecs(gomock.Any()).Return([]structs.SpecInfo{{}}, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
+		prw.EXPECT().QuerySpecs(gomock.Any()).Return([]structs.SpecInfo{{}}, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
 		_, err := mgr.QuerySpecs(context.TODO())
 		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
@@ -357,7 +360,7 @@ func TestProductManager_QuerySpecs(t *testing.T) {
 	t.Run("QuerySpecsWithDBError", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().QuerySpecs(gomock.Any()).Return([]structs.SpecInfo{{}}, errors.NewEMErrorf(errors.QuerySpecScanRowError, "scan data database error")).AnyTimes()
+		prw.EXPECT().QuerySpecs(gomock.Any()).Return([]structs.SpecInfo{{}}, errors.NewErrorf(errors.QuerySpecScanRowError, "scan data database error")).AnyTimes()
 		_, err := mgr.QuerySpecs(context.TODO())
 		assert.Equal(t, errors.QuerySpecScanRowError, err.(errors.EMError).GetCode())
 	})
@@ -384,7 +387,7 @@ func TestProductManager_CreateProduct(t *testing.T) {
 	t.Run("CreateProductWithEmptyParameter", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().CreateProduct(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
+		prw.EXPECT().CreateProduct(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
 		_, err := mgr.CreateProduct(context.TODO(), msg)
 		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
@@ -392,7 +395,7 @@ func TestProductManager_CreateProduct(t *testing.T) {
 	t.Run("CreateProductWithDBError", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().CreateProduct(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.NewEMErrorf(errors.CreateProductError, "create zone failed")).AnyTimes()
+		prw.EXPECT().CreateProduct(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.NewErrorf(errors.CreateProductError, "create zone failed")).AnyTimes()
 		_, err := mgr.CreateProduct(context.TODO(), msg)
 		assert.Equal(t, errors.CreateProductError, err.(errors.EMError).GetCode())
 	})
@@ -418,7 +421,7 @@ func TestProductManager_DeleteProduct(t *testing.T) {
 	t.Run("DeleteProductWithEmptyParameter", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().DeleteProduct(gomock.Any(), gomock.Any()).Return(errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
+		prw.EXPECT().DeleteProduct(gomock.Any(), gomock.Any()).Return(errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
 		_, err := mgr.DeleteProduct(context.TODO(), msg)
 		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
@@ -426,7 +429,7 @@ func TestProductManager_DeleteProduct(t *testing.T) {
 	t.Run("DeleteProductWithDBError", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().DeleteProduct(gomock.Any(), gomock.Any()).Return(errors.NewEMErrorf(errors.DeleteProductError, "create zone failed")).AnyTimes()
+		prw.EXPECT().DeleteProduct(gomock.Any(), gomock.Any()).Return(errors.NewErrorf(errors.DeleteProductError, "create zone failed")).AnyTimes()
 		_, err := mgr.DeleteProduct(context.TODO(), msg)
 		assert.Equal(t, errors.DeleteProductError, err.(errors.EMError).GetCode())
 	})
@@ -448,13 +451,18 @@ func TestProductManager_QueryProducts(t *testing.T) {
 		prw.EXPECT().QueryProducts(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(products, nil).AnyTimes()
 		resp, err := mgr.QueryProducts(context.TODO(), msg)
 		assert.NoError(t, err)
-		assert.Equal(t, true, reflect.DeepEqual(resp.Products, products))
+		assert.Equal(t, 2, len(resp.Products))
+		assert.Equal(t, 2, len(resp.Products["CN-HANGZHOU"]))
+		assert.Equal(t, 2, len(resp.Products["CN-HANGZHOU"]["TiDB"]))
+		assert.Equal(t, 1, len(resp.Products["CN-HANGZHOU"]["TiDB"]["X86_64"]))
+		assert.Equal(t, "TiDB", resp.Products["CN-HANGZHOU"]["TiDB"]["X86_64"]["5.0.0"].Name)
+
 	})
 
 	t.Run("QueryProductsWithEmptyParameter", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().QueryProducts(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.Product{{}}, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
+		prw.EXPECT().QueryProducts(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.Product{{}}, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
 		_, err := mgr.QueryProducts(context.TODO(), msg)
 		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
@@ -462,7 +470,7 @@ func TestProductManager_QueryProducts(t *testing.T) {
 	t.Run("QueryProductsWithDBError", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().QueryProducts(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.Product{{}}, errors.NewEMErrorf(errors.QueryProductsScanRowError, "scan data database error")).AnyTimes()
+		prw.EXPECT().QueryProducts(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]structs.Product{{}}, errors.NewErrorf(errors.QueryProductsScanRowError, "scan data database error")).AnyTimes()
 		_, err := mgr.QueryProducts(context.TODO(), msg)
 		assert.Equal(t, errors.QueryProductsScanRowError, err.(errors.EMError).GetCode())
 	})
@@ -481,7 +489,6 @@ func TestProductManager_QueryProductDetail(t *testing.T) {
 		InternalProduct: constants.EMInternalProductNo,
 	}
 	t.Run("QueryProductDetail", func(t *testing.T) {
-
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
 
@@ -489,71 +496,7 @@ func TestProductManager_QueryProductDetail(t *testing.T) {
 			Product    structs.Product
 			Components []structs.ProductComponentProperty
 		}
-		args := []Args{
-			{Product: products[0], Components: TiDBALIYUNHZX8650Components},
-			{Product: products[1], Components: TiDBALIYUNHZARM6451Components}}
-
 		Products := make(map[string]structs.ProductDetail)
-		for _, arg := range args {
-			var ok bool
-			var detail structs.ProductDetail
-			var productVersion structs.ProductVersion
-			var productComponentInfo structs.ProductComponentProperty
-			var components map[string]structs.ProductComponentProperty
-			info := arg.Product
-			detail, ok = Products[info.ID]
-			if !ok {
-				Products[info.ID] = structs.ProductDetail{ID: info.ID, Name: info.Name, Versions: make(map[string]structs.ProductVersion)}
-				detail, _ = Products[info.ID]
-			}
-
-			//Query whether the product version information is already in Versions,
-			//if it already exists, then directly modify the relevant data structure
-			productVersion, ok = detail.Versions[info.Version]
-			if !ok {
-				detail.Versions[info.Version] = structs.ProductVersion{Version: info.Version, Arch: make(map[string]map[string]structs.ProductComponentProperty)}
-				productVersion, _ = detail.Versions[info.Version]
-			}
-
-			//Query whether the product arch information is already in archs,
-			//if it already exists, then directly modify the relevant data structure
-			components, ok = productVersion.Arch[info.Arch]
-			if !ok {
-				productVersion.Arch[info.Arch] = make(map[string]structs.ProductComponentProperty)
-				components, _ = productVersion.Arch[info.Arch]
-			}
-
-			for _, item := range arg.Components {
-				productComponentInfo, ok = components[item.ID]
-				if !ok {
-					components[item.ID] = structs.ProductComponentProperty{ID: item.ID, Name: item.Name, PurposeType: item.PurposeType,
-						StartPort: item.StartPort, EndPort: item.EndPort, MaxPort: item.MaxPort, MinInstance: item.MinInstance, MaxInstance: item.MaxInstance, Spec: make(map[string]structs.ComponentInstanceResourceSpec)}
-					productComponentInfo, _ = components[item.ID]
-
-					var tmpSpecs []structs.SpecInfo
-
-					if item.PurposeType == string(constants.PurposeSchedule) {
-						tmpSpecs = scheduleSpecs
-					} else if item.PurposeType == string(constants.PurposeCompute) {
-						tmpSpecs = computeSpecs
-					} else if item.PurposeType == string(constants.PurposeStorage) {
-						tmpSpecs = storageSpecs
-					}
-					for _, ss := range tmpSpecs {
-						_, ok = productComponentInfo.Spec[ss.ID]
-						if !ok {
-							productComponentInfo.Spec[ss.ID] = structs.ComponentInstanceResourceSpec{
-								ID:       ss.ID,
-								Name:     ss.Name,
-								CPU:      ss.CPU,
-								Memory:   ss.Memory,
-								DiskType: ss.DiskType,
-							}
-						}
-					}
-				}
-			}
-		}
 
 		prw.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(Products, nil).AnyTimes()
 		resp, err := mgr.QueryProductDetail(context.TODO(), msg)
@@ -565,7 +508,7 @@ func TestProductManager_QueryProductDetail(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
 		prw.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(make(map[string]structs.ProductDetail, 0),
-			errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
+			errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
 		_, err := mgr.QueryProductDetail(context.TODO(), msg)
 		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
@@ -574,7 +517,7 @@ func TestProductManager_QueryProductDetail(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
 		prw.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(make(map[string]structs.ProductDetail, 0),
-			errors.NewEMErrorf(errors.QueryProductsScanRowError, "scan data database error")).AnyTimes()
+			errors.NewErrorf(errors.QueryProductsScanRowError, "scan data database error")).AnyTimes()
 		_, err := mgr.QueryProductDetail(context.TODO(), msg)
 		assert.Equal(t, errors.QueryProductsScanRowError, err.(errors.EMError).GetCode())
 	})

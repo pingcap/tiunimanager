@@ -18,13 +18,13 @@ package framework
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"io"
 	"time"
 
 	"github.com/asim/go-micro/v3/metadata"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 )
@@ -328,11 +328,6 @@ func NewMicroContextWithKeyValuePairs(ctx context.Context, pairs map[string]stri
 // GetUserIDFromContext Get UserID from ctx
 func GetUserIDFromContext(ctx context.Context) string {
 	return getStringValueFromContext(ctx, TiEM_X_USER_ID_KEY)
-}
-
-// GetUserNameFromContext Get UserName from ctx
-func GetUserNameFromContext(ctx context.Context) string {
-	return getStringValueFromContext(ctx, TiEM_X_USER_NAME_KEY)
 }
 
 // GetTenantIDFromContext Get TenantID from ctx

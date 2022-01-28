@@ -159,6 +159,55 @@ func TestBRReadWrite_DeleteBackupRecord(t *testing.T) {
 	assert.Nil(t, recordGet)
 }
 
+func TestBRReadWrite_DeleteBackupRecords(t *testing.T) {
+	record1 := &BackupRecord{
+		Entity: common.Entity{
+			TenantId: "tenantId",
+			Status:   "BackupInitStatus",
+		},
+		ClusterID:    "clusterId",
+		FilePath:     "/tmp/test",
+		StorageType:  "s3",
+		BackupType:   "full",
+		BackupMethod: "logic",
+		BackupMode:   "auto",
+		Size:         23346546,
+		BackupTso:    42353454343234,
+		StartTime:    time.Now(),
+	}
+	recordCreate1, errCreate1 := rw.CreateBackupRecord(context.TODO(), record1)
+	assert.NoError(t, errCreate1)
+	record2 := &BackupRecord{
+		Entity: common.Entity{
+			TenantId: "tenantId",
+			Status:   "BackupInitStatus",
+		},
+		ClusterID:    "clusterId",
+		FilePath:     "/tmp/test",
+		StorageType:  "s3",
+		BackupType:   "full",
+		BackupMethod: "logic",
+		BackupMode:   "auto",
+		Size:         23346546,
+		BackupTso:    42353454343234,
+		StartTime:    time.Now(),
+	}
+	recordCreate2, errCreate2 := rw.CreateBackupRecord(context.TODO(), record2)
+	assert.NoError(t, errCreate2)
+
+	deleteIds := []string{recordCreate1.ID, recordCreate2.ID}
+	errDelete := rw.DeleteBackupRecords(context.TODO(), deleteIds)
+	assert.NoError(t, errDelete)
+
+	recordGet1, errGet1 := rw.GetBackupRecord(context.TODO(), recordCreate1.ID)
+	assert.NotNil(t, errGet1)
+	assert.Nil(t, recordGet1)
+
+	recordGet2, errGet2 := rw.GetBackupRecord(context.TODO(), recordCreate2.ID)
+	assert.NotNil(t, errGet2)
+	assert.Nil(t, recordGet2)
+}
+
 func TestBRReadWrite_CreateBackupStrategy(t *testing.T) {
 	strategy := &BackupStrategy{
 		Entity: common.Entity{

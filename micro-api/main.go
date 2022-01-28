@@ -18,9 +18,10 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/pingcap-inc/tiem/common/client"
+	"github.com/pingcap-inc/tiem/metrics"
 	"github.com/pingcap-inc/tiem/proto/clusterservices"
-	"net/http"
 	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -28,9 +29,6 @@ import (
 	"github.com/gin-contrib/cors"
 
 	"github.com/prometheus/client_golang/prometheus"
-
-	"github.com/pingcap-inc/tiem/library/thirdparty/etcd_clientv2"
-	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
 
 	"github.com/pingcap-inc/tiem/library/knowledge"
 
@@ -83,8 +81,6 @@ func initGinEngine(d *framework.BaseFramework) error {
 	// enable cors access
 	g.Use(cors.New(corsConfig()))
 
-	g.Use(promMiddleware(d))
-
 	route.Route(g)
 
 	port := d.GetServiceMeta().ServicePort
@@ -126,7 +122,7 @@ func corsConfig() cors.Config {
 
 // serviceRegistry registry openapi-server service
 func serviceRegistry(f *framework.BaseFramework) {
-	etcdClient := etcd_clientv2.InitEtcdClient(f.GetServiceMeta().RegistryAddress)
+	etcdClient := framework.InitEtcdClientV2(f.GetServiceMeta().RegistryAddress)
 	address := f.GetClientArgs().Host + f.GetServiceMeta().GetServiceAddress()
 	key := "/micro/registry/" + f.GetServiceMeta().ServiceName.ServerName() + "/" + address
 	// Register openapi-server every TTL-2 seconds, default TTL is 5s
@@ -150,52 +146,4 @@ func defaultPortForLocal(f *framework.BaseFramework) error {
 		f.GetServiceMeta().ServicePort = constants.DefaultMicroApiPort
 	}
 	return nil
-}
-
-// prometheus http metrics
-func promMiddleware(d *framework.BaseFramework) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		relativePath := c.Request.URL.Path
-		start := time.Now()
-		c.Next()
-		duration := time.Since(start)
-		code := fmt.Sprintf("%d", c.Writer.Status())
-		serviceName := d.GetServiceMeta().ServiceName.ServerName()
-
-		d.GetMetrics().APIRequestsCounterMetric.
-			With(prometheus.Labels{metrics.ServiceLabel: serviceName, metrics.HandlerLabel: relativePath, metrics.MethodLabel: c.Request.Method, metrics.CodeLabel: code}).
-			Inc()
-		d.GetMetrics().RequestDurationHistogramMetric.
-			With(prometheus.Labels{metrics.ServiceLabel: serviceName, metrics.HandlerLabel: relativePath, metrics.MethodLabel: c.Request.Method, metrics.CodeLabel: code}).
-			Observe(duration.Seconds())
-		d.GetMetrics().RequestSizeHistogramMetric.
-			With(prometheus.Labels{metrics.ServiceLabel: serviceName, metrics.HandlerLabel: relativePath, metrics.MethodLabel: c.Request.Method, metrics.CodeLabel: code}).
-			Observe(float64(computeApproximateRequestSize(c.Request)))
-		d.GetMetrics().ResponseSizeHistogramMetric.
-			With(prometheus.Labels{metrics.ServiceLabel: serviceName, metrics.HandlerLabel: relativePath, metrics.MethodLabel: c.Request.Method, metrics.CodeLabel: code}).
-			Observe(float64(c.Writer.Size()))
-	}
-}
-
-// From https://github.com/DanielHeckrath/gin-prometheus/blob/master/gin_prometheus.go
-func computeApproximateRequestSize(r *http.Request) int {
-	s := 0
-	if r.URL != nil {
-		s = len(r.URL.Path)
-	}
-
-	s += len(r.Method)
-	s += len(r.Proto)
-	for name, values := range r.Header {
-		s += len(name)
-		for _, value := range values {
-			s += len(value)
-		}
-	}
-	s += len(r.Host)
-
-	if r.ContentLength != -1 {
-		s += int(r.ContentLength)
-	}
-	return s
 }

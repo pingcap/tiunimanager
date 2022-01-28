@@ -21,7 +21,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	"github.com/robfig/cron"
@@ -83,7 +83,7 @@ func (auto *autoBackupHandler) doBackup(strategy *backuprestore.BackupStrategy) 
 	framework.Log().Infof("begin do auto backup for cluster %s", strategy.ClusterID)
 	defer framework.Log().Infof("end do auto backup for cluster %s", strategy.ClusterID)
 
-	meta, err := handler.Get(context.Background(), strategy.ClusterID)
+	meta, err := meta.Get(context.Background(), strategy.ClusterID)
 	if err != nil || meta.Cluster == nil {
 		framework.LogWithContext(context.Background()).Errorf("load cluster meta %s failed, %v", strategy.ClusterID, err)
 		return

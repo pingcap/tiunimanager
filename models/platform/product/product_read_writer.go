@@ -31,6 +31,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
+	"sort"
 )
 
 type ProductReadWriterInterface interface {
@@ -133,13 +134,13 @@ type ProductReadWriter struct {
 func (p *ProductReadWriter) CreateZones(ctx context.Context, zones []Zone) (er error) {
 	if len(zones) <= 0 {
 		framework.LogWithContext(ctx).Warningf("create zones %v, len: %d, parameter invalid", zones, len(zones))
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "create zones %v, parameter invalid", zones)
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "create zones %v, parameter invalid", zones)
 	}
 
 	db := p.DB(ctx).CreateInBatches(zones, 1024)
 	if db.Error != nil {
 		framework.LogWithContext(ctx).Errorf("create zones %v, errors: %v", zones, db.Error)
-		return errors.NewEMErrorf(errors.CreateZonesError, "create zones %v, error: %v", zones, db.Error)
+		return errors.NewErrorf(errors.CreateZonesError, "create zones %v, error: %v", zones, db.Error)
 	}
 	return nil
 }
@@ -148,7 +149,7 @@ func (p *ProductReadWriter) CreateZones(ctx context.Context, zones []Zone) (er e
 func (p *ProductReadWriter) DeleteZones(ctx context.Context, zones []structs.ZoneInfo) (er error) {
 	if len(zones) <= 0 {
 		framework.LogWithContext(ctx).Warningf("delete zones %v, len: %d, parameter invalid", zones, len(zones))
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "delete zones %v, parameter invalid", zones)
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "delete zones %v, parameter invalid", zones)
 	}
 	p.DB(ctx).Begin()
 	for _, zone := range zones {
@@ -156,7 +157,7 @@ func (p *ProductReadWriter) DeleteZones(ctx context.Context, zones []structs.Zon
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("delete zone, VendorID:%s RegeionID: %s, ZoneID:%s, errors: %v", zone.VendorID, zone.RegionID, zone.ZoneID, err)
 			p.DB(ctx).Rollback()
-			return errors.NewEMErrorf(errors.DeleteZonesError, "delete zone, VendorID:%s RegionID: %s, ZoneID:%s, errors: %v", zone.VendorID, zone.RegionID, zone.ZoneID, err)
+			return errors.NewErrorf(errors.DeleteZonesError, "delete zone, VendorID:%s RegionID: %s, ZoneID:%s, errors: %v", zone.VendorID, zone.RegionID, zone.ZoneID, err)
 		}
 	}
 	p.DB(ctx).Commit()
@@ -170,14 +171,14 @@ func (p *ProductReadWriter) QueryZones(ctx context.Context) (zones []structs.Zon
 	rows, err := p.DB(ctx).Raw(SQL).Rows()
 	defer rows.Close()
 	if err != nil {
-		return nil, errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "query all zones error: %v, SQL: %s", err, SQL)
+		return nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "query all zones error: %v, SQL: %s", err, SQL)
 	}
 	for rows.Next() {
 		err = rows.Scan(&info.ZoneID, &info.ZoneName, &info.RegionID, &info.RegionName, &info.VendorID, &info.VendorName)
 		if err == nil {
 			zones = append(zones, info)
 		} else {
-			return nil, errors.NewEMErrorf(errors.QueryZoneScanRowError, "query all zones, scan data error: %v, SQL: %s", err, SQL)
+			return nil, errors.NewErrorf(errors.QueryZoneScanRowError, "query all zones, scan data error: %v, SQL: %s", err, SQL)
 		}
 	}
 	return zones, err
@@ -187,21 +188,21 @@ func (p *ProductReadWriter) QueryZones(ctx context.Context) (zones []structs.Zon
 func (p *ProductReadWriter) CreateProduct(ctx context.Context, product Product, components []ProductComponent) (er error) {
 	if len(components) <= 0 {
 		framework.LogWithContext(ctx).Warningf("create product invalid parameter,product: %v, components: %v", product, components)
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "create product invalid parameter, product: %v, components: %v",
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "create product invalid parameter, product: %v, components: %v",
 			product, components)
 	}
 	err := p.DB(ctx).Create(&product).Error
 	if err != nil {
 		p.DB(ctx).Rollback()
 		framework.LogWithContext(ctx).Warningf("create product, insert product information failed,product: %v, components: %v", product, components)
-		return errors.NewEMErrorf(errors.CreateProductError, "create product, insert product information into product table failed, rollback,product: %v, components: %v", product, components)
+		return errors.NewErrorf(errors.CreateProductError, "create product, insert product information into product table failed, rollback,product: %v, components: %v", product, components)
 	}
 	for _, component := range components {
 		err = p.DB(ctx).Create(&component).Error
 		if err != nil {
 			p.DB(ctx).Rollback()
 			framework.LogWithContext(ctx).Warningf("create product, insert component information into components table failed,product: %v, components: %v", product, component)
-			return errors.NewEMErrorf(errors.CreateProductError, "create product, insert component information into components table failed, rollback,product: %v, components: %v", product, component)
+			return errors.NewErrorf(errors.CreateProductError, "create product, insert component information into components table failed, rollback,product: %v, components: %v", product, component)
 		}
 	}
 	p.DB(ctx).Commit()
@@ -214,12 +215,12 @@ func (p *ProductReadWriter) DeleteProduct(ctx context.Context, product structs.P
 	if "" == product.ID || "" == product.VendorID || "" == product.RegionID ||
 		"" == product.Version || "" == product.Arch {
 		framework.LogWithContext(ctx).Warningf("delete product invalid parameter,product: %v", product)
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "delete product invalid parameter, product: %v", product)
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "delete product invalid parameter, product: %v", product)
 	}
 	components, err := p.QueryProductComponentProperty(ctx, product.VendorID, product.RegionID, product.ID, product.Version, product.Arch, constants.ProductComponentStatus(product.Status))
 	if err != nil || len(components) == 0 {
 		framework.LogWithContext(ctx).Warningf("delete product, query product component form product_component table failed,product: %v,components: %v", product, components)
-		return errors.NewEMErrorf(errors.DeleteProductError, "delete product, query product component form product_component table failed,product: %v,components:%v", product, components)
+		return errors.NewErrorf(errors.DeleteProductError, "delete product, query product component form product_component table failed,product: %v,components:%v", product, components)
 	}
 
 	p.DB(ctx).Begin()
@@ -229,7 +230,7 @@ func (p *ProductReadWriter) DeleteProduct(ctx context.Context, product structs.P
 	if err != nil {
 		p.DB(ctx).Rollback()
 		framework.LogWithContext(ctx).Warningf("delete product, delete product information form product table failed,product: %v", product)
-		return errors.NewEMErrorf(errors.DeleteProductError, "delete product, delete product information form product table failed,product: %v", product)
+		return errors.NewErrorf(errors.DeleteProductError, "delete product, delete product information form product table failed,product: %v", product)
 	}
 
 	for _, component := range components {
@@ -238,7 +239,7 @@ func (p *ProductReadWriter) DeleteProduct(ctx context.Context, product structs.P
 		if err != nil {
 			p.DB(ctx).Rollback()
 			framework.LogWithContext(ctx).Warningf("delete product, delete product component form product_component table failed,product: %v, component: %v", product, component)
-			return errors.NewEMErrorf(errors.DeleteProductError, "delete product, delete product component form product_component table failed,product: %v, component: %v", product, component)
+			return errors.NewErrorf(errors.DeleteProductError, "delete product, delete product component form product_component table failed,product: %v, component: %v", product, component)
 		}
 	}
 	p.DB(ctx).Commit()
@@ -251,7 +252,7 @@ func (p *ProductReadWriter) QueryProducts(ctx context.Context, vendorID string, 
 	if "" == vendorID || "" == status {
 		framework.LogWithContext(ctx).Warningf("query product invalid parameter, vendorID: %s, status: %s, internal: %d",
 			vendorID, status, internal)
-		return nil, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "query product invalid parameter, vendorID: %s, status: %s, internal: %d",
+		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "query product invalid parameter, vendorID: %s, status: %s, internal: %d",
 			vendorID, status, internal)
 	}
 	SQL := `SELECT DISTINCT t2.vendor_id,t2.vendor_name,t2.region_id,t2.region_name,t1.product_id,t1.name,t1.version,t1.arch,t1.status FROM products t1 INNER JOIN zones t2 ON
@@ -266,7 +267,7 @@ func (p *ProductReadWriter) QueryProducts(ctx context.Context, vendorID string, 
 			if err != nil {
 				framework.LogWithContext(ctx).Warningf("query product error: %v, vendorID: %s, status: %s, internal: %d",
 					err, vendorID, status, internal)
-				return nil, errors.NewEMErrorf(errors.QueryProductsScanRowError, "query product error: %v, vendorID: %s, status: %s, internal: %d",
+				return nil, errors.NewErrorf(errors.QueryProductsScanRowError, "query product error: %v, vendorID: %s, status: %s, internal: %d",
 					err, vendorID, status, internal)
 			}
 			products = append(products, info)
@@ -281,21 +282,10 @@ func (p *ProductReadWriter) QueryProductDetail(ctx context.Context, vendorID, re
 	if "" == vendorID || "" == regionID || "" == productID {
 		framework.LogWithContext(ctx).Warningf("query product detail invalid parameter, vendorID: %s, regionID:%s, productID: %s,status: %s, internal: %d",
 			vendorID, regionID, productID, status, internal)
-		return nil, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "query product detail invalid parameter, vendorID: %s, regionID:%s, productID: %s,status: %s, internal: %d",
+		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "query product detail invalid parameter, vendorID: %s, regionID:%s, productID: %s,status: %s, internal: %d",
 			vendorID, regionID, productID, status, internal)
 	}
-	/*	SQL := `SELECT t2.zone_id,t2.zone_name,t1.name,t1.version,t1.arch,
-		t4.id,t4.name,t4.disk_type,t4.cpu,t4.memory,t3.component_id,t3.name,t3.purpose_type,t3.start_port,t3.end_port,
-		t3.max_port,t3.max_instance,t3.min_instance FROM products t1,zones t2,product_components t3,specs t4,vendors t5
-		WHERE t1.vendor_id = t5.vendor_id AND t1.vendor_id = ?
-		AND t1.region_id=t2.region_id AND t1.region_id= ?
-		AND t1.Internal = ?
-		AND t1.version=t3.product_version
-		AND t1.product_id=t3.product_id AND t1.product_id = ?
-		AND t3.purpose_type=t4.purpose_type
-		AND t1.arch=t4.arch
-		AND t2.zone_id =t4.zone_id
-		AND t1.status = ? AND t3.status = ? AND t4.status = ?;`*/
+
 	SQL := `SELECT t2.zone_id,t2.zone_name,t1.name,t1.version,t1.arch,
 t4.id,t4.name,t4.disk_type,t4.cpu,t4.memory,t3.component_id,t3.name,t3.purpose_type,t3.start_port,t3.end_port,
 t3.max_port,t3.max_instance,t3.min_instance FROM products t1,zones t2,product_components t3,specs t4
@@ -313,13 +303,14 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 	var spec structs.ComponentInstanceResourceSpec
 	var info, productComponentInfo structs.ProductComponentProperty
 	var productName, version, arch string
-	var components map[string]structs.ProductComponentProperty
+	var components []structs.ProductComponentProperty
 	products = make(map[string]structs.ProductDetail)
 	rows, err := p.DB(ctx).Raw(SQL, vendorID, regionID, internal, productID, status, constants.ProductSpecStatusOnline, constants.ProductSpecStatusOnline).Rows()
 	defer rows.Close()
 	log := framework.LogWithContext(ctx)
 	log.Debugf("QueryProductDetail SQL: %s vendorID:%s, regionID: %s productID: %s, internal: %d, status: %s, execute result, error: %v",
 		SQL, vendorID, regionID, productID, internal, status, err)
+
 	if err == nil {
 		for rows.Next() {
 			//Read a row of data and store it in a temporary variable
@@ -332,7 +323,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			if err != nil {
 				framework.LogWithContext(ctx).Warningf("query product detail scan data error: %v, vendorID: %s, regionID:%s, productID: %s,status: %s, internal: %d",
 					err, vendorID, regionID, productID, status, internal)
-				return nil, errors.NewEMErrorf(errors.QueryProductsScanRowError, "query product detail scan data error: %v, vendorID: %s, regionID:%s, productID: %s,status: %s, internal: %d",
+				return nil, errors.NewErrorf(errors.QueryProductsScanRowError, "query product detail scan data error: %v, vendorID: %s, regionID:%s, productID: %s,status: %s, internal: %d",
 					err, vendorID, regionID, productID, status, internal)
 			}
 			//Query whether the product information is already in commodity,
@@ -347,7 +338,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			//if it already exists, then directly modify the relevant data structure
 			productVersion, ok = detail.Versions[version]
 			if !ok {
-				detail.Versions[version] = structs.ProductVersion{Version: version, Arch: make(map[string]map[string]structs.ProductComponentProperty)}
+				detail.Versions[version] = structs.ProductVersion{Version: version, Arch: make(map[string][]structs.ProductComponentProperty)}
 				productVersion, _ = detail.Versions[version]
 			}
 
@@ -355,28 +346,72 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			//if it already exists, then directly modify the relevant data structure
 			components, ok = productVersion.Arch[arch]
 			if !ok {
-				productVersion.Arch[arch] = make(map[string]structs.ProductComponentProperty)
-				components, _ = productVersion.Arch[arch]
+				components = make([]structs.ProductComponentProperty, 0)
 			}
 
 			//Query whether the product component information is already in Components,
 			//if it already exists, then directly modify the relevant data structure
-			productComponentInfo, ok = components[info.ID]
-			if !ok {
-				components[info.ID] = structs.ProductComponentProperty{ID: info.ID, Name: info.Name, PurposeType: info.PurposeType,
-					StartPort: info.StartPort, EndPort: info.EndPort, MaxPort: info.MaxPort, MinInstance: info.MinInstance, MaxInstance: info.MaxInstance, Spec: make(map[string]structs.ComponentInstanceResourceSpec)}
-				productComponentInfo, _ = components[info.ID]
-			}
 
-			//Query whether the product component specification information is already in Specifications,
-			//if it already exists, then directly modify the relevant data structure
-			_, ok = productComponentInfo.Spec[spec.ID]
-			if !ok {
-				productComponentInfo.Spec[spec.ID] = spec
+			componentExisted := false
+			for i, _ := range components {
+				if components[i].ID == info.ID {
+					componentExisted = true
+					zoneExisted := false
+					for j, _ := range components[i].AvailableZones {
+						if spec.ZoneID == components[i].AvailableZones[j].ZoneID {
+							components[i].AvailableZones[j].Specs = append(components[i].AvailableZones[j].Specs, spec)
+							zoneExisted = true
+							break
+						}
+					}
+					if !zoneExisted {
+						components[i].AvailableZones = append(components[i].AvailableZones, structs.ComponentInstanceZoneWithSpecs{ZoneID: spec.ZoneID, ZoneName: spec.ZoneName, Specs: []structs.ComponentInstanceResourceSpec{spec}})
+					}
+					break
+				}
+			}
+			if !componentExisted {
+				productComponentInfo = structs.ProductComponentProperty{ID: info.ID, Name: info.Name, PurposeType: info.PurposeType,
+					StartPort: info.StartPort, EndPort: info.EndPort, MaxPort: info.MaxPort, MinInstance: info.MinInstance, MaxInstance: info.MaxInstance, SuggestedInstancesCount: constants.EMProductComponentIDType(info.ID).SuggestedNodeCount(), AvailableZones: []structs.ComponentInstanceZoneWithSpecs{{ZoneID: spec.ZoneID, ZoneName: spec.ZoneName, Specs: []structs.ComponentInstanceResourceSpec{spec}}}}
+				components = append(components, productComponentInfo)
+			}
+			productVersion.Arch[arch] = components
+		}
+	} else {
+		return nil, errors.NewErrorf(errors.QueryProductsScanRowError, "query product detail scan data error: %v, vendorID: %s, regionID:%s, productID: %s,status: %s, internal: %d",
+			err, vendorID, regionID, productID, status, internal)
+	}
+
+	for _, product := range products {
+		for _, v := range product.Versions {
+			for key, a := range v.Arch {
+				componentSortWrapper := ComponentSortWrapper{
+					infos: a,
+					by: func(p, q *structs.ProductComponentProperty) bool {
+						return constants.EMProductComponentIDType(p.ID).SortWeight() > constants.EMProductComponentIDType(q.ID).SortWeight()
+					},
+				}
+				sort.Sort(componentSortWrapper)
+				v.Arch[key] = componentSortWrapper.infos
 			}
 		}
 	}
 	return products, err
+}
+
+type ComponentSortWrapper struct {
+	infos []structs.ProductComponentProperty
+	by    func(p, q *structs.ProductComponentProperty) bool
+}
+
+func (pw ComponentSortWrapper) Len() int {
+	return len(pw.infos)
+}
+func (pw ComponentSortWrapper) Swap(i, j int) {
+	pw.infos[i], pw.infos[j] = pw.infos[j], pw.infos[i]
+}
+func (pw ComponentSortWrapper) Less(i, j int) bool {
+	return pw.by(&pw.infos[i], &pw.infos[j])
 }
 
 // QueryProductComponentProperty Query the properties of a product component,For creating, expanding and shrinking clusters only
@@ -384,7 +419,7 @@ func (p *ProductReadWriter) QueryProductComponentProperty(ctx context.Context, v
 	if "" == vendorID || "" == regionID || "" == productID || "" == productVersion || "" == arch {
 		framework.LogWithContext(ctx).Warningf("query product component property invalid parameter, vendorID: %s, regionID: %s, productID: %s, version: %s, arch: %s,status: %s",
 			vendorID, regionID, productID, productVersion, arch, string(productStatus))
-		return nil, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "query product component property invalid parameter, vendorID: %s, regionID: %s, productID: %s, version: %s, arch: %s,status: %s",
+		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "query product component property invalid parameter, vendorID: %s, regionID: %s, productID: %s, version: %s, arch: %s,status: %s",
 			vendorID, regionID, productID, productVersion, arch, string(productStatus))
 	}
 	var info structs.ProductComponentProperty
@@ -396,7 +431,7 @@ func (p *ProductReadWriter) QueryProductComponentProperty(ctx context.Context, v
 	if err != nil {
 		framework.LogWithContext(ctx).Warningf("query product component property scan data error: %v, vendorID: %s, regionID: %s, productID: %s, version: %s, arch: %s,status: %s",
 			err, vendorID, regionID, productID, productVersion, arch, string(productStatus))
-		return nil, errors.NewEMErrorf(errors.QueryProductComponentProperty, "query product component property scan data error: %v, vendorID: %s, regionID: %s, productID: %s, version: %s, arch: %s,status: %s",
+		return nil, errors.NewErrorf(errors.QueryProductComponentProperty, "query product component property scan data error: %v, vendorID: %s, regionID: %s, productID: %s, version: %s, arch: %s,status: %s",
 			err, vendorID, regionID, productID, productVersion, arch, string(productStatus))
 	}
 	for rows.Next() {
@@ -406,7 +441,7 @@ func (p *ProductReadWriter) QueryProductComponentProperty(ctx context.Context, v
 		} else {
 			framework.LogWithContext(ctx).Warningf("query product component property scan data error: %v, vendorID: %s, regionID: %s, productID: %s, version: %s, arch: %s,status: %s",
 				err, vendorID, regionID, productID, productVersion, arch, productStatus)
-			return nil, errors.NewEMErrorf(errors.QueryProductComponentProperty, "query product component property scan data error: %v, vendorID: %s, regionID: %s, productID: %s, version: %s, arch: %s,status: %s",
+			return nil, errors.NewErrorf(errors.QueryProductComponentProperty, "query product component property scan data error: %v, vendorID: %s, regionID: %s, productID: %s, version: %s, arch: %s,status: %s",
 				err, vendorID, regionID, productID, productVersion, arch, productStatus)
 		}
 	}
@@ -417,13 +452,13 @@ func (p *ProductReadWriter) QueryProductComponentProperty(ctx context.Context, v
 func (p *ProductReadWriter) CreateSpecs(ctx context.Context, specs []Spec) (er error) {
 	if len(specs) <= 0 || len(specs) > 1024 {
 		framework.LogWithContext(ctx).Warningf("create specs %v, len: %d, parameter invalid", specs, len(specs))
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "create specs %v, parameter invalid", specs)
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "create specs %v, parameter invalid", specs)
 	}
 
 	db := p.DB(ctx).CreateInBatches(specs, 10)
 	if db.Error != nil {
 		framework.LogWithContext(ctx).Errorf("create specs %v, errors: %v", specs, db.Error)
-		return errors.NewEMErrorf(errors.CreateSpecsError, "create specs %v, error: %v", specs, db.Error)
+		return errors.NewErrorf(errors.CreateSpecsError, "create specs %v, error: %v", specs, db.Error)
 	}
 	return nil
 }
@@ -432,7 +467,7 @@ func (p *ProductReadWriter) CreateSpecs(ctx context.Context, specs []Spec) (er e
 func (p *ProductReadWriter) DeleteSpecs(ctx context.Context, specs []string) (er error) {
 	if len(specs) <= 0 || len(specs) > 1024 {
 		framework.LogWithContext(ctx).Warningf("delete specs %v, len: %d, parameter invalid", specs, len(specs))
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "delete specs %v, parameter invalid", specs)
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "delete specs %v, parameter invalid", specs)
 	}
 	p.DB(ctx).Begin()
 	for _, spec := range specs {
@@ -440,7 +475,7 @@ func (p *ProductReadWriter) DeleteSpecs(ctx context.Context, specs []string) (er
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("delete specs, spec: %s errors: %v", spec, err)
 			p.DB(ctx).Rollback()
-			return errors.NewEMErrorf(errors.DeleteSpecsError, "delete spec: %s, errors: %v", spec, err)
+			return errors.NewErrorf(errors.DeleteSpecsError, "delete spec: %s, errors: %v", spec, err)
 		}
 	}
 	p.DB(ctx).Commit()
@@ -457,14 +492,14 @@ func (p *ProductReadWriter) QuerySpecs(ctx context.Context) (specs []structs.Spe
 	log := framework.LogWithContext(ctx)
 	log.Debugf("QuerySpecs SQL: %s, execute result, error: %v", SQL, err)
 	if err != nil {
-		return nil, errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "query all specs error: %v, SQL: %s", err, SQL)
+		return nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "query all specs error: %v, SQL: %s", err, SQL)
 	}
 	for rows.Next() {
 		err = rows.Scan(&info.ID, &info.Name, &info.CPU, &info.Memory, &info.DiskType, &info.PurposeType, &info.Status)
 		if err == nil {
 			specs = append(specs, info)
 		} else {
-			return nil, errors.NewEMErrorf(errors.QuerySpecScanRowError, "query all specs, scan data error: %v, SQL: %s", err, SQL)
+			return nil, errors.NewErrorf(errors.QuerySpecScanRowError, "query all specs, scan data error: %v, SQL: %s", err, SQL)
 		}
 	}
 	return specs, err

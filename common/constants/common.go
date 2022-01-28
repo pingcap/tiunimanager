@@ -24,8 +24,9 @@
 package constants
 
 import (
-	"github.com/pingcap-inc/tiem/common/errors"
 	"time"
+
+	"github.com/pingcap-inc/tiem/common/errors"
 )
 
 const (
@@ -77,7 +78,22 @@ func ValidProductID(p string) error {
 	if p == string(EMProductIDTiDB) || p == string(EMProductIDDataMigration) || p == string(EMProductIDEnterpriseManager) {
 		return nil
 	}
-	return errors.NewEMErrorf(errors.TIEM_RESOURCE_INVALID_PRODUCT_NAME, "valid product name: [%s|%s|%s]", string(EMProductIDTiDB), string(EMProductIDDataMigration), string(EMProductIDEnterpriseManager))
+	return errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_PRODUCT_NAME, "valid product name: [%s|%s|%s]", string(EMProductIDTiDB), string(EMProductIDDataMigration), string(EMProductIDEnterpriseManager))
+}
+
+type ProvidedVendor string
+
+// Definition of vendors provided by Enterprise manager
+const (
+	Local ProvidedVendor = "Local"
+	AWS   ProvidedVendor = "AWS"
+)
+
+func ValidProvidedVendor(p string) error {
+	if p == string(Local) || p == string(AWS) {
+		return nil
+	}
+	return errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_VENDOR_NAME, "valid vendor name: [%s|%s]", string(Local), string(AWS))
 }
 
 type EMProductComponentIDType string
@@ -106,6 +122,52 @@ const (
 	ComponentIDOpenAPIServer EMProductComponentIDType = "openapi-server"
 	ComponentIDFileServer    EMProductComponentIDType = "file-server"
 )
+
+// SuggestedNodeCount
+// @Description: get suggested node count
+// @Receiver p
+// @return []int32
+func (p EMProductComponentIDType) SuggestedNodeCount() []int32 {
+	switch p {
+	case ComponentIDPD:
+		return []int32{1, 3, 5, 7}
+	default:
+		return []int32{}
+	}
+}
+
+func (p EMProductComponentIDType) SortWeight() int {
+	switch p {
+	case ComponentIDPD:
+		return 19900
+	case ComponentIDTiDB:
+		return 19800
+	case ComponentIDTiKV:
+		return 19700
+	case ComponentIDTiFlash:
+		return 19600
+	case ComponentIDCDC:
+		return 19500
+	case ComponentIDGrafana:
+		return 19400
+	case ComponentIDPrometheus:
+		return 19300
+	case ComponentIDAlertManger:
+		return 19200
+	case ComponentIDNodeExporter:
+		return 18900
+	case ComponentIDBlackboxExporter:
+		return 18800
+	case ComponentIDClusterServer:
+		return 9900
+	case ComponentIDOpenAPIServer:
+		return 9800
+	case ComponentIDFileServer:
+		return 9700
+	default:
+		return 0
+	}
+}
 
 type EMProductComponentNameType string
 

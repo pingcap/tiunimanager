@@ -19,7 +19,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 )
 
 // DataImportConfig data import toml config for lightning https://docs.pingcap.com/zh/tidb/dev/tidb-lightning-configuration
@@ -61,7 +61,7 @@ type TiDBCfg struct {
 	PDAddr     string `toml:"pd-addr"`
 }
 
-func NewDataImportConfig(ctx context.Context, meta *handler.ClusterMeta, info *importInfo) *DataImportConfig {
+func NewDataImportConfig(ctx context.Context, meta *meta.ClusterMeta, info *importInfo) *DataImportConfig {
 	if meta == nil || meta.Cluster == nil {
 		framework.LogWithContext(ctx).Errorf("input meta is invalid!")
 		return nil

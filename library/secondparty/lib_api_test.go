@@ -33,7 +33,7 @@ import (
 	"testing"
 )
 
-func TestSecondMicro_ApiEditConfig(t *testing.T) {
+func TestSecondMicro_ApiEditConfig_Success(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write(nil)
@@ -112,6 +112,24 @@ func TestSecondMicro_ApiEditConfig(t *testing.T) {
 			},
 		},
 		{
+			"normal4",
+			args{
+				req: ApiEditConfigReq{
+					TiDBClusterComponent: "cdc",
+					InstanceHost:         host,
+					InstancePort:         uint(port),
+					Headers:              map[string]string{},
+					ConfigMap: map[string]interface{}{
+						"binlog_cache": 1024,
+					},
+				},
+			},
+			false,
+			[]func(a args, hasSuc bool) bool{
+				func(a args, hasSuc bool) bool { return hasSuc },
+			},
+		},
+		{
 			"cluster component is null",
 			args{
 				req: ApiEditConfigReq{
@@ -138,6 +156,122 @@ func TestSecondMicro_ApiEditConfig(t *testing.T) {
 					InstancePort:         uint(port),
 					Headers:              nil,
 					ConfigMap:            nil,
+				},
+			},
+			true,
+			[]func(a args, hasSuc bool) bool{
+				func(a args, hasSuc bool) bool { return hasSuc },
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			hasSuc, err := secondPartyManager3.ApiEditConfig(context.TODO(), tt.args.req)
+			if err != nil {
+				if tt.wantErr {
+					return
+				}
+				t.Errorf("ApiEditConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			for i, assert := range tt.wants {
+				if !assert(tt.args, hasSuc) {
+					t.Errorf("ApiEditConfig() test error, testname = %v, assert %v, args = %v, got param id = %v", tt.name, i, tt.args, hasSuc)
+				}
+			}
+		})
+	}
+}
+func TestSecondMicro_ApiEditConfig_Error(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(nil)
+		r.ParseForm()
+	}))
+	defer server.Close()
+
+	ipAndPort := strings.TrimPrefix(server.URL, "http://")
+	host := strings.Split(ipAndPort, ":")[0]
+	portStr := strings.Split(ipAndPort, ":")[1]
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	type args struct {
+		req ApiEditConfigReq
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+		wants   []func(a args, hasSuc bool) bool
+	}{
+		{
+			"err1",
+			args{
+				req: ApiEditConfigReq{
+					TiDBClusterComponent: "tidb",
+					InstanceHost:         host,
+					InstancePort:         uint(port),
+					Headers:              map[string]string{},
+					ConfigMap: map[string]interface{}{
+						"binlog_cache": 1024,
+					},
+				},
+			},
+			true,
+			[]func(a args, hasSuc bool) bool{
+				func(a args, hasSuc bool) bool { return hasSuc },
+			},
+		},
+		{
+			"err2",
+			args{
+				req: ApiEditConfigReq{
+					TiDBClusterComponent: "tikv",
+					InstanceHost:         host,
+					InstancePort:         uint(port),
+					Headers:              map[string]string{},
+					ConfigMap: map[string]interface{}{
+						"binlog_cache": 1024,
+					},
+				},
+			},
+			true,
+			[]func(a args, hasSuc bool) bool{
+				func(a args, hasSuc bool) bool { return hasSuc },
+			},
+		},
+		{
+			"err3",
+			args{
+				req: ApiEditConfigReq{
+					TiDBClusterComponent: "pd",
+					InstanceHost:         host,
+					InstancePort:         uint(port),
+					Headers:              map[string]string{},
+					ConfigMap: map[string]interface{}{
+						"binlog_cache": 1024,
+					},
+				},
+			},
+			true,
+			[]func(a args, hasSuc bool) bool{
+				func(a args, hasSuc bool) bool { return hasSuc },
+			},
+		},
+		{
+			"err4",
+			args{
+				req: ApiEditConfigReq{
+					TiDBClusterComponent: "cdc",
+					InstanceHost:         host,
+					InstancePort:         uint(port),
+					Headers:              map[string]string{},
+					ConfigMap: map[string]interface{}{
+						"binlog_cache": 1024,
+					},
 				},
 			},
 			true,

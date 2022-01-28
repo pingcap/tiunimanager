@@ -22,7 +22,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
+	"github.com/pingcap-inc/tiem/metrics"
 	"github.com/pingcap-inc/tiem/micro-cluster/registry"
 	clusterService "github.com/pingcap-inc/tiem/micro-cluster/service"
 	"github.com/pingcap-inc/tiem/models"

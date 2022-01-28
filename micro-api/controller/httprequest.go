@@ -141,26 +141,37 @@ func HandleRequest(c *gin.Context,
 	validator func(req interface{}) error,
 	serializer func(req interface{}) ([]byte, error)) (string, bool) {
 
-	err := builder(c, req)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("unmarshal request failed, %s", err.Error())
-		c.JSON(http.StatusBadRequest, Fail(int(errors.TIEM_UNMARSHAL_ERROR), err.Error()))
-		return "", false
-	}
-
-	err = validator(req)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("validate request failed, %s", err.Error())
-		c.JSON(http.StatusBadRequest, Fail(int(errors.TIEM_PARAMETER_INVALID), err.Error()))
-		return "", false
-	}
-
-	requestBodyBytes, err := serializer(req)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("marshal request failed, %s", err.Error())
-		c.JSON(http.StatusBadRequest, Fail(int(errors.TIEM_MARSHAL_ERROR), err.Error()))
-		return "", false
-	} else {
-		return string(requestBodyBytes), true
-	}
+	requestContent := ""
+	ok := errors.OfNullable(nil).
+		BreakIf(func() error {
+			return errors.OfNullable(builder(c, req)).
+				Map(func(err error) error {
+					return errors.NewError(errors.TIEM_MARSHAL_ERROR, err.Error())
+				}).
+				Present()
+		}).
+		BreakIf(func() error {
+			return errors.OfNullable(validator(req)).
+				Map(func(err error) error {
+					return errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
+				}).
+				Present()
+		}).
+		BreakIf(func() error {
+			bytes, err := serializer(req)
+			return errors.OfNullable(err).
+				Map(func(err error) error {
+					return errors.NewError(errors.TIEM_MARSHAL_ERROR, err.Error())
+				}).
+				Else(func() {
+					requestContent = string(bytes)
+				}).
+				Present()
+		}).
+		If(func(err error) {
+			framework.LogWithContext(c).Errorf("handle http request failed, %s", err.Error())
+			c.JSON(http.StatusBadRequest, Fail(int(err.(errors.EMError).GetCode()), err.Error()))
+		}).
+		IfNil()
+	return requestContent, ok
 }

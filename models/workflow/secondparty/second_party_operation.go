@@ -24,9 +24,8 @@
 package secondparty
 
 import (
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"time"
-
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 
 	"gorm.io/gorm"
 )
@@ -70,6 +69,7 @@ const (
 	OperationType_ClusterUpgrade            OperationType = "cluster upgrade"
 	OperationType_ClusterScaleOut           OperationType = "cluster scale out"
 	OperationType_ClusterScaleIn            OperationType = "cluster scale in"
+	OperationType_ClusterPrune              OperationType = "cluster prune"
 	OperationType_ClusterEditGlobalConfig   OperationType = "cluster edit global config"
 	OperationType_ClusterEditInstanceConfig OperationType = "cluster edit instance config"
 	OperationType_ClusterReload             OperationType = "cluster reload"

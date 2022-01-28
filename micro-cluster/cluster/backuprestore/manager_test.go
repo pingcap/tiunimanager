@@ -52,14 +52,14 @@ func TestBRManager_BackupCluster(t *testing.T) {
 			ID:       "id-xxxx",
 			TenantId: "tid-xxx",
 		},
-	}, make([]*management.ClusterInstance, 0), nil).AnyTimes()
+	}, make([]*management.ClusterInstance, 0), make([]*management.DBUser, 0), nil).AnyTimes()
 	clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 	workflowService.EXPECT().RegisterWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 	}, nil).AnyTimes()
@@ -98,14 +98,14 @@ func TestBRManager_RestoreExistCluster(t *testing.T) {
 			ID:       "id-xxxx",
 			TenantId: "tid-xxx",
 		},
-	}, make([]*management.ClusterInstance, 0), nil).AnyTimes()
+	}, make([]*management.ClusterInstance, 0), make([]*management.DBUser, 0), nil).AnyTimes()
 	clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 	workflowService.EXPECT().RegisterWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 	}, nil).AnyTimes()

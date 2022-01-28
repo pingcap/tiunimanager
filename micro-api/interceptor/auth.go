@@ -18,17 +18,18 @@ package interceptor
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/proto/clusterservices"
-	"net/http"
+	utils "github.com/pingcap-inc/tiem/util/stringutil"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/gin-gonic/gin"
-	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
 )
 
 const VisitorIdentityKey = "VisitorIdentity"
@@ -66,7 +67,9 @@ func VerifyIdentity(c *gin.Context) {
 		c.Abort()
 	} else if rpcResp.Code != int32(errors.TIEM_SUCCESS) {
 		framework.LogWithContext(c).Error(rpcResp.Message)
-		c.Status(errors.EM_ERROR_CODE(rpcResp.Code).GetHttpCode())
+		code := errors.EM_ERROR_CODE(rpcResp.Code)
+		msg := rpcResp.Message
+		c.JSON(code.GetHttpCode(), controller.Fail(int(code), msg))
 		c.Abort()
 	} else {
 		var result message.AccessibleResp
@@ -77,8 +80,7 @@ func VerifyIdentity(c *gin.Context) {
 			c.Status(errors.TIEM_UNMARSHAL_ERROR.GetHttpCode())
 			c.Abort()
 		}
-		c.Set(framework.TiEM_X_USER_ID_KEY, result.AccountID)
-		c.Set(framework.TiEM_X_USER_NAME_KEY, result.AccountName)
+		c.Set(framework.TiEM_X_USER_ID_KEY, result.UserID)
 		c.Set(framework.TiEM_X_TENANT_ID_KEY, result.TenantID)
 		c.Next()
 	}

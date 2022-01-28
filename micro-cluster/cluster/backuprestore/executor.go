@@ -21,11 +21,12 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
+	"os"
 	"strconv"
 	"time"
 )
@@ -35,7 +36,14 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 	defer framework.LogWithContext(ctx).Info("end backupCluster")
 
 	record := ctx.GetData(contextBackupRecordKey).(*backuprestore.BackupRecord)
-	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
+	meta := ctx.GetData(contextClusterMetaKey).(*meta.ClusterMeta)
+
+	if string(constants.StorageTypeNFS) == record.StorageType {
+		if err := cleanBackupNfsPath(ctx, record.FilePath); err != nil {
+			framework.LogWithContext(ctx).Errorf("clean backup nfs path failed, %s", err.Error())
+			return fmt.Errorf("clean backup nfs path failed, %s", err.Error())
+		}
+	}
 
 	tidbAddress := meta.GetClusterConnectAddresses()
 	if len(tidbAddress) == 0 {
@@ -45,20 +53,26 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 	framework.LogWithContext(ctx).Infof("get cluster %s tidb address from meta, %+v", meta.Cluster.ID, tidbAddress)
 	tidbServerHost := tidbAddress[0].IP
 	tidbServerPort := tidbAddress[0].Port
+	node.Record(fmt.Sprintf("get cluster %s tidb address: %s:%d ", meta.Cluster.ID, tidbServerHost, tidbServerPort))
 
-	tidbUserInfo := meta.GetClusterUserNamePasswd()
-	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta, %+v", meta.Cluster.ID, tidbUserInfo)
+	tidbUserInfo, err := meta.GetDBUserNamePassword(ctx, constants.DBUserBackupRestore)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get cluster %s user info from meta falied, %s ", meta.Cluster.ID, err.Error())
+		return err
+	}
+	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta", meta.Cluster.ID)
 
 	storageType, err := convertBrStorageType(record.StorageType)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("convert storage type failed, %s", err.Error())
 		return err
 	}
+	node.Record(fmt.Sprintf("convert storage type: %s ", storageType))
 
 	clusterFacade := secondparty.ClusterFacade{
 		DbConnParameter: secondparty.DbConnParam{
-			Username: tidbUserInfo.UserName,
-			Password: tidbUserInfo.Password,
+			Username: tidbUserInfo.Name,
+			Password: string(tidbUserInfo.Password),
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),
 		},
@@ -81,6 +95,7 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 		return err
 	}
 	ctx.SetData(contextBackupTiupTaskIDKey, backupTaskId)
+	node.Record(fmt.Sprintf("backup cluster %s ", meta.Cluster.ID))
 	return nil
 }
 
@@ -88,7 +103,7 @@ func updateBackupRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) e
 	framework.LogWithContext(ctx).Info("begin updateBackupRecord")
 	defer framework.LogWithContext(ctx).Info("end updateBackupRecord")
 
-	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
+	meta := ctx.GetData(contextClusterMetaKey).(*meta.ClusterMeta)
 	record := ctx.GetData(contextBackupRecordKey).(*backuprestore.BackupRecord)
 	backupTaskId := ctx.GetData(contextBackupTiupTaskIDKey).(string)
 
@@ -105,6 +120,7 @@ func updateBackupRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) e
 		return err
 	}
 
+	node.Record(fmt.Sprintf("update backup record %s of cluster %s ", record.ID, meta.Cluster.ID))
 	return nil
 }
 
@@ -112,7 +128,7 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	framework.LogWithContext(ctx).Info("begin recoverFromSrcCluster")
 	defer framework.LogWithContext(ctx).Info("end recoverFromSrcCluster")
 
-	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
+	meta := ctx.GetData(contextClusterMetaKey).(*meta.ClusterMeta)
 	record := ctx.GetData(contextBackupRecordKey).(*backuprestore.BackupRecord)
 
 	tidbServers := meta.GetClusterConnectAddresses()
@@ -123,20 +139,26 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	framework.LogWithContext(ctx).Infof("get cluster %s tidb address from meta, %+v", meta.Cluster.ID, tidbServers)
 	tidbServerHost := tidbServers[0].IP
 	tidbServerPort := tidbServers[0].Port
+	node.Record(fmt.Sprintf("get cluster %s tidb address: %s:%d ", meta.Cluster.ID, tidbServerHost, tidbServerPort))
 
-	tidbUserInfo := meta.GetClusterUserNamePasswd()
-	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta, %+v", meta.Cluster.ID, tidbUserInfo)
+	tidbUserInfo, err := meta.GetDBUserNamePassword(ctx, constants.DBUserBackupRestore)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get cluster %s user info from meta falied, %s ", meta.Cluster.ID, err.Error())
+		return err
+	}
+	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta", meta.Cluster.ID)
 
 	storageType, err := convertBrStorageType(record.StorageType)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("convert br storage type failed, %s", err.Error())
 		return fmt.Errorf("convert br storage type failed, %s", err.Error())
 	}
+	node.Record(fmt.Sprintf("convert br storage type: %s ", storageType))
 
 	clusterFacade := secondparty.ClusterFacade{
 		DbConnParameter: secondparty.DbConnParam{
-			Username: tidbUserInfo.UserName,
-			Password: tidbUserInfo.Password,
+			Username: tidbUserInfo.Name,
+			Password: string(tidbUserInfo.Password),
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),
 		},
@@ -156,6 +178,7 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 		framework.LogWithContext(ctx).Errorf("call restore api failed, %s", err.Error())
 		return err
 	}
+	node.Record(fmt.Sprintf("update backup record %s of cluster %s ", record.ID, meta.Cluster.ID))
 	return nil
 }
 
@@ -163,7 +186,7 @@ func defaultEnd(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin defaultEnd")
 	defer framework.LogWithContext(ctx).Info("end defaultEnd")
 
-	clusterMeta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
+	clusterMeta := ctx.GetData(contextClusterMetaKey).(*meta.ClusterMeta)
 	maintenanceStatusChange := ctx.GetData(contextMaintenanceStatusChangeKey).(bool)
 	if maintenanceStatusChange {
 		if err := clusterMeta.EndMaintenance(ctx, clusterMeta.Cluster.MaintenanceStatus); err != nil {
@@ -179,7 +202,7 @@ func backupFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin backupFail")
 	defer framework.LogWithContext(ctx).Info("end backupFail")
 
-	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
+	meta := ctx.GetData(contextClusterMetaKey).(*meta.ClusterMeta)
 	record := ctx.GetData(contextBackupRecordKey).(*backuprestore.BackupRecord)
 
 	brRW := models.GetBRReaderWriter()
@@ -232,4 +255,18 @@ func convertBrStorageType(storageType string) (secondparty.StorageType, error) {
 	} else {
 		return "", fmt.Errorf("invalid storage type, %s", storageType)
 	}
+}
+
+func cleanBackupNfsPath(ctx context.Context, filepath string) error {
+	framework.LogWithContext(ctx).Infof("clean and re-mkdir data dir: %s", filepath)
+	if err := os.RemoveAll(filepath); err != nil {
+		framework.LogWithContext(ctx).Errorf("remove data dir: %s failed %s", filepath, err.Error())
+		return err
+	}
+
+	if err := os.MkdirAll(filepath, os.ModePerm); err != nil {
+		framework.LogWithContext(ctx).Errorf("re-mkdir data dir: %s failed %s", filepath, err.Error())
+		return err
+	}
+	return nil
 }

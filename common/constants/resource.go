@@ -38,11 +38,22 @@ const (
 )
 
 func ValidArchType(arch string) error {
-	if arch == string(ArchX86) || arch == string(ArchX8664) || arch == string(ArchArm) || arch == string(ArchArm64) {
+	if arch == string(ArchX86) || arch == string(ArchX8664) || arch == string(ArchArm) || arch == string(ArchArm64){
 		return nil
 	}
-	return errors.NewEMErrorf(errors.TIEM_RESOURCE_INVALID_ARCH, "valid arch type: [%s|%s|%s|%s]",
+	return errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_ARCH, "valid arch type: [%s|%s|%s|%s]",
 		string(ArchX86), string(ArchX8664), string(ArchArm), string(ArchArm64))
+}
+
+func ConvertAlias(arch string) (ArchType) {
+	switch arch {
+	case "arm64":
+		return ArchArm64
+	case "amd64":
+		return ArchX8664
+	default:
+		return ""
+	}
 }
 
 func GetArchAlias(arch ArchType) string {
@@ -69,6 +80,7 @@ const (
 	HostOnline   HostStatus = "Online"
 	HostOffline  HostStatus = "Offline"
 	HostFailed   HostStatus = "Failed"
+	HostDeleting HostStatus = "Deleting"
 	HostDeleted  HostStatus = "Deleted"
 )
 
@@ -77,6 +89,7 @@ func (s HostStatus) IsValidStatus() bool {
 		s == HostOffline ||
 		s == HostInit ||
 		s == HostFailed ||
+		s == HostDeleting ||
 		s == HostDeleted)
 }
 
@@ -115,7 +128,7 @@ func ValidDiskType(diskType string) error {
 	if diskType == string(NVMeSSD) || diskType == string(SSD) || diskType == string(SATA) {
 		return nil
 	}
-	return errors.NewEMErrorf(errors.TIEM_RESOURCE_INVALID_PURPOSE, "valid disk type: [%s|%s|%s]",
+	return errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_PURPOSE, "valid disk type: [%s|%s|%s]",
 		string(NVMeSSD), string(SSD), string(SATA))
 }
 
@@ -164,7 +177,7 @@ func ValidPurposeType(p string) error {
 	if p == string(PurposeCompute) || p == string(PurposeStorage) || p == string(PurposeSchedule) {
 		return nil
 	}
-	return errors.NewEMErrorf(errors.TIEM_RESOURCE_INVALID_PURPOSE, "valid purpose name: [%s|%s|%s]",
+	return errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_PURPOSE, "valid purpose name: [%s|%s|%s]",
 		string(PurposeCompute), string(PurposeStorage), string(PurposeSchedule))
 }
 

@@ -159,7 +159,7 @@ func loadSpecKnowledge() {
 	tidbV4_0_12 := ClusterVersion{"v4.0.12", "v4.0.12"}
 	tidbV5_0_0 := ClusterVersion{"v5.0.0", "v5.0.0"}
 	tidbV5_2_2 := ClusterVersion{"v5.2.2", "v5.2.2"}
-	tidbV5_4_0_alpha := ClusterVersion{"v5.4.0-alpha", "v5.4.0-alpha"}
+	tidbV5_4_0 := ClusterVersion{"v5.4.0", "v5.4.0"}
 
 	tidbComponent := ClusterComponent{
 		"TiDB", "compute", "TiDB",
@@ -340,8 +340,8 @@ func loadSpecKnowledge() {
 			},
 		},
 	}
-	tidbV5_4_0_alpha_Spec := ClusterVersionSpec{
-		ClusterVersion:        tidbV5_4_0_alpha,
+	tidbV5_4_0_Spec := ClusterVersionSpec{
+		ClusterVersion:        tidbV5_4_0,
 		ClusterPortConstraint: ComponentPortConstraint{11000, 12000, 2},
 		ArchTypes: []constants.ArchType{
 			constants.ArchArm64,
@@ -396,9 +396,9 @@ func loadSpecKnowledge() {
 		},
 	}
 	SpecKnowledge = &ClusterSpecKnowledge{
-		Specs:    []*ClusterTypeSpec{{tidbType, []ClusterVersionSpec{tidbV4_0_12_Spec, tidbV5_0_0_Spec, tidbV5_2_2_Spec, tidbV5_4_0_alpha_Spec}}},
+		Specs:    []*ClusterTypeSpec{{tidbType, []ClusterVersionSpec{tidbV4_0_12_Spec, tidbV5_0_0_Spec, tidbV5_2_2_Spec, tidbV5_4_0_Spec}}},
 		Types:    map[string]*ClusterType{tidbType.Code: &tidbType},
-		Versions: map[string]*ClusterVersion{tidbV4_0_12.Code: &tidbV4_0_12, tidbV5_0_0.Code: &tidbV5_0_0, tidbV5_2_2.Code: &tidbV5_2_2, tidbV5_4_0_alpha.Code: &tidbV5_4_0_alpha},
+		Versions: map[string]*ClusterVersion{tidbV4_0_12.Code: &tidbV4_0_12, tidbV5_0_0.Code: &tidbV5_0_0, tidbV5_2_2.Code: &tidbV5_2_2, tidbV5_4_0.Code: &tidbV5_4_0},
 		Components: map[string]*ClusterComponent{tidbComponent.ComponentType: &tidbComponent,
 			tikvComponent.ComponentType:        &tikvComponent,
 			pdComponent.ComponentType:          &pdComponent,

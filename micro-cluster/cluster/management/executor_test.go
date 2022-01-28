@@ -1165,6 +1165,65 @@ func TestSyncBackupStrategy(t *testing.T) {
 	})
 }
 
+func TestGetFirstScaleOutTypes(t *testing.T) {
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "testCluster",
+			},
+			Version: "v5.0.0",
+		},
+		Instances: map[string][]*management.ClusterInstance{
+			"TiDB": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone:     "zone1",
+					CpuCores: 4,
+					Memory:   8,
+					Type:     "TiDB",
+					Version:  "v5.0.0",
+					Ports:    []int32{10001, 10002, 10003, 10004},
+					HostIP:   []string{"127.0.0.1"},
+				},
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone:     "zone1",
+					CpuCores: 3,
+					Memory:   7,
+					Type:     "TiDB",
+					Version:  "v5.0.0",
+					Ports:    []int32{10001, 10002, 10003, 10004},
+					HostIP:   []string{"127.0.0.1"},
+				},
+			},
+			"TiFlash": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceInitializing),
+					},
+					Zone:     "zone1",
+					CpuCores: 4,
+					Memory:   8,
+					Type:     "TiFlash",
+					Version:  "v5.0.0",
+					Ports:    []int32{10001, 10002, 10003, 10004},
+					HostIP:   []string{"127.0.0.1"},
+				},
+			},
+		},
+	})
+	err := getFirstScaleOutTypes(&workflowModel.WorkFlowNode{}, flowContext)
+	assert.NoError(t, err)
+	types := flowContext.GetData(ContextInstanceTypes).([]string)
+	assert.Equal(t, len(types), 1)
+	assert.Equal(t, types[0], "TiFlash")
+}
+
 func TestSyncParameters(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -2403,8 +2462,8 @@ func Test_chooseParameterGroup(t *testing.T) {
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version:          "v5.2.3",
-				Type: "TiDB",
+				Version: "v5.2.3",
+				Type:    "TiDB",
 			},
 		}, node, ctx)
 		assert.NoError(t, err)
@@ -2419,8 +2478,8 @@ func Test_chooseParameterGroup(t *testing.T) {
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version:          "v5.1.9",
-				Type: "TiDB",
+				Version: "v5.1.9",
+				Type:    "TiDB",
 			},
 		}, node, ctx)
 		assert.Error(t, err)
@@ -2434,8 +2493,8 @@ func Test_chooseParameterGroup(t *testing.T) {
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version:          "v5.0.1",
-				Type: "TiDB",
+				Version: "v5.0.1",
+				Type:    "TiDB",
 			},
 		}, node, ctx)
 		assert.Error(t, err)

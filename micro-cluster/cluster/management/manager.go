@@ -50,6 +50,7 @@ const (
 	ContextDeleteRequest     = "DeleteRequest"
 	ContextTakeoverRequest   = "TakeoverRequest"
 	ContextGCLifeTime        = "GCLifeTime"
+	ContextInstanceTypes     = "InstanceTypes"
 )
 
 type Manager struct{}
@@ -75,11 +76,13 @@ var scaleOutDefine = workflow.WorkFlowDefine{
 		"start":            {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, prepareResource},
 		"resourceDone":     {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, buildConfig},
 		"configDone":       {"scaleOutCluster", "scaleOutDone", "fail", workflow.PollingNode, scaleOutCluster},
-		"scaleOutDone":     {"updateClusterParameters", "updateDone", "fail", workflow.PollingNode, updateClusterParameters},
-		"updateDone":       {"syncTopology", "syncTopologyDone", "fail", workflow.SyncFuncNode, syncTopology},
-		"syncTopologyDone": {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
-		"onlineDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
+		"scaleOutDone":     {"syncTopology", "syncTopologyDone", "fail", workflow.SyncFuncNode, syncTopology},
+		"syncTopologyDone": {"getTypes", "getTypesDone", "fail", workflow.SyncFuncNode, getFirstScaleOutTypes},
+		"getTypesDone":     {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
+		"onlineDone":       {"updateClusterParameters", "updateDone", "failAfterScale", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, updateClusterParameters)},
+		"updateDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
 		"fail":             {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, endMaintenance)},
+		"failAfterScale":   {"end", "", "", workflow.SyncFuncNode, endMaintenance},
 	},
 }
 

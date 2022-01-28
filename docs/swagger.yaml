@@ -41,8 +41,7 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
+        description: todo delete?
         type: string
       exclusive:
         description: Whether the newly created cluster is exclusive to physical resources,
@@ -63,6 +62,8 @@ definitions:
         type: array
       tls:
         type: boolean
+      vendor:
+        type: string
     required:
     - cloneStrategy
     - clusterName
@@ -136,8 +137,7 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
+        description: todo delete?
         type: string
       exclusive:
         description: Whether the newly created cluster is exclusive to physical resources,
@@ -157,6 +157,8 @@ definitions:
         type: array
       tls:
         type: boolean
+      vendor:
+        type: string
     required:
     - clusterName
     - clusterType
@@ -227,9 +229,15 @@ definitions:
       downstreamFetchTs:
         example: "415241823337054209"
         type: string
+      downstreamFetchUnix:
+        example: 1642402879000
+        type: integer
       downstreamSyncTs:
         example: "415241823337054209"
         type: string
+      downstreamSyncUnix:
+        example: 1642402879000
+        type: integer
       downstreamType:
         enum:
         - tidb
@@ -252,6 +260,9 @@ definitions:
       startTS:
         example: "415241823337054209"
         type: string
+      startUnix:
+        example: 1642402879000
+        type: integer
       status:
         enum:
         - Initial
@@ -270,6 +281,9 @@ definitions:
       upstreamUpdateTs:
         example: "415241823337054209"
         type: string
+      upstreamUpdateUnix:
+        example: 1642402879000
+        type: integer
     type: object
   cluster.Dispatcher:
     properties:
@@ -441,9 +455,15 @@ definitions:
       downstreamFetchTs:
         example: "415241823337054209"
         type: string
+      downstreamFetchUnix:
+        example: 1642402879000
+        type: integer
       downstreamSyncTs:
         example: "415241823337054209"
         type: string
+      downstreamSyncUnix:
+        example: 1642402879000
+        type: integer
       downstreamType:
         enum:
         - tidb
@@ -466,6 +486,9 @@ definitions:
       startTS:
         example: "415241823337054209"
         type: string
+      startUnix:
+        example: 1642402879000
+        type: integer
       status:
         enum:
         - Initial
@@ -484,6 +507,9 @@ definitions:
       upstreamUpdateTs:
         example: "415241823337054209"
         type: string
+      upstreamUpdateUnix:
+        example: 1642402879000
+        type: integer
     type: object
   cluster.QueryClusterDetailResp:
     properties:
@@ -564,8 +590,7 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
+        description: todo delete?
         type: string
       exclusive:
         description: Whether the newly created cluster is exclusive to physical resources,
@@ -585,6 +610,8 @@ definitions:
         type: array
       tls:
         type: boolean
+      vendor:
+        type: string
     required:
     - backupId
     - clusterName
@@ -681,9 +708,6 @@ definitions:
       dbPassword:
         example: myPassword
         type: string
-      dbUser:
-        example: root
-        type: string
     required:
     - TiUPIp
     - TiUPPath
@@ -692,7 +716,6 @@ definitions:
     - TiUPUserPassword
     - clusterName
     - dbPassword
-    - dbUser
     type: object
   cluster.TakeoverClusterResp:
     properties:
@@ -776,6 +799,8 @@ definitions:
         type: array
       reboot:
         type: boolean
+    required:
+    - params
     type: object
   cluster.UpdateClusterParametersResp:
     properties:
@@ -897,6 +922,17 @@ definitions:
       portRangeStart:
         type: integer
     type: object
+  message.AddPermissionsForRoleReq:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/structs.RbacPermission'
+        type: array
+      role:
+        type: string
+    type: object
+  message.AddPermissionsForRoleResp:
+    type: object
   message.ApplyParameterGroupReq:
     properties:
       clusterId:
@@ -904,6 +940,8 @@ definitions:
         type: string
       reboot:
         type: boolean
+    required:
+    - clusterId
     type: object
   message.ApplyParameterGroupResp:
     properties:
@@ -917,6 +955,31 @@ definitions:
         description: Asynchronous task workflow ID
         type: string
     type: object
+  message.BindRolesForUserReq:
+    properties:
+      roles:
+        items:
+          type: string
+        type: array
+      userId:
+        type: string
+    type: object
+  message.BindRolesForUserResp:
+    type: object
+  message.CheckPermissionForUserReq:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/structs.RbacPermission'
+        type: array
+      userId:
+        type: string
+    type: object
+  message.CheckPermissionForUserResp:
+    properties:
+      result:
+        type: boolean
+    type: object
   message.CopyParameterGroupReq:
     properties:
       name:
@@ -925,6 +988,8 @@ definitions:
       note:
         example: copy param group
         type: string
+    required:
+    - name
     type: object
   message.CopyParameterGroupResp:
     properties:
@@ -934,6 +999,10 @@ definitions:
     type: object
   message.CreateParameterGroupReq:
     properties:
+      addParams:
+        items:
+          $ref: '#/definitions/message.ParameterInfo'
+        type: array
       clusterSpec:
         example: 8C16G
         type: string
@@ -952,12 +1021,6 @@ definitions:
         - 2
         example: 1
         type: integer
-      hasDefault:
-        enum:
-        - 1
-        - 2
-        example: 1
-        type: integer
       name:
         example: 8C16GV4_default
         type: string
@@ -968,6 +1031,8 @@ definitions:
         items:
           $ref: '#/definitions/structs.ParameterGroupParameterSampleInfo'
         type: array
+    required:
+    - params
     type: object
   message.CreateParameterGroupResp:
     properties:
@@ -986,6 +1051,13 @@ definitions:
     type: object
   message.CreateProductResp:
     type: object
+  message.CreateRoleReq:
+    properties:
+      role:
+        type: string
+    type: object
+  message.CreateRoleResp:
+    type: object
   message.CreateSpecsReq:
     properties:
       specs:
@@ -994,6 +1066,50 @@ definitions:
         type: array
     type: object
   message.CreateSpecsResp:
+    type: object
+  message.CreateTenantReq:
+    properties:
+      id:
+        type: string
+      maxCluster:
+        type: integer
+      maxCpu:
+        type: integer
+      maxMemory:
+        type: integer
+      maxStorage:
+        type: integer
+      name:
+        type: string
+      onBoardingStatus:
+        type: string
+      status:
+        type: string
+    required:
+    - id
+    type: object
+  message.CreateTenantResp:
+    type: object
+  message.CreateUserReq:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      nickname:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      tenantId:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  message.CreateUserResp:
     type: object
   message.CreateZonesReq:
     properties:
@@ -1074,6 +1190,8 @@ definitions:
     type: object
   message.DeleteHostsReq:
     properties:
+      force:
+        type: boolean
       hostIds:
         items:
           type: string
@@ -1099,12 +1217,25 @@ definitions:
         example: "1"
         type: string
     type: object
+  message.DeletePermissionsForRoleReq:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/structs.RbacPermission'
+        type: array
+      role:
+        type: string
+    type: object
+  message.DeletePermissionsForRoleResp:
+    type: object
   message.DeleteProductReq:
     properties:
       productInfo:
         $ref: '#/definitions/structs.Product'
     type: object
   message.DeleteProductResp:
+    type: object
+  message.DeleteRoleResp:
     type: object
   message.DeleteSpecsReq:
     properties:
@@ -1114,6 +1245,17 @@ definitions:
         type: array
     type: object
   message.DeleteSpecsResp:
+    type: object
+  message.DeleteTenantReq:
+    properties:
+      id:
+        type: string
+    type: object
+  message.DeleteTenantResp:
+    type: object
+  message.DeleteUserReq:
+    type: object
+  message.DeleteUserResp:
     type: object
   message.DeleteZoneReq:
     properties:
@@ -1183,6 +1325,21 @@ definitions:
         description: map[zone] -> stocks
         type: object
     type: object
+  message.GetTenantReq:
+    properties:
+      id:
+        type: string
+    type: object
+  message.GetTenantResp:
+    properties:
+      info:
+        $ref: '#/definitions/structs.TenantInfo'
+    type: object
+  message.GetUserResp:
+    properties:
+      user:
+        $ref: '#/definitions/structs.UserInfo'
+    type: object
   message.ImportHostsResp:
     properties:
       flowInfo:
@@ -1210,13 +1367,58 @@ definitions:
         type: string
       token:
         type: string
-      userName:
+      userId:
         type: string
     type: object
   message.LogoutResp:
     properties:
-      accountName:
+      userId:
         type: string
+    type: object
+  message.ParameterInfo:
+    properties:
+      category:
+        example: log
+        type: string
+      defaultValue:
+        example: "1024"
+        type: string
+      description:
+        example: binlog size
+        type: string
+      hasApply:
+        example: 1
+        type: integer
+      hasReboot:
+        example: 0
+        type: integer
+      instanceType:
+        example: TiDB
+        type: string
+      name:
+        example: binlog_size
+        type: string
+      note:
+        type: string
+      range:
+        items:
+          type: string
+        type: array
+      readOnly:
+        example: 0
+        type: integer
+      systemVariable:
+        example: log.binlog_size
+        type: string
+      type:
+        example: 0
+        type: integer
+      unit:
+        example: mb
+        type: string
+      updateSource:
+        example: 0
+        type: integer
     type: object
   message.QueryDataImportExportRecordsResp:
     properties:
@@ -1278,6 +1480,15 @@ definitions:
         example: 1636698675
         type: integer
     type: object
+  message.QueryPermissionsForUserResp:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/structs.RbacPermission'
+        type: array
+      userId:
+        type: string
+    type: object
   message.QueryProductDetailResp:
     properties:
       products:
@@ -1288,8 +1499,22 @@ definitions:
   message.QueryProductsResp:
     properties:
       products:
+        additionalProperties:
+          additionalProperties:
+            additionalProperties:
+              additionalProperties:
+                $ref: '#/definitions/structs.Product'
+              type: object
+            type: object
+          type: object
+        description: arch version
+        type: object
+    type: object
+  message.QueryRolesResp:
+    properties:
+      roles:
         items:
-          $ref: '#/definitions/structs.Product'
+          type: string
         type: array
     type: object
   message.QuerySpecsResp:
@@ -1298,6 +1523,38 @@ definitions:
         items:
           $ref: '#/definitions/structs.SpecInfo'
         type: array
+    type: object
+  message.QueryTenantReq:
+    properties:
+      page:
+        description: Current page location
+        type: integer
+      pageSize:
+        description: Number of this request
+        type: integer
+    type: object
+  message.QueryTenantResp:
+    properties:
+      tenants:
+        additionalProperties:
+          $ref: '#/definitions/structs.TenantInfo'
+        type: object
+    type: object
+  message.QueryUserReq:
+    properties:
+      page:
+        description: Current page location
+        type: integer
+      pageSize:
+        description: Number of this request
+        type: integer
+    type: object
+  message.QueryUserResp:
+    properties:
+      users:
+        additionalProperties:
+          $ref: '#/definitions/structs.UserInfo'
+        type: object
     type: object
   message.QueryWorkFlowDetailResp:
     properties:
@@ -1319,12 +1576,21 @@ definitions:
           $ref: '#/definitions/structs.WorkFlowInfo'
         type: array
     type: object
-  message.QueryZonesResp:
+  message.QueryZonesTreeResp:
     properties:
-      zones:
-        items:
-          $ref: '#/definitions/structs.ZoneInfo'
-        type: array
+      vendors:
+        additionalProperties:
+          $ref: '#/definitions/structs.VendorWithRegion'
+        type: object
+    type: object
+  message.UnbindRoleForUserReq:
+    properties:
+      role:
+        type: string
+      userId:
+        type: string
+    type: object
+  message.UnbindRoleForUserResp:
     type: object
   message.UpdateHostReservedReq:
     properties:
@@ -1350,12 +1616,22 @@ definitions:
     type: object
   message.UpdateParameterGroupReq:
     properties:
+      addParams:
+        items:
+          $ref: '#/definitions/message.ParameterInfo'
+        type: array
       clusterSpec:
         example: 8C16G
         type: string
       clusterVersion:
         example: v5.0
         type: string
+      delParams:
+        example:
+        - "1"
+        items:
+          type: string
+        type: array
       name:
         example: 8C16GV4_default
         type: string
@@ -1366,6 +1642,8 @@ definitions:
         items:
           $ref: '#/definitions/structs.ParameterGroupParameterSampleInfo'
         type: array
+    required:
+    - params
     type: object
   message.UpdateParameterGroupResp:
     properties:
@@ -1373,12 +1651,53 @@ definitions:
         example: "1"
         type: string
     type: object
-  message.UserProfile:
+  message.UpdateTenantOnBoardingStatusReq:
     properties:
-      tenantId:
+      id:
         type: string
-      userName:
+      onBoardingStatus:
         type: string
+    type: object
+  message.UpdateTenantOnBoardingStatusResp:
+    type: object
+  message.UpdateTenantProfileReq:
+    properties:
+      id:
+        type: string
+      maxCluster:
+        type: integer
+      maxCpu:
+        type: integer
+      maxMemory:
+        type: integer
+      maxStorage:
+        type: integer
+      name:
+        type: string
+    type: object
+  message.UpdateTenantProfileResp:
+    type: object
+  message.UpdateUserPasswordReq:
+    properties:
+      id:
+        type: string
+      password:
+        type: string
+    required:
+    - password
+    type: object
+  message.UpdateUserPasswordResp:
+    type: object
+  message.UpdateUserProfileReq:
+    properties:
+      email:
+        type: string
+      nickname:
+        type: string
+      phone:
+        type: string
+    type: object
+  message.UpdateUserProfileResp:
     type: object
   structs.AsyncTaskWorkFlowInfo:
     properties:
@@ -1452,10 +1771,6 @@ definitions:
         $ref: '#/definitions/structs.Usage'
       createTime:
         type: string
-      dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
-        type: string
       deleteTime:
         type: string
       exclusive:
@@ -1497,6 +1812,11 @@ definitions:
       updateTime:
         type: string
       userId:
+        type: string
+      vendor:
+        description: DBUser                   string    `json:"dbUser"` //The username
+          and password for the newly created database cluster, default is the root
+          user, which is not valid for Data Migration clusters
         type: string
       whitelist:
         items:
@@ -1629,6 +1949,12 @@ definitions:
         items:
           type: string
         type: array
+      readOnly:
+        enum:
+        - 0
+        - 1
+        example: 0
+        type: integer
       realValue:
         $ref: '#/definitions/structs.ParameterRealValue'
       systemVariable:
@@ -1665,6 +1991,9 @@ definitions:
         type: string
       realValue:
         $ref: '#/definitions/structs.ParameterRealValue'
+    required:
+    - paramId
+    - realValue
     type: object
   structs.ClusterResourceInfo:
     properties:
@@ -1716,6 +2045,17 @@ definitions:
       name:
         description: 'Name of the instance resource specification,eg: TiDB.c1.large'
         type: string
+      zoneId:
+        type: string
+      zoneName:
+        type: string
+    type: object
+  structs.ComponentInstanceZoneWithSpecs:
+    properties:
+      specs:
+        items:
+          $ref: '#/definitions/structs.ComponentInstanceResourceSpec'
+        type: array
       zoneId:
         type: string
       zoneName:
@@ -1774,13 +2114,13 @@ definitions:
     type: object
   structs.HierarchyTreeNode:
     properties:
-      Code:
+      code:
         type: string
-      Name:
+      name:
         type: string
-      Prefix:
+      prefix:
         type: string
-      SubNodes:
+      subNodes:
         items:
           $ref: '#/definitions/structs.HierarchyTreeNode'
         type: array
@@ -1801,18 +2141,12 @@ definitions:
       createTime:
         type: integer
       diskType:
-        description: Disk type of this host [sata/ssd/nvme_ssd]
+        description: Disk type of this host [SATA/SSD/NVMeSSD]
         type: string
       disks:
         items:
           $ref: '#/definitions/structs.DiskInfo'
         type: array
-      freeCpuCores:
-        description: Unused CpuCore, used for allocation
-        type: integer
-      freeMemory:
-        description: Unused memory size, Unit:GB, used for allocation
-        type: integer
       hostId:
         type: string
       hostName:
@@ -1835,7 +2169,7 @@ definitions:
       passwd:
         type: string
       purpose:
-        description: What Purpose is the host used for? [compute/storage/general]
+        description: What Purpose is the host used for? [compute/storage/schedule]
         type: string
       rack:
         type: string
@@ -1859,7 +2193,15 @@ definitions:
         type: integer
       updateTime:
         type: integer
+      usedCpuCores:
+        description: Unused CpuCore, used for allocation
+        type: integer
+      usedMemory:
+        description: Unused memory size, Unit:GiB, used for allocation
+        type: integer
       userName:
+        type: string
+      vendor:
         type: string
     type: object
   structs.Index:
@@ -1918,6 +2260,12 @@ definitions:
         items:
           type: string
         type: array
+      readOnly:
+        enum:
+        - 0
+        - 1
+        example: 0
+        type: integer
       systemVariable:
         example: log.log_level
         type: string
@@ -1950,12 +2298,15 @@ definitions:
       defaultValue:
         example: "1"
         type: string
-      description:
+      note:
         example: binlog cache size
         type: string
       paramId:
         example: "123"
         type: string
+    required:
+    - defaultValue
+    - paramId
     type: object
   structs.ParameterRealValue:
     properties:
@@ -1995,6 +2346,12 @@ definitions:
     type: object
   structs.ProductComponentProperty:
     properties:
+      availableZones:
+        description: Information on the specifications of the resources online for
+          the running of product components,organized by different Zone
+        items:
+          $ref: '#/definitions/structs.ComponentInstanceZoneWithSpecs'
+        type: array
       endPort:
         type: integer
       id:
@@ -2017,14 +2374,12 @@ definitions:
         description: The type of resources required by the product component at runtime,
           e.g. storage class
         type: string
-      spec:
-        additionalProperties:
-          $ref: '#/definitions/structs.ComponentInstanceResourceSpec'
-        description: Information on the specifications of the resources online for
-          the running of product components,organized by different Zone
-        type: object
       startPort:
         type: integer
+      suggestedInstancesCount:
+        items:
+          type: integer
+        type: array
     type: object
   structs.ProductDetail:
     properties:
@@ -2052,13 +2407,27 @@ definitions:
     properties:
       arch:
         additionalProperties:
-          additionalProperties:
+          items:
             $ref: '#/definitions/structs.ProductComponentProperty'
-          type: object
+          type: array
         description: Arch information of the product, e.g. X86/X86_64
         type: object
       version:
         description: Version information of the product, e.g. v5.0.0
+        type: string
+    type: object
+  structs.RbacPermission:
+    properties:
+      action:
+        type: string
+      resource:
+        type: string
+    type: object
+  structs.RegionInfo:
+    properties:
+      id:
+        type: string
+      name:
         type: string
     type: object
   structs.ResourceStockCheckResult:
@@ -2120,6 +2489,31 @@ definitions:
       zone:
         type: string
     type: object
+  structs.TenantInfo:
+    properties:
+      createAt:
+        type: string
+      creator:
+        type: string
+      id:
+        type: string
+      maxCluster:
+        type: integer
+      maxCpu:
+        type: integer
+      maxMemory:
+        type: integer
+      maxStorage:
+        type: integer
+      name:
+        type: string
+      onBoardingStatus:
+        type: string
+      status:
+        type: string
+      updateAt:
+        type: string
+    type: object
   structs.Usage:
     properties:
       total:
@@ -2128,6 +2522,48 @@ definitions:
         type: number
       used:
         type: number
+    type: object
+  structs.UserInfo:
+    properties:
+      createAt:
+        type: string
+      creator:
+        type: string
+      defaultTenantId:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      names:
+        items:
+          type: string
+        type: array
+      nickname:
+        type: string
+      phone:
+        type: string
+      status:
+        type: string
+      tenantIds:
+        items:
+          type: string
+        type: array
+      updateAt:
+        type: string
+    type: object
+  structs.VendorWithRegion:
+    properties:
+      id:
+        description: The value of the VendorID is similar to AWS
+        type: string
+      name:
+        description: The value of the Name is similar to AWS
+        type: string
+      regions:
+        additionalProperties:
+          $ref: '#/definitions/structs.RegionInfo'
+        type: object
     type: object
   structs.WorkFlowInfo:
     properties:
@@ -2985,6 +3421,9 @@ paths:
       - application/json
       description: query parameters of a cluster
       parameters:
+      - in: query
+        name: instanceType
+        type: string
       - description: Current page location
         in: query
         name: page
@@ -2993,6 +3432,9 @@ paths:
         in: query
         name: pageSize
         type: integer
+      - in: query
+        name: paramName
+        type: string
       - description: clusterId
         in: path
         name: clusterId
@@ -3115,7 +3557,7 @@ paths:
       tags:
       - cluster parameters
   /clusters/{clusterId}/preview-scale-out:
-    get:
+    post:
       consumes:
       - application/json
       description: preview cluster topology and capability
@@ -3333,6 +3775,45 @@ paths:
       tags:
       - cluster
   /clusters/{clusterId}/strategy:
+    get:
+      consumes:
+      - application/json
+      description: show the backup strategy of a cluster
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.GetBackupStrategyResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: show the backup strategy of a cluster
+      tags:
+      - cluster backup
     put:
       consumes:
       - application/json
@@ -3376,46 +3857,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: save the backup strategy of a cluster
-      tags:
-      - cluster backup
-  /clusters/{clusterId}/strategy/:
-    get:
-      consumes:
-      - application/json
-      description: show the backup strategy of a cluster
-      parameters:
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.GetBackupStrategyResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: show the backup strategy of a cluster
       tags:
       - cluster backup
   /clusters/clone:
@@ -4019,6 +4460,12 @@ paths:
         name: paramGroupId
         required: true
         type: string
+      - in: query
+        name: instanceType
+        type: string
+      - in: query
+        name: paramName
+        type: string
       produces:
       - application/json
       responses:
@@ -4359,6 +4806,371 @@ paths:
       summary: query all product detail
       tags:
       - platform
+  /rbac/permission/{userId}:
+    get:
+      consumes:
+      - application/json
+      description: QueryPermissionsForUser
+      parameters:
+      - description: rbac userId
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryPermissionsForUserResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query permissions of user
+      tags:
+      - rbac QueryPermissionsForUser
+  /rbac/permission/add:
+    post:
+      consumes:
+      - application/json
+      description: AddPermissionsForRole
+      parameters:
+      - description: AddPermissionsForRole request
+        in: body
+        name: addPermissionsForRoleReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.AddPermissionsForRoleReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.AddPermissionsForRoleResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: add permissions for role
+      tags:
+      - rbac AddPermissionsForRole
+  /rbac/permission/check:
+    post:
+      consumes:
+      - application/json
+      description: CheckPermissionForUser
+      parameters:
+      - description: CheckPermissionForUser request
+        in: body
+        name: checkPermissionForUserReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.CheckPermissionForUserReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.CheckPermissionForUserResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: check permissions of user
+      tags:
+      - rbac CheckPermissionForUser
+  /rbac/permission/delete:
+    delete:
+      consumes:
+      - application/json
+      description: DeletePermissionsForRole
+      parameters:
+      - description: DeleteRoleForUser request
+        in: body
+        name: deletePermissionsForRoleReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.DeletePermissionsForRoleReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.DeletePermissionsForRoleResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: delete permissions for role
+      tags:
+      - rbac DeletePermissionsForRole
+  /rbac/role/:
+    get:
+      consumes:
+      - application/json
+      description: QueryRoles
+      parameters:
+      - description: rbac role
+        in: path
+        name: role
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryRolesResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query rbac roles
+      tags:
+      - rbac QueryRoles
+    post:
+      consumes:
+      - application/json
+      description: CreateRbacRole
+      parameters:
+      - description: CreateRole request
+        in: body
+        name: createReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.CreateRoleReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.CreateRoleResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: create rbac role
+      tags:
+      - rbac CreateRbacRole
+  /rbac/role/{role}:
+    delete:
+      consumes:
+      - application/json
+      description: DeleteRbacRole
+      parameters:
+      - description: rbac role
+        in: path
+        name: role
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.DeleteRoleResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: delete rbac role
+      tags:
+      - rbac DeleteRbacRole
+  /rbac/role/bind:
+    post:
+      consumes:
+      - application/json
+      description: BindRolesForUser
+      parameters:
+      - description: BindRolesForUser request
+        in: body
+        name: bindReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.BindRolesForUserReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.BindRolesForUserResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: bind user with roles
+      tags:
+      - rbac BindRolesForUser
+  /rbac/user_role/delete:
+    delete:
+      consumes:
+      - application/json
+      description: UnbindRoleForUser
+      parameters:
+      - description: UnbindRoleForUser request
+        in: body
+        name: deleteRoleForUserReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UnbindRoleForUserReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UnbindRoleForUserResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: unbind rbac role from user
+      tags:
+      - rbac UnbindRoleForUser
   /resources/hierarchy:
     get:
       consumes:
@@ -4497,22 +5309,13 @@ paths:
       description: get hosts list
       parameters:
       - in: query
-        name: HostIp
-        type: string
-      - in: query
-        name: Rack
-        type: string
-      - in: query
-        name: Region
-        type: string
-      - in: query
-        name: Zone
-        type: string
-      - in: query
         name: arch
         type: string
       - in: query
         name: hostId
+        type: string
+      - in: query
+        name: hostIp
         type: string
       - in: query
         name: loadStat
@@ -4529,7 +5332,16 @@ paths:
         name: purpose
         type: string
       - in: query
+        name: rack
+        type: string
+      - in: query
+        name: region
+        type: string
+      - in: query
         name: status
+        type: string
+      - in: query
+        name: zone
         type: string
       produces:
       - application/json
@@ -4557,6 +5369,16 @@ paths:
         description: whether hosts are reserved(won't be allocated) after import
         in: formData
         name: hostReserved
+        type: string
+      - default: "false"
+        description: whether to skip host init steps
+        in: formData
+        name: skipHostInit
+        type: string
+      - default: "false"
+        description: whether to ignore warings in init steps
+        in: formData
+        name: ignorewarns
         type: string
       - description: hosts information in a xlsx file
         in: formData
@@ -4604,31 +5426,22 @@ paths:
       description: get resource stocks in specified conditions
       parameters:
       - in: query
-        name: Capacity
-        type: integer
-      - in: query
-        name: DiskStatus
-        type: string
-      - in: query
-        name: DiskType
-        type: string
-      - in: query
-        name: HostIp
-        type: string
-      - in: query
-        name: Rack
-        type: string
-      - in: query
-        name: Region
-        type: string
-      - in: query
-        name: Zone
-        type: string
-      - in: query
         name: arch
         type: string
       - in: query
+        name: capacity
+        type: integer
+      - in: query
+        name: diskStatus
+        type: string
+      - in: query
+        name: diskType
+        type: string
+      - in: query
         name: hostId
+        type: string
+      - in: query
+        name: hostIp
         type: string
       - in: query
         name: loadStat
@@ -4637,7 +5450,16 @@ paths:
         name: purpose
         type: string
       - in: query
+        name: rack
+        type: string
+      - in: query
+        name: region
+        type: string
+      - in: query
         name: status
+        type: string
+      - in: query
+        name: zone
         type: string
       produces:
       - application/json
@@ -4656,7 +5478,7 @@ paths:
       summary: Show the resources stocks
       tags:
       - resource
-  /specs:
+  /specs/:
     delete:
       consumes:
       - application/json
@@ -4770,6 +5592,271 @@ paths:
       summary: created  specs
       tags:
       - platform
+  /tenant:
+    get:
+      consumes:
+      - application/json
+      description: query all tenant profile
+      parameters:
+      - description: query tenant profile request parameter
+        in: body
+        name: QueryTenantReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.QueryTenantReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryTenantResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: queries all tenant profile
+      tags:
+      - user
+    post:
+      consumes:
+      - application/json
+      description: update tenant onboarding status
+      parameters:
+      - description: tenant id
+        in: path
+        name: tenantId
+        required: true
+        type: string
+      - description: query tenant profile request parameter
+        in: body
+        name: UpdateTenantOnBoardingStatusReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateTenantOnBoardingStatusReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateTenantOnBoardingStatusResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: update tenant onboarding status
+      tags:
+      - user
+  /tenant/{tenantId}:
+    get:
+      consumes:
+      - application/json
+      description: get tenant profile
+      parameters:
+      - description: tenant id
+        in: path
+        name: tenantId
+        required: true
+        type: string
+      - description: get tenant profile request parameter
+        in: body
+        name: GetTenantReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.GetTenantReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.GetTenantResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: get tenant profile
+      tags:
+      - user
+  /tenants/:
+    post:
+      consumes:
+      - application/json
+      description: created tenant
+      parameters:
+      - description: create tenant request parameter
+        in: body
+        name: CreateTenantReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.CreateTenantReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.CreateTenantResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: created  tenant
+      tags:
+      - user
+  /tenants/{tenantId}:
+    delete:
+      consumes:
+      - application/json
+      description: delete tenant
+      parameters:
+      - description: tenant id
+        in: path
+        name: tenantId
+        required: true
+        type: string
+      - description: delete tenant request parameter
+        in: body
+        name: DeleteTenantReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.DeleteTenantReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.DeleteTenantResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: delete tenant
+      tags:
+      - user
+  /tenants/{tenantId}/update_profile:
+    post:
+      consumes:
+      - application/json
+      description: update tenant profile
+      parameters:
+      - description: tenant id
+        in: path
+        name: tenantId
+        required: true
+        type: string
+      - description: query tenant profile request parameter
+        in: body
+        name: UpdateTenantProfileReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateTenantProfileReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateTenantProfileResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: update tenant profile
+      tags:
+      - user
   /user/login:
     post:
       consumes:
@@ -4835,11 +5922,58 @@ paths:
       summary: logout
       tags:
       - platform
-  /user/profile:
+  /users/:
     get:
       consumes:
       - application/json
-      description: profile
+      description: query all user profile
+      parameters:
+      - description: query user profile request parameter
+        in: body
+        name: queryUserRequest
+        required: true
+        schema:
+          $ref: '#/definitions/message.QueryUserReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryUserResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: queries all user profile
+      tags:
+      - platform
+    post:
+      consumes:
+      - application/json
+      description: created user
+      parameters:
+      - description: create user request parameter
+        in: body
+        name: createUserReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.CreateUserReq'
       produces:
       - application/json
       responses:
@@ -4850,10 +5984,14 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/message.UserProfile'
+                  $ref: '#/definitions/message.CreateUserResp'
               type: object
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/controller.CommonResult'
         "500":
@@ -4862,7 +6000,184 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: user profile
+      summary: created  user
+      tags:
+      - platform
+  /users/{userId}:
+    delete:
+      consumes:
+      - application/json
+      description: delete user
+      parameters:
+      - description: user id
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: delete user request parameter
+        in: body
+        name: deleteUserReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.DeleteUserReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.DeleteUserResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: delete user
+      tags:
+      - platform
+    get:
+      consumes:
+      - application/json
+      description: get user profile
+      parameters:
+      - description: user id
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.GetUserResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: get user profile
+      tags:
+      - platform
+  /users/{userId}/password:
+    post:
+      consumes:
+      - application/json
+      description: update user password
+      parameters:
+      - description: user id
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: query user password request parameter
+        in: body
+        name: UpdateUserPasswordRequest
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateUserPasswordReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateUserPasswordResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: update user password
+      tags:
+      - platform
+  /users/{userId}/update_profile:
+    post:
+      consumes:
+      - application/json
+      description: update user profile
+      parameters:
+      - description: user id
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: query user profile request parameter
+        in: body
+        name: updateUserProfileRequest
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateUserProfileReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateUserProfileResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: update user profile
       tags:
       - platform
   /workflow/:
@@ -4960,7 +6275,7 @@ paths:
       summary: show details of a flow work
       tags:
       - task
-  /zones:
+  /zones/:
     delete:
       consumes:
       - application/json
@@ -5001,39 +6316,6 @@ paths:
       summary: deleted zones
       tags:
       - platform
-    get:
-      consumes:
-      - application/json
-      description: queries all zones information
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.QueryZonesResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: queries all zones information
-      tags:
-      - platform
     post:
       consumes:
       - application/json
@@ -5072,6 +6354,40 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: created  zones
+      tags:
+      - platform
+  /zones/tree:
+    get:
+      consumes:
+      - application/json
+      description: queries all regions information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryZonesTreeResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: queries all regions information
       tags:
       - platform
 securityDefinitions:

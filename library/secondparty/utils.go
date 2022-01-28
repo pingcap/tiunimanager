@@ -37,13 +37,13 @@ const (
 	FieldKey_Json FieldKey = "json"
 )
 
-func assert(b bool) {
-	if b {
-	} else {
-		framework.Log().Error("unexpected panic with stack trace:", string(debug.Stack()))
-		panic("unexpected")
-	}
-}
+//func assert(b bool) {
+//	if b {
+//	} else {
+//		framework.Log().Error("unexpected panic with stack trace:", string(debug.Stack()))
+//		panic("unexpected")
+//	}
+//}
 
 func myPanic(v interface{}) {
 	s := fmt.Sprint(v)
@@ -74,7 +74,9 @@ func newTmpFileWithContent(filePrefix string, content []byte) (fileName string, 
 
 func jsonMustMarshal(v interface{}) []byte {
 	bs, err := json.Marshal(v)
-	assert(err == nil)
+	if err != nil {
+		return []byte(fmt.Sprintf("fail marshal %v: %v", v, err))
+	}
 	return bs
 }
 

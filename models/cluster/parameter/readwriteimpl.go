@@ -48,26 +48,35 @@ func NewClusterParameterReadWrite(db *gorm.DB) *ClusterParameterReadWrite {
 	return m
 }
 
-func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, clusterId string, offset, size int) (paramGroupId string, params []*ClusterParamDetail, total int64, err error) {
+func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, clusterId, parameterName, instanceType string, offset, size int) (paramGroupId string, params []*ClusterParamDetail, total int64, err error) {
 	log := framework.LogWithContext(ctx)
 	cluster := management.Cluster{}
 	err = m.DB(ctx).Where("id = ?", clusterId).First(&cluster).Error
 	if err != nil {
 		log.Errorf("find params by cluster id err: %v, request cluster id: %v", err.Error(), clusterId)
-		err = errors.NewEMErrorf(errors.TIEM_CLUSTER_NOT_FOUND, errors.TIEM_CLUSTER_NOT_FOUND.Explain())
+		err = errors.NewErrorf(errors.TIEM_CLUSTER_NOT_FOUND, err.Error())
 		return
 	}
 	paramGroupId = cluster.ParameterGroupID
 
-	err = m.DB(ctx).Model(&ClusterParameterMapping{}).
+	query := m.DB(ctx).Model(&ClusterParameterMapping{}).
 		Select("parameters.id, parameters.category, parameters.name, parameters.instance_type, parameters.system_variable, "+
 			"parameters.type, parameters.unit, parameters.range, parameters.has_reboot, parameters.has_apply, parameters.update_source, parameters.description, "+
 			"parameter_group_mappings.default_value, cluster_parameter_mappings.real_value, parameter_group_mappings.note, "+
 			"cluster_parameter_mappings.created_at, cluster_parameter_mappings.updated_at").
 		Joins("left join parameters on parameters.id = cluster_parameter_mappings.parameter_id").
 		Joins("left join parameter_group_mappings on parameters.id = parameter_group_mappings.parameter_id").
-		Where("cluster_parameter_mappings.cluster_id = ? and parameter_group_mappings.parameter_group_id = ?", cluster.ID, paramGroupId).
-		Order("parameters.instance_type desc").
+		Where("cluster_parameter_mappings.cluster_id = ? and parameter_group_mappings.parameter_group_id = ?", cluster.ID, paramGroupId)
+
+	// Fuzzy query by parameter name
+	if parameterName != "" {
+		query.Where("parameters.name like '%" + parameterName + "%'")
+	}
+	if instanceType != "" {
+		query.Where("parameters.instance_type = ?", instanceType)
+	}
+
+	err = query.Order("parameters.instance_type desc").
 		Count(&total).Offset(offset).Limit(size).
 		Scan(&params).Error
 	if err != nil {
@@ -82,7 +91,7 @@ func (m ClusterParameterReadWrite) UpdateClusterParameter(ctx context.Context, c
 	log := framework.LogWithContext(ctx)
 
 	if clusterId == "" {
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, errors.TIEM_PARAMETER_INVALID.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "cluster id is empty")
 	}
 
 	tx := m.DB(ctx).Begin()
@@ -96,7 +105,7 @@ func (m ClusterParameterReadWrite) UpdateClusterParameter(ctx context.Context, c
 		if err != nil {
 			log.Errorf("update cluster params err: %v", err.Error())
 			tx.Rollback()
-			return errors.NewEMErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR.Explain())
+			return errors.NewErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, err.Error())
 		}
 	}
 
@@ -108,7 +117,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	log := framework.LogWithContext(ctx)
 
 	if clusterId == "" || parameterGroupId == "" {
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, errors.TIEM_PARAMETER_INVALID.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "cluster id or parameter group id is empty")
 	}
 
 	tx := m.DB(ctx).Begin()
@@ -118,7 +127,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	if err != nil {
 		log.Errorf("apply param group err: %v", err.Error())
 		tx.Rollback()
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR, errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR, err.Error())
 	}
 
 	// update clusters table
@@ -129,7 +138,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	if err != nil {
 		log.Errorf("apply param group err: %v", err.Error())
 		tx.Rollback()
-		return errors.NewEMErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR.Explain())
+		return errors.NewErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, err.Error())
 	}
 
 	// batch insert cluster_parameter_mapping table
@@ -142,7 +151,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	if err != nil {
 		log.Errorf("apply param group map err: %v, request param map: %v", err.Error(), params)
 		tx.Rollback()
-		return errors.NewEMErrorf(errors.TIEM_PARAMETER_GROUP_CREATE_RELATION_PARAM_ERROR, errors.TIEM_PARAMETER_GROUP_CREATE_RELATION_PARAM_ERROR.Explain())
+		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_CREATE_RELATION_PARAM_ERROR, err.Error())
 	}
 
 	tx.Commit()

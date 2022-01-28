@@ -15,11 +15,12 @@
 
 package constants
 
-const SecondPartyReady = true
-
 const (
-	FlowImportHosts string = "ImportHosts"
-	FlowDeleteHosts string = "DeleteHosts"
+	FlowImportHosts            string = "ImportHosts"            // A normal flow to import hosts
+	FlowImportHostsWithoutInit string = "ImportHostsWithoutInit" // import hosts without initialization
+	FlowTakeOverHosts          string = "TakeOverHosts"          // A flow to take over hosts
+	FlowDeleteHosts            string = "DeleteHosts"            // A normal flow to delete hosts
+	FlowDeleteHostsByForce     string = "DeleteHostsByForce"     // delete hosts by force - without uninstall filebeat .etc.
 )
 
 const (
@@ -27,6 +28,7 @@ const (
 	ContextHostInfoArrayKey  string = "hostInfoArray"
 	ContextHostIDArrayKey    string = "hostIDArray"
 	ContextWorkFlowNodeIDKey string = "resourceWorkFlowNodeID"
+	ContextIgnoreWarnings    string = "checkHostIgnoreWarns"
 )
 
 const (

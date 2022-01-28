@@ -75,7 +75,7 @@ build_cluster_server:
 build_file_server:
 	@echo "build file-server start."
 	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${FILE_SERVER_BINARY} file-server/*.go
-	@echo "build file-server sucessufully."
+	@echo "build file-server successfully."
 
 #2. R&D to test the code themselves for compliance before submitting it
 devselfcheck:
@@ -261,7 +261,6 @@ add_test_file:
 mock:
 	$(GO) install github.com/golang/mock/mockgen
 	mockgen -destination ./test/mockcluster/mock_clusterservices.pb.micro.go -package mockclusterservices -source ./proto/clusterservices/clusterservices.pb.micro.go
-
 	mockgen -destination ./test/mockmodels/mockmanagement/mock_management_interface.go -package mockmanagement -source ./models/cluster/management/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockworkflow/mock_workflow_interface.go -package mockworkflow -source ./models/workflow/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockbr/mock_br_interface.go -package mockbr -source ./models/cluster/backuprestore/readerwriter.go
@@ -274,6 +273,7 @@ mock:
 	mockgen -destination ./test/mockmodels/mockclusterparameter/mock_clusterparameter_interface.go -package mockclusterparameter -source ./models/cluster/parameter/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockclustermanagement/mock_cluster_management_interface.go -package mockclustermanagement -source ./models/cluster/management/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockchangefeed/mock_change_feed_interface.go -package mockchangefeed -source ./models/cluster/changefeed/readerwriter.go
+	mockgen -destination ./test/mockmodels/mockaccount/mock_account.go -package mock_account -source ./models/user/account/readerwriter.go
 	mockgen -destination ./test/mockworkflow/mock_workflow.go -package mock_workflow_service -source ./workflow/workflow.go
 	mockgen -destination ./test/mockbr/mock_br.go -package mock_br_service -source ./micro-cluster/cluster/backuprestore/service.go
 	mockgen -destination ./test/mocksecondparty_v2/mock_secondparty.go -package mock_secondparty -source ./library/secondparty/second_party_manager_v2.go
@@ -283,6 +283,9 @@ mock:
 	mockgen -destination ./test/mockresource/mock_allocator_recycler.go -package mock_allocator_recycler -source ./micro-cluster/resourcemanager/management/structs/allocator_recycler.go
 	mockgen -destination ./test/mockcdcmanager/mock_cdc_manager.go -package mockcdcmanager -source ./micro-cluster/cluster/switchover/cdc_manager_api.go
 	mockgen -destination ./test/mockmodels/mock_product.go -package mock_product -source ./models/platform/product/product_read_writer.go
+	mockgen -destination ./test/mockaccount/mock_account.go -package mockaccount -source ./models/user/account/readerwriter.go
+	mockgen -destination ./test/mockidentification/mock_identification.go -package mockidentification -source ./models/user/identification/readerwriter.go
+	mockgen -destination ./test/mockchangefeed/mock_changefeed.go -package mockchangefeed -source ./micro-cluster/cluster/changefeed/service.go
 
 swag:
 	$(GO) install github.com/swaggo/swag/cmd/swag@v1.7.1

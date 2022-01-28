@@ -190,7 +190,6 @@ type TakeoverClusterReq struct {
 	TiUPUserPassword string `json:"TiUPUserPassword" example:"password" form:"TiUPUserPassword" validate:"required"`
 	TiUPPath         string `json:"TiUPPath" example:".tiup/" form:"TiUPPath" validate:"required"`
 	ClusterName      string `json:"clusterName" example:"myClusterName" form:"clusterName" validate:"required"`
-	DBUser           string `json:"dbUser" example:"root" form:"dbUser" validate:"required"`
 	DBPassword       string `json:"dbPassword" example:"myPassword" form:"dbPassword" validate:"required"`
 }
 
@@ -270,7 +269,9 @@ type QueryClusterLogResp struct {
 }
 
 type QueryClusterParametersReq struct {
-	ClusterID string `json:"clusterId" swaggerignore:"true"`
+	ClusterID    string `json:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
+	ParamName    string `json:"paramName" form:"paramName"`
+	InstanceType string `json:"instanceType" form:"instanceType"`
 	structs.PageRequest
 }
 
@@ -280,9 +281,10 @@ type QueryClusterParametersResp struct {
 }
 
 type UpdateClusterParametersReq struct {
-	ClusterID string                               `json:"clusterId" swaggerignore:"true"`
-	Params    []structs.ClusterParameterSampleInfo `json:"params"`
+	ClusterID string                               `json:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
+	Params    []structs.ClusterParameterSampleInfo `json:"params" validate:"required"`
 	Reboot    bool                                 `json:"reboot"`
+	Nodes     []string                             `json:"nodes" swaggerignore:"true"`
 }
 
 type UpdateClusterParametersResp struct {
@@ -291,7 +293,7 @@ type UpdateClusterParametersResp struct {
 }
 
 type InspectClusterParametersReq struct {
-	ClusterID string `json:"clusterId"`
+	ClusterID string `json:"clusterId" validate:"required,min=8,max=64"`
 }
 
 type InspectClusterParametersResp struct {

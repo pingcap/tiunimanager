@@ -27,8 +27,8 @@ package constants
 type TransportType string
 
 const (
-	DefaultImportPath   string        = "/home/em/import"
-	DefaultExportPath   string        = "/home/em/export"
+	DefaultImportPath   string        = "/home/tiem/import"
+	DefaultExportPath   string        = "/home/tiem/export"
 	DefaultZipName      string        = "data.zip"
 	TransportTypeExport TransportType = "export"
 	TransportTypeImport TransportType = "import"

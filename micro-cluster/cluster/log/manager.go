@@ -27,13 +27,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/pingcap-inc/tiem/proto/clusterservices"
-	"github.com/pingcap-inc/tiem/util/convert"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
+	"github.com/pingcap-inc/tiem/util/convert"
+
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -72,7 +73,7 @@ var buildLogConfigDefine = workflow.WorkFlowDefine{
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":   {"collect", "success", "fail", workflow.SyncFuncNode, collectorClusterLogConfig},
 		"success": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-		"fail":    {"fail", "", "", workflow.SyncFuncNode, defaultEnd},
+		"fail":    {"end", "", "", workflow.SyncFuncNode, defaultEnd},
 	},
 }
 
@@ -89,7 +90,7 @@ func (m Manager) BuildClusterLogConfig(ctx context.Context, clusterId string) (f
 	defer framework.LogWithContext(ctx).Infof("end build cluster log")
 
 	// Get cluster info and topology from db based by clusterID
-	clusterMeta, err := handler.Get(ctx, clusterId)
+	clusterMeta, err := meta.Get(ctx, clusterId)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluser [%s] meta from db error: %s", clusterId, err.Error())
 		return
@@ -126,7 +127,7 @@ func (m Manager) QueryClusterLog(ctx context.Context, req cluster.QueryClusterLo
 	esResp, err := framework.Current.GetElasticsearchClient().Search(logIndexPrefix, &buf, (req.Page-1)*req.PageSize, req.PageSize)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("cluster %s query log, search es err: %v", req.ClusterID, err)
-		return resp, page, errors.NewEMErrorf(errors.TIEM_CLUSTER_LOG_QUERY_FAILED, errors.TIEM_CLUSTER_LOG_QUERY_FAILED.Explain())
+		return resp, page, errors.NewErrorf(errors.TIEM_CLUSTER_LOG_QUERY_FAILED, errors.TIEM_CLUSTER_LOG_QUERY_FAILED.Explain(), err)
 	}
 	return handleResult(ctx, req, esResp)
 }
@@ -136,18 +137,18 @@ func prepareSearchParams(ctx context.Context, req cluster.QueryClusterLogReq) (b
 	_, err = models.GetClusterReaderWriter().Get(ctx, req.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("cluster %s query log, get cluster err: %v", req.ClusterID, err)
-		return buf, errors.NewEMErrorf(errors.TIEM_CLUSTER_NOT_FOUND, errors.TIEM_CLUSTER_NOT_FOUND.Explain())
+		return buf, errors.NewErrorf(errors.TIEM_CLUSTER_NOT_FOUND, errors.TIEM_CLUSTER_NOT_FOUND.Explain())
 	}
 
 	buf = bytes.Buffer{}
 	query, err := buildSearchClusterReqParams(req)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("cluster %s query log, build search params err: %v", req.ClusterID, err)
-		return buf, errors.NewEMErrorf(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR.Explain())
+		return buf, errors.NewErrorf(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR.Explain(), err)
 	}
 	if err = json.NewEncoder(&buf).Encode(query); err != nil {
 		framework.LogWithContext(ctx).Errorf("cluster %s query log, encode err: %v", req.ClusterID, err)
-		return buf, errors.NewEMErrorf(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR.Explain())
+		return buf, errors.NewErrorf(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR.Explain(), err)
 	}
 	return buf, nil
 }
@@ -155,12 +156,12 @@ func prepareSearchParams(ctx context.Context, req cluster.QueryClusterLogReq) (b
 func handleResult(ctx context.Context, req cluster.QueryClusterLogReq, esResp *esapi.Response) (resp cluster.QueryClusterLogResp, page *clusterservices.RpcPage, err error) {
 	if esResp.IsError() || esResp.StatusCode != 200 {
 		framework.LogWithContext(ctx).Errorf("cluster %s query log, search es err: %v", req.ClusterID, err)
-		return resp, page, errors.NewEMErrorf(errors.TIEM_CLUSTER_LOG_QUERY_FAILED, errors.TIEM_CLUSTER_LOG_QUERY_FAILED.Explain())
+		return resp, page, errors.NewErrorf(errors.TIEM_CLUSTER_LOG_QUERY_FAILED, errors.TIEM_CLUSTER_LOG_QUERY_FAILED.Explain(), esResp.String())
 	}
 	var esResult ElasticSearchResult
 	if err = json.NewDecoder(esResp.Body).Decode(&esResult); err != nil {
 		framework.LogWithContext(ctx).Errorf("cluster %s query log, decoder err: %v", req.ClusterID, err)
-		return resp, page, errors.NewEMErrorf(errors.TIEM_CLUSTER_LOG_QUERY_FAILED, errors.TIEM_CLUSTER_LOG_QUERY_FAILED.Explain())
+		return resp, page, errors.NewErrorf(errors.TIEM_CLUSTER_LOG_QUERY_FAILED, errors.TIEM_CLUSTER_LOG_QUERY_FAILED.Explain(), err)
 	}
 
 	resp = cluster.QueryClusterLogResp{
@@ -172,7 +173,7 @@ func handleResult(ctx context.Context, req cluster.QueryClusterLogReq, esResp *e
 		err := convert.ConvertObj(hit.Source, &hitItem)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("cluster %s query log, convert obj err: %v", req.ClusterID, err)
-			return resp, page, errors.NewEMErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain())
+			return resp, page, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
 		}
 
 		resp.Results = append(resp.Results, structs.ClusterLogItem{
@@ -294,7 +295,7 @@ func filterTimestamp(req cluster.QueryClusterLogReq) (map[string]interface{}, er
 
 	if req.StartTime > 0 && req.EndTime > 0 {
 		if req.StartTime > req.EndTime {
-			return nil, errors.NewEMErrorf(errors.TIEM_CLUSTER_LOG_TIME_AFTER, errors.TIEM_CLUSTER_LOG_TIME_AFTER.Explain())
+			return nil, errors.NewErrorf(errors.TIEM_CLUSTER_LOG_TIME_AFTER, errors.TIEM_CLUSTER_LOG_TIME_AFTER.Explain())
 		}
 		tsFilter["gte"] = req.StartTime * 1000
 		tsFilter["lte"] = req.EndTime * 1000

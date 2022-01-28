@@ -90,11 +90,13 @@ grafana_servers:
   {{ if eq .Status "Initializing" }}
   - host: {{ index .HostIP 0 }}
     port: {{ index .Ports 0}}
-    deploy_dir: {{ .DiskPath }}/{{ .ID }}/grafana-deploy
+    deploy_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/grafana-deploy
     anonymous_enable: true
     default_theme: light
     org_name: Main Org.
     org_role: Viewer
+    config:
+      security.allow_embedding: true
   {{ end }}
   {{ end }}
 {{ else if and (eq $key "Prometheus") (len $instances) }}

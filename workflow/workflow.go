@@ -17,6 +17,7 @@ package workflow
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -149,7 +150,7 @@ func (mgr *WorkFlowManager) GetWorkFlowDefine(ctx context.Context, flowName stri
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
 		framework.LogWithContext(ctx).Errorf("WorkFlow %s not exist", flowName)
-		return nil, errors.NewEMErrorf(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
+		return nil, errors.NewErrorf(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
 	}
 	return flowDefine.(*WorkFlowDefine), nil
 }
@@ -157,7 +158,7 @@ func (mgr *WorkFlowManager) GetWorkFlowDefine(ctx context.Context, flowName stri
 func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, bizType string, flowName string) (*WorkFlowAggregation, error) {
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
-		return nil, errors.NewEMErrorf(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
+		return nil, errors.NewErrorf(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
 	}
 
 	flow, err := createFlowWork(ctx, bizId, bizType, flowDefine.(*WorkFlowDefine))
@@ -217,11 +218,11 @@ func (mgr *WorkFlowManager) DetailWorkFlow(ctx context.Context, request message.
 			UpdateTime: flow.UpdatedAt,
 			DeleteTime: flow.DeletedAt.Time,
 		},
-		NodeInfo:  make([]*structs.WorkFlowNodeInfo, len(nodes)),
+		NodeInfo:  make([]*structs.WorkFlowNodeInfo, 0),
 		NodeNames: define.getNodeNameList(),
 	}
-	for index, node := range nodes {
-		resp.NodeInfo[index] = &structs.WorkFlowNodeInfo{
+	for _, node := range nodes {
+		resp.NodeInfo = append(resp.NodeInfo, &structs.WorkFlowNodeInfo{
 			ID:         node.ID,
 			Name:       node.Name,
 			Parameters: node.Parameters,
@@ -229,6 +230,9 @@ func (mgr *WorkFlowManager) DetailWorkFlow(ctx context.Context, request message.
 			Status:     node.Status,
 			StartTime:  node.StartTime,
 			EndTime:    node.EndTime,
+		})
+		if node.Status == constants.WorkFlowStatusError {
+			break
 		}
 	}
 

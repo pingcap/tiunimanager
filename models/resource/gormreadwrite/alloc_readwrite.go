@@ -38,7 +38,7 @@ func (rw *GormResourceReadWrite) AllocResources(ctx context.Context, batchReq *r
 		result, err = rw.allocForSingleRequest(ctx, tx, &request)
 		if err != nil {
 			tx.Rollback()
-			return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_ALLOCATE_ERROR, "alloc resources in batch failed on %dth request with %d requires, request: %v, error: %v", i+1, len(request.Requires), request, err)
+			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_ALLOCATE_ERROR, "alloc resources in batch failed on %dth request with %d requires, request: %v, error: %v", i+1, len(request.Requires), request, err)
 		}
 		results.BatchResults = append(results.BatchResults, result)
 	}
@@ -80,7 +80,7 @@ func (rw *GormResourceReadWrite) allocForSingleRequest(ctx context.Context, tx *
 			}
 			results.Results = append(results.Results, res...)
 		default:
-			return nil, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "invalid alloc strategy %d", require.Strategy)
+			return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid alloc strategy %d", require.Strategy)
 		}
 	}
 	return
@@ -98,6 +98,9 @@ type Resource struct {
 	DiskName string
 	Path     string
 	Capacity int
+	Region   string
+	AZ       string
+	Rack     string
 	portRes  []*resource_structs.PortResource
 }
 
@@ -108,6 +111,12 @@ func (resource *Resource) toCompute() (result *resource_structs.Compute, err err
 		HostIp:   resource.Ip,
 		UserName: resource.UserName,
 		Passwd:   resource.Passwd,
+		Location: structs.Location{
+			Region: structs.GetDomainNameFromCode(resource.Region),
+			Zone:   structs.GetDomainNameFromCode(resource.AZ),
+			Rack:   structs.GetDomainNameFromCode(resource.Rack),
+			HostIp: resource.Ip,
+		},
 	}
 	result.ComputeRes.CpuCores = int32(resource.CpuCores)
 	result.ComputeRes.Memory = int32(resource.Memory)
@@ -121,7 +130,7 @@ func (resource *Resource) toCompute() (result *resource_structs.Compute, err err
 
 	result.Passwd, err = crypto.AesDecryptCFB(result.Passwd)
 	if err != nil {
-		return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_DECRYPT_PASSWD_ERROR, "decrypt compute %v password failed, %v", *result, err)
+		return nil, errors.NewErrorf(errors.TIEM_RESOURCE_DECRYPT_PASSWD_ERROR, "decrypt compute %v password failed, %v", *result, err)
 	}
 	return result, nil
 
@@ -152,7 +161,7 @@ func (rw *GormResourceReadWrite) allocResourceWithRR(ctx context.Context, tx *go
 	if needDisk {
 		var count int64
 		db := tx.Order("hosts.free_cpu_cores desc").Order("hosts.free_memory desc").Limit(int(require.Count)).Model(&rp.Disk{}).Select(
-			"disks.host_id, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", reqCores, reqMem).Joins(
+			"disks.host_id, hosts.host_name, hosts.region, hosts.az, hosts.rack, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", reqCores, reqMem).Joins(
 			"left join hosts on disks.host_id = hosts.id").Where("hosts.reserved = 0")
 		if excludedHosts == nil {
 			db.Count(&count)
@@ -160,12 +169,12 @@ func (rw *GormResourceReadWrite) allocResourceWithRR(ctx context.Context, tx *go
 			db.Not(map[string]interface{}{"hosts.ip": excludedHosts}).Count(&count)
 		}
 		if count < int64(require.Count) {
-			return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_DISK, "expect disk count %d but only %d after excluded host list", require.Count, count)
+			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_DISK, "expect disk count %d but only %d after excluded host list", require.Count, count)
 		}
 
 		db = db.Where("disks.status = ? and disks.capacity >= ?", constants.DiskAvailable, capacity).Count(&count)
 		if count < int64(require.Count) {
-			return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_DISK, "expect disk count %d but only %d after disk filter", require.Count, count)
+			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_DISK, "expect disk count %d but only %d after disk filter", require.Count, count)
 		}
 
 		if !exclusive {
@@ -179,14 +188,14 @@ func (rw *GormResourceReadWrite) allocResourceWithRR(ctx context.Context, tx *go
 	} else {
 		var count int64
 		db := tx.Order("hosts.free_cpu_cores desc").Order("hosts.free_memory desc").Limit(int(require.Count)).Model(&rp.Host{}).Select(
-			"id as host_id, host_name, ip, user_name, passwd, ? as cpu_cores, ? as memory", reqCores, reqMem).Where("reserved = 0")
+			"id as host_id, host_name, ip, region, az, rack, user_name, passwd, ? as cpu_cores, ? as memory", reqCores, reqMem).Where("reserved = 0")
 		if excludedHosts == nil {
 			db.Count(&count)
 		} else {
 			db.Not(map[string]interface{}{"hosts.ip": excludedHosts}).Count(&count)
 		}
 		if count < int64(require.Count) {
-			return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "expect host count %d but only %d after excluded host list", require.Count, count)
+			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "expect host count %d but only %d after excluded host list", require.Count, count)
 		}
 		if !exclusive {
 			err = db.Where("az = ? and arch = ? and traits & ? = ? and status = ? and (stat = ? or stat = ?) and free_cpu_cores >= ? and free_memory >= ?",
@@ -198,11 +207,11 @@ func (rw *GormResourceReadWrite) allocResourceWithRR(ctx context.Context, tx *go
 		}
 	}
 	if err != nil {
-		return nil, errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "select resources failed, %v", err)
+		return nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "select resources failed, %v", err)
 	}
 
 	if len(resources) < int(require.Count) {
-		return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "hosts in %s, %s is not enough for allocation(%d|%d), arch: %s, traits: %d", regionName, zoneName, len(resources), require.Count, hostArch, hostTraits)
+		return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "hosts in %s, %s is not enough for allocation(%d|%d), arch: %s, traits: %d", regionName, zoneName, len(resources), require.Count, hostArch, hostTraits)
 	}
 
 	// 2. Choose Ports in Hosts
@@ -212,7 +221,7 @@ func (rw *GormResourceReadWrite) allocResourceWithRR(ctx context.Context, tx *go
 		for _, portReq := range require.Require.PortReq {
 			res, err := rw.getPortsInRange(usedPorts, portReq.Start, portReq.End, int(portReq.PortCnt))
 			if err != nil {
-				return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_PORT, "host %s(%s) has no enough ports on range [%d, %d]", resource.HostId, resource.Ip, portReq.Start, portReq.End)
+				return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_PORT, "host %s(%s) has no enough ports on range [%d, %d]", resource.HostId, resource.Ip, portReq.Start, portReq.End)
 			}
 			resource.portRes = append(resource.portRes, res)
 		}
@@ -241,7 +250,7 @@ func (rw *GormResourceReadWrite) allocResourceInHost(ctx context.Context, tx *go
 	log.Infof("allocResourceInHost[%d] for application %v, require: %v", seq, *applicant, *require)
 	hostIp := require.Location.HostIp
 	if require.Count != 1 {
-		return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "request host count should be 1 for UserSpecifyHost allocation(%d)", require.Count)
+		return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "request host count should be 1 for UserSpecifyHost allocation(%d)", require.Count)
 	}
 	reqCores := require.Require.ComputeReq.CpuCores
 	reqMem := require.Require.ComputeReq.Memory
@@ -258,7 +267,7 @@ func (rw *GormResourceReadWrite) allocResourceInHost(ctx context.Context, tx *go
 
 	if needDisk {
 		db := tx.Order("disks.capacity").Limit(int(require.Count)).Model(&rp.Disk{}).Select(
-			"disks.host_id, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", reqCores, reqMem).Joins(
+			"disks.host_id, hosts.host_name, hosts.region, hosts.az, hosts.rack, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", reqCores, reqMem).Joins(
 			"left join hosts on disks.host_id = hosts.id").Where("hosts.ip = ?", hostIp).Count(&count)
 		// No Limit in Reserved == false in this strategy for a takeover operation
 		if !isTakeOver {
@@ -266,11 +275,11 @@ func (rw *GormResourceReadWrite) allocResourceInHost(ctx context.Context, tx *go
 		}
 
 		if count < int64(require.Count) {
-			return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "disk is not enough(%d|%d) in host (%s), takeover operation (%v)", count, require.Count, hostIp, isTakeOver)
+			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "disk is not enough(%d|%d) in host (%s), takeover operation (%v)", count, require.Count, hostIp, isTakeOver)
 		}
 		db = db.Where("hosts.free_cpu_cores >= ? and hosts.free_memory >= ?", reqCores, reqMem).Count(&count)
 		if count < int64(require.Count) {
-			return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "cpucores or memory in host (%s) is not enough", hostIp)
+			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "cpucores or memory in host (%s) is not enough", hostIp)
 		}
 		if !exclusive {
 			db = db.Where("hosts.status = ? and (hosts.stat = ? or hosts.stat = ?)", constants.HostOnline, constants.HostLoadLoadLess, constants.HostLoadInUsed).Count(&count)
@@ -279,7 +288,7 @@ func (rw *GormResourceReadWrite) allocResourceInHost(ctx context.Context, tx *go
 			db = db.Where("hosts.status = ? and hosts.stat = ?", constants.HostOnline, constants.HostLoadLoadLess).Count(&count)
 		}
 		if count < int64(require.Count) {
-			return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) status/stat is not expected for exlusive(%v) condition", hostIp, exclusive)
+			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) status/stat is not expected for exlusive(%v) condition", hostIp, exclusive)
 		}
 		if diskSpecify == "" {
 			err = db.Where("disks.type = ? and disks.status = ? and disks.capacity >= ?", diskType, constants.DiskAvailable, capacity).Scan(&resources).Error
@@ -287,27 +296,27 @@ func (rw *GormResourceReadWrite) allocResourceInHost(ctx context.Context, tx *go
 			err = db.Where("disks.id = ? and disks.status = ?", diskSpecify, constants.DiskAvailable).Scan(&resources).Error
 		}
 		if err != nil {
-			return nil, errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "select resources failed, %v", err)
+			return nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "select resources failed, %v", err)
 		}
 		if len(resources) < int(require.Count) {
 			if diskSpecify == "" {
-				return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_DISK, "no available disk with type(%s) and capacity(%d) in host(%s) after disk filter", diskType, capacity, hostIp)
+				return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_DISK, "no available disk with type(%s) and capacity(%d) in host(%s) after disk filter", diskType, capacity, hostIp)
 			} else {
-				return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_DISK, "disk (%s) not existed or it is not available in host(%s)", diskSpecify, hostIp)
+				return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_DISK, "disk (%s) not existed or it is not available in host(%s)", diskSpecify, hostIp)
 			}
 		}
 	} else {
-		db := tx.Model(&rp.Host{}).Select("id as host_id, host_name, ip, user_name, passwd, ? as cpu_cores, ? as memory", reqCores, reqMem).Where("ip = ?", hostIp).Count(&count)
+		db := tx.Model(&rp.Host{}).Select("id as host_id, host_name, region, az, rack, ip, user_name, passwd, ? as cpu_cores, ? as memory", reqCores, reqMem).Where("ip = ?", hostIp).Count(&count)
 		// No Limit in Reserved == false in this strategy for a takeover operation
 		if !isTakeOver {
 			db = db.Where("hosts.reserved = 0").Count(&count)
 		}
 		if count < int64(require.Count) {
-			return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) is not existed or reserved, takeover operation(%v)", hostIp, isTakeOver)
+			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) is not existed or reserved, takeover operation(%v)", hostIp, isTakeOver)
 		}
 		db = db.Where("free_cpu_cores >= ? and free_memory >= ?", reqCores, reqMem).Count(&count)
 		if count < int64(require.Count) {
-			return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "cpucores or memory in host (%s) is not enough", hostIp)
+			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "cpucores or memory in host (%s) is not enough", hostIp)
 		}
 		if !exclusive {
 			err = db.Where("status = ? and (stat = ? or stat = ?)", constants.HostOnline, constants.HostLoadLoadLess, constants.HostLoadInUsed).Scan(&resources).Error
@@ -316,10 +325,10 @@ func (rw *GormResourceReadWrite) allocResourceInHost(ctx context.Context, tx *go
 			err = db.Where("status = ? and stat = ?", constants.HostOnline, constants.HostLoadLoadLess).Scan(&resources).Error
 		}
 		if err != nil {
-			return nil, errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "select resources failed, %v", err)
+			return nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "select resources failed, %v", err)
 		}
 		if len(resources) < int(require.Count) {
-			return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) status/stat is not expected for exlusive(%v) condition", hostIp, exclusive)
+			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) status/stat is not expected for exlusive(%v) condition", hostIp, exclusive)
 		}
 	}
 
@@ -330,7 +339,7 @@ func (rw *GormResourceReadWrite) allocResourceInHost(ctx context.Context, tx *go
 		for _, portReq := range require.Require.PortReq {
 			res, err := rw.getPortsInRange(usedPorts, portReq.Start, portReq.End, int(portReq.PortCnt))
 			if err != nil {
-				return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_PORT, "host %s(%s) has no enough ports on range [%d, %d]", resource.HostId, resource.Ip, portReq.Start, portReq.End)
+				return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_PORT, "host %s(%s) has no enough ports on range [%d, %d]", resource.HostId, resource.Ip, portReq.Start, portReq.End)
 			}
 			resource.portRes = append(resource.portRes, res)
 		}
@@ -366,28 +375,28 @@ func (rw *GormResourceReadWrite) allocPortsInRegion(ctx context.Context, tx *gor
 		return nil, errors.NewError(errors.TIEM_RESOURCE_INVALID_ARCH, "no valid arch")
 	}
 	if len(require.Require.PortReq) != 1 {
-		return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_PORT, "require portReq len should be 1 for RegionUniformPorts allocation(%d)", len(require.Require.PortReq))
+		return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_PORT, "require portReq len should be 1 for RegionUniformPorts allocation(%d)", len(require.Require.PortReq))
 	}
 	portReq := require.Require.PortReq[0]
 	var regionHosts []string
 	err = tx.Model(&rp.Host{}).Select("id").Where("region = ? and arch = ?", regionCode, hostArch).Where("reserved = 0").Scan(&regionHosts).Error
 	if err != nil {
-		return nil, errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "select %s hosts in region %s failed, %v", hostArch, regionCode, err)
+		return nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "select %s hosts in region %s failed, %v", hostArch, regionCode, err)
 	}
 	if len(regionHosts) == 0 {
-		return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "no %s host in region %s", hostArch, regionCode)
+		return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "no %s host in region %s", hostArch, regionCode)
 	}
 
 	var usedPorts []int32
 	err = tx.Order("port").Model(&mm.UsedPort{}).Select("port").Where("host_id in ?", regionHosts).Group("port").Having("port >= ? and port < ?", portReq.Start, portReq.End).Scan(&usedPorts).Error
 	if err != nil {
-		return nil, errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "select used port range %d - %d in region %s failed, %v", portReq.Start, portReq.End, regionCode, err)
+		return nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "select used port range %d - %d in region %s failed, %v", portReq.Start, portReq.End, regionCode, err)
 	}
 	log.Infof("region used port list: %v, hosts: %v, start: %d, end: %d", usedPorts, regionHosts, portReq.Start, portReq.End)
 
 	res, err := rw.getPortsInRange(usedPorts, portReq.Start, portReq.End, int(portReq.PortCnt))
 	if err != nil {
-		return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_PORT, "Region %s has no enough %d ports on range [%d, %d]", regionCode, portReq.PortCnt, portReq.Start, portReq.End)
+		return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_PORT, "Region %s has no enough %d ports on range [%d, %d]", regionCode, portReq.PortCnt, portReq.Start, portReq.End)
 	}
 	log.Infof("get region ports: %v, [%d, %d, %d]", res, portReq.Start, portReq.End, portReq.PortCnt)
 
@@ -445,10 +454,10 @@ func (rw *GormResourceReadWrite) markResourcesForUsed(tx *gorm.DB, applicant *re
 			if constants.DiskStatus(disk.Status).IsAvailable() {
 				err = tx.Model(&disk).Update("Status", string(constants.DiskExhaust)).Error
 				if err != nil {
-					return errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "update disk(%s) status err, %v", resource.DiskId, err)
+					return errors.NewErrorf(errors.TIEM_SQL_ERROR, "update disk(%s) status err, %v", resource.DiskId, err)
 				}
 			} else {
-				return errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "disk %s status not expected(%s)", resource.DiskId, disk.Status)
+				return errors.NewErrorf(errors.TIEM_SQL_ERROR, "disk %s status not expected(%s)", resource.DiskId, disk.Status)
 			}
 			usedDisk := mm.UsedDisk{
 				DiskId:   resource.DiskId,
@@ -459,7 +468,7 @@ func (rw *GormResourceReadWrite) markResourcesForUsed(tx *gorm.DB, applicant *re
 			usedDisk.RequestId = applicant.RequestId
 			err = tx.Create(&usedDisk).Error
 			if err != nil {
-				return errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "insert disk(%s) to used_disks table failed: %v", resource.DiskId, err)
+				return errors.NewErrorf(errors.TIEM_SQL_ERROR, "insert disk(%s) to used_disks table failed: %v", resource.DiskId, err)
 			}
 		}
 
@@ -474,7 +483,7 @@ func (rw *GormResourceReadWrite) markResourcesForUsed(tx *gorm.DB, applicant *re
 		}
 		err = tx.Model(&host).Select("FreeCpuCores", "FreeMemory", "Stat").Where("id = ?", resource.HostId).Updates(rp.Host{FreeCpuCores: host.FreeCpuCores, FreeMemory: host.FreeMemory, Stat: host.Stat}).Error
 		if err != nil {
-			return errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "update host(%s) stat err, %v", resource.HostId, err)
+			return errors.NewErrorf(errors.TIEM_SQL_ERROR, "update host(%s) stat err, %v", resource.HostId, err)
 		}
 		usedCompute := mm.UsedCompute{
 			HostId:   resource.HostId,
@@ -485,7 +494,7 @@ func (rw *GormResourceReadWrite) markResourcesForUsed(tx *gorm.DB, applicant *re
 		usedCompute.RequestId = applicant.RequestId
 		err = tx.Create(&usedCompute).Error
 		if err != nil {
-			return errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "insert host(%s) to used_computes table failed: %v", resource.HostId, err)
+			return errors.NewErrorf(errors.TIEM_SQL_ERROR, "insert host(%s) to used_computes table failed: %v", resource.HostId, err)
 		}
 
 		for _, ports := range resource.portRes {
@@ -498,7 +507,7 @@ func (rw *GormResourceReadWrite) markResourcesForUsed(tx *gorm.DB, applicant *re
 				usedPort.RequestId = applicant.RequestId
 				err = tx.Create(&usedPort).Error
 				if err != nil {
-					return errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "insert host(%s) for port(%d) table failed: %v", resource.HostId, port, err)
+					return errors.NewErrorf(errors.TIEM_SQL_ERROR, "insert host(%s) for port(%d) table failed: %v", resource.HostId, port, err)
 				}
 			}
 		}
@@ -517,7 +526,7 @@ func (rw *GormResourceReadWrite) markPortsInRegion(tx *gorm.DB, applicant *resou
 			usedPort.RequestId = applicant.RequestId
 			err = tx.Create(&usedPort).Error
 			if err != nil {
-				return errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "insert host(%s) for port(%d) table failed: %v", host, port, err)
+				return errors.NewErrorf(errors.TIEM_SQL_ERROR, "insert host(%s) for port(%d) table failed: %v", host, port, err)
 			}
 		}
 	}

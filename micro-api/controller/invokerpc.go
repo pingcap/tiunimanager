@@ -60,9 +60,9 @@ func InvokeRpcMethod(
 			return errors.EM_ERROR_CODE(rpcResponse.GetCode()), rpcResponse.GetMessage()
 		},
 		func() (interface{}, error) {
-			err := json.Unmarshal([]byte(rpcResponse.Response), response)
-			if err != nil {
-				return nil, err
+			marshalError := json.Unmarshal([]byte(rpcResponse.Response), response)
+			if marshalError != nil {
+				return nil, errors.NewError(errors.TIEM_UNMARSHAL_ERROR, marshalError.Error())
 			} else {
 				return response, nil
 			}

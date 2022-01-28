@@ -32,7 +32,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 
 	"github.com/alecthomas/assert"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -61,7 +61,7 @@ func TestExecutor_collectorClusterLogConfig(t *testing.T) {
 
 func TestExecutor_buildCollectorClusterLogConfig(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		configs, err := buildCollectorClusterLogConfig(context.TODO(), []*handler.InstanceLogInfo{
+		configs, err := buildCollectorClusterLogConfig(context.TODO(), []*meta.InstanceLogInfo{
 			{
 				ClusterID:    "123",
 				InstanceType: "TiDB",

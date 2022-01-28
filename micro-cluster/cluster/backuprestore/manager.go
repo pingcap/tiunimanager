@@ -24,12 +24,13 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	dbModel "github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/workflow"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -64,7 +65,7 @@ func NewBRManager() *BRManager {
 			"start":            {"backup", "backupDone", "fail", workflow.PollingNode, backupCluster},
 			"backupDone":       {"updateBackupRecord", "updateRecordDone", "fail", workflow.SyncFuncNode, updateBackupRecord},
 			"updateRecordDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-			"fail":             {"fail", "", "", workflow.SyncFuncNode, backupFail},
+			"fail":             {"end", "", "", workflow.SyncFuncNode, backupFail},
 		},
 	})
 	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowRestoreExistCluster, &workflow.WorkFlowDefine{
@@ -72,7 +73,7 @@ func NewBRManager() *BRManager {
 		TaskNodes: map[string]*workflow.NodeDefine{
 			"start":       {"restoreFromSrcCluster", "restoreDone", "fail", workflow.PollingNode, restoreFromSrcCluster},
 			"restoreDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-			"fail":        {"fail", "", "", workflow.SyncFuncNode, restoreFail},
+			"fail":        {"end", "", "", workflow.SyncFuncNode, restoreFail},
 		},
 	})
 
@@ -103,7 +104,7 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request cluster.BackupC
 		return resp, errors.WrapError(errors.TIEM_BACKUP_SYSTEM_CONFIG_INVAILD, fmt.Sprintf("get conifg %s failed: %s", constants.ConfigKeyBackupStoragePath, err.Error()), err)
 	}
 
-	meta, err := handler.Get(ctx, request.ClusterID)
+	meta, err := meta.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
@@ -177,7 +178,7 @@ func (mgr *BRManager) RestoreExistCluster(ctx context.Context, request cluster.R
 	framework.LogWithContext(ctx).Infof("Begin RestoreExistCluster, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End RestoreExistCluster")
 
-	meta, err := handler.Get(ctx, request.ClusterID)
+	meta, err := meta.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
@@ -265,7 +266,7 @@ func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request cluster.D
 
 	if request.ClusterID == "" && request.BackupID == "" {
 		framework.LogWithContext(ctx).Errorf("invalid param clusterId and backupId empty")
-		return resp, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "invalid param clusterId and backupId empty")
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid param clusterId and backupId empty")
 	}
 
 	deleteRecordMap := make(map[string]*backuprestore.BackupRecord)
@@ -344,7 +345,7 @@ func (mgr *BRManager) SaveBackupStrategy(ctx context.Context, request cluster.Sa
 		return resp, errors.WrapError(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("save backup strategy precheck failed, %s", err.Error()), err)
 	}
 
-	meta, err := handler.Get(ctx, request.ClusterID)
+	meta, err := meta.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get cluster %s meta failed, %s", request.ClusterID, err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
@@ -413,7 +414,15 @@ func (mgr *BRManager) backupClusterPreCheck(ctx context.Context, request cluster
 			return fmt.Errorf("get and check conifg %s failed", constants.ConfigKeyBackupS3SecretAccessKey)
 		}
 	case string(constants.StorageTypeNFS):
-		break
+		absPath, err := filepath.Abs(storagePathCfg.ConfigValue)
+		if err != nil {
+			return fmt.Errorf("backup nfs path %s is not vaild", storagePathCfg.ConfigValue)
+		}
+		if !mgr.checkFilePathExists(absPath) {
+			if err = os.MkdirAll(absPath, os.ModePerm); err != nil {
+				return fmt.Errorf("make backup nfs path %s failed, %s", absPath, err.Error())
+			}
+		}
 	default:
 		return fmt.Errorf("conifg %s value %s is unknow", constants.ConfigKeyBackupStorageType, storageTypeCfg.ConfigValue)
 	}
@@ -463,4 +472,12 @@ func (mgr *BRManager) saveBackupStrategyPreCheck(ctx context.Context, request cl
 
 func (mgr *BRManager) getBackupPath(backupPath, clusterId string, time time.Time, backupType string) string {
 	return fmt.Sprintf("%s/%s/%s_%s", backupPath, clusterId, time.Format("2006-01-02_15:04:05"), backupType)
+}
+
+func (mgr *BRManager) checkFilePathExists(path string) bool {
+	_, err := os.Stat(path)
+	if err != nil {
+		return os.IsExist(err)
+	}
+	return true
 }

@@ -20,7 +20,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
@@ -56,7 +56,7 @@ func TestExecutor_backupCluster(t *testing.T) {
 	flowContext.SetData(contextBackupRecordKey, &backuprestore.BackupRecord{
 		StorageType: "s3",
 	})
-	flowContext.SetData(contextClusterMetaKey, &handler.ClusterMeta{
+	flowContext.SetData(contextClusterMetaKey, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "cls-test",
@@ -79,6 +79,14 @@ func TestExecutor_backupCluster(t *testing.T) {
 					DiskType:     "SSD",
 					DiskCapacity: 128,
 				},
+			},
+		},
+		DBUsers: map[string]*management.DBUser{
+			string(constants.DBUserBackupRestore): &management.DBUser{
+				ClusterID: "cls-test",
+				Name:      constants.DBUserName[constants.DBUserBackupRestore],
+				Password:  "12345678",
+				RoleType:  string(constants.DBUserBackupRestore),
 			},
 		},
 	})
@@ -107,7 +115,7 @@ func TestExecutor_updateBackupRecord(t *testing.T) {
 			ID: "record-xxxx",
 		},
 	})
-	flowContext.SetData(contextClusterMetaKey, &handler.ClusterMeta{
+	flowContext.SetData(contextClusterMetaKey, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "cls-xxxx",
@@ -135,7 +143,7 @@ func TestExecutor_restoreFromSrcCluster(t *testing.T) {
 	flowContext.SetData(contextBackupRecordKey, &backuprestore.BackupRecord{
 		StorageType: "s3",
 	})
-	flowContext.SetData(contextClusterMetaKey, &handler.ClusterMeta{
+	flowContext.SetData(contextClusterMetaKey, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "cls-test",
@@ -152,6 +160,14 @@ func TestExecutor_restoreFromSrcCluster(t *testing.T) {
 					HostIP: []string{"127.0.0.1"},
 					Ports:  []int32{8000},
 				},
+			},
+		},
+		DBUsers: map[string]*management.DBUser{
+			string(constants.DBUserBackupRestore): &management.DBUser{
+				ClusterID: "cls-test",
+				Name:      constants.DBUserName[constants.DBUserBackupRestore],
+				Password:  "12345678",
+				RoleType:  string(constants.DBUserBackupRestore),
 			},
 		},
 	})
@@ -177,7 +193,7 @@ func TestExecutor_backupFail(t *testing.T) {
 			ID: "record-xxxx",
 		},
 	})
-	flowContext.SetData(contextClusterMetaKey, &handler.ClusterMeta{
+	flowContext.SetData(contextClusterMetaKey, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "cls-xxxx",
@@ -196,7 +212,7 @@ func TestExecutor_restoreFail(t *testing.T) {
 			ID: "record-xxxx",
 		},
 	})
-	flowContext.SetData(contextClusterMetaKey, &handler.ClusterMeta{
+	flowContext.SetData(contextClusterMetaKey, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "cls-xxxx",
@@ -222,7 +238,7 @@ func TestExecutor_defaultEnd(t *testing.T) {
 			ID: "record-xxxx",
 		},
 	})
-	flowContext.SetData(contextClusterMetaKey, &handler.ClusterMeta{
+	flowContext.SetData(contextClusterMetaKey, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "cls-xxxx",

@@ -48,7 +48,7 @@ func getEmptyFlow(name string) *workflow.WorkFlowDefine {
 		TaskNodes: map[string]*workflow.NodeDefine{
 			"start": {Name: "start", SuccessEvent: "done", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
 			"done":  {Name: "end", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
-			"fail":  {Name: "fail", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
+			"fail":  {Name: "end", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
 		},
 	}
 }
@@ -157,13 +157,13 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
 	}, nil).AnyTimes()
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(3)
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(4)
 
 	var hosts []structs.HostInfo
 	host := genHostInfo("TEST_HOST1")
 	hosts = append(hosts, *host)
 
-	flowIds, hostIds, err := resourceManager.ImportHosts(context.TODO(), hosts)
+	flowIds, hostIds, err := resourceManager.ImportHosts(context.TODO(), hosts, &structs.ImportCondition{})
 	assert.Nil(t, err)
 
 	assert.Equal(t, fake_hostId, hostIds[0])
@@ -212,7 +212,7 @@ func Test_ImportHosts_Failed(t *testing.T) {
 	var hosts []structs.HostInfo
 	host := genHostInfo("TEST_HOST2")
 	hosts = append(hosts, *host)
-	flowIds, _, err := resourceManager.ImportHosts(context.TODO(), hosts)
+	flowIds, _, err := resourceManager.ImportHosts(context.TODO(), hosts, &structs.ImportCondition{})
 	assert.NotNil(t, err)
 	tiemErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
@@ -268,6 +268,11 @@ func Test_DeleteHosts_Succeed(t *testing.T) {
 	defer ctrl.Finish()
 	mockClient := mock_resource.NewMockReaderWriter(ctrl)
 	mockClient.EXPECT().UpdateHostStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	mockClient.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+		[]resourcepool.Host{{IP: "192.168.168.999", Status: string(constants.HostOnline), Stat: string(constants.HostLoadLoadLess)}},
+		int64(1),
+		nil,
+	).Times(2)
 
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
 	file_hostprovider, ok := (hostprovider).(*(host_provider.FileHostProvider))
@@ -284,13 +289,13 @@ func Test_DeleteHosts_Succeed(t *testing.T) {
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
 	}, nil).AnyTimes()
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(4)
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(6)
 
 	var hostIds []string
 	hostIds = append(hostIds, fake_hostId1)
 	hostIds = append(hostIds, fake_hostId2)
 
-	flowIds, err := resourceManager.DeleteHosts(context.TODO(), hostIds)
+	flowIds, err := resourceManager.DeleteHosts(context.TODO(), hostIds, false)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(flowIds))
 }

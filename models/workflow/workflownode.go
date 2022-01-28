@@ -54,6 +54,11 @@ func (node *WorkFlowNode) Record(result ...interface{}) {
 	}
 }
 
+func (node *WorkFlowNode) RecordAndPersist(result ...interface{}) {
+	// todo: persist record
+	node.Record(result)
+}
+
 func (node *WorkFlowNode) Success(result ...interface{}) {
 	node.Record(result...)
 
@@ -64,5 +69,5 @@ func (node *WorkFlowNode) Success(result ...interface{}) {
 func (node *WorkFlowNode) Fail(e error) {
 	node.Status = constants.WorkFlowStatusError
 	node.EndTime = time.Now()
-	node.Result = e.Error()
+	node.Record(e.Error())
 }

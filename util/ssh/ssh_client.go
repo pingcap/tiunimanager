@@ -31,9 +31,20 @@ import (
 )
 
 type SSHClientExecutor interface {
-	Connect() (err error)
-	Close()
-	RunCommandsInSession(commands []string) (result string, err error)
+	RunCommandsInRemoteHost(host string, port int, sshType SSHType, user, passwd string, timeoutS int, commands []string) (result string, err error)
+}
+
+type SSHExecutor struct{}
+
+func (client SSHExecutor) RunCommandsInRemoteHost(host string, port int, sshType SSHType, user, passwd string, timeoutS int, commands []string) (result string, err error) {
+	c := new(SSHClient)
+	c.InitSSHClient(host, port, sshType, user, passwd, timeoutS)
+	if err = c.Connect(); err != nil {
+		return "", err
+	}
+	defer c.Close()
+
+	return c.RunCommandsInSession(commands)
 }
 
 type SSHType string
@@ -45,9 +56,9 @@ const (
 
 type SSHClient struct {
 	sshHost     string
-	sshPort int
-	sshType SSHType
-	sshUser string
+	sshPort     int
+	sshType     SSHType
+	sshUser     string
 	sshPassword string
 	sshTimeout  time.Duration
 	sshKeyPath  string //path of id_rsa
@@ -55,16 +66,15 @@ type SSHClient struct {
 	client *ssh.Client
 }
 
-func NewSSHClient(host string, port int, sshType SSHType, user, passwd string) *SSHClient {
-	return &SSHClient{
-		sshHost:     host,
-		sshPort:     port,
-		sshType:     sshType,
-		sshUser:     user,
-		sshPassword: passwd,
-		sshTimeout:  time.Second, // default time 1s
-		sshKeyPath:  filepath.Join(os.Getenv("HOME"), ".ssh", "id_rsa"),
-	}
+func (c *SSHClient) InitSSHClient(host string, port int, sshType SSHType, user, passwd string, timeoutS int) {
+	c.sshHost = host
+	c.sshPort = port
+	c.sshType = sshType
+	c.sshUser = user
+	c.sshPassword = passwd
+
+	c.sshTimeout = time.Duration(timeoutS) * time.Second
+	c.sshKeyPath = filepath.Join(os.Getenv("HOME"), ".ssh", "id_rsa")
 }
 
 func (c *SSHClient) SetConnTimeOut(t time.Duration) {
@@ -93,7 +103,7 @@ func (c *SSHClient) Connect() (err error) {
 	addr := fmt.Sprintf("%s:%d", c.sshHost, c.sshPort)
 	c.client, err = ssh.Dial("tcp", addr, config)
 	if err != nil {
-		err = errors.NewEMErrorf(errors.TIEM_RESOURCE_CONNECT_TO_HOST_ERROR, "ssh client dial to addr %s@%s failed, %v", c.sshUser, addr, err)
+		err = errors.NewErrorf(errors.TIEM_RESOURCE_CONNECT_TO_HOST_ERROR, "ssh client dial to addr %s@%s failed, %v", c.sshUser, addr, err)
 		return
 	}
 
@@ -101,20 +111,22 @@ func (c *SSHClient) Connect() (err error) {
 }
 
 func (c *SSHClient) Close() {
-	c.client.Close()
+	if c.client != nil {
+		c.client.Close()
+	}
 }
 
 func (c *SSHClient) RunCommandsInSession(commands []string) (result string, err error) {
 	session, err := c.client.NewSession()
 	if err != nil {
-		return "", errors.NewEMErrorf(errors.TIEM_RESOURCE_NEW_SESSION_ERROR, "new ssh session failed for %s@%s:%d, %v", c.sshUser, c.sshHost, c.sshPort, err)
+		return "", errors.NewErrorf(errors.TIEM_RESOURCE_NEW_SESSION_ERROR, "new ssh session failed for %s@%s:%d, %v", c.sshUser, c.sshHost, c.sshPort, err)
 	}
 	defer session.Close()
 
 	command := strings.Join(commands, ";")
 	combo, err := session.CombinedOutput(command)
 	if err != nil {
-		return "", errors.NewEMErrorf(errors.TIEM_RESOURCE_RUN_COMMAND_ERROR, "exec command %s on %s@%s:%d failed, %v", command, c.sshUser, c.sshHost, c.sshPort, err)
+		return "", errors.NewErrorf(errors.TIEM_RESOURCE_RUN_COMMAND_ERROR, "exec command %s on %s@%s:%d failed, %v", command, c.sshUser, c.sshHost, c.sshPort, err)
 	}
 	result = string(combo)
 	return

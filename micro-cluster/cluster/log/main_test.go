@@ -29,7 +29,7 @@ import (
 	"testing"
 
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 
 	"github.com/pingcap-inc/tiem/models/common"
@@ -58,8 +58,8 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func mockClusterMeta() *handler.ClusterMeta {
-	return &handler.ClusterMeta{
+func mockClusterMeta() *meta.ClusterMeta {
+	return &meta.ClusterMeta{
 		Cluster: mockCluster(),
 		Instances: map[string][]*management.ClusterInstance{
 			"TiDB": mockClusterInstances(),
@@ -75,8 +75,6 @@ func mockCluster() *management.Cluster {
 	return &management.Cluster{
 		Entity:            common.Entity{ID: "123", TenantId: "1", Status: "1"},
 		Name:              "testCluster",
-		DBUser:            "root",
-		DBPassword:        "123",
 		Type:              "0",
 		Version:           "5.0",
 		TLS:               false,
@@ -114,6 +112,35 @@ func mockClusterInstances() []*management.ClusterInstance {
 			DiskPath:     "/tmp",
 			HostInfo:     "host",
 			PortInfo:     "port",
+		},
+	}
+}
+
+func mockDBUsers() []*management.DBUser {
+	return []*management.DBUser{
+		{
+			ClusterID: "123",
+			Name:      "backup",
+			Password:  "123455678",
+			RoleType:  string(constants.DBUserBackupRestore),
+		},
+		{
+			ClusterID: "123",
+			Name:      "root",
+			Password:  "123455678",
+			RoleType:  string(constants.Root),
+		},
+		{
+			ClusterID: "123",
+			Name:      "parameter",
+			Password:  "123455678",
+			RoleType:  string(constants.DBUserParameterManagement),
+		},
+		{
+			ClusterID: "123",
+			Name:      "data_sync",
+			Password:  "123455678",
+			RoleType:  string(constants.DBUserCDCDataSync),
 		},
 	}
 }

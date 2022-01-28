@@ -27,16 +27,15 @@ import (
 	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
 	switchoverApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/switchover"
-	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
+	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
 	"github.com/pingcap-inc/tiem/micro-api/controller/platform/product"
 	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
 	warehouseApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 	flowtaskApi "github.com/pingcap-inc/tiem/micro-api/controller/task/flowtask"
-	accountApi "github.com/pingcap-inc/tiem/micro-api/controller/user/account"
-	idApi "github.com/pingcap-inc/tiem/micro-api/controller/user/identification"
-
+	userApi "github.com/pingcap-inc/tiem/micro-api/controller/user"
+	rbacApi "github.com/pingcap-inc/tiem/micro-api/controller/user/rbac"
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -59,7 +58,6 @@ func Route(g *gin.Engine) {
 	web := g.Group("/web")
 	{
 		web.Use(interceptor.AccessLog(), gin.Recovery())
-		// 替换成静态文件
 		web.GET("/*any", controller.HelloPage)
 	}
 
@@ -70,17 +68,49 @@ func Route(g *gin.Engine) {
 		apiV1.Use(interceptor.GinTraceIDHandler())
 		apiV1.Use(interceptor.AccessLog(), gin.Recovery())
 
-		user := apiV1.Group("/user")
+		auth := apiV1.Group("/user")
 		{
-			user.POST("/login", metrics.HandleMetrics(constants.MetricsUserLogin), idApi.Login)
-			user.POST("/logout", metrics.HandleMetrics(constants.MetricsUserLogout), idApi.Logout)
+			auth.POST("/login", metrics.HandleMetrics(constants.MetricsUserLogin), userApi.Login)
+			auth.POST("/logout", metrics.HandleMetrics(constants.MetricsUserLogout), userApi.Logout)
 		}
 
-		profile := user.Group("")
+		user := apiV1.Group("/users")
 		{
-			profile.Use(interceptor.VerifyIdentity)
-			profile.Use(interceptor.AuditLog())
-			profile.GET("/profile", metrics.HandleMetrics(constants.MetricsUserProfile), accountApi.Profile)
+			user.Use(interceptor.VerifyIdentity)
+			user.Use(interceptor.AuditLog())
+			user.POST("/", metrics.HandleMetrics(constants.MetricsUserCreate), userApi.CreateUser)
+			user.DELETE("/:userId", metrics.HandleMetrics(constants.MetricsUserDelete), userApi.DeleteUser)
+			user.POST("/:userId/update_profile", metrics.HandleMetrics(constants.MetricsUserUpdateProfile), userApi.UpdateUserProfile)
+			user.POST("/:userId/password", metrics.HandleMetrics(constants.MetricsUserUpdatePassword), userApi.UpdateUserPassword)
+			user.GET("/:userId", metrics.HandleMetrics(constants.MetricsUserGet), userApi.GetUser)
+			user.GET("/", metrics.HandleMetrics(constants.MetricsUserQuery), userApi.QueryUsers)
+		}
+
+		tenant := apiV1.Group("/tenants")
+		{
+			tenant.Use(interceptor.VerifyIdentity)
+			tenant.Use(interceptor.AuditLog())
+			tenant.POST("/", metrics.HandleMetrics(constants.MetricsTenantCreate), userApi.CreateTenant)
+			tenant.DELETE("/:tenantId", metrics.HandleMetrics(constants.MetricsTenantDelete), userApi.DeleteTenant)
+			tenant.POST("/:tenantId/update_profile", metrics.HandleMetrics(constants.MetricsTenantUpdateProfile), userApi.UpdateTenantProfile)
+			tenant.POST("/:tenantId/update_on_boarding_status", metrics.HandleMetrics(constants.MetricsTenantUpdateOnBoardingStatus), userApi.UpdateTenantOnBoardingStatus)
+			tenant.GET("/:tenantId", metrics.HandleMetrics(constants.MetricsTenantGet), userApi.GetTenant)
+			tenant.GET("/", metrics.HandleMetrics(constants.MetricsTenantQuery), userApi.QueryTenants)
+		}
+
+		rbac := apiV1.Group("/rbac")
+		{
+			rbac.Use(interceptor.VerifyIdentity)
+			rbac.Use(interceptor.AuditLog())
+			rbac.POST("/role/", metrics.HandleMetrics(constants.MetricsRbacCreateRole), rbacApi.CreateRbacRole)
+			rbac.GET("/role/", metrics.HandleMetrics(constants.MetricsRbacQueryRole), rbacApi.QueryRbacRoles)
+			rbac.POST("/role/bind", metrics.HandleMetrics(constants.MetricsRbacBindRolesForUser), rbacApi.BindRolesForUser)
+			rbac.DELETE("/role/unbind", metrics.HandleMetrics(constants.MetricsRbacUnbindRoleForUser), rbacApi.UnbindRoleForUser)
+			rbac.DELETE("/role/:role", metrics.HandleMetrics(constants.MetricsRbacDeleteRole), rbacApi.DeleteRbacRole)
+			rbac.POST("/permission/add", metrics.HandleMetrics(constants.MetricsRbacAddPermissionForRole), rbacApi.AddPermissionsForRole)
+			rbac.DELETE("/permission/delete", metrics.HandleMetrics(constants.MetricsRbacDeletePermissionForRole), rbacApi.DeletePermissionsForRole)
+			rbac.GET("/permission/:userId", metrics.HandleMetrics(constants.MetricsRbacQueryPermissionForUser), rbacApi.QueryPermissionsForUser)
+			rbac.POST("/permission/check", metrics.HandleMetrics(constants.MetricsRbacCheckPermissionForUser), rbacApi.CheckPermissionForUser)
 		}
 
 		cluster := apiV1.Group("/clusters")
@@ -103,7 +133,7 @@ func Route(g *gin.Engine) {
 			cluster.GET("/:clusterId/log", metrics.HandleMetrics(constants.MetricsClusterQueryLogParameter), logApi.QueryClusterLog)
 
 			// Scale cluster
-			cluster.GET("/:clusterId/preview-scale-out", metrics.HandleMetrics(constants.MetricsClusterPreviewScaleOut), clusterApi.ScaleOutPreview)
+			cluster.POST("/:clusterId/preview-scale-out", metrics.HandleMetrics(constants.MetricsClusterPreviewScaleOut), clusterApi.ScaleOutPreview)
 			cluster.POST("/:clusterId/scale-out", metrics.HandleMetrics(constants.MetricsClusterScaleOut), clusterApi.ScaleOut)
 			cluster.POST("/:clusterId/scale-in", metrics.HandleMetrics(constants.MetricsClusterScaleIn), clusterApi.ScaleIn)
 
@@ -216,7 +246,7 @@ func Route(g *gin.Engine) {
 			zoneGroup.Use(interceptor.AuditLog())
 			zoneGroup.POST("/", product.CreateZones)
 			zoneGroup.DELETE("/", product.DeleteZones)
-			zoneGroup.GET("/", product.QueryZones)
+			zoneGroup.GET("/tree", product.QueryZonesTree)
 		}
 
 		specGroup := apiV1.Group("/specs")

@@ -1912,6 +1912,11 @@ var doc = `{
                 "summary": "query parameters of a cluster",
                 "parameters": [
                     {
+                        "type": "string",
+                        "name": "instanceType",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Current page location",
                         "name": "page",
@@ -1921,6 +1926,11 @@ var doc = `{
                         "type": "integer",
                         "description": "Number of this request",
                         "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "paramName",
                         "in": "query"
                     },
                     {
@@ -2116,7 +2126,7 @@ var doc = `{
             }
         },
         "/clusters/{clusterId}/preview-scale-out": {
-            "get": {
+            "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
@@ -2478,6 +2488,71 @@ var doc = `{
             }
         },
         "/clusters/{clusterId}/strategy": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "show the backup strategy of a cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster backup"
+                ],
+                "summary": "show the backup strategy of a cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.GetBackupStrategyResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            },
             "put": {
                 "security": [
                     {
@@ -2526,73 +2601,6 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/cluster.SaveBackupStrategyResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/clusters/{clusterId}/strategy/": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "show the backup strategy of a cluster",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster backup"
-                ],
-                "summary": "show the backup strategy of a cluster",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "clusterId",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/cluster.GetBackupStrategyResp"
                                         }
                                     }
                                 }
@@ -2969,6 +2977,16 @@ var doc = `{
                         "name": "paramGroupId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "instanceType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "paramName",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -3596,6 +3614,619 @@ var doc = `{
                 }
             }
         },
+        "/rbac/permission/add": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "AddPermissionsForRole",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac AddPermissionsForRole"
+                ],
+                "summary": "add permissions for role",
+                "parameters": [
+                    {
+                        "description": "AddPermissionsForRole request",
+                        "name": "addPermissionsForRoleReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.AddPermissionsForRoleReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.AddPermissionsForRoleResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/rbac/permission/check": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "CheckPermissionForUser",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac CheckPermissionForUser"
+                ],
+                "summary": "check permissions of user",
+                "parameters": [
+                    {
+                        "description": "CheckPermissionForUser request",
+                        "name": "checkPermissionForUserReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.CheckPermissionForUserReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.CheckPermissionForUserResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/rbac/permission/delete": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "DeletePermissionsForRole",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac DeletePermissionsForRole"
+                ],
+                "summary": "delete permissions for role",
+                "parameters": [
+                    {
+                        "description": "DeleteRoleForUser request",
+                        "name": "deletePermissionsForRoleReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.DeletePermissionsForRoleReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.DeletePermissionsForRoleResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/rbac/permission/{userId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "QueryPermissionsForUser",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac QueryPermissionsForUser"
+                ],
+                "summary": "query permissions of user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "rbac userId",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.QueryPermissionsForUserResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/rbac/role/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "QueryRoles",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac QueryRoles"
+                ],
+                "summary": "query rbac roles",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "rbac role",
+                        "name": "role",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.QueryRolesResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "CreateRbacRole",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac CreateRbacRole"
+                ],
+                "summary": "create rbac role",
+                "parameters": [
+                    {
+                        "description": "CreateRole request",
+                        "name": "createReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.CreateRoleReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.CreateRoleResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/rbac/role/bind": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "BindRolesForUser",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac BindRolesForUser"
+                ],
+                "summary": "bind user with roles",
+                "parameters": [
+                    {
+                        "description": "BindRolesForUser request",
+                        "name": "bindReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.BindRolesForUserReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.BindRolesForUserResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/rbac/role/{role}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "DeleteRbacRole",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac DeleteRbacRole"
+                ],
+                "summary": "delete rbac role",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "rbac role",
+                        "name": "role",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.DeleteRoleResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/rbac/user_role/delete": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "UnbindRoleForUser",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rbac UnbindRoleForUser"
+                ],
+                "summary": "unbind rbac role from user",
+                "parameters": [
+                    {
+                        "description": "UnbindRoleForUser request",
+                        "name": "deleteRoleForUserReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UnbindRoleForUserReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UnbindRoleForUserResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/resources/hierarchy": {
             "get": {
                 "security": [
@@ -3797,32 +4428,17 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "name": "HostIp",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "Rack",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "Region",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "Zone",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
                         "name": "arch",
                         "in": "query"
                     },
                     {
                         "type": "string",
                         "name": "hostId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostIp",
                         "in": "query"
                     },
                     {
@@ -3849,7 +4465,22 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "rack",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "region",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "zone",
                         "in": "query"
                     }
                 ],
@@ -3897,6 +4528,20 @@ var doc = `{
                         "default": "false",
                         "description": "whether hosts are reserved(won't be allocated) after import",
                         "name": "hostReserved",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "false",
+                        "description": "whether to skip host init steps",
+                        "name": "skipHostInit",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "false",
+                        "description": "whether to ignore warings in init steps",
+                        "name": "ignorewarns",
                         "in": "formData"
                     },
                     {
@@ -4026,48 +4671,33 @@ var doc = `{
                 "summary": "Show the resources stocks",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "name": "Capacity",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "DiskStatus",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "DiskType",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "HostIp",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "Rack",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "Region",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "Zone",
-                        "in": "query"
-                    },
-                    {
                         "type": "string",
                         "name": "arch",
                         "in": "query"
                     },
                     {
+                        "type": "integer",
+                        "name": "capacity",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "diskStatus",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "diskType",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "name": "hostId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostIp",
                         "in": "query"
                     },
                     {
@@ -4082,7 +4712,22 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "rack",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "region",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "zone",
                         "in": "query"
                     }
                 ],
@@ -4108,7 +4753,7 @@ var doc = `{
                 }
             }
         },
-        "/specs": {
+        "/specs/": {
             "get": {
                 "security": [
                     {
@@ -4300,6 +4945,446 @@ var doc = `{
                 }
             }
         },
+        "/tenant": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query all tenant profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "queries all tenant profile",
+                "parameters": [
+                    {
+                        "description": "query tenant profile request parameter",
+                        "name": "QueryTenantReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.QueryTenantReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.QueryTenantResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "update tenant onboarding status",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "update tenant onboarding status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "tenant id",
+                        "name": "tenantId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "query tenant profile request parameter",
+                        "name": "UpdateTenantOnBoardingStatusReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UpdateTenantOnBoardingStatusReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UpdateTenantOnBoardingStatusResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/tenant/{tenantId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get tenant profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "get tenant profile",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "tenant id",
+                        "name": "tenantId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "get tenant profile request parameter",
+                        "name": "GetTenantReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.GetTenantReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.GetTenantResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/tenants/": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "created tenant",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "created  tenant",
+                "parameters": [
+                    {
+                        "description": "create tenant request parameter",
+                        "name": "CreateTenantReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.CreateTenantReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.CreateTenantResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/tenants/{tenantId}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "delete tenant",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "delete tenant",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "tenant id",
+                        "name": "tenantId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "delete tenant request parameter",
+                        "name": "DeleteTenantReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.DeleteTenantReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.DeleteTenantResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/tenants/{tenantId}/update_profile": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "update tenant profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "update tenant profile",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "tenant id",
+                        "name": "tenantId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "query tenant profile request parameter",
+                        "name": "UpdateTenantProfileReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UpdateTenantProfileReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UpdateTenantProfileResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/user/login": {
             "post": {
                 "description": "login",
@@ -4410,14 +5495,14 @@ var doc = `{
                 }
             }
         },
-        "/user/profile": {
+        "/users/": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "profile",
+                "description": "query all user profile",
                 "consumes": [
                     "application/json"
                 ],
@@ -4427,7 +5512,85 @@ var doc = `{
                 "tags": [
                     "platform"
                 ],
-                "summary": "user profile",
+                "summary": "queries all user profile",
+                "parameters": [
+                    {
+                        "description": "query user profile request parameter",
+                        "name": "queryUserRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.QueryUserReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.QueryUserResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "created user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "created  user",
+                "parameters": [
+                    {
+                        "description": "create user request parameter",
+                        "name": "createUserReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.CreateUserReq"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4440,7 +5603,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/message.UserProfile"
+                                            "$ref": "#/definitions/message.CreateUserResp"
                                         }
                                     }
                                 }
@@ -4449,6 +5612,305 @@ var doc = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{userId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get user profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "get user profile",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user id",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.GetUserResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "delete user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "delete user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user id",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "delete user request parameter",
+                        "name": "deleteUserReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.DeleteUserReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.DeleteUserResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{userId}/password": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "update user password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "update user password",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user id",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "query user password request parameter",
+                        "name": "UpdateUserPasswordRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UpdateUserPasswordReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UpdateUserPasswordResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{userId}/update_profile": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "update user profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "update user profile",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user id",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "query user profile request parameter",
+                        "name": "updateUserProfileRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UpdateUserProfileReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UpdateUserProfileResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/controller.CommonResult"
                         }
@@ -4621,63 +6083,7 @@ var doc = `{
                 }
             }
         },
-        "/zones": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "queries all zones information",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "platform"
-                ],
-                "summary": "queries all zones information",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/message.QueryZonesResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            },
+        "/zones/": {
             "post": {
                 "security": [
                     {
@@ -4812,6 +6218,64 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/zones/tree": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "queries all regions information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "queries all regions information",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.QueryZonesTreeResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -4881,7 +6345,7 @@ var doc = `{
                     "type": "string"
                 },
                 "dbUser": {
-                    "description": "The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
+                    "description": "todo delete?",
                     "type": "string"
                 },
                 "exclusive": {
@@ -4907,6 +6371,9 @@ var doc = `{
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendor": {
+                    "type": "string"
                 }
             }
         },
@@ -5006,7 +6473,7 @@ var doc = `{
                     "type": "string"
                 },
                 "dbUser": {
-                    "description": "The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
+                    "description": "todo delete?",
                     "type": "string"
                 },
                 "exclusive": {
@@ -5031,6 +6498,9 @@ var doc = `{
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendor": {
+                    "type": "string"
                 }
             }
         },
@@ -5124,9 +6594,17 @@ var doc = `{
                     "type": "string",
                     "example": "415241823337054209"
                 },
+                "downstreamFetchUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
+                },
                 "downstreamSyncTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "downstreamSyncUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 },
                 "downstreamType": {
                     "type": "string",
@@ -5158,6 +6636,10 @@ var doc = `{
                     "type": "string",
                     "example": "415241823337054209"
                 },
+                "startUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
+                },
                 "status": {
                     "type": "string",
                     "enum": [
@@ -5180,6 +6662,10 @@ var doc = `{
                 "upstreamUpdateTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "upstreamUpdateUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 }
             }
         },
@@ -5423,9 +6909,17 @@ var doc = `{
                     "type": "string",
                     "example": "415241823337054209"
                 },
+                "downstreamFetchUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
+                },
                 "downstreamSyncTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "downstreamSyncUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 },
                 "downstreamType": {
                     "type": "string",
@@ -5457,6 +6951,10 @@ var doc = `{
                     "type": "string",
                     "example": "415241823337054209"
                 },
+                "startUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
+                },
                 "status": {
                     "type": "string",
                     "enum": [
@@ -5479,6 +6977,10 @@ var doc = `{
                 "upstreamUpdateTs": {
                     "type": "string",
                     "example": "415241823337054209"
+                },
+                "upstreamUpdateUnix": {
+                    "type": "integer",
+                    "example": 1642402879000
                 }
             }
         },
@@ -5607,7 +7109,7 @@ var doc = `{
                     "type": "string"
                 },
                 "dbUser": {
-                    "description": "The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
+                    "description": "todo delete?",
                     "type": "string"
                 },
                 "exclusive": {
@@ -5632,6 +7134,9 @@ var doc = `{
                 },
                 "tls": {
                     "type": "boolean"
+                },
+                "vendor": {
+                    "type": "string"
                 }
             }
         },
@@ -5739,8 +7244,7 @@ var doc = `{
                 "TiUPUserName",
                 "TiUPUserPassword",
                 "clusterName",
-                "dbPassword",
-                "dbUser"
+                "dbPassword"
             ],
             "properties": {
                 "TiUPIp": {
@@ -5770,10 +7274,6 @@ var doc = `{
                 "dbPassword": {
                     "type": "string",
                     "example": "myPassword"
-                },
-                "dbUser": {
-                    "type": "string",
-                    "example": "root"
                 }
             }
         },
@@ -5882,6 +7382,9 @@ var doc = `{
         },
         "cluster.UpdateClusterParametersReq": {
             "type": "object",
+            "required": [
+                "params"
+            ],
             "properties": {
                 "params": {
                     "type": "array",
@@ -6079,8 +7582,28 @@ var doc = `{
                 }
             }
         },
+        "message.AddPermissionsForRoleReq": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.RbacPermission"
+                    }
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.AddPermissionsForRoleResp": {
+            "type": "object"
+        },
         "message.ApplyParameterGroupReq": {
             "type": "object",
+            "required": [
+                "clusterId"
+            ],
             "properties": {
                 "clusterId": {
                     "type": "string",
@@ -6108,8 +7631,50 @@ var doc = `{
                 }
             }
         },
+        "message.BindRolesForUserReq": {
+            "type": "object",
+            "properties": {
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.BindRolesForUserResp": {
+            "type": "object"
+        },
+        "message.CheckPermissionForUserReq": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.RbacPermission"
+                    }
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.CheckPermissionForUserResp": {
+            "type": "object",
+            "properties": {
+                "result": {
+                    "type": "boolean"
+                }
+            }
+        },
         "message.CopyParameterGroupReq": {
             "type": "object",
+            "required": [
+                "name"
+            ],
             "properties": {
                 "name": {
                     "type": "string",
@@ -6132,7 +7697,16 @@ var doc = `{
         },
         "message.CreateParameterGroupReq": {
             "type": "object",
+            "required": [
+                "params"
+            ],
             "properties": {
+                "addParams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/message.ParameterInfo"
+                    }
+                },
                 "clusterSpec": {
                     "type": "string",
                     "example": "8C16G"
@@ -6150,14 +7724,6 @@ var doc = `{
                     "example": 1
                 },
                 "groupType": {
-                    "type": "integer",
-                    "enum": [
-                        1,
-                        2
-                    ],
-                    "example": 1
-                },
-                "hasDefault": {
                     "type": "integer",
                     "enum": [
                         1,
@@ -6207,6 +7773,17 @@ var doc = `{
         "message.CreateProductResp": {
             "type": "object"
         },
+        "message.CreateRoleReq": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.CreateRoleResp": {
+            "type": "object"
+        },
         "message.CreateSpecsReq": {
             "type": "object",
             "properties": {
@@ -6219,6 +7796,72 @@ var doc = `{
             }
         },
         "message.CreateSpecsResp": {
+            "type": "object"
+        },
+        "message.CreateTenantReq": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "maxCluster": {
+                    "type": "integer"
+                },
+                "maxCpu": {
+                    "type": "integer"
+                },
+                "maxMemory": {
+                    "type": "integer"
+                },
+                "maxStorage": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "onBoardingStatus": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.CreateTenantResp": {
+            "type": "object"
+        },
+        "message.CreateUserReq": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "nickname": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.CreateUserResp": {
             "type": "object"
         },
         "message.CreateZonesReq": {
@@ -6341,6 +7984,9 @@ var doc = `{
         "message.DeleteHostsReq": {
             "type": "object",
             "properties": {
+                "force": {
+                    "type": "boolean"
+                },
                 "hostIds": {
                     "type": "array",
                     "items": {
@@ -6380,6 +8026,23 @@ var doc = `{
                 }
             }
         },
+        "message.DeletePermissionsForRoleReq": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.RbacPermission"
+                    }
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.DeletePermissionsForRoleResp": {
+            "type": "object"
+        },
         "message.DeleteProductReq": {
             "type": "object",
             "properties": {
@@ -6389,6 +8052,9 @@ var doc = `{
             }
         },
         "message.DeleteProductResp": {
+            "type": "object"
+        },
+        "message.DeleteRoleResp": {
             "type": "object"
         },
         "message.DeleteSpecsReq": {
@@ -6403,6 +8069,23 @@ var doc = `{
             }
         },
         "message.DeleteSpecsResp": {
+            "type": "object"
+        },
+        "message.DeleteTenantReq": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.DeleteTenantResp": {
+            "type": "object"
+        },
+        "message.DeleteUserReq": {
+            "type": "object"
+        },
+        "message.DeleteUserResp": {
             "type": "object"
         },
         "message.DeleteZoneReq": {
@@ -6502,6 +8185,30 @@ var doc = `{
                 }
             }
         },
+        "message.GetTenantReq": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.GetTenantResp": {
+            "type": "object",
+            "properties": {
+                "info": {
+                    "$ref": "#/definitions/structs.TenantInfo"
+                }
+            }
+        },
+        "message.GetUserResp": {
+            "type": "object",
+            "properties": {
+                "user": {
+                    "$ref": "#/definitions/structs.UserInfo"
+                }
+            }
+        },
         "message.ImportHostsResp": {
             "type": "object",
             "properties": {
@@ -6543,7 +8250,7 @@ var doc = `{
                 "token": {
                     "type": "string"
                 },
-                "userName": {
+                "userId": {
                     "type": "string"
                 }
             }
@@ -6551,8 +8258,70 @@ var doc = `{
         "message.LogoutResp": {
             "type": "object",
             "properties": {
-                "accountName": {
+                "userId": {
                     "type": "string"
+                }
+            }
+        },
+        "message.ParameterInfo": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "log"
+                },
+                "defaultValue": {
+                    "type": "string",
+                    "example": "1024"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "binlog size"
+                },
+                "hasApply": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "hasReboot": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "instanceType": {
+                    "type": "string",
+                    "example": "TiDB"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "binlog_size"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "range": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "readOnly": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "systemVariable": {
+                    "type": "string",
+                    "example": "log.binlog_size"
+                },
+                "type": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "mb"
+                },
+                "updateSource": {
+                    "type": "integer",
+                    "example": 0
                 }
             }
         },
@@ -6641,6 +8410,20 @@ var doc = `{
                 }
             }
         },
+        "message.QueryPermissionsForUserResp": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.RbacPermission"
+                    }
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
         "message.QueryProductDetailResp": {
             "type": "object",
             "properties": {
@@ -6656,9 +8439,30 @@ var doc = `{
             "type": "object",
             "properties": {
                 "products": {
+                    "description": "arch version",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "$ref": "#/definitions/structs.Product"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "message.QueryRolesResp": {
+            "type": "object",
+            "properties": {
+                "roles": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/structs.Product"
+                        "type": "string"
                     }
                 }
             }
@@ -6670,6 +8474,54 @@ var doc = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.SpecInfo"
+                    }
+                }
+            }
+        },
+        "message.QueryTenantReq": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "description": "Current page location",
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "description": "Number of this request",
+                    "type": "integer"
+                }
+            }
+        },
+        "message.QueryTenantResp": {
+            "type": "object",
+            "properties": {
+                "tenants": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.TenantInfo"
+                    }
+                }
+            }
+        },
+        "message.QueryUserReq": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "description": "Current page location",
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "description": "Number of this request",
+                    "type": "integer"
+                }
+            }
+        },
+        "message.QueryUserResp": {
+            "type": "object",
+            "properties": {
+                "users": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.UserInfo"
                     }
                 }
             }
@@ -6705,16 +8557,30 @@ var doc = `{
                 }
             }
         },
-        "message.QueryZonesResp": {
+        "message.QueryZonesTreeResp": {
             "type": "object",
             "properties": {
-                "zones": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.ZoneInfo"
+                "vendors": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.VendorWithRegion"
                     }
                 }
             }
+        },
+        "message.UnbindRoleForUserReq": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.UnbindRoleForUserResp": {
+            "type": "object"
         },
         "message.UpdateHostReservedReq": {
             "type": "object",
@@ -6752,7 +8618,16 @@ var doc = `{
         },
         "message.UpdateParameterGroupReq": {
             "type": "object",
+            "required": [
+                "params"
+            ],
             "properties": {
+                "addParams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/message.ParameterInfo"
+                    }
+                },
                 "clusterSpec": {
                     "type": "string",
                     "example": "8C16G"
@@ -6760,6 +8635,15 @@ var doc = `{
                 "clusterVersion": {
                     "type": "string",
                     "example": "v5.0"
+                },
+                "delParams": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "1"
+                    ]
                 },
                 "name": {
                     "type": "string",
@@ -6786,16 +8670,79 @@ var doc = `{
                 }
             }
         },
-        "message.UserProfile": {
+        "message.UpdateTenantOnBoardingStatusReq": {
             "type": "object",
             "properties": {
-                "tenantId": {
+                "id": {
                     "type": "string"
                 },
-                "userName": {
+                "onBoardingStatus": {
                     "type": "string"
                 }
             }
+        },
+        "message.UpdateTenantOnBoardingStatusResp": {
+            "type": "object"
+        },
+        "message.UpdateTenantProfileReq": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "maxCluster": {
+                    "type": "integer"
+                },
+                "maxCpu": {
+                    "type": "integer"
+                },
+                "maxMemory": {
+                    "type": "integer"
+                },
+                "maxStorage": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.UpdateTenantProfileResp": {
+            "type": "object"
+        },
+        "message.UpdateUserPasswordReq": {
+            "type": "object",
+            "required": [
+                "password"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.UpdateUserPasswordResp": {
+            "type": "object"
+        },
+        "message.UpdateUserProfileReq": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "nickname": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.UpdateUserProfileResp": {
+            "type": "object"
         },
         "structs.AsyncTaskWorkFlowInfo": {
             "type": "object",
@@ -6903,10 +8850,6 @@ var doc = `{
                 "createTime": {
                     "type": "string"
                 },
-                "dbUser": {
-                    "description": "The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
-                    "type": "string"
-                },
                 "deleteTime": {
                     "type": "string"
                 },
@@ -6964,6 +8907,10 @@ var doc = `{
                     "type": "string"
                 },
                 "userId": {
+                    "type": "string"
+                },
+                "vendor": {
+                    "description": "DBUser                   string    ` + "`" + `json:\"dbUser\"` + "`" + ` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
                     "type": "string"
                 },
                 "whitelist": {
@@ -7152,6 +9099,14 @@ var doc = `{
                         " 1000"
                     ]
                 },
+                "readOnly": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "example": 0
+                },
                 "realValue": {
                     "$ref": "#/definitions/structs.ParameterRealValue"
                 },
@@ -7192,6 +9147,10 @@ var doc = `{
         },
         "structs.ClusterParameterSampleInfo": {
             "type": "object",
+            "required": [
+                "paramId",
+                "realValue"
+            ],
             "properties": {
                 "paramId": {
                     "type": "string",
@@ -7283,6 +9242,23 @@ var doc = `{
                 }
             }
         },
+        "structs.ComponentInstanceZoneWithSpecs": {
+            "type": "object",
+            "properties": {
+                "specs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ComponentInstanceResourceSpec"
+                    }
+                },
+                "zoneId": {
+                    "type": "string"
+                },
+                "zoneName": {
+                    "type": "string"
+                }
+            }
+        },
         "structs.DataImportExportRecordInfo": {
             "type": "object",
             "properties": {
@@ -7361,16 +9337,16 @@ var doc = `{
         "structs.HierarchyTreeNode": {
             "type": "object",
             "properties": {
-                "Code": {
+                "code": {
                     "type": "string"
                 },
-                "Name": {
+                "name": {
                     "type": "string"
                 },
-                "Prefix": {
+                "prefix": {
                     "type": "string"
                 },
-                "SubNodes": {
+                "subNodes": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.HierarchyTreeNode"
@@ -7400,7 +9376,7 @@ var doc = `{
                     "type": "integer"
                 },
                 "diskType": {
-                    "description": "Disk type of this host [sata/ssd/nvme_ssd]",
+                    "description": "Disk type of this host [SATA/SSD/NVMeSSD]",
                     "type": "string"
                 },
                 "disks": {
@@ -7408,14 +9384,6 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/structs.DiskInfo"
                     }
-                },
-                "freeCpuCores": {
-                    "description": "Unused CpuCore, used for allocation",
-                    "type": "integer"
-                },
-                "freeMemory": {
-                    "description": "Unused memory size, Unit:GB, used for allocation",
-                    "type": "integer"
                 },
                 "hostId": {
                     "type": "string"
@@ -7448,7 +9416,7 @@ var doc = `{
                     "type": "string"
                 },
                 "purpose": {
-                    "description": "What Purpose is the host used for? [compute/storage/general]",
+                    "description": "What Purpose is the host used for? [compute/storage/schedule]",
                     "type": "string"
                 },
                 "rack": {
@@ -7482,7 +9450,18 @@ var doc = `{
                 "updateTime": {
                     "type": "integer"
                 },
+                "usedCpuCores": {
+                    "description": "Unused CpuCore, used for allocation",
+                    "type": "integer"
+                },
+                "usedMemory": {
+                    "description": "Unused memory size, Unit:GiB, used for allocation",
+                    "type": "integer"
+                },
                 "userName": {
+                    "type": "string"
+                },
+                "vendor": {
                     "type": "string"
                 }
             }
@@ -7565,6 +9544,14 @@ var doc = `{
                         " 1000"
                     ]
                 },
+                "readOnly": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "example": 0
+                },
                 "systemVariable": {
                     "type": "string",
                     "example": "log.log_level"
@@ -7602,12 +9589,16 @@ var doc = `{
         },
         "structs.ParameterGroupParameterSampleInfo": {
             "type": "object",
+            "required": [
+                "defaultValue",
+                "paramId"
+            ],
             "properties": {
                 "defaultValue": {
                     "type": "string",
                     "example": "1"
                 },
-                "description": {
+                "note": {
                     "type": "string",
                     "example": "binlog cache size"
                 },
@@ -7673,6 +9664,13 @@ var doc = `{
         "structs.ProductComponentProperty": {
             "type": "object",
             "properties": {
+                "availableZones": {
+                    "description": "Information on the specifications of the resources online for the running of product components,organized by different Zone",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ComponentInstanceZoneWithSpecs"
+                    }
+                },
                 "endPort": {
                     "type": "integer"
                 },
@@ -7699,15 +9697,14 @@ var doc = `{
                     "description": "The type of resources required by the product component at runtime, e.g. storage class",
                     "type": "string"
                 },
-                "spec": {
-                    "description": "Information on the specifications of the resources online for the running of product components,organized by different Zone",
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/structs.ComponentInstanceResourceSpec"
-                    }
-                },
                 "startPort": {
                     "type": "integer"
+                },
+                "suggestedInstancesCount": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
@@ -7749,14 +9746,36 @@ var doc = `{
                     "description": "Arch information of the product, e.g. X86/X86_64",
                     "type": "object",
                     "additionalProperties": {
-                        "type": "object",
-                        "additionalProperties": {
+                        "type": "array",
+                        "items": {
                             "$ref": "#/definitions/structs.ProductComponentProperty"
                         }
                     }
                 },
                 "version": {
                     "description": "Version information of the product, e.g. v5.0.0",
+                    "type": "string"
+                }
+            }
+        },
+        "structs.RbacPermission": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "resource": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.RegionInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -7847,6 +9866,44 @@ var doc = `{
                 }
             }
         },
+        "structs.TenantInfo": {
+            "type": "object",
+            "properties": {
+                "createAt": {
+                    "type": "string"
+                },
+                "creator": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "maxCluster": {
+                    "type": "integer"
+                },
+                "maxCpu": {
+                    "type": "integer"
+                },
+                "maxMemory": {
+                    "type": "integer"
+                },
+                "maxStorage": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "onBoardingStatus": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updateAt": {
+                    "type": "string"
+                }
+            }
+        },
         "structs.Usage": {
             "type": "object",
             "properties": {
@@ -7858,6 +9915,69 @@ var doc = `{
                 },
                 "used": {
                     "type": "number"
+                }
+            }
+        },
+        "structs.UserInfo": {
+            "type": "object",
+            "properties": {
+                "createAt": {
+                    "type": "string"
+                },
+                "creator": {
+                    "type": "string"
+                },
+                "defaultTenantId": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "names": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "nickname": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tenantIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updateAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.VendorWithRegion": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "The value of the VendorID is similar to AWS",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The value of the Name is similar to AWS",
+                    "type": "string"
+                },
+                "regions": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.RegionInfo"
+                    }
                 }
             }
         },

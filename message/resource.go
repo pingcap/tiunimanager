@@ -48,7 +48,8 @@ type QueryHostsResp struct {
 }
 
 type ImportHostsReq struct {
-	Hosts []structs.HostInfo `json:"hosts"`
+	Condition structs.ImportCondition `json:"condition"`
+	Hosts     []structs.HostInfo      `json:"hosts"`
 }
 
 type ImportHostsResp struct {
@@ -58,6 +59,7 @@ type ImportHostsResp struct {
 
 type DeleteHostsReq struct {
 	HostIDs []string `json:"hostIds"`
+	Force   bool     `json:"force"`
 }
 
 type DeleteHostsResp struct {

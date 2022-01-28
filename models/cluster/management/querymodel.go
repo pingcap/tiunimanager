@@ -27,6 +27,7 @@ type Filters struct {
 }
 
 type Result struct {
-	Cluster *Cluster
+	Cluster   *Cluster
 	Instances []*ClusterInstance
+	DBUsers   []*DBUser
 }

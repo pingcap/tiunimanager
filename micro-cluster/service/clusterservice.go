@@ -20,8 +20,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/constants"
 	"time"
+
+	"github.com/pingcap-inc/tiem/common/constants"
 
 	"github.com/pingcap-inc/tiem/metrics"
 	"github.com/pingcap-inc/tiem/micro-cluster/user/rbac"
@@ -168,7 +169,7 @@ func (handler *ClusterServiceHandler) MasterSlaveSwitchover(ctx context.Context,
 	framework.LogWithContext(ctx).Info("master/slave switchover")
 	reqBody := cluster.MasterSlaveClusterSwitchoverReq{}
 
-	if handleRequest(ctx, request, response, reqBody) {
+	if handleRequest(ctx, request, response, reqBody, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionCreate)}}) {
 		result, err := handler.switchoverManager.Switchover(ctx, &reqBody)
 		handleResponse(ctx, response, err, result, nil)
 	}

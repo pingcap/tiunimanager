@@ -23,8 +23,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/pingcap-inc/tiem/models/platform/user"
-
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	resourceTemplate "github.com/pingcap-inc/tiem/resource/template"

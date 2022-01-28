@@ -30,7 +30,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	tsoLib "github.com/pingcap-inc/tiem/library/util/tso"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	changefeedModel "github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	clusterMgr "github.com/pingcap-inc/tiem/models/cluster/management"
@@ -158,7 +158,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 				// A rw-able & B unavailable
 				framework.LogWithContext(ctx).Errorf("checkClusterReadWriteHealth on oldSlaveId %s failed err:%s", oldSlaveId, err)
 				flowName = "" // end
-				return resp, emerr.NewEMErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED, "master/slave switchover failed: %s", "slave is unavailable")
+				return resp, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED, "master/slave switchover failed: %s", "slave is unavailable")
 			}
 		} else {
 			framework.LogWithContext(ctx).Errorf("checkClusterReadWriteHealth on oldMasterId %s failed err:%s", oldMasterId, err)
@@ -171,7 +171,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 				// A unavailable & B unavailable
 				framework.LogWithContext(ctx).Errorf("checkClusterReadWriteHealth on oldSlaveId %s failed err:%s", oldSlaveId, err)
 				flowName = "" // end
-				return resp, emerr.NewEMErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED, "master/slave switchover failed: %s", "master and slave are both unavailable")
+				return resp, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED, "master/slave switchover failed: %s", "master and slave are both unavailable")
 			}
 		}
 	}
@@ -179,7 +179,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 	flow, err := flowManager.CreateWorkFlow(ctx, oldMasterId, workflow.BizTypeCluster, flowName)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", flowName, err.Error())
-		return resp, emerr.NewEMErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
+		return resp, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
 			"create %s workflow failed: %s", flowName, err.Error())
 	}
 
@@ -199,10 +199,10 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 		}
 	}
 	defer cancel()
-	metaOfSource, err := handler.Get(ctx, req.SourceClusterID)
+	metaOfSource, err := meta.Get(ctx, req.SourceClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get meta of cluster %s failed:%s", req.SourceClusterID, err.Error())
-		return resp, emerr.NewEMErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
+		return resp, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
 			"get meta of %s failed, %s", req.SourceClusterID, err.Error())
 	}
 
@@ -218,10 +218,10 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 		}
 	})
 
-	metaOfTarget, err := handler.Get(ctx, req.TargetClusterID)
+	metaOfTarget, err := meta.Get(ctx, req.TargetClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get meta of cluster %s failed:%s", req.TargetClusterID, err.Error())
-		return resp, emerr.NewEMErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
+		return resp, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
 			"get meta of cluster %s failed, %s", req.TargetClusterID, err.Error())
 	}
 
@@ -239,7 +239,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 
 	if err = flowManager.AsyncStart(ctx, flow); err != nil {
 		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", flowName, err.Error())
-		return nil, emerr.NewEMErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
+		return nil, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
 			"async start %s workflow failed, %s", flowName, err.Error())
 	}
 
@@ -277,15 +277,16 @@ func (p *Manager) checkClusterReadWriteHealth(ctx context.Context, clusterID str
 }
 
 func (p *Manager) clusterGetMysqlUserNameAndPwd(ctx context.Context, clusterID string) (userName, password string, err error) {
+	panic("NIY")
 	framework.LogWithContext(ctx).Info("clusterGetMysqlUserNameAndPwd clusterID:", clusterID)
 	db := models.GetClusterReaderWriter()
-	cluster, err := db.Get(ctx, clusterID)
+	_, err = db.Get(ctx, clusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Error("clusterGetMysqlUserNameAndPwd get cluster record err:", err)
 		return userName, password, err
 	} else {
-		userName = cluster.DBUser
-		password = cluster.DBPassword
+		userName = "" //cluster.DBUser
+		password = "" //cluster.DBPassword
 		framework.LogWithContext(ctx).Infof(
 			"clusterGetMysqlUserNameAndPwd get cluster record userName:%s password:%s err:%s", userName, password, err)
 		return userName, password, err
@@ -295,7 +296,7 @@ func (p *Manager) clusterGetMysqlUserNameAndPwd(ctx context.Context, clusterID s
 // with special `RESTRICTED_REPLICA_WRITER_ADMIN` privilege already set
 func (p *Manager) clusterGetCDCUserNameAndPwd(ctx context.Context, clusterID string) (userName, password string, err error) {
 	framework.LogWithContext(ctx).Info("clusterGetCDCUserNameAndPwd clusterID:", clusterID)
-	m, err := handler.Get(ctx, clusterID)
+	m, err := meta.Get(ctx, clusterID)
 	if err != nil {
 		return "", "", err
 	}
@@ -303,7 +304,7 @@ func (p *Manager) clusterGetCDCUserNameAndPwd(ctx context.Context, clusterID str
 	if err != nil {
 		return "", "", err
 	}
-	return user.Name, user.Password, nil
+	return user.Name, string(user.Password), nil
 }
 
 // addr: ip:port
@@ -317,7 +318,7 @@ func (p *Manager) clusterGetOneConnectAddress(ctx context.Context, clusterID str
 
 // addr: ip:port
 func (p *Manager) clusterGetOneConnectIPPort(ctx context.Context, clusterID string) (ip string, port int, err error) {
-	m, err := handler.Get(ctx, clusterID)
+	m, err := meta.Get(ctx, clusterID)
 	if err != nil {
 		return "", 0, err
 	}
@@ -518,7 +519,7 @@ func (m *Manager) getOldSyncChangeFeedTaskId(ctx context.Context, reqJson, logNa
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"%s getRelation req:%s err:%s", funcName, reqJson, err)
-		return "", emerr.NewEMErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_NOT_FOUND, "master/slave relation not found: %s", err)
+		return "", emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_NOT_FOUND, "master/slave relation not found: %s", err)
 	} else {
 		framework.LogWithContext(ctx).Infof(
 			"%s getRelation req:%s success", funcName, reqJson)

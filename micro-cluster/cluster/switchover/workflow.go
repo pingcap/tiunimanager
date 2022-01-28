@@ -25,7 +25,7 @@ import (
 	emerr "github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	changefeedModel "github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -602,12 +602,12 @@ func wfStepFinish(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) e
 	}
 
 	errToRet := err
-	metaOfSource, err := handler.Get(ctx, wfGetOldMasterClusterId(ctx))
+	metaOfSource, err := meta.Get(ctx, wfGetOldMasterClusterId(ctx))
 	if err != nil {
 		errToRet = err
 		framework.LogWithContext(ctx).Warnf("%s get meta of cluster %s failed:%s",
 			funcName, wfGetOldMasterClusterId(ctx), err)
-		errToRet = emerr.NewEMErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
+		errToRet = emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
 			"get meta of %s failed, %s", wfGetOldMasterClusterId(ctx), err.Error())
 	} else {
 		previousStatus := constants.ClusterMaintenanceStatus(wfGetOldMasterPreviousMaintenanceStatus(ctx))
@@ -618,12 +618,12 @@ func wfStepFinish(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) e
 		}
 	}
 
-	metaOfTarget, err := handler.Get(ctx, wfGetOldSlaveClusterId(ctx))
+	metaOfTarget, err := meta.Get(ctx, wfGetOldSlaveClusterId(ctx))
 	if err != nil {
 		errToRet = err
 		framework.LogWithContext(ctx).Warnf("%s get meta of cluster %s failed:%s",
 			funcName, wfGetOldSlaveClusterId(ctx), err)
-		errToRet = emerr.NewEMErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
+		errToRet = emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
 			"get meta of %s failed, %s", wfGetOldSlaveClusterId(ctx), err.Error())
 	} else {
 		previousStatus := constants.ClusterMaintenanceStatus(wfGetOldSlavePreviousMaintenanceStatus(ctx))

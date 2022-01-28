@@ -24,7 +24,6 @@ import (
 	"github.com/pingcap-inc/tiem/tiup/spec"
 	"github.com/pingcap-inc/tiem/tiup/task"
 	"github.com/pingcap-inc/tiem/tiup/templates/config"
-	cspec "github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/pingcap/tiup/pkg/meta"
 	"github.com/pingcap/tiup/pkg/set"
 	"github.com/pingcap/tiup/pkg/tui"
@@ -348,7 +347,7 @@ func buildMonitoredDeployTask(
 	uniqueHosts map[string]hostInfo, // host -> ssh-port, os, arch
 	noAgentHosts set.StringSet, // hosts that do not deploy monitor agents
 	globalOptions *spec.GlobalOptions,
-	monitoredOptions *cspec.MonitoredOptions,
+	monitoredOptions *spec.MonitoredOptions,
 	version string,
 	gOpt operator.Options,
 	esHosts []string,
@@ -460,7 +459,7 @@ func buildRefreshMonitoredConfigTasks(
 	uniqueHosts map[string]hostInfo, // host -> ssh-port, os, arch
 	noAgentHosts set.StringSet,
 	globalOptions spec.GlobalOptions,
-	monitoredOptions *cspec.MonitoredOptions,
+	monitoredOptions *spec.MonitoredOptions,
 	gOpt operator.Options,
 	esHosts []string,
 	tiemHosts map[string]*config.LogPathInfo,

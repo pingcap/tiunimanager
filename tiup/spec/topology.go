@@ -60,6 +60,16 @@ const (
 	TopoTypeTiEM = "tiem"
 )
 
+// MonitoredOptions represents the monitored node configuration
+type MonitoredOptions struct {
+	NodeExporterPort int                  `yaml:"node_exporter_port,omitempty" default:"9100"`
+	DeployDir        string               `yaml:"deploy_dir,omitempty"`
+	DataDir          string               `yaml:"data_dir,omitempty"`
+	LogDir           string               `yaml:"log_dir,omitempty"`
+	NumaNode         string               `yaml:"numa_node,omitempty" validate:"numa_node:editable"`
+	ResourceControl  meta.ResourceControl `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
+}
+
 // GlobalOptions represents the global options for all groups in topology
 // specification in topology.yaml
 type GlobalOptions struct {
@@ -79,7 +89,7 @@ type GlobalOptions struct {
 // BaseTopo is the base info to topology.
 type BaseTopo struct {
 	GlobalOptions    *GlobalOptions
-	MonitoredOptions *spec.MonitoredOptions
+	MonitoredOptions *MonitoredOptions
 	MasterList       []string
 
 	Monitors      []*PrometheusSpec
@@ -91,19 +101,19 @@ type BaseTopo struct {
 
 // Specification represents the specification of topology.yaml
 type Specification struct {
-	GlobalOptions        GlobalOptions          `yaml:"global,omitempty" validate:"global:editable"`
-	MonitoredOptions     *spec.MonitoredOptions `yaml:"monitored,omitempty" validate:"monitored:editable"`
-	ClusterServers       []*ClusterServerSpec   `yaml:"tiem_cluster_servers"`
-	APIServers           []*APIServerSpec       `yaml:"tiem_api_servers"`
-	FileServers          []*FileServerSpec      `yaml:"tiem_file_servers"`
-	WebServers           []*WebServerSpec       `yaml:"tiem_web_servers"`
-	TracerServers        []*TracerServerSpec    `yaml:"tracer_servers"`
-	ElasticSearchServers []*ElasticSearchSpec   `yaml:"elasticsearch_servers"`
-	KibanaServers        []*KibanaSpec          `yaml:"kibana_servers,omitempty"`
-	FilebeatServers      []*FilebeatSpec        `yaml:"filebeat_servers,omitempty"`
-	Monitors             []*PrometheusSpec      `yaml:"monitoring_servers,omitempty"`
-	Grafanas             []*GrafanaSpec         `yaml:"grafana_servers,omitempty"`
-	Alertmanagers        []*AlertmanagerSpec    `yaml:"alertmanager_servers,omitempty"`
+	GlobalOptions        GlobalOptions        `yaml:"global,omitempty" validate:"global:editable"`
+	MonitoredOptions     *MonitoredOptions    `yaml:"monitored,omitempty" validate:"monitored:editable"`
+	ClusterServers       []*ClusterServerSpec `yaml:"tiem_cluster_servers"`
+	APIServers           []*APIServerSpec     `yaml:"tiem_api_servers"`
+	FileServers          []*FileServerSpec    `yaml:"tiem_file_servers"`
+	WebServers           []*WebServerSpec     `yaml:"tiem_web_servers"`
+	TracerServers        []*TracerServerSpec  `yaml:"tracer_servers"`
+	ElasticSearchServers []*ElasticSearchSpec `yaml:"elasticsearch_servers"`
+	KibanaServers        []*KibanaSpec        `yaml:"kibana_servers,omitempty"`
+	FilebeatServers      []*FilebeatSpec      `yaml:"filebeat_servers,omitempty"`
+	Monitors             []*PrometheusSpec    `yaml:"monitoring_servers,omitempty"`
+	Grafanas             []*GrafanaSpec       `yaml:"grafana_servers,omitempty"`
+	Alertmanagers        []*AlertmanagerSpec  `yaml:"alertmanager_servers,omitempty"`
 }
 
 // UnmarshalYAML sets default values when unmarshaling the topology file

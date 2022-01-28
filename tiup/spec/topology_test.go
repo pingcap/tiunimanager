@@ -524,7 +524,6 @@ monitored:
 		err := ParseTopologyYaml(file, &topo)
 		assert.Nil(t, err)
 		assert.Equal(t, 39100, topo.MonitoredOptions.NodeExporterPort)
-		assert.Equal(t, 39115, topo.MonitoredOptions.BlackboxExporterPort)
 		assert.Equal(t, "test-deploy/log", topo.MonitoredOptions.LogDir)
 		assert.Equal(t, "test-deploy", topo.MonitoredOptions.DeployDir)
 	})

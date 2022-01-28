@@ -13,10 +13,6 @@
 
 package spec
 
-import (
-	"github.com/pingcap/tiup/pkg/cluster/spec"
-)
-
 const (
 	// Timeout in second when quering node status
 	//statusQueryTimeout = 10 * time.Second
@@ -38,7 +34,7 @@ type Topology interface {
 	ComponentsByStopOrder() []Component
 	ComponentsByUpdateOrder() []Component
 	IterInstance(fn func(instance Instance))
-	GetMonitoredOptions() *spec.MonitoredOptions
+	GetMonitoredOptions() *MonitoredOptions
 	// count how many time a path is used by instances in cluster
 	CountDir(host string, dir string) int
 	Merge(that Topology) Topology

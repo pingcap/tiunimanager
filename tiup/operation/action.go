@@ -29,7 +29,6 @@ import (
 	"github.com/pingcap/tiup/pkg/checkpoint"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/cluster/module"
-	cspec "github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/pingcap/tiup/pkg/logger/log"
 	"github.com/pingcap/tiup/pkg/set"
 	"golang.org/x/sync/errgroup"
@@ -290,17 +289,17 @@ func Restart(
 }
 
 // StartMonitored start BlackboxExporter and NodeExporter
-func StartMonitored(ctx context.Context, hosts []string, noAgentHosts set.StringSet, options *cspec.MonitoredOptions, timeout uint64) error {
+func StartMonitored(ctx context.Context, hosts []string, noAgentHosts set.StringSet, options *spec.MonitoredOptions, timeout uint64) error {
 	return systemctlMonitor(ctx, hosts, noAgentHosts, options, "start", timeout)
 }
 
 // StopMonitored stop BlackboxExporter and NodeExporter
-func StopMonitored(ctx context.Context, hosts []string, noAgentHosts set.StringSet, options *cspec.MonitoredOptions, timeout uint64) error {
+func StopMonitored(ctx context.Context, hosts []string, noAgentHosts set.StringSet, options *spec.MonitoredOptions, timeout uint64) error {
 	return systemctlMonitor(ctx, hosts, noAgentHosts, options, "stop", timeout)
 }
 
 // EnableMonitored enable/disable monitor service in a cluster
-func EnableMonitored(ctx context.Context, hosts []string, noAgentHosts set.StringSet, options *cspec.MonitoredOptions, timeout uint64, isEnable bool) error {
+func EnableMonitored(ctx context.Context, hosts []string, noAgentHosts set.StringSet, options *spec.MonitoredOptions, timeout uint64, isEnable bool) error {
 	action := "disable"
 	if isEnable {
 		action = "enable"
@@ -309,7 +308,7 @@ func EnableMonitored(ctx context.Context, hosts []string, noAgentHosts set.Strin
 	return systemctlMonitor(ctx, hosts, noAgentHosts, options, action, timeout)
 }
 
-func systemctlMonitor(ctx context.Context, hosts []string, noAgentHosts set.StringSet, options *cspec.MonitoredOptions, action string, timeout uint64) error {
+func systemctlMonitor(ctx context.Context, hosts []string, noAgentHosts set.StringSet, options *spec.MonitoredOptions, action string, timeout uint64) error {
 	ports := monitorPortMap(options)
 	for _, comp := range []string{
 		spec.ComponentNodeExporter,
@@ -645,7 +644,7 @@ func toFailedActionError(err error, action string, host, service, logDir string)
 	)
 }
 
-func monitorPortMap(options *cspec.MonitoredOptions) map[string]int {
+func monitorPortMap(options *spec.MonitoredOptions) map[string]int {
 	return map[string]int{
 		spec.ComponentNodeExporter: options.NodeExporterPort,
 	}

@@ -20,7 +20,6 @@ import (
 	operator "github.com/pingcap-inc/tiem/tiup/operation"
 	"github.com/pingcap-inc/tiem/tiup/spec"
 	"github.com/pingcap/tiup/pkg/cluster/executor"
-	cspec "github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/pingcap/tiup/pkg/crypto"
 	"github.com/pingcap/tiup/pkg/meta"
 )
@@ -233,7 +232,7 @@ func (b *Builder) ScaleConfig(clusterName, clusterVersion string, specManager *s
 func (b *Builder) MonitoredConfig(
 	name, comp, host string,
 	globResCtl meta.ResourceControl,
-	options *cspec.MonitoredOptions,
+	options *spec.MonitoredOptions,
 	deployUser string,
 	paths meta.DirPaths,
 ) *Builder {

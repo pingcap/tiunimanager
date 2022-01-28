@@ -41,7 +41,7 @@ func (topo *Specification) GetGlobalOptions() GlobalOptions {
 }
 
 // GetMonitoredOptions returns MonitoredOptions
-func (topo *Specification) GetMonitoredOptions() *spec.MonitoredOptions {
+func (topo *Specification) GetMonitoredOptions() *MonitoredOptions {
 	return topo.MonitoredOptions
 }
 

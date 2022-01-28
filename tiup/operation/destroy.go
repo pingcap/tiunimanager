@@ -27,7 +27,6 @@ import (
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/cluster/executor"
 	"github.com/pingcap/tiup/pkg/cluster/module"
-	cspec "github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/pingcap/tiup/pkg/logger/log"
 	"github.com/pingcap/tiup/pkg/set"
 )
@@ -217,7 +216,7 @@ func DeletePublicKey(ctx context.Context, host string) error {
 }
 
 // DestroyMonitored destroy the monitored service.
-func DestroyMonitored(ctx context.Context, inst spec.Instance, options *cspec.MonitoredOptions, timeout uint64) error {
+func DestroyMonitored(ctx context.Context, inst spec.Instance, options *spec.MonitoredOptions, timeout uint64) error {
 	e := ctxt.GetInner(ctx).Get(inst.GetHost())
 	log.Infof("Destroying monitored %s", inst.GetHost())
 
@@ -262,11 +261,6 @@ func DestroyMonitored(ctx context.Context, inst spec.Instance, options *cspec.Mo
 
 	if err := spec.PortStopped(ctx, e, options.NodeExporterPort, timeout); err != nil {
 		str := fmt.Sprintf("%s failed to destroy node exportoer: %s", inst.GetHost(), err)
-		log.Errorf(str)
-		return errors.Annotatef(err, str)
-	}
-	if err := spec.PortStopped(ctx, e, options.BlackboxExporterPort, timeout); err != nil {
-		str := fmt.Sprintf("%s failed to destroy blackbox exportoer: %s", inst.GetHost(), err)
 		log.Errorf(str)
 		return errors.Annotatef(err, str)
 	}

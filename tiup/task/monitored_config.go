@@ -27,7 +27,6 @@ import (
 	system "github.com/pingcap-inc/tiem/tiup/templates/systemd"
 	"github.com/pingcap/tiup/pkg/checkpoint"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
-	cspec "github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/pingcap/tiup/pkg/logger/log"
 	"github.com/pingcap/tiup/pkg/meta"
 	"go.uber.org/zap"
@@ -39,7 +38,7 @@ type MonitoredConfig struct {
 	component  string
 	host       string
 	globResCtl meta.ResourceControl
-	options    *cspec.MonitoredOptions
+	options    *spec.MonitoredOptions
 	deployUser string
 	tlsEnabled bool
 	paths      meta.DirPaths
@@ -151,6 +150,6 @@ func (m *MonitoredConfig) Rollback(ctx context.Context) error {
 
 // String implements the fmt.Stringer interface
 func (m *MonitoredConfig) String() string {
-	return fmt.Sprintf("MonitoredConfig: cluster=%s, user=%s, node_exporter_port=%d, blackbox_exporter_port=%d, %v",
-		m.name, m.deployUser, m.options.NodeExporterPort, m.options.BlackboxExporterPort, m.paths)
+	return fmt.Sprintf("MonitoredConfig: cluster=%s, user=%s, node_exporter_port=%d, %v",
+		m.name, m.deployUser, m.options.NodeExporterPort, m.paths)
 }

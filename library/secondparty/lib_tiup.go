@@ -13,10 +13,20 @@
  *  limitations under the License.                                            *
  ******************************************************************************/
 
+/*******************************************************************************
+ * @File: lib_tiup_v2
+ * @Description:
+ * @Author: shenhaibo@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/8
+*******************************************************************************/
+
 package secondparty
 
 import (
-	"github.com/pingcap-inc/tiem/common/constants"
+	"context"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/models"
 )
 
 type TiUPComponentTypeStr string
@@ -29,5 +39,19 @@ const (
 	DefaultComponentTypeStr TiUPComponentTypeStr = "default"
 )
 
-var topologyTmpFilePrefix = constants.TiUPTopologyTmpFilePrefix
-var collectorTmpFilePrefix = constants.TiUPCollectorTmpFilePrefix
+func GetTiUPHomeForComponent(ctx context.Context, tiUPComponent TiUPComponentTypeStr) string {
+	var component string
+	switch tiUPComponent {
+	case TiEMComponentTypeStr:
+		component = string(TiEMComponentTypeStr)
+	default:
+		component = string(DefaultComponentTypeStr)
+	}
+	tiUPConfig, err := models.GetTiUPConfigReaderWriter().QueryByComponentType(context.Background(), component)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("fail get tiup_home for %s: %s", component, err.Error())
+		return ""
+	} else {
+		return tiUPConfig.TiupHome
+	}
+}

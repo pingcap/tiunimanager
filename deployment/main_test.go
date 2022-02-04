@@ -40,6 +40,7 @@ const (
 	TestDstVersion         = "v5.2.2"
 	TestTiDBTopo           = ""
 	TestTiDBScaleOutTopo   = ""
+	TestTiDBCheckTopo      = ""
 	TestTiDBEditConfigTopo = ""
 	TestTiDBPushTopo       = ""
 	TestNodeID             = ""

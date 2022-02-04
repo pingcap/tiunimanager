@@ -18,118 +18,10 @@ package secondparty
 import (
 	"github.com/pingcap-inc/tiem/library/spec"
 	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
-	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
 )
-
-type CmdDeployReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	TaskID        uint64
-	InstanceName  string
-	Version       string
-	ConfigStrYaml string
-	TimeoutS      int
-	TiUPPath      string
-	TiUPHome      string
-	Password      string
-	Flags         []string
-}
-
-type CmdScaleOutReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	TaskID        uint64
-	InstanceName  string
-	ConfigStrYaml string
-	TimeoutS      int
-	TiUPPath      string
-	TiUPHome      string
-	Password      string
-	Flags         []string
-}
-
-type CmdScaleInReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	TaskID        uint64
-	InstanceName  string
-	NodeId        string
-	TimeoutS      int
-	TiUPPath      string
-	TiUPHome      string
-	Flags         []string
-}
-
-type CmdPruneReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	TaskID        uint64
-	InstanceName  string
-	TimeoutS      int
-	TiUPPath      string
-	TiUPHome      string
-	Flags         []string
-}
-
-type CmdStartReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	TaskID        uint64
-	InstanceName  string
-	TimeoutS      int
-	TiUPPath      string
-	TiUPHome      string
-	Flags         []string
-}
-
-type CmdListReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	TaskID        uint64
-	TimeoutS      int
-	TiUPPath      string
-	TiUPHome      string
-	Flags         []string
-}
-
-type CmdDestroyReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	TaskID        uint64
-	InstanceName  string
-	TimeoutS      int
-	TiUPPath      string
-	TiUPHome      string
-	Flags         []string
-}
-
-type CmdListResp struct {
-	ListRespStr string
-}
 
 type CmdGetAllOperationStatusResp struct {
 	Stats []OperationStatusMember
-}
-
-type CmdDumplingReq struct {
-	TaskID   uint64
-	TiUPHome string
-	TimeoutS int
-	TiUPPath string
-	Flags    []string
-}
-
-type CmdLightningReq struct {
-	TaskID   uint64
-	TimeoutS int
-	TiUPPath string
-	TiUPHome string
-	Flags    []string
-}
-
-type CmdDisplayReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	InstanceName  string
-	TimeoutS      int
-	TiUPPath      string
-	Flags         []string
-}
-
-type CmdDisplayResp struct {
-	DisplayRespString string
 }
 
 type CmdBackUpReq struct {
@@ -206,40 +98,6 @@ type CmdShowRestoreInfoResp struct {
 	ErrorStr      string
 }
 
-type CmdTransferReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	TaskID        uint64
-	InstanceName  string
-	CollectorYaml string
-	RemotePath    string
-	TiUPHome      string
-	TimeoutS      int
-	TiUPPath      string
-	Flags         []string
-}
-
-type CmdUpgradeReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	TaskID        uint64
-	InstanceName  string
-	Version       string
-	TimeoutS      int
-	TiUPPath      string
-	TiUPHome      string
-	Flags         []string
-}
-
-type CmdShowConfigReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	InstanceName  string
-	TimeoutS      int
-	Flags         []string
-}
-
-type CmdShowConfigResp struct {
-	TiDBClusterTopo *spec2.Specification
-}
-
 type GlobalComponentConfig struct {
 	TiDBClusterComponent spec.TiDBClusterComponent
 	ConfigMap            map[string]interface{}
@@ -250,50 +108,6 @@ type ClusterComponentConfig struct {
 	InstanceAddr         string
 	ConfigKey            string
 	ConfigValue          string
-}
-
-type CmdEditGlobalConfigReq struct {
-	TiUPComponent          TiUPComponentTypeStr
-	InstanceName           string
-	GlobalComponentConfigs []GlobalComponentConfig
-	TimeoutS               int
-	Flags                  []string
-}
-
-type CmdEditInstanceConfigReq struct {
-	TiUPComponent        TiUPComponentTypeStr
-	InstanceName         string
-	TiDBClusterComponent spec.TiDBClusterComponent
-	Host                 string
-	Port                 int
-	ConfigMap            map[string]interface{}
-	TimeoutS             int
-	Flags                []string
-}
-
-type CmdEditConfigReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	InstanceName  string
-	NewTopo       *spec2.Specification
-	TiUPHome      string
-	TimeoutS      int
-	Flags         []string
-}
-
-type CmdReloadConfigReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	InstanceName  string
-	TiUPHome      string
-	TimeoutS      int
-	Flags         []string
-}
-
-type CmdClusterExecReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	InstanceName  string
-	TiUPHome      string
-	TimeoutS      int
-	Flags         []string
 }
 
 type ApiEditConfigReq struct {
@@ -309,10 +123,6 @@ type ClusterEditConfigReq struct {
 	ComponentConfigs []ClusterComponentConfig
 }
 
-type ClusterEditConfigResp struct {
-	Message string
-}
-
 type ShowWarningsResp struct {
 	Level   string
 	Code    string
@@ -323,14 +133,6 @@ type GetOperationStatusResp struct {
 	Status   secondparty.OperationStatus
 	Result   string
 	ErrorStr string
-}
-
-type ClusterSetDbPswReq struct {
-	DbConnParameter DbConnParam
-}
-
-type ClusterSetDbPswResp struct {
-	Message string
 }
 
 type ChangeFeedCreateReq struct {

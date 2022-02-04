@@ -26,11 +26,11 @@ package log
 import (
 	ctx "context"
 	"fmt"
+	"github.com/pingcap-inc/tiem/deployment"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -71,21 +71,22 @@ func collectorClusterLogConfig(node *workflowModel.WorkFlowNode, ctx *workflow.F
 		collectorYaml := string(bs)
 		// todo: When the tiem scale-out and scale-in is complete, change to take the filebeat deployDir from the tiem topology
 		deployDir := "/tiem-test/filebeat"
-		clusterComponentType := secondparty.ClusterComponentTypeStr
+		clusterComponentType := deployment.TiUPComponentTypeCluster
+		home := "/home/tiem/.tiup"
 		clusterName := clusterMeta.Cluster.ID
 		if framework.Current.GetClientArgs().EMClusterName != "" {
 			deployDir = "/tiem-deploy/filebeat-0"
-			clusterComponentType = secondparty.TiEMComponentTypeStr
+			clusterComponentType = deployment.TiUPComponentTypeTiEM
+			home = "/home/tiem/.tiuptiem"
 			clusterName = framework.Current.GetClientArgs().EMClusterName
 		}
-		transferTaskId, err := secondparty.Manager.Transfer(ctx, clusterComponentType,
-			clusterName, collectorYaml, deployDir+"/conf/input_tidb.yml",
-			0, []string{"-N", hostIP}, node.ID)
+		transferTaskId, err := deployment.M.Push(ctx, clusterComponentType, clusterName, collectorYaml, deployDir+"/conf/input_tidb.yml", home, node.ParentID, []string{"-N", hostIP}, 0)
 		framework.LogWithContext(ctx).Infof("got transferTaskId: %s", transferTaskId)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("collectorClusterLogConfig invoke tiup transfer err： %v", err)
 			return err
 		}
+		node.OperationID = transferTaskId
 	}
 
 	return nil

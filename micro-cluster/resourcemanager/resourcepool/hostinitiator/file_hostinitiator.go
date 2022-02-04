@@ -18,6 +18,7 @@ package hostinitiator
 import (
 	"context"
 	"fmt"
+	"github.com/pingcap-inc/tiem/deployment"
 	"strings"
 
 	"github.com/pingcap-inc/tiem/util/scp"
@@ -75,8 +76,8 @@ func (p *FileHostInitiator) Prepare(ctx context.Context, h *structs.HostInfo) (e
 		return err
 	}
 
-	resultStr, err := p.secondPartyServ.CheckTopo(ctx, secondparty.ClusterComponentTypeStr, templateStr, rp_consts.DefaultTiupTimeOut,
-		[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--apply", "--format", "json"})
+	resultStr, err := deployment.M.CheckConfig(ctx, deployment.TiUPComponentTypeCluster, templateStr, "/home/tiem/.tiup",
+		[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--apply", "--format", "json"}, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
 		errMsg := fmt.Sprintf("call second serv to apply host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
 		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
@@ -115,8 +116,8 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 	}
 	log.Infof("verify host %s %s ignore warning (%t)", h.HostName, h.IP, ignoreWarnings)
 
-	resultStr, err := p.secondPartyServ.CheckTopo(ctx, secondparty.ClusterComponentTypeStr, templateStr, rp_consts.DefaultTiupTimeOut,
-		[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--format", "json"})
+	resultStr, err := deployment.M.CheckConfig(ctx, deployment.TiUPComponentTypeCluster, templateStr, "/home/tiem/.tiup",
+		[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--format", "json"}, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
 		errMsg := fmt.Sprintf("call second serv to check host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
 		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
@@ -185,12 +186,12 @@ func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.H
 
 	emClusterName := framework.Current.GetClientArgs().EMClusterName
 	framework.LogWithContext(ctx).Infof("join em cluster %s with work flow id %s", emClusterName, workFlowNodeID)
-	operationId, err := p.secondPartyServ.ClusterScaleOut(ctx, secondparty.TiEMComponentTypeStr, emClusterName, templateStr, rp_consts.DefaultTiupTimeOut,
-		[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, workFlowNodeID, "")
+	operationID, err := deployment.M.ScaleOut(ctx, deployment.TiUPComponentTypeTiEM, emClusterName, templateStr,
+		"/home/tiem/.tiuptiem", "", []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
 		return errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "join em cluster %s [%v] failed, %v", emClusterName, templateStr, err)
 	}
-	framework.LogWithContext(ctx).Infof("join em cluster %s for %v in operationId %s", emClusterName, tempateInfo, operationId)
+	framework.LogWithContext(ctx).Infof("join em cluster %s for %v in operationID %s", emClusterName, tempateInfo, operationID)
 
 	return nil
 }
@@ -205,12 +206,13 @@ func (p *FileHostInitiator) LeaveEMCluster(ctx context.Context, nodeId string) (
 
 	emClusterName := framework.Current.GetClientArgs().EMClusterName
 	framework.LogWithContext(ctx).Infof("leave em cluster %s with work flow id %s", emClusterName, workFlowNodeID)
-	operationId, err := p.secondPartyServ.ClusterScaleIn(ctx, secondparty.TiEMComponentTypeStr, emClusterName, nodeId, rp_consts.DefaultTiupTimeOut,
-		[]string{"--yes"}, workFlowNodeID)
+	operationID, err := deployment.M.ScaleIn(ctx, deployment.TiUPComponentTypeTiEM, emClusterName,
+		nodeId, "/home/tiem/.tiuptiem",
+		"", []string{}, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
 		return errors.NewErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "leave em cluster %s [%s] failed, %v", emClusterName, nodeId, err)
 	}
-	framework.LogWithContext(ctx).Infof("leave em cluster %s for %s in operationId %s", emClusterName, nodeId, operationId)
+	framework.LogWithContext(ctx).Infof("leave em cluster %s for %s in operationId %s", emClusterName, nodeId, operationID)
 
 	return nil
 }

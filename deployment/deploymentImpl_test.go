@@ -123,7 +123,7 @@ func TestManager_Display(t *testing.T) {
 }
 
 func TestManager_ShowConfig(t *testing.T) {
-	_, err := manager.ShowConfig(context.TODO(), TiUPComponentTypeCluster, TestClusterID, testTiUPHome, TestWorkFlowID, []string{"--format", "json"}, 360)
+	_, err := manager.ShowConfig(context.TODO(), TiUPComponentTypeCluster, TestClusterID, testTiUPHome, []string{"--format", "json"}, 360)
 	if err == nil {
 		t.Error("nil error")
 	}
@@ -168,6 +168,35 @@ func TestManager_Exec(t *testing.T) {
 	_, err := manager.Exec(context.TODO(), TiUPComponentTypeCluster, TestClusterID, testTiUPHome, TestWorkFlowID, []string{}, 360)
 	if err != nil {
 		t.Error(err)
+	}
+}
+
+func TestManager_CheckConfig(t *testing.T) {
+	_, err := manager.CheckConfig(context.TODO(), TiUPComponentTypeCluster, TestTiDBCheckTopo, testTiUPHome, []string{}, 360)
+	if err == nil {
+		t.Error("nil err")
+	}
+}
+
+func TestManager_ExtractCheckResult(t *testing.T) {
+	type want struct {
+		result string
+	}
+	tests := []struct {
+		testName string
+		results  []string
+		want     want
+	}{
+		{"Test_WithResult", []string{"{\"prefix\":", "{\"prefix\":", "{\"prefix\":", "{\"result\":", "{\"exit_code\":"}, want{"{\"result\":"}},
+		{"Test_WithoutResult", []string{"{\"prefix\":", "{\"prefix\":", "{\"prefix\":", "{\"exit_code\":"}, want{""}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.testName, func(t *testing.T) {
+			result := manager.extractCheckResult(tt.results)
+			if result != tt.want.result {
+				t.Errorf("case extract check result %s . err(expected %v, actual %v)", tt.testName, tt.want.result, result)
+			}
+		})
 	}
 }
 

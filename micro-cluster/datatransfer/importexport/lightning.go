@@ -28,7 +28,6 @@ type DataImportConfig struct {
 	TiKVImporter TiKVImporterCfg `toml:"tikv-importer"`
 	MyDumper     MyDumperCfg     `toml:"mydumper"`
 	TiDB         TiDBCfg         `toml:"tidb"`
-	CheckPoint   CheckPointCfg   `toml:"checkpoint"`
 }
 
 type LightningCfg struct {
@@ -60,12 +59,6 @@ type TiDBCfg struct {
 	Password   string `toml:"password"`
 	StatusPort int    `toml:"status-port"` //table information from tidb status port
 	PDAddr     string `toml:"pd-addr"`
-}
-
-type CheckPointCfg struct {
-	Enable bool   `toml:"enable"`
-	Schema string `toml:"schema"`
-	Driver string `toml:"driver"`
 }
 
 func NewDataImportConfig(ctx context.Context, meta *meta.ClusterMeta, info *importInfo) *DataImportConfig {

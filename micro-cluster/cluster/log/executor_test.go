@@ -32,7 +32,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 
 	"github.com/alecthomas/assert"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -46,6 +46,10 @@ func TestExecutor_collectorClusterLogConfig(t *testing.T) {
 	secondparty.Manager = mock2rdService
 
 	t.Run("success", func(t *testing.T) {
+		mock2rdService.EXPECT().ClusterDisplay(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, tiUPComponent secondparty.TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string) (resp *secondparty.CmdDisplayResp, err error) {
+				return &secondparty.CmdDisplayResp{DisplayRespString: "{\"instances\":[{\"role\":\"filebeat\", \"host\":\"127.0.0.1\"}]}"}, nil
+			})
 		mock2rdService.EXPECT().Transfer(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
@@ -61,7 +65,7 @@ func TestExecutor_collectorClusterLogConfig(t *testing.T) {
 
 func TestExecutor_buildCollectorClusterLogConfig(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		configs, err := buildCollectorClusterLogConfig(context.TODO(), []*handler.InstanceLogInfo{
+		configs, err := buildCollectorClusterLogConfig(context.TODO(), []*meta.InstanceLogInfo{
 			{
 				ClusterID:    "123",
 				InstanceType: "TiDB",

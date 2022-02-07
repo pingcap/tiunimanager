@@ -105,14 +105,14 @@ func (m ParameterGroupReadWrite) DeleteParameterGroup(ctx context.Context, param
 
 	// check if the parameter group manages the cluster
 	var total int64 = 0
-	err = m.DB(ctx).Model(&management.Cluster{}).Count(&total).Where("parameter_group_id = ?", parameterGroupId).Find(&management.Cluster{}).Error
+	err = m.DB(ctx).Model(&management.Cluster{}).Where("parameter_group_id = ?", parameterGroupId).Count(&total).Error
 	if err != nil {
 		log.Errorf("query cluster count err: %v, request param id: %v", err.Error(), parameterGroupId)
 		tx.Rollback()
 		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR, err.Error())
 	}
 	if total > 0 {
-		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_RELATION_CLUSTER_NOT_DEL, "")
+		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_RELATION_CLUSTER_NOT_DEL, "parameter group id: %s", parameterGroupId)
 	}
 	// delete parameter_group_mapping table
 	err = m.DB(ctx).Where("parameter_group_id = ?", parameterGroupId).Delete(&ParameterGroupMapping{}).Error
@@ -210,7 +210,7 @@ func (m ParameterGroupReadWrite) QueryParameterGroup(ctx context.Context, name, 
 	return groups, total, err
 }
 
-func (m ParameterGroupReadWrite) GetParameterGroup(ctx context.Context, parameterGroupId, parameterName string) (group *ParameterGroup, params []*ParamDetail, err error) {
+func (m ParameterGroupReadWrite) GetParameterGroup(ctx context.Context, parameterGroupId, parameterName, instanceType string) (group *ParameterGroup, params []*ParamDetail, err error) {
 	log := framework.LogWithContext(ctx)
 	if parameterGroupId == "" {
 		return nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "parameter group id is empty")
@@ -224,7 +224,7 @@ func (m ParameterGroupReadWrite) GetParameterGroup(ctx context.Context, paramete
 		return nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_QUERY_ERROR, err.Error())
 	}
 
-	params, err = m.QueryParametersByGroupId(ctx, parameterGroupId, parameterName)
+	params, err = m.QueryParametersByGroupId(ctx, parameterGroupId, parameterName, instanceType)
 	if err != nil {
 		log.Errorf("get param group err: %v", err.Error())
 		return nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, err.Error())
@@ -284,7 +284,7 @@ func (m ParameterGroupReadWrite) QueryParameters(ctx context.Context, offset, si
 	return params, total, err
 }
 
-func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, parameterGroupId, parameterName string) (params []*ParamDetail, err error) {
+func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, parameterGroupId, parameterName, instanceType string) (params []*ParamDetail, err error) {
 	log := framework.LogWithContext(ctx)
 
 	query := m.DB(ctx).Model(&Parameter{}).
@@ -298,6 +298,9 @@ func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, p
 	// Fuzzy query by parameter name
 	if parameterName != "" {
 		query.Where("parameters.name like '%" + parameterName + "%'")
+	}
+	if instanceType != "" {
+		query.Where("parameters.instance_type = ?", instanceType)
 	}
 
 	err = query.Order("parameters.instance_type desc").

@@ -944,7 +944,7 @@ func TestClusterReadWrite_UpdateDBUser(t *testing.T) {
 			} else {
 				got, err := testRW.GetDBUser(tt.args.ctx, tt.args.user.ClusterID)
 				assert.NoError(t, err)
-				assert.Equal(t, got[0].Password, "12345")
+				assert.Equal(t, string(got[0].Password), "12345")
 			}
 		})
 	}

@@ -13,7 +13,7 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package handler
+package meta
 
 import (
 	"context"
@@ -51,7 +51,7 @@ func TestClusterMeta_BuildCluster(t *testing.T) {
 	}
 	meta := &ClusterMeta{}
 
-	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{}, nil)
+	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "1234"}}, nil)
 
 	err := meta.BuildCluster(context.TODO(), params)
 	assert.NoError(t, err)
@@ -60,7 +60,9 @@ func TestClusterMeta_BuildCluster(t *testing.T) {
 	assert.Equal(t, meta.Cluster.Version, params.Version)
 	assert.Equal(t, meta.Cluster.TLS, params.TLS)
 	assert.Equal(t, meta.Cluster.Tags, params.Tags)
-	assert.Equal(t, meta.DBUsers[string(constants.Root)].Password, params.DBPassword)
+	assert.Equal(t, string(meta.DBUsers[string(constants.Root)].Password), params.DBPassword)
+	assert.NotEmpty(t, meta.DBUsers[string(constants.Root)].ClusterID)
+	assert.Equal(t, meta.DBUsers[string(constants.Root)].ClusterID, "1234")
 }
 
 func TestClusterMeta_AddInstances(t *testing.T) {
@@ -483,7 +485,7 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 	models.SetClusterReaderWriter(rw)
 
 	rw.EXPECT().CreateRelation(gomock.Any(), gomock.Any()).Return(nil)
-	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil)
+	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster01"}}, nil)
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -1499,4 +1501,94 @@ func TestGetRandomString(t *testing.T) {
 			fmt.Println(got)
 		})
 	}
+}
+
+func TestClusterMeta_BuildForTakeover(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(rw)
+
+	meta := &ClusterMeta{}
+
+	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "1234"}}, nil)
+	rw.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	err := meta.BuildForTakeover(context.TODO(), "test", "1234")
+	assert.NoError(t, err)
+	//assert.Equal(t, meta.Cluster.Name, params.Name)
+	//assert.Equal(t, meta.Cluster.Type, params.Type)
+	//assert.Equal(t, meta.Cluster.Version, params.Version)
+	//assert.Equal(t, meta.Cluster.TLS, params.TLS)
+	//assert.Equal(t, meta.Cluster.Tags, params.Tags)
+	//assert.Equal(t, meta.DBUsers[string(constants.Root)].Password, params.DBPassword)
+	assert.NotEmpty(t, meta.DBUsers[string(constants.Root)].ClusterID)
+	assert.Equal(t, meta.DBUsers[string(constants.Root)].ClusterID, "1234")
+
+	//cluster := &management.Cluster{
+	//	Entity: common.Entity{
+	//		ID: "123",
+	//		TenantId: "tttt",
+	//	},
+	//	Name: "testName",
+	//	OwnerId: "oooo",
+	//}
+	//instance := make(map[string][]*management.ClusterInstance)
+	//user := make(map[string]*management.DBUser)
+	//type args struct {
+	//	ctx        context.Context
+	//	name       string
+	//	dbUser     string
+	//	dbPassword string
+	//}
+	//tests := []struct {
+	//	name    string
+	//	args    args
+	//	wantErr bool
+	//}{
+	//	// TODO: Add test cases.
+	//	{"normal", args{context.TODO(), "test", "root", "1234567"},false},
+	//}
+	//for _, tt := range tests {
+	//	t.Run(tt.name, func(t *testing.T) {
+	//		p := &ClusterMeta{
+	//			Cluster:              cluster,
+	//			Instances:            instance,
+	//			DBUsers:              user,
+	//		}
+	//		if err := p.BuildForTakeover(tt.args.ctx, tt.args.name, tt.args.dbUser, tt.args.dbPassword); (err != nil) != tt.wantErr {
+	//			t.Errorf("BuildForTakeover() error = %v, wantErr %v", err, tt.wantErr)
+	//		} else {
+	//			fmt.Println(p.Cluster.ID, p.DBUsers[string(constants.Root)].ID)
+	//
+	//			assert.Equal(t, p.Cluster.ID, p.DBUsers[string(constants.Root)].ID)
+	//			assert.NotEmpty(t, p.DBUsers[string(constants.Root)].ID)
+	//		}
+	//	})
+	//}
+}
+
+func TestClusterMeta_IsTakenOver(t *testing.T) {
+	t.Run("empty", func(t *testing.T) {
+		meta := ClusterMeta{
+			Cluster: &management.Cluster{},
+		}
+		assert.False(t, meta.IsTakenOver())
+	})
+	t.Run("true", func(t *testing.T) {
+		meta := ClusterMeta{
+			Cluster: &management.Cluster{
+				Tags: []string{"aaa", TagTakeover, "bbb"},
+			},
+		}
+		assert.True(t, meta.IsTakenOver())
+	})
+	t.Run("false", func(t *testing.T) {
+		meta := ClusterMeta{
+			Cluster: &management.Cluster{
+				Tags: []string{"aaa", "bbb"},
+			},
+		}
+		assert.False(t, meta.IsTakenOver())
+	})
 }

@@ -23,7 +23,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
@@ -65,15 +65,24 @@ type Service interface {
 }
 
 func GetChangeFeedService() Service {
-	return GetManager()
+	serviceOnce.Do(func() {
+		if service == nil {
+			service = &Manager{}
+		}
+	})
+	return service
+}
+
+func MockChangeFeedService(s Service) {
+	service = s
 }
 
 func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID string, targetClusterID string, relationType constants.ClusterRelationType) (ID string, err error) {
-	sourceCluster, err := handler.Get(ctx, sourceClusterID)
+	sourceCluster, err := meta.Get(ctx, sourceClusterID)
 	if err != nil {
 		return
 	}
-	targetCluster, err := handler.Get(ctx, targetClusterID)
+	targetCluster, err := meta.Get(ctx, targetClusterID)
 	if err != nil {
 		return
 	}
@@ -98,7 +107,7 @@ func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID str
 			Ip:              address.IP,
 			Port:            address.Port,
 			Username:        user.Name,
-			Password:        user.Password,
+			Password:        string(user.Password),
 			TargetClusterId: targetClusterID,
 		},
 	}
@@ -117,7 +126,7 @@ func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID str
 }
 
 func (p *Manager) ReverseBetweenClusters(ctx context.Context, sourceClusterID string, targetClusterID string, relationType constants.ClusterRelationType) (ID string, err error) {
-	sourceCluster, err := handler.Get(ctx, sourceClusterID)
+	sourceCluster, err := meta.Get(ctx, sourceClusterID)
 	if err != nil {
 		return
 	}
@@ -162,7 +171,7 @@ func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTa
 		err = errors.NewError(errors.TIEM_CHANGE_FEED_NOT_FOUND, "change feed task has not been created")
 	}
 
-	clusterMeta, err := handler.Get(ctx, task.ClusterId)
+	clusterMeta, err := meta.Get(ctx, task.ClusterId)
 	if err != nil {
 		return
 	}

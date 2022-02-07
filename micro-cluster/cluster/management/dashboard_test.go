@@ -22,7 +22,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/common"
@@ -195,7 +195,7 @@ func TestGetDashboardInfo(t *testing.T) {
 }
 
 func Test_getDashboardUrlFromCluster(t *testing.T) {
-	_, err := getDashboardUrlFromCluster(context.TODO(), &handler.ClusterMeta{
+	_, err := getDashboardUrlFromCluster(context.TODO(), &meta.ClusterMeta{
 		Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDPD): {},
 		},

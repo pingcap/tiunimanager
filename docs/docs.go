@@ -2980,6 +2980,11 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "instanceType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "paramName",
                         "in": "query"
                     }
@@ -7239,8 +7244,7 @@ var doc = `{
                 "TiUPUserName",
                 "TiUPUserPassword",
                 "clusterName",
-                "dbPassword",
-                "dbUser"
+                "dbPassword"
             ],
             "properties": {
                 "TiUPIp": {
@@ -7270,10 +7274,6 @@ var doc = `{
                 "dbPassword": {
                     "type": "string",
                     "example": "myPassword"
-                },
-                "dbUser": {
-                    "type": "string",
-                    "example": "root"
                 }
             }
         },
@@ -9376,7 +9376,7 @@ var doc = `{
                     "type": "integer"
                 },
                 "diskType": {
-                    "description": "Disk type of this host [sata/ssd/nvme_ssd]",
+                    "description": "Disk type of this host [SATA/SSD/NVMeSSD]",
                     "type": "string"
                 },
                 "disks": {
@@ -9384,14 +9384,6 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/structs.DiskInfo"
                     }
-                },
-                "freeCpuCores": {
-                    "description": "Unused CpuCore, used for allocation",
-                    "type": "integer"
-                },
-                "freeMemory": {
-                    "description": "Unused memory size, Unit:GB, used for allocation",
-                    "type": "integer"
                 },
                 "hostId": {
                     "type": "string"
@@ -9424,7 +9416,7 @@ var doc = `{
                     "type": "string"
                 },
                 "purpose": {
-                    "description": "What Purpose is the host used for? [compute/storage/general]",
+                    "description": "What Purpose is the host used for? [compute/storage/schedule]",
                     "type": "string"
                 },
                 "rack": {
@@ -9458,7 +9450,18 @@ var doc = `{
                 "updateTime": {
                     "type": "integer"
                 },
+                "usedCpuCores": {
+                    "description": "Unused CpuCore, used for allocation",
+                    "type": "integer"
+                },
+                "usedMemory": {
+                    "description": "Unused memory size, Unit:GiB, used for allocation",
+                    "type": "integer"
+                },
                 "userName": {
+                    "type": "string"
+                },
+                "vendor": {
                     "type": "string"
                 }
             }

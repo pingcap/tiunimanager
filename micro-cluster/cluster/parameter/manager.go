@@ -36,7 +36,7 @@ import (
 
 	"github.com/pingcap-inc/tiem/message"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -72,8 +72,9 @@ var modifyParametersDefine = workflow.WorkFlowDefine{
 		"start":          {"validationParameter", "validationDone", "fail", workflow.SyncFuncNode, validationParameter},
 		"validationDone": {"modifyParameter", "modifyDone", "fail", workflow.SyncFuncNode, modifyParameters},
 		"modifyDone":     {"refreshParameter", "refreshDone", "fail", workflow.SyncFuncNode, refreshParameter},
-		"refreshDone":    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(defaultEnd, persistParameter)},
-		"fail":           {"fail", "", "", workflow.SyncFuncNode, defaultEnd},
+		"refreshDone":    {"persistParameter", "persistDone", "fail", workflow.SyncFuncNode, persistParameter},
+		"persistDone":    {"end", "", "", workflow.SyncFuncNode, defaultEnd},
+		"fail":           {"end", "", "", workflow.SyncFuncNode, defaultEnd},
 	},
 }
 
@@ -151,13 +152,13 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 	framework.LogWithContext(ctx).Infof("query cluster %s parameter group id: %s, total size: %d", req.ClusterID, pgId, total)
 
 	// Get cluster info and topology from db based by clusterID
-	clusterMeta, err := handler.Get(ctx, req.ClusterID)
+	clusterMeta, err := meta.Get(ctx, req.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluser%s meta from db error: %s", req.ClusterID, err.Error())
 		return
 	}
 
-	params := make([]ModifyClusterParameterInfo, 0)
+	params := make([]*ModifyClusterParameterInfo, 0)
 
 	// Iterate to get the complete information of the modified parameters
 	for _, detail := range paramDetails {
@@ -171,7 +172,7 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 						return
 					}
 				}
-				params = append(params, ModifyClusterParameterInfo{
+				params = append(params, &ModifyClusterParameterInfo{
 					ParamId:        param.ParamId,
 					Category:       detail.Category,
 					Name:           detail.Name,
@@ -211,21 +212,21 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 	defer framework.LogWithContext(ctx).Infof("end apply cluster parameters")
 
 	// Get cluster info and topology from db based by clusterID
-	clusterMeta, err := handler.Get(ctx, req.ClusterID)
+	clusterMeta, err := meta.Get(ctx, req.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluser%s meta from db error: %s", req.ClusterID, err.Error())
 		return
 	}
 
 	// Detail parameter group by id
-	_, pgm, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId, "")
+	_, pgm, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId, "", "")
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("detail parameter group %s from db error: %s", req.ParamGroupId, err.Error())
 		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain())
 	}
 
 	// Constructing clusterParameter.ModifyParameter objects
-	params := make([]ModifyClusterParameterInfo, len(pgm))
+	params := make([]*ModifyClusterParameterInfo, len(pgm))
 	for i, param := range pgm {
 		ranges := make([]string, 0)
 		if len(param.Range) > 0 {
@@ -235,7 +236,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 				return
 			}
 		}
-		params[i] = ModifyClusterParameterInfo{
+		params[i] = &ModifyClusterParameterInfo{
 			ParamId:        param.ID,
 			Category:       param.Category,
 			Name:           param.Name,
@@ -252,7 +253,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 
 	// Get modify parameters
 	data := make(map[string]interface{})
-	data[contextModifyParameters] = &ModifyParameter{ClusterID: req.ClusterID, Reboot: req.Reboot, Params: params, Nodes: req.Nodes}
+	data[contextModifyParameters] = &ModifyParameter{ClusterID: req.ClusterID, ParamGroupId: req.ParamGroupId, Reboot: req.Reboot, Params: params, Nodes: req.Nodes}
 	data[contextHasApplyParameter] = true
 	data[contextMaintenanceStatusChange] = maintenanceStatusChange
 	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
@@ -272,7 +273,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 }
 
 func (m *Manager) PersistApplyParameterGroup(ctx context.Context, req message.ApplyParameterGroupReq, hasEmptyValue bool) (resp message.ApplyParameterGroupResp, err error) {
-	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId, "")
+	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId, "", "")
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
 		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, err.Error())

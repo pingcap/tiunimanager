@@ -30,7 +30,7 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/constants"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 
 	"github.com/pingcap-inc/tiem/common/structs"
 
@@ -61,14 +61,15 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func mockClusterMeta() *handler.ClusterMeta {
-	return &handler.ClusterMeta{
+func mockClusterMeta() *meta.ClusterMeta {
+	return &meta.ClusterMeta{
 		Cluster: mockCluster(),
 		Instances: map[string][]*management.ClusterInstance{
-			"TiDB": mockClusterInstances(),
-			"TiKV": mockClusterInstances(),
-			"PD":   mockClusterInstances(),
-			"CDC":  mockClusterInstances(),
+			"TiDB":    mockClusterInstances(),
+			"TiKV":    mockClusterInstances(),
+			"PD":      mockClusterInstances(),
+			"CDC":     mockClusterInstances(),
+			"TiFlash": mockClusterInstances(),
 		},
 		DBUsers: map[string]*management.DBUser{
 			string(constants.Root): &management.DBUser{
@@ -178,7 +179,7 @@ func mockDBUsers() []*management.DBUser {
 func mockModifyParameter() *ModifyParameter {
 	return &ModifyParameter{
 		Reboot: false,
-		Params: []ModifyClusterParameterInfo{
+		Params: []*ModifyClusterParameterInfo{
 			{
 				ParamId:        "1",
 				Name:           "test_param_1",

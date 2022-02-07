@@ -21,7 +21,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
@@ -37,7 +37,7 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 	defer framework.LogWithContext(ctx).Info("end backupCluster")
 
 	record := ctx.GetData(contextBackupRecordKey).(*backuprestore.BackupRecord)
-	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
+	meta := ctx.GetData(contextClusterMetaKey).(*meta.ClusterMeta)
 
 	if string(constants.StorageTypeNFS) == record.StorageType {
 		if err := cleanBackupNfsPath(ctx, record.FilePath); err != nil {
@@ -102,7 +102,7 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 		StorageAddress: fmt.Sprintf("%s://%s", storageType, getBRStoragePath(ctx, record.StorageType, record.FilePath)),
 		DbConnParameter: sql.DbConnParam{
 			Username: tidbUserInfo.Name,
-			Password: tidbUserInfo.Password,
+			Password: string(tidbUserInfo.Password),
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),
 		},
@@ -123,7 +123,7 @@ func updateBackupRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) e
 	framework.LogWithContext(ctx).Info("begin updateBackupRecord")
 	defer framework.LogWithContext(ctx).Info("end updateBackupRecord")
 
-	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
+	meta := ctx.GetData(contextClusterMetaKey).(*meta.ClusterMeta)
 	record := ctx.GetData(contextBackupRecordKey).(*backuprestore.BackupRecord)
 	brInfo := ctx.GetData(contextBRInfoKey).(*sql.BRSQLResp)
 
@@ -150,7 +150,7 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	framework.LogWithContext(ctx).Info("begin recoverFromSrcCluster")
 	defer framework.LogWithContext(ctx).Info("end recoverFromSrcCluster")
 
-	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
+	meta := ctx.GetData(contextClusterMetaKey).(*meta.ClusterMeta)
 	record := ctx.GetData(contextBackupRecordKey).(*backuprestore.BackupRecord)
 
 	tidbServers := meta.GetClusterConnectAddresses()
@@ -208,7 +208,7 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 		StorageAddress: fmt.Sprintf("%s://%s", storageType, getBRStoragePath(ctx, record.StorageType, record.FilePath)),
 		DbConnParameter: sql.DbConnParam{
 			Username: tidbUserInfo.Name,
-			Password: tidbUserInfo.Password,
+			Password: string(tidbUserInfo.Password),
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),
 		},
@@ -228,7 +228,7 @@ func defaultEnd(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin defaultEnd")
 	defer framework.LogWithContext(ctx).Info("end defaultEnd")
 
-	clusterMeta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
+	clusterMeta := ctx.GetData(contextClusterMetaKey).(*meta.ClusterMeta)
 	maintenanceStatusChange := ctx.GetData(contextMaintenanceStatusChangeKey).(bool)
 	if maintenanceStatusChange {
 		if err := clusterMeta.EndMaintenance(ctx, clusterMeta.Cluster.MaintenanceStatus); err != nil {
@@ -244,7 +244,7 @@ func backupFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin backupFail")
 	defer framework.LogWithContext(ctx).Info("end backupFail")
 
-	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
+	meta := ctx.GetData(contextClusterMetaKey).(*meta.ClusterMeta)
 	record := ctx.GetData(contextBackupRecordKey).(*backuprestore.BackupRecord)
 
 	brRW := models.GetBRReaderWriter()

@@ -24,7 +24,9 @@
 package parameter
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/pingcap-inc/tiem/common/structs"
 )
@@ -73,7 +75,7 @@ type ModifyParameter struct {
 	ClusterID    string
 	ParamGroupId string
 	Reboot       bool
-	Params       []ModifyClusterParameterInfo
+	Params       []*ModifyClusterParameterInfo
 	Nodes        []string
 }
 
@@ -102,9 +104,13 @@ const (
 // @Description: validate parameter value by range field
 // @Parameter param
 // @return bool
-func ValidateRange(param ModifyClusterParameterInfo) bool {
+func ValidateRange(param *ModifyClusterParameterInfo, hasModify bool) bool {
 	// Determine if range is nil or an expression, continue the loop directly
 	if param.Range == nil || len(param.Range) == 0 {
+		return true
+	}
+	// If it is a modified parameter workflow, the value empty is skipped
+	if hasModify && strings.TrimSpace(param.RealValue.ClusterValue) == "" {
 		return true
 	}
 	switch param.Type {
@@ -128,6 +134,10 @@ func ValidateRange(param ModifyClusterParameterInfo) bool {
 			}
 		}
 	case int(String):
+		// If the parameter is a string type and the range length is 1, it means it is an expression or a fixed display value
+		if len(param.Range) <= 1 {
+			return true
+		}
 		for _, enumValue := range param.Range {
 			if param.RealValue.ClusterValue == enumValue {
 				return true
@@ -149,4 +159,16 @@ func ValidateRange(param ModifyClusterParameterInfo) bool {
 		return true
 	}
 	return false
+}
+
+// DisplayFullParameterName
+// @Description: display full parameter name
+// @Parameter category
+// @Parameter name
+// @return string
+func DisplayFullParameterName(category, name string) string {
+	if category == "basic" {
+		return name
+	}
+	return fmt.Sprintf("%s.%s", category, name)
 }

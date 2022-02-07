@@ -141,6 +141,7 @@ const (
 	TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR    EM_ERROR_CODE = 30131
 	TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR  EM_ERROR_CODE = 30132
 	TIEM_RESOURCE_PREPARE_HOST_ERROR        EM_ERROR_CODE = 30133
+	TIEM_RESOURCE_INVALID_VENDOR_NAME       EM_ERROR_CODE = 30134
 
 	TIEM_MONITOR_NOT_FOUND EM_ERROR_CODE = 614
 
@@ -187,6 +188,8 @@ const (
 	TIEM_STORE_NOT_FOUND_ERROR            EM_ERROR_CODE = 20808
 
 	TIEM_CHECK_CLUSTER_VERSION_ERROR EM_ERROR_CODE = 21301
+	TIEM_CDC_NOT_FOUND               EM_ERROR_CODE = 21302
+	TIEM_CLONE_TIKV_ERROR            EM_ERROR_CODE = 21303
 
 	CreateZonesError              EM_ERROR_CODE = 70001
 	DeleteZonesError              EM_ERROR_CODE = 70002
@@ -348,6 +351,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR:    {"extract workflow context failed", 500},
 	TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR:  {"uninstall filebeat on host failed", 400},
 	TIEM_RESOURCE_PREPARE_HOST_ERROR:        {"prepare host before verify failed", 500},
+	TIEM_RESOURCE_INVALID_VENDOR_NAME:       {"invalid vendor", 400},
 
 	// param group & cluster param
 	TIEM_DEFAULT_PARAM_GROUP_NOT_DEL:                 {"Not allow to deleted the default parameter group", 409},

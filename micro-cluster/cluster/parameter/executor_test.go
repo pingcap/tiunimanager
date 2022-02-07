@@ -111,7 +111,7 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 		FlowData: map[string]interface{}{},
 	}
 
-	v, err := convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
+	v, err := convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
 		ParamId:   "1",
 		Name:      "param1",
 		Type:      0,
@@ -120,7 +120,7 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, 1, v)
 
-	v, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
+	v, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
 		ParamId:   "2",
 		Name:      "param2",
 		Type:      1,
@@ -129,7 +129,7 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, "debug", v)
 
-	v, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
+	v, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
 		ParamId:   "3",
 		Name:      "param3",
 		Type:      2,
@@ -138,7 +138,7 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, true, v)
 
-	v, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
+	v, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
 		ParamId:   "4",
 		Name:      "param4",
 		Type:      3,
@@ -147,7 +147,7 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, 3.00, math.Trunc(v.(float64)))
 
-	v, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
+	v, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
 		ParamId:   "5",
 		Name:      "param5",
 		Type:      4,
@@ -164,7 +164,7 @@ func TestExecutor_convertRealParameterType_Error(t *testing.T) {
 		FlowData: map[string]interface{}{},
 	}
 
-	_, err := convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
+	_, err := convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
 		ParamId:   "2",
 		Name:      "param2",
 		Type:      2,
@@ -172,7 +172,7 @@ func TestExecutor_convertRealParameterType_Error(t *testing.T) {
 	})
 	assert.Error(t, err)
 
-	_, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
+	_, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
 		ParamId:   "3",
 		Name:      "param3",
 		Type:      3,
@@ -180,7 +180,7 @@ func TestExecutor_convertRealParameterType_Error(t *testing.T) {
 	})
 	assert.Error(t, err)
 
-	_, err = convertRealParameterType(applyCtx, ModifyClusterParameterInfo{
+	_, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
 		ParamId:   "5",
 		Name:      "param5",
 		Type:      0,
@@ -208,7 +208,7 @@ func TestExecutor_validationParameters(t *testing.T) {
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
-			Params: []ModifyClusterParameterInfo{
+			Params: []*ModifyClusterParameterInfo{
 				{
 					ParamId:        "1",
 					Name:           "test_param_1",
@@ -230,7 +230,7 @@ func TestExecutor_validationParameters(t *testing.T) {
 
 func TestExecutor_validateRange(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		validated := ValidateRange(ModifyClusterParameterInfo{
+		validated := ValidateRange(&ModifyClusterParameterInfo{
 			ParamId:        "1",
 			Name:           "test_param_1",
 			InstanceType:   "TiDB",
@@ -240,10 +240,10 @@ func TestExecutor_validateRange(t *testing.T) {
 			Type:           0,
 			Range:          []string{"1", "10"},
 			RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
-		})
+		}, true)
 		assert.EqualValues(t, true, validated)
 
-		validated = ValidateRange(ModifyClusterParameterInfo{
+		validated = ValidateRange(&ModifyClusterParameterInfo{
 			ParamId:        "2",
 			Name:           "test_param_2",
 			InstanceType:   "TiDB",
@@ -253,10 +253,10 @@ func TestExecutor_validateRange(t *testing.T) {
 			Type:           1,
 			Range:          []string{"debug", "info", "warn", "error"},
 			RealValue:      structs.ParameterRealValue{ClusterValue: "info"},
-		})
+		}, true)
 		assert.EqualValues(t, true, validated)
 
-		validated = ValidateRange(ModifyClusterParameterInfo{
+		validated = ValidateRange(&ModifyClusterParameterInfo{
 			ParamId:        "3",
 			Name:           "test_param_3",
 			InstanceType:   "TiDB",
@@ -266,10 +266,10 @@ func TestExecutor_validateRange(t *testing.T) {
 			Type:           2,
 			Range:          []string{"true", "false"},
 			RealValue:      structs.ParameterRealValue{ClusterValue: "true"},
-		})
+		}, true)
 		assert.EqualValues(t, true, validated)
 
-		validated = ValidateRange(ModifyClusterParameterInfo{
+		validated = ValidateRange(&ModifyClusterParameterInfo{
 			ParamId:        "4",
 			Name:           "test_param_4",
 			InstanceType:   "TiDB",
@@ -279,9 +279,9 @@ func TestExecutor_validateRange(t *testing.T) {
 			Type:           3,
 			Range:          []string{"0.1", "5.2"},
 			RealValue:      structs.ParameterRealValue{ClusterValue: "3.14"},
-		})
+		}, true)
 
-		validated = ValidateRange(ModifyClusterParameterInfo{
+		validated = ValidateRange(&ModifyClusterParameterInfo{
 			ParamId:        "5",
 			Name:           "test_param_5",
 			InstanceType:   "TiDB",
@@ -291,7 +291,7 @@ func TestExecutor_validateRange(t *testing.T) {
 			Type:           4,
 			Range:          []string{"[]", "[]"},
 			RealValue:      structs.ParameterRealValue{ClusterValue: "[]"},
-		})
+		}, true)
 		assert.EqualValues(t, true, validated)
 	})
 }
@@ -322,6 +322,130 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, mockModifyParameter())
 		modifyCtx.SetData(contextHasApplyParameter, true)
+		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		assert.NoError(t, err)
+	})
+
+	t.Run("no tiflash apply parameter", func(t *testing.T) {
+		mock2rdService.EXPECT().ClusterEditGlobalConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return("1", nil)
+		mock2rdService.EXPECT().GetOperationStatusByWorkFlowNodeID(gomock.Any(), gomock.Any()).Return(secondparty.GetOperationStatusResp{
+			Status: secondparty2.OperationStatus_Finished, Result: "success", ErrorStr: "",
+		}, nil)
+
+		modifyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
+		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
+			Reboot: false,
+			Params: []*ModifyClusterParameterInfo{
+				{
+					ParamId:        "1",
+					Name:           "test_param_1",
+					InstanceType:   "TiFlash",
+					UpdateSource:   0,
+					HasApply:       1,
+					SystemVariable: "",
+					Type:           0,
+					Range:          []string{"0", "1024"},
+					RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
+				},
+			},
+			Nodes: []string{"172.16.1.12:9000"},
+		})
+		modifyCtx.SetData(contextHasApplyParameter, true)
+		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		assert.NoError(t, err)
+	})
+
+	t.Run("no tiflash modify parameter", func(t *testing.T) {
+		mock2rdService.EXPECT().ClusterEditGlobalConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return("1", nil)
+		mock2rdService.EXPECT().GetOperationStatusByWorkFlowNodeID(gomock.Any(), gomock.Any()).Return(secondparty.GetOperationStatusResp{
+			Status: secondparty2.OperationStatus_Finished, Result: "success", ErrorStr: "",
+		}, nil)
+
+		modifyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
+		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
+			Reboot: false,
+			Params: []*ModifyClusterParameterInfo{
+				{
+					ParamId:        "1",
+					Name:           "test_param_1",
+					InstanceType:   "TiFlash",
+					UpdateSource:   0,
+					HasApply:       1,
+					SystemVariable: "",
+					Type:           0,
+					Range:          []string{"0", "1024"},
+					RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
+				},
+			},
+			Nodes: []string{"172.16.1.12:9000"},
+		})
+		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		assert.NoError(t, err)
+	})
+
+	t.Run("no cdc apply parameter", func(t *testing.T) {
+		mock2rdService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
+
+		modifyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
+		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
+			Reboot: false,
+			Params: []*ModifyClusterParameterInfo{
+				{
+					ParamId:        "1",
+					Name:           "test_param_1",
+					InstanceType:   "CDC",
+					UpdateSource:   3,
+					HasApply:       1,
+					SystemVariable: "",
+					Type:           0,
+					Range:          []string{"0", "1024"},
+					RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
+				},
+			},
+			Nodes: []string{"172.16.1.12:9000"},
+		})
+		modifyCtx.SetData(contextHasApplyParameter, true)
+		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		assert.NoError(t, err)
+	})
+
+	t.Run("no cdc modify parameter", func(t *testing.T) {
+		mock2rdService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
+
+		modifyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
+		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
+			Reboot: false,
+			Params: []*ModifyClusterParameterInfo{
+				{
+					ParamId:        "1",
+					Name:           "test_param_1",
+					InstanceType:   "CDC",
+					UpdateSource:   3,
+					HasApply:       1,
+					SystemVariable: "",
+					Type:           0,
+					Range:          []string{"0", "1024"},
+					RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
+				},
+			},
+			Nodes: []string{"172.16.1.12:9000"},
+		})
 		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
 		assert.NoError(t, err)
 	})

@@ -114,7 +114,7 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 		return err
 	}
 
-	ctx.SetData(contextBRInfoKey, resp)
+	ctx.SetData(contextBRInfoKey, &resp)
 	node.Record(fmt.Sprintf("backup cluster %s ", meta.Cluster.ID))
 	return nil
 }

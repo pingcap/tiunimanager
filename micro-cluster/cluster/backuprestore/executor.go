@@ -69,32 +69,7 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 		return err
 	}
 	node.Record(fmt.Sprintf("convert storage type: %s ", storageType))
-	/*
-		clusterFacade := secondparty.ClusterFacade{
-			DbConnParameter: secondparty.DbConnParam{
-				Username: tidbUserInfo.Name,
-				Password: tidbUserInfo.Password,
-				IP:       tidbServerHost,
-				Port:     strconv.Itoa(tidbServerPort),
-			},
-			DbName:      "", //todo: support db table backup
-			TableName:   "",
-			ClusterId:   meta.Cluster.ID,
-			ClusterName: meta.Cluster.Name,
-		}
-		storage := secondparty.BrStorage{
-			StorageType: storageType,
-			Root:        getBRStoragePath(ctx, record.StorageType, record.FilePath),
-		}
 
-		framework.LogWithContext(ctx).Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
-
-		backupTaskId, err := secondparty.Manager.BackUp(ctx, clusterFacade, storage, node.ID)
-		if err != nil {
-			framework.LogWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
-			return err
-		}
-	*/
 	backupSQLReq := sql.BackupSQLReq{
 		NodeID:         node.ID,
 		DbName:         "", //todo: support db table backup
@@ -126,14 +101,6 @@ func updateBackupRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) e
 	meta := ctx.GetData(contextClusterMetaKey).(*meta.ClusterMeta)
 	record := ctx.GetData(contextBackupRecordKey).(*backuprestore.BackupRecord)
 	brInfo := ctx.GetData(contextBRInfoKey).(*sql.BRSQLResp)
-
-	/*
-		resp, err := secondparty.Manager.ShowBackUpInfoThruMetaDB(ctx, backupTaskId)
-		if err != nil {
-			framework.LogWithContext(ctx).Errorf("show backup info of backupId %s failed", backupTaskId)
-			return err
-		}
-	*/
 
 	brRW := models.GetBRReaderWriter()
 	err := brRW.UpdateBackupRecord(ctx, record.ID, string(constants.ClusterBackupFinished), brInfo.Size, brInfo.BackupTS, time.Now())
@@ -176,30 +143,6 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 		return fmt.Errorf("convert br storage type failed, %s", err.Error())
 	}
 	node.Record(fmt.Sprintf("convert br storage type: %s ", storageType))
-	/*
-		clusterFacade := secondparty.ClusterFacade{
-			DbConnParameter: secondparty.DbConnParam{
-				Username: tidbUserInfo.Name,
-				Password: tidbUserInfo.Password,
-				IP:       tidbServerHost,
-				Port:     strconv.Itoa(tidbServerPort),
-			},
-			DbName:      "", //todo: support db table restore
-			TableName:   "",
-			ClusterId:   meta.Cluster.ID,
-			ClusterName: meta.Cluster.Name,
-		}
-		storage := secondparty.BrStorage{
-			StorageType: storageType,
-			Root:        getBRStoragePath(ctx, record.StorageType, record.FilePath),
-		}
-		framework.LogWithContext(ctx).Infof("begin call brmgr restore api, clusterFacade %v, storage %v", clusterFacade, storage)
-		_, err = secondparty.Manager.Restore(ctx, clusterFacade, storage, node.ID)
-		if err != nil {
-			framework.LogWithContext(ctx).Errorf("call restore api failed, %s", err.Error())
-			return err
-		}
-	*/
 
 	restoreSQLReq := sql.RestoreSQLReq{
 		NodeID:         node.ID,

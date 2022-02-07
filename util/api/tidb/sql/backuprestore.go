@@ -94,7 +94,7 @@ func ExecBackupSQL(ctx context.Context, request BackupSQLReq, workflowNodeId str
 		framework.LogWithContext(ctx).Errorf("query backup sql cmd failed %s", err.Error())
 		return
 	}
-	framework.LogWithContext(ctx).Info("do backup sql cmd %s succeed", brSQLCmd)
+	framework.LogWithContext(ctx).Infof("do backup sql cmd %s succeed", brSQLCmd)
 	return
 }
 
@@ -139,6 +139,6 @@ func ExecRestoreSQL(ctx context.Context, request RestoreSQLReq, workflowNodeId s
 		framework.LogWithContext(ctx).Errorf("query restore sql cmd failed %s", err.Error())
 		return
 	}
-	framework.LogWithContext(ctx).Info("do restore sql cmd %s succeed", brSQLCmd)
+	framework.LogWithContext(ctx).Infof("do restore sql cmd %s succeed", brSQLCmd)
 	return
 }

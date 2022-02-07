@@ -62,7 +62,7 @@ func NewBRManager() *BRManager {
 	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowBackupCluster, &workflow.WorkFlowDefine{
 		FlowName: constants.FlowBackupCluster,
 		TaskNodes: map[string]*workflow.NodeDefine{
-			"start":            {"backup", "backupDone", "fail", workflow.PollingNode, backupCluster},
+			"start":            {"backup", "backupDone", "fail", workflow.SyncFuncNode, backupCluster},
 			"backupDone":       {"updateBackupRecord", "updateRecordDone", "fail", workflow.SyncFuncNode, updateBackupRecord},
 			"updateRecordDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
 			"fail":             {"end", "", "", workflow.SyncFuncNode, backupFail},
@@ -71,7 +71,7 @@ func NewBRManager() *BRManager {
 	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowRestoreExistCluster, &workflow.WorkFlowDefine{
 		FlowName: constants.FlowRestoreExistCluster,
 		TaskNodes: map[string]*workflow.NodeDefine{
-			"start":       {"restoreFromSrcCluster", "restoreDone", "fail", workflow.PollingNode, restoreFromSrcCluster},
+			"start":       {"restoreFromSrcCluster", "restoreDone", "fail", workflow.SyncFuncNode, restoreFromSrcCluster},
 			"restoreDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
 			"fail":        {"end", "", "", workflow.SyncFuncNode, restoreFail},
 		},

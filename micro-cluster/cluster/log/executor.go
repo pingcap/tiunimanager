@@ -25,6 +25,9 @@ package log
 
 import (
 	ctx "context"
+	"encoding/json"
+
+	"github.com/pingcap-inc/tiem/common/structs"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 
@@ -64,26 +67,62 @@ func collectorClusterLogConfig(node *workflowModel.WorkFlowNode, ctx *workflow.F
 			return err
 		}
 		collectorYaml := string(bs)
-		// todo: When the tiem scale-out and scale-in is complete, change to take the filebeat deployDir from the tiem topology
-		deployDir := "/tiem-test/filebeat"
-		clusterComponentType := secondparty.ClusterComponentTypeStr
-		clusterName := clusterMeta.Cluster.ID
-		if framework.Current.GetClientArgs().EMClusterName != "" {
-			deployDir = "/tiem-deploy/filebeat-0"
-			clusterComponentType = secondparty.TiEMComponentTypeStr
-			clusterName = framework.Current.GetClientArgs().EMClusterName
+
+		// Get the deploy info of push
+		clusterComponentType, clusterName, deployDir, err := getDeployInfo(clusterMeta, ctx, hostIP)
+		if err != nil {
+			return err
 		}
 		transferTaskId, err := secondparty.Manager.Transfer(ctx, clusterComponentType,
 			clusterName, collectorYaml, deployDir+"/conf/input_tidb.yml",
 			0, []string{"-N", hostIP}, node.ID)
 		framework.LogWithContext(ctx).Infof("got transferTaskId: %s", transferTaskId)
 		if err != nil {
-			framework.LogWithContext(ctx).Errorf("collectorClusterLogConfig invoke tiup transfer err： %v", err)
+			framework.LogWithContext(ctx).Errorf("invoke tiup transfer err： %v", err)
 			return err
 		}
 	}
 
 	return nil
+}
+
+// getDeployInfo
+// @Description: Get the deploy info of push
+// @Parameter clusterMeta
+// @Parameter ctx
+// @Parameter hostIP
+// @return secondparty.TiUPComponentTypeStr
+// @return string
+// @return string
+// @return error
+func getDeployInfo(clusterMeta *handler.ClusterMeta, ctx *workflow.FlowContext, hostIP string) (secondparty.TiUPComponentTypeStr, string, string, error) {
+	deployDir := "/tiem-test/filebeat"
+	clusterComponentType := secondparty.ClusterComponentTypeStr
+	clusterName := clusterMeta.Cluster.ID
+	if framework.Current.GetClientArgs().EMClusterName != "" {
+		deployDir = "/tiem-deploy/filebeat-0"
+		clusterComponentType = secondparty.TiEMComponentTypeStr
+		clusterName = framework.Current.GetClientArgs().EMClusterName
+
+		// Parse EM topology structure to get filebeat deploy dir
+		resp, err := secondparty.Manager.ClusterDisplay(ctx, clusterComponentType, clusterName, 0, []string{"--json"})
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("invoke tiup cluster display err： %v", err)
+			return "", "", "", err
+		}
+		emTopo := new(structs.EMMetaTopo)
+		err = json.Unmarshal([]byte(resp.DisplayRespString), &emTopo)
+		if err != nil {
+			return "", "", "", err
+		}
+		for _, instance := range emTopo.Instances {
+			if instance.Role == "filebeat" && instance.Host == hostIP {
+				deployDir = instance.DeployDir
+				break
+			}
+		}
+	}
+	return clusterComponentType, clusterName, deployDir, nil
 }
 
 // buildCollectorClusterLogConfig

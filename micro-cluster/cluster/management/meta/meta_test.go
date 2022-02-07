@@ -13,7 +13,7 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package handler
+package meta
 
 import (
 	"context"
@@ -60,7 +60,7 @@ func TestClusterMeta_BuildCluster(t *testing.T) {
 	assert.Equal(t, meta.Cluster.Version, params.Version)
 	assert.Equal(t, meta.Cluster.TLS, params.TLS)
 	assert.Equal(t, meta.Cluster.Tags, params.Tags)
-	assert.Equal(t, meta.DBUsers[string(constants.Root)].Password, params.DBPassword)
+	assert.Equal(t, string(meta.DBUsers[string(constants.Root)].Password), params.DBPassword)
 	assert.NotEmpty(t, meta.DBUsers[string(constants.Root)].ClusterID)
 	assert.Equal(t, meta.DBUsers[string(constants.Root)].ClusterID, "1234")
 }
@@ -485,7 +485,7 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 	models.SetClusterReaderWriter(rw)
 
 	rw.EXPECT().CreateRelation(gomock.Any(), gomock.Any()).Return(nil)
-	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster01"}}, nil)
+	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster01"}}, nil)
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -1273,7 +1273,7 @@ func mockResult(name string) []*management.Result {
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
 			},
-			Name:              name,
+			Name: name,
 			//DBUser:            "kodjsfn",
 			Type:              "TiDB",
 			Version:           "v5.0.0",
@@ -1503,7 +1503,6 @@ func TestGetRandomString(t *testing.T) {
 	}
 }
 
-
 func TestClusterMeta_BuildForTakeover(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -1513,7 +1512,9 @@ func TestClusterMeta_BuildForTakeover(t *testing.T) {
 	meta := &ClusterMeta{}
 
 	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "1234"}}, nil)
-	err := meta.BuildForTakeover(context.TODO(), "test", "root", "1234")
+	rw.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	err := meta.BuildForTakeover(context.TODO(), "test", "1234")
 	assert.NoError(t, err)
 	//assert.Equal(t, meta.Cluster.Name, params.Name)
 	//assert.Equal(t, meta.Cluster.Type, params.Type)
@@ -1565,4 +1566,29 @@ func TestClusterMeta_BuildForTakeover(t *testing.T) {
 	//		}
 	//	})
 	//}
+}
+
+func TestClusterMeta_IsTakenOver(t *testing.T) {
+	t.Run("empty", func(t *testing.T) {
+		meta := ClusterMeta{
+			Cluster: &management.Cluster{},
+		}
+		assert.False(t, meta.IsTakenOver())
+	})
+	t.Run("true", func(t *testing.T) {
+		meta := ClusterMeta{
+			Cluster: &management.Cluster{
+				Tags: []string{"aaa", TagTakeover, "bbb"},
+			},
+		}
+		assert.True(t, meta.IsTakenOver())
+	})
+	t.Run("false", func(t *testing.T) {
+		meta := ClusterMeta{
+			Cluster: &management.Cluster{
+				Tags: []string{"aaa", "bbb"},
+			},
+		}
+		assert.False(t, meta.IsTakenOver())
+	})
 }

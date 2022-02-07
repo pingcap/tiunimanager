@@ -22,7 +22,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -35,7 +35,7 @@ func buildDataImportConfig(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	framework.LogWithContext(ctx).Info("begin buildDataImportConfig")
 	defer framework.LogWithContext(ctx).Info("end buildDataImportConfig")
 
-	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
+	meta := ctx.GetData(contextClusterMetaKey).(*meta.ClusterMeta)
 	info := ctx.GetData(contextDataTransportRecordKey).(*importInfo)
 
 	config := NewDataImportConfig(ctx, meta, info)
@@ -101,7 +101,7 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	framework.LogWithContext(ctx).Info("begin exportDataFromCluster")
 	defer framework.LogWithContext(ctx).Info("end exportDataFromCluster")
 
-	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
+	meta := ctx.GetData(contextClusterMetaKey).(*meta.ClusterMeta)
 	info := ctx.GetData(contextDataTransportRecordKey).(*exportInfo)
 
 	tidbServers := meta.GetClusterConnectAddresses()

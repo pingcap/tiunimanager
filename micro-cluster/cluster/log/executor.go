@@ -27,13 +27,15 @@ import (
 	ctx "context"
 	"encoding/json"
 
+	"fmt"
+
 	"github.com/pingcap-inc/tiem/common/structs"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
 	"gopkg.in/yaml.v2"
@@ -43,19 +45,23 @@ func collectorClusterLogConfig(node *workflowModel.WorkFlowNode, ctx *workflow.F
 	framework.LogWithContext(ctx).Info("begin collector cluster log config executor method")
 	defer framework.LogWithContext(ctx).Info("end collector cluster log config executor method")
 
-	clusterMeta := ctx.GetData(contextClusterMeta).(*handler.ClusterMeta)
+	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
 
 	// get current cluster hosts
 	hosts := listClusterHosts(clusterMeta)
 	framework.LogWithContext(ctx).Infof("cluster [%s] list host: %v", clusterMeta.Cluster.ID, hosts)
 
+	node.Record("get instance log info")
 	for hostID, hostIP := range hosts {
-		instances, err := handler.QueryInstanceLogInfo(ctx, hostID, []string{}, []string{})
+		instances, err := meta.QueryInstanceLogInfo(ctx, hostID, []string{}, []string{})
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("cluster [%s] query metas failed. err: %v", clusterMeta.Cluster.ID, err)
 			return err
 		}
 
+		for _, i := range instances {
+			node.Record(fmt.Sprintf("HostIP: %s, log dir : %s", i.IP, i.LogDir))
+		}
 		collectorConfigs, err := buildCollectorClusterLogConfig(ctx, instances)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("build collector cluster log config err： %v", err)
@@ -95,7 +101,7 @@ func collectorClusterLogConfig(node *workflowModel.WorkFlowNode, ctx *workflow.F
 // @return string
 // @return string
 // @return error
-func getDeployInfo(clusterMeta *handler.ClusterMeta, ctx *workflow.FlowContext, hostIP string) (secondparty.TiUPComponentTypeStr, string, string, error) {
+func getDeployInfo(clusterMeta *meta.ClusterMeta, ctx *workflow.FlowContext, hostIP string) (secondparty.TiUPComponentTypeStr, string, string, error) {
 	deployDir := "/tiem-test/filebeat"
 	clusterComponentType := secondparty.ClusterComponentTypeStr
 	clusterName := clusterMeta.Cluster.ID
@@ -132,16 +138,16 @@ func getDeployInfo(clusterMeta *handler.ClusterMeta, ctx *workflow.FlowContext, 
 // @Parameter clusters
 // @return []CollectorClusterLogConfig
 // @return error
-func buildCollectorClusterLogConfig(ctx ctx.Context, clusterInfos []*handler.InstanceLogInfo) ([]CollectorClusterLogConfig, error) {
+func buildCollectorClusterLogConfig(ctx ctx.Context, clusterInfos []*meta.InstanceLogInfo) ([]CollectorClusterLogConfig, error) {
 	framework.LogWithContext(ctx).Info("begin collector cluster log config executor method")
 	defer framework.LogWithContext(ctx).Info("end collector cluster log config executor method")
 
 	// Construct the structure of multiple clusters corresponding instances
-	clusterInstances := make(map[string][]*handler.InstanceLogInfo, 0)
+	clusterInstances := make(map[string][]*meta.InstanceLogInfo, 0)
 	for _, instance := range clusterInfos {
 		insts := clusterInstances[instance.ClusterID]
 		if insts == nil {
-			clusterInstances[instance.ClusterID] = []*handler.InstanceLogInfo{instance}
+			clusterInstances[instance.ClusterID] = []*meta.InstanceLogInfo{instance}
 		} else {
 			insts = append(insts, instance)
 			clusterInstances[instance.ClusterID] = insts
@@ -259,7 +265,7 @@ func buildCollectorModuleDetail(clusterID string, host, logDir string) Collector
 // @Description: List the hosts after cluster de-duplication
 // @Parameter clusterMeta
 // @return map[string]string
-func listClusterHosts(clusterMeta *handler.ClusterMeta) map[string]string {
+func listClusterHosts(clusterMeta *meta.ClusterMeta) map[string]string {
 	hosts := make(map[string]string, 0)
 	for _, instances := range clusterMeta.Instances {
 		for _, instance := range instances {

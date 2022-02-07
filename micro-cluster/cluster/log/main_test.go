@@ -29,7 +29,7 @@ import (
 	"testing"
 
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 
 	"github.com/pingcap-inc/tiem/models/common"
@@ -58,8 +58,8 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func mockClusterMeta() *handler.ClusterMeta {
-	return &handler.ClusterMeta{
+func mockClusterMeta() *meta.ClusterMeta {
+	return &meta.ClusterMeta{
 		Cluster: mockCluster(),
 		Instances: map[string][]*management.ClusterInstance{
 			"TiDB": mockClusterInstances(),

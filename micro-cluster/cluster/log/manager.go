@@ -34,7 +34,7 @@ import (
 	"github.com/pingcap-inc/tiem/proto/clusterservices"
 	"github.com/pingcap-inc/tiem/util/convert"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -73,7 +73,7 @@ var buildLogConfigDefine = workflow.WorkFlowDefine{
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":   {"collect", "success", "fail", workflow.SyncFuncNode, collectorClusterLogConfig},
 		"success": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-		"fail":    {"fail", "", "", workflow.SyncFuncNode, defaultEnd},
+		"fail":    {"end", "", "", workflow.SyncFuncNode, defaultEnd},
 	},
 }
 
@@ -90,7 +90,7 @@ func (m Manager) BuildClusterLogConfig(ctx context.Context, clusterId string) (f
 	defer framework.LogWithContext(ctx).Infof("end build cluster log")
 
 	// Get cluster info and topology from db based by clusterID
-	clusterMeta, err := handler.Get(ctx, clusterId)
+	clusterMeta, err := meta.Get(ctx, clusterId)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluser [%s] meta from db error: %s", clusterId, err.Error())
 		return

@@ -23,7 +23,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
@@ -504,7 +504,7 @@ func TestManager_updateExecutor(t *testing.T) {
 		Succeed:  false,
 	}, nil).AnyTimes()
 
-	clusterMeta := &handler.ClusterMeta{
+	clusterMeta := &meta.ClusterMeta{
 		Instances: map[string][]*management.ClusterInstance{
 			"CDC": {
 				{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
@@ -537,7 +537,7 @@ func TestManager_pauseExecutor(t *testing.T) {
 		Succeed:  false,
 	}, nil).AnyTimes()
 
-	clusterMeta := &handler.ClusterMeta{
+	clusterMeta := &meta.ClusterMeta{
 		Instances: map[string][]*management.ClusterInstance{
 			"CDC": {
 				{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
@@ -570,7 +570,7 @@ func TestManager_resumeExecutor(t *testing.T) {
 		Succeed:  false,
 	}, nil).AnyTimes()
 
-	clusterMeta := &handler.ClusterMeta{
+	clusterMeta := &meta.ClusterMeta{
 		Instances: map[string][]*management.ClusterInstance{
 			"CDC": {
 				{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
@@ -603,7 +603,7 @@ func TestManager_createExecutor(t *testing.T) {
 		Succeed:  false,
 	}, nil).AnyTimes()
 
-	clusterMeta := &handler.ClusterMeta{
+	clusterMeta := &meta.ClusterMeta{
 		Instances: map[string][]*management.ClusterInstance{
 			"CDC": {
 				{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},

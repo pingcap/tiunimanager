@@ -13,7 +13,7 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package handler
+package meta
 
 import (
 	"github.com/pingcap-inc/tiem/library/knowledge"

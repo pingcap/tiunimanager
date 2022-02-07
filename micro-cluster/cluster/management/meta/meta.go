@@ -13,7 +13,7 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package handler
+package meta
 
 import (
 	"bytes"
@@ -83,7 +83,7 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 		p.DBUsers[string(constants.Root)] = &management.DBUser{
 			ClusterID: got.ID,
 			Name:      constants.DBUserName[constants.Root],
-			Password:  param.DBPassword,
+			Password:  dbCommon.Password(param.DBPassword),
 			RoleType:  string(constants.Root),
 		}
 		//fmt.Println("got: ",got.ID, "user: ", p.DBUsers[string(constants.Root)].ClusterID)
@@ -95,33 +95,36 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 
 var TagTakeover = "takeover"
 
-func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbUser string, dbPassword string) error {
+func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbPassword string) error {
 	p.Cluster = &management.Cluster{
 		Entity: dbCommon.Entity{
 			ID:       name,
 			TenantId: framework.GetTenantIDFromContext(ctx),
 			Status:   string(constants.ClusterRunning),
 		},
-		Name: name,
-		//DBUser:         dbUser,
-		//DBPassword:     dbPassword,
+		// todo get from takeover request
+		Vendor:         "Local",
+		Name:           name,
 		Tags:           []string{TagTakeover},
 		OwnerId:        framework.GetUserIDFromContext(ctx),
 		MaintainWindow: "",
 	}
 	got, err := models.GetClusterReaderWriter().Create(ctx, p.Cluster)
 	if err == nil {
-		framework.LogWithContext(ctx).Infof("takeover cluster %s succeed, id = %s", p.Cluster.Name, got.ID)
 		// set root user in clusterMeta
 		p.DBUsers = make(map[string]*management.DBUser)
-		p.DBUsers[string(constants.Root)] = &management.DBUser{
+		rootUser := &management.DBUser{
 			ClusterID: got.ID,
 			Name:      constants.DBUserName[constants.Root],
-			Password:  dbPassword,
+			Password:  dbCommon.Password(dbPassword),
 			RoleType:  string(constants.Root),
 		}
-		//fmt.Println("got: ",got.ID, "user: ", p.DBUsers[string(constants.Root)].ClusterID)
-	} else {
+		p.DBUsers[string(constants.Root)] = rootUser
+
+		err = models.GetClusterReaderWriter().CreateDBUser(ctx, p.DBUsers[string(constants.Root)])
+	}
+
+	if err != nil {
 		framework.LogWithContext(ctx).Errorf("takeover cluster %s failed, err : %s", p.Cluster.Name, err.Error())
 	}
 	return err
@@ -162,7 +165,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 					int32(server.ClientPort),
 					int32(server.PeerPort),
 				}
-			}))
+			}).SetPresetDir(server.DeployDir, server.DataDir, server.LogDir))
 		}
 	}
 	if len(specs.TiDBServers) > 0 {
@@ -174,7 +177,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 					int32(server.Port),
 					int32(server.StatusPort),
 				}
-			}))
+			}).SetPresetDir(server.DeployDir, "", server.LogDir))
 		}
 	}
 	if len(specs.TiKVServers) > 0 {
@@ -186,7 +189,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 					int32(server.Port),
 					int32(server.StatusPort),
 				}
-			}))
+			}).SetPresetDir(server.DeployDir, server.DataDir, server.LogDir))
 		}
 	}
 	if len(specs.TiFlashServers) > 0 {
@@ -202,7 +205,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 					int32(server.FlashProxyStatusPort),
 					int32(server.StatusPort),
 				}
-			}))
+			}).SetPresetDir(server.DeployDir, server.DataDir, server.LogDir))
 		}
 	}
 	if len(specs.CDCServers) > 0 {
@@ -213,7 +216,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 				return []int32{
 					int32(server.Port),
 				}
-			}))
+			}).SetPresetDir(server.DeployDir, server.DataDir, server.LogDir))
 		}
 	}
 	if len(specs.Grafanas) > 0 {
@@ -224,7 +227,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 				return []int32{
 					int32(server.Port),
 				}
-			}))
+			}).SetPresetDir(server.DeployDir, "", ""))
 		}
 	}
 	if len(specs.Alertmanagers) > 0 {
@@ -236,7 +239,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 					int32(server.WebPort),
 					int32(server.ClusterPort),
 				}
-			}))
+			}).SetPresetDir(server.DeployDir, server.DataDir, server.LogDir))
 		}
 	}
 	if len(specs.Monitors) > 0 {
@@ -247,7 +250,7 @@ func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.S
 				return []int32{
 					int32(server.Port),
 				}
-			}))
+			}).SetPresetDir(server.DeployDir, server.DataDir, server.LogDir))
 		}
 	}
 
@@ -649,7 +652,7 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 	meta.DBUsers[string(constants.Root)] = &management.DBUser{
 		ClusterID: got.ID,
 		Name:      constants.DBUserName[constants.Root],
-		Password:  parameter.DBPassword,
+		Password:  dbCommon.Password(parameter.DBPassword),
 		RoleType:  string(constants.Root),
 	}
 	// clone instances
@@ -1061,18 +1064,27 @@ func QueryInstanceLogInfo(ctx context.Context, hostId string, typeFilter []strin
 
 	infos = make([]*InstanceLogInfo, 0)
 	for _, instance := range instances {
-		if len(instance.DiskPath) > 0 {
-			infos = append(infos, &InstanceLogInfo{
-				ClusterID:    instance.ClusterID,
-				InstanceType: constants.EMProductComponentIDType(instance.Type),
-				IP:           instance.HostIP[0],
-				DataDir:      instance.GetDataDir(),
-				DeployDir:    instance.GetDeployDir(),
-				LogDir:       instance.GetLogDir(),
-			})
-		}
+		infos = append(infos, &InstanceLogInfo{
+			ClusterID:    instance.ClusterID,
+			InstanceType: constants.EMProductComponentIDType(instance.Type),
+			IP:           instance.HostIP[0],
+			DataDir:      instance.GetDataDir(),
+			DeployDir:    instance.GetDeployDir(),
+			LogDir:       instance.GetLogDir(),
+		})
 	}
 	return
+}
+
+func (p *ClusterMeta) IsTakenOver() bool {
+	if len(p.Cluster.Tags) > 0 {
+		for _, tag := range p.Cluster.Tags {
+			if tag == TagTakeover {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (p *ClusterMeta) GetMajorVersion() string {

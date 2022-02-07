@@ -107,7 +107,7 @@ func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID str
 			Ip:              address.IP,
 			Port:            address.Port,
 			Username:        user.Name,
-			Password: string(user.Password),
+			Password:        string(user.Password),
 			TargetClusterId: targetClusterID,
 		},
 	}

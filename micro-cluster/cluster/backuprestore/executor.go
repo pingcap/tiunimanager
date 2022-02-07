@@ -25,6 +25,7 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
+	"github.com/pingcap-inc/tiem/util/api/tidb/sql"
 	"github.com/pingcap-inc/tiem/workflow"
 	"os"
 	"strconv"
@@ -68,33 +69,52 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 		return err
 	}
 	node.Record(fmt.Sprintf("convert storage type: %s ", storageType))
+	/*
+		clusterFacade := secondparty.ClusterFacade{
+			DbConnParameter: secondparty.DbConnParam{
+				Username: tidbUserInfo.Name,
+				Password: tidbUserInfo.Password,
+				IP:       tidbServerHost,
+				Port:     strconv.Itoa(tidbServerPort),
+			},
+			DbName:      "", //todo: support db table backup
+			TableName:   "",
+			ClusterId:   meta.Cluster.ID,
+			ClusterName: meta.Cluster.Name,
+		}
+		storage := secondparty.BrStorage{
+			StorageType: storageType,
+			Root:        getBRStoragePath(ctx, record.StorageType, record.FilePath),
+		}
 
-	clusterFacade := secondparty.ClusterFacade{
-		DbConnParameter: secondparty.DbConnParam{
+		framework.LogWithContext(ctx).Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
+
+		backupTaskId, err := secondparty.Manager.BackUp(ctx, clusterFacade, storage, node.ID)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
+			return err
+		}
+	*/
+	backupSQLReq := sql.BackupSQLReq{
+		NodeID:         node.ID,
+		DbName:         "", //todo: support db table backup
+		TableName:      "",
+		StorageAddress: fmt.Sprintf("%s://%s", storageType, getBRStoragePath(ctx, record.StorageType, record.FilePath)),
+		DbConnParameter: sql.DbConnParam{
 			Username: tidbUserInfo.Name,
 			Password: tidbUserInfo.Password,
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),
 		},
-		DbName:      "", //todo: support db table backup
-		TableName:   "",
-		ClusterId:   meta.Cluster.ID,
-		ClusterName: meta.Cluster.Name,
 	}
-	storage := secondparty.BrStorage{
-		StorageType: storageType,
-		Root:        getBRStoragePath(ctx, record.StorageType, record.FilePath),
-		//Root:        fmt.Sprintf("%s/%s", record.FilePath, "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"),
-	}
-
-	framework.LogWithContext(ctx).Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
-
-	backupTaskId, err := secondparty.Manager.BackUp(ctx, clusterFacade, storage, node.ID)
+	framework.LogWithContext(ctx).Infof("begin do backup sql, request[%+v]", backupSQLReq)
+	resp, err := sql.ExecBackupSQL(ctx, backupSQLReq, node.ID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
 		return err
 	}
-	ctx.SetData(contextBackupTiupTaskIDKey, backupTaskId)
+
+	ctx.SetData(contextBRInfoKey, resp)
 	node.Record(fmt.Sprintf("backup cluster %s ", meta.Cluster.ID))
 	return nil
 }
@@ -105,16 +125,18 @@ func updateBackupRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) e
 
 	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
 	record := ctx.GetData(contextBackupRecordKey).(*backuprestore.BackupRecord)
-	backupTaskId := ctx.GetData(contextBackupTiupTaskIDKey).(string)
+	brInfo := ctx.GetData(contextBRInfoKey).(*sql.BRSQLResp)
 
-	resp, err := secondparty.Manager.ShowBackUpInfoThruMetaDB(ctx, backupTaskId)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("show backup info of backupId %s failed", backupTaskId)
-		return err
-	}
+	/*
+		resp, err := secondparty.Manager.ShowBackUpInfoThruMetaDB(ctx, backupTaskId)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("show backup info of backupId %s failed", backupTaskId)
+			return err
+		}
+	*/
 
 	brRW := models.GetBRReaderWriter()
-	err = brRW.UpdateBackupRecord(ctx, record.ID, string(constants.ClusterBackupFinished), resp.Size, resp.BackupTS, time.Now())
+	err := brRW.UpdateBackupRecord(ctx, record.ID, string(constants.ClusterBackupFinished), brInfo.Size, brInfo.BackupTS, time.Now())
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("update backup reocrd %s of cluster %s failed", record.ID, meta.Cluster.ID)
 		return err
@@ -154,30 +176,50 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 		return fmt.Errorf("convert br storage type failed, %s", err.Error())
 	}
 	node.Record(fmt.Sprintf("convert br storage type: %s ", storageType))
+	/*
+		clusterFacade := secondparty.ClusterFacade{
+			DbConnParameter: secondparty.DbConnParam{
+				Username: tidbUserInfo.Name,
+				Password: tidbUserInfo.Password,
+				IP:       tidbServerHost,
+				Port:     strconv.Itoa(tidbServerPort),
+			},
+			DbName:      "", //todo: support db table restore
+			TableName:   "",
+			ClusterId:   meta.Cluster.ID,
+			ClusterName: meta.Cluster.Name,
+		}
+		storage := secondparty.BrStorage{
+			StorageType: storageType,
+			Root:        getBRStoragePath(ctx, record.StorageType, record.FilePath),
+		}
+		framework.LogWithContext(ctx).Infof("begin call brmgr restore api, clusterFacade %v, storage %v", clusterFacade, storage)
+		_, err = secondparty.Manager.Restore(ctx, clusterFacade, storage, node.ID)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("call restore api failed, %s", err.Error())
+			return err
+		}
+	*/
 
-	clusterFacade := secondparty.ClusterFacade{
-		DbConnParameter: secondparty.DbConnParam{
+	restoreSQLReq := sql.RestoreSQLReq{
+		NodeID:         node.ID,
+		DbName:         "", //todo: support db table backup
+		TableName:      "",
+		StorageAddress: fmt.Sprintf("%s://%s", storageType, getBRStoragePath(ctx, record.StorageType, record.FilePath)),
+		DbConnParameter: sql.DbConnParam{
 			Username: tidbUserInfo.Name,
 			Password: tidbUserInfo.Password,
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),
 		},
-		DbName:      "", //todo: support db table restore
-		TableName:   "",
-		ClusterId:   meta.Cluster.ID,
-		ClusterName: meta.Cluster.Name,
 	}
-	storage := secondparty.BrStorage{
-		StorageType: storageType,
-		Root:        getBRStoragePath(ctx, record.StorageType, record.FilePath),
-		//Root:        fmt.Sprintf("%s/%s", record.FilePath, "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"),
-	}
-	framework.LogWithContext(ctx).Infof("begin call brmgr restore api, clusterFacade %v, storage %v", clusterFacade, storage)
-	_, err = secondparty.Manager.Restore(ctx, clusterFacade, storage, node.ID)
+	framework.LogWithContext(ctx).Infof("begin do backup sql, request[%+v]", restoreSQLReq)
+	_, err = sql.ExecRestoreSQL(ctx, restoreSQLReq, node.ID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("call restore api failed, %s", err.Error())
+		framework.LogWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
 		return err
 	}
+
 	node.Record(fmt.Sprintf("update backup record %s of cluster %s ", record.ID, meta.Cluster.ID))
 	return nil
 }

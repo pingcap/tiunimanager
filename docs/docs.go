@@ -2980,6 +2980,11 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "instanceType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "paramName",
                         "in": "query"
                     }
@@ -7239,8 +7244,7 @@ var doc = `{
                 "TiUPUserName",
                 "TiUPUserPassword",
                 "clusterName",
-                "dbPassword",
-                "dbUser"
+                "dbPassword"
             ],
             "properties": {
                 "TiUPIp": {
@@ -7270,10 +7274,6 @@ var doc = `{
                 "dbPassword": {
                     "type": "string",
                     "example": "myPassword"
-                },
-                "dbUser": {
-                    "type": "string",
-                    "example": "root"
                 }
             }
         },

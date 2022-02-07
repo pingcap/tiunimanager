@@ -13,7 +13,7 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package handler
+package meta
 
 import (
 	"context"
@@ -60,7 +60,7 @@ func TestClusterMeta_BuildCluster(t *testing.T) {
 	assert.Equal(t, meta.Cluster.Version, params.Version)
 	assert.Equal(t, meta.Cluster.TLS, params.TLS)
 	assert.Equal(t, meta.Cluster.Tags, params.Tags)
-	assert.Equal(t, meta.DBUsers[string(constants.Root)].Password, params.DBPassword)
+	assert.Equal(t, string(meta.DBUsers[string(constants.Root)].Password), params.DBPassword)
 	assert.NotEmpty(t, meta.DBUsers[string(constants.Root)].ClusterID)
 	assert.Equal(t, meta.DBUsers[string(constants.Root)].ClusterID, "1234")
 }

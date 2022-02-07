@@ -18,7 +18,7 @@ package importexport
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -40,7 +40,7 @@ func TestNewDataImportConfig(t *testing.T) {
 	pd[0].Ports = []int32{4000, 4001}
 	instanceMap[string(constants.ComponentIDPD)] = pd
 
-	meta := &handler.ClusterMeta{
+	meta := &meta.ClusterMeta{
 		Instances: instanceMap,
 		Cluster:   &management.Cluster{},
 	}

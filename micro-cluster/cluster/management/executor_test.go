@@ -46,7 +46,7 @@ import (
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	"github.com/pingcap-inc/tiem/models"
@@ -73,7 +73,7 @@ func TestPrepareResource(t *testing.T) {
 	defer ctrl.Finish()
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID:        "2145635758",
@@ -173,7 +173,7 @@ func TestPrepareResource(t *testing.T) {
 
 func TestBuildConfig(t *testing.T) {
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID:     "111",
@@ -207,7 +207,7 @@ func TestBuildConfig(t *testing.T) {
 	err := buildConfig(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.NoError(t, err)
 
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID:     "111",
@@ -231,7 +231,7 @@ func TestScaleOutCluster(t *testing.T) {
 	secondparty.Manager = mockTiupManager
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "testCluster",
@@ -274,7 +274,7 @@ func TestScaleInCluster(t *testing.T) {
 	defer ctrl.Finish()
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "testCluster",
@@ -358,7 +358,7 @@ func TestFreeInstanceResource(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "123",
@@ -390,7 +390,7 @@ func TestFreeInstanceResource(t *testing.T) {
 
 	t.Run("delete not found", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "123",
@@ -419,7 +419,7 @@ func TestFreeInstanceResource(t *testing.T) {
 
 	t.Run("recycle fail", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "123",
@@ -455,7 +455,7 @@ func TestClearBackupData(t *testing.T) {
 	defer ctrl.Finish()
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "testCluster",
@@ -504,7 +504,7 @@ func TestBackupBeforeDelete(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -533,7 +533,7 @@ func TestBackupBeforeDelete(t *testing.T) {
 
 	t.Run("backup fail", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -559,7 +559,7 @@ func TestBackupBeforeDelete(t *testing.T) {
 
 	t.Run("wait workflow fail", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -588,7 +588,7 @@ func TestBackupBeforeDelete(t *testing.T) {
 
 	t.Run("no backup", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -602,7 +602,7 @@ func TestBackupBeforeDelete(t *testing.T) {
 
 	t.Run("skip", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "skip",
@@ -626,7 +626,7 @@ func TestApplyParameterGroup(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -651,7 +651,7 @@ func TestBackupSourceCluster(t *testing.T) {
 	defer ctrl.Finish()
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextSourceClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextSourceClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "testCluster",
@@ -691,7 +691,7 @@ func TestRestoreNewCluster(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -714,7 +714,7 @@ func TestRestoreNewCluster(t *testing.T) {
 
 	t.Run("restore fail", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -733,7 +733,7 @@ func TestRestoreNewCluster(t *testing.T) {
 
 	t.Run("no backup id", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -793,7 +793,7 @@ func TestSetClusterFailure(t *testing.T) {
 	clusterRW.EXPECT().UpdateStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "testCluster",
@@ -818,7 +818,7 @@ func TestSetClusterOnline(t *testing.T) {
 	clusterRW.EXPECT().UpdateStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "testCluster",
@@ -853,7 +853,7 @@ func TestSetClusterOffline(t *testing.T) {
 	clusterRW.EXPECT().UpdateStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "testCluster",
@@ -935,7 +935,7 @@ func TestEndMaintenance(t *testing.T) {
 	clusterRW.EXPECT().ClearMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "testCluster",
@@ -961,7 +961,7 @@ func TestPersistCluster(t *testing.T) {
 	models.SetClusterReaderWriter(clusterRW)
 	clusterRW.EXPECT().UpdateMeta(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "testCluster",
@@ -996,7 +996,7 @@ func TestDeployCluster(t *testing.T) {
 		secondparty.Manager = mockTiupManager
 
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -1011,7 +1011,7 @@ func TestDeployCluster(t *testing.T) {
 
 	t.Run("no topology", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -1031,7 +1031,7 @@ func TestDeployCluster(t *testing.T) {
 		secondparty.Manager = mockTiupManager
 
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -1056,7 +1056,7 @@ func TestStartCluster(t *testing.T) {
 		secondparty.Manager = mockTiupManager
 
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -1075,7 +1075,7 @@ func TestStartCluster(t *testing.T) {
 		secondparty.Manager = mockTiupManager
 
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -1093,14 +1093,14 @@ func TestSyncBackupStrategy(t *testing.T) {
 	defer ctrl.Finish()
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextSourceClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextSourceClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "sourceCluster",
 			},
 		},
 	})
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "targetCluster",
@@ -1165,6 +1165,65 @@ func TestSyncBackupStrategy(t *testing.T) {
 	})
 }
 
+func TestGetFirstScaleOutTypes(t *testing.T) {
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "testCluster",
+			},
+			Version: "v5.0.0",
+		},
+		Instances: map[string][]*management.ClusterInstance{
+			"TiDB": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone:     "zone1",
+					CpuCores: 4,
+					Memory:   8,
+					Type:     "TiDB",
+					Version:  "v5.0.0",
+					Ports:    []int32{10001, 10002, 10003, 10004},
+					HostIP:   []string{"127.0.0.1"},
+				},
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone:     "zone1",
+					CpuCores: 3,
+					Memory:   7,
+					Type:     "TiDB",
+					Version:  "v5.0.0",
+					Ports:    []int32{10001, 10002, 10003, 10004},
+					HostIP:   []string{"127.0.0.1"},
+				},
+			},
+			"TiFlash": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceInitializing),
+					},
+					Zone:     "zone1",
+					CpuCores: 4,
+					Memory:   8,
+					Type:     "TiFlash",
+					Version:  "v5.0.0",
+					Ports:    []int32{10001, 10002, 10003, 10004},
+					HostIP:   []string{"127.0.0.1"},
+				},
+			},
+		},
+	})
+	err := getFirstScaleOutTypes(&workflowModel.WorkFlowNode{}, flowContext)
+	assert.NoError(t, err)
+	types := flowContext.GetData(ContextInstanceTypes).([]string)
+	assert.Equal(t, len(types), 1)
+	assert.Equal(t, types[0], "TiFlash")
+}
+
 func TestSyncParameters(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -1178,14 +1237,14 @@ func TestSyncParameters(t *testing.T) {
 		})
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextSourceClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextSourceClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "sourceCluster",
 			},
 		},
 	})
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "targetCluster",
@@ -1203,7 +1262,7 @@ func TestRestoreCluster(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -1227,7 +1286,7 @@ func TestRestoreCluster(t *testing.T) {
 
 	t.Run("restore fail", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -1247,7 +1306,7 @@ func TestRestoreCluster(t *testing.T) {
 
 	t.Run("no backup id", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -1272,7 +1331,7 @@ func TestStopCluster(t *testing.T) {
 		secondparty.Manager = mockTiupManager
 
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -1291,7 +1350,7 @@ func TestStopCluster(t *testing.T) {
 		secondparty.Manager = mockTiupManager
 
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -1318,7 +1377,7 @@ func TestDestroyCluster(t *testing.T) {
 		secondparty.Manager = mockTiupManager
 
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -1337,7 +1396,7 @@ func TestDestroyCluster(t *testing.T) {
 		secondparty.Manager = mockTiupManager
 
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "testCluster",
@@ -1353,7 +1412,7 @@ func TestDestroyCluster(t *testing.T) {
 		clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "skip").Return(management.ClusterTopologySnapshot{}, errors.NewError(errors.TIEM_PANIC, "")).AnyTimes()
 
 		flowContext := workflow.NewFlowContext(context.TODO())
-		flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "skip",
@@ -1377,7 +1436,7 @@ func TestDeleteCluster(t *testing.T) {
 	clusterRW.EXPECT().Delete(gomock.Any(), "111").Return(nil)
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "111",
@@ -1399,7 +1458,7 @@ func TestDeleteClusterPhysically(t *testing.T) {
 	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "111").Return(nil)
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "111",
@@ -1416,7 +1475,7 @@ func TestFreedClusterResource(t *testing.T) {
 	defer ctrl.Finish()
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "testCluster",
@@ -1446,7 +1505,7 @@ func TestInitDatabaseAccount(t *testing.T) {
 	defer ctrl.Finish()
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID:        "2145635758",
@@ -1550,7 +1609,7 @@ func Test_testConnectivity(t *testing.T) {
 	*/
 	t.Run("error", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
-		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		ctx.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				//DBUser:     "root",
 				//DBPassword: "wrong",
@@ -1587,7 +1646,7 @@ func Test_initDatabaseData(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
-		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		ctx.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				//DBUser:     "root",
 				//DBPassword: "ssssssss",
@@ -1632,7 +1691,7 @@ func Test_initDatabaseData(t *testing.T) {
 	})
 	t.Run("skip", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
-		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		ctx.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				//DBUser:     "root",
 				//DBPassword: "ssssssss",
@@ -1675,7 +1734,7 @@ func Test_testRebuildTopologyFromConfig(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
-		clusterMeta := &handler.ClusterMeta{
+		clusterMeta := &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID:       "clusterId",
@@ -1735,7 +1794,7 @@ func TestTakeoverResource(t *testing.T) {
 	defer ctrl.Finish()
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID:        "2145635758",
@@ -1832,7 +1891,7 @@ func Test_syncTopology(t *testing.T) {
 	clusterRW.EXPECT().UpdateTopologySnapshotConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "111",
@@ -1880,7 +1939,7 @@ func Test_syncConnectionKey(t *testing.T) {
 	clusterRW.EXPECT().CreateClusterTopologySnapshot(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "111",
@@ -1969,7 +2028,7 @@ func Test_rebuildTiupSpaceForCluster(t *testing.T) {
 	}, nil).AnyTimes()
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "111",
@@ -2008,7 +2067,7 @@ func Test_validateHostsStatus(t *testing.T) {
 			Context:  context.TODO(),
 			FlowData: map[string]interface{}{},
 		}
-		context.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		context.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Instances: map[string][]*management.ClusterInstance{
 				"TiDB": {
 					{
@@ -2030,7 +2089,7 @@ func Test_validateHostsStatus(t *testing.T) {
 			Context:  context.TODO(),
 			FlowData: map[string]interface{}{},
 		}
-		context.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		context.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Instances: map[string][]*management.ClusterInstance{
 				"TiDB": {
 					{
@@ -2053,7 +2112,7 @@ func Test_validateHostsStatus(t *testing.T) {
 			Context:  context.TODO(),
 			FlowData: map[string]interface{}{},
 		}
-		context.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		context.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Instances: map[string][]*management.ClusterInstance{
 				"TiDB": {
 					{
@@ -2084,7 +2143,7 @@ func Test_validateHostsStatus(t *testing.T) {
 			Context:  context.TODO(),
 			FlowData: map[string]interface{}{},
 		}
-		context.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		context.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Instances: map[string][]*management.ClusterInstance{
 				"TiDB": {
 					{
@@ -2110,7 +2169,7 @@ func Test_validateHostsStatus(t *testing.T) {
 			Context:  context.TODO(),
 			FlowData: map[string]interface{}{},
 		}
-		context.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		context.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Instances: map[string][]*management.ClusterInstance{
 				"TiDB": {
 					{
@@ -2134,14 +2193,14 @@ func Test_syncIncrData(t *testing.T) {
 	defer ctrl.Finish()
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "cluster01",
 			},
 		},
 	})
-	flowContext.SetData(ContextSourceClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextSourceClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "cluster02",
@@ -2199,7 +2258,7 @@ func Test_fetchTopologyFile(t *testing.T) {
 		Context:  context.TODO(),
 		FlowData: map[string]interface{}{},
 	}
-	context.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	context.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{},
 		Instances: map[string][]*management.ClusterInstance{
 			"TiDB": {
@@ -2222,7 +2281,7 @@ func TestCheckInstanceStatus(t *testing.T) {
 	defer ctrl.Finish()
 
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "testCluster",
@@ -2347,7 +2406,7 @@ func Test_applyParameterGroup(t *testing.T) {
 
 	t.Run("query group error", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
-		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		ctx.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "1111",
@@ -2361,7 +2420,7 @@ func Test_applyParameterGroup(t *testing.T) {
 	})
 	t.Run("query group empty", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
-		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		ctx.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "1111",
@@ -2398,13 +2457,13 @@ func Test_chooseParameterGroup(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
 		node := &workflowModel.WorkFlowNode{}
-		err := chooseParameterGroup(&handler.ClusterMeta{
+		err := chooseParameterGroup(&meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version:          "v5.2.3",
-				Type: "TiDB",
+				Version: "v5.2.3",
+				Type:    "TiDB",
 			},
 		}, node, ctx)
 		assert.NoError(t, err)
@@ -2414,13 +2473,13 @@ func Test_chooseParameterGroup(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
 		node := &workflowModel.WorkFlowNode{}
-		err := chooseParameterGroup(&handler.ClusterMeta{
+		err := chooseParameterGroup(&meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version:          "v5.1.9",
-				Type: "TiDB",
+				Version: "v5.1.9",
+				Type:    "TiDB",
 			},
 		}, node, ctx)
 		assert.Error(t, err)
@@ -2429,13 +2488,13 @@ func Test_chooseParameterGroup(t *testing.T) {
 	t.Run("error", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
 		node := &workflowModel.WorkFlowNode{}
-		err := chooseParameterGroup(&handler.ClusterMeta{
+		err := chooseParameterGroup(&meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "1111",
 				},
-				Version:          "v5.0.1",
-				Type: "TiDB",
+				Version: "v5.0.1",
+				Type:    "TiDB",
 			},
 		}, node, ctx)
 		assert.Error(t, err)
@@ -2464,7 +2523,7 @@ func Test_Test_applyParameterGroupForTakeover(t *testing.T) {
 
 	t.Run("query group error", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
-		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		ctx.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "1111",
@@ -2478,7 +2537,7 @@ func Test_Test_applyParameterGroupForTakeover(t *testing.T) {
 	})
 	t.Run("query group empty", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
-		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		ctx.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "1111",
@@ -2501,7 +2560,7 @@ func Test_adjustParameters(t *testing.T) {
 
 	t.Run("query parameter error", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
-		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		ctx.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "1111",
@@ -2520,7 +2579,7 @@ func Test_adjustParameters(t *testing.T) {
 	})
 	t.Run("query parameter empty", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO())
-		ctx.SetData(ContextClusterMeta, &handler.ClusterMeta{
+		ctx.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
 					ID: "1111",
@@ -2565,7 +2624,7 @@ func init() {
 
 func TestGenerateDBUser(t *testing.T) {
 	flowContext := workflow.NewFlowContext(context.TODO())
-	flowContext.SetData(ContextClusterMeta, &handler.ClusterMeta{
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "testCluster",
@@ -2573,7 +2632,7 @@ func TestGenerateDBUser(t *testing.T) {
 			Version: "v5.0.0",
 		},
 	})
-	clusterMeta := flowContext.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	clusterMeta := flowContext.GetData(ContextClusterMeta).(*meta.ClusterMeta)
 	type args struct {
 		context *workflow.FlowContext
 		roleTyp constants.DBUserRoleType

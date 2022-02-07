@@ -708,9 +708,6 @@ definitions:
       dbPassword:
         example: myPassword
         type: string
-      dbUser:
-        example: root
-        type: string
     required:
     - TiUPIp
     - TiUPPath
@@ -719,7 +716,6 @@ definitions:
     - TiUPUserPassword
     - clusterName
     - dbPassword
-    - dbUser
     type: object
   cluster.TakeoverClusterResp:
     properties:
@@ -4463,6 +4459,9 @@ paths:
         in: path
         name: paramGroupId
         required: true
+        type: string
+      - in: query
+        name: instanceType
         type: string
       - in: query
         name: paramName

@@ -124,9 +124,6 @@ func NewDataImportConfig(ctx context.Context, meta *meta.ClusterMeta, info *impo
 			StatusPort: tidbStatusPort,
 			PDAddr:     fmt.Sprintf("%s:%d", pdServerHost, pdClientPort),
 		},
-		CheckPoint: CheckPointCfg{
-			Enable: false,
-		},
 	}
 	return config
 }

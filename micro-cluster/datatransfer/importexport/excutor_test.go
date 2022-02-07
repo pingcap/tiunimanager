@@ -91,6 +91,16 @@ func TestExecutor_updateDataImportRecord(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestExecutor_cleanImportTempFile(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(contextDataTransportRecordKey, &importInfo{RecordId: "record-xxx", ConfigPath: "./temp"})
+	err := cleanImportTempFile(&workflowModel.WorkFlowNode{}, flowContext)
+	assert.Nil(t, err)
+}
+
 func TestExecutor_updateDataExportRecord(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

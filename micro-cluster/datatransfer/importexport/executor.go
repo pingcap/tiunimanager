@@ -97,6 +97,23 @@ func updateDataImportRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContex
 	return nil
 }
 
+func cleanImportTempFile(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.LogWithContext(ctx).Info("begin cleanImportTempFile")
+	defer framework.LogWithContext(ctx).Info("end cleanImportTempFile")
+
+	info := ctx.GetData(contextDataTransportRecordKey).(*importInfo)
+
+	if string(constants.StorageTypeS3) == info.StorageType {
+		go func() {
+			removeErr := os.RemoveAll(info.ConfigPath)
+			framework.LogWithContext(ctx).Infof("remove import temp file path %s, error: %v", info.ConfigPath, removeErr)
+		}()
+	}
+	framework.LogWithContext(ctx).Info("update data transport record success")
+	node.Record("clean data import temp file ")
+	return nil
+}
+
 func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin exportDataFromCluster")
 	defer framework.LogWithContext(ctx).Info("end exportDataFromCluster")

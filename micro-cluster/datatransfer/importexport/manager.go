@@ -71,7 +71,8 @@ func NewImportExportManager() *ImportExportManager {
 			"start":            {"buildDataImportConfig", "buildConfigDone", "fail", workflow.SyncFuncNode, buildDataImportConfig},
 			"buildConfigDone":  {"importDataToCluster", "importDataDone", "fail", workflow.PollingNode, importDataToCluster},
 			"importDataDone":   {"updateDataImportRecord", "updateRecordDone", "fail", workflow.SyncFuncNode, updateDataImportRecord},
-			"updateRecordDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
+			"updateRecordDone": {"cleanImportTempFile", "cleanTempDone", "fail", workflow.SyncFuncNode, cleanImportTempFile},
+			"cleanTempDone":    {"end", "", "", workflow.SyncFuncNode, defaultEnd},
 			"fail":             {"end", "", "", workflow.SyncFuncNode, importDataFailed},
 		},
 	})

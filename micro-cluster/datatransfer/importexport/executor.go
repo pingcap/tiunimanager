@@ -121,7 +121,8 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	}
 
 	//tiup dumpling -u root -P 4000 --host 127.0.0.1 --filetype sql -t 8 -o /tmp/test -r 200000 -F 256MiB --filter "user*"
-	cmd := []string{"-u", info.UserName,
+	cmd := []string{
+		"-u", info.UserName,
 		"-p", info.Password,
 		"-P", strconv.Itoa(tidbPort),
 		"--host", tidbHost,
@@ -129,14 +130,15 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 		"-t", "8",
 		"-o", info.FilePath,
 		"-r", "200000",
-		"-F", "256MiB"}
+		"-F", "256MiB",
+	}
 	if info.Filter != "" {
 		cmd = append(cmd, "--filter", info.Filter)
 	}
 	if fileTypeCSV == info.FileType && info.Filter == "" && info.Sql != "" {
 		cmd = append(cmd, "--sql", info.Sql)
 	}
-	framework.LogWithContext(ctx).Infof("call tiupmgr dumpling api, cmd: %v, timeout: %d", cmd, dumplingTimeout)
+	framework.LogWithContext(ctx).Infof("call tiupmgr dumpling api, cmd: %v, timeout: %d", cmd[4:], dumplingTimeout)
 	exportTaskId, err := secondparty.Manager.Dumpling(ctx, dumplingTimeout, cmd, node.ID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call tiup dumpling api failed, %s", err.Error())

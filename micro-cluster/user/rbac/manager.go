@@ -134,7 +134,6 @@ func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 	}}, true)
 
 	// 2. bind admin role for admin user
-	// todo: replace new account
 	adminUser, _ := models.GetAccountReaderWriter().GetUserByName(ctx, "admin")
 	if adminUser != nil && adminUser.ID != "" {
 		mgr.BindRolesForUser(ctx, message.BindRolesForUserReq{UserID: adminUser.ID, Roles: []string{string(constants.RbacRoleAdmin)}})

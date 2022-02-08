@@ -240,7 +240,7 @@ type Interface interface {
 	// @param timeout
 	// @return result
 	// @return err
-	Display(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (result string, err error)
+	Display(ctx context.Context, componentType TiUPComponentType, clusterID, home string, args []string, timeout int) (result string, err error)
 	// ShowConfig
 	// @Description:
 	// @param ctx

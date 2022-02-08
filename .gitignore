@@ -18,6 +18,6 @@ library/secondparty/logs
 test/
 /template
 /nohup.out
-log/
+logs/
 out.txt
 run.sh

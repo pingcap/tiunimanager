@@ -103,8 +103,8 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbPassw
 			Status:   string(constants.ClusterRunning),
 		},
 		// todo get from takeover request
-		Vendor: "Local",
-		Name: name,
+		Vendor:         "Local",
+		Name:           name,
 		Tags:           []string{TagTakeover},
 		OwnerId:        framework.GetUserIDFromContext(ctx),
 		MaintainWindow: "",
@@ -116,7 +116,7 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbPassw
 		rootUser := &management.DBUser{
 			ClusterID: got.ID,
 			Name:      constants.DBUserName[constants.Root],
-			Password: dbCommon.Password(dbPassword),
+			Password:  dbCommon.Password(dbPassword),
 			RoleType:  string(constants.Root),
 		}
 		p.DBUsers[string(constants.Root)] = rootUser

@@ -423,13 +423,12 @@ func (m *Manager) List(ctx context.Context, componentType TiUPComponentType, hom
 // @Parameter componentType
 // @Parameter clusterID
 // @Parameter home
-// @Parameter workFlowID
 // @Parameter args
 // @Parameter timeout
 // @return result, the response from command
 // @return err
-func (m *Manager) Display(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (result string, err error) {
-	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+func (m *Manager) Display(ctx context.Context, componentType TiUPComponentType, clusterID, home string, args []string, timeout int) (result string, err error) {
+	logInFunc := framework.LogWithContext(ctx)
 
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDDisplay, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
 	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)

@@ -116,7 +116,7 @@ func TestManager_List(t *testing.T) {
 }
 
 func TestManager_Display(t *testing.T) {
-	_, err := manager.Display(context.TODO(), TiUPComponentTypeCluster, TestClusterID, testTiUPHome, TestWorkFlowID, []string{"--format", "json"}, 360)
+	_, err := manager.Display(context.TODO(), TiUPComponentTypeCluster, TestClusterID, testTiUPHome, []string{"--format", "json"}, 360)
 	if err == nil {
 		t.Error("nil error")
 	}

@@ -214,7 +214,7 @@ func loadSpecKnowledge() {
 			}, 1},
 				ComponentPortConstraint{10020, 10040, 2},
 			},
-			{pdComponent, ComponentConstraint{true, false, []int{1,3,5,7}, []string{
+			{pdComponent, ComponentConstraint{true, false, []int{1, 3, 5, 7}, []string{
 				GenSpecCode(4, 8),
 				GenSpecCode(8, 16),
 			}, 1},
@@ -261,7 +261,7 @@ func loadSpecKnowledge() {
 			}, 1},
 				ComponentPortConstraint{10020, 10040, 2},
 			},
-			{pdComponent, ComponentConstraint{true, false, []int{1,3,5,7}, []string{
+			{pdComponent, ComponentConstraint{true, false, []int{1, 3, 5, 7}, []string{
 				GenSpecCode(4, 8),
 				GenSpecCode(8, 16),
 			}, 1},
@@ -308,7 +308,7 @@ func loadSpecKnowledge() {
 			}, 1},
 				ComponentPortConstraint{10020, 10040, 2},
 			},
-			{pdComponent, ComponentConstraint{true, false, []int{1,3,5,7}, []string{
+			{pdComponent, ComponentConstraint{true, false, []int{1, 3, 5, 7}, []string{
 				GenSpecCode(4, 8),
 				GenSpecCode(8, 16),
 			}, 1},
@@ -363,7 +363,7 @@ func loadSpecKnowledge() {
 			}, 1},
 				ComponentPortConstraint{10020, 10040, 2},
 			},
-			{pdComponent, ComponentConstraint{true, false, []int{1,3,5,7}, []string{
+			{pdComponent, ComponentConstraint{true, false, []int{1, 3, 5, 7}, []string{
 				GenSpecCode(4, 8),
 				GenSpecCode(8, 16),
 			}, 1},

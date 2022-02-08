@@ -57,7 +57,7 @@ func GetManager() *Manager {
 // @return string ID of ChangeFeedTask
 // @return error
 func (p *Manager) Create(ctx context.Context, request cluster.CreateChangeFeedTaskReq) (resp cluster.CreateChangeFeedTaskResp, err error) {
-	clusterMeta, err:= meta.Get(ctx, request.ClusterID)
+	clusterMeta, err := meta.Get(ctx, request.ClusterID)
 	if err != nil {
 		return
 	}
@@ -67,18 +67,18 @@ func (p *Manager) Create(ctx context.Context, request cluster.CreateChangeFeedTa
 		err = errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
 		return
 	}
-	task := &changefeed.ChangeFeedTask {
+	task := &changefeed.ChangeFeedTask{
 		Entity: dbCommon.Entity{
 			TenantId: framework.GetTenantIDFromContext(ctx),
 			Status:   string(constants.ChangeFeedStatusInitial),
 		},
-		StartTS: 0,
+		StartTS:     0,
 		Name:        request.Name,
 		ClusterId:   request.ClusterID,
 		FilterRules: request.FilterRules,
 	}
 
-	if len(request.StartTS) > 0  {
+	if len(request.StartTS) > 0 {
 		tso, parseError := strconv.ParseInt(request.StartTS, 10, 64)
 		if parseError == nil {
 			task.StartTS = tso
@@ -118,7 +118,7 @@ func (p *Manager) Delete(ctx context.Context, request cluster.DeleteChangeFeedTa
 		resp.Status = task.Status
 	}
 
-	clusterMeta, err:= meta.Get(ctx, task.ClusterId)
+	clusterMeta, err := meta.Get(ctx, task.ClusterId)
 	if err != nil {
 		return
 	}
@@ -128,7 +128,7 @@ func (p *Manager) Delete(ctx context.Context, request cluster.DeleteChangeFeedTa
 		return
 	}
 	//ctx = framework.NewBackgroundMicroCtx(ctx, true)
-	result, err := secondparty.Manager.DeleteChangeFeedTask(ctx, secondparty.ChangeFeedDeleteReq {
+	result, err := secondparty.Manager.DeleteChangeFeedTask(ctx, secondparty.ChangeFeedDeleteReq{
 		CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
 		ChangeFeedID: task.ID,
 	})
@@ -154,7 +154,7 @@ func (p *Manager) Pause(ctx context.Context, request cluster.PauseChangeFeedTask
 		resp.Status = task.Status
 	}
 
-	clusterMeta, err:= meta.Get(ctx, task.ClusterId)
+	clusterMeta, err := meta.Get(ctx, task.ClusterId)
 	if err != nil {
 		return
 	}
@@ -182,7 +182,7 @@ func (p *Manager) Resume(ctx context.Context, request cluster.ResumeChangeFeedTa
 		resp.Status = task.Status
 	}
 
-	clusterMeta, err:= meta.Get(ctx, task.ClusterId)
+	clusterMeta, err := meta.Get(ctx, task.ClusterId)
 	if err != nil {
 		return
 	}
@@ -227,7 +227,7 @@ func (p *Manager) Update(ctx context.Context, request cluster.UpdateChangeFeedTa
 		return
 	}
 
-	clusterMeta, err:= meta.Get(ctx, task.ClusterId)
+	clusterMeta, err := meta.Get(ctx, task.ClusterId)
 	if err != nil {
 		return
 	}
@@ -276,7 +276,7 @@ func currentTSO() uint64 {
 }
 
 func (p *Manager) Query(ctx context.Context, request cluster.QueryChangeFeedTaskReq) (resps []cluster.QueryChangeFeedTaskResp, total int, err error) {
-	clusterMeta, err:= meta.Get(ctx, request.ClusterId)
+	clusterMeta, err := meta.Get(ctx, request.ClusterId)
 	if err != nil {
 		return
 	}
@@ -287,8 +287,8 @@ func (p *Manager) Query(ctx context.Context, request cluster.QueryChangeFeedTask
 		return
 	}
 	// remote
-	result, err := secondparty.Manager.QueryChangeFeedTasks(ctx, secondparty.ChangeFeedQueryReq {
-		CDCAddress:   cdcAddress[0].ToString(),
+	result, err := secondparty.Manager.QueryChangeFeedTasks(ctx, secondparty.ChangeFeedQueryReq{
+		CDCAddress: cdcAddress[0].ToString(),
 	})
 
 	cdcTaskInstanceMap := make(map[string]secondparty.ChangeFeedInfo)
@@ -324,7 +324,7 @@ func (p *Manager) Query(ctx context.Context, request cluster.QueryChangeFeedTask
 
 func (p *Manager) createExecutor(ctx context.Context, clusterMeta *meta.ClusterMeta, task *changefeed.ChangeFeedTask) (err error) {
 	ctx = framework.NewBackgroundMicroCtx(ctx, true)
-	libResp, libError := secondparty.Manager.CreateChangeFeedTask(ctx, secondparty.ChangeFeedCreateReq {
+	libResp, libError := secondparty.Manager.CreateChangeFeedTask(ctx, secondparty.ChangeFeedCreateReq{
 		CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
 		ChangeFeedID: task.ID,
 		SinkURI:      task.Downstream.GetSinkURI(),
@@ -348,7 +348,7 @@ func (p *Manager) createExecutor(ctx context.Context, clusterMeta *meta.ClusterM
 }
 
 func (p *Manager) pauseExecutor(ctx context.Context, clusterMeta *meta.ClusterMeta, task *changefeed.ChangeFeedTask) error {
-	libResp, libError := secondparty.Manager.PauseChangeFeedTask(ctx, secondparty.ChangeFeedPauseReq {
+	libResp, libError := secondparty.Manager.PauseChangeFeedTask(ctx, secondparty.ChangeFeedPauseReq{
 		CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
 		ChangeFeedID: task.ID,
 	})
@@ -363,7 +363,7 @@ func (p *Manager) pauseExecutor(ctx context.Context, clusterMeta *meta.ClusterMe
 }
 
 func (p *Manager) updateExecutor(ctx context.Context, clusterMeta *meta.ClusterMeta, task *changefeed.ChangeFeedTask) error {
-	libResp, libError := secondparty.Manager.UpdateChangeFeedTask(ctx, secondparty.ChangeFeedUpdateReq {
+	libResp, libError := secondparty.Manager.UpdateChangeFeedTask(ctx, secondparty.ChangeFeedUpdateReq{
 		CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
 		ChangeFeedID: task.ID,
 		SinkURI:      task.Downstream.GetSinkURI(),
@@ -380,7 +380,7 @@ func (p *Manager) updateExecutor(ctx context.Context, clusterMeta *meta.ClusterM
 }
 
 func (p *Manager) resumeExecutor(ctx context.Context, clusterMeta *meta.ClusterMeta, task *changefeed.ChangeFeedTask) error {
-	libResp, libError := secondparty.Manager.ResumeChangeFeedTask(ctx, secondparty.ChangeFeedResumeReq {
+	libResp, libError := secondparty.Manager.ResumeChangeFeedTask(ctx, secondparty.ChangeFeedResumeReq{
 		CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
 		ChangeFeedID: task.ID,
 	})

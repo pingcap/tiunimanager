@@ -20,7 +20,6 @@ const (
 	contextBackupRecordKey            string = "backupRecord"
 	contextMaintenanceStatusChangeKey string = "maintenanceStatusChange"
 	contextBRInfoKey                  string = "brInfo"
-	contextBackupTiupTaskIDKey        string = "backupTaskId"
 )
 
 const (

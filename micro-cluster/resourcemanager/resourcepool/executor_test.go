@@ -105,7 +105,7 @@ func Test_InstallSoftware(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func Test_JoinEMCluster(t *testing.T) {
+func Test_JoinEMCluster_Normal(t *testing.T) {
 	models.MockDB()
 	resourcePool := GetResourcePool()
 
@@ -115,6 +115,32 @@ func Test_JoinEMCluster(t *testing.T) {
 	mockInitiator := mock_initiator.NewMockHostInitiator(ctrl)
 	mockInitiator.EXPECT().JoinEMCluster(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []structs.HostInfo) error {
 		return nil
+	})
+	mockInitiator.EXPECT().PreCheckHostInstallFilebeat(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []structs.HostInfo) (bool, error) {
+		return false, nil
+	})
+
+	resourcePool.SetHostInitiator(mockInitiator)
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
+	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
+
+	var node workflowModel.WorkFlowNode
+	err := joinEmCluster(&node, flowContext)
+	assert.Nil(t, err)
+}
+
+func Test_JoinEMCluster_AlreadyInstall(t *testing.T) {
+	models.MockDB()
+	resourcePool := GetResourcePool()
+
+	// Mock host initiator
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockInitiator := mock_initiator.NewMockHostInitiator(ctrl)
+	mockInitiator.EXPECT().PreCheckHostInstallFilebeat(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []structs.HostInfo) (bool, error) {
+		return true, nil
 	})
 
 	resourcePool.SetHostInitiator(mockInitiator)
@@ -254,7 +280,7 @@ func Test_CheckHostBeforeDeleted_Fail(t *testing.T) {
 	assert.Equal(t, errors.TIEM_RESOURCE_HOST_STILL_INUSED, emERR.GetCode())
 }
 
-func Test_LeaveEMCluster(t *testing.T) {
+func Test_LeaveEMCluster_Normal(t *testing.T) {
 	models.MockDB()
 	resourcePool := GetResourcePool()
 
@@ -269,6 +295,33 @@ func Test_LeaveEMCluster(t *testing.T) {
 		assert.True(t, ok)
 		assert.Equal(t, "Fake-NodeID-1", workFlowId)
 		return nil
+	})
+	mockInitiator.EXPECT().PreCheckHostInstallFilebeat(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []structs.HostInfo) (bool, error) {
+		return true, nil
+	})
+
+	resourcePool.SetHostInitiator(mockInitiator)
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(rp_consts.ContextResourcePoolKey, resourcePool)
+	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
+
+	var node workflowModel.WorkFlowNode
+	node.ID = "Fake-NodeID-1"
+	err := leaveEmCluster(&node, flowContext)
+	assert.Nil(t, err)
+}
+
+func Test_LeaveEMCluster_AlreadyRemove(t *testing.T) {
+	models.MockDB()
+	resourcePool := GetResourcePool()
+
+	// Mock host initiator
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockInitiator := mock_initiator.NewMockHostInitiator(ctrl)
+	mockInitiator.EXPECT().PreCheckHostInstallFilebeat(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []structs.HostInfo) (bool, error) {
+		return false, nil
 	})
 
 	resourcePool.SetHostInitiator(mockInitiator)

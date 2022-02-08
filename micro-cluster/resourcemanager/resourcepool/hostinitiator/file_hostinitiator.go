@@ -173,7 +173,7 @@ func (p *FileHostInitiator) PreCheckHostInstallFilebeat(ctx context.Context, hos
 	emClusterName := framework.Current.GetClientArgs().EMClusterName
 
 	// Parse EM topology structure to check whether filebeat has been installed already
-	resp, err := secondparty.Manager.ClusterDisplay(ctx, secondparty.TiEMComponentTypeStr, emClusterName, rp_consts.DefaultTiupTimeOut, []string{"--json"})
+	resp, err := p.secondPartyServ.ClusterDisplay(ctx, secondparty.TiEMComponentTypeStr, emClusterName, rp_consts.DefaultTiupTimeOut, []string{"--json"})
 	if err != nil {
 		log.Errorf("precheck before join em cluster failed, %v", err)
 		return false, errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "precheck join em cluster %s failed, %v", emClusterName, err)

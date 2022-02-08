@@ -17,6 +17,7 @@ package hostinitiator
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -164,6 +165,38 @@ func (p *FileHostInitiator) InstallSoftware(ctx context.Context, hosts []structs
 		return err
 	}
 	return nil
+}
+
+func (p *FileHostInitiator) PreCheckHostInstallFilebeat(ctx context.Context, hosts []structs.HostInfo) (installed bool, err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infoln("begin precheck before join em cluster")
+	emClusterName := framework.Current.GetClientArgs().EMClusterName
+
+	// Parse EM topology structure to check whether filebeat has been installed already
+	resp, err := secondparty.Manager.ClusterDisplay(ctx, secondparty.TiEMComponentTypeStr, emClusterName, rp_consts.DefaultTiupTimeOut, []string{"--json"})
+	if err != nil {
+		log.Errorf("precheck before join em cluster failed, %v", err)
+		return false, errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "precheck join em cluster %s failed, %v", emClusterName, err)
+	}
+	emTopo := new(structs.EMMetaTopo)
+	err = json.Unmarshal([]byte(resp.DisplayRespString), emTopo)
+	if err != nil {
+		return false, errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "precheck join em cluster %s failed on umarshal, %v", emClusterName, err)
+	}
+	installed = false
+LOOP:
+	for _, instance := range emTopo.Instances {
+		if instance.Role == "filebeat" {
+			for _, host := range hosts {
+				if instance.Host == host.IP {
+					installed = true
+					log.Infof("host %s %s has been install filebeat", host.HostName, host.IP)
+					break LOOP
+				}
+			}
+		}
+	}
+	return installed, nil
 }
 
 func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.HostInfo) (err error) {

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Copyright (c)  2022 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
  * you may not use this file except in compliance with the License.           *
  * You may obtain a copy of the License at                                    *
@@ -13,19 +13,17 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package management
+package constants
 
 import (
-	"github.com/pingcap-inc/tiem/models/common"
-	"gorm.io/gorm"
-	"time"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-type DBUser struct {
-	gorm.Model
-	ClusterID                string          `gorm:"not null;type:varchar(22);default:null"`
-	Name                     string          `gorm:"default:null;not null;comment:'name of the user'"`
-	Password                 common.Password `gorm:"not null;size:256;comment:'password of the user'"`
-	RoleType                 string          `gorm:"not null;size:64;comment:'role type of the user'"`
-	LastPasswordGenerateTime time.Time
+func Test_Config(t *testing.T)  {
+	ports := make([]int, 2)
+	err := json.Unmarshal([]byte(DefaultRetainedPortRange), &ports)
+	assert.NoError(t, err)
+	assert.Equal(t, []int{11000, 12000}, ports)
 }

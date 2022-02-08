@@ -394,10 +394,9 @@ func (g *ClusterReadWrite) ClearClusterPhysically(ctx context.Context, clusterID
 	}
 
 	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&ClusterInstance{}).Error
-	if err != nil {
-		return dbCommon.WrapDBError(err)
-	}
 	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&ClusterTopologySnapshot{}).Error
+	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&DBUser{}).Error
+
 	return dbCommon.WrapDBError(err)
 }
 

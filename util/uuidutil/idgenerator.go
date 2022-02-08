@@ -35,6 +35,11 @@ func GenerateID() string {
 	encoded := make([]byte, ENTITY_UUID_LENGTH)
 	base64.URLEncoding.WithPadding(base64.NoPadding).Encode(encoded, uuid[0:16])
 
+	for i, _ := range encoded {
+		if encoded[i] == '-' {
+			encoded[i] = '*'
+		}
+	}
 	return string(encoded)
 }
 

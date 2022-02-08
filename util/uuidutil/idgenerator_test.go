@@ -44,21 +44,13 @@ func TestGenerateIDReplace(t *testing.T) {
 			t.Errorf("GenerateID() got /")
 		}
 		if strings.Contains(got, "-") {
-			break
-		}
-		time++
-	}
-	for time < 200 {
-		got := GenerateID()
-		if strings.Contains(got, "/") {
-			t.Errorf("GenerateID() got /")
+			t.Errorf("GenerateID() got -")
 		}
 		if strings.Contains(got, "-") {
-			break
+			t.Errorf("GenerateID() got +")
 		}
 		time++
 	}
-
 }
 
 func TestShortId(t *testing.T) {

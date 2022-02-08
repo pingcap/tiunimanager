@@ -63,9 +63,16 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	globalAllocId := uuidutil.GenerateID()
 	instanceAllocId := uuidutil.GenerateID()
 
-	globalRequirement := clusterMeta.GenerateGlobalPortRequirements(context)
-	instanceRequirement, instances := clusterMeta.GenerateInstanceResourceRequirements(context)
+	globalRequirement, err := clusterMeta.GenerateGlobalPortRequirements(context)
+	if err != nil {
+		return err
+	}
+	instanceRequirement, instances, err := clusterMeta.GenerateInstanceResourceRequirements(context)
 
+	if err != nil {
+		framework.LogWithContext(context).Error(err)
+		return err
+	}
 	batchReq := &resourceStructs.BatchAllocRequest{
 		BatchRequests: []resourceStructs.AllocReq{
 			{

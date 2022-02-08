@@ -19,15 +19,21 @@ import (
 	ctx "context"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiem/models/platform/config"
+	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/net/context"
 	"testing"
 	"time"
 )
@@ -125,6 +131,50 @@ func TestScaleOutPreCheck(t *testing.T) {
 }
 
 func TestScaleInPreCheck(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	productRW := mock_product.NewMockProductReadWriterInterface(ctrl)
+	models.SetProductReaderWriter(productRW)
+
+	productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
+		"TiDB": {
+			Versions: map[string]structs.ProductVersion{
+				"v5.2.2": {
+					Version: "v5.2.2",
+					Arch: map[string][]structs.ProductComponentProperty{
+						"x86_64": {
+							{
+								ID:                      "TiDB",
+								MinInstance:             1,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{},
+							},
+							{
+								ID:                      "TiKV",
+								MinInstance:             1,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{},
+							},
+							{
+								ID:                      "PD",
+								MinInstance:             1,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{1, 3, 5, 7},
+							},
+							{
+								ID:                      "TiFlash",
+								MinInstance:             0,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, nil).AnyTimes()
+
 	t.Run("parameter invalid", func(t *testing.T) {
 		err := ScaleInPreCheck(ctx.TODO(), nil, nil)
 		assert.Error(t, err)
@@ -153,7 +203,7 @@ func TestScaleInPreCheck(t *testing.T) {
 	})
 
 	t.Run("component required error", func(t *testing.T) {
-		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0"}, Instances: map[string][]*management.ClusterInstance{
+		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.2.2", CpuArchitecture: "x86_64"}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDTiDB): {
 				{
 					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
@@ -420,5 +470,44 @@ func TestWaitWorkflow(t *testing.T) {
 					Status: constants.WorkFlowStatusProcessing}}, nil).AnyTimes()
 		err := WaitWorkflow(ctx.TODO(), "111", 1*time.Second, 2*time.Second)
 		assert.Error(t, err)
+	})
+}
+
+func Test_getRetainedPortRange(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	rw := mockconfig.NewMockReaderWriter(ctrl)
+	models.SetConfigReaderWriter(rw)
+
+	t.Run("normal", func(t *testing.T) {
+		rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{
+			ConfigValue: "[10,11]",
+		}, nil).Times(1)
+		portRange, err := getRetainedPortRange(context.TODO())
+		assert.NoError(t, err)
+		assert.Equal(t, []int{10,11}, portRange)
+	})
+	t.Run("error", func(t *testing.T) {
+		rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{}, errors.Error(errors.TIEM_SYSTEM_MISSING_CONFIG)).Times(1)
+		_, err := getRetainedPortRange(context.TODO())
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "missing system config")
+	})
+	t.Run("empty", func(t *testing.T) {
+		rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{
+			ConfigValue: "",
+		}, nil).Times(1)
+		_, err := getRetainedPortRange(context.TODO())
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "missing config config_retained_port_range")
+	})
+	t.Run("unmarshal error", func(t *testing.T) {
+		rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{
+			ConfigValue: "ssss",
+		}, nil).Times(1)
+		_, err := getRetainedPortRange(context.TODO())
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid value for config config_retained_port_range")
 	})
 }

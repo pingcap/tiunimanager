@@ -52,7 +52,6 @@ func (s *ClusterTypeSpec) GetVersionSpec(versionCode string) (versionSpec *Clust
 
 type ClusterVersionSpec struct {
 	ClusterVersion        ClusterVersion          `json:"clusterVersion"`
-	ClusterPortConstraint ComponentPortConstraint `json:"clusterPortConstraint"`
 	ComponentSpecs        []ClusterComponentSpec  `json:"componentSpecs"`
 	ArchTypes             []constants.ArchType    `json:"archTypes"`
 }

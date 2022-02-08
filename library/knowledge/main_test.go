@@ -23,6 +23,5 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	LoadKnowledge()
 	os.Exit(m.Run())
 }

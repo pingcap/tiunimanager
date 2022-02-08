@@ -325,16 +325,46 @@ func (p *ClusterMeta) AddDefaultInstances(ctx context.Context) error {
 	return nil
 }
 
-func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance) {
+func (p *ClusterMeta) GetClusterComponentProperties(ctx context.Context) ([]structs.ProductComponentProperty, error) {
+	detail, err := GetProductDetail(ctx, p.Cluster.Vendor, p.Cluster.Region, p.Cluster.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	if v, versionOK := detail.Versions[p.Cluster.Version]; !versionOK {
+		return nil, errors.NewErrorf(errors.TIEM_UNSUPPORT_PRODUCT, "version %s is not supported", p.Cluster.Version)
+	} else if properties, archOK := v.Arch[string(p.Cluster.CpuArchitecture)]; !archOK {
+		return nil, errors.NewErrorf(errors.TIEM_UNSUPPORT_PRODUCT, "arch %s is not supported", p.Cluster.CpuArchitecture)
+	} else {
+		return properties, nil
+	}
+}
+
+func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance, error) {
 	instances := p.GetInstanceByStatus(ctx, constants.ClusterInstanceInitializing)
 	requirements := make([]resource.AllocRequirement, 0)
 
+	properties, err := p.GetClusterComponentProperties(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	propertyMap := make(map[string]structs.ProductComponentProperty)
+	for _, property := range properties {
+		propertyMap[property.ID] = property
+	}
+
 	allocInstances := make([]*management.ClusterInstance, 0)
 	for _, instance := range instances {
+		var instanceProperty structs.ProductComponentProperty
 		if Contain(constants.ParasiteComponentIDs, constants.EMProductComponentIDType(instance.Type)) {
 			continue
 		}
-		portRange := knowledge.GetComponentPortRange(p.Cluster.Type, p.Cluster.Version, instance.Type)
+		if property, ok := propertyMap[instance.Type]; !ok {
+			return nil, nil, errors.NewError(errors.TIEM_UNSUPPORT_PRODUCT, "")
+		} else {
+			instanceProperty = property
+		}
 		requirements = append(requirements, resource.AllocRequirement{
 			Location: structs.Location{
 				Region: p.Cluster.Region,
@@ -344,9 +374,9 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 				Exclusive: p.Cluster.Exclusive,
 				PortReq: []resource.PortRequirement{
 					{
-						Start:   int32(portRange.Start),
-						End:     int32(portRange.End),
-						PortCnt: int32(portRange.Count),
+						Start:   instanceProperty.StartPort,
+						End:     instanceProperty.EndPort,
+						PortCnt: instanceProperty.MaxPort,
 					},
 				},
 				DiskReq: resource.DiskRequirement{
@@ -369,7 +399,7 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 		})
 		allocInstances = append(allocInstances, instance)
 	}
-	return requirements, allocInstances
+	return requirements, allocInstances, nil
 }
 
 func (p *ClusterMeta) GenerateTakeoverResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance) {
@@ -404,23 +434,26 @@ func (p *ClusterMeta) GenerateTakeoverResourceRequirements(ctx context.Context) 
 	return requirements, allocInstances
 }
 
-func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) []resource.AllocRequirement {
+func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) ([]resource.AllocRequirement, error) {
 	requirements := make([]resource.AllocRequirement, 0)
 
 	if p.Cluster.Status != string(constants.ClusterInitializing) {
 		framework.LogWithContext(ctx).Infof("cluster %s is not initializing, no need to alloc global port resource", p.Cluster.ID)
-		return requirements
+		return requirements, nil
 	}
 
-	portRange := knowledge.GetClusterPortRange(p.Cluster.Type, p.Cluster.Version)
+	portRange, err := getRetainedPortRange(ctx)
+	if err != nil {
+		return nil, err
+	}
 	requirements = append(requirements, resource.AllocRequirement{
 		Location: structs.Location{Region: p.Cluster.Region},
 		Require: resource.Requirement{
 			PortReq: []resource.PortRequirement{
 				{
-					Start:   int32(portRange.Start),
-					End:     int32(portRange.End),
-					PortCnt: int32(portRange.Count),
+					Start:   int32(portRange[0]),
+					End:     int32(portRange[1]),
+					PortCnt: int32(2),
 				},
 			},
 			DiskReq: resource.DiskRequirement{NeedDisk: false},
@@ -435,7 +468,7 @@ func (p *ClusterMeta) GenerateGlobalPortRequirements(ctx context.Context) []reso
 		Strategy: resource.ClusterPorts,
 	})
 
-	return requirements
+	return requirements, nil
 }
 
 func (p *ClusterMeta) ApplyGlobalPortResource(nodeExporterPort, blackboxExporterPort int32) {
@@ -548,8 +581,18 @@ func (p *ClusterMeta) GetInstance(ctx context.Context, instanceID string) (*mana
 // @Parameter	component type
 // @Return		bool
 func (p *ClusterMeta) IsComponentRequired(ctx context.Context, componentType string) bool {
-	return knowledge.GetComponentSpec(p.Cluster.Type,
-		p.Cluster.Version, componentType).ComponentConstraint.ComponentRequired
+	properties, err := p.GetClusterComponentProperties(ctx)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(err.Error())
+		return false
+	}
+
+	for _, property := range properties {
+		if property.ID == componentType && property.MinInstance > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 // DeleteInstance

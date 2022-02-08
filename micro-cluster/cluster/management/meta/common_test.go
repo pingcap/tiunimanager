@@ -17,6 +17,7 @@ package meta
 
 import (
 	ctx "context"
+	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -510,4 +511,23 @@ func Test_getRetainedPortRange(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid value for config config_retained_port_range")
 	})
+}
+
+func TestGetRandomString(t *testing.T) {
+	type args struct {
+		n int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{"normal", args{10}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := GetRandomString(tt.args.n)
+			fmt.Println(got)
+		})
+	}
 }

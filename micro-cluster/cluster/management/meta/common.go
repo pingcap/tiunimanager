@@ -25,6 +25,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/workflow"
+	"math/rand"
 	"reflect"
 	"strconv"
 	"strings"
@@ -305,4 +306,11 @@ func GetProductDetail(ctx context.Context, vendor, region, clusterType string) (
 	} else {
 		return &product, nil
 	}
+}
+
+// GetRandomString get random password
+func GetRandomString(n int) string {
+	randBytes := make([]byte, n/2)
+	rand.Read(randBytes)
+	return fmt.Sprintf("%x", randBytes)
 }

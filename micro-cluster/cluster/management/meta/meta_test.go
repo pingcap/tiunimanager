@@ -1932,24 +1932,6 @@ func TestClusterMeta_GetVersion(t *testing.T) {
 
 }
 
-func TestGetRandomString(t *testing.T) {
-	type args struct {
-		n int
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-		{"normal", args{10}},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := GetRandomString(tt.args.n)
-			fmt.Println(got)
-		})
-	}
-}
 
 func TestClusterMeta_BuildForTakeover(t *testing.T) {
 	ctrl := gomock.NewController(t)

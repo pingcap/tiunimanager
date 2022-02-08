@@ -46,6 +46,10 @@ func TestExecutor_collectorClusterLogConfig(t *testing.T) {
 	secondparty.Manager = mock2rdService
 
 	t.Run("success", func(t *testing.T) {
+		mock2rdService.EXPECT().ClusterDisplay(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, tiUPComponent secondparty.TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string) (resp *secondparty.CmdDisplayResp, err error) {
+				return &secondparty.CmdDisplayResp{DisplayRespString: "{\"instances\":[{\"role\":\"filebeat\", \"host\":\"127.0.0.1\"}]}"}, nil
+			})
 		mock2rdService.EXPECT().Transfer(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
 			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 

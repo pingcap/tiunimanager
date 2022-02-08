@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Copyright (c)  2022 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
  * you may not use this file except in compliance with the License.           *
  * You may obtain a copy of the License at                                    *
@@ -13,40 +13,11 @@
  *  limitations under the License.                                            *
  ******************************************************************************/
 
-package backuprestore
+package sql
 
-const (
-	contextClusterMetaKey             string = "clusterMeta"
-	contextBackupRecordKey            string = "backupRecord"
-	contextMaintenanceStatusChangeKey string = "maintenanceStatusChange"
-	contextBRInfoKey                  string = "brInfo"
-	contextBackupTiupTaskIDKey        string = "backupTaskId"
-)
-
-const (
-	defaultPageSize int = 10
-)
-
-const (
-	Sunday    string = "Sunday"
-	Monday    string = "Monday"
-	Tuesday   string = "Tuesday"
-	Wednesday string = "Wednesday"
-	Thursday  string = "Thursday"
-	Friday    string = "Friday"
-	Saturday  string = "Saturday"
-)
-
-var WeekDayMap = map[string]int{
-	Sunday:    0,
-	Monday:    1,
-	Tuesday:   2,
-	Wednesday: 3,
-	Thursday:  4,
-	Friday:    5,
-	Saturday:  6}
-
-func checkWeekDayValid(day string) bool {
-	_, exist := WeekDayMap[day]
-	return exist
+type DbConnParam struct {
+	Username string
+	Password string
+	IP       string
+	Port     string
 }

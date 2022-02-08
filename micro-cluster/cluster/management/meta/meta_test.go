@@ -485,7 +485,7 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 	models.SetClusterReaderWriter(rw)
 
 	rw.EXPECT().CreateRelation(gomock.Any(), gomock.Any()).Return(nil)
-	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster01"}}, nil)
+	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster01"}}, nil)
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -1273,7 +1273,7 @@ func mockResult(name string) []*management.Result {
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
 			},
-			Name:              name,
+			Name: name,
 			//DBUser:            "kodjsfn",
 			Type:              "TiDB",
 			Version:           "v5.0.0",
@@ -1503,7 +1503,6 @@ func TestGetRandomString(t *testing.T) {
 	}
 }
 
-
 func TestClusterMeta_BuildForTakeover(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -1572,16 +1571,14 @@ func TestClusterMeta_BuildForTakeover(t *testing.T) {
 func TestClusterMeta_IsTakenOver(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
 		meta := ClusterMeta{
-			Cluster: &management.Cluster{
-
-			},
+			Cluster: &management.Cluster{},
 		}
 		assert.False(t, meta.IsTakenOver())
 	})
 	t.Run("true", func(t *testing.T) {
 		meta := ClusterMeta{
 			Cluster: &management.Cluster{
-				Tags: []string{"aaa", TagTakeover,"bbb"},
+				Tags: []string{"aaa", TagTakeover, "bbb"},
 			},
 		}
 		assert.True(t, meta.IsTakenOver())

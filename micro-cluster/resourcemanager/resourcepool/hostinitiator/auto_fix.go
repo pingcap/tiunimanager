@@ -155,6 +155,11 @@ func (p *FileHostInitiator) remountFS(ctx context.Context, h *structs.HostInfo, 
 	}
 	// result should be "/dev/mapper/centos-root /data    xfs     defaults        0 0"
 	mountInfo := strings.Fields(result)
+	if len(mountInfo) != 6 {
+		errMsg := fmt.Sprintf("get mount point %s option failed, mountInfo: %v", path, mountInfo)
+		log.Errorln(errMsg)
+		return errors.NewError(errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, errMsg)
+	}
 	originOpts := mountInfo[3]
 	targetOpts := fmt.Sprintf("%s,%s", originOpts, addingOpts)
 	updateFsTabCmd := fmt.Sprintf("sed -i '\\# %s #s#%s#%s#g' /etc/fstab", path, originOpts, targetOpts)

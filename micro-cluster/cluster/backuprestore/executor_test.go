@@ -34,6 +34,7 @@ import (
 	"github.com/pingcap-inc/tiem/util/api/tidb/sql"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
 )
 
@@ -55,7 +56,8 @@ func TestExecutor_backupCluster(t *testing.T) {
 
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(contextBackupRecordKey, &backuprestore.BackupRecord{
-		StorageType: "s3",
+		StorageType: "nfs",
+		FilePath:    "./testdata",
 	})
 	flowContext.SetData(contextClusterMetaKey, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
@@ -93,6 +95,7 @@ func TestExecutor_backupCluster(t *testing.T) {
 	})
 	err := backupCluster(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.NotNil(t, err)
+	os.Remove("./testdata")
 }
 
 func TestExecutor_updateBackupRecord(t *testing.T) {

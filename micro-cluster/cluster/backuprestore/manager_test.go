@@ -17,6 +17,7 @@ package backuprestore
 
 import (
 	"context"
+	"errors"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -247,7 +248,7 @@ func TestBRManager_DeleteBackupRecords(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestBRManager_GetBackupStrategy(t *testing.T) {
+func TestBRManager_GetBackupStrategy_case1(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -266,7 +267,20 @@ func TestBRManager_GetBackupStrategy(t *testing.T) {
 	assert.Equal(t, "0:00-1:00", resp.Strategy.Period)
 }
 
-func TestBRManager_DeleteBackupStrategy(t *testing.T) {
+func TestBRManager_GetBackupStrategy_case2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	brRW := mockbr.NewMockReaderWriter(ctrl)
+	brRW.EXPECT().GetBackupStrategy(gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
+	models.SetBRReaderWriter(brRW)
+
+	service := GetBRService()
+	_, err := service.GetBackupStrategy(context.TODO(), cluster.GetBackupStrategyReq{})
+	assert.NotNil(t, err)
+}
+
+func TestBRManager_DeleteBackupStrategy_case1(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -279,7 +293,20 @@ func TestBRManager_DeleteBackupStrategy(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestBRManager_SaveBackupStrategy(t *testing.T) {
+func TestBRManager_DeleteBackupStrategy_case2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	brRW := mockbr.NewMockReaderWriter(ctrl)
+	brRW.EXPECT().DeleteBackupStrategy(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+	models.SetBRReaderWriter(brRW)
+
+	service := GetBRService()
+	_, err := service.DeleteBackupStrategy(context.TODO(), cluster.DeleteBackupStrategyReq{})
+	assert.NotNil(t, err)
+}
+
+func TestBRManager_SaveBackupStrategy_case1(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -297,6 +324,42 @@ func TestBRManager_SaveBackupStrategy(t *testing.T) {
 		},
 	})
 	assert.Nil(t, err)
+}
+
+func TestBRManager_SaveBackupStrategy_case2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	brRW := mockbr.NewMockReaderWriter(ctrl)
+	brRW.EXPECT().SaveBackupStrategy(gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
+	models.SetBRReaderWriter(brRW)
+
+	service := GetBRService()
+	_, err := service.SaveBackupStrategy(context.TODO(), cluster.SaveBackupStrategyReq{
+		ClusterID: "cls-xxxx",
+		Strategy: structs.BackupStrategy{
+			ClusterID:  "cls-xxxx",
+			BackupDate: "Monday",
+			Period:     "0:00-1:00",
+		},
+	})
+	assert.NotNil(t, err)
+}
+
+func TestBRManager_SaveBackupStrategy_case3(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	service := GetBRService()
+	_, err := service.SaveBackupStrategy(context.TODO(), cluster.SaveBackupStrategyReq{
+		ClusterID: "cls-xxxx",
+		Strategy: structs.BackupStrategy{
+			ClusterID:  "cls-xxxx",
+			BackupDate: "Monday",
+			Period:     "2:00-1:00",
+		},
+	})
+	assert.NotNil(t, err)
 }
 
 func TestBRManager_QueryClusterBackupRecords(t *testing.T) {

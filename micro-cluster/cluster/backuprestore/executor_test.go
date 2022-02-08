@@ -31,8 +31,10 @@ import (
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockmanagement"
 	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
+	"github.com/pingcap-inc/tiem/util/api/tidb/sql"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
 )
 
@@ -54,7 +56,8 @@ func TestExecutor_backupCluster(t *testing.T) {
 
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(contextBackupRecordKey, &backuprestore.BackupRecord{
-		StorageType: "s3",
+		StorageType: "nfs",
+		FilePath:    "./testdata",
 	})
 	flowContext.SetData(contextClusterMetaKey, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
@@ -91,7 +94,8 @@ func TestExecutor_backupCluster(t *testing.T) {
 		},
 	})
 	err := backupCluster(&workflowModel.WorkFlowNode{}, flowContext)
-	assert.Nil(t, err)
+	assert.NotNil(t, err)
+	os.Remove("./testdata")
 }
 
 func TestExecutor_updateBackupRecord(t *testing.T) {
@@ -122,7 +126,11 @@ func TestExecutor_updateBackupRecord(t *testing.T) {
 			},
 		},
 	})
-	flowContext.SetData(contextBackupTiupTaskIDKey, "123")
+	flowContext.SetData(contextBRInfoKey, &sql.BRSQLResp{
+		Destination: "test",
+		Size:        1234,
+		BackupTS:    2534534534,
+	})
 	err := updateBackupRecord(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
 }
@@ -172,7 +180,7 @@ func TestExecutor_restoreFromSrcCluster(t *testing.T) {
 		},
 	})
 	err := restoreFromSrcCluster(&workflowModel.WorkFlowNode{}, flowContext)
-	assert.Nil(t, err)
+	assert.NotNil(t, err)
 }
 
 func TestExecutor_backupFail(t *testing.T) {

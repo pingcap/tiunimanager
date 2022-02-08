@@ -285,6 +285,11 @@ mock:
 	mockgen -destination ./test/mockaccount/mock_account.go -package mockaccount -source ./models/user/account/readerwriter.go
 	mockgen -destination ./test/mockidentification/mock_identification.go -package mockidentification -source ./models/user/identification/readerwriter.go
 	mockgen -destination ./test/mockchangefeed/mock_changefeed.go -package mockchangefeed -source ./micro-cluster/cluster/changefeed/service.go
+	mockgen -destination ./test/mockutilcdc/mock_utilcdc.go -package mockutilcdc -source ./util/api/cdc/clusterconfig.go
+	mockgen -destination ./test/mockutilpd/mock_utilpd.go -package mockutilpd -source ./util/api/pd/clusterconfig.go
+	mockgen -destination ./test/mockutiltikv/mock_utiltikv.go -package mockutiltikv -source ./util/api/tikv/clusterconfig.go
+	mockgen -destination ./test/mockutiltidbhttp/mock_utiltidbhttp.go -package mockutiltidbhttp -source ./util/api/tidb/http/clusterconfig.go
+	mockgen -destination ./test/mockutiltidbsql_config/mock_utiltidbsql_config.go -package mockutiltidbsqlconfig -source ./util/api/tidb/sql/clusterconfig.go
 
 swag:
 	$(GO) install github.com/swaggo/swag/cmd/swag@v1.7.1

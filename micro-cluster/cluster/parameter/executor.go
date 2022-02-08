@@ -32,6 +32,18 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pingcap-inc/tiem/util/api/cdc"
+
+	"github.com/pingcap-inc/tiem/util/api/pd"
+
+	"github.com/pingcap-inc/tiem/util/api/tikv"
+
+	"github.com/pingcap-inc/tiem/message/cluster"
+
+	tidbApi "github.com/pingcap-inc/tiem/util/api/tidb/http"
+
+	"github.com/pingcap-inc/tiem/util/api/tidb/sql"
+
 	"github.com/pingcap-inc/tiem/common/errors"
 
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -276,14 +288,14 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 	framework.LogWithContext(ctx).Info("begin sql edit config executor method")
 	defer framework.LogWithContext(ctx).Info("end sql edit config executor method")
 
-	configs := make([]secondparty.ClusterComponentConfig, len(params))
+	configs := make([]sql.ClusterComponentConfig, len(params))
 	for i, param := range params {
 		configKey := param.Name
 		// set config key from system variable
 		if param.SystemVariable != "" {
 			configKey = param.SystemVariable
 		}
-		configs[i] = secondparty.ClusterComponentConfig{
+		configs[i] = sql.ClusterComponentConfig{
 			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.InstanceType)),
 			ConfigKey:            configKey,
 			ConfigValue:          param.RealValue.ClusterValue,
@@ -309,8 +321,8 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 		return fmt.Errorf("get cluster user name from meta failed, empty address")
 	}
 
-	req := secondparty.ClusterEditConfigReq{
-		DbConnParameter: secondparty.DbConnParam{
+	req := sql.ClusterEditConfigReq{
+		DbConnParameter: sql.DbConnParam{
 			Username: tidbUserInfo.Name,
 			Password: string(tidbUserInfo.Password),
 			IP:       tidbServer.IP,
@@ -318,7 +330,7 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 		},
 		ComponentConfigs: configs,
 	}
-	err = secondparty.Manager.EditClusterConfig(ctx, req, node.ID)
+	err = sql.SqlService.EditClusterConfig(ctx, req, node.ID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call secondparty sql edit cluster config err = %s", err.Error())
 		return err
@@ -358,8 +370,6 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 			}
 			clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
 
-			// Get the instance host and port of the component based on the topology
-			servers := make(map[string]uint)
 			switch comp.(string) {
 			case string(constants.ComponentIDTiDB):
 				tidbServers := clusterMeta.GetClusterStatusAddress()
@@ -368,7 +378,17 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 					return fmt.Errorf("get tidb status address from meta failed, empty address")
 				}
 				for _, server := range tidbServers {
-					servers[server.IP] = uint(server.Port)
+					// api edit config
+					hasSuc, err := tidbApi.ApiService.ApiEditConfig(ctx, cluster.ApiEditConfigReq{
+						InstanceHost: server.IP,
+						InstancePort: uint(server.Port),
+						Headers:      map[string]string{},
+						ConfigMap:    cm,
+					})
+					if err != nil || !hasSuc {
+						framework.LogWithContext(ctx).Errorf("call secondparty api edit config is %v, err = %s", hasSuc, err)
+						return err
+					}
 				}
 			case string(constants.ComponentIDTiKV):
 				tikvServers := clusterMeta.GetTiKVStatusAddress()
@@ -377,7 +397,17 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 					return fmt.Errorf("get tikv address from meta failed, empty address")
 				}
 				for _, server := range tikvServers {
-					servers[server.IP] = uint(server.Port)
+					// api edit config
+					hasSuc, err := tikv.ApiService.ApiEditConfig(ctx, cluster.ApiEditConfigReq{
+						InstanceHost: server.IP,
+						InstancePort: uint(server.Port),
+						Headers:      map[string]string{},
+						ConfigMap:    cm,
+					})
+					if err != nil || !hasSuc {
+						framework.LogWithContext(ctx).Errorf("call secondparty api edit config is %v, err = %s", hasSuc, err)
+						return err
+					}
 				}
 			case string(constants.ComponentIDPD):
 				pdServers := clusterMeta.GetPDClientAddresses()
@@ -386,7 +416,17 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 					return fmt.Errorf("get pd address from meta failed, empty address")
 				}
 				server := pdServers[rand.Intn(len(pdServers))]
-				servers[server.IP] = uint(server.Port)
+				// api edit config
+				hasSuc, err := pd.ApiService.ApiEditConfig(ctx, cluster.ApiEditConfigReq{
+					InstanceHost: server.IP,
+					InstancePort: uint(server.Port),
+					Headers:      map[string]string{},
+					ConfigMap:    cm,
+				})
+				if err != nil || !hasSuc {
+					framework.LogWithContext(ctx).Errorf("call secondparty api edit config is %v, err = %s", hasSuc, err)
+					return err
+				}
 			case string(constants.ComponentIDCDC):
 				cdcServers := clusterMeta.GetCDCClientAddresses()
 				if len(cdcServers) == 0 {
@@ -394,22 +434,19 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 					return fmt.Errorf("get cdc address from meta failed, empty address")
 				}
 				server := cdcServers[rand.Intn(len(cdcServers))]
-				servers[server.IP] = uint(server.Port)
-			default:
-				return fmt.Errorf(fmt.Sprintf("Component [%s] type modification is not supported", comp.(string)))
-			}
-			for host, port := range servers {
-				hasSuc, err := secondparty.Manager.ApiEditConfig(ctx, secondparty.ApiEditConfigReq{
-					TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(comp.(string))),
-					InstanceHost:         host,
-					InstancePort:         port,
-					Headers:              map[string]string{},
-					ConfigMap:            cm,
+				// api edit config
+				hasSuc, err := cdc.ApiService.ApiEditConfig(ctx, cluster.ApiEditConfigReq{
+					InstanceHost: server.IP,
+					InstancePort: uint(server.Port),
+					Headers:      map[string]string{},
+					ConfigMap:    cm,
 				})
 				if err != nil || !hasSuc {
 					framework.LogWithContext(ctx).Errorf("call secondparty api edit config is %v, err = %s", hasSuc, err)
 					return err
 				}
+			default:
+				return fmt.Errorf(fmt.Sprintf("Component [%s] type modification is not supported", comp.(string)))
 			}
 		}
 	}

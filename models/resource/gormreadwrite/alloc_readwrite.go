@@ -17,6 +17,8 @@ package gormreadwrite
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/pingcap-inc/tiem/util/bitmap"
 	crypto "github.com/pingcap-inc/tiem/util/encrypt"
 
@@ -25,11 +27,124 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
+	resource_structs2 "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management2/structs"
 	mm "github.com/pingcap-inc/tiem/models/resource/management"
 	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	"gorm.io/gorm"
 )
 
+func (rw *GormResourceReadWrite) AllocResources2(ctx context.Context, allocReq *resource_structs2.AllocRequest) (results *resource_structs2.AllocResponse, err error) {
+	log := framework.LogWithContext(ctx)
+	results = new(resource_structs2.AllocResponse)
+	results.Applicant.HolderId = allocReq.Applicant.HolderId
+	results.Applicant.RequestId = allocReq.Applicant.RequestId
+	log.Infof("Applicant %v Alloc Resource by Mode %s in location %s, excludedHosts: %v, arch: %s, vendor: %s, traits: %d, poolType: %s",
+		allocReq.Applicant, allocReq.Mode, allocReq.Location, allocReq.Arch, allocReq.Vendor, allocReq.ProductType, allocReq.PoolType)
+	hosts := make([]rp.Host, 0)
+	var total int64
+	tx := rw.DB(ctx).Begin()
+	db := tx.Model(&rp.Host{}).
+		Where("region = ?", allocReq.Location.Region)
+	if allocReq.Mode == "FullPath" {
+		zoneCode := structs.GenDomainCodeByName(allocReq.Location.Region, allocReq.Location.Zone)
+		rackCode := structs.GenDomainCodeByName(zoneCode, allocReq.Location.Rack)
+		db = db.Where("az = ?", zoneCode).Where("rack = ?", rackCode)
+	}
+	err = db.Where("arch = ?", allocReq.Arch).
+		Where("vendor = ?", allocReq.Vendor).
+		Where("pool = ?", allocReq.PoolType).
+		Where("traits & ? = ?", allocReq.ProductType, allocReq.ProductType).
+		Count(&total).Find(&hosts).Error
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("Get Resources in location %s (arch %s, vendor %s, traits %d)failed, %s", allocReq.Location, allocReq.Arch, allocReq.Vendor, allocReq.ProductType, err)
+		return nil, err
+	}
+	if total == 0 {
+		tx.Rollback()
+		log.Errorf("No Resources in location %s (arch %s, vendor %s, traits %d) , %s", allocReq.Location, allocReq.Arch, allocReq.Vendor, allocReq.ProductType, err)
+		return nil, err
+	}
+
+	rack2hosts, zone2racks, region2zones, err := rw.buildHierarchy(hosts)
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("build hierarchy from hosts %v failed, %v", hosts, err)
+		return nil, err
+	}
+
+	for i, request := range allocReq.ComponentRequests {
+		var result *resource_structs2.ComponentResult
+		result, err = rw.allocForComponentRequest(ctx, tx, &request, rack2hosts, zone2racks, region2zones)
+		if err != nil {
+			tx.Rollback()
+			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_ALLOCATE_ERROR, "alloc resources failed on %dth component request with %d requires, request: %v, error: %v", i+1, len(request.Requires), request, err)
+		}
+		results.ComponentResults = append(results.ComponentResults, result)
+	}
+
+	tx.Commit()
+	return
+}
+
+func (rw *GormResourceReadWrite) allocForComponentRequest(ctx context.Context, tx *gorm.DB, req *resource_structs2.ComponentRequest,
+	rack2hosts map[string][]*rp.Host, zone2racks map[string][]string, region2zones map[string][]string) (results *resource_structs2.ComponentResult, err error) {
+	log := framework.LogWithContext(ctx)
+	results = new(resource_structs2.ComponentResult)
+	for _, require := range req.Requires {
+		result, err := rw.allocForEachRequirement(ctx, tx, &require, rack2hosts, zone2racks, region2zones)
+		if err != nil {
+			log.Errorf("alloc for requirement %v failed, %v", require, err)
+			return nil, err
+		}
+		results.ZoneResults = append(results.ZoneResults, *result)
+	}
+	return
+}
+
+func (rw *GormResourceReadWrite) allocForEachRequirement(ctx context.Context, tx *gorm.DB, require *resource_structs2.AllocRequirement,
+	rack2hosts map[string][]*rp.Host, zone2racks map[string][]string, region2zones map[string][]string) (results *resource_structs2.AllocResult, err error) {
+	log := framework.LogWithContext(ctx)
+	regionName := require.Location.Region
+	zoneName := require.Location.Zone
+	if regionName == "" || zoneName == "" {
+		errMsg := fmt.Sprintf("neither regionName (%s) nor zoneName (%s) should not be empty in require", regionName, zoneName)
+		log.Errorln(errMsg)
+		return nil, errors.NewError(errors.TIEM_RESOURCE_ALLOCATE_ERROR, errMsg)
+	}
+	zoneCode := structs.GenDomainCodeByName(regionName, zoneName)
+	racks, ok := zone2racks[zoneCode]
+	if !ok {
+		errMsg := fmt.Sprintf("no racks under zone (%s)", zoneCode)
+		log.Errorln(errMsg)
+		return nil, errors.NewError(errors.TIEM_RESOURCE_ALLOCATE_ERROR, errMsg)
+	}
+	count := require.Count
+	require.Strategy
+
+}
+
+func (rw *GormResourceReadWrite) buildHierarchy(hosts []rp.Host) (rack2hosts map[string][]*rp.Host, zone2racks map[string][]string, region2zones map[string][]string, err error) {
+	rack2hosts = make(map[string][]*rp.Host)
+	zone2racks = make(map[string][]string)
+	region2zones = make(map[string][]string)
+	// For deduplicated
+	tmp_rack_recorded := make(map[string]bool)
+	tmp_zone_recorded := make(map[string]bool)
+
+	for i := range hosts {
+		rack2hosts[hosts[i].Rack] = append(rack2hosts[hosts[i].Rack], &hosts[i])
+		if _, ok := tmp_rack_recorded[hosts[i].Rack]; !ok {
+			tmp_rack_recorded[hosts[i].Rack] = true
+			zone2racks[hosts[i].AZ] = append(zone2racks[hosts[i].AZ], hosts[i].Rack)
+		}
+		if _, ok := tmp_zone_recorded[hosts[i].AZ]; !ok {
+			tmp_zone_recorded[hosts[i].AZ] = true
+			region2zones[hosts[i].Region] = append(region2zones[hosts[i].Region], hosts[i].AZ)
+		}
+	}
+	return
+}
 func (rw *GormResourceReadWrite) AllocResources(ctx context.Context, batchReq *resource_structs.BatchAllocRequest) (results *resource_structs.BatchAllocResponse, err error) {
 	results = new(resource_structs.BatchAllocResponse)
 	tx := rw.DB(ctx).Begin()

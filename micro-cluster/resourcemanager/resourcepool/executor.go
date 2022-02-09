@@ -29,6 +29,27 @@ import (
 	"github.com/pingcap-inc/tiem/workflow"
 )
 
+func validateHostInfo(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infoln("begin validate host info")
+
+	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
+	if err != nil {
+		log.Errorf("validate host failed for get flow context, %v", err)
+		return err
+	}
+	for _, host := range hosts {
+		err = resourcePool.ValidateZoneInfo(ctx, &host)
+		if err != nil {
+			log.Errorf("validate host %s %s failed, %v", host.HostName, host.IP, err)
+			return err
+		}
+		log.Infof("validate host %v succeed", host)
+	}
+	node.Record(fmt.Sprintf("validate hosts %v succeed", hosts))
+	return nil
+}
+
 func authHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin authHosts")
@@ -46,7 +67,7 @@ func authHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err
 		}
 		log.Infof("auth host %v succeed", host)
 	}
-	node.Record("auth hosts ")
+	node.Record(fmt.Sprintf("auth hosts %v succeed", hosts))
 	return nil
 }
 
@@ -69,7 +90,7 @@ func prepare(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err e
 		}
 		log.Infof("prepare host %v succeed", host)
 	}
-	node.Record("prepare hosts ")
+	node.Record(fmt.Sprintf("prepare hosts %v succeed", hosts))
 	return nil
 }
 
@@ -97,13 +118,7 @@ func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 		}
 		log.Infof("verify host %v succeed", host)
 	}
-	node.Record("verify hosts ")
-	return nil
-}
-
-func configHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
-	framework.LogWithContext(ctx).Info("begin configHosts")
-	defer framework.LogWithContext(ctx).Info("end configHosts")
+	node.Record(fmt.Sprintf("verify hosts %v succeed", hosts))
 	return nil
 }
 
@@ -122,7 +137,7 @@ func installSoftware(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext
 		return err
 	}
 	log.Infof("install software succeed for %v", hosts)
-	node.Record("install software for hosts ")
+	node.Record(fmt.Sprintf("install software for hosts %v succeed", hosts))
 	return nil
 }
 

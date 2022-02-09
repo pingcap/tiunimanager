@@ -26,7 +26,7 @@ import (
 	"github.com/pingcap-inc/tiem/models/common"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockimportexport"
-	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
+	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"
 	"os"

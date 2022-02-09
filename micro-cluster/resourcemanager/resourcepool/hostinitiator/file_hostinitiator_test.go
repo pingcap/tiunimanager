@@ -27,7 +27,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	secondparty "github.com/pingcap-inc/tiem/library/secondparty"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
-	mock_secp "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
+	mock_secp "github.com/pingcap-inc/tiem/test/mocksecondparty"
 	mock_ssh "github.com/pingcap-inc/tiem/test/mockutil/mocksshclientexecutor"
 	sshclient "github.com/pingcap-inc/tiem/util/ssh"
 	"github.com/stretchr/testify/assert"

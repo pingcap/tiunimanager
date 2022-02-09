@@ -60,7 +60,7 @@ import (
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclusterparameter"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mocktiupconfig"
 	mock_allocator_recycler "github.com/pingcap-inc/tiem/test/mockresource"
-	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
+	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/pingcap/tiup/pkg/cluster/spec"

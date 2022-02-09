@@ -28,19 +28,18 @@ import (
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 )
 
 type FileHostInitiator struct {
-	sshClient       sshclient.SSHClientExecutor
-	secondPartyServ secondparty.SecondPartyService
+	sshClient      sshclient.SSHClientExecutor
+	deploymentServ deployment.Interface
 }
 
 func NewFileHostInitiator() *FileHostInitiator {
 	hostInitiator := new(FileHostInitiator)
 	hostInitiator.sshClient = sshclient.SSHExecutor{}
-	hostInitiator.secondPartyServ = secondparty.Manager
+	hostInitiator.deploymentServ = deployment.M
 	return hostInitiator
 }
 
@@ -48,8 +47,8 @@ func (p *FileHostInitiator) SetSSHClient(c sshclient.SSHClientExecutor) {
 	p.sshClient = c
 }
 
-func (p *FileHostInitiator) SetSecondPartyServ(s secondparty.SecondPartyService) {
-	p.secondPartyServ = s
+func (p *FileHostInitiator) SetDeploymentServ(d deployment.Interface) {
+	p.deploymentServ = d
 }
 
 func (p *FileHostInitiator) CopySSHID(ctx context.Context, h *structs.HostInfo) (err error) {
@@ -80,7 +79,7 @@ func (p *FileHostInitiator) Prepare(ctx context.Context, h *structs.HostInfo) (e
 	resultStr, err := deployment.M.CheckConfig(ctx, deployment.TiUPComponentTypeCluster, templateStr, "/home/tiem/.tiup",
 		[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--apply", "--format", "json"}, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
-		errMsg := fmt.Sprintf("call second serv to apply host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
+		errMsg := fmt.Sprintf("call deployment serv to apply host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
 		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
 	}
 	log.Infof("apply host %s %s done, %s", h.HostName, h.IP, resultStr)
@@ -120,7 +119,7 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 	resultStr, err := deployment.M.CheckConfig(ctx, deployment.TiUPComponentTypeCluster, templateStr, "/home/tiem/.tiup",
 		[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--format", "json"}, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
-		errMsg := fmt.Sprintf("call second serv to check host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
+		errMsg := fmt.Sprintf("call deployment serv to check host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
 		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
 	}
 	log.Infof("verify host %s %s for %v done", h.HostName, h.IP, tempateInfo)
@@ -174,13 +173,13 @@ func (p *FileHostInitiator) PreCheckHostInstallFilebeat(ctx context.Context, hos
 	emClusterName := framework.Current.GetClientArgs().EMClusterName
 
 	// Parse EM topology structure to check whether filebeat has been installed already
-	resp, err := p.secondPartyServ.ClusterDisplay(ctx, secondparty.TiEMComponentTypeStr, emClusterName, rp_consts.DefaultTiupTimeOut, []string{"--json"})
+	result, err := p.deploymentServ.Display(ctx, deployment.TiUPComponentTypeTiEM, emClusterName, "/home/tiem/.tiuptiem", []string{"--json"}, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
 		log.Errorf("precheck before join em cluster failed, %v", err)
 		return false, errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "precheck join em cluster %s failed, %v", emClusterName, err)
 	}
 	emTopo := new(structs.EMMetaTopo)
-	err = json.Unmarshal([]byte(resp.DisplayRespString), emTopo)
+	err = json.Unmarshal([]byte(result), emTopo)
 	if err != nil {
 		return false, errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "precheck join em cluster %s failed on umarshal, %v", emClusterName, err)
 	}

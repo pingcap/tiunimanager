@@ -26,7 +26,7 @@ import (
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	secondpartyModel "github.com/pingcap-inc/tiem/models/workflow/secondparty"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockworkflow"
-	mock_secondparty "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
+	mock_secondparty "github.com/pingcap-inc/tiem/test/mocksecondparty"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

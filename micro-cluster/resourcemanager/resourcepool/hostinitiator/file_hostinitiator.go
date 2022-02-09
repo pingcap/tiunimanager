@@ -199,7 +199,7 @@ LOOP:
 	return installed, nil
 }
 
-func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.HostInfo) (err error) {
+func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.HostInfo) (operationID string, err error) {
 	tempateInfo := templateScaleOut{}
 	for _, host := range hosts {
 		tempateInfo.HostIPs = append(tempateInfo.HostIPs, host.IP)
@@ -207,46 +207,46 @@ func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.H
 
 	templateStr, err := tempateInfo.generateTopologyConfig(ctx)
 	if err != nil {
-		return err
+		return "", err
 	}
 	framework.LogWithContext(ctx).Infof("join em cluster on %s", templateStr)
 
-	workFlowNodeID, ok := ctx.Value(rp_consts.ContextWorkFlowNodeIDKey).(string)
-	if !ok || workFlowNodeID == "" {
-		return errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "get work flow node from context failed, %s, %v", workFlowNodeID, ok)
+	workFlowID, ok := ctx.Value(rp_consts.ContextWorkFlowIDKey).(string)
+	if !ok || workFlowID == "" {
+		return "", errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "get work flow from context failed, %s, %v", workFlowID, ok)
 	}
 
 	emClusterName := framework.Current.GetClientArgs().EMClusterName
-	framework.LogWithContext(ctx).Infof("join em cluster %s with work flow id %s", emClusterName, workFlowNodeID)
-	operationID, err := deployment.M.ScaleOut(ctx, deployment.TiUPComponentTypeTiEM, emClusterName, templateStr,
-		"/home/tiem/.tiuptiem", "", []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, rp_consts.DefaultTiupTimeOut)
+	framework.LogWithContext(ctx).Infof("join em cluster %s with work flow id %s", emClusterName, workFlowID)
+	operationID, err = deployment.M.ScaleOut(ctx, deployment.TiUPComponentTypeTiEM, emClusterName, templateStr,
+		"/home/tiem/.tiuptiem", workFlowID, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
-		return errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "join em cluster %s [%v] failed, %v", emClusterName, templateStr, err)
+		return "", errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "join em cluster %s [%v] failed, %v", emClusterName, templateStr, err)
 	}
 	framework.LogWithContext(ctx).Infof("join em cluster %s for %v in operationID %s", emClusterName, tempateInfo, operationID)
 
-	return nil
+	return operationID, nil
 }
 
-func (p *FileHostInitiator) LeaveEMCluster(ctx context.Context, nodeId string) (err error) {
+func (p *FileHostInitiator) LeaveEMCluster(ctx context.Context, nodeId string) (operationID string, err error) {
 	framework.LogWithContext(ctx).Infof("host %s leave em cluster", nodeId)
 
-	workFlowNodeID, ok := ctx.Value(rp_consts.ContextWorkFlowNodeIDKey).(string)
-	if !ok || workFlowNodeID == "" {
-		return errors.NewErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "get work flow node from context failed, %s, %v", workFlowNodeID, ok)
+	workFlowID, ok := ctx.Value(rp_consts.ContextWorkFlowIDKey).(string)
+	if !ok || workFlowID == "" {
+		return "", errors.NewErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "get work flow from context failed, %s, %v", workFlowID, ok)
 	}
 
 	emClusterName := framework.Current.GetClientArgs().EMClusterName
-	framework.LogWithContext(ctx).Infof("leave em cluster %s with work flow id %s", emClusterName, workFlowNodeID)
-	operationID, err := deployment.M.ScaleIn(ctx, deployment.TiUPComponentTypeTiEM, emClusterName,
+	framework.LogWithContext(ctx).Infof("leave em cluster %s with work flow id %s", emClusterName, workFlowID)
+	operationID, err = deployment.M.ScaleIn(ctx, deployment.TiUPComponentTypeTiEM, emClusterName,
 		nodeId, "/home/tiem/.tiuptiem",
-		"", []string{}, rp_consts.DefaultTiupTimeOut)
+		workFlowID, []string{}, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
-		return errors.NewErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "leave em cluster %s [%s] failed, %v", emClusterName, nodeId, err)
+		return "", errors.NewErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "leave em cluster %s [%s] failed, %v", emClusterName, nodeId, err)
 	}
 	framework.LogWithContext(ctx).Infof("leave em cluster %s for %s in operationId %s", emClusterName, nodeId, operationID)
 
-	return nil
+	return operationID, nil
 }
 
 func (p *FileHostInitiator) installTcpDump(ctx context.Context, hosts []structs.HostInfo) (err error) {

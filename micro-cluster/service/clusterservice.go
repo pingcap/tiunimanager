@@ -20,8 +20,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/constants"
+	"runtime/debug"
 	"time"
+
+	"github.com/pingcap-inc/tiem/common/constants"
 
 	"github.com/pingcap-inc/tiem/metrics"
 	"github.com/pingcap-inc/tiem/micro-cluster/user/rbac"
@@ -132,7 +134,7 @@ func handleResponse(ctx context.Context, resp *clusterservices.RpcResponse, err 
 // @Parameter resp
 func handlePanic(ctx context.Context, funcName string, resp *clusterservices.RpcResponse) {
 	if r := recover(); r != nil {
-		framework.LogWithContext(ctx).Errorf("recover from %s", funcName)
+		framework.LogWithContext(ctx).Errorf("recover from %s, stacktrace:%s", funcName, string(debug.Stack()))
 		resp.Code = int32(errors.TIEM_PANIC)
 		resp.Message = fmt.Sprintf("%v", r)
 	}

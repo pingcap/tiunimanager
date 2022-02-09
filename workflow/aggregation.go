@@ -19,6 +19,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"runtime/debug"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -28,7 +31,6 @@ import (
 	dbModel "github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/workflow"
 	secondpartyModel "github.com/pingcap-inc/tiem/models/workflow/secondparty"
-	"time"
 )
 
 // WorkFlowAggregation workflow aggregation with workflow definition and nodes
@@ -131,7 +133,9 @@ func (flow *WorkFlowAggregation) addContext(key string, value interface{}) {
 func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) (execErr error) {
 	defer func() {
 		if r := recover(); r != nil {
-			framework.LogWithContext(flow.Context).Errorf("recover from workflow %s, node %s", flow.Flow.Name, node.Name)
+			framework.LogWithContext(flow.Context).Errorf(
+				"recover from workflow %s, node %s, stacktrace %s",
+				flow.Flow.Name, node.Name, string(debug.Stack()))
 			execErr = errors.NewErrorf(errors.TIEM_PANIC, "%v", r)
 			node.Fail(execErr)
 		}

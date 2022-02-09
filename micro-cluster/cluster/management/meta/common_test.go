@@ -20,11 +20,11 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/common"
-	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty"
+	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"
@@ -52,12 +52,12 @@ func TestScaleOutPreCheck(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTiup := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	secondparty.Manager = mockTiup
+	mockTiup := mock_deployment.NewMockInterface(ctrl)
+	deployment.M = mockTiup
 
 	t.Run("normal", func(t *testing.T) {
-		mockTiup.EXPECT().ClusterComponentCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"true\"}", nil)
+		mockTiup.EXPECT().Ctl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"true\"}", nil)
 		meta := &ClusterMeta{
 			Cluster: &management.Cluster{
 				Version: "v5.0.0",
@@ -86,8 +86,8 @@ func TestScaleOutPreCheck(t *testing.T) {
 	})
 
 	t.Run("fail", func(t *testing.T) {
-		mockTiup.EXPECT().ClusterComponentCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"false\"}", nil)
+		mockTiup.EXPECT().Ctl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"false\"}", nil)
 		meta := &ClusterMeta{
 			Cluster: &management.Cluster{
 				Version: "v5.0.0",

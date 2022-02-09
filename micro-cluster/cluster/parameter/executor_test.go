@@ -26,6 +26,7 @@ package parameter
 import (
 	"context"
 	"errors"
+	"github.com/pingcap-inc/tiem/deployment"
 	"math"
 	"testing"
 
@@ -58,8 +59,7 @@ import (
 
 	"github.com/alecthomas/assert"
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/library/secondparty"
-	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty"
+	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
 	"github.com/pingcap-inc/tiem/workflow"
 )
 
@@ -311,8 +311,8 @@ func TestExecutor_modifyParameters(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock2rdService := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	secondparty.Manager = mock2rdService
+	mock2rdService := mock_deployment.NewMockInterface(ctrl)
+	deployment.M = mock2rdService
 
 	mockCDCApiService := mockutilcdc.NewMockCDCApiService(ctrl)
 	cdc.ApiService = mockCDCApiService
@@ -326,7 +326,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 	tikv.ApiService = mockTiKVApiService
 
 	t.Run("success", func(t *testing.T) {
-		mock2rdService.EXPECT().ClusterEditGlobalConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return("1", nil)
+		mock2rdService.EXPECT().EditConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("1", nil)
 
 		mockPDApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
 		mockTiDBApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
@@ -346,7 +346,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 	})
 
 	t.Run("no tiflash apply parameter", func(t *testing.T) {
-		mock2rdService.EXPECT().ClusterEditGlobalConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return("1", nil)
+		mock2rdService.EXPECT().EditConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("1", nil)
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
@@ -376,7 +376,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 	})
 
 	t.Run("no tiflash modify parameter", func(t *testing.T) {
-		mock2rdService.EXPECT().ClusterEditGlobalConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return("1", nil)
+		mock2rdService.EXPECT().EditConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("1", nil)
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
@@ -584,11 +584,11 @@ func TestExecutor_refreshParameter(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock2rdService := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	secondparty.Manager = mock2rdService
+	mock2rdService := mock_deployment.NewMockInterface(ctrl)
+	deployment.M = mock2rdService
 
 	t.Run("success", func(t *testing.T) {
-		mock2rdService.EXPECT().ClusterReload(gomock.Any(), gomock.Any(), gomock.Any()).Return("123", nil)
+		mock2rdService.EXPECT().Reload(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("123", nil)
 
 		refreshCtx := &workflow.FlowContext{
 			Context:  context.TODO(),

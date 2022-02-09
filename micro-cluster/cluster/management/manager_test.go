@@ -34,6 +34,7 @@ import (
 	"github.com/pingcap-inc/tiem/models/common"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	mock_br_service "github.com/pingcap-inc/tiem/test/mockbr"
+	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
 	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
@@ -300,6 +301,46 @@ func TestManager_ScaleIn(t *testing.T) {
 		{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
 	}, make([]*management.DBUser, 0), nil).AnyTimes()
 
+	productRW := mock_product.NewMockProductReadWriterInterface(ctrl)
+	models.SetProductReaderWriter(productRW)
+	productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
+		"TiDB": {
+			Versions: map[string]structs.ProductVersion{
+				"v5.2.2": {
+					Version: "v5.2.2",
+					Arch: map[string][]structs.ProductComponentProperty{
+						"x86_64": {
+							{
+								ID:                      "TiDB",
+								MinInstance:             1,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{},
+							},
+							{
+								ID:                      "TiKV",
+								MinInstance:             1,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{},
+							},
+							{
+								ID:                      "PD",
+								MinInstance:             1,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{1, 3, 5, 7},
+							},
+							{
+								ID:                      "TiFlash",
+								MinInstance:             0,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, nil).AnyTimes()
+
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
@@ -359,7 +400,7 @@ func TestManager_ScaleIn(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Type: "TiDB", Version: "v4.0.12"}, []*management.ClusterInstance{
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Type: "TiDB", Version: "v5.2.2", CpuArchitecture: "x86_64"}, []*management.ClusterInstance{
 			{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
 			{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
 		}, make([]*management.DBUser, 0), nil).AnyTimes()

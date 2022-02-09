@@ -18,7 +18,6 @@ package meta
 import (
 	"context"
 	"errors"
-	"fmt"
 	errors2 "github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/models/platform/config"

@@ -336,7 +336,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			detail, ok = products[productID]
 			if !ok {
 				products[productID] = structs.ProductDetail{ID: productID, Name: productName, Versions: make(map[string]structs.ProductVersion)}
-				detail, _ = products[productID]
+				detail = products[productID]
 			}
 
 			//Query whether the product version information is already in Versions,
@@ -344,7 +344,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			productVersion, ok = detail.Versions[version]
 			if !ok {
 				detail.Versions[version] = structs.ProductVersion{Version: version, Arch: make(map[string][]structs.ProductComponentProperty)}
-				productVersion, _ = detail.Versions[version]
+				productVersion = detail.Versions[version]
 			}
 
 			//Query whether the product arch information is already in archs,
@@ -358,7 +358,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			//if it already exists, then directly modify the relevant data structure
 
 			componentExisted := false
-			for i, _ := range components {
+			for i := range components {
 				if components[i].ID == info.ID {
 					componentExisted = true
 					zoneExisted := false

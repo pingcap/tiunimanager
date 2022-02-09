@@ -703,15 +703,7 @@ func (m *Manager) startAsyncOperation(ctx context.Context, id, home, tiUPArgs st
 		updateStatus(ctx, id, "operation processing", Processing, time.Time{})
 
 		err := cmd.Wait()
-		if err != nil {
-			if exitErr, ok := err.(*exec.ExitError); ok {
-				if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
-					if status.ExitStatus() == 0 {
-						updateStatus(ctx, id, "operation finished", Finished, t0)
-						return
-					}
-				}
-			}
+		if err != nil && !m.ExitStatusZero(err) {
 			updateStatus(ctx, id, fmt.Sprintf("operation failed with err: %+v, errstr: %s", err, stderr.String()), Error, t0)
 			return
 		}
@@ -719,6 +711,15 @@ func (m *Manager) startAsyncOperation(ctx context.Context, id, home, tiUPArgs st
 		updateStatus(ctx, id, "operation finished", Finished, t0)
 		return
 	}()
+}
+
+func (m *Manager) ExitStatusZero(err error) bool {
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
+			return status.ExitStatus() == 0
+		}
+	}
+	return false
 }
 
 func (m *Manager) startSyncOperation(home, tiUPArgs string, timeoutS int) (result string, err error) {

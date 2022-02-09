@@ -26,6 +26,10 @@ package deployment
 
 import (
 	"context"
+	"errors"
+	asserts "github.com/stretchr/testify/assert"
+	"os"
+	"os/exec"
 	"testing"
 )
 
@@ -226,6 +230,27 @@ func TestManager_startAsyncOperation(t *testing.T) {
 			TiUPBinPath: "ls",
 		}
 		m.startAsyncOperation(context.TODO(), "", "", "-lh", 1)
+	})
+}
+
+func TestManager_ExitStatusZero(t *testing.T) {
+	t.Run("zero", func(t *testing.T) {
+		m := &Manager{
+			TiUPBinPath: "mock_tiup",
+		}
+		err := exec.ExitError{
+			&os.ProcessState{},
+			[]byte{},
+		}
+		asserts.True(t, m.ExitStatusZero(&err))
+	})
+
+	t.Run("nonzero", func(t *testing.T) {
+		m := &Manager{
+			TiUPBinPath: "mock_tiup",
+		}
+		err := errors.New("")
+		asserts.False(t, m.ExitStatusZero(err))
 	})
 }
 

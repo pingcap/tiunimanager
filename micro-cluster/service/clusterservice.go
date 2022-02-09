@@ -134,7 +134,7 @@ func handleResponse(ctx context.Context, resp *clusterservices.RpcResponse, err 
 // @Parameter resp
 func handlePanic(ctx context.Context, funcName string, resp *clusterservices.RpcResponse) {
 	if r := recover(); r != nil {
-		framework.LogWithContext(ctx).Errorf("recover from %s, stacktrace:%s", funcName, string(debug.Stack()))
+		framework.LogWithContext(ctx).Errorf("recover from %s, stacktrace %s", funcName, string(debug.Stack()))
 		resp.Code = int32(errors.TIEM_PANIC)
 		resp.Message = fmt.Sprintf("%v", r)
 	}

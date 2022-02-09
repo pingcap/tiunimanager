@@ -124,6 +124,7 @@ func init() {
 		newDestroyCmd(),
 		newPullCmd(),
 		newPushCmd(),
+		backupCmd(),
 	)
 }
 

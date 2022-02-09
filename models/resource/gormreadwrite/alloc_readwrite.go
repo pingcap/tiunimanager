@@ -54,6 +54,7 @@ func (rw *GormResourceReadWrite) AllocResources2(ctx context.Context, allocReq *
 		Where("vendor = ?", allocReq.Vendor).
 		Where("pool = ?", allocReq.PoolType).
 		Where("traits & ? = ?", allocReq.ProductType, allocReq.ProductType).
+		Order("az").Order("rack").Order("cpu_cores").Order("memory").
 		Count(&total).Find(&hosts).Error
 	if err != nil {
 		tx.Rollback()
@@ -119,9 +120,65 @@ func (rw *GormResourceReadWrite) allocForEachRequirement(ctx context.Context, tx
 		log.Errorln(errMsg)
 		return nil, errors.NewError(errors.TIEM_RESOURCE_ALLOCATE_ERROR, errMsg)
 	}
-	count := require.Count
-	require.Strategy
+	count := 0
+	var resources []*Resource
+	for count < int(require.Count) {
+		found := false
+		for _, rack := range racks {
+			hosts, ok := rack2hosts[rack]
+			if !ok {
+				errMsg := fmt.Sprintf("no hosts under rack (%s)", rack)
+				log.Errorln(errMsg)
+				return nil, errors.NewError(errors.TIEM_RESOURCE_ALLOCATE_ERROR, errMsg)
+			}
+			for i := range hosts {
+				if meetRequire(require, hosts[i]) {
+					found = true
+					resource := updateHost(ctx, tx, require, hosts[i])
+					resources = append(resources, resource)
+					break
+				}
+			}
+		}
+		if !found {
+			break
+		}
+	}
+	if count < int(require.Count) {
+		errMsg := fmt.Sprintf("no enough resource to meet require %v", *require)
+		log.Errorln(errMsg)
+		return nil, errors.NewError(errors.TIEM_RESOURCE_ALLOCATE_ERROR, errMsg)
+	}
 
+	// 2. Choose Ports in Hosts
+	for _, resource := range resources {
+		var usedPorts []int32
+		tx.Order("port").Model(&mm.UsedPort{}).Select("port").Where("host_id = ?", resource.HostId).Scan(&usedPorts)
+		for _, portReq := range require.Require.PortReq {
+			res, err := rw.getPortsInRange(usedPorts, portReq.Start, portReq.End, int(portReq.PortCnt))
+			if err != nil {
+				return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_PORT, "host %s(%s) has no enough ports on range [%d, %d]", resource.HostId, resource.Ip, portReq.Start, portReq.End)
+			}
+			resource.portRes = append(resource.portRes, res)
+		}
+	}
+
+	// 3. Mark Resources in used
+	err = rw.markResourcesForUsed(tx, applicant, resources, exclusive)
+	if err != nil {
+		return nil, err
+	}
+
+	// 4. make Results and Complete one Requirement
+	for _, resource := range resources {
+		result, err := resource.toCompute()
+		if err != nil {
+			return nil, err
+		}
+		result.Reqseq = int32(seq)
+		results = append(results, *result)
+	}
+	return
 }
 
 func (rw *GormResourceReadWrite) buildHierarchy(hosts []rp.Host) (rack2hosts map[string][]*rp.Host, zone2racks map[string][]string, region2zones map[string][]string, err error) {

@@ -70,8 +70,8 @@ var modifyParametersDefine = workflow.WorkFlowDefine{
 	FlowName: constants.FlowModifyParameters,
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":          {"validationParameter", "validationDone", "fail", workflow.SyncFuncNode, validationParameter},
-		"validationDone": {"modifyParameter", "modifyDone", "fail", workflow.SyncFuncNode, modifyParameters},
-		"modifyDone":     {"refreshParameter", "refreshDone", "fail", workflow.SyncFuncNode, refreshParameter},
+		"validationDone": {"modifyParameter", "modifyDone", "fail", workflow.PollingNode, modifyParameters},
+		"modifyDone":     {"refreshParameter", "refreshDone", "fail", workflow.PollingNode, refreshParameter},
 		"refreshDone":    {"persistParameter", "persistDone", "fail", workflow.SyncFuncNode, persistParameter},
 		"persistDone":    {"end", "", "", workflow.SyncFuncNode, defaultEnd},
 		"fail":           {"end", "", "", workflow.SyncFuncNode, defaultEnd},

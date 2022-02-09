@@ -30,7 +30,18 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
-	"time"
+
+	"github.com/pingcap-inc/tiem/util/api/cdc"
+
+	"github.com/pingcap-inc/tiem/util/api/pd"
+
+	"github.com/pingcap-inc/tiem/util/api/tikv"
+
+	"github.com/pingcap-inc/tiem/message/cluster"
+
+	tidbApi "github.com/pingcap-inc/tiem/util/api/tidb/http"
+
+	"github.com/pingcap-inc/tiem/util/api/tidb/sql"
 
 	"github.com/pingcap-inc/tiem/common/errors"
 
@@ -42,7 +53,6 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 
 	"github.com/pingcap-inc/tiem/library/framework"
-	secondparty2 "github.com/pingcap-inc/tiem/models/workflow/secondparty"
 
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	spec2 "github.com/pingcap-inc/tiem/library/spec"
@@ -195,6 +205,9 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 	applyParameter := ctx.GetData(contextHasApplyParameter)
 	framework.LogWithContext(ctx).Debugf("modify parameter get apply parameter: %v", applyParameter)
 
+	// Define variables to determine if polling for results is required
+	hasPolling := false
+
 	// grouping by parameter source
 	paramContainer := make(map[interface{}][]*ModifyClusterParameterInfo)
 	for i, param := range modifyParam.Params {
@@ -238,12 +251,21 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		framework.LogWithContext(ctx).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.ClusterValue)
 		// condition UpdateSource values is 2, then insert tiup and sql respectively
 		if param.UpdateSource == int(TiupAndSql) {
+			hasPolling = true
 			putParameterContainer(paramContainer, int(TiUP), param)
 			putParameterContainer(paramContainer, int(SQL), param)
 		} else {
+			if param.UpdateSource == int(TiUP) {
+				hasPolling = true
+			}
 			putParameterContainer(paramContainer, param.UpdateSource, param)
 		}
 		node.Record(fmt.Sprintf("modify parameter `%s` in %s to %s; ", DisplayFullParameterName(param.Category, param.Name), param.InstanceType, param.RealValue.ClusterValue))
+	}
+
+	// If polling is not needed, call node.Success() to terminate workflow polling
+	if !hasPolling {
+		node.Success()
 	}
 
 	for source, params := range paramContainer {
@@ -263,7 +285,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 			}
 		}
 	}
-	node.Record("modify parameters ")
+	node.Record("modify parameters")
 	return nil
 }
 
@@ -276,14 +298,14 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 	framework.LogWithContext(ctx).Info("begin sql edit config executor method")
 	defer framework.LogWithContext(ctx).Info("end sql edit config executor method")
 
-	configs := make([]secondparty.ClusterComponentConfig, len(params))
+	configs := make([]sql.ClusterComponentConfig, len(params))
 	for i, param := range params {
 		configKey := param.Name
 		// set config key from system variable
 		if param.SystemVariable != "" {
 			configKey = param.SystemVariable
 		}
-		configs[i] = secondparty.ClusterComponentConfig{
+		configs[i] = sql.ClusterComponentConfig{
 			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.InstanceType)),
 			ConfigKey:            configKey,
 			ConfigValue:          param.RealValue.ClusterValue,
@@ -309,8 +331,8 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 		return fmt.Errorf("get cluster user name from meta failed, empty address")
 	}
 
-	req := secondparty.ClusterEditConfigReq{
-		DbConnParameter: secondparty.DbConnParam{
+	req := sql.ClusterEditConfigReq{
+		DbConnParameter: sql.DbConnParam{
 			Username: tidbUserInfo.Name,
 			Password: string(tidbUserInfo.Password),
 			IP:       tidbServer.IP,
@@ -318,7 +340,7 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 		},
 		ComponentConfigs: configs,
 	}
-	err = secondparty.Manager.EditClusterConfig(ctx, req, node.ID)
+	err = sql.SqlService.EditClusterConfig(ctx, req, node.ID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call secondparty sql edit cluster config err = %s", err.Error())
 		return err
@@ -358,8 +380,6 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 			}
 			clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
 
-			// Get the instance host and port of the component based on the topology
-			servers := make(map[string]uint)
 			switch comp.(string) {
 			case string(constants.ComponentIDTiDB):
 				tidbServers := clusterMeta.GetClusterStatusAddress()
@@ -368,7 +388,17 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 					return fmt.Errorf("get tidb status address from meta failed, empty address")
 				}
 				for _, server := range tidbServers {
-					servers[server.IP] = uint(server.Port)
+					// api edit config
+					hasSuc, err := tidbApi.ApiService.ApiEditConfig(ctx, cluster.ApiEditConfigReq{
+						InstanceHost: server.IP,
+						InstancePort: uint(server.Port),
+						Headers:      map[string]string{},
+						ConfigMap:    cm,
+					})
+					if err != nil || !hasSuc {
+						framework.LogWithContext(ctx).Errorf("call secondparty api edit config is %v, err = %s", hasSuc, err)
+						return err
+					}
 				}
 			case string(constants.ComponentIDTiKV):
 				tikvServers := clusterMeta.GetTiKVStatusAddress()
@@ -377,7 +407,17 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 					return fmt.Errorf("get tikv address from meta failed, empty address")
 				}
 				for _, server := range tikvServers {
-					servers[server.IP] = uint(server.Port)
+					// api edit config
+					hasSuc, err := tikv.ApiService.ApiEditConfig(ctx, cluster.ApiEditConfigReq{
+						InstanceHost: server.IP,
+						InstancePort: uint(server.Port),
+						Headers:      map[string]string{},
+						ConfigMap:    cm,
+					})
+					if err != nil || !hasSuc {
+						framework.LogWithContext(ctx).Errorf("call secondparty api edit config is %v, err = %s", hasSuc, err)
+						return err
+					}
 				}
 			case string(constants.ComponentIDPD):
 				pdServers := clusterMeta.GetPDClientAddresses()
@@ -386,7 +426,17 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 					return fmt.Errorf("get pd address from meta failed, empty address")
 				}
 				server := pdServers[rand.Intn(len(pdServers))]
-				servers[server.IP] = uint(server.Port)
+				// api edit config
+				hasSuc, err := pd.ApiService.ApiEditConfig(ctx, cluster.ApiEditConfigReq{
+					InstanceHost: server.IP,
+					InstancePort: uint(server.Port),
+					Headers:      map[string]string{},
+					ConfigMap:    cm,
+				})
+				if err != nil || !hasSuc {
+					framework.LogWithContext(ctx).Errorf("call secondparty api edit config is %v, err = %s", hasSuc, err)
+					return err
+				}
 			case string(constants.ComponentIDCDC):
 				cdcServers := clusterMeta.GetCDCClientAddresses()
 				if len(cdcServers) == 0 {
@@ -394,22 +444,19 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 					return fmt.Errorf("get cdc address from meta failed, empty address")
 				}
 				server := cdcServers[rand.Intn(len(cdcServers))]
-				servers[server.IP] = uint(server.Port)
-			default:
-				return fmt.Errorf(fmt.Sprintf("Component [%s] type modification is not supported", comp.(string)))
-			}
-			for host, port := range servers {
-				hasSuc, err := secondparty.Manager.ApiEditConfig(ctx, secondparty.ApiEditConfigReq{
-					TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(comp.(string))),
-					InstanceHost:         host,
-					InstancePort:         port,
-					Headers:              map[string]string{},
-					ConfigMap:            cm,
+				// api edit config
+				hasSuc, err := cdc.ApiService.ApiEditConfig(ctx, cluster.ApiEditConfigReq{
+					InstanceHost: server.IP,
+					InstancePort: uint(server.Port),
+					Headers:      map[string]string{},
+					ConfigMap:    cm,
 				})
 				if err != nil || !hasSuc {
 					framework.LogWithContext(ctx).Errorf("call secondparty api edit config is %v, err = %s", hasSuc, err)
 					return err
 				}
+			default:
+				return fmt.Errorf(fmt.Sprintf("Component [%s] type modification is not supported", comp.(string)))
 			}
 		}
 	}
@@ -456,8 +503,7 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 		return err
 	}
 	framework.LogWithContext(ctx).Infof("got editConfigId: %v", editConfigId)
-	// loop get tiup exec status
-	return getTaskStatusByTaskId(ctx, node)
+	return nil
 }
 
 // convertRealParameterType
@@ -559,45 +605,9 @@ func refreshParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 			return err
 		}
 		framework.LogWithContext(ctx).Infof("got reloadId: %v", reloadId)
-
-		// loop get tiup exec status
-		return getTaskStatusByTaskId(ctx, node)
+	} else {
+		node.Success()
 	}
 	node.Record(fmt.Sprintf("refresh cluster %s parameters ", clusterMeta.Cluster.ID))
-	return nil
-}
-
-// getTaskStatusByTaskId
-// @Description: get task status by id
-// @Parameter ctx
-// @Parameter node
-// @return error
-func getTaskStatusByTaskId(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode) error {
-	framework.LogWithContext(ctx).Info("begin get task status")
-	defer framework.LogWithContext(ctx).Info("end get task status")
-
-	ticker := time.NewTicker(3 * time.Second)
-	sequence := 0
-	for range ticker.C {
-		if sequence += 1; sequence > 200 {
-			return errors.NewErrorf(errors.TIEM_TASK_POLLING_TIME_OUT, errors.TIEM_TASK_POLLING_TIME_OUT.Explain())
-		}
-		framework.LogWithContext(ctx).Infof("polling node waiting, nodeId %s, nodeName %s", node.ID, node.Name)
-
-		resp, err := secondparty.Manager.GetOperationStatusByWorkFlowNodeID(ctx, node.ID)
-		if err != nil {
-			framework.LogWithContext(ctx).Error(err)
-			node.Fail(errors.NewErrorf(errors.TIEM_TASK_FAILED, errors.TIEM_TASK_FAILED.Explain()))
-			return errors.NewErrorf(errors.TIEM_TASK_FAILED, errors.TIEM_TASK_FAILED.Explain(), err)
-		}
-		if resp.Status == secondparty2.OperationStatus_Error {
-			node.Fail(errors.NewErrorf(errors.TIEM_TASK_FAILED, resp.ErrorStr))
-			return errors.NewErrorf(errors.TIEM_TASK_FAILED, resp.ErrorStr)
-		}
-		if resp.Status == secondparty2.OperationStatus_Finished {
-			node.Success(resp.Result)
-			break
-		}
-	}
 	return nil
 }

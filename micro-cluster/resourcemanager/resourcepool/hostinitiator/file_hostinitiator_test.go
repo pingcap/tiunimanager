@@ -24,6 +24,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/framework"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
@@ -95,6 +96,7 @@ func Test_Verify_ignoreWarings(t *testing.T) {
 	defer ctrl.Finish()
 	mockSec := mock_deployment.NewMockInterface(ctrl)
 	mockSec.EXPECT().CheckConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
+	deployment.M = mockSec
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetDeploymentServ(mockSec)
@@ -126,6 +128,7 @@ func Test_Verify_Warings(t *testing.T) {
 	defer ctrl.Finish()
 	mockSec := mock_deployment.NewMockInterface(ctrl)
 	mockSec.EXPECT().CheckConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
+	deployment.M = mockSec
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetDeploymentServ(mockSec)
@@ -149,6 +152,7 @@ func Test_Prepare_NoError(t *testing.T) {
 	defer ctrl.Finish()
 	mockSec := mock_deployment.NewMockInterface(ctrl)
 	mockSec.EXPECT().CheckConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
+	deployment.M = mockSec
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetDeploymentServ(mockSec)
@@ -168,6 +172,7 @@ func Test_Prepare_ConnectError(t *testing.T) {
 	defer ctrl.Finish()
 	mockSec := mock_deployment.NewMockInterface(ctrl)
 	mockSec.EXPECT().CheckConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
+	deployment.M = mockSec
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetDeploymentServ(mockSec)
@@ -315,11 +320,12 @@ func Test_JoinEMCluster(t *testing.T) {
 	defer ctrl.Finish()
 	mockSec := mock_deployment.NewMockInterface(ctrl)
 	mockSec.EXPECT().ScaleOut(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
+	deployment.M = mockSec
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetDeploymentServ(mockSec)
 
-	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowNodeIDKey, "fake-node-id")
+	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowIDKey, "fake-node-id")
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
 	_, err := fileInitiator.JoinEMCluster(ctx, []structs.HostInfo{{Arch: "X86_64", IP: "192.168.177.180"}})
 	assert.Nil(t, err)
@@ -330,11 +336,12 @@ func Test_LeaveEMCluster(t *testing.T) {
 	defer ctrl.Finish()
 	mockSec := mock_deployment.NewMockInterface(ctrl)
 	mockSec.EXPECT().ScaleIn(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
+	deployment.M = mockSec
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetDeploymentServ(mockSec)
 
-	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowNodeIDKey, "fake-node-id")
+	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowIDKey, "fake-node-id")
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
 	_, err := fileInitiator.LeaveEMCluster(ctx, "192.168.177.180:0")
 	assert.Nil(t, err)

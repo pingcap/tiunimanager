@@ -27,6 +27,6 @@ type HostInitiator interface {
 	Verify(ctx context.Context, h *structs.HostInfo) (err error)
 	InstallSoftware(ctx context.Context, hosts []structs.HostInfo) (err error)
 	PreCheckHostInstallFilebeat(ctx context.Context, hosts []structs.HostInfo) (installed bool, err error)
-	JoinEMCluster(ctx context.Context, hosts []structs.HostInfo) (err error)
-	LeaveEMCluster(ctx context.Context, nodeId string) (err error)
+	JoinEMCluster(ctx context.Context, hosts []structs.HostInfo) (operationID string, err error)
+	LeaveEMCluster(ctx context.Context, nodeId string) (operationID string, err error)
 }

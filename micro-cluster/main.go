@@ -19,6 +19,7 @@ package main
 import (
 	"github.com/asim/go-micro/v3"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
@@ -66,6 +67,9 @@ func initLibForDev(f *framework.BaseFramework) error {
 		TiUPBinPath: constants.TiUPBinPath,
 	}
 	secondparty.Manager.Init()
+	deployment.M = &deployment.Manager{
+		TiUPBinPath: constants.TiUPBinPath,
+	}
 	return nil
 }
 

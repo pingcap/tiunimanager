@@ -30,7 +30,7 @@ import (
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockbr"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockmanagement"
-	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
+	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty"
 	"github.com/pingcap-inc/tiem/util/api/tidb/sql"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"

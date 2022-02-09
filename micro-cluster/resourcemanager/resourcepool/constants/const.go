@@ -24,12 +24,11 @@ const (
 )
 
 const (
-	ContextResourcePoolKey   string = "resourcePool"
-	ContextHostInfoArrayKey  string = "hostInfoArray"
-	ContextHostIDArrayKey    string = "hostIDArray"
-	ContextWorkFlowNodeIDKey string = "resourceWorkFlowNodeID"
-	ContextWorkFlowIDKey     string = "resourceWorkFlowID"
-	ContextIgnoreWarnings    string = "checkHostIgnoreWarns"
+	ContextResourcePoolKey  string = "resourcePool"
+	ContextHostInfoArrayKey string = "hostInfoArray"
+	ContextHostIDArrayKey   string = "hostIDArray"
+	ContextWorkFlowIDKey    string = "resourceWorkFlowID"
+	ContextIgnoreWarnings   string = "checkHostIgnoreWarns"
 )
 
 const (

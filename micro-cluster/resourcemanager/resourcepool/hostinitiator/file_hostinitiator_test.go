@@ -25,6 +25,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
+	secondparty "github.com/pingcap-inc/tiem/library/secondparty"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	mock_secp "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
 	mock_ssh "github.com/pingcap-inc/tiem/test/mockutil/mocksshclientexecutor"
@@ -250,6 +251,64 @@ func Test_InstallSoftware(t *testing.T) {
 	fileInitiator.SetSSHClient(mockClient)
 	err := fileInitiator.InstallSoftware(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "192.168.177.180"}})
 	assert.Nil(t, err)
+}
+
+func Test_PreCheckHostInstallFilebeat(t *testing.T) {
+	jsonStr := `
+	{
+		"cluster_meta": {
+		  "cluster_type": "tiem",
+		  "cluster_name": "tiem-test",
+		  "cluster_version": "v1.0.0-beta.7",
+		  "deploy_user": "tiem",
+		  "ssh_type": "builtin"
+		},
+		"instances": [
+		  {
+			"id": "172.16.6.252:4112",
+			"role": "alertmanager",
+			"host": "172.16.6.252",
+			"ports": "4112/4113",
+			"os_arch": "linux/x86_64",
+			"status": "Up",
+			"since": "-",
+			"data_dir": "/tiem-data/alertmanager-4112",
+			"deploy_dir": "/tiem-deploy/alertmanager-4112",
+			"ComponentName": "alertmanager",
+			"Port": 4112
+		  },
+		  {
+			"id": "172.16.6.252:0",
+			"role": "filebeat",
+			"host": "172.16.6.252",
+			"ports": "",
+			"os_arch": "linux/x86_64",
+			"status": "Up",
+			"since": "-",
+			"data_dir": "/tiem-data/filebeat-0",
+			"deploy_dir": "/tiem-deploy/filebeat-0",
+			"ComponentName": "filebeat",
+			"Port": 0
+		  }
+		]
+	}
+	`
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockSec := mock_secp.NewMockSecondPartyService(ctrl)
+	mockSec.EXPECT().ClusterDisplay(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&secondparty.CmdDisplayResp{DisplayRespString: jsonStr}, nil).Times(2)
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
+
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSecondPartyServ(mockSec)
+
+	installed, err := fileInitiator.PreCheckHostInstallFilebeat(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "172.16.6.252"}})
+	assert.Nil(t, err)
+	assert.True(t, installed)
+
+	installed, err = fileInitiator.PreCheckHostInstallFilebeat(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "172.16.6.253"}})
+	assert.Nil(t, err)
+	assert.False(t, installed)
 }
 
 func Test_JoinEMCluster(t *testing.T) {

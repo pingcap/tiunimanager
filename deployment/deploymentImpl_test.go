@@ -200,6 +200,13 @@ func TestManager_ExtractCheckResult(t *testing.T) {
 	}
 }
 
+func TestManager_Prune(t *testing.T) {
+	_, err := manager.Prune(context.TODO(), TiUPComponentTypeCluster, TestClusterID, testTiUPHome, TestWorkFlowID, []string{}, 360)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func TestManager_GetStatus(t *testing.T) {
 	_, err := manager.GetStatus(context.TODO(), "")
 	if err == nil {

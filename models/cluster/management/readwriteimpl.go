@@ -83,7 +83,7 @@ func (g *ClusterReadWrite) Get(ctx context.Context, clusterID string) (*Cluster,
 	err := g.DB(ctx).First(cluster, "id = ?", clusterID).Error
 
 	if err != nil {
-		errInfo := fmt.Sprintf("get cluster failed : clusterID = %s", clusterID)
+		errInfo := fmt.Sprintf("get cluster failed : clusterID = %s, err = %s", clusterID, err.Error())
 		framework.LogWithContext(ctx).Error(errInfo)
 
 		return nil, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, errInfo, err)

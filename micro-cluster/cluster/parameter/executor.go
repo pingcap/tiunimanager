@@ -27,6 +27,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/deployment"
+	"gopkg.in/yaml.v2"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -58,6 +60,7 @@ import (
 	spec2 "github.com/pingcap-inc/tiem/library/spec"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
+	tiupSpec "github.com/pingcap/tiup/pkg/cluster/spec"
 )
 
 // asyncMaintenance
@@ -490,20 +493,86 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 		}
 	}
 	framework.LogWithContext(ctx).Debugf("modify global component configs: %v", configs)
-	req := secondparty.CmdEditGlobalConfigReq{
-		TiUPComponent:          secondparty.ClusterComponentTypeStr,
-		InstanceName:           clusterMeta.Cluster.ID,
-		GlobalComponentConfigs: configs,
-		TimeoutS:               0,
-		Flags:                  []string{},
+
+	yamlConfig, err := generateNewYamlConfig(ctx, clusterMeta.Cluster.ID, configs)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("generate new yaml config err = %s", err.Error())
+		return err
 	}
-	editConfigId, err := secondparty.Manager.ClusterEditGlobalConfig(ctx, req, node.ID)
+	editConfigId, err := deployment.M.EditConfig(ctx, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID,
+		yamlConfig, "/home/tiem/.tiup", node.ParentID, []string{}, 0)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call secondparty tiup edit global config err = %s", err.Error())
 		return err
 	}
 	framework.LogWithContext(ctx).Infof("got editConfigId: %v", editConfigId)
+	node.OperationID = editConfigId
 	return nil
+}
+
+func generateNewYamlConfig(ctx context.Context, clusterID string, configs []secondparty.GlobalComponentConfig) (string, error) {
+	topoStr, err := deployment.M.ShowConfig(ctx, deployment.TiUPComponentTypeCluster, clusterID, "/home/tiem/.tiup", []string{}, meta.DefaultTiupTimeOut)
+	if err != nil {
+		return "", err
+	}
+	topo := &tiupSpec.Specification{}
+	if err = yaml.UnmarshalStrict([]byte(topoStr), topo); err != nil {
+		framework.LogWithContext(ctx).Errorf("parse original config(%s) error: %+v", topoStr, err)
+		return "", err
+	}
+
+	var componentServerConfigs map[string]interface{}
+
+	for _, globalComponentConfig := range configs {
+		switch globalComponentConfig.TiDBClusterComponent {
+		case spec2.TiDBClusterComponent_TiDB:
+			componentServerConfigs = topo.ServerConfigs.TiDB
+		case spec2.TiDBClusterComponent_TiKV:
+			componentServerConfigs = topo.ServerConfigs.TiKV
+		case spec2.TiDBClusterComponent_PD:
+			componentServerConfigs = topo.ServerConfigs.PD
+		case spec2.TiDBClusterComponent_TiFlash:
+			componentServerConfigs = topo.ServerConfigs.TiFlash
+		case spec2.TiDBClusterComponent_TiFlashLearner:
+			componentServerConfigs = topo.ServerConfigs.TiFlashLearner
+		case spec2.TiDBClusterComponent_Pump:
+			componentServerConfigs = topo.ServerConfigs.Pump
+		case spec2.TiDBClusterComponent_Drainer:
+			componentServerConfigs = topo.ServerConfigs.Drainer
+		case spec2.TiDBClusterComponent_CDC:
+			componentServerConfigs = topo.ServerConfigs.CDC
+		}
+		if componentServerConfigs == nil {
+			componentServerConfigs = make(map[string]interface{})
+		}
+		for k, v := range globalComponentConfig.ConfigMap {
+			componentServerConfigs[k] = v
+		}
+		switch globalComponentConfig.TiDBClusterComponent {
+		case spec2.TiDBClusterComponent_TiDB:
+			topo.ServerConfigs.TiDB = componentServerConfigs
+		case spec2.TiDBClusterComponent_TiKV:
+			topo.ServerConfigs.TiKV = componentServerConfigs
+		case spec2.TiDBClusterComponent_PD:
+			topo.ServerConfigs.PD = componentServerConfigs
+		case spec2.TiDBClusterComponent_TiFlash:
+			topo.ServerConfigs.TiFlash = componentServerConfigs
+		case spec2.TiDBClusterComponent_TiFlashLearner:
+			topo.ServerConfigs.TiFlashLearner = componentServerConfigs
+		case spec2.TiDBClusterComponent_Pump:
+			topo.ServerConfigs.Pump = componentServerConfigs
+		case spec2.TiDBClusterComponent_Drainer:
+			topo.ServerConfigs.Drainer = componentServerConfigs
+		case spec2.TiDBClusterComponent_CDC:
+			topo.ServerConfigs.CDC = componentServerConfigs
+		}
+	}
+
+	newData, err := yaml.Marshal(topo)
+	if err != nil {
+		return "", err
+	}
+	return string(newData), nil
 }
 
 // convertRealParameterType
@@ -593,18 +662,13 @@ func refreshParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 			flags = append(flags, strings.Join(modifyParam.Nodes, ","))
 		}
 
-		req := secondparty.CmdReloadConfigReq{
-			TiUPComponent: secondparty.ClusterComponentTypeStr,
-			InstanceName:  clusterMeta.Cluster.ID,
-			TimeoutS:      0,
-			Flags:         flags,
-		}
-		reloadId, err := secondparty.Manager.ClusterReload(ctx, req, node.ID)
+		reloadId, err := deployment.M.Reload(ctx, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID, "/home/tiem/.tiup", node.ParentID, flags, 0)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("call tiup api edit global config err = %s", err.Error())
 			return err
 		}
 		framework.LogWithContext(ctx).Infof("got reloadId: %v", reloadId)
+		node.OperationID = reloadId
 	} else {
 		node.Success()
 	}

@@ -135,8 +135,8 @@ func Test_JoinEMCluster_Normal(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockInitiator := mock_initiator.NewMockHostInitiator(ctrl)
-	mockInitiator.EXPECT().JoinEMCluster(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []structs.HostInfo) error {
-		return nil
+	mockInitiator.EXPECT().JoinEMCluster(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []structs.HostInfo) (operationID string, err error) {
+		return "", nil
 	})
 	mockInitiator.EXPECT().PreCheckHostInstallFilebeat(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []structs.HostInfo) (bool, error) {
 		return false, nil
@@ -310,13 +310,13 @@ func Test_LeaveEMCluster_Normal(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockInitiator := mock_initiator.NewMockHostInitiator(ctrl)
-	mockInitiator.EXPECT().LeaveEMCluster(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, nodeId string) error {
+	mockInitiator.EXPECT().LeaveEMCluster(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, nodeId string) (operationID string, err error) {
 		assert.Equal(t, "192.168.192.192:0", nodeId)
 		var workFlowId string
-		workFlowId, ok := ctx.Value(rp_consts.ContextWorkFlowNodeIDKey).(string)
+		workFlowId, ok := ctx.Value(rp_consts.ContextWorkFlowIDKey).(string)
 		assert.True(t, ok)
 		assert.Equal(t, "Fake-NodeID-1", workFlowId)
-		return nil
+		return "", nil
 	})
 	mockInitiator.EXPECT().PreCheckHostInstallFilebeat(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []structs.HostInfo) (bool, error) {
 		return true, nil

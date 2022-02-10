@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Copyright (c)  2022 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
  * you may not use this file except in compliance with the License.           *
  * You may obtain a copy of the License at                                    *
@@ -14,44 +14,50 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: lib_tiup_v2
+ * @File: lib_tiup_test
  * @Description:
  * @Author: shenhaibo@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/8
+ * @Date: 2022/2/9
 *******************************************************************************/
 
 package secondparty
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"errors"
+	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/tiup"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mocktiupconfig"
+	asserts "github.com/stretchr/testify/assert"
+	"testing"
 )
 
-type TiUPComponentTypeStr string
+func TestGetTiUPHomeForComponent(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
 
-const (
-	ClusterComponentTypeStr TiUPComponentTypeStr = "cluster"
-	DMComponentTypeStr      TiUPComponentTypeStr = "dm"
-	TiEMComponentTypeStr    TiUPComponentTypeStr = "tiem"
-	CTLComponentTypeStr     TiUPComponentTypeStr = "ctl"
-	DefaultComponentTypeStr TiUPComponentTypeStr = "default"
-)
+		tiupRW := mocktiupconfig.NewMockReaderWriter(ctrl)
+		models.SetTiUPConfigReaderWriter(tiupRW)
+		tiupRW.EXPECT().QueryByComponentType(gomock.Any(), gomock.Any()).Return(&tiup.TiupConfig{TiupHome: "testdata"}, nil).AnyTimes()
 
-func GetTiUPHomeForComponent(ctx context.Context, tiUPComponent TiUPComponentTypeStr) string {
-	var component string
-	switch tiUPComponent {
-	case TiEMComponentTypeStr:
-		component = string(TiEMComponentTypeStr)
-	default:
-		component = string(DefaultComponentTypeStr)
-	}
-	tiUPConfig, err := models.GetTiUPConfigReaderWriter().QueryByComponentType(context.Background(), component)
-	if err != nil {
-		framework.LogWithContext(ctx).Warnf("fail get tiup_home for %s: %s", component, err.Error())
-		return ""
-	} else {
-		return tiUPConfig.TiupHome
-	}
+		result := GetTiUPHomeForComponent(context.TODO(), TiEMComponentTypeStr)
+		asserts.Equal(t, "testdata", result)
+		result = GetTiUPHomeForComponent(context.TODO(), ClusterComponentTypeStr)
+		asserts.Equal(t, "testdata", result)
+	})
+
+	t.Run("fail", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		tiupRW := mocktiupconfig.NewMockReaderWriter(ctrl)
+		models.SetTiUPConfigReaderWriter(tiupRW)
+		tiupRW.EXPECT().QueryByComponentType(gomock.Any(), gomock.Any()).Return(nil, errors.New("cannot get")).AnyTimes()
+
+		result := GetTiUPHomeForComponent(context.TODO(), TiEMComponentTypeStr)
+		asserts.Equal(t, "", result)
+	})
 }

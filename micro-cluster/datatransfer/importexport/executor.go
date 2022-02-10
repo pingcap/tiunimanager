@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
@@ -68,15 +68,14 @@ func importDataToCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) 
 
 	framework.LogWithContext(ctx).Infof("begin do tiup tidb-lightning -config %s/tidb-lightning.toml, timeout: %d", info.ConfigPath, lightningTimeout)
 	//tiup tidb-lightning -config tidb-lightning.toml
-	importTaskId, err := secondparty.Manager.Lightning(ctx, lightningTimeout,
-		[]string{"-config", fmt.Sprintf("%s/tidb-lightning.toml", info.ConfigPath)},
-		node.ID)
+	importTaskId, err := deployment.M.Lightning(ctx, "/home/tiem/.tiup", node.ParentID, []string{"-config", fmt.Sprintf("%s/tidb-lightning.toml", info.ConfigPath)}, lightningTimeout)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call tiup lightning api failed, %s", err.Error())
 		return fmt.Errorf("call tiup lightning api failed, %s", err.Error())
 	}
 	framework.LogWithContext(ctx).Infof("call tiupmgr tidb-lightning api success, importTaskId %s", importTaskId)
 	node.Record("import data to cluster ")
+	node.OperationID = importTaskId
 	return nil
 }
 
@@ -137,7 +136,7 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 		cmd = append(cmd, "--sql", info.Sql)
 	}
 	framework.LogWithContext(ctx).Infof("call tiupmgr dumpling api, cmd: %v, timeout: %d", cmd, dumplingTimeout)
-	exportTaskId, err := secondparty.Manager.Dumpling(ctx, dumplingTimeout, cmd, node.ID)
+	exportTaskId, err := deployment.M.Dumpling(ctx, "/home/tiem/.tiup", node.ParentID, cmd, dumplingTimeout)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call tiup dumpling api failed, %s", err.Error())
 		return fmt.Errorf("call tiup dumpling api failed, %s", err.Error())
@@ -146,6 +145,7 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	framework.LogWithContext(ctx).Infof("call tiupmgr succee, exportTaskId: %s", exportTaskId)
 	node.Record(fmt.Sprintf("export data from cluster %s ", meta.Cluster.ID),
 		fmt.Sprintf("host: %s, port: %d ", tidbHost, tidbPort))
+	node.OperationID = exportTaskId
 	return nil
 }
 

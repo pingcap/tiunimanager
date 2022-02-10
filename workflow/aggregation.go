@@ -19,16 +19,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"runtime/debug"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/models"
 	dbModel "github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/workflow"
-	secondpartyModel "github.com/pingcap-inc/tiem/models/workflow/secondparty"
-	"time"
 )
 
 // WorkFlowAggregation workflow aggregation with workflow definition and nodes
@@ -131,7 +132,9 @@ func (flow *WorkFlowAggregation) addContext(key string, value interface{}) {
 func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) (execErr error) {
 	defer func() {
 		if r := recover(); r != nil {
-			framework.LogWithContext(flow.Context).Errorf("recover from workflow %s, node %s", flow.Flow.Name, node.Name)
+			framework.LogWithContext(flow.Context).Errorf(
+				"recover from workflow %s, node %s, stacktrace %s",
+				flow.Flow.Name, node.Name, string(debug.Stack()))
 			execErr = errors.NewErrorf(errors.TIEM_PANIC, "%v", r)
 			node.Fail(execErr)
 		}
@@ -214,22 +217,22 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 			}
 			framework.LogWithContext(flow.Context).Debugf("polling node waiting, sequence %d, nodeId %s, nodeName %s", sequence, node.ID, node.Name)
 
-			resp, err := secondparty.Manager.GetOperationStatusByWorkFlowNodeID(flow.Context, node.ID)
+			op, err := deployment.M.GetStatus(flow.Context, node.OperationID)
 			if err != nil {
-				framework.LogWithContext(flow.Context).Errorf("call secondparty GetOperationStatusByWorkFlowNodeID %s, failed %s", node.ID, err.Error())
+				framework.LogWithContext(flow.Context).Errorf("call deployment GetStatus %s, failed %s", node.OperationID, err.Error())
 				node.Fail(errors.NewError(errors.TIEM_TASK_FAILED, err.Error()))
 				flow.handleTaskError(node, nodeDefine)
 				return false
 			}
-			if resp.Status == secondpartyModel.OperationStatus_Error {
-				framework.LogWithContext(flow.Context).Errorf("call secondparty GetOperationStatusByWorkFlowNodeID %s, response error %s", node.ID, resp.ErrorStr)
-				node.Fail(errors.NewError(errors.TIEM_TASK_FAILED, resp.ErrorStr))
+			if op.Status == deployment.Error {
+				framework.LogWithContext(flow.Context).Errorf("call deployment GetStatus %s, response error %s", node.OperationID, op.ErrorStr)
+				node.Fail(errors.NewError(errors.TIEM_TASK_FAILED, op.ErrorStr))
 				flow.handleTaskError(node, nodeDefine)
 				return false
 			}
-			if resp.Status == secondpartyModel.OperationStatus_Finished {
-				if resp.Result != "" {
-					node.Success(resp.Result)
+			if op.Status == deployment.Finished {
+				if op.Result != "" {
+					node.Success(op.Result)
 				} else {
 					node.Success(nil)
 				}

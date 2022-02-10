@@ -48,6 +48,28 @@ func GetDomainPrefixFromCode(failureDomain string) string {
 	return failureDomain[:pos]
 }
 
+//CPUInfo Information describing the CPU, which will currently be used for Telemetry
+type CPUInfo struct {
+	Num     int     `json:"num"`     //go's reported runtime.NUMCPU()
+	Sockets int     `json:"sockets"` //number of cpus reported
+	Cores   int32   `json:"cores"`   //reported cores for first cpu
+	Model   string  `json:"model"`   //reported model name e.g. `Intel(R) Core(TM) i7-7920HQ CPU @ 3.10GHz`
+	HZ      float64 `json:"hz"`      //speed of first cpu e.g. 3100
+}
+
+//MemoryInfo Information describing the Memory, which will currently be used for Telemetry
+type MemoryInfo struct {
+	Total     uint64 `json:"total"`
+	Available uint64 `json:"available"`
+}
+
+//OSInfo Information describing the OS, which will currently be used for Telemetry
+type OSInfo struct {
+	Family   string `json:"family"`
+	Platform string `json:"platform"`
+	Version  string `json:"version"`
+}
+
 type DiskInfo struct {
 	ID       string `json:"diskId"`
 	HostId   string `json:"hostId,omitempty"`
@@ -72,15 +94,16 @@ type HostInfo struct {
 	Spec         string     `json:"spec"`         // Host Spec, init while importing
 	CpuCores     int32      `json:"cpuCores"`     // Host cpu cores spec, init while importing
 	Memory       int32      `json:"memory"`       // Host memory, init while importing
-	FreeCpuCores int32      `json:"freeCpuCores"` // Unused CpuCore, used for allocation
-	FreeMemory   int32      `json:"freeMemory"`   // Unused memory size, Unit:GB, used for allocation
+	UsedCpuCores int32      `json:"usedCpuCores"` // Unused CpuCore, used for allocation
+	UsedMemory   int32      `json:"usedMemory"`   // Unused memory size, Unit:GiB, used for allocation
 	Nic          string     `json:"nic"`          // Host network type: 1GE or 10GE
+	Vendor       string     `json:"vendor"`
 	Region       string     `json:"region"`
 	AZ           string     `json:"az"`
 	Rack         string     `json:"rack"`
 	ClusterType  string     `json:"clusterType"` // What cluster is the host used for? [database/data migration]
-	Purpose      string     `json:"purpose"`     // What Purpose is the host used for? [compute/storage/general]
-	DiskType     string     `json:"diskType"`    // Disk type of this host [sata/ssd/nvme_ssd]
+	Purpose      string     `json:"purpose"`     // What Purpose is the host used for? [compute/storage/schedule]
+	DiskType     string     `json:"diskType"`    // Disk type of this host [SATA/SSD/NVMeSSD]
 	Reserved     bool       `json:"reserved"`    // Whether this host is reserved - will not be allocated
 	Traits       int64      `json:"traits"`      // Traits of labels
 	SysLabels    []string   `json:"sysLabels"`
@@ -114,7 +137,7 @@ func (h HostInfo) IsExhaust() (stat constants.HostLoadStatus, isExhaust bool) {
 			break
 		}
 	}
-	computeExaust := (h.FreeCpuCores == 0 || h.FreeMemory == 0)
+	computeExaust := (h.UsedCpuCores == h.CpuCores || h.UsedMemory == h.Memory)
 	if diskExaust && computeExaust {
 		return constants.HostLoadExhaust, true
 	} else if computeExaust {
@@ -134,14 +157,20 @@ func (h HostInfo) IsLoadless() bool {
 			break
 		}
 	}
-	return diskLoadless && h.FreeCpuCores == h.CpuCores && h.FreeMemory == h.Memory
+	return diskLoadless && h.UsedCpuCores == 0 && h.UsedMemory == 0
 }
 
 type Location struct {
-	Region string `json:"Region"`
-	Zone   string `json:"Zone"`
-	Rack   string `json:"Rack"`
-	HostIp string `json:"HostIp"`
+	Region string `json:"region" form:"region"`
+	Zone   string `json:"zone" form:"zone"`
+	Rack   string `json:"rack" form:"rack"`
+	HostIp string `json:"hostIp" form:"hostIp"`
+}
+
+type ImportCondition struct {
+	ReserveHost   bool `json:"reserved" form:"reserved"`
+	SkipHostInit  bool `json:"skipHostInit" form:"skipHostInit"`
+	IgnoreWarings bool `json:"ignoreWarnings" form:"ignoreWarnings"`
 }
 
 type HostFilter struct {
@@ -153,22 +182,23 @@ type HostFilter struct {
 }
 
 type DiskFilter struct {
-	DiskType   string `json:"DiskType"`
-	DiskStatus string `json:"DiskStatus"`
-	Capacity   int32  `json:"Capacity"`
+	DiskType   string `json:"diskType" form:"diskType"`
+	DiskStatus string `json:"diskStatus" form:"diskStatus"`
+	Capacity   int32  `json:"capacity" form:"capacity"`
 }
 
 type HierarchyTreeNode struct {
-	Code     string               `json:"Code"`
-	Name     string               `json:"Name"`
-	Prefix   string               `json:"Prefix"`
-	SubNodes []*HierarchyTreeNode `json:"SubNodes"`
+	Code     string               `json:"code"`
+	Name     string               `json:"name"`
+	Prefix   string               `json:"prefix"`
+	SubNodes []*HierarchyTreeNode `json:"subNodes"`
 }
 
 type Stocks struct {
-	FreeHostCount    int32 `json:"freeHostCount"`
-	FreeCpuCores     int32 `json:"freeCpuCores"`
-	FreeMemory       int32 `json:"freeMemory"`
-	FreeDiskCount    int32 `json:"freeDiskCount"`
-	FreeDiskCapacity int32 `json:"freeDiskCapacity"`
+	Zone             string `json:"zone"`
+	FreeHostCount    int32  `json:"freeHostCount"`
+	FreeCpuCores     int32  `json:"freeCpuCores"`
+	FreeMemory       int32  `json:"freeMemory"`
+	FreeDiskCount    int32  `json:"freeDiskCount"`
+	FreeDiskCapacity int32  `json:"freeDiskCapacity"`
 }

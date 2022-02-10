@@ -34,8 +34,6 @@ const (
 
 func (s ServiceNameEnum) ServerName() string {
 	switch s {
-	case MetaDBService:
-		return "metadb-server"
 	case ClusterService:
 		return "cluster-server"
 	case ApiService:

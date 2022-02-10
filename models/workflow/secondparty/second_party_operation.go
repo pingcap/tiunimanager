@@ -26,7 +26,7 @@ package secondparty
 import (
 	"time"
 
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 
 	"gorm.io/gorm"
 )
@@ -61,23 +61,25 @@ const (
 type OperationType string
 
 const (
-	OperationTypeClusterDeploy             OperationType = "cluster deploy"
-	OperationTypeClusterStart              OperationType = "cluster start"
-	OperationTypeClusterDestroy            OperationType = "cluster destroy"
-	OperationTypeClusterRestart            OperationType = "cluster restart"
-	OperationTypeClusterStop               OperationType = "cluster stop"
-	OperationTypeClusterUpgrade            OperationType = "cluster upgrade"
-	OperationTypeClusterScaleOut           OperationType = "cluster scale out"
-	OperationTypeClusterScaleIn            OperationType = "cluster scale in"
-	OperationTypeClusterEditGlobalConfig   OperationType = "cluster edit global config"
-	OperationTypeClusterEditInstanceConfig OperationType = "cluster edit instance config"
-	OperationTypeClusterReload             OperationType = "cluster reload"
-	OperationTypeClusterExec               OperationType = "cluster exec"
-	OperationTypeTransfer                  OperationType = "transfer"
-	OperationTypeDumpling                  OperationType = "dumpling"
-	OperationTypeLightning                 OperationType = "lightning"
-	OperationTypeBackup                    OperationType = "backup"
-	OperationTypeRestore                   OperationType = "restore"
+	OperationType_ClusterDeploy             OperationType = "cluster deploy"
+	OperationType_ClusterStart              OperationType = "cluster start"
+	OperationType_ClusterDestroy            OperationType = "cluster destroy"
+	OperationType_ClusterList               OperationType = "cluster list"
+	OperationType_ClusterRestart            OperationType = "cluster restart"
+	OperationType_ClusterStop               OperationType = "cluster stop"
+	OperationType_ClusterUpgrade            OperationType = "cluster upgrade"
+	OperationType_ClusterScaleOut           OperationType = "cluster scale out"
+	OperationType_ClusterScaleIn            OperationType = "cluster scale in"
+	OperationType_ClusterPrune              OperationType = "cluster prune"
+	OperationType_ClusterEditGlobalConfig   OperationType = "cluster edit global config"
+	OperationType_ClusterEditInstanceConfig OperationType = "cluster edit instance config"
+	OperationType_ClusterReload             OperationType = "cluster reload"
+	OperationType_ClusterExec               OperationType = "cluster exec"
+	OperationType_Transfer                  OperationType = "transfer"
+	OperationType_Dumpling                  OperationType = "dumpling"
+	OperationType_Lightning                 OperationType = "lightning"
+	OperationType_Backup                    OperationType = "backup"
+	OperationType_Restore                   OperationType = "restore"
 )
 
 const (

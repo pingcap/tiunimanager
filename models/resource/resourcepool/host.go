@@ -20,40 +20,42 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	em_errors "github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	crypto "github.com/pingcap-inc/tiem/library/thirdparty/encrypt"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
 )
 
 type Host struct {
-	ID           string `json:"hostId" gorm:"primaryKey"`
-	IP           string `json:"ip" gorm:"not null"`
-	UserName     string `json:"userName,omitempty" gorm:"size:32"`
-	Passwd       string `json:"passwd,omitempty" gorm:"size:32"`
-	HostName     string `json:"hostName" gorm:"size:255"`
-	Status       string `json:"status" gorm:"index;default:Online"` // Host Status
-	Stat         string `json:"stat" gorm:"index;default:LoadLess"` // Host Resource Stat
-	Arch         string `json:"arch" gorm:"index"`                  // x86 or arm64
-	OS           string `json:"os" gorm:"size:32"`
-	Kernel       string `json:"kernel" gorm:"size:32"`
-	Spec         string `json:"spec"`               // Host Spec, init while importing
-	CpuCores     int32  `json:"cpuCores"`           // Host cpu cores spec, init while importing
-	Memory       int32  `json:"memory"`             // Host memory, init while importing
-	FreeCpuCores int32  `json:"freeCpuCores"`       // Unused CpuCore, used for allocation
-	FreeMemory   int32  `json:"freeMemory"`         // Unused memory size, Unit:GB, used for allocation
-	Nic          string `json:"nic" gorm:"size:32"` // Host network type: 1GE or 10GE
-	Region       string `json:"region" gorm:"size:32"`
-	AZ           string `json:"az" gorm:"index"`
-	Rack         string `json:"rack" gorm:"index"`
-	ClusterType  string `json:"clusterType" gorm:"index"` // What Cluster is the host used for? [database/datamigration]
-	Purpose      string `json:"purpose" gorm:"index"`     // What Purpose is the host used for? [compute/storage/schedule]
-	DiskType     string `json:"diskType" gorm:"index"`    // Disk type of this host [sata/ssd/nvme_ssd]
-	Reserved     bool   `json:"reserved" gorm:"index"`    // Whether this host is reserved - will not be allocated
-	Traits       int64  `json:"traits" gorm:"index"`      // Traits of labels
-	Disks        []Disk `json:"disks" gorm:"-"`
+	ID           string          `json:"hostId" gorm:"primaryKey"`
+	IP           string          `json:"ip" gorm:"not null"`
+	UserName     string          `json:"userName,omitempty" gorm:"size:32"`
+	Passwd       common.Password `json:"passwd,omitempty" gorm:"size:256"`
+	HostName     string          `json:"hostName" gorm:"size:255"`
+	Status       string          `json:"status" gorm:"index;default:Online"` // Host Status
+	Stat         string          `json:"stat" gorm:"index;default:LoadLess"` // Host Resource Stat
+	Arch         string          `json:"arch" gorm:"index"`                  // x86 or arm64
+	OS           string          `json:"os" gorm:"size:32"`
+	Kernel       string          `json:"kernel" gorm:"size:32"`
+	Spec         string          `json:"spec"`               // Host Spec, init while importing
+	CpuCores     int32           `json:"cpuCores"`           // Host cpu cores spec, init while importing
+	Memory       int32           `json:"memory"`             // Host memory, init while importing
+	FreeCpuCores int32           `json:"freeCpuCores"`       // Unused CpuCore, used for allocation
+	FreeMemory   int32           `json:"freeMemory"`         // Unused memory size, Unit:GB, used for allocation
+	Nic          string          `json:"nic" gorm:"size:32"` // Host network type: 1GE or 10GE
+	Vendor       string          `json:"vendor" gorm:"size:32"`
+	Region       string          `json:"region" gorm:"size:32"`
+	AZ           string          `json:"az" gorm:"index"`
+	Rack         string          `json:"rack" gorm:"index"`
+	ClusterType  string          `json:"clusterType" gorm:"index"` // What Cluster is the host used for? [database/datamigration]
+	Purpose      string          `json:"purpose" gorm:"index"`     // What Purpose is the host used for? [compute/storage/schedule]
+	DiskType     string          `json:"diskType" gorm:"index"`    // Disk type of this host [sata/ssd/nvme_ssd]
+	Reserved     bool            `json:"reserved" gorm:"index"`    // Whether this host is reserved - will not be allocated
+	Traits       int64           `json:"traits" gorm:"index"`      // Traits of labels
+	Disks        []Disk          `json:"disks" gorm:"-"`
 	//UsedDisks    []UsedDisk     `json:"-" gorm:"-"`
 	//UsedComputes []UsedCompute  `json:"-" gorm:"-"`
 	//UsedPorts    []UsedPort     `json:"-" gorm:"-"`
@@ -80,7 +82,7 @@ func (h Host) IsLoadless() bool {
 func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
 	err = tx.Where("IP = ? and HOST_NAME = ?", h.IP, h.HostName).First(&Host{}).Error
 	if err == nil {
-		return em_errors.NewEMErrorf(em_errors.TIEM_RESOURCE_HOST_ALREADY_EXIST, "host %s(%s) is existed", h.HostName, h.IP)
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_HOST_ALREADY_EXIST, "host %s(%s) is existed", h.HostName, h.IP)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		h.ID = uuidutil.GenerateID()
@@ -95,7 +97,7 @@ func (h *Host) AfterCreate(tx *gorm.DB) (err error) {
 		disk.HostID = h.ID
 		err = tx.Create(&disk).Error
 		if err != nil {
-			return em_errors.NewEMErrorf(em_errors.TIEM_RESOURCE_CREATE_DISK_ERROR, "create disk %s for host %s(%s) failed, %v", disk.Name, h.HostName, h.IP, err)
+			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_CREATE_DISK_ERROR, "create disk %s for host %s(%s) failed, %v", disk.Name, h.HostName, h.IP, err)
 		}
 	}
 	return nil
@@ -105,11 +107,11 @@ func (h *Host) BeforeDelete(tx *gorm.DB) (err error) {
 	err = tx.Where("ID = ?", h.ID).First(h).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return em_errors.NewEMErrorf(em_errors.TIEM_RESOURCE_HOST_NOT_FOUND, "host %s is not found", h.ID)
+			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_HOST_NOT_FOUND, "host %s is not found", h.ID)
 		}
 	} else {
 		if h.IsInused() {
-			return em_errors.NewEMErrorf(em_errors.TIEM_RESOURCE_HOST_STILL_INUSED, "host %s is still in used", h.ID)
+			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_HOST_STILL_INUSED, "host %s is still in used", h.ID)
 		}
 	}
 
@@ -135,20 +137,17 @@ func (h *Host) ConstructFromHostInfo(src *structs.HostInfo) error {
 	h.HostName = src.HostName
 	h.IP = src.IP
 	h.UserName = src.UserName
-	passwd, err := crypto.AesEncryptCFB(src.Passwd)
-	if err != nil {
-		return err
-	}
-	h.Passwd = passwd
+	h.Passwd = common.Password(src.Passwd)
 	h.Arch = src.Arch
 	h.OS = src.OS
 	h.Kernel = src.Kernel
-	h.FreeCpuCores = src.FreeCpuCores
-	h.FreeMemory = src.FreeMemory
+	h.FreeCpuCores = (src.CpuCores - src.UsedCpuCores)
+	h.FreeMemory = (src.Memory - src.UsedMemory)
 	h.Spec = src.GetSpecString()
 	h.CpuCores = src.CpuCores
 	h.Memory = src.Memory
 	h.Nic = src.Nic
+	h.Vendor = src.Vendor
 	h.Region = src.Region
 	h.AZ = structs.GenDomainCodeByName(h.Region, src.AZ)
 	h.Rack = structs.GenDomainCodeByName(h.AZ, src.Rack)
@@ -178,12 +177,13 @@ func (h *Host) ToHostInfo(dst *structs.HostInfo) {
 	dst.Arch = h.Arch
 	dst.OS = h.OS
 	dst.Kernel = h.Kernel
-	dst.FreeCpuCores = h.FreeCpuCores
-	dst.FreeMemory = h.FreeMemory
+	dst.UsedCpuCores = (h.CpuCores - h.FreeCpuCores)
+	dst.UsedMemory = (h.Memory - h.FreeMemory)
 	dst.Spec = h.Spec
 	dst.CpuCores = h.CpuCores
 	dst.Memory = h.Memory
 	dst.Nic = h.Nic
+	dst.Vendor = h.Vendor
 	dst.Region = h.Region
 	dst.AZ = structs.GetDomainNameFromCode(h.AZ)
 	dst.Rack = structs.GetDomainNameFromCode(h.Rack)

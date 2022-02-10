@@ -36,6 +36,7 @@ type ParameterGroupParameterInfo struct {
 	HasApply       int      `json:"hasApply" example:"1" enums:"0,1"`
 	DefaultValue   string   `json:"defaultValue" example:"1"`
 	UpdateSource   int      `json:"updateSource" example:"0" enums:"0,1,2,3"`
+	ReadOnly       int      `json:"readOnly" example:"0" enums:"0,1"`
 	Description    string   `json:"description" example:"binlog cache size"`
 	Note           string   `json:"note" example:"binlog cache size"`
 	CreatedAt      int64    `json:"createTime" example:"1636698675"`
@@ -43,7 +44,7 @@ type ParameterGroupParameterInfo struct {
 }
 
 type ParameterGroupParameterSampleInfo struct {
-	ID           string `json:"paramId" example:"123"`
-	DefaultValue string `json:"defaultValue" example:"1"`
-	Note         string `json:"description" example:"binlog cache size"`
+	ID           string `json:"paramId" example:"123" validate:"required,min=1,max=64"`
+	DefaultValue string `json:"defaultValue" example:"1" validate:"required"`
+	Note         string `json:"note" example:"binlog cache size"`
 }

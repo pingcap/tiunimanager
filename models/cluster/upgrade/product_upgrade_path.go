@@ -26,7 +26,7 @@ package upgrade
 import (
 	"time"
 
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"gorm.io/gorm"
 )
 

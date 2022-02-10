@@ -39,6 +39,7 @@ type Parameter struct {
 	HasReboot      int       `gorm:"default:0;comment:'whether parameter updates require a restart. optional values: [0: false, 1: true]'" json:"hasReboot"`
 	HasApply       int       `gorm:"default:1;comment:'whether to apply the parameter set by default. optional values: [0: false, 1: true]'" json:"hasApply"`
 	UpdateSource   int       `gorm:"default:0;comment:'parameter update data source. optional values: [0: tiup, 1: sql, 2: tiup+sql, 3: api]'" json:"updateSource"`
+	ReadOnly       int       `gorm:"default:0;comment:'specify if the parameter is read-only. optional values: [0: false, 1: true]'" json:"readOnly"`
 	Description    string    `gorm:"comment:'parameter description information'" json:"description"`
 	CreatedAt      time.Time `gorm:"<-:create" json:"createdAt"`
 	UpdatedAt      time.Time `json:"updatedAt"`

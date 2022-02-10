@@ -19,7 +19,7 @@ const (
 	contextClusterMetaKey             string = "clusterMeta"
 	contextBackupRecordKey            string = "backupRecord"
 	contextMaintenanceStatusChangeKey string = "maintenanceStatusChange"
-	contextBackupTiupTaskIDKey        string = "backupTaskId"
+	contextBRInfoKey                  string = "brInfo"
 )
 
 const (

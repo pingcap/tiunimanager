@@ -18,7 +18,8 @@ package service
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -39,21 +40,21 @@ func (p TestErrorStruct) MarshalJSON() ([]byte, error) {
 
 func Test_handleRequest(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		req := &clusterpb.RpcRequest{
+		req := &clusterservices.RpcRequest{
 			Request: "{\n    \"name\": \"aaa\",\n    \"type\": 4\n}",
 		}
-		resp := &clusterpb.RpcResponse{}
+		resp := &clusterservices.RpcResponse{}
 		data := TestStruct{}
-		succeed := handleRequest(context.TODO(), req, resp, &data)
+		succeed := handleRequest(context.TODO(), req, resp, &data, []structs.RbacPermission{})
 		assert.True(t, succeed)
 	})
 	t.Run("unmarshal error", func(t *testing.T) {
-		req := &clusterpb.RpcRequest{
+		req := &clusterservices.RpcRequest{
 			Request: "\n    \"name\": \"aaa\",\n    \"type\": 4\n}",
 		}
-		resp := &clusterpb.RpcResponse{}
+		resp := &clusterservices.RpcResponse{}
 		data := TestStruct{}
-		succeed := handleRequest(context.TODO(), req, resp, &data)
+		succeed := handleRequest(context.TODO(), req, resp, &data, []structs.RbacPermission{})
 		assert.False(t, succeed)
 		assert.Equal(t, int32(errors.TIEM_UNMARSHAL_ERROR), resp.Code)
 	})
@@ -61,12 +62,12 @@ func Test_handleRequest(t *testing.T) {
 
 func Test_handleResponse(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		resp := &clusterpb.RpcResponse{}
+		resp := &clusterservices.RpcResponse{}
 		data := TestStruct{
 			Name: "aaa",
 			Type: 4,
 		}
-		handleResponse(context.TODO(), resp, nil, data, &clusterpb.RpcPage{
+		handleResponse(context.TODO(), resp, nil, data, &clusterservices.RpcPage{
 			Page:     4,
 			PageSize: 8,
 			Total:    32,
@@ -80,12 +81,12 @@ func Test_handleResponse(t *testing.T) {
 	})
 
 	t.Run("Error", func(t *testing.T) {
-		resp := &clusterpb.RpcResponse{}
+		resp := &clusterservices.RpcResponse{}
 		data := TestStruct{
 			Name: "aaa",
 			Type: 4,
 		}
-		handleResponse(context.TODO(), resp, errors.NewError(errors.TIEM_CLUSTER_NOT_FOUND, ""), data, &clusterpb.RpcPage{
+		handleResponse(context.TODO(), resp, errors.NewError(errors.TIEM_CLUSTER_NOT_FOUND, ""), data, &clusterservices.RpcPage{
 			Page:     4,
 			PageSize: 8,
 			Total:    32,
@@ -97,9 +98,9 @@ func Test_handleResponse(t *testing.T) {
 	})
 
 	t.Run("marshal error", func(t *testing.T) {
-		resp := &clusterpb.RpcResponse{}
+		resp := &clusterservices.RpcResponse{}
 
-		handleResponse(context.TODO(), resp, nil, TestErrorStruct{}, &clusterpb.RpcPage{
+		handleResponse(context.TODO(), resp, nil, TestErrorStruct{}, &clusterservices.RpcPage{
 			Page:     4,
 			PageSize: 8,
 			Total:    32,
@@ -113,20 +114,18 @@ func Test_handleResponse(t *testing.T) {
 
 func Test_handlePanic(t *testing.T) {
 	t.Run("succeed", func(t *testing.T) {
-		resp := &clusterpb.RpcResponse{
-		}
+		resp := &clusterservices.RpcResponse{}
 
-		func () {
+		func() {
 			defer handlePanic(context.TODO(), "create", resp)
 		}()
 		assert.Equal(t, int32(0), resp.Code)
 		assert.Empty(t, resp.Message)
 	})
 	t.Run("panic", func(t *testing.T) {
-		resp := &clusterpb.RpcResponse{
-		}
+		resp := &clusterservices.RpcResponse{}
 
-		func () {
+		func() {
 			defer handlePanic(context.TODO(), "create", resp)
 			panic("aaa")
 		}()

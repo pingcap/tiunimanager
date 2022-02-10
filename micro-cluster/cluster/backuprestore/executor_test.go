@@ -18,8 +18,9 @@ package backuprestore
 import (
 	"context"
 	"github.com/golang/mock/gomock"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
@@ -29,9 +30,11 @@ import (
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockbr"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockmanagement"
-	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
+	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty"
+	"github.com/pingcap-inc/tiem/util/api/tidb/sql"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
 )
 
@@ -53,18 +56,46 @@ func TestExecutor_backupCluster(t *testing.T) {
 
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(contextBackupRecordKey, &backuprestore.BackupRecord{
-		StorageType: "s3",
+		StorageType: "nfs",
+		FilePath:    "./testdata",
 	})
-	flowContext.SetData(contextClusterMetaKey, &handler.ClusterMeta{
+	flowContext.SetData(contextClusterMetaKey, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "cls-test",
 			},
 			Name: "cls-test",
 		},
+		Instances: map[string][]*management.ClusterInstance{
+			"TiDB": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone:         "zone1",
+					CpuCores:     4,
+					Memory:       8,
+					Type:         "TiDB",
+					Version:      "v5.0.0",
+					Ports:        []int32{10001, 10002, 10003, 10004},
+					HostIP:       []string{"127.0.0.1"},
+					DiskType:     "SSD",
+					DiskCapacity: 128,
+				},
+			},
+		},
+		DBUsers: map[string]*management.DBUser{
+			string(constants.DBUserBackupRestore): &management.DBUser{
+				ClusterID: "cls-test",
+				Name:      constants.DBUserName[constants.DBUserBackupRestore],
+				Password:  "12345678",
+				RoleType:  string(constants.DBUserBackupRestore),
+			},
+		},
 	})
 	err := backupCluster(&workflowModel.WorkFlowNode{}, flowContext)
-	assert.Nil(t, err)
+	assert.NotNil(t, err)
+	os.Remove("./testdata")
 }
 
 func TestExecutor_updateBackupRecord(t *testing.T) {
@@ -75,18 +106,30 @@ func TestExecutor_updateBackupRecord(t *testing.T) {
 	brRW.EXPECT().UpdateBackupRecord(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetBRReaderWriter(brRW)
 
+	mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
+	mockTiupManager.EXPECT().ShowBackUpInfoThruMetaDB(gomock.Any(), gomock.Any()).Return(secondparty.CmdBrResp{
+		Size:     123,
+		BackupTS: 234,
+	}, nil).AnyTimes()
+	secondparty.Manager = mockTiupManager
+
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(contextBackupRecordKey, &backuprestore.BackupRecord{
 		Entity: common.Entity{
 			ID: "record-xxxx",
 		},
 	})
-	flowContext.SetData(contextClusterMetaKey, &handler.ClusterMeta{
+	flowContext.SetData(contextClusterMetaKey, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "cls-xxxx",
 			},
 		},
+	})
+	flowContext.SetData(contextBRInfoKey, &sql.BRSQLResp{
+		Destination: "test",
+		Size:        1234,
+		BackupTS:    2534534534,
 	})
 	err := updateBackupRecord(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
@@ -108,16 +151,36 @@ func TestExecutor_restoreFromSrcCluster(t *testing.T) {
 	flowContext.SetData(contextBackupRecordKey, &backuprestore.BackupRecord{
 		StorageType: "s3",
 	})
-	flowContext.SetData(contextClusterMetaKey, &handler.ClusterMeta{
+	flowContext.SetData(contextClusterMetaKey, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "cls-test",
 			},
 			Name: "cls-test",
 		},
+		Instances: map[string][]*management.ClusterInstance{
+			"TiDB": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Type:   "TiDB",
+					HostIP: []string{"127.0.0.1"},
+					Ports:  []int32{8000},
+				},
+			},
+		},
+		DBUsers: map[string]*management.DBUser{
+			string(constants.DBUserBackupRestore): &management.DBUser{
+				ClusterID: "cls-test",
+				Name:      constants.DBUserName[constants.DBUserBackupRestore],
+				Password:  "12345678",
+				RoleType:  string(constants.DBUserBackupRestore),
+			},
+		},
 	})
 	err := restoreFromSrcCluster(&workflowModel.WorkFlowNode{}, flowContext)
-	assert.Nil(t, err)
+	assert.NotNil(t, err)
 }
 
 func TestExecutor_backupFail(t *testing.T) {
@@ -138,13 +201,14 @@ func TestExecutor_backupFail(t *testing.T) {
 			ID: "record-xxxx",
 		},
 	})
-	flowContext.SetData(contextClusterMetaKey, &handler.ClusterMeta{
+	flowContext.SetData(contextClusterMetaKey, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "cls-xxxx",
 			},
 		},
 	})
+	flowContext.SetData(contextMaintenanceStatusChangeKey, true)
 	err := backupFail(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
 }
@@ -156,13 +220,14 @@ func TestExecutor_restoreFail(t *testing.T) {
 			ID: "record-xxxx",
 		},
 	})
-	flowContext.SetData(contextClusterMetaKey, &handler.ClusterMeta{
+	flowContext.SetData(contextClusterMetaKey, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "cls-xxxx",
 			},
 		},
 	})
+	flowContext.SetData(contextMaintenanceStatusChangeKey, true)
 	err := restoreFail(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
 }
@@ -181,13 +246,14 @@ func TestExecutor_defaultEnd(t *testing.T) {
 			ID: "record-xxxx",
 		},
 	})
-	flowContext.SetData(contextClusterMetaKey, &handler.ClusterMeta{
+	flowContext.SetData(contextClusterMetaKey, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
 				ID: "cls-xxxx",
 			},
 		},
 	})
+	flowContext.SetData(contextMaintenanceStatusChangeKey, true)
 	err := defaultEnd(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
 }

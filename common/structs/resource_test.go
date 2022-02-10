@@ -102,7 +102,7 @@ func Test_GetTraitByName(t *testing.T) {
 		{"EM", string(constants.EMProductIDEnterpriseManager), want{trait: 0x0000000000000004, err: nil}},
 		{"Schedule", string(constants.PurposeSchedule), want{trait: 0x0000000000000020, err: nil}},
 		{"SSD", string(constants.SSD), want{trait: 0x0000000000000080, err: nil}},
-		{"ERROR", "InvalidName", want{trait: 0, err: errors.NewEMErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND,
+		{"ERROR", "InvalidName", want{trait: 0, err: errors.NewErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND,
 			"label type %v not found in system default labels", "InvalidName")}},
 	}
 	for _, tt := range tests {
@@ -149,14 +149,14 @@ func TestHost_IsExhaust(t *testing.T) {
 		host HostInfo
 		want want
 	}{
-		{"normal", HostInfo{FreeCpuCores: 4, FreeMemory: 8, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{constants.HostLoadStatusWhatever, false}},
-		{"exhaust1", HostInfo{FreeCpuCores: 0, FreeMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskInUsed)}}}, want{constants.HostLoadExhaust, true}},
-		{"exhaust2", HostInfo{FreeCpuCores: 0, FreeMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskExhaust)}}}, want{constants.HostLoadExhaust, true}},
-		{"exhaust3", HostInfo{FreeCpuCores: 0, FreeMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskExhaust)}, {Status: string(constants.DiskInUsed)}}}, want{constants.HostLoadExhaust, true}},
-		{"with_disk", HostInfo{FreeCpuCores: 0, FreeMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{constants.HostLoadComputeExhaust, true}},
-		{"without_disk", HostInfo{FreeCpuCores: 4, FreeMemory: 8}, want{constants.HostLoadDiskExhaust, true}},
-		{"without_cpu", HostInfo{FreeCpuCores: 0, FreeMemory: 8, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{constants.HostLoadComputeExhaust, true}},
-		{"without_momery", HostInfo{FreeCpuCores: 4, FreeMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{constants.HostLoadComputeExhaust, true}},
+		{"normal", HostInfo{UsedCpuCores: 4, UsedMemory: 8, CpuCores: 8, Memory: 16, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{constants.HostLoadStatusWhatever, false}},
+		{"exhaust1", HostInfo{UsedCpuCores: 8, UsedMemory: 16, CpuCores: 8, Memory: 16, Disks: []DiskInfo{{Status: string(constants.DiskInUsed)}}}, want{constants.HostLoadExhaust, true}},
+		{"exhaust2", HostInfo{UsedCpuCores: 8, UsedMemory: 16, CpuCores: 8, Memory: 16, Disks: []DiskInfo{{Status: string(constants.DiskExhaust)}}}, want{constants.HostLoadExhaust, true}},
+		{"exhaust3", HostInfo{UsedCpuCores: 8, UsedMemory: 16, CpuCores: 8, Memory: 16, Disks: []DiskInfo{{Status: string(constants.DiskExhaust)}, {Status: string(constants.DiskInUsed)}}}, want{constants.HostLoadExhaust, true}},
+		{"with_disk", HostInfo{UsedCpuCores: 8, UsedMemory: 16, CpuCores: 8, Memory: 16, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{constants.HostLoadComputeExhaust, true}},
+		{"without_disk", HostInfo{UsedCpuCores: 4, UsedMemory: 8, CpuCores: 8, Memory: 16}, want{constants.HostLoadDiskExhaust, true}},
+		{"without_cpu", HostInfo{UsedCpuCores: 8, UsedMemory: 8, CpuCores: 8, Memory: 16, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{constants.HostLoadComputeExhaust, true}},
+		{"without_momery", HostInfo{UsedCpuCores: 4, UsedMemory: 16, CpuCores: 8, Memory: 16, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{constants.HostLoadComputeExhaust, true}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -176,12 +176,12 @@ func TestHost_IsLoadLess(t *testing.T) {
 		host HostInfo
 		want want
 	}{
-		{"normal", HostInfo{CpuCores: 4, Memory: 8, FreeCpuCores: 4, FreeMemory: 8, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{true}},
-		{"diskused", HostInfo{CpuCores: 16, Memory: 64, FreeCpuCores: 16, FreeMemory: 64, Disks: []DiskInfo{{Status: string(constants.DiskInUsed)}}}, want{false}},
-		{"diskused2", HostInfo{CpuCores: 16, Memory: 64, FreeCpuCores: 16, FreeMemory: 64, Disks: []DiskInfo{{Status: string(constants.DiskExhaust)}}}, want{false}},
-		{"diskused3", HostInfo{CpuCores: 16, Memory: 64, FreeCpuCores: 16, FreeMemory: 64, Disks: []DiskInfo{{Status: string(constants.DiskExhaust)}, {Status: string(constants.DiskAvailable)}}}, want{false}},
-		{"cpuused", HostInfo{CpuCores: 16, Memory: 64, FreeCpuCores: 12, FreeMemory: 64, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{false}},
-		{"memoryused", HostInfo{CpuCores: 16, Memory: 64, FreeCpuCores: 16, FreeMemory: 8}, want{false}},
+		{"normal", HostInfo{CpuCores: 4, Memory: 8, UsedCpuCores: 0, UsedMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{true}},
+		{"diskused", HostInfo{CpuCores: 16, Memory: 64, UsedCpuCores: 0, UsedMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskInUsed)}}}, want{false}},
+		{"diskused2", HostInfo{CpuCores: 16, Memory: 64, UsedCpuCores: 0, UsedMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskExhaust)}}}, want{false}},
+		{"diskused3", HostInfo{CpuCores: 16, Memory: 64, UsedCpuCores: 0, UsedMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskExhaust)}, {Status: string(constants.DiskAvailable)}}}, want{false}},
+		{"cpuused", HostInfo{CpuCores: 16, Memory: 64, UsedCpuCores: 4, UsedMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{false}},
+		{"memoryused", HostInfo{CpuCores: 16, Memory: 64, UsedCpuCores: 0, UsedMemory: 56}, want{false}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

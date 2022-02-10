@@ -20,12 +20,13 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"github.com/pingcap-inc/tiem/common/constants"
 	"net/http"
 	"os"
 	"strconv"
 
-	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/metrics"
+
 	prom "github.com/prometheus/client_golang/prometheus"
 
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
@@ -51,7 +52,7 @@ type Framework interface {
 	Log() *log.Entry
 	LogWithContext(context.Context) *log.Entry
 	GetTracer() *Tracer
-	GetEtcdClient() *EtcdClient
+	GetEtcdClient() *EtcdClientV3
 	GetElasticsearchClient() *ElasticSearchClient
 	GetMetrics() *metrics.Metrics
 
@@ -90,15 +91,14 @@ type BaseFramework struct {
 	configuration *Configuration
 	log           *RootLogger
 	trace         *Tracer
-	etcdClient    *EtcdClient
+	etcdClient    *EtcdClientV3
 	certificate   *CertificateInfo
 
 	elasticsearchClient *ElasticSearchClient
 
-	metrics *metrics.Metrics
-
 	serviceMeta  *ServiceMeta
 	microService micro.Service
+	metrics      *metrics.Metrics
 
 	initOpts     []Opt
 	shutdownOpts []Opt
@@ -121,10 +121,10 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 		DeployDir:          "./../bin",
 		DataDir:            "./testdata",
 		LogLevel:           "info",
+		EMClusterName:      "em-test",
 	}
 	f.parseArgs(serviceName)
 
-	f.metrics = metrics.InitMetricsForUT()
 	f.serviceMeta = NewServiceMetaFromArgs(serviceName, f.args)
 	f.initOpts = opts
 	f.Init()
@@ -234,7 +234,7 @@ func (b *BaseFramework) initElasticsearchClient() {
 }
 
 func (b *BaseFramework) initMetrics() {
-	b.metrics = metrics.InitMetrics()
+	b.metrics = metrics.GetMetrics()
 }
 
 func (b *BaseFramework) GetDeployDir() string {
@@ -294,7 +294,7 @@ func (b *BaseFramework) GetCertificateInfo() *CertificateInfo {
 	return b.certificate
 }
 
-func (b *BaseFramework) GetEtcdClient() *EtcdClient {
+func (b *BaseFramework) GetEtcdClient() *EtcdClientV3 {
 	return b.etcdClient
 }
 

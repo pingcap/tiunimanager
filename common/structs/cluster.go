@@ -23,7 +23,10 @@
 
 package structs
 
-import "time"
+import (
+	"github.com/pingcap-inc/tiem/common/constants"
+	"time"
+)
 
 //ClusterResourceParameterComputeResource Single component resource parameters when creating a cluster
 type ClusterResourceParameterComputeResource struct {
@@ -43,7 +46,7 @@ func (p *ClusterResourceParameterComputeResource) Equal(zone, spec, diskType str
 
 //ClusterResourceParameterCompute Component resource parameters when creating a cluster, including: compute resources, storage resources
 type ClusterResourceParameterCompute struct {
-	Type     string                                    `json:"componentType"` //TiDB/TiKV/PD/TiFlash/TiCDC/DM-Master/DM-Worker
+	Type     string                                    `json:"componentType"` //TiDB/TiKV/PD/TiFlash/CDC/DM-Master/DM-Worker
 	Count    int                                       `json:"totalNodeCount"`
 	Resource []ClusterResourceParameterComputeResource `json:"resource"`
 }
@@ -53,30 +56,42 @@ type ClusterResourceInfo struct {
 	InstanceResource []ClusterResourceParameterCompute `json:"instanceResource"`
 }
 
+func (p ClusterResourceInfo) GetComponentCount(idType constants.EMProductComponentIDType) int32 {
+	for _, i := range p.InstanceResource {
+		if i.Type == string(idType) {
+			return int32(i.Count)
+		}
+	}
+	return 0
+}
+
 //CreateClusterParameter User input parameters when creating a cluster
 type CreateClusterParameter struct {
-	Name             string   `json:"clusterName"`
-	DBUser           string   `json:"dbUser"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
-	DBPassword       string   `json:"dbPassword"`
-	Type             string   `json:"clusterType"`
-	Version          string   `json:"clusterVersion"`
+	Name string `json:"clusterName" validate:"required,min=8,max=64"`
+	// todo delete?
+	DBUser           string   `json:"dbUser" validate:"max=32"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
+	DBPassword       string   `json:"dbPassword" validate:"required,min=8,max=32"`
+	Type             string   `json:"clusterType" validate:"required,oneof=TiDB DM TiKV"`
+	Version          string   `json:"clusterVersion" validate:"required,startswith=v"`
 	Tags             []string `json:"tags"`
 	TLS              bool     `json:"tls"`
-	Copies           int      `json:"copies"`                                 //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
-	Exclusive        bool     `json:"exclusive" form:"exclusive"`             //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
-	Region           string   `json:"region" form:"region"`                   //The Region where the cluster is located
-	CpuArchitecture  string   `json:"cpuArchitecture" form:"cpuArchitecture"` //X86/X86_64/ARM
+	Copies           int      `json:"copies"`                     //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
+	Exclusive        bool     `json:"exclusive" form:"exclusive"` //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+	Vendor           string   `json:"vendor" form:"vendor"`
+	Region           string   `json:"region" form:"region" validate:"required,max=32"`                                       //The Region where the cluster is located
+	CpuArchitecture  string   `json:"cpuArchitecture" form:"cpuArchitecture" validate:"required,oneof=X86 X86_64 ARM ARM64"` //X86/X86_64/ARM
 	ParameterGroupID string   `json:"parameterGroupID" form:"parameterGroupID"`
 }
 
 // ClusterInfo Cluster details information
 type ClusterInfo struct {
-	ID                       string    `json:"clusterId"`
-	UserID                   string    `json:"userId"`
-	Name                     string    `json:"clusterName"`
-	Type                     string    `json:"clusterType"`
-	Version                  string    `json:"clusterVersion"`
-	DBUser                   string    `json:"dbUser"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
+	ID      string `json:"clusterId"`
+	UserID  string `json:"userId"`
+	Name    string `json:"clusterName"`
+	Type    string `json:"clusterType"`
+	Version string `json:"clusterVersion"`
+	//DBUser                   string    `json:"dbUser"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
+	Vendor                   string    `json:"vendor" form:"vendor"`
 	Tags                     []string  `json:"tags"`
 	TLS                      bool      `json:"tls"`
 	Region                   string    `json:"region"`
@@ -141,7 +156,7 @@ type BackupRecord struct {
 	BackupMode   string    `json:"backupMode"`
 	FilePath     string    `json:"filePath"`
 	Size         float32   `json:"size"`
-	BackupTSO    uint64    `json:"backupTso"`
+	BackupTSO    string    `json:"backupTso"`
 	Status       string    `json:"status"`
 	StartTime    time.Time `json:"startTime"`
 	EndTime      time.Time `json:"endTime"`
@@ -198,14 +213,8 @@ type ParameterRealValue struct {
 }
 
 type ClusterParameterSampleInfo struct {
-	ParamId        string             `json:"paramId" example:"1"`
-	Name           string             `json:"name" example:"log_level"`
-	InstanceType   string             `json:"instanceType" example:"TiDB"`
-	UpdateSource   int                `json:"updateSource" example:"0" enums:"0,1,2,3"`
-	SystemVariable string             `json:"systemVariable" example:"log.binlog_cache"`
-	Type           int                `json:"type" example:"0" enums:"0,1,2,3,4"`
-	HasApply       int                `json:"hasApply" example:"1" enums:"0,1"`
-	RealValue      ParameterRealValue `json:"realValue"`
+	ParamId   string             `json:"paramId" example:"1" validate:"required,min=1,max=64"`
+	RealValue ParameterRealValue `json:"realValue" validate:"required"`
 }
 
 type ClusterParameterInfo struct {
@@ -220,6 +229,7 @@ type ClusterParameterInfo struct {
 	HasReboot      int                `json:"hasReboot" example:"0" enums:"0,1"`
 	HasApply       int                `json:"hasApply" example:"1" enums:"0,1"`
 	UpdateSource   int                `json:"updateSource" example:"0" enums:"0,1,2,3"`
+	ReadOnly       int                `json:"readOnly" example:"0" enums:"0,1"`
 	DefaultValue   string             `json:"defaultValue" example:"1"`
 	RealValue      ParameterRealValue `json:"realValue"`
 	Description    string             `json:"description" example:"binlog cache size"`

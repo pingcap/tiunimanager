@@ -17,15 +17,16 @@ package cluster
 
 import (
 	"github.com/pingcap-inc/tiem/common/structs"
+	"strconv"
 	"time"
 )
 
 type CreateChangeFeedTaskReq struct {
-	Name           string      `json:"name" form:"name" example:"my_sync_name"`
-	ClusterID      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
-	StartTS        int64       `json:"startTS" form:"startTS" example:"415241823337054209"`
+	Name           string      `json:"name" form:"name" example:"my_sync_name" validate:"required,min=4,max=64"`
+	ClusterID      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22" validate:"required,min=8,max=64"`
+	StartTS        string      `json:"startTS" form:"startTS" example:"415241823337054209"`
 	FilterRules    []string    `json:"rules" form:"rules" example:"*.*"`
-	DownstreamType string      `json:"downstreamType"  form:"downstreamType" example:"tidb" enums:"tidb,kafka,mysql"`
+	DownstreamType string      `json:"downstreamType"  form:"downstreamType" example:"tidb" enums:"tidb,kafka,mysql" validate:"required,oneof=tidb kafka mysql"`
 	Downstream     interface{} `json:"downstream" form:"downstream"`
 }
 
@@ -34,7 +35,7 @@ type CreateChangeFeedTaskResp struct {
 }
 
 type QueryChangeFeedTaskReq struct {
-	ClusterId string `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
+	ClusterId string `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22" validate:"required,min=8,max=64"`
 	structs.PageRequest
 }
 
@@ -43,7 +44,7 @@ type QueryChangeFeedTaskResp struct {
 }
 
 type DetailChangeFeedTaskReq struct {
-	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIEM____22"`
+	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIEM____22" validate:"required,min=8,max=64"`
 }
 
 type DetailChangeFeedTaskResp struct {
@@ -51,7 +52,7 @@ type DetailChangeFeedTaskResp struct {
 }
 
 type PauseChangeFeedTaskReq struct {
-	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIEM____22"`
+	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIEM____22" validate:"required,min=8,max=64"`
 }
 
 type PauseChangeFeedTaskResp struct {
@@ -59,7 +60,7 @@ type PauseChangeFeedTaskResp struct {
 }
 
 type ResumeChangeFeedTaskReq struct {
-	ID string `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22"`
+	ID string `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22" validate:"required,min=8,max=64"`
 }
 
 type ResumeChangeFeedTaskResp struct {
@@ -67,8 +68,8 @@ type ResumeChangeFeedTaskResp struct {
 }
 
 type UpdateChangeFeedTaskReq struct {
-	ID             string      `json:"id" form:"id" swaggerignore:"true"`
-	Name           string      `json:"name" form:"name" example:"my_sync_name"`
+	ID             string      `json:"id" form:"id" swaggerignore:"true" validate:"required,min=8,max=64"`
+	Name           string      `json:"name" form:"name" example:"my_sync_name" validate:"required,min=4,max=64"`
 	FilterRules    []string    `json:"rules" form:"rules" example:"*.*"`
 	DownstreamType string      `json:"downstreamType"  form:"downstreamType" example:"tidb" enums:"tidb,kafka,mysql"`
 	Downstream     interface{} `json:"downstream" form:"downstream"`
@@ -79,7 +80,7 @@ type UpdateChangeFeedTaskResp struct {
 }
 
 type DeleteChangeFeedTaskReq struct {
-	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIEM____22"`
+	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIEM____22" validate:"required,min=8,max=64"`
 }
 
 type DeleteChangeFeedTaskResp struct {
@@ -91,7 +92,7 @@ type ChangeFeedTask struct {
 	ID             string      `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22"`
 	Name           string      `json:"name" form:"name" example:"my_sync_name"`
 	ClusterID      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
-	StartTS        int64       `json:"startTS" form:"startTS" example:"415241823337054209"`
+	StartTS        string      `json:"startTS" form:"startTS" example:"415241823337054209"`
 	FilterRules    []string    `json:"rules" form:"rules" example:"*.*"`
 	Status         string      `json:"status" form:"status" example:"Normal" enums:"Initial,Normal,Stopped,Finished,Error,Failed"`
 	DownstreamType string      `json:"downstreamType"  form:"downstreamType" example:"tidb" enums:"tidb,kafka,mysql"`
@@ -161,8 +162,61 @@ type TiDBDownstream struct {
 
 type ChangeFeedTaskInfo struct {
 	ChangeFeedTask
-	UnSteady          bool `json:"unsteady" form:"unsteady" example:"false"`
-	UpstreamUpdateTS  uint `json:"upstreamUpdateTs" form:"upstreamUpdateTs" example:"415241823337054209"`
-	DownstreamFetchTS uint `json:"downstreamFetchTs" form:"downstreamFetchTs" example:"415241823337054209"`
-	DownstreamSyncTS  uint `json:"downstreamSyncTs" form:"downstreamSyncTs" example:"415241823337054209"`
+	UnSteady            bool   `json:"unsteady" form:"unsteady" example:"false"`
+	StartUnix           int64  `json:"startUnix" form:"startUnix" example:"1642402879000"`
+	UpstreamUpdateTS    string `json:"upstreamUpdateTs" form:"upstreamUpdateTs" example:"415241823337054209"`
+	UpstreamUpdateUnix  int64  `json:"upstreamUpdateUnix" form:"upstreamUpdateUnix" example:"1642402879000"`
+	DownstreamFetchTS   string `json:"downstreamFetchTs" form:"downstreamFetchTs" example:"415241823337054209"`
+	DownstreamFetchUnix int64  `json:"downstreamFetchUnix" form:"downstreamFetchUnix" example:"1642402879000"`
+	DownstreamSyncTS    string `json:"downstreamSyncTs" form:"downstreamSyncTs" example:"415241823337054209"`
+	DownstreamSyncUnix  int64  `json:"downstreamSyncUnix" form:"downstreamSyncUnix" example:"1642402879000"`
 }
+
+func (p *ChangeFeedTaskInfo) ConvertStartTS() {
+	if len(p.StartTS) == 0 || p.StartTS == "0" {
+		p.StartUnix = 0
+	} else {
+		ts, err := strconv.ParseInt(p.StartTS, 10, 64)
+		if err == nil {
+			p.StartUnix = parseTS(uint64(ts))
+		}
+	}
+}
+
+func (p *ChangeFeedTaskInfo) AcceptUpstreamUpdateTS(ts uint64) {
+	if ts == 0 {
+		p.UpstreamUpdateTS = "0"
+		p.UpstreamUpdateUnix = 0
+	} else {
+		p.UpstreamUpdateTS = strconv.FormatInt(int64(ts), 10)
+		p.UpstreamUpdateUnix = parseTS(ts)
+	}
+}
+
+func (p *ChangeFeedTaskInfo) AcceptDownstreamFetchTS(ts uint64) {
+	if ts == 0 {
+		p.DownstreamFetchTS = "0"
+		p.DownstreamFetchUnix = 0
+	} else {
+		p.DownstreamFetchTS = strconv.FormatInt(int64(ts), 10)
+		p.DownstreamFetchUnix = parseTS(ts)
+	}
+}
+
+func (p *ChangeFeedTaskInfo) AcceptDownstreamSyncTS(ts uint64) {
+	if ts == 0 {
+		p.DownstreamSyncTS = "0"
+		p.DownstreamSyncUnix = 0
+	} else {
+		p.DownstreamSyncTS = strconv.FormatInt(int64(ts), 10)
+		p.DownstreamSyncUnix = parseTS(ts)
+	}
+
+}
+
+var physicalShiftBits = 18
+
+func parseTS(ts uint64) (unix int64) {
+	return int64(ts >> physicalShiftBits)
+}
+

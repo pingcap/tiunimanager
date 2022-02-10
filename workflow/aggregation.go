@@ -19,17 +19,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"runtime/debug"
 	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/models"
 	dbModel "github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/workflow"
-	secondpartyModel "github.com/pingcap-inc/tiem/models/workflow/secondparty"
 )
 
 // WorkFlowAggregation workflow aggregation with workflow definition and nodes
@@ -68,14 +68,14 @@ func (c FlowContext) SetData(key string, value interface{}) {
 	c.FlowData[key] = value
 }
 
-func createFlowWork(ctx context.Context, bizId string, define *WorkFlowDefine) (*WorkFlowAggregation, error) {
+func createFlowWork(ctx context.Context, bizId string, bizType string, define *WorkFlowDefine) (*WorkFlowAggregation, error) {
 	framework.LogWithContext(ctx).Infof("create flowwork %v for bizId %s", define, bizId)
 	if define == nil {
-		return nil, errors.NewEMErrorf(errors.TIEM_FLOW_NOT_FOUND, "empty workflow definition")
+		return nil, errors.NewErrorf(errors.TIEM_FLOW_NOT_FOUND, "empty workflow definition")
 	}
 	flowData := make(map[string]interface{})
 
-	flow := define.getInstance(ctx, bizId, flowData)
+	flow := define.getInstance(ctx, bizId, bizType, flowData)
 	_, err := models.GetWorkFlowReaderWriter().CreateWorkFlow(ctx, flow.Flow)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create workflow %+v failed %s", flow.Flow, err.Error())
@@ -123,7 +123,7 @@ func (flow *WorkFlowAggregation) addContext(key string, value interface{}) {
 	flow.Context.SetData(key, value)
 	data, err := json.Marshal(flow.Context.FlowData)
 	if err != nil {
-		framework.Log().Warnf("json marshal flow context data failed %s", err.Error())
+		framework.LogWithContext(flow.Context).Warnf("json marshal flow context data failed %s", err.Error())
 		return
 	}
 	flow.Flow.Context = string(data)
@@ -132,8 +132,10 @@ func (flow *WorkFlowAggregation) addContext(key string, value interface{}) {
 func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) (execErr error) {
 	defer func() {
 		if r := recover(); r != nil {
-			framework.LogWithContext(flow.Context).Errorf("recover from workflow %s, node %s", flow.Flow.Name, node.Name)
-			execErr = errors.NewEMErrorf(errors.TIEM_PANIC, "%v", r)
+			framework.LogWithContext(flow.Context).Errorf(
+				"recover from workflow %s, node %s, stacktrace %s",
+				flow.Flow.Name, node.Name, string(debug.Stack()))
+			execErr = errors.NewErrorf(errors.TIEM_PANIC, "%v", r)
 			node.Fail(execErr)
 		}
 	}()
@@ -143,12 +145,12 @@ func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDe
 	node.Processing()
 	data, err := json.Marshal(flow.Context.FlowData)
 	if err != nil {
-		framework.Log().Warnf("json marshal flow context data failed %s", err.Error())
+		framework.LogWithContext(flow.Context).Warnf("json marshal flow context data failed %s", err.Error())
 	}
 	flow.Flow.Context = string(data)
 	err = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
 	if err != nil {
-		framework.Log().Warnf("update workflow %s detail of bizId %s failed %s", flow.Flow.ID, flow.Flow.BizID, err.Error())
+		framework.LogWithContext(flow.Context).Warnf("update workflow %s detail of bizId %s failed %s", flow.Flow.ID, flow.Flow.BizID, err.Error())
 	}
 
 	err = nodeDefine.Executor(node, &flow.Context)
@@ -165,7 +167,7 @@ func (flow *WorkFlowAggregation) handleTaskError(node *workflow.WorkFlowNode, no
 	if "" != nodeDefine.FailEvent {
 		flow.handle(flow.Define.TaskNodes[nodeDefine.FailEvent])
 	} else {
-		framework.Log().Warnf("no fail event in flow definition, flowname %s", nodeDefine.Name)
+		framework.LogWithContext(flow.Context).Warnf("no fail event in flow definition, flowname %s", nodeDefine.Name)
 	}
 }
 
@@ -188,7 +190,7 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 
 	_, err := models.GetWorkFlowReaderWriter().CreateWorkFlowNode(flow.Context, node)
 	if err != nil {
-		framework.Log().Warnf("create workflow node, node %s failed %s", node.Name, err.Error())
+		framework.LogWithContext(flow.Context).Warnf("create workflow node, node %s failed %s", node.Name, err.Error())
 	}
 	handleError := flow.executeTask(node, nodeDefine)
 	if handleError != nil {
@@ -198,11 +200,12 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 
 	switch nodeDefine.ReturnType {
 	case SyncFuncNode:
-		if node.Result == "" {
-			node.Success()
-		}
+		node.Success()
 		return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
 	case PollingNode:
+		if node.Status == constants.WorkFlowStatusFinished {
+			return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
+		}
 		ticker := time.NewTicker(3 * time.Second)
 		sequence := int32(0)
 		for range ticker.C {
@@ -212,23 +215,24 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 				flow.handleTaskError(node, nodeDefine)
 				return false
 			}
-			framework.LogWithContext(flow.Context).Infof("polling node waiting, sequence %d, nodeId %s, nodeName %s", sequence, node.ID, node.Name)
+			framework.LogWithContext(flow.Context).Debugf("polling node waiting, sequence %d, nodeId %s, nodeName %s", sequence, node.ID, node.Name)
 
-			resp, err := secondparty.Manager.GetOperationStatusByWorkFlowNodeID(flow.Context, node.ID)
+			op, err := deployment.M.GetStatus(flow.Context, node.OperationID)
 			if err != nil {
-				framework.LogWithContext(flow.Context).Error(err)
-				node.Fail(fmt.Errorf("call secondparty GetOperationStatusByWorkFlowNodeID %s, failed %s", node.ID, err.Error()))
+				framework.LogWithContext(flow.Context).Errorf("call deployment GetStatus %s, failed %s", node.OperationID, err.Error())
+				node.Fail(errors.NewError(errors.TIEM_TASK_FAILED, err.Error()))
 				flow.handleTaskError(node, nodeDefine)
 				return false
 			}
-			if resp.Status == secondpartyModel.OperationStatusError {
-				node.Fail(fmt.Errorf("call secondparty GetOperationStatusByWorkFlowNodeID %s, response error %s", node.ID, resp.ErrorStr))
+			if op.Status == deployment.Error {
+				framework.LogWithContext(flow.Context).Errorf("call deployment GetStatus %s, response error %s", node.OperationID, op.ErrorStr)
+				node.Fail(errors.NewError(errors.TIEM_TASK_FAILED, op.ErrorStr))
 				flow.handleTaskError(node, nodeDefine)
 				return false
 			}
-			if resp.Status == secondpartyModel.OperationStatusFinished {
-				if resp.Result != "" {
-					node.Success(resp.Result)
+			if op.Status == deployment.Finished {
+				if op.Result != "" {
+					node.Success(op.Result)
 				} else {
 					node.Success(nil)
 				}

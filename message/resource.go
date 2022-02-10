@@ -30,6 +30,7 @@ import (
 type QueryHostsReq struct {
 	structs.PageRequest
 	structs.HostFilter
+	structs.Location
 }
 
 func (req *QueryHostsReq) GetHostFilter() *structs.HostFilter {
@@ -38,24 +39,31 @@ func (req *QueryHostsReq) GetHostFilter() *structs.HostFilter {
 func (req *QueryHostsReq) GetPage() *structs.PageRequest {
 	return &(req.PageRequest)
 }
+func (req *QueryHostsReq) GetLocation() *structs.Location {
+	return &(req.Location)
+}
 
 type QueryHostsResp struct {
 	Hosts []structs.HostInfo `json:"hosts"`
 }
 
 type ImportHostsReq struct {
-	Hosts []structs.HostInfo `json:"hosts"`
+	Condition structs.ImportCondition `json:"condition"`
+	Hosts     []structs.HostInfo      `json:"hosts"`
 }
 
 type ImportHostsResp struct {
-	HostIDS []string `json:"hostIds"`
+	FlowInfo []structs.AsyncTaskWorkFlowInfo `json:"flowInfo"`
+	HostIDS  []string                        `json:"hostIds"`
 }
 
 type DeleteHostsReq struct {
 	HostIDs []string `json:"hostIds"`
+	Force   bool     `json:"force"`
 }
 
 type DeleteHostsResp struct {
+	FlowInfo []structs.AsyncTaskWorkFlowInfo `json:"flowInfo"`
 }
 
 type UpdateHostReservedReq struct {
@@ -105,7 +113,8 @@ func (req *GetStocksReq) GetDiskFilter() *structs.DiskFilter {
 }
 
 type GetStocksResp struct {
-	Stocks structs.Stocks `json:"stocks"`
+	// map[zone] -> stocks
+	Stocks map[string]*structs.Stocks `json:"stocks"`
 }
 
 type DownloadHostTemplateFileReq struct {

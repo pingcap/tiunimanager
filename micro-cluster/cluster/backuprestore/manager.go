@@ -24,12 +24,13 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	dbModel "github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/workflow"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -61,18 +62,18 @@ func NewBRManager() *BRManager {
 	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowBackupCluster, &workflow.WorkFlowDefine{
 		FlowName: constants.FlowBackupCluster,
 		TaskNodes: map[string]*workflow.NodeDefine{
-			"start":            {"backup", "backupDone", "fail", workflow.PollingNode, backupCluster},
+			"start":            {"backup", "backupDone", "fail", workflow.SyncFuncNode, backupCluster},
 			"backupDone":       {"updateBackupRecord", "updateRecordDone", "fail", workflow.SyncFuncNode, updateBackupRecord},
 			"updateRecordDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-			"fail":             {"fail", "", "", workflow.SyncFuncNode, backupFail},
+			"fail":             {"end", "", "", workflow.SyncFuncNode, backupFail},
 		},
 	})
 	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowRestoreExistCluster, &workflow.WorkFlowDefine{
 		FlowName: constants.FlowRestoreExistCluster,
 		TaskNodes: map[string]*workflow.NodeDefine{
-			"start":       {"restoreFromSrcCluster", "restoreDone", "fail", workflow.PollingNode, restoreFromSrcCluster},
+			"start":       {"restoreFromSrcCluster", "restoreDone", "fail", workflow.SyncFuncNode, restoreFromSrcCluster},
 			"restoreDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-			"fail":        {"fail", "", "", workflow.SyncFuncNode, restoreFail},
+			"fail":        {"end", "", "", workflow.SyncFuncNode, restoreFail},
 		},
 	})
 
@@ -103,7 +104,7 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request cluster.BackupC
 		return resp, errors.WrapError(errors.TIEM_BACKUP_SYSTEM_CONFIG_INVAILD, fmt.Sprintf("get conifg %s failed: %s", constants.ConfigKeyBackupStoragePath, err.Error()), err)
 	}
 
-	meta, err := handler.Get(ctx, request.ClusterID)
+	meta, err := meta.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
@@ -153,7 +154,7 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request cluster.BackupC
 	}()
 
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.FlowBackupCluster)
+	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, workflow.BizTypeCluster, constants.FlowBackupCluster)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
 		return resp, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, fmt.Sprintf("create %s workflow failed, %s", constants.FlowBackupCluster, err.Error()), err)
@@ -177,7 +178,7 @@ func (mgr *BRManager) RestoreExistCluster(ctx context.Context, request cluster.R
 	framework.LogWithContext(ctx).Infof("Begin RestoreExistCluster, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End RestoreExistCluster")
 
-	meta, err := handler.Get(ctx, request.ClusterID)
+	meta, err := meta.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
@@ -205,7 +206,7 @@ func (mgr *BRManager) RestoreExistCluster(ctx context.Context, request cluster.R
 	}
 
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.FlowRestoreExistCluster)
+	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, workflow.BizTypeCluster, constants.FlowRestoreExistCluster)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
 		return resp, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, fmt.Sprintf("create %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error()), err)
@@ -246,7 +247,7 @@ func (mgr *BRManager) QueryClusterBackupRecords(ctx context.Context, request clu
 			BackupMode:   record.BackupMode,
 			FilePath:     record.FilePath,
 			Size:         float32(record.Size) / bytes.MB, //Byte to MByte,
-			BackupTSO:    record.BackupTso,
+			BackupTSO:    strconv.FormatUint(record.BackupTso, 10),
 			Status:       record.Status,
 			StartTime:    record.StartTime,
 			EndTime:      record.EndTime,
@@ -265,7 +266,15 @@ func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request cluster.D
 
 	if request.ClusterID == "" && request.BackupID == "" {
 		framework.LogWithContext(ctx).Errorf("invalid param clusterId and backupId empty")
-		return resp, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "invalid param clusterId and backupId empty")
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid param clusterId and backupId empty")
+	}
+
+	deleteRecordMap := make(map[string]*backuprestore.BackupRecord)
+	excludeBackupIdMap := make(map[string]string)
+	if len(request.ExcludeBackupIDs) > 0 {
+		for _, excludeId := range request.ExcludeBackupIDs {
+			excludeBackupIdMap[excludeId] = excludeId
+		}
 	}
 
 	brRW := models.GetBRReaderWriter()
@@ -280,21 +289,29 @@ func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request cluster.D
 		}
 
 		for _, record := range records {
-			if string(constants.StorageTypeS3) != record.StorageType {
-				filePath := record.FilePath
-				err = os.RemoveAll(filePath)
-				if err != nil {
-					framework.LogWithContext(ctx).Errorf("remove backup filePath %s failed, %s", filePath, err.Error())
-					return resp, errors.WrapError(errors.TIEM_BACKUP_FILE_DELETE_FAILED, fmt.Sprintf("remove backup filePath %s failed, %s", filePath, err.Error()), err)
-				}
+			if _, ok := excludeBackupIdMap[record.ID]; ok {
+				framework.LogWithContext(ctx).Infof("current backupId %s in excludeBackupIds, skip delete!", record.ID)
+				continue
 			}
-
-			err = brRW.DeleteBackupRecord(ctx, record.ID)
-			if err != nil {
-				framework.LogWithContext(ctx).Errorf("delete backup record %s failed, %s", record.ID, err.Error())
-				return resp, errors.WrapError(errors.TIEM_BACKUP_RECORD_DELETE_FAILED, fmt.Sprintf("delete backup record %s failed, %s", record.ID, err.Error()), err)
-			}
+			deleteRecordMap[record.ID] = record
 		}
+	}
+
+	for recordId, record := range deleteRecordMap {
+		framework.LogWithContext(ctx).Infof("begin delete backup record %+v", record)
+		if string(constants.StorageTypeS3) != record.StorageType {
+			filePath := record.FilePath
+			go func() {
+				removeErr := os.RemoveAll(filePath)
+				framework.LogWithContext(ctx).Infof("remove backup filePath %s, result %v", filePath, removeErr)
+			}()
+		}
+		err = brRW.DeleteBackupRecord(ctx, recordId)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("delete backup record %s failed, %s", recordId, err.Error())
+			return resp, errors.WrapError(errors.TIEM_BACKUP_RECORD_DELETE_FAILED, fmt.Sprintf("delete backup record %s failed, %s", recordId, err.Error()), err)
+		}
+		framework.LogWithContext(ctx).Infof("success delete backup record %+v", record)
 	}
 
 	return resp, nil
@@ -328,7 +345,7 @@ func (mgr *BRManager) SaveBackupStrategy(ctx context.Context, request cluster.Sa
 		return resp, errors.WrapError(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("save backup strategy precheck failed, %s", err.Error()), err)
 	}
 
-	meta, err := handler.Get(ctx, request.ClusterID)
+	meta, err := meta.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get cluster %s meta failed, %s", request.ClusterID, err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
@@ -397,7 +414,15 @@ func (mgr *BRManager) backupClusterPreCheck(ctx context.Context, request cluster
 			return fmt.Errorf("get and check conifg %s failed", constants.ConfigKeyBackupS3SecretAccessKey)
 		}
 	case string(constants.StorageTypeNFS):
-		break
+		absPath, err := filepath.Abs(storagePathCfg.ConfigValue)
+		if err != nil {
+			return fmt.Errorf("backup nfs path %s is not vaild", storagePathCfg.ConfigValue)
+		}
+		if !mgr.checkFilePathExists(absPath) {
+			if err = os.MkdirAll(absPath, os.ModePerm); err != nil {
+				return fmt.Errorf("make backup nfs path %s failed, %s", absPath, err.Error())
+			}
+		}
 	default:
 		return fmt.Errorf("conifg %s value %s is unknow", constants.ConfigKeyBackupStorageType, storageTypeCfg.ConfigValue)
 	}
@@ -447,4 +472,12 @@ func (mgr *BRManager) saveBackupStrategyPreCheck(ctx context.Context, request cl
 
 func (mgr *BRManager) getBackupPath(backupPath, clusterId string, time time.Time, backupType string) string {
 	return fmt.Sprintf("%s/%s/%s_%s", backupPath, clusterId, time.Format("2006-01-02_15:04:05"), backupType)
+}
+
+func (mgr *BRManager) checkFilePathExists(path string) bool {
+	_, err := os.Stat(path)
+	if err != nil {
+		return os.IsExist(err)
+	}
+	return true
 }

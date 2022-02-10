@@ -24,18 +24,61 @@ import (
 
 func TestGetReaderWriter(t *testing.T) {
 	assert.NotEmpty(t, GetBRReaderWriter())
+	SetBRReaderWriter(nil)
+	assert.Empty(t, GetBRReaderWriter())
+
 	assert.NotEmpty(t, GetChangeFeedReaderWriter())
+	SetChangeFeedReaderWriter(nil)
+	assert.Empty(t, GetChangeFeedReaderWriter())
+
 	assert.NotEmpty(t, GetWorkFlowReaderWriter())
+	SetWorkFlowReaderWriter(nil)
+	assert.Empty(t, GetWorkFlowReaderWriter())
+
 	assert.NotEmpty(t, GetImportExportReaderWriter())
+	SetImportExportReaderWriter(nil)
+	assert.Empty(t, GetImportExportReaderWriter())
+
 	assert.NotEmpty(t, GetResourceReaderWriter())
+	SetResourceReaderWriter(nil)
+	assert.Empty(t, GetResourceReaderWriter())
+
 	assert.NotEmpty(t, GetClusterReaderWriter())
+	SetClusterReaderWriter(nil)
+	assert.Empty(t, GetClusterReaderWriter())
+
 	assert.NotEmpty(t, GetConfigReaderWriter())
+	SetConfigReaderWriter(nil)
+	assert.Empty(t, GetConfigReaderWriter())
+
 	assert.NotEmpty(t, GetSecondPartyOperationReaderWriter())
+	SetSecondPartyOperationReaderWriter(nil)
+	assert.Empty(t, GetSecondPartyOperationReaderWriter())
+
 	assert.NotEmpty(t, GetParameterGroupReaderWriter())
+	SetParameterGroupReaderWriter(nil)
+	assert.Empty(t, GetParameterGroupReaderWriter())
+
 	assert.NotEmpty(t, GetClusterParameterReaderWriter())
+	SetClusterParameterReaderWriter(nil)
+	assert.Empty(t, GetClusterParameterReaderWriter())
+
 	assert.NotEmpty(t, GetAccountReaderWriter())
-	assert.NotEmpty(t, GetTenantReaderWriter())
+	SetAccountReaderWriter(nil)
+	assert.Empty(t, GetAccountReaderWriter())
+
 	assert.NotEmpty(t, GetTokenReaderWriter())
+	SetTokenReaderWriter(nil)
+	assert.Empty(t, GetTokenReaderWriter())
+
+	assert.NotEmpty(t, GetTiUPConfigReaderWriter())
+	SetTiUPConfigReaderWriter(nil)
+	assert.Empty(t, GetTiUPConfigReaderWriter())
+
+	assert.NotEmpty(t, GetProductReaderWriter())
+	SetProductReaderWriter(nil)
+	assert.Empty(t, GetProductReaderWriter())
+	MockDB()
 }
 
 func TestMain(m *testing.M) {

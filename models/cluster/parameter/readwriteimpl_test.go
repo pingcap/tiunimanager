@@ -105,6 +105,22 @@ func TestClusterParameterReadWrite_QueryClusterParameter(t *testing.T) {
 				func(a args, ret resp) bool { return len(ret.params) > 0 },
 			},
 		},
+		{
+			"error",
+			args{
+				clusterId: "aaaa",
+				offset:    0,
+				size:      1,
+				params: []*ClusterParameterMapping{
+					{
+						ParameterID: params[0].ID,
+						RealValue:   "{\"cluster\": 456}",
+					},
+				},
+			},
+			true,
+			[]func(a args, ret resp) bool{},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -116,7 +132,7 @@ func TestClusterParameterReadWrite_QueryClusterParameter(t *testing.T) {
 				t.Errorf("ApplyClusterParameter() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			paramGroupId, params, total, err := clusterParameterRW.QueryClusterParameter(context.TODO(), tt.args.clusterId, tt.args.offset, tt.args.size)
+			paramGroupId, params, total, err := clusterParameterRW.QueryClusterParameter(context.TODO(), tt.args.clusterId, "param", "TiKV", tt.args.offset, tt.args.size)
 			if err != nil {
 				if tt.wantErr {
 					return
@@ -184,6 +200,24 @@ func TestClusterParameterReadWrite_UpdateClusterParameter(t *testing.T) {
 				func(a args, clusterId string) bool { return clusterId != "" },
 				func(a args, clusterId string) bool { return len(clusterId) > 0 },
 			},
+		},
+		{
+			"empty",
+			args{
+				clusterId: "",
+				params: []*ClusterParameterMapping{
+					{
+						ParameterID: params[0].ID,
+						RealValue:   "{\"cluster\": 123}",
+					},
+					{
+						ParameterID: params[1].ID,
+						RealValue:   "{\"cluster\": \"true\"}",
+					},
+				},
+			},
+			true,
+			[]func(a args, clusterId string) bool{},
 		},
 	}
 	for _, tt := range tests {
@@ -285,6 +319,25 @@ func TestClusterParameterReadWrite_ApplyClusterParameter(t *testing.T) {
 			args{
 				id:        groups[0].ID,
 				clusterId: "",
+				params: []*ClusterParameterMapping{
+					{
+						ParameterID: params[0].ID,
+						RealValue:   "{\"cluster\": 123}",
+					},
+					{
+						ParameterID: params[1].ID,
+						RealValue:   "{\"cluster\": 1024}",
+					},
+				},
+			},
+			true,
+			[]func(a args, id string) bool{},
+		},
+		{
+			"clusterIdIsEmpty",
+			args{
+				id:        groups[0].ID,
+				clusterId: "aaa",
 				params: []*ClusterParameterMapping{
 					{
 						ParameterID: params[0].ID,

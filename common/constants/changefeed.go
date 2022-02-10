@@ -17,6 +17,7 @@ package constants
 
 import (
 	"github.com/pingcap-inc/tiem/common/errors"
+	"strings"
 )
 
 type ChangeFeedStatus string
@@ -31,6 +32,10 @@ const (
 	ChangeFeedStatusUnknown  ChangeFeedStatus = "Unknown"
 )
 
+func (s ChangeFeedStatus) EqualCDCState(state string) bool {
+	return strings.ToLower(s.ToString()) == state
+}
+
 func (s ChangeFeedStatus) IsFinal() bool {
 	return ChangeFeedStatusFinished == s || ChangeFeedStatusFailed == s
 }
@@ -39,7 +44,13 @@ func (s ChangeFeedStatus) ToString() string {
 	return string(s)
 }
 
-func IsValidStatus(s string) bool {
+func UnfinishedChangeFeedStatus() []ChangeFeedStatus{
+	return []ChangeFeedStatus{
+		ChangeFeedStatusInitial,ChangeFeedStatusNormal,ChangeFeedStatusStopped,ChangeFeedStatusError,
+	}
+}
+
+func IsValidChangeFeedStatus(s string) bool {
 	return ChangeFeedStatusInitial.ToString() == s ||
 		ChangeFeedStatusNormal.ToString() == s ||
 		ChangeFeedStatusStopped.ToString() == s ||
@@ -48,8 +59,8 @@ func IsValidStatus(s string) bool {
 		ChangeFeedStatusFailed.ToString() == s
 }
 
-func ConvertStatus(s string) (status ChangeFeedStatus, err error) {
-	if IsValidStatus(s) {
+func ConvertChangeFeedStatus(s string) (status ChangeFeedStatus, err error) {
+	if IsValidChangeFeedStatus(s) {
 		return ChangeFeedStatus(s), nil
 	} else {
 		return ChangeFeedStatusUnknown, errors.NewError(errors.TIEM_PARAMETER_INVALID, "unexpected change feed status")

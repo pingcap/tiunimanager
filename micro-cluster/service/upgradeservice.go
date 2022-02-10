@@ -27,26 +27,29 @@ package service
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/proto/clusterservices"
+
 	"github.com/pingcap-inc/tiem/message/cluster"
 )
 
-func (handler *ClusterServiceHandler) CreateProductUpgradePath(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler *ClusterServiceHandler) CreateProductUpgradePath(context.Context, *clusterservices.RpcRequest, *clusterservices.RpcResponse) error {
 	panic("implement me")
 }
 
-func (handler *ClusterServiceHandler) DeleteProductUpgradePath(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler *ClusterServiceHandler) DeleteProductUpgradePath(context.Context, *clusterservices.RpcRequest, *clusterservices.RpcResponse) error {
 	panic("implement me")
 }
 
-func (handler *ClusterServiceHandler) UpdateProductUpgradePath(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+func (handler *ClusterServiceHandler) UpdateProductUpgradePath(context.Context, *clusterservices.RpcRequest, *clusterservices.RpcResponse) error {
 	panic("implement me")
 }
 
-func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	request := &cluster.QueryUpgradePathReq{}
 
-	if handleRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionRead)}}) {
 		result, err := handler.clusterManager.QueryProductUpdatePath(ctx, request.ClusterID)
 		handleResponse(ctx, resp, err, result, nil)
 	}
@@ -54,10 +57,10 @@ func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Contex
 	return nil
 }
 
-func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	request := &cluster.QueryUpgradeVersionDiffInfoReq{}
 
-	if handleRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionRead)}}) {
 		result, err := handler.clusterManager.QueryUpgradeVersionDiffInfo(ctx, request.ClusterID, request.TargetVersion)
 		handleResponse(ctx, resp, err, result, nil)
 	}
@@ -65,10 +68,10 @@ func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Co
 	return nil
 }
 
-func (handler *ClusterServiceHandler) ClusterUpgrade(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+func (handler *ClusterServiceHandler) ClusterUpgrade(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	request := &cluster.ClusterUpgradeReq{}
 
-	if handleRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionRead)}}) {
 		result, err := handler.clusterManager.InPlaceUpgradeCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, nil)
 	}

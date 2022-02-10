@@ -16,35 +16,33 @@
 package secondparty
 
 import (
-	ctx "context"
 	"fmt"
+	"testing"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"golang.org/x/net/context"
-	"reflect"
-	"strings"
-	"testing"
 )
 
 type Foo1 struct {
-	Bar                string
+	Bar string
 }
 
 type Foo2 struct {
-	Bar                string `yaml:"bar"`
+	Bar string `yaml:"bar"`
 }
 
-func Test_assert_false(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The test did not panic")
-		}
-	}()
-	assert(false)
-}
-
-func Test_assert_true(t *testing.T) {
-	assert(true)
-}
+//func Test_assert_false(t *testing.T) {
+//	defer func() {
+//		if r := recover(); r == nil {
+//			t.Errorf("The test did not panic")
+//		}
+//	}()
+//	assert(false)
+//}
+//
+//func Test_assert_true(t *testing.T) {
+//	assert(true)
+//}
 
 func Test_myPanic(t *testing.T) {
 	defer func() {
@@ -60,51 +58,6 @@ func Test_newTmpFileWithContent(t *testing.T) {
 	_, err := newTmpFileWithContent("test-prefix", content)
 	if err != nil {
 		t.Errorf(err.Error())
-	}
-}
-
-func Test_findName_IncorrectFieldKey(t *testing.T) {
-	foo2 := Foo2 {
-		"bar",
-	}
-	v := reflect.ValueOf(&foo2).Elem()
-	typeField := v.Type().Field(0)
-	tag := typeField.Tag
-	_, err := findName(tag, FieldKey_Json)
-	if err == nil || !strings.Contains(err.Error(), "tag provided does not define") {
-		t.Errorf("nil error for incorrectfieldkey or incorrectfieldkey: %v", err)
-	}
-}
-
-func Test_SetField_NonPointer(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The test did not panic")
-		}
-	}()
-	foo1 := Foo1 {
-		"bar",
-	}
-	SetField(ctx.TODO(), foo1, FieldKey_Yaml, "bar", "baz")
-}
-
-func Test_SetField_FieldNotExist(t *testing.T) {
-	foo2 := Foo2 {
-		"bar",
-	}
-	SetField(ctx.TODO(), &foo2, FieldKey_Yaml, "nobar", "baz")
-	if foo2.Bar != "bar" {
-		t.Errorf("bar value should not change, expect: bar, actual: %s", foo2.Bar)
-	}
-}
-
-func Test_SetField_Success(t *testing.T) {
-	foo2 := Foo2 {
-		"bar",
-	}
-	SetField(ctx.TODO(), &foo2, FieldKey_Yaml, "bar", "newbar")
-	if foo2.Bar != "newbar" {
-		t.Errorf("fail set, it is %s now", foo2.Bar)
 	}
 }
 

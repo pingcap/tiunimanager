@@ -58,34 +58,34 @@ func (m *ResourceManager) GetManagement() *management.Management {
 	return m.management
 }
 
-func (m *ResourceManager) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error) {
-	hostIds, err = m.resourcePool.ImportHosts(ctx, hosts)
+func (m *ResourceManager) ImportHosts(ctx context.Context, hosts []structs.HostInfo, condition *structs.ImportCondition) (flowIds []string, hostIds []string, err error) {
+	flowIds, hostIds, err = m.resourcePool.ImportHosts(ctx, hosts, condition)
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("import hosts %v in batch failed from db service: %v", hosts, err)
 	} else {
-		framework.LogWithContext(ctx).Infof("import %d hosts in batch succeed from db service.", len(hosts))
+		framework.LogWithContext(ctx).Infof("import %d hosts in batch %v succeed from db service.", len(hosts), flowIds)
 	}
 
 	return
 }
 
-func (m *ResourceManager) QueryHosts(ctx context.Context, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, err error) {
-	hosts, err = m.resourcePool.QueryHosts(ctx, filter, page)
+func (m *ResourceManager) QueryHosts(ctx context.Context, location *structs.Location, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, total int64, err error) {
+	hosts, total, err = m.resourcePool.QueryHosts(ctx, location, filter, page)
 	if err != nil {
-		framework.LogWithContext(ctx).Warnf("query hosts in filter %v failed from db service: %v", *filter, err)
+		framework.LogWithContext(ctx).Warnf("query hosts in location %v with filter %v failed from db service: %v", *location, *filter, err)
 	} else {
-		framework.LogWithContext(ctx).Infof("query %d hosts in filter %v succeed from db service.", len(hosts), *filter)
+		framework.LogWithContext(ctx).Infof("query %d hosts in location %v with filter %v succeed from db service.", len(hosts), *location, *filter)
 	}
 
 	return
 }
 
-func (m *ResourceManager) DeleteHosts(ctx context.Context, hostIds []string) (err error) {
-	err = m.resourcePool.DeleteHosts(ctx, hostIds)
+func (m *ResourceManager) DeleteHosts(ctx context.Context, hostIds []string, force bool) (flowIds []string, err error) {
+	flowIds, err = m.resourcePool.DeleteHosts(ctx, hostIds, force)
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("delete %d hosts %v in failed from db service: %v", len(hostIds), hostIds, err)
 	} else {
-		framework.LogWithContext(ctx).Infof("delete %d hosts %v succeed from db service.", len(hostIds), hostIds)
+		framework.LogWithContext(ctx).Infof("delete %d hosts %v in batch %v succeed from db service.", len(hostIds), hostIds, flowIds)
 	}
 
 	return
@@ -124,7 +124,7 @@ func (m *ResourceManager) GetHierarchy(ctx context.Context, filter *structs.Host
 	return
 }
 
-func (m *ResourceManager) GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks *structs.Stocks, err error) {
+func (m *ResourceManager) GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks map[string]*structs.Stocks, err error) {
 	stocks, err = m.resourcePool.GetStocks(ctx, location, hostFilter, diskFilter)
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("get stocks on location %v, host filter %v, disk filter %v failed from db service: %v", *location, *hostFilter, *diskFilter, err)

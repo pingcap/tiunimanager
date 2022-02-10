@@ -13,11 +13,15 @@
  *  limitations under the License.                                            *
  ******************************************************************************/
 
-package secondparty
+/*******************************************************************************
+ * @File: lib_br_v2
+ * @Description:
+ * @Author: shenhaibo@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/8
+*******************************************************************************/
 
-import (
-	_ "github.com/go-sql-driver/mysql"
-)
+package secondparty
 
 type DbConnParam struct {
 	Username string
@@ -32,20 +36,3 @@ const (
 	StorageTypeLocal StorageType = "local"
 	StorageTypeS3    StorageType = "s3"
 )
-
-type ClusterFacade struct {
-	TaskID          uint64 // do not pass this value for br command
-	DbConnParameter DbConnParam
-	DbName          string
-	TableName       string
-	ClusterId       string // todo: need to know the usage
-	ClusterName     string // todo: need to know the usage
-	RateLimitM      string
-	Concurrency     string
-	CheckSum        string
-}
-
-type BrStorage struct {
-	StorageType StorageType
-	Root        string // "/tmp/backup"
-}

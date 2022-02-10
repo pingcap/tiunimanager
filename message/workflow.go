@@ -42,6 +42,7 @@ type QueryWorkFlowsReq struct {
 	Status   string `json:"status" form:"status"`
 	FlowName string `json:"flowName" form:"flowName"`
 	BizID    string `json:"bizId" form:"bizId"`
+	BizType  string `json:"bizType" form:"bizType"`
 }
 
 type QueryWorkFlowsResp struct {

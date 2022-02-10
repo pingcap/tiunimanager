@@ -22,7 +22,7 @@ import (
 //
 // EMError
 // @Description: EM business error
-// Always get EMError from EMErrorBuilder.build(), limited to Error, NewEMError, NewEMErrorf, WrapError, ErrorBuilder().build()
+// Always get EMError from EMErrorBuilder.build(), limited to Error, NewEMError, NewErrorf, WrapError, ErrorBuilder().build()
 type EMError struct {
 	code  EM_ERROR_CODE
 	msg   string
@@ -37,7 +37,7 @@ func NewError(code EM_ERROR_CODE, msg string) EMError {
 	return ErrorBuilder().Code(code).Message(msg).Build()
 }
 
-func NewEMErrorf(code EM_ERROR_CODE, format string, a ...interface{}) EMError {
+func NewErrorf(code EM_ERROR_CODE, format string, a ...interface{}) EMError {
 	return ErrorBuilder().Code(code).Message(fmt.Sprintf(format, a...)).Build()
 }
 
@@ -63,11 +63,15 @@ func (e EMError) Is(err error) bool {
 }
 
 func (e EMError) Error() string {
-	if e.cause == nil {
-		return fmt.Sprintf("[%d]%s", e.GetCode(), e.GetMsg())
-	} else {
-		return fmt.Sprintf("[%d]%s, cause:%s", e.GetCode(), e.GetMsg(), e.GetCause().Error())
+	errInfo := fmt.Sprintf("[%d]%s", e.GetCode(), e.GetCodeText())
+	if len(e.msg) > 0 {
+		errInfo = fmt.Sprintf("%s	%s", errInfo, e.msg)
 	}
+
+	if e.cause != nil {
+		errInfo = fmt.Sprintf("%s	cause: %s", errInfo, e.cause.Error())
+	}
+	return errInfo
 }
 
 type EMErrorBuilder struct {
@@ -92,7 +96,7 @@ func (t EMErrorBuilder) Message(msg string) EMErrorBuilder {
 	return t
 }
 
-func (t EMErrorBuilder) Format(format string, args... interface{}) EMErrorBuilder {
+func (t EMErrorBuilder) Format(format string, args ...interface{}) EMErrorBuilder {
 	t.template.msg = fmt.Sprintf(format, args...)
 	return t
 }

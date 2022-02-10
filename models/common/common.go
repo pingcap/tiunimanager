@@ -17,11 +17,13 @@ package common
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/errors"
+	"database/sql/driver"
+	crypto "github.com/pingcap-inc/tiem/util/encrypt"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"gorm.io/gorm"
 )
 
@@ -35,8 +37,28 @@ type Entity struct {
 	Status   string `gorm:"not null;"`
 }
 
+type Password string
+
+// Scan implements the Scanner interface.
+func (p *Password) Scan(value interface{}) error {
+	enc, err := crypto.AesDecryptCFB(value.(string))
+	if err != nil {
+		return err
+	}
+	*p = Password(enc)
+	return nil
+}
+
+// Value implements the driver Valuer interface.
+func (p Password) Value() (driver.Value, error) {
+	return crypto.AesEncryptCFB(string(p))
+}
+
 func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
-	e.ID = uuidutil.GenerateID()
+	if len(e.ID) == 0 {
+		e.ID = uuidutil.GenerateID()
+	}
+
 	return nil
 }
 

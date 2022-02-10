@@ -26,6 +26,10 @@ package parametergroup
 import (
 	"context"
 	"testing"
+
+	"github.com/pingcap-inc/tiem/message"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParameterGroupReadWrite_CreateParameterGroup(t *testing.T) {
@@ -35,8 +39,9 @@ func TestParameterGroupReadWrite_CreateParameterGroup(t *testing.T) {
 		return
 	}
 	type args struct {
-		pg  *ParameterGroup
-		pgm []*ParameterGroupMapping
+		pg        *ParameterGroup
+		pgm       []*ParameterGroupMapping
+		addParams []message.ParameterInfo
 	}
 	tests := []struct {
 		name    string
@@ -66,6 +71,40 @@ func TestParameterGroupReadWrite_CreateParameterGroup(t *testing.T) {
 						ParameterID:  params[1].ID,
 						DefaultValue: "2",
 						Note:         "test param 2",
+					},
+				},
+				addParams: []message.ParameterInfo{
+					{
+						Category:       "log",
+						Name:           "binlog_cache",
+						InstanceType:   "TiDB",
+						SystemVariable: "log.binlog_cache",
+						Type:           0,
+						Unit:           "mb",
+						Range:          []string{"0", "1024"},
+						HasReboot:      0,
+						HasApply:       1,
+						UpdateSource:   0,
+						ReadOnly:       0,
+						Description:    "binlog cache",
+						DefaultValue:   "512",
+						Note:           "binlog cache",
+					},
+					{
+						Category:       "basic",
+						Name:           "http_port",
+						InstanceType:   "TiKV",
+						SystemVariable: "",
+						Type:           0,
+						Unit:           "",
+						Range:          nil,
+						HasReboot:      0,
+						HasApply:       1,
+						UpdateSource:   0,
+						ReadOnly:       0,
+						Description:    "http port",
+						DefaultValue:   "8000",
+						Note:           "http port",
 					},
 				},
 			},
@@ -152,7 +191,7 @@ func TestParameterGroupReadWrite_CreateParameterGroup(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			parameterGroup, err := testRW.CreateParameterGroup(context.TODO(), tt.args.pg, tt.args.pgm)
+			parameterGroup, err := testRW.CreateParameterGroup(context.TODO(), tt.args.pg, tt.args.pgm, tt.args.addParams)
 			if err != nil {
 				if tt.wantErr {
 					return
@@ -176,7 +215,7 @@ func TestParameterGroupReadWrite_DeleteParameterGroup(t *testing.T) {
 		t.Errorf("TestParameterGroupReadWrite_DeleteParameterGroup() test error, build params err.")
 		return
 	}
-	groups, err := buildParamGroup(2, params)
+	groups, err := buildParamGroup(2, params, nil)
 	if err != nil {
 		t.Errorf("TestParameterGroupReadWrite_DeleteParameterGroup() test error, build param group err.")
 		return
@@ -236,19 +275,21 @@ func TestParameterGroupReadWrite_DeleteParameterGroup(t *testing.T) {
 }
 
 func TestParameterGroupReadWrite_UpdateParameterGroup(t *testing.T) {
-	params, err := buildParams(2)
+	params, err := buildParams(3)
 	if err != nil {
 		t.Errorf("TestParameterGroupReadWrite_UpdateParameterGroup() test error, build params err.")
 		return
 	}
-	groups, err := buildParamGroup(2, params)
+	groups, err := buildParamGroup(2, params, nil)
 	if err != nil {
 		t.Errorf("TestParameterGroupReadWrite_UpdateParameterGroup() test error, build param group err.")
 		return
 	}
 	type args struct {
-		pg  *ParameterGroup
-		pgm []*ParameterGroupMapping
+		pg        *ParameterGroup
+		pgm       []*ParameterGroupMapping
+		addParams []message.ParameterInfo
+		delParams []string
 	}
 	tests := []struct {
 		name    string
@@ -278,6 +319,25 @@ func TestParameterGroupReadWrite_UpdateParameterGroup(t *testing.T) {
 						Note:         "test param 2",
 					},
 				},
+				addParams: []message.ParameterInfo{
+					{
+						Category:       "log",
+						Name:           "binlog_cache",
+						InstanceType:   "TiDB",
+						SystemVariable: "log.binlog_cache",
+						Type:           0,
+						Unit:           "mb",
+						Range:          []string{"0", "1024"},
+						HasReboot:      0,
+						HasApply:       1,
+						UpdateSource:   0,
+						ReadOnly:       0,
+						Description:    "binlog cache",
+						DefaultValue:   "512",
+						Note:           "binlog cache",
+					},
+				},
+				delParams: []string{params[1].ID},
 			},
 			false,
 			[]func(a args) bool{
@@ -302,6 +362,34 @@ func TestParameterGroupReadWrite_UpdateParameterGroup(t *testing.T) {
 					},
 					{
 						ParameterID:  params[1].ID,
+						DefaultValue: "32",
+						Note:         "test param 2",
+					},
+				},
+			},
+			false,
+			[]func(a args) bool{
+				func(a args) bool { return a.pg.ID != "" },
+			},
+		},
+		{
+			"parameter_group_id error",
+			args{
+				pg: &ParameterGroup{
+					ID:             groups[1].ID,
+					Name:           "update_param_group_2",
+					ClusterSpec:    "8C32G",
+					ClusterVersion: "5.2",
+					Note:           "update param group 2",
+				},
+				pgm: []*ParameterGroupMapping{
+					{
+						ParameterID:  "dsfsda",
+						DefaultValue: "22",
+						Note:         "test param 1",
+					},
+					{
+						ParameterID:  "dsfds",
 						DefaultValue: "32",
 						Note:         "test param 2",
 					},
@@ -338,10 +426,36 @@ func TestParameterGroupReadWrite_UpdateParameterGroup(t *testing.T) {
 			true,
 			[]func(a args) bool{},
 		},
+		{
+			"idNotExisted",
+			args{
+				pg: &ParameterGroup{
+					ID:             "aaaaaaaaaaa",
+					Name:           "update_param_group_3",
+					ClusterSpec:    "8C32G",
+					ClusterVersion: "5.2",
+					Note:           "update param group 3",
+				},
+				pgm: []*ParameterGroupMapping{
+					{
+						ParameterID:  "",
+						DefaultValue: "22",
+						Note:         "test param 3",
+					},
+					{
+						ParameterID:  "",
+						DefaultValue: "32",
+						Note:         "test param 3",
+					},
+				},
+			},
+			true,
+			[]func(a args) bool{},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := testRW.UpdateParameterGroup(context.TODO(), tt.args.pg, tt.args.pgm)
+			err := testRW.UpdateParameterGroup(context.TODO(), tt.args.pg, tt.args.pgm, tt.args.addParams, tt.args.delParams)
 			if (err != nil) && tt.wantErr {
 				return
 			}
@@ -361,7 +475,7 @@ func TestParameterGroupReadWrite_QueryParameterGroup(t *testing.T) {
 		t.Errorf("TestParameterGroupReadWrite_QueryParameterGroup() test error, build params err.")
 		return
 	}
-	groups, err := buildParamGroup(2, params)
+	groups, err := buildParamGroup(2, params, nil)
 	if err != nil {
 		t.Errorf("TestParameterGroupReadWrite_QueryParameterGroup() test error, build param group err.")
 		return
@@ -434,7 +548,7 @@ func TestParameterGroupReadWrite_GetParameterGroup(t *testing.T) {
 		t.Errorf("TestParameterGroupReadWrite_GetParameterGroup() test error, build params err.")
 		return
 	}
-	groups, err := buildParamGroup(2, params)
+	groups, err := buildParamGroup(2, params, nil)
 	if err != nil {
 		t.Errorf("TestParameterGroupReadWrite_GetParameterGroup() test error, build param group err.")
 		return
@@ -483,10 +597,18 @@ func TestParameterGroupReadWrite_GetParameterGroup(t *testing.T) {
 			true,
 			[]func(a args, ret resp) bool{},
 		},
+		{
+			"idIsEmpty",
+			args{
+				id: "aaaa",
+			},
+			true,
+			[]func(a args, ret resp) bool{},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			group, params, err := testRW.GetParameterGroup(context.TODO(), tt.args.id)
+			group, params, err := testRW.GetParameterGroup(context.TODO(), tt.args.id, "test", "TiKV")
 			if err != nil {
 				if tt.wantErr {
 					return
@@ -658,6 +780,14 @@ func TestParameterGroupReadWrite_DeleteParameter(t *testing.T) {
 				func(a args) bool { return a.id == "" },
 			},
 		},
+		{
+			"idIsEmpty",
+			args{
+				id: "aaaa",
+			},
+			true,
+			[]func(a args) bool{},
+		},
 	}
 
 	for _, tt := range tests {
@@ -736,6 +866,16 @@ func TestParameterGroupReadWrite_UpdateParameter(t *testing.T) {
 			[]func(a args) bool{
 				func(a args) bool { return a.p.ID != "" },
 			},
+		},
+		{
+			"idIsEmpty",
+			args{
+				p: &Parameter{
+					ID: "aaaa",
+				},
+			},
+			true,
+			[]func(a args) bool{},
 		},
 	}
 
@@ -825,6 +965,50 @@ func TestParameterGroupReadWrite_GetParameter(t *testing.T) {
 			for i, assert := range tt.wants {
 				if !assert(tt.args, param) {
 					t.Errorf("GetParameter() test error, testname = %v, assert %v, args = %v, got param = %v", tt.name, i, tt.args, param)
+				}
+			}
+		})
+	}
+}
+
+func TestParameterGroupReadWrite_QueryParameter(t *testing.T) {
+	_, err := buildParams(2)
+	if err != nil {
+		t.Errorf("TestParameterGroupReadWrite_QueryParameter() test error, build params err.")
+		return
+	}
+
+	type args struct{}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+		wants   []func(a args, p []*Parameter) bool
+	}{
+		{
+			"normal",
+			args{},
+			false,
+			[]func(a args, p []*Parameter) bool{
+				func(a args, p []*Parameter) bool { return len(p) > 0 },
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			params, total, err := testRW.QueryParameters(context.TODO(), 0, 10)
+			assert.True(t, int(total) > 0)
+			if err != nil {
+				if tt.wantErr {
+					return
+				}
+				t.Errorf("QueryParameters() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			for i, assert := range tt.wants {
+				if !assert(tt.args, params) {
+					t.Errorf("QueryParameters() test error, testname = %v, assert %v, args = %v, got params = %v", tt.name, i, tt.args, params)
 				}
 			}
 		})

@@ -105,7 +105,15 @@ func (m *BRReadWrite) DeleteBackupRecord(ctx context.Context, backupId string) (
 		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "backup id cannot be empty")
 	}
 	record := &BackupRecord{}
-	return m.DB(ctx).First(record, "id = ?", backupId).Delete(record).Error
+	return m.DB(ctx).First(record, "id = ?", backupId).Unscoped().Delete(record).Error
+}
+
+func (m *BRReadWrite) DeleteBackupRecords(ctx context.Context, backupIds []string) (err error) {
+	if len(backupIds) <= 0 {
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "backup ids cannot be empty")
+	}
+	records := &[]BackupRecord{}
+	return m.DB(ctx).Find(records, "id in ?", backupIds).Unscoped().Delete(records).Error
 }
 
 func (m *BRReadWrite) CreateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (*BackupStrategy, error) {

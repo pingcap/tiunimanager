@@ -1,8 +1,9 @@
 syntax = "proto3";
-option go_package = "./clusterpb/;clusterpb";
+option go_package = "./clusterservices/;clusterservices";
 
 service ClusterService {
     // Cluster manager module
+
     rpc CreateCluster(RpcRequest) returns (RpcResponse);
     rpc QueryCluster(RpcRequest) returns (RpcResponse);
     rpc DeleteCluster(RpcRequest) returns (RpcResponse);
@@ -13,6 +14,9 @@ service ClusterService {
     rpc ScaleOutCluster(RpcRequest) returns (RpcResponse);
     rpc ScaleInCluster(RpcRequest) returns (RpcResponse);
     rpc CloneCluster(RpcRequest) returns (RpcResponse);
+
+    rpc PreviewCluster(RpcRequest) returns (RpcResponse);
+    rpc PreviewScaleOutCluster(RpcRequest) returns (RpcResponse);
 
     rpc ImportData(RpcRequest) returns (RpcResponse);
     rpc ExportData(RpcRequest) returns (RpcResponse);
@@ -35,6 +39,17 @@ service ClusterService {
     rpc Login(RpcRequest) returns (RpcResponse);
     rpc Logout(RpcRequest) returns (RpcResponse);
     rpc VerifyIdentity(RpcRequest) returns (RpcResponse);
+
+    // Rbac
+    rpc BindRolesForUser(RpcRequest) returns (RpcResponse);
+    rpc QueryRoles(RpcRequest) returns (RpcResponse);
+    rpc CreateRbacRole(RpcRequest) returns (RpcResponse);
+    rpc DeleteRbacRole(RpcRequest) returns (RpcResponse);
+    rpc UnbindRoleForUser(RpcRequest) returns (RpcResponse);
+    rpc AddPermissionsForRole(RpcRequest) returns (RpcResponse);
+    rpc DeletePermissionsForRole(RpcRequest) returns (RpcResponse);
+    rpc QueryPermissionsForUser(RpcRequest) returns (RpcResponse);
+    rpc CheckPermissionForUser(RpcRequest) returns (RpcResponse);
 
     // resource manager module
     rpc ImportHosts(RpcRequest) returns (RpcResponse);
@@ -80,6 +95,32 @@ service ClusterService {
 
     // system config
     rpc GetSystemConfig(RpcRequest) returns (RpcResponse);
+
+    //product & spec
+    rpc CreateZones(RpcRequest) returns (RpcResponse);
+    rpc DeleteZone(RpcRequest) returns (RpcResponse);
+    rpc QueryZones(RpcRequest) returns (RpcResponse);
+    rpc QueryProducts(RpcRequest) returns (RpcResponse);
+    rpc CreateProduct(RpcRequest) returns (RpcResponse);
+    rpc DeleteProduct(RpcRequest) returns (RpcResponse);
+    rpc QueryProductDetail(RpcRequest) returns (RpcResponse);
+    rpc CreateSpecs(RpcRequest) returns (RpcResponse);
+    rpc DeleteSpecs(RpcRequest) returns (RpcResponse);
+    rpc QuerySpecs(RpcRequest) returns (RpcResponse);
+
+    //user & tenant
+    rpc CreateUser(RpcRequest) returns (RpcResponse);
+    rpc DeleteUser(RpcRequest) returns (RpcResponse);
+    rpc GetUser(RpcRequest) returns (RpcResponse);
+    rpc QueryUsers(RpcRequest) returns (RpcResponse);
+    rpc UpdateUserProfile(RpcRequest) returns (RpcResponse);
+    rpc UpdateUserPassword(RpcRequest) returns (RpcResponse);
+    rpc CreateTenant(RpcRequest) returns (RpcResponse);
+    rpc DeleteTenant(RpcRequest) returns (RpcResponse);
+    rpc GetTenant(RpcRequest) returns (RpcResponse);
+    rpc QueryTenants(RpcRequest) returns (RpcResponse);
+    rpc UpdateTenantOnBoardingStatus(RpcRequest) returns (RpcResponse);
+    rpc UpdateTenantProfile(RpcRequest) returns (RpcResponse);
 }
 
 message RpcRequest {

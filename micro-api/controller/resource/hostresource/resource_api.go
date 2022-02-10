@@ -25,11 +25,12 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/pingcap-inc/tiem/common/client"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 
 	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
@@ -49,12 +50,18 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	rows := xlsx.GetRows("Host Information")
+	rows := xlsx.GetRows(ImportHostTemplateSheet)
+	if len(rows) == 0 {
+		errMsg := fmt.Sprintf("[%s] sheet not exist or has no valid data", ImportHostTemplateSheet)
+		return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+	}
 	var hosts []structs.HostInfo
 	for irow, row := range rows {
 		if irow > 0 {
 			var host structs.HostInfo
 			host.Reserved = reserved
+			// Only Local Vendor hosts imported by template file
+			host.Vendor = string(constants.Local)
 			host.HostName = row[HOSTNAME_FIELD]
 			addr := net.ParseIP(row[IP_FILED])
 			if addr == nil {
@@ -80,14 +87,14 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 			}
 			host.CpuCores = int32(coreNum)
-			host.FreeCpuCores = host.CpuCores
+			host.UsedCpuCores = 0
 			mem, err := (strconv.Atoi(row[MEM_FIELD]))
 			if err != nil {
 				errMsg := fmt.Sprintf("Row %d get memory(%s) failed, %v", irow, row[MEM_FIELD], err)
 				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 			}
 			host.Memory = int32(mem)
-			host.FreeMemory = host.Memory
+			host.UsedMemory = 0
 			host.Nic = row[NIC_FIELD]
 
 			if err = constants.ValidProductID(row[CLUSTER_TYPE_FIELD]); err != nil {
@@ -119,7 +126,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			if err = host.AddTraits(host.DiskType); err != nil {
 				return nil, err
 			}
-			host.Status = string(constants.HostOnline)
+			host.Status = string(constants.HostInit)
 			host.Stat = string(constants.HostLoadLoadLess)
 			disksStr := row[DISKS_FIELD]
 			if err = json.Unmarshal([]byte(disksStr), &host.Disks); err != nil {
@@ -137,6 +144,11 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 	return hosts, nil
 }
 
+func getBoolPostForm(c *gin.Context, field string, defaultValue string) (bool, error) {
+	inputStr := c.DefaultPostForm(field, defaultValue)
+	return strconv.ParseBool(inputStr)
+}
+
 // ImportHosts godoc
 // @Summary Import a batch of hosts to TiEM
 // @Description import hosts by xlsx file
@@ -145,17 +157,31 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param hostReserved formData string false "whether hosts are reserved(won't be allocated) after import" default(false)
+// @Param skipHostInit formData string false "whether to skip host init steps" default(false)
+// @Param ignorewarns formData string false "whether to ignore warings in init steps" default(false)
 // @Param file formData file true "hosts information in a xlsx file"
 // @Success 200 {object} controller.CommonResult{data=message.ImportHostsResp}
 // @Router /resources/hosts [post]
 func ImportHosts(c *gin.Context) {
-	reservedStr := c.DefaultPostForm("hostReserved", "false")
-	reserved, err := strconv.ParseBool(reservedStr)
+	reserved, err := getBoolPostForm(c, "hostReserved", "false")
 	if err != nil {
-		errmsg := fmt.Sprintf("GetFormData Error: %v", err)
+		errmsg := fmt.Sprintf("GetFormData hostReserved Error: %v", err)
 		setGinContextForInvalidParam(c, errmsg)
 		return
 	}
+	skipHostInit, err := getBoolPostForm(c, "skipHostInit", "false")
+	if err != nil {
+		errmsg := fmt.Sprintf("GetFormData skipHostInit Error: %v", err)
+		setGinContextForInvalidParam(c, errmsg)
+		return
+	}
+	ignoreWarings, err := getBoolPostForm(c, "ignorewarns", "false")
+	if err != nil {
+		errmsg := fmt.Sprintf("GetFormData ignorewarns Error: %v", err)
+		setGinContextForInvalidParam(c, errmsg)
+		return
+	}
+
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
 		errmsg := fmt.Sprintf("GetFormFile Error: %v", err)
@@ -171,6 +197,11 @@ func ImportHosts(c *gin.Context) {
 
 	requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, message.ImportHostsReq{
 		Hosts: hosts,
+		Condition: structs.ImportCondition{
+			ReserveHost:   reserved,
+			SkipHostInit:  skipHostInit,
+			IgnoreWarings: ignoreWarings,
+		},
 	})
 
 	if ok {
@@ -228,7 +259,7 @@ func detectDuplicateElement(hostIds []string) (string, bool) {
 // @Security ApiKeyAuth
 // @Param hostIds body message.DeleteHostsReq true "list of host IDs"
 // @Success 200 {object} controller.CommonResult{data=message.DeleteHostsResp}
-// @Router /resources/hosts/ [delete]
+// @Router /resources/hosts [delete]
 func RemoveHosts(c *gin.Context) {
 	var req message.DeleteHostsReq
 
@@ -253,7 +284,7 @@ func RemoveHosts(c *gin.Context) {
 // @Produce octet-stream
 // @Security ApiKeyAuth
 // @Success 200 {file} file
-// @Router /resources/hosts-template/ [get]
+// @Router /resources/hosts-template [get]
 func DownloadHostTemplateFile(c *gin.Context) {
 	curDir, _ := os.Getwd()
 	templateName := ImportHostTemplateFileName
@@ -321,7 +352,7 @@ func UpdateHostStatus(c *gin.Context) {
 		}
 
 		if !constants.HostStatus(req.Status).IsValidStatus() {
-			errmsg := fmt.Sprintf("input status %s is invalid, [Online,Offline,Deleted]", req.Status)
+			errmsg := fmt.Sprintf("input status %s is invalid, [Online,Offline,Deleted,Init,Failed]", req.Status)
 			setGinContextForInvalidParam(c, errmsg)
 			return
 		}

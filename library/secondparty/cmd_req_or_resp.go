@@ -18,98 +18,10 @@ package secondparty
 import (
 	"github.com/pingcap-inc/tiem/library/spec"
 	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
-	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
 )
-
-type CmdDeployReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	TaskID        uint64
-	InstanceName  string
-	Version       string
-	ConfigStrYaml string
-	TimeoutS      int
-	TiUPPath      string
-	Flags         []string
-}
-
-type CmdScaleOutReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	TaskID        uint64
-	InstanceName  string
-	ConfigStrYaml string
-	TimeoutS      int
-	TiUPPath      string
-	Flags         []string
-}
-
-type CmdScaleInReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	TaskID        uint64
-	InstanceName  string
-	NodeId        string
-	TimeoutS      int
-	TiUPPath      string
-	Flags         []string
-}
-
-type CmdStartReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	TaskID        uint64
-	InstanceName  string
-	TimeoutS      int
-	TiUPPath      string
-	Flags         []string
-}
-
-type CmdListReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	TaskID        uint64
-	TimeoutS      int
-	TiUPPath      string
-	Flags         []string
-}
-
-type CmdDestroyReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	TaskID        uint64
-	InstanceName  string
-	TimeoutS      int
-	TiUPPath      string
-	Flags         []string
-}
-
-type CmdListResp struct {
-	ListRespStr string
-}
 
 type CmdGetAllOperationStatusResp struct {
 	Stats []OperationStatusMember
-}
-
-type CmdDumplingReq struct {
-	TaskID   uint64
-	TimeoutS int
-	TiUPPath string
-	Flags    []string
-}
-
-type CmdLightningReq struct {
-	TaskID   uint64
-	TimeoutS int
-	TiUPPath string
-	Flags    []string
-}
-
-type CmdDisplayReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	InstanceName  string
-	TimeoutS      int
-	TiUPPath      string
-	Flags         []string
-}
-
-type CmdDisplayResp struct {
-	DisplayRespString string
 }
 
 type CmdBackUpReq struct {
@@ -186,38 +98,6 @@ type CmdShowRestoreInfoResp struct {
 	ErrorStr      string
 }
 
-type CmdTransferReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	TaskID        uint64
-	InstanceName  string
-	CollectorYaml string
-	RemotePath    string
-	TimeoutS      int
-	TiUPPath      string
-	Flags         []string
-}
-
-type CmdUpgradeReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	TaskID        uint64
-	InstanceName  string
-	Version       string
-	TimeoutS      int
-	TiUPPath      string
-	Flags         []string
-}
-
-type CmdShowConfigReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	InstanceName  string
-	TimeoutS      int
-	Flags         []string
-}
-
-type CmdShowConfigResp struct {
-	TiDBClusterTopo *spec2.Specification
-}
-
 type GlobalComponentConfig struct {
 	TiDBClusterComponent spec.TiDBClusterComponent
 	ConfigMap            map[string]interface{}
@@ -228,47 +108,6 @@ type ClusterComponentConfig struct {
 	InstanceAddr         string
 	ConfigKey            string
 	ConfigValue          string
-}
-
-type CmdEditGlobalConfigReq struct {
-	TiUPComponent          TiUPComponentTypeStr
-	InstanceName           string
-	GlobalComponentConfigs []GlobalComponentConfig
-	TimeoutS               int
-	Flags                  []string
-}
-
-type CmdEditInstanceConfigReq struct {
-	TiUPComponent        TiUPComponentTypeStr
-	InstanceName         string
-	TiDBClusterComponent spec.TiDBClusterComponent
-	Host                 string
-	Port                 int
-	ConfigMap            map[string]interface{}
-	TimeoutS             int
-	Flags                []string
-}
-
-type CmdEditConfigReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	InstanceName  string
-	NewTopo       *spec2.Specification
-	TimeoutS      int
-	Flags         []string
-}
-
-type CmdReloadConfigReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	InstanceName  string
-	TimeoutS      int
-	Flags         []string
-}
-
-type CmdClusterExecReq struct {
-	TiUPComponent TiUPComponentTypeStr
-	InstanceName  string
-	TimeoutS      int
-	Flags         []string
 }
 
 type ApiEditConfigReq struct {
@@ -284,10 +123,6 @@ type ClusterEditConfigReq struct {
 	ComponentConfigs []ClusterComponentConfig
 }
 
-type ClusterEditConfigResp struct {
-	Message string
-}
-
 type ShowWarningsResp struct {
 	Level   string
 	Code    string
@@ -300,50 +135,42 @@ type GetOperationStatusResp struct {
 	ErrorStr string
 }
 
-type ClusterSetDbPswReq struct {
-	DbConnParameter DbConnParam
-}
-
-type ClusterSetDbPswResp struct {
-	Message string
-}
-
 type ChangeFeedCreateReq struct {
-	PD               string
-	ChangeFeedID     string   `form:"changefeed_id"`
-	SinkURI          string   `form:"sink_uri"`
-	StartTS          uint64   `form:"start_ts"`
+	CDCAddress       string   `json:"-"`
+	ChangeFeedID     string   `json:"changefeed_id"`
+	SinkURI          string   `json:"sink_uri"`
+	StartTS          uint64   `json:"start_ts"`
 	TargetTS         uint64   `json:"target_ts"`
-	IgnoreTxnStartTS uint64   `json:"ignore_txn_start_ts"`
+	IgnoreTxnStartTS []uint64 `json:"ignore_txn_start_ts"`
 	FilterRules      []string `json:"filter_rules"`
 	SinkConfig       []string `json:"sink_config"`
 	MounterWorkerNum int      `json:"mounter_worker_num"`
 }
 
 type ChangeFeedUpdateReq struct {
-	ChangeFeedID     string
-	PD               string
+	ChangeFeedID     string   `json:"-"`
+	CDCAddress       string   `json:"-"`
 	SinkURI          string   `json:"sink_uri"`
 	TargetTS         int64    `json:"target_ts"`
 	FilterRules      []string `json:"filter_rules"`
-	IgnoreTxnStartTS uint64   `json:"ignore_txn_start_ts"`
+	IgnoreTxnStartTS []uint64 `json:"ignore_txn_start_ts"`
 	SinkConfig       []string `json:"sink_config"`
 	MounterWorkerNum int      `json:"mounter_worker_num"`
 }
 
 type ChangeFeedPauseReq struct {
 	ChangeFeedID string
-	PD           string
+	CDCAddress   string
 }
 
 type ChangeFeedDeleteReq struct {
 	ChangeFeedID string
-	PD           string
+	CDCAddress   string
 }
 
 type ChangeFeedResumeReq struct {
 	ChangeFeedID string
-	PD           string
+	CDCAddress   string
 }
 
 type ChangeFeedCmdAcceptResp struct {
@@ -354,8 +181,8 @@ type ChangeFeedCmdAcceptResp struct {
 }
 
 type ChangeFeedQueryReq struct {
-	PD    string
-	State string
+	CDCAddress string
+	State      string
 }
 
 type ChangeFeedQueryResp struct {
@@ -363,7 +190,7 @@ type ChangeFeedQueryResp struct {
 }
 
 type ChangeFeedDetailReq struct {
-	PD           string
+	CDCAddress   string
 	ChangeFeedID string
 }
 
@@ -374,6 +201,7 @@ type ChangeFeedDetailResp struct {
 type ChangeFeedInfo struct {
 	ChangeFeedID  string `json:"id"`
 	State         string `json:"state"`
-	CheckPointTSO string `json:"checkpoint_tso"`
+	CheckPointTSO uint64 `json:"checkpoint_tso"`
+	ResolvedTSO   uint64 `json:"resolved_tso"`
 	Error         string `json:"error"`
 }

@@ -24,7 +24,7 @@ PROTOC_GEN_GO = google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
 PROTOBUF_VERSION = 3.14.0
 PROTOC_PKG = protoc-$(PROTOBUF_VERSION)-$(OS)-$(ARCH).zip
 PROTOC_URL = https://github.com/protocolbuffers/protobuf/releases/download/v$(PROTOBUF_VERSION)/$(PROTOC_PKG)
-GENERATE_TARGET_DIR = $(CURDIR)/library/client/
+GENERATE_TARGET_DIR = $(CURDIR)/proto
 
 include Makefile.common
 
@@ -47,9 +47,9 @@ prepare:
 # generate protobuf files
 proto:
 	@echo "start to generate protobuf files"
-	@if [ ! -d "$(GENERATE_TARGET_DIR)/cluster" ]; then mkdir -p $(GENERATE_TARGET_DIR)/cluster; fi
-	protoc --proto_path=$(CURDIR)/proto:$(GOPATH)/include --micro_out=$(GENERATE_TARGET_DIR)/cluster \
-		--go_out=$(GENERATE_TARGET_DIR)/cluster $(CURDIR)/proto/*.proto
+	@if [ ! -d "$(GENERATE_TARGET_DIR)" ]; then mkdir -p $(GENERATE_TARGET_DIR); fi
+	protoc --proto_path=$(CURDIR)/proto:$(GOPATH)/include --micro_out=$(GENERATE_TARGET_DIR) \
+		--go_out=$(GENERATE_TARGET_DIR) $(CURDIR)/proto/*.proto
 	@echo "generate protobuf files successfully"
 
 
@@ -75,7 +75,7 @@ build_cluster_server:
 build_file_server:
 	@echo "build file-server start."
 	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${FILE_SERVER_BINARY} file-server/*.go
-	@echo "build file-server sucessufully."
+	@echo "build file-server successfully."
 
 #2. R&D to test the code themselves for compliance before submitting it
 devselfcheck:
@@ -188,7 +188,7 @@ clean:
 	@if [ -f ${TIEM_BINARY_DIR}/vfsgendev ] ; then rm ${TIEM_BINARY_DIR}/vfsgendev; fi
 	@if [ -f ${TIEM_BINARY_DIR}/golangci-lint ] ; then rm ${TIEM_BINARY_DIR}/golangci-lint; fi
 	@if [ -f ${TIEM_BINARY_DIR}/errdoc-gen ] ; then rm ${TIEM_BINARY_DIR}/errdoc-gen; fi
-	@if [ -d ${GENERATE_TARGET_DIR}/cluster ] ; then rm -rf ${GENERATE_TARGET_DIR}/cluster; fi
+	@if [ -d ${GENERATE_TARGET_DIR}/clusterservices ] ; then rm -rf ${GENERATE_TARGET_DIR}/clusterservices; fi
 	@if [ -d ${CURDIR}/test ] ; then rm -rf ${CURDIR}/test; fi
 
 help:
@@ -260,8 +260,7 @@ add_test_file:
 
 mock:
 	$(GO) install github.com/golang/mock/mockgen
-	mockgen -destination ./test/mockcluster/mock_cluster.pb.micro.go -package mockcluster -source ./library/client/cluster/clusterpb/clusterservices.pb.micro.go
-
+	mockgen -destination ./test/mockcluster/mock_clusterservices.pb.micro.go -package mockclusterservices -source ./proto/clusterservices/clusterservices.pb.micro.go
 	mockgen -destination ./test/mockmodels/mockmanagement/mock_management_interface.go -package mockmanagement -source ./models/cluster/management/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockworkflow/mock_workflow_interface.go -package mockworkflow -source ./models/workflow/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockbr/mock_br_interface.go -package mockbr -source ./models/cluster/backuprestore/readerwriter.go
@@ -269,13 +268,29 @@ mock:
 	mockgen -destination ./test/mockmodels/mockresource/mock_resource_interface.go -package mockresource -source ./models/resource/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockconfig/mock_config_interface.go -package mockconfig -source ./models/platform/config/readerwriter.go
 	mockgen -destination ./test/mockmodels/mocksecondparty/mock_secondparty_interface.go -package mocksecondparty -source ./models/workflow/secondparty/readerwriter.go
+	mockgen -destination ./test/mockmodels/mocktiupconfig/mock_tiupconfig_interface.go -package mocktiupconfig -source ./models/tiup/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockparametergroup/mock_parametergroup_interface.go -package mockparametergroup -source ./models/parametergroup/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockclusterparameter/mock_clusterparameter_interface.go -package mockclusterparameter -source ./models/cluster/parameter/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockclustermanagement/mock_cluster_management_interface.go -package mockclustermanagement -source ./models/cluster/management/readerwriter.go
-
+	mockgen -destination ./test/mockmodels/mockchangefeed/mock_change_feed_interface.go -package mockchangefeed -source ./models/cluster/changefeed/readerwriter.go
+	mockgen -destination ./test/mockmodels/mockaccount/mock_account.go -package mock_account -source ./models/user/account/readerwriter.go
 	mockgen -destination ./test/mockworkflow/mock_workflow.go -package mock_workflow_service -source ./workflow/workflow.go
 	mockgen -destination ./test/mockbr/mock_br.go -package mock_br_service -source ./micro-cluster/cluster/backuprestore/service.go
-	mockgen -destination ./test/mocksecondparty_v2/mock_secondparty.go -package mock_secondparty -source ./library/secondparty/second_party_manager_v2.go
+	mockgen -destination ./test/mocksecondparty/mock_secondparty.go -package mock_secondparty -source ./library/secondparty/second_party_manager.go
+	mockgen -destination ./test/mockdeployment/mock_deployment.go -package mock_deployment -source ./deployment/deploymentInterface.go
+	mockgen -destination ./test/mockresource/mockinitiator/mock_initiator_interface.go -package mockinitiator -source ./micro-cluster/resourcemanager/resourcepool/hostinitiator/hostinitiator.go
+	mockgen -destination ./test/mockresource/mockprovider/mock_provider_interface.go -package mockinitiator -source ./micro-cluster/resourcemanager/resourcepool/hostprovider/hostprovider.go
+	mockgen -destination ./test/mockutil/mocksshclientexecutor/mock_ssh_client_interface.go -package mocksshclient -source ./util/ssh/ssh_client.go
+	mockgen -destination ./test/mockresource/mock_allocator_recycler.go -package mock_allocator_recycler -source ./micro-cluster/resourcemanager/management/structs/allocator_recycler.go
+	mockgen -destination ./test/mockmodels/mock_product.go -package mock_product -source ./models/platform/product/product_read_writer.go
+	mockgen -destination ./test/mockaccount/mock_account.go -package mockaccount -source ./models/user/account/readerwriter.go
+	mockgen -destination ./test/mockidentification/mock_identification.go -package mockidentification -source ./models/user/identification/readerwriter.go
+	mockgen -destination ./test/mockchangefeed/mock_changefeed.go -package mockchangefeed -source ./micro-cluster/cluster/changefeed/service.go
+	mockgen -destination ./test/mockutilcdc/mock_utilcdc.go -package mockutilcdc -source ./util/api/cdc/clusterconfig.go
+	mockgen -destination ./test/mockutilpd/mock_utilpd.go -package mockutilpd -source ./util/api/pd/clusterconfig.go
+	mockgen -destination ./test/mockutiltikv/mock_utiltikv.go -package mockutiltikv -source ./util/api/tikv/clusterconfig.go
+	mockgen -destination ./test/mockutiltidbhttp/mock_utiltidbhttp.go -package mockutiltidbhttp -source ./util/api/tidb/http/clusterconfig.go
+	mockgen -destination ./test/mockutiltidbsql_config/mock_utiltidbsql_config.go -package mockutiltidbsqlconfig -source ./util/api/tidb/sql/clusterconfig.go
 
 swag:
 	$(GO) install github.com/swaggo/swag/cmd/swag@v1.7.1

@@ -26,7 +26,7 @@ package parametergroup
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
@@ -65,15 +65,21 @@ const paramNameOfParameterGroupId = "paramGroupId"
 // @Produce json
 // @Security ApiKeyAuth
 // @Param paramGroupId path string true "parameter group id"
+// @Param queryReq query message.DetailParameterGroupReq false "query request"
 // @Success 200 {object} controller.CommonResult{data=message.DetailParameterGroupResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /param-groups/{paramGroupId} [get]
 func Detail(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.DetailParameterGroupReq{
-		ParamGroupID: c.Param(paramNameOfParameterGroupId),
-	}); ok {
+	var req message.DetailParameterGroupReq
+
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &req,
+		// append id in path to request
+		func(c *gin.Context, req interface{}) error {
+			req.(*message.DetailParameterGroupReq).ParamGroupID = c.Param(paramNameOfParameterGroupId)
+			return nil
+		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DetailParameterGroup, &message.DetailParameterGroupResp{},
 			requestBody,
 			controller.DefaultTimeout)

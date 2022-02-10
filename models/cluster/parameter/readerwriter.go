@@ -33,13 +33,15 @@ type ReaderWriter interface {
 	// @Description: query cluster parameter
 	// @param ctx
 	// @param clusterId
+	// @param parameterName
+	// @param instanceType
 	// @param page
 	// @param pageSize
 	// @return paramGroupId
 	// @return total
 	// @return params
 	// @return err
-	QueryClusterParameter(ctx context.Context, clusterId string, offset, size int) (paramGroupId string, params []*ClusterParamDetail, total int64, err error)
+	QueryClusterParameter(ctx context.Context, clusterId, parameterName, instanceType string, offset, size int) (paramGroupId string, params []*ClusterParamDetail, total int64, err error)
 
 	// UpdateClusterParameter
 	// @Description: update cluster parameters

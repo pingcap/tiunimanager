@@ -22,29 +22,27 @@ import (
 	"time"
 )
 
-// WorkFlowNode work flow node infomation
+// WorkFlowNode work flow node information
 type WorkFlowNode struct {
 	common.Entity
-	BizID      string `gorm:"default:null;<-:create"`
-	ParentID   string `gorm:"default:null;index;comment:'ID of the workflow parent node'"`
-	Name       string `gorm:"default:null;comment:'name of the workflow node'"`
-	ReturnType string `gorm:"default:null"`
-	Parameters string `gorm:"default:null"`
-	Result     string `gorm:"default:null"`
-	StartTime  time.Time
-	EndTime    time.Time
+	BizID       string `gorm:"default:null;<-:create"`
+	ParentID    string `gorm:"default:null;index;comment:'ID of the workflow parent node'"`
+	Name        string `gorm:"default:null;comment:'name of the workflow node'"`
+	OperationID string `gorm:"default:null;comment:'ID of the operation'"`
+	ReturnType  string `gorm:"default:null"`
+	Parameters  string `gorm:"default:null"`
+	Result      string `gorm:"default:null"`
+	StartTime   time.Time
+	EndTime     time.Time
 }
 
 func (node *WorkFlowNode) Processing() {
 	node.Status = constants.WorkFlowStatusProcessing
 }
 
-var defaultSuccessInfo = "success"
+var defaultSuccessInfo = "Completed."
 
-func (node *WorkFlowNode) Success(result ...interface{}) {
-	node.Status = constants.WorkFlowStatusFinished
-	node.EndTime = time.Now()
-
+func (node *WorkFlowNode) Record(result ...interface{}) {
 	if result == nil {
 		result = []interface{}{defaultSuccessInfo}
 	}
@@ -57,8 +55,20 @@ func (node *WorkFlowNode) Success(result ...interface{}) {
 	}
 }
 
+func (node *WorkFlowNode) RecordAndPersist(result ...interface{}) {
+	// todo: persist record
+	node.Record(result)
+}
+
+func (node *WorkFlowNode) Success(result ...interface{}) {
+	node.Record(result...)
+
+	node.Status = constants.WorkFlowStatusFinished
+	node.EndTime = time.Now()
+}
+
 func (node *WorkFlowNode) Fail(e error) {
 	node.Status = constants.WorkFlowStatusError
 	node.EndTime = time.Now()
-	node.Result = e.Error()
+	node.Record(e.Error())
 }

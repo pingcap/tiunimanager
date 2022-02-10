@@ -74,7 +74,7 @@ tiflash_servers:
     data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/tiflash-data
   {{ end }}
   {{ end }}
-{{ else if and (eq $key "TiCDC") (len $instances) }}
+{{ else if and (eq $key "CDC") (len $instances) }}
 cdc_servers:
   {{ range $instances }}
   {{ if eq .Status "Initializing" }}
@@ -82,6 +82,42 @@ cdc_servers:
     port: {{ index .Ports 0 }}
     deploy_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/cdc-deploy
     data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/cdc-data
+  {{ end }}
+  {{ end }}
+{{ else if and (eq $key "Grafana") (len $instances) }}
+grafana_servers:
+  {{ range $instances }}
+  {{ if eq .Status "Initializing" }}
+  - host: {{ index .HostIP 0 }}
+    port: {{ index .Ports 0}}
+    deploy_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/grafana-deploy
+    anonymous_enable: true
+    default_theme: light
+    org_name: Main Org.
+    org_role: Viewer
+    config:
+      security.allow_embedding: true
+  {{ end }}
+  {{ end }}
+{{ else if and (eq $key "Prometheus") (len $instances) }}
+monitoring_servers:
+  {{ range $instances }}
+  {{ if eq .Status "Initializing" }}
+  - host: {{ index .HostIP 0 }}
+    port: {{ index .Ports 0}}
+    deploy_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/prometheus-deploy
+    data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/prometheus-data
+  {{ end }}
+  {{ end }}
+{{ else if and (eq $key "AlertManger") (len $instances) }}
+alertmanager_servers:
+  {{ range $instances }}
+  {{ if eq .Status "Initializing" }}
+  - host: {{ index .HostIP 0 }}
+    web_port: {{ index .Ports 0}}
+    cluster_port: {{ index .Ports 1}}
+    deploy_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/alertmanager-deploy
+    data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/alertmanager-data
   {{ end }}
   {{ end }}
 {{ else if and (eq $key "PD") (len $instances) }}
@@ -95,28 +131,6 @@ pd_servers:
     data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/pd-data
   {{ end }}
   {{ end }}
-{{ if eq $.Cluster.Status "Initializing" }}
-{{ $instance := index $instances 0 }}
-monitoring_servers:
-  - host: {{ index $instance.HostIP 0 }}
-    port: {{ index $instance.Ports 2}}
-    deploy_dir: {{ $instance.DiskPath }}/{{ $.Cluster.ID }}/prometheus-deploy
-    data_dir: {{ $instance.DiskPath }}/{{ $.Cluster.ID }}/prometheus-data
-grafana_servers:
-  - host: {{ index $instance.HostIP 0 }}
-    port: {{ index $instance.Ports 3}}
-    deploy_dir: {{ $instance.DiskPath }}/{{ $.Cluster.ID }}/grafana-deploy
-    anonymous_enable: true
-    default_theme: light
-    org_name: Main Org.
-    org_role: Viewer
-alertmanager_servers:
-  - host: {{ index $instance.HostIP 0 }}
-    web_port: {{ index $instance.Ports 4}}
-    cluster_port: {{ index $instance.Ports 5}}
-    deploy_dir: {{ $instance.DiskPath }}/{{ $.Cluster.ID }}/alertmanagers-deploy
-    data_dir: {{ $instance.DiskPath }}/{{ $.Cluster.ID }}/alertmanagers-data
-{{ end }}
 {{ end }}
 {{ end }}
 `

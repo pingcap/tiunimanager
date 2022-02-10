@@ -65,7 +65,7 @@ const (
 	FlowImportData                   = "ImportData"
 	FlowRestartCluster               = "RestartCluster"
 	FlowStopCluster                  = "StopCluster"
-	FlowTakeoverCluster              = "BuildForTakeover"
+	FlowTakeoverCluster              = "TakeoverCluster"
 	FlowBuildLogConfig               = "BuildLogConfig"
 	FlowScaleOutCluster              = "ScaleOutCluster"
 	FlowScaleInCluster               = "ScaleInCluster"
@@ -123,7 +123,7 @@ type ClusterCloneStrategy string
 const (
 	ClusterTopologyClone ClusterCloneStrategy = "TopologyClone"
 	SnapShotClone        ClusterCloneStrategy = "Snapshot"
-	TiCDCSyncClone       ClusterCloneStrategy = "TiCDCSync"
+	CDCSyncClone         ClusterCloneStrategy = "CDCSync"
 )
 
 type BackupType string

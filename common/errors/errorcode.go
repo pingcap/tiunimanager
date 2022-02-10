@@ -31,6 +31,8 @@ const (
 	TIEM_TASK_CONFLICT             EM_ERROR_CODE = 9993
 	TIEM_TASK_CANCELED             EM_ERROR_CODE = 9992
 
+	TIEM_SYSTEM_MISSING_DATA EM_ERROR_CODE = 9899
+
 	TIEM_UNRECOGNIZED_ERROR EM_ERROR_CODE = 10000
 	TIEM_PARAMETER_INVALID  EM_ERROR_CODE = 10001
 	TIEM_SQL_ERROR          EM_ERROR_CODE = 10002
@@ -43,8 +45,9 @@ const (
 	// cluster
 	TIEM_DUPLICATED_NAME             EM_ERROR_CODE = 20101
 	TIEM_INVALID_TOPOLOGY            EM_ERROR_CODE = 20102
-	TIEM_UNSUPPPORT_PRODUCT          EM_ERROR_CODE = 20103
+	TIEM_UNSUPPORT_PRODUCT           EM_ERROR_CODE = 20103
 	TIEM_CLUSTER_RESOURCE_NOT_ENOUGH EM_ERROR_CODE = 20104
+	TIEM_CLUSTER_METADATA_BROKEN     EM_ERROR_CODE = 20105
 
 	TIEM_TAKEOVER_SSH_CONNECT_ERROR     EM_ERROR_CODE = 20201
 	TIEM_TAKEOVER_SFTP_ERROR            EM_ERROR_CODE = 20110
@@ -62,6 +65,7 @@ const (
 	TIEM_BACKUP_STRATEGY_DELETE_FAILED  EM_ERROR_CODE = 20607
 	TIEM_BACKUP_FILE_DELETE_FAILED      EM_ERROR_CODE = 20608
 	TIEM_BACKUP_PATH_CREATE_FAILED      EM_ERROR_CODE = 20609
+	TIEM_BACKUP_RECORD_INVALID          EM_ERROR_CODE = 20610
 
 	// upgrade
 	TIEM_UPGRADE_QUERY_PATH_FAILED EM_ERROR_CODE = 21100
@@ -89,7 +93,20 @@ const (
 	TIEM_TRANSPORT_FILE_TRANSFER_LIMITED   EM_ERROR_CODE = 60111
 
 	//user
-	TIEM_UNAUTHORIZED_USER EM_ERROR_CODE = 70600
+	TIEM_UNAUTHORIZED_USER    EM_ERROR_CODE = 70600
+	TIEM_USER_NOT_FOUND       EM_ERROR_CODE = 70601
+	TIEM_ACCESS_TOKEN_EXPIRED EM_ERROR_CODE = 70602
+	TIEM_LOGIN_FAILED         EM_ERROR_CODE = 70603
+
+	TIEM_RBAC_PERMISSION_CHECK_FAILED  EM_ERROR_CODE = 70650
+	TIEM_RBAC_PERMISSION_ADD_FAILED    EM_ERROR_CODE = 70651
+	TIEM_RBAC_PERMISSION_DELETE_FAILED EM_ERROR_CODE = 70652
+	TIEM_RBAC_PERMISSION_QUERY_FAILED  EM_ERROR_CODE = 70653
+	TIEM_RBAC_ROLE_CREATE_FAILED       EM_ERROR_CODE = 70654
+	TIEM_RBAC_ROLE_DELETE_FAILED       EM_ERROR_CODE = 70655
+	TIEM_RBAC_ROLE_QUERY_FAILED        EM_ERROR_CODE = 70656
+	TIEM_RBAC_ROLE_BIND_FAILED         EM_ERROR_CODE = 70657
+	TIEM_RBAC_ROLE_UNBIND_FAILED       EM_ERROR_CODE = 70658
 
 	// dashboard && monitor
 	TIEM_DASHBOARD_NOT_FOUND EM_ERROR_CODE = 80100
@@ -119,6 +136,15 @@ const (
 	TIEM_RESOURCE_DECRYPT_PASSWD_ERROR      EM_ERROR_CODE = 30123
 	TIEM_RESOURCE_ALLOCATE_ERROR            EM_ERROR_CODE = 30124
 	TIEM_RESOURCE_RECYCLE_ERROR             EM_ERROR_CODE = 30125
+	TIEM_RESOURCE_CONNECT_TO_HOST_ERROR     EM_ERROR_CODE = 30126
+	TIEM_RESOURCE_NEW_SESSION_ERROR         EM_ERROR_CODE = 30127
+	TIEM_RESOURCE_RUN_COMMAND_ERROR         EM_ERROR_CODE = 30128
+	TIEM_RESOURCE_HOST_NOT_EXPECTED         EM_ERROR_CODE = 30129
+	TIEM_RESOURCE_INIT_FILEBEAT_ERROR       EM_ERROR_CODE = 30130
+	TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR    EM_ERROR_CODE = 30131
+	TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR  EM_ERROR_CODE = 30132
+	TIEM_RESOURCE_PREPARE_HOST_ERROR        EM_ERROR_CODE = 30133
+	TIEM_RESOURCE_INVALID_VENDOR_NAME       EM_ERROR_CODE = 30134
 
 	TIEM_MONITOR_NOT_FOUND EM_ERROR_CODE = 614
 
@@ -139,31 +165,58 @@ const (
 	TIEM_PARAMETER_GROUP_UPDATE_RELATION_PARAM_ERROR EM_ERROR_CODE = 20513
 	TIEM_CLUSTER_PARAMETER_QUERY_ERROR               EM_ERROR_CODE = 20514
 	TIEM_CLUSTER_PARAMETER_UPDATE_ERROR              EM_ERROR_CODE = 20515
+	TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS         EM_ERROR_CODE = 20516
+	TIEM_PARAMETER_GROUP_RELATION_CLUSTER_NOT_DEL    EM_ERROR_CODE = 20517
 
-	TIEM_PARAMETER_QUERY_ERROR  EM_ERROR_CODE = 20520
-	TIEM_PARAMETER_CREATE_ERROR EM_ERROR_CODE = 20521
-	TIEM_PARAMETER_DELETE_ERROR EM_ERROR_CODE = 20522
-	TIEM_PARAMETER_DETAIL_ERROR EM_ERROR_CODE = 20523
-	TIEM_PARAMETER_UPDATE_ERROR EM_ERROR_CODE = 20524
+	TIEM_PARAMETER_QUERY_ERROR    EM_ERROR_CODE = 20520
+	TIEM_PARAMETER_CREATE_ERROR   EM_ERROR_CODE = 20521
+	TIEM_PARAMETER_DELETE_ERROR   EM_ERROR_CODE = 20522
+	TIEM_PARAMETER_DETAIL_ERROR   EM_ERROR_CODE = 20523
+	TIEM_PARAMETER_UPDATE_ERROR   EM_ERROR_CODE = 20524
+	TIEM_PARAMETER_ALREADY_EXISTS EM_ERROR_CODE = 20525
 
-	TIEM_CHANGE_FEED_NOT_FOUND EM_ERROR_CODE = 701
-
-	TIEM_CHANGE_FEED_DUPLICATE_ID           EM_ERROR_CODE = 702
-	TIEM_CHANGE_FEED_STATUS_CONFLICT        EM_ERROR_CODE = 703
-	TIEM_CHANGE_FEED_LOCK_EXPIRED           EM_ERROR_CODE = 704
-	TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM EM_ERROR_CODE = 705
-	TIEM_CHANGE_FEED_CONNECT_ERROR          EM_ERROR_CODE = 706
+	TIEM_CHANGE_FEED_NOT_FOUND              EM_ERROR_CODE = 21201
+	TIEM_CHANGE_FEED_DUPLICATE_ID           EM_ERROR_CODE = 21202
+	TIEM_CHANGE_FEED_STATUS_CONFLICT        EM_ERROR_CODE = 21203
+	TIEM_CHANGE_FEED_LOCK_EXPIRED           EM_ERROR_CODE = 21204
+	TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM EM_ERROR_CODE = 21205
+	TIEM_CHANGE_FEED_EXECUTE_ERROR          EM_ERROR_CODE = 21206
 
 	TIEM_DELETE_INSTANCE_ERROR            EM_ERROR_CODE = 20801
 	TIEM_CHECK_PLACEMENT_RULES_ERROR      EM_ERROR_CODE = 20802
 	TIEM_CHECK_TIFLASH_MAX_REPLICAS_ERROR EM_ERROR_CODE = 20803
 	TIEM_SCAN_MAX_REPLICA_COUNT_ERROR     EM_ERROR_CODE = 20804
+	TIEM_PD_NOT_FOUND_ERROR               EM_ERROR_CODE = 20806
+	TIEM_CHECK_INSTANCE_TIEMOUT_ERROR     EM_ERROR_CODE = 20807
+	TIEM_STORE_NOT_FOUND_ERROR            EM_ERROR_CODE = 20808
 
 	TIEM_CHECK_CLUSTER_VERSION_ERROR EM_ERROR_CODE = 21301
+	TIEM_CDC_NOT_FOUND               EM_ERROR_CODE = 21302
+	TIEM_CLONE_TIKV_ERROR            EM_ERROR_CODE = 21303
 
-	QueryProductComponentProperty = 706 //TODO
-	QueryProductsScanRowError     = 707 //TODO
-	QueryZoneScanRowError         = 708 //TODO
+	CreateZonesError              EM_ERROR_CODE = 70001
+	DeleteZonesError              EM_ERROR_CODE = 70002
+	QueryZoneScanRowError         EM_ERROR_CODE = 70003
+	CreateProductError            EM_ERROR_CODE = 70004
+	DeleteProductError            EM_ERROR_CODE = 70005
+	QueryProductsScanRowError     EM_ERROR_CODE = 70006
+	QueryProductComponentProperty EM_ERROR_CODE = 70007
+	CreateSpecsError              EM_ERROR_CODE = 70008
+	DeleteSpecsError              EM_ERROR_CODE = 70009
+	QuerySpecScanRowError         EM_ERROR_CODE = 70010
+
+	QueryUserScanRowError              EM_ERROR_CODE = 70604
+	QueryTenantScanRowError            EM_ERROR_CODE = 70605
+	TenantAlreadyExist                 EM_ERROR_CODE = 70606
+	TenantNotExist                     EM_ERROR_CODE = 70607
+	DeleteTenantFailed                 EM_ERROR_CODE = 70608
+	UpdateTenantOnBoardingStatusFailed EM_ERROR_CODE = 70609
+
+	UserAlreadyExist              EM_ERROR_CODE = 70610
+	UserGenSaltAndHashValueFailed EM_ERROR_CODE = 70611
+	UserNotExist                  EM_ERROR_CODE = 70612
+	DeleteUserFailed              EM_ERROR_CODE = 70613
+	UpdateUserProfileFailed       EM_ERROR_CODE = 70614
 
 	TIEM_CLUSTER_LOG_QUERY_FAILED EM_ERROR_CODE = 80300
 	TIEM_CLUSTER_LOG_TIME_AFTER   EM_ERROR_CODE = 80301
@@ -197,10 +250,25 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_CLUSTER_NOT_FOUND:  {"cluster not found", 404},
 	TIEM_MARSHAL_ERROR:      {"marshal error", 500},
 	TIEM_UNMARSHAL_ERROR:    {"marshal error", 500},
-	TIEM_UNAUTHORIZED_USER:  {"unauthorized", 401},
+
+	// user
+	TIEM_UNAUTHORIZED_USER:             {"unauthorized", 401},
+	TIEM_USER_NOT_FOUND:                {"user not found", 404},
+	TIEM_ACCESS_TOKEN_EXPIRED:          {"access token has been expired", 401},
+	TIEM_LOGIN_FAILED:                  {"incorrect username or password", 400},
+	TIEM_RBAC_PERMISSION_CHECK_FAILED:  {"rbac permission check failed", 403},
+	TIEM_RBAC_PERMISSION_ADD_FAILED:    {"rbac permission add failed", 500},
+	TIEM_RBAC_PERMISSION_DELETE_FAILED: {"rbac permission delete failed", 500},
+	TIEM_RBAC_PERMISSION_QUERY_FAILED:  {"rbac permission query failed", 500},
+	TIEM_RBAC_ROLE_CREATE_FAILED:       {"rbac role create failed", 500},
+	TIEM_RBAC_ROLE_QUERY_FAILED:        {"rbac role query failed", 500},
+	TIEM_RBAC_ROLE_DELETE_FAILED:       {"rbac role delete failed", 500},
+	TIEM_RBAC_ROLE_BIND_FAILED:         {"rbac role bind user failed", 500},
+	TIEM_RBAC_ROLE_UNBIND_FAILED:       {"rbac role unbind user failed", 500},
 
 	TIEM_METADB_SERVER_CALL_ERROR:  {"call metadb-Server failed", 500},
 	TIEM_CLUSTER_SERVER_CALL_ERROR: {"call cluster-Server failed", 500},
+	TIEM_SYSTEM_MISSING_DATA:       {"missing system data", 500},
 
 	TIEM_TASK_TIMEOUT:          {"task timeout", 500},
 	TIEM_FLOW_NOT_FOUND:        {"flow not found", 500},
@@ -211,9 +279,10 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 
 	TIEM_DUPLICATED_NAME:              {"duplicated cluster name", 400},
 	TIEM_INVALID_TOPOLOGY:             {"invalid cluster topology", 400},
-	TIEM_UNSUPPPORT_PRODUCT:           {"unsupported cluster type or version", 400},
+	TIEM_UNSUPPORT_PRODUCT:            {"unsupported cluster product", 400},
 	TIEM_CLUSTER_RESOURCE_NOT_ENOUGH:  {"host resource is not enough", 500},
 	TIEM_CLUSTER_MAINTENANCE_CONFLICT: {"maintenance status conflict", 409},
+	TIEM_CLUSTER_METADATA_BROKEN:      {"cluster meta is incomplete", 400},
 
 	// cluster management
 	TIEM_TAKEOVER_SSH_CONNECT_ERROR: {"ssh connect failed", 500},
@@ -255,6 +324,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_BACKUP_STRATEGY_DELETE_FAILED:  {"delete backup strategy failed", 500},
 	TIEM_BACKUP_FILE_DELETE_FAILED:      {"remove backup file failed", 500},
 	TIEM_BACKUP_PATH_CREATE_FAILED:      {"backup filepath create failed", 500},
+	TIEM_BACKUP_RECORD_INVALID:          {"backup record invalid", 400},
 
 	// resource
 	TIEM_RESOURCE_HOST_NOT_FOUND:            {"host not found", 500},
@@ -276,6 +346,15 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_RESOURCE_CREATE_DISK_ERROR:         {"ailed to update disk table", 500},
 	TIEM_RESOURCE_TEMPLATE_FILE_NOT_FOUND:   {"template file is not found", 500},
 	TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR: {"parse template file failed", 400},
+	TIEM_RESOURCE_CONNECT_TO_HOST_ERROR:     {"connect to host failed", 400},
+	TIEM_RESOURCE_NEW_SESSION_ERROR:         {"new connect session to host failed", 500},
+	TIEM_RESOURCE_RUN_COMMAND_ERROR:         {"run command on host failed", 500},
+	TIEM_RESOURCE_HOST_NOT_EXPECTED:         {"host is not expected as import file", 400},
+	TIEM_RESOURCE_INIT_FILEBEAT_ERROR:       {"install filebeat on host failed", 400},
+	TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR:    {"extract workflow context failed", 500},
+	TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR:  {"uninstall filebeat on host failed", 400},
+	TIEM_RESOURCE_PREPARE_HOST_ERROR:        {"prepare host before verify failed", 500},
+	TIEM_RESOURCE_INVALID_VENDOR_NAME:       {"invalid vendor", 400},
 
 	// param group & cluster param
 	TIEM_DEFAULT_PARAM_GROUP_NOT_DEL:                 {"Not allow to deleted the default parameter group", 409},
@@ -294,19 +373,23 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_PARAMETER_GROUP_UPDATE_RELATION_PARAM_ERROR: {"Failed to update relation parameter in parameter group", 500},
 	TIEM_CLUSTER_PARAMETER_QUERY_ERROR:               {"Failed to query cluster parameters", 500},
 	TIEM_CLUSTER_PARAMETER_UPDATE_ERROR:              {"Failed to update cluster parameters", 500},
+	TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS:         {"Parameter group name already exists", 500},
+	TIEM_PARAMETER_GROUP_RELATION_CLUSTER_NOT_DEL:    {"Parameter group association clusters cannot be deleted", 500},
 
-	TIEM_PARAMETER_QUERY_ERROR:  {"Failed to query parameter by parameter group id", 500},
-	TIEM_PARAMETER_CREATE_ERROR: {"Failed to create parameter", 500},
-	TIEM_PARAMETER_DELETE_ERROR: {"Failed to delete parameter", 500},
-	TIEM_PARAMETER_DETAIL_ERROR: {"Failed to detail parameter", 500},
-	TIEM_PARAMETER_UPDATE_ERROR: {"Failed to update parameter", 500},
+	TIEM_PARAMETER_QUERY_ERROR:    {"Failed to query parameter by parameter group id", 500},
+	TIEM_PARAMETER_CREATE_ERROR:   {"Failed to create parameter", 500},
+	TIEM_PARAMETER_DELETE_ERROR:   {"Failed to delete parameter", 500},
+	TIEM_PARAMETER_DETAIL_ERROR:   {"Failed to detail parameter", 500},
+	TIEM_PARAMETER_UPDATE_ERROR:   {"Failed to update parameter", 500},
+	TIEM_PARAMETER_ALREADY_EXISTS: {"The parameter already exists", 500},
 
 	// change feed
-	TIEM_CHANGE_FEED_NOT_FOUND:              {"change feed task not found", 404},
-	TIEM_CHANGE_FEED_DUPLICATE_ID:           {"duplicate id", 500},
-	TIEM_CHANGE_FEED_STATUS_CONFLICT:        {"task status conflict", 409},
-	TIEM_CHANGE_FEED_LOCK_EXPIRED:           {"task status lock expired", 409},
-	TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM: {"task downstream type not supported", 500},
+	TIEM_CHANGE_FEED_NOT_FOUND:              {"Change feed task is not found", 404},
+	TIEM_CHANGE_FEED_DUPLICATE_ID:           {"Duplicate id", 500},
+	TIEM_CHANGE_FEED_STATUS_CONFLICT:        {"Task status conflict", 409},
+	TIEM_CHANGE_FEED_LOCK_EXPIRED:           {"Task status lock expired", 409},
+	TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM: {"Task downstream type not supported", 500},
+	TIEM_CHANGE_FEED_EXECUTE_ERROR:          {"Failed to execute task command", 500},
 
 	TIEM_CLUSTER_LOG_QUERY_FAILED: {"Failed to query cluster log", 500},
 	TIEM_CLUSTER_LOG_TIME_AFTER:   {"query log parameter startTime after endTime", 401},
@@ -318,4 +401,24 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_CHECK_PLACEMENT_RULES_ERROR:      {"Placement rule is not set when scale out TiFlash", 409},
 	TIEM_CHECK_TIFLASH_MAX_REPLICAS_ERROR: {"The number of remaining TiFlash instances is less than the maximum replicas of data tables", 409},
 	TIEM_SCAN_MAX_REPLICA_COUNT_ERROR:     {"Failed to scan max replicas of data tables of TiFlash", 500},
+
+	//product
+	CreateZonesError:              {"create zone failed", 500},
+	DeleteZonesError:              {"delete zone failed", 500},
+	QueryZoneScanRowError:         {"query all zone failed", 401},
+	CreateProductError:            {"create product failed", 500},
+	DeleteProductError:            {"delete product failed", 500},
+	QueryProductsScanRowError:     {"query all product failed", 401},
+	QueryProductComponentProperty: {"query all component property failed", 401},
+	CreateSpecsError:              {"create specs failed", 500},
+	DeleteSpecsError:              {"delete specs failed", 500},
+	QuerySpecScanRowError:         {"query all specs failed", 401},
+
+	//user & tenant
+	QueryUserScanRowError:              {"query all users failed", 401},
+	QueryTenantScanRowError:            {"query all tenants failed", 401},
+	TenantAlreadyExist:                 {"tenant already exist", 401},
+	TenantNotExist:                     {"tenant not exist", 401},
+	DeleteTenantFailed:                 {"delete tenant failed", 401},
+	UpdateTenantOnBoardingStatusFailed: {"update tenant on boarding status failed", 401},
 }

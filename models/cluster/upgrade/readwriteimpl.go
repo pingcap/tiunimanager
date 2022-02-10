@@ -49,7 +49,7 @@ func NewGormProductUpgradePath(db *gorm.DB) *GormProductUpgradePathReadWrite {
 func (m *GormProductUpgradePathReadWrite) Create(ctx context.Context, upgradeType constants.UpgradeType,
 	emProductIDType constants.EMProductIDType, srcVersion string, dstVersion string) (*ProductUpgradePath, error) {
 	if "" == upgradeType || "" == emProductIDType || "" == srcVersion || "" == dstVersion {
-		return nil, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "at least one of upgradetype(actual: "+
+		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "at least one of upgradetype(actual: "+
 			"%s), emproductidtype(actual: %s), srcversion(actual: %s), dstversion(actual: %s) is nil", upgradeType,
 			emProductIDType, srcVersion, dstVersion)
 	}
@@ -73,7 +73,7 @@ func (m *GormProductUpgradePathReadWrite) Create(ctx context.Context, upgradeTyp
 func (m *GormProductUpgradePathReadWrite) queryByPathParam(ctx context.Context, upgradeType constants.UpgradeType,
 	emProductIDType constants.EMProductIDType, srcVersion string, dstVersion string) (*ProductUpgradePath, error) {
 	if "" == upgradeType || "" == emProductIDType || "" == srcVersion || "" == dstVersion {
-		return nil, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "at least one of upgradetype(actual: "+
+		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "at least one of upgradetype(actual: "+
 			"%s), emproductidtype(actual: %s), srcversion(actual: %s), dstversion(actual: %s) is nil", upgradeType,
 			emProductIDType, srcVersion, dstVersion)
 	}
@@ -93,7 +93,7 @@ func (m *GormProductUpgradePathReadWrite) Get(ctx context.Context, id string) (*
 	err := m.DB(ctx).First(path, "id = ?", id).Error
 
 	if err != nil {
-		return nil, errors.NewEMErrorf(errors.TIEM_UPGRADE_QUERY_PATH_FAILED, err.Error())
+		return nil, errors.NewErrorf(errors.TIEM_UPGRADE_QUERY_PATH_FAILED, err.Error())
 	} else {
 		return path, nil
 	}

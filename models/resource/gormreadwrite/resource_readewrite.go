@@ -38,12 +38,13 @@ func NewGormResourceReadWrite(db *gorm.DB) resource_models.ReaderWriter {
 	}
 	return m
 }
+
 /*
 func (rw *GormResourceReadWrite) addTable(ctx context.Context, tableModel interface{}) (newTable bool, err error) {
 	if !rw.DB(ctx).Migrator().HasTable(tableModel) {
 		err := rw.DB(ctx).Migrator().CreateTable(tableModel)
 		if nil != err {
-			return true, errors.NewEMErrorf(errors.TIEM_RESOURCE_ADD_TABLE_ERROR, "crete table %v failed, error: %v", tableModel, err)
+			return true, errors.NewErrorf(errors.TIEM_RESOURCE_ADD_TABLE_ERROR, "crete table %v failed, error: %v", tableModel, err)
 		}
 		return true, nil
 	} else {
@@ -57,7 +58,7 @@ func (rw *GormResourceReadWrite) Create(ctx context.Context, hosts []rp.Host) (h
 		err = tx.Create(&host).Error
 		if err != nil {
 			tx.Rollback()
-			return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_CREATE_HOST_ERROR, "create %s(%s) error, %v", host.HostName, host.IP, err)
+			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_CREATE_HOST_ERROR, "create %s(%s) error, %v", host.HostName, host.IP, err)
 		}
 		hostIds = append(hostIds, host.ID)
 	}
@@ -69,14 +70,15 @@ func (rw *GormResourceReadWrite) Delete(ctx context.Context, hostIds []string) (
 	tx := rw.DB(ctx).Begin()
 	for _, hostId := range hostIds {
 		var host rp.Host
-		if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host, "ID = ?", hostId).Error; err != nil {
+		//if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host, "ID = ?", hostId).Error; err != nil {
+		if err = tx.First(&host, "ID = ?", hostId).Error; err != nil {
 			tx.Rollback()
-			return errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "lock host %s(%s) error, %v", hostId, host.IP, err)
+			return errors.NewErrorf(errors.TIEM_SQL_ERROR, "lock host %s(%s) error, %v", hostId, host.IP, err)
 		}
 		err = tx.Delete(&host).Error
 		if err != nil {
 			tx.Rollback()
-			return errors.NewEMErrorf(errors.TIEM_RESOURCE_DELETE_HOST_ERROR, "delete host %s(%s) error, %v", hostId, host.IP, err)
+			return errors.NewErrorf(errors.TIEM_RESOURCE_DELETE_HOST_ERROR, "delete host %s(%s) error, %v", hostId, host.IP, err)
 		}
 	}
 	err = tx.Commit().Error
@@ -101,7 +103,7 @@ func (rw *GormResourceReadWrite) hostFiltered(db *gorm.DB, filter *structs.HostF
 	if filter.Purpose != "" {
 		label, err := structs.GetTraitByName(filter.Purpose)
 		if err != nil {
-			return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND, "query host use a invalid purpose name %s, %v", filter.Purpose, err)
+			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND, "query host use a invalid purpose name %s, %v", filter.Purpose, err)
 		}
 		db = db.Where("traits & ? = ?", label, label)
 	}
@@ -124,6 +126,10 @@ func (rw *GormResourceReadWrite) diskFiltered(db *gorm.DB, filter *structs.DiskF
 func (rw *GormResourceReadWrite) locationFiltered(db *gorm.DB, location *structs.Location) (*gorm.DB, error) {
 	var regionCode, zoneCode, rackCode string
 
+	if location.HostIp != "" {
+		db = db.Where("hosts.ip = ?", location.HostIp)
+	}
+
 	// Region field should be required for follower filter
 	if location.Region == "" {
 		return db, nil
@@ -144,28 +150,29 @@ func (rw *GormResourceReadWrite) locationFiltered(db *gorm.DB, location *structs
 		db = db.Where("hosts.rack = ?", rackCode)
 	}
 
-	if location.HostIp != "" {
-		db = db.Where("hosts.ip = ?", location.HostIp)
-	}
-
 	return db, nil
 }
 
-func (rw *GormResourceReadWrite) Query(ctx context.Context, filter *structs.HostFilter, offset int, limit int) (hosts []rp.Host, err error) {
-	db := rw.DB(ctx)
+func (rw *GormResourceReadWrite) Query(ctx context.Context, location *structs.Location, filter *structs.HostFilter, offset int, limit int) (hosts []rp.Host, total int64, err error) {
+	hosts = make([]rp.Host, 0)
+	db := rw.DB(ctx).Model(&rp.Host{})
 	// Check Host Detail
 	if filter.HostID != "" {
-		err = db.Where("id = ?", filter.HostID).Find(&hosts).Error
+		err = db.Where("id = ?", filter.HostID).Count(&total).Find(&hosts).Error
 		if err != nil {
-			return nil, errors.NewEMErrorf(errors.TIEM_RESOURCE_HOST_NOT_FOUND, "query host %s error, %v", filter.HostID, err)
+			return nil, 0, errors.NewErrorf(errors.TIEM_RESOURCE_HOST_NOT_FOUND, "query host %s error, %v", filter.HostID, err)
 		}
 		return
 	}
+	db, err = rw.locationFiltered(db, location)
+	if err != nil {
+		return nil, 0, err
+	}
 	db, err = rw.hostFiltered(db, filter)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	err = db.Offset(offset).Limit(limit).Find(&hosts).Error
+	err = db.Count(&total).Offset(offset).Limit(limit).Find(&hosts).Error
 	return
 }
 
@@ -175,11 +182,11 @@ func (rw *GormResourceReadWrite) UpdateHostStatus(ctx context.Context, hostIds [
 		result := tx.Model(&rp.Host{}).Where("id = ?", hostId).Update("status", status)
 		if result.Error != nil {
 			tx.Rollback()
-			return errors.NewEMErrorf(errors.TIEM_UPDATE_HOST_STATUS_FAIL, "update host %s status to %s fail", hostId, status)
+			return errors.NewErrorf(errors.TIEM_UPDATE_HOST_STATUS_FAIL, "update host %s status to %s fail", hostId, status)
 		}
 		if result.RowsAffected == 0 {
 			tx.Rollback()
-			return errors.NewEMErrorf(errors.TIEM_UPDATE_HOST_STATUS_FAIL, "update host %s status to %s not affected", hostId, status)
+			return errors.NewErrorf(errors.TIEM_UPDATE_HOST_STATUS_FAIL, "update host %s status to %s not affected", hostId, status)
 		}
 	}
 	tx.Commit()
@@ -191,11 +198,11 @@ func (rw *GormResourceReadWrite) UpdateHostReserved(ctx context.Context, hostIds
 		result := tx.Model(&rp.Host{}).Where("id = ?", hostId).Update("reserved", reserved)
 		if result.Error != nil {
 			tx.Rollback()
-			return errors.NewEMErrorf(errors.TIEM_RESERVE_HOST_FAIL, "update host %s reserved status to %v fail", hostId, reserved)
+			return errors.NewErrorf(errors.TIEM_RESERVE_HOST_FAIL, "update host %s reserved status to %v fail", hostId, reserved)
 		}
 		if result.RowsAffected == 0 {
 			tx.Rollback()
-			return errors.NewEMErrorf(errors.TIEM_RESERVE_HOST_FAIL, "update host %s reserved status to %v not affected", hostId, reserved)
+			return errors.NewErrorf(errors.TIEM_RESERVE_HOST_FAIL, "update host %s reserved status to %v not affected", hostId, reserved)
 		}
 	}
 	tx.Commit()
@@ -227,7 +234,7 @@ func (rw *GormResourceReadWrite) GetHostItems(ctx context.Context, filter *struc
 	}
 	if err != nil {
 		tx.Rollback()
-		return nil, errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "get hierarchy failed, %v", err)
+		return nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "get hierarchy failed, %v", err)
 	}
 	tx.Commit()
 	return
@@ -235,7 +242,7 @@ func (rw *GormResourceReadWrite) GetHostItems(ctx context.Context, filter *struc
 func (rw *GormResourceReadWrite) GetHostStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks []structs.Stocks, err error) {
 	tx := rw.DB(ctx).Begin()
 	db := tx.Model(&rp.Host{}).Select(
-		"hosts.free_cpu_cores as free_cpu_cores, hosts.free_memory as free_memory, count(disks.id) as free_disk_count, sum(disks.capacity) as free_disk_capacity").Joins(
+		"hosts.az as zone, hosts.free_cpu_cores as free_cpu_cores, hosts.free_memory as free_memory, count(disks.id) as free_disk_count, sum(disks.capacity) as free_disk_capacity").Joins(
 		"left join disks on disks.host_id = hosts.id")
 	db, err = rw.locationFiltered(db, location)
 	if err != nil {
@@ -259,7 +266,7 @@ func (rw *GormResourceReadWrite) GetHostStocks(ctx context.Context, location *st
 	err = db.Scan(&stocks).Error
 	if err != nil {
 		tx.Rollback()
-		return nil, errors.NewEMErrorf(errors.TIEM_SQL_ERROR, "get stocks failed, %v", err)
+		return nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "get stocks failed, %v", err)
 	}
 	tx.Commit()
 	return

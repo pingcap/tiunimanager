@@ -19,7 +19,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 )
 
 // DataImportConfig data import toml config for lightning https://docs.pingcap.com/zh/tidb/dev/tidb-lightning-configuration
@@ -28,6 +28,7 @@ type DataImportConfig struct {
 	TiKVImporter TiKVImporterCfg `toml:"tikv-importer"`
 	MyDumper     MyDumperCfg     `toml:"mydumper"`
 	TiDB         TiDBCfg         `toml:"tidb"`
+	CheckPoint   CheckPointCfg   `toml:"checkpoint"`
 }
 
 type LightningCfg struct {
@@ -41,6 +42,11 @@ const (
 	BackendLocal string = "local"
 	//BackendImport string = "importer"
 	//BackendTiDB   string = "tidb"
+)
+
+const (
+	DriverFile  string = "file"
+	DriverMysql string = "mysql"
 )
 
 type TiKVImporterCfg struct {
@@ -61,7 +67,13 @@ type TiDBCfg struct {
 	PDAddr     string `toml:"pd-addr"`
 }
 
-func NewDataImportConfig(ctx context.Context, meta *handler.ClusterMeta, info *importInfo) *DataImportConfig {
+type CheckPointCfg struct {
+	Enable bool   `toml:"enable"`
+	Driver string `toml:"driver"`
+	Dsn    string `toml:"dsn"`
+}
+
+func NewDataImportConfig(ctx context.Context, meta *meta.ClusterMeta, info *importInfo) *DataImportConfig {
 	if meta == nil || meta.Cluster == nil {
 		framework.LogWithContext(ctx).Errorf("input meta is invalid!")
 		return nil
@@ -116,6 +128,11 @@ func NewDataImportConfig(ctx context.Context, meta *handler.ClusterMeta, info *i
 			Password:   info.Password,
 			StatusPort: tidbStatusPort,
 			PDAddr:     fmt.Sprintf("%s:%d", pdServerHost, pdClientPort),
+		},
+		CheckPoint: CheckPointCfg{
+			Enable: true,
+			Driver: DriverFile,
+			Dsn:    fmt.Sprintf("%s/tidb_lightning_checkpoint.pb", info.ConfigPath),
 		},
 	}
 	return config

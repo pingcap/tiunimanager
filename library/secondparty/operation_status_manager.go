@@ -34,6 +34,11 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 )
 
+/*
+Every second:
+
+*/
+
 type OperationStatusMember struct {
 	OperationID string
 	Status      secondparty.OperationStatus
@@ -58,15 +63,15 @@ func (manager *SecondPartyManager) operationStatusMapSyncer() {
 			oldv := manager.syncedOperationStatusMap[v.OperationID]
 			if oldv.validFlag {
 				if oldv.stat.Status == v.Status {
-					assert(oldv.stat == v)
+					//assert(oldv.stat == v)
 				} else {
-					assert(oldv.stat.Status == secondparty.OperationStatusProcessing)
+					//assert(oldv.stat.Status == secondparty.OperationStatus_Processing)
 					manager.syncedOperationStatusMap[v.OperationID] = OperationStatusMapValue{
 						validFlag: true,
 						stat:      v,
 						readct:    0,
 					}
-					assert(v.Status == secondparty.OperationStatusFinished || v.Status == secondparty.OperationStatusError)
+					//assert(v.Status == secondparty.OperationStatus_Finished || v.Status == secondparty.OperationStatus_Error)
 					needDbUpdate = append(needDbUpdate, v)
 				}
 			} else {
@@ -111,18 +116,21 @@ func (manager *SecondPartyManager) syncOperationStatusMap() {
 		var ok bool
 		select {
 		case statm, ok = <-manager.operationStatusCh:
-			assert(ok)
-			consumedFlag = true
+			if ok {
+				consumedFlag = true
+			} else {
+				framework.Log().WithField("operation_status_manager", "syncoperationstatusmap").Error("unlikely: secondpartymanager.operationstatusch is closed")
+			}
 		default:
 		}
 		if consumedFlag {
-			v := manager.operationStatusMap[statm.OperationID]
-			if v.validFlag {
-				assert(v.stat.Status == secondparty.OperationStatusProcessing)
-				assert(statm.Status == secondparty.OperationStatusFinished || statm.Status == secondparty.OperationStatusError)
-			} else {
-				assert(statm.Status == secondparty.OperationStatusProcessing)
-			}
+			//v := manager.operationStatusMap[statm.OperationID]
+			//if v.validFlag {
+			//	assert(v.stat.Status == secondparty.OperationStatus_Processing)
+			//	assert(statm.Status == secondparty.OperationStatus_Finished || statm.Status == secondparty.OperationStatus_Error)
+			//} else {
+			//	assert(statm.Status == secondparty.OperationStatus_Processing)
+			//}
 			manager.operationStatusMap[statm.OperationID] = OperationStatusMapValue{
 				validFlag: true,
 				readct:    0,
@@ -149,8 +157,8 @@ func (manager *SecondPartyManager) getAllValidOperationStatus() (ret []Operation
 	for _, k := range needDeleteOperationList {
 		delete(manager.operationStatusMap, k)
 	}
-	for k, v := range manager.operationStatusMap {
-		assert(k == v.stat.OperationID)
+	for _, v := range manager.operationStatusMap {
+		//assert(k == v.stat.OperationID)
 		ret = append(ret, v.stat)
 	}
 	for k, v := range manager.operationStatusMap {

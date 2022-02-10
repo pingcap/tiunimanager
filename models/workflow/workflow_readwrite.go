@@ -46,7 +46,7 @@ func (m *WorkFlowReadWrite) UpdateWorkFlow(ctx context.Context, flowId string, s
 	flow := &WorkFlow{}
 	err = m.DB(ctx).First(flow, "id = ?", flowId).Error
 	if err != nil {
-		return errors.NewEMErrorf(errors.TIEM_FLOW_NOT_FOUND, "flow %s not found", flowId)
+		return errors.NewErrorf(errors.TIEM_FLOW_NOT_FOUND, "flow %s not found", flowId)
 	}
 
 	return m.DB(ctx).Model(flow).
@@ -56,22 +56,25 @@ func (m *WorkFlowReadWrite) UpdateWorkFlow(ctx context.Context, flowId string, s
 
 func (m *WorkFlowReadWrite) GetWorkFlow(ctx context.Context, flowId string) (flow *WorkFlow, err error) {
 	if "" == flowId {
-		return nil, errors.NewEMErrorf(errors.TIEM_PARAMETER_INVALID, "flow id is required")
+		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "flow id is required")
 	}
 
 	flow = &WorkFlow{}
 	err = m.DB(ctx).First(flow, "id = ?", flowId).Error
 	if err != nil {
-		return nil, errors.NewEMErrorf(errors.TIEM_FLOW_NOT_FOUND, "flow %s not found", flowId)
+		return nil, errors.NewErrorf(errors.TIEM_FLOW_NOT_FOUND, "flow %s not found", flowId)
 	}
 	return flow, nil
 }
 
-func (m *WorkFlowReadWrite) QueryWorkFlows(ctx context.Context, bizId, fuzzyName, status string, page int, pageSize int) (flows []*WorkFlow, total int64, err error) {
-	flows = make([]*WorkFlow, pageSize)
+func (m *WorkFlowReadWrite) QueryWorkFlows(ctx context.Context, bizId, bizType, fuzzyName, status string, page int, pageSize int) (flows []*WorkFlow, total int64, err error) {
+	flows = make([]*WorkFlow, 0)
 	query := m.DB(ctx).Model(&WorkFlow{})
 	if bizId != "" {
 		query = query.Where("biz_id = ?", bizId)
+	}
+	if bizType != "" {
+		query = query.Where("biz_type = ?", bizType)
 	}
 	if fuzzyName != "" {
 		query = query.Where("name like '%" + fuzzyName + "%'")
@@ -126,7 +129,7 @@ func (m *WorkFlowReadWrite) QueryDetailWorkFlow(ctx context.Context, flowId stri
 	flow = &WorkFlow{}
 	err = m.DB(ctx).First(flow, "id = ?", flowId).Error
 	if err != nil {
-		return nil, nil, errors.NewEMErrorf(errors.TIEM_FLOW_NOT_FOUND, "flow %s not found", flowId)
+		return nil, nil, errors.NewErrorf(errors.TIEM_FLOW_NOT_FOUND, "flow %s not found", flowId)
 	}
 
 	err = m.DB(ctx).Where("parent_id = ?", flowId).Find(&nodes).Error

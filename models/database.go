@@ -17,15 +17,22 @@ package models
 
 import (
 	"context"
+	"io/ioutil"
+	"os"
+	"strings"
+	"syscall"
+
+	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/models/platform/product"
+	"github.com/pingcap-inc/tiem/models/user/rbac"
+
+	"github.com/pingcap-inc/tiem/models/tiup"
 
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/structs"
-	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	mm "github.com/pingcap-inc/tiem/models/resource/management"
 	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	"github.com/pingcap-inc/tiem/models/user/account"
 	"github.com/pingcap-inc/tiem/models/user/identification"
-	"github.com/pingcap-inc/tiem/models/user/tenant"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
@@ -60,16 +67,28 @@ type database struct {
 	configReaderWriter               config.ReaderWriter
 	secondPartyOperationReaderWriter secondparty.ReaderWriter
 	resourceReaderWriter             resource.ReaderWriter
-	tenantReaderWriter               tenant.ReaderWriter
+	rbacReaderWriter                 rbac.ReaderWriter
 	accountReaderWriter              account.ReaderWriter
 	tokenReaderWriter                identification.ReaderWriter
+	productReaderWriter              product.ProductReadWriterInterface
+	tiUPConfigReaderWriter           tiup.ReaderWriter
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
-	dbFile := fw.GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName
+	dbFile := fw.GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName + "?_busy_timeout=60000"
 	logins := framework.LogForkFile(constants.LogFileSystem)
-	// todo tidb?
-	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+
+	//newLogger := framework.New(
+	//	log.New(os.Stdout, "\r\n", log.LstdFlags),
+	//	framework.Config{
+	//		SlowThreshold:             time.Second,
+	//		LogLevel:                  framework.Info,
+	//		IgnoreRecordNotFoundError: true,
+	//	},
+	//)
+	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{
+		//Logger: newLogger,
+	})
 
 	if err != nil || db.Error != nil {
 		logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)
@@ -117,6 +136,7 @@ func (p *database) initTables() (err error) {
 		new(management.ClusterInstance),
 		new(management.ClusterRelation),
 		new(management.ClusterTopologySnapshot),
+		new(management.DBUser),
 		new(importexport.DataTransportRecord),
 		new(backuprestore.BackupRecord),
 		new(backuprestore.BackupStrategy),
@@ -126,17 +146,23 @@ func (p *database) initTables() (err error) {
 		new(parametergroup.ParameterGroup),
 		new(parametergroup.ParameterGroupMapping),
 		new(parameter.ClusterParameterMapping),
-		new(account.Account),
-		new(tenant.Tenant),
 		new(identification.Token),
+		new(tiup.TiupConfig),
 		new(resourcePool.Host),
 		new(resourcePool.Disk),
 		new(resourcePool.Label),
 		new(mm.UsedCompute),
 		new(mm.UsedPort),
 		new(mm.UsedDisk),
+		new(product.Zone),
+		new(product.Spec),
+		new(product.Product),
+		new(product.ProductComponent),
+		new(account.User),
+		new(account.Tenant),
+		new(account.UserLogin),
+		new(account.UserTenantRelation),
 	)
-
 }
 
 func (p *database) initReaderWriters() {
@@ -151,43 +177,95 @@ func (p *database) initReaderWriters() {
 	defaultDb.configReaderWriter = config.NewConfigReadWrite(defaultDb.base)
 	defaultDb.secondPartyOperationReaderWriter = secondparty.NewGormSecondPartyOperationReadWrite(defaultDb.base)
 	defaultDb.clusterReaderWriter = management.NewClusterReadWrite(defaultDb.base)
-	defaultDb.tenantReaderWriter = tenant.NewTenantReadWrite(defaultDb.base)
+	defaultDb.rbacReaderWriter = rbac.NewRBACReadWrite(defaultDb.base)
 	defaultDb.accountReaderWriter = account.NewAccountReadWrite(defaultDb.base)
 	defaultDb.tokenReaderWriter = identification.NewTokenReadWrite(defaultDb.base)
+	defaultDb.productReaderWriter = product.NewProductReadWriter(defaultDb.base)
+	defaultDb.tiUPConfigReaderWriter = tiup.NewGormTiupConfigReadWrite(defaultDb.base)
 }
 
 func (p *database) initSystemData() {
-	tenant, err := defaultDb.tenantReaderWriter.AddTenant(context.TODO(), "EM system administration", 1, 0)
+	tenant, err := defaultDb.accountReaderWriter.CreateTenant(context.TODO(),
+		&account.Tenant{
+			ID:               "admin",
+			Name:             "EM system administration",
+			Creator:          "System",
+			Status:           string(constants.TenantStatusNormal),
+			OnBoardingStatus: string(constants.TenantOnBoarding)})
+	if err != nil {
+		framework.LogWithContext(context.TODO()).Errorf("create 'admin' tenant error: %v", err)
+		return
+	}
 
 	// todo determine if default data needed
-	if err == nil {
-		// system admin account
-		account := &account.Account{
-			Entity: dbCommon.Entity{
-				TenantId: tenant.ID,
-			},
-			Name: "admin",
-		}
-		account.GenSaltAndHash("admin")
-		defaultDb.accountReaderWriter.AddAccount(context.TODO(), tenant.ID, account.Name, account.Salt, account.FinalHash, 0)
+	// system admin account
+	user := &account.User{
+		DefaultTenantID: tenant.ID,
+		Name:            "admin",
+		Creator:         "System",
+	}
+	user.GenSaltAndHash("admin")
+	_, _, _, err = defaultDb.accountReaderWriter.CreateUser(context.TODO(), user, "admin")
+	if err != nil {
+		framework.LogWithContext(context.TODO()).Errorf("create 'admin' user error: %v", err)
+		return
+	}
 
-		// label
-		for _, v := range structs.DefaultLabelTypes {
-			labelRecord := new(resourcePool.Label)
-			labelRecord.ConstructLabelRecord(&v)
-			if err = defaultDb.base.Create(labelRecord).Error; err != nil {
-				return
+	// label
+	for _, v := range structs.DefaultLabelTypes {
+		labelRecord := new(resourcePool.Label)
+		labelRecord.ConstructLabelRecord(&v)
+		if err = defaultDb.base.Create(labelRecord).Error; err != nil {
+			framework.LogForkFile(constants.LogFileSystem).Errorf("create label error: %s", err.Error())
+			return
+		}
+	}
+
+	// system config
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStorageType, ConfigValue: string(constants.StorageTypeS3)})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStoragePath, ConfigValue: constants.DefaultBackupStoragePath})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3AccessKey, ConfigValue: constants.DefaultBackupS3AccessKey})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3SecretAccessKey, ConfigValue: constants.DefaultBackupS3SecretAccessKey})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3Endpoint, ConfigValue: constants.DefaultBackupS3Endpoint})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyExportShareStoragePath, ConfigValue: constants.DefaultExportPath})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyImportShareStoragePath, ConfigValue: constants.DefaultImportPath})
+
+	// batch import parameters & default parameter group sql
+	parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters.sql"
+	err = syscall.Access(parameterSqlFile, syscall.F_OK)
+	if !os.IsNotExist(err) {
+		sqls, err := ioutil.ReadFile(parameterSqlFile)
+		if err != nil {
+			framework.LogForkFile(constants.LogFileSystem).Errorf("batch import parameters failed, err = %s", err.Error())
+			return
+		}
+		sqlArr := strings.Split(string(sqls), ";")
+		for _, sql := range sqlArr {
+			if strings.TrimSpace(sql) == "" {
+				continue
 			}
+			// exec import sql
+			defaultDb.base.Exec(sql)
 		}
+	}
 
-		// system config
-		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStorageType, ConfigValue: string(constants.StorageTypeS3)})
-		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStoragePath, ConfigValue: constants.DefaultBackupStoragePath})
-		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3AccessKey, ConfigValue: constants.DefaultBackupS3AccessKey})
-		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3SecretAccessKey, ConfigValue: constants.DefaultBackupS3SecretAccessKey})
-		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3Endpoint, ConfigValue: constants.DefaultBackupS3Endpoint})
-		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyExportShareStoragePath, ConfigValue: constants.DefaultExportPath})
-		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyImportShareStoragePath, ConfigValue: constants.DefaultImportPath})
+	// import TiUP configs
+	tiUPSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/tiup_configs.sql"
+	err = syscall.Access(tiUPSqlFile, syscall.F_OK)
+	if !os.IsNotExist(err) {
+		sqls, err := ioutil.ReadFile(tiUPSqlFile)
+		if err != nil {
+			framework.LogForkFile(constants.LogFileSystem).Errorf("import tiupconfigs failed, err = %s", err.Error())
+			return
+		}
+		sqlArr := strings.Split(string(sqls), ";")
+		for _, sql := range sqlArr {
+			if strings.TrimSpace(sql) == "" {
+				continue
+			}
+			// exec import sql
+			defaultDb.base.Exec(sql)
+		}
 	}
 }
 
@@ -226,6 +304,11 @@ func GetUpgradeReaderWriter() upgrade.ReaderWriter {
 func SetUpgradeReaderWriter(rw upgrade.ReaderWriter) {
 	defaultDb.upgradeReadWriter = rw
 }
+
+func SetResourceReaderWriter(rw resource.ReaderWriter) {
+	defaultDb.resourceReaderWriter = rw
+}
+
 func GetResourceReaderWriter() resource.ReaderWriter {
 	return defaultDb.resourceReaderWriter
 }
@@ -274,6 +357,14 @@ func SetClusterParameterReaderWriter(rw parameter.ReaderWriter) {
 	defaultDb.clusterParameterReaderWriter = rw
 }
 
+func GetRBACReaderWriter() rbac.ReaderWriter {
+	return defaultDb.rbacReaderWriter
+}
+
+func SetRBACReaderWriter(rw rbac.ReaderWriter) {
+	defaultDb.rbacReaderWriter = rw
+}
+
 func GetAccountReaderWriter() account.ReaderWriter {
 	return defaultDb.accountReaderWriter
 }
@@ -282,19 +373,27 @@ func SetAccountReaderWriter(rw account.ReaderWriter) {
 	defaultDb.accountReaderWriter = rw
 }
 
-func GetTenantReaderWriter() tenant.ReaderWriter {
-	return defaultDb.tenantReaderWriter
-}
-
-func SetTenantReaderWriter(rw tenant.ReaderWriter) {
-	defaultDb.tenantReaderWriter = rw
-}
 func GetTokenReaderWriter() identification.ReaderWriter {
 	return defaultDb.tokenReaderWriter
 }
 
 func SetTokenReaderWriter(rw identification.ReaderWriter) {
 	defaultDb.tokenReaderWriter = rw
+}
+
+func GetProductReaderWriter() product.ProductReadWriterInterface {
+	return defaultDb.productReaderWriter
+}
+func SetProductReaderWriter(rw product.ProductReadWriterInterface) {
+	defaultDb.productReaderWriter = rw
+}
+
+func GetTiUPConfigReaderWriter() tiup.ReaderWriter {
+	return defaultDb.tiUPConfigReaderWriter
+}
+
+func SetTiUPConfigReaderWriter(rw tiup.ReaderWriter) {
+	defaultDb.tiUPConfigReaderWriter = rw
 }
 
 func MockDB() {

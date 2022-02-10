@@ -36,14 +36,13 @@ import (
 
 	"github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 )
 
 // DefaultTimeout
 // todo adjust timeout for async flow task
 var DefaultTimeout = func(o *client.CallOptions) {
-	o.RequestTimeout = time.Minute * 5
-	o.DialTimeout = time.Minute * 5
+	o.RequestTimeout = time.Second * 30
+	o.DialTimeout = time.Second * 30
 }
 
 type Usage struct {
@@ -90,17 +89,4 @@ type Operator struct {
 	OperatorName   string `json:"operatorName"`
 	OperatorId     string `json:"operatorId"`
 	TenantId       string `json:"tenantId"`
-}
-
-func GetOperator(c *gin.Context) *Operator {
-	v, _ := c.Get(interceptor.VisitorIdentityKey)
-
-	visitor, _ := v.(*interceptor.VisitorIdentity)
-
-	return &Operator{
-		ManualOperator: true,
-		OperatorId:     visitor.AccountId,
-		OperatorName:   visitor.AccountName,
-		TenantId:       visitor.TenantId,
-	}
 }

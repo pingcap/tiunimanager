@@ -17,6 +17,7 @@ package importexport
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
@@ -67,7 +68,7 @@ func (m *ImportExportReadWrite) GetDataTransportRecord(ctx context.Context, reco
 }
 
 func (m *ImportExportReadWrite) QueryDataTransportRecords(ctx context.Context, recordId string, clusterId string, reImport bool, startTime, endTime int64, page int, pageSize int) (records []*DataTransportRecord, total int64, err error) {
-	records = make([]*DataTransportRecord, pageSize)
+	records = make([]*DataTransportRecord, 0)
 	query := m.DB(ctx).Model(&DataTransportRecord{}).Where("deleted_at is null")
 	if recordId != "" {
 		query = query.Where("id = ?", recordId)
@@ -76,7 +77,7 @@ func (m *ImportExportReadWrite) QueryDataTransportRecords(ctx context.Context, r
 		query = query.Where("cluster_id = ?", clusterId)
 	}
 	if reImport {
-		query = query.Where("re_import_support = ?", reImport)
+		query = query.Where("re_import_support = ?", reImport).Where("status = ?", constants.DataImportExportFinished)
 	}
 	if startTime > 0 {
 		query = query.Where("start_time >= ?", startTime)

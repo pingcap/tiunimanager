@@ -42,7 +42,9 @@ type QueryParameterGroupResp struct {
 }
 
 type DetailParameterGroupReq struct {
-	ParamGroupID string `json:"paramGroupId"`
+	ParamGroupID string `json:"paramGroupId" swaggerignore:"true" validate:"required,min=1,max=64"`
+	ParamName    string `json:"paramName" form:"paramName"`
+	InstanceType string `json:"instanceType" form:"instanceType"`
 }
 
 type DetailParameterGroupResp struct {
@@ -52,12 +54,12 @@ type DetailParameterGroupResp struct {
 type CreateParameterGroupReq struct {
 	Name           string                                      `json:"name" example:"8C16GV4_default"`
 	DBType         int                                         `json:"dbType" example:"1" enums:"1,2"`
-	HasDefault     int                                         `json:"hasDefault" example:"1" enums:"1,2"`
 	ClusterVersion string                                      `json:"clusterVersion" example:"v5.0"`
 	ClusterSpec    string                                      `json:"clusterSpec" example:"8C16G"`
 	GroupType      int                                         `json:"groupType" example:"1" enums:"1,2"`
 	Note           string                                      `json:"note" example:"default param group"`
-	Params         []structs.ParameterGroupParameterSampleInfo `json:"params"`
+	Params         []structs.ParameterGroupParameterSampleInfo `json:"params" validate:"required"`
+	AddParams      []ParameterInfo                             `json:"addParams"`
 }
 
 type CreateParameterGroupResp struct {
@@ -65,7 +67,7 @@ type CreateParameterGroupResp struct {
 }
 
 type DeleteParameterGroupReq struct {
-	ParamGroupID string `json:"paramGroupId" example:"1"`
+	ParamGroupID string `json:"paramGroupId" example:"1" validate:"required,min=1,max=64"`
 }
 
 type DeleteParameterGroupResp struct {
@@ -73,12 +75,14 @@ type DeleteParameterGroupResp struct {
 }
 
 type UpdateParameterGroupReq struct {
-	ParamGroupID   string                                      `json:"paramGroupId" swaggerignore:"true"`
+	ParamGroupID   string                                      `json:"paramGroupId" swaggerignore:"true" validate:"required,min=1,max=64"`
 	Name           string                                      `json:"name" example:"8C16GV4_default"`
 	ClusterVersion string                                      `json:"clusterVersion" example:"v5.0"`
 	ClusterSpec    string                                      `json:"clusterSpec" example:"8C16G"`
 	Note           string                                      `json:"note" example:"default param group"`
-	Params         []structs.ParameterGroupParameterSampleInfo `json:"params"`
+	Params         []structs.ParameterGroupParameterSampleInfo `json:"params" validate:"required"`
+	AddParams      []ParameterInfo                             `json:"addParams"`
+	DelParams      []string                                    `json:"delParams" example:"1"`
 }
 
 type UpdateParameterGroupResp struct {
@@ -86,8 +90,8 @@ type UpdateParameterGroupResp struct {
 }
 
 type CopyParameterGroupReq struct {
-	ParamGroupID string `json:"paramGroupId" swaggerignore:"true"`
-	Name         string `json:"name" example:"8C16GV4_copy"`
+	ParamGroupID string `json:"paramGroupId" swaggerignore:"true" validate:"required,min=1,max=64"`
+	Name         string `json:"name" example:"8C16GV4_copy" validate:"required,min=1,max=64"`
 	Note         string `json:"note" example:"copy param group"`
 }
 
@@ -96,9 +100,10 @@ type CopyParameterGroupResp struct {
 }
 
 type ApplyParameterGroupReq struct {
-	ParamGroupId string `json:"paramGroupId" example:"123" swaggerignore:"true"`
-	ClusterID    string `json:"clusterId" example:"123"`
-	Reboot       bool   `json:"reboot"`
+	ParamGroupId string   `json:"paramGroupId" example:"123" swaggerignore:"true" validate:"required,min=1,max=64"`
+	ClusterID    string   `json:"clusterId" example:"123" validate:"required,min=8,max=64"`
+	Reboot       bool     `json:"reboot"`
+	Nodes        []string `json:"nodes" swaggerignore:"true"`
 }
 
 type ApplyParameterGroupResp struct {
@@ -119,4 +124,21 @@ type ParameterGroupInfo struct {
 	CreatedAt      int64                                 `json:"createTime" example:"1636698675"`
 	UpdatedAt      int64                                 `json:"updateTime" example:"1636698675"`
 	Params         []structs.ParameterGroupParameterInfo `json:"params"`
+}
+
+type ParameterInfo struct {
+	Category       string   `json:"category" example:"log"`
+	Name           string   `json:"name" example:"binlog_size"`
+	InstanceType   string   `json:"instanceType" example:"TiDB"`
+	SystemVariable string   `json:"systemVariable" example:"log.binlog_size"`
+	Type           int      `json:"type" example:"0"`
+	Unit           string   `json:"unit" example:"mb"`
+	Range          []string `json:"range" example:""`
+	HasReboot      int      `json:"hasReboot" example:"0"`
+	HasApply       int      `json:"hasApply" example:"1"`
+	UpdateSource   int      `json:"updateSource" example:"0"`
+	ReadOnly       int      `json:"readOnly" example:"0"`
+	Description    string   `json:"description" example:"binlog size"`
+	DefaultValue   string   `json:"defaultValue" example:"1024"`
+	Note           string   `json:"note"`
 }

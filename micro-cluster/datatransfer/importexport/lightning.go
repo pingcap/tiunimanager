@@ -132,7 +132,7 @@ func NewDataImportConfig(ctx context.Context, meta *meta.ClusterMeta, info *impo
 		CheckPoint: CheckPointCfg{
 			Enable: true,
 			Driver: DriverFile,
-			Dsn:    fmt.Sprintf("%s:tidb_lightning_checkpoint.pb", info.ConfigPath),
+			Dsn:    fmt.Sprintf("%s/tidb_lightning_checkpoint.pb", info.ConfigPath),
 		},
 	}
 	return config

@@ -22,6 +22,7 @@ import (
 )
 
 type HostProvider interface {
+	ValidateZoneInfo(ctx context.Context, host *structs.HostInfo) (err error)
 	ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error)
 	DeleteHosts(ctx context.Context, hostIds []string) (err error)
 	QueryHosts(ctx context.Context, location *structs.Location, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, total int64, err error)

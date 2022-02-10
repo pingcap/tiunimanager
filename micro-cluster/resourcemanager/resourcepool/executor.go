@@ -172,7 +172,7 @@ func joinEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) 
 		return err
 	}
 
-	node.Record("join em cluster for hosts ")
+	node.Record(fmt.Sprintf("join em cluster for host %s %s succeed", hosts[0].HostName, hosts[0].IP))
 	node.OperationID = operationID
 	return nil
 }
@@ -294,7 +294,7 @@ func leaveEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 		}
 		node.OperationID = operationID
 	}
-	node.Record("leave em cluster for hosts ")
+	node.Record(fmt.Sprintf("leave em cluster for host %s %s succeed", hosts[0].HostName, hosts[0].IP))
 	return nil
 }
 

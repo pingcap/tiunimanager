@@ -144,6 +144,7 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request message.
 		Filter:      request.Filter,
 		Sql:         request.Sql,
 		StorageType: request.StorageType,
+		ConfigPath:  exportDir,
 	}
 
 	flowManager := workflow.GetWorkFlowService()

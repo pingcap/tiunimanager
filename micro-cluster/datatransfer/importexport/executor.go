@@ -119,7 +119,7 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 		}
 	}
 
-	//tiup dumpling -u root -P 4000 --host 127.0.0.1 --filetype sql -t 8 -o /tmp/test -r 200000 -F 256MiB --filter "user*"
+	//tiup dumpling -u root -P 4000 --host 127.0.0.1 --filetype sql -t 8 -o /tmp/test -r 200000 -F 256MiB --filter "db.tb"
 	cmd := []string{"-u", info.UserName,
 		"-p", info.Password,
 		"-P", strconv.Itoa(tidbPort),
@@ -128,7 +128,9 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 		"-t", "8",
 		"-o", info.FilePath,
 		"-r", "200000",
-		"-F", "256MiB"}
+		"-F", "256MiB",
+		"--loglevel", "debug",
+		"--logfile", fmt.Sprintf("%s/dumpling.log", info.ConfigPath)}
 	if info.Filter != "" {
 		cmd = append(cmd, "--filter", info.Filter)
 	}

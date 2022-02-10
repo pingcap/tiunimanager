@@ -28,6 +28,7 @@ type DataImportConfig struct {
 	TiKVImporter TiKVImporterCfg `toml:"tikv-importer"`
 	MyDumper     MyDumperCfg     `toml:"mydumper"`
 	TiDB         TiDBCfg         `toml:"tidb"`
+	CheckPoint   CheckPointCfg   `toml:"checkpoint"`
 }
 
 type LightningCfg struct {
@@ -41,6 +42,11 @@ const (
 	BackendLocal string = "local"
 	//BackendImport string = "importer"
 	//BackendTiDB   string = "tidb"
+)
+
+const (
+	DriverFile  string = "file"
+	DriverMysql string = "mysql"
 )
 
 type TiKVImporterCfg struct {
@@ -59,6 +65,12 @@ type TiDBCfg struct {
 	Password   string `toml:"password"`
 	StatusPort int    `toml:"status-port"` //table information from tidb status port
 	PDAddr     string `toml:"pd-addr"`
+}
+
+type CheckPointCfg struct {
+	Enable bool   `toml:"enable"`
+	Driver string `toml:"driver"`
+	Dsn    string `toml:"dsn"`
 }
 
 func NewDataImportConfig(ctx context.Context, meta *meta.ClusterMeta, info *importInfo) *DataImportConfig {
@@ -116,6 +128,11 @@ func NewDataImportConfig(ctx context.Context, meta *meta.ClusterMeta, info *impo
 			Password:   info.Password,
 			StatusPort: tidbStatusPort,
 			PDAddr:     fmt.Sprintf("%s:%d", pdServerHost, pdClientPort),
+		},
+		CheckPoint: CheckPointCfg{
+			Enable: true,
+			Driver: DriverFile,
+			Dsn:    fmt.Sprintf("%s/tidb_lightning_checkpoint.pb", info.ConfigPath),
 		},
 	}
 	return config

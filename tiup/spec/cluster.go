@@ -18,7 +18,10 @@ import (
 	"crypto/tls"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
+
+	"github.com/pingcap/errors"
 
 	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
@@ -39,6 +42,7 @@ type ClusterServerSpec struct {
 	DeployDir       string                 `yaml:"deploy_dir,omitempty"`
 	DataDir         string                 `yaml:"data_dir,omitempty"`
 	LogDir          string                 `yaml:"log_dir,omitempty"`
+	DBPath          string                 `yaml:"db_path,omitempty"`
 	Config          map[string]interface{} `yaml:"config,omitempty" validate:"config:ignore"`
 	Arch            string                 `yaml:"arch,omitempty"`
 	OS              string                 `yaml:"os,omitempty"`
@@ -197,7 +201,18 @@ func (i *ClusterServerInstance) InitConfig(
 		return err
 	}
 
-	// no config file needed
+	// Determine if DBPath is specified for data recovery
+	if spec.DBPath != "" {
+		if !FileExist(spec.DBPath) || !strings.HasSuffix(spec.DBPath, "db") {
+			return errors.New("DBPath file does not exist or is not the correct db file")
+		}
+		if _, _, err := e.Execute(ctx,
+			fmt.Sprintf("/bin/cp -f %s %s/%s",
+				spec.DBPath, paths.Data[0], DBName),
+			false); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

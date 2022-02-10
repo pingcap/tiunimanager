@@ -30,6 +30,7 @@ import (
 )
 
 const (
+	DBName             = "em.db"
 	statusQueryTimeout = 2 * time.Second
 )
 

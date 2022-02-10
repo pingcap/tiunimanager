@@ -18,6 +18,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -229,4 +230,9 @@ func isSkipField(field reflect.Value) bool {
 	}
 	tp := field.Type().Name()
 	return tp == globalOptionTypeName || tp == monitorOptionTypeName
+}
+
+func FileExist(path string) bool {
+	_, err := os.Lstat(path)
+	return !os.IsNotExist(err)
 }

@@ -36,8 +36,6 @@ type BackupOptions struct {
 	Limit  int // rate limit in Kbit/s
 }
 
-const dbName = "em.db"
-
 // Backup copies files from or to host in the tidb cluster.
 func (m *Manager) Backup(name string, opt BackupOptions, gOpt operator.Options) error {
 	if err := clusterutil.ValidateClusterNameOrError(name); err != nil {
@@ -61,7 +59,7 @@ func (m *Manager) Backup(name string, opt BackupOptions, gOpt operator.Options) 
 	uniqueHosts := map[string]set.StringSet{} // host-sshPort -> {target-path}
 	topo.IterInstance(func(inst spec.Instance) {
 		if inst.ComponentName() == spec.ComponentTiEMClusterServer {
-			srcPath = inst.DataDir() + "/" + dbName // e.g.: /tiem-data/cluster-server-4101/*.db
+			srcPath = inst.DataDir() + "/" + spec.DBName // e.g.: /tiem-data/cluster-server-4101/*.db
 		}
 		key := fmt.Sprintf("%s-%d", inst.GetHost(), inst.GetSSHPort())
 		if _, found := uniqueHosts[key]; !found {
@@ -92,7 +90,7 @@ func (m *Manager) Backup(name string, opt BackupOptions, gOpt operator.Options) 
 		host := strings.Split(hostKey, "-")[0]
 		for _, p := range i.Slice() {
 			t := task.NewBuilder()
-			t.CopyFile(srcPath, p+"/"+dbName, host, false, opt.Limit)
+			t.CopyFile(srcPath, p+"/"+spec.DBName, host, false, opt.Limit)
 			shellTasks = append(shellTasks, t.Build())
 		}
 	}

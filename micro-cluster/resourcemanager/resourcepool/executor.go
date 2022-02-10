@@ -135,14 +135,30 @@ func joinEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) 
 		log.Errorf("join em cluster failed for get flow context, %v", err)
 		return err
 	}
+
+	// Check whether host has already install filebeat
+	installed, err := resourcePool.hostInitiator.PreCheckHostInstallFilebeat(ctx, hosts)
+	if err != nil {
+		log.Errorf("precheck host %v filebeat failed, %v", hosts, err)
+		return err
+	}
+	if installed {
+		msg := fmt.Sprintf("host %v has already installed filebeat, no need to re-join em cluster", hosts)
+		log.Infoln(msg)
+		node.Success(msg)
+		return nil
+	}
+
 	// Store nodeID for second party service
-	installSoftwareCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowNodeIDKey, node.ID)
-	if err = resourcePool.hostInitiator.JoinEMCluster(installSoftwareCtx, hosts); err != nil {
+	installSoftwareCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowIDKey, node.ID)
+	operationID, err := resourcePool.hostInitiator.JoinEMCluster(installSoftwareCtx, hosts)
+	if err != nil {
 		log.Errorf("join em cluster failed for %v, %v", hosts, err)
 		return err
 	}
 
 	node.Record("join em cluster for hosts ")
+	node.OperationID = operationID
 	return nil
 }
 
@@ -238,14 +254,30 @@ func leaveEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 		log.Errorf("leave em cluster failed for get flow context, %v", err)
 		return err
 	}
+
+	installed, err := resourcePool.hostInitiator.PreCheckHostInstallFilebeat(ctx, hosts)
+	if err != nil {
+		log.Errorf("precheck host %v filebeat failed, %v", hosts, err)
+		return err
+	}
+	if !installed {
+		msg := fmt.Sprintf("host %v has already uninstalled filebeat, no need to leave em cluster", hosts)
+		log.Infoln(msg)
+		node.Success(msg)
+		return nil
+	}
+
 	// Store nodeID for second party service
-	wrapCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowNodeIDKey, node.ID)
+	wrapCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowIDKey, node.ID)
+
 	for _, host := range hosts {
 		clusterNodeId := fmt.Sprintf("%s:%d", host.IP, rp_consts.HostFileBeatPort)
-		if err = resourcePool.hostInitiator.LeaveEMCluster(wrapCtx, clusterNodeId); err != nil {
+		operationID, err := resourcePool.hostInitiator.LeaveEMCluster(wrapCtx, clusterNodeId)
+		if err != nil {
 			log.Errorf("leave em cluster failed for %v, %v", host.IP, err)
 			return err
 		}
+		node.OperationID = operationID
 	}
 	node.Record("leave em cluster for hosts ")
 	return nil

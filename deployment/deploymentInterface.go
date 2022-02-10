@@ -35,11 +35,11 @@ import (
 type TiUPComponentType string
 
 const (
-	TiUPComponentTypeCluster = "cluster"
-	TiUPComponentTypeDM      = "dm"
-	TiUPComponentTypeTiEM    = "tiem"
-	TiUPComponentTypeCtrl    = "ctl"
-	TiUPComponentTypeDefault = "default"
+	TiUPComponentTypeCluster TiUPComponentType = "cluster"
+	TiUPComponentTypeDM      TiUPComponentType = "dm"
+	TiUPComponentTypeTiEM    TiUPComponentType = "tiem"
+	TiUPComponentTypeCtrl    TiUPComponentType = "ctl"
+	TiUPComponentTypeDefault TiUPComponentType = "default"
 )
 
 type TiUPMeta struct {
@@ -81,8 +81,12 @@ const (
 	CMDLightning    = "tidb-lightning"
 	CMDTopologyFile = "--topology-file"
 	CMDPush         = "push"
+	CMDCheck        = "check"
+	CMDPrune        = "prune"
 	FlagWaitTimeout = "--wait-timeout"
 )
+
+var M Interface
 
 type Interface interface {
 	// Deploy
@@ -236,7 +240,7 @@ type Interface interface {
 	// @param timeout
 	// @return result
 	// @return err
-	Display(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (result string, err error)
+	Display(ctx context.Context, componentType TiUPComponentType, clusterID, home string, args []string, timeout int) (result string, err error)
 	// ShowConfig
 	// @Description:
 	// @param ctx
@@ -248,7 +252,7 @@ type Interface interface {
 	// @param timeout
 	// @return spec
 	// @return err
-	ShowConfig(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (result string, err error)
+	ShowConfig(ctx context.Context, componentType TiUPComponentType, clusterID, home string, args []string, timeout int) (result string, err error)
 	// Dumpling
 	// @Description:
 	// @param ctx
@@ -293,7 +297,7 @@ type Interface interface {
 	// @param workFlowID
 	// @param args[]
 	// @param timeout
-	// @return ID
+	// @return result
 	// @return err
 	Ctl(ctx context.Context, componentType TiUPComponentType, version, component, home string, args []string, timeout int) (result string, err error)
 	// Exec
@@ -307,6 +311,29 @@ type Interface interface {
 	// @return result
 	// @return err
 	Exec(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error)
+	// CheckConfig
+	// @Description:
+	// @param ctx
+	// @param componentType
+	// @param configYaml
+	// @param home
+	// @param args
+	// @param timeout
+	// @return result
+	// @return err
+	CheckConfig(ctx context.Context, componentType TiUPComponentType, configYaml, home string, args []string, timeout int) (result string, err error)
+	// Prune
+	// @Description:
+	// @param ctx
+	// @param componentType
+	// @param clusterID
+	// @param home
+	// @param workFlowID
+	// @param args
+	// @param timeout
+	// @return ID
+	// @return err
+	Prune(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error)
 	// GetStatus
 	// @Description:
 	// @param ctx

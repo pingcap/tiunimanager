@@ -20,13 +20,12 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
-	secondpartyModel "github.com/pingcap-inc/tiem/models/workflow/secondparty"
+	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockworkflow"
-	mock_secondparty "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -114,9 +113,10 @@ func TestFlowManager_Start_case2(t *testing.T) {
 	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
-	mockSecondParty := mock_secondparty.NewMockSecondPartyService(ctrl)
-	mockSecondParty.EXPECT().GetOperationStatusByWorkFlowNodeID(gomock.Any(), gomock.Any()).Return(secondparty.GetOperationStatusResp{Status: secondpartyModel.OperationStatus_Finished}, nil).AnyTimes()
-	secondparty.Manager = mockSecondParty
+	mockSecondParty := mock_deployment.NewMockInterface(ctrl)
+	mockSecondParty.EXPECT().GetStatus(gomock.Any(), gomock.Any()).
+		Return(deployment.Operation{Status: deployment.Finished}, nil).AnyTimes()
+	deployment.M = mockSecondParty
 
 	manager := GetWorkFlowService()
 	manager.RegisterWorkFlow(context.TODO(), "flowName",

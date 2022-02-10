@@ -23,7 +23,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	em_errors "github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
@@ -34,10 +34,10 @@ import (
 	"github.com/pingcap-inc/tiem/models/common"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	mock_br_service "github.com/pingcap-inc/tiem/test/mockbr"
+	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
 	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
-	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/pkg/sftp"
@@ -146,10 +146,10 @@ func TestManager_ScaleOut(t *testing.T) {
 	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
-		mockTiup := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-		secondparty.Manager = mockTiup
-		mockTiup.EXPECT().ClusterComponentCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"true\"}", nil)
+		mockTiup := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mockTiup
+		mockTiup.EXPECT().Ctl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"true\"}", nil)
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
@@ -211,8 +211,8 @@ func TestManager_ScaleOut(t *testing.T) {
 	})
 
 	t.Run("check fail", func(t *testing.T) {
-		mockTiup := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-		secondparty.Manager = mockTiup
+		mockTiup := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mockTiup
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
@@ -228,8 +228,8 @@ func TestManager_ScaleOut(t *testing.T) {
 			},
 			{},
 		}, make([]*management.DBUser, 0), nil).AnyTimes()
-		mockTiup.EXPECT().ClusterComponentCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"false\"}", nil).AnyTimes()
+		mockTiup.EXPECT().Ctl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"false\"}", nil).AnyTimes()
 		_, err := manager.ScaleOut(context.TODO(), cluster.ScaleOutClusterReq{
 			ClusterID: "111",
 			ClusterResourceInfo: structs.ClusterResourceInfo{
@@ -244,10 +244,10 @@ func TestManager_ScaleOut(t *testing.T) {
 	})
 
 	t.Run("aync fail", func(t *testing.T) {
-		mockTiup := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-		secondparty.Manager = mockTiup
-		mockTiup.EXPECT().ClusterComponentCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"true\"}", nil)
+		mockTiup := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mockTiup
+		mockTiup.EXPECT().Ctl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"true\"}", nil)
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 

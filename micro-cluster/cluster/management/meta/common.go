@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
 	"github.com/pingcap-inc/tiem/models"
@@ -34,7 +35,6 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 )
@@ -120,8 +120,8 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 			}
 			pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
 
-			config, err := secondparty.Manager.ClusterComponentCtl(ctx, secondparty.CTLComponentTypeStr,
-				meta.Cluster.Version, spec.ComponentPD, []string{"-u", pdID, "config", "show", "replication"}, DefaultTiupTimeOut)
+			config, err := deployment.M.Ctl(ctx, deployment.TiUPComponentTypeCtrl, meta.Cluster.Version, spec.ComponentPD,
+				"/home/tiem/.tiup", []string{"-u", pdID, "config", "show", "replication"}, DefaultTiupTimeOut)
 			if err != nil {
 				return err
 			}

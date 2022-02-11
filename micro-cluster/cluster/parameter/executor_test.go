@@ -600,6 +600,49 @@ func TestExecutor_modifyParameters(t *testing.T) {
 	})
 }
 
+func TestDefaultFail(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock2rdService := mock_deployment.NewMockInterface(ctrl)
+	deployment.M = mock2rdService
+
+	t.Run("success", func(t *testing.T) {
+		mock2rdService.EXPECT().EditConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("124", nil)
+
+		refreshCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		refreshCtx.SetData(contextClusterMeta, mockClusterMeta())
+		modifyParameter := mockModifyParameter()
+		modifyParameter.Reboot = true
+		refreshCtx.SetData(contextModifyParameters, modifyParameter)
+		refreshCtx.SetData(contextRefreshParameter, contextRefreshParameter)
+		refreshCtx.SetData(contextClusterConfigStr, "user: tiem\ntiem_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiem\n    group: tiem\n")
+		err := defaultFail(mockWorkFlowAggregation().CurrentNode, refreshCtx)
+		assert.NoError(t, err)
+	})
+
+	t.Run("reload fail rollback", func(t *testing.T) {
+		mock2rdService.EXPECT().EditConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return("124", errors.New("edit config fail"))
+
+		refreshCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		refreshCtx.SetData(contextClusterMeta, mockClusterMeta())
+		modifyParameter := mockModifyParameter()
+		modifyParameter.Reboot = true
+		refreshCtx.SetData(contextModifyParameters, modifyParameter)
+		refreshCtx.SetData(contextRefreshParameter, contextRefreshParameter)
+		refreshCtx.SetData(contextClusterConfigStr, "user: tiem\ntiem_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiem\n    group: tiem\n")
+		err := defaultFail(mockWorkFlowAggregation().CurrentNode, refreshCtx)
+		assert.Error(t, err)
+	})
+}
+
 func TestExecutor_refreshParameter(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -633,43 +676,6 @@ func TestExecutor_refreshParameter(t *testing.T) {
 		refreshCtx.SetData(contextModifyParameters, modifyParameter)
 		err := refreshParameter(mockWorkFlowAggregation().CurrentNode, refreshCtx)
 		assert.NoError(t, err)
-	})
-
-	t.Run("reload fail rollback", func(t *testing.T) {
-		mock2rdService.EXPECT().Reload(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-			Return("123", errors.New("reload fail"))
-		mock2rdService.EXPECT().EditConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("124", nil)
-
-		refreshCtx := &workflow.FlowContext{
-			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
-		}
-		refreshCtx.SetData(contextClusterMeta, mockClusterMeta())
-		modifyParameter := mockModifyParameter()
-		modifyParameter.Reboot = true
-		refreshCtx.SetData(contextModifyParameters, modifyParameter)
-		refreshCtx.SetData(contextClusterConfigStr, "user: tiem\ntiem_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiem\n    group: tiem\n")
-		err := refreshParameter(mockWorkFlowAggregation().CurrentNode, refreshCtx)
-		assert.Error(t, err)
-	})
-
-	t.Run("reload fail", func(t *testing.T) {
-		mock2rdService.EXPECT().Reload(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-			Return("123", errors.New("reload fail"))
-		mock2rdService.EXPECT().EditConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-			Return("124", errors.New("edit config fail"))
-
-		refreshCtx := &workflow.FlowContext{
-			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
-		}
-		refreshCtx.SetData(contextClusterMeta, mockClusterMeta())
-		modifyParameter := mockModifyParameter()
-		modifyParameter.Reboot = true
-		refreshCtx.SetData(contextModifyParameters, modifyParameter)
-		refreshCtx.SetData(contextClusterConfigStr, "user: tiem\ntiem_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiem\n    group: tiem\n")
-		err := refreshParameter(mockWorkFlowAggregation().CurrentNode, refreshCtx)
-		assert.Error(t, err)
 	})
 }
 

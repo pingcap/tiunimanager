@@ -234,3 +234,67 @@ func Test_AddTraits(t *testing.T) {
 		})
 	}
 }
+
+func TestGenSpecCode(t *testing.T) {
+	type args struct {
+		cpuCores int32
+		mem      int32
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"normal", args{3,6}, "3C6G"},
+		{"normal", args{999,999}, "999C999G"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GenSpecCode(tt.args.cpuCores, tt.args.mem); got != tt.want {
+				t.Errorf("GenSpecCode() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParseCpu(t *testing.T) {
+	type args struct {
+		specCode string
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{"normal", args{"3C6G"}, 3},
+		{"normal", args{"999C6G"}, 999},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ParseCpu(tt.args.specCode); got != tt.want {
+				t.Errorf("ParseCpu() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParseMemory(t *testing.T) {
+	type args struct {
+		specCode string
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{"normal", args{"3C6G"}, 6},
+		{"normal", args{"3C999G"}, 999},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ParseMemory(tt.args.specCode); got != tt.want {
+				t.Errorf("ParseMemory() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -13,6 +13,14 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
+/*******************************************************************************
+ * @File: metaoperation.go
+ * @Description:
+ * @Author: zhangpeijin@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2022/2/11
+*******************************************************************************/
+
 package meta
 
 import (
@@ -21,7 +29,6 @@ import (
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
@@ -55,8 +62,8 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 					Type:         compute.Type,
 					Version:      p.Cluster.Version,
 					ClusterID:    p.Cluster.ID,
-					CpuCores:     int8(knowledge.ParseCpu(item.Spec)),
-					Memory:       int8(knowledge.ParseMemory(item.Spec)),
+					CpuCores:     int8(structs.ParseCpu(item.Spec)),
+					Memory:       int8(structs.ParseMemory(item.Spec)),
 					Zone:         structs.GetDomainNameFromCode(item.Zone),
 					DiskType:     item.DiskType,
 					DiskCapacity: int32(item.DiskCapacity),

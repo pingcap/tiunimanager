@@ -13,6 +13,14 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
+/*******************************************************************************
+ * @File: metadisplay.go
+ * @Description:
+ * @Author: zhangpeijin@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2022/2/11
+*******************************************************************************/
+
 package meta
 
 import (
@@ -22,7 +30,6 @@ import (
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"sort"
@@ -396,8 +403,8 @@ func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterT
 				Addresses: instance.HostIP,
 				Ports:     instance.Ports,
 				Spec: structs.ProductSpecInfo{
-					ID:   knowledge.GenSpecCode(int32(instance.CpuCores), int32(instance.Memory)),
-					Name: knowledge.GenSpecCode(int32(instance.CpuCores), int32(instance.Memory)),
+					ID:   structs.GenSpecCode(int32(instance.CpuCores), int32(instance.Memory)),
+					Name: structs.GenSpecCode(int32(instance.CpuCores), int32(instance.Memory)),
 				},
 				Zone: structs.ZoneInfo{
 					ZoneID:   structs.GenDomainCodeByName(p.Cluster.Region, instance.Zone),
@@ -406,7 +413,7 @@ func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterT
 			}
 			topologyInfo.Topology = append(topologyInfo.Topology, instanceInfo)
 
-			spec := knowledge.GenSpecCode(int32(instance.CpuCores), int32(instance.Memory))
+			spec := structs.GenSpecCode(int32(instance.CpuCores), int32(instance.Memory))
 
 			newResourceSpec := true
 			for i, resource := range instanceResource.Resource {

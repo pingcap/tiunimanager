@@ -83,7 +83,7 @@ func asyncMaintenance(ctx context.Context, meta *meta.ClusterMeta, data map[stri
 	}
 
 	if flow, flowError := workflow.GetWorkFlowService().CreateWorkFlow(ctx, meta.Cluster.ID, workflow.BizTypeCluster, flowName); flowError != nil {
-		framework.LogWithContext(ctx).Errorf("create flow %s failed, clusterID = %s, error = %s", flow.Flow.Name, meta.Cluster.ID, err.Error())
+		framework.LogWithContext(ctx).Errorf("create flow %s failed, clusterID = %s, error = %s", flow.Flow.Name, meta.Cluster.ID, err)
 		err = flowError
 		return
 	} else {
@@ -118,22 +118,20 @@ func defaultEnd(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) err
 	return nil
 }
 
-// defaultFail
+// refreshParameterFail
 // @Description: Rollback logic for default failures
-func defaultFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
-	framework.LogWithContext(ctx).Info("begin default fail executor method")
-	defer framework.LogWithContext(ctx).Info("end default fail executor method")
+func refreshParameterFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.LogWithContext(ctx).Info("begin refresh parameter fail executor method")
+	defer framework.LogWithContext(ctx).Info("end refresh parameter fail executor method")
 
 	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
 
-	if ctx.GetData(contextRefreshParameter) != nil {
-		// If the reload fails, then do a meta rollback
-		taskId, err := deployment.M.EditConfig(ctx, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID,
-			ctx.GetData(contextClusterConfigStr).(string), "/home/tiem/.tiup", node.ParentID, []string{}, 0)
-		if err != nil {
-			framework.LogWithContext(ctx).Errorf("call secondparty tiup rollback global config task id = %v, err = %s", taskId, err.Error())
-			return err
-		}
+	// If the reload fails, then do a meta rollback
+	taskId, err := deployment.M.EditConfig(ctx, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID,
+		ctx.GetData(contextClusterConfigStr).(string), "/home/tiem/.tiup", node.ParentID, []string{}, 0)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("call secondparty tiup rollback global config task id = %v, err = %s", taskId, err.Error())
+		return err
 	}
 	return nil
 }
@@ -685,8 +683,6 @@ func refreshParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 			flags = append(flags, strings.Join(modifyParam.Nodes, ","))
 		}
 
-		// set markers
-		ctx.SetData(contextRefreshParameter, contextRefreshParameter)
 		reloadId, err := deployment.M.Reload(ctx, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID, "/home/tiem/.tiup", node.ParentID, flags, 0)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("call tiup api edit global config err = %s", err.Error())

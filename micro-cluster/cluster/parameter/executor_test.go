@@ -29,6 +29,8 @@ import (
 	"math"
 	"testing"
 
+	"github.com/pingcap-inc/tiem/common/constants"
+
 	"github.com/pingcap-inc/tiem/deployment"
 
 	"github.com/pingcap-inc/tiem/util/api/cdc"
@@ -42,8 +44,6 @@ import (
 	"github.com/pingcap-inc/tiem/test/mockutiltidbhttp"
 	mockutiltidbsqlconfig "github.com/pingcap-inc/tiem/test/mockutiltidbsql_config"
 	"github.com/pingcap-inc/tiem/test/mockutiltikv"
-
-	"github.com/pingcap-inc/tiem/common/constants"
 
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
@@ -68,29 +68,81 @@ func TestExecutor_asyncMaintenance_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
-	models.SetClusterParameterReaderWriter(clusterParameterRW)
-	clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
-	models.SetClusterReaderWriter(clusterManagementRW)
-	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
-	workflow.MockWorkFlowService(workflowService)
-	configRW := mockconfig.NewMockReaderWriter(ctrl)
-	models.SetConfigReaderWriter(configRW)
+	t.Run("success", func(t *testing.T) {
+		clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
+		models.SetClusterParameterReaderWriter(clusterParameterRW)
+		clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterManagementRW)
+		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+		workflow.MockWorkFlowService(workflowService)
+		configRW := mockconfig.NewMockReaderWriter(ctrl)
+		models.SetConfigReaderWriter(configRW)
 
-	clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (*workflow.WorkFlowAggregation, error) {
-			return mockWorkFlowAggregation(), nil
-		})
-	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).AnyTimes()
-	configRW.EXPECT().CreateConfig(gomock.Any(), gomock.Any()).AnyTimes()
+		clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (*workflow.WorkFlowAggregation, error) {
+				return mockWorkFlowAggregation(), nil
+			})
+		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).AnyTimes()
+		configRW.EXPECT().CreateConfig(gomock.Any(), gomock.Any()).AnyTimes()
 
-	data := map[string]interface{}{}
-	data[contextModifyParameters] = mockModifyParameter()
-	data[contextMaintenanceStatusChange] = true
-	resp, err := asyncMaintenance(context.TODO(), mockClusterMeta(), data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, resp)
+		data := map[string]interface{}{}
+		data[contextModifyParameters] = mockModifyParameter()
+		data[contextMaintenanceStatusChange] = true
+		resp, err := asyncMaintenance(context.TODO(), mockClusterMeta(), data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, resp)
+	})
+
+	t.Run("start maintenance fail", func(t *testing.T) {
+		clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterManagementRW)
+
+		clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().
+			Return(errors.New("set maintenance fail"))
+		data := map[string]interface{}{}
+		data[contextModifyParameters] = mockModifyParameter()
+		data[contextMaintenanceStatusChange] = true
+		_, err := asyncMaintenance(context.TODO(), mockClusterMeta(), data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
+		assert.Error(t, err)
+	})
+
+	t.Run("create workflow fail", func(t *testing.T) {
+		clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterManagementRW)
+		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+		workflow.MockWorkFlowService(workflowService)
+
+		clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (*workflow.WorkFlowAggregation, error) {
+				return mockWorkFlowAggregation(), errors.New("create workflow fail")
+			})
+		data := map[string]interface{}{}
+		data[contextModifyParameters] = mockModifyParameter()
+		data[contextMaintenanceStatusChange] = true
+		_, err := asyncMaintenance(context.TODO(), mockClusterMeta(), data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
+		assert.Error(t, err)
+	})
+
+	t.Run("async start fail", func(t *testing.T) {
+		clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterManagementRW)
+		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+		workflow.MockWorkFlowService(workflowService)
+
+		clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (*workflow.WorkFlowAggregation, error) {
+				return mockWorkFlowAggregation(), nil
+			})
+		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).AnyTimes().Return(errors.New("async start fail"))
+		data := map[string]interface{}{}
+		data[contextModifyParameters] = mockModifyParameter()
+		data[contextMaintenanceStatusChange] = true
+		_, err := asyncMaintenance(context.TODO(), mockClusterMeta(), data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
+		assert.Error(t, err)
+	})
 }
 
 func TestExecutor_endMaintenance_Success(t *testing.T) {
@@ -312,21 +364,21 @@ func TestExecutor_modifyParameters(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock2rdService := mock_deployment.NewMockInterface(ctrl)
-	deployment.M = mock2rdService
-
-	mockCDCApiService := mockutilcdc.NewMockCDCApiService(ctrl)
-	cdc.ApiService = mockCDCApiService
-	mockPDApiService := mockutilpd.NewMockPDApiService(ctrl)
-	pd.ApiService = mockPDApiService
-	mockTiDBApiService := mockutiltidbhttp.NewMockTiDBApiService(ctrl)
-	http.ApiService = mockTiDBApiService
-	mockTiDBSqlConfigService := mockutiltidbsqlconfig.NewMockClusterConfigService(ctrl)
-	sql.SqlService = mockTiDBSqlConfigService
-	mockTiKVApiService := mockutiltikv.NewMockTiKVApiService(ctrl)
-	tikv.ApiService = mockTiKVApiService
-
 	t.Run("success", func(t *testing.T) {
+		mock2rdService := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mock2rdService
+
+		mockCDCApiService := mockutilcdc.NewMockCDCApiService(ctrl)
+		cdc.ApiService = mockCDCApiService
+		mockPDApiService := mockutilpd.NewMockPDApiService(ctrl)
+		pd.ApiService = mockPDApiService
+		mockTiDBApiService := mockutiltidbhttp.NewMockTiDBApiService(ctrl)
+		http.ApiService = mockTiDBApiService
+		mockTiDBSqlConfigService := mockutiltidbsqlconfig.NewMockClusterConfigService(ctrl)
+		sql.SqlService = mockTiDBSqlConfigService
+		mockTiKVApiService := mockutiltikv.NewMockTiKVApiService(ctrl)
+		tikv.ApiService = mockTiKVApiService
+
 		mock2rdService.EXPECT().EditConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("1", nil)
 		mock2rdService.EXPECT().ShowConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil)
 
@@ -348,6 +400,9 @@ func TestExecutor_modifyParameters(t *testing.T) {
 	})
 
 	t.Run("edit config fail", func(t *testing.T) {
+		mock2rdService := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mock2rdService
+
 		mock2rdService.EXPECT().EditConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return("1", errors.New("edit config fail"))
 		mock2rdService.EXPECT().ShowConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil)
@@ -364,6 +419,9 @@ func TestExecutor_modifyParameters(t *testing.T) {
 	})
 
 	t.Run("no tiflash apply parameter", func(t *testing.T) {
+		mock2rdService := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mock2rdService
+
 		mock2rdService.EXPECT().EditConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("1", nil)
 		mock2rdService.EXPECT().ShowConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil)
 
@@ -395,6 +453,9 @@ func TestExecutor_modifyParameters(t *testing.T) {
 	})
 
 	t.Run("no tiflash modify parameter", func(t *testing.T) {
+		mock2rdService := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mock2rdService
+
 		mock2rdService.EXPECT().EditConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("1", nil)
 		mock2rdService.EXPECT().ShowConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil)
 
@@ -425,6 +486,12 @@ func TestExecutor_modifyParameters(t *testing.T) {
 	})
 
 	t.Run("no cdc apply parameter", func(t *testing.T) {
+		mock2rdService := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mock2rdService
+
+		mockCDCApiService := mockutilcdc.NewMockCDCApiService(ctrl)
+		cdc.ApiService = mockCDCApiService
+
 		mockCDCApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
 
 		modifyCtx := &workflow.FlowContext{
@@ -455,6 +522,12 @@ func TestExecutor_modifyParameters(t *testing.T) {
 	})
 
 	t.Run("no cdc modify parameter", func(t *testing.T) {
+		mock2rdService := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mock2rdService
+
+		mockCDCApiService := mockutilcdc.NewMockCDCApiService(ctrl)
+		cdc.ApiService = mockCDCApiService
+
 		mockCDCApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
 
 		modifyCtx := &workflow.FlowContext{
@@ -484,6 +557,11 @@ func TestExecutor_modifyParameters(t *testing.T) {
 	})
 
 	t.Run("tidb api modify fail", func(t *testing.T) {
+		mock2rdService := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mock2rdService
+		mockTiDBApiService := mockutiltidbhttp.NewMockTiDBApiService(ctrl)
+		http.ApiService = mockTiDBApiService
+
 		mockTiDBApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
 
 		modifyCtx := &workflow.FlowContext{
@@ -513,6 +591,11 @@ func TestExecutor_modifyParameters(t *testing.T) {
 	})
 
 	t.Run("tikv api modify fail", func(t *testing.T) {
+		mock2rdService := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mock2rdService
+		mockTiKVApiService := mockutiltikv.NewMockTiKVApiService(ctrl)
+		tikv.ApiService = mockTiKVApiService
+
 		mockTiKVApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
 
 		modifyCtx := &workflow.FlowContext{
@@ -542,6 +625,11 @@ func TestExecutor_modifyParameters(t *testing.T) {
 	})
 
 	t.Run("pd api modify fail", func(t *testing.T) {
+		mock2rdService := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mock2rdService
+		mockPDApiService := mockutilpd.NewMockPDApiService(ctrl)
+		pd.ApiService = mockPDApiService
+
 		mockPDApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
 
 		modifyCtx := &workflow.FlowContext{
@@ -571,6 +659,11 @@ func TestExecutor_modifyParameters(t *testing.T) {
 	})
 
 	t.Run("cdc api modify fail", func(t *testing.T) {
+		mock2rdService := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mock2rdService
+		mockCDCApiService := mockutilcdc.NewMockCDCApiService(ctrl)
+		cdc.ApiService = mockCDCApiService
+
 		mockCDCApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
 
 		modifyCtx := &workflow.FlowContext{
@@ -618,9 +711,8 @@ func TestDefaultFail(t *testing.T) {
 		modifyParameter := mockModifyParameter()
 		modifyParameter.Reboot = true
 		refreshCtx.SetData(contextModifyParameters, modifyParameter)
-		refreshCtx.SetData(contextRefreshParameter, contextRefreshParameter)
 		refreshCtx.SetData(contextClusterConfigStr, "user: tiem\ntiem_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiem\n    group: tiem\n")
-		err := defaultFail(mockWorkFlowAggregation().CurrentNode, refreshCtx)
+		err := refreshParameterFail(mockWorkFlowAggregation().CurrentNode, refreshCtx)
 		assert.NoError(t, err)
 	})
 
@@ -636,9 +728,8 @@ func TestDefaultFail(t *testing.T) {
 		modifyParameter := mockModifyParameter()
 		modifyParameter.Reboot = true
 		refreshCtx.SetData(contextModifyParameters, modifyParameter)
-		refreshCtx.SetData(contextRefreshParameter, contextRefreshParameter)
 		refreshCtx.SetData(contextClusterConfigStr, "user: tiem\ntiem_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiem\n    group: tiem\n")
-		err := defaultFail(mockWorkFlowAggregation().CurrentNode, refreshCtx)
+		err := refreshParameterFail(mockWorkFlowAggregation().CurrentNode, refreshCtx)
 		assert.Error(t, err)
 	})
 }

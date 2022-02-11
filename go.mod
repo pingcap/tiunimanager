@@ -34,7 +34,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pingcap/check v0.0.0-20200212061837-5e12011dc712
 	github.com/pingcap/errors v0.11.4
-	github.com/pingcap/tiup v1.9.0-dev.0.20220118075544-84b544b26293
+	github.com/pingcap/tiup v1.9.0
 	github.com/pkg/sftp v1.10.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/common v0.30.0

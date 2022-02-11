@@ -980,6 +980,17 @@ definitions:
       result:
         type: boolean
     type: object
+  message.CheckPlatformRsp:
+    properties:
+      hosts:
+        additionalProperties:
+          $ref: '#/definitions/message.HostCheck'
+        type: object
+      tenants:
+        additionalProperties:
+          $ref: '#/definitions/message.TenantCheck'
+        type: object
+    type: object
   message.CopyParameterGroupReq:
     properties:
       name:
@@ -1340,6 +1351,8 @@ definitions:
       user:
         $ref: '#/definitions/structs.UserInfo'
     type: object
+  message.HostCheck:
+    type: object
   message.ImportHostsResp:
     properties:
       flowInfo:
@@ -1583,6 +1596,19 @@ definitions:
           $ref: '#/definitions/structs.VendorWithRegion'
         type: object
     type: object
+  message.TenantCheck:
+    properties:
+      clusterCount:
+        type: integer
+      cpuRatio:
+        type: number
+      maxCluster:
+        $ref: '#/definitions/message.UnionInt'
+      memoryRatio:
+        type: number
+      storageRatio:
+        type: number
+    type: object
   message.UnbindRoleForUserReq:
     properties:
       role:
@@ -1591,6 +1617,15 @@ definitions:
         type: string
     type: object
   message.UnbindRoleForUserResp:
+    type: object
+  message.UnionInt:
+    properties:
+      expectedValue:
+        type: integer
+      realValue:
+        type: integer
+      valid:
+        type: boolean
     type: object
   message.UpdateHostReservedReq:
     properties:
@@ -4632,6 +4667,44 @@ paths:
       summary: copy a parameter group
       tags:
       - parameter group
+  /platform/check:
+    get:
+      consumes:
+      - application/json
+      description: platform check
+      parameters:
+      - in: query
+        name: displayMode
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.CheckPlatformRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: platform check
+      tags:
+      - platform
   /products/:
     delete:
       consumes:

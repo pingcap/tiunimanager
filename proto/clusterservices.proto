@@ -113,6 +113,9 @@ service ClusterService {
     rpc QueryTenants(RpcRequest) returns (RpcResponse);
     rpc UpdateTenantOnBoardingStatus(RpcRequest) returns (RpcResponse);
     rpc UpdateTenantProfile(RpcRequest) returns (RpcResponse);
+
+    // platform
+    rpc CheckPlatform(RpcRequest) returns(RpcResponse);
 }
 
 message RpcRequest {

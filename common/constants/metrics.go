@@ -50,6 +50,8 @@ const (
 	MetricsClusterInspectParameter      MetricsType = "cluster/inspect_parameter"
 	MetricsClusterQueryLogParameter     MetricsType = "cluster/query_logs"
 
+	MetricsPlatformCheck MetricsType = "platform/check"
+
 	// MetricsBackupCreate define backup metrics
 	MetricsBackupCreate         MetricsType = "backup/create"
 	MetricsBackupDelete         MetricsType = "backup/delete"

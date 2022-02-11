@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/micro-cluster/platform/check"
 	"runtime/debug"
 	"time"
 
@@ -68,6 +69,7 @@ type ClusterServiceHandler struct {
 	authManager             *identification.Manager
 	productManager          *product.ProductManager
 	rbacManager             rbac.RBACService
+	checkManager            *check.CheckManager
 }
 
 func handleRequest(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse, requestBody interface{}, permissions []structs.RbacPermission) bool {
@@ -155,6 +157,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.authManager = identification.NewIdentificationManager()
 	handler.productManager = product.NewProductManager()
 	handler.rbacManager = rbac.GetRBACService()
+	handler.checkManager = check.NewCheckManager()
 
 	return handler
 }
@@ -1430,5 +1433,18 @@ func (handler *ClusterServiceHandler) UpdateTenantProfile(ctx context.Context, r
 		resp, err := handler.accountManager.UpdateTenantProfile(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) CheckPlatform(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "CheckPlatform", int(response.GetCode()))
+
+	req := message.CheckPlatformReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionRead)}}) {
+		resp, err := handler.checkManager.Check(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
 	return nil
 }

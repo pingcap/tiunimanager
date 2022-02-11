@@ -3320,6 +3320,71 @@ var doc = `{
                 }
             }
         },
+        "/platform/check": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "platform check",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "platform check",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "displayMode",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.CheckPlatformRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/products/": {
             "get": {
                 "security": [
@@ -7670,6 +7735,23 @@ var doc = `{
                 }
             }
         },
+        "message.CheckPlatformRsp": {
+            "type": "object",
+            "properties": {
+                "hosts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/message.HostCheck"
+                    }
+                },
+                "tenants": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/message.TenantCheck"
+                    }
+                }
+            }
+        },
         "message.CopyParameterGroupReq": {
             "type": "object",
             "required": [
@@ -8209,6 +8291,9 @@ var doc = `{
                 }
             }
         },
+        "message.HostCheck": {
+            "type": "object"
+        },
         "message.ImportHostsResp": {
             "type": "object",
             "properties": {
@@ -8568,6 +8653,26 @@ var doc = `{
                 }
             }
         },
+        "message.TenantCheck": {
+            "type": "object",
+            "properties": {
+                "clusterCount": {
+                    "type": "integer"
+                },
+                "cpuRatio": {
+                    "type": "number"
+                },
+                "maxCluster": {
+                    "$ref": "#/definitions/message.UnionInt"
+                },
+                "memoryRatio": {
+                    "type": "number"
+                },
+                "storageRatio": {
+                    "type": "number"
+                }
+            }
+        },
         "message.UnbindRoleForUserReq": {
             "type": "object",
             "properties": {
@@ -8581,6 +8686,20 @@ var doc = `{
         },
         "message.UnbindRoleForUserResp": {
             "type": "object"
+        },
+        "message.UnionInt": {
+            "type": "object",
+            "properties": {
+                "expectedValue": {
+                    "type": "integer"
+                },
+                "realValue": {
+                    "type": "integer"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
         },
         "message.UpdateHostReservedReq": {
             "type": "object",

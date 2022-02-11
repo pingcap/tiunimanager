@@ -28,12 +28,13 @@ import (
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
+	platformApi "github.com/pingcap-inc/tiem/micro-api/controller/platform"
 	"github.com/pingcap-inc/tiem/micro-api/controller/platform/product"
 	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
 	warehouseApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 	flowtaskApi "github.com/pingcap-inc/tiem/micro-api/controller/task/flowtask"
-	rbacApi "github.com/pingcap-inc/tiem/micro-api/controller/user/rbac"
 	userApi "github.com/pingcap-inc/tiem/micro-api/controller/user"
+	rbacApi "github.com/pingcap-inc/tiem/micro-api/controller/user/rbac"
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -70,6 +71,13 @@ func Route(g *gin.Engine) {
 		{
 			auth.POST("/login", metrics.HandleMetrics(constants.MetricsUserLogin), userApi.Login)
 			auth.POST("/logout", metrics.HandleMetrics(constants.MetricsUserLogout), userApi.Logout)
+		}
+
+		platform := apiV1.Group("/platform")
+		{
+			platform.Use(interceptor.VerifyIdentity)
+			platform.Use(interceptor.AuditLog())
+			platform.POST("/check", metrics.HandleMetrics(constants.MetricsPlatformCheck), platformApi.Check)
 		}
 
 		user := apiV1.Group("/users")

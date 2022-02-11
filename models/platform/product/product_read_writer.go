@@ -25,13 +25,15 @@ package product
 
 import (
 	"context"
+	"fmt"
+	"sort"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
-	"sort"
 )
 
 type ProductReadWriterInterface interface {
@@ -41,6 +43,16 @@ type ProductReadWriterInterface interface {
 	// @return zones
 	// @return err
 	QueryZones(ctx context.Context) (zones []structs.ZoneInfo, err error)
+
+	// GetZone
+	// @Description: Get region & zone information provided by Enterprise Manager
+	// @param ctx
+	// @param vendorID
+	// @param regionID
+	// @param zoneID
+	// @return zone
+	// @return err
+	GetZone(ctx context.Context, vendorID, regionID, zoneID string) (zone *structs.ZoneInfo, count int64, err error)
 
 	// CreateZones
 	// @Description: batch create zones interface
@@ -185,6 +197,25 @@ func (p *ProductReadWriter) QueryZones(ctx context.Context) (zones []structs.Zon
 		}
 	}
 	return zones, err
+}
+
+// GetZone zone by vendorID, regionID, zoneID
+func (p *ProductReadWriter) GetZone(ctx context.Context, vendorID, regionID, zoneID string) (zone *structs.ZoneInfo, count int64, err error) {
+	if vendorID == "" || regionID == "" || zoneID == "" {
+		errMsg := fmt.Sprintf("get zone without vendorID %s, regionID %s, zoneID %s, parameter invalid", vendorID, regionID, zoneID)
+		framework.LogWithContext(ctx).Warningln(errMsg)
+		return nil, 0, errors.NewError(errors.TIEM_PARAMETER_INVALID, errMsg)
+	}
+
+	zone = new(structs.ZoneInfo)
+	err = p.DB(ctx).Model(&Zone{}).Where("vendor_id = ? AND  region_id = ? AND zone_id = ?", vendorID, regionID, zoneID).Count(&count).Find(zone).Error
+	if err != nil {
+		errMsg := fmt.Sprintf("get zone, vendorID: %s regionID: %s, zoneID:%s, failed: %v", zone.VendorID, zone.RegionID, zone.ZoneID, err)
+		framework.LogWithContext(ctx).Errorf(errMsg)
+		return nil, 0, errors.NewError(errors.QueryZoneScanRowError, errMsg)
+	}
+
+	return zone, count, nil
 }
 
 //CreateProduct create a product by product information and components

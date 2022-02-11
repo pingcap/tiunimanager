@@ -123,14 +123,6 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 		}
 	}
 
-	if err := models.GetClusterReaderWriter().CreateRelation(ctx, &management.ClusterRelation{
-		ObjectClusterID:  meta.Cluster.ID,
-		SubjectClusterID: p.Cluster.ID,
-		RelationType:     constants.ClusterRelationCloneFrom,
-	}); err != nil {
-		return nil, err
-	}
-
 	return meta, nil
 }
 

@@ -27,11 +27,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/deployment"
-	"gopkg.in/yaml.v2"
 	"math/rand"
 	"strconv"
 	"strings"
+
+	"github.com/pingcap-inc/tiem/deployment"
+	"gopkg.in/yaml.v2"
 
 	"github.com/pingcap-inc/tiem/util/api/cdc"
 
@@ -82,7 +83,7 @@ func asyncMaintenance(ctx context.Context, meta *meta.ClusterMeta, data map[stri
 	}
 
 	if flow, flowError := workflow.GetWorkFlowService().CreateWorkFlow(ctx, meta.Cluster.ID, workflow.BizTypeCluster, flowName); flowError != nil {
-		framework.LogWithContext(ctx).Errorf("create flow %s failed, clusterID = %s, error = %s", flow.Flow.Name, meta.Cluster.ID, err.Error())
+		framework.LogWithContext(ctx).Errorf("create flow %s failed, clusterID = %s, error = %s", flow.Flow.Name, meta.Cluster.ID, err)
 		err = flowError
 		return
 	} else {
@@ -113,6 +114,24 @@ func defaultEnd(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) err
 			framework.LogWithContext(ctx).Errorf("end cluster %s maintenance status failed, %s", clusterMeta.Cluster.ID, err.Error())
 			return err
 		}
+	}
+	return nil
+}
+
+// refreshParameterFail
+// @Description: Rollback logic for default failures
+func refreshParameterFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.LogWithContext(ctx).Info("begin refresh parameter fail executor method")
+	defer framework.LogWithContext(ctx).Info("end refresh parameter fail executor method")
+
+	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
+
+	// If the reload fails, then do a meta rollback
+	taskId, err := deployment.M.EditConfig(ctx, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID,
+		ctx.GetData(contextClusterConfigStr).(string), "/home/tiem/.tiup", node.ParentID, []string{}, 0)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("call secondparty tiup rollback global config task id = %v, err = %s", taskId, err.Error())
+		return err
 	}
 	return nil
 }
@@ -494,7 +513,19 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 	}
 	framework.LogWithContext(ctx).Debugf("modify global component configs: %v", configs)
 
-	yamlConfig, err := generateNewYamlConfig(ctx, clusterMeta.Cluster.ID, configs)
+	// invoke tiup show-config
+	topoStr, err := deployment.M.ShowConfig(ctx, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID,
+		"/home/tiem/.tiup", []string{}, meta.DefaultTiupTimeOut)
+	if err != nil {
+		return err
+	}
+	ctx.SetData(contextClusterConfigStr, topoStr)
+	topo := &tiupSpec.Specification{}
+	if err = yaml.UnmarshalStrict([]byte(topoStr), topo); err != nil {
+		framework.LogWithContext(ctx).Errorf("parse original config(%s) error: %+v", topoStr, err)
+		return err
+	}
+	yamlConfig, err := generateNewYamlConfig(configs, topo)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("generate new yaml config err = %s", err.Error())
 		return err
@@ -510,17 +541,7 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 	return nil
 }
 
-func generateNewYamlConfig(ctx context.Context, clusterID string, configs []secondparty.GlobalComponentConfig) (string, error) {
-	topoStr, err := deployment.M.ShowConfig(ctx, deployment.TiUPComponentTypeCluster, clusterID, "/home/tiem/.tiup", []string{}, meta.DefaultTiupTimeOut)
-	if err != nil {
-		return "", err
-	}
-	topo := &tiupSpec.Specification{}
-	if err = yaml.UnmarshalStrict([]byte(topoStr), topo); err != nil {
-		framework.LogWithContext(ctx).Errorf("parse original config(%s) error: %+v", topoStr, err)
-		return "", err
-	}
-
+func generateNewYamlConfig(configs []secondparty.GlobalComponentConfig, topo *tiupSpec.Specification) (string, error) {
 	var componentServerConfigs map[string]interface{}
 
 	for _, globalComponentConfig := range configs {

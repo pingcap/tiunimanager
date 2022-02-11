@@ -968,10 +968,21 @@ func syncIncrData(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	}
 	// create cdc sync and wait for syncing ready
 	taskID, err := changefeed.GetChangeFeedService().CreateBetweenClusters(context.Context,
-		sourceClusterMeta.Cluster.ID, clusterMeta.Cluster.ID, constants.ClusterRelationCloneFrom)
+		sourceClusterMeta.Cluster.ID, clusterMeta.Cluster.ID, constants.ClusterRelationStandBy)
 	if err != nil {
 		return err
 	}
+
+	// create standby relation
+	if err := models.GetClusterReaderWriter().CreateRelation(context.Context, &management.ClusterRelation{
+		ObjectClusterID:      clusterMeta.Cluster.ID,
+		SubjectClusterID:     sourceClusterMeta.Cluster.ID,
+		RelationType:         constants.ClusterRelationStandBy,
+		SyncChangeFeedTaskID: taskID,
+	}); err != nil {
+		return err
+	}
+
 	gcLifeTime, err := time.ParseDuration(context.GetData(ContextGCLifeTime).(string))
 	if err != nil {
 		return err

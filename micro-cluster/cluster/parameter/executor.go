@@ -27,11 +27,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/deployment"
-	"gopkg.in/yaml.v2"
 	"math/rand"
 	"strconv"
 	"strings"
+
+	"github.com/pingcap-inc/tiem/deployment"
+	"gopkg.in/yaml.v2"
 
 	"github.com/pingcap-inc/tiem/util/api/cdc"
 
@@ -494,7 +495,19 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 	}
 	framework.LogWithContext(ctx).Debugf("modify global component configs: %v", configs)
 
-	yamlConfig, err := generateNewYamlConfig(ctx, clusterMeta.Cluster.ID, configs)
+	// invoke tiup show-config
+	topoStr, err := deployment.M.ShowConfig(ctx, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID,
+		"/home/tiem/.tiup", []string{}, meta.DefaultTiupTimeOut)
+	if err != nil {
+		return err
+	}
+	ctx.SetData(contextClusterConfigStr, topoStr)
+	topo := &tiupSpec.Specification{}
+	if err = yaml.UnmarshalStrict([]byte(topoStr), topo); err != nil {
+		framework.LogWithContext(ctx).Errorf("parse original config(%s) error: %+v", topoStr, err)
+		return err
+	}
+	yamlConfig, err := generateNewYamlConfig(configs, topo)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("generate new yaml config err = %s", err.Error())
 		return err
@@ -510,17 +523,7 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 	return nil
 }
 
-func generateNewYamlConfig(ctx context.Context, clusterID string, configs []secondparty.GlobalComponentConfig) (string, error) {
-	topoStr, err := deployment.M.ShowConfig(ctx, deployment.TiUPComponentTypeCluster, clusterID, "/home/tiem/.tiup", []string{}, meta.DefaultTiupTimeOut)
-	if err != nil {
-		return "", err
-	}
-	topo := &tiupSpec.Specification{}
-	if err = yaml.UnmarshalStrict([]byte(topoStr), topo); err != nil {
-		framework.LogWithContext(ctx).Errorf("parse original config(%s) error: %+v", topoStr, err)
-		return "", err
-	}
-
+func generateNewYamlConfig(configs []secondparty.GlobalComponentConfig, topo *tiupSpec.Specification) (string, error) {
 	var componentServerConfigs map[string]interface{}
 
 	for _, globalComponentConfig := range configs {
@@ -665,6 +668,12 @@ func refreshParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		reloadId, err := deployment.M.Reload(ctx, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID, "/home/tiem/.tiup", node.ParentID, flags, 0)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("call tiup api edit global config err = %s", err.Error())
+			// If the reload fails, then do a meta rollback
+			taskId, err1 := deployment.M.EditConfig(ctx, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID,
+				ctx.GetData(contextClusterConfigStr).(string), "/home/tiem/.tiup", node.ParentID, []string{}, 0)
+			if err1 != nil {
+				framework.LogWithContext(ctx).Errorf("call secondparty tiup rollback global config task id = %v, err = %s", taskId, err1.Error())
+			}
 			return err
 		}
 		framework.LogWithContext(ctx).Infof("got reloadId: %v", reloadId)

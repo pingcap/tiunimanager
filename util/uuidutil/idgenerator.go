@@ -34,7 +34,7 @@ const (
 func GenerateID() string {
 	var encoded []byte = nil
 
-	for encoded == nil || strings.HasPrefix(string(encoded), "-") {
+	for encoded == nil || strings.HasPrefix(string(encoded), "-") || strings.HasPrefix(string(encoded), "_"){
 		uuid := uuid.New()
 
 		encoded = make([]byte, ENTITY_UUID_LENGTH)

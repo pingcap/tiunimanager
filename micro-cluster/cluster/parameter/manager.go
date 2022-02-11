@@ -69,12 +69,13 @@ func NewManager() *Manager {
 var modifyParametersDefine = workflow.WorkFlowDefine{
 	FlowName: constants.FlowModifyParameters,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":          {"validationParameter", "validationDone", "fail", workflow.SyncFuncNode, validationParameter},
-		"validationDone": {"modifyParameter", "modifyDone", "fail", workflow.PollingNode, modifyParameters},
-		"modifyDone":     {"refreshParameter", "refreshDone", "fail", workflow.PollingNode, refreshParameter},
-		"refreshDone":    {"persistParameter", "persistDone", "fail", workflow.SyncFuncNode, persistParameter},
-		"persistDone":    {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-		"fail":           {"end", "", "", workflow.SyncFuncNode, defaultEnd},
+		"start":                {"validationParameter", "validationDone", "fail", workflow.SyncFuncNode, validationParameter},
+		"validationDone":       {"modifyParameter", "modifyDone", "fail", workflow.PollingNode, modifyParameters},
+		"modifyDone":           {"refreshParameter", "refreshDone", "failRefreshParameter", workflow.PollingNode, refreshParameter},
+		"refreshDone":          {"persistParameter", "persistDone", "fail", workflow.SyncFuncNode, persistParameter},
+		"persistDone":          {"end", "", "", workflow.SyncFuncNode, defaultEnd},
+		"fail":                 {"end", "", "", workflow.SyncFuncNode, defaultEnd},
+		"failRefreshParameter": {"end", "", "", workflow.SyncFuncNode, refreshParameterFail},
 	},
 }
 

@@ -30,8 +30,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/pingcap-inc/tiem/library/knowledge"
-
 	"github.com/asim/go-micro/v3"
 	"github.com/gin-gonic/gin"
 	_ "github.com/pingcap-inc/tiem/docs"
@@ -57,7 +55,6 @@ import (
 // @name Authorization
 func main() {
 	f := framework.InitBaseFrameworkFromArgs(framework.ApiService,
-		loadKnowledge,
 		defaultPortForLocal,
 	)
 	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
@@ -135,10 +132,6 @@ func serviceRegistry(f *framework.BaseFramework) {
 			time.Sleep(time.Second * 3)
 		}
 	}()
-}
-func loadKnowledge(f *framework.BaseFramework) error {
-	knowledge.LoadKnowledge()
-	return nil
 }
 
 func defaultPortForLocal(f *framework.BaseFramework) error {

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Copyright (c)  2022 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
  * you may not use this file except in compliance with the License.           *
  * You may obtain a copy of the License at                                    *
@@ -14,28 +14,44 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: platform.go
+ * @File: metaconfig.go
  * @Description:
- * @Author: duanbing@pingcap.com
+ * @Author: zhangpeijin@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/4
+ * @Date: 2022/2/11
 *******************************************************************************/
 
-package constants
+package meta
 
-// System config key
-const (
-	ConfigKeyBackupStorageType       string = "BackupStorageType"
-	ConfigKeyBackupStoragePath       string = "BackupStoragePath"
-	ConfigKeyBackupS3Endpoint        string = "BackupS3Endpoint"
-	ConfigKeyBackupS3AccessKey       string = "BackupS3AccessKey"
-	ConfigKeyBackupS3SecretAccessKey string = "BackupS3SecretAccessKey"
-
-	ConfigKeyImportShareStoragePath string = "ImportShareStoragePath"
-	ConfigKeyExportShareStoragePath string = "ExportShareStoragePath"
-
-	ConfigTelemetrySwitch   string = "config_telemetry_switch"
-	ConfigPrometheusAddress string = "config_prometheus_address"
-
-	ConfigKeyRetainedPortRange string = "config_retained_port_range"
+import (
+	"bytes"
+	"context"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/library/framework"
+	resourceTemplate "github.com/pingcap-inc/tiem/resource/template"
+	"text/template"
 )
+
+// GenerateTopologyConfig
+// @Description generate yaml config based on cluster topology
+// @Return		yaml config
+// @Return		error
+func (p *ClusterMeta) GenerateTopologyConfig(ctx context.Context) (string, error) {
+	if p.Cluster == nil || len(p.Instances) == 0 {
+		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster topology is empty, please check it!")
+	}
+
+	t, err := template.New("topology").Parse(resourceTemplate.ClusterTopology)
+	if err != nil {
+		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
+	}
+
+	topology := new(bytes.Buffer)
+	if err = t.Execute(topology, p); err != nil {
+		return "", errors.NewError(errors.TIEM_UNRECOGNIZED_ERROR, err.Error())
+	}
+	framework.LogWithContext(ctx).Infof("generate topology config: %s", topology.String())
+
+	return topology.String(), nil
+}
+

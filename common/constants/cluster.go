@@ -109,10 +109,7 @@ type ClusterRelationType string
 
 //Constants for the relationships between clusters
 const (
-	ClusterRelationSlaveTo     ClusterRelationType = "SlaveTo"
 	ClusterRelationStandBy     ClusterRelationType = "StandBy"
-	ClusterRelationCloneFrom   ClusterRelationType = "CloneFrom"
-	ClusterRelationRecoverFrom ClusterRelationType = "RecoverFrom"
 )
 
 type ClusterCloneStrategy string

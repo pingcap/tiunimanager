@@ -2216,6 +2216,10 @@ func Test_syncIncrData(t *testing.T) {
 
 		service.EXPECT().CreateBetweenClusters(gomock.Any(), gomock.Any(),
 			gomock.Any(), gomock.Any()).Return("task01", nil)
+		rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(rw)
+
+		rw.EXPECT().CreateRelation(gomock.Any(), gomock.Any()).Return(nil)
 		flowContext.SetData(ContextGCLifeTime, "10m0s")
 		service.EXPECT().Detail(gomock.Any(), gomock.Any()).Return(
 			cluster.DetailChangeFeedTaskResp{

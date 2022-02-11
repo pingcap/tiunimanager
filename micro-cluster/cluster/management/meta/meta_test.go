@@ -484,7 +484,6 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(rw)
 
-	rw.EXPECT().CreateRelation(gomock.Any(), gomock.Any()).Return(nil)
 	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster01"}}, nil)
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
@@ -546,9 +545,10 @@ func TestClusterMeta_GetRelations(t *testing.T) {
 
 	rw.EXPECT().GetRelations(gomock.Any(), "111").Return([]*management.ClusterRelation{
 		{
-			RelationType:     constants.ClusterRelationCloneFrom,
-			SubjectClusterID: "111",
-			ObjectClusterID:  "222",
+			RelationType:         constants.ClusterRelationStandBy,
+			SubjectClusterID:     "111",
+			ObjectClusterID:      "222",
+			SyncChangeFeedTaskID: "task01",
 		},
 	}, nil)
 	meta := &ClusterMeta{

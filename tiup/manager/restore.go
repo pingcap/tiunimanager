@@ -26,18 +26,17 @@ import (
 	perrs "github.com/pingcap/errors"
 	"github.com/pingcap/tiup/pkg/cluster/clusterutil"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
-	"github.com/pingcap/tiup/pkg/logger/log"
 	"github.com/pingcap/tiup/pkg/set"
 )
 
-// BackupOptions for exec shell commanm.
-type BackupOptions struct {
-	Target string
+// RestoreOptions for exec shell commanm.
+type RestoreOptions struct {
+	Source string
 	Limit  int // rate limit in Kbit/s
 }
 
 // Backup copies files from or to host in the tidb cluster.
-func (m *Manager) Backup(name string, opt BackupOptions, gOpt operator.Options) error {
+func (m *Manager) Restore(name string, opt RestoreOptions, gOpt operator.Options) error {
 	if err := clusterutil.ValidateClusterNameOrError(name); err != nil {
 		return err
 	}
@@ -55,13 +54,13 @@ func (m *Manager) Backup(name string, opt BackupOptions, gOpt operator.Options) 
 
 	var shellTasks []task.Task
 
-	var srcPath string
 	uniqueHosts := map[string]set.StringSet{} // host-sshPort -> {target-path}
 	topo.IterInstance(func(inst spec.Instance) {
-		if inst.ComponentName() == spec.ComponentTiEMClusterServer {
-			srcPath = inst.DataDir() + "/" + spec.DBName // e.g.: /tiem-data/cluster-server-4101/em.db
-		}
 		key := fmt.Sprintf("%s-%d", inst.GetHost(), inst.GetSSHPort())
+		if inst.ComponentName() == spec.ComponentTiEMClusterServer {
+			dstPath := inst.DataDir() + "/" + spec.DBName // e.g.: /tiem-data/cluster-server-4101/em.db
+			uniqueHosts[key] = set.NewStringSet(dstPath)
+		}
 		if _, found := uniqueHosts[key]; !found {
 			if len(gOpt.Roles) > 0 && !filterRoles.Exist(inst.Role()) {
 				return
@@ -69,20 +68,6 @@ func (m *Manager) Backup(name string, opt BackupOptions, gOpt operator.Options) 
 			if len(gOpt.Nodes) > 0 && !filterNodes.Exist(inst.GetHost()) {
 				return
 			}
-
-			// render remote path
-			instPath := opt.Target
-			paths, err := renderInstanceSpec(instPath, inst)
-			if err != nil {
-				log.Debugf("error rendering remote path with spec: %s", err)
-				return // skip
-			}
-			pathSet := set.NewStringSet(paths...)
-			if _, ok := uniqueHosts[key]; ok {
-				uniqueHosts[key].Join(pathSet)
-				return
-			}
-			uniqueHosts[key] = pathSet
 		}
 	})
 
@@ -90,7 +75,7 @@ func (m *Manager) Backup(name string, opt BackupOptions, gOpt operator.Options) 
 		host := strings.Split(hostKey, "-")[0]
 		for _, p := range i.Slice() {
 			t := task.NewBuilder()
-			t.CopyFile(srcPath, p+"/"+spec.DBName, host, false, opt.Limit)
+			t.CopyFile(opt.Source, p, host, false, opt.Limit)
 			shellTasks = append(shellTasks, t.Build())
 		}
 	}

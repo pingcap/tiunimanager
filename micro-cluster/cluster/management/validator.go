@@ -17,13 +17,12 @@ package management
 
 import (
 	"context"
-	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 )
 
 var creatingRules = []func(req *cluster.CreateClusterReq, product *structs.ProductDetail) error{
@@ -76,21 +75,14 @@ var validator = validateCreating
 
 func validateCreating(ctx context.Context, req *cluster.CreateClusterReq) error {
 	optionalError := errors.OfNullable(nil)
-	products, err := models.GetProductReaderWriter().QueryProductDetail(ctx, req.Vendor, req.Region, req.Type, constants.ProductStatusOnline, constants.EMInternalProductNo)
-	if err != nil {
-		errMsg := fmt.Sprintf("get product detail failed, vendor = %s, region = %s, productID = %s", req.Vendor, req.Region, req.Type)
-		framework.LogWithContext(ctx).Errorf("%s, err = %s", errMsg, err.Error())
-		return err
-	}
 
-	if product, ok := products[req.Type]; !ok {
-		errMsg := fmt.Sprintf("product is not existed, vendor = %s, region = %s, productID = %s", req.Vendor, req.Region, req.Type)
-		framework.LogWithContext(ctx).Error(errMsg)
-		return errors.NewErrorf(errors.TIEM_UNSUPPORT_PRODUCT, errMsg)
+	product, err := meta.GetProductDetail(ctx, req.Vendor, req.Region, req.Type)
+	if err != nil {
+		return err
 	} else {
 		for _, v := range creatingRules {
 			optionalError.BreakIf(func() error {
-				return v(req, &product)
+				return v(req, product)
 			})
 		}
 	}

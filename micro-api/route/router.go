@@ -32,8 +32,8 @@ import (
 	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
 	warehouseApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 	flowtaskApi "github.com/pingcap-inc/tiem/micro-api/controller/task/flowtask"
-	rbacApi "github.com/pingcap-inc/tiem/micro-api/controller/user/rbac"
 	userApi "github.com/pingcap-inc/tiem/micro-api/controller/user"
+	rbacApi "github.com/pingcap-inc/tiem/micro-api/controller/user/rbac"
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -152,11 +152,6 @@ func Route(g *gin.Engine) {
 			cluster.POST("/export", metrics.HandleMetrics(constants.MetricsDataExport), importexport.ExportData)
 			cluster.GET("/transport", metrics.HandleMetrics(constants.MetricsDataExportImportQuery), importexport.QueryDataTransport)
 			cluster.DELETE("/transport/:recordId", metrics.HandleMetrics(constants.MetricsDataExportImportDelete), importexport.DeleteDataTransportRecord)
-		}
-
-		knowledge := apiV1.Group("/knowledges")
-		{
-			knowledge.GET("/", metrics.HandleMetrics(constants.MetricsPlatformQueryKnowledge), product.ClusterKnowledge)
 		}
 
 		backup := apiV1.Group("/backups")

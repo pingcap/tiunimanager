@@ -22,7 +22,6 @@ import (
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
@@ -441,15 +440,15 @@ func preCheckStock(ctx context.Context, region string, arch string, instanceReso
 			if zoneResource, ok := stocks[resource.Zone]; ok &&
 				zoneResource.FreeHostCount >= int32(resource.Count) &&
 				zoneResource.FreeDiskCount >= int32(resource.Count) &&
-				zoneResource.FreeCpuCores >= int32(knowledge.ParseCpu(resource.Spec)*resource.Count) &&
-				zoneResource.FreeMemory >= int32(knowledge.ParseMemory(resource.Spec)*resource.Count) {
+				zoneResource.FreeCpuCores >= int32(structs.ParseCpu(resource.Spec)*resource.Count) &&
+				zoneResource.FreeMemory >= int32(structs.ParseMemory(resource.Spec)*resource.Count) {
 
 				enough = true
 				// deduction
 				zoneResource.FreeHostCount = zoneResource.FreeHostCount - int32(resource.Count)
 				zoneResource.FreeDiskCount = zoneResource.FreeDiskCount - int32(resource.Count)
-				zoneResource.FreeCpuCores = zoneResource.FreeCpuCores - int32(knowledge.ParseCpu(resource.Spec)*resource.Count)
-				zoneResource.FreeMemory = zoneResource.FreeMemory - int32(knowledge.ParseMemory(resource.Spec)*resource.Count)
+				zoneResource.FreeCpuCores = zoneResource.FreeCpuCores - int32(structs.ParseCpu(resource.Spec)*resource.Count)
+				zoneResource.FreeMemory = zoneResource.FreeMemory - int32(structs.ParseMemory(resource.Spec)*resource.Count)
 			} else {
 				framework.LogWithContext(ctx).Warnf("stock is not enough, instance: %v, stock %v", resource, stocks)
 				enough = false
@@ -535,12 +534,13 @@ func (p *Manager) StopCluster(ctx context.Context, req cluster.StopClusterReq) (
 var deleteClusterFlow = workflow.WorkFlowDefine{
 	FlowName: constants.FlowDeleteCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":              {"backupBeforeDelete", "backupDone", "fail", workflow.SyncFuncNode, backupBeforeDelete},
+		"start":              {"backupBeforeDelete", "backupDone", "revert", workflow.SyncFuncNode, backupBeforeDelete},
 		"backupDone":         {"destroyCluster", "destroyClusterDone", "fail", workflow.PollingNode, destroyCluster},
 		"destroyClusterDone": {"freedClusterResource", "freedResourceDone", "fail", workflow.SyncFuncNode, freedClusterResource},
 		"freedResourceDone":  {"clearBackupData", "clearDone", "fail", workflow.SyncFuncNode, clearBackupData},
 		"clearDone":          {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(deleteCluster)},
 		"fail":               {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"revert":               {"end", "", "", workflow.SyncFuncNode, endMaintenance},
 	},
 }
 

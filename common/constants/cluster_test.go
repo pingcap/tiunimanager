@@ -1,6 +1,5 @@
-
 /******************************************************************************
- * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Copyright (c)  2022 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
  * you may not use this file except in compliance with the License.           *
  * You may obtain a copy of the License at                                    *
@@ -12,17 +11,27 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
-package knowledge
+/*******************************************************************************
+ * @File: cluster_test.go
+ * @Description:
+ * @Author: zhangpeijin@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2022/2/11
+*******************************************************************************/
+
+package constants
 
 import (
-	"os"
+	"encoding/json"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestMain(m *testing.M) {
-	LoadKnowledge()
-	os.Exit(m.Run())
+func Test_Config(t *testing.T)  {
+	ports := make([]int, 2)
+	err := json.Unmarshal([]byte(DefaultRetainedPortRange), &ports)
+	assert.NoError(t, err)
+	assert.Equal(t, []int{11000, 12000}, ports)
 }

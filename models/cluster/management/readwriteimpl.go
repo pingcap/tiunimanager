@@ -83,7 +83,7 @@ func (g *ClusterReadWrite) Get(ctx context.Context, clusterID string) (*Cluster,
 	err := g.DB(ctx).First(cluster, "id = ?", clusterID).Error
 
 	if err != nil {
-		errInfo := fmt.Sprintf("get cluster failed : clusterID = %s", clusterID)
+		errInfo := fmt.Sprintf("get cluster failed : clusterID = %s, err = %s", clusterID, err.Error())
 		framework.LogWithContext(ctx).Error(errInfo)
 
 		return nil, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, errInfo, err)
@@ -394,10 +394,9 @@ func (g *ClusterReadWrite) ClearClusterPhysically(ctx context.Context, clusterID
 	}
 
 	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&ClusterInstance{}).Error
-	if err != nil {
-		return dbCommon.WrapDBError(err)
-	}
 	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&ClusterTopologySnapshot{}).Error
+	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&DBUser{}).Error
+
 	return dbCommon.WrapDBError(err)
 }
 

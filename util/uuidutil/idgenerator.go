@@ -19,6 +19,7 @@ package uuidutil
 
 import (
 	"encoding/base64"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/lithammer/shortuuid"
@@ -31,15 +32,15 @@ const (
 // GenerateID Encode with Base64
 // URLEncoding Set contains '-' and '_'
 func GenerateID() string {
-	uuid := uuid.New()
-	encoded := make([]byte, ENTITY_UUID_LENGTH)
-	base64.URLEncoding.WithPadding(base64.NoPadding).Encode(encoded, uuid[0:16])
+	var encoded []byte = nil
 
-	for i, _ := range encoded {
-		if encoded[i] == '-' {
-			encoded[i] = '*'
-		}
+	for encoded == nil || strings.HasPrefix(string(encoded), "-") {
+		uuid := uuid.New()
+
+		encoded = make([]byte, ENTITY_UUID_LENGTH)
+		base64.URLEncoding.WithPadding(base64.NoPadding).Encode(encoded, uuid[0:16])
 	}
+
 	return string(encoded)
 }
 

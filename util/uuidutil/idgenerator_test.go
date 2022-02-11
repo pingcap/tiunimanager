@@ -38,17 +38,18 @@ func TestGenerateID(t *testing.T) {
 
 func TestGenerateIDReplace(t *testing.T) {
 	time := 0
-	for time < 100 {
+	for time < 1000 {
 		got := GenerateID()
 		if strings.Contains(got, "/") {
 			t.Errorf("GenerateID() got /")
 		}
-		if strings.Contains(got, "-") {
-			t.Errorf("GenerateID() got -")
-		}
-		if strings.Contains(got, "-") {
+		if strings.Contains(got, "+") {
 			t.Errorf("GenerateID() got +")
 		}
+		if strings.HasPrefix(got, "-") {
+			t.Errorf("GenerateID() has prefix -")
+		}
+		fmt.Println(got)
 		time++
 	}
 }

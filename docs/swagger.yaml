@@ -840,88 +840,6 @@ definitions:
       page:
         $ref: '#/definitions/controller.Page'
     type: object
-  knowledge.ClusterComponent:
-    properties:
-      componentName:
-        type: string
-      componentPurpose:
-        type: string
-      componentType:
-        type: string
-    type: object
-  knowledge.ClusterComponentSpec:
-    properties:
-      clusterComponent:
-        $ref: '#/definitions/knowledge.ClusterComponent'
-      componentConstraint:
-        $ref: '#/definitions/knowledge.ComponentConstraint'
-      componentPortConstraint:
-        $ref: '#/definitions/knowledge.ComponentPortConstraint'
-    type: object
-  knowledge.ClusterType:
-    properties:
-      code:
-        type: string
-      name:
-        type: string
-    type: object
-  knowledge.ClusterTypeSpec:
-    properties:
-      clusterType:
-        $ref: '#/definitions/knowledge.ClusterType'
-      versionSpecs:
-        items:
-          $ref: '#/definitions/knowledge.ClusterVersionSpec'
-        type: array
-    type: object
-  knowledge.ClusterVersion:
-    properties:
-      code:
-        type: string
-      name:
-        type: string
-    type: object
-  knowledge.ClusterVersionSpec:
-    properties:
-      archTypes:
-        items:
-          type: string
-        type: array
-      clusterPortConstraint:
-        $ref: '#/definitions/knowledge.ComponentPortConstraint'
-      clusterVersion:
-        $ref: '#/definitions/knowledge.ClusterVersion'
-      componentSpecs:
-        items:
-          $ref: '#/definitions/knowledge.ClusterComponentSpec'
-        type: array
-    type: object
-  knowledge.ComponentConstraint:
-    properties:
-      availableSpecCodes:
-        items:
-          type: string
-        type: array
-      componentRequired:
-        type: boolean
-      minZoneQuantity:
-        type: integer
-      parasite:
-        type: boolean
-      suggestedNodeQuantities:
-        items:
-          type: integer
-        type: array
-    type: object
-  knowledge.ComponentPortConstraint:
-    properties:
-      portCount:
-        type: integer
-      portRangeEnd:
-        type: integer
-      portRangeStart:
-        type: integer
-    type: object
   message.AddPermissionsForRoleReq:
     properties:
       permissions:
@@ -983,12 +901,10 @@ definitions:
   message.CheckPlatformRsp:
     properties:
       hosts:
-        additionalProperties:
-          $ref: '#/definitions/message.HostCheck'
-        type: object
+        $ref: '#/definitions/structs.HostsCheck'
       tenants:
         additionalProperties:
-          $ref: '#/definitions/message.TenantCheck'
+          $ref: '#/definitions/structs.TenantCheck'
         type: object
     type: object
   message.CopyParameterGroupReq:
@@ -1351,8 +1267,6 @@ definitions:
       user:
         $ref: '#/definitions/structs.UserInfo'
     type: object
-  message.HostCheck:
-    type: object
   message.ImportHostsResp:
     properties:
       flowInfo:
@@ -1596,19 +1510,6 @@ definitions:
           $ref: '#/definitions/structs.VendorWithRegion'
         type: object
     type: object
-  message.TenantCheck:
-    properties:
-      clusterCount:
-        type: integer
-      cpuRatio:
-        type: number
-      maxCluster:
-        $ref: '#/definitions/message.UnionInt'
-      memoryRatio:
-        type: number
-      storageRatio:
-        type: number
-    type: object
   message.UnbindRoleForUserReq:
     properties:
       role:
@@ -1617,15 +1518,6 @@ definitions:
         type: string
     type: object
   message.UnbindRoleForUserResp:
-    type: object
-  message.UnionInt:
-    properties:
-      expectedValue:
-        type: integer
-      realValue:
-        type: integer
-      valid:
-        type: boolean
     type: object
   message.UpdateHostReservedReq:
     properties:
@@ -1779,6 +1671,104 @@ definitions:
         type: string
       period:
         type: string
+    type: object
+  structs.CheckAny:
+    properties:
+      expectedValue:
+        type: object
+      realValue:
+        type: object
+      valid:
+        type: boolean
+    type: object
+  structs.CheckBool:
+    properties:
+      expectedValue:
+        type: boolean
+      realValue:
+        type: boolean
+      valid:
+        type: boolean
+    type: object
+  structs.CheckError:
+    properties:
+      message:
+        type: string
+      type:
+        type: string
+    type: object
+  structs.CheckInt32:
+    properties:
+      expectedValue:
+        type: integer
+      realValue:
+        type: integer
+      valid:
+        type: boolean
+    type: object
+  structs.CheckStatus:
+    properties:
+      health:
+        type: boolean
+      message:
+        type: string
+    type: object
+  structs.CheckString:
+    properties:
+      expectedValue:
+        type: string
+      realValue:
+        type: string
+      valid:
+        type: boolean
+    type: object
+  structs.CheckSwitch:
+    properties:
+      enable:
+        type: boolean
+    type: object
+  structs.ClusterCheck:
+    properties:
+      accountStatus:
+        $ref: '#/definitions/structs.CheckStatus'
+      backupRecordValid:
+        additionalProperties:
+          type: boolean
+        type: object
+      backupStrategy:
+        $ref: '#/definitions/structs.CheckString'
+      clusterID:
+        type: string
+      connectionCount:
+        type: integer
+      copies:
+        $ref: '#/definitions/structs.CheckInt32'
+      cpu:
+        type: integer
+      instances:
+        items:
+          $ref: '#/definitions/structs.InstanceCheck'
+        type: array
+      maintenanceStatus:
+        type: string
+      memory:
+        type: integer
+      parameters:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckAny'
+        type: object
+      regionStatus:
+        $ref: '#/definitions/structs.CheckStatus'
+      storage:
+        type: integer
+      tls:
+        $ref: '#/definitions/structs.CheckBool'
+      topology:
+        $ref: '#/definitions/structs.CheckString'
+      versions:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckString'
+        type: object
     type: object
   structs.ClusterInfo:
     properties:
@@ -2160,6 +2150,29 @@ definitions:
           $ref: '#/definitions/structs.HierarchyTreeNode'
         type: array
     type: object
+  structs.HostCheck:
+    properties:
+      cpu:
+        $ref: '#/definitions/structs.CheckInt32'
+      disk:
+        $ref: '#/definitions/structs.CheckInt32'
+      errors:
+        items:
+          $ref: '#/definitions/structs.CheckError'
+        type: array
+      firewall:
+        $ref: '#/definitions/structs.CheckSwitch'
+      memory:
+        $ref: '#/definitions/structs.CheckInt32'
+      selinux:
+        $ref: '#/definitions/structs.CheckSwitch'
+      storageRatio:
+        type: number
+      swap:
+        $ref: '#/definitions/structs.CheckSwitch'
+      version:
+        $ref: '#/definitions/structs.CheckString'
+    type: object
   structs.HostInfo:
     properties:
       arch:
@@ -2239,6 +2252,29 @@ definitions:
       vendor:
         type: string
     type: object
+  structs.HostsCheck:
+    properties:
+      delay:
+        additionalProperties:
+          type: integer
+        type: object
+      hosts:
+        additionalProperties:
+          $ref: '#/definitions/structs.HostCheck'
+        type: object
+      ntp:
+        additionalProperties:
+          type: integer
+        type: object
+      ping:
+        additionalProperties:
+          type: boolean
+        type: object
+      timeZoneConsistency:
+        additionalProperties:
+          type: boolean
+        type: object
+    type: object
   structs.Index:
     properties:
       description:
@@ -2249,6 +2285,13 @@ definitions:
         type: string
       value:
         type: object
+    type: object
+  structs.InstanceCheck:
+    properties:
+      instanceID:
+        type: string
+      status:
+        $ref: '#/definitions/structs.CheckStatus'
     type: object
   structs.ParameterGroupParameterInfo:
     properties:
@@ -2523,6 +2566,21 @@ definitions:
         type: integer
       zone:
         type: string
+    type: object
+  structs.TenantCheck:
+    properties:
+      clusterCount:
+        type: integer
+      clusters:
+        items:
+          $ref: '#/definitions/structs.ClusterCheck'
+        type: array
+      cpuRatio:
+        type: number
+      memoryRatio:
+        type: number
+      storageRatio:
+        type: number
     type: object
   structs.TenantInfo:
     properties:
@@ -4292,42 +4350,6 @@ paths:
       summary: unused, just display downstream config
       tags:
       - change feed
-  /knowledges/:
-    get:
-      consumes:
-      - application/json
-      description: show cluster knowledge
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/knowledge.ClusterTypeSpec'
-                  type: array
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: show cluster knowledge
-      tags:
-      - knowledge
   /param-groups/:
     get:
       consumes:

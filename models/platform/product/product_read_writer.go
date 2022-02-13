@@ -181,10 +181,13 @@ func (p *ProductReadWriter) QueryZones(ctx context.Context) (zones []structs.Zon
 	var info structs.ZoneInfo
 	SQL := "SELECT t1.zone_id,t1.zone_name,t1.region_id,t1.region_name,t1.vendor_id,t1.vendor_name FROM zones t1;"
 	rows, err := p.DB(ctx).Raw(SQL).Rows()
-	defer rows.Close()
+
 	if err != nil {
 		return nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "query all zones error: %v, SQL: %s", err, SQL)
 	}
+
+	defer rows.Close()
+
 	for rows.Next() {
 		err = rows.Scan(&info.ZoneID, &info.ZoneName, &info.RegionID, &info.RegionName, &info.VendorID, &info.VendorName)
 		if err == nil {
@@ -290,8 +293,9 @@ func (p *ProductReadWriter) QueryProducts(ctx context.Context, vendorID string, 
  t1.vendor_id=t2.vendor_id AND t1.region_id=t2.region_id AND t1.vendor_id = ? AND t1.status = ? AND t1.internal = ?;`
 	var info structs.Product
 	rows, err := p.DB(ctx).Raw(SQL, vendorID, status, internal).Rows()
-	defer rows.Close()
 	if err == nil {
+		defer rows.Close()
+
 		for rows.Next() {
 			//Read a row of data and store it in a temporary variable
 			err = rows.Scan(&info.VendorID, &info.VendorName, &info.RegionID, &info.RegionName, &info.ID, &info.Name, &info.Version, &info.Arch, &info.Status)
@@ -337,12 +341,13 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 	var components []structs.ProductComponentProperty
 	products = make(map[string]structs.ProductDetail)
 	rows, err := p.DB(ctx).Raw(SQL, vendorID, regionID, internal, productID, status, constants.ProductSpecStatusOnline, constants.ProductSpecStatusOnline).Rows()
-	defer rows.Close()
 	log := framework.LogWithContext(ctx)
 	log.Debugf("QueryProductDetail SQL: %s vendorID:%s, regionID: %s productID: %s, internal: %d, status: %s, execute result, error: %v",
 		SQL, vendorID, regionID, productID, internal, status, err)
 
 	if err == nil {
+		defer rows.Close()
+
 		for rows.Next() {
 			//Read a row of data and store it in a temporary variable
 			err = rows.Scan(&spec.ZoneID, &spec.ZoneName, &productName, &version, &arch,
@@ -362,7 +367,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			detail, ok = products[productID]
 			if !ok {
 				products[productID] = structs.ProductDetail{ID: productID, Name: productName, Versions: make(map[string]structs.ProductVersion)}
-				detail, _ = products[productID]
+				detail = products[productID]
 			}
 
 			//Query whether the product version information is already in Versions,
@@ -370,7 +375,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			productVersion, ok = detail.Versions[version]
 			if !ok {
 				detail.Versions[version] = structs.ProductVersion{Version: version, Arch: make(map[string][]structs.ProductComponentProperty)}
-				productVersion, _ = detail.Versions[version]
+				productVersion = detail.Versions[version]
 			}
 
 			//Query whether the product arch information is already in archs,
@@ -384,7 +389,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			//if it already exists, then directly modify the relevant data structure
 
 			componentExisted := false
-			for i, _ := range components {
+			for i := range components {
 				if components[i].ID == info.ID {
 					componentExisted = true
 					zoneExisted := false

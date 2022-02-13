@@ -20,7 +20,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
@@ -38,7 +37,6 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	knowledge.LoadKnowledge()
 	models.MockDB()
 
 	os.Exit(m.Run())

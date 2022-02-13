@@ -23,7 +23,10 @@ import (
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
+	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/workflow"
+	"math/rand"
 	"reflect"
 	"strconv"
 	"strings"
@@ -255,4 +258,59 @@ func WaitWorkflow(ctx context.Context, workflowID string, interval, timeout time
 	}
 
 	return nil
+}
+
+const retainedPortCount = 2
+
+// getRetainedPortRange
+// @Description: get retained port range for all clusters
+// @Parameter ctx
+// @return []int
+// @return error
+func getRetainedPortRange(ctx context.Context) ([]int, error) {
+	configResp , err := config.NewSystemConfigManager().GetSystemConfig(ctx, message.GetSystemConfigReq{
+		ConfigKey: constants.ConfigKeyRetainedPortRange,
+	})
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get config %s failed, err = %s", constants.ConfigKeyRetainedPortRange, err.Error())
+		return nil, err
+	}
+
+	if len(configResp.ConfigValue) == 0 {
+		err = errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_CONFIG, "missing config %s", constants.ConfigKeyRetainedPortRange)
+		framework.LogWithContext(ctx).Error(err)
+		return nil, err
+	}
+
+	portRange := make([]int, retainedPortCount)
+	err = json.Unmarshal([]byte(configResp.ConfigValue), &portRange)
+	if err != nil {
+		err = errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_CONFIG, "invalid value for config %s, value = %s", constants.ConfigKeyRetainedPortRange, configResp.ConfigValue)
+		framework.LogWithContext(ctx).Error(err)
+		return nil, err
+	}
+	return portRange, nil
+}
+
+func GetProductDetail(ctx context.Context, vendor, region, clusterType string) (*structs.ProductDetail, error) {
+	products, err := models.GetProductReaderWriter().QueryProductDetail(ctx, vendor, region, clusterType, constants.ProductStatusOnline, constants.EMInternalProductNo)
+	if err != nil {
+		errMsg := fmt.Sprintf("get product detail failed, vendor = %s, region = %s, productID = %s", vendor, region, clusterType)
+		framework.LogWithContext(ctx).Errorf("%s, err = %s", errMsg, err.Error())
+		return nil, err
+	}
+	if product, ok := products[clusterType]; !ok {
+		errMsg := fmt.Sprintf("product is not existed, vendor = %s, region = %s, productID = %s", vendor, region, clusterType)
+		framework.LogWithContext(ctx).Error(errMsg)
+		return nil, errors.NewErrorf(errors.TIEM_UNSUPPORT_PRODUCT, errMsg)
+	} else {
+		return &product, nil
+	}
+}
+
+// GetRandomString get random password
+func GetRandomString(n int) string {
+	randBytes := make([]byte, n/2)
+	rand.Read(randBytes)
+	return fmt.Sprintf("%x", randBytes)
 }

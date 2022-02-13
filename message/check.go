@@ -23,6 +23,5 @@ type CheckPlatformReq struct {
 
 type CheckPlatformRsp struct {
 	Tenants map[string]structs.TenantCheck `json:"tenants"`
-	Hosts   map[string]structs.HostCheck   `json:"hosts"`
+	Hosts   structs.HostsCheck             `json:"hosts"`
 }
-

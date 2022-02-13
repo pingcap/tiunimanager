@@ -15,6 +15,8 @@
 
 package structs
 
+import "github.com/pingcap-inc/tiem/common/constants"
+
 type CheckString struct {
 	Valid         bool   `json:"valid"`
 	RealValue     string `json:"realValue"`
@@ -39,6 +41,11 @@ type CheckAny struct {
 	ExpectedValue interface{} `json:"expectedValue"`
 }
 
+type CheckStatus struct {
+	Health  bool   `json:"health"`
+	Message string `json:"message"`
+}
+
 type TenantCheck struct {
 	ClusterCount int32          `json:"clusterCount"`
 	CPURatio     float32        `json:"cpuRatio"`
@@ -48,28 +55,57 @@ type TenantCheck struct {
 }
 
 type ClusterCheck struct {
-	ID                string                 `json:"clusterID"`
-	ConnectionCount   int32                  `json:"connectionCount"`
-	CPU               int32                  `json:"cpu"`
-	Memory            int32                  `json:"memory"`
-	Storage           int32                  `json:"storage"`
-	Copies            CheckInt32             `json:"copies"`
-	TLS               CheckBool              `json:"tls"`
-	Versions          map[string]CheckString `json:"versions"`
-	AccountStatus     string                 `json:"accountStatus"`
-	Topology          CheckString            `json:"topology"`
-	Parameters        map[string]CheckAny    `json:"parameters"`
-	RegionStatus      string                 `json:"regionStatus"`
-	Instances         []InstanceCheck        `json:"instances"`
-	BackupStrategy    CheckString            `json:"backupStrategy"`
-	BackupRecordValid map[string]bool        `json:"backupRecordValid"`
+	ID                string                             `json:"clusterID"`
+	MaintenanceStatus constants.ClusterMaintenanceStatus `json:"maintenanceStatus"`
+	ConnectionCount   int32                              `json:"connectionCount"`
+	CPU               int32                              `json:"cpu"`
+	Memory            int32                              `json:"memory"`
+	Storage           int32                              `json:"storage"`
+	Copies            CheckInt32                         `json:"copies"`
+	TLS               CheckBool                          `json:"tls"`
+	Versions          map[string]CheckString             `json:"versions"`
+	AccountStatus     CheckStatus                        `json:"accountStatus"`
+	Topology          CheckString                        `json:"topology"`
+	Parameters        map[string]CheckAny                `json:"parameters"`
+	RegionStatus      CheckStatus                        `json:"regionStatus"`
+	Instances         []InstanceCheck                    `json:"instances"`
+	BackupStrategy    CheckString                        `json:"backupStrategy"`
+	BackupRecordValid map[string]bool                    `json:"backupRecordValid"`
 }
 
 type InstanceCheck struct {
-	ID     string `json:"instanceID"`
-	Status string `json:"status"`
+	ID     string      `json:"instanceID"`
+	Status CheckStatus `json:"status"`
+}
+
+type CheckKey struct {
+	Source, Target string
+}
+type HostsCheck struct {
+	NTP                 map[CheckKey]int32   `json:"ntp"`
+	TimeZoneConsistency map[CheckKey]bool    `json:"timeZoneConsistency"`
+	Ping                map[CheckKey]bool    `json:"ping"`
+	Delay               map[CheckKey]int32   `json:"delay"`
+	Hosts               map[string]HostCheck `json:"hosts"`
+}
+
+type CheckSwitch struct {
+	Enable bool `json:"enable"`
+}
+
+type CheckError struct {
+	Type    string `json:"type"`
+	Message string `json:"message"`
 }
 
 type HostCheck struct {
-	
+	OSVersion    CheckString  `json:"version"`
+	SELinux      CheckSwitch  `json:"selinux"`
+	Firewall     CheckSwitch  `json:"firewall"`
+	Swap         CheckSwitch  `json:"swap"`
+	Memory       CheckInt32   `json:"memory"`
+	CPU          CheckInt32   `json:"cpu"`
+	Disk         CheckInt32   `json:"disk"`
+	StorageRatio float32      `json:"storageRatio"`
+	Errors       []CheckError `json:"errors"`
 }

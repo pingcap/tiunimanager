@@ -7551,15 +7551,12 @@ var doc = `{
             "type": "object",
             "properties": {
                 "hosts": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/message.HostCheck"
-                    }
+                    "$ref": "#/definitions/structs.HostsCheck"
                 },
                 "tenants": {
                     "type": "object",
                     "additionalProperties": {
-                        "$ref": "#/definitions/message.TenantCheck"
+                        "$ref": "#/definitions/structs.TenantCheck"
                     }
                 }
             }
@@ -8103,9 +8100,6 @@ var doc = `{
                 }
             }
         },
-        "message.HostCheck": {
-            "type": "object"
-        },
         "message.ImportHostsResp": {
             "type": "object",
             "properties": {
@@ -8465,26 +8459,6 @@ var doc = `{
                 }
             }
         },
-        "message.TenantCheck": {
-            "type": "object",
-            "properties": {
-                "clusterCount": {
-                    "type": "integer"
-                },
-                "cpuRatio": {
-                    "type": "number"
-                },
-                "maxCluster": {
-                    "$ref": "#/definitions/message.UnionInt"
-                },
-                "memoryRatio": {
-                    "type": "number"
-                },
-                "storageRatio": {
-                    "type": "number"
-                }
-            }
-        },
         "message.UnbindRoleForUserReq": {
             "type": "object",
             "properties": {
@@ -8498,20 +8472,6 @@ var doc = `{
         },
         "message.UnbindRoleForUserResp": {
             "type": "object"
-        },
-        "message.UnionInt": {
-            "type": "object",
-            "properties": {
-                "expectedValue": {
-                    "type": "integer"
-                },
-                "realValue": {
-                    "type": "integer"
-                },
-                "valid": {
-                    "type": "boolean"
-                }
-            }
         },
         "message.UpdateHostReservedReq": {
             "type": "object",
@@ -8742,6 +8702,157 @@ var doc = `{
                 },
                 "period": {
                     "type": "string"
+                }
+            }
+        },
+        "structs.CheckAny": {
+            "type": "object",
+            "properties": {
+                "expectedValue": {
+                    "type": "object"
+                },
+                "realValue": {
+                    "type": "object"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "structs.CheckBool": {
+            "type": "object",
+            "properties": {
+                "expectedValue": {
+                    "type": "boolean"
+                },
+                "realValue": {
+                    "type": "boolean"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "structs.CheckError": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.CheckInt32": {
+            "type": "object",
+            "properties": {
+                "expectedValue": {
+                    "type": "integer"
+                },
+                "realValue": {
+                    "type": "integer"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "structs.CheckStatus": {
+            "type": "object",
+            "properties": {
+                "health": {
+                    "type": "boolean"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.CheckString": {
+            "type": "object",
+            "properties": {
+                "expectedValue": {
+                    "type": "string"
+                },
+                "realValue": {
+                    "type": "string"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "structs.CheckSwitch": {
+            "type": "object",
+            "properties": {
+                "enable": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "structs.ClusterCheck": {
+            "type": "object",
+            "properties": {
+                "accountStatus": {
+                    "$ref": "#/definitions/structs.CheckStatus"
+                },
+                "backupRecordValid": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                },
+                "backupStrategy": {
+                    "$ref": "#/definitions/structs.CheckString"
+                },
+                "clusterID": {
+                    "type": "string"
+                },
+                "connectionCount": {
+                    "type": "integer"
+                },
+                "copies": {
+                    "$ref": "#/definitions/structs.CheckInt32"
+                },
+                "cpu": {
+                    "type": "integer"
+                },
+                "instances": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.InstanceCheck"
+                    }
+                },
+                "maintenanceStatus": {
+                    "type": "string"
+                },
+                "memory": {
+                    "type": "integer"
+                },
+                "parameters": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckAny"
+                    }
+                },
+                "regionStatus": {
+                    "$ref": "#/definitions/structs.CheckStatus"
+                },
+                "storage": {
+                    "type": "integer"
+                },
+                "tls": {
+                    "$ref": "#/definitions/structs.CheckBool"
+                },
+                "topology": {
+                    "$ref": "#/definitions/structs.CheckString"
+                },
+                "versions": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckString"
+                    }
                 }
             }
         },
@@ -9285,6 +9396,41 @@ var doc = `{
                 }
             }
         },
+        "structs.HostCheck": {
+            "type": "object",
+            "properties": {
+                "cpu": {
+                    "$ref": "#/definitions/structs.CheckInt32"
+                },
+                "disk": {
+                    "$ref": "#/definitions/structs.CheckInt32"
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.CheckError"
+                    }
+                },
+                "firewall": {
+                    "$ref": "#/definitions/structs.CheckSwitch"
+                },
+                "memory": {
+                    "$ref": "#/definitions/structs.CheckInt32"
+                },
+                "selinux": {
+                    "$ref": "#/definitions/structs.CheckSwitch"
+                },
+                "storageRatio": {
+                    "type": "number"
+                },
+                "swap": {
+                    "$ref": "#/definitions/structs.CheckSwitch"
+                },
+                "version": {
+                    "$ref": "#/definitions/structs.CheckString"
+                }
+            }
+        },
         "structs.HostInfo": {
             "type": "object",
             "properties": {
@@ -9397,6 +9543,41 @@ var doc = `{
                 }
             }
         },
+        "structs.HostsCheck": {
+            "type": "object",
+            "properties": {
+                "delay": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "hosts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.HostCheck"
+                    }
+                },
+                "ntp": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "ping": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                },
+                "timeZoneConsistency": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                }
+            }
+        },
         "structs.Index": {
             "type": "object",
             "properties": {
@@ -9411,6 +9592,17 @@ var doc = `{
                 },
                 "value": {
                     "type": "object"
+                }
+            }
+        },
+        "structs.InstanceCheck": {
+            "type": "object",
+            "properties": {
+                "instanceID": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/structs.CheckStatus"
                 }
             }
         },
@@ -9794,6 +9986,29 @@ var doc = `{
                 },
                 "zone": {
                     "type": "string"
+                }
+            }
+        },
+        "structs.TenantCheck": {
+            "type": "object",
+            "properties": {
+                "clusterCount": {
+                    "type": "integer"
+                },
+                "clusters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ClusterCheck"
+                    }
+                },
+                "cpuRatio": {
+                    "type": "number"
+                },
+                "memoryRatio": {
+                    "type": "number"
+                },
+                "storageRatio": {
+                    "type": "number"
                 }
             }
         },

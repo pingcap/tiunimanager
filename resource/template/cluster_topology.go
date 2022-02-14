@@ -39,6 +39,9 @@ monitored:
 {{ end }}
 {{ range $key, $instances := .Instances }}
 {{ if and (eq $key "TiDB") (len $instances) }}
+server_configs:
+  pd:
+    replication.location-labels: ["region", "zone", "rack", "host"]
 tidb_servers:
   {{ range $instances }}
   {{ if eq .Status "Initializing" }}

@@ -59,10 +59,10 @@ tikv_servers:
     data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/tikv-data
     config:
       server.labels:
-		region: {{ $.Cluster.Region }}
-		zone: {{ .Zone }}
-		rack: {{ .Rack }}
-		host: {{ .HostID }}
+        region: {{ $.Cluster.Region }}
+        zone: {{ .Zone }}
+        rack: {{ .Rack }}
+        host: {{ .HostID }}
   {{ end }}
   {{ end }}
 {{ else if and (eq $key "TiFlash") (len $instances) }}

@@ -8758,6 +8758,24 @@ var doc = `{
                 }
             }
         },
+        "structs.CheckRangeInt32": {
+            "type": "object",
+            "properties": {
+                "expectedRange": {
+                    "description": "Left closed right closed interval",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "realValue": {
+                    "type": "integer"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
         "structs.CheckStatus": {
             "type": "object",
             "properties": {
@@ -9549,7 +9567,7 @@ var doc = `{
                 "delay": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "integer"
+                        "$ref": "#/definitions/structs.CheckRangeInt32"
                     }
                 },
                 "hosts": {
@@ -9561,7 +9579,7 @@ var doc = `{
                 "ntp": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "integer"
+                        "$ref": "#/definitions/structs.CheckRangeInt32"
                     }
                 },
                 "ping": {

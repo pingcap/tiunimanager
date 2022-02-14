@@ -1706,6 +1706,18 @@ definitions:
       valid:
         type: boolean
     type: object
+  structs.CheckRangeInt32:
+    properties:
+      expectedRange:
+        description: Left closed right closed interval
+        items:
+          type: integer
+        type: array
+      realValue:
+        type: integer
+      valid:
+        type: boolean
+    type: object
   structs.CheckStatus:
     properties:
       health:
@@ -2256,7 +2268,7 @@ definitions:
     properties:
       delay:
         additionalProperties:
-          type: integer
+          $ref: '#/definitions/structs.CheckRangeInt32'
         type: object
       hosts:
         additionalProperties:
@@ -2264,7 +2276,7 @@ definitions:
         type: object
       ntp:
         additionalProperties:
-          type: integer
+          $ref: '#/definitions/structs.CheckRangeInt32'
         type: object
       ping:
         additionalProperties:

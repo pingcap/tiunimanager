@@ -251,8 +251,11 @@ func (rw *GormResourceReadWrite) allocResourceInHost(ctx context.Context, tx *go
 	log := framework.LogWithContext(ctx)
 	log.Infof("allocResourceInHost[%d] for application %v, require: %v", seq, *applicant, *require)
 	hostIp := require.Location.HostIp
+	if hostIp == "" {
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "request should have host ip")
+	}
 	if require.Count < 1 {
-		return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "request host count should be 1 for UserSpecifyHost allocation(%d)", require.Count)
+		return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "count invalid for UserSpecifyHost allocation(%d)", require.Count)
 	}
 	reqCores := require.Require.ComputeReq.CpuCores
 	reqMem := require.Require.ComputeReq.Memory

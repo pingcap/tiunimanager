@@ -349,7 +349,7 @@ func (g *ClusterReadWrite) SwapMasterSlaveRelation(ctx context.Context, oldMaste
 	}
 
 	err := tx.Delete(&ClusterRelation{
-		RelationType:     constants.ClusterRelationSlaveTo,
+		RelationType:     constants.ClusterRelationStandBy,
 		ObjectClusterID:  oldSlaveClusterId,
 		SubjectClusterID: oldMasterClusterId,
 	}).Error
@@ -358,7 +358,7 @@ func (g *ClusterReadWrite) SwapMasterSlaveRelation(ctx context.Context, oldMaste
 		return err
 	}
 	err = tx.Create(&ClusterRelation{
-		RelationType:         constants.ClusterRelationSlaveTo,
+		RelationType:         constants.ClusterRelationStandBy,
 		ObjectClusterID:      oldMasterClusterId,
 		SubjectClusterID:     oldSlaveClusterId,
 		SyncChangeFeedTaskID: newSyncChangeFeedTaskId,

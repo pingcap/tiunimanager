@@ -38,7 +38,7 @@ func TestSwitchover(t *testing.T) {
 	clusterRW.EXPECT().GetRelations(gomock.Any(), gomock.Eq("2")).Return(
 		[]*clusterMgr.ClusterRelation{
 			{
-				RelationType:         constants.ClusterRelationSlaveTo,
+				RelationType:         constants.ClusterRelationStandBy,
 				SubjectClusterID:     "1",
 				ObjectClusterID:      "2",
 				SyncChangeFeedTaskID: "1",

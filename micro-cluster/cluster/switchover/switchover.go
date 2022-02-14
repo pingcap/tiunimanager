@@ -379,7 +379,7 @@ func (m *Manager) clusterGetRelationByMasterSlaveClusterId(ctx context.Context, 
 		return nil, err
 	}
 	for _, v := range relations {
-		if v.SubjectClusterID == masterClusterId && v.RelationType == constants.ClusterRelationSlaveTo {
+		if v.SubjectClusterID == masterClusterId && v.RelationType == constants.ClusterRelationStandBy {
 			relation = v
 			break
 		}

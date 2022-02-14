@@ -590,18 +590,9 @@ func wfnExecuteDeferStack(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCo
 	return errAfterAllRetryies
 }
 
-func wfStepFinish(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
-	funcName := "wfStepFinish"
-	framework.LogWithContext(ctx).Infof("%s", funcName)
-	err := mgr.removeChangeFeedTask(ctx, wfGetOldSyncChangeFeedTaskId(ctx))
-	if err == nil {
-		framework.LogWithContext(ctx).Infof("%s remove old change feed task success", funcName)
-	} else {
-		framework.LogWithContext(ctx).Warnf("%s remove old change feed task failed, id:%s, err:%s",
-			funcName, wfGetOldSyncChangeFeedTaskId(ctx), err)
-	}
-
-	errToRet := err
+func wfnEndMaintenance(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	funcName := "wfnEndMaintenance"
+	var errToRet error
 	metaOfSource, err := meta.Get(ctx, wfGetOldMasterClusterId(ctx))
 	if err != nil {
 		errToRet = err
@@ -637,10 +628,34 @@ func wfStepFinish(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) e
 	return errToRet
 }
 
+func wfStepFinish(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	funcName := "wfStepFinish"
+	framework.LogWithContext(ctx).Infof("%s", funcName)
+	err := mgr.removeChangeFeedTask(ctx, wfGetOldSyncChangeFeedTaskId(ctx))
+	if err == nil {
+		framework.LogWithContext(ctx).Infof("%s remove old change feed task success", funcName)
+	} else {
+		framework.LogWithContext(ctx).Warnf("%s remove old change feed task failed, id:%s, err:%s",
+			funcName, wfGetOldSyncChangeFeedTaskId(ctx), err)
+	}
+
+	errToRet := err
+	err = wfnEndMaintenance(node, ctx)
+	if err != nil {
+		errToRet = err
+	}
+	return errToRet
+}
+
 func wfStepFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	funcName := "wfStepFail"
 	framework.LogWithContext(ctx).Errorf("%s", funcName)
-	return wfnExecuteDeferStack(node, ctx)
+	err := wfnExecuteDeferStack(node, ctx)
+	err2 := wfnEndMaintenance(node, ctx)
+	if err == nil && err2 == nil {
+		return nil
+	}
+	return fmt.Errorf("wfStepFail: err:%s err2:%s", err, err2)
 }
 
 func ifNoErrThenPushDefer(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext,

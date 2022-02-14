@@ -210,7 +210,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 		framework.LogWithContext(ctx).Errorf("start maintenance failed:%s", err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT, fmt.Sprintf("start maintenance failed, %s", err.Error()), err)
 	}
-	flowManager.AddContext(flow, wfContextOldMasterPreviousMaintenanceStatusKey, metaOfSource.Cluster.MaintenanceStatus)
+	flowManager.AddContext(flow, wfContextOldMasterPreviousMaintenanceStatusKey, string(metaOfSource.Cluster.MaintenanceStatus))
 	cancelFps = append(cancelFps, func() {
 		err := metaOfSource.EndMaintenance(ctx, metaOfSource.Cluster.MaintenanceStatus)
 		if err != nil {
@@ -229,7 +229,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 		framework.LogWithContext(ctx).Errorf("start maintenance failed:%s", err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT, fmt.Sprintf("start maintenance failed, %s", err.Error()), err)
 	}
-	flowManager.AddContext(flow, wfContextOldSlavePreviousMaintenanceStatusKey, metaOfTarget.Cluster.MaintenanceStatus)
+	flowManager.AddContext(flow, wfContextOldSlavePreviousMaintenanceStatusKey, string(metaOfTarget.Cluster.MaintenanceStatus))
 	cancelFps = append(cancelFps, func() {
 		err := metaOfTarget.EndMaintenance(ctx, metaOfTarget.Cluster.MaintenanceStatus)
 		if err != nil {

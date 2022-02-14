@@ -168,13 +168,17 @@ func (handler *ClusterServiceHandler) MasterSlaveSwitchover(ctx context.Context,
 	defer handlePanic(ctx, "MasterSlaveSwitchover", response)
 
 	framework.LogWithContext(ctx).Info("master/slave switchover")
-	reqBody := cluster.MasterSlaveClusterSwitchoverReq{}
+	reqBody := &cluster.MasterSlaveClusterSwitchoverReq{}
 
+	framework.LogWithContext(ctx).Info("MasterSlaveSwitchover: before handleRequest")
 	if handleRequest(ctx, request, response, reqBody, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionCreate)}}) {
-		result, err := handler.switchoverManager.Switchover(ctx, &reqBody)
+		framework.LogWithContext(ctx).Info("MasterSlaveSwitchover: after handleRequest")
+		framework.LogWithContext(ctx).Info("MasterSlaveSwitchover: before  handler.switchoverManager.Switchover")
+		result, err := handler.switchoverManager.Switchover(ctx, reqBody)
+		framework.LogWithContext(ctx).Info("MasterSlaveSwitchover: after  handler.switchoverManager.Switchover", result, err)
 		handleResponse(ctx, response, err, result, nil)
 	}
-
+	framework.LogWithContext(ctx).Info("MasterSlaveSwitchover: ret")
 	return nil
 }
 

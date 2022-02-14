@@ -117,7 +117,7 @@ func handleResponse(ctx context.Context, resp *clusterservices.RpcResponse, err 
 		if finalError, ok := err.(errors.EMError); ok {
 			framework.LogWithContext(ctx).Errorf("rpc method failed with error, %s", err.Error())
 			resp.Code = int32(finalError.GetCode())
-			resp.Message = finalError.GetMsg()
+			resp.Message = finalError.Error()
 			return
 		} else {
 			resp.Code = int32(errors.TIEM_UNRECOGNIZED_ERROR)

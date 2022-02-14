@@ -65,9 +65,16 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	globalAllocId := uuidutil.GenerateID()
 	instanceAllocId := uuidutil.GenerateID()
 
-	globalRequirement := clusterMeta.GenerateGlobalPortRequirements(context)
-	instanceRequirement, instances := clusterMeta.GenerateInstanceResourceRequirements(context)
+	globalRequirement, err := clusterMeta.GenerateGlobalPortRequirements(context)
+	if err != nil {
+		return err
+	}
+	instanceRequirement, instances, err := clusterMeta.GenerateInstanceResourceRequirements(context)
 
+	if err != nil {
+		framework.LogWithContext(context).Error(err)
+		return err
+	}
 	batchReq := &resourceStructs.BatchAllocRequest{
 		BatchRequests: []resourceStructs.AllocReq{
 			{
@@ -962,10 +969,21 @@ func syncIncrData(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	}
 	// create cdc sync and wait for syncing ready
 	taskID, err := changefeed.GetChangeFeedService().CreateBetweenClusters(context.Context,
-		sourceClusterMeta.Cluster.ID, clusterMeta.Cluster.ID, constants.ClusterRelationCloneFrom)
+		sourceClusterMeta.Cluster.ID, clusterMeta.Cluster.ID, constants.ClusterRelationStandBy)
 	if err != nil {
 		return err
 	}
+
+	// create standby relation
+	if err := models.GetClusterReaderWriter().CreateRelation(context.Context, &management.ClusterRelation{
+		ObjectClusterID:      clusterMeta.Cluster.ID,
+		SubjectClusterID:     sourceClusterMeta.Cluster.ID,
+		RelationType:         constants.ClusterRelationStandBy,
+		SyncChangeFeedTaskID: taskID,
+	}); err != nil {
+		return err
+	}
+
 	gcLifeTime, err := time.ParseDuration(context.GetData(ContextGCLifeTime).(string))
 	if err != nil {
 		return err

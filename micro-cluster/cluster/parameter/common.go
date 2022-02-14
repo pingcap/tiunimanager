@@ -36,6 +36,7 @@ const (
 	contextModifyParameters        = "ModifyParameters"
 	contextHasApplyParameter       = "HasApplyParameter"
 	contextMaintenanceStatusChange = "MaintenanceStatusChange"
+	contextClusterConfigStr        = "ClusterConfigStr"
 )
 
 type UpdateParameterSource int

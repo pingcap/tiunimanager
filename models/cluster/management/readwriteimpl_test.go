@@ -153,9 +153,10 @@ func TestGormClusterReadWrite_Create(t *testing.T) {
 func TestGormClusterReadWrite_CreateRelation(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		relation := &ClusterRelation{
-			ObjectClusterID:  "111",
-			SubjectClusterID: "222",
-			RelationType:     constants.ClusterRelationCloneFrom,
+			ObjectClusterID:      "111",
+			SubjectClusterID:     "222",
+			RelationType:         constants.ClusterRelationStandBy,
+			SyncChangeFeedTaskID: "task01",
 		}
 		err := testRW.CreateRelation(context.TODO(), relation)
 
@@ -292,9 +293,10 @@ func TestGormClusterReadWrite_DeleteInstance(t *testing.T) {
 
 func TestGormClusterReadWrite_DeleteRelation(t *testing.T) {
 	relation := &ClusterRelation{
-		ObjectClusterID:  "111",
-		SubjectClusterID: "222",
-		RelationType:     constants.ClusterRelationCloneFrom,
+		ObjectClusterID:      "111",
+		SubjectClusterID:     "222",
+		RelationType:         constants.ClusterRelationStandBy,
+		SyncChangeFeedTaskID: "task01",
 	}
 	testRW.CreateRelation(context.TODO(), relation)
 
@@ -710,31 +712,35 @@ func mockCluster(name string, clusterType string, status constants.ClusterRunnin
 
 func TestClusterReadWrite_Relations(t *testing.T) {
 	relation1 := &ClusterRelation{
-		ObjectClusterID:  "test_relation",
-		SubjectClusterID: "222",
-		RelationType:     constants.ClusterRelationCloneFrom,
+		ObjectClusterID:      "test_relation",
+		SubjectClusterID:     "222",
+		RelationType:         constants.ClusterRelationStandBy,
+		SyncChangeFeedTaskID: "task01",
 	}
 	err := testRW.CreateRelation(context.TODO(), relation1)
 	assert.NoError(t, err)
 
 	err = testRW.CreateRelation(context.TODO(), &ClusterRelation{
-		ObjectClusterID:  "test_relation",
-		SubjectClusterID: "222",
-		RelationType:     constants.ClusterRelationSlaveTo,
+		ObjectClusterID:      "test_relation",
+		SubjectClusterID:     "222",
+		RelationType:         constants.ClusterRelationStandBy,
+		SyncChangeFeedTaskID: "task01",
 	})
 	assert.NoError(t, err)
 
 	err = testRW.CreateRelation(context.TODO(), &ClusterRelation{
-		ObjectClusterID:  "test_relation",
-		SubjectClusterID: "333",
-		RelationType:     constants.ClusterRelationSlaveTo,
+		ObjectClusterID:      "test_relation",
+		SubjectClusterID:     "333",
+		RelationType:         constants.ClusterRelationStandBy,
+		SyncChangeFeedTaskID: "task01",
 	})
 	assert.NoError(t, err)
 
 	err = testRW.CreateRelation(context.TODO(), &ClusterRelation{
-		ObjectClusterID:  "333",
-		SubjectClusterID: "test_relation",
-		RelationType:     constants.ClusterRelationSlaveTo,
+		ObjectClusterID:      "333",
+		SubjectClusterID:     "test_relation",
+		RelationType:         constants.ClusterRelationStandBy,
+		SyncChangeFeedTaskID: "task01",
 	})
 	assert.NoError(t, err)
 

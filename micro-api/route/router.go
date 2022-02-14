@@ -160,11 +160,6 @@ func Route(g *gin.Engine) {
 			cluster.POST("/:clusterId/upgrade", upgrade.ClusterUpgrade)
 		}
 
-		knowledge := apiV1.Group("/knowledges")
-		{
-			knowledge.GET("/", metrics.HandleMetrics(constants.MetricsPlatformQueryKnowledge), product.ClusterKnowledge)
-		}
-
 		backup := apiV1.Group("/backups")
 		{
 			backup.Use(interceptor.VerifyIdentity)

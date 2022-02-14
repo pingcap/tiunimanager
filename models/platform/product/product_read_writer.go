@@ -25,13 +25,15 @@ package product
 
 import (
 	"context"
+	"fmt"
+	"sort"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
-	"sort"
 )
 
 type ProductReadWriterInterface interface {
@@ -41,6 +43,16 @@ type ProductReadWriterInterface interface {
 	// @return zones
 	// @return err
 	QueryZones(ctx context.Context) (zones []structs.ZoneInfo, err error)
+
+	// GetZone
+	// @Description: Get region & zone information provided by Enterprise Manager
+	// @param ctx
+	// @param vendorID
+	// @param regionID
+	// @param zoneID
+	// @return zone
+	// @return err
+	GetZone(ctx context.Context, vendorID, regionID, zoneID string) (zone *structs.ZoneInfo, count int64, err error)
 
 	// CreateZones
 	// @Description: batch create zones interface
@@ -169,10 +181,13 @@ func (p *ProductReadWriter) QueryZones(ctx context.Context) (zones []structs.Zon
 	var info structs.ZoneInfo
 	SQL := "SELECT t1.zone_id,t1.zone_name,t1.region_id,t1.region_name,t1.vendor_id,t1.vendor_name FROM zones t1;"
 	rows, err := p.DB(ctx).Raw(SQL).Rows()
-	defer rows.Close()
+
 	if err != nil {
 		return nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "query all zones error: %v, SQL: %s", err, SQL)
 	}
+
+	defer rows.Close()
+
 	for rows.Next() {
 		err = rows.Scan(&info.ZoneID, &info.ZoneName, &info.RegionID, &info.RegionName, &info.VendorID, &info.VendorName)
 		if err == nil {
@@ -182,6 +197,25 @@ func (p *ProductReadWriter) QueryZones(ctx context.Context) (zones []structs.Zon
 		}
 	}
 	return zones, err
+}
+
+// GetZone zone by vendorID, regionID, zoneID
+func (p *ProductReadWriter) GetZone(ctx context.Context, vendorID, regionID, zoneID string) (zone *structs.ZoneInfo, count int64, err error) {
+	if vendorID == "" || regionID == "" || zoneID == "" {
+		errMsg := fmt.Sprintf("get zone without vendorID %s, regionID %s, zoneID %s, parameter invalid", vendorID, regionID, zoneID)
+		framework.LogWithContext(ctx).Warningln(errMsg)
+		return nil, 0, errors.NewError(errors.TIEM_PARAMETER_INVALID, errMsg)
+	}
+
+	zone = new(structs.ZoneInfo)
+	err = p.DB(ctx).Model(&Zone{}).Where("vendor_id = ? AND  region_id = ? AND zone_id = ?", vendorID, regionID, zoneID).Count(&count).Find(zone).Error
+	if err != nil {
+		errMsg := fmt.Sprintf("get zone, vendorID: %s regionID: %s, zoneID:%s, failed: %v", zone.VendorID, zone.RegionID, zone.ZoneID, err)
+		framework.LogWithContext(ctx).Errorf(errMsg)
+		return nil, 0, errors.NewError(errors.QueryZoneScanRowError, errMsg)
+	}
+
+	return zone, count, nil
 }
 
 //CreateProduct create a product by product information and components
@@ -259,8 +293,9 @@ func (p *ProductReadWriter) QueryProducts(ctx context.Context, vendorID string, 
  t1.vendor_id=t2.vendor_id AND t1.region_id=t2.region_id AND t1.vendor_id = ? AND t1.status = ? AND t1.internal = ?;`
 	var info structs.Product
 	rows, err := p.DB(ctx).Raw(SQL, vendorID, status, internal).Rows()
-	defer rows.Close()
 	if err == nil {
+		defer rows.Close()
+
 		for rows.Next() {
 			//Read a row of data and store it in a temporary variable
 			err = rows.Scan(&info.VendorID, &info.VendorName, &info.RegionID, &info.RegionName, &info.ID, &info.Name, &info.Version, &info.Arch, &info.Status)
@@ -306,12 +341,13 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 	var components []structs.ProductComponentProperty
 	products = make(map[string]structs.ProductDetail)
 	rows, err := p.DB(ctx).Raw(SQL, vendorID, regionID, internal, productID, status, constants.ProductSpecStatusOnline, constants.ProductSpecStatusOnline).Rows()
-	defer rows.Close()
 	log := framework.LogWithContext(ctx)
 	log.Debugf("QueryProductDetail SQL: %s vendorID:%s, regionID: %s productID: %s, internal: %d, status: %s, execute result, error: %v",
 		SQL, vendorID, regionID, productID, internal, status, err)
 
 	if err == nil {
+		defer rows.Close()
+
 		for rows.Next() {
 			//Read a row of data and store it in a temporary variable
 			err = rows.Scan(&spec.ZoneID, &spec.ZoneName, &productName, &version, &arch,
@@ -331,7 +367,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			detail, ok = products[productID]
 			if !ok {
 				products[productID] = structs.ProductDetail{ID: productID, Name: productName, Versions: make(map[string]structs.ProductVersion)}
-				detail, _ = products[productID]
+				detail = products[productID]
 			}
 
 			//Query whether the product version information is already in Versions,
@@ -339,7 +375,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			productVersion, ok = detail.Versions[version]
 			if !ok {
 				detail.Versions[version] = structs.ProductVersion{Version: version, Arch: make(map[string][]structs.ProductComponentProperty)}
-				productVersion, _ = detail.Versions[version]
+				productVersion = detail.Versions[version]
 			}
 
 			//Query whether the product arch information is already in archs,
@@ -353,7 +389,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			//if it already exists, then directly modify the relevant data structure
 
 			componentExisted := false
-			for i, _ := range components {
+			for i := range components {
 				if components[i].ID == info.ID {
 					componentExisted = true
 					zoneExisted := false

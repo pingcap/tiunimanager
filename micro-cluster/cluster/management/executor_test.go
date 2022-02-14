@@ -21,6 +21,7 @@ import (
 	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/test/mockchangefeed"
+	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
 	"strconv"
 
 	"github.com/pingcap-inc/tiem/models/parametergroup"
@@ -146,6 +147,47 @@ func TestPrepareResource(t *testing.T) {
 			},
 		},
 	})
+
+	productRW := mock_product.NewMockProductReadWriterInterface(ctrl)
+	models.SetProductReaderWriter(productRW)
+	productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs2.ProductDetail{
+		"TiDB": {
+			Versions: map[string]structs2.ProductVersion{
+				"v5.0.0": {
+					Version: "v5.0.0",
+					Arch: map[string][]structs2.ProductComponentProperty{
+						"x86_64": {
+							{
+								ID:                      "TiDB",
+								MinInstance:             1,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{},
+							},
+							{
+								ID:                      "TiKV",
+								MinInstance:             1,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{},
+							},
+							{
+								ID:                      "PD",
+								MinInstance:             1,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{1, 3, 5, 7},
+							},
+							{
+								ID:                      "TiFlash",
+								MinInstance:             0,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, nil).AnyTimes()
+
 	t.Run("normal", func(t *testing.T) {
 		resourceManager := mock_allocator_recycler.NewMockAllocatorRecycler(ctrl)
 		resourceManager.EXPECT().AllocResources(gomock.Any(), gomock.Any()).Return(&structs.BatchAllocResponse{
@@ -2216,6 +2258,10 @@ func Test_syncIncrData(t *testing.T) {
 
 		service.EXPECT().CreateBetweenClusters(gomock.Any(), gomock.Any(),
 			gomock.Any(), gomock.Any()).Return("task01", nil)
+		rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(rw)
+
+		rw.EXPECT().CreateRelation(gomock.Any(), gomock.Any()).Return(nil)
 		flowContext.SetData(ContextGCLifeTime, "10m0s")
 		service.EXPECT().Detail(gomock.Any(), gomock.Any()).Return(
 			cluster.DetailChangeFeedTaskResp{

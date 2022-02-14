@@ -100,16 +100,6 @@ func (c *FilebeatComponent) Instances() []Instance {
 					s.LogDir,
 				},
 				StatusFn: func(_ *tls.Config, _ ...string) string {
-					//e, found := ctxt.GetInner(context.TODO()).GetExecutor(s.Host)
-					//fmt.Println("found: ", found)
-					//if !found {
-					//	return ""
-					//}
-					//if _, _, err := e.Execute(ctx,
-					//	fmt.Sprintf("ps -ef | grep ", spec.DBPath, paths.Data[0], DBName),
-					//	false); err != nil {
-					//	return err
-					//}
 					return "-"
 				},
 				UptimeFn: func(tlsCfg *tls.Config) time.Duration {

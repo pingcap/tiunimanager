@@ -554,6 +554,11 @@ func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 			}
 		}
 	}
+	if clusterMeta.Cluster.Status == string(constants.ClusterInitializing) {
+		// PD cannot be restarted for a minute, or it will encounter "error.keyvisual.service_stopped"
+		time.Sleep(time.Minute)
+		return nil
+	}
 
 	// set cluster status into running
 	if err := clusterMeta.UpdateClusterStatus(context.Context, constants.ClusterRunning); err != nil {
@@ -697,9 +702,6 @@ func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 
 	node.Record(fmt.Sprintf("start cluster %s, version: %s ", clusterMeta.Cluster.ID, cluster.Version))
 	node.OperationID = operationID
-	// todo
-	// PD cannot be restarted for a minute, or it will encounter "error.keyvisual.service_stopped"
-	time.Sleep(time.Minute)
 	return nil
 }
 

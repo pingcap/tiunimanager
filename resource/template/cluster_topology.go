@@ -74,7 +74,7 @@ tiflash_servers:
     data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/tiflash-data
     config:
       server.labels:
-		vendorregoin: {{ $.Cluster.Region }}
+		region: {{ $.Cluster.Region }}
 		zone: {{ .Zone }}
 		rack: {{ .Rack }}
 		host: {{ .HostID }}

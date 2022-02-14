@@ -58,7 +58,7 @@ func TestClusterInstance_SetPresetDir(t *testing.T) {
 
 	t.Run("default", func(t *testing.T) {
 		instance := ClusterInstance{}
-		instance.SetPresetDir("/my/deploy", "bbb", "log")
+		instance.SetPresetDir("/my/deploy", "/my/data", "log")
 		assert.Equal(t, "/my/deploy", instance.GetDeployDir())
 		assert.Equal(t, "/my/data", instance.GetDataDir())
 		assert.Equal(t, "/my/deploy/log", instance.GetLogDir())

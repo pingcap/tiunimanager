@@ -65,7 +65,8 @@ func (p *ResourcePool) registerImportHostsWorkFlow(ctx context.Context, flowMana
 	flowManager.RegisterWorkFlow(ctx, rp_consts.FlowImportHosts, &workflow.WorkFlowDefine{
 		FlowName: rp_consts.FlowImportHosts,
 		TaskNodes: map[string]*workflow.NodeDefine{
-			"start":           {Name: "start", SuccessEvent: "prepare", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: authHosts},
+			"start":           {Name: "start", SuccessEvent: "authhosts", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: validateHostInfo},
+			"authhosts":       {Name: "authhosts", SuccessEvent: "prepare", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: authHosts},
 			"prepare":         {Name: "prepare", SuccessEvent: "verifyHosts", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: prepare},
 			"verifyHosts":     {Name: "verifyHosts", SuccessEvent: "installSoftware", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: verifyHosts},
 			"installSoftware": {Name: "installSoftware", SuccessEvent: "joinEMCluster", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: installSoftware},
@@ -87,7 +88,8 @@ func (p *ResourcePool) registerImportHostsWorkFlow(ctx context.Context, flowMana
 	flowManager.RegisterWorkFlow(ctx, rp_consts.FlowTakeOverHosts, &workflow.WorkFlowDefine{
 		FlowName: rp_consts.FlowTakeOverHosts,
 		TaskNodes: map[string]*workflow.NodeDefine{
-			"start":         {Name: "start", SuccessEvent: "joinEMCluster", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: authHosts},
+			"start":         {Name: "start", SuccessEvent: "authhosts", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: validateHostInfo},
+			"authhosts":     {Name: "authhosts", SuccessEvent: "joinEMCluster", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: authHosts},
 			"joinEMCluster": {Name: "joinEMCluster", SuccessEvent: "succeed", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: joinEmCluster},
 			"succeed":       {Name: "succeed", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsOnline},
 			"fail":          {Name: "end", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsFail},
@@ -219,6 +221,10 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 		}
 	}()
 	return flowIds, nil
+}
+
+func (p *ResourcePool) ValidateZoneInfo(ctx context.Context, host *structs.HostInfo) (err error) {
+	return p.hostProvider.ValidateZoneInfo(ctx, host)
 }
 
 func (p *ResourcePool) QueryHosts(ctx context.Context, location *structs.Location, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, total int64, err error) {

@@ -17,7 +17,6 @@ package management
 
 import (
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/models"
 	"os"
 	"testing"
@@ -27,7 +26,6 @@ func TestMain(m *testing.M) {
 	var testFilePath string
 	framework.InitBaseFrameworkForUt(framework.ClusterService,
 		func(d *framework.BaseFramework) error {
-			knowledge.LoadKnowledge()
 			models.MockDB()
 			testFilePath = d.GetDataDir()
 			os.MkdirAll(testFilePath, 0755)

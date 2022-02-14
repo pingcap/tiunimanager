@@ -22,23 +22,23 @@ import (
 )
 
 func TestClusterInstance_GetDir(t *testing.T) {
-	instance := ClusterInstance {
+	instance := ClusterInstance{
 		ClusterID: "cluster1",
-		DiskPath: "/sda",
-		Type: string(constants.ComponentIDTiKV),
+		DiskPath:  "/sda",
+		Type:      string(constants.ComponentIDTiKV),
 	}
 
 	instance2 := ClusterInstance{
 		DeployDir: "aaa",
-		DataDir: "bbb",
-		LogDir: "ccc",
+		DataDir:   "bbb",
+		LogDir:    "ccc",
 	}
 	t.Run("deploy", func(t *testing.T) {
-		assert.Equal(t, "/sda/cluster1/tikv-deploy",instance.GetDeployDir())
+		assert.Equal(t, "/sda/cluster1/tikv-deploy", instance.GetDeployDir())
 		assert.Equal(t, "aaa", instance2.GetDeployDir())
 	})
 	t.Run("data", func(t *testing.T) {
-		assert.Equal(t, "/sda/cluster1/tikv-data",instance.GetDataDir())
+		assert.Equal(t, "/sda/cluster1/tikv-data", instance.GetDataDir())
 		assert.Equal(t, "bbb", instance2.GetDataDir())
 	})
 	t.Run("log", func(t *testing.T) {
@@ -49,8 +49,7 @@ func TestClusterInstance_GetDir(t *testing.T) {
 
 func TestClusterInstance_SetPresetDir(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		instance := ClusterInstance{
-		}
+		instance := ClusterInstance{}
 		instance.SetPresetDir("aaa", "bbb", "ccc")
 		assert.Equal(t, "aaa", instance.GetDeployDir())
 		assert.Equal(t, "bbb", instance.GetDataDir())

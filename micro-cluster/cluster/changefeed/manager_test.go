@@ -20,7 +20,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
@@ -30,7 +29,7 @@ import (
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockchangefeed"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
-	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
+	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -38,7 +37,6 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	knowledge.LoadKnowledge()
 	models.MockDB()
 
 	os.Exit(m.Run())

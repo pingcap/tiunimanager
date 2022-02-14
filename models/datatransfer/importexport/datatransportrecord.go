@@ -26,6 +26,7 @@ type DataTransportRecord struct {
 	ClusterID       string `gorm:"index;"`
 	TransportType   string `gorm:"not null;"`
 	FilePath        string `gorm:"not null;"`
+	ConfigPath      string
 	ZipName         string
 	StorageType     string `gorm:"not null;"`
 	Comment         string

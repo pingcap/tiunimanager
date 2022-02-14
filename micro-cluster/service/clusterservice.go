@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"runtime/debug"
 	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -117,7 +118,7 @@ func handleResponse(ctx context.Context, resp *clusterservices.RpcResponse, err 
 		if finalError, ok := err.(errors.EMError); ok {
 			framework.LogWithContext(ctx).Errorf("rpc method failed with error, %s", err.Error())
 			resp.Code = int32(finalError.GetCode())
-			resp.Message = finalError.GetMsg()
+			resp.Message = finalError.Error()
 			return
 		} else {
 			resp.Code = int32(errors.TIEM_UNRECOGNIZED_ERROR)
@@ -135,7 +136,7 @@ func handleResponse(ctx context.Context, resp *clusterservices.RpcResponse, err 
 // @Parameter resp
 func handlePanic(ctx context.Context, funcName string, resp *clusterservices.RpcResponse) {
 	if r := recover(); r != nil {
-		framework.LogWithContext(ctx).Errorf("recover from %s", funcName)
+		framework.LogWithContext(ctx).Errorf("recover from %s, stacktrace %s", funcName, string(debug.Stack()))
 		resp.Code = int32(errors.TIEM_PANIC)
 		resp.Message = fmt.Sprintf("%v", r)
 	}

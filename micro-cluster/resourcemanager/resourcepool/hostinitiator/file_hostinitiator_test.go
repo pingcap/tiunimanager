@@ -24,9 +24,10 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/framework"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
-	mock_secp "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
+	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
 	mock_ssh "github.com/pingcap-inc/tiem/test/mockutil/mocksshclientexecutor"
 	sshclient "github.com/pingcap-inc/tiem/util/ssh"
 	"github.com/stretchr/testify/assert"
@@ -93,11 +94,12 @@ func Test_Verify_ignoreWarings(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockSec := mock_secp.NewMockSecondPartyService(ctrl)
-	mockSec.EXPECT().CheckTopo(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
+	mockSec := mock_deployment.NewMockInterface(ctrl)
+	mockSec.EXPECT().CheckConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
+	deployment.M = mockSec
 
 	fileInitiator := NewFileHostInitiator()
-	fileInitiator.SetSecondPartyServ(mockSec)
+	fileInitiator.SetDeploymentServ(mockSec)
 
 	ctx := context.WithValue(context.TODO(), rp_consts.ContextIgnoreWarnings, true)
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
@@ -124,11 +126,12 @@ func Test_Verify_Warings(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockSec := mock_secp.NewMockSecondPartyService(ctrl)
-	mockSec.EXPECT().CheckTopo(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
+	mockSec := mock_deployment.NewMockInterface(ctrl)
+	mockSec.EXPECT().CheckConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
+	deployment.M = mockSec
 
 	fileInitiator := NewFileHostInitiator()
-	fileInitiator.SetSecondPartyServ(mockSec)
+	fileInitiator.SetDeploymentServ(mockSec)
 
 	ctx := context.WithValue(context.TODO(), rp_consts.ContextIgnoreWarnings, false)
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
@@ -147,11 +150,12 @@ func Test_Prepare_NoError(t *testing.T) {
 		`
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockSec := mock_secp.NewMockSecondPartyService(ctrl)
-	mockSec.EXPECT().CheckTopo(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
+	mockSec := mock_deployment.NewMockInterface(ctrl)
+	mockSec.EXPECT().CheckConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
+	deployment.M = mockSec
 
 	fileInitiator := NewFileHostInitiator()
-	fileInitiator.SetSecondPartyServ(mockSec)
+	fileInitiator.SetDeploymentServ(mockSec)
 
 	err := fileInitiator.Prepare(context.TODO(), &structs.HostInfo{IP: "666.666.66.66", UserName: "r00t", Passwd: "fake"})
 	assert.Nil(t, err)
@@ -166,11 +170,12 @@ func Test_Prepare_ConnectError(t *testing.T) {
 		`
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockSec := mock_secp.NewMockSecondPartyService(ctrl)
-	mockSec.EXPECT().CheckTopo(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
+	mockSec := mock_deployment.NewMockInterface(ctrl)
+	mockSec.EXPECT().CheckConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil)
+	deployment.M = mockSec
 
 	fileInitiator := NewFileHostInitiator()
-	fileInitiator.SetSecondPartyServ(mockSec)
+	fileInitiator.SetDeploymentServ(mockSec)
 
 	err := fileInitiator.Prepare(context.TODO(), &structs.HostInfo{IP: "666.666.66.66", UserName: "r00t", Passwd: "fake"})
 	assert.NotNil(t, err)
@@ -252,33 +257,93 @@ func Test_InstallSoftware(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func Test_PreCheckHostInstallFilebeat(t *testing.T) {
+	jsonStr := `
+	{
+		"cluster_meta": {
+		  "cluster_type": "tiem",
+		  "cluster_name": "tiem-test",
+		  "cluster_version": "v1.0.0-beta.7",
+		  "deploy_user": "tiem",
+		  "ssh_type": "builtin"
+		},
+		"instances": [
+		  {
+			"id": "172.16.6.252:4112",
+			"role": "alertmanager",
+			"host": "172.16.6.252",
+			"ports": "4112/4113",
+			"os_arch": "linux/x86_64",
+			"status": "Up",
+			"since": "-",
+			"data_dir": "/tiem-data/alertmanager-4112",
+			"deploy_dir": "/tiem-deploy/alertmanager-4112",
+			"ComponentName": "alertmanager",
+			"Port": 4112
+		  },
+		  {
+			"id": "172.16.6.252:0",
+			"role": "filebeat",
+			"host": "172.16.6.252",
+			"ports": "",
+			"os_arch": "linux/x86_64",
+			"status": "Up",
+			"since": "-",
+			"data_dir": "/tiem-data/filebeat-0",
+			"deploy_dir": "/tiem-deploy/filebeat-0",
+			"ComponentName": "filebeat",
+			"Port": 0
+		  }
+		]
+	}
+	`
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockSec := mock_deployment.NewMockInterface(ctrl)
+	mockSec.EXPECT().Display(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil).Times(2)
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
+
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetDeploymentServ(mockSec)
+
+	installed, err := fileInitiator.PreCheckHostInstallFilebeat(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "172.16.6.252"}})
+	assert.Nil(t, err)
+	assert.True(t, installed)
+
+	installed, err = fileInitiator.PreCheckHostInstallFilebeat(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "172.16.6.253"}})
+	assert.Nil(t, err)
+	assert.False(t, installed)
+}
+
 func Test_JoinEMCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockSec := mock_secp.NewMockSecondPartyService(ctrl)
-	mockSec.EXPECT().ClusterScaleOut(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
+	mockSec := mock_deployment.NewMockInterface(ctrl)
+	mockSec.EXPECT().ScaleOut(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
+	deployment.M = mockSec
 
 	fileInitiator := NewFileHostInitiator()
-	fileInitiator.SetSecondPartyServ(mockSec)
+	fileInitiator.SetDeploymentServ(mockSec)
 
-	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowNodeIDKey, "fake-node-id")
+	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowIDKey, "fake-node-id")
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
-	err := fileInitiator.JoinEMCluster(ctx, []structs.HostInfo{{Arch: "X86_64", IP: "192.168.177.180"}})
+	_, err := fileInitiator.JoinEMCluster(ctx, []structs.HostInfo{{Arch: "X86_64", IP: "192.168.177.180"}})
 	assert.Nil(t, err)
 }
 
 func Test_LeaveEMCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockSec := mock_secp.NewMockSecondPartyService(ctrl)
-	mockSec.EXPECT().ClusterScaleIn(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
+	mockSec := mock_deployment.NewMockInterface(ctrl)
+	mockSec.EXPECT().ScaleIn(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
+	deployment.M = mockSec
 
 	fileInitiator := NewFileHostInitiator()
-	fileInitiator.SetSecondPartyServ(mockSec)
+	fileInitiator.SetDeploymentServ(mockSec)
 
-	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowNodeIDKey, "fake-node-id")
+	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowIDKey, "fake-node-id")
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
-	err := fileInitiator.LeaveEMCluster(ctx, "192.168.177.180:0")
+	_, err := fileInitiator.LeaveEMCluster(ctx, "192.168.177.180:0")
 	assert.Nil(t, err)
 }
 

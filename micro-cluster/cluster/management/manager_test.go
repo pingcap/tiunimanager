@@ -23,7 +23,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	em_errors "github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
@@ -34,9 +34,10 @@ import (
 	"github.com/pingcap-inc/tiem/models/common"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	mock_br_service "github.com/pingcap-inc/tiem/test/mockbr"
+	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
+	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
-	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/pkg/sftp"
@@ -145,10 +146,10 @@ func TestManager_ScaleOut(t *testing.T) {
 	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
-		mockTiup := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-		secondparty.Manager = mockTiup
-		mockTiup.EXPECT().ClusterComponentCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"true\"}", nil)
+		mockTiup := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mockTiup
+		mockTiup.EXPECT().Ctl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"true\"}", nil)
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
@@ -210,8 +211,8 @@ func TestManager_ScaleOut(t *testing.T) {
 	})
 
 	t.Run("check fail", func(t *testing.T) {
-		mockTiup := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-		secondparty.Manager = mockTiup
+		mockTiup := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mockTiup
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
@@ -227,8 +228,8 @@ func TestManager_ScaleOut(t *testing.T) {
 			},
 			{},
 		}, make([]*management.DBUser, 0), nil).AnyTimes()
-		mockTiup.EXPECT().ClusterComponentCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"false\"}", nil).AnyTimes()
+		mockTiup.EXPECT().Ctl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"false\"}", nil).AnyTimes()
 		_, err := manager.ScaleOut(context.TODO(), cluster.ScaleOutClusterReq{
 			ClusterID: "111",
 			ClusterResourceInfo: structs.ClusterResourceInfo{
@@ -243,10 +244,10 @@ func TestManager_ScaleOut(t *testing.T) {
 	})
 
 	t.Run("aync fail", func(t *testing.T) {
-		mockTiup := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-		secondparty.Manager = mockTiup
-		mockTiup.EXPECT().ClusterComponentCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"true\"}", nil)
+		mockTiup := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mockTiup
+		mockTiup.EXPECT().Ctl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"true\"}", nil)
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
@@ -299,6 +300,46 @@ func TestManager_ScaleIn(t *testing.T) {
 		{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
 		{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
 	}, make([]*management.DBUser, 0), nil).AnyTimes()
+
+	productRW := mock_product.NewMockProductReadWriterInterface(ctrl)
+	models.SetProductReaderWriter(productRW)
+	productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
+		"TiDB": {
+			Versions: map[string]structs.ProductVersion{
+				"v5.2.2": {
+					Version: "v5.2.2",
+					Arch: map[string][]structs.ProductComponentProperty{
+						"x86_64": {
+							{
+								ID:                      "TiDB",
+								MinInstance:             1,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{},
+							},
+							{
+								ID:                      "TiKV",
+								MinInstance:             1,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{},
+							},
+							{
+								ID:                      "PD",
+								MinInstance:             1,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{1, 3, 5, 7},
+							},
+							{
+								ID:                      "TiFlash",
+								MinInstance:             0,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, nil).AnyTimes()
 
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 	workflow.MockWorkFlowService(workflowService)
@@ -359,7 +400,7 @@ func TestManager_ScaleIn(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Type: "TiDB", Version: "v4.0.12"}, []*management.ClusterInstance{
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Type: "TiDB", Version: "v5.2.2", CpuArchitecture: "x86_64"}, []*management.ClusterInstance{
 			{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
 			{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
 		}, make([]*management.DBUser, 0), nil).AnyTimes()
@@ -425,7 +466,7 @@ func TestManager_Clone(t *testing.T) {
 				RoleType:  string(constants.Root),
 			},
 		}, nil).AnyTimes()
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().CreateRelation(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
@@ -493,7 +534,7 @@ func TestManager_Clone(t *testing.T) {
 			{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
 			{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
 		}, make([]*management.DBUser, 0), nil).AnyTimes()
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().CreateRelation(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("fail")).AnyTimes()
@@ -536,7 +577,7 @@ func TestManager_CreateCluster(t *testing.T) {
 		}()
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		_, err := manager.CreateCluster(context.TODO(), cluster.CreateClusterReq{
 			ResourceParameter: structs.ClusterResourceInfo{
@@ -593,7 +634,7 @@ func TestManager_CreateCluster(t *testing.T) {
 		}()
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		_, err := manager.CreateCluster(context.TODO(), cluster.CreateClusterReq{})
 		assert.Error(t, err)
 	})
@@ -607,7 +648,7 @@ func TestManager_CreateCluster(t *testing.T) {
 		}()
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("fail")).AnyTimes()
 		_, err := manager.CreateCluster(context.TODO(), cluster.CreateClusterReq{
 			ResourceParameter: structs.ClusterResourceInfo{
@@ -970,7 +1011,7 @@ func TestManager_RestoreNewCluster(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		_, err := manager.RestoreNewCluster(context.TODO(), cluster.RestoreNewClusterReq{
 			ResourceParameter: structs.ClusterResourceInfo{
@@ -1017,7 +1058,7 @@ func TestManager_RestoreNewCluster(t *testing.T) {
 	t.Run("no computes", func(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		_, err := manager.RestoreNewCluster(context.TODO(), cluster.RestoreNewClusterReq{})
 		assert.Error(t, err)
 	})
@@ -1025,7 +1066,7 @@ func TestManager_RestoreNewCluster(t *testing.T) {
 	t.Run("async fail", func(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("fail")).AnyTimes()
 		_, err := manager.RestoreNewCluster(context.TODO(), cluster.RestoreNewClusterReq{
 			ResourceParameter: structs.ClusterResourceInfo{
@@ -1448,7 +1489,7 @@ func TestManager_TakeoverCluster(t *testing.T) {
 		}
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		clusterRW.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq{
@@ -1487,7 +1528,7 @@ func TestManager_TakeoverCluster(t *testing.T) {
 	t.Run("no name", func(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq{
 			TiUPIp:           "127.0.0.1",
@@ -1524,7 +1565,7 @@ func TestManager_TakeoverCluster(t *testing.T) {
 		}
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
-		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity:common.Entity{ID: "cluster"}}, nil).AnyTimes()
+		clusterRW.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster"}}, nil).AnyTimes()
 		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("fail")).AnyTimes()
 		clusterRW.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		_, err := manager.Takeover(context.TODO(), cluster.TakeoverClusterReq{

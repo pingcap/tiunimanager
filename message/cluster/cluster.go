@@ -321,3 +321,10 @@ type ScaleOutPreviewResp struct {
 	StockCheckResult  []structs.ResourceStockCheckResult `json:"stockCheckResult"`
 	CapabilityIndexes []structs.Index                    `json:"capabilityIndexes"`
 }
+
+type ApiEditConfigReq struct {
+	InstanceHost string
+	InstancePort uint
+	Headers      map[string]string
+	ConfigMap    map[string]interface{}
+}

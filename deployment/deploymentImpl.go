@@ -423,13 +423,12 @@ func (m *Manager) List(ctx context.Context, componentType TiUPComponentType, hom
 // @Parameter componentType
 // @Parameter clusterID
 // @Parameter home
-// @Parameter workFlowID
 // @Parameter args
 // @Parameter timeout
 // @return result, the response from command
 // @return err
-func (m *Manager) Display(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (result string, err error) {
-	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+func (m *Manager) Display(ctx context.Context, componentType TiUPComponentType, clusterID, home string, args []string, timeout int) (result string, err error) {
+	logInFunc := framework.LogWithContext(ctx)
 
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDDisplay, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
 	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
@@ -444,13 +443,12 @@ func (m *Manager) Display(ctx context.Context, componentType TiUPComponentType, 
 // @Parameter componentType
 // @Parameter clusterID
 // @Parameter home
-// @Parameter workFlowID
 // @Parameter args
 // @Parameter timeout
 // @return result, the response from command
 // @return err
-func (m *Manager) ShowConfig(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (result string, err error) {
-	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+func (m *Manager) ShowConfig(ctx context.Context, componentType TiUPComponentType, clusterID, home string, args []string, timeout int) (result string, err error) {
+	logInFunc := framework.LogWithContext(ctx)
 
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDShowConfig, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
 	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
@@ -614,6 +612,70 @@ func (m *Manager) Exec(ctx context.Context, componentType TiUPComponentType, clu
 	return id, nil
 }
 
+// CheckConfig
+// @Description: wrapper of `tiup cluster check topology.yml`
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter configYaml
+// @Parameter home
+// @Parameter args
+// @Parameter timeout
+// @return result
+// @return err
+func (m *Manager) CheckConfig(ctx context.Context, componentType TiUPComponentType, configYaml, home string, args []string, timeout int) (result string, err error) {
+	logInFunc := framework.LogWithContext(ctx)
+	// todo: delete the outdated topo file
+	configYamlFilePath, err := disk.CreateWithContent("", "tidb-check-topology", "yaml", []byte(configYaml))
+	if err != nil {
+		return "", err
+	}
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d", componentType, CMDCheck, configYamlFilePath, strings.Join(args, " "), FlagWaitTimeout, timeout)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	resp, err := m.startSyncOperation(home, tiUPArgs, timeout)
+	if err != nil {
+		return "", err
+	}
+
+	jsons := strings.Split(resp, "\n")
+	result = m.extractCheckResult(jsons)
+	return
+}
+
+// extract check result from tiup check cluster
+func (m *Manager) extractCheckResult(resultJsons []string) (result string) {
+	for _, jsonStr := range resultJsons {
+		if strings.HasPrefix(jsonStr, "{\"result\":") {
+			result = jsonStr
+			break
+		}
+	}
+	return
+}
+
+func (m *Manager) Prune(ctx context.Context, componentType TiUPComponentType, clusterID, home, workFlowID string, args []string, timeout int) (ID string, err error) {
+	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDPrune, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
+	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	logInFunc.Infof("recv operation req: %s", op)
+
+	id, err := Create(home, Operation{
+		Type:       CMDPrune,
+		Operation:  op,
+		WorkFlowID: workFlowID,
+		Status:     Init,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
+	return id, nil
+}
+
 // GetStatus
 // @Description: get status for async operation
 // @Receiver m
@@ -641,15 +703,7 @@ func (m *Manager) startAsyncOperation(ctx context.Context, id, home, tiUPArgs st
 		updateStatus(ctx, id, "operation processing", Processing, time.Time{})
 
 		err := cmd.Wait()
-		if err != nil {
-			if exitErr, ok := err.(*exec.ExitError); ok {
-				if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
-					if status.ExitStatus() == 0 {
-						updateStatus(ctx, id, "operation finished", Finished, t0)
-						return
-					}
-				}
-			}
+		if err != nil && !m.ExitStatusZero(err) {
 			updateStatus(ctx, id, fmt.Sprintf("operation failed with err: %+v, errstr: %s", err, stderr.String()), Error, t0)
 			return
 		}
@@ -657,6 +711,15 @@ func (m *Manager) startAsyncOperation(ctx context.Context, id, home, tiUPArgs st
 		updateStatus(ctx, id, "operation finished", Finished, t0)
 		return
 	}()
+}
+
+func (m *Manager) ExitStatusZero(err error) bool {
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
+			return status.ExitStatus() == 0
+		}
+	}
+	return false
 }
 
 func (m *Manager) startSyncOperation(home, tiUPArgs string, timeoutS int) (result string, err error) {

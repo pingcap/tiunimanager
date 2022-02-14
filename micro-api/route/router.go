@@ -156,11 +156,6 @@ func Route(g *gin.Engine) {
 			cluster.DELETE("/transport/:recordId", metrics.HandleMetrics(constants.MetricsDataExportImportDelete), importexport.DeleteDataTransportRecord)
 		}
 
-		knowledge := apiV1.Group("/knowledges")
-		{
-			knowledge.GET("/", metrics.HandleMetrics(constants.MetricsPlatformQueryKnowledge), product.ClusterKnowledge)
-		}
-
 		backup := apiV1.Group("/backups")
 		{
 			backup.Use(interceptor.VerifyIdentity)

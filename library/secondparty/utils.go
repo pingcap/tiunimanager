@@ -22,28 +22,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"reflect"
 	"runtime/debug"
-	"strings"
 	"time"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 )
 
 type FieldKey string
-
-const (
-	FieldKey_Yaml FieldKey = "yaml"
-	FieldKey_Json FieldKey = "json"
-)
-
-//func assert(b bool) {
-//	if b {
-//	} else {
-//		framework.Log().Error("unexpected panic with stack trace:", string(debug.Stack()))
-//		panic("unexpected")
-//	}
-//}
 
 func myPanic(v interface{}) {
 	s := fmt.Sprint(v)
@@ -78,35 +63,6 @@ func jsonMustMarshal(v interface{}) []byte {
 		return []byte(fmt.Sprintf("fail marshal %v: %v", v, err))
 	}
 	return bs
-}
-
-func SetField(ctx context.Context, item interface{}, fieldKey FieldKey, fieldName string, value interface{}) {
-	v := reflect.ValueOf(item).Elem()
-
-	// key: fieldName, value: index of fieldName in struct
-	fieldNames := map[string]int{}
-	for i := 0; i < v.NumField(); i++ {
-		typeField := v.Type().Field(i)
-		tag := typeField.Tag
-		fname, _ := findName(tag, fieldKey)
-		fieldNames[fname] = i
-	}
-
-	fieldNum, ok := fieldNames[fieldName]
-	if !ok {
-		framework.LogWithContext(ctx).Infof("field %s does not exist within the provided item", fieldName)
-		return
-	}
-	fieldVal := v.Field(fieldNum)
-	fieldVal.Set(reflect.ValueOf(value))
-}
-
-// It's possible we can cache this, which is why precompute all these ahead of time.
-func findName(t reflect.StructTag, fieldKey FieldKey) (string, error) {
-	if yt, ok := t.Lookup(string(fieldKey)); ok {
-		return strings.Split(yt, ",")[0], nil
-	}
-	return "", fmt.Errorf("tag provided does not define a tag %s", string(fieldKey))
 }
 
 func execShowBackUpInfoThruSQL(ctx context.Context, db *sql.DB, showBackupSQLCmd string) (resp CmdShowBackUpInfoResp) {

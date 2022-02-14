@@ -27,7 +27,7 @@ import (
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockchangefeed"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
-	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
+	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -77,17 +77,17 @@ func TestManager_CreateBetweenClusters(t *testing.T) {
 			},
 			Downstream: &changefeed.TiDBDownstream{},
 		}, nil).Times(1)
-		id, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationCloneFrom)
+		id, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationStandBy)
 		assert.NoError(t, err)
 		assert.Equal(t, "11111", id)
 		time.Sleep(time.Millisecond * 10)
 	})
 	t.Run("error1", func(t *testing.T) {
-		_, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "errorId", "targetId", constants.ClusterRelationCloneFrom)
+		_, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "errorId", "targetId", constants.ClusterRelationStandBy)
 		assert.Error(t, err)
 	})
 	t.Run("error2", func(t *testing.T) {
-		_, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "errorId", constants.ClusterRelationCloneFrom)
+		_, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "errorId", constants.ClusterRelationStandBy)
 		assert.Error(t, err)
 	})
 	t.Run("error3", func(t *testing.T) {
@@ -98,7 +98,7 @@ func TestManager_CreateBetweenClusters(t *testing.T) {
 			Downstream: &changefeed.TiDBDownstream{},
 		}, errors.Error(errors.TIEM_UNRECOGNIZED_ERROR)).AnyTimes()
 
-		_, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationCloneFrom)
+		_, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationStandBy)
 		assert.Error(t, err)
 	})
 }
@@ -185,14 +185,14 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 		}, int64(3), nil).Times(1)
 		changefeedRW.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
-		id, err := GetChangeFeedService().ReverseBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationCloneFrom)
+		id, err := GetChangeFeedService().ReverseBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationStandBy)
 		assert.NoError(t, err)
 		assert.Equal(t, "11111", id)
 		time.Sleep(time.Millisecond * 10)
 	})
 
 	t.Run("get error", func(t *testing.T) {
-		_, err := GetChangeFeedService().ReverseBetweenClusters(context.TODO(), "errorId", "targetId", constants.ClusterRelationCloneFrom)
+		_, err := GetChangeFeedService().ReverseBetweenClusters(context.TODO(), "errorId", "targetId", constants.ClusterRelationStandBy)
 		assert.Error(t, err)
 	})
 
@@ -229,7 +229,7 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 			},
 		}, int64(3), errors.Error(errors.TIEM_UNMARSHAL_ERROR)).Times(1)
 
-		_, err := GetChangeFeedService().ReverseBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationCloneFrom)
+		_, err := GetChangeFeedService().ReverseBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationStandBy)
 		assert.Error(t, err)
 	})
 
@@ -267,7 +267,7 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 		}, int64(3), nil).Times(1)
 		changefeedRW.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(errors.Error(errors.TIEM_PARAMETER_INVALID)).AnyTimes()
 
-		_, err := GetChangeFeedService().ReverseBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationCloneFrom)
+		_, err := GetChangeFeedService().ReverseBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationStandBy)
 		assert.Error(t, err)
 	})
 }

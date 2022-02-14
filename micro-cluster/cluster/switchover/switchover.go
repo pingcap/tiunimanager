@@ -30,6 +30,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	tsoLib "github.com/pingcap-inc/tiem/library/util/tso"
 	"github.com/pingcap-inc/tiem/message/cluster"
+	changefeedMgr "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	changefeedModel "github.com/pingcap-inc/tiem/models/cluster/changefeed"
@@ -48,9 +49,9 @@ func newManager() *Manager {
 var mgr = newManager()
 var mgrOnceRegisterWorkFlow sync.Once
 
-func GetManager(changefeedMgr CDCManagerAPI) *Manager {
+func GetManager() *Manager {
 	mgrOnceRegisterWorkFlow.Do(func() {
-		mgr.changefeedMgr = changefeedMgr
+		mgr.changefeedMgr = changefeedMgr.GetManager()
 		flowManager := workflow.GetWorkFlowService()
 		flowManager.RegisterWorkFlow(context.TODO(), constants.FlowMasterSlaveSwitchoverNormal, &workflow.WorkFlowDefine{
 			FlowName: constants.FlowMasterSlaveSwitchoverNormal,

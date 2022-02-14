@@ -300,7 +300,7 @@ func (m *Manager) Deploy(
 	builder := task.NewBuilder().
 		Step("+ Generate SSH keys",
 			task.NewBuilder().SSHKeyGen(m.specManager.Path(name, "ssh", "id_rsa")).Build()).
-		ParallelStep("+ Download TiDB components", false, downloadCompTasks...).
+		ParallelStep("+ Download components", false, downloadCompTasks...).
 		ParallelStep("+ Initialize target host environments", false, envInitTasks...).
 		ParallelStep("+ Copy files", false, deployCompTasks...)
 

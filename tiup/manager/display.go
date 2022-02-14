@@ -229,6 +229,8 @@ func (m *Manager) GetClusterTopology(name string, opt operator.Options) ([]InstI
 					if parts := strings.Split(strings.TrimSpace(active), " "); len(parts) > 2 {
 						if parts[1] == "active" {
 							status = "Up"
+						} else if parts[1] == "inactive" {
+							status = "Down"
 						} else {
 							status = parts[1]
 						}

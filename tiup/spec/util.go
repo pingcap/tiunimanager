@@ -70,6 +70,11 @@ func LoadClientCert(dir string) (*tls.Config, error) {
 	}.ClientConfig()
 }
 
+func statusByProcess(host string) string {
+	// Copy to remote server
+	return ""
+}
+
 // statusByHost queries current status of the instance by http status api.
 func statusByHost(host string, port int, path string, tlsCfg *tls.Config) string {
 	client := utils.NewHTTPClient(statusQueryTimeout, tlsCfg)

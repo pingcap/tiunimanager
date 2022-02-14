@@ -85,6 +85,7 @@ func (c *FilebeatComponent) Role() string {
 func (c *FilebeatComponent) Instances() []Instance {
 	ins := make([]Instance, 0)
 	for _, s := range c.Topology.FilebeatServers {
+		s := s
 		ins = append(ins, &FilebeatInstance{
 			BaseInstance: BaseInstance{
 				InstanceSpec: s,
@@ -99,7 +100,17 @@ func (c *FilebeatComponent) Instances() []Instance {
 					s.LogDir,
 				},
 				StatusFn: func(_ *tls.Config, _ ...string) string {
-					return "Up"
+					//e, found := ctxt.GetInner(context.TODO()).GetExecutor(s.Host)
+					//fmt.Println("found: ", found)
+					//if !found {
+					//	return ""
+					//}
+					//if _, _, err := e.Execute(ctx,
+					//	fmt.Sprintf("ps -ef | grep ", spec.DBPath, paths.Data[0], DBName),
+					//	false); err != nil {
+					//	return err
+					//}
+					return "-"
 				},
 				UptimeFn: func(tlsCfg *tls.Config) time.Duration {
 					return 0

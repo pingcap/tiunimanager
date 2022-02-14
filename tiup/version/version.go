@@ -19,11 +19,11 @@ package version
 
 var (
 	// ComponentVerMajor is the major version of Component
-	ComponentVerMajor = 0
+	ComponentVerMajor = 1
 	// ComponentVerMinor is the minor version of Component
 	ComponentVerMinor = 0
 	// ComponentVerPatch is the patch version of Component
-	ComponentVerPatch = 1
+	ComponentVerPatch = 0
 	// ComponentVerName is an alternative name of the version
 	ComponentVerName = "tiem"
 	// GitHash is the current git commit hash

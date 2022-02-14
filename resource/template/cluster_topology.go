@@ -57,6 +57,12 @@ tikv_servers:
     status_port: {{ index .Ports 1 }}
     deploy_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/tikv-deploy
     data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/tikv-data
+    config:
+      server.labels:
+		region: {{ $.Cluster.Region }}
+		zone: {{ .Zone }}
+		rack: {{ .Rack }}
+		host: {{ .HostID }}
   {{ end }}
   {{ end }}
 {{ else if and (eq $key "TiFlash") (len $instances) }}
@@ -72,12 +78,6 @@ tiflash_servers:
     metrics_port: {{ index .Ports 5 }}
     deploy_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/tiflash-deploy
     data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/tiflash-data
-    config:
-      server.labels:
-		region: {{ $.Cluster.Region }}
-		zone: {{ .Zone }}
-		rack: {{ .Rack }}
-		host: {{ .HostID }}
   {{ end }}
   {{ end }}
 {{ else if and (eq $key "CDC") (len $instances) }}

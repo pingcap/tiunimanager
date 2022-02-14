@@ -124,6 +124,7 @@ func (t *ClusterInstance) GetLogDir() string {
 func (t *ClusterInstance) SetPresetDir(deployDir, dataDir, logDir string) *ClusterInstance {
 	t.DeployDir = deployDir
 	t.DataDir = dataDir
+
 	t.LogDir = logDir
 
 	return t

@@ -28,6 +28,7 @@ import (
 	"encoding/json"
 
 	"fmt"
+
 	"github.com/pingcap-inc/tiem/deployment"
 
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -121,7 +122,7 @@ func getDeployInfo(clusterMeta *meta.ClusterMeta, ctx *workflow.FlowContext, hos
 		clusterName = framework.Current.GetClientArgs().EMClusterName
 
 		// Parse EM topology structure to get filebeat deploy dir
-		result, err := deployment.M.Display(ctx, clusterComponentType, clusterName, "/home/tiem/.tiuptiem", []string{"--format", "json"}, 0)
+		result, err := deployment.M.Display(ctx, clusterComponentType, clusterName, "/home/tiem/.tiuptiem", []string{"--json"}, 0)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("invoke tiup cluster display err： %v", err)
 			return "", "", "", err

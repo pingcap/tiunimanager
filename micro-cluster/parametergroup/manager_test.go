@@ -72,10 +72,11 @@ func TestManager_CreateParameterGroup(t *testing.T) {
 		DoAndReturn(func(ctx context.Context, offset, size int) (params []*parametergroup.Parameter, total int64, err error) {
 			resp := []*parametergroup.Parameter{
 				{
-					ID:    "1",
-					Type:  0,
-					Unit:  "",
-					Range: "[\"0\", \"10\"]",
+					ID:          "1",
+					Type:        0,
+					Unit:        "",
+					Range:       "[\"0\", \"10\"]",
+					UnitOptions: "[\"KB\", \"MB\", \"GB\"]",
 				},
 			}
 			return resp, 1, nil
@@ -119,8 +120,9 @@ func TestManager_CreateParameterGroup(t *testing.T) {
 				InstanceType:   "TiDB",
 				SystemVariable: "log.binlog_cache",
 				Type:           0,
-				Unit:           "mb",
 				Range:          []string{"0", "1024"},
+				Unit:           "MB",
+				UnitOptions:    []string{"KB", "MB", "GB"},
 				HasReboot:      0,
 				HasApply:       1,
 				UpdateSource:   0,
@@ -147,10 +149,11 @@ func TestManager_UpdateParameterGroup_Success(t *testing.T) {
 		DoAndReturn(func(ctx context.Context, offset, size int) (params []*parametergroup.Parameter, total int64, err error) {
 			resp := []*parametergroup.Parameter{
 				{
-					ID:    "1",
-					Type:  0,
-					Unit:  "",
-					Range: "[\"0\", \"10\"]",
+					ID:          "1",
+					Type:        0,
+					Range:       "[\"0\", \"10\"]",
+					Unit:        "MB",
+					UnitOptions: "[\"KB\", \"MB\", \"GB\"]",
 				},
 			}
 			return resp, 1, nil
@@ -184,8 +187,9 @@ func TestManager_UpdateParameterGroup_Success(t *testing.T) {
 				InstanceType:   "TiDB",
 				SystemVariable: "log.binlog_cache",
 				Type:           0,
-				Unit:           "mb",
 				Range:          []string{"0", "1024"},
+				Unit:           "MB",
+				UnitOptions:    []string{"KB", "MB", "GB"},
 				HasReboot:      0,
 				HasApply:       1,
 				UpdateSource:   0,
@@ -485,10 +489,11 @@ func TestManager_validateParameter(t *testing.T) {
 			DoAndReturn(func(ctx context.Context, offset, size int) (params []*parametergroup.Parameter, total int64, err error) {
 				resp := []*parametergroup.Parameter{
 					{
-						ID:    "1",
-						Type:  0,
-						Unit:  "",
-						Range: "[\"0\", \"10\"]",
+						ID:          "1",
+						Type:        0,
+						Range:       "[\"0\", \"10\"]",
+						Unit:        "MB",
+						UnitOptions: "[\"KB\", \"MB\", \"GB\"]",
 					},
 				}
 				return resp, 1, nil

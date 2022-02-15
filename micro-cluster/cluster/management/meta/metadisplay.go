@@ -384,9 +384,6 @@ func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterT
 	}
 
 	for k, v := range p.Instances {
-		if Contain(constants.ParasiteComponentIDs, constants.EMProductComponentIDType(k)) {
-			continue
-		}
 		instanceResource := structs.ClusterResourceParameterCompute{
 			Type:  k,
 			Count: 0,

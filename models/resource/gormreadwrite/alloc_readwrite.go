@@ -50,19 +50,15 @@ func (rw *GormResourceReadWrite) AllocResources(ctx context.Context, batchReq *r
 
 func (rw *GormResourceReadWrite) allocForSingleRequest(ctx context.Context, tx *gorm.DB, req *resource_structs.AllocReq) (results *resource_structs.AllocRsp, err error) {
 	log := framework.LogWithContext(ctx)
-	var choosedHosts []string
 	results = new(resource_structs.AllocRsp)
 	results.Applicant = req.Applicant
 	for i, require := range req.Requires {
 		switch resource_structs.AllocStrategy(require.Strategy) {
 		case resource_structs.RandomRack:
-			res, err := rw.allocResourceWithRR(ctx, tx, &req.Applicant, i, &require, choosedHosts)
+			res, err := rw.allocResourceWithRR(ctx, tx, &req.Applicant, i, &require)
 			if err != nil {
 				log.Errorf("alloc resources in random rack strategy for %dth requirement %v failed, %v", i, require, err)
 				return nil, err
-			}
-			for _, result := range res {
-				choosedHosts = append(choosedHosts, result.HostIp)
 			}
 			results.Results = append(results.Results, res...)
 		case resource_structs.DiffRackBestEffort:
@@ -138,7 +134,7 @@ func (resource *Resource) toCompute() (result *resource_structs.Compute, err err
 
 }
 
-func (rw *GormResourceReadWrite) allocResourceWithRR(ctx context.Context, tx *gorm.DB, applicant *resource_structs.Applicant, seq int, require *resource_structs.AllocRequirement, choosedHosts []string) (results []resource_structs.Compute, err error) {
+func (rw *GormResourceReadWrite) allocResourceWithRR(ctx context.Context, tx *gorm.DB, applicant *resource_structs.Applicant, seq int, require *resource_structs.AllocRequirement) (results []resource_structs.Compute, err error) {
 	log := framework.LogWithContext(ctx)
 	regionName := require.Location.Region
 	zoneName := require.Location.Zone
@@ -147,8 +143,6 @@ func (rw *GormResourceReadWrite) allocResourceWithRR(ctx context.Context, tx *go
 	if require.HostExcluded.Hosts != nil {
 		excludedHosts = require.HostExcluded.Hosts
 	}
-	// excluded choosed hosts in one request
-	excludedHosts = append(excludedHosts, choosedHosts...)
 	hostArch := require.HostFilter.Arch
 	hostTraits := require.HostFilter.HostTraits
 	exclusive := require.Require.Exclusive

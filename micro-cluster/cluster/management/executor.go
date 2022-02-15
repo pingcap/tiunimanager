@@ -554,6 +554,10 @@ func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 			}
 		}
 	}
+	if clusterMeta.Cluster.Status == string(constants.ClusterInitializing) {
+		// PD cannot be restarted for a minute, or it will encounter "error.keyvisual.service_stopped"
+		time.Sleep(time.Minute)
+	}
 
 	// set cluster status into running
 	if err := clusterMeta.UpdateClusterStatus(context.Context, constants.ClusterRunning); err != nil {
@@ -1255,6 +1259,7 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 // applyParameterGroup
 // @Description: apply parameter group to cluster
 func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
 	cluster := clusterMeta.Cluster
 

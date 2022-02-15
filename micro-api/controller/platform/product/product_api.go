@@ -219,7 +219,7 @@ func DeleteSpecs(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param QuerySpecsReq query message.QuerySpecsReq true "query specs reqeust parameter"
+// @Param QuerySpecsReq query message.QuerySpecsReq true "query specs request parameter"
 // @Success 200 {object} controller.CommonResult{data=message.QuerySpecsResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult

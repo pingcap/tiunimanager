@@ -29,6 +29,8 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/pingcap-inc/tiem/models/cluster/management"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/util/uuidutil"
@@ -64,6 +66,7 @@ func TestMain(m *testing.M) {
 			db.Migrator().CreateTable(Parameter{})
 			db.Migrator().CreateTable(ParameterGroup{})
 			db.Migrator().CreateTable(ParameterGroupMapping{})
+			db.Migrator().CreateTable(management.Cluster{})
 
 			testRW = NewParameterGroupReadWrite(db)
 			return nil

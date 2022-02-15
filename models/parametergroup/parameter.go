@@ -35,6 +35,7 @@ type Parameter struct {
 	SystemVariable string    `gorm:"comment:'parameter mapped system variables for updating parameter values by sql and api'" json:"systemVariable"`
 	Type           int       `gorm:"default:0;comment:'parameter type. optional values: [0: int, 1: string, 2: bool, 3: float, 4: array]'" json:"type"`
 	Unit           string    `gorm:"comment:'unit of parameter values'" json:"unit"`
+	UnitOptions    string    `gorm:"comment:'collection of optional units'" json:"unitOptions"`
 	Range          string    `gorm:"comment:'range of parameter values'" json:"range"`
 	HasReboot      int       `gorm:"default:0;comment:'whether parameter updates require a restart. optional values: [0: false, 1: true]'" json:"hasReboot"`
 	HasApply       int       `gorm:"default:1;comment:'whether to apply the parameter set by default. optional values: [0: false, 1: true]'" json:"hasApply"`

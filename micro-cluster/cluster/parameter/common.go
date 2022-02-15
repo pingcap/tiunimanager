@@ -24,6 +24,7 @@
 package parameter
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -38,6 +39,8 @@ const (
 	contextMaintenanceStatusChange = "MaintenanceStatusChange"
 	contextClusterConfigStr        = "ClusterConfigStr"
 )
+
+var units = []string{"KB", "MB", "GB", "s", "m", "h"}
 
 type UpdateParameterSource int
 
@@ -89,6 +92,8 @@ type ModifyClusterParameterInfo struct {
 	ReadOnly       int
 	SystemVariable string
 	Type           int
+	Unit           string
+	UnitOptions    []string
 	Range          []string
 	HasApply       int
 	RealValue      structs.ParameterRealValue
@@ -172,4 +177,19 @@ func DisplayFullParameterName(category, name string) string {
 		return name
 	}
 	return fmt.Sprintf("%s.%s", category, name)
+}
+
+// UnmarshalCovertArray
+// @Description: unmarshal json string convert array
+// @Parameter marshal json string
+// @return []string
+// @return error
+func UnmarshalCovertArray(marshal string) ([]string, error) {
+	result := make([]string, 0)
+	if len(marshal) > 0 {
+		if err := json.Unmarshal([]byte(marshal), &result); err != nil {
+			return nil, err
+		}
+	}
+	return result, nil
 }

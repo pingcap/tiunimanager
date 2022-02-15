@@ -1014,3 +1014,46 @@ func TestParameterGroupReadWrite_QueryParameter(t *testing.T) {
 		})
 	}
 }
+
+func TestParameterGroupReadWrite_ExistsParameter(t *testing.T) {
+	params, err := buildParams(2)
+	if err != nil {
+		t.Errorf("TestParameterGroupReadWrite_ExistsParameter() test error, build params err.")
+		return
+	}
+
+	type args struct{}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+		wants   []func(a args, p *Parameter) bool
+	}{
+		{
+			"normal",
+			args{},
+			false,
+			[]func(a args, p *Parameter) bool{
+				func(a args, p *Parameter) bool { return p != nil },
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			parameter, err := testRW.ExistsParameter(context.TODO(), params[0].Category, params[0].Name, params[0].InstanceType)
+			if err != nil {
+				if tt.wantErr {
+					return
+				}
+				t.Errorf("ExistsParameter() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			for i, assert := range tt.wants {
+				if !assert(tt.args, parameter) {
+					t.Errorf("ExistsParameter() test error, testname = %v, assert %v, args = %v, got params = %v", tt.name, i, tt.args, parameter)
+				}
+			}
+		})
+	}
+}

@@ -289,7 +289,7 @@ func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, p
 
 	query := m.DB(ctx).Model(&Parameter{}).
 		Select("parameters.id, parameters.category, parameters.name, parameters.instance_type, parameters.system_variable, "+
-			"parameters.type, parameters.unit, parameters.range, parameters.has_reboot, parameters.has_apply, "+
+			"parameters.type, parameters.unit, parameters.unit_options, parameters.range, parameters.has_reboot, parameters.has_apply, "+
 			"parameters.update_source, parameters.read_only, parameters.description, parameter_group_mappings.default_value, parameter_group_mappings.note, "+
 			"parameter_group_mappings.created_at, parameter_group_mappings.updated_at").
 		Joins("left join parameter_group_mappings on parameters.id = parameter_group_mappings.parameter_id").
@@ -337,9 +337,16 @@ func (m ParameterGroupReadWrite) ExistsParameter(ctx context.Context, category, 
 func (m ParameterGroupReadWrite) addParameters(ctx context.Context, pgID string, addParameters []message.ParameterInfo) (err error) {
 	if addParameters != nil && len(addParameters) > 0 {
 		for _, addParameter := range addParameters {
-			var b []byte
+			var rangeByte []byte
 			if addParameter.Range != nil && len(addParameter.Range) > 0 {
-				b, err = json.Marshal(addParameter.Range)
+				rangeByte, err = json.Marshal(addParameter.Range)
+				if err != nil {
+					return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, err.Error())
+				}
+			}
+			var unitOptionsByte []byte
+			if addParameter.UnitOptions != nil && len(addParameter.UnitOptions) > 0 {
+				unitOptionsByte, err = json.Marshal(addParameter.UnitOptions)
 				if err != nil {
 					return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, err.Error())
 				}
@@ -352,7 +359,8 @@ func (m ParameterGroupReadWrite) addParameters(ctx context.Context, pgID string,
 				SystemVariable: addParameter.SystemVariable,
 				Type:           addParameter.Type,
 				Unit:           addParameter.Unit,
-				Range:          string(b),
+				UnitOptions:    string(unitOptionsByte),
+				Range:          string(rangeByte),
 				HasReboot:      addParameter.HasReboot,
 				HasApply:       addParameter.HasApply,
 				UpdateSource:   addParameter.UpdateSource,

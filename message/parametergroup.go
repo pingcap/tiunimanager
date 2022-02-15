@@ -132,7 +132,8 @@ type ParameterInfo struct {
 	InstanceType   string   `json:"instanceType" example:"TiDB"`
 	SystemVariable string   `json:"systemVariable" example:"log.binlog_size"`
 	Type           int      `json:"type" example:"0"`
-	Unit           string   `json:"unit" example:"mb"`
+	Unit           string   `json:"unit" example:"MB"`
+	UnitOptions    []string `json:"unitOptions" example:"KB,MB,GB"`
 	Range          []string `json:"range" example:""`
 	HasReboot      int      `json:"hasReboot" example:"0"`
 	HasApply       int      `json:"hasApply" example:"1"`

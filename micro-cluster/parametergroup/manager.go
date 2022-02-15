@@ -328,12 +328,14 @@ func validateParameter(ctx context.Context, reqParams []structs.ParameterGroupPa
 
 func convertParameterGroupParameterInfo(param *parametergroup.ParamDetail) (pgi structs.ParameterGroupParameterInfo, err error) {
 	// convert range
-	ranges := make([]string, 0)
-	if len(param.Range) > 0 {
-		err = json.Unmarshal([]byte(param.Range), &ranges)
-		if err != nil {
-			return pgi, err
-		}
+	ranges, err := parameter.UnmarshalCovertArray(param.UnitOptions)
+	if err != nil {
+		return pgi, err
+	}
+	// convert unitOptions
+	unitOptions, err := parameter.UnmarshalCovertArray(param.UnitOptions)
+	if err != nil {
+		return pgi, err
 	}
 
 	pgi = structs.ParameterGroupParameterInfo{
@@ -344,6 +346,7 @@ func convertParameterGroupParameterInfo(param *parametergroup.ParamDetail) (pgi 
 		SystemVariable: param.SystemVariable,
 		Type:           param.Type,
 		Unit:           param.Unit,
+		UnitOptions:    unitOptions,
 		Range:          ranges,
 		HasReboot:      param.HasReboot,
 		HasApply:       param.HasApply,

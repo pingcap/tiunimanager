@@ -185,7 +185,7 @@ func (p *database) initSystemConfig() {
 	// system config
 	_, err := defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStorageType, ConfigValue: string(constants.StorageTypeS3)})
 	if err != nil {
-		framework.LogWithContext(context.TODO()).Errorf("ERRRRRR: %%")
+		framework.LogWithContext(context.TODO()).Errorf("ERRRRRR: %s", err.Error())
 	}
 	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStoragePath, ConfigValue: constants.DefaultBackupStoragePath})
 	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3AccessKey, ConfigValue: constants.DefaultBackupS3AccessKey})

@@ -30,7 +30,7 @@ const (
 	DefaultImportPath        string        = "/home/tiem/import"
 	DefaultExportPath        string        = "/home/tiem/export"
 	DefaultZipName           string        = "data.zip"
-	DefaultDumplingThreadNum string        = "1"
+	DefaultDumplingThreadNum string        = "8"
 	TransportTypeExport      TransportType = "export"
 	TransportTypeImport      TransportType = "import"
 )

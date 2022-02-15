@@ -13,6 +13,14 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
+/*******************************************************************************
+ * @File: cdc_manager_api.go
+ * @Description: interface of cdc_manager_api
+ * @Author: hansen@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2022/2/15 11:30
+*******************************************************************************/
+
 package switchover
 
 import (

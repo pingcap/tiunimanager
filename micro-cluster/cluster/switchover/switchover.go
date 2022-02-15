@@ -13,6 +13,14 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
+/*******************************************************************************
+ * @File: switchover.go
+ * @Description: switchover implementation
+ * @Author: hansen@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2022/2/15 11:30
+*******************************************************************************/
+
 package switchover
 
 import (

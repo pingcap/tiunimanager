@@ -18,15 +18,16 @@ package meta
 import (
 	"context"
 	"errors"
+	"sort"
+	"testing"
+	"time"
+
 	errors2 "github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/models/platform/config"
 	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
-	"sort"
-	"testing"
-	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -184,8 +185,50 @@ func TestClusterMeta_GenerateInstanceResourceRequirements(t *testing.T) {
 					DiskType:     "SSD",
 					DiskCapacity: 128,
 				},
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceInitializing),
+					},
+					Zone:         "zone2",
+					CpuCores:     4,
+					Memory:       8,
+					Type:         "TiDB",
+					Version:      "v5.0.0",
+					Ports:        []int32{10001, 10002, 10003, 10004},
+					HostIP:       []string{"127.0.1.2"},
+					DiskType:     "SSD",
+					DiskCapacity: 128,
+				},
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceInitializing),
+					},
+					Zone:         "zone1",
+					CpuCores:     4,
+					Memory:       8,
+					Type:         "TiDB",
+					Version:      "v5.0.0",
+					Ports:        []int32{10001, 10002, 10003, 10004},
+					HostIP:       []string{"127.0.1.1"},
+					DiskType:     "SSD",
+					DiskCapacity: 128,
+				},
 			},
 			"TiKV": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceInitializing),
+					},
+					Zone:         "zone2",
+					CpuCores:     4,
+					Memory:       8,
+					Type:         "TiKV",
+					Version:      "v5.0.0",
+					Ports:        []int32{20001, 20002, 20003, 20004},
+					HostIP:       []string{"127.0.2.2"},
+					DiskType:     "SSD",
+					DiskCapacity: 128,
+				},
 				{
 					Entity: common.Entity{
 						Status: string(constants.ClusterInstanceInitializing),
@@ -213,6 +256,34 @@ func TestClusterMeta_GenerateInstanceResourceRequirements(t *testing.T) {
 					Version:      "v5.0.0",
 					Ports:        []int32{30001, 30002, 30003, 30004},
 					HostIP:       []string{"127.0.0.3"},
+					DiskType:     "SSD",
+					DiskCapacity: 128,
+				},
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceInitializing),
+					},
+					Zone:         "zone1",
+					CpuCores:     4,
+					Memory:       8,
+					Type:         "PD",
+					Version:      "v5.0.0",
+					Ports:        []int32{30001, 30002, 30003, 30004},
+					HostIP:       []string{"127.0.3.3"},
+					DiskType:     "SSD",
+					DiskCapacity: 128,
+				},
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceInitializing),
+					},
+					Zone:         "zone1",
+					CpuCores:     4,
+					Memory:       8,
+					Type:         "PD",
+					Version:      "v5.0.0",
+					Ports:        []int32{30001, 30002, 30003, 30004},
+					HostIP:       []string{"127.0.3.4"},
 					DiskType:     "SSD",
 					DiskCapacity: 128,
 				},
@@ -260,9 +331,18 @@ func TestClusterMeta_GenerateInstanceResourceRequirements(t *testing.T) {
 		}, nil).Times(1)
 
 		got1, got2, err := meta.GenerateInstanceResourceRequirements(context.TODO())
-		assert.Equal(t, 3, len(got1))
-		assert.Equal(t, 3, len(got2))
+		assert.Equal(t, 5, len(got1))
+		assert.Equal(t, 8, len(got2))
 		assert.NoError(t, err)
+
+		total := 0
+		for i := range got1 {
+			for j := 0; j < int(got1[i].Count); j++ {
+				assert.Equal(t, got1[i].Location.Zone, got2[total+j].Zone)
+			}
+			total += int(got1[i].Count)
+		}
+		assert.Equal(t, len(got2), total)
 	})
 }
 
@@ -809,8 +889,8 @@ func TestClusterMeta_IsComponentRequired(t *testing.T) {
 
 		meta := &ClusterMeta{
 			Cluster: &management.Cluster{
-				Type:    "TiDB",
-				Version: "v5.0.0",
+				Type:            "TiDB",
+				Version:         "v5.0.0",
 				CpuArchitecture: "x86_64",
 			},
 		}
@@ -858,8 +938,8 @@ func TestClusterMeta_IsComponentRequired(t *testing.T) {
 
 		meta := &ClusterMeta{
 			Cluster: &management.Cluster{
-				Type:    "TiDB",
-				Version: "v5.2.2",
+				Type:            "TiDB",
+				Version:         "v5.2.2",
 				CpuArchitecture: "x86_64",
 			},
 		}
@@ -1930,7 +2010,6 @@ func TestClusterMeta_GetVersion(t *testing.T) {
 	assert.Equal(t, "v5.2.2", meta.GetRevision())
 
 }
-
 
 func TestClusterMeta_BuildForTakeover(t *testing.T) {
 	ctrl := gomock.NewController(t)

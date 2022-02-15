@@ -25,6 +25,8 @@ package meta
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -47,7 +49,12 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 		propertyMap[property.ID] = property
 	}
 
+	// record whether a requirement for a instance has been made
+	instance2Require := make(map[string]int)
+	// record requirement[i] meet for the count of instances
+	require2instances := make(map[int][]*management.ClusterInstance)
 	allocInstances := make([]*management.ClusterInstance, 0)
+
 	for _, instance := range instances {
 		var instanceProperty structs.ProductComponentProperty
 		if Contain(constants.ParasiteComponentIDs, constants.EMProductComponentIDType(instance.Type)) {
@@ -57,6 +64,13 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 			return nil, nil, errors.NewError(errors.TIEM_UNSUPPORT_PRODUCT, "")
 		} else {
 			instanceProperty = property
+		}
+		// check whether the instance has requirement item already, format: "Region-Zone-TiKV"
+		instKey := fmt.Sprintf("%s-%s-%s", p.Cluster.Region, instance.Zone, instance.Type)
+		if i, ok := instance2Require[instKey]; ok {
+			requirements[i].Count++
+			require2instances[i] = append(require2instances[i], instance)
+			continue
 		}
 		requirements = append(requirements, resource.AllocRequirement{
 			Location: structs.Location{
@@ -90,8 +104,13 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 			},
 			Strategy: resource.RandomRack,
 		})
-		allocInstances = append(allocInstances, instance)
+		instance2Require[instKey] = len(requirements) - 1
+		require2instances[len(requirements)-1] = []*management.ClusterInstance{instance}
 	}
+	for k := range requirements {
+		allocInstances = append(allocInstances, require2instances[k]...)
+	}
+
 	return requirements, allocInstances, nil
 }
 

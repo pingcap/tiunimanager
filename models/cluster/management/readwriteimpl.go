@@ -361,11 +361,11 @@ func (g *ClusterReadWrite) SwapMasterSlaveRelation(ctx context.Context, oldMaste
 	framework.Assert(len(relations) > 0)
 	for _, relation := range relations {
 		framework.Assert(relation.SubjectClusterID == oldMasterClusterId)
-		framework.LogWithContext(ctx).Debugf("gorm SwapMasterSlaveRelation get relation %s %s %s %s",
+		framework.LogWithContext(ctx).Debugf("gorm SwapMasterSlaveRelation get relation %v %s %s %s",
 			relation.ID, relation.SubjectClusterID, relation.ObjectClusterID, relation.SyncChangeFeedTaskID)
 		err = tx.Debug().Delete(relation).Error
 		if err != nil {
-			framework.LogWithContext(ctx).Errorf("1st gorm SwapMasterSlaveRelation", err)
+			framework.LogWithContext(ctx).Errorf("1st gorm SwapMasterSlaveRelation %s", err)
 			tx.Rollback()
 			return err
 		}
@@ -377,7 +377,7 @@ func (g *ClusterReadWrite) SwapMasterSlaveRelation(ctx context.Context, oldMaste
 		SyncChangeFeedTaskID: newSyncChangeFeedTaskId,
 	}).Error
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("2st gorm SwapMasterSlaveRelation", err)
+		framework.LogWithContext(ctx).Errorf("2st gorm SwapMasterSlaveRelation %s", err)
 		tx.Rollback()
 		return err
 	}

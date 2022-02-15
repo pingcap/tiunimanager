@@ -70,6 +70,10 @@ const (
 	FlowScaleOutCluster     = "ScaleOutCluster"
 	FlowScaleInCluster      = "ScaleInCluster"
 	FlowCloneCluster        = "CloneCluster"
+
+	FlowMasterSlaveSwitchoverNormal                     = "SwitchoverNormal"
+	FlowMasterSlaveSwitchoverForce                      = "SwitchoverForce"
+	FlowMasterSlaveSwitchoverForceWithMasterUnavailable = "SwitchoverForceWithMasterUnavailable"
 )
 
 type ClusterInstanceRunningStatus string

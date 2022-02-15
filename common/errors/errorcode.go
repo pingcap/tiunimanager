@@ -68,6 +68,10 @@ const (
 	TIEM_BACKUP_PATH_CREATE_FAILED      EM_ERROR_CODE = 20609
 	TIEM_BACKUP_RECORD_INVALID          EM_ERROR_CODE = 20610
 
+	// switchover
+	TIEM_MASTER_SLAVE_SWITCHOVER_NOT_FOUND EM_ERROR_CODE = 21000
+	TIEM_MASTER_SLAVE_SWITCHOVER_FAILED    EM_ERROR_CODE = 21001
+
 	// workflow
 	TIEM_WORKFLOW_CREATE_FAILED         EM_ERROR_CODE = 40100
 	TIEM_WORKFLOW_QUERY_FAILED          EM_ERROR_CODE = 40101
@@ -391,6 +395,9 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_CHANGE_FEED_LOCK_EXPIRED:           {"Task status lock expired", 409},
 	TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM: {"Task downstream type not supported", 500},
 	TIEM_CHANGE_FEED_EXECUTE_ERROR:          {"Failed to execute task command", 500},
+
+	TIEM_MASTER_SLAVE_SWITCHOVER_NOT_FOUND: {"master/slave relation not found", 404},
+	TIEM_MASTER_SLAVE_SWITCHOVER_FAILED:    {"master/slave switchover failed", 500},
 
 	TIEM_CLUSTER_LOG_QUERY_FAILED: {"Failed to query cluster log", 500},
 	TIEM_CLUSTER_LOG_TIME_AFTER:   {"query log parameter startTime after endTime", 401},

@@ -109,7 +109,7 @@ type ClusterRelationType string
 
 //Constants for the relationships between clusters
 const (
-	ClusterRelationStandBy     ClusterRelationType = "StandBy"
+	ClusterRelationStandBy ClusterRelationType = "StandBy"
 )
 
 type ClusterCloneStrategy string
@@ -154,6 +154,10 @@ const (
 	DefaultBackupS3AccessKey       string = "minioadmin"
 	DefaultBackupS3SecretAccessKey string = "minioadmin"
 	DefaultBackupS3Endpoint        string = "http://minio.pingcap.net:9000"
+	DefaultBackupRateLimit         string = ""
+	DefaultRestoreRateLimit        string = ""
+	DefaultBackupConcurrency       string = ""
+	DefaultRestoreConcurrency      string = ""
 )
 
 type DBUserRoleType string

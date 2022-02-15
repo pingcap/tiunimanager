@@ -30,9 +30,14 @@ const (
 	ConfigKeyBackupS3Endpoint        string = "BackupS3Endpoint"
 	ConfigKeyBackupS3AccessKey       string = "BackupS3AccessKey"
 	ConfigKeyBackupS3SecretAccessKey string = "BackupS3SecretAccessKey"
+	ConfigKeyBackupRateLimit         string = "BackupRateLimit"
+	ConfigKeyRestoreRateLimit        string = "RestoreRateLimit"
+	ConfigKeyBackupConcurrency       string = "BackupConcurrency"
+	ConfigKeyRestoreConcurrency      string = "RestoreConcurrency"
 
 	ConfigKeyImportShareStoragePath string = "ImportShareStoragePath"
 	ConfigKeyExportShareStoragePath string = "ExportShareStoragePath"
+	ConfigKeyDumplingThreadNum      string = "DumplingThreadNum"
 
 	ConfigTelemetrySwitch   string = "config_telemetry_switch"
 	ConfigPrometheusAddress string = "config_prometheus_address"

@@ -40,7 +40,21 @@ const (
 	contextClusterConfigStr        = "ClusterConfigStr"
 )
 
-var units = []string{"KB", "MB", "GB", "s", "m", "h"}
+// Define unit conversion
+var units = map[string]map[string]int64{
+	"storage": {
+		"KB": 1,
+		"MB": 1024,
+		"GB": 1024 * 1024,
+		"TB": 1024 * 1024 * 1024,
+	},
+	"time": {
+		"ms": 1,
+		"s":  1000,
+		"m":  60 * 1000,
+		"h":  60 * 60 * 1000,
+	},
+}
 
 type UpdateParameterSource int
 
@@ -95,6 +109,7 @@ type ModifyClusterParameterInfo struct {
 	Unit           string
 	UnitOptions    []string
 	Range          []string
+	RangeType      int
 	HasApply       int
 	RealValue      structs.ParameterRealValue
 }

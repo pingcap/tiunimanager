@@ -348,6 +348,7 @@ func convertParameterGroupParameterInfo(param *parametergroup.ParamDetail) (pgi 
 		Unit:           param.Unit,
 		UnitOptions:    unitOptions,
 		Range:          ranges,
+		RangeType:      param.RangeType,
 		HasReboot:      param.HasReboot,
 		HasApply:       param.HasApply,
 		DefaultValue:   param.DefaultValue,

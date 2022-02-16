@@ -217,6 +217,7 @@ type ClusterParameterInfo struct {
 	Unit           string             `json:"unit" example:"MB"`
 	UnitOptions    []string           `json:"unitOptions" example:"KB,MB,GB"`
 	Range          []string           `json:"range" example:"1, 1000"`
+	RangeType      int                `json:"rangeType" example:"1" enums:"0,1,2"`
 	HasReboot      int                `json:"hasReboot" example:"0" enums:"0,1"`
 	HasApply       int                `json:"hasApply" example:"1" enums:"0,1"`
 	UpdateSource   int                `json:"updateSource" example:"0" enums:"0,1,2,3"`

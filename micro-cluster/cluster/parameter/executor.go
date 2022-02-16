@@ -205,7 +205,7 @@ func validationParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCon
 			}
 		}
 	}
-	node.Record("validate parameters ")
+	node.Record("validate parameters")
 	return nil
 }
 

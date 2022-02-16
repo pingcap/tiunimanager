@@ -223,7 +223,7 @@ func TestBRManager_RestoreExistCluster(t *testing.T) {
 	assert.NotNil(t, resp.WorkFlowID)
 }
 
-func TestBRManager_DeleteBackupRecords(t *testing.T) {
+func TestBRManager_DeleteBackupRecords_case1(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -232,13 +232,44 @@ func TestBRManager_DeleteBackupRecords(t *testing.T) {
 		Entity: common.Entity{
 			ID: "record-xxx",
 		},
-		FilePath: "./testdata",
+		StorageType: "nfs",
+		FilePath:    "./testdata",
 	}
 	brRW := mockbr.NewMockReaderWriter(ctrl)
 	brRW.EXPECT().QueryBackupRecords(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(records, int64(1), nil)
 	brRW.EXPECT().QueryBackupRecords(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(make([]*backuprestore.BackupRecord, 0), int64(0), nil)
 	brRW.EXPECT().DeleteBackupRecord(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetBRReaderWriter(brRW)
+
+	service := GetBRService()
+	_, err := service.DeleteBackupRecords(context.TODO(), cluster.DeleteBackupDataReq{
+		ClusterID: "testCluster",
+		BackupID:  "testBackup",
+	})
+	assert.Nil(t, err)
+}
+
+func TestBRManager_DeleteBackupRecords_case2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	records := make([]*backuprestore.BackupRecord, 1)
+	records[0] = &backuprestore.BackupRecord{
+		Entity: common.Entity{
+			ID: "record-xxx",
+		},
+		StorageType: "s3",
+		FilePath:    "./testdata",
+	}
+	brRW := mockbr.NewMockReaderWriter(ctrl)
+	brRW.EXPECT().QueryBackupRecords(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(records, int64(1), nil)
+	brRW.EXPECT().QueryBackupRecords(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(make([]*backuprestore.BackupRecord, 0), int64(0), nil)
+	brRW.EXPECT().DeleteBackupRecord(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	models.SetBRReaderWriter(brRW)
+
+	configService := mockconfig.NewMockReaderWriter(ctrl)
+	configService.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: "test"}, nil).AnyTimes()
+	models.SetConfigReaderWriter(configService)
 
 	service := GetBRService()
 	_, err := service.DeleteBackupRecords(context.TODO(), cluster.DeleteBackupDataReq{

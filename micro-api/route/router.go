@@ -79,7 +79,7 @@ func Route(g *gin.Engine) {
 		{
 			platform.Use(interceptor.VerifyIdentity)
 			platform.Use(interceptor.AuditLog())
-			platform.GET("/check", metrics.HandleMetrics(constants.MetricsPlatformCheck), platformApi.Check)
+			platform.POST("/check", metrics.HandleMetrics(constants.MetricsPlatformCheck), platformApi.Check)
 			platform.GET("/report/:checkId", metrics.HandleMetrics(constants.MetricsQueryCheckReports), platformApi.GetCheckReport)
 			platform.GET("/reports", metrics.HandleMetrics(constants.MetricsGetCheckReport), platformApi.QueryCheckReports)
 		}

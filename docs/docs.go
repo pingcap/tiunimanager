@@ -3260,7 +3260,7 @@ var doc = `{
             }
         },
         "/platform/check": {
-            "get": {
+            "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []

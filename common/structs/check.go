@@ -15,7 +15,10 @@
 
 package structs
 
-import "github.com/pingcap-inc/tiem/common/constants"
+import (
+	"github.com/pingcap-inc/tiem/common/constants"
+	"time"
+)
 
 type CheckString struct {
 	Valid         bool   `json:"valid"`
@@ -78,21 +81,17 @@ type InstanceCheck struct {
 	Status CheckStatus `json:"status"`
 }
 
-type CheckKey struct {
-	Source, Target string
-}
-
 type CheckRangeInt32 struct {
 	Valid         bool    `json:"valid"`
 	RealValue     int32   `json:"realValue"`
-	ExpectedRange []int32 `json:"expectedRange"`	// Left closed right closed interval
+	ExpectedRange []int32 `json:"expectedRange"` // Left closed right closed interval
 }
 type HostsCheck struct {
-	NTP                 map[CheckKey]CheckRangeInt32 `json:"ntp"`
-	TimeZoneConsistency map[CheckKey]bool            `json:"timeZoneConsistency"`
-	Ping                map[CheckKey]bool            `json:"ping"`
-	Delay               map[CheckKey]CheckRangeInt32 `json:"delay"`
-	Hosts               map[string]HostCheck         `json:"hosts"`
+	NTP                 map[string]CheckRangeInt32 `json:"ntp"`
+	TimeZoneConsistency map[string]bool            `json:"timeZoneConsistency"`
+	Ping                map[string]bool            `json:"ping"`
+	Delay               map[string]CheckRangeInt32 `json:"delay"`
+	Hosts               map[string]HostCheck       `json:"hosts"`
 }
 
 type CheckSwitch struct {
@@ -114,4 +113,15 @@ type HostCheck struct {
 	Disk         CheckInt32   `json:"disk"`
 	StorageRatio float32      `json:"storageRatio"`
 	Errors       []CheckError `json:"errors"`
+}
+
+type CheckReportInfo struct {
+	Tenants map[string]TenantCheck `json:"tenants"`
+	Hosts   HostsCheck             `json:"hosts"`
+}
+
+type CheckReportMeta struct {
+	ID        string    `json:"checkID"`
+	Creator   string    `json:"creator"`
+	CreatedAt time.Time `json:"createAt"`
 }

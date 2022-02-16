@@ -51,7 +51,7 @@ func (node *WorkFlowNode) Record(result ...interface{}) {
 		if r == nil {
 			r = defaultSuccessInfo
 		}
-		node.Result = fmt.Sprintln(node.Result, r)
+		node.Result = fmt.Sprintf("%s%s", node.Result, fmt.Sprintln(r))
 	}
 }
 

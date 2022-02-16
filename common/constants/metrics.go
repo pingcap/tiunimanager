@@ -50,7 +50,9 @@ const (
 	MetricsClusterInspectParameter      MetricsType = "cluster/inspect_parameter"
 	MetricsClusterQueryLogParameter     MetricsType = "cluster/query_logs"
 
-	MetricsPlatformCheck MetricsType = "platform/check"
+	MetricsPlatformCheck     MetricsType = "platform/check"
+	MetricsQueryCheckReports MetricsType = "platform/reports"
+	MetricsGetCheckReport    MetricsType = "platform/report"
 
 	// MetricsBackupCreate define backup metrics
 	MetricsBackupCreate         MetricsType = "backup/create"
@@ -77,6 +79,8 @@ const (
 	MetricsCDCTaskQuery  MetricsType = "cdc/query"
 	MetricsCDCTaskDetail MetricsType = "cdc/detail"
 	MetricsCDCDownstream MetricsType = "cdc/downstream/delete"
+
+	MetricsSwitchover MetricsType = "switchover/switch"
 
 	// MetricsParameterGroupCreate define parameter group metrics
 	MetricsParameterGroupCreate MetricsType = "parameter_group/create"

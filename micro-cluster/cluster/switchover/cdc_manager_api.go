@@ -14,33 +14,26 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: platform.go
- * @Description:
- * @Author: duanbing@pingcap.com
+ * @File: cdc_manager_api.go
+ * @Description: interface of cdc_manager_api
+ * @Author: hansen@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/4
+ * @Date: 2022/2/15 11:30
 *******************************************************************************/
 
-package constants
+package switchover
 
-// System config key
-const (
-	ConfigKeyBackupStorageType       string = "BackupStorageType"
-	ConfigKeyBackupStoragePath       string = "BackupStoragePath"
-	ConfigKeyBackupS3Endpoint        string = "BackupS3Endpoint"
-	ConfigKeyBackupS3AccessKey       string = "BackupS3AccessKey"
-	ConfigKeyBackupS3SecretAccessKey string = "BackupS3SecretAccessKey"
-	ConfigKeyBackupRateLimit         string = "BackupRateLimit"
-	ConfigKeyRestoreRateLimit        string = "RestoreRateLimit"
-	ConfigKeyBackupConcurrency       string = "BackupConcurrency"
-	ConfigKeyRestoreConcurrency      string = "RestoreConcurrency"
+import (
+	"context"
 
-	ConfigKeyImportShareStoragePath string = "ImportShareStoragePath"
-	ConfigKeyExportShareStoragePath string = "ExportShareStoragePath"
-	ConfigKeyDumplingThreadNum      string = "DumplingThreadNum"
-
-	ConfigTelemetrySwitch   string = "config_telemetry_switch"
-	ConfigPrometheusAddress string = "config_prometheus_address"
-
-	ConfigKeyRetainedPortRange string = "config_retained_port_range"
+	"github.com/pingcap-inc/tiem/message/cluster"
 )
+
+type CDCManagerAPI interface {
+	Create(ctx context.Context, request cluster.CreateChangeFeedTaskReq) (resp cluster.CreateChangeFeedTaskResp, err error)
+	Delete(ctx context.Context, request cluster.DeleteChangeFeedTaskReq) (resp cluster.DeleteChangeFeedTaskResp, err error)
+	Pause(ctx context.Context, request cluster.PauseChangeFeedTaskReq) (resp cluster.PauseChangeFeedTaskResp, err error)
+	Resume(ctx context.Context, request cluster.ResumeChangeFeedTaskReq) (resp cluster.ResumeChangeFeedTaskResp, err error)
+	Detail(ctx context.Context, request cluster.DetailChangeFeedTaskReq) (resp cluster.DetailChangeFeedTaskResp, err error)
+	Query(ctx context.Context, request cluster.QueryChangeFeedTaskReq) (resps []cluster.QueryChangeFeedTaskResp, total int, err error)
+}

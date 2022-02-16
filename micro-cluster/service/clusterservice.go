@@ -45,6 +45,7 @@ import (
 	clusterLog "github.com/pingcap-inc/tiem/micro-cluster/cluster/log"
 	clusterManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/management"
 	clusterParameter "github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
+	switchoverManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/switchover"
 	"github.com/pingcap-inc/tiem/micro-cluster/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager"
@@ -58,6 +59,7 @@ var TiEMClusterServiceName = "go.micro.tiem.cluster"
 type ClusterServiceHandler struct {
 	resourceManager         *resourcemanager.ResourceManager
 	changeFeedManager       *changefeed.Manager
+	switchoverManager       *switchoverManager.Manager
 	parameterGroupManager   *parametergroup.Manager
 	clusterParameterManager *clusterParameter.Manager
 	clusterManager          *clusterManager.Manager
@@ -149,6 +151,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.parameterGroupManager = parametergroup.NewManager()
 	handler.clusterParameterManager = clusterParameter.NewManager()
 	handler.clusterManager = clusterManager.NewClusterManager()
+	handler.switchoverManager = switchoverManager.GetManager()
 	handler.systemConfigManager = config.NewSystemConfigManager()
 	handler.brManager = backuprestore.GetBRService()
 	handler.importexportManager = importexport.GetImportExportService()
@@ -160,6 +163,26 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.checkManager = check.NewCheckManager()
 
 	return handler
+}
+
+func (handler *ClusterServiceHandler) MasterSlaveSwitchover(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "MasterSlaveSwitchover", int(response.GetCode()))
+	defer handlePanic(ctx, "MasterSlaveSwitchover", response)
+
+	framework.LogWithContext(ctx).Info("master/slave switchover")
+	reqBody := &cluster.MasterSlaveClusterSwitchoverReq{}
+
+	framework.LogWithContext(ctx).Info("MasterSlaveSwitchover: before handleRequest")
+	if handleRequest(ctx, request, response, reqBody, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionCreate)}}) {
+		framework.LogWithContext(ctx).Info("MasterSlaveSwitchover: after handleRequest")
+		framework.LogWithContext(ctx).Info("MasterSlaveSwitchover: before  handler.switchoverManager.Switchover")
+		result, err := handler.switchoverManager.Switchover(ctx, reqBody)
+		framework.LogWithContext(ctx).Info("MasterSlaveSwitchover: after  handler.switchoverManager.Switchover", result, err)
+		handleResponse(ctx, response, err, result, nil)
+	}
+	framework.LogWithContext(ctx).Info("MasterSlaveSwitchover: ret")
+	return nil
 }
 
 func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
@@ -1443,6 +1466,32 @@ func (handler *ClusterServiceHandler) CheckPlatform(ctx context.Context, request
 	req := message.CheckPlatformReq{}
 	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionRead)}}) {
 		resp, err := handler.checkManager.Check(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) QueryCheckReports(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "QueryCheckReports", int(response.GetCode()))
+
+	req := message.QueryCheckReportsReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionRead)}}) {
+		resp, err := handler.checkManager.QueryCheckReports(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) GetCheckReport(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "GetCheckReport", int(response.GetCode()))
+
+	req := message.GetCheckReportReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionRead)}}) {
+		resp, err := handler.checkManager.GetCheckReport(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 

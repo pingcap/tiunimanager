@@ -119,18 +119,28 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 		}
 	}
 
+	configRW := models.GetConfigReaderWriter()
+	dumplingThreadNumConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyDumplingThreadNum)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("get conifg %s failed: %s", constants.ConfigKeyDumplingThreadNum, err.Error())
+	}
+
 	//tiup dumpling -u root -P 4000 --host 127.0.0.1 --filetype sql -t 8 -o /tmp/test -r 200000 -F 256MiB --filter "db.tb"
 	cmd := []string{"-u", info.UserName,
 		"-p", info.Password,
 		"-P", strconv.Itoa(tidbPort),
 		"--host", tidbHost,
 		"--filetype", info.FileType,
-		"-t", "8",
 		"-o", info.FilePath,
 		"-r", "200000",
 		"-F", "256MiB",
 		"--loglevel", "debug",
 		"--logfile", fmt.Sprintf("%s/dumpling.log", info.ConfigPath)}
+	if dumplingThreadNumConfig != nil && dumplingThreadNumConfig.ConfigValue != "" {
+		cmd = append(cmd, "-t", dumplingThreadNumConfig.ConfigValue)
+	} else {
+		cmd = append(cmd, "-t", "8")
+	}
 	if info.Filter != "" {
 		cmd = append(cmd, "--filter", info.Filter)
 	}

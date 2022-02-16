@@ -39,6 +39,9 @@ monitored:
 {{ end }}
 {{ range $key, $instances := .Instances }}
 {{ if and (eq $key "TiDB") (len $instances) }}
+server_configs:
+  pd:
+    replication.location-labels: ["region", "zone", "rack", "host"]
 tidb_servers:
   {{ range $instances }}
   {{ if eq .Status "Initializing" }}
@@ -57,6 +60,12 @@ tikv_servers:
     status_port: {{ index .Ports 1 }}
     deploy_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/tikv-deploy
     data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/tikv-data
+    config:
+      server.labels:
+        region: {{ $.Cluster.Region }}
+        zone: {{ .Zone }}
+        rack: {{ .Rack }}
+        host: {{ .HostID }}
   {{ end }}
   {{ end }}
 {{ else if and (eq $key "TiFlash") (len $instances) }}

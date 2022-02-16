@@ -3324,6 +3324,143 @@ var doc = `{
                 }
             }
         },
+        "/platform/report/:checkId": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get check report based on checkId",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "get check report based on checkId",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.GetCheckReportRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/platform/reports": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get query check reports",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "query check reports",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Current page location",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of this request",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.QueryCheckReportsRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/products/": {
             "get": {
                 "security": [
@@ -4922,6 +5059,75 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/message.DeleteSpecsResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/switchover": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "master/slave switchover",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "switchover"
+                ],
+                "summary": "master/slave switchover",
+                "parameters": [
+                    {
+                        "description": "switchover request",
+                        "name": "masterSlaveClusterSwitchoverReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.MasterSlaveClusterSwitchoverReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.MasterSlaveClusterSwitchoverResp"
                                         }
                                     }
                                 }
@@ -6799,6 +7005,35 @@ var doc = `{
                 }
             }
         },
+        "cluster.MasterSlaveClusterSwitchoverReq": {
+            "type": "object",
+            "required": [
+                "sourceClusterID",
+                "targetClusterID"
+            ],
+            "properties": {
+                "force": {
+                    "type": "boolean"
+                },
+                "sourceClusterID": {
+                    "description": "old master/new slave",
+                    "type": "string"
+                },
+                "targetClusterID": {
+                    "description": "new master/old slave",
+                    "type": "string"
+                }
+            }
+        },
+        "cluster.MasterSlaveClusterSwitchoverResp": {
+            "type": "object",
+            "properties": {
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
         "cluster.MysqlDownstream": {
             "type": "object",
             "properties": {
@@ -7550,14 +7785,12 @@ var doc = `{
         "message.CheckPlatformRsp": {
             "type": "object",
             "properties": {
-                "hosts": {
-                    "$ref": "#/definitions/structs.HostsCheck"
+                "checkID": {
+                    "type": "string"
                 },
-                "tenants": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/structs.TenantCheck"
-                    }
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
                 }
             }
         },
@@ -8056,6 +8289,14 @@ var doc = `{
                 }
             }
         },
+        "message.GetCheckReportRsp": {
+            "type": "object",
+            "properties": {
+                "reportInfo": {
+                    "$ref": "#/definitions/structs.CheckReportInfo"
+                }
+            }
+        },
         "message.GetHierarchyResp": {
             "type": "object",
             "properties": {
@@ -8213,6 +8454,17 @@ var doc = `{
                 "updateSource": {
                     "type": "integer",
                     "example": 0
+                }
+            }
+        },
+        "message.QueryCheckReportsRsp": {
+            "type": "object",
+            "properties": {
+                "reportMetas": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckReportMeta"
+                    }
                 }
             }
         },
@@ -8773,6 +9025,34 @@ var doc = `{
                 },
                 "valid": {
                     "type": "boolean"
+                }
+            }
+        },
+        "structs.CheckReportInfo": {
+            "type": "object",
+            "properties": {
+                "hosts": {
+                    "$ref": "#/definitions/structs.HostsCheck"
+                },
+                "tenants": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.TenantCheck"
+                    }
+                }
+            }
+        },
+        "structs.CheckReportMeta": {
+            "type": "object",
+            "properties": {
+                "checkID": {
+                    "type": "string"
+                },
+                "createAt": {
+                    "type": "string"
+                },
+                "creator": {
+                    "type": "string"
                 }
             }
         },

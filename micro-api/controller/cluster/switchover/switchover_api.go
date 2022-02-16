@@ -13,34 +13,34 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-/*******************************************************************************
- * @File: datatransfer.go
- * @Description:
- * @Author: duanbing@pingcap.com
- * @Version: 1.0.0
- * @Date: 2021/12/4
-*******************************************************************************/
+package switchover
 
-package constants
-
-//Definition export & import data constants
-type TransportType string
-
-const (
-	DefaultImportPath        string        = "/home/tiem/import"
-	DefaultExportPath        string        = "/home/tiem/export"
-	DefaultZipName           string        = "data.zip"
-	DefaultDumplingThreadNum string        = "8"
-	TransportTypeExport      TransportType = "export"
-	TransportTypeImport      TransportType = "import"
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/common/client"
+	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
 
-type DataImportExportStatus string
+// Switchover master/slave switchover
+// @Summary master/slave switchover
+// @Description master/slave switchover
+// @Tags switchover
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param masterSlaveClusterSwitchoverReq body cluster.MasterSlaveClusterSwitchoverReq true "switchover request"
+// @Success 200 {object} controller.CommonResult{data=cluster.MasterSlaveClusterSwitchoverResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /switchover [post]
+func Switchover(c *gin.Context) {
+	var req cluster.MasterSlaveClusterSwitchoverReq
 
-//Definition data export status information
-const (
-	DataImportExportInitializing DataImportExportStatus = "Initializing"
-	DataImportExportProcessing   DataImportExportStatus = "Processing"
-	DataImportExportFinished     DataImportExportStatus = "Finished"
-	DataImportExportFailed       DataImportExportStatus = "Failed"
-)
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.MasterSlaveSwitchover, &cluster.MasterSlaveClusterSwitchoverResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}

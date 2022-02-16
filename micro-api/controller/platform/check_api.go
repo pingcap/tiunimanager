@@ -45,3 +45,47 @@ func Check(c *gin.Context) {
 			controller.DefaultTimeout)
 	}
 }
+
+// GetCheckReport get check report based on checkId
+// @Summary get check report based on checkId
+// @Description get check report based on checkId
+// @Tags platform
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param getCheckReportReq query message.GetCheckReportReq false "get check report"
+// @Success 200 {object} controller.ResultWithPage{data=message.GetCheckReportRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /platform/report/:checkId [get]
+func GetCheckReport(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.GetCheckReportReq{
+		ID: c.Param("checkId"),
+	}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.GetCheckReport, &message.GetCheckReportRsp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// QueryCheckReports query check reports
+// @Summary query check reports
+// @Description get query check reports
+// @Tags platform
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param queryCheckReportsReq query message.QueryCheckReportsReq false "query check reports"
+// @Success 200 {object} controller.ResultWithPage{data=message.QueryCheckReportsRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /platform/reports [get]
+func QueryCheckReports(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryCheckReportsReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryCheckReports, &message.QueryCheckReportsRsp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}

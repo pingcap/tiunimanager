@@ -13,31 +13,41 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package message
+package check
 
-import "github.com/pingcap-inc/tiem/common/structs"
+import (
+	"encoding/json"
+	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/models"
+	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
+	"github.com/pingcap-inc/tiem/workflow"
+)
 
-type CheckPlatformReq struct {
-	DisplayMode string `json:"displayMode" form:"displayMode"`
+func checkTenants(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	checkID := context.GetData(ContextCheckID).(string)
+	info := &structs.CheckReportInfo{
+		Tenants: map[string]structs.TenantCheck{
+			"tenant01": {
+				ClusterCount: 1,
+			},
+		},
+	}
+	reportInfo, err := json.Marshal(info)
+	if err != nil {
+		return err
+	}
+	err = models.GetReportReaderWriter().UpdateReport(context.Context, checkID, string(reportInfo))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-type CheckPlatformRsp struct {
-	structs.AsyncTaskWorkFlowInfo
-	CheckID string `json:"checkID"`
+func endCheck(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	return nil
 }
 
-type QueryCheckReportsReq struct {
-	structs.PageRequest
-}
-
-type QueryCheckReportsRsp struct {
-	ReportMetas map[string]structs.CheckReportMeta `json:"reportMetas"`
-}
-
-type GetCheckReportReq struct {
-	ID string `json:"id"`
-}
-
-type GetCheckReportRsp struct {
-	ReportInfo structs.CheckReportInfo `json:"reportInfo"`
+func handleFail(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	return nil
 }

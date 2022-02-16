@@ -24,8 +24,10 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiem/models/platform/config"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockimportexport"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"
@@ -136,6 +138,10 @@ func TestExecutor_exportDataFailed(t *testing.T) {
 func TestExecutor_exportDataFromCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+
+	configService := mockconfig.NewMockReaderWriter(ctrl)
+	configService.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: ""}, nil).AnyTimes()
+	models.SetConfigReaderWriter(configService)
 
 	mockTiupManager := mock_deployment.NewMockInterface(ctrl)
 	mockTiupManager.EXPECT().Dumpling(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()

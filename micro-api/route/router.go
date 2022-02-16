@@ -26,6 +26,8 @@ import (
 	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
 	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
+	switchoverApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/switchover"
+
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
 	platformApi "github.com/pingcap-inc/tiem/micro-api/controller/platform"
@@ -77,7 +79,9 @@ func Route(g *gin.Engine) {
 		{
 			platform.Use(interceptor.VerifyIdentity)
 			platform.Use(interceptor.AuditLog())
-			platform.POST("/check", metrics.HandleMetrics(constants.MetricsPlatformCheck), platformApi.Check)
+			platform.GET("/check", metrics.HandleMetrics(constants.MetricsPlatformCheck), platformApi.Check)
+			platform.GET("/report/:checkId", metrics.HandleMetrics(constants.MetricsQueryCheckReports), platformApi.GetCheckReport)
+			platform.GET("/reports", metrics.HandleMetrics(constants.MetricsGetCheckReport), platformApi.QueryCheckReports)
 		}
 
 		user := apiV1.Group("/users")
@@ -186,6 +190,14 @@ func Route(g *gin.Engine) {
 
 			changeFeeds.GET("/:changeFeedTaskId/", metrics.HandleMetrics(constants.MetricsCDCTaskDetail), changefeed.Detail)
 			changeFeeds.GET("/", metrics.HandleMetrics(constants.MetricsCDCTaskQuery), changefeed.Query)
+		}
+
+		switchover := apiV1.Group("/switchover")
+		{
+			switchover.Use(interceptor.VerifyIdentity)
+			switchover.Use(interceptor.AuditLog())
+
+			switchover.POST("/", metrics.HandleMetrics(constants.MetricsSwitchover), switchoverApi.Switchover)
 		}
 
 		flowworks := apiV1.Group("/workflow")

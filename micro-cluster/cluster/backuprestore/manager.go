@@ -497,7 +497,8 @@ func (mgr *BRManager) removeBackupFiles(ctx context.Context, record *backupresto
 			return fmt.Errorf("get and check conifg %s failed", constants.ConfigKeyBackupS3SecretAccessKey)
 		}
 		go func() {
-			s3Client, err := minio.New(endpointCfg.ConfigValue, &minio.Options{
+			endpoint := strings.TrimPrefix(endpointCfg.ConfigValue, "http://")
+			s3Client, err := minio.New(endpoint, &minio.Options{
 				Creds:  credentials.NewStaticV4(akCfg.ConfigValue, skCfg.ConfigValue, ""),
 				Secure: true,
 			})

@@ -41,6 +41,7 @@ import (
 )
 
 var testRW *ParameterGroupReadWrite
+var testNilRW *ParameterGroupReadWrite
 
 func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
@@ -69,6 +70,15 @@ func TestMain(m *testing.M) {
 			db.Migrator().CreateTable(management.Cluster{})
 
 			testRW = NewParameterGroupReadWrite(db)
+
+			// build nil db
+			nilDB, err := gorm.Open(sqlite.Open(""), &gorm.Config{})
+			if err != nil || db.Error != nil {
+				logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)
+			} else {
+				logins.Infof("open database successful, filepath: %s", dbFile)
+			}
+			testNilRW = NewParameterGroupReadWrite(nilDB)
 			return nil
 		},
 	)

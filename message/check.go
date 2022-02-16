@@ -22,6 +22,22 @@ type CheckPlatformReq struct {
 }
 
 type CheckPlatformRsp struct {
-	Tenants map[string]structs.TenantCheck `json:"tenants"`
-	Hosts   structs.HostsCheck             `json:"hosts"`
+	structs.AsyncTaskWorkFlowInfo
+	CheckID string `json:"checkID"`
+}
+
+type QueryCheckReportsReq struct {
+	structs.PageRequest
+}
+
+type QueryCheckReportsRsp struct {
+	ReportMetas map[string]structs.CheckReportMeta `json:"reportMetas"`
+}
+
+type GetCheckReportReq struct {
+	ID string `json:"id"`
+}
+
+type GetCheckReportRsp struct {
+	ReportInfo structs.CheckReportInfo `json:"reportInfo"`
 }

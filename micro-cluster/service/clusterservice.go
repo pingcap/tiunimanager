@@ -1448,3 +1448,29 @@ func (handler *ClusterServiceHandler) CheckPlatform(ctx context.Context, request
 
 	return nil
 }
+
+func (handler *ClusterServiceHandler) QueryCheckReports(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "QueryCheckReports", int(response.GetCode()))
+
+	req := message.QueryCheckReportsReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionRead)}}) {
+		resp, err := handler.checkManager.QueryCheckReports(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) GetCheckReport(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "GetCheckReport", int(response.GetCode()))
+
+	req := message.GetCheckReportReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionRead)}}) {
+		resp, err := handler.checkManager.GetCheckReport(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
+}

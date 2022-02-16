@@ -15,7 +15,10 @@
 
 package structs
 
-import "github.com/pingcap-inc/tiem/common/constants"
+import (
+	"github.com/pingcap-inc/tiem/common/constants"
+	"time"
+)
 
 type CheckString struct {
 	Valid         bool   `json:"valid"`
@@ -85,7 +88,7 @@ type CheckKey struct {
 type CheckRangeInt32 struct {
 	Valid         bool    `json:"valid"`
 	RealValue     int32   `json:"realValue"`
-	ExpectedRange []int32 `json:"expectedRange"`	// Left closed right closed interval
+	ExpectedRange []int32 `json:"expectedRange"` // Left closed right closed interval
 }
 type HostsCheck struct {
 	NTP                 map[CheckKey]CheckRangeInt32 `json:"ntp"`
@@ -114,4 +117,15 @@ type HostCheck struct {
 	Disk         CheckInt32   `json:"disk"`
 	StorageRatio float32      `json:"storageRatio"`
 	Errors       []CheckError `json:"errors"`
+}
+
+type CheckReportInfo struct {
+	Tenants map[string]TenantCheck `json:"tenants"`
+	Hosts   HostsCheck             `json:"hosts"`
+}
+
+type CheckReportMeta struct {
+	ID        string    `json:"checkID"`
+	Creator   string    `json:"creator"`
+	CreatedAt time.Time `json:"createAt"`
 }

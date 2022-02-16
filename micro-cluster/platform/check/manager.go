@@ -17,16 +17,59 @@ package check
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/workflow"
 )
 
 type CheckManager struct{}
 
 func NewCheckManager() *CheckManager {
+	workflowManager := workflow.GetWorkFlowService()
+
+	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowCheckPlatform, &checkDefine)
+
 	return &CheckManager{}
 }
 
+var checkDefine = workflow.WorkFlowDefine{
+	FlowName:  constants.FlowCheckPlatform,
+	TaskNodes: map[string]*workflow.NodeDefine{},
+}
+
+// Check
+// @Description	check platform and generate check report
+// @Parameter	request
+// @Return		message.CheckPlatformRsp
+// @Return		error
 func (manager *CheckManager) Check(ctx context.Context, request message.CheckPlatformReq) (resp message.CheckPlatformRsp, err error) {
 	//todo: check platform
 	return message.CheckPlatformRsp{}, nil
+}
+
+func (manager *CheckManager) QueryCheckReports(ctx context.Context, request message.QueryCheckReportsReq) (resp message.QueryCheckReportsRsp, err error) {
+	log := framework.LogWithContext(ctx)
+	rw := models.GetReportReaderWriter()
+
+	resp.ReportMetas, err = rw.QueryReports(ctx)
+	if err != nil {
+		log.Errorf("query all check reports error: %v", err)
+		return resp, errors.NewErrorf(errors.QueryReportsScanRowError, "query all check reports error: %v", err)
+	}
+	return resp, nil
+}
+
+func (manager *CheckManager) GetCheckReport(ctx context.Context, request message.GetCheckReportReq) (resp message.GetCheckReportRsp, err error) {
+	log := framework.LogWithContext(ctx)
+	rw := models.GetReportReaderWriter()
+	resp.ReportInfo, err = rw.GetReport(ctx, request.ID)
+	if err != nil {
+		log.Errorf("get check report %s error: %v", request.ID, err)
+		return resp, errors.NewErrorf(errors.CheckReportNotExist,
+			"get check report %s error: %v", request.ID, err)
+	}
+	return resp, err
 }

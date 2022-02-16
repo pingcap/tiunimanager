@@ -900,12 +900,11 @@ definitions:
     type: object
   message.CheckPlatformRsp:
     properties:
-      hosts:
-        $ref: '#/definitions/structs.HostsCheck'
-      tenants:
-        additionalProperties:
-          $ref: '#/definitions/structs.TenantCheck'
-        type: object
+      checkID:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
     type: object
   message.CopyParameterGroupReq:
     properties:
@@ -1239,6 +1238,11 @@ definitions:
         example: 1636698675
         type: integer
     type: object
+  message.GetCheckReportRsp:
+    properties:
+      reportInfo:
+        $ref: '#/definitions/structs.CheckReportInfo'
+    type: object
   message.GetHierarchyResp:
     properties:
       root:
@@ -1346,6 +1350,13 @@ definitions:
       updateSource:
         example: 0
         type: integer
+    type: object
+  message.QueryCheckReportsRsp:
+    properties:
+      reportMetas:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckReportMeta'
+        type: object
     type: object
   message.QueryDataImportExportRecordsResp:
     properties:
@@ -1717,6 +1728,24 @@ definitions:
         type: integer
       valid:
         type: boolean
+    type: object
+  structs.CheckReportInfo:
+    properties:
+      hosts:
+        $ref: '#/definitions/structs.HostsCheck'
+      tenants:
+        additionalProperties:
+          $ref: '#/definitions/structs.TenantCheck'
+        type: object
+    type: object
+  structs.CheckReportMeta:
+    properties:
+      checkID:
+        type: string
+      createAt:
+        type: string
+      creator:
+        type: string
     type: object
   structs.CheckStatus:
     properties:
@@ -4737,6 +4766,87 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: platform check
+      tags:
+      - platform
+  /platform/report/:checkId:
+    get:
+      consumes:
+      - application/json
+      description: get check report based on checkId
+      parameters:
+      - in: query
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.GetCheckReportRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: get check report based on checkId
+      tags:
+      - platform
+  /platform/reports:
+    get:
+      consumes:
+      - application/json
+      description: get query check reports
+      parameters:
+      - description: Current page location
+        in: query
+        name: page
+        type: integer
+      - description: Number of this request
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryCheckReportsRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query check reports
       tags:
       - platform
   /products/:

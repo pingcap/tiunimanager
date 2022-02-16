@@ -17,6 +17,7 @@ package models
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/models/platform/check"
 	"github.com/pingcap-inc/tiem/models/user/rbac"
 	"io/ioutil"
 	"os"
@@ -70,6 +71,7 @@ type database struct {
 	tokenReaderWriter                identification.ReaderWriter
 	productReaderWriter              product.ProductReadWriterInterface
 	tiUPConfigReaderWriter           tiup.ReaderWriter
+	reportReaderWriter               check.ReaderWriter
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
@@ -159,6 +161,7 @@ func (p *database) initTables() (err error) {
 		new(account.Tenant),
 		new(account.UserLogin),
 		new(account.UserTenantRelation),
+		new(check.CheckReport),
 	)
 }
 
@@ -178,6 +181,7 @@ func (p *database) initReaderWriters() {
 	defaultDb.tokenReaderWriter = identification.NewTokenReadWrite(defaultDb.base)
 	defaultDb.productReaderWriter = product.NewProductReadWriter(defaultDb.base)
 	defaultDb.tiUPConfigReaderWriter = tiup.NewGormTiupConfigReadWrite(defaultDb.base)
+	defaultDb.reportReaderWriter = check.NewReportReadWrite(defaultDb.base)
 }
 
 func (p *database) initSystemData() {
@@ -383,6 +387,14 @@ func GetTiUPConfigReaderWriter() tiup.ReaderWriter {
 
 func SetTiUPConfigReaderWriter(rw tiup.ReaderWriter) {
 	defaultDb.tiUPConfigReaderWriter = rw
+}
+
+func SetReportReaderWriter(rw check.ReaderWriter) {
+	defaultDb.reportReaderWriter = rw
+}
+
+func GetReportReaderWriter() check.ReaderWriter {
+	return defaultDb.reportReaderWriter
 }
 
 func MockDB() {

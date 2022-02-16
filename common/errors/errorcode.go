@@ -219,6 +219,9 @@ const (
 
 	TIEM_CLUSTER_LOG_QUERY_FAILED EM_ERROR_CODE = 80300
 	TIEM_CLUSTER_LOG_TIME_AFTER   EM_ERROR_CODE = 80301
+
+	QueryReportsScanRowError EM_ERROR_CODE = 90001
+	CheckReportNotExist      EM_ERROR_CODE = 90002
 )
 
 type ErrorCodeExplanation struct {

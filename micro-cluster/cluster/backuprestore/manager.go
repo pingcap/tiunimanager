@@ -506,7 +506,9 @@ func (mgr *BRManager) removeBackupFiles(ctx context.Context, record *backupresto
 				framework.LogWithContext(ctx).Warnf("create s3 client failed: %s", err.Error())
 				return
 			}
-			if err = s3Client.RemoveBucket(ctx, record.FilePath); err != nil {
+			s3Addr := strings.SplitN(record.FilePath, "/", 2)
+			framework.LogWithContext(ctx).Infof("begin remove bucket %s object %s", s3Addr[0], s3Addr[1])
+			if err = s3Client.RemoveObject(ctx, s3Addr[0], s3Addr[1], minio.RemoveObjectOptions{ForceDelete: true}); err != nil {
 				framework.LogWithContext(ctx).Warnf("remove bucket %s failed: %v", record.FilePath, err)
 				return
 			}

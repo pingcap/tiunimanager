@@ -81,21 +81,17 @@ type InstanceCheck struct {
 	Status CheckStatus `json:"status"`
 }
 
-type CheckKey struct {
-	Source, Target string
-}
-
 type CheckRangeInt32 struct {
 	Valid         bool    `json:"valid"`
 	RealValue     int32   `json:"realValue"`
 	ExpectedRange []int32 `json:"expectedRange"` // Left closed right closed interval
 }
 type HostsCheck struct {
-	NTP                 map[CheckKey]CheckRangeInt32 `json:"ntp"`
-	TimeZoneConsistency map[CheckKey]bool            `json:"timeZoneConsistency"`
-	Ping                map[CheckKey]bool            `json:"ping"`
-	Delay               map[CheckKey]CheckRangeInt32 `json:"delay"`
-	Hosts               map[string]HostCheck         `json:"hosts"`
+	NTP                 map[string]CheckRangeInt32 `json:"ntp"`
+	TimeZoneConsistency map[string]bool            `json:"timeZoneConsistency"`
+	Ping                map[string]bool            `json:"ping"`
+	Delay               map[string]CheckRangeInt32 `json:"delay"`
+	Hosts               map[string]HostCheck       `json:"hosts"`
 }
 
 type CheckSwitch struct {

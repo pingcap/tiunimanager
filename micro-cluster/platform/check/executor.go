@@ -25,7 +25,7 @@ import (
 
 func checkTenants(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	checkID := context.GetData(ContextCheckID).(string)
-	info := structs.CheckReportInfo{
+	info := &structs.CheckReportInfo{
 		Tenants: map[string]structs.TenantCheck{
 			"tenant01": {
 				ClusterCount: 1,

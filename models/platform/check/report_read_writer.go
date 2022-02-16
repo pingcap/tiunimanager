@@ -106,7 +106,6 @@ func (rrw *ReportReadWrite) UpdateReport(ctx context.Context, checkID, report st
 	if "" == checkID || "" == report {
 		framework.LogWithContext(ctx).Errorf("update %s report: %s, parameter invalid", checkID, report)
 		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "update %s report: %s, parameter invalid", checkID, report)
-		return nil
 	}
 
 	return rrw.DB(ctx).Model(&CheckReport{}).Where("id = ?", checkID).Update("report", report).Error

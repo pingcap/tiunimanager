@@ -35,7 +35,7 @@ import (
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /platform/check [get]
+// @Router /platform/check [post]
 func Check(c *gin.Context) {
 	var request message.CheckPlatformReq
 

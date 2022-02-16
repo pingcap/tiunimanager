@@ -4751,7 +4751,7 @@ paths:
       tags:
       - parameter group
   /platform/check:
-    get:
+    post:
       consumes:
       - application/json
       description: platform check

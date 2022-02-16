@@ -3246,7 +3246,7 @@
             }
         },
         "/platform/check": {
-            "get": {
+            "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []

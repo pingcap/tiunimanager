@@ -4884,6 +4884,75 @@ var doc = `{
                 }
             }
         },
+        "/switchover": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "master/slave switchover",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "switchover"
+                ],
+                "summary": "master/slave switchover",
+                "parameters": [
+                    {
+                        "description": "switchover request",
+                        "name": "masterSlaveClusterSwitchoverReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.MasterSlaveClusterSwitchoverReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.MasterSlaveClusterSwitchoverResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/tenant": {
             "get": {
                 "security": [
@@ -6731,6 +6800,35 @@ var doc = `{
                 "version": {
                     "type": "string",
                     "example": "2.4.0"
+                }
+            }
+        },
+        "cluster.MasterSlaveClusterSwitchoverReq": {
+            "type": "object",
+            "required": [
+                "sourceClusterID",
+                "targetClusterID"
+            ],
+            "properties": {
+                "force": {
+                    "type": "boolean"
+                },
+                "sourceClusterID": {
+                    "description": "old master/new slave",
+                    "type": "string"
+                },
+                "targetClusterID": {
+                    "description": "new master/old slave",
+                    "type": "string"
+                }
+            }
+        },
+        "cluster.MasterSlaveClusterSwitchoverResp": {
+            "type": "object",
+            "properties": {
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
                 }
             }
         },

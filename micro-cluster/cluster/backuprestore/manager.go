@@ -470,7 +470,7 @@ func (mgr *BRManager) saveBackupStrategyPreCheck(ctx context.Context, request cl
 }
 
 func (mgr *BRManager) getBackupPath(backupPath, clusterId string, time time.Time, backupType string) string {
-	return fmt.Sprintf("%s/%s/%s_%s", backupPath, clusterId, time.Format("2006-01-02-15-04-05"), backupType)
+	return fmt.Sprintf("%s/%s/%s-%s", backupPath, clusterId, time.Format("2006-01-02-15-04-05"), backupType)
 }
 
 func (mgr *BRManager) checkFilePathExists(path string) bool {

@@ -17,6 +17,7 @@ package management
 
 import (
 	"context"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 )
@@ -106,6 +107,7 @@ type ReaderWriter interface {
 
 	CreateRelation(ctx context.Context, relation *ClusterRelation) error
 	DeleteRelation(ctx context.Context, relationID uint) error
+	SwapMasterSlaveRelation(ctx context.Context, oldMasterClusterId, oldSlaveClusterId, newSyncChangeFeedTaskId string) error
 
 	CreateClusterTopologySnapshot(ctx context.Context, snapshot ClusterTopologySnapshot) error
 	GetCurrentClusterTopologySnapshot(ctx context.Context, clusterID string) (ClusterTopologySnapshot, error)

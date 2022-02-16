@@ -13,34 +13,30 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-/*******************************************************************************
- * @File: datatransfer.go
- * @Description:
- * @Author: duanbing@pingcap.com
- * @Version: 1.0.0
- * @Date: 2021/12/4
-*******************************************************************************/
-
 package constants
 
-//Definition export & import data constants
-type TransportType string
-
-const (
-	DefaultImportPath        string        = "/home/tiem/import"
-	DefaultExportPath        string        = "/home/tiem/export"
-	DefaultZipName           string        = "data.zip"
-	DefaultDumplingThreadNum string        = "8"
-	TransportTypeExport      TransportType = "export"
-	TransportTypeImport      TransportType = "import"
+import (
+	"time"
 )
 
-type DataImportExportStatus string
+const SwitchoverCheckClusterReadWriteHealthRetriesCount = 3
+const SwitchoverCheckClusterReadWriteHealthRetryWait = 500 * time.Millisecond
 
-//Definition data export status information
-const (
-	DataImportExportInitializing DataImportExportStatus = "Initializing"
-	DataImportExportProcessing   DataImportExportStatus = "Processing"
-	DataImportExportFinished     DataImportExportStatus = "Finished"
-	DataImportExportFailed       DataImportExportStatus = "Failed"
-)
+const SwitchoverCheckMasterSlaveMaxLagTime = 30 * time.Second
+const SwitchoverCheckMasterSlaveMaxLagTimeRetriesCount = 3
+const SwitchoverCheckMasterSlaveMaxLagTimeRetryWait = 3000 * time.Millisecond
+
+const SwitchoverCheckSyncChangeFeedTaskHealthTimeInterval = 5000 * time.Millisecond
+const SwitchoverCheckSyncChangeFeedTaskHealthRetriesCount = 3
+const SwitchoverCheckSyncChangeFeedTaskHealthRetryWait = 500 * time.Millisecond
+
+const SwitchoverCheckSyncChangeFeedTaskCaughtUpRetriesCount = 3
+const SwitchoverCheckSyncChangeFeedTaskCaughtUpRetryWait = 1000 * time.Millisecond
+const SwitchoverCheckSyncChangeFeedTaskCaughtUpMaxLagTime = 2000 * time.Millisecond
+
+const SwitchoverReadWriteHealthTestDBName = "test"
+const SwitchoverReadWriteHealthTestTableNamePrefix = "em_rwtest"
+
+const SwitchoverCancelOpRetriesCount = 3
+const SwitchoverCancelOpRetryWait = 500 * time.Millisecond
+const SwitchoverCancelOpRunAllStepsEvenOnFail = false

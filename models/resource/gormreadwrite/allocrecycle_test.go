@@ -848,3 +848,147 @@ func TestAllocResources_Host_Recycle_Strategy(t *testing.T) {
 	err = GormRW.Delete(context.TODO(), id1)
 	assert.Nil(t, err)
 }
+
+func TestAllocResources_Request3Count_SpecifyHost_Strategy(t *testing.T) {
+	id1, _ := createTestHost("Test_Region12", "Test_Region12,Test_Zone2", "Test_Region12,Test_Zone2,Test_Rack1", "Test_Host1", "494.111.111.127",
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 17, 64, 3)
+	id2, _ := createTestHost("Test_Region12", "Test_Region12,Test_Zone2", "Test_Region12,Test_Zone2,Test_Rack1", "Test_Host2", "494.111.111.128",
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 16, 64, 3)
+	id3, _ := createTestHost("Test_Region12", "Test_Region12,Test_Zone2", "Test_Region12,Test_Zone2,Test_Rack1", "Test_Host3", "494.111.111.129",
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 15, 64, 3)
+
+	loc1 := structs.Location{}
+	loc1.Region = "Test_Region12"
+	loc1.Zone = "Test_Zone2"
+	loc1.HostIp = "494.111.111.127"
+
+	require1 := newRequirementForRequest(4, 8, true, 256, string(constants.SSD), 10000, 10015, 5)
+
+	var test_req resource_structs.AllocReq
+	test_req.Applicant.HolderId = "TestCluster1"
+	test_req.Applicant.RequestId = "TestRequestID1"
+	test_req.Requires = append(test_req.Requires, resource_structs.AllocRequirement{
+		Location: loc1,
+		Strategy: resource_structs.UserSpecifyHost,
+		Require:  *require1,
+		Count:    3,
+	})
+
+	loc2 := structs.Location{}
+	loc2.Region = "Test_Region12"
+	loc2.Zone = "Test_Zone2"
+	loc2.HostIp = "494.111.111.128"
+
+	require2 := newRequirementForRequest(4, 8, false, 256, string(constants.SSD), 10000, 10015, 5)
+
+	test_req.Requires = append(test_req.Requires, resource_structs.AllocRequirement{
+		Location: loc2,
+		Strategy: resource_structs.UserSpecifyHost,
+		Require:  *require2,
+		Count:    3,
+	})
+
+	loc3 := structs.Location{}
+	loc3.Region = "Test_Region12"
+	loc3.Zone = "Test_Zone2"
+	loc3.HostIp = "494.111.111.129"
+
+	require3 := newRequirementForRequest(4, 8, true, 256, string(constants.SSD), 10000, 10015, 5)
+
+	test_req.Requires = append(test_req.Requires, resource_structs.AllocRequirement{
+		Location: loc3,
+		Strategy: resource_structs.UserSpecifyHost,
+		Require:  *require3,
+		Count:    1,
+	})
+
+	var batchReq resource_structs.BatchAllocRequest
+	batchReq.BatchRequests = append(batchReq.BatchRequests, test_req)
+	assert.Equal(t, 1, len(batchReq.BatchRequests))
+
+	rsp, err := GormRW.AllocResources(context.TODO(), &batchReq)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(rsp.BatchResults))
+	assert.Equal(t, 7, len(rsp.BatchResults[0].Results))
+	assert.Equal(t, int32(0), rsp.BatchResults[0].Results[2].Reqseq)
+	assert.Equal(t, int32(1), rsp.BatchResults[0].Results[3].Reqseq)
+	assert.Equal(t, int32(2), rsp.BatchResults[0].Results[6].Reqseq)
+	assert.Equal(t, int32(10003), rsp.BatchResults[0].Results[0].PortRes[0].Ports[3])
+	assert.Equal(t, int32(10008), rsp.BatchResults[0].Results[1].PortRes[0].Ports[3])
+	assert.True(t, rsp.BatchResults[0].Results[0].HostIp != rsp.BatchResults[0].Results[3].HostIp)
+	assert.True(t, rsp.BatchResults[0].Results[0].HostIp == "494.111.111.127")
+	assert.True(t, rsp.BatchResults[0].Results[1].HostIp == "494.111.111.127")
+	assert.True(t, rsp.BatchResults[0].Results[2].HostIp == "494.111.111.127")
+	assert.True(t, rsp.BatchResults[0].Results[3].HostIp == "494.111.111.128")
+	assert.True(t, rsp.BatchResults[0].Results[4].HostIp == "494.111.111.128")
+	assert.True(t, rsp.BatchResults[0].Results[5].HostIp == "494.111.111.128")
+	assert.True(t, rsp.BatchResults[0].Results[6].HostIp == "494.111.111.129")
+	assert.Equal(t, int32(4), rsp.BatchResults[0].Results[0].ComputeRes.CpuCores)
+	assert.Equal(t, int32(8), rsp.BatchResults[0].Results[0].ComputeRes.Memory)
+	assert.Equal(t, int32(4), rsp.BatchResults[0].Results[1].ComputeRes.CpuCores)
+	assert.Equal(t, int32(8), rsp.BatchResults[0].Results[2].ComputeRes.Memory)
+	assert.Equal(t, int32(4), rsp.BatchResults[0].Results[4].ComputeRes.CpuCores)
+	assert.Equal(t, int32(8), rsp.BatchResults[0].Results[5].ComputeRes.Memory)
+	assert.Equal(t, "admin2", rsp.BatchResults[0].Results[0].Passwd)
+	var host resourcepool.Host
+	MetaDB.First(&host, "IP = ?", "494.111.111.127")
+	assert.Equal(t, int32(17-4-4-4), host.FreeCpuCores)
+	assert.Equal(t, int32(64-8-8-8), host.FreeMemory)
+	assert.True(t, host.Stat == string(constants.HostLoadInUsed))
+	var host2 resourcepool.Host
+	MetaDB.First(&host2, "IP = ?", "494.111.111.128")
+	assert.Equal(t, int32(16-4-4-4), host2.FreeCpuCores)
+	assert.Equal(t, int32(64-8-8-8), host2.FreeMemory)
+	assert.True(t, host2.Stat == string(constants.HostLoadInUsed))
+	var host3 resourcepool.Host
+	MetaDB.First(&host3, "IP = ?", "494.111.111.129")
+	assert.Equal(t, int32(15-4), host3.FreeCpuCores)
+	assert.Equal(t, int32(64-8), host3.FreeMemory)
+	assert.True(t, host3.Stat == string(constants.HostLoadInUsed))
+	//var usedPorts []int32
+	var usedPorts []management.UsedPort
+	MetaDB.Order("port").Model(&management.UsedPort{}).Where("host_id = ?", host3.ID).Scan(&usedPorts)
+	assert.Equal(t, 5, len(usedPorts))
+	assert.Equal(t, test_req.Applicant.HolderId, usedPorts[1].HolderId)
+	assert.Equal(t, test_req.Applicant.RequestId, usedPorts[2].RequestId)
+	for i := 0; i < 5; i++ {
+		assert.Equal(t, int32(10000+i), usedPorts[i].Port)
+	}
+
+	var usedPorts2 []management.UsedPort
+	MetaDB.Order("port").Model(&management.UsedPort{}).Where("host_id = ?", host2.ID).Scan(&usedPorts2)
+	assert.Equal(t, 15, len(usedPorts2))
+	assert.Equal(t, test_req.Applicant.HolderId, usedPorts2[1].HolderId)
+	assert.Equal(t, test_req.Applicant.RequestId, usedPorts2[2].RequestId)
+	for i := 0; i < 15; i++ {
+		assert.Equal(t, int32(10000+i), usedPorts2[i].Port)
+	}
+
+	var usedPorts3 []management.UsedPort
+	MetaDB.Order("port").Model(&management.UsedPort{}).Where("host_id = ?", host.ID).Scan(&usedPorts3)
+	assert.Equal(t, 15, len(usedPorts3))
+	assert.Equal(t, test_req.Applicant.HolderId, usedPorts3[1].HolderId)
+	assert.Equal(t, test_req.Applicant.RequestId, usedPorts3[2].RequestId)
+	for i := 0; i < 15; i++ {
+		assert.Equal(t, int32(10000+i), usedPorts3[i].Port)
+	}
+
+	var usedComputes []management.UsedCompute
+	MetaDB.Order("cpu_cores").Model(&management.UsedCompute{}).Where("host_id = ?", host.ID).Scan(&usedComputes)
+	var totalUsedCpu, totalUsedMem int32
+	for i := range usedComputes {
+		totalUsedCpu += usedComputes[i].CpuCores
+		totalUsedMem += usedComputes[i].Memory
+	}
+	assert.Equal(t, int32(4+4+4), totalUsedCpu)
+	assert.Equal(t, int32(8+8+8), totalUsedMem)
+
+	err = recycleClusterResources("TestCluster1")
+	assert.Nil(t, err)
+	err = GormRW.Delete(context.TODO(), id1)
+	assert.Nil(t, err)
+	err = GormRW.Delete(context.TODO(), id2)
+	assert.Nil(t, err)
+	err = GormRW.Delete(context.TODO(), id3)
+	assert.Nil(t, err)
+}

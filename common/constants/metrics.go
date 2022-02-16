@@ -80,6 +80,8 @@ const (
 	MetricsCDCTaskDetail MetricsType = "cdc/detail"
 	MetricsCDCDownstream MetricsType = "cdc/downstream/delete"
 
+	MetricsSwitchover MetricsType = "switchover/switch"
+
 	// MetricsParameterGroupCreate define parameter group metrics
 	MetricsParameterGroupCreate MetricsType = "parameter_group/create"
 	MetricsParameterGroupDelete MetricsType = "parameter_group/delete"

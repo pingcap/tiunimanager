@@ -176,6 +176,7 @@ func (p *ClusterMeta) ApplyInstanceResource(resource *resource.AllocRsp, instanc
 		instance.Ports = resource.Results[i].PortRes[0].Ports
 		instance.DiskID = resource.Results[i].DiskRes.DiskId
 		instance.DiskPath = resource.Results[i].DiskRes.Path
+		instance.Rack = resource.Results[i].Location.Rack
 	}
 	if p.Cluster.Status == string(constants.ClusterInitializing) {
 		pd := p.Instances[string(constants.ComponentIDPD)][0]

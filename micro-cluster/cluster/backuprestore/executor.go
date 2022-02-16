@@ -70,6 +70,16 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 	}
 	node.Record(fmt.Sprintf("convert storage type: %s ", storageType))
 
+	configRW := models.GetConfigReaderWriter()
+	rateLimitConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupRateLimit)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("get conifg %s failed: %s", constants.ConfigKeyBackupRateLimit, err.Error())
+	}
+	concurrencyConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupConcurrency)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("get conifg %s failed: %s", constants.ConfigKeyBackupConcurrency, err.Error())
+	}
+
 	backupSQLReq := sql.BackupSQLReq{
 		NodeID:         node.ID,
 		DbName:         "", //todo: support db table backup
@@ -81,6 +91,12 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),
 		},
+	}
+	if rateLimitConfig != nil && rateLimitConfig.ConfigValue != "" {
+		backupSQLReq.RateLimitM = rateLimitConfig.ConfigValue
+	}
+	if concurrencyConfig != nil && concurrencyConfig.ConfigValue != "" {
+		backupSQLReq.Concurrency = concurrencyConfig.ConfigValue
 	}
 	framework.LogWithContext(ctx).Infof("begin do backup sql, request[%+v]", backupSQLReq)
 	resp, err := sql.ExecBackupSQL(ctx, backupSQLReq, node.ID)
@@ -144,6 +160,16 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	}
 	node.Record(fmt.Sprintf("convert br storage type: %s ", storageType))
 
+	configRW := models.GetConfigReaderWriter()
+	rateLimitConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyRestoreRateLimit)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("get conifg %s failed: %s", constants.ConfigKeyRestoreRateLimit, err.Error())
+	}
+	concurrencyConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyRestoreConcurrency)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("get conifg %s failed: %s", constants.ConfigKeyRestoreConcurrency, err.Error())
+	}
+
 	restoreSQLReq := sql.RestoreSQLReq{
 		NodeID:         node.ID,
 		DbName:         "", //todo: support db table backup
@@ -155,6 +181,13 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),
 		},
+	}
+
+	if rateLimitConfig != nil && rateLimitConfig.ConfigValue != "" {
+		restoreSQLReq.RateLimitM = rateLimitConfig.ConfigValue
+	}
+	if concurrencyConfig != nil && concurrencyConfig.ConfigValue != "" {
+		restoreSQLReq.Concurrency = concurrencyConfig.ConfigValue
 	}
 	framework.LogWithContext(ctx).Infof("begin do backup sql, request[%+v]", restoreSQLReq)
 	_, err = sql.ExecRestoreSQL(ctx, restoreSQLReq, node.ID)

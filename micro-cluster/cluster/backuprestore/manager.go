@@ -500,7 +500,7 @@ func (mgr *BRManager) removeBackupFiles(ctx context.Context, record *backupresto
 			endpoint := strings.TrimPrefix(endpointCfg.ConfigValue, "http://")
 			s3Client, err := minio.New(endpoint, &minio.Options{
 				Creds:  credentials.NewStaticV4(akCfg.ConfigValue, skCfg.ConfigValue, ""),
-				Secure: true,
+				Secure: false,
 			})
 			if err != nil {
 				framework.LogWithContext(ctx).Warnf("create s3 client failed: %s", err.Error())

@@ -8190,10 +8190,18 @@ var doc = `{
                 },
                 "hasApply": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
                     "example": 1
                 },
                 "hasReboot": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
                     "example": 0
                 },
                 "instanceType": {
@@ -8213,8 +8221,21 @@ var doc = `{
                         "type": "string"
                     }
                 },
+                "rangeType": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ],
+                    "example": 1
+                },
                 "readOnly": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
                     "example": 0
                 },
                 "systemVariable": {
@@ -8223,14 +8244,38 @@ var doc = `{
                 },
                 "type": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                    ],
                     "example": 0
                 },
                 "unit": {
                     "type": "string",
-                    "example": "mb"
+                    "example": "MB"
+                },
+                "unitOptions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "KB",
+                        "MB",
+                        "GB"
+                    ]
                 },
                 "updateSource": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3
+                    ],
                     "example": 0
                 }
             }
@@ -9009,6 +9054,15 @@ var doc = `{
                         " 1000"
                     ]
                 },
+                "rangeType": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ],
+                    "example": 1
+                },
                 "readOnly": {
                     "type": "integer",
                     "enum": [
@@ -9037,7 +9091,18 @@ var doc = `{
                 },
                 "unit": {
                     "type": "string",
-                    "example": "mb"
+                    "example": "MB"
+                },
+                "unitOptions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "KB",
+                        "MB",
+                        "GB"
+                    ]
                 },
                 "updateSource": {
                     "type": "integer",
@@ -9453,6 +9518,15 @@ var doc = `{
                         "1",
                         " 1000"
                     ]
+                },
+                "rangeType": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ],
+                    "example": 1
                 },
                 "readOnly": {
                     "type": "integer",

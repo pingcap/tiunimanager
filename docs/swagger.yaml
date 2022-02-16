@@ -1325,9 +1325,15 @@ definitions:
         example: binlog size
         type: string
       hasApply:
+        enum:
+        - 0
+        - 1
         example: 1
         type: integer
       hasReboot:
+        enum:
+        - 0
+        - 1
         example: 0
         type: integer
       instanceType:
@@ -1342,19 +1348,48 @@ definitions:
         items:
           type: string
         type: array
+      rangeType:
+        enum:
+        - 0
+        - 1
+        - 2
+        example: 1
+        type: integer
       readOnly:
+        enum:
+        - 0
+        - 1
         example: 0
         type: integer
       systemVariable:
         example: log.binlog_size
         type: string
       type:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
         example: 0
         type: integer
       unit:
-        example: mb
+        example: MB
         type: string
+      unitOptions:
+        example:
+        - KB
+        - MB
+        - GB
+        items:
+          type: string
+        type: array
       updateSource:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
         example: 0
         type: integer
     type: object
@@ -1887,6 +1922,13 @@ definitions:
         items:
           type: string
         type: array
+      rangeType:
+        enum:
+        - 0
+        - 1
+        - 2
+        example: 1
+        type: integer
       readOnly:
         enum:
         - 0
@@ -1908,8 +1950,16 @@ definitions:
         example: 0
         type: integer
       unit:
-        example: mb
+        example: MB
         type: string
+      unitOptions:
+        example:
+        - KB
+        - MB
+        - GB
+        items:
+          type: string
+        type: array
       updateSource:
         enum:
         - 0
@@ -2198,6 +2248,13 @@ definitions:
         items:
           type: string
         type: array
+      rangeType:
+        enum:
+        - 0
+        - 1
+        - 2
+        example: 1
+        type: integer
       readOnly:
         enum:
         - 0

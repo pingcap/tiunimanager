@@ -25,7 +25,6 @@ package parametergroup
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
@@ -296,19 +295,25 @@ func validateParameter(ctx context.Context, reqParams []structs.ParameterGroupPa
 	for _, queryParam := range params {
 		for _, reqParam := range reqParams {
 			if queryParam.ID == reqParam.ID {
-				ranges := make([]string, 0)
-				if len(queryParam.Range) > 0 {
-					err = json.Unmarshal([]byte(queryParam.Range), &ranges)
-					if err != nil {
-						framework.LogWithContext(ctx).Errorf("failed to convert parameter range. range: %v, err: %v", queryParam.Range, err)
-						return err
-					}
+				ranges, err := parameter.UnmarshalCovertArray(queryParam.Range)
+				if err != nil {
+					framework.LogWithContext(ctx).Errorf("failed to convert parameter range. range: %v, err: %v", queryParam.Range, err)
+					return err
 				}
+				// convert unitOptions
+				unitOptions, err := parameter.UnmarshalCovertArray(queryParam.UnitOptions)
+				if err != nil {
+					return err
+				}
+
 				if !parameter.ValidateRange(&parameter.ModifyClusterParameterInfo{
-					ParamId:   reqParam.ID,
-					Type:      queryParam.Type,
-					Range:     ranges,
-					RealValue: structs.ParameterRealValue{ClusterValue: reqParam.DefaultValue},
+					ParamId:     reqParam.ID,
+					Type:        queryParam.Type,
+					Range:       ranges,
+					RangeType:   queryParam.RangeType,
+					Unit:        queryParam.Unit,
+					UnitOptions: unitOptions,
+					RealValue:   structs.ParameterRealValue{ClusterValue: reqParam.DefaultValue},
 				}, false) {
 					if len(ranges) == 2 && (queryParam.Type == int(parameter.Integer) || queryParam.Type == int(parameter.Float)) {
 						return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
@@ -328,7 +333,7 @@ func validateParameter(ctx context.Context, reqParams []structs.ParameterGroupPa
 
 func convertParameterGroupParameterInfo(param *parametergroup.ParamDetail) (pgi structs.ParameterGroupParameterInfo, err error) {
 	// convert range
-	ranges, err := parameter.UnmarshalCovertArray(param.UnitOptions)
+	ranges, err := parameter.UnmarshalCovertArray(param.Range)
 	if err != nil {
 		return pgi, err
 	}

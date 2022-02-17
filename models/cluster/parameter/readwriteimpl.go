@@ -61,7 +61,8 @@ func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, cl
 
 	query := m.DB(ctx).Model(&ClusterParameterMapping{}).
 		Select("parameters.id, parameters.category, parameters.name, parameters.instance_type, parameters.system_variable, "+
-			"parameters.type, parameters.unit, parameters.range, parameters.has_reboot, parameters.has_apply, parameters.update_source, parameters.description, "+
+			"parameters.type, parameters.unit, parameters.unit_options, parameters.range, parameters.range_type, "+
+			"parameters.has_reboot, parameters.has_apply, parameters.update_source, parameters.description, "+
 			"parameter_group_mappings.default_value, cluster_parameter_mappings.real_value, parameter_group_mappings.note, "+
 			"cluster_parameter_mappings.created_at, cluster_parameter_mappings.updated_at").
 		Joins("left join parameters on parameters.id = cluster_parameter_mappings.parameter_id").

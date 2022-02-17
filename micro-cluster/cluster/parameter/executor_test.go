@@ -282,6 +282,7 @@ func TestExecutor_validationParameters(t *testing.T) {
 					SystemVariable: "",
 					Type:           0,
 					Range:          []string{"s", "e"},
+					RangeType:      1,
 					RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
 				},
 			},
@@ -303,6 +304,7 @@ func TestExecutor_validateRange(t *testing.T) {
 			SystemVariable: "",
 			Type:           0,
 			Range:          []string{"1", "10"},
+			RangeType:      1,
 			RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
 		}, true)
 		assert.EqualValues(t, true, validated)
@@ -316,6 +318,7 @@ func TestExecutor_validateRange(t *testing.T) {
 			SystemVariable: "",
 			Type:           1,
 			Range:          []string{"debug", "info", "warn", "error"},
+			RangeType:      2,
 			RealValue:      structs.ParameterRealValue{ClusterValue: "info"},
 		}, true)
 		assert.EqualValues(t, true, validated)
@@ -329,6 +332,7 @@ func TestExecutor_validateRange(t *testing.T) {
 			SystemVariable: "",
 			Type:           2,
 			Range:          []string{"true", "false"},
+			RangeType:      2,
 			RealValue:      structs.ParameterRealValue{ClusterValue: "true"},
 		}, true)
 		assert.EqualValues(t, true, validated)
@@ -342,6 +346,7 @@ func TestExecutor_validateRange(t *testing.T) {
 			SystemVariable: "",
 			Type:           3,
 			Range:          []string{"0.1", "5.2"},
+			RangeType:      1,
 			RealValue:      structs.ParameterRealValue{ClusterValue: "3.14"},
 		}, true)
 
@@ -354,6 +359,7 @@ func TestExecutor_validateRange(t *testing.T) {
 			SystemVariable: "",
 			Type:           4,
 			Range:          []string{"[]", "[]"},
+			RangeType:      0,
 			RealValue:      structs.ParameterRealValue{ClusterValue: "[]"},
 		}, true)
 		assert.EqualValues(t, true, validated)
@@ -423,6 +429,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 					SystemVariable: "",
 					Type:           0,
 					Range:          []string{"0", "1024"},
+					RangeType:      1,
 					RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
 				},
 			},
@@ -457,6 +464,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 					SystemVariable: "",
 					Type:           0,
 					Range:          []string{"0", "1024"},
+					RangeType:      1,
 					RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
 				},
 			},
@@ -492,6 +500,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 					SystemVariable: "",
 					Type:           0,
 					Range:          []string{"0", "1024"},
+					RangeType:      1,
 					RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
 				},
 			},
@@ -528,6 +537,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 					SystemVariable: "",
 					Type:           0,
 					Range:          []string{"0", "1024"},
+					RangeType:      1,
 					RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
 				},
 			},
@@ -562,6 +572,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 					SystemVariable: "",
 					Type:           0,
 					Range:          []string{"0", "1024"},
+					RangeType:      1,
 					RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
 				},
 			},
@@ -596,6 +607,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 					SystemVariable: "",
 					Type:           0,
 					Range:          []string{"0", "1024"},
+					RangeType:      1,
 					RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
 				},
 			},
@@ -630,6 +642,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 					SystemVariable: "",
 					Type:           0,
 					Range:          []string{"0", "1024"},
+					RangeType:      1,
 					RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
 				},
 			},
@@ -664,6 +677,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 					SystemVariable: "",
 					Type:           0,
 					Range:          []string{"0", "1024"},
+					RangeType:      1,
 					RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
 				},
 			},

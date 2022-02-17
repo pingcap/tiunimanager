@@ -4884,6 +4884,75 @@ var doc = `{
                 }
             }
         },
+        "/switchover": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "master/slave switchover",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "switchover"
+                ],
+                "summary": "master/slave switchover",
+                "parameters": [
+                    {
+                        "description": "switchover request",
+                        "name": "masterSlaveClusterSwitchoverReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.MasterSlaveClusterSwitchoverReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.MasterSlaveClusterSwitchoverResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/tenant": {
             "get": {
                 "security": [
@@ -6734,6 +6803,35 @@ var doc = `{
                 }
             }
         },
+        "cluster.MasterSlaveClusterSwitchoverReq": {
+            "type": "object",
+            "required": [
+                "sourceClusterID",
+                "targetClusterID"
+            ],
+            "properties": {
+                "force": {
+                    "type": "boolean"
+                },
+                "sourceClusterID": {
+                    "description": "old master/new slave",
+                    "type": "string"
+                },
+                "targetClusterID": {
+                    "description": "new master/old slave",
+                    "type": "string"
+                }
+            }
+        },
+        "cluster.MasterSlaveClusterSwitchoverResp": {
+            "type": "object",
+            "properties": {
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
         "cluster.MysqlDownstream": {
             "type": "object",
             "properties": {
@@ -8092,10 +8190,18 @@ var doc = `{
                 },
                 "hasApply": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
                     "example": 1
                 },
                 "hasReboot": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
                     "example": 0
                 },
                 "instanceType": {
@@ -8115,8 +8221,21 @@ var doc = `{
                         "type": "string"
                     }
                 },
+                "rangeType": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ],
+                    "example": 1
+                },
                 "readOnly": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
                     "example": 0
                 },
                 "systemVariable": {
@@ -8125,14 +8244,38 @@ var doc = `{
                 },
                 "type": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                    ],
                     "example": 0
                 },
                 "unit": {
                     "type": "string",
-                    "example": "mb"
+                    "example": "MB"
+                },
+                "unitOptions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "KB",
+                        "MB",
+                        "GB"
+                    ]
                 },
                 "updateSource": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3
+                    ],
                     "example": 0
                 }
             }
@@ -8911,6 +9054,15 @@ var doc = `{
                         " 1000"
                     ]
                 },
+                "rangeType": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ],
+                    "example": 1
+                },
                 "readOnly": {
                     "type": "integer",
                     "enum": [
@@ -8939,7 +9091,18 @@ var doc = `{
                 },
                 "unit": {
                     "type": "string",
-                    "example": "mb"
+                    "example": "MB"
+                },
+                "unitOptions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "KB",
+                        "MB",
+                        "GB"
+                    ]
                 },
                 "updateSource": {
                     "type": "integer",
@@ -9356,6 +9519,15 @@ var doc = `{
                         " 1000"
                     ]
                 },
+                "rangeType": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ],
+                    "example": 1
+                },
                 "readOnly": {
                     "type": "integer",
                     "enum": [
@@ -9381,7 +9553,18 @@ var doc = `{
                 },
                 "unit": {
                     "type": "string",
-                    "example": "mb"
+                    "example": "MB"
+                },
+                "unitOptions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "KB",
+                        "MB",
+                        "GB"
+                    ]
                 },
                 "updateSource": {
                     "type": "integer",

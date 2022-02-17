@@ -25,7 +25,6 @@ package parametergroup
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
@@ -296,21 +295,27 @@ func validateParameter(ctx context.Context, reqParams []structs.ParameterGroupPa
 	for _, queryParam := range params {
 		for _, reqParam := range reqParams {
 			if queryParam.ID == reqParam.ID {
-				ranges := make([]string, 0)
-				if len(queryParam.Range) > 0 {
-					err = json.Unmarshal([]byte(queryParam.Range), &ranges)
-					if err != nil {
-						framework.LogWithContext(ctx).Errorf("failed to convert parameter range. range: %v, err: %v", queryParam.Range, err)
-						return err
-					}
+				ranges, err := parameter.UnmarshalCovertArray(queryParam.Range)
+				if err != nil {
+					framework.LogWithContext(ctx).Errorf("failed to convert parameter range. range: %v, err: %v", queryParam.Range, err)
+					return err
 				}
+				// convert unitOptions
+				unitOptions, err := parameter.UnmarshalCovertArray(queryParam.UnitOptions)
+				if err != nil {
+					return err
+				}
+
 				if !parameter.ValidateRange(&parameter.ModifyClusterParameterInfo{
-					ParamId:   reqParam.ID,
-					Type:      queryParam.Type,
-					Range:     ranges,
-					RealValue: structs.ParameterRealValue{ClusterValue: reqParam.DefaultValue},
+					ParamId:     reqParam.ID,
+					Type:        queryParam.Type,
+					Range:       ranges,
+					RangeType:   queryParam.RangeType,
+					Unit:        queryParam.Unit,
+					UnitOptions: unitOptions,
+					RealValue:   structs.ParameterRealValue{ClusterValue: reqParam.DefaultValue},
 				}, false) {
-					if len(ranges) == 2 && (queryParam.Type == int(parameter.Integer) || queryParam.Type == int(parameter.Float)) {
+					if queryParam.RangeType == int(parameter.ContinuousRange) && len(queryParam.Range) == 2 {
 						return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
 							fmt.Sprintf("Validation %s parameter `%s` failed, update value: %s, can take a range of values: %v",
 								queryParam.InstanceType, parameter.DisplayFullParameterName(queryParam.Category, queryParam.Name), reqParam.DefaultValue, ranges))
@@ -328,12 +333,14 @@ func validateParameter(ctx context.Context, reqParams []structs.ParameterGroupPa
 
 func convertParameterGroupParameterInfo(param *parametergroup.ParamDetail) (pgi structs.ParameterGroupParameterInfo, err error) {
 	// convert range
-	ranges := make([]string, 0)
-	if len(param.Range) > 0 {
-		err = json.Unmarshal([]byte(param.Range), &ranges)
-		if err != nil {
-			return pgi, err
-		}
+	ranges, err := parameter.UnmarshalCovertArray(param.Range)
+	if err != nil {
+		return pgi, err
+	}
+	// convert unitOptions
+	unitOptions, err := parameter.UnmarshalCovertArray(param.UnitOptions)
+	if err != nil {
+		return pgi, err
 	}
 
 	pgi = structs.ParameterGroupParameterInfo{
@@ -344,7 +351,9 @@ func convertParameterGroupParameterInfo(param *parametergroup.ParamDetail) (pgi 
 		SystemVariable: param.SystemVariable,
 		Type:           param.Type,
 		Unit:           param.Unit,
+		UnitOptions:    unitOptions,
 		Range:          ranges,
+		RangeType:      param.RangeType,
 		HasReboot:      param.HasReboot,
 		HasApply:       param.HasApply,
 		DefaultValue:   param.DefaultValue,

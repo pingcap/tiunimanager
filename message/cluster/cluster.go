@@ -145,7 +145,9 @@ type CloneClusterResp struct {
 
 // MasterSlaveClusterSwitchoverReq Master and slave cluster switchover messages
 type MasterSlaveClusterSwitchoverReq struct {
+	// old master/new slave
 	SourceClusterID string `json:"sourceClusterID" validate:"required,min=8,max=64"`
+	// new master/old slave
 	TargetClusterID string `json:"targetClusterID" validate:"required,min=8,max=64"`
 	Force           bool   `json:"force"`
 }

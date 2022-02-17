@@ -18,6 +18,7 @@ package meta
 import (
 	"context"
 	"fmt"
+
 	"github.com/pingcap-inc/tiem/message/cluster"
 
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -156,4 +157,3 @@ func QueryInstanceLogInfo(ctx context.Context, hostId string, typeFilter []strin
 	}
 	return
 }
-

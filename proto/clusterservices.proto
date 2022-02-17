@@ -93,6 +93,9 @@ service ClusterService {
     rpc QueryUpgradeVersionDiffInfo(RpcRequest) returns (RpcResponse);
     rpc UpgradeCluster(RpcRequest) returns (RpcResponse);
 
+    // switchover
+    rpc MasterSlaveSwitchover(RpcRequest) returns (RpcResponse);
+
     // system config
     rpc GetSystemConfig(RpcRequest) returns (RpcResponse);
 

@@ -1475,19 +1475,6 @@ func TestClusterMeta_Display(t *testing.T) {
 			MaintenanceStatus: constants.ClusterMaintenanceCreating,
 		},
 		Instances: map[string][]*management.ClusterInstance{
-			"Prometheus": {
-				{
-					Entity: common.Entity{
-						Status: string(constants.ClusterInstanceRunning),
-					},
-					Zone:     "zone1",
-					CpuCores: 4,
-					Memory:   8,
-					Type:     "Prometheus",
-					Version:  "v5.0.0",
-					HostIP:   []string{"127.0.0.1"},
-				},
-			},
 			"TiDB": {
 				{
 					Entity: common.Entity{
@@ -1538,21 +1525,6 @@ func TestClusterMeta_Display(t *testing.T) {
 					Version:  "v5.0.0",
 					Ports:    []int32{1},
 					HostIP:   []string{"127.0.0.1"},
-				},
-			},
-
-			"Grafana": {
-				{
-					Entity: common.Entity{
-						Status: string(constants.ClusterInstanceRunning),
-					},
-					Zone:     "zone1",
-					CpuCores: 4,
-					Memory:   8,
-					Type:     "Grafana",
-					Version:  "v5.0.0",
-					HostIP:   []string{"127.4.5.6"},
-					Ports:    []int32{888},
 				},
 			},
 			"TiKV": {
@@ -1616,6 +1588,34 @@ func TestClusterMeta_Display(t *testing.T) {
 					Ports:    []int32{999},
 				},
 			},
+
+			"Grafana": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone:     "zone1",
+					CpuCores: 4,
+					Memory:   8,
+					Type:     "Grafana",
+					Version:  "v5.0.0",
+					HostIP:   []string{"127.4.5.6"},
+					Ports:    []int32{888},
+				},
+			},
+			"Prometheus": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone:     "zone1",
+					CpuCores: 4,
+					Memory:   8,
+					Type:     "Prometheus",
+					Version:  "v5.0.0",
+					HostIP:   []string{"127.0.0.1"},
+				},
+			},
 		},
 	}
 
@@ -1636,11 +1636,11 @@ func TestClusterMeta_Display(t *testing.T) {
 	})
 	t.Run("instance", func(t *testing.T) {
 		topology, resource := meta.DisplayInstanceInfo(context.TODO())
-		assert.Equal(t, 8, len(topology.Topology))
+		assert.Equal(t, 11, len(topology.Topology))
 		assert.Equal(t, topology.Topology[1].Type, topology.Topology[0].Type)
 		assert.NotEqual(t, topology.Topology[3].Type, topology.Topology[4].Type)
 
-		assert.Equal(t, 2, len(resource.InstanceResource))
+		assert.Equal(t, 5, len(resource.InstanceResource))
 		assert.Equal(t, 4, resource.InstanceResource[0].Count)
 		assert.NotEqual(t, resource.InstanceResource[0].Type, resource.InstanceResource[1].Type)
 		assert.Equal(t, 3, len(resource.InstanceResource[1].Resource))

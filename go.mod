@@ -24,9 +24,11 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/google/goexpect v0.0.0-20210430020637-ab937bf7fd6f
 	github.com/google/uuid v1.3.0
+	github.com/jinzhu/now v1.1.3 // indirect
 	github.com/labstack/gommon v0.3.0
 	github.com/lithammer/shortuuid v3.0.0+incompatible
 	github.com/micro/cli/v2 v2.1.2
+	github.com/minio/minio-go/v7 v7.0.21 // indirect
 	github.com/opentracing/basictracer-go v1.0.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pingcap/check v0.0.0-20211026125417-57bd13f7b5f0
@@ -61,6 +63,7 @@ require (
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v2 v2.4.0
+	gorm.io/driver/mysql v1.2.0 // indirect
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.22.3
 )

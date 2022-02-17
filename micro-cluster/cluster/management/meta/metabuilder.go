@@ -25,6 +25,7 @@ package meta
 
 import (
 	"context"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -55,6 +56,7 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 		Tags:              p.Cluster.Tags,    // user specify (option)
 		TLS:               p.Cluster.TLS,     // user specify (option)
 		OwnerId:           framework.GetUserIDFromContext(ctx),
+		Vendor:            parameter.Vendor,
 		ParameterGroupID:  p.Cluster.ParameterGroupID, // user specify (option)
 		Copies:            p.Cluster.Copies,           // user specify (option)
 		Exclusive:         p.Cluster.Exclusive,        // user specify (option)

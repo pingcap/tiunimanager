@@ -282,6 +282,7 @@ mock:
 	mockgen -destination ./test/mockresource/mockprovider/mock_provider_interface.go -package mockinitiator -source ./micro-cluster/resourcemanager/resourcepool/hostprovider/hostprovider.go
 	mockgen -destination ./test/mockutil/mocksshclientexecutor/mock_ssh_client_interface.go -package mocksshclient -source ./util/ssh/ssh_client.go
 	mockgen -destination ./test/mockresource/mock_allocator_recycler.go -package mock_allocator_recycler -source ./micro-cluster/resourcemanager/management/structs/allocator_recycler.go
+	mockgen -destination ./test/mockcdcmanager/mock_cdc_manager.go -package mockcdcmanager -source ./micro-cluster/cluster/switchover/cdc_manager_api.go
 	mockgen -destination ./test/mockmodels/mock_product.go -package mock_product -source ./models/platform/product/product_read_writer.go
 	mockgen -destination ./test/mockaccount/mock_account.go -package mockaccount -source ./models/user/account/readerwriter.go
 	mockgen -destination ./test/mockidentification/mock_identification.go -package mockidentification -source ./models/user/identification/readerwriter.go
@@ -291,6 +292,7 @@ mock:
 	mockgen -destination ./test/mockutiltikv/mock_utiltikv.go -package mockutiltikv -source ./util/api/tikv/clusterconfig.go
 	mockgen -destination ./test/mockutiltidbhttp/mock_utiltidbhttp.go -package mockutiltidbhttp -source ./util/api/tidb/http/clusterconfig.go
 	mockgen -destination ./test/mockutiltidbsql_config/mock_utiltidbsql_config.go -package mockutiltidbsqlconfig -source ./util/api/tidb/sql/clusterconfig.go
+	mockgen -destination ./test/mockutilcdc/mock_utilcdc_change_feed.go -package mockutilcdc -source ./util/api/cdc/changefeed.go
 
 swag:
 	$(GO) install github.com/swaggo/swag/cmd/swag@v1.7.1

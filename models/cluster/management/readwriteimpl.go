@@ -18,6 +18,7 @@ package management
 import (
 	"context"
 	"fmt"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -338,6 +339,50 @@ func (g *ClusterReadWrite) DeleteRelation(ctx context.Context, relationID uint) 
 	relation := &ClusterRelation{}
 	err := g.DB(ctx).First(relation, "id = ?", relationID).Delete(relation).Error
 	return dbCommon.WrapDBError(err)
+}
+
+func (g *ClusterReadWrite) SwapMasterSlaveRelation(ctx context.Context, oldMasterClusterId, oldSlaveClusterId, newSyncChangeFeedTaskId string) error {
+	tx := g.DB(ctx).Begin()
+
+	if err := tx.Error; err != nil {
+		return err
+	}
+	relations := make([]*ClusterRelation, 0)
+	err := tx.Model(&ClusterRelation{}).
+		Where("subject_cluster_id  = ? ", oldMasterClusterId).
+		Where("object_cluster_id  = ? ", oldSlaveClusterId).
+		Where("relation_type  = ? ", string(constants.ClusterRelationStandBy)).
+		Find(&relations).Error
+	if err != nil {
+		err = dbCommon.WrapDBError(err)
+		tx.Rollback()
+		return err
+	}
+	framework.Assert(len(relations) > 0)
+	for _, relation := range relations {
+		framework.Assert(relation.SubjectClusterID == oldMasterClusterId)
+		framework.LogWithContext(ctx).Debugf("gorm SwapMasterSlaveRelation get relation %v %s %s %s",
+			relation.ID, relation.SubjectClusterID, relation.ObjectClusterID, relation.SyncChangeFeedTaskID)
+		err = tx.Debug().Delete(relation).Error
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("1st gorm SwapMasterSlaveRelation %s", err)
+			tx.Rollback()
+			return err
+		}
+	}
+	err = tx.Debug().Create(&ClusterRelation{
+		RelationType:         constants.ClusterRelationStandBy,
+		ObjectClusterID:      oldMasterClusterId,
+		SubjectClusterID:     oldSlaveClusterId,
+		SyncChangeFeedTaskID: newSyncChangeFeedTaskId,
+	}).Error
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("2st gorm SwapMasterSlaveRelation %s", err)
+		tx.Rollback()
+		return err
+	}
+
+	return dbCommon.WrapDBError(tx.Commit().Error)
 }
 
 func (g *ClusterReadWrite) CreateClusterTopologySnapshot(ctx context.Context, snapshot ClusterTopologySnapshot) error {

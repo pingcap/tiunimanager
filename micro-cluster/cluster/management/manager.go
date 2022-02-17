@@ -548,7 +548,7 @@ var deleteClusterFlow = workflow.WorkFlowDefine{
 		"freedResourceDone":  {"clearBackupData", "clearDone", "fail", workflow.SyncFuncNode, clearBackupData},
 		"clearDone":          {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(deleteCluster)},
 		"fail":               {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
-		"revert":               {"end", "", "", workflow.SyncFuncNode, endMaintenance},
+		"revert":             {"end", "", "", workflow.SyncFuncNode, endMaintenance},
 	},
 }
 
@@ -832,17 +832,26 @@ func (p *Manager) restoreNewClusterPreCheck(ctx context.Context, req cluster.Res
 var onlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
 	FlowName: constants.FlowOnlineInPlaceUpgradeCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":          {"editConfig", "editConfigDone", "fail", workflow.SyncFuncNode, editConfig},
-		"editConfigDone": {"clusterUpgrade", "upgradeDone", "fail", workflow.PollingNode, upgradeCluster},
-		"upgradeDone":    {"end", "", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistCluster)},
-		"fail":           {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure)},
+		"start":                   {"initialize", "initializeDone", "fail", workflow.SyncFuncNode, initializeUpgrade},
+		"initializeDone":          {"selectTargetVersion", "selectTargetVersionDone", "fail", workflow.SyncFuncNode, selectTargetUpgradeVersion},
+		"selectTargetVersionDone": {"mergeConfig", "mergeConfigDone", "fail", workflow.SyncFuncNode, mergeUpgradeConfig},
+		"mergeConfigDone":         {"checkRegionHealth", "checkRegionHealthDone", "fail", workflow.SyncFuncNode, checkRegionHealth},
+		"checkRegionHealthDone":   {"upgradeCluster", "upgradeDone", "fail", workflow.PollingNode, upgradeCluster},
+		"upgradeDone":             {"checkVersion", "checkVersionDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeVersion},
+		"checkVersionDone":        {"checkMD5", "checkMD5Done", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeMD5},
+		"checkMD5Done":            {"checkUpgradeTime", "checkUpgradeTimeDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeTime},
+		"checkUpgradeTimeDone":    {"checkConfig", "checkConfigDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeConfig},
+		"checkConfigDone":         {"checkSystemHealth", "checkSystemHealthDone", "failAfterUpgrade", workflow.SyncFuncNode, checkRegionHealth},
+		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
+		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertConfigAfterFailure, endMaintenance)},
+		"failAfterUpgrade":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 
 var offlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
 	FlowName: constants.FlowOfflineInPlaceUpgradeCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":            {"editConfig", "editConfigDone", "fail", workflow.SyncFuncNode, editConfig},
+		"start":            {"editConfig", "editConfigDone", "fail", workflow.SyncFuncNode, mergeUpgradeConfig},
 		"editConfigDone":   {"clusterStop", "stopClusterDone", "fail", workflow.PollingNode, stopCluster},
 		"stopClusterDone":  {"clusterUpgrade", "upgradeDone", "fail", workflow.PollingNode, upgradeCluster},
 		"upgradeDone":      {"clusterStart", "startClusterDone", "fail", workflow.SyncFuncNode, startCluster},
@@ -914,40 +923,40 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 }
 
 // InPlaceUpgradeCluster
-// @Description: See onlineInPlaceUpgradeClusterFlow
+// @Description: upgrade a cluster
 // @Receiver p
 // @Parameter ctx
-// @Parameter req
-// @return resp
-// @return err
-func (p *Manager) InPlaceUpgradeCluster(ctx context.Context, req *cluster.ClusterUpgradeReq) (resp *cluster.ClusterUpgradeResp, err error) {
-	framework.LogWithContext(ctx).Infof("inplaceupgradecluster, handle request [%+v]", *req)
-	meta, err := meta.Get(ctx, req.ClusterID)
+// @Parameter cluster.UpgradeClusterReq
+// @return cluster.UpgradeClusterResp
+// @return error
+func (p *Manager) InPlaceUpgradeCluster(ctx context.Context, req cluster.UpgradeClusterReq) (resp cluster.UpgradeClusterResp, err error) {
+	framework.LogWithContext(ctx).Debugf("inplaceupgradecluster, handle request [%+v]", req)
+	// Get cluster info and topology from db based by clusterID
+	clusterMeta, err := meta.Get(ctx, req.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"load cluster %s meta from db error: %s", req.ClusterID, err.Error())
 		return
 	}
 
-	if meta.Cluster.Status != string(constants.ClusterRunning) {
-		errMsg := fmt.Sprintf("cannot upgrade cluster [%s] under status [%s]", meta.Cluster.Name, meta.Cluster.Status)
-		framework.LogWithContext(ctx).Error(errMsg)
-		err = errors.NewError(errors.TIEM_TASK_CONFLICT, errMsg)
-		return &cluster.ClusterUpgradeResp{}, err
-	}
-
 	data := map[string]interface{}{
-		ContextClusterMeta:    meta,
+		ContextClusterMeta:    clusterMeta,
 		ContextUpgradeVersion: req.TargetVersion,
 		ContextUpgradeWay:     req.UpgradeWay,
 	}
 	var flowID string
 	if req.UpgradeWay == cluster.UpgradeWayOnline {
-		flowID, err = asyncMaintenance(ctx, meta, constants.ClusterMaintenanceUpgrading, onlineInPlaceUpgradeClusterFlow.FlowName, data)
+		flowID, err = asyncMaintenance(ctx, clusterMeta, constants.ClusterMaintenanceUpgrading, onlineInPlaceUpgradeClusterFlow.FlowName, data)
 	} else {
-		flowID, err = asyncMaintenance(ctx, meta, constants.ClusterMaintenanceUpgrading, offlineInPlaceUpgradeClusterFlow.FlowName, data)
+		flowID, err = asyncMaintenance(ctx, clusterMeta, constants.ClusterMaintenanceUpgrading, offlineInPlaceUpgradeClusterFlow.FlowName, data)
+	}
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"cluster %s async maintenance error: %s", clusterMeta.Cluster.ID, err.Error())
+		return
 	}
 
+	resp.ClusterID = clusterMeta.Cluster.ID
 	resp.WorkFlowID = flowID
 	return
 }

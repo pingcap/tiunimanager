@@ -82,35 +82,6 @@ definitions:
         description: Asynchronous task workflow ID
         type: string
     type: object
-  cluster.ClusterUpgradeReq:
-    properties:
-      configs:
-        items:
-          $ref: '#/definitions/structs.ClusterUpgradeVersionConfigItem'
-        type: array
-      targetVersion:
-        example: v5.0.0
-        type: string
-      upgradeType:
-        enum:
-        - in-place
-        - migration
-        type: string
-      upgradeWay:
-        enum:
-        - offline
-        - online
-        type: string
-    required:
-    - targetVersion
-    - upgradeType
-    type: object
-  cluster.ClusterUpgradeResp:
-    properties:
-      workFlowId:
-        description: Asynchronous task workflow ID
-        type: string
-    type: object
   cluster.CreateChangeFeedTaskReq:
     properties:
       clusterId:
@@ -849,6 +820,37 @@ definitions:
     properties:
       clusterId:
         example: "1"
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  cluster.UpgradeClusterReq:
+    properties:
+      configs:
+        items:
+          $ref: '#/definitions/structs.ClusterUpgradeVersionConfigItem'
+        type: array
+      targetVersion:
+        example: v5.0.0
+        type: string
+      upgradeType:
+        enum:
+        - in-place
+        - migration
+        type: string
+      upgradeWay:
+        enum:
+        - offline
+        - online
+        type: string
+    required:
+    - targetVersion
+    - upgradeType
+    type: object
+  cluster.UpgradeClusterResp:
+    properties:
+      clusterId:
         type: string
       workFlowId:
         description: Asynchronous task workflow ID
@@ -3240,7 +3242,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: request for upgrade
+      description: request for upgrade TiDB cluster
       parameters:
       - description: clusterId
         in: path
@@ -3252,7 +3254,7 @@ paths:
         name: upgradeReq
         required: true
         schema:
-          $ref: '#/definitions/cluster.ClusterUpgradeReq'
+          $ref: '#/definitions/cluster.UpgradeClusterReq'
       produces:
       - application/json
       responses:
@@ -3263,7 +3265,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/cluster.ClusterUpgradeResp'
+                  $ref: '#/definitions/cluster.UpgradeClusterResp'
               type: object
         "401":
           description: Unauthorized
@@ -3279,7 +3281,7 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: request for upgrade
+      summary: request for upgrade TiDB cluster
       tags:
       - cluster upgrade
   /clusters/:clusterId/upgrade/diff:

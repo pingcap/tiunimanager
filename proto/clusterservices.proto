@@ -91,7 +91,7 @@ service ClusterService {
     rpc UpdateProductUpgradePath(RpcRequest) returns (RpcResponse);
     rpc QueryProductUpgradePath(RpcRequest) returns (RpcResponse);
     rpc QueryUpgradeVersionDiffInfo(RpcRequest) returns (RpcResponse);
-    rpc ClusterUpgrade(RpcRequest) returns (RpcResponse);
+    rpc UpgradeCluster(RpcRequest) returns (RpcResponse);
 
     // system config
     rpc GetSystemConfig(RpcRequest) returns (RpcResponse);

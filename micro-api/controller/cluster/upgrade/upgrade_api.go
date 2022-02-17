@@ -30,7 +30,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
 
-const paramNameOfClusterID = "clusterId"
+const ParamClusterID = "clusterId"
 
 // QueryUpgradePaths query upgrade path for given cluster id
 // @Summary query upgrade path for given cluster id
@@ -47,7 +47,7 @@ const paramNameOfClusterID = "clusterId"
 // @Router /clusters/:clusterId/upgrade/path [get]
 func QueryUpgradePaths(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.QueryUpgradePathReq{
-		ClusterID: c.Param(paramNameOfClusterID),
+		ClusterID: c.Param(ParamClusterID),
 	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.QueryProductUpgradePath, &cluster.QueryUpgradePathRsp{},
 			requestBody,
@@ -75,7 +75,7 @@ func QueryUpgradeVersionDiffInfo(c *gin.Context) {
 		&req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
-			req.(*cluster.QueryUpgradeVersionDiffInfoReq).ClusterID = c.Param(paramNameOfClusterID)
+			req.(*cluster.QueryUpgradeVersionDiffInfoReq).ClusterID = c.Param(ParamClusterID)
 			return nil
 		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.QueryUpgradeVersionDiffInfo, &cluster.QueryUpgradeVersionDiffInfoResp{},
@@ -84,31 +84,30 @@ func QueryUpgradeVersionDiffInfo(c *gin.Context) {
 	}
 }
 
-// ClusterUpgrade request for upgrade
-// @Summary request for upgrade
-// @Description request for upgrade
+// Upgrade a cluster
+// @Summary request for upgrade TiDB cluster
+// @Description request for upgrade TiDB cluster
 // @Tags cluster upgrade
-// @Accept json
-// @Produce json
+// @Accept application/json
+// @Produce application/json
 // @Security ApiKeyAuth
 // @Param clusterId path string true "clusterId"
-// @Param upgradeReq body cluster.ClusterUpgradeReq true "upgrade request"
-// @Success 200 {object} controller.CommonResult{data=cluster.ClusterUpgradeResp}
+// @Param upgradeReq body cluster.UpgradeClusterReq true "upgrade request"
+// @Success 200 {object} controller.CommonResult{data=cluster.UpgradeClusterResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/:clusterId/upgrade [post]
-func ClusterUpgrade(c *gin.Context) {
-	var req cluster.ClusterUpgradeReq
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
-		&req,
+func Upgrade(c *gin.Context) {
+	// handle upgrade request and call rpc method
+	if body, ok := controller.HandleJsonRequestFromBody(c,
+		&cluster.UpgradeClusterReq{},
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
-			req.(*cluster.ClusterUpgradeReq).ClusterID = c.Param(paramNameOfClusterID)
+			req.(*cluster.UpgradeClusterReq).ClusterID = c.Param(ParamClusterID)
 			return nil
 		}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.ClusterUpgrade, &cluster.ClusterUpgradeResp{},
-			requestBody,
-			controller.DefaultTimeout)
+		controller.InvokeRpcMethod(c, client.ClusterClient.UpgradeCluster,
+			&cluster.UpgradeClusterResp{}, body, controller.DefaultTimeout)
 	}
 }

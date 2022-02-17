@@ -54,8 +54,8 @@ const (
 	UpgradeWayOnline  UpgradeWayStr = "online"
 )
 
-// ClusterUpgradeReq Message for requesting upgrade
-type ClusterUpgradeReq struct {
+// UpgradeClusterReq Message for requesting upgrade
+type UpgradeClusterReq struct {
 	ClusterID     string        `json:"clusterId" swaggerignore:"true"`
 	TargetVersion string        `json:"targetVersion" validate:"required" example:"v5.0.0"`
 	UpgradeType   string        `json:"upgradeType"  validate:"required" enums:"in-place,migration"`
@@ -63,7 +63,8 @@ type ClusterUpgradeReq struct {
 	Configs       []*structs.ClusterUpgradeVersionConfigItem
 }
 
-// ClusterUpgradeResp Reply message for requesting upgrade
-type ClusterUpgradeResp struct {
+// UpgradeClusterResp Reply message for requesting upgrade
+type UpgradeClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
+	ClusterID string `json:"clusterId"`
 }

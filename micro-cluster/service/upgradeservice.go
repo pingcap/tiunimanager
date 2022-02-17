@@ -26,6 +26,11 @@ package service
 
 import (
 	"context"
+	"time"
+
+	"github.com/pingcap-inc/tiem/library/framework"
+
+	"github.com/pingcap-inc/tiem/metrics"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -68,11 +73,15 @@ func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Co
 	return nil
 }
 
-func (handler *ClusterServiceHandler) ClusterUpgrade(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
-	request := &cluster.ClusterUpgradeReq{}
+func (handler *ClusterServiceHandler) UpgradeCluster(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "UpgradeCluster", int(resp.GetCode()))
+	defer handlePanic(ctx, "UpgradeCluster", resp)
 
-	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionRead)}}) {
-		result, err := handler.clusterManager.InPlaceUpgradeCluster(ctx, request)
+	request := &cluster.UpgradeClusterReq{}
+
+	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionUpdate)}}) {
+		result, err := handler.clusterManager.InPlaceUpgradeCluster(framework.NewBackgroundMicroCtx(ctx, false), *request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 

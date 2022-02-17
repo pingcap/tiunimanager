@@ -53,6 +53,7 @@ import (
 	utilsql "github.com/pingcap-inc/tiem/util/api/tidb/sql"
 	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"github.com/pingcap-inc/tiem/workflow"
+	tiupMgr "github.com/pingcap/tiup/pkg/cluster/manager"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"gopkg.in/yaml.v2"
 )
@@ -1706,21 +1707,48 @@ func waitInitDatabaseData(node *workflowModel.WorkFlowNode, context *workflow.Fl
 	return waitWorkFlow(node, context)
 }
 
-// editConfig
-// @Description: edit the cluster config
-func editConfig(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+func initializeUpgrade(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	// there is nothing to do for now
+	return nil
+}
+
+func selectTargetUpgradeVersion(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	// the target upgrade version has already been set before workflow starts
+	return nil
+}
+
+func mergeUpgradeConfig(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
 	cluster := clusterMeta.Cluster
 
 	framework.LogWithContext(context.Context).Infof(
-		"edit cluster[%s], version = %s", cluster.Name, cluster.Version)
-	// todo: call edit config
+		"merge upgrade config for cluster %s, version %s", cluster.ID, cluster.Version)
+	// todo: call update parameter
 
 	return nil
 }
 
-// upgradeCluster
-// @Description: upgrade the cluster
+func checkRegionHealth(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
+	cluster := clusterMeta.Cluster
+
+	framework.LogWithContext(context.Context).Infof(
+		"check cluster %s, version %s health", cluster.ID, cluster.Version)
+	result, err := deployment.M.CheckCluster(context.Context, deployment.TiUPComponentTypeCluster, cluster.ID,
+		"/home/tiem/.tiup", []string{"--cluster"}, meta.DefaultTiupTimeOut)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"check cluster %s health error: %s", clusterMeta.Cluster.ID, err.Error())
+		return err
+	}
+
+	if !strings.Contains(result, "All regions are healthy") {
+		return errors.NewErrorf(errors.TIEM_UPGRADE_REGION_UNHEALTHY, "check cluster %s health result: %s", clusterMeta.Cluster.ID, result)
+	}
+
+	return nil
+}
+
 func upgradeCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
 	clusterInfo := clusterMeta.Cluster
@@ -1728,21 +1756,72 @@ func upgradeCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	way := context.GetData(ContextUpgradeWay).(string)
 
 	framework.LogWithContext(context.Context).Infof(
-		"upgrade cluster[%s], version = %s, way: %s", clusterInfo.Name, clusterInfo.Version, way)
+		"upgrade cluster %s, version %s, to version %s by way: %s", clusterInfo.ID, clusterInfo.Version, version, way)
 	var args []string
 	if way == string(cluster.UpgradeWayOffline) {
 		args = append(args, "--offline")
 	}
-	args = append(args, "BACKUP")
-	taskId, err := deployment.M.Upgrade(
-		context.Context, deployment.TiUPComponentTypeCluster, clusterInfo.Name, version, "/home/tiem/.tiup", node.ParentID, args, 3600,
+	operationID, err := deployment.M.Upgrade(context.Context, deployment.TiUPComponentTypeCluster, clusterInfo.ID, version,
+		"/home/tiem/.tiup", node.ParentID, args, 3600,
 	)
-
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
-			"cluster[%s] upgrade error: %s", clusterMeta.Cluster.Name, err.Error())
+			"cluster %s upgrade error: %s", clusterMeta.Cluster.ID, err.Error())
 		return err
 	}
-	framework.LogWithContext(context.Context).Infof("get upgrade cluster task id: %s", taskId)
+	framework.LogWithContext(context.Context).Infof(
+		"get start cluster %s operation id: %s", clusterMeta.Cluster.ID, operationID)
+	node.Record(fmt.Sprintf("upgrade cluster %s, version: from %s to %s", clusterMeta.Cluster.ID, clusterInfo.Version, version))
+	node.OperationID = operationID
+	return nil
+}
+
+func checkUpgradeVersion(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
+	clusterInfo := clusterMeta.Cluster
+	version := context.GetData(ContextUpgradeVersion).(string)
+
+	framework.LogWithContext(context.Context).Infof(
+		"check cluster %s real version, expect %s", clusterInfo.ID, version)
+	result, err := deployment.M.Display(context.Context, deployment.TiUPComponentTypeCluster, clusterInfo.ID,
+		"/home/tiem/.tiup", []string{"--format", "json"}, 3600,
+	)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"check cluster %s real version error: %s", clusterMeta.Cluster.ID, err.Error())
+		return err
+	}
+
+	var displayResp tiupMgr.JSONOutput
+	if err = json.Unmarshal([]byte(result), &displayResp); err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"check cluster %s real version error while unmarshal (%s): %s", clusterMeta.Cluster.ID, result, err.Error())
+		return err
+	}
+
+	if displayResp.ClusterMetaInfo.ClusterVersion != version {
+		return errors.NewErrorf(errors.TIEM_UPGRADE_VERSION_INCORRECT, "check cluster %s upgrade version result: %s, expect : %s",
+			clusterMeta.Cluster.ID, displayResp.ClusterMetaInfo.ClusterVersion, version)
+	}
+	return nil
+}
+
+func checkUpgradeMD5(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	return nil
+}
+
+func checkUpgradeTime(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	return nil
+}
+
+func checkUpgradeConfig(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	return nil
+}
+
+func checkSystemHealth(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	return nil
+}
+
+func revertConfigAfterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	return nil
 }

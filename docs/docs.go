@@ -929,7 +929,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "request for upgrade",
+                "description": "request for upgrade TiDB cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -939,7 +939,7 @@ var doc = `{
                 "tags": [
                     "cluster upgrade"
                 ],
-                "summary": "request for upgrade",
+                "summary": "request for upgrade TiDB cluster",
                 "parameters": [
                     {
                         "type": "string",
@@ -954,7 +954,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/cluster.ClusterUpgradeReq"
+                            "$ref": "#/definitions/cluster.UpgradeClusterReq"
                         }
                     }
                 ],
@@ -970,7 +970,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/cluster.ClusterUpgradeResp"
+                                            "$ref": "#/definitions/cluster.UpgradeClusterResp"
                                         }
                                     }
                                 }
@@ -6545,48 +6545,6 @@ var doc = `{
                 }
             }
         },
-        "cluster.ClusterUpgradeReq": {
-            "type": "object",
-            "required": [
-                "targetVersion",
-                "upgradeType"
-            ],
-            "properties": {
-                "configs": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.ClusterUpgradeVersionConfigItem"
-                    }
-                },
-                "targetVersion": {
-                    "type": "string",
-                    "example": "v5.0.0"
-                },
-                "upgradeType": {
-                    "type": "string",
-                    "enum": [
-                        "in-place",
-                        "migration"
-                    ]
-                },
-                "upgradeWay": {
-                    "type": "string",
-                    "enum": [
-                        "offline",
-                        "online"
-                    ]
-                }
-            }
-        },
-        "cluster.ClusterUpgradeResp": {
-            "type": "object",
-            "properties": {
-                "workFlowId": {
-                    "description": "Asynchronous task workflow ID",
-                    "type": "string"
-                }
-            }
-        },
         "cluster.CreateChangeFeedTaskReq": {
             "type": "object",
             "required": [
@@ -7623,6 +7581,51 @@ var doc = `{
                 "clusterId": {
                     "type": "string",
                     "example": "1"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
+        "cluster.UpgradeClusterReq": {
+            "type": "object",
+            "required": [
+                "targetVersion",
+                "upgradeType"
+            ],
+            "properties": {
+                "configs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ClusterUpgradeVersionConfigItem"
+                    }
+                },
+                "targetVersion": {
+                    "type": "string",
+                    "example": "v5.0.0"
+                },
+                "upgradeType": {
+                    "type": "string",
+                    "enum": [
+                        "in-place",
+                        "migration"
+                    ]
+                },
+                "upgradeWay": {
+                    "type": "string",
+                    "enum": [
+                        "offline",
+                        "online"
+                    ]
+                }
+            }
+        },
+        "cluster.UpgradeClusterResp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
                 },
                 "workFlowId": {
                     "description": "Asynchronous task workflow ID",

@@ -155,9 +155,9 @@ func Route(g *gin.Engine) {
 			cluster.DELETE("/transport/:recordId", metrics.HandleMetrics(constants.MetricsDataExportImportDelete), importexport.DeleteDataTransportRecord)
 
 			//Upgrade
-			cluster.GET("/:clusterId/upgrade/path", upgrade.QueryUpgradePaths)
-			cluster.GET("/:clusterId/upgrade/diff", upgrade.QueryUpgradeVersionDiffInfo)
-			cluster.POST("/:clusterId/upgrade", upgrade.ClusterUpgrade)
+			cluster.GET("/:clusterId/upgrade/path", metrics.HandleMetrics(constants.MetricsClusterUpgradePath), upgrade.QueryUpgradePaths)
+			cluster.GET("/:clusterId/upgrade/diff", metrics.HandleMetrics(constants.MetricsClusterUpgradeDiff), upgrade.QueryUpgradeVersionDiffInfo)
+			cluster.POST("/:clusterId/upgrade", metrics.HandleMetrics(constants.MetricsClusterUpgrade), upgrade.Upgrade)
 		}
 
 		backup := apiV1.Group("/backups")

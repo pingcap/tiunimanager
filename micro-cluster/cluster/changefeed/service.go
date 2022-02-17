@@ -21,12 +21,12 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiem/util/api/cdc"
 )
 
 type Service interface {
@@ -141,7 +141,7 @@ func (p *Manager) ReverseBetweenClusters(ctx context.Context, sourceClusterID st
 		if task.Type == constants.DownstreamTypeTiDB &&
 			!constants.ChangeFeedStatus(task.Status).IsFinal() &&
 			task.Downstream.(*changefeed.TiDBDownstream).TargetClusterId == targetClusterID {
-			result, deleteError := secondparty.Manager.DeleteChangeFeedTask(ctx, secondparty.ChangeFeedDeleteReq{
+			result, deleteError := cdc.CDCService.DeleteChangeFeedTask(ctx, cdc.ChangeFeedDeleteReq{
 				CDCAddress:   sourceCluster.GetCDCClientAddresses()[0].ToString(),
 				ChangeFeedID: task.ID,
 			})
@@ -182,7 +182,7 @@ func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTa
 	}
 	resp.ChangeFeedTaskInfo = parse(*task)
 
-	taskDetail, detailError := secondparty.Manager.DetailChangeFeedTask(ctx, secondparty.ChangeFeedDetailReq{
+	taskDetail, detailError := cdc.CDCService.DetailChangeFeedTask(ctx, cdc.ChangeFeedDetailReq{
 		CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
 		ChangeFeedID: task.ID,
 	})

@@ -143,6 +143,7 @@ func buildParams(count uint) (params []*parametergroup.Parameter, err error) {
 			RangeType:    1,
 			HasReboot:    1,
 			UpdateSource: 1,
+			ReadOnly:     0,
 			Description:  "test param name order " + strconv.Itoa(i),
 		}
 		parameter, err := parameterGroupRW.CreateParameter(context.TODO(), params[i])

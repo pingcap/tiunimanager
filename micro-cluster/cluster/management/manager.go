@@ -945,7 +945,7 @@ func (p *Manager) InPlaceUpgradeCluster(ctx context.Context, req cluster.Upgrade
 		ContextUpgradeWay:     req.UpgradeWay,
 	}
 	var flowID string
-	if req.UpgradeWay == cluster.UpgradeWayOnline {
+	if req.UpgradeWay == string(constants.UpgradeWayOnline) {
 		flowID, err = asyncMaintenance(ctx, clusterMeta, constants.ClusterMaintenanceUpgrading, onlineInPlaceUpgradeClusterFlow.FlowName, data)
 	} else {
 		flowID, err = asyncMaintenance(ctx, clusterMeta, constants.ClusterMaintenanceUpgrading, offlineInPlaceUpgradeClusterFlow.FlowName, data)

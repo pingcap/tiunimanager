@@ -1763,7 +1763,7 @@ func upgradeCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	framework.LogWithContext(context.Context).Infof(
 		"upgrade cluster %s, version %s, to version %s by way: %s", clusterInfo.ID, clusterInfo.Version, version, way)
 	var args []string
-	if way == string(cluster.UpgradeWayOffline) {
+	if way == string(constants.UpgradeWayOffline) {
 		args = append(args, "--offline")
 	}
 	operationID, err := deployment.M.Upgrade(context.Context, deployment.TiUPComponentTypeCluster, clusterInfo.ID, version,

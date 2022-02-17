@@ -26,7 +26,11 @@ package constants
 
 type UpgradeType string
 
+type UpgradeWayStr string
+
 const (
-	UpgradeTypeInPlace   UpgradeType = "in-place"
-	UpgradeTypeMigration UpgradeType = "migration"
+	UpgradeTypeInPlace   UpgradeType   = "in-place"
+	UpgradeTypeMigration UpgradeType   = "migration"
+	UpgradeWayOffline    UpgradeWayStr = "offline"
+	UpgradeWayOnline     UpgradeWayStr = "online"
 )

@@ -47,19 +47,12 @@ type QueryUpgradeVersionDiffInfoResp struct {
 	ConfigDiffInfos []*structs.ProductUpgradeVersionConfigDiffItem `json:"configDiffInfos"`
 }
 
-type UpgradeWayStr string
-
-const (
-	UpgradeWayOffline UpgradeWayStr = "offline"
-	UpgradeWayOnline  UpgradeWayStr = "online"
-)
-
 // UpgradeClusterReq Message for requesting upgrade
 type UpgradeClusterReq struct {
-	ClusterID     string        `json:"clusterId" swaggerignore:"true"`
-	TargetVersion string        `json:"targetVersion" validate:"required" example:"v5.0.0"`
-	UpgradeType   string        `json:"upgradeType"  validate:"required" enums:"in-place,migration"`
-	UpgradeWay    UpgradeWayStr `json:"upgradeWay"  enums:"offline,online"`
+	ClusterID     string `json:"clusterId" swaggerignore:"true"`
+	TargetVersion string `json:"targetVersion" validate:"required" example:"v5.0.0"`
+	UpgradeType   string `json:"upgradeType"  validate:"required" enums:"in-place,migration"`
+	UpgradeWay    string `json:"upgradeWay"  enums:"offline,online"`
 	Configs       []*structs.ClusterUpgradeVersionConfigItem
 }
 

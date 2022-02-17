@@ -1721,7 +1721,7 @@ func selectTargetUpgradeVersion(node *workflowModel.WorkFlowNode, context *workf
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
 	clusterInfo := clusterMeta.Cluster
 	version := context.GetData(ContextUpgradeVersion).(string)
-	node.Record(fmt.Sprintf("Select target upgrade version %s, current version: %s", version, clusterInfo.Version))
+	node.Record(fmt.Sprintf("select target upgrade version %s, current version: %s", version, clusterInfo.Version))
 	return nil
 }
 
@@ -1735,7 +1735,7 @@ func mergeUpgradeConfig(node *workflowModel.WorkFlowNode, context *workflow.Flow
 	// todo: call update parameter
 
 	node.Record(fmt.Sprintf(
-		"Merge upgrade config for cluster %s, from version %s to %s", clusterInfo.ID, clusterInfo.Version, version))
+		"merge upgrade config for cluster %s, from version %s to %s", clusterInfo.ID, clusterInfo.Version, version))
 	return nil
 }
 
@@ -1757,7 +1757,7 @@ func checkRegionHealth(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 		return errors.NewErrorf(errors.TIEM_UPGRADE_REGION_UNHEALTHY, "check cluster %s health result: %s", clusterMeta.Cluster.ID, result)
 	}
 
-	node.Record(fmt.Sprintf("Check all regions are healthy"))
+	node.Record(fmt.Sprintf("check all regions are healthy"))
 	return nil
 }
 
@@ -1783,7 +1783,7 @@ func upgradeCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	}
 	framework.LogWithContext(context.Context).Infof(
 		"get start cluster %s operation id: %s", clusterMeta.Cluster.ID, operationID)
-	node.Record(fmt.Sprintf("Upgrade cluster %s version to %s from %s", clusterMeta.Cluster.ID, version, clusterInfo.Version))
+	node.Record(fmt.Sprintf("upgrade cluster %s version to %s from %s", clusterMeta.Cluster.ID, version, clusterInfo.Version))
 	node.OperationID = operationID
 	return nil
 }
@@ -1815,7 +1815,7 @@ func checkUpgradeVersion(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		return errors.NewErrorf(errors.TIEM_UPGRADE_VERSION_INCORRECT, "check cluster %s upgrade version result: %s, expect : %s",
 			clusterMeta.Cluster.ID, displayResp.ClusterMetaInfo.ClusterVersion, version)
 	}
-	node.Record(fmt.Sprintf("Check version %s as expected", displayResp.ClusterMetaInfo.ClusterVersion))
+	node.Record(fmt.Sprintf("check version %s as expected", displayResp.ClusterMetaInfo.ClusterVersion))
 	return nil
 }
 

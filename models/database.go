@@ -277,6 +277,25 @@ func (p *database) initSystemData() {
 			defaultDb.base.Exec(sql)
 		}
 	}
+
+	// import upgrade paths
+	upgradeSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/upgrades.sql"
+	err = syscall.Access(tiUPSqlFile, syscall.F_OK)
+	if !os.IsNotExist(err) {
+		sqls, err := ioutil.ReadFile(upgradeSqlFile)
+		if err != nil {
+			framework.LogForkFile(constants.LogFileSystem).Errorf("import upgrades failed, err = %s", err.Error())
+			return
+		}
+		sqlArr := strings.Split(string(sqls), ";")
+		for _, sql := range sqlArr {
+			if strings.TrimSpace(sql) == "" {
+				continue
+			}
+			// exec import sql
+			defaultDb.base.Exec(sql)
+		}
+	}
 }
 
 func GetChangeFeedReaderWriter() changefeed.ReaderWriter {

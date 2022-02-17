@@ -9114,12 +9114,6 @@
                 "memory": {
                     "type": "integer"
                 },
-                "parameters": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/structs.CheckAny"
-                    }
-                },
                 "regionStatus": {
                     "$ref": "#/definitions/structs.CheckStatus"
                 },
@@ -9709,9 +9703,6 @@
                 },
                 "swap": {
                     "$ref": "#/definitions/structs.CheckSwitch"
-                },
-                "version": {
-                    "$ref": "#/definitions/structs.CheckString"
                 }
             }
         },
@@ -9884,6 +9875,12 @@
             "properties": {
                 "instanceID": {
                     "type": "string"
+                },
+                "parameters": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckAny"
+                    }
                 },
                 "status": {
                     "$ref": "#/definitions/structs.CheckStatus"

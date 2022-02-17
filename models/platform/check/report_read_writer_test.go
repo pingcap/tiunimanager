@@ -24,6 +24,7 @@ func TestReportReadWrite_CreateReport(t *testing.T) {
 		report := &CheckReport{
 			Report:  "report",
 			Creator: "admin",
+			Status:  "Running",
 		}
 		got, err := testRW.CreateReport(ctx.TODO(), report)
 		assert.NoError(t, err)
@@ -45,6 +46,7 @@ func TestReportReadWrite_DeleteReport(t *testing.T) {
 		report := &CheckReport{
 			Report:  "report",
 			Creator: "admin",
+			Status:  "Running",
 		}
 		got, err := testRW.CreateReport(ctx.TODO(), report)
 		err = testRW.DeleteReport(ctx.TODO(), got.ID)
@@ -62,6 +64,7 @@ func TestReportReadWrite_GetReport(t *testing.T) {
 		report := &CheckReport{
 			Report:  `{"tenants": {}, "hosts": {}}`,
 			Creator: "admin",
+			Status:  "Running",
 		}
 		got, err := testRW.CreateReport(ctx.TODO(), report)
 		assert.NoError(t, err)
@@ -77,6 +80,7 @@ func TestReportReadWrite_QueryReports(t *testing.T) {
 		report := &CheckReport{
 			Report:  `{"tenants": {}, "hosts": {}}`,
 			Creator: "admin",
+			Status:  "Running",
 		}
 		got, err := testRW.CreateReport(ctx.TODO(), report)
 		assert.NoError(t, err)
@@ -98,10 +102,32 @@ func TestReportReadWrite_UpdateReport(t *testing.T) {
 		report := &CheckReport{
 			Report:  `{"tenants": {}, "hosts": {}}`,
 			Creator: "admin",
+			Status:  "Running",
 		}
 		got, err := testRW.CreateReport(ctx.TODO(), report)
 		assert.NoError(t, err)
 		err = testRW.UpdateReport(ctx.TODO(), got.ID, "report")
+		assert.NoError(t, err)
+		err = testRW.DeleteReport(ctx.TODO(), got.ID)
+		assert.NoError(t, err)
+	})
+}
+
+func TestReportReadWrite_UpdateStatus(t *testing.T) {
+	t.Run("invalid parameter", func(t *testing.T) {
+		err := testRW.UpdateStatus(ctx.TODO(), "", "")
+		assert.Error(t, err)
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		report := &CheckReport{
+			Report:  `{"tenants": {}, "hosts": {}}`,
+			Creator: "admin",
+			Status:  "Running",
+		}
+		got, err := testRW.CreateReport(ctx.TODO(), report)
+		assert.NoError(t, err)
+		err = testRW.UpdateStatus(ctx.TODO(), got.ID, "Completed")
 		assert.NoError(t, err)
 		err = testRW.DeleteReport(ctx.TODO(), got.ID)
 		assert.NoError(t, err)

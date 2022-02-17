@@ -18,3 +18,11 @@ package constants
 const (
 	FlowCheckPlatform = "CheckPlatform"
 )
+
+type CheckStatus string
+
+const (
+	CheckRunning   CheckStatus = "Running"
+	CheckFailure   CheckStatus = "Failure"
+	CheckCompleted CheckStatus = "Completed"
+)

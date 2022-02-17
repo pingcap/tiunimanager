@@ -9128,12 +9128,6 @@ var doc = `{
                 "memory": {
                     "type": "integer"
                 },
-                "parameters": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/structs.CheckAny"
-                    }
-                },
                 "regionStatus": {
                     "$ref": "#/definitions/structs.CheckStatus"
                 },
@@ -9723,9 +9717,6 @@ var doc = `{
                 },
                 "swap": {
                     "$ref": "#/definitions/structs.CheckSwitch"
-                },
-                "version": {
-                    "$ref": "#/definitions/structs.CheckString"
                 }
             }
         },
@@ -9898,6 +9889,12 @@ var doc = `{
             "properties": {
                 "instanceID": {
                     "type": "string"
+                },
+                "parameters": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckAny"
+                    }
                 },
                 "status": {
                     "$ref": "#/definitions/structs.CheckStatus"

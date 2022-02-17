@@ -851,12 +851,21 @@ var onlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
 var offlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
 	FlowName: constants.FlowOfflineInPlaceUpgradeCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
-		"start":            {"editConfig", "editConfigDone", "fail", workflow.SyncFuncNode, mergeUpgradeConfig},
-		"editConfigDone":   {"clusterStop", "stopClusterDone", "fail", workflow.PollingNode, stopCluster},
-		"stopClusterDone":  {"clusterUpgrade", "upgradeDone", "fail", workflow.PollingNode, upgradeCluster},
-		"upgradeDone":      {"clusterStart", "startClusterDone", "fail", workflow.SyncFuncNode, startCluster},
-		"startClusterDone": {"end", "", "fail", workflow.PollingNode, workflow.CompositeExecutor(endMaintenance, persistCluster)},
-		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, setClusterFailure)},
+		"start":                   {"initialize", "initializeDone", "fail", workflow.SyncFuncNode, initializeUpgrade},
+		"initializeDone":          {"selectTargetVersion", "selectTargetVersionDone", "fail", workflow.SyncFuncNode, selectTargetUpgradeVersion},
+		"selectTargetVersionDone": {"mergeConfig", "mergeConfigDone", "fail", workflow.SyncFuncNode, mergeUpgradeConfig},
+		"mergeConfigDone":         {"checkRegionHealth", "checkRegionHealthDone", "fail", workflow.SyncFuncNode, checkRegionHealth},
+		"checkRegionHealthDone":   {"stopCluster", "stopClusterDone", "fail", workflow.PollingNode, stopCluster},
+		"stopClusterDone":         {"upgradeCluster", "upgradeDone", "fail", workflow.PollingNode, upgradeCluster},
+		"upgradeDone":             {"startCluster", "startClusterDone", "fail", workflow.SyncFuncNode, startCluster},
+		"startClusterDone":        {"checkVersion", "checkVersionDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeVersion},
+		"checkVersionDone":        {"checkMD5", "checkMD5Done", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeMD5},
+		"checkMD5Done":            {"checkUpgradeTime", "checkUpgradeTimeDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeTime},
+		"checkUpgradeTimeDone":    {"checkConfig", "checkConfigDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeConfig},
+		"checkConfigDone":         {"checkSystemHealth", "success", "failAfterUpgrade", workflow.SyncFuncNode, checkRegionHealth},
+		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
+		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertConfigAfterFailure, endMaintenance)},
+		"failAfterUpgrade":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 

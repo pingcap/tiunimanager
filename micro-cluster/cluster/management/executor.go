@@ -1718,18 +1718,24 @@ func initializeUpgrade(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 }
 
 func selectTargetUpgradeVersion(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	// the target upgrade version has already been set before workflow starts
+	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
+	clusterInfo := clusterMeta.Cluster
+	version := context.GetData(ContextUpgradeVersion).(string)
+	node.Record(fmt.Sprintf("select target upgrade version %s, current version: %s", version, clusterInfo.Version))
 	return nil
 }
 
 func mergeUpgradeConfig(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
-	cluster := clusterMeta.Cluster
+	clusterInfo := clusterMeta.Cluster
+	version := context.GetData(ContextUpgradeVersion).(string)
 
 	framework.LogWithContext(context.Context).Infof(
-		"merge upgrade config for cluster %s, version %s", cluster.ID, cluster.Version)
+		"merge upgrade config for cluster %s, from version %s to %s", clusterInfo.ID, clusterInfo.Version, version)
 	// todo: call update parameter
 
+	node.Record(fmt.Sprintf(
+		"merge upgrade config for cluster %s, from version %s to %s", clusterInfo.ID, clusterInfo.Version, version))
 	return nil
 }
 
@@ -1751,6 +1757,7 @@ func checkRegionHealth(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 		return errors.NewErrorf(errors.TIEM_UPGRADE_REGION_UNHEALTHY, "check cluster %s health result: %s", clusterMeta.Cluster.ID, result)
 	}
 
+	node.Record(fmt.Sprintf("All regions are healthy"))
 	return nil
 }
 
@@ -1808,6 +1815,7 @@ func checkUpgradeVersion(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		return errors.NewErrorf(errors.TIEM_UPGRADE_VERSION_INCORRECT, "check cluster %s upgrade version result: %s, expect : %s",
 			clusterMeta.Cluster.ID, displayResp.ClusterMetaInfo.ClusterVersion, version)
 	}
+	node.Record(fmt.Sprintf("Check version %s as expected", displayResp.ClusterMetaInfo.ClusterVersion))
 	return nil
 }
 

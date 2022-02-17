@@ -315,7 +315,7 @@ func validateParameter(ctx context.Context, reqParams []structs.ParameterGroupPa
 					UnitOptions: unitOptions,
 					RealValue:   structs.ParameterRealValue{ClusterValue: reqParam.DefaultValue},
 				}, false) {
-					if len(ranges) == 2 && (queryParam.Type == int(parameter.Integer) || queryParam.Type == int(parameter.Float)) {
+					if queryParam.RangeType == int(parameter.ContinuousRange) && len(queryParam.Range) == 2 {
 						return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
 							fmt.Sprintf("Validation %s parameter `%s` failed, update value: %s, can take a range of values: %v",
 								queryParam.InstanceType, parameter.DisplayFullParameterName(queryParam.Category, queryParam.Name), reqParam.DefaultValue, ranges))

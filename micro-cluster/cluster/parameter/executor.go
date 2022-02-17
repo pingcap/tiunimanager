@@ -196,7 +196,7 @@ func validationParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCon
 	for _, param := range modifyParam.Params {
 		// validate parameter value by range field
 		if !ValidateRange(param, true) {
-			if len(param.Range) == 2 && (param.Type == int(Integer) || param.Type == int(Float)) {
+			if param.RangeType == int(ContinuousRange) && len(param.Range) == 2 {
 				return fmt.Errorf(fmt.Sprintf("Validation parameter `%s` failed, update value: %s, can take a range of values: %v",
 					DisplayFullParameterName(param.Category, param.Name), param.RealValue.ClusterValue, param.Range))
 			} else {

@@ -19,9 +19,21 @@ import (
 	"context"
 
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/models"
+	cluster_mgm "github.com/pingcap-inc/tiem/models/cluster/management"
+	"github.com/pingcap-inc/tiem/models/resource"
 )
 
 type HostInspect struct {
+	resouceRW  resource.ReaderWriter
+	instanceRW cluster_mgm.ReaderWriter
+}
+
+func NewHostInspector() HostInspector {
+	hostInspector := new(HostInspect)
+	hostInspector.resouceRW = models.GetResourceReaderWriter()
+	hostInspector.instanceRW = models.GetClusterReaderWriter()
+	return hostInspector
 }
 
 func (p *HostInspect) CheckCpuCores(ctx context.Context, host *structs.HostInfo) (result *structs.CheckInt32, err error) {
@@ -30,18 +42,21 @@ func (p *HostInspect) CheckCpuCores(ctx context.Context, host *structs.HostInfo)
 func (p *HostInspect) CheckMemorySize(ctx context.Context, host *structs.HostInfo) (result *structs.CheckInt32, err error) {
 	return
 }
-func (p *HostInspect) CheckCpuAllocated(ctx context.Context, host *structs.HostInfo) (result *structs.CheckInt32, err error) {
-	return
-}
-func (p *HostInspect) CheckMemAllocated(ctx context.Context, host *structs.HostInfo) (result *structs.CheckInt32, err error) {
-	return
-}
-func (p *HostInspect) CheckDiskAllocated(ctx context.Context, host *structs.HostInfo) (inconsistDisks map[string]structs.CheckString, err error) {
-	return
-}
 func (p *HostInspect) CheckDiskSize(ctx context.Context, host *structs.HostInfo) (inconsistDisks map[string]structs.CheckInt32, err error) {
 	return
 }
-func (p *HostInspect) CheckDiskRatio() (inconsistDisks map[string]structs.CheckInt32, err error) {
+func (p *HostInspect) CheckDiskRatio(ctx context.Context, host *structs.HostInfo) (inconsistDisks map[string]structs.CheckInt32, err error) {
+	return
+}
+
+func (p *HostInspect) CheckCpuAllocated(ctx context.Context, hosts []structs.HostInfo) (result map[string]structs.CheckInt32, err error) {
+	//result = new(structs.CheckInt32)
+	//result.ExpectedValue = p.resouceRW.
+	return
+}
+func (p *HostInspect) CheckMemAllocated(ctx context.Context, hosts []structs.HostInfo) (result map[string]structs.CheckInt32, err error) {
+	return
+}
+func (p *HostInspect) CheckDiskAllocated(ctx context.Context, hosts []structs.HostInfo) (inconsistDisks map[string]map[string]structs.CheckString, err error) {
 	return
 }

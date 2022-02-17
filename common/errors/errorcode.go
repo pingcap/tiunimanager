@@ -148,6 +148,8 @@ const (
 	TIEM_RESOURCE_PREPARE_HOST_ERROR        EM_ERROR_CODE = 30133
 	TIEM_RESOURCE_INVALID_VENDOR_NAME       EM_ERROR_CODE = 30134
 	TIEM_RESOURCE_INVALID_ZONE_INFO         EM_ERROR_CODE = 30135
+	TIEM_RESOURCE_CHECK_COMPUTES_ERROR      EM_ERROR_CODE = 30136
+	TIEM_RESOURCE_CHECK_DISKS_ERROR         EM_ERROR_CODE = 30137
 
 	TIEM_MONITOR_NOT_FOUND EM_ERROR_CODE = 614
 
@@ -363,6 +365,8 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_RESOURCE_PREPARE_HOST_ERROR:        {"prepare host before verify failed", 500},
 	TIEM_RESOURCE_INVALID_VENDOR_NAME:       {"invalid vendor", 400},
 	TIEM_RESOURCE_INVALID_ZONE_INFO:         {"invalid zone info", 400},
+	TIEM_RESOURCE_CHECK_COMPUTES_ERROR:      {"check compute resource mismatch", 500},
+	TIEM_RESOURCE_CHECK_DISKS_ERROR:         {"check disk resource mismatch", 500},
 
 	// param group & cluster param
 	TIEM_DEFAULT_PARAM_GROUP_NOT_DEL:                 {"Not allow to deleted the default parameter group", 409},

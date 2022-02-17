@@ -103,7 +103,7 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request message.
 
 	exportTime := time.Now()
 	exportPrefix, _ := filepath.Abs(exportPathConfig.ConfigValue)
-	exportDir := filepath.Join(exportPrefix, request.ClusterID, fmt.Sprintf("%s_%s", exportTime.Format("2006-01-02_15:04:05"), request.StorageType))
+	exportDir := filepath.Join(exportPrefix, request.ClusterID, fmt.Sprintf("%s-%s", exportTime.Format("2006-01-02-15-04-05"), request.StorageType))
 
 	record := &importexport.DataTransportRecord{
 		Entity: dbModel.Entity{
@@ -194,7 +194,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 	var recordCreate *importexport.DataTransportRecord
 	importTime := time.Now()
 	importPrefix, _ := filepath.Abs(importPathConfig.ConfigValue)
-	importDir := filepath.Join(importPrefix, request.ClusterID, fmt.Sprintf("%s_%s", importTime.Format("2006-01-02_15:04:05"), request.StorageType))
+	importDir := filepath.Join(importPrefix, request.ClusterID, fmt.Sprintf("%s-%s", importTime.Format("2006-01-02-15-04-05"), request.StorageType))
 	if request.RecordId == "" {
 		if string(constants.StorageTypeNFS) == request.StorageType {
 			err = os.Rename(filepath.Join(importPrefix, request.ClusterID, "temp"), importDir)

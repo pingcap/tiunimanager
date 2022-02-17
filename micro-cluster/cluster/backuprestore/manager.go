@@ -507,10 +507,15 @@ func (mgr *BRManager) removeBackupFiles(ctx context.Context, record *backupresto
 				return
 			}
 			s3Addr := strings.SplitN(record.FilePath, "/", 2)
-			framework.LogWithContext(ctx).Infof("begin remove bucket %s object %s", s3Addr[0], s3Addr[1])
-			if err = s3Client.RemoveObject(ctx, s3Addr[0], s3Addr[1], minio.RemoveObjectOptions{ForceDelete: true}); err != nil {
-				framework.LogWithContext(ctx).Warnf("remove bucket %s failed: %v", record.FilePath, err)
+			if len(s3Addr) != 2 {
 				return
+			}
+			framework.LogWithContext(ctx).Infof("begin remove bucket:%s object:%s", s3Addr[0], s3Addr[1])
+			objectChan := s3Client.ListObjects(ctx, s3Addr[0], minio.ListObjectsOptions{Recursive: true, Prefix: s3Addr[1]})
+			for object := range objectChan {
+				if err = s3Client.RemoveObject(context.TODO(), s3Addr[0], object.Key, minio.RemoveObjectOptions{ForceDelete: true}); err != nil {
+					framework.LogWithContext(ctx).Warnf("remove bucket %s failed: %v", record.FilePath, err)
+				}
 			}
 		}()
 	} else {

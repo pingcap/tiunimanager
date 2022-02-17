@@ -292,17 +292,27 @@ type UpdateClusterParametersResp struct {
 	structs.AsyncTaskWorkFlowInfo
 }
 
-type InspectClusterParametersReq struct {
-	ClusterID string `json:"clusterId" validate:"required,min=8,max=64"`
+type InspectParametersReq struct {
+	ClusterID  string `json:"clusterId" validate:"required,min=8,max=64"`
+	InstanceID string `json:"instanceId"`
 }
 
-type InspectClusterParametersResp struct {
+type InspectParametersResp struct {
+	Params InspectParameters `json:"params"`
+}
+
+type InspectParameters struct {
+	InstanceID     string                 `json:"instanceId"`
+	ParameterInfos []InspectParameterInfo `json:"parameterInfos"`
+}
+
+type InspectParameterInfo struct {
 	ParamID      int64                      `json:"paramId" example:"1"`
+	Category     string                     `json:"category" example:"log"`
 	Name         string                     `json:"name" example:"binlog_cache"`
-	InstanceType string                     `json:"instanceType" example:"tidb"`
-	Instance     string                     `json:"instance" example:"172.16.5.23"`
+	InstanceType string                     `json:"instanceType" example:"TiDB"`
 	RealValue    structs.ParameterRealValue `json:"realValue"`
-	InspectValue string                     `json:"inspectValue" example:"1"`
+	InspectValue interface{}                `json:"inspectValue"`
 }
 
 type PreviewClusterResp struct {

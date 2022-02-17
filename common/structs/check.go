@@ -69,7 +69,6 @@ type ClusterCheck struct {
 	Versions          map[string]CheckString             `json:"versions"`
 	AccountStatus     CheckStatus                        `json:"accountStatus"`
 	Topology          CheckString                        `json:"topology"`
-	Parameters        map[string]CheckAny                `json:"parameters"`
 	RegionStatus      CheckStatus                        `json:"regionStatus"`
 	Instances         []InstanceCheck                    `json:"instances"`
 	BackupStrategy    CheckString                        `json:"backupStrategy"`
@@ -77,8 +76,9 @@ type ClusterCheck struct {
 }
 
 type InstanceCheck struct {
-	ID     string      `json:"instanceID"`
-	Status CheckStatus `json:"status"`
+	ID         string              `json:"instanceID"`
+	Status     CheckStatus         `json:"status"`
+	Parameters map[string]CheckAny `json:"parameters"`
 }
 
 type CheckRangeInt32 struct {
@@ -104,7 +104,6 @@ type CheckError struct {
 }
 
 type HostCheck struct {
-	OSVersion    CheckString  `json:"version"`
 	SELinux      CheckSwitch  `json:"selinux"`
 	Firewall     CheckSwitch  `json:"firewall"`
 	Swap         CheckSwitch  `json:"swap"`

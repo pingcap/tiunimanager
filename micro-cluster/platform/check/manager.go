@@ -62,6 +62,7 @@ func (manager *CheckManager) Check(ctx context.Context, request message.CheckPla
 	report := &check.CheckReport{
 		Report:  "{}",
 		Creator: framework.GetUserIDFromContext(ctx),
+		Status:  string(constants.CheckRunning),
 	}
 	report, err = rw.CreateReport(ctx, report)
 	if err != nil {

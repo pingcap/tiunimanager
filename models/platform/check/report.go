@@ -18,6 +18,7 @@ type CheckReport struct {
 	ID        string    `gorm:"primarykey"`
 	Report    string    `gorm:"default:null;not null;"`
 	Creator   string    `gorm:"default:null;not null;"`
+	Status    string    `gorm:"default:null;not null;"`
 	CreatedAt time.Time `gorm:"<-:create"`
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt

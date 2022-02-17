@@ -150,6 +150,9 @@ func Route(g *gin.Engine) {
 			// Clone cluster
 			cluster.POST("/clone", metrics.HandleMetrics(constants.MetricsClusterClone), clusterApi.Clone)
 
+			// Switchover
+			cluster.POST("/switchover", metrics.HandleMetrics(constants.MetricsSwitchover), switchoverApi.Switchover)
+
 			// Params
 			cluster.GET("/:clusterId/params", metrics.HandleMetrics(constants.MetricsClusterQueryParameter), parameterApi.QueryParameters)
 			cluster.PUT("/:clusterId/params", metrics.HandleMetrics(constants.MetricsClusterModifyParameter), parameterApi.UpdateParameters)
@@ -190,14 +193,6 @@ func Route(g *gin.Engine) {
 
 			changeFeeds.GET("/:changeFeedTaskId/", metrics.HandleMetrics(constants.MetricsCDCTaskDetail), changefeed.Detail)
 			changeFeeds.GET("/", metrics.HandleMetrics(constants.MetricsCDCTaskQuery), changefeed.Query)
-		}
-
-		switchover := apiV1.Group("/switchover")
-		{
-			switchover.Use(interceptor.VerifyIdentity)
-			switchover.Use(interceptor.AuditLog())
-
-			switchover.POST("/", metrics.HandleMetrics(constants.MetricsSwitchover), switchoverApi.Switchover)
 		}
 
 		flowworks := apiV1.Group("/workflow")

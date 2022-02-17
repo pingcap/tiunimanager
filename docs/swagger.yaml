@@ -1338,9 +1338,15 @@ definitions:
         example: binlog size
         type: string
       hasApply:
+        enum:
+        - 0
+        - 1
         example: 1
         type: integer
       hasReboot:
+        enum:
+        - 0
+        - 1
         example: 0
         type: integer
       instanceType:
@@ -1355,19 +1361,48 @@ definitions:
         items:
           type: string
         type: array
+      rangeType:
+        enum:
+        - 0
+        - 1
+        - 2
+        example: 1
+        type: integer
       readOnly:
+        enum:
+        - 0
+        - 1
         example: 0
         type: integer
       systemVariable:
         example: log.binlog_size
         type: string
       type:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
         example: 0
         type: integer
       unit:
-        example: mb
+        example: MB
         type: string
+      unitOptions:
+        example:
+        - KB
+        - MB
+        - GB
+        items:
+          type: string
+        type: array
       updateSource:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
         example: 0
         type: integer
     type: object
@@ -1814,10 +1849,6 @@ definitions:
         type: string
       memory:
         type: integer
-      parameters:
-        additionalProperties:
-          $ref: '#/definitions/structs.CheckAny'
-        type: object
       regionStatus:
         $ref: '#/definitions/structs.CheckStatus'
       storage:
@@ -2035,6 +2066,13 @@ definitions:
         items:
           type: string
         type: array
+      rangeType:
+        enum:
+        - 0
+        - 1
+        - 2
+        example: 1
+        type: integer
       readOnly:
         enum:
         - 0
@@ -2056,8 +2094,16 @@ definitions:
         example: 0
         type: integer
       unit:
-        example: mb
+        example: MB
         type: string
+      unitOptions:
+        example:
+        - KB
+        - MB
+        - GB
+        items:
+          type: string
+        type: array
       updateSource:
         enum:
         - 0
@@ -2231,8 +2277,6 @@ definitions:
         type: number
       swap:
         $ref: '#/definitions/structs.CheckSwitch'
-      version:
-        $ref: '#/definitions/structs.CheckString'
     type: object
   structs.HostInfo:
     properties:
@@ -2351,6 +2395,10 @@ definitions:
     properties:
       instanceID:
         type: string
+      parameters:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckAny'
+        type: object
       status:
         $ref: '#/definitions/structs.CheckStatus'
     type: object
@@ -2399,6 +2447,13 @@ definitions:
         items:
           type: string
         type: array
+      rangeType:
+        enum:
+        - 0
+        - 1
+        - 2
+        example: 1
+        type: integer
       readOnly:
         enum:
         - 0
@@ -2418,8 +2473,16 @@ definitions:
         example: 0
         type: integer
       unit:
-        example: mb
+        example: MB
         type: string
+      unitOptions:
+        example:
+        - KB
+        - MB
+        - GB
+        items:
+          type: string
+        type: array
       updateSource:
         enum:
         - 0
@@ -4218,6 +4281,47 @@ paths:
       summary: restore a new cluster by backup record
       tags:
       - cluster
+  /clusters/switchover:
+    post:
+      consumes:
+      - application/json
+      description: master/slave switchover
+      parameters:
+      - description: switchover request
+        in: body
+        name: masterSlaveClusterSwitchoverReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.MasterSlaveClusterSwitchoverReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.MasterSlaveClusterSwitchoverResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: master/slave switchover
+      tags:
+      - switchover
   /clusters/takeover:
     post:
       consumes:
@@ -5829,47 +5933,6 @@ paths:
       summary: created  specs
       tags:
       - platform
-  /switchover:
-    post:
-      consumes:
-      - application/json
-      description: master/slave switchover
-      parameters:
-      - description: switchover request
-        in: body
-        name: masterSlaveClusterSwitchoverReq
-        required: true
-        schema:
-          $ref: '#/definitions/cluster.MasterSlaveClusterSwitchoverReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.MasterSlaveClusterSwitchoverResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: master/slave switchover
-      tags:
-      - switchover
   /tenant:
     get:
       consumes:

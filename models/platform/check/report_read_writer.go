@@ -24,6 +24,7 @@ type ReaderWriter interface {
 	GetReport(ctx context.Context, checkID string) (structs.CheckReportInfo, error)
 	QueryReports(ctx context.Context) (map[string]structs.CheckReportMeta, error)
 	UpdateReport(ctx context.Context, checkID, report string) error
+	UpdateStatus(ctx context.Context, checkID, status string) error
 }
 
 type ReportReadWrite struct {
@@ -109,4 +110,12 @@ func (rrw *ReportReadWrite) UpdateReport(ctx context.Context, checkID, report st
 	}
 
 	return rrw.DB(ctx).Model(&CheckReport{}).Where("id = ?", checkID).Update("report", report).Error
+}
+
+func (rrw *ReportReadWrite) UpdateStatus(ctx context.Context, checkID, status string) error {
+	if "" ==checkID || "" == status {
+		framework.LogWithContext(ctx).Errorf("update %s check report status %s, parameter invalid", checkID, status)
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "update %s check report status %s, parameter invalid", checkID, status)
+	}
+	return rrw.DB(ctx).Model(&CheckReport{}).Where("id = ?", checkID).Update("status", status).Error
 }

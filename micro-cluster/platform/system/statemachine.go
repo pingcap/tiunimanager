@@ -94,7 +94,7 @@ func pushToUpgrading(ctx context.Context, event constants.SystemEvent, originalS
 	}).Present()
 }
 
-func pushToUnFailure(ctx context.Context, event constants.SystemEvent, originalState constants.SystemState) error {
+func pushToFailure(ctx context.Context, event constants.SystemEvent, originalState constants.SystemState) error {
 	return errors.OfNullable(nil).BreakIf(func() error {
 		return models.GetSystemReaderWriter().UpdateState(ctx, originalState, constants.SystemFailure)
 	}).If(func(err error) {

@@ -23,3 +23,32 @@
 
 package system
 
+import (
+	"context"
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
+
+func TestSystemManager_AcceptSystemEvent(t *testing.T) {
+	t.Run("empty", func(t *testing.T) {
+		err := GetSystemManager().AcceptSystemEvent(context.TODO(), "")
+		assert.Error(t, err)
+	})
+	t.Run("unknown", func(t *testing.T) {
+		err := GetSystemManager().AcceptSystemEvent(context.TODO(), "unknown")
+		assert.Error(t, err)
+	})
+}
+
+func TestSystemManager_GetSystemInfo(t *testing.T) {
+	systemInfo, err := GetSystemManager().GetSystemInfo(context.TODO())
+	assert.NoError(t, err)
+	assert.NotEmpty(t, systemInfo.SystemName)
+	assert.NotEmpty(t, systemInfo.State)
+}
+
+func TestSystemManager_GetSystemVersionInfo(t *testing.T) {
+	_, err := GetSystemManager().GetSystemVersionInfo(context.TODO())
+	assert.Error(t, err)
+
+}

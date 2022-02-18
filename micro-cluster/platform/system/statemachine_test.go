@@ -104,25 +104,43 @@ func Test_StateMachine(t *testing.T) {
 }
 
 func Test_pushToServiceReady(t *testing.T) {
-
+	t.Run("error", func(t *testing.T) {
+		err := pushToServiceReady(context.TODO(), "unknown", "unknown")
+		assert.Error(t, err)
+	})
 }
 
 func Test_pushToDataReady(t *testing.T) {
-
+	t.Run("error", func(t *testing.T) {
+		err := pushToServiceReady(context.TODO(), "unknown", "unknown")
+		assert.Error(t, err)
+	})
 }
 
 func Test_pushToRunning(t *testing.T) {
-
+	t.Run("error", func(t *testing.T) {
+		err := pushToRunning(context.TODO(), "unknown", "unknown")
+		assert.Error(t, err)
+	})
 }
 
 func Test_pushToUnFailure(t *testing.T) {
-
+	t.Run("error", func(t *testing.T) {
+		err := pushToFailure(context.TODO(), "unknown", "unknown")
+		assert.Error(t, err)
+	})
 }
 
 func Test_pushToUnserviceable(t *testing.T) {
-
+	t.Run("error", func(t *testing.T) {
+		err := pushToUnserviceable(context.TODO(), "unknown", "unknown")
+		assert.Error(t, err)
+	})
 }
 
 func Test_pushToUpgrading(t *testing.T) {
-
+	t.Run("error", func(t *testing.T) {
+		err := pushToUpgrading(context.TODO(), "unknown", "unknown")
+		assert.Error(t, err)
+	})
 }

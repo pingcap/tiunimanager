@@ -68,7 +68,7 @@ func GetSystemManager() *SystemManager {
 					constants.SystemUnserviceable: pushToUpgrading,
 				},
 				constants.SystemFailureDetected : {
-					constants.SystemRunning: pushToUnFailure,
+					constants.SystemRunning: pushToFailure,
 				},
 			}
 		}
@@ -82,7 +82,7 @@ func getActionBindings() map[constants.SystemEvent]map[constants.SystemState]act
 
 func (p *SystemManager) AcceptSystemEvent(ctx context.Context, event constants.SystemEvent) error {
 	if len(event) == 0 {
-		panic("unknown system event")
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "system event is empty")
 	}
 	return acceptSystemEvent(ctx, event)
 }
@@ -98,7 +98,7 @@ func acceptSystemEvent(ctx context.Context, event constants.SystemEvent) error {
 		}
 		return errors.NewErrorf(errors.TIEM_SYSTEM_STATE_CONFLICT, "undefined action for event %s in state %s", event, systemInfo.State)
 	} else {
-		panic("unknown system event")
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "system event %s is unrecognized", event)
 	}
 }
 

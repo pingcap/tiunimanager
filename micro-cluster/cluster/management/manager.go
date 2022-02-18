@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"strings"
 
 	"github.com/pingcap-inc/tiem/models"
 
@@ -869,27 +870,37 @@ var offlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
 	},
 }
 
-func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) (*cluster.QueryUpgradePathRsp, error) {
-	meta, err := meta.Get(ctx, clusterID)
+// QueryProductUpdatePath
+// @Description:
+// @Receiver p
+// @Parameter ctx
+// @Parameter clusterID
+// @return *cluster.QueryUpgradePathRsp
+// @return error
+func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) (resp cluster.QueryUpgradePathRsp, err error) {
+	// Get cluster info and topology from db based by clusterID
+	clusterMeta, err := meta.Get(ctx, clusterID)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("failed to query update path while getcluster, %s", err.Error())
-		return &cluster.QueryUpgradePathRsp{}, errors.WrapError(errors.TIEM_UPGRADE_QUERY_PATH_FAILED, "failed to query update path while getclusterdetail", err)
+		framework.LogWithContext(ctx).Errorf(
+			"load cluster %s meta from db error: %s", clusterID, err.Error())
+		return
 	}
 
-	version := meta.Cluster.Version
-	framework.LogWithContext(ctx).Infof("query update path with version %s", version)
-	productUpgradePaths, err := models.GetUpgradeReaderWriter().QueryBySrcVersion(ctx, version)
+	version := clusterMeta.Cluster.Version
+	framework.LogWithContext(ctx).Infof("query update path for cluster %s, version %s, using minor version %s",
+		clusterID, version, clusterMeta.GetMinorVersion())
+	productUpgradePaths, err := models.GetUpgradeReaderWriter().QueryBySrcVersion(ctx, clusterMeta.GetMinorVersion())
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("failed to query update path, %s", err.Error())
-		return &cluster.QueryUpgradePathRsp{}, errors.WrapError(errors.TIEM_UPGRADE_QUERY_PATH_FAILED, "failed to query upgrade path", err)
+		framework.LogWithContext(ctx).Errorf("failed to query update path for cluster %s version %s: %s", clusterID, version, err.Error())
+		return
 	}
-	framework.LogWithContext(ctx).Infof("query update path with version %s result: %d", version, len(productUpgradePaths))
+	framework.LogWithContext(ctx).Infof("query update path for cluster %s version %s: %v", clusterID, version, productUpgradePaths)
 
+	// key: type, value: dstVersions
 	pathMap := make(map[string][]string)
 	for _, productUpgradePath := range productUpgradePaths {
-		framework.LogWithContext(ctx).Infof("loop type %s dstversion: %s", productUpgradePath.Type, productUpgradePath.DstVersion)
 		if versions, ok := pathMap[productUpgradePath.Type]; ok {
-			versions = append(versions, productUpgradePath.DstVersion)
+			versions = append(versions, getFullVersion(productUpgradePath.DstVersion))
 			pathMap[productUpgradePath.Type] = versions
 		} else {
 			versions = []string{productUpgradePath.DstVersion}
@@ -897,7 +908,7 @@ func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) 
 		}
 	}
 
-	framework.LogWithContext(ctx).Infof("pathMap %v", pathMap)
+	framework.LogWithContext(ctx).Debugf("query pathMap for cluster %s version %s: %v", clusterID, version, pathMap)
 	var paths []*structs.ProductUpgradePathItem
 	for k, v := range pathMap {
 		path := structs.ProductUpgradePathItem{
@@ -906,13 +917,20 @@ func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) 
 		}
 		paths = append(paths, &path)
 	}
-	framework.LogWithContext(ctx).Infof("paths %d", len(paths))
+	framework.LogWithContext(ctx).Debugf("query paths for cluster %s version %s: %v", clusterID, version, paths)
 
-	resp := &cluster.QueryUpgradePathRsp{
-		Paths: paths,
+	resp.Paths = paths
+	return
+}
+
+func getFullVersion(version string) string {
+	numbers := strings.Split(version, ".")
+	if len(numbers) == 1 {
+		return fmt.Sprintf("%s.0.0", numbers[0])
+	} else if len(numbers) == 2 {
+		return fmt.Sprintf("%s.%s.0", numbers[0], numbers[1])
 	}
-
-	return resp, nil
+	return version
 }
 
 func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID string, version string) ([]*structs.ProductUpgradeVersionConfigDiffItem, error) {

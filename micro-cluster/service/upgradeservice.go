@@ -52,6 +52,10 @@ func (handler *ClusterServiceHandler) UpdateProductUpgradePath(context.Context, 
 }
 
 func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "QueryProductUpgradePath", int(resp.GetCode()))
+	defer handlePanic(ctx, "QueryProductUpgradePath", resp)
+
 	request := &cluster.QueryUpgradePathReq{}
 
 	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionRead)}}) {
@@ -63,6 +67,10 @@ func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Contex
 }
 
 func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "QueryUpgradeVersionDiffInfo", int(resp.GetCode()))
+	defer handlePanic(ctx, "QueryUpgradeVersionDiffInfo", resp)
+
 	request := &cluster.QueryUpgradeVersionDiffInfoReq{}
 
 	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionRead)}}) {

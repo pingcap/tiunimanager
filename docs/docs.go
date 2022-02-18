@@ -2341,76 +2341,6 @@ var doc = `{
                 }
             }
         },
-        "/clusters/{clusterId}/params/inspect": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "inspect parameters",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster parameters"
-                ],
-                "summary": "inspect parameters",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "clusterId",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/cluster.InspectClusterParametersResp"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
         "/clusters/{clusterId}/preview-scale-out": {
             "post": {
                 "security": [
@@ -6928,34 +6858,6 @@ var doc = `{
                 "url": {
                     "type": "string",
                     "example": "http://127.0.0.1:9093"
-                }
-            }
-        },
-        "cluster.InspectClusterParametersResp": {
-            "type": "object",
-            "properties": {
-                "inspectValue": {
-                    "type": "string",
-                    "example": "1"
-                },
-                "instance": {
-                    "type": "string",
-                    "example": "172.16.5.23"
-                },
-                "instanceType": {
-                    "type": "string",
-                    "example": "tidb"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "binlog_cache"
-                },
-                "paramId": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "realValue": {
-                    "$ref": "#/definitions/structs.ParameterRealValue"
                 }
             }
         },

@@ -933,14 +933,15 @@ func getFullVersion(version string) string {
 	return version
 }
 
-func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID string, version string) ([]*structs.ProductUpgradeVersionConfigDiffItem, error) {
-	meta, err := meta.Get(ctx, clusterID)
+func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID string, version string) (resp []*structs.ProductUpgradeVersionConfigDiffItem, err error) {
+	clusterMeta, err := meta.Get(ctx, clusterID)
 	if err != nil {
-		framework.LogWithContext(ctx).Error("failed to query upgrade version diff, %s", err)
+		framework.LogWithContext(ctx).Errorf(
+			"load cluster %s meta from db error: %s", clusterID, err.Error())
 		return []*structs.ProductUpgradeVersionConfigDiffItem{}, errors.WrapError(errors.TIEM_UPGRADE_QUERY_PATH_FAILED, "failed to query upgrade version diff", err)
 	}
 
-	srcVersion := meta.Cluster.Version
+	srcVersion := clusterMeta.Cluster.Version
 	// TODO: get params for clusterID and dst version and check the diffs
 	framework.LogWithContext(ctx).Infof("TODO: get params for current cluster(%s:%s) and dst version(%s) and get get diffs", clusterID, srcVersion, version)
 

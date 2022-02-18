@@ -38,6 +38,7 @@ type TiEMClusterServerScript struct {
 	ElasticsearchAddress string
 	TracerAddress        string
 	ClusterName          string
+	ClusterVersion       string
 }
 
 // NewTiEMClusterServerScript returns a TiEMClusterServerScript with given arguments
@@ -100,6 +101,12 @@ func (c *TiEMClusterServerScript) WithTracer(addr []string) *TiEMClusterServerSc
 // WithClusterName set ClusterName
 func (c *TiEMClusterServerScript) WithClusterName(clusterName string) *TiEMClusterServerScript {
 	c.ClusterName = clusterName
+	return c
+}
+
+// WithClusterVersion set ClusterVersion
+func (c *TiEMClusterServerScript) WithClusterVersion(clusterVersion string) *TiEMClusterServerScript {
+	c.ClusterVersion = clusterVersion
 	return c
 }
 

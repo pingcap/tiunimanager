@@ -420,7 +420,7 @@ func (handler *ClusterServiceHandler) InspectClusterParameters(ctx context.Conte
 	defer metrics.HandleClusterMetrics(start, "InspectClusterParameters", int(resp.GetCode()))
 	defer handlePanic(ctx, "InspectClusterParameters", resp)
 
-	request := &cluster.InspectClusterParametersReq{}
+	request := &cluster.InspectParametersReq{}
 
 	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceParameter), Action: string(constants.RbacActionRead)}}) {
 		result, err := handler.clusterParameterManager.InspectClusterParameters(framework.NewBackgroundMicroCtx(ctx, false), *request)

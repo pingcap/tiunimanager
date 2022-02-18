@@ -33,36 +33,6 @@ import (
 
 type action func(ctx context.Context, event constants.SystemEvent, originalState constants.SystemState) error
 
-// define what to do in current SystemState when SystemEvent occurred
-var actionBindings = map[constants.SystemEvent]map[constants.SystemState]action {
-	constants.SystemProcessStarted: {
-		constants.SystemInitialing:    pushToServiceReady,
-		constants.SystemUpgrading:     pushToServiceReady,
-		constants.SystemUnserviceable: pushToServiceReady,
-		constants.SystemRunning:       pushToServiceReady,
-		constants.SystemDataReady:     pushToServiceReady,
-		constants.SystemFailure:       pushToServiceReady,
-	},
-
-	constants.SystemDataInitialized : {
-		constants.SystemServiceReady: pushToDataReady,
-	},
-	constants.SystemServe : {
-		constants.SystemDataReady: pushToRunning,
-		constants.SystemUnserviceable: pushToRunning,
-		constants.SystemFailure: pushToRunning,
-	},
-	constants.SystemStop : {
-		constants.SystemRunning: pushToUnserviceable,
-	},
-	constants.SystemProcessUpgrade : {
-		constants.SystemUnserviceable: pushToUpgrading,
-	},
-	constants.SystemFailureDetected : {
-		constants.SystemRunning: pushToUnFailure,
-	},
-}
-
 // pushToServiceReady
 // @Description: push system state to system ready, then trigger data initializer
 // @Parameter ctx
@@ -73,13 +43,13 @@ func pushToServiceReady(ctx context.Context, event constants.SystemEvent, origin
 	return errors.OfNullable(nil).BreakIf(func() error {
 		return models.GetSystemReaderWriter().UpdateState(ctx, originalState, constants.SystemServiceReady)
 	}).BreakIf(func() error {
-		systemInfo, err := GetSystemManager().GetSystemInfo(ctx)
-		if err != nil {
+		systemInfo, err := models.GetSystemReaderWriter().GetSystemInfo(ctx)
+		if err == nil {
 			return models.IncrementVersionData(systemInfo.CurrentVersionID, framework.Current.GetClientArgs().EMVersion)
 		}
 		return err
 	}).BreakIf(func() error {
-		GetSystemManager().AcceptSystemEvent(ctx, constants.SystemDataInitialized)
+		acceptSystemEvent(ctx, constants.SystemDataInitialized)
 		return nil
 	}).If(func(err error) {
 		framework.LogWithContext(ctx).Errorf("push system state to ServiceReady failed, event = %s, originalState = %s, err = %s", event, originalState, err.Error())
@@ -93,7 +63,7 @@ func pushToDataReady(ctx context.Context, event constants.SystemEvent, originalS
 		models.GetSystemReaderWriter().UpdateVersion(ctx, framework.Current.GetClientArgs().EMVersion)
 		return nil
 	}).BreakIf(func() error {
-		GetSystemManager().AcceptSystemEvent(ctx, constants.SystemServe)
+		acceptSystemEvent(ctx, constants.SystemServe)
 		return nil
 	}).If(func(err error) {
 		framework.LogWithContext(ctx).Errorf("push system state to DataReady failed, event = %s, originalState = %s, err = %s", event, originalState, err.Error())

@@ -179,6 +179,10 @@ func Test_MockVersionData(t *testing.T) {
 	err = defaultDb.base.First(v).Error
 	assert.Error(t, err)
 
+	// reopen
+	err = IncrementVersionData("v2", "v2")
+	assert.NoError(t, err)
+
 	// reopen and upgrade from v2 to v3
 	err = IncrementVersionData("v2", "v3")
 	assert.NoError(t, err)

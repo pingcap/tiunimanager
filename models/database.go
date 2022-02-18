@@ -120,6 +120,9 @@ func IncrementVersionData(originalVersion string, targetVersion string) error {
 		return errors.NewErrorf(errors.TIEM_SYSTEM_INVALID_VERSION, "invalid version %s", targetVersion)
 	}
 
+	if originalVersion == targetVersion {
+		return nil
+	}
 	originalVersionIndex := -1
 	for i, eachVersion := range allVersionInitializers {
 		// match target version before originalVersion, return err

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c)  2022 PingCAP, Inc.                                          *
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
  * you may not use this file except in compliance with the License.           *
  * You may obtain a copy of the License at                                    *
@@ -13,34 +13,27 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-/*******************************************************************************
- * @File: initdata_test.go.go
- * @Description:
- * @Author: zhangpeijin@pingcap.com
- * @Version: 1.0.0
- * @Date: 2022/2/18
-*******************************************************************************/
-
-package models
+package system
 
 import (
-	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/stretchr/testify/assert"
+	"github.com/pingcap-inc/tiem/models"
 	"os"
 	"testing"
 )
 
-func Test_allVersionInitializers(t *testing.T) {
-	// open empty
-	err := Open(framework.Current.(*framework.BaseFramework))
-	defer func() {
-		defaultDb = nil
-		os.RemoveAll(framework.Current.(*framework.BaseFramework).GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName)
-	}()
+func TestMain(m *testing.M) {
+	var testFilePath string
+	framework.InitBaseFrameworkForUt(framework.ClusterService,
+		func(d *framework.BaseFramework) error {
+			testFilePath = d.GetDataDir()
+			os.MkdirAll(testFilePath, 0755)
+			return models.Open(d)
+		},
+	)
+	code := m.Run()
+	models.MockDB()
+	os.RemoveAll(testFilePath)
 
-	assert.NoError(t, err)
-	err = IncrementVersionData("", inTestingVersion)
-	assert.NoError(t, err)
-	// todo add assertion for each new version here
+	os.Exit(code)
 }

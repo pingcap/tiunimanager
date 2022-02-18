@@ -38,7 +38,8 @@ import (
 	"strings"
 	"syscall"
 )
-var virtualTestVersion = "virtualTestVersion"
+
+var inTestingVersion = "InTest"
 
 var allVersionInitializers = []system.VersionInitializer {
 	{"", fullDataBeforeVersions},
@@ -50,8 +51,8 @@ var allVersionInitializers = []system.VersionInitializer {
 		}).Error
 	}},
 
-	{virtualTestVersion, func() error {
-		// new data for dev, move it to NewVersion before packing
+	{inTestingVersion, func() error {
+		// new data for new version
 		return nil
 	}},
 }

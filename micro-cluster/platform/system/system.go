@@ -34,6 +34,7 @@ import (
 )
 
 type SystemManager struct {
+	actionBindings map[constants.SystemEvent]map[constants.SystemState]action
 }
 
 var manager *SystemManager
@@ -43,35 +44,69 @@ func GetSystemManager() *SystemManager {
 	once.Do(func() {
 		if manager == nil {
 			manager = &SystemManager{}
+			manager.actionBindings = map[constants.SystemEvent]map[constants.SystemState]action {
+				constants.SystemProcessStarted: {
+					constants.SystemInitialing:    pushToServiceReady,
+					constants.SystemUpgrading:     pushToServiceReady,
+					constants.SystemUnserviceable: pushToServiceReady,
+					constants.SystemRunning:       pushToServiceReady,
+					constants.SystemDataReady:     pushToServiceReady,
+					constants.SystemFailure:       pushToServiceReady,
+				},
+				constants.SystemDataInitialized : {
+					constants.SystemServiceReady: pushToDataReady,
+				},
+				constants.SystemServe : {
+					constants.SystemDataReady: pushToRunning,
+					constants.SystemUnserviceable: pushToRunning,
+					constants.SystemFailure: pushToRunning,
+				},
+				constants.SystemStop : {
+					constants.SystemRunning: pushToUnserviceable,
+				},
+				constants.SystemProcessUpgrade : {
+					constants.SystemUnserviceable: pushToUpgrading,
+				},
+				constants.SystemFailureDetected : {
+					constants.SystemRunning: pushToUnFailure,
+				},
+			}
 		}
 	})
 	return manager
+}
+
+func getActionBindings() map[constants.SystemEvent]map[constants.SystemState]action {
+	return GetSystemManager().actionBindings
 }
 
 func (p *SystemManager) AcceptSystemEvent(ctx context.Context, event constants.SystemEvent) error {
 	if len(event) == 0 {
 		panic("unknown system event")
 	}
+	return acceptSystemEvent(ctx, event)
+}
 
-	if statusMapAction, ok := actionBindings[event]; ok {
-		systemInfo, err := p.GetSystemInfo(context.TODO())
+func acceptSystemEvent(ctx context.Context, event constants.SystemEvent) error {
+	if statusMapAction, ok := getActionBindings()[event]; ok {
+		systemInfo, err := models.GetSystemReaderWriter().GetSystemInfo(context.TODO())
 		if err != nil {
 			return err
 		}
 		if actionFunc, statusOK := statusMapAction[systemInfo.State]; statusOK {
 			return actionFunc(ctx, event, systemInfo.State)
 		}
+		return errors.NewErrorf(errors.TIEM_SYSTEM_STATE_CONFLICT, "undefined action for event %s in state %s", event, systemInfo.State)
 	} else {
 		panic("unknown system event")
 	}
-	return nil
 }
 
 func (p *SystemManager) GetSystemInfo(ctx context.Context) (*system.SystemInfo, error) {
 	return models.GetSystemReaderWriter().GetSystemInfo(ctx)
 }
 
-func (p *SystemManager) GetVersionInfo(ctx context.Context, versionID string) (*system.VersionInfo, error) {
+func (p *SystemManager) GetSystemVersionInfo(ctx context.Context) (*system.VersionInfo, error) {
 	var systemInfo *system.SystemInfo
 	var versionInfo *system.VersionInfo
 	return versionInfo, errors.OfNullable(nil).
@@ -81,17 +116,17 @@ func (p *SystemManager) GetVersionInfo(ctx context.Context, versionID string) (*
 			return err
 		}).
 		BreakIf(func() error {
-			got, err := models.GetSystemReaderWriter().GetVersion(ctx, versionID)
+			got, err := models.GetSystemReaderWriter().GetVersion(ctx, systemInfo.CurrentVersionID)
 			if err != nil {
 				versionInfo = got
 			}
 			return err
 		}).
 		If(func(err error) {
-			framework.LogWithContext(ctx).Errorf("get version info failed, versionID = %s, err = %s", versionID, err.Error())
+			framework.LogWithContext(ctx).Errorf("get system version info failed, err = %s", err.Error())
 		}).
 		Else(func() {
-			framework.LogWithContext(ctx).Infof("get version info succeed, versionID = %s,info = %v", versionID, *versionInfo)
+			framework.LogWithContext(ctx).Infof("get system version info succeed, info = %v", *versionInfo)
 		}).
 		Present()
 }

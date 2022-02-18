@@ -56,5 +56,5 @@ type ReaderWriter interface {
 	// Get used Memory
 	GetUsedMemory(ctx context.Context, hostIds []string) (resultFromHostTable, resultFromUsedTable, resultFromInstTable map[string]int, err error)
 	// Get used Disk
-	GetUsedDisks(ctx context.Context, hostIds []string) (resultFromHostTable, resultFromUsedTable, resultFromInstTable map[string]map[string]string, err error)
+	GetUsedDisks(ctx context.Context, hostIds []string) (resultFromHostTable, resultFromUsedTable, resultFromInstTable map[string]*[]string, err error)
 }

@@ -18,6 +18,7 @@ package gormreadwrite
 import (
 	"context"
 
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	cl "github.com/pingcap-inc/tiem/models/cluster/management"
 	mm "github.com/pingcap-inc/tiem/models/resource/management"
@@ -32,6 +33,11 @@ type UsedCores struct {
 type UsedMem struct {
 	HostId     string
 	UsedMemory int
+}
+
+type UsedDisks struct {
+	HostId string
+	DiskId string
 }
 
 func (rw *GormResourceReadWrite) GetUsedCpuCores(ctx context.Context, hostIds []string) (resultFromHostTable, resultFromUsedTable, resultFromInstTable map[string]int, err error) {
@@ -77,9 +83,87 @@ func (rw *GormResourceReadWrite) GetUsedCpuCores(ctx context.Context, hostIds []
 }
 
 func (rw *GormResourceReadWrite) GetUsedMemory(ctx context.Context, hostIds []string) (resultFromHostTable, resultFromUsedTable, resultFromInstTable map[string]int, err error) {
+	tx := rw.DB(ctx).Begin()
+	var result1 []UsedMem
+	err = tx.Model(&rp.Host{}).Select("id as host_id, memory - free_memory as used_memory").Where("id in ?", hostIds).Scan(&result1).Error
+	if err != nil {
+		tx.Rollback()
+		return nil, nil, nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "get memory from hosts %v error, %v", hostIds, err)
+	}
+
+	var result2 []UsedMem
+	err = tx.Model(&mm.UsedCompute{}).Select("host_id, sum(memory) as used_memory").
+		Group("host_id").Having("host_id in ?", hostIds).Scan(&result2).Error
+	if err != nil {
+		tx.Rollback()
+		return nil, nil, nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "get used memory from used_computes %v error, %v", hostIds, err)
+	}
+
+	var result3 []UsedMem
+	err = tx.Model(&cl.ClusterInstance{}).Select("host_id, sum(memory) as used_memory").
+		Group("host_id").Having("host_id in ?", hostIds).Scan(&result3).Error
+	if err != nil {
+		tx.Rollback()
+		return nil, nil, nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "get used memory from cluster_instances %v error, %v", hostIds, err)
+	}
+	tx.Commit()
+
+	resultFromHostTable = make(map[string]int)
+	resultFromUsedTable = make(map[string]int)
+	resultFromInstTable = make(map[string]int)
+	for i := range result1 {
+		resultFromHostTable[result1[i].HostId] = result1[i].UsedMemory
+	}
+	for i := range result2 {
+		resultFromUsedTable[result2[i].HostId] = result2[i].UsedMemory
+	}
+	for i := range result3 {
+		resultFromInstTable[result3[i].HostId] = result3[i].UsedMemory
+	}
 	return
 }
 
-func (rw *GormResourceReadWrite) GetUsedDisks(ctx context.Context, hostIds []string) (resultFromHostTable, resultFromUsedTable, resultFromInstTable map[string]map[string]string, err error) {
+func (rw *GormResourceReadWrite) GetUsedDisks(ctx context.Context, hostIds []string) (resultFromHostTable, resultFromUsedTable, resultFromInstTable map[string]*[]string, err error) {
+	tx := rw.DB(ctx).Begin()
+	var result1 []UsedDisks
+	err = tx.Model(&rp.Disk{}).Select("host_id, id as disk_id").Where("status = ?", constants.DiskExhaust).
+		Group("host_id").Group("id").Having("host_id in ?", hostIds).Scan(&result1).Error
+	if err != nil {
+		tx.Rollback()
+		return nil, nil, nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "get used disks from disks %v error, %v", hostIds, err)
+	}
+
+	var result2 []UsedDisks
+	err = tx.Model(&mm.UsedDisk{}).Select("host_id, disk_id").Where("host_id in ?", hostIds).Scan(&result2).Error
+	if err != nil {
+		tx.Rollback()
+		return nil, nil, nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "get used disks from used_disks %v error, %v", hostIds, err)
+	}
+
+	var result3 []UsedDisks
+	err = tx.Model(&cl.ClusterInstance{}).Select("host_id, disk_id").Group("host_id").Group("disk_id").Having("host_id in ?", hostIds).Scan(&result3).Error
+	if err != nil {
+		tx.Rollback()
+		return nil, nil, nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "get used disks from cluster_instances %v error, %v", hostIds, err)
+	}
+	tx.Commit()
+
+	resultFromHostTable = rw.buildDiskMapByArr(result1)
+	resultFromUsedTable = rw.buildDiskMapByArr(result2)
+	resultFromInstTable = rw.buildDiskMapByArr(result3)
+
+	return
+}
+
+func (rw *GormResourceReadWrite) buildDiskMapByArr(items []UsedDisks) (result map[string]*[]string) {
+	result = make(map[string]*[]string)
+	for i := range items {
+		if ptr, ok := result[items[i].HostId]; ok {
+			*ptr = append(*ptr, items[i].DiskId)
+		} else {
+			diskArr := []string{items[i].DiskId}
+			result[items[i].HostId] = &diskArr
+		}
+	}
 	return
 }

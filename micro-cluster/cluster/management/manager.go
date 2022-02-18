@@ -903,7 +903,7 @@ func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) 
 			versions = append(versions, getFullVersion(productUpgradePath.DstVersion))
 			pathMap[productUpgradePath.Type] = versions
 		} else {
-			versions = []string{productUpgradePath.DstVersion}
+			versions = []string{getFullVersion(productUpgradePath.DstVersion)}
 			pathMap[productUpgradePath.Type] = versions
 		}
 	}

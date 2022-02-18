@@ -10081,17 +10081,22 @@ var doc = `{
         "structs.ProductUpgradeVersionConfigDiffItem": {
             "type": "object",
             "required": [
-                "currentVal",
+                "category",
+                "currentValue",
                 "instanceType",
                 "name",
                 "paramId",
                 "range",
-                "suggestVal",
+                "suggestValue",
                 "type",
                 "unit"
             ],
             "properties": {
-                "currentVal": {
+                "category": {
+                    "type": "string",
+                    "example": "basic"
+                },
+                "currentValue": {
                     "type": "string",
                     "example": "20"
                 },
@@ -10121,7 +10126,7 @@ var doc = `{
                         " 1000"
                     ]
                 },
-                "suggestVal": {
+                "suggestValue": {
                     "type": "string",
                     "example": "30"
                 },
@@ -10138,7 +10143,7 @@ var doc = `{
                 },
                 "unit": {
                     "type": "string",
-                    "example": "mb"
+                    "example": "MB"
                 }
             }
         },

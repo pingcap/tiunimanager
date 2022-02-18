@@ -44,6 +44,13 @@ func NewManager() *Manager {
 	return &Manager{}
 }
 
+type DBType int
+
+const (
+	TiDB DBType = 1
+	DM   DBType = 2
+)
+
 type ParamGroupType int
 
 const (

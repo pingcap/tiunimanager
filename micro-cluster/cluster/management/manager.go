@@ -22,6 +22,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
+
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
+
 	"github.com/pingcap-inc/tiem/models"
 
 	"time"
@@ -933,21 +938,85 @@ func getFullVersion(version string) string {
 	return version
 }
 
-func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID string, version string) (resp []*structs.ProductUpgradeVersionConfigDiffItem, err error) {
+func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID string, version string) (resp []structs.ProductUpgradeVersionConfigDiffItem, err error) {
 	clusterMeta, err := meta.Get(ctx, clusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"load cluster %s meta from db error: %s", clusterID, err.Error())
-		return []*structs.ProductUpgradeVersionConfigDiffItem{}, errors.WrapError(errors.TIEM_UPGRADE_QUERY_PATH_FAILED, "failed to query upgrade version diff", err)
+		return
 	}
 
-	srcVersion := clusterMeta.Cluster.Version
-	// TODO: get params for clusterID and dst version and check the diffs
-	framework.LogWithContext(ctx).Infof("TODO: get params for current cluster(%s:%s) and dst version(%s) and get get diffs", clusterID, srcVersion, version)
+	framework.LogWithContext(ctx).Infof("query config difference between cluster %s version %s and parametergroup of %s", clusterID, clusterMeta.Cluster.Version, version)
+	paramResp, _, err := parameter.NewManager().QueryClusterParameters(ctx, cluster.QueryClusterParametersReq{
+		ClusterID: clusterMeta.Cluster.ID,
+	})
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"query cluster %s param from db error: %s", clusterID, err.Error())
+		return
+	}
 
-	var configDiffInfos []*structs.ProductUpgradeVersionConfigDiffItem
+	groups, _, err := parametergroup.NewManager().QueryParameterGroup(ctx, message.QueryParameterGroupReq{
+		DBType:         int(parametergroup.TiDB),
+		HasDefault:     int(parametergroup.DEFAULT),
+		ClusterVersion: getMinorVersion(version),
+	})
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"query paramgroup for version %s from db error: %s", version, err.Error())
+		return
+	}
+	if len(groups) == 0 {
+		msg := fmt.Sprintf("no default group found for dbtype %d, hasdefault = %s, version = %s", int(parametergroup.TiDB), int(parametergroup.DEFAULT), getMinorVersion(version))
+		framework.LogWithContext(ctx).Error(msg)
+		err = errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_DATA, msg)
+		return
+	}
 
-	return configDiffInfos, nil
+	resp = compareConfigDifference(paramResp.Params, groups[0].Params)
+
+	return
+}
+
+func getMinorVersion(version string) string {
+	numbers := strings.Split(version, ".")
+	if len(numbers) > 1 {
+		return fmt.Sprintf("%s.%s", numbers[0], numbers[1])
+	} else {
+		return fmt.Sprintf(numbers[0])
+	}
+}
+
+func compareConfigDifference(clusterParameterInfos []structs.ClusterParameterInfo, parameterGroupParameterInfos []structs.ParameterGroupParameterInfo) (resp []structs.ProductUpgradeVersionConfigDiffItem) {
+	clusterParamMap := make(map[string]structs.ClusterParameterInfo)
+	for _, param := range clusterParameterInfos {
+		clusterParamMap[param.ParamId] = param
+	}
+
+	pgParamMap := make(map[string]structs.ParameterGroupParameterInfo)
+	for _, param := range parameterGroupParameterInfos {
+		pgParamMap[param.ID] = param
+	}
+
+	for id, clusterParam := range clusterParamMap {
+		if pgParam, ok := pgParamMap[id]; ok {
+			if clusterParam.RealValue.ClusterValue != pgParam.DefaultValue {
+				resp = append(resp, structs.ProductUpgradeVersionConfigDiffItem{
+					ParamId:      id,
+					Category:     pgParam.Category,
+					Name:         pgParam.Name,
+					InstanceType: pgParam.InstanceType,
+					CurrentValue: clusterParam.RealValue.ClusterValue,
+					SuggestValue: pgParam.DefaultValue,
+					Type:         pgParam.Type,
+					Unit:         pgParam.Unit,
+					Range:        pgParam.Range,
+					Description:  pgParam.Description,
+				})
+			}
+		}
+	}
+	return
 }
 
 // InPlaceUpgradeCluster

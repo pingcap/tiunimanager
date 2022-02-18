@@ -1290,8 +1290,8 @@ func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.Flo
 func chooseParameterGroup(clusterMeta *meta.ClusterMeta, node *workflowModel.WorkFlowNode, context *workflow.FlowContext) (err error) {
 	node.Record("parameter group id is empty")
 	groups, _, err := parametergroup.NewManager().QueryParameterGroup(context, message.QueryParameterGroupReq{
-		DBType:         1,
-		HasDefault:     1,
+		DBType:         int(parametergroup.TiDB),
+		HasDefault:     int(parametergroup.DEFAULT),
 		ClusterVersion: clusterMeta.GetMinorVersion(),
 	})
 	if err != nil {

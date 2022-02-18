@@ -186,12 +186,13 @@ type ProductUpgradePathItem struct {
 }
 type ProductUpgradeVersionConfigDiffItem struct {
 	ParamId      string   `json:"paramId" validate:"required" example:"1"`
+	Category     string   `json:"category" validate:"required" example:"basic"`
 	Name         string   `json:"name" validate:"required" example:"max-merge-region-size"`
 	InstanceType string   `json:"instanceType" validate:"required" example:"pd-server"`
-	CurrentVal   string   `json:"currentVal" validate:"required" example:"20"`
-	SuggestVal   string   `json:"suggestVal" validate:"required" example:"30"`
+	CurrentValue string   `json:"currentValue" validate:"required" example:"20"`
+	SuggestValue string   `json:"suggestValue" validate:"required" example:"30"`
 	Type         int      `json:"type" validate:"required" example:"0" enums:"0,1,2,3,4"`
-	Unit         string   `json:"unit" validate:"required" example:"mb"`
+	Unit         string   `json:"unit" validate:"required" example:"MB"`
 	Range        []string `json:"range" validate:"required" example:"1, 1000"`
 	Description  string   `json:"description" example:"desc for max-merge-region-size"`
 }

@@ -2496,7 +2496,10 @@ definitions:
     type: object
   structs.ProductUpgradeVersionConfigDiffItem:
     properties:
-      currentVal:
+      category:
+        example: basic
+        type: string
+      currentValue:
         example: "20"
         type: string
       description:
@@ -2518,7 +2521,7 @@ definitions:
         items:
           type: string
         type: array
-      suggestVal:
+      suggestValue:
         example: "30"
         type: string
       type:
@@ -2531,15 +2534,16 @@ definitions:
         example: 0
         type: integer
       unit:
-        example: mb
+        example: MB
         type: string
     required:
-    - currentVal
+    - category
+    - currentValue
     - instanceType
     - name
     - paramId
     - range
-    - suggestVal
+    - suggestValue
     - type
     - unit
     type: object

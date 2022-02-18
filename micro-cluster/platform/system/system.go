@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Copyright (c)  2022 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
  * you may not use this file except in compliance with the License.           *
  * You may obtain a copy of the License at                                    *
@@ -13,28 +13,33 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package management
+/*******************************************************************************
+ * @File: system.go
+ * @Description:
+ * @Author: zhangpeijin@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2022/2/16
+*******************************************************************************/
+
+package system
 
 import (
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
-	"os"
-	"testing"
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/models/platform/system"
 )
 
-func TestMain(m *testing.M) {
-	var testFilePath string
-	framework.InitBaseFrameworkForUt(framework.ClusterService,
-		func(d *framework.BaseFramework) error {
-			models.MockDB()
-			testFilePath = d.GetDataDir()
-			os.MkdirAll(testFilePath, 0755)
-			models.MockDB()
-			return models.Open(d, "")
-		},
-	)
-	code := m.Run()
-	os.RemoveAll(testFilePath)
+type SystemManager struct {
 
-	os.Exit(code)
+}
+
+func (p *SystemManager) AcceptSystemEvent(event constants.SystemEvent) error{
+	return nil
+}
+
+func (p *SystemManager) GetSystemInfo() (system.SystemInfo, error) {
+	return system.SystemInfo{}, nil
+}
+
+func (p *SystemManager) GetVersionInfo(version string) (system.VersionInfo, error) {
+	return system.VersionInfo{}, nil
 }

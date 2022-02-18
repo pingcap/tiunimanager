@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Copyright (c)  2022 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
  * you may not use this file except in compliance with the License.           *
  * You may obtain a copy of the License at                                    *
@@ -13,28 +13,23 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package management
+/*******************************************************************************
+ * @File: version.go
+ * @Description:
+ * @Author: zhangpeijin@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2022/2/16
+*******************************************************************************/
 
-import (
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
-	"os"
-	"testing"
-)
+package system
 
-func TestMain(m *testing.M) {
-	var testFilePath string
-	framework.InitBaseFrameworkForUt(framework.ClusterService,
-		func(d *framework.BaseFramework) error {
-			models.MockDB()
-			testFilePath = d.GetDataDir()
-			os.MkdirAll(testFilePath, 0755)
-			models.MockDB()
-			return models.Open(d, "")
-		},
-	)
-	code := m.Run()
-	os.RemoveAll(testFilePath)
+type VersionInfo struct {
+	ID          string `gorm:"primaryKey;"`
+	Desc        string
+	ReleaseNote string
+}
 
-	os.Exit(code)
+type VersionInitializer struct {
+	VersionID       string
+	DataInitializer func() error
 }

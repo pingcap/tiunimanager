@@ -51,6 +51,8 @@ type ClientArgs struct {
 	LogLevel             string
 	ElasticsearchAddress string
 	EMClusterName        string
+
+	EMVersion            string
 }
 
 func AllFlags(receiver *ClientArgs) []cli.Flag {

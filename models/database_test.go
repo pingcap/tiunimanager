@@ -78,6 +78,11 @@ func TestGetReaderWriter(t *testing.T) {
 	assert.NotEmpty(t, GetProductReaderWriter())
 	SetProductReaderWriter(nil)
 	assert.Empty(t, GetProductReaderWriter())
+
+
+	assert.NotEmpty(t, GetSystemReaderWriter())
+	SetSystemReaderWriter(nil)
+	assert.Empty(t, GetSystemReaderWriter())
 	MockDB()
 }
 
@@ -88,7 +93,7 @@ func TestMain(m *testing.M) {
 			testFilePath = d.GetDataDir()
 			os.MkdirAll(testFilePath, 0755)
 
-			return Open(d, false)
+			return Open(d, "")
 		},
 	)
 	code := m.Run()

@@ -72,7 +72,7 @@ func initLibForDev(f *framework.BaseFramework) error {
 }
 
 func initDatabase(f *framework.BaseFramework) error {
-	models.Open(f, false)
+	models.Open(f, "")
 	return nil
 }
 

@@ -18,7 +18,7 @@
  * @Description:
  * @Author: zhangpeijin@pingcap.com
  * @Version: 1.0.0
- * @Date: 2022/2/16
+ * @Date: 2022/2/18
 *******************************************************************************/
 
 package system
@@ -26,151 +26,133 @@ package system
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/models/common"
-	"gorm.io/gorm"
-	"reflect"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestNewSystemReadWrite(t *testing.T) {
-	type args struct {
-		db *gorm.DB
-	}
-	tests := []struct {
-		name string
-		args args
-		want ReaderWriter
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := NewSystemReadWrite(tt.args.db); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewSystemReadWrite() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestSystemReadWrite_GetHistoryVersions(t *testing.T) {
-	type fields struct {
-		GormDB common.GormDB
-	}
-	type args struct {
-		ctx context.Context
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    []*VersionInfo
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &SystemReadWrite{
-				GormDB: tt.fields.GormDB,
-			}
-			got, err := s.GetHistoryVersions(tt.args.ctx)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetHistoryVersions() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetHistoryVersions() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestSystemReadWrite_GetSystemInfo(t *testing.T) {
-	type fields struct {
-		GormDB common.GormDB
+	info, err := testRW.GetSystemInfo(context.TODO())
+	assert.Error(t, err)
+	assert.Equal(t, errors.TIEM_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
+
+	systemInfo := &SystemInfo{
+		SystemName: "EM",
+		SystemLogo: "sss",
+		CurrentVersionID: "v1",
+		LastVersionID: "",
+		State: constants.SystemRunning,
 	}
-	type args struct {
-		ctx context.Context
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *SystemInfo
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &SystemReadWrite{
-				GormDB: tt.fields.GormDB,
-			}
-			got, err := s.GetSystemInfo(tt.args.ctx)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetSystemInfo() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetSystemInfo() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	err = testRW.DB(context.TODO()).Create(systemInfo).Error
+	defer testRW.DB(context.TODO()).Delete(&SystemInfo{}, "system_name = 'EM'")
+
+	info, err = testRW.GetSystemInfo(context.TODO())
+	assert.NoError(t, err)
+	assert.Equal(t, "EM", info.SystemName)
 }
 
-func TestSystemReadWrite_UpdateStatus(t *testing.T) {
-	type fields struct {
-		GormDB common.GormDB
+func TestSystemReadWrite_VersionInfo(t *testing.T) {
+	testRW.DB(context.TODO()).Create(&VersionInfo{
+		"v1","test","",
+	})
+	testRW.DB(context.TODO()).Create(&VersionInfo{
+		"v2","test","",
+	})
+	testRW.DB(context.TODO()).Create(&VersionInfo{
+		"v3","test","",
+	})
+	defer testRW.DB(context.TODO()).Delete(&SystemInfo{}, "desc = 'test'")
+
+	t.Run("query", func(t *testing.T) {
+		versions, err := testRW.QueryVersions(context.TODO())
+		assert.NoError(t, err)
+		assert.Equal(t, 3, len(versions))
+		assert.Equal(t, "v2", versions[1].ID)
+	})
+
+	t.Run("get v2", func(t *testing.T) {
+		version, err := testRW.GetVersion(context.TODO(), "v2")
+		assert.NoError(t, err)
+		assert.Equal(t, "v2", version.ID)
+	})
+	t.Run("get empty", func(t *testing.T) {
+		_, err := testRW.GetVersion(context.TODO(), "")
+		assert.Error(t, err)
+		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
+	})
+	t.Run("get not found", func(t *testing.T) {
+		_, err := testRW.GetVersion(context.TODO(), "v5")
+		assert.Error(t, err)
+		assert.Equal(t, errors.TIEM_SYSTEM_INVALID_VERSION, err.(errors.EMError).GetCode())
+	})
+}
+
+func TestSystemReadWrite_UpdateState(t *testing.T) {
+	err := testRW.UpdateState(context.TODO(), constants.SystemUnserviceable, constants.SystemRunning)
+	assert.Error(t, err)
+	assert.Equal(t, errors.TIEM_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
+
+	systemInfo := &SystemInfo{
+		SystemName: "EM",
+		SystemLogo: "sss",
+		CurrentVersionID: "",
+		LastVersionID: "",
+		State: constants.SystemRunning,
 	}
-	type args struct {
-		ctx      context.Context
-		original constants.SystemStatus
-		target   constants.SystemStatus
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &SystemReadWrite{
-				GormDB: tt.fields.GormDB,
-			}
-			if err := s.UpdateStatus(tt.args.ctx, tt.args.original, tt.args.target); (err != nil) != tt.wantErr {
-				t.Errorf("UpdateStatus() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+	err = testRW.DB(context.TODO()).Create(systemInfo).Error
+	defer testRW.DB(context.TODO()).Delete(&SystemInfo{}, "system_name = 'EM'")
+	assert.NoError(t, err)
+
+	t.Run("conflict", func(t *testing.T) {
+		err = testRW.UpdateState(context.TODO(), constants.SystemUpgrading, constants.SystemServiceReady)
+		assert.Error(t, err)
+		newInfo, _ := testRW.GetSystemInfo(context.TODO())
+		assert.Equal(t, constants.SystemRunning, newInfo.State)
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		err = testRW.UpdateState(context.TODO(), constants.SystemRunning, constants.SystemServiceReady)
+		assert.NoError(t, err)
+		newInfo, _ := testRW.GetSystemInfo(context.TODO())
+		assert.Equal(t, constants.SystemServiceReady, newInfo.State)
+
+		err = testRW.UpdateState(context.TODO(), constants.SystemRunning, constants.SystemServiceReady)
+		assert.Error(t, err)
+
+		err = testRW.UpdateState(context.TODO(), constants.SystemServiceReady, constants.SystemRunning)
+		assert.NoError(t, err)
+	})
 }
 
 func TestSystemReadWrite_UpdateVersion(t *testing.T) {
-	type fields struct {
-		GormDB common.GormDB
+	err := testRW.UpdateVersion(context.TODO(), "v1")
+	assert.Error(t, err)
+	assert.Equal(t, errors.TIEM_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
+
+	systemInfo := &SystemInfo{
+		SystemName: "EM",
+		SystemLogo: "sss",
+		CurrentVersionID: "",
+		LastVersionID: "",
+		State: constants.SystemRunning,
 	}
-	type args struct {
-		ctx    context.Context
-		target constants.SystemStatus
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &SystemReadWrite{
-				GormDB: tt.fields.GormDB,
-			}
-			if err := s.UpdateVersion(tt.args.ctx, tt.args.target); (err != nil) != tt.wantErr {
-				t.Errorf("UpdateVersion() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+	err = testRW.DB(context.TODO()).Create(systemInfo).Error
+	defer testRW.DB(context.TODO()).Delete(&SystemInfo{}, "system_name = 'EM'")
+	assert.NoError(t, err)
+
+	err = testRW.UpdateVersion(context.TODO(), "v1")
+	assert.NoError(t, err)
+
+	newInfo, err := testRW.GetSystemInfo(context.TODO())
+	assert.NoError(t, err)
+	assert.Equal(t, "", newInfo.LastVersionID)
+	assert.Equal(t, "v1", newInfo.CurrentVersionID)
+
+	err = testRW.UpdateVersion(context.TODO(), "v2")
+	assert.NoError(t, err)
+
+	newInfo, err = testRW.GetSystemInfo(context.TODO())
+	assert.NoError(t, err)
+	assert.Equal(t, "v1", newInfo.LastVersionID)
+	assert.Equal(t, "v2", newInfo.CurrentVersionID)
 }

@@ -25,8 +25,10 @@ package system
 
 import (
 	"context"
+	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
 )
@@ -40,9 +42,29 @@ func NewSystemReadWrite(db *gorm.DB) ReaderWriter {
 	dbCommon.WrapDB(db),
 	}
 }
+func (s *SystemReadWrite) QueryVersions(ctx context.Context) ([]*VersionInfo, error) {
+	versions := make([]*VersionInfo, 0)
+	return versions, s.DB(ctx).Find(&versions).Error
+}
 
-func (s *SystemReadWrite) GetHistoryVersions(ctx context.Context) ([]*VersionInfo, error) {
-	panic("implement me")
+func (s *SystemReadWrite) GetVersion(ctx context.Context, versionID string) (*VersionInfo, error) {
+	if "" == versionID {
+		errInfo := "get version info failed : empty versionID"
+		framework.LogWithContext(ctx).Error(errInfo)
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
+	}
+
+	version := &VersionInfo{}
+	err := s.DB(ctx).First(version, "id = ?", versionID).Error
+
+	if err != nil {
+		errInfo := fmt.Sprintf("get version info failed : versionID = %s, err = %s", versionID, err.Error())
+		framework.LogWithContext(ctx).Error(errInfo)
+
+		return nil, errors.WrapError(errors.TIEM_SYSTEM_INVALID_VERSION, errInfo, err)
+	} else {
+		return version, nil
+	}
 }
 
 func (s *SystemReadWrite) GetSystemInfo(ctx context.Context) (*SystemInfo, error) {
@@ -54,33 +76,30 @@ func (s *SystemReadWrite) GetSystemInfo(ctx context.Context) (*SystemInfo, error
 	return info, err
 }
 
-func (s *SystemReadWrite) UpdateStatus(ctx context.Context, original, target constants.SystemStatus) error {
+func (s *SystemReadWrite) UpdateState(ctx context.Context, original, target constants.SystemState) error {
 	info, err := s.GetSystemInfo(ctx)
 	if err != nil {
 		return err
 	}
 
-	if info.Status != original {
-		return errors.NewErrorf(errors.TIEM_SYSTEM_STATUS_CONFLICT, "current status = %s, expected original status = %s", info.Status, original)
+	if info.State != original {
+		return errors.NewErrorf(errors.TIEM_SYSTEM_STATE_CONFLICT, "current state = %s, expected original state = %s", info.State, original)
 	}
-	err = s.DB(ctx).First(info).Update("status", target).Error
-	if err != nil {
-		return dbCommon.WrapDBError(err)
-	}
-	return nil
+	err = s.DB(ctx).Model(info).Where("system_name is not null").Update("state", target).Error
+	return dbCommon.WrapDBError(err)
 }
 
-func (s *SystemReadWrite) UpdateVersion(ctx context.Context, target constants.SystemStatus) error {
+func (s *SystemReadWrite) UpdateVersion(ctx context.Context, target string) error {
 	info, err := s.GetSystemInfo(ctx)
 	if err != nil {
 		return err
 	}
-	err = s.DB(ctx).First(info).Update("last_version_id", info.CurrentVersionID).Update("current_version_id", target).Error
 
-	if err != nil {
-		return dbCommon.WrapDBError(err)
-	}
-	return nil
+	err = s.DB(ctx).Model(info).Where("system_name is not null").
+		Update("last_version_id", info.CurrentVersionID).
+		Update("current_version_id", target).
+		Error
+	return dbCommon.WrapDBError(err)
 }
 
 

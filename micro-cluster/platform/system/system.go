@@ -24,22 +24,74 @@
 package system
 
 import (
+	"context"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/platform/system"
+	"sync"
 )
 
 type SystemManager struct {
-
 }
 
-func (p *SystemManager) AcceptSystemEvent(event constants.SystemEvent) error{
+var manager *SystemManager
+var once sync.Once
+
+func GetSystemManager() *SystemManager {
+	once.Do(func() {
+		if manager == nil {
+			manager = &SystemManager{}
+		}
+	})
+	return manager
+}
+
+func (p *SystemManager) AcceptSystemEvent(ctx context.Context, event constants.SystemEvent) error {
+	if len(event) == 0 {
+		panic("unknown system event")
+	}
+
+	if statusMapAction, ok := actionBindings[event]; ok {
+		systemInfo, err := p.GetSystemInfo(context.TODO())
+		if err != nil {
+			return err
+		}
+		if actionFunc, statusOK := statusMapAction[systemInfo.State]; statusOK {
+			return actionFunc(ctx, event, systemInfo.State)
+		}
+	} else {
+		panic("unknown system event")
+	}
 	return nil
 }
 
-func (p *SystemManager) GetSystemInfo() (system.SystemInfo, error) {
-	return system.SystemInfo{}, nil
+func (p *SystemManager) GetSystemInfo(ctx context.Context) (*system.SystemInfo, error) {
+	return models.GetSystemReaderWriter().GetSystemInfo(ctx)
 }
 
-func (p *SystemManager) GetVersionInfo(version string) (system.VersionInfo, error) {
-	return system.VersionInfo{}, nil
+func (p *SystemManager) GetVersionInfo(ctx context.Context, versionID string) (*system.VersionInfo, error) {
+	var systemInfo *system.SystemInfo
+	var versionInfo *system.VersionInfo
+	return versionInfo, errors.OfNullable(nil).
+		BreakIf(func() error {
+			got, err := p.GetSystemInfo(ctx)
+			systemInfo = got
+			return err
+		}).
+		BreakIf(func() error {
+			got, err := models.GetSystemReaderWriter().GetVersion(ctx, versionID)
+			if err != nil {
+				versionInfo = got
+			}
+			return err
+		}).
+		If(func(err error) {
+			framework.LogWithContext(ctx).Errorf("get version info failed, versionID = %s, err = %s", versionID, err.Error())
+		}).
+		Else(func() {
+			framework.LogWithContext(ctx).Infof("get version info succeed, versionID = %s,info = %v", versionID, *versionInfo)
+		}).
+		Present()
 }

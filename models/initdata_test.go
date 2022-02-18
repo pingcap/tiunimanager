@@ -14,23 +14,33 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: info.go
+ * @File: initdata_test.go.go
  * @Description:
  * @Author: zhangpeijin@pingcap.com
  * @Version: 1.0.0
- * @Date: 2022/2/16
+ * @Date: 2022/2/18
 *******************************************************************************/
 
-package system
+package models
 
 import (
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/stretchr/testify/assert"
+	"os"
+	"testing"
 )
 
-type SystemInfo struct {
-	SystemName       string                `gorm:""`
-	SystemLogo       string                `gorm:""`
-	CurrentVersionID string                `gorm:""`
-	LastVersionID    string                `gorm:""`
-	State            constants.SystemState `gorm:"default:Initialing;"`
+func Test_allVersionInitializers(t *testing.T) {
+	// open empty
+	err := Open(framework.Current.(*framework.BaseFramework))
+	defer func() {
+		defaultDb = nil
+		os.RemoveAll(framework.Current.(*framework.BaseFramework).GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName)
+	}()
+
+	assert.NoError(t, err)
+	err = IncrementVersionData("", virtualTestVersion)
+	assert.NoError(t, err)
+	// todo add assertion for each new version here
 }

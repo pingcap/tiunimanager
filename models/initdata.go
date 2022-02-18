@@ -38,16 +38,21 @@ import (
 	"strings"
 	"syscall"
 )
+var virtualTestVersion = "virtualTestVersion"
 
 var allVersionInitializers = []system.VersionInitializer {
 	{"", fullDataBeforeVersions},
 	{"v1.0.0-beta9", func() error {
-		// new default config for new version
-		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStorageType, ConfigValue: string(constants.StorageTypeS3)})
 		return defaultDb.base.Create(&system.VersionInfo {
 			ID: "v1.0.0-beta9",
 			Desc: "beta 9",
+			ReleaseNote: "aaa",
 		}).Error
+	}},
+
+	{virtualTestVersion, func() error {
+		// new data for dev, move it to NewVersion before packing
+		return nil
 	}},
 }
 
@@ -60,7 +65,7 @@ func fullDataBeforeVersions() error {
 			SystemLogo:       "",
 			CurrentVersionID: "",
 			LastVersionID:    "",
-			Status:           constants.SystemInitialing,
+			State:            constants.SystemInitialing,
 		})
 		return nil
 	}).BreakIf(func() error {

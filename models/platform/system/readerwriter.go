@@ -29,8 +29,9 @@ import (
 )
 
 type ReaderWriter interface {
-	GetHistoryVersions(ctx context.Context) ([]*VersionInfo, error)
+	GetVersion(ctx context.Context, versionID string) (*VersionInfo, error)
+	QueryVersions(ctx context.Context) ([]*VersionInfo, error)
 	GetSystemInfo(ctx context.Context) (*SystemInfo, error)
-	UpdateStatus(ctx context.Context, original, target constants.SystemStatus) error
-	UpdateVersion(ctx context.Context, target constants.SystemStatus) error
+	UpdateState(ctx context.Context, original, target constants.SystemState) error
+	UpdateVersion(ctx context.Context, target string) error
 }

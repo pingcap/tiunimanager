@@ -45,25 +45,24 @@ const (
 	ConfigKeyRetainedPortRange string = "config_retained_port_range"
 )
 
-type SystemStatus string
+type SystemState string
 
 const (
-	SystemInitialing    SystemStatus = "Initialing"
-	SystemServiceReady  SystemStatus = "ServiceReady"
-	SystemDataReady     SystemStatus = "DataReady"
-	SystemUpgrading     SystemStatus = "Upgrading"
-	SystemUnserviceable SystemStatus = "Unserviceable"
-	SystemRunning       SystemStatus = "Running"
-	SystemFailure       SystemStatus = "Failure"
+	SystemInitialing    SystemState = "Initialing"
+	SystemServiceReady  SystemState = "ServiceReady"
+	SystemDataReady     SystemState = "DataReady"
+	SystemUpgrading     SystemState = "Upgrading"
+	SystemUnserviceable SystemState = "Unserviceable"
+	SystemRunning       SystemState = "Running"
+	SystemFailure       SystemState = "Failure"
 )
 
 type SystemEvent string
 
 const (
-	SystemStarted         SystemEvent = "Started"
+	SystemProcessStarted  SystemEvent = "ProcessStarted"
 	SystemDataInitialized SystemEvent = "DataInitialized"
-	SystemRestart         SystemEvent = "Restart"
-	SystemUpgrade         SystemEvent = "Upgrade"
+	SystemProcessUpgrade  SystemEvent = "ProcessUpgrade"
 	SystemServe           SystemEvent = "Serve"
 	SystemStop            SystemEvent = "Stop"
 	SystemFailureDetected SystemEvent = "FailureDetected"

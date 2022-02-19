@@ -967,7 +967,7 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 		return
 	}
 	if len(groups) == 0 {
-		msg := fmt.Sprintf("no default group found for dbtype %d, hasdefault = %s, version = %s", int(parametergroup.TiDB), int(parametergroup.DEFAULT), getMinorVersion(version))
+		msg := fmt.Sprintf("no default group found for dbtype %d, hasdefault = %d, version = %s", int(parametergroup.TiDB), int(parametergroup.DEFAULT), getMinorVersion(version))
 		framework.LogWithContext(ctx).Error(msg)
 		err = errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_DATA, msg)
 		return

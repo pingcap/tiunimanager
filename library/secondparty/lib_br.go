@@ -79,7 +79,7 @@ func (manager *SecondPartyManager) BackUp(ctx context.Context, cluster ClusterFa
 	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("backup, clusterfacade: "+
 		"%v, storage: %v", cluster, storage)
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
-		secondparty.OperationType_Backup, workFlowNodeID)
+		secondparty.OperationTypeBackup, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
@@ -178,7 +178,7 @@ func (manager *SecondPartyManager) Restore(ctx context.Context, cluster ClusterF
 	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("restore, "+
 		"clusterfacade: %v, storage: %v", cluster, storage)
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
-		secondparty.OperationType_Restore, workFlowNodeID)
+		secondparty.OperationTypeRestore, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err

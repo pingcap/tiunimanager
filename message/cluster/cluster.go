@@ -157,31 +157,6 @@ type MasterSlaveClusterSwitchoverResp struct {
 	structs.AsyncTaskWorkFlowInfo
 }
 
-type QueryUpgradeVersionDiffInfoReq struct {
-	ClusterID string `json:"clusterId"`
-	Version   string `json:"version"`
-}
-
-type QueryUpgradeVersionDiffInfoResp struct {
-	ConfigDiffInfos []structs.ProductUpgradeVersionConfigDiffItem `json:"configDiffInfos"`
-}
-
-type ClusterUpgradeVersionConfigItem struct {
-	Name         string `json:"name"`
-	InstanceType string `json:"instanceType"`
-	Value        string `json:"value"`
-}
-
-type ClusterUpgradeReq struct {
-	ClusterID     string `json:"ClusterId"`
-	TargetVersion string `json:"targetVersion"`
-	Configs       []ClusterUpgradeVersionConfigItem
-}
-
-type ClusterUpgradeResp struct {
-	structs.AsyncTaskWorkFlowInfo
-}
-
 // TakeoverClusterReq Requests to take over an existing TiDB cluster, requiring TiDB version >= 4.0 when taking over
 type TakeoverClusterReq struct {
 	TiUPIp           string `json:"TiUPIp" example:"172.16.4.147" form:"TiUPIp" validate:"required,ip"`

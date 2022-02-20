@@ -180,16 +180,28 @@ type ClusterLogItem struct {
 }
 
 type ProductUpgradePathItem struct {
-	Type     string   `json:"type"`
-	Versions []string `json:"versions"`
+	UpgradeType string   `json:"upgradeType"  validate:"required" enums:"in-place,migration"`
+	UpgradeWay  string   `json:"upgradeWay,omitempty"  enums:"offline,online"`
+	Versions    []string `json:"versions" validate:"required" example:"v5.0.0,v5.3.0"`
 }
 type ProductUpgradeVersionConfigDiffItem struct {
-	Name         string `json:"name"`
-	InstanceType string `json:"instanceType"`
-	CurrentVal   string `json:"currentVal"`
-	SuggestVal   string `json:"suggestVal"`
-	Range        string `json:"range"`
-	Description  string `json:"description"`
+	ParamId      string   `json:"paramId" validate:"required" example:"1"`
+	Category     string   `json:"category" validate:"required" example:"basic"`
+	Name         string   `json:"name" validate:"required" example:"max-merge-region-size"`
+	InstanceType string   `json:"instanceType" validate:"required" example:"pd-server"`
+	CurrentValue string   `json:"currentValue" validate:"required" example:"20"`
+	SuggestValue string   `json:"suggestValue" validate:"required" example:"30"`
+	Type         int      `json:"type" validate:"required" example:"0" enums:"0,1,2,3,4"`
+	Unit         string   `json:"unit" validate:"required" example:"MB"`
+	Range        []string `json:"range" validate:"required" example:"1, 1000"`
+	Description  string   `json:"description" example:"desc for max-merge-region-size"`
+}
+
+type ClusterUpgradeVersionConfigItem struct {
+	ParamId      string `json:"paramId" validate:"required" example:"1"`
+	Name         string `json:"name" validate:"required" example:"max-merge-region-size"`
+	InstanceType string `json:"instanceType" validate:"required" example:"pd-server"`
+	Value        string `json:"value" validate:"required" example:"20"`
 }
 
 type ClusterInstanceParameterValue struct {

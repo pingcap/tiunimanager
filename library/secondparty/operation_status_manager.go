@@ -143,14 +143,14 @@ func (manager *SecondPartyManager) syncOperationStatusMap() {
 }
 
 /**
-1. delete all OperationStatus_Finished and OperationStatus_Error operations which have been read before from the memory
+1. delete all OperationStatusFinished and OperationStatusError operations which have been read before from the memory
 2. put all the rest OperationStatusMember into the result list
 3. increment the read count of rest OperationStatusMember
 */
 func (manager *SecondPartyManager) getAllValidOperationStatus() (ret []OperationStatusMember) {
 	var needDeleteOperationList []string
 	for k, v := range manager.operationStatusMap {
-		if v.readct > 0 && (v.stat.Status == secondparty.OperationStatus_Finished || v.stat.Status == secondparty.OperationStatus_Error) {
+		if v.readct > 0 && (v.stat.Status == secondparty.OperationStatusFinished || v.stat.Status == secondparty.OperationStatusError) {
 			needDeleteOperationList = append(needDeleteOperationList, k)
 		}
 	}

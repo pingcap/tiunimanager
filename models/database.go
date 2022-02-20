@@ -17,18 +17,18 @@ package models
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/models/user/rbac"
 	"io/ioutil"
 	"os"
 	"strings"
 	"syscall"
 
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/models/platform/product"
+	"github.com/pingcap-inc/tiem/models/user/rbac"
 
 	"github.com/pingcap-inc/tiem/models/tiup"
 
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/structs"
 	mm "github.com/pingcap-inc/tiem/models/resource/management"
 	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	"github.com/pingcap-inc/tiem/models/user/account"
@@ -39,6 +39,7 @@ import (
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/cluster/parameter"
+	"github.com/pingcap-inc/tiem/models/cluster/upgrade"
 	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/models/parametergroup"
 	"github.com/pingcap-inc/tiem/models/platform/config"
@@ -59,6 +60,7 @@ type database struct {
 	importExportReaderWriter         importexport.ReaderWriter
 	brReaderWriter                   backuprestore.ReaderWriter
 	changeFeedReaderWriter           changefeed.ReaderWriter
+	upgradeReadWriter                upgrade.ReaderWriter
 	clusterReaderWriter              management.ReaderWriter
 	parameterGroupReaderWriter       parametergroup.ReaderWriter
 	clusterParameterReaderWriter     parameter.ReaderWriter
@@ -130,6 +132,7 @@ func (p *database) initTables() (err error) {
 		new(changefeed.ChangeFeedTask),
 		new(workflow.WorkFlow),
 		new(workflow.WorkFlowNode),
+		new(upgrade.ProductUpgradePath),
 		new(management.Cluster),
 		new(management.ClusterInstance),
 		new(management.ClusterRelation),
@@ -168,6 +171,7 @@ func (p *database) initReaderWriters() {
 	defaultDb.workFlowReaderWriter = workflow.NewFlowReadWrite(defaultDb.base)
 	defaultDb.importExportReaderWriter = importexport.NewImportExportReadWrite(defaultDb.base)
 	defaultDb.brReaderWriter = backuprestore.NewBRReadWrite(defaultDb.base)
+	defaultDb.upgradeReadWriter = upgrade.NewGormProductUpgradePath(defaultDb.base)
 	defaultDb.resourceReaderWriter = resource_rw.NewGormResourceReadWrite(defaultDb.base)
 	defaultDb.parameterGroupReaderWriter = parametergroup.NewParameterGroupReadWrite(defaultDb.base)
 	defaultDb.clusterParameterReaderWriter = parameter.NewClusterParameterReadWrite(defaultDb.base)
@@ -273,6 +277,25 @@ func (p *database) initSystemData() {
 			defaultDb.base.Exec(sql)
 		}
 	}
+
+	// import upgrade paths
+	upgradeSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/upgrades.sql"
+	err = syscall.Access(tiUPSqlFile, syscall.F_OK)
+	if !os.IsNotExist(err) {
+		sqls, err := ioutil.ReadFile(upgradeSqlFile)
+		if err != nil {
+			framework.LogForkFile(constants.LogFileSystem).Errorf("import upgrades failed, err = %s", err.Error())
+			return
+		}
+		sqlArr := strings.Split(string(sqls), ";")
+		for _, sql := range sqlArr {
+			if strings.TrimSpace(sql) == "" {
+				continue
+			}
+			// exec import sql
+			defaultDb.base.Exec(sql)
+		}
+	}
 }
 
 func GetChangeFeedReaderWriter() changefeed.ReaderWriter {
@@ -301,6 +324,14 @@ func SetImportExportReaderWriter(rw importexport.ReaderWriter) {
 
 func GetBRReaderWriter() backuprestore.ReaderWriter {
 	return defaultDb.brReaderWriter
+}
+
+func GetUpgradeReaderWriter() upgrade.ReaderWriter {
+	return defaultDb.upgradeReadWriter
+}
+
+func SetUpgradeReaderWriter(rw upgrade.ReaderWriter) {
+	defaultDb.upgradeReadWriter = rw
 }
 
 func SetResourceReaderWriter(rw resource.ReaderWriter) {

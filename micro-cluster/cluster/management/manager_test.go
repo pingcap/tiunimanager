@@ -19,6 +19,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	em_errors "github.com/pingcap-inc/tiem/common/errors"
@@ -43,8 +46,6 @@ import (
 	"github.com/pkg/sftp"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/ssh"
-	"testing"
-	"time"
 )
 
 var emptyNode = func(task *wfModel.WorkFlowNode, context *workflow.FlowContext) error {
@@ -1578,6 +1579,72 @@ func TestManager_TakeoverCluster(t *testing.T) {
 			DBPassword:       "password",
 		})
 
+		assert.Error(t, err)
+	})
+}
+
+func TestManager_InPlaceUpgradeCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	workflow.GetWorkFlowService().RegisterWorkFlow(context.TODO(), constants.FlowOnlineInPlaceUpgradeCluster, getEmptyFlow(constants.FlowOnlineInPlaceUpgradeCluster))
+	workflow.GetWorkFlowService().RegisterWorkFlow(context.TODO(), constants.FlowOfflineInPlaceUpgradeCluster, getEmptyFlow(constants.FlowOfflineInPlaceUpgradeCluster))
+
+	manager := Manager{}
+	t.Run("normal", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+			{},
+			{},
+		}, make([]*management.DBUser, 0), nil)
+
+		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+		workflow.MockWorkFlowService(workflowService)
+		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
+		}, nil).AnyTimes()
+		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+		_, err := manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
+			ClusterID:  "111",
+			UpgradeWay: string(constants.UpgradeWayOnline),
+		})
+		assert.NoError(t, err)
+
+		_, err = manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
+			ClusterID:  "111",
+			UpgradeWay: string(constants.UpgradeWayOffline),
+		})
+		assert.NoError(t, err)
+	})
+	t.Run("not found", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(nil, nil, nil, errors.New(""))
+
+		_, err := manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
+			ClusterID: "111",
+		})
+		assert.Error(t, err)
+	})
+	t.Run("status", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+			{},
+			{},
+		}, make([]*management.DBUser, 0), nil)
+		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New(""))
+
+		_, err := manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
+			ClusterID: "111",
+		})
 		assert.Error(t, err)
 	})
 }

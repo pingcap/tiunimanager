@@ -1650,6 +1650,127 @@ func TestManager_QueryProductUpdatePath(t *testing.T) {
 	})
 }
 
+func Test_getFullVersion(t *testing.T) {
+	t.Run("len 1", func(t *testing.T) {
+		version := getFullVersion("v5")
+		assert.Equal(t, "v5.0.0", version)
+	})
+	t.Run("len 2", func(t *testing.T) {
+		version := getFullVersion("v5.1")
+		assert.Equal(t, "v5.1.0", version)
+	})
+}
+
+func TestManager_QueryUpgradeVersionDiffInfo(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	manager := Manager{}
+	t.Run("not found", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(nil, nil, nil, errors.New(""))
+
+		_, err := manager.QueryUpgradeVersionDiffInfo(context.TODO(), "111", "v5.4.0")
+		assert.Error(t, err)
+	})
+	t.Run("status", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+			{},
+			{},
+		}, make([]*management.DBUser, 0), nil)
+
+		_, err := manager.QueryUpgradeVersionDiffInfo(context.TODO(), "111", "v5.4.0")
+		assert.Error(t, err)
+	})
+}
+
+func Test_getMinorVersion(t *testing.T) {
+	t.Run("len 1", func(t *testing.T) {
+		version := getFullVersion("v5")
+		assert.Equal(t, "v5", version)
+	})
+	t.Run("len 3", func(t *testing.T) {
+		version := getFullVersion("v5.2.2")
+		assert.Equal(t, "v5.2", version)
+	})
+}
+
+func Test_compareConfigDifference(t *testing.T) {
+	cParamInfos := []structs.ClusterParameterInfo{
+		{
+			ParamId:      "1",
+			Category:     "basic1",
+			Name:         "param1",
+			InstanceType: "tidb",
+			RealValue: structs.ParameterRealValue{
+				ClusterValue: "v1_real",
+			},
+			Type:        1,
+			Unit:        "MB",
+			Range:       []string{"1, 100"},
+			Description: "param1 desc",
+		},
+		{
+			ParamId:      "2",
+			Category:     "basic2",
+			Name:         "param2",
+			InstanceType: "tikv",
+			RealValue: structs.ParameterRealValue{
+				ClusterValue: "v2",
+			},
+			Type:        2,
+			Unit:        "GB",
+			Range:       []string{"1, 1000"},
+			Description: "param2 desc",
+		},
+	}
+
+	pgParamInfos := []structs.ParameterGroupParameterInfo{
+		{
+			ID:           "1",
+			Category:     "basic1",
+			Name:         "param1",
+			InstanceType: "tidb",
+			DefaultValue: "v1new",
+			Type:         1,
+			Unit:         "MB",
+			Range:        []string{"1, 100"},
+			Description:  "param1 desc",
+		},
+		{
+			ID:           "2",
+			Category:     "basic2",
+			Name:         "param2",
+			InstanceType: "tikv",
+			DefaultValue: "v2",
+			Type:         2,
+			Unit:         "GB",
+			Range:        []string{"1, 1000"},
+			Description:  "param2 desc",
+		},
+	}
+
+	resp := compareConfigDifference(cParamInfos, pgParamInfos)
+	assert.Equal(t, 1, len(resp))
+	item := structs.ProductUpgradeVersionConfigDiffItem{
+		ParamId:      "1",
+		Category:     "basic1",
+		Name:         "param1",
+		InstanceType: "tidb",
+		CurrentValue: "v1_real",
+		SuggestValue: "v1new",
+		Type:         1,
+		Unit:         "MB",
+		Range:        []string{"1, 100"},
+		Description:  "param1 desc",
+	}
+	assert.Equal(t, item, resp[0])
+}
+
 func TestManager_InPlaceUpgradeCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

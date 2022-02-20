@@ -948,7 +948,7 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 
 	framework.LogWithContext(ctx).Infof("query config difference between cluster %s version %s and parametergroup of %s", clusterID, clusterMeta.Cluster.Version, version)
 	paramResp, _, err := parameter.NewManager().QueryClusterParameters(ctx, cluster.QueryClusterParametersReq{
-		ClusterID: clusterMeta.Cluster.ID,
+		ClusterID: clusterID,
 	})
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(

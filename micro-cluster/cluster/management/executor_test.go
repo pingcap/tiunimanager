@@ -2845,7 +2845,7 @@ func Test_upgradeCluster(t *testing.T) {
 		})
 		flowContext.SetData(ContextUpgradeVersion, "v5.4.0")
 		flowContext.SetData(ContextUpgradeWay, string(constants.UpgradeWayOffline))
-		err := checkRegionHealth(&workflowModel.WorkFlowNode{}, flowContext)
+		err := upgradeCluster(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
 	})
 }

@@ -1690,11 +1690,11 @@ func TestManager_QueryUpgradeVersionDiffInfo(t *testing.T) {
 
 func Test_getMinorVersion(t *testing.T) {
 	t.Run("len 1", func(t *testing.T) {
-		version := getFullVersion("v5")
+		version := getMinorVersion("v5")
 		assert.Equal(t, "v5", version)
 	})
 	t.Run("len 3", func(t *testing.T) {
-		version := getFullVersion("v5.2.2")
+		version := getMinorVersion("v5.2.2")
 		assert.Equal(t, "v5.2", version)
 	})
 }

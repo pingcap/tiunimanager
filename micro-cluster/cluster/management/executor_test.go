@@ -18,15 +18,17 @@ package management
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/test/mockchangefeed"
 	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
-	"strconv"
+
+	"reflect"
 
 	"github.com/pingcap-inc/tiem/models/parametergroup"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockparametergroup"
-	"reflect"
 
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
@@ -2702,4 +2704,148 @@ func TestGenerateDBUser(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_initializeUpgrade(t *testing.T) {
+	err := initializeUpgrade(&workflowModel.WorkFlowNode{}, &workflow.FlowContext{})
+	assert.NoError(t, err)
+}
+
+func Test_selectTargetUpgradeVersion(t *testing.T) {
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "testCluster",
+			},
+			Version: "v5.0.0",
+		},
+	})
+	flowContext.SetData(ContextUpgradeVersion, "v5.4.0")
+	err := selectTargetUpgradeVersion(&workflowModel.WorkFlowNode{}, flowContext)
+	assert.NoError(t, err)
+}
+
+func Test_mergeUpgradeConfig(t *testing.T) {
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "testCluster",
+			},
+			Version: "v5.0.0",
+		},
+	})
+	flowContext.SetData(ContextUpgradeVersion, "v5.4.0")
+	err := mergeUpgradeConfig(&workflowModel.WorkFlowNode{}, flowContext)
+	assert.NoError(t, err)
+}
+
+func Test_checkRegionHealth(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	t.Run("normal", func(t *testing.T) {
+		mockTiupManager := mock_deployment.NewMockInterface(ctrl)
+		mockTiupManager.EXPECT().CheckCluster(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("All regions are healthy", nil).AnyTimes()
+		deployment.M = mockTiupManager
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		err := checkRegionHealth(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
+
+	t.Run("fail", func(t *testing.T) {
+		mockTiupManager := mock_deployment.NewMockInterface(ctrl)
+		mockTiupManager.EXPECT().CheckCluster(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("", fmt.Errorf("fail")).AnyTimes()
+		deployment.M = mockTiupManager
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		err := checkRegionHealth(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
+
+	t.Run("abnormal", func(t *testing.T) {
+		mockTiupManager := mock_deployment.NewMockInterface(ctrl)
+		mockTiupManager.EXPECT().CheckCluster(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("not healthy", nil).AnyTimes()
+		deployment.M = mockTiupManager
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		err := checkRegionHealth(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
+}
+
+func Test_upgradeCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	t.Run("normal", func(t *testing.T) {
+		mockTiupManager := mock_deployment.NewMockInterface(ctrl)
+		mockTiupManager.EXPECT().Upgrade(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
+		deployment.M = mockTiupManager
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		flowContext.SetData(ContextUpgradeVersion, "v5.4.0")
+		flowContext.SetData(ContextUpgradeWay, string(constants.UpgradeWayOffline))
+		err := upgradeCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
+
+	t.Run("fail", func(t *testing.T) {
+		mockTiupManager := mock_deployment.NewMockInterface(ctrl)
+		mockTiupManager.EXPECT().Upgrade(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", fmt.Errorf("fail")).AnyTimes()
+		deployment.M = mockTiupManager
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		flowContext.SetData(ContextUpgradeVersion, "v5.4.0")
+		flowContext.SetData(ContextUpgradeWay, string(constants.UpgradeWayOffline))
+		err := checkRegionHealth(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
 }

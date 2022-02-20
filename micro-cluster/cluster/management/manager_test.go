@@ -1591,7 +1591,33 @@ func TestManager_InPlaceUpgradeCluster(t *testing.T) {
 	workflow.GetWorkFlowService().RegisterWorkFlow(context.TODO(), constants.FlowOfflineInPlaceUpgradeCluster, getEmptyFlow(constants.FlowOfflineInPlaceUpgradeCluster))
 
 	manager := Manager{}
-	t.Run("normal", func(t *testing.T) {
+	t.Run("normal offline", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+			{},
+			{},
+		}, make([]*management.DBUser, 0), nil)
+
+		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+		workflow.MockWorkFlowService(workflowService)
+		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
+		}, nil).AnyTimes()
+		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+		_, err := manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
+			ClusterID:  "111",
+			UpgradeWay: string(constants.UpgradeWayOffline),
+		})
+		assert.NoError(t, err)
+	})
+	t.Run("normal online", func(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
@@ -1614,12 +1640,6 @@ func TestManager_InPlaceUpgradeCluster(t *testing.T) {
 		_, err := manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
 			ClusterID:  "111",
 			UpgradeWay: string(constants.UpgradeWayOnline),
-		})
-		assert.NoError(t, err)
-
-		_, err = manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
-			ClusterID:  "111",
-			UpgradeWay: string(constants.UpgradeWayOffline),
 		})
 		assert.NoError(t, err)
 	})

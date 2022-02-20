@@ -1674,18 +1674,6 @@ func TestManager_QueryUpgradeVersionDiffInfo(t *testing.T) {
 		_, err := manager.QueryUpgradeVersionDiffInfo(context.TODO(), "111", "v5.4.0")
 		assert.Error(t, err)
 	})
-	t.Run("status", func(t *testing.T) {
-		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
-		models.SetClusterReaderWriter(clusterRW)
-
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
-			{},
-			{},
-		}, make([]*management.DBUser, 0), nil)
-
-		_, err := manager.QueryUpgradeVersionDiffInfo(context.TODO(), "111", "v5.4.0")
-		assert.Error(t, err)
-	})
 }
 
 func Test_getMinorVersion(t *testing.T) {

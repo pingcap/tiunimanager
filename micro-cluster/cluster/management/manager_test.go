@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pingcap-inc/tiem/models/cluster/upgrade"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	em_errors "github.com/pingcap-inc/tiem/common/errors"
@@ -41,6 +43,7 @@ import (
 	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
+	mock_upgrade "github.com/pingcap-inc/tiem/test/mockmodels/mockupgrade"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/pkg/sftp"
@@ -1579,6 +1582,70 @@ func TestManager_TakeoverCluster(t *testing.T) {
 			DBPassword:       "password",
 		})
 
+		assert.Error(t, err)
+	})
+}
+
+func TestManager_QueryProductUpdatePath(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	manager := Manager{}
+	t.Run("normal", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{
+			Version: "v5.2.2",
+		}, []*management.ClusterInstance{
+			{},
+			{},
+		}, make([]*management.DBUser, 0), nil)
+
+		mockUpgrade := mock_upgrade.NewMockReaderWriter(ctrl)
+		mockUpgrade.EXPECT().QueryBySrcVersion(gomock.Any(), gomock.Any()).Return([]*upgrade.ProductUpgradePath{
+			{
+				Type:       "in-place",
+				SrcVersion: "v5.2",
+				DstVersion: "v5.3",
+			},
+			{
+				Type:       "in-place",
+				SrcVersion: "v5.2",
+				DstVersion: "v5.4",
+			},
+		}, nil)
+		models.SetUpgradeReaderWriter(mockUpgrade)
+
+		_, err := manager.QueryProductUpdatePath(context.TODO(), "111")
+		assert.NoError(t, err)
+	})
+	t.Run("not found meta", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(nil, nil, nil, errors.New(""))
+
+		_, err := manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
+			ClusterID: "111",
+		})
+		assert.Error(t, err)
+	})
+	t.Run("not found path", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{
+			Version: "v5.2.2",
+		}, []*management.ClusterInstance{
+			{},
+			{},
+		}, make([]*management.DBUser, 0), nil)
+
+		mockUpgrade := mock_upgrade.NewMockReaderWriter(ctrl)
+		mockUpgrade.EXPECT().QueryBySrcVersion(gomock.Any(), gomock.Any()).Return(nil, errors.New(""))
+		models.SetUpgradeReaderWriter(mockUpgrade)
+
+		_, err := manager.QueryProductUpdatePath(context.TODO(), "111")
 		assert.Error(t, err)
 	})
 }

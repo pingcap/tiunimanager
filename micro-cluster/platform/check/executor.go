@@ -16,8 +16,9 @@
 package check
 
 import (
-	"encoding/json"
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/micro-cluster/platform/check/handler"
 	"github.com/pingcap-inc/tiem/models"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -25,29 +26,98 @@ import (
 
 func checkTenants(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	checkID := context.GetData(ContextCheckID).(string)
-	info := &structs.CheckReportInfo{
-		Tenants: map[string]structs.TenantCheck{
-			"tenant01": {
-				ClusterCount: 1,
-			},
-		},
-	}
-	reportInfo, err := json.Marshal(info)
+	report := &handler.Report{}
+
+	err := report.ParseFrom(context.Context, checkID)
 	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"parse from report %s error: %s", checkID, err.Error())
 		return err
 	}
-	err = models.GetReportReaderWriter().UpdateReport(context.Context, checkID, string(reportInfo))
+
+	err = report.CheckTenants(context.Context)
 	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"check platform tenants error: %s", err.Error())
+		return err
+	}
+
+	info, err := report.Serialize(context.Context)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"serialize check report %s error: %s", checkID, err.Error())
+		return err
+	}
+
+	err = models.GetReportReaderWriter().UpdateReport(context.Context, checkID, info)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"update check report %s error: %s", checkID, err.Error())
 		return err
 	}
 
 	return nil
 }
 
+func checkHosts(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	checkID := context.GetData(ContextCheckID).(string)
+	report := handler.Report{}
+
+	err := report.ParseFrom(context.Context, checkID)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"parse from report %s error: %s", checkID, err.Error())
+		return err
+	}
+
+	err = report.CheckHosts(context.Context)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"check platform hosts error: %s", err.Error())
+		return err
+	}
+
+	info, err := report.Serialize(context.Context)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"serialize check report %s error: %s", checkID, err.Error())
+		return err
+	}
+
+	err = models.GetReportReaderWriter().UpdateReport(context.Context, checkID, info)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"update check report %s error: %s", checkID, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// endCheck
+// @Description: end to check platform
 func endCheck(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	checkID := context.GetData(ContextCheckID).(string)
+
+	if err := models.GetReportReaderWriter().UpdateStatus(context.Context,
+		checkID, string(constants.CheckCompleted)); err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"update check report %s status into %s", checkID, constants.CheckCompleted)
+		return err
+	}
+
 	return nil
 }
 
 func handleFail(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	checkID := context.GetData(ContextCheckID).(string)
+
+	if err := models.GetReportReaderWriter().UpdateStatus(context.Context,
+		checkID, string(constants.CheckFailure)); err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"update check report %s status into %s", checkID, constants.CheckFailure)
+		return err
+	}
+
 	return nil
 }

@@ -2694,7 +2694,7 @@ definitions:
   structs.TenantCheck:
     properties:
       clusterCount:
-        type: integer
+        $ref: '#/definitions/structs.CheckRangeInt32'
       clusters:
         items:
           $ref: '#/definitions/structs.ClusterCheck'

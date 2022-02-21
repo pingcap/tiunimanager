@@ -10373,7 +10373,7 @@ var doc = `{
             "type": "object",
             "properties": {
                 "clusterCount": {
-                    "type": "integer"
+                    "$ref": "#/definitions/structs.CheckRangeInt32"
                 },
                 "clusters": {
                     "type": "array",

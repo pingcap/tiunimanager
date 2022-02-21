@@ -19,6 +19,7 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -116,7 +117,44 @@ func (p *HostInspect) CheckMemAllocated(ctx context.Context, hosts []structs.Hos
 	return
 }
 
-func (p *HostInspect) CheckDiskAllocated(ctx context.Context, hosts []structs.HostInfo) (inconsistDisks map[string]map[string]*structs.CheckString, err error) {
+func (p *HostInspect) CheckDiskAllocated(ctx context.Context, hosts []structs.HostInfo) (result map[string]map[string]*structs.CheckString, err error) {
+	log := framework.LogWithContext(ctx)
+	var hostIds []string
+	for i := range hosts {
+		hostIds = append(hostIds, hosts[i].ID)
+	}
+	resultFromHostTable, resultFromUsedTable, resultFromInstTable, err := p.resouceRW.GetUsedDisks(ctx, hostIds)
+	if err != nil {
+		log.Errorf("get used memory for hosts %v from db failed, %v", hostIds, err)
+		return nil, err
+	}
+	if !reflect.DeepEqual(resultFromHostTable, resultFromUsedTable) {
+		// should be a allocation bug in resource module
+		result = p.generateCheckStatusResult(hostIds, resultFromHostTable, resultFromUsedTable)
+		for hostId, disks := range result {
+			for diskId, status := range disks {
+				if !status.Valid {
+					log.Errorf("used disk mismatch between hosts table and used_compute on host %s, disk %s, expected %d, got %d",
+						hostId, diskId, status.ExpectedValue, status.RealValue)
+				}
+			}
+		}
+		return result, errors.NewError(errors.TIEM_RESOURCE_CHECK_DISKS_ERROR, "used disks mismatch between hosts table and used_compute")
+	}
+	result = p.generateCheckStatusResult(hostIds, resultFromHostTable, resultFromInstTable)
+	if !reflect.DeepEqual(resultFromHostTable, resultFromInstTable) {
+		// should be a resource leak between resource module and cluster module
+		for hostId, disks := range result {
+			for diskId, status := range disks {
+				if !status.Valid {
+					log.Errorf("used disk mismatch between hosts table and used_compute on host %s, disk %s, expected %d, got %d",
+						hostId, diskId, status.ExpectedValue, status.RealValue)
+				}
+			}
+		}
+		return result, errors.NewError(errors.TIEM_RESOURCE_CHECK_DISKS_ERROR, "used memory mismatch between resource module and cluster module")
+	}
+
 	return
 }
 
@@ -143,6 +181,59 @@ func (p *HostInspect) generateCheckInt32Result(hostIds []string, map1 map[string
 			check.Valid = false
 		}
 		result[hostId] = check
+	}
+	return
+}
+
+func (p *HostInspect) generateCheckStatusResult(hostIds []string, map1, map2 map[string]*[]string) (result map[string]map[string]*structs.CheckString) {
+	result = make(map[string]map[string]*structs.CheckString)
+
+	for _, hostId := range hostIds {
+		v1, ok1 := map1[hostId]
+		if ok1 {
+			disksStatus, ok := result[hostId]
+			if !ok {
+				result[hostId] = make(map[string]*structs.CheckString)
+				disksStatus = result[hostId]
+			}
+			for _, diskId := range *v1 {
+				check, diskExist := disksStatus[diskId]
+				if diskExist {
+					check.ExpectedValue = string(constants.DiskExhaust)
+					if check.ExpectedValue == check.RealValue {
+						check.Valid = true
+					}
+				} else {
+					check = new(structs.CheckString)
+					check.Valid = false
+					check.ExpectedValue = string(constants.DiskExhaust)
+					disksStatus[diskId] = check
+				}
+			}
+		}
+		v2, ok2 := map2[hostId]
+		if ok2 {
+			disksStatus, ok := result[hostId]
+			if !ok {
+				result[hostId] = make(map[string]*structs.CheckString)
+				disksStatus = result[hostId]
+			}
+			for _, diskId := range *v2 {
+				check, diskExist := disksStatus[diskId]
+				if diskExist {
+					check.RealValue = string(constants.DiskExhaust)
+					if check.ExpectedValue == check.RealValue {
+						check.Valid = true
+					}
+				} else {
+					check = new(structs.CheckString)
+					check.Valid = false
+					check.RealValue = string(constants.DiskExhaust)
+					disksStatus[diskId] = check
+				}
+			}
+
+		}
 	}
 	return
 }

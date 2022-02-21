@@ -18,6 +18,7 @@ package main
 
 import (
 	"github.com/asim/go-micro/v3"
+	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -48,6 +49,13 @@ func main() {
 			return nil
 		},
 	)
+
+	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
+		framework.ClusterService: func(service micro.Service) error {
+			client.ClusterClient = clusterservices.NewClusterService(string(framework.ClusterService), service.Client())
+			return nil
+		},
+	})
 
 	f.PrepareService(func(service micro.Service) error {
 		return clusterservices.RegisterClusterServiceHandler(service.Server(), clusterService.NewClusterServiceHandler(f))

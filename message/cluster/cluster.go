@@ -133,8 +133,9 @@ type RestoreExistClusterResp struct {
 // CloneClusterReq Message for clone a new cluster
 type CloneClusterReq struct {
 	structs.CreateClusterParameter
-	CloneStrategy   string `json:"cloneStrategy" validate:"required"`                // specify clone strategy, include empty, snapshot and sync, default empty(option)
-	SourceClusterID string `json:"sourceClusterId" validate:"required,min=8,max=64"` // specify source cluster id(require)
+	ResourceParameter structs.ClusterResourceInfo `json:"resourceParameters" form:"resourceParameters"`
+	CloneStrategy     string                      `json:"cloneStrategy" validate:"required"`                // specify clone strategy, include empty, snapshot and sync, default empty(option)
+	SourceClusterID   string                      `json:"sourceClusterId" validate:"required,min=8,max=64"` // specify source cluster id(require)
 }
 
 // CloneClusterResp Reply message for clone a new cluster

@@ -41,7 +41,7 @@ import (
 // @Receiver p
 // @Parameter ctx
 // @return *ClusterMeta
-func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClusterParameter) (*ClusterMeta, error) {
+func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClusterParameter, computes []structs.ClusterResourceParameterCompute) (*ClusterMeta, error) {
 	meta := &ClusterMeta{}
 	// clone cluster info
 	meta.Cluster = &management.Cluster{
@@ -67,7 +67,11 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 
 	// if user specify cluster version
 	if len(parameter.Version) > 0 {
-		if parameter.Version < p.Cluster.Version {
+		cmp, err := CompareTiDBVersion(parameter.Version, p.Cluster.Version)
+		if err != nil {
+			return nil, err
+		}
+		if !cmp {
 			return nil, errors.NewError(errors.TIEM_CHECK_CLUSTER_VERSION_ERROR,
 				"the specified cluster version is less than source cluster version")
 		}
@@ -111,26 +115,10 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 		Password:  dbCommon.Password(parameter.DBPassword),
 		RoleType:  string(constants.Root),
 	}
-	// clone instances
-	meta.Instances = make(map[string][]*management.ClusterInstance)
-	for componentType, components := range p.Instances {
-		for _, instance := range components {
-			newInstance := &management.ClusterInstance{
-				Entity: dbCommon.Entity{
-					TenantId: p.Cluster.TenantId,
-					Status:   string(constants.ClusterInstanceInitializing),
-				},
-				Type:         instance.Type,
-				ClusterID:    meta.Cluster.ID,
-				Zone:         instance.Zone,
-				Version:      meta.Cluster.Version,
-				CpuCores:     instance.CpuCores,
-				Memory:       instance.Memory,
-				DiskType:     instance.DiskType,
-				DiskCapacity: instance.DiskCapacity,
-			}
-			meta.Instances[componentType] = append(meta.Instances[componentType], newInstance)
-		}
+	// add instances
+	err = meta.AddInstances(ctx, computes)
+	if err != nil {
+		return nil, err
 	}
 
 	return meta, nil

@@ -249,7 +249,7 @@ func (p *Manager) Clone(ctx context.Context, request cluster.CloneClusterReq) (r
 	}
 
 	// Clone source cluster meta to get cluster topology
-	clusterMeta, err := sourceClusterMeta.CloneMeta(ctx, request.CreateClusterParameter)
+	clusterMeta, err := sourceClusterMeta.CloneMeta(ctx, request.CreateClusterParameter, request.ResourceParameter.InstanceResource)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"clone cluster %s meta error: %s", sourceClusterMeta.Cluster.ID, err.Error())

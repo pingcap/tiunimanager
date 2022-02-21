@@ -27,9 +27,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	em_errors "github.com/pingcap-inc/tiem/common/errors"
 	"strings"
 	"testing"
+
+	em_errors "github.com/pingcap-inc/tiem/common/errors"
 
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
@@ -66,7 +67,7 @@ func TestSecondPartyManager_BackUp_Fail(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_Backup, TestWorkFlowNodeID).Return(nil, expectedErr)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeBackup, TestWorkFlowNodeID).Return(nil, expectedErr)
 
 	operationID, err := secondPartyManager2.BackUp(context.TODO(), clusterFacade, storage, TestWorkFlowNodeID)
 	if operationID != "" || err == nil {
@@ -92,7 +93,7 @@ func TestSecondPartyManager_BackUp_Success1_DontCareAsyncResult(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_Backup, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeBackup, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	operationID, err := secondPartyManager2.BackUp(context.TODO(), clusterFacade, storage, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
@@ -114,7 +115,7 @@ func TestSecondPartyManager_BackUp_Success2_DontCareAsyncResult(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_Backup, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeBackup, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	operationID, err := secondPartyManager2.BackUp(context.TODO(), clusterFacade, storage, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
@@ -131,7 +132,7 @@ func TestSecondPartyManager_BackUp_Success3_DontCareAsyncResult(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_Backup, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeBackup, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	operationID, err := secondPartyManager2.BackUp(context.TODO(), clusterFacade, storage, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
@@ -158,7 +159,7 @@ func TestSecondPartyManager_ShowBackUpInfoThruMetaDB_Fail1(t *testing.T) {
 
 	secondPartyOperation := secondparty.SecondPartyOperation{
 		ID:       TestOperationID,
-		Status:   secondparty.OperationStatus_Error,
+		Status:   secondparty.OperationStatusError,
 		ErrorStr: "backup cluster error",
 	}
 	mockCtl = gomock.NewController(t)
@@ -172,7 +173,7 @@ func TestSecondPartyManager_ShowBackUpInfoThruMetaDB_Fail1(t *testing.T) {
 
 	secondPartyOperation = secondparty.SecondPartyOperation{
 		ID:       TestOperationID,
-		Status:   secondparty.OperationStatus_Finished,
+		Status:   secondparty.OperationStatusFinished,
 		ErrorStr: "",
 		Result:   "invalidjson",
 	}
@@ -197,7 +198,7 @@ func TestSecondPartyManager_Restore_Fail(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_Restore, TestWorkFlowNodeID).Return(nil, expectedErr)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeRestore, TestWorkFlowNodeID).Return(nil, expectedErr)
 
 	operationID, err := secondPartyManager2.Restore(context.TODO(), clusterFacade, storage, TestWorkFlowNodeID)
 	if operationID != "" || err == nil {
@@ -223,7 +224,7 @@ func TestSecondPartyManager_Restore_Success1_DontCareAsyncResult(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_Restore, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeRestore, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	operationID, err := secondPartyManager2.Restore(context.TODO(), clusterFacade, storage, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
@@ -245,7 +246,7 @@ func TestSecondPartyManager_Restore_Success2_DontCareAsyncResult(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_Restore, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeRestore, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	operationID, err := secondPartyManager2.Restore(context.TODO(), clusterFacade, storage, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {
@@ -262,7 +263,7 @@ func TestSecondPartyManager_Restore_Success3_DontCareAsyncResult(t *testing.T) {
 	mockCtl := gomock.NewController(t)
 	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
-	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationType_Restore, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
+	mockReaderWriter.EXPECT().Create(context.Background(), secondparty.OperationTypeRestore, TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
 	operationID, err := secondPartyManager2.Restore(context.TODO(), clusterFacade, storage, TestWorkFlowNodeID)
 	if operationID != TestOperationID || err != nil {

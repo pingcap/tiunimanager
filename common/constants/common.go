@@ -47,6 +47,7 @@ const (
 const (
 	DBDirPrefix      string = "/"
 	DatabaseFileName string = "em.db"
+	SqliteFileName   string = "sqlite.db"
 )
 
 // Enterprise Manager Certificates constants

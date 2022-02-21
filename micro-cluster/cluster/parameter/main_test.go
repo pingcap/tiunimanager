@@ -191,6 +191,7 @@ func mockModifyParameter() *ModifyParameter {
 				Type:           0,
 				Range:          []string{"0", "1024"},
 				RangeType:      1,
+				ReadOnly:       1,
 				RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
 			},
 			{

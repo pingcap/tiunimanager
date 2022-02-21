@@ -31,7 +31,7 @@ import (
 var operationIDs []string
 
 func TestGormSecondPartyOperationReadWrite_Create_Fail(t *testing.T) {
-	operation1, err := testRW.Create(context.TODO(), OperationType_ClusterDeploy, "")
+	operation1, err := testRW.Create(context.TODO(), OperationTypeClusterDeploy, "")
 
 	if err == nil || operation1 != nil {
 		t.Errorf("Create() error: %v: operation1: %v", err, operation1)
@@ -39,7 +39,7 @@ func TestGormSecondPartyOperationReadWrite_Create_Fail(t *testing.T) {
 }
 
 func TestGormSecondPartyOperationReadWrite_Create_Success(t *testing.T) {
-	operation1, err := testRW.Create(context.TODO(), OperationType_ClusterDeploy, TestWorkFlowNodeID)
+	operation1, err := testRW.Create(context.TODO(), OperationTypeClusterDeploy, TestWorkFlowNodeID)
 	operationIDs = append(operationIDs, operation1.ID)
 
 	if err != nil || operation1 == nil {
@@ -53,7 +53,7 @@ func TestGormSecondPartyOperationReadWrite_Create_Success(t *testing.T) {
 }
 
 func TestGormSecondPartyOperationReadWrite_Update_Fail(t *testing.T) {
-	operation1, err := testRW.Create(context.TODO(), OperationType_ClusterDeploy, TestWorkFlowNodeID)
+	operation1, err := testRW.Create(context.TODO(), OperationTypeClusterDeploy, TestWorkFlowNodeID)
 	operationIDs = append(operationIDs, operation1.ID)
 
 	if err != nil || operation1 == nil {
@@ -61,7 +61,7 @@ func TestGormSecondPartyOperationReadWrite_Update_Fail(t *testing.T) {
 	}
 
 	operation1.ID = ""
-	operation1.Status = OperationStatus_Processing
+	operation1.Status = OperationStatusProcessing
 	err = testRW.Update(context.TODO(), operation1)
 
 	if err == nil {
@@ -70,14 +70,14 @@ func TestGormSecondPartyOperationReadWrite_Update_Fail(t *testing.T) {
 }
 
 func TestGormSecondPartyOperationReadWrite_Update_Success(t *testing.T) {
-	operation1, err := testRW.Create(context.TODO(), OperationType_ClusterDeploy, TestWorkFlowNodeID)
+	operation1, err := testRW.Create(context.TODO(), OperationTypeClusterDeploy, TestWorkFlowNodeID)
 	operationIDs = append(operationIDs, operation1.ID)
 
 	if err != nil || operation1 == nil {
 		t.Errorf("Create() error: %v: operation1: %v", err, operation1)
 	}
 
-	operation1.Status = OperationStatus_Processing
+	operation1.Status = OperationStatusProcessing
 	err = testRW.Update(context.TODO(), operation1)
 
 	if err != nil {
@@ -85,7 +85,7 @@ func TestGormSecondPartyOperationReadWrite_Update_Success(t *testing.T) {
 	}
 
 	operation2, err := testRW.Get(context.TODO(), operation1.ID)
-	if err != nil || operation2 == nil || operation1.ID != operation2.ID || operation2.Status != OperationStatus_Processing {
+	if err != nil || operation2 == nil || operation1.ID != operation2.ID || operation2.Status != OperationStatusProcessing {
 		t.Errorf("Update Get() error: %v, operation1: %v, operation2: %v", err, operation1, operation2)
 	}
 }
@@ -113,7 +113,7 @@ func TestGormSecondPartyOperationReadWrite_QueryByWorkFlowNodeID_Fail2(t *testin
 }
 
 func TestGormSecondPartyOperationReadWrite_QueryByWorkFlowNodeID_Success1(t *testing.T) {
-	operation1, err := testRW.Create(context.TODO(), OperationType_ClusterDeploy, TestWorkFlowNodeID)
+	operation1, err := testRW.Create(context.TODO(), OperationTypeClusterDeploy, TestWorkFlowNodeID)
 	operationIDs = append(operationIDs, operation1.ID)
 
 	if err != nil || operation1 == nil {
@@ -125,14 +125,14 @@ func TestGormSecondPartyOperationReadWrite_QueryByWorkFlowNodeID_Success1(t *tes
 		if err != nil {
 			t.Error(err)
 		}
-		operation.Status = OperationStatus_Error
+		operation.Status = OperationStatusError
 		err = testRW.Update(context.TODO(), operation)
 		if err != nil {
 			t.Error(err)
 		}
 	}
 	operation2, err := testRW.QueryByWorkFlowNodeID(context.TODO(), TestWorkFlowNodeID)
-	if err != nil || operation2.Status != OperationStatus_Error {
+	if err != nil || operation2.Status != OperationStatusError {
 		t.Errorf("err: %v, operation: %v", err, operation2)
 	}
 
@@ -141,14 +141,14 @@ func TestGormSecondPartyOperationReadWrite_QueryByWorkFlowNodeID_Success1(t *tes
 		if err != nil {
 			t.Error(err)
 		}
-		operation.Status = OperationStatus_Init
+		operation.Status = OperationStatusInit
 		err = testRW.Update(context.TODO(), operation)
 		if err != nil {
 			t.Error(err)
 		}
 	}
 	operation2, err = testRW.QueryByWorkFlowNodeID(context.TODO(), TestWorkFlowNodeID)
-	if err != nil || operation2.Status != OperationStatus_Init {
+	if err != nil || operation2.Status != OperationStatusInit {
 		t.Errorf("err: %v, operation: %v", err, operation2)
 	}
 
@@ -157,14 +157,14 @@ func TestGormSecondPartyOperationReadWrite_QueryByWorkFlowNodeID_Success1(t *tes
 		if err != nil {
 			t.Error(err)
 		}
-		operation.Status = OperationStatus_Processing
+		operation.Status = OperationStatusProcessing
 		err = testRW.Update(context.TODO(), operation)
 		if err != nil {
 			t.Error(err)
 		}
 	}
 	operation2, err = testRW.QueryByWorkFlowNodeID(context.TODO(), TestWorkFlowNodeID)
-	if err != nil || operation2.Status != OperationStatus_Processing {
+	if err != nil || operation2.Status != OperationStatusProcessing {
 		t.Errorf("err: %v, operation: %v", err, operation2)
 	}
 }

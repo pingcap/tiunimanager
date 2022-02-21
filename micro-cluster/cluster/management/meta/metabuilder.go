@@ -121,6 +121,11 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 		return nil, err
 	}
 
+	// add default instances
+	if err = meta.AddDefaultInstances(ctx); err != nil {
+		return nil, err
+	}
+
 	return meta, nil
 }
 

@@ -320,7 +320,7 @@ func (m *Manager) PersistApplyParameterGroup(ctx context.Context, req message.Ap
 	return resp, nil
 }
 
-func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.InspectClusterParametersReq) (resp cluster.InspectClusterParametersResp, err error) {
+func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.InspectParametersReq) (resp cluster.InspectParametersResp, err error) {
 	// todo: Reliance on parameter source query implementation
 	return
 }

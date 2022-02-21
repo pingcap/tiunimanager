@@ -310,26 +310,6 @@ definitions:
         example: http://127.0.0.1:9093
         type: string
     type: object
-  cluster.InspectClusterParametersResp:
-    properties:
-      inspectValue:
-        example: "1"
-        type: string
-      instance:
-        example: 172.16.5.23
-        type: string
-      instanceType:
-        example: tidb
-        type: string
-      name:
-        example: binlog_cache
-        type: string
-      paramId:
-        example: 1
-        type: integer
-      realValue:
-        $ref: '#/definitions/structs.ParameterRealValue'
-    type: object
   cluster.KafkaDownstream:
     properties:
       clientId:
@@ -582,6 +562,20 @@ definitions:
         example: http://127.0.0.1:3000
         type: string
     type: object
+  cluster.QueryUpgradePathRsp:
+    properties:
+      paths:
+        items:
+          $ref: '#/definitions/structs.ProductUpgradePathItem'
+        type: array
+    type: object
+  cluster.QueryUpgradeVersionDiffInfoResp:
+    properties:
+      configDiffInfos:
+        items:
+          $ref: '#/definitions/structs.ProductUpgradeVersionConfigDiffItem'
+        type: array
+    type: object
   cluster.RestartClusterResp:
     properties:
       clusterId:
@@ -826,6 +820,37 @@ definitions:
     properties:
       clusterId:
         example: "1"
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  cluster.UpgradeClusterReq:
+    properties:
+      configs:
+        items:
+          $ref: '#/definitions/structs.ClusterUpgradeVersionConfigItem'
+        type: array
+      targetVersion:
+        example: v5.0.0
+        type: string
+      upgradeType:
+        enum:
+        - in-place
+        - migration
+        type: string
+      upgradeWay:
+        enum:
+        - offline
+        - online
+        type: string
+    required:
+    - targetVersion
+    - upgradeType
+    type: object
+  cluster.UpgradeClusterResp:
+    properties:
+      clusterId:
         type: string
       workFlowId:
         description: Asynchronous task workflow ID
@@ -2161,6 +2186,26 @@ definitions:
       zoneCode:
         type: string
     type: object
+  structs.ClusterUpgradeVersionConfigItem:
+    properties:
+      instanceType:
+        example: pd-server
+        type: string
+      name:
+        example: max-merge-region-size
+        type: string
+      paramId:
+        example: "1"
+        type: string
+      value:
+        example: "20"
+        type: string
+    required:
+    - instanceType
+    - name
+    - paramId
+    - value
+    type: object
   structs.ComponentInstanceResourceSpec:
     properties:
       cpu:
@@ -2605,6 +2650,82 @@ definitions:
       name:
         type: string
     type: object
+  structs.ProductUpgradePathItem:
+    properties:
+      upgradeType:
+        enum:
+        - in-place
+        - migration
+        type: string
+      upgradeWay:
+        enum:
+        - offline
+        - online
+        type: string
+      versions:
+        example:
+        - v5.0.0
+        - v5.3.0
+        items:
+          type: string
+        type: array
+    required:
+    - upgradeType
+    - versions
+    type: object
+  structs.ProductUpgradeVersionConfigDiffItem:
+    properties:
+      category:
+        example: basic
+        type: string
+      currentValue:
+        example: "20"
+        type: string
+      description:
+        example: desc for max-merge-region-size
+        type: string
+      instanceType:
+        example: pd-server
+        type: string
+      name:
+        example: max-merge-region-size
+        type: string
+      paramId:
+        example: "1"
+        type: string
+      range:
+        example:
+        - "1"
+        - ' 1000'
+        items:
+          type: string
+        type: array
+      suggestValue:
+        example: "30"
+        type: string
+      type:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        example: 0
+        type: integer
+      unit:
+        example: MB
+        type: string
+    required:
+    - category
+    - currentValue
+    - instanceType
+    - name
+    - paramId
+    - range
+    - suggestValue
+    - type
+    - unit
+    type: object
   structs.ProductVersion:
     properties:
       arch:
@@ -2694,7 +2815,7 @@ definitions:
   structs.TenantCheck:
     properties:
       clusterCount:
-        type: integer
+        $ref: '#/definitions/structs.CheckRangeInt32'
       clusters:
         items:
           $ref: '#/definitions/structs.ClusterCheck'
@@ -3400,6 +3521,137 @@ paths:
       summary: create a cluster
       tags:
       - cluster
+  /clusters/:clusterId/upgrade:
+    post:
+      consumes:
+      - application/json
+      description: request for upgrade TiDB cluster
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: upgrade request
+        in: body
+        name: upgradeReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.UpgradeClusterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.UpgradeClusterResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: request for upgrade TiDB cluster
+      tags:
+      - cluster upgrade
+  /clusters/:clusterId/upgrade/diff:
+    get:
+      consumes:
+      - application/json
+      description: query config diff between current cluster and target upgrade version
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - example: v5.0.0
+        in: query
+        name: targetVersion
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.QueryUpgradeVersionDiffInfoResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query config diff between current cluster and target upgrade version
+      tags:
+      - cluster upgrade
+  /clusters/:clusterId/upgrade/path:
+    get:
+      consumes:
+      - application/json
+      description: query upgrade path for given cluster id
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.QueryUpgradePathRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query upgrade path for given cluster id
+      tags:
+      - cluster upgrade
   /clusters/{clusterId}:
     delete:
       consumes:
@@ -3729,48 +3981,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: submit parameters
-      tags:
-      - cluster parameters
-  /clusters/{clusterId}/params/inspect:
-    post:
-      consumes:
-      - application/json
-      description: inspect parameters
-      parameters:
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/cluster.InspectClusterParametersResp'
-                  type: array
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: inspect parameters
       tags:
       - cluster parameters
   /clusters/{clusterId}/preview-scale-out:

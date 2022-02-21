@@ -50,11 +50,11 @@ type CheckStatus struct {
 }
 
 type TenantCheck struct {
-	ClusterCount int32          `json:"clusterCount"`
-	CPURatio     float32        `json:"cpuRatio"`
-	MemoryRatio  float32        `json:"memoryRatio"`
-	StorageRatio float32        `json:"storageRatio"`
-	Clusters     []ClusterCheck `json:"clusters"`
+	ClusterCount CheckRangeInt32 `json:"clusterCount"`
+	CPURatio     float32         `json:"cpuRatio"`
+	MemoryRatio  float32         `json:"memoryRatio"`
+	StorageRatio float32         `json:"storageRatio"`
+	Clusters     []ClusterCheck  `json:"clusters"`
 }
 
 type ClusterCheck struct {

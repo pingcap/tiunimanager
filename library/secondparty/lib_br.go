@@ -29,9 +29,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	em_errors "github.com/pingcap-inc/tiem/common/errors"
 	"strings"
 	"time"
+
+	em_errors "github.com/pingcap-inc/tiem/common/errors"
 
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
@@ -78,7 +79,7 @@ func (manager *SecondPartyManager) BackUp(ctx context.Context, cluster ClusterFa
 	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("backup, clusterfacade: "+
 		"%v, storage: %v", cluster, storage)
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
-		secondparty.OperationType_Backup, workFlowNodeID)
+		secondparty.OperationTypeBackup, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
@@ -143,7 +144,7 @@ func (manager *SecondPartyManager) ShowBackUpInfoThruMetaDB(ctx context.Context,
 		logInFunc.Errorf("get backup operation info err = %s", err.Error())
 		return
 	}
-	if secondPartyOperation.Status == secondparty.OperationStatus_Error {
+	if secondPartyOperation.Status == secondparty.OperationStatusError {
 		logInFunc.Errorf("backup cluster error, %s", secondPartyOperation.ErrorStr)
 		return resp, errors.New(secondPartyOperation.ErrorStr)
 	}
@@ -177,7 +178,7 @@ func (manager *SecondPartyManager) Restore(ctx context.Context, cluster ClusterF
 	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("restore, "+
 		"clusterfacade: %v, storage: %v", cluster, storage)
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Create(ctx,
-		secondparty.OperationType_Restore, workFlowNodeID)
+		secondparty.OperationTypeRestore, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartyoperation:%v, err:%v", secondPartyOperation, err)
 		return "", err
@@ -256,7 +257,7 @@ func (manager *SecondPartyManager) startBrTaskThruSQL(ctx context.Context, opera
 	logInFunc.Infof("operation starts processing: brsqlcmd:%s", brSQLCmd)
 	manager.operationStatusCh <- OperationStatusMember{
 		OperationID: operationID,
-		Status:      secondparty.OperationStatus_Processing,
+		Status:      secondparty.OperationStatusProcessing,
 		Result:      "",
 		ErrorStr:    "",
 	}
@@ -268,7 +269,7 @@ func (manager *SecondPartyManager) startBrTaskThruSQL(ctx context.Context, opera
 		if err != nil {
 			manager.operationStatusCh <- OperationStatusMember{
 				OperationID: operationID,
-				Status:      secondparty.OperationStatus_Error,
+				Status:      secondparty.OperationStatusError,
 				Result:      "",
 				ErrorStr:    fmt.Sprintln(err),
 			}
@@ -283,7 +284,7 @@ func (manager *SecondPartyManager) startBrTaskThruSQL(ctx context.Context, opera
 			logInFunc.Error("query sql cmd err", err)
 			manager.operationStatusCh <- OperationStatusMember{
 				OperationID: operationID,
-				Status:      secondparty.OperationStatus_Error,
+				Status:      secondparty.OperationStatusError,
 				Result:      "",
 				ErrorStr:    fmt.Sprintln(err),
 			}
@@ -293,7 +294,7 @@ func (manager *SecondPartyManager) startBrTaskThruSQL(ctx context.Context, opera
 			logInFunc.Info("operation finished, time cost", time.Since(t0))
 			manager.operationStatusCh <- OperationStatusMember{
 				OperationID: operationID,
-				Status:      secondparty.OperationStatus_Finished,
+				Status:      secondparty.OperationStatusFinished,
 				Result:      string(jsonMustMarshal(&resp)),
 				ErrorStr:    string(jsonMustMarshal(&resp)), //deprecated
 			}

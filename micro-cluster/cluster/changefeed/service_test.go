@@ -20,14 +20,14 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockchangefeed"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
-	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty"
+	"github.com/pingcap-inc/tiem/test/mockutilcdc"
+	"github.com/pingcap-inc/tiem/util/api/cdc"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -62,10 +62,9 @@ func TestManager_CreateBetweenClusters(t *testing.T) {
 	models.SetChangeFeedReaderWriter(changefeedRW)
 	changefeedRW.EXPECT().UnlockStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
-	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	secondparty.Manager = mockSecond
-
-	mockSecond.EXPECT().CreateChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+	mockCDCService := mockutilcdc.NewMockChangeFeedService(ctrl)
+	cdc.CDCService = mockCDCService
+	mockCDCService.EXPECT().CreateChangeFeedTask(gomock.Any(), gomock.Any()).Return(cdc.ChangeFeedCmdAcceptResp{
 		Accepted: true,
 		Succeed:  true,
 	}, nil).AnyTimes()
@@ -132,15 +131,14 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 	models.SetChangeFeedReaderWriter(changefeedRW)
 	changefeedRW.EXPECT().UnlockStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
-	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	secondparty.Manager = mockSecond
-
-	mockSecond.EXPECT().CreateChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+	mockCDCService := mockutilcdc.NewMockChangeFeedService(ctrl)
+	cdc.CDCService = mockCDCService
+	mockCDCService.EXPECT().CreateChangeFeedTask(gomock.Any(), gomock.Any()).Return(cdc.ChangeFeedCmdAcceptResp{
 		Accepted: true,
 		Succeed:  true,
 	}, nil).AnyTimes()
 
-	mockSecond.EXPECT().DeleteChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+	mockCDCService.EXPECT().DeleteChangeFeedTask(gomock.Any(), gomock.Any()).Return(cdc.ChangeFeedCmdAcceptResp{
 		Accepted: true,
 		Succeed:  true,
 	}, nil).AnyTimes()

@@ -44,7 +44,8 @@ var checkDefine = workflow.WorkFlowDefine{
 	FlowName: constants.FlowCheckPlatform,
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":            {"checkTenants", "checkTenantsDone", "fail", workflow.SyncFuncNode, checkTenants},
-		"checkTenantsDone": {"end", "", "", workflow.SyncFuncNode, endCheck},
+		"checkTenantsDone": {"checkHosts", "checkHostsDone", "fail", workflow.SyncFuncNode, checkHosts},
+		"checkHostsDone":   {"end", "", "", workflow.SyncFuncNode, endCheck},
 		"fail":             {"end", "", "", workflow.SyncFuncNode, handleFail},
 	},
 }

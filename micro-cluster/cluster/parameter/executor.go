@@ -388,17 +388,13 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 		for comp, params := range compContainer {
 			cm := map[string]interface{}{}
 			for _, param := range params {
-				configKey := param.Name
-				// set config key from system variable
-				if param.SystemVariable != "" {
-					configKey = param.SystemVariable
-				}
 				clusterValue, err := convertRealParameterType(ctx, param)
 				if err != nil {
 					framework.LogWithContext(ctx).Errorf("convert real parameter type err = %v", err)
 					return err
 				}
-				cm[configKey] = clusterValue
+				// display full parameter name
+				cm[DisplayFullParameterName(param.Category, param.Name)] = clusterValue
 			}
 			clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
 

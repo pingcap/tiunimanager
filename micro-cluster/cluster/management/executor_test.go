@@ -18,6 +18,7 @@ package management
 import (
 	"context"
 	"fmt"
+	utilsql "github.com/pingcap-inc/tiem/util/api/tidb/sql"
 	"strconv"
 
 	"github.com/pingcap-inc/tiem/deployment"
@@ -46,7 +47,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	structs2 "github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
@@ -2653,17 +2653,17 @@ func Test_adjustParameters(t *testing.T) {
 
 }
 
-var dbConnParam1 secondparty.DbConnParam
-var dbConnParam2 secondparty.DbConnParam
+var dbConnParam1 utilsql.DbConnParam
+var dbConnParam2 utilsql.DbConnParam
 
 func init() {
-	dbConnParam1 = secondparty.DbConnParam{
+	dbConnParam1 = utilsql.DbConnParam{
 		Username: "root",
 		Password: "",
 		IP:       "127.0.0.1",
 		Port:     "4000",
 	}
-	dbConnParam2 = secondparty.DbConnParam{
+	dbConnParam2 = utilsql.DbConnParam{
 		Username: "root",
 		Password: "12345678",
 		IP:       "127.0.0.1",

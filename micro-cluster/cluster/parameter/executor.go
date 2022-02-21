@@ -32,6 +32,7 @@ import (
 	"strings"
 
 	"github.com/pingcap-inc/tiem/deployment"
+	"github.com/pingcap-inc/tiem/library/spec"
 	"gopkg.in/yaml.v2"
 
 	"github.com/pingcap-inc/tiem/util/api/cdc"
@@ -57,7 +58,6 @@ import (
 
 	"github.com/pingcap-inc/tiem/library/framework"
 
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	spec2 "github.com/pingcap-inc/tiem/library/spec"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -481,6 +481,11 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 	return nil
 }
 
+type GlobalComponentConfig struct {
+	TiDBClusterComponent spec.TiDBClusterComponent
+	ConfigMap            map[string]interface{}
+}
+
 // tiupEditConfig
 // @Description: through tiup edit config
 // @Parameter ctx
@@ -492,7 +497,7 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 	defer framework.LogWithContext(ctx).Info("end tiup edit config executor method")
 
 	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
-	configs := make([]secondparty.GlobalComponentConfig, len(params))
+	configs := make([]GlobalComponentConfig, len(params))
 	for i, param := range params {
 		cm := map[string]interface{}{}
 		clusterValue, err := convertRealParameterType(ctx, param)
@@ -502,7 +507,7 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 		}
 		// display full parameter name
 		cm[DisplayFullParameterName(param.Category, param.Name)] = clusterValue
-		configs[i] = secondparty.GlobalComponentConfig{
+		configs[i] = GlobalComponentConfig{
 			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.InstanceType)),
 			ConfigMap:            cm,
 		}
@@ -537,7 +542,7 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 	return nil
 }
 
-func generateNewYamlConfig(configs []secondparty.GlobalComponentConfig, topo *tiupSpec.Specification) (string, error) {
+func generateNewYamlConfig(configs []GlobalComponentConfig, topo *tiupSpec.Specification) (string, error) {
 	var componentServerConfigs map[string]interface{}
 
 	for _, globalComponentConfig := range configs {

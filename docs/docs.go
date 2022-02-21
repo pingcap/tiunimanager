@@ -6514,6 +6514,9 @@ var doc = `{
                     "description": "The Region where the cluster is located",
                     "type": "string"
                 },
+                "resourceParameters": {
+                    "$ref": "#/definitions/structs.ClusterResourceInfo"
+                },
                 "sourceClusterId": {
                     "description": "specify source cluster id(require)",
                     "type": "string"

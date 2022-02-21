@@ -436,7 +436,7 @@ func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterT
 	instanceWrapper := InstanceWrapper{topologyInfo.Topology, func(p, q *structs.ClusterInstanceInfo) bool {
 		return constants.EMProductComponentIDType(p.Type).SortWeight() > constants.EMProductComponentIDType(q.Type).SortWeight()
 	}}
-	sort.Sort(instanceWrapper)
+	sort.Stable(instanceWrapper)
 
 	topologyInfo.Topology = instanceWrapper.infos
 	return *topologyInfo, *resourceInfo

@@ -826,7 +826,7 @@ func updateClusterParameters(node *workflowModel.WorkFlowNode, context *workflow
 func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*meta.ClusterMeta)
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
-	if clusterMeta.Cluster.ParameterGroupID == sourceClusterMeta.Cluster.ParameterGroupID {
+	if clusterMeta.Cluster.Version == sourceClusterMeta.Cluster.Version {
 		targetParams := make([]structs.ClusterParameterSampleInfo, 0)
 		reboot := false
 		for instanceType, _ := range sourceClusterMeta.Instances {
@@ -841,6 +841,9 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 			for _, param := range sourceResponse.Params {
 				// if parameter is variable which related os(such as temp dir in os), can not update it
 				if param.HasApply == int(parameter.ModifyApply) {
+					continue
+				}
+				if param.ReadOnly == int(parameter.ReadOnly) {
 					continue
 				}
 				targetParam := structs.ClusterParameterSampleInfo{

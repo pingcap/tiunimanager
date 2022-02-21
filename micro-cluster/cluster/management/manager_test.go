@@ -459,7 +459,7 @@ func TestManager_Clone(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Version: "v5.2.2"}, []*management.ClusterInstance{
 			{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
 			{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
 		}, []*management.DBUser{
@@ -481,7 +481,20 @@ func TestManager_Clone(t *testing.T) {
 				DBUser:     "user01",
 				DBPassword: "password01",
 				Type:       "TiDB",
-				Version:    "v5.0.0",
+				Version:    "v5.2.2",
+			},
+			ResourceParameter: structs.ClusterResourceInfo{
+				InstanceResource: []structs.ClusterResourceParameterCompute{
+					{Type: "TiDB", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+					{Type: "TiKV", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+					{Type: "PD", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+				},
 			},
 		})
 		assert.NoError(t, err)
@@ -491,7 +504,7 @@ func TestManager_Clone(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Version: "v5.2.2"}, []*management.ClusterInstance{
 			{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
 			{Entity: common.Entity{ID: "instance02"}, Type: "PD"},
 		}, make([]*management.DBUser, 0), fmt.Errorf("not found cluster")).AnyTimes()
@@ -502,7 +515,20 @@ func TestManager_Clone(t *testing.T) {
 				DBUser:     "user01",
 				DBPassword: "password01",
 				Type:       "TiDB",
-				Version:    "v5.0.0",
+				Version:    "v5.2.2",
+			},
+			ResourceParameter: structs.ClusterResourceInfo{
+				InstanceResource: []structs.ClusterResourceParameterCompute{
+					{Type: "TiDB", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+					{Type: "TiKV", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+					{Type: "PD", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+				},
 			},
 		})
 		assert.Error(t, err)
@@ -512,7 +538,7 @@ func TestManager_Clone(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Version: "v5.0.0"},
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Version: "v5.2.2"},
 			[]*management.ClusterInstance{
 				{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
 				{Entity: common.Entity{ID: "instance02"}, Type: "PD"},
@@ -526,6 +552,19 @@ func TestManager_Clone(t *testing.T) {
 				Type:       "TiDB",
 				Version:    "v3.0.0",
 			},
+			ResourceParameter: structs.ClusterResourceInfo{
+				InstanceResource: []structs.ClusterResourceParameterCompute{
+					{Type: "TiDB", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+					{Type: "TiKV", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+					{Type: "PD", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+				},
+			},
 		})
 		assert.Error(t, err)
 	})
@@ -534,7 +573,7 @@ func TestManager_Clone(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Version: "v5.2.2"}, []*management.ClusterInstance{
 			{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
 			{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
 		}, make([]*management.DBUser, 0), nil).AnyTimes()
@@ -549,7 +588,20 @@ func TestManager_Clone(t *testing.T) {
 				DBUser:     "user01",
 				DBPassword: "password01",
 				Type:       "TiDB",
-				Version:    "v5.0.0",
+				Version:    "v5.2.2",
+			},
+			ResourceParameter: structs.ClusterResourceInfo{
+				InstanceResource: []structs.ClusterResourceParameterCompute{
+					{Type: "TiDB", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+					{Type: "TiKV", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+					{Type: "PD", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+				},
 			},
 		})
 		assert.Error(t, err)

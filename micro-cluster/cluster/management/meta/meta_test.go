@@ -978,7 +978,7 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 			}},
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, 2, len(got.Instances))
+		assert.Equal(t, 5, len(got.Instances))
 	})
 
 	t.Run("version error", func(t *testing.T) {

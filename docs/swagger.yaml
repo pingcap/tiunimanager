@@ -41,8 +41,7 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
+        description: todo delete?
         type: string
       exclusive:
         description: Whether the newly created cluster is exclusive to physical resources,
@@ -138,8 +137,7 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
+        description: todo delete?
         type: string
       exclusive:
         description: Whether the newly created cluster is exclusive to physical resources,
@@ -312,26 +310,6 @@ definitions:
         example: http://127.0.0.1:9093
         type: string
     type: object
-  cluster.InspectClusterParametersResp:
-    properties:
-      inspectValue:
-        example: "1"
-        type: string
-      instance:
-        example: 172.16.5.23
-        type: string
-      instanceType:
-        example: tidb
-        type: string
-      name:
-        example: binlog_cache
-        type: string
-      paramId:
-        example: 1
-        type: integer
-      realValue:
-        $ref: '#/definitions/structs.ParameterRealValue'
-    type: object
   cluster.KafkaDownstream:
     properties:
       clientId:
@@ -375,6 +353,26 @@ definitions:
         type: string
       version:
         example: 2.4.0
+        type: string
+    type: object
+  cluster.MasterSlaveClusterSwitchoverReq:
+    properties:
+      force:
+        type: boolean
+      sourceClusterID:
+        description: old master/new slave
+        type: string
+      targetClusterID:
+        description: new master/old slave
+        type: string
+    required:
+    - sourceClusterID
+    - targetClusterID
+    type: object
+  cluster.MasterSlaveClusterSwitchoverResp:
+    properties:
+      workFlowId:
+        description: Asynchronous task workflow ID
         type: string
     type: object
   cluster.MysqlDownstream:
@@ -564,6 +562,20 @@ definitions:
         example: http://127.0.0.1:3000
         type: string
     type: object
+  cluster.QueryUpgradePathRsp:
+    properties:
+      paths:
+        items:
+          $ref: '#/definitions/structs.ProductUpgradePathItem'
+        type: array
+    type: object
+  cluster.QueryUpgradeVersionDiffInfoResp:
+    properties:
+      configDiffInfos:
+        items:
+          $ref: '#/definitions/structs.ProductUpgradeVersionConfigDiffItem'
+        type: array
+    type: object
   cluster.RestartClusterResp:
     properties:
       clusterId:
@@ -592,8 +604,7 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
+        description: todo delete?
         type: string
       exclusive:
         description: Whether the newly created cluster is exclusive to physical resources,
@@ -711,9 +722,6 @@ definitions:
       dbPassword:
         example: myPassword
         type: string
-      dbUser:
-        example: root
-        type: string
     required:
     - TiUPIp
     - TiUPPath
@@ -722,7 +730,6 @@ definitions:
     - TiUPUserPassword
     - clusterName
     - dbPassword
-    - dbUser
     type: object
   cluster.TakeoverClusterResp:
     properties:
@@ -818,6 +825,37 @@ definitions:
         description: Asynchronous task workflow ID
         type: string
     type: object
+  cluster.UpgradeClusterReq:
+    properties:
+      configs:
+        items:
+          $ref: '#/definitions/structs.ClusterUpgradeVersionConfigItem'
+        type: array
+      targetVersion:
+        example: v5.0.0
+        type: string
+      upgradeType:
+        enum:
+        - in-place
+        - migration
+        type: string
+      upgradeWay:
+        enum:
+        - offline
+        - online
+        type: string
+    required:
+    - targetVersion
+    - upgradeType
+    type: object
+  cluster.UpgradeClusterResp:
+    properties:
+      clusterId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
   controller.CommonResult:
     properties:
       code:
@@ -846,88 +884,6 @@ definitions:
         type: string
       page:
         $ref: '#/definitions/controller.Page'
-    type: object
-  knowledge.ClusterComponent:
-    properties:
-      componentName:
-        type: string
-      componentPurpose:
-        type: string
-      componentType:
-        type: string
-    type: object
-  knowledge.ClusterComponentSpec:
-    properties:
-      clusterComponent:
-        $ref: '#/definitions/knowledge.ClusterComponent'
-      componentConstraint:
-        $ref: '#/definitions/knowledge.ComponentConstraint'
-      componentPortConstraint:
-        $ref: '#/definitions/knowledge.ComponentPortConstraint'
-    type: object
-  knowledge.ClusterType:
-    properties:
-      code:
-        type: string
-      name:
-        type: string
-    type: object
-  knowledge.ClusterTypeSpec:
-    properties:
-      clusterType:
-        $ref: '#/definitions/knowledge.ClusterType'
-      versionSpecs:
-        items:
-          $ref: '#/definitions/knowledge.ClusterVersionSpec'
-        type: array
-    type: object
-  knowledge.ClusterVersion:
-    properties:
-      code:
-        type: string
-      name:
-        type: string
-    type: object
-  knowledge.ClusterVersionSpec:
-    properties:
-      archTypes:
-        items:
-          type: string
-        type: array
-      clusterPortConstraint:
-        $ref: '#/definitions/knowledge.ComponentPortConstraint'
-      clusterVersion:
-        $ref: '#/definitions/knowledge.ClusterVersion'
-      componentSpecs:
-        items:
-          $ref: '#/definitions/knowledge.ClusterComponentSpec'
-        type: array
-    type: object
-  knowledge.ComponentConstraint:
-    properties:
-      availableSpecCodes:
-        items:
-          type: string
-        type: array
-      componentRequired:
-        type: boolean
-      minZoneQuantity:
-        type: integer
-      parasite:
-        type: boolean
-      suggestedNodeQuantities:
-        items:
-          type: integer
-        type: array
-    type: object
-  knowledge.ComponentPortConstraint:
-    properties:
-      portCount:
-        type: integer
-      portRangeEnd:
-        type: integer
-      portRangeStart:
-        type: integer
     type: object
   message.AddPermissionsForRoleReq:
     properties:
@@ -1394,9 +1350,15 @@ definitions:
         example: binlog size
         type: string
       hasApply:
+        enum:
+        - 0
+        - 1
         example: 1
         type: integer
       hasReboot:
+        enum:
+        - 0
+        - 1
         example: 0
         type: integer
       instanceType:
@@ -1411,19 +1373,48 @@ definitions:
         items:
           type: string
         type: array
+      rangeType:
+        enum:
+        - 0
+        - 1
+        - 2
+        example: 1
+        type: integer
       readOnly:
+        enum:
+        - 0
+        - 1
         example: 0
         type: integer
       systemVariable:
         example: log.binlog_size
         type: string
       type:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
         example: 0
         type: integer
       unit:
-        example: mb
+        example: MB
         type: string
+      unitOptions:
+        example:
+        - KB
+        - MB
+        - GB
+        items:
+          type: string
+        type: array
       updateSource:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
         example: 0
         type: integer
     type: object
@@ -1778,10 +1769,6 @@ definitions:
         $ref: '#/definitions/structs.Usage'
       createTime:
         type: string
-      dbUser:
-        description: The username and password for the newly created database cluster,
-          default is the root user, which is not valid for Data Migration clusters
-        type: string
       deleteTime:
         type: string
       exclusive:
@@ -1825,6 +1812,9 @@ definitions:
       userId:
         type: string
       vendor:
+        description: DBUser                   string    `json:"dbUser"` //The username
+          and password for the newly created database cluster, default is the root
+          user, which is not valid for Data Migration clusters
         type: string
       whitelist:
         items:
@@ -1957,6 +1947,13 @@ definitions:
         items:
           type: string
         type: array
+      rangeType:
+        enum:
+        - 0
+        - 1
+        - 2
+        example: 1
+        type: integer
       readOnly:
         enum:
         - 0
@@ -1978,8 +1975,16 @@ definitions:
         example: 0
         type: integer
       unit:
-        example: mb
+        example: MB
         type: string
+      unitOptions:
+        example:
+        - KB
+        - MB
+        - GB
+        items:
+          type: string
+        type: array
       updateSource:
         enum:
         - 0
@@ -2036,6 +2041,26 @@ definitions:
         type: string
       zoneCode:
         type: string
+    type: object
+  structs.ClusterUpgradeVersionConfigItem:
+    properties:
+      instanceType:
+        example: pd-server
+        type: string
+      name:
+        example: max-merge-region-size
+        type: string
+      paramId:
+        example: "1"
+        type: string
+      value:
+        example: "20"
+        type: string
+    required:
+    - instanceType
+    - name
+    - paramId
+    - value
     type: object
   structs.ComponentInstanceResourceSpec:
     properties:
@@ -2149,18 +2174,12 @@ definitions:
       createTime:
         type: integer
       diskType:
-        description: Disk type of this host [sata/ssd/nvme_ssd]
+        description: Disk type of this host [SATA/SSD/NVMeSSD]
         type: string
       disks:
         items:
           $ref: '#/definitions/structs.DiskInfo'
         type: array
-      freeCpuCores:
-        description: Unused CpuCore, used for allocation
-        type: integer
-      freeMemory:
-        description: Unused memory size, Unit:GB, used for allocation
-        type: integer
       hostId:
         type: string
       hostName:
@@ -2183,7 +2202,7 @@ definitions:
       passwd:
         type: string
       purpose:
-        description: What Purpose is the host used for? [compute/storage/general]
+        description: What Purpose is the host used for? [compute/storage/schedule]
         type: string
       rack:
         type: string
@@ -2207,7 +2226,15 @@ definitions:
         type: integer
       updateTime:
         type: integer
+      usedCpuCores:
+        description: Unused CpuCore, used for allocation
+        type: integer
+      usedMemory:
+        description: Unused memory size, Unit:GiB, used for allocation
+        type: integer
       userName:
+        type: string
+      vendor:
         type: string
     type: object
   structs.Index:
@@ -2266,6 +2293,13 @@ definitions:
         items:
           type: string
         type: array
+      rangeType:
+        enum:
+        - 0
+        - 1
+        - 2
+        example: 1
+        type: integer
       readOnly:
         enum:
         - 0
@@ -2285,8 +2319,16 @@ definitions:
         example: 0
         type: integer
       unit:
-        example: mb
+        example: MB
         type: string
+      unitOptions:
+        example:
+        - KB
+        - MB
+        - GB
+        items:
+          type: string
+        type: array
       updateSource:
         enum:
         - 0
@@ -2408,6 +2450,82 @@ definitions:
         type: string
       name:
         type: string
+    type: object
+  structs.ProductUpgradePathItem:
+    properties:
+      upgradeType:
+        enum:
+        - in-place
+        - migration
+        type: string
+      upgradeWay:
+        enum:
+        - offline
+        - online
+        type: string
+      versions:
+        example:
+        - v5.0.0
+        - v5.3.0
+        items:
+          type: string
+        type: array
+    required:
+    - upgradeType
+    - versions
+    type: object
+  structs.ProductUpgradeVersionConfigDiffItem:
+    properties:
+      category:
+        example: basic
+        type: string
+      currentValue:
+        example: "20"
+        type: string
+      description:
+        example: desc for max-merge-region-size
+        type: string
+      instanceType:
+        example: pd-server
+        type: string
+      name:
+        example: max-merge-region-size
+        type: string
+      paramId:
+        example: "1"
+        type: string
+      range:
+        example:
+        - "1"
+        - ' 1000'
+        items:
+          type: string
+        type: array
+      suggestValue:
+        example: "30"
+        type: string
+      type:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        example: 0
+        type: integer
+      unit:
+        example: MB
+        type: string
+    required:
+    - category
+    - currentValue
+    - instanceType
+    - name
+    - paramId
+    - range
+    - suggestValue
+    - type
+    - unit
     type: object
   structs.ProductVersion:
     properties:
@@ -3189,6 +3307,137 @@ paths:
       summary: create a cluster
       tags:
       - cluster
+  /clusters/:clusterId/upgrade:
+    post:
+      consumes:
+      - application/json
+      description: request for upgrade TiDB cluster
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: upgrade request
+        in: body
+        name: upgradeReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.UpgradeClusterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.UpgradeClusterResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: request for upgrade TiDB cluster
+      tags:
+      - cluster upgrade
+  /clusters/:clusterId/upgrade/diff:
+    get:
+      consumes:
+      - application/json
+      description: query config diff between current cluster and target upgrade version
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - example: v5.0.0
+        in: query
+        name: targetVersion
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.QueryUpgradeVersionDiffInfoResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query config diff between current cluster and target upgrade version
+      tags:
+      - cluster upgrade
+  /clusters/:clusterId/upgrade/path:
+    get:
+      consumes:
+      - application/json
+      description: query upgrade path for given cluster id
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.QueryUpgradePathRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query upgrade path for given cluster id
+      tags:
+      - cluster upgrade
   /clusters/{clusterId}:
     delete:
       consumes:
@@ -3427,6 +3676,9 @@ paths:
       - application/json
       description: query parameters of a cluster
       parameters:
+      - in: query
+        name: instanceType
+        type: string
       - description: Current page location
         in: query
         name: page
@@ -3515,48 +3767,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: submit parameters
-      tags:
-      - cluster parameters
-  /clusters/{clusterId}/params/inspect:
-    post:
-      consumes:
-      - application/json
-      description: inspect parameters
-      parameters:
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/cluster.InspectClusterParametersResp'
-                  type: array
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: inspect parameters
       tags:
       - cluster parameters
   /clusters/{clusterId}/preview-scale-out:
@@ -3778,6 +3988,45 @@ paths:
       tags:
       - cluster
   /clusters/{clusterId}/strategy:
+    get:
+      consumes:
+      - application/json
+      description: show the backup strategy of a cluster
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.GetBackupStrategyResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: show the backup strategy of a cluster
+      tags:
+      - cluster backup
     put:
       consumes:
       - application/json
@@ -3821,46 +4070,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: save the backup strategy of a cluster
-      tags:
-      - cluster backup
-  /clusters/{clusterId}/strategy/:
-    get:
-      consumes:
-      - application/json
-      description: show the backup strategy of a cluster
-      parameters:
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.GetBackupStrategyResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: show the backup strategy of a cluster
       tags:
       - cluster backup
   /clusters/clone:
@@ -4068,6 +4277,47 @@ paths:
       summary: restore a new cluster by backup record
       tags:
       - cluster
+  /clusters/switchover:
+    post:
+      consumes:
+      - application/json
+      description: master/slave switchover
+      parameters:
+      - description: switchover request
+        in: body
+        name: masterSlaveClusterSwitchoverReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.MasterSlaveClusterSwitchoverReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.MasterSlaveClusterSwitchoverResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: master/slave switchover
+      tags:
+      - switchover
   /clusters/takeover:
     post:
       consumes:
@@ -4261,42 +4511,6 @@ paths:
       summary: unused, just display downstream config
       tags:
       - change feed
-  /knowledges/:
-    get:
-      consumes:
-      - application/json
-      description: show cluster knowledge
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/knowledge.ClusterTypeSpec'
-                  type: array
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: show cluster knowledge
-      tags:
-      - knowledge
   /param-groups/:
     get:
       consumes:
@@ -4463,6 +4677,9 @@ paths:
         in: path
         name: paramGroupId
         required: true
+        type: string
+      - in: query
+        name: instanceType
         type: string
       - in: query
         name: paramName

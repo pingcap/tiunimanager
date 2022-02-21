@@ -48,7 +48,7 @@ func NewClusterParameterReadWrite(db *gorm.DB) *ClusterParameterReadWrite {
 	return m
 }
 
-func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, clusterId, parameterName string, offset, size int) (paramGroupId string, params []*ClusterParamDetail, total int64, err error) {
+func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, clusterId, parameterName, instanceType string, offset, size int) (paramGroupId string, params []*ClusterParamDetail, total int64, err error) {
 	log := framework.LogWithContext(ctx)
 	cluster := management.Cluster{}
 	err = m.DB(ctx).Where("id = ?", clusterId).First(&cluster).Error
@@ -61,7 +61,8 @@ func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, cl
 
 	query := m.DB(ctx).Model(&ClusterParameterMapping{}).
 		Select("parameters.id, parameters.category, parameters.name, parameters.instance_type, parameters.system_variable, "+
-			"parameters.type, parameters.unit, parameters.range, parameters.has_reboot, parameters.has_apply, parameters.update_source, parameters.description, "+
+			"parameters.type, parameters.unit, parameters.unit_options, parameters.range, parameters.range_type, "+
+			"parameters.has_reboot, parameters.has_apply, parameters.update_source, parameters.read_only, parameters.description, "+
 			"parameter_group_mappings.default_value, cluster_parameter_mappings.real_value, parameter_group_mappings.note, "+
 			"cluster_parameter_mappings.created_at, cluster_parameter_mappings.updated_at").
 		Joins("left join parameters on parameters.id = cluster_parameter_mappings.parameter_id").
@@ -71,6 +72,9 @@ func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, cl
 	// Fuzzy query by parameter name
 	if parameterName != "" {
 		query.Where("parameters.name like '%" + parameterName + "%'")
+	}
+	if instanceType != "" {
+		query.Where("parameters.instance_type = ?", instanceType)
 	}
 
 	err = query.Order("parameters.instance_type desc").

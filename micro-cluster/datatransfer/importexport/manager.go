@@ -23,7 +23,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	dbModel "github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
@@ -62,7 +62,7 @@ func NewImportExportManager() *ImportExportManager {
 			"start":            {"exportDataFromCluster", "exportDataDone", "fail", workflow.PollingNode, exportDataFromCluster},
 			"exportDataDone":   {"updateDataExportRecord", "updateRecordDone", "fail", workflow.SyncFuncNode, updateDataExportRecord},
 			"updateRecordDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-			"fail":             {"fail", "", "", workflow.SyncFuncNode, exportDataFailed},
+			"fail":             {"end", "", "", workflow.SyncFuncNode, exportDataFailed},
 		},
 	})
 	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowImportData, &workflow.WorkFlowDefine{
@@ -72,7 +72,7 @@ func NewImportExportManager() *ImportExportManager {
 			"buildConfigDone":  {"importDataToCluster", "importDataDone", "fail", workflow.PollingNode, importDataToCluster},
 			"importDataDone":   {"updateDataImportRecord", "updateRecordDone", "fail", workflow.SyncFuncNode, updateDataImportRecord},
 			"updateRecordDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-			"fail":             {"fail", "", "", workflow.SyncFuncNode, importDataFailed},
+			"fail":             {"end", "", "", workflow.SyncFuncNode, importDataFailed},
 		},
 	})
 
@@ -95,7 +95,7 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request message.
 		return resp, errors.WrapError(errors.TIEM_TRANSPORT_SYSTEM_CONFIG_INVALID, fmt.Sprintf("get conifg %s failed: %s", constants.ConfigKeyExportShareStoragePath, err.Error()), err)
 	}
 
-	meta, err := handler.Get(ctx, request.ClusterID)
+	meta, err := meta.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
@@ -103,7 +103,7 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request message.
 
 	exportTime := time.Now()
 	exportPrefix, _ := filepath.Abs(exportPathConfig.ConfigValue)
-	exportDir := filepath.Join(exportPrefix, request.ClusterID, fmt.Sprintf("%s_%s", exportTime.Format("2006-01-02_15:04:05"), request.StorageType))
+	exportDir := filepath.Join(exportPrefix, request.ClusterID, fmt.Sprintf("%s-%s", exportTime.Format("2006-01-02-15-04-05"), request.StorageType))
 
 	record := &importexport.DataTransportRecord{
 		Entity: dbModel.Entity{
@@ -113,6 +113,7 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request message.
 		ClusterID:       request.ClusterID,
 		TransportType:   string(constants.TransportTypeExport),
 		FilePath:        mgr.getDataExportFilePath(&request, exportDir, true),
+		ConfigPath:      exportDir,
 		ZipName:         request.ZipName,
 		StorageType:     request.StorageType,
 		Comment:         request.Comment,
@@ -144,6 +145,7 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request message.
 		Filter:      request.Filter,
 		Sql:         request.Sql,
 		StorageType: request.StorageType,
+		ConfigPath:  exportDir,
 	}
 
 	flowManager := workflow.GetWorkFlowService()
@@ -181,7 +183,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 		return resp, errors.WrapError(errors.TIEM_TRANSPORT_SYSTEM_CONFIG_INVALID, fmt.Sprintf("get conifg %s failed: %s", constants.ConfigKeyImportShareStoragePath, err.Error()), err)
 	}
 
-	meta, err := handler.Get(ctx, request.ClusterID)
+	meta, err := meta.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
@@ -192,7 +194,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 	var recordCreate *importexport.DataTransportRecord
 	importTime := time.Now()
 	importPrefix, _ := filepath.Abs(importPathConfig.ConfigValue)
-	importDir := filepath.Join(importPrefix, request.ClusterID, fmt.Sprintf("%s_%s", importTime.Format("2006-01-02_15:04:05"), request.StorageType))
+	importDir := filepath.Join(importPrefix, request.ClusterID, fmt.Sprintf("%s-%s", importTime.Format("2006-01-02-15-04-05"), request.StorageType))
 	if request.RecordId == "" {
 		if string(constants.StorageTypeNFS) == request.StorageType {
 			err = os.Rename(filepath.Join(importPrefix, request.ClusterID, "temp"), importDir)
@@ -216,6 +218,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 			ClusterID:       request.ClusterID,
 			TransportType:   string(constants.TransportTypeImport),
 			FilePath:        mgr.getDataImportFilePath(&request, importDir, true),
+			ConfigPath:      importDir,
 			ZipName:         constants.DefaultZipName,
 			StorageType:     request.StorageType,
 			Comment:         request.Comment,
@@ -258,6 +261,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 			ClusterID:       request.ClusterID,
 			TransportType:   string(constants.TransportTypeImport),
 			FilePath:        mgr.getDataImportFilePath(&request, importDir, true),
+			ConfigPath:      importDir,
 			ZipName:         constants.DefaultZipName,
 			StorageType:     request.StorageType,
 			Comment:         request.Comment,
@@ -361,8 +365,21 @@ func (mgr *ImportExportManager) DeleteDataTransportRecord(ctx context.Context, r
 	if string(constants.StorageTypeS3) != record.StorageType {
 		filePath := filepath.Dir(record.FilePath)
 		go func() {
-			removeErr := os.RemoveAll(filePath)
-			framework.LogWithContext(ctx).Infof("remove file path %s, record: %+v, error: %v", filePath, record, removeErr)
+			if filePath != "" {
+				removeErr := os.RemoveAll(filePath)
+				framework.LogWithContext(ctx).Infof("remove file path %s, record: %+v, error: %v", filePath, record, removeErr)
+			}
+			if record.ConfigPath != "" {
+				removeErr := os.RemoveAll(record.ConfigPath)
+				framework.LogWithContext(ctx).Infof("remove config path %s, record: %+v, error: %v", record.ConfigPath, record, removeErr)
+			}
+		}()
+	} else {
+		go func() {
+			if record.ConfigPath != "" {
+				removeErr := os.RemoveAll(record.ConfigPath)
+				framework.LogWithContext(ctx).Infof("remove config path %s, record: %+v, error: %v", record.ConfigPath, record, removeErr)
+			}
 		}()
 	}
 

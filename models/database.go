@@ -22,6 +22,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/models/platform/product"
 	"github.com/pingcap-inc/tiem/models/user/rbac"
 	gormopentracing "gorm.io/plugin/opentracing"
@@ -29,7 +30,6 @@ import (
 	"github.com/pingcap-inc/tiem/models/tiup"
 
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/structs"
 	mm "github.com/pingcap-inc/tiem/models/resource/management"
 	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	"github.com/pingcap-inc/tiem/models/user/account"
@@ -40,6 +40,7 @@ import (
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/cluster/parameter"
+	"github.com/pingcap-inc/tiem/models/cluster/upgrade"
 	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/models/parametergroup"
 	"github.com/pingcap-inc/tiem/models/platform/config"
@@ -60,6 +61,7 @@ type database struct {
 	importExportReaderWriter         importexport.ReaderWriter
 	brReaderWriter                   backuprestore.ReaderWriter
 	changeFeedReaderWriter           changefeed.ReaderWriter
+	upgradeReadWriter                upgrade.ReaderWriter
 	clusterReaderWriter              management.ReaderWriter
 	parameterGroupReaderWriter       parametergroup.ReaderWriter
 	clusterParameterReaderWriter     parameter.ReaderWriter
@@ -76,7 +78,7 @@ type database struct {
 func Open(fw *framework.BaseFramework, reentry bool) error {
 	dbFile := fw.GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName + "?_busy_timeout=60000"
 	logins := framework.LogForkFile(constants.LogFileSystem)
-	// todo tidb?
+
 	//newLogger := framework.New(
 	//	log.New(os.Stdout, "\r\n", log.LstdFlags),
 	//	framework.Config{
@@ -118,6 +120,7 @@ func Open(fw *framework.BaseFramework, reentry bool) error {
 			return err
 		}
 		defaultDb.initSystemData()
+		defaultDb.initSystemConfig()
 	}
 
 	return nil
@@ -139,10 +142,12 @@ func (p *database) initTables() (err error) {
 		new(changefeed.ChangeFeedTask),
 		new(workflow.WorkFlow),
 		new(workflow.WorkFlowNode),
+		new(upgrade.ProductUpgradePath),
 		new(management.Cluster),
 		new(management.ClusterInstance),
 		new(management.ClusterRelation),
 		new(management.ClusterTopologySnapshot),
+		new(management.DBUser),
 		new(importexport.DataTransportRecord),
 		new(backuprestore.BackupRecord),
 		new(backuprestore.BackupStrategy),
@@ -176,6 +181,7 @@ func (p *database) initReaderWriters() {
 	defaultDb.workFlowReaderWriter = workflow.NewFlowReadWrite(defaultDb.base)
 	defaultDb.importExportReaderWriter = importexport.NewImportExportReadWrite(defaultDb.base)
 	defaultDb.brReaderWriter = backuprestore.NewBRReadWrite(defaultDb.base)
+	defaultDb.upgradeReadWriter = upgrade.NewGormProductUpgradePath(defaultDb.base)
 	defaultDb.resourceReaderWriter = resource_rw.NewGormResourceReadWrite(defaultDb.base)
 	defaultDb.parameterGroupReaderWriter = parametergroup.NewParameterGroupReadWrite(defaultDb.base)
 	defaultDb.clusterParameterReaderWriter = parameter.NewClusterParameterReadWrite(defaultDb.base)
@@ -187,6 +193,24 @@ func (p *database) initReaderWriters() {
 	defaultDb.tokenReaderWriter = identification.NewTokenReadWrite(defaultDb.base)
 	defaultDb.productReaderWriter = product.NewProductReadWriter(defaultDb.base)
 	defaultDb.tiUPConfigReaderWriter = tiup.NewGormTiupConfigReadWrite(defaultDb.base)
+}
+
+func (p *database) initSystemConfig() {
+	// system config
+	framework.LogWithContext(context.TODO()).Info("begin init system configs to database...")
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStorageType, ConfigValue: string(constants.StorageTypeS3)})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStoragePath, ConfigValue: constants.DefaultBackupStoragePath})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3AccessKey, ConfigValue: constants.DefaultBackupS3AccessKey})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3SecretAccessKey, ConfigValue: constants.DefaultBackupS3SecretAccessKey})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3Endpoint, ConfigValue: constants.DefaultBackupS3Endpoint})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupRateLimit, ConfigValue: constants.DefaultBackupRateLimit})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyRestoreRateLimit, ConfigValue: constants.DefaultRestoreRateLimit})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupConcurrency, ConfigValue: constants.DefaultBackupConcurrency})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyRestoreConcurrency, ConfigValue: constants.DefaultRestoreConcurrency})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyExportShareStoragePath, ConfigValue: constants.DefaultExportPath})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyImportShareStoragePath, ConfigValue: constants.DefaultImportPath})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyDumplingThreadNum, ConfigValue: constants.DefaultDumplingThreadNum})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyRetainedPortRange, ConfigValue: constants.DefaultRetainedPortRange})
 }
 
 func (p *database) initSystemData() {
@@ -226,15 +250,6 @@ func (p *database) initSystemData() {
 		}
 	}
 
-	// system config
-	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStorageType, ConfigValue: string(constants.StorageTypeS3)})
-	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStoragePath, ConfigValue: constants.DefaultBackupStoragePath})
-	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3AccessKey, ConfigValue: constants.DefaultBackupS3AccessKey})
-	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3SecretAccessKey, ConfigValue: constants.DefaultBackupS3SecretAccessKey})
-	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3Endpoint, ConfigValue: constants.DefaultBackupS3Endpoint})
-	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyExportShareStoragePath, ConfigValue: constants.DefaultExportPath})
-	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyImportShareStoragePath, ConfigValue: constants.DefaultImportPath})
-
 	// batch import parameters & default parameter group sql
 	parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters.sql"
 	err = syscall.Access(parameterSqlFile, syscall.F_OK)
@@ -261,6 +276,25 @@ func (p *database) initSystemData() {
 		sqls, err := ioutil.ReadFile(tiUPSqlFile)
 		if err != nil {
 			framework.LogForkFile(constants.LogFileSystem).Errorf("import tiupconfigs failed, err = %s", err.Error())
+			return
+		}
+		sqlArr := strings.Split(string(sqls), ";")
+		for _, sql := range sqlArr {
+			if strings.TrimSpace(sql) == "" {
+				continue
+			}
+			// exec import sql
+			defaultDb.base.Exec(sql)
+		}
+	}
+
+	// import upgrade paths
+	upgradeSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/upgrades.sql"
+	err = syscall.Access(tiUPSqlFile, syscall.F_OK)
+	if !os.IsNotExist(err) {
+		sqls, err := ioutil.ReadFile(upgradeSqlFile)
+		if err != nil {
+			framework.LogForkFile(constants.LogFileSystem).Errorf("import upgrades failed, err = %s", err.Error())
 			return
 		}
 		sqlArr := strings.Split(string(sqls), ";")
@@ -300,6 +334,14 @@ func SetImportExportReaderWriter(rw importexport.ReaderWriter) {
 
 func GetBRReaderWriter() backuprestore.ReaderWriter {
 	return defaultDb.brReaderWriter
+}
+
+func GetUpgradeReaderWriter() upgrade.ReaderWriter {
+	return defaultDb.upgradeReadWriter
+}
+
+func SetUpgradeReaderWriter(rw upgrade.ReaderWriter) {
+	defaultDb.upgradeReadWriter = rw
 }
 
 func SetResourceReaderWriter(rw resource.ReaderWriter) {

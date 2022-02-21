@@ -22,7 +22,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/common"
@@ -47,8 +47,6 @@ func TestGetDashboardInfo(t *testing.T) {
 			UpdatedAt: time.Now(),
 		},
 		Name:              "koojdafij",
-		DBUser:            "kodjsfn",
-		DBPassword:        "mypassword",
 		Type:              "TiDB",
 		Version:           "v5.0.0",
 		Tags:              []string{"111", "333"},
@@ -106,6 +104,13 @@ func TestGetDashboardInfo(t *testing.T) {
 			Version:  "v5.0.0",
 			Ports:    []int32{30001, 30002, 30003, 30004},
 			HostIP:   []string{"127.0.0.3"},
+		},
+	}, []*management.DBUser{
+		{
+			ClusterID: "2145635758",
+			Name:      constants.DBUserName[constants.Root],
+			Password:  "12345678",
+			RoleType:  string(constants.Root),
 		},
 	}, nil).Times(1)
 
@@ -119,8 +124,6 @@ func TestGetDashboardInfo(t *testing.T) {
 			UpdatedAt: time.Now(),
 		},
 		Name:              "koojdafij",
-		DBUser:            "kodjsfn",
-		DBPassword:        "mypassword",
 		Type:              "TiDB",
 		Version:           "v5.0.0",
 		Tags:              []string{"111", "333"},
@@ -179,17 +182,23 @@ func TestGetDashboardInfo(t *testing.T) {
 			Ports:    []int32{30001, 30002, 30003, 30004},
 			HostIP:   []string{"127.0.0.3"},
 		},
+	}, []*management.DBUser{
+		{
+			ClusterID: "2145635758",
+			Name:      constants.DBUserName[constants.Root],
+			Password:  "12345678",
+			RoleType:  string(constants.Root),
+		},
 	}, errors.Error(errors.TIEM_MARSHAL_ERROR)).Times(1)
 	_, err = GetDashboardInfo(context.TODO(), cluster.GetDashboardInfoReq{ClusterID: "2145635758"})
 	assert.Error(t, err)
 }
 
 func Test_getDashboardUrlFromCluster(t *testing.T) {
-	_, err := getDashboardUrlFromCluster(context.TODO(), &handler.ClusterMeta{
+	_, err := getDashboardUrlFromCluster(context.TODO(), &meta.ClusterMeta{
 		Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDPD): {},
 		},
 	})
 	assert.Error(t, err)
 }
-

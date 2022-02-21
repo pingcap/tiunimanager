@@ -145,38 +145,15 @@ type CloneClusterResp struct {
 
 // MasterSlaveClusterSwitchoverReq Master and slave cluster switchover messages
 type MasterSlaveClusterSwitchoverReq struct {
+	// old master/new slave
 	SourceClusterID string `json:"sourceClusterID" validate:"required,min=8,max=64"`
+	// new master/old slave
 	TargetClusterID string `json:"targetClusterID" validate:"required,min=8,max=64"`
 	Force           bool   `json:"force"`
 }
 
 // MasterSlaveClusterSwitchoverResp Master and slave cluster switchover reply message
 type MasterSlaveClusterSwitchoverResp struct {
-	structs.AsyncTaskWorkFlowInfo
-}
-
-type QueryUpgradeVersionDiffInfoReq struct {
-	ClusterID string `json:"clusterId"`
-	Version   string `json:"version"`
-}
-
-type QueryUpgradeVersionDiffInfoResp struct {
-	ConfigDiffInfos []structs.ProductUpgradeVersionConfigDiffItem `json:"configDiffInfos"`
-}
-
-type ClusterUpgradeVersionConfigItem struct {
-	Name         string `json:"name"`
-	InstanceType string `json:"instanceType"`
-	Value        string `json:"value"`
-}
-
-type ClusterUpgradeReq struct {
-	ClusterID     string `json:"ClusterId"`
-	TargetVersion string `json:"targetVersion"`
-	Configs       []ClusterUpgradeVersionConfigItem
-}
-
-type ClusterUpgradeResp struct {
 	structs.AsyncTaskWorkFlowInfo
 }
 
@@ -188,7 +165,6 @@ type TakeoverClusterReq struct {
 	TiUPUserPassword string `json:"TiUPUserPassword" example:"password" form:"TiUPUserPassword" validate:"required"`
 	TiUPPath         string `json:"TiUPPath" example:".tiup/" form:"TiUPPath" validate:"required"`
 	ClusterName      string `json:"clusterName" example:"myClusterName" form:"clusterName" validate:"required"`
-	DBUser           string `json:"dbUser" example:"root" form:"dbUser" validate:"required"`
 	DBPassword       string `json:"dbPassword" example:"myPassword" form:"dbPassword" validate:"required"`
 }
 
@@ -268,8 +244,9 @@ type QueryClusterLogResp struct {
 }
 
 type QueryClusterParametersReq struct {
-	ClusterID string `json:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
-	ParamName string `json:"paramName" form:"paramName"`
+	ClusterID    string `json:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
+	ParamName    string `json:"paramName" form:"paramName"`
+	InstanceType string `json:"instanceType" form:"instanceType"`
 	structs.PageRequest
 }
 
@@ -290,17 +267,27 @@ type UpdateClusterParametersResp struct {
 	structs.AsyncTaskWorkFlowInfo
 }
 
-type InspectClusterParametersReq struct {
-	ClusterID string `json:"clusterId" validate:"required,min=8,max=64"`
+type InspectParametersReq struct {
+	ClusterID  string `json:"clusterId" validate:"required,min=8,max=64"`
+	InstanceID string `json:"instanceId"`
 }
 
-type InspectClusterParametersResp struct {
+type InspectParametersResp struct {
+	Params InspectParameters `json:"params"`
+}
+
+type InspectParameters struct {
+	InstanceID     string                 `json:"instanceId"`
+	ParameterInfos []InspectParameterInfo `json:"parameterInfos"`
+}
+
+type InspectParameterInfo struct {
 	ParamID      int64                      `json:"paramId" example:"1"`
+	Category     string                     `json:"category" example:"log"`
 	Name         string                     `json:"name" example:"binlog_cache"`
-	InstanceType string                     `json:"instanceType" example:"tidb"`
-	Instance     string                     `json:"instance" example:"172.16.5.23"`
+	InstanceType string                     `json:"instanceType" example:"TiDB"`
 	RealValue    structs.ParameterRealValue `json:"realValue"`
-	InspectValue string                     `json:"inspectValue" example:"1"`
+	InspectValue interface{}                `json:"inspectValue"`
 }
 
 type PreviewClusterResp struct {
@@ -318,4 +305,11 @@ type PreviewClusterResp struct {
 type ScaleOutPreviewResp struct {
 	StockCheckResult  []structs.ResourceStockCheckResult `json:"stockCheckResult"`
 	CapabilityIndexes []structs.Index                    `json:"capabilityIndexes"`
+}
+
+type ApiEditConfigReq struct {
+	InstanceHost string
+	InstancePort uint
+	Headers      map[string]string
+	ConfigMap    map[string]interface{}
 }

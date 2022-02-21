@@ -44,6 +44,7 @@ type QueryParameterGroupResp struct {
 type DetailParameterGroupReq struct {
 	ParamGroupID string `json:"paramGroupId" swaggerignore:"true" validate:"required,min=1,max=64"`
 	ParamName    string `json:"paramName" form:"paramName"`
+	InstanceType string `json:"instanceType" form:"instanceType"`
 }
 
 type DetailParameterGroupResp struct {
@@ -130,13 +131,15 @@ type ParameterInfo struct {
 	Name           string   `json:"name" example:"binlog_size"`
 	InstanceType   string   `json:"instanceType" example:"TiDB"`
 	SystemVariable string   `json:"systemVariable" example:"log.binlog_size"`
-	Type           int      `json:"type" example:"0"`
-	Unit           string   `json:"unit" example:"mb"`
+	Type           int      `json:"type" example:"0" enums:"0,1,2,3,4"`
+	Unit           string   `json:"unit" example:"MB"`
+	UnitOptions    []string `json:"unitOptions" example:"KB,MB,GB"`
 	Range          []string `json:"range" example:""`
-	HasReboot      int      `json:"hasReboot" example:"0"`
-	HasApply       int      `json:"hasApply" example:"1"`
-	UpdateSource   int      `json:"updateSource" example:"0"`
-	ReadOnly       int      `json:"readOnly" example:"0"`
+	RangeType      int      `json:"rangeType" example:"1" enums:"0,1,2"`
+	HasReboot      int      `json:"hasReboot" example:"0" enums:"0,1"`
+	HasApply       int      `json:"hasApply" example:"1" enums:"0,1"`
+	UpdateSource   int      `json:"updateSource" example:"0" enums:"0,1,2,3"`
+	ReadOnly       int      `json:"readOnly" example:"0" enums:"0,1"`
 	Description    string   `json:"description" example:"binlog size"`
 	DefaultValue   string   `json:"defaultValue" example:"1024"`
 	Note           string   `json:"note"`

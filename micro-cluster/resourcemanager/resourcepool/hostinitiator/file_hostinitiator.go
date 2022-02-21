@@ -17,7 +17,9 @@ package hostinitiator
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/deployment"
 	"strings"
 
 	"github.com/pingcap-inc/tiem/util/scp"
@@ -26,19 +28,18 @@ import (
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 )
 
 type FileHostInitiator struct {
-	sshClient       sshclient.SSHClientExecutor
-	secondPartyServ secondparty.SecondPartyService
+	sshClient      sshclient.SSHClientExecutor
+	deploymentServ deployment.Interface
 }
 
 func NewFileHostInitiator() *FileHostInitiator {
 	hostInitiator := new(FileHostInitiator)
 	hostInitiator.sshClient = sshclient.SSHExecutor{}
-	hostInitiator.secondPartyServ = secondparty.Manager
+	hostInitiator.deploymentServ = deployment.M
 	return hostInitiator
 }
 
@@ -46,8 +47,8 @@ func (p *FileHostInitiator) SetSSHClient(c sshclient.SSHClientExecutor) {
 	p.sshClient = c
 }
 
-func (p *FileHostInitiator) SetSecondPartyServ(s secondparty.SecondPartyService) {
-	p.secondPartyServ = s
+func (p *FileHostInitiator) SetDeploymentServ(d deployment.Interface) {
+	p.deploymentServ = d
 }
 
 func (p *FileHostInitiator) CopySSHID(ctx context.Context, h *structs.HostInfo) (err error) {
@@ -75,10 +76,10 @@ func (p *FileHostInitiator) Prepare(ctx context.Context, h *structs.HostInfo) (e
 		return err
 	}
 
-	resultStr, err := p.secondPartyServ.CheckTopo(ctx, secondparty.ClusterComponentTypeStr, templateStr, rp_consts.DefaultTiupTimeOut,
-		[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--apply", "--format", "json"})
+	resultStr, err := deployment.M.CheckConfig(ctx, deployment.TiUPComponentTypeCluster, templateStr, "/home/tiem/.tiup",
+		[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--apply", "--format", "json"}, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
-		errMsg := fmt.Sprintf("call second serv to apply host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
+		errMsg := fmt.Sprintf("call deployment serv to apply host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
 		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
 	}
 	log.Infof("apply host %s %s done, %s", h.HostName, h.IP, resultStr)
@@ -115,10 +116,10 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 	}
 	log.Infof("verify host %s %s ignore warning (%t)", h.HostName, h.IP, ignoreWarnings)
 
-	resultStr, err := p.secondPartyServ.CheckTopo(ctx, secondparty.ClusterComponentTypeStr, templateStr, rp_consts.DefaultTiupTimeOut,
-		[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--format", "json"})
+	resultStr, err := deployment.M.CheckConfig(ctx, deployment.TiUPComponentTypeCluster, templateStr, "/home/tiem/.tiup",
+		[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--format", "json"}, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
-		errMsg := fmt.Sprintf("call second serv to check host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
+		errMsg := fmt.Sprintf("call deployment serv to check host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
 		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
 	}
 	log.Infof("verify host %s %s for %v done", h.HostName, h.IP, tempateInfo)
@@ -166,7 +167,39 @@ func (p *FileHostInitiator) InstallSoftware(ctx context.Context, hosts []structs
 	return nil
 }
 
-func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.HostInfo) (err error) {
+func (p *FileHostInitiator) PreCheckHostInstallFilebeat(ctx context.Context, hosts []structs.HostInfo) (installed bool, err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infoln("begin precheck before join em cluster")
+	emClusterName := framework.Current.GetClientArgs().EMClusterName
+
+	// Parse EM topology structure to check whether filebeat has been installed already
+	result, err := p.deploymentServ.Display(ctx, deployment.TiUPComponentTypeTiEM, emClusterName, "/home/tiem/.tiuptiem", []string{"--json"}, rp_consts.DefaultTiupTimeOut)
+	if err != nil {
+		log.Errorf("precheck before join em cluster failed, %v", err)
+		return false, errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "precheck join em cluster %s failed, %v", emClusterName, err)
+	}
+	emTopo := new(structs.EMMetaTopo)
+	err = json.Unmarshal([]byte(result), emTopo)
+	if err != nil {
+		return false, errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "precheck join em cluster %s failed on umarshal, %v", emClusterName, err)
+	}
+	installed = false
+LOOP:
+	for _, instance := range emTopo.Instances {
+		if instance.Role == "filebeat" {
+			for _, host := range hosts {
+				if instance.Host == host.IP {
+					installed = true
+					log.Infof("host %s %s has been install filebeat", host.HostName, host.IP)
+					break LOOP
+				}
+			}
+		}
+	}
+	return installed, nil
+}
+
+func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.HostInfo) (operationID string, err error) {
 	tempateInfo := templateScaleOut{}
 	for _, host := range hosts {
 		tempateInfo.HostIPs = append(tempateInfo.HostIPs, host.IP)
@@ -174,45 +207,46 @@ func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.H
 
 	templateStr, err := tempateInfo.generateTopologyConfig(ctx)
 	if err != nil {
-		return err
+		return "", err
 	}
 	framework.LogWithContext(ctx).Infof("join em cluster on %s", templateStr)
 
-	workFlowNodeID, ok := ctx.Value(rp_consts.ContextWorkFlowNodeIDKey).(string)
-	if !ok || workFlowNodeID == "" {
-		return errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "get work flow node from context failed, %s, %v", workFlowNodeID, ok)
+	workFlowID, ok := ctx.Value(rp_consts.ContextWorkFlowIDKey).(string)
+	if !ok || workFlowID == "" {
+		return "", errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "get work flow from context failed, %s, %v", workFlowID, ok)
 	}
 
 	emClusterName := framework.Current.GetClientArgs().EMClusterName
-	framework.LogWithContext(ctx).Infof("join em cluster %s with work flow id %s", emClusterName, workFlowNodeID)
-	operationId, err := p.secondPartyServ.ClusterScaleOut(ctx, secondparty.TiEMComponentTypeStr, emClusterName, templateStr, rp_consts.DefaultTiupTimeOut,
-		[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, workFlowNodeID, "")
+	framework.LogWithContext(ctx).Infof("join em cluster %s with work flow id %s", emClusterName, workFlowID)
+	operationID, err = deployment.M.ScaleOut(ctx, deployment.TiUPComponentTypeTiEM, emClusterName, templateStr,
+		"/home/tiem/.tiuptiem", workFlowID, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
-		return errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "join em cluster %s [%v] failed, %v", emClusterName, templateStr, err)
+		return "", errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "join em cluster %s [%v] failed, %v", emClusterName, templateStr, err)
 	}
-	framework.LogWithContext(ctx).Infof("join em cluster %s for %v in operationId %s", emClusterName, tempateInfo, operationId)
+	framework.LogWithContext(ctx).Infof("join em cluster %s for %v in operationID %s", emClusterName, tempateInfo, operationID)
 
-	return nil
+	return operationID, nil
 }
 
-func (p *FileHostInitiator) LeaveEMCluster(ctx context.Context, nodeId string) (err error) {
+func (p *FileHostInitiator) LeaveEMCluster(ctx context.Context, nodeId string) (operationID string, err error) {
 	framework.LogWithContext(ctx).Infof("host %s leave em cluster", nodeId)
 
-	workFlowNodeID, ok := ctx.Value(rp_consts.ContextWorkFlowNodeIDKey).(string)
-	if !ok || workFlowNodeID == "" {
-		return errors.NewErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "get work flow node from context failed, %s, %v", workFlowNodeID, ok)
+	workFlowID, ok := ctx.Value(rp_consts.ContextWorkFlowIDKey).(string)
+	if !ok || workFlowID == "" {
+		return "", errors.NewErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "get work flow from context failed, %s, %v", workFlowID, ok)
 	}
 
 	emClusterName := framework.Current.GetClientArgs().EMClusterName
-	framework.LogWithContext(ctx).Infof("leave em cluster %s with work flow id %s", emClusterName, workFlowNodeID)
-	operationId, err := p.secondPartyServ.ClusterScaleIn(ctx, secondparty.TiEMComponentTypeStr, emClusterName, nodeId, rp_consts.DefaultTiupTimeOut,
-		[]string{"--yes"}, workFlowNodeID)
+	framework.LogWithContext(ctx).Infof("leave em cluster %s with work flow id %s", emClusterName, workFlowID)
+	operationID, err = deployment.M.ScaleIn(ctx, deployment.TiUPComponentTypeTiEM, emClusterName,
+		nodeId, "/home/tiem/.tiuptiem",
+		workFlowID, []string{}, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
-		return errors.NewErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "leave em cluster %s [%s] failed, %v", emClusterName, nodeId, err)
+		return "", errors.NewErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "leave em cluster %s [%s] failed, %v", emClusterName, nodeId, err)
 	}
-	framework.LogWithContext(ctx).Infof("leave em cluster %s for %s in operationId %s", emClusterName, nodeId, operationId)
+	framework.LogWithContext(ctx).Infof("leave em cluster %s for %s in operationId %s", emClusterName, nodeId, operationID)
 
-	return nil
+	return operationID, nil
 }
 
 func (p *FileHostInitiator) installTcpDump(ctx context.Context, hosts []structs.HostInfo) (err error) {

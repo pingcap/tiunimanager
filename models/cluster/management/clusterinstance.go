@@ -51,7 +51,10 @@ type ClusterInstance struct {
 	// marshal HostIP, never use
 	HostInfo string `gorm:"type:varchar(128)"`
 	// marshal PortInfo, never use
-	PortInfo string `gorm:"type:varchar(128)"`
+	PortInfo  string `gorm:"type:varchar(128)"`
+	DeployDir string
+	LogDir    string
+	DataDir   string
 }
 
 func (t *ClusterInstance) BeforeSave(tx *gorm.DB) (err error) {
@@ -98,13 +101,34 @@ func (t *ClusterInstance) AfterFind(tx *gorm.DB) (err error) {
 }
 
 func (t *ClusterInstance) GetDeployDir() string {
-	return fmt.Sprintf("%s/%s/%s-deploy", t.DiskPath, t.ClusterID, strings.ToLower(t.Type))
+	if len(t.DeployDir) == 0 {
+		t.DeployDir = fmt.Sprintf("%s/%s/%s-deploy", t.DiskPath, t.ClusterID, strings.ToLower(t.Type))
+	}
+	return t.DeployDir
 }
 
 func (t *ClusterInstance) GetDataDir() string {
-	return fmt.Sprintf("%s/%s/%s-data", t.DiskPath, t.ClusterID, strings.ToLower(t.Type))
+	if len(t.DataDir) == 0 {
+		t.DataDir = fmt.Sprintf("%s/%s/%s-data", t.DiskPath, t.ClusterID, strings.ToLower(t.Type))
+	}
+	return t.DataDir
 }
 
 func (t *ClusterInstance) GetLogDir() string {
-	return fmt.Sprintf("%s/%s/tidb-log", t.GetDeployDir(), t.ClusterID)
+	if len(t.LogDir) == 0 {
+		t.LogDir = fmt.Sprintf("%s/%s/tidb-log", t.GetDeployDir(), t.ClusterID)
+	}
+	return t.LogDir
+}
+
+func (t *ClusterInstance) SetPresetDir(deployDir, dataDir, logDir string) *ClusterInstance {
+	t.DeployDir = deployDir
+	t.DataDir = dataDir
+	if strings.HasPrefix(logDir, "/") {
+		t.LogDir = logDir
+	} else {
+		t.LogDir = deployDir + "/" + logDir
+	}
+
+	return t
 }

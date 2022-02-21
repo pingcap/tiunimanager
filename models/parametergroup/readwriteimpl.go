@@ -105,14 +105,14 @@ func (m ParameterGroupReadWrite) DeleteParameterGroup(ctx context.Context, param
 
 	// check if the parameter group manages the cluster
 	var total int64 = 0
-	err = m.DB(ctx).Model(&management.Cluster{}).Count(&total).Where("parameter_group_id = ?", parameterGroupId).Find(&management.Cluster{}).Error
+	err = m.DB(ctx).Model(&management.Cluster{}).Where("parameter_group_id = ?", parameterGroupId).Count(&total).Error
 	if err != nil {
 		log.Errorf("query cluster count err: %v, request param id: %v", err.Error(), parameterGroupId)
 		tx.Rollback()
 		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR, err.Error())
 	}
 	if total > 0 {
-		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_RELATION_CLUSTER_NOT_DEL, "")
+		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_RELATION_CLUSTER_NOT_DEL, "parameter group id: %s", parameterGroupId)
 	}
 	// delete parameter_group_mapping table
 	err = m.DB(ctx).Where("parameter_group_id = ?", parameterGroupId).Delete(&ParameterGroupMapping{}).Error
@@ -190,11 +190,11 @@ func (m ParameterGroupReadWrite) QueryParameterGroup(ctx context.Context, name, 
 	if name != "" {
 		query = query.Where("name like '%" + name + "%'")
 	}
+	if clusterVersion != "" {
+		query = query.Where("cluster_version like '%" + clusterVersion + "%'")
+	}
 	if clusterSpec != "" {
 		query = query.Where("cluster_spec = ?", clusterSpec)
-	}
-	if clusterVersion != "" {
-		query = query.Where("cluster_version = ?", clusterVersion)
 	}
 	if dbType > 0 {
 		query = query.Where("db_type = ?", dbType)
@@ -210,7 +210,7 @@ func (m ParameterGroupReadWrite) QueryParameterGroup(ctx context.Context, name, 
 	return groups, total, err
 }
 
-func (m ParameterGroupReadWrite) GetParameterGroup(ctx context.Context, parameterGroupId, parameterName string) (group *ParameterGroup, params []*ParamDetail, err error) {
+func (m ParameterGroupReadWrite) GetParameterGroup(ctx context.Context, parameterGroupId, parameterName, instanceType string) (group *ParameterGroup, params []*ParamDetail, err error) {
 	log := framework.LogWithContext(ctx)
 	if parameterGroupId == "" {
 		return nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "parameter group id is empty")
@@ -224,7 +224,7 @@ func (m ParameterGroupReadWrite) GetParameterGroup(ctx context.Context, paramete
 		return nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_QUERY_ERROR, err.Error())
 	}
 
-	params, err = m.QueryParametersByGroupId(ctx, parameterGroupId, parameterName)
+	params, err = m.QueryParametersByGroupId(ctx, parameterGroupId, parameterName, instanceType)
 	if err != nil {
 		log.Errorf("get param group err: %v", err.Error())
 		return nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, err.Error())
@@ -284,12 +284,12 @@ func (m ParameterGroupReadWrite) QueryParameters(ctx context.Context, offset, si
 	return params, total, err
 }
 
-func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, parameterGroupId, parameterName string) (params []*ParamDetail, err error) {
+func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, parameterGroupId, parameterName, instanceType string) (params []*ParamDetail, err error) {
 	log := framework.LogWithContext(ctx)
 
 	query := m.DB(ctx).Model(&Parameter{}).
 		Select("parameters.id, parameters.category, parameters.name, parameters.instance_type, parameters.system_variable, "+
-			"parameters.type, parameters.unit, parameters.range, parameters.has_reboot, parameters.has_apply, "+
+			"parameters.type, parameters.unit, parameters.unit_options, parameters.range, parameters.range_type, parameters.has_reboot, parameters.has_apply, "+
 			"parameters.update_source, parameters.read_only, parameters.description, parameter_group_mappings.default_value, parameter_group_mappings.note, "+
 			"parameter_group_mappings.created_at, parameter_group_mappings.updated_at").
 		Joins("left join parameter_group_mappings on parameters.id = parameter_group_mappings.parameter_id").
@@ -298,6 +298,9 @@ func (m ParameterGroupReadWrite) QueryParametersByGroupId(ctx context.Context, p
 	// Fuzzy query by parameter name
 	if parameterName != "" {
 		query.Where("parameters.name like '%" + parameterName + "%'")
+	}
+	if instanceType != "" {
+		query.Where("parameters.instance_type = ?", instanceType)
 	}
 
 	err = query.Order("parameters.instance_type desc").
@@ -334,9 +337,16 @@ func (m ParameterGroupReadWrite) ExistsParameter(ctx context.Context, category, 
 func (m ParameterGroupReadWrite) addParameters(ctx context.Context, pgID string, addParameters []message.ParameterInfo) (err error) {
 	if addParameters != nil && len(addParameters) > 0 {
 		for _, addParameter := range addParameters {
-			var b []byte
+			var rangeByte []byte
 			if addParameter.Range != nil && len(addParameter.Range) > 0 {
-				b, err = json.Marshal(addParameter.Range)
+				rangeByte, err = json.Marshal(addParameter.Range)
+				if err != nil {
+					return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, err.Error())
+				}
+			}
+			var unitOptionsByte []byte
+			if addParameter.UnitOptions != nil && len(addParameter.UnitOptions) > 0 {
+				unitOptionsByte, err = json.Marshal(addParameter.UnitOptions)
 				if err != nil {
 					return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, err.Error())
 				}
@@ -349,7 +359,9 @@ func (m ParameterGroupReadWrite) addParameters(ctx context.Context, pgID string,
 				SystemVariable: addParameter.SystemVariable,
 				Type:           addParameter.Type,
 				Unit:           addParameter.Unit,
-				Range:          string(b),
+				UnitOptions:    string(unitOptionsByte),
+				Range:          string(rangeByte),
+				RangeType:      addParameter.RangeType,
 				HasReboot:      addParameter.HasReboot,
 				HasApply:       addParameter.HasApply,
 				UpdateSource:   addParameter.UpdateSource,

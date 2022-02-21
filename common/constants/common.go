@@ -24,8 +24,9 @@
 package constants
 
 import (
-	"github.com/pingcap-inc/tiem/common/errors"
 	"time"
+
+	"github.com/pingcap-inc/tiem/common/errors"
 )
 
 const (
@@ -46,6 +47,7 @@ const (
 const (
 	DBDirPrefix      string = "/"
 	DatabaseFileName string = "em.db"
+	SqliteFileName   string = "sqlite.db"
 )
 
 // Enterprise Manager Certificates constants
@@ -78,6 +80,21 @@ func ValidProductID(p string) error {
 		return nil
 	}
 	return errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_PRODUCT_NAME, "valid product name: [%s|%s|%s]", string(EMProductIDTiDB), string(EMProductIDDataMigration), string(EMProductIDEnterpriseManager))
+}
+
+type ProvidedVendor string
+
+// Definition of vendors provided by Enterprise manager
+const (
+	Local ProvidedVendor = "Local"
+	AWS   ProvidedVendor = "AWS"
+)
+
+func ValidProvidedVendor(p string) error {
+	if p == string(Local) || p == string(AWS) {
+		return nil
+	}
+	return errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_VENDOR_NAME, "valid vendor name: [%s|%s]", string(Local), string(AWS))
 }
 
 type EMProductComponentIDType string

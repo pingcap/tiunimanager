@@ -30,3 +30,11 @@ func TestWorkFlow_Finished(t *testing.T) {
 	}
 	assert.True(t, f.Finished())
 }
+
+func TestResult(t *testing.T) {
+	node := &WorkFlowNode{}
+	node.Record("aaa", 2, true)
+	assert.Equal(t, "aaa\n2\ntrue\n", node.Result)
+	node.Record("ddd")
+	assert.Equal(t, "aaa\n2\ntrue\nddd\n", node.Result)
+}

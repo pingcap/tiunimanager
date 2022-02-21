@@ -25,7 +25,6 @@ package parametergroup
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
@@ -44,6 +43,13 @@ type Manager struct{}
 func NewManager() *Manager {
 	return &Manager{}
 }
+
+type DBType int
+
+const (
+	TiDB DBType = 1
+	DM   DBType = 2
+)
 
 type ParamGroupType int
 
@@ -97,7 +103,7 @@ func (m *Manager) UpdateParameterGroup(ctx context.Context, req message.UpdatePa
 		return resp, err
 	}
 
-	group, _, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID, "")
+	group, _, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID, "", "")
 	if err != nil || group.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
 		err = errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
@@ -139,7 +145,7 @@ func (m *Manager) UpdateParameterGroup(ctx context.Context, req message.UpdatePa
 }
 
 func (m *Manager) DeleteParameterGroup(ctx context.Context, req message.DeleteParameterGroupReq) (resp message.DeleteParameterGroupResp, err error) {
-	pg, _, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID, "")
+	pg, _, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID, "", "")
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
 		err = errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
@@ -174,7 +180,7 @@ func (m *Manager) QueryParameterGroup(ctx context.Context, req message.QueryPara
 
 		// condition load parameter details
 		if req.HasDetail {
-			pgm, err := models.GetParameterGroupReaderWriter().QueryParametersByGroupId(ctx, pg.ID, "")
+			pgm, err := models.GetParameterGroupReaderWriter().QueryParametersByGroupId(ctx, pg.ID, "", "")
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("query parameter group req: %v, err: %v", req, err)
 				return resp, page, errors.NewErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, errors.TIEM_PARAMETER_QUERY_ERROR.Explain(), err)
@@ -201,7 +207,7 @@ func (m *Manager) QueryParameterGroup(ctx context.Context, req message.QueryPara
 }
 
 func (m *Manager) DetailParameterGroup(ctx context.Context, req message.DetailParameterGroupReq) (resp message.DetailParameterGroupResp, err error) {
-	pg, pgm, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID, req.ParamName)
+	pg, pgm, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID, req.ParamName, req.InstanceType)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
 		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
@@ -222,7 +228,7 @@ func (m *Manager) DetailParameterGroup(ctx context.Context, req message.DetailPa
 
 func (m *Manager) CopyParameterGroup(ctx context.Context, req message.CopyParameterGroupReq) (resp message.CopyParameterGroupResp, err error) {
 	// get parameter group by id
-	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID, "")
+	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID, "", "")
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
 		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
@@ -272,7 +278,7 @@ func checkAddParametersExists(ctx context.Context, addParams []message.Parameter
 			}
 			if existsParameter != nil && existsParameter.ID != "" {
 				return errors.NewErrorf(errors.TIEM_PARAMETER_ALREADY_EXISTS,
-					fmt.Sprintf("%s parameter `%s.%s` already exists, parameter ID: %s", param.InstanceType, param.Category, param.Name, existsParameter.ID))
+					fmt.Sprintf("%s parameter `%s` already exists, parameter ID: %s", param.InstanceType, parameter.DisplayFullParameterName(param.Category, param.Name), existsParameter.ID))
 			}
 		}
 	}
@@ -296,28 +302,34 @@ func validateParameter(ctx context.Context, reqParams []structs.ParameterGroupPa
 	for _, queryParam := range params {
 		for _, reqParam := range reqParams {
 			if queryParam.ID == reqParam.ID {
-				ranges := make([]string, 0)
-				if len(queryParam.Range) > 0 {
-					err = json.Unmarshal([]byte(queryParam.Range), &ranges)
-					if err != nil {
-						framework.LogWithContext(ctx).Errorf("failed to convert parameter range. range: %v, err: %v", queryParam.Range, err)
-						return err
-					}
+				ranges, err := parameter.UnmarshalCovertArray(queryParam.Range)
+				if err != nil {
+					framework.LogWithContext(ctx).Errorf("failed to convert parameter range. range: %v, err: %v", queryParam.Range, err)
+					return err
 				}
-				if !parameter.ValidateRange(parameter.ModifyClusterParameterInfo{
-					ParamId:   reqParam.ID,
-					Type:      queryParam.Type,
-					Range:     ranges,
-					RealValue: structs.ParameterRealValue{ClusterValue: reqParam.DefaultValue},
-				}) {
-					if len(ranges) == 2 && (queryParam.Type == int(parameter.Integer) || queryParam.Type == int(parameter.Float)) {
+				// convert unitOptions
+				unitOptions, err := parameter.UnmarshalCovertArray(queryParam.UnitOptions)
+				if err != nil {
+					return err
+				}
+
+				if !parameter.ValidateRange(&parameter.ModifyClusterParameterInfo{
+					ParamId:     reqParam.ID,
+					Type:        queryParam.Type,
+					Range:       ranges,
+					RangeType:   queryParam.RangeType,
+					Unit:        queryParam.Unit,
+					UnitOptions: unitOptions,
+					RealValue:   structs.ParameterRealValue{ClusterValue: reqParam.DefaultValue},
+				}, false) {
+					if queryParam.RangeType == int(parameter.ContinuousRange) && len(queryParam.Range) == 2 {
 						return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
-							fmt.Sprintf("Validation parameter `%s.%s` failed, update value: %s, can take a range of values: %v",
-								queryParam.Category, queryParam.Name, reqParam.DefaultValue, ranges))
+							fmt.Sprintf("Validation %s parameter `%s` failed, update value: %s, can take a range of values: %v",
+								queryParam.InstanceType, parameter.DisplayFullParameterName(queryParam.Category, queryParam.Name), reqParam.DefaultValue, ranges))
 					} else {
 						return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
-							fmt.Sprintf("Validation parameter `%s.%s` failed, update value: %s, optional values: %v",
-								queryParam.Category, queryParam.Name, reqParam.DefaultValue, ranges))
+							fmt.Sprintf("Validation %s parameter `%s` failed, update value: %s, optional values: %v",
+								queryParam.InstanceType, parameter.DisplayFullParameterName(queryParam.Category, queryParam.Name), reqParam.DefaultValue, ranges))
 					}
 				}
 			}
@@ -328,12 +340,14 @@ func validateParameter(ctx context.Context, reqParams []structs.ParameterGroupPa
 
 func convertParameterGroupParameterInfo(param *parametergroup.ParamDetail) (pgi structs.ParameterGroupParameterInfo, err error) {
 	// convert range
-	ranges := make([]string, 0)
-	if len(param.Range) > 0 {
-		err = json.Unmarshal([]byte(param.Range), &ranges)
-		if err != nil {
-			return pgi, err
-		}
+	ranges, err := parameter.UnmarshalCovertArray(param.Range)
+	if err != nil {
+		return pgi, err
+	}
+	// convert unitOptions
+	unitOptions, err := parameter.UnmarshalCovertArray(param.UnitOptions)
+	if err != nil {
+		return pgi, err
 	}
 
 	pgi = structs.ParameterGroupParameterInfo{
@@ -344,7 +358,9 @@ func convertParameterGroupParameterInfo(param *parametergroup.ParamDetail) (pgi 
 		SystemVariable: param.SystemVariable,
 		Type:           param.Type,
 		Unit:           param.Unit,
+		UnitOptions:    unitOptions,
 		Range:          ranges,
+		RangeType:      param.RangeType,
 		HasReboot:      param.HasReboot,
 		HasApply:       param.HasApply,
 		DefaultValue:   param.DefaultValue,

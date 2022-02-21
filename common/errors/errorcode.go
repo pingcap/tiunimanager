@@ -31,7 +31,8 @@ const (
 	TIEM_TASK_CONFLICT             EM_ERROR_CODE = 9993
 	TIEM_TASK_CANCELED             EM_ERROR_CODE = 9992
 
-	TIEM_SYSTEM_MISSING_DATA EM_ERROR_CODE = 9899
+	TIEM_SYSTEM_MISSING_DATA   EM_ERROR_CODE = 9899
+	TIEM_SYSTEM_MISSING_CONFIG EM_ERROR_CODE = 9898
 
 	TIEM_UNRECOGNIZED_ERROR EM_ERROR_CODE = 10000
 	TIEM_PARAMETER_INVALID  EM_ERROR_CODE = 10001
@@ -66,6 +67,15 @@ const (
 	TIEM_BACKUP_FILE_DELETE_FAILED      EM_ERROR_CODE = 20608
 	TIEM_BACKUP_PATH_CREATE_FAILED      EM_ERROR_CODE = 20609
 	TIEM_BACKUP_RECORD_INVALID          EM_ERROR_CODE = 20610
+
+	// upgrade
+	TIEM_UPGRADE_QUERY_PATH_FAILED EM_ERROR_CODE = 21100
+	TIEM_UPGRADE_REGION_UNHEALTHY  EM_ERROR_CODE = 21104
+	TIEM_UPGRADE_VERSION_INCORRECT EM_ERROR_CODE = 21105
+
+	// switchover
+	TIEM_MASTER_SLAVE_SWITCHOVER_NOT_FOUND EM_ERROR_CODE = 21000
+	TIEM_MASTER_SLAVE_SWITCHOVER_FAILED    EM_ERROR_CODE = 21001
 
 	// workflow
 	TIEM_WORKFLOW_CREATE_FAILED         EM_ERROR_CODE = 40100
@@ -141,6 +151,8 @@ const (
 	TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR    EM_ERROR_CODE = 30131
 	TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR  EM_ERROR_CODE = 30132
 	TIEM_RESOURCE_PREPARE_HOST_ERROR        EM_ERROR_CODE = 30133
+	TIEM_RESOURCE_INVALID_VENDOR_NAME       EM_ERROR_CODE = 30134
+	TIEM_RESOURCE_INVALID_ZONE_INFO         EM_ERROR_CODE = 30135
 
 	TIEM_MONITOR_NOT_FOUND EM_ERROR_CODE = 614
 
@@ -187,6 +199,8 @@ const (
 	TIEM_STORE_NOT_FOUND_ERROR            EM_ERROR_CODE = 20808
 
 	TIEM_CHECK_CLUSTER_VERSION_ERROR EM_ERROR_CODE = 21301
+	TIEM_CDC_NOT_FOUND               EM_ERROR_CODE = 21302
+	TIEM_CLONE_TIKV_ERROR            EM_ERROR_CODE = 21303
 
 	CreateZonesError              EM_ERROR_CODE = 70001
 	DeleteZonesError              EM_ERROR_CODE = 70002
@@ -263,6 +277,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_METADB_SERVER_CALL_ERROR:  {"call metadb-Server failed", 500},
 	TIEM_CLUSTER_SERVER_CALL_ERROR: {"call cluster-Server failed", 500},
 	TIEM_SYSTEM_MISSING_DATA:       {"missing system data", 500},
+	TIEM_SYSTEM_MISSING_CONFIG:     {"missing system config", 500},
 
 	TIEM_TASK_TIMEOUT:          {"task timeout", 500},
 	TIEM_FLOW_NOT_FOUND:        {"flow not found", 500},
@@ -348,6 +363,8 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR:    {"extract workflow context failed", 500},
 	TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR:  {"uninstall filebeat on host failed", 400},
 	TIEM_RESOURCE_PREPARE_HOST_ERROR:        {"prepare host before verify failed", 500},
+	TIEM_RESOURCE_INVALID_VENDOR_NAME:       {"invalid vendor", 400},
+	TIEM_RESOURCE_INVALID_ZONE_INFO:         {"invalid zone info", 400},
 
 	// param group & cluster param
 	TIEM_DEFAULT_PARAM_GROUP_NOT_DEL:                 {"Not allow to deleted the default parameter group", 409},
@@ -383,6 +400,9 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_CHANGE_FEED_LOCK_EXPIRED:           {"Task status lock expired", 409},
 	TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM: {"Task downstream type not supported", 500},
 	TIEM_CHANGE_FEED_EXECUTE_ERROR:          {"Failed to execute task command", 500},
+
+	TIEM_MASTER_SLAVE_SWITCHOVER_NOT_FOUND: {"master/slave relation not found", 404},
+	TIEM_MASTER_SLAVE_SWITCHOVER_FAILED:    {"master/slave switchover failed", 500},
 
 	TIEM_CLUSTER_LOG_QUERY_FAILED: {"Failed to query cluster log", 500},
 	TIEM_CLUSTER_LOG_TIME_AFTER:   {"query log parameter startTime after endTime", 401},

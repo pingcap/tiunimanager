@@ -25,14 +25,13 @@ package log
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/deployment"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/library/secondparty"
-	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
-
 	"github.com/golang/mock/gomock"
+	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 
 	"github.com/alecthomas/assert"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -42,12 +41,16 @@ func TestExecutor_collectorClusterLogConfig(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mock2rdService := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	secondparty.Manager = mock2rdService
+	mock2rdService := mock_deployment.NewMockInterface(ctrl)
+	deployment.M = mock2rdService
 
 	t.Run("success", func(t *testing.T) {
-		mock2rdService.EXPECT().Transfer(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+		mock2rdService.EXPECT().Display(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, componentType deployment.TiUPComponentType, clusterID, home string, args []string, timeout int) (result string, err error) {
+				return "{\"instances\":[{\"role\":\"filebeat\", \"host\":\"127.0.0.1\"}]}", nil
+			})
+		mock2rdService.EXPECT().Push(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
 		ctx := &workflow.FlowContext{
 			Context:  context.TODO(),
@@ -61,7 +64,7 @@ func TestExecutor_collectorClusterLogConfig(t *testing.T) {
 
 func TestExecutor_buildCollectorClusterLogConfig(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		configs, err := buildCollectorClusterLogConfig(context.TODO(), []*handler.InstanceLogInfo{
+		configs, err := buildCollectorClusterLogConfig(context.TODO(), []*meta.InstanceLogInfo{
 			{
 				ClusterID:    "123",
 				InstanceType: "TiDB",

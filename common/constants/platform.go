@@ -30,19 +30,17 @@ const (
 	ConfigKeyBackupS3Endpoint        string = "BackupS3Endpoint"
 	ConfigKeyBackupS3AccessKey       string = "BackupS3AccessKey"
 	ConfigKeyBackupS3SecretAccessKey string = "BackupS3SecretAccessKey"
+	ConfigKeyBackupRateLimit         string = "BackupRateLimit"
+	ConfigKeyRestoreRateLimit        string = "RestoreRateLimit"
+	ConfigKeyBackupConcurrency       string = "BackupConcurrency"
+	ConfigKeyRestoreConcurrency      string = "RestoreConcurrency"
 
 	ConfigKeyImportShareStoragePath string = "ImportShareStoragePath"
 	ConfigKeyExportShareStoragePath string = "ExportShareStoragePath"
+	ConfigKeyDumplingThreadNum      string = "DumplingThreadNum"
 
 	ConfigTelemetrySwitch   string = "config_telemetry_switch"
 	ConfigPrometheusAddress string = "config_prometheus_address"
-)
 
-type DBUserRoleType string
-// DBUser role type
-const (
-	Root                      DBUserRoleType = "Root"                      // root
-	DBUserBackupRestore       DBUserRoleType = "EM_Backup_Restore"         // user for backup and restore
-	DBUserParameterManagement DBUserRoleType = "EM_Parameter_Management"   // user for managing parameters
-	DBUserCDCDataSync         DBUserRoleType = "CDC_Data_Sync"             // user for CDC data synchronization
+	ConfigKeyRetainedPortRange string = "config_retained_port_range"
 )

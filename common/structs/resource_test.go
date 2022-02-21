@@ -149,14 +149,14 @@ func TestHost_IsExhaust(t *testing.T) {
 		host HostInfo
 		want want
 	}{
-		{"normal", HostInfo{FreeCpuCores: 4, FreeMemory: 8, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{constants.HostLoadStatusWhatever, false}},
-		{"exhaust1", HostInfo{FreeCpuCores: 0, FreeMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskInUsed)}}}, want{constants.HostLoadExhaust, true}},
-		{"exhaust2", HostInfo{FreeCpuCores: 0, FreeMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskExhaust)}}}, want{constants.HostLoadExhaust, true}},
-		{"exhaust3", HostInfo{FreeCpuCores: 0, FreeMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskExhaust)}, {Status: string(constants.DiskInUsed)}}}, want{constants.HostLoadExhaust, true}},
-		{"with_disk", HostInfo{FreeCpuCores: 0, FreeMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{constants.HostLoadComputeExhaust, true}},
-		{"without_disk", HostInfo{FreeCpuCores: 4, FreeMemory: 8}, want{constants.HostLoadDiskExhaust, true}},
-		{"without_cpu", HostInfo{FreeCpuCores: 0, FreeMemory: 8, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{constants.HostLoadComputeExhaust, true}},
-		{"without_momery", HostInfo{FreeCpuCores: 4, FreeMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{constants.HostLoadComputeExhaust, true}},
+		{"normal", HostInfo{UsedCpuCores: 4, UsedMemory: 8, CpuCores: 8, Memory: 16, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{constants.HostLoadStatusWhatever, false}},
+		{"exhaust1", HostInfo{UsedCpuCores: 8, UsedMemory: 16, CpuCores: 8, Memory: 16, Disks: []DiskInfo{{Status: string(constants.DiskInUsed)}}}, want{constants.HostLoadExhaust, true}},
+		{"exhaust2", HostInfo{UsedCpuCores: 8, UsedMemory: 16, CpuCores: 8, Memory: 16, Disks: []DiskInfo{{Status: string(constants.DiskExhaust)}}}, want{constants.HostLoadExhaust, true}},
+		{"exhaust3", HostInfo{UsedCpuCores: 8, UsedMemory: 16, CpuCores: 8, Memory: 16, Disks: []DiskInfo{{Status: string(constants.DiskExhaust)}, {Status: string(constants.DiskInUsed)}}}, want{constants.HostLoadExhaust, true}},
+		{"with_disk", HostInfo{UsedCpuCores: 8, UsedMemory: 16, CpuCores: 8, Memory: 16, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{constants.HostLoadComputeExhaust, true}},
+		{"without_disk", HostInfo{UsedCpuCores: 4, UsedMemory: 8, CpuCores: 8, Memory: 16}, want{constants.HostLoadDiskExhaust, true}},
+		{"without_cpu", HostInfo{UsedCpuCores: 8, UsedMemory: 8, CpuCores: 8, Memory: 16, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{constants.HostLoadComputeExhaust, true}},
+		{"without_momery", HostInfo{UsedCpuCores: 4, UsedMemory: 16, CpuCores: 8, Memory: 16, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{constants.HostLoadComputeExhaust, true}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -176,12 +176,12 @@ func TestHost_IsLoadLess(t *testing.T) {
 		host HostInfo
 		want want
 	}{
-		{"normal", HostInfo{CpuCores: 4, Memory: 8, FreeCpuCores: 4, FreeMemory: 8, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{true}},
-		{"diskused", HostInfo{CpuCores: 16, Memory: 64, FreeCpuCores: 16, FreeMemory: 64, Disks: []DiskInfo{{Status: string(constants.DiskInUsed)}}}, want{false}},
-		{"diskused2", HostInfo{CpuCores: 16, Memory: 64, FreeCpuCores: 16, FreeMemory: 64, Disks: []DiskInfo{{Status: string(constants.DiskExhaust)}}}, want{false}},
-		{"diskused3", HostInfo{CpuCores: 16, Memory: 64, FreeCpuCores: 16, FreeMemory: 64, Disks: []DiskInfo{{Status: string(constants.DiskExhaust)}, {Status: string(constants.DiskAvailable)}}}, want{false}},
-		{"cpuused", HostInfo{CpuCores: 16, Memory: 64, FreeCpuCores: 12, FreeMemory: 64, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{false}},
-		{"memoryused", HostInfo{CpuCores: 16, Memory: 64, FreeCpuCores: 16, FreeMemory: 8}, want{false}},
+		{"normal", HostInfo{CpuCores: 4, Memory: 8, UsedCpuCores: 0, UsedMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{true}},
+		{"diskused", HostInfo{CpuCores: 16, Memory: 64, UsedCpuCores: 0, UsedMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskInUsed)}}}, want{false}},
+		{"diskused2", HostInfo{CpuCores: 16, Memory: 64, UsedCpuCores: 0, UsedMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskExhaust)}}}, want{false}},
+		{"diskused3", HostInfo{CpuCores: 16, Memory: 64, UsedCpuCores: 0, UsedMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskExhaust)}, {Status: string(constants.DiskAvailable)}}}, want{false}},
+		{"cpuused", HostInfo{CpuCores: 16, Memory: 64, UsedCpuCores: 4, UsedMemory: 0, Disks: []DiskInfo{{Status: string(constants.DiskAvailable)}}}, want{false}},
+		{"memoryused", HostInfo{CpuCores: 16, Memory: 64, UsedCpuCores: 0, UsedMemory: 56}, want{false}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -231,6 +231,70 @@ func Test_AddTraits(t *testing.T) {
 				tt.host.AddTraits(label)
 			}
 			assert.Equal(t, tt.want.traits, tt.host.Traits)
+		})
+	}
+}
+
+func TestGenSpecCode(t *testing.T) {
+	type args struct {
+		cpuCores int32
+		mem      int32
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"normal", args{3,6}, "3C6G"},
+		{"normal", args{999,999}, "999C999G"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GenSpecCode(tt.args.cpuCores, tt.args.mem); got != tt.want {
+				t.Errorf("GenSpecCode() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParseCpu(t *testing.T) {
+	type args struct {
+		specCode string
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{"normal", args{"3C6G"}, 3},
+		{"normal", args{"999C6G"}, 999},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ParseCpu(tt.args.specCode); got != tt.want {
+				t.Errorf("ParseCpu() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParseMemory(t *testing.T) {
+	type args struct {
+		specCode string
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{"normal", args{"3C6G"}, 6},
+		{"normal", args{"3C999G"}, 999},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ParseMemory(tt.args.specCode); got != tt.want {
+				t.Errorf("ParseMemory() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }

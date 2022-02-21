@@ -21,10 +21,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap/tiup/pkg/crypto/rand"
 	"io/ioutil"
 	"net/http"
@@ -45,22 +46,26 @@ type loginResponse struct {
 const loginUrlSuffix string = "api/user/login"
 
 func GetDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) (resp cluster.GetDashboardInfoResp, err error) {
-	meta, err := handler.Get(ctx, request.ClusterID)
+	meta, err := meta.Get(ctx, request.ClusterID)
 	if err != nil {
 		errMsg := fmt.Sprintf("get cluster %s meta failed: %s", request.ClusterID, err.Error())
 		framework.LogWithContext(ctx).Errorf(errMsg)
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, errMsg, err)
 	}
 
-	tidbUserInfo := meta.GetClusterUserNamePasswd()
-	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta, %+v", meta.Cluster.ID, tidbUserInfo)
+	tidbUserInfo, err := meta.GetDBUserNamePassword(ctx, constants.Root)
+	if err != nil {
+		return resp, errors.WrapError(errors.TIEM_USER_NOT_FOUND,
+			fmt.Sprintf("get cluster %s user info from meta failed: %s", request.ClusterID, err.Error()), err)
+	}
+	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta", meta.Cluster.ID)
 
 	url, err := getDashboardUrlFromCluster(ctx, meta)
 	if err != nil {
 		return resp, errors.WrapError(errors.TIEM_DASHBOARD_NOT_FOUND,
 			fmt.Sprintf("find cluster %s dashboard failed: %s", request.ClusterID, err.Error()), err)
 	}
-	token, err := getLoginToken(ctx, url, tidbUserInfo.UserName, tidbUserInfo.Password)
+	token, err := getLoginToken(ctx, url, tidbUserInfo.Name, string(tidbUserInfo.Password))
 	if err != nil {
 		return resp, errors.WrapError(errors.TIEM_DASHBOARD_NOT_FOUND,
 			fmt.Sprintf("get cluster %s dashboard login token failed: %s", request.ClusterID, err.Error()), err)
@@ -72,7 +77,7 @@ func GetDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) 
 	return resp, nil
 }
 
-func getDashboardUrlFromCluster(ctx context.Context, meta *handler.ClusterMeta) (string, error) {
+func getDashboardUrlFromCluster(ctx context.Context, meta *meta.ClusterMeta) (string, error) {
 	pdAddress := meta.GetPDClientAddresses()
 	if len(pdAddress) == 0 {
 		framework.LogWithContext(ctx).Errorf("get pd address from meta failed, empty address")

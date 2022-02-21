@@ -26,6 +26,9 @@ package parameter
 import (
 	"context"
 	"testing"
+	"time"
+
+	"github.com/alecthomas/assert"
 )
 
 func TestClusterParameterReadWrite_QueryClusterParameter(t *testing.T) {
@@ -132,7 +135,7 @@ func TestClusterParameterReadWrite_QueryClusterParameter(t *testing.T) {
 				t.Errorf("ApplyClusterParameter() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			paramGroupId, params, total, err := clusterParameterRW.QueryClusterParameter(context.TODO(), tt.args.clusterId, "param", tt.args.offset, tt.args.size)
+			paramGroupId, params, total, err := clusterParameterRW.QueryClusterParameter(context.TODO(), tt.args.clusterId, "param", "TiKV", tt.args.offset, tt.args.size)
 			if err != nil {
 				if tt.wantErr {
 					return
@@ -245,6 +248,35 @@ func TestClusterParameterReadWrite_UpdateClusterParameter(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestClusterParameterReadWrite_UpdateClusterParameter_Fail(t *testing.T) {
+	t.Run("cluster id is empty", func(t *testing.T) {
+		err := clusterParameterNilRW.UpdateClusterParameter(context.TODO(), "", []*ClusterParameterMapping{
+			{
+				ClusterID:   "",
+				ParameterID: "param1",
+				RealValue:   "{\"clusterValue\":\"10\"}",
+				CreatedAt:   time.Time{},
+				UpdatedAt:   time.Time{},
+			},
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("update cluster parameter fail", func(t *testing.T) {
+		err := clusterParameterNilRW.UpdateClusterParameter(context.TODO(), "testCluster", []*ClusterParameterMapping{
+			{
+				ClusterID:   "testCluster",
+				ParameterID: "param1",
+				RealValue:   "{\"clusterValue\":\"10\"}",
+				CreatedAt:   time.Time{},
+				UpdatedAt:   time.Time{},
+			},
+		})
+		assert.Error(t, err)
+	})
+
 }
 
 func TestClusterParameterReadWrite_ApplyClusterParameter(t *testing.T) {
@@ -370,4 +402,20 @@ func TestClusterParameterReadWrite_ApplyClusterParameter(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestClusterParameterReadWrite_ApplyClusterParameter_Fail(t *testing.T) {
+	t.Run("apply cluster parameter fail", func(t *testing.T) {
+		err := clusterParameterNilRW.ApplyClusterParameter(context.TODO(), "pg1", "testCluster", []*ClusterParameterMapping{
+			{
+				ClusterID:   "testCluster",
+				ParameterID: "param1",
+				RealValue:   "{\"clusterValue\":\"10\"}",
+				CreatedAt:   time.Time{},
+				UpdatedAt:   time.Time{},
+			},
+		})
+		assert.Error(t, err)
+	})
+
 }

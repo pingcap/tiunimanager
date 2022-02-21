@@ -46,6 +46,10 @@ var clusterParameterRW *ClusterParameterReadWrite
 var parameterGroupRW *parametergroup.ParameterGroupReadWrite
 var clusterRW *management.ClusterReadWrite
 
+var clusterParameterNilRW *ClusterParameterReadWrite
+var parameterGroupNilRW *parametergroup.ParameterGroupReadWrite
+var clusterNilRW *management.ClusterReadWrite
+
 func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
 	os.MkdirAll(testFilePath, 0755)
@@ -67,6 +71,7 @@ func TestMain(m *testing.M) {
 			} else {
 				logins.Infof("open database successful, filepath: %s", dbFile)
 			}
+
 			db.Migrator().CreateTable(parametergroup.Parameter{})
 			db.Migrator().CreateTable(parametergroup.ParameterGroup{})
 			db.Migrator().CreateTable(parametergroup.ParameterGroupMapping{})
@@ -77,6 +82,17 @@ func TestMain(m *testing.M) {
 			clusterParameterRW = NewClusterParameterReadWrite(db)
 			parameterGroupRW = parametergroup.NewParameterGroupReadWrite(db)
 			clusterRW = management.NewClusterReadWrite(db)
+
+			// build nil db
+			nilDB, err := gorm.Open(sqlite.Open(""), &gorm.Config{})
+			if err != nil || db.Error != nil {
+				logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)
+			} else {
+				logins.Infof("open database successful, filepath: %s", dbFile)
+			}
+			clusterParameterNilRW = NewClusterParameterReadWrite(nilDB)
+			parameterGroupNilRW = parametergroup.NewParameterGroupReadWrite(nilDB)
+			clusterNilRW = management.NewClusterReadWrite(nilDB)
 			return nil
 		},
 	)
@@ -121,10 +137,13 @@ func buildParams(count uint) (params []*parametergroup.Parameter, err error) {
 			Name:         "test_param_" + uuidutil.GenerateID(),
 			InstanceType: "TiKV",
 			Type:         0,
-			Unit:         "kb",
+			Unit:         "KB",
+			UnitOptions:  "[\"KB\", \"MB\", \"GB\"]",
 			Range:        "[\"0\", \"10\"]",
+			RangeType:    1,
 			HasReboot:    1,
 			UpdateSource: 1,
+			ReadOnly:     0,
 			Description:  "test param name order " + strconv.Itoa(i),
 		}
 		parameter, err := parameterGroupRW.CreateParameter(context.TODO(), params[i])

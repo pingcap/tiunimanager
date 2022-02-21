@@ -20,8 +20,8 @@ import (
 	"github.com/asim/go-micro/v3"
 	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/metrics"
 	"github.com/pingcap-inc/tiem/micro-cluster/registry"
@@ -33,7 +33,6 @@ import (
 
 func main() {
 	f := framework.InitBaseFrameworkFromArgs(framework.ClusterService,
-		loadKnowledge,
 		initLibForDev,
 		initDatabase,
 		defaultPortForLocal,
@@ -74,11 +73,9 @@ func initLibForDev(f *framework.BaseFramework) error {
 		TiUPBinPath: constants.TiUPBinPath,
 	}
 	secondparty.Manager.Init()
-	return nil
-}
-
-func loadKnowledge(f *framework.BaseFramework) error {
-	knowledge.LoadKnowledge()
+	deployment.M = &deployment.Manager{
+		TiUPBinPath: constants.TiUPBinPath,
+	}
 	return nil
 }
 

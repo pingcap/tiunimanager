@@ -20,13 +20,12 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
-	secondpartyModel "github.com/pingcap-inc/tiem/models/workflow/secondparty"
+	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockworkflow"
-	mock_secondparty "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -60,7 +59,7 @@ func TestFlowManager_RegisterWorkFlow(t *testing.T) {
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
 				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", SyncFuncNode, doFail},
+				"fail":          {"end", "", "", SyncFuncNode, doFail},
 			},
 		})
 
@@ -70,7 +69,7 @@ func TestFlowManager_RegisterWorkFlow(t *testing.T) {
 	assert.Equal(t, "nodeName1", define.TaskNodes["start"].Name)
 	assert.Equal(t, "nodeName2", define.TaskNodes["nodeName1Done"].Name)
 	assert.Equal(t, "end", define.TaskNodes["nodeName2Done"].Name)
-	assert.Equal(t, "fail", define.TaskNodes["fail"].Name)
+	assert.Equal(t, "end", define.TaskNodes["fail"].Name)
 }
 
 func TestFlowManager_Start_case1(t *testing.T) {
@@ -91,7 +90,7 @@ func TestFlowManager_Start_case1(t *testing.T) {
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
 				"nodeName2Done": {"end", "", "", SyncFuncNode, CompositeExecutor(doFail, defaultSuccess)},
-				"fail":          {"fail", "", "", SyncFuncNode, doFail},
+				"fail":          {"end", "", "", SyncFuncNode, doFail},
 			},
 		})
 
@@ -114,9 +113,10 @@ func TestFlowManager_Start_case2(t *testing.T) {
 	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
-	mockSecondParty := mock_secondparty.NewMockSecondPartyService(ctrl)
-	mockSecondParty.EXPECT().GetOperationStatusByWorkFlowNodeID(gomock.Any(), gomock.Any()).Return(secondparty.GetOperationStatusResp{Status: secondpartyModel.OperationStatus_Finished}, nil).AnyTimes()
-	secondparty.Manager = mockSecondParty
+	mockSecondParty := mock_deployment.NewMockInterface(ctrl)
+	mockSecondParty.EXPECT().GetStatus(gomock.Any(), gomock.Any()).
+		Return(deployment.Operation{Status: deployment.Finished}, nil).AnyTimes()
+	deployment.M = mockSecondParty
 
 	manager := GetWorkFlowService()
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
@@ -126,7 +126,7 @@ func TestFlowManager_Start_case2(t *testing.T) {
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", PollingNode, doNodeName2},
 				"nodeName2Done": {"end", "", "", SyncFuncNode, CompositeExecutor(doFail, defaultSuccess)},
-				"fail":          {"fail", "", "", SyncFuncNode, doFail},
+				"fail":          {"end", "", "", SyncFuncNode, doFail},
 			},
 		})
 
@@ -157,7 +157,7 @@ func TestFlowManager_AddContext(t *testing.T) {
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
 				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", SyncFuncNode, doFail},
+				"fail":          {"end", "", "", SyncFuncNode, doFail},
 			},
 		})
 
@@ -189,7 +189,7 @@ func TestFlowManager_Destroy(t *testing.T) {
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
 				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", SyncFuncNode, doFail},
+				"fail":          {"end", "", "", SyncFuncNode, doFail},
 			},
 		})
 
@@ -221,7 +221,7 @@ func TestFlowManager_Complete(t *testing.T) {
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
 				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", SyncFuncNode, doFail},
+				"fail":          {"end", "", "", SyncFuncNode, doFail},
 			},
 		})
 
@@ -266,7 +266,7 @@ func TestFlowManager_DetailWorkFlow(t *testing.T) {
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
 				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", SyncFuncNode, doFail},
+				"fail":          {"end", "", "", SyncFuncNode, doFail},
 			},
 		})
 
@@ -292,7 +292,7 @@ func TestFlowManager_AsyncStart(t *testing.T) {
 				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
 				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", SyncFuncNode, doFail},
+				"fail":          {"end", "", "", SyncFuncNode, doFail},
 			},
 		})
 

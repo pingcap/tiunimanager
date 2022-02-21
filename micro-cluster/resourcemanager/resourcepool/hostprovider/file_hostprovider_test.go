@@ -24,8 +24,10 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/models"
 	resource_models "github.com/pingcap-inc/tiem/models/resource"
 	resourcepool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
+	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
 	mock_resource "github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
 	"github.com/stretchr/testify/assert"
 )
@@ -353,4 +355,35 @@ func Test_GetStocks_Succeed(t *testing.T) {
 	assert.Equal(t, int32(5), stocks["TEST_Region1,TEST_Zone1"].FreeMemory)
 	assert.Equal(t, int32(3), stocks["TEST_Region1,TEST_Zone1"].FreeDiskCount)
 	assert.Equal(t, int32(512), stocks["TEST_Region1,TEST_Zone1"].FreeDiskCapacity)
+}
+
+func Test_ValidateZoneInfo_Succeed(t *testing.T) {
+	models.MockDB()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	prw := mock_product.NewMockProductReadWriterInterface(ctrl)
+	models.SetProductReaderWriter(prw)
+	prw.EXPECT().GetZone(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, vendorID, regionID, zoneID string) (*structs.ZoneInfo, int64, error) {
+		if vendorID == "Fake_Vendor0" {
+			return &structs.ZoneInfo{VendorID: vendorID, RegionID: regionID, ZoneID: zoneID}, 1, nil
+		} else if vendorID == "Fake_Vendor1" {
+			return nil, 0, nil
+		} else {
+			return nil, 0, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "get zone without vendorID %s, regionID %s, zoneID %s, parameter invalid", vendorID, regionID, zoneID)
+		}
+	}).Times(3)
+
+	hostProvider := mockFileHostProvider(nil)
+
+	err := hostProvider.ValidateZoneInfo(context.TODO(), &structs.HostInfo{Vendor: "Fake_Vendor0", Region: "Fake_Region", AZ: "Fake_Zone"})
+	assert.Nil(t, err)
+
+	err = hostProvider.ValidateZoneInfo(context.TODO(), &structs.HostInfo{Vendor: "Fake_Vendor1", Region: "Fake_Region", AZ: "Fake_Zone"})
+	assert.NotNil(t, err)
+	assert.Equal(t, errors.TIEM_RESOURCE_INVALID_ZONE_INFO, err.(errors.EMError).GetCode())
+
+	err = hostProvider.ValidateZoneInfo(context.TODO(), &structs.HostInfo{Vendor: "Fake_Vendor3", Region: "Fake_Region", AZ: "Fake_Zone"})
+	assert.NotNil(t, err)
+	assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 }

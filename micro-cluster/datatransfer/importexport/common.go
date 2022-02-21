@@ -50,4 +50,5 @@ type exportInfo struct {
 	Filter      string
 	Sql         string
 	StorageType string
+	ConfigPath  string
 }

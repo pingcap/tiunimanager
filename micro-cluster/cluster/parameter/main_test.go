@@ -30,7 +30,7 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/constants"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 
 	"github.com/pingcap-inc/tiem/common/structs"
 
@@ -61,14 +61,41 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func mockClusterMeta() *handler.ClusterMeta {
-	return &handler.ClusterMeta{
+func mockClusterMeta() *meta.ClusterMeta {
+	return &meta.ClusterMeta{
 		Cluster: mockCluster(),
 		Instances: map[string][]*management.ClusterInstance{
-			"TiDB": mockClusterInstances(),
-			"TiKV": mockClusterInstances(),
-			"PD":   mockClusterInstances(),
-			"CDC":  mockClusterInstances(),
+			"TiDB":    mockClusterInstances(),
+			"TiKV":    mockClusterInstances(),
+			"PD":      mockClusterInstances(),
+			"CDC":     mockClusterInstances(),
+			"TiFlash": mockClusterInstances(),
+		},
+		DBUsers: map[string]*management.DBUser{
+			string(constants.Root): &management.DBUser{
+				ClusterID: "id",
+				Name:      constants.DBUserName[constants.Root],
+				Password:  "12345678",
+				RoleType:  string(constants.Root),
+			},
+			string(constants.DBUserBackupRestore): &management.DBUser{
+				ClusterID: "id",
+				Name:      constants.DBUserName[constants.DBUserBackupRestore],
+				Password:  "12345678",
+				RoleType:  string(constants.DBUserBackupRestore),
+			},
+			string(constants.DBUserParameterManagement): &management.DBUser{
+				ClusterID: "id",
+				Name:      constants.DBUserName[constants.DBUserParameterManagement],
+				Password:  "12345678",
+				RoleType:  string(constants.DBUserParameterManagement),
+			},
+			string(constants.DBUserCDCDataSync): &management.DBUser{
+				ClusterID: "id",
+				Name:      constants.DBUserName[constants.DBUserCDCDataSync],
+				Password:  "12345678",
+				RoleType:  string(constants.DBUserCDCDataSync),
+			},
 		},
 		NodeExporterPort:     9091,
 		BlackboxExporterPort: 9092,
@@ -79,8 +106,6 @@ func mockCluster() *management.Cluster {
 	return &management.Cluster{
 		Entity:            common.Entity{ID: "123", TenantId: "1", Status: "1"},
 		Name:              "testCluster",
-		DBUser:            "root",
-		DBPassword:        "123",
 		Type:              "0",
 		Version:           "5.0",
 		TLS:               false,
@@ -122,12 +147,42 @@ func mockClusterInstances() []*management.ClusterInstance {
 	}
 }
 
+func mockDBUsers() []*management.DBUser {
+	return []*management.DBUser{
+		{
+			ClusterID: "clusterId",
+			Name:      "backup",
+			Password:  "123455678",
+			RoleType:  string(constants.DBUserBackupRestore),
+		},
+		{
+			ClusterID: "clusterId",
+			Name:      "root",
+			Password:  "123455678",
+			RoleType:  string(constants.Root),
+		},
+		{
+			ClusterID: "clusterId",
+			Name:      "parameter",
+			Password:  "123455678",
+			RoleType:  string(constants.DBUserParameterManagement),
+		},
+		{
+			ClusterID: "clusterId",
+			Name:      "data_sync",
+			Password:  "123455678",
+			RoleType:  string(constants.DBUserCDCDataSync),
+		},
+	}
+}
+
 func mockModifyParameter() *ModifyParameter {
 	return &ModifyParameter{
 		Reboot: false,
-		Params: []ModifyClusterParameterInfo{
+		Params: []*ModifyClusterParameterInfo{
 			{
 				ParamId:        "1",
+				Category:       "basic",
 				Name:           "test_param_1",
 				InstanceType:   "TiDB",
 				UpdateSource:   0,
@@ -135,16 +190,21 @@ func mockModifyParameter() *ModifyParameter {
 				SystemVariable: "",
 				Type:           0,
 				Range:          []string{"0", "1024"},
+				RangeType:      1,
+				ReadOnly:       1,
 				RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
 			},
 			{
 				ParamId:        "2",
+				Category:       "log",
 				Name:           "test_param_2",
 				InstanceType:   "TiKV",
 				UpdateSource:   0,
 				HasApply:       1,
 				SystemVariable: "",
 				Type:           0,
+				Range:          []string{"2"},
+				RangeType:      2,
 				RealValue:      structs.ParameterRealValue{ClusterValue: "2"},
 			},
 			{
@@ -154,8 +214,12 @@ func mockModifyParameter() *ModifyParameter {
 				UpdateSource:   3,
 				HasApply:       1,
 				SystemVariable: "",
-				Type:           0,
-				RealValue:      structs.ParameterRealValue{ClusterValue: "3"},
+				Type:           1,
+				Unit:           "kB",
+				UnitOptions:    []string{"KB", "MB"},
+				Range:          []string{"10KB", "1MB"},
+				RangeType:      1,
+				RealValue:      structs.ParameterRealValue{ClusterValue: "1024KB"},
 			},
 			{
 				ParamId:        "4",
@@ -196,6 +260,62 @@ func mockModifyParameter() *ModifyParameter {
 				SystemVariable: "",
 				Type:           1,
 				RealValue:      structs.ParameterRealValue{ClusterValue: "info"},
+			},
+			{
+				ParamId:        "8",
+				Name:           "test_param_8",
+				InstanceType:   "PD",
+				UpdateSource:   0,
+				HasApply:       1,
+				SystemVariable: "",
+				Type:           0,
+				RealValue:      structs.ParameterRealValue{ClusterValue: "3"},
+			},
+			{
+				ParamId:        "9",
+				Name:           "test_param_9",
+				InstanceType:   "tiflash-learner",
+				UpdateSource:   0,
+				HasApply:       1,
+				SystemVariable: "",
+				Type:           3,
+				Range:          []string{"0.1", "1.0"},
+				RangeType:      2,
+				RealValue:      structs.ParameterRealValue{ClusterValue: "1.0"},
+			},
+			{
+				ParamId:        "10",
+				Name:           "test_param_10",
+				InstanceType:   "pump",
+				UpdateSource:   0,
+				HasApply:       1,
+				SystemVariable: "",
+				Type:           0,
+				RealValue:      structs.ParameterRealValue{ClusterValue: "3"},
+			},
+			{
+				ParamId:        "11",
+				Name:           "test_param_11",
+				InstanceType:   "drainer",
+				UpdateSource:   0,
+				HasApply:       1,
+				SystemVariable: "",
+				Type:           4,
+				Range:          []string{"10"},
+				RangeType:      2,
+				RealValue:      structs.ParameterRealValue{ClusterValue: "[]"},
+			},
+			{
+				ParamId:        "12",
+				Name:           "test_param_12",
+				InstanceType:   "CDC",
+				UpdateSource:   0,
+				HasApply:       1,
+				SystemVariable: "",
+				Type:           0,
+				Range:          []string{"0", "1024"},
+				RangeType:      1,
+				RealValue:      structs.ParameterRealValue{ClusterValue: ""},
 			},
 		},
 		Nodes: []string{"172.16.1.12:9000", "172.16.1.12:9001"},

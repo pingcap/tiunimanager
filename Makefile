@@ -264,6 +264,7 @@ mock:
 	mockgen -destination ./test/mockmodels/mockmanagement/mock_management_interface.go -package mockmanagement -source ./models/cluster/management/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockworkflow/mock_workflow_interface.go -package mockworkflow -source ./models/workflow/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockbr/mock_br_interface.go -package mockbr -source ./models/cluster/backuprestore/readerwriter.go
+	mockgen -destination ./test/mockmodels/mockupgrade/mock_upgrade_interface.go -package mockupgrade -source ./models/cluster/upgrade/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockimportexport/mock_importexport_interface.go -package mockimportexport -source ./models/datatransfer/importexport/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockresource/mock_resource_interface.go -package mockresource -source ./models/resource/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockconfig/mock_config_interface.go -package mockconfig -source ./models/platform/config/readerwriter.go
@@ -276,14 +277,23 @@ mock:
 	mockgen -destination ./test/mockmodels/mockaccount/mock_account.go -package mock_account -source ./models/user/account/readerwriter.go
 	mockgen -destination ./test/mockworkflow/mock_workflow.go -package mock_workflow_service -source ./workflow/workflow.go
 	mockgen -destination ./test/mockbr/mock_br.go -package mock_br_service -source ./micro-cluster/cluster/backuprestore/service.go
-	mockgen -destination ./test/mocksecondparty_v2/mock_secondparty.go -package mock_secondparty -source ./library/secondparty/second_party_manager_v2.go
+	mockgen -destination ./test/mocksecondparty/mock_secondparty.go -package mock_secondparty -source ./library/secondparty/second_party_manager.go
+	mockgen -destination ./test/mockdeployment/mock_deployment.go -package mock_deployment -source ./deployment/deploymentInterface.go
 	mockgen -destination ./test/mockresource/mockinitiator/mock_initiator_interface.go -package mockinitiator -source ./micro-cluster/resourcemanager/resourcepool/hostinitiator/hostinitiator.go
 	mockgen -destination ./test/mockresource/mockprovider/mock_provider_interface.go -package mockinitiator -source ./micro-cluster/resourcemanager/resourcepool/hostprovider/hostprovider.go
 	mockgen -destination ./test/mockutil/mocksshclientexecutor/mock_ssh_client_interface.go -package mocksshclient -source ./util/ssh/ssh_client.go
 	mockgen -destination ./test/mockresource/mock_allocator_recycler.go -package mock_allocator_recycler -source ./micro-cluster/resourcemanager/management/structs/allocator_recycler.go
+	mockgen -destination ./test/mockcdcmanager/mock_cdc_manager.go -package mockcdcmanager -source ./micro-cluster/cluster/switchover/cdc_manager_api.go
 	mockgen -destination ./test/mockmodels/mock_product.go -package mock_product -source ./models/platform/product/product_read_writer.go
 	mockgen -destination ./test/mockaccount/mock_account.go -package mockaccount -source ./models/user/account/readerwriter.go
 	mockgen -destination ./test/mockidentification/mock_identification.go -package mockidentification -source ./models/user/identification/readerwriter.go
+	mockgen -destination ./test/mockchangefeed/mock_changefeed.go -package mockchangefeed -source ./micro-cluster/cluster/changefeed/service.go
+	mockgen -destination ./test/mockutilcdc/mock_utilcdc.go -package mockutilcdc -source ./util/api/cdc/clusterconfig.go
+	mockgen -destination ./test/mockutilpd/mock_utilpd.go -package mockutilpd -source ./util/api/pd/clusterconfig.go
+	mockgen -destination ./test/mockutiltikv/mock_utiltikv.go -package mockutiltikv -source ./util/api/tikv/clusterconfig.go
+	mockgen -destination ./test/mockutiltidbhttp/mock_utiltidbhttp.go -package mockutiltidbhttp -source ./util/api/tidb/http/clusterconfig.go
+	mockgen -destination ./test/mockutiltidbsql_config/mock_utiltidbsql_config.go -package mockutiltidbsqlconfig -source ./util/api/tidb/sql/clusterconfig.go
+	mockgen -destination ./test/mockutilcdc/mock_utilcdc_change_feed.go -package mockutilcdc -source ./util/api/cdc/changefeed.go
 
 swag:
 	$(GO) install github.com/swaggo/swag/cmd/swag@v1.7.1

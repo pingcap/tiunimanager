@@ -18,6 +18,8 @@ library/secondparty/logs
 test/
 /template
 /nohup.out
+.vscode/
 log/
+logs/
 out.txt
 run.sh

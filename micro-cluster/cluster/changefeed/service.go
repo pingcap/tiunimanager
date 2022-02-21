@@ -21,12 +21,12 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiem/util/api/cdc"
 )
 
 type Service interface {
@@ -54,33 +54,46 @@ type Service interface {
 	//
 	ReverseBetweenClusters(ctx context.Context, sourceClusterID string, targetClusterID string, relationType constants.ClusterRelationType) (ID string, err error)
 	//
-    // Detail
-    // @Description: query change feed task detail info
-    // @param ctx
-    // @param request
-    // @return resp
-    // @return err
-    //
+	// Detail
+	// @Description: query change feed task detail info
+	// @param ctx
+	// @param request
+	// @return resp
+	// @return err
+	//
 	Detail(ctx context.Context, request cluster.DetailChangeFeedTaskReq) (resp cluster.DetailChangeFeedTaskResp, err error)
 }
 
 func GetChangeFeedService() Service {
-	return GetManager()
+	serviceOnce.Do(func() {
+		if service == nil {
+			service = &Manager{}
+		}
+	})
+	return service
+}
+
+func MockChangeFeedService(s Service) {
+	service = s
 }
 
 func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID string, targetClusterID string, relationType constants.ClusterRelationType) (ID string, err error) {
-	sourceCluster, err:= handler.Get(ctx, sourceClusterID)
+	sourceCluster, err := meta.Get(ctx, sourceClusterID)
 	if err != nil {
 		return
 	}
-	targetCluster, err:= handler.Get(ctx, targetClusterID)
+	targetCluster, err := meta.Get(ctx, targetClusterID)
 	if err != nil {
 		return
 	}
-
 	address := targetCluster.GetClusterConnectAddresses()[0]
 
-	task := &changefeed.ChangeFeedTask {
+	user, err := targetCluster.GetDBUserNamePassword(ctx, constants.DBUserCDCDataSync)
+	if err != nil {
+		return
+	}
+
+	task := &changefeed.ChangeFeedTask{
 		Entity: dbCommon.Entity{
 			TenantId: framework.GetTenantIDFromContext(ctx),
 			Status:   string(constants.ChangeFeedStatusInitial),
@@ -89,12 +102,12 @@ func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID str
 		ClusterId:   sourceClusterID,
 		StartTS:     0,
 		FilterRules: []string{},
-		Type: constants.DownstreamTypeTiDB,
+		Type:        constants.DownstreamTypeTiDB,
 		Downstream: &changefeed.TiDBDownstream{
-			Ip: address.IP,
-			Port: address.Port,
-			Username: targetCluster.GetClusterUserNamePasswd().UserName,
-			Password: targetCluster.GetClusterUserNamePasswd().Password,
+			Ip:              address.IP,
+			Port:            address.Port,
+			Username:        user.Name,
+			Password:        string(user.Password),
 			TargetClusterId: targetClusterID,
 		},
 	}
@@ -113,7 +126,7 @@ func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID str
 }
 
 func (p *Manager) ReverseBetweenClusters(ctx context.Context, sourceClusterID string, targetClusterID string, relationType constants.ClusterRelationType) (ID string, err error) {
-	sourceCluster, err:= handler.Get(ctx, sourceClusterID)
+	sourceCluster, err := meta.Get(ctx, sourceClusterID)
 	if err != nil {
 		return
 	}
@@ -128,7 +141,7 @@ func (p *Manager) ReverseBetweenClusters(ctx context.Context, sourceClusterID st
 		if task.Type == constants.DownstreamTypeTiDB &&
 			!constants.ChangeFeedStatus(task.Status).IsFinal() &&
 			task.Downstream.(*changefeed.TiDBDownstream).TargetClusterId == targetClusterID {
-			result, deleteError := secondparty.Manager.DeleteChangeFeedTask(ctx, secondparty.ChangeFeedDeleteReq {
+			result, deleteError := cdc.CDCService.DeleteChangeFeedTask(ctx, cdc.ChangeFeedDeleteReq{
 				CDCAddress:   sourceCluster.GetCDCClientAddresses()[0].ToString(),
 				ChangeFeedID: task.ID,
 			})
@@ -158,7 +171,7 @@ func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTa
 		err = errors.NewError(errors.TIEM_CHANGE_FEED_NOT_FOUND, "change feed task has not been created")
 	}
 
-	clusterMeta, err:= handler.Get(ctx, task.ClusterId)
+	clusterMeta, err := meta.Get(ctx, task.ClusterId)
 	if err != nil {
 		return
 	}
@@ -169,7 +182,7 @@ func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTa
 	}
 	resp.ChangeFeedTaskInfo = parse(*task)
 
-	taskDetail, detailError := secondparty.Manager.DetailChangeFeedTask(ctx, secondparty.ChangeFeedDetailReq{
+	taskDetail, detailError := cdc.CDCService.DetailChangeFeedTask(ctx, cdc.ChangeFeedDetailReq{
 		CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
 		ChangeFeedID: task.ID,
 	})

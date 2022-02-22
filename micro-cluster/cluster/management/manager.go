@@ -955,6 +955,7 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 			"query cluster %s param from db error: %s", clusterID, err.Error())
 		return
 	}
+	framework.LogWithContext(ctx).Debugf("query config for cluster %s version %s result: %v", clusterID, clusterMeta.Cluster.Version, paramResp)
 
 	groups, _, err := parametergroup.NewManager().QueryParameterGroup(ctx, message.QueryParameterGroupReq{
 		DBType:         int(parametergroup.TiDB),
@@ -972,6 +973,7 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 		err = errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_DATA, msg)
 		return
 	}
+	framework.LogWithContext(ctx).Debugf("query paramgroup for version %s result: %v", version, groups)
 
 	resp = compareConfigDifference(ctx, paramResp.Params, groups[0].Params)
 

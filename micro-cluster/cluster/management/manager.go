@@ -920,6 +920,9 @@ func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) 
 			UpgradeType: k,
 			Versions:    v,
 		}
+		if k == string(constants.UpgradeTypeInPlace) {
+			path.UpgradeWay = []string{string(constants.UpgradeWayOffline), string(constants.UpgradeWayOnline)}
+		}
 		paths = append(paths, &path)
 	}
 	framework.LogWithContext(ctx).Debugf("query paths for cluster %s version %s: %v", clusterID, version, paths)
@@ -938,7 +941,7 @@ func getFullVersion(version string) string {
 	return version
 }
 
-func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID string, version string) (resp []structs.ProductUpgradeVersionConfigDiffItem, err error) {
+func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID string, version string) (resp cluster.QueryUpgradeVersionDiffInfoResp, err error) {
 	clusterMeta, err := meta.Get(ctx, clusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
@@ -955,10 +958,12 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 			"query cluster %s param from db error: %s", clusterID, err.Error())
 		return
 	}
+	framework.LogWithContext(ctx).Debugf("query config for cluster %s version %s result: %v", clusterID, clusterMeta.Cluster.Version, paramResp)
 
 	groups, _, err := parametergroup.NewManager().QueryParameterGroup(ctx, message.QueryParameterGroupReq{
 		DBType:         int(parametergroup.TiDB),
 		HasDefault:     int(parametergroup.DEFAULT),
+		HasDetail:      true,
 		ClusterVersion: getMinorVersion(version),
 	})
 	if err != nil {
@@ -972,8 +977,10 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 		err = errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_DATA, msg)
 		return
 	}
+	framework.LogWithContext(ctx).Debugf("query paramgroup for version %s result: %v", version, groups)
 
-	resp = compareConfigDifference(paramResp.Params, groups[0].Params)
+	configDiffInfos := compareConfigDifference(ctx, paramResp.Params, groups[0].Params)
+	resp.ConfigDiffInfos = configDiffInfos
 
 	return
 }
@@ -987,7 +994,10 @@ func getMinorVersion(version string) string {
 	}
 }
 
-func compareConfigDifference(clusterParameterInfos []structs.ClusterParameterInfo, parameterGroupParameterInfos []structs.ParameterGroupParameterInfo) (resp []structs.ProductUpgradeVersionConfigDiffItem) {
+func compareConfigDifference(ctx context.Context, clusterParameterInfos []structs.ClusterParameterInfo, parameterGroupParameterInfos []structs.ParameterGroupParameterInfo) (resp []*structs.ProductUpgradeVersionConfigDiffItem) {
+	framework.LogWithContext(ctx).Debugf("query config difference between clusterParameterInfos (%v) and parameterGroupParameterInfos (%v)",
+		clusterParameterInfos, parameterGroupParameterInfos)
+
 	clusterParamMap := make(map[string]structs.ClusterParameterInfo)
 	for _, param := range clusterParameterInfos {
 		clusterParamMap[param.ParamId] = param
@@ -999,9 +1009,11 @@ func compareConfigDifference(clusterParameterInfos []structs.ClusterParameterInf
 	}
 
 	for id, clusterParam := range clusterParamMap {
+		framework.LogWithContext(ctx).Debugf("check clusterParam (%v)", clusterParam)
 		if pgParam, ok := pgParamMap[id]; ok {
+			framework.LogWithContext(ctx).Debugf("compare clusterParam (%v) and pgParam (%v)", clusterParam, pgParam)
 			if clusterParam.RealValue.ClusterValue != pgParam.DefaultValue {
-				resp = append(resp, structs.ProductUpgradeVersionConfigDiffItem{
+				resp = append(resp, &structs.ProductUpgradeVersionConfigDiffItem{
 					ParamId:      id,
 					Category:     pgParam.Category,
 					Name:         pgParam.Name,
@@ -1010,7 +1022,9 @@ func compareConfigDifference(clusterParameterInfos []structs.ClusterParameterInf
 					SuggestValue: pgParam.DefaultValue,
 					Type:         pgParam.Type,
 					Unit:         pgParam.Unit,
+					UnitOptions:  pgParam.UnitOptions,
 					Range:        pgParam.Range,
+					RangeType:    pgParam.RangeType,
 					Description:  pgParam.Description,
 				})
 			}

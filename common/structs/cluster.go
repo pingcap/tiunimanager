@@ -181,8 +181,8 @@ type ClusterLogItem struct {
 
 type ProductUpgradePathItem struct {
 	UpgradeType string   `json:"upgradeType"  validate:"required" enums:"in-place,migration"`
-	UpgradeWay  string   `json:"upgradeWay,omitempty"  enums:"offline,online"`
-	Versions    []string `json:"versions" validate:"required" example:"v5.0.0,v5.3.0"`
+	UpgradeWay  []string `json:"upgradeWay,omitempty"  example:"offline,online"`
+	Versions    []string `json:"versions" validate:"required" example:"v5.3.0,v5.4.0"`
 }
 type ProductUpgradeVersionConfigDiffItem struct {
 	ParamId      string   `json:"paramId" validate:"required" example:"1"`
@@ -193,7 +193,9 @@ type ProductUpgradeVersionConfigDiffItem struct {
 	SuggestValue string   `json:"suggestValue" validate:"required" example:"30"`
 	Type         int      `json:"type" validate:"required" example:"0" enums:"0,1,2,3,4"`
 	Unit         string   `json:"unit" validate:"required" example:"MB"`
+	UnitOptions  []string `json:"unitOptions" validate:"required" example:"KB,MB,GB"`
 	Range        []string `json:"range" validate:"required" example:"1, 1000"`
+	RangeType    int      `json:"rangeType" validate:"required" example:"1" enums:"0,1,2"`
 	Description  string   `json:"description" example:"desc for max-merge-region-size"`
 }
 

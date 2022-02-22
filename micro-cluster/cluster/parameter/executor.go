@@ -388,7 +388,7 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 		for comp, params := range compContainer {
 			cm := map[string]interface{}{}
 			for _, param := range params {
-				clusterValue, err := convertRealParameterType(ctx, param)
+				clusterValue, err := convertRealParameterType(ctx, param.Type, param.RealValue.ClusterValue)
 				if err != nil {
 					framework.LogWithContext(ctx).Errorf("convert real parameter type err = %v", err)
 					return err
@@ -407,7 +407,7 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 				}
 				for _, server := range tidbServers {
 					// api edit config
-					hasSuc, err := tidbApi.ApiService.ApiEditConfig(ctx, cluster.ApiEditConfigReq{
+					hasSuc, err := tidbApi.ApiService.EditConfig(ctx, cluster.ApiEditConfigReq{
 						InstanceHost: server.IP,
 						InstancePort: uint(server.Port),
 						Headers:      map[string]string{},
@@ -426,7 +426,7 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 				}
 				for _, server := range tikvServers {
 					// api edit config
-					hasSuc, err := tikv.ApiService.ApiEditConfig(ctx, cluster.ApiEditConfigReq{
+					hasSuc, err := tikv.ApiService.EditConfig(ctx, cluster.ApiEditConfigReq{
 						InstanceHost: server.IP,
 						InstancePort: uint(server.Port),
 						Headers:      map[string]string{},
@@ -445,7 +445,7 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 				}
 				server := pdServers[rand.Intn(len(pdServers))]
 				// api edit config
-				hasSuc, err := pd.ApiService.ApiEditConfig(ctx, cluster.ApiEditConfigReq{
+				hasSuc, err := pd.ApiService.EditConfig(ctx, cluster.ApiEditConfigReq{
 					InstanceHost: server.IP,
 					InstancePort: uint(server.Port),
 					Headers:      map[string]string{},
@@ -463,7 +463,7 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 				}
 				server := cdcServers[rand.Intn(len(cdcServers))]
 				// api edit config
-				hasSuc, err := cdc.ApiService.ApiEditConfig(ctx, cluster.ApiEditConfigReq{
+				hasSuc, err := cdc.ApiService.EditConfig(ctx, cluster.ApiEditConfigReq{
 					InstanceHost: server.IP,
 					InstancePort: uint(server.Port),
 					Headers:      map[string]string{},
@@ -495,7 +495,7 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 	configs := make([]secondparty.GlobalComponentConfig, len(params))
 	for i, param := range params {
 		cm := map[string]interface{}{}
-		clusterValue, err := convertRealParameterType(ctx, param)
+		clusterValue, err := convertRealParameterType(ctx, param.Type, param.RealValue.ClusterValue)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("convert real parameter type err = %s", err.Error())
 			return err
@@ -595,33 +595,34 @@ func generateNewYamlConfig(configs []secondparty.GlobalComponentConfig, topo *ti
 // convertRealParameterType
 // @Description: convert real parameter type
 // @Parameter ctx
-// @Parameter param
+// @Parameter paramType
+// @Parameter value
 // @return interface{}
 // @return error
-func convertRealParameterType(ctx *workflow.FlowContext, param *ModifyClusterParameterInfo) (interface{}, error) {
-	switch param.Type {
+func convertRealParameterType(ctx context.Context, paramType int, value string) (interface{}, error) {
+	switch paramType {
 	case int(Integer):
-		c, err := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)
+		c, err := strconv.ParseInt(value, 0, 64)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("strconv realvalue type int fail, err = %s", err.Error())
 			return nil, err
 		}
 		return c, nil
 	case int(Boolean):
-		c, err := strconv.ParseBool(param.RealValue.ClusterValue)
+		c, err := strconv.ParseBool(value)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("strconv realvalue type bool fail, err = %s", err.Error())
 			return nil, err
 		}
 		return c, nil
 	case int(Float):
-		c, err := strconv.ParseFloat(param.RealValue.ClusterValue, 64)
+		c, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("strconv realvalue type float fail, err = %s", err.Error())
 			return nil, err
 		}
 		// Retains floating precision and is not converted to integer
-		valStr := strings.Split(param.RealValue.ClusterValue, ".")
+		valStr := strings.Split(value, ".")
 		if len(valStr) == 2 {
 			num, err := strconv.Atoi(valStr[1])
 			if err != nil {
@@ -634,14 +635,14 @@ func convertRealParameterType(ctx *workflow.FlowContext, param *ModifyClusterPar
 		return c, nil
 	case int(Array):
 		var c interface{}
-		err := json.Unmarshal([]byte(param.RealValue.ClusterValue), &c)
+		err := json.Unmarshal([]byte(value), &c)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("strconv realvalue type array fail, err = %s", err.Error())
 			return nil, err
 		}
 		return c, nil
 	default:
-		return param.RealValue.ClusterValue, nil
+		return value, nil
 	}
 }
 

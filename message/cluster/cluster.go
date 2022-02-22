@@ -273,21 +273,31 @@ type InspectParametersReq struct {
 }
 
 type InspectParametersResp struct {
-	Params InspectParameters `json:"params"`
+	Params []InspectParameters `json:"params"`
 }
 
 type InspectParameters struct {
 	InstanceID     string                 `json:"instanceId"`
+	InstanceType   string                 `json:"instanceType"`
 	ParameterInfos []InspectParameterInfo `json:"parameterInfos"`
 }
 
 type InspectParameterInfo struct {
-	ParamID      int64                      `json:"paramId" example:"1"`
-	Category     string                     `json:"category" example:"log"`
-	Name         string                     `json:"name" example:"binlog_cache"`
-	InstanceType string                     `json:"instanceType" example:"TiDB"`
-	RealValue    structs.ParameterRealValue `json:"realValue"`
-	InspectValue interface{}                `json:"inspectValue"`
+	ParamID        string                     `json:"paramId" example:"1"`
+	Category       string                     `json:"category" example:"log"`
+	Name           string                     `json:"name" example:"binlog_cache"`
+	SystemVariable string                     `json:"systemVariable" example:"log.log_level"`
+	Type           int                        `json:"type" example:"0" enums:"0,1,2,3,4"`
+	Unit           string                     `json:"unit" example:"MB"`
+	UnitOptions    []string                   `json:"unitOptions" example:"KB,MB,GB"`
+	Range          []string                   `json:"range" example:"1, 1000"`
+	RangeType      int                        `json:"rangeType" example:"1" enums:"0,1,2"`
+	HasReboot      int                        `json:"hasReboot" example:"0" enums:"0,1"`
+	ReadOnly       int                        `json:"readOnly" example:"0" enums:"0,1"`
+	Description    string                     `json:"description" example:"binlog cache size"`
+	Note           string                     `json:"note" example:"binlog cache size"`
+	RealValue      structs.ParameterRealValue `json:"realValue"`
+	InspectValue   interface{}                `json:"inspectValue"`
 }
 
 type PreviewClusterResp struct {
@@ -312,4 +322,11 @@ type ApiEditConfigReq struct {
 	InstancePort uint
 	Headers      map[string]string
 	ConfigMap    map[string]interface{}
+}
+
+type ApiShowConfigReq struct {
+	InstanceHost string
+	InstancePort uint
+	Params       map[string]string
+	Headers      map[string]string
 }

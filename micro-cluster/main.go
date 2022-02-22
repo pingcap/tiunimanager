@@ -37,7 +37,7 @@ func main() {
 	f := framework.InitBaseFrameworkFromArgs(framework.ClusterService,
 		initLibForDev,
 		openDatabase,
-		processStarted,
+		notifySystemEvent,
 		func(b *framework.BaseFramework) error {
 			go func() {
 				// init embed etcd.
@@ -85,6 +85,6 @@ func openDatabase(f *framework.BaseFramework) error {
 	return models.Open(f)
 }
 
-func processStarted(f *framework.BaseFramework) error {
+func notifySystemEvent(f *framework.BaseFramework) error {
 	return system.GetSystemManager().AcceptSystemEvent(context.TODO(), constants.SystemProcessStarted)
 }

@@ -384,9 +384,6 @@ func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterT
 	}
 
 	for k, v := range p.Instances {
-		if Contain(constants.ParasiteComponentIDs, constants.EMProductComponentIDType(k)) {
-			continue
-		}
 		instanceResource := structs.ClusterResourceParameterCompute{
 			Type:  k,
 			Count: 0,
@@ -439,7 +436,7 @@ func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterT
 	instanceWrapper := InstanceWrapper{topologyInfo.Topology, func(p, q *structs.ClusterInstanceInfo) bool {
 		return constants.EMProductComponentIDType(p.Type).SortWeight() > constants.EMProductComponentIDType(q.Type).SortWeight()
 	}}
-	sort.Sort(instanceWrapper)
+	sort.Stable(instanceWrapper)
 
 	topologyInfo.Topology = instanceWrapper.infos
 	return *topologyInfo, *resourceInfo

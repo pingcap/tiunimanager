@@ -85,6 +85,14 @@ service ClusterService {
     rpc QueryChangeFeedTasks(RpcRequest) returns (RpcResponse);
     rpc DetailChangeFeedTask(RpcRequest) returns (RpcResponse);
 
+    // product upgrade path
+    rpc CreateProductUpgradePath(RpcRequest) returns(RpcResponse);
+    rpc DeleteProductUpgradePath(RpcRequest) returns (RpcResponse);
+    rpc UpdateProductUpgradePath(RpcRequest) returns (RpcResponse);
+    rpc QueryProductUpgradePath(RpcRequest) returns (RpcResponse);
+    rpc QueryUpgradeVersionDiffInfo(RpcRequest) returns (RpcResponse);
+    rpc UpgradeCluster(RpcRequest) returns (RpcResponse);
+
     // switchover
     rpc MasterSlaveSwitchover(RpcRequest) returns (RpcResponse);
 

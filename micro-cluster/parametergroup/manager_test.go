@@ -66,74 +66,150 @@ func TestManager_CreateParameterGroup(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
-	models.SetParameterGroupReaderWriter(parameterGroupRW)
-	parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, offset, size int) (params []*parametergroup.Parameter, total int64, err error) {
-			resp := []*parametergroup.Parameter{
+	t.Run("success", func(t *testing.T) {
+		parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+		models.SetParameterGroupReaderWriter(parameterGroupRW)
+		parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, offset, size int) (params []*parametergroup.Parameter, total int64, err error) {
+				resp := []*parametergroup.Parameter{
+					{
+						ID:          "1",
+						Type:        0,
+						Unit:        "",
+						Range:       "[\"0\", \"10\"]",
+						RangeType:   1,
+						UnitOptions: "[\"KB\", \"MB\", \"GB\"]",
+					},
+				}
+				return resp, 1, nil
+			})
+		parameterGroupRW.EXPECT().ExistsParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+		parameterGroupRW.EXPECT().CreateParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, pg *parametergroup.ParameterGroup, pgm []*parametergroup.ParameterGroupMapping, addParams []message.ParameterInfo) (*parametergroup.ParameterGroup, error) {
+				resp := &parametergroup.ParameterGroup{
+					ID:             "1",
+					Name:           "test_parameter_group",
+					ParentID:       "",
+					ClusterSpec:    "8C16G",
+					HasDefault:     1,
+					DBType:         1,
+					GroupType:      1,
+					ClusterVersion: "5.0",
+					Note:           "test parameter group",
+					CreatedAt:      time.Time{},
+					UpdatedAt:      time.Time{},
+				}
+				return resp, nil
+			})
+		resp, err := manager.CreateParameterGroup(context.TODO(), message.CreateParameterGroupReq{
+			Name:           "test_parameter_group",
+			DBType:         1,
+			ClusterVersion: "v5.0",
+			ClusterSpec:    "8C16G",
+			GroupType:      1,
+			Note:           "test parameter group",
+			Params: []structs.ParameterGroupParameterSampleInfo{
 				{
-					ID:    "1",
-					Type:  0,
-					Unit:  "",
-					Range: "[\"0\", \"10\"]",
+					ID:           "1",
+					DefaultValue: "10",
+					Note:         "test param",
 				},
-			}
-			return resp, 1, nil
-		})
-	parameterGroupRW.EXPECT().ExistsParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	parameterGroupRW.EXPECT().CreateParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, pg *parametergroup.ParameterGroup, pgm []*parametergroup.ParameterGroupMapping, addParams []message.ParameterInfo) (*parametergroup.ParameterGroup, error) {
-			resp := &parametergroup.ParameterGroup{
-				ID:             "1",
-				Name:           "test_parameter_group",
-				ParentID:       "",
-				ClusterSpec:    "8C16G",
-				HasDefault:     1,
-				DBType:         1,
-				GroupType:      1,
-				ClusterVersion: "5.0",
-				Note:           "test parameter group",
-				CreatedAt:      time.Time{},
-				UpdatedAt:      time.Time{},
-			}
-			return resp, nil
-		})
-	resp, err := manager.CreateParameterGroup(context.TODO(), message.CreateParameterGroupReq{
-		Name:           "test_parameter_group",
-		DBType:         1,
-		ClusterVersion: "5.0",
-		ClusterSpec:    "8C16G",
-		GroupType:      1,
-		Note:           "test parameter group",
-		Params: []structs.ParameterGroupParameterSampleInfo{
-			{
-				ID:           "1",
-				DefaultValue: "10",
-				Note:         "test param",
 			},
-		},
-		AddParams: []message.ParameterInfo{
-			{
-				Category:       "log",
-				Name:           "binlog_cache",
-				InstanceType:   "TiDB",
-				SystemVariable: "log.binlog_cache",
-				Type:           0,
-				Unit:           "mb",
-				Range:          []string{"0", "1024"},
-				HasReboot:      0,
-				HasApply:       1,
-				UpdateSource:   0,
-				ReadOnly:       0,
-				Description:    "binlog cache",
-				DefaultValue:   "512",
-				Note:           "binlog cache",
+			AddParams: []message.ParameterInfo{
+				{
+					Category:       "log",
+					Name:           "binlog_cache",
+					InstanceType:   "TiDB",
+					SystemVariable: "log.binlog_cache",
+					Type:           0,
+					Range:          []string{"0", "1024"},
+					RangeType:      1,
+					Unit:           "MB",
+					UnitOptions:    []string{"KB", "MB", "GB"},
+					HasReboot:      0,
+					HasApply:       1,
+					UpdateSource:   0,
+					ReadOnly:       0,
+					Description:    "binlog cache",
+					DefaultValue:   "512",
+					Note:           "binlog cache",
+				},
 			},
-		},
+		})
+		assert.NotEmpty(t, resp)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, resp.ParamGroupID)
 	})
-	assert.NotEmpty(t, resp)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, resp.ParamGroupID)
+
+	t.Run("check add parameters fail", func(t *testing.T) {
+		parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+		models.SetParameterGroupReaderWriter(parameterGroupRW)
+		parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, offset, size int) (params []*parametergroup.Parameter, total int64, err error) {
+				resp := []*parametergroup.Parameter{
+					{
+						ID:          "1",
+						Type:        0,
+						Unit:        "",
+						Range:       "[\"0\", \"10\"]",
+						RangeType:   1,
+						UnitOptions: "[\"KB\", \"MB\", \"GB\"]",
+					},
+				}
+				return resp, 1, nil
+			})
+		parameterGroupRW.EXPECT().ExistsParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(nil, errors.New("exists parameter fail"))
+
+		_, err := manager.CreateParameterGroup(context.TODO(), message.CreateParameterGroupReq{
+			Name: "test_parameter_group",
+			AddParams: []message.ParameterInfo{
+				{
+					Category:       "log",
+					Name:           "binlog_cache",
+					InstanceType:   "TiDB",
+					SystemVariable: "log.binlog_cache",
+					Type:           0,
+				},
+			},
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("create parameter group fail", func(t *testing.T) {
+		parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+		models.SetParameterGroupReaderWriter(parameterGroupRW)
+		parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, offset, size int) (params []*parametergroup.Parameter, total int64, err error) {
+				resp := []*parametergroup.Parameter{
+					{
+						ID:          "1",
+						Type:        0,
+						Unit:        "",
+						Range:       "[\"0\", \"10\"]",
+						RangeType:   1,
+						UnitOptions: "[\"KB\", \"MB\", \"GB\"]",
+					},
+				}
+				return resp, 1, nil
+			})
+		parameterGroupRW.EXPECT().ExistsParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+		parameterGroupRW.EXPECT().CreateParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(nil, errors.New("create parameter group fail"))
+		_, err := manager.CreateParameterGroup(context.TODO(), message.CreateParameterGroupReq{
+			Name:           "test_parameter_group",
+			DBType:         1,
+			ClusterVersion: "v5.0",
+			AddParams: []message.ParameterInfo{
+				{
+					Category:     "log",
+					Name:         "binlog_cache",
+					InstanceType: "TiDB",
+				},
+			},
+		})
+		assert.Error(t, err)
+	})
 }
 
 func TestManager_UpdateParameterGroup_Success(t *testing.T) {
@@ -147,10 +223,12 @@ func TestManager_UpdateParameterGroup_Success(t *testing.T) {
 		DoAndReturn(func(ctx context.Context, offset, size int) (params []*parametergroup.Parameter, total int64, err error) {
 			resp := []*parametergroup.Parameter{
 				{
-					ID:    "1",
-					Type:  0,
-					Unit:  "",
-					Range: "[\"0\", \"10\"]",
+					ID:          "1",
+					Type:        0,
+					Range:       "[\"0\", \"10\"]",
+					RangeType:   1,
+					Unit:        "MB",
+					UnitOptions: "[\"KB\", \"MB\", \"GB\"]",
 				},
 			}
 			return resp, 1, nil
@@ -184,8 +262,10 @@ func TestManager_UpdateParameterGroup_Success(t *testing.T) {
 				InstanceType:   "TiDB",
 				SystemVariable: "log.binlog_cache",
 				Type:           0,
-				Unit:           "mb",
 				Range:          []string{"0", "1024"},
+				RangeType:      1,
+				Unit:           "MB",
+				UnitOptions:    []string{"KB", "MB", "GB"},
 				HasReboot:      0,
 				HasApply:       1,
 				UpdateSource:   0,
@@ -485,10 +565,12 @@ func TestManager_validateParameter(t *testing.T) {
 			DoAndReturn(func(ctx context.Context, offset, size int) (params []*parametergroup.Parameter, total int64, err error) {
 				resp := []*parametergroup.Parameter{
 					{
-						ID:    "1",
-						Type:  0,
-						Unit:  "",
-						Range: "[\"0\", \"10\"]",
+						ID:          "1",
+						Type:        0,
+						Range:       "[\"0\", \"10\"]",
+						RangeType:   1,
+						Unit:        "MB",
+						UnitOptions: "[\"KB\", \"MB\", \"GB\"]",
 					},
 				}
 				return resp, 1, nil
@@ -521,10 +603,11 @@ func TestManager_validateParameter(t *testing.T) {
 			DoAndReturn(func(ctx context.Context, offset, size int) (params []*parametergroup.Parameter, total int64, err error) {
 				resp := []*parametergroup.Parameter{
 					{
-						ID:    "1",
-						Type:  0,
-						Unit:  "",
-						Range: "[\"0\", \"10\"]",
+						ID:        "1",
+						Type:      0,
+						Unit:      "",
+						Range:     "[\"0\", \"10\"]",
+						RangeType: 1,
 					},
 				}
 				return resp, 1, nil
@@ -543,10 +626,11 @@ func TestManager_validateParameter(t *testing.T) {
 			DoAndReturn(func(ctx context.Context, offset, size int) (params []*parametergroup.Parameter, total int64, err error) {
 				resp := []*parametergroup.Parameter{
 					{
-						ID:    "1",
-						Type:  0,
-						Unit:  "",
-						Range: "[\"10\"]",
+						ID:        "1",
+						Type:      0,
+						Unit:      "",
+						Range:     "[\"10\"]",
+						RangeType: 1,
 					},
 				}
 				return resp, 1, nil

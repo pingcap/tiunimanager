@@ -49,6 +49,9 @@ const (
 	MetricsClusterModifyParameter       MetricsType = "cluster/modify_parameter"
 	MetricsClusterInspectParameter      MetricsType = "cluster/inspect_parameter"
 	MetricsClusterQueryLogParameter     MetricsType = "cluster/query_logs"
+	MetricsClusterUpgrade               MetricsType = "cluster/upgrade"
+	MetricsClusterUpgradePath           MetricsType = "cluster/upgrade_path"
+	MetricsClusterUpgradeDiff           MetricsType = "cluster/upgrade_diff"
 
 	// MetricsBackupCreate define backup metrics
 	MetricsBackupCreate         MetricsType = "backup/create"

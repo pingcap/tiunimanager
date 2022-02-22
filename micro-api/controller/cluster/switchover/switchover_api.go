@@ -34,7 +34,7 @@ import (
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /switchover [post]
+// @Router /clusters/switchover [post]
 func Switchover(c *gin.Context) {
 	var req cluster.MasterSlaveClusterSwitchoverReq
 

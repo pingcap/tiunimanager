@@ -19,6 +19,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/labstack/gommon/bytes"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -299,12 +301,9 @@ func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request cluster.D
 
 	for recordId, record := range deleteRecordMap {
 		framework.LogWithContext(ctx).Infof("begin delete backup record %+v", record)
-		if string(constants.StorageTypeS3) != record.StorageType {
-			filePath := record.FilePath
-			go func() {
-				removeErr := os.RemoveAll(filePath)
-				framework.LogWithContext(ctx).Infof("remove backup filePath %s, result %v", filePath, removeErr)
-			}()
+		err = mgr.removeBackupFiles(ctx, record)
+		if err != nil {
+			framework.LogWithContext(ctx).Warnf("remove backup files of recordId %s failed, %s", recordId, err.Error())
 		}
 		err = brRW.DeleteBackupRecord(ctx, recordId)
 		if err != nil {
@@ -471,7 +470,7 @@ func (mgr *BRManager) saveBackupStrategyPreCheck(ctx context.Context, request cl
 }
 
 func (mgr *BRManager) getBackupPath(backupPath, clusterId string, time time.Time, backupType string) string {
-	return fmt.Sprintf("%s/%s/%s_%s", backupPath, clusterId, time.Format("2006-01-02_15:04:05"), backupType)
+	return fmt.Sprintf("%s/%s/%s-%s", backupPath, clusterId, time.Format("2006-01-02-15-04-05"), backupType)
 }
 
 func (mgr *BRManager) checkFilePathExists(path string) bool {
@@ -480,4 +479,52 @@ func (mgr *BRManager) checkFilePathExists(path string) bool {
 		return os.IsExist(err)
 	}
 	return true
+}
+
+func (mgr *BRManager) removeBackupFiles(ctx context.Context, record *backuprestore.BackupRecord) error {
+	if string(constants.StorageTypeS3) == record.StorageType {
+		configRW := models.GetConfigReaderWriter()
+		endpointCfg, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupS3Endpoint)
+		if err != nil || endpointCfg.ConfigValue == "" {
+			return fmt.Errorf("get and check conifg %s failed", constants.ConfigKeyBackupS3Endpoint)
+		}
+		akCfg, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupS3AccessKey)
+		if err != nil || akCfg.ConfigValue == "" {
+			return fmt.Errorf("get and check conifg %s failed", constants.ConfigKeyBackupS3AccessKey)
+		}
+		skCfg, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupS3SecretAccessKey)
+		if err != nil || skCfg.ConfigValue == "" {
+			return fmt.Errorf("get and check conifg %s failed", constants.ConfigKeyBackupS3SecretAccessKey)
+		}
+		go func() {
+			endpoint := strings.TrimPrefix(endpointCfg.ConfigValue, "http://")
+			s3Client, err := minio.New(endpoint, &minio.Options{
+				Creds:  credentials.NewStaticV4(akCfg.ConfigValue, skCfg.ConfigValue, ""),
+				Secure: false,
+			})
+			if err != nil {
+				framework.LogWithContext(ctx).Warnf("create s3 client failed: %s", err.Error())
+				return
+			}
+			s3Addr := strings.SplitN(record.FilePath, "/", 2)
+			if len(s3Addr) != 2 {
+				return
+			}
+			framework.LogWithContext(ctx).Infof("begin remove bucket:%s object:%s", s3Addr[0], s3Addr[1])
+			objectChan := s3Client.ListObjects(ctx, s3Addr[0], minio.ListObjectsOptions{Recursive: true, Prefix: s3Addr[1]})
+			for object := range objectChan {
+				if err = s3Client.RemoveObject(context.TODO(), s3Addr[0], object.Key, minio.RemoveObjectOptions{ForceDelete: true}); err != nil {
+					framework.LogWithContext(ctx).Warnf("remove bucket %s failed: %v", record.FilePath, err)
+				}
+			}
+		}()
+	} else {
+		go func() {
+			if err := os.RemoveAll(record.FilePath); err != nil {
+				framework.LogWithContext(ctx).Warnf("remove backup filePath %s, result %v", record.FilePath, err)
+				return
+			}
+		}()
+	}
+	return nil
 }

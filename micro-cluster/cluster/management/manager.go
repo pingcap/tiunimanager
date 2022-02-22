@@ -18,6 +18,19 @@ package management
 import (
 	"context"
 	"fmt"
+	"net"
+	"strconv"
+	"strings"
+
+	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
+
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
+
+	"github.com/pingcap-inc/tiem/models"
+
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -29,9 +42,6 @@ import (
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
-	"net"
-	"strconv"
-	"time"
 )
 
 const (
@@ -42,6 +52,8 @@ const (
 	ContextSourceClusterMeta = "SourceClusterMeta"
 	ContextCloneStrategy     = "CloneStrategy"
 	ContextBackupID          = "BackupID"
+	ContextUpgradeVersion    = "UpgradeVersion"
+	ContextUpgradeWay        = "UpgradeWay"
 	ContextWorkflowID        = "WorkflowID"
 	ContextTopologyConfig    = "TopologyConfig"
 	ContextPublicKey         = "PublicKey"
@@ -63,6 +75,8 @@ func NewClusterManager() *Manager {
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowDeleteCluster, &deleteClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowRestartCluster, &restartClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowStopCluster, &stopClusterFlow)
+	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowOnlineInPlaceUpgradeCluster, &onlineInPlaceUpgradeClusterFlow)
+	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowOfflineInPlaceUpgradeCluster, &offlineInPlaceUpgradeClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowCloneCluster, &cloneDefine)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowTakeoverCluster, &takeoverClusterFlow)
 
@@ -235,7 +249,7 @@ func (p *Manager) Clone(ctx context.Context, request cluster.CloneClusterReq) (r
 	}
 
 	// Clone source cluster meta to get cluster topology
-	clusterMeta, err := sourceClusterMeta.CloneMeta(ctx, request.CreateClusterParameter)
+	clusterMeta, err := sourceClusterMeta.CloneMeta(ctx, request.CreateClusterParameter, request.ResourceParameter.InstanceResource)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"clone cluster %s meta error: %s", sourceClusterMeta.Cluster.ID, err.Error())
@@ -540,7 +554,7 @@ var deleteClusterFlow = workflow.WorkFlowDefine{
 		"freedResourceDone":  {"clearBackupData", "clearDone", "fail", workflow.SyncFuncNode, clearBackupData},
 		"clearDone":          {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(deleteCluster)},
 		"fail":               {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
-		"revert":               {"end", "", "", workflow.SyncFuncNode, endMaintenance},
+		"revert":             {"end", "", "", workflow.SyncFuncNode, endMaintenance},
 	},
 }
 
@@ -819,4 +833,227 @@ func (p *Manager) restoreNewClusterPreCheck(ctx context.Context, req cluster.Res
 	}
 
 	return nil
+}
+
+var onlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
+	FlowName: constants.FlowOnlineInPlaceUpgradeCluster,
+	TaskNodes: map[string]*workflow.NodeDefine{
+		"start":                   {"initialize", "initializeDone", "fail", workflow.SyncFuncNode, initializeUpgrade},
+		"initializeDone":          {"selectTargetVersion", "selectTargetVersionDone", "fail", workflow.SyncFuncNode, selectTargetUpgradeVersion},
+		"selectTargetVersionDone": {"mergeConfig", "mergeConfigDone", "fail", workflow.SyncFuncNode, mergeUpgradeConfig},
+		"mergeConfigDone":         {"checkRegionHealth", "checkRegionHealthDone", "fail", workflow.SyncFuncNode, checkRegionHealth},
+		"checkRegionHealthDone":   {"upgradeCluster", "upgradeDone", "fail", workflow.PollingNode, upgradeCluster},
+		"upgradeDone":             {"checkVersion", "checkVersionDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeVersion},
+		"checkVersionDone":        {"checkMD5", "checkMD5Done", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeMD5},
+		"checkMD5Done":            {"checkUpgradeTime", "checkUpgradeTimeDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeTime},
+		"checkUpgradeTimeDone":    {"checkConfig", "checkConfigDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeConfig},
+		"checkConfigDone":         {"checkSystemHealth", "success", "failAfterUpgrade", workflow.SyncFuncNode, checkRegionHealth},
+		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
+		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertConfigAfterFailure, endMaintenance)},
+		"failAfterUpgrade":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+	},
+}
+
+var offlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
+	FlowName: constants.FlowOfflineInPlaceUpgradeCluster,
+	TaskNodes: map[string]*workflow.NodeDefine{
+		"start":                   {"initialize", "initializeDone", "fail", workflow.SyncFuncNode, initializeUpgrade},
+		"initializeDone":          {"selectTargetVersion", "selectTargetVersionDone", "fail", workflow.SyncFuncNode, selectTargetUpgradeVersion},
+		"selectTargetVersionDone": {"mergeConfig", "mergeConfigDone", "fail", workflow.SyncFuncNode, mergeUpgradeConfig},
+		"mergeConfigDone":         {"checkRegionHealth", "checkRegionHealthDone", "fail", workflow.SyncFuncNode, checkRegionHealth},
+		"checkRegionHealthDone":   {"stopCluster", "stopClusterDone", "fail", workflow.PollingNode, stopCluster},
+		"stopClusterDone":         {"upgradeCluster", "upgradeDone", "fail", workflow.PollingNode, upgradeCluster},
+		"upgradeDone":             {"startCluster", "startClusterDone", "fail", workflow.SyncFuncNode, startCluster},
+		"startClusterDone":        {"checkVersion", "checkVersionDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeVersion},
+		"checkVersionDone":        {"checkMD5", "checkMD5Done", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeMD5},
+		"checkMD5Done":            {"checkUpgradeTime", "checkUpgradeTimeDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeTime},
+		"checkUpgradeTimeDone":    {"checkConfig", "checkConfigDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeConfig},
+		"checkConfigDone":         {"checkSystemHealth", "success", "failAfterUpgrade", workflow.SyncFuncNode, checkRegionHealth},
+		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
+		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertConfigAfterFailure, endMaintenance)},
+		"failAfterUpgrade":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+	},
+}
+
+// QueryProductUpdatePath
+// @Description:
+// @Receiver p
+// @Parameter ctx
+// @Parameter clusterID
+// @return *cluster.QueryUpgradePathRsp
+// @return error
+func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) (resp cluster.QueryUpgradePathRsp, err error) {
+	// Get cluster info and topology from db based by clusterID
+	clusterMeta, err := meta.Get(ctx, clusterID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"load cluster %s meta from db error: %s", clusterID, err.Error())
+		return
+	}
+
+	version := clusterMeta.Cluster.Version
+	framework.LogWithContext(ctx).Infof("query update path for cluster %s, version %s, using minor version %s",
+		clusterID, version, clusterMeta.GetMinorVersion())
+	productUpgradePaths, err := models.GetUpgradeReaderWriter().QueryBySrcVersion(ctx, clusterMeta.GetMinorVersion())
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("failed to query update path for cluster %s version %s: %s", clusterID, version, err.Error())
+		return
+	}
+	framework.LogWithContext(ctx).Infof("query update path for cluster %s version %s: %v", clusterID, version, productUpgradePaths)
+
+	// key: type, value: dstVersions
+	pathMap := make(map[string][]string)
+	for _, productUpgradePath := range productUpgradePaths {
+		if versions, ok := pathMap[productUpgradePath.Type]; ok {
+			versions = append(versions, getFullVersion(productUpgradePath.DstVersion))
+			pathMap[productUpgradePath.Type] = versions
+		} else {
+			versions = []string{getFullVersion(productUpgradePath.DstVersion)}
+			pathMap[productUpgradePath.Type] = versions
+		}
+	}
+
+	framework.LogWithContext(ctx).Debugf("query pathMap for cluster %s version %s: %v", clusterID, version, pathMap)
+	var paths []*structs.ProductUpgradePathItem
+	for k, v := range pathMap {
+		path := structs.ProductUpgradePathItem{
+			UpgradeType: k,
+			Versions:    v,
+		}
+		paths = append(paths, &path)
+	}
+	framework.LogWithContext(ctx).Debugf("query paths for cluster %s version %s: %v", clusterID, version, paths)
+
+	resp.Paths = paths
+	return
+}
+
+func getFullVersion(version string) string {
+	numbers := strings.Split(version, ".")
+	if len(numbers) == 1 {
+		return fmt.Sprintf("%s.0.0", numbers[0])
+	} else if len(numbers) == 2 {
+		return fmt.Sprintf("%s.%s.0", numbers[0], numbers[1])
+	}
+	return version
+}
+
+func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID string, version string) (resp []structs.ProductUpgradeVersionConfigDiffItem, err error) {
+	clusterMeta, err := meta.Get(ctx, clusterID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"load cluster %s meta from db error: %s", clusterID, err.Error())
+		return
+	}
+
+	framework.LogWithContext(ctx).Infof("query config difference between cluster %s version %s and parametergroup of %s", clusterID, clusterMeta.Cluster.Version, version)
+	paramResp, _, err := parameter.NewManager().QueryClusterParameters(ctx, cluster.QueryClusterParametersReq{
+		ClusterID: clusterID,
+	})
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"query cluster %s param from db error: %s", clusterID, err.Error())
+		return
+	}
+
+	groups, _, err := parametergroup.NewManager().QueryParameterGroup(ctx, message.QueryParameterGroupReq{
+		DBType:         int(parametergroup.TiDB),
+		HasDefault:     int(parametergroup.DEFAULT),
+		ClusterVersion: getMinorVersion(version),
+	})
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"query paramgroup for version %s from db error: %s", version, err.Error())
+		return
+	}
+	if len(groups) == 0 {
+		msg := fmt.Sprintf("no default group found for dbtype %d, hasdefault = %d, version = %s", int(parametergroup.TiDB), int(parametergroup.DEFAULT), getMinorVersion(version))
+		framework.LogWithContext(ctx).Error(msg)
+		err = errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_DATA, msg)
+		return
+	}
+
+	resp = compareConfigDifference(paramResp.Params, groups[0].Params)
+
+	return
+}
+
+func getMinorVersion(version string) string {
+	numbers := strings.Split(version, ".")
+	if len(numbers) > 1 {
+		return fmt.Sprintf("%s.%s", numbers[0], numbers[1])
+	} else {
+		return fmt.Sprintf(numbers[0])
+	}
+}
+
+func compareConfigDifference(clusterParameterInfos []structs.ClusterParameterInfo, parameterGroupParameterInfos []structs.ParameterGroupParameterInfo) (resp []structs.ProductUpgradeVersionConfigDiffItem) {
+	clusterParamMap := make(map[string]structs.ClusterParameterInfo)
+	for _, param := range clusterParameterInfos {
+		clusterParamMap[param.ParamId] = param
+	}
+
+	pgParamMap := make(map[string]structs.ParameterGroupParameterInfo)
+	for _, param := range parameterGroupParameterInfos {
+		pgParamMap[param.ID] = param
+	}
+
+	for id, clusterParam := range clusterParamMap {
+		if pgParam, ok := pgParamMap[id]; ok {
+			if clusterParam.RealValue.ClusterValue != pgParam.DefaultValue {
+				resp = append(resp, structs.ProductUpgradeVersionConfigDiffItem{
+					ParamId:      id,
+					Category:     pgParam.Category,
+					Name:         pgParam.Name,
+					InstanceType: pgParam.InstanceType,
+					CurrentValue: clusterParam.RealValue.ClusterValue,
+					SuggestValue: pgParam.DefaultValue,
+					Type:         pgParam.Type,
+					Unit:         pgParam.Unit,
+					Range:        pgParam.Range,
+					Description:  pgParam.Description,
+				})
+			}
+		}
+	}
+	return
+}
+
+// InPlaceUpgradeCluster
+// @Description: upgrade a cluster
+// @Receiver p
+// @Parameter ctx
+// @Parameter cluster.UpgradeClusterReq
+// @return cluster.UpgradeClusterResp
+// @return error
+func (p *Manager) InPlaceUpgradeCluster(ctx context.Context, req cluster.UpgradeClusterReq) (resp cluster.UpgradeClusterResp, err error) {
+	framework.LogWithContext(ctx).Debugf("inplaceupgradecluster, handle request [%+v]", req)
+	// Get cluster info and topology from db based by clusterID
+	clusterMeta, err := meta.Get(ctx, req.ClusterID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"load cluster %s meta from db error: %s", req.ClusterID, err.Error())
+		return
+	}
+
+	data := map[string]interface{}{
+		ContextClusterMeta:    clusterMeta,
+		ContextUpgradeVersion: req.TargetVersion,
+		ContextUpgradeWay:     req.UpgradeWay,
+	}
+	var flowID string
+	if req.UpgradeWay == string(constants.UpgradeWayOnline) {
+		flowID, err = asyncMaintenance(ctx, clusterMeta, constants.ClusterMaintenanceUpgrading, onlineInPlaceUpgradeClusterFlow.FlowName, data)
+	} else {
+		flowID, err = asyncMaintenance(ctx, clusterMeta, constants.ClusterMaintenanceUpgrading, offlineInPlaceUpgradeClusterFlow.FlowName, data)
+	}
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"cluster %s async maintenance error: %s", clusterMeta.Cluster.ID, err.Error())
+		return
+	}
+
+	resp.ClusterID = clusterMeta.Cluster.ID
+	resp.WorkFlowID = flowID
+	return
 }

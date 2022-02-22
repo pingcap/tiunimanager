@@ -133,8 +133,9 @@ type RestoreExistClusterResp struct {
 // CloneClusterReq Message for clone a new cluster
 type CloneClusterReq struct {
 	structs.CreateClusterParameter
-	CloneStrategy   string `json:"cloneStrategy" validate:"required"`                // specify clone strategy, include empty, snapshot and sync, default empty(option)
-	SourceClusterID string `json:"sourceClusterId" validate:"required,min=4,max=64"` // specify source cluster id(require)
+	ResourceParameter structs.ClusterResourceInfo `json:"resourceParameters" form:"resourceParameters"`
+	CloneStrategy     string                      `json:"cloneStrategy" validate:"required"`                // specify clone strategy, include empty, snapshot and sync, default empty(option)
+	SourceClusterID   string                      `json:"sourceClusterId" validate:"required,min=4,max=64"` // specify source cluster id(require)
 }
 
 // CloneClusterResp Reply message for clone a new cluster
@@ -154,31 +155,6 @@ type MasterSlaveClusterSwitchoverReq struct {
 
 // MasterSlaveClusterSwitchoverResp Master and slave cluster switchover reply message
 type MasterSlaveClusterSwitchoverResp struct {
-	structs.AsyncTaskWorkFlowInfo
-}
-
-type QueryUpgradeVersionDiffInfoReq struct {
-	ClusterID string `json:"clusterId"`
-	Version   string `json:"version"`
-}
-
-type QueryUpgradeVersionDiffInfoResp struct {
-	ConfigDiffInfos []structs.ProductUpgradeVersionConfigDiffItem `json:"configDiffInfos"`
-}
-
-type ClusterUpgradeVersionConfigItem struct {
-	Name         string `json:"name"`
-	InstanceType string `json:"instanceType"`
-	Value        string `json:"value"`
-}
-
-type ClusterUpgradeReq struct {
-	ClusterID     string `json:"ClusterId"`
-	TargetVersion string `json:"targetVersion"`
-	Configs       []ClusterUpgradeVersionConfigItem
-}
-
-type ClusterUpgradeResp struct {
 	structs.AsyncTaskWorkFlowInfo
 }
 
@@ -292,17 +268,27 @@ type UpdateClusterParametersResp struct {
 	structs.AsyncTaskWorkFlowInfo
 }
 
-type InspectClusterParametersReq struct {
-	ClusterID string `json:"clusterId" validate:"required,min=4,max=64"`
+type InspectParametersReq struct {
+	ClusterID  string `json:"clusterId" validate:"required,min=4,max=64"`
+	InstanceID string `json:"instanceId"`
 }
 
-type InspectClusterParametersResp struct {
+type InspectParametersResp struct {
+	Params InspectParameters `json:"params"`
+}
+
+type InspectParameters struct {
+	InstanceID     string                 `json:"instanceId"`
+	ParameterInfos []InspectParameterInfo `json:"parameterInfos"`
+}
+
+type InspectParameterInfo struct {
 	ParamID      int64                      `json:"paramId" example:"1"`
+	Category     string                     `json:"category" example:"log"`
 	Name         string                     `json:"name" example:"binlog_cache"`
-	InstanceType string                     `json:"instanceType" example:"tidb"`
-	Instance     string                     `json:"instance" example:"172.16.5.23"`
+	InstanceType string                     `json:"instanceType" example:"TiDB"`
 	RealValue    structs.ParameterRealValue `json:"realValue"`
-	InspectValue string                     `json:"inspectValue" example:"1"`
+	InspectValue interface{}                `json:"inspectValue"`
 }
 
 type PreviewClusterResp struct {

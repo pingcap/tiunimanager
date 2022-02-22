@@ -322,6 +322,17 @@ type Interface interface {
 	// @return result
 	// @return err
 	CheckConfig(ctx context.Context, componentType TiUPComponentType, configYaml, home string, args []string, timeout int) (result string, err error)
+	// CheckCluster
+	// @Description:
+	// @param ctx
+	// @param componentType
+	// @param configYaml
+	// @param home
+	// @param args
+	// @param timeout
+	// @return result
+	// @return err
+	CheckCluster(ctx context.Context, componentType TiUPComponentType, clusterID, home string, args []string, timeout int) (result string, err error)
 	// Prune
 	// @Description:
 	// @param ctx

@@ -644,6 +644,26 @@ func (m *Manager) CheckConfig(ctx context.Context, componentType TiUPComponentTy
 	return
 }
 
+// CheckCluster
+// @Description: wrapper of `tiup cluster check <cluster-name>`
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter clusterID
+// @Parameter home
+// @Parameter args
+// @Parameter timeout
+// @return result
+// @return err
+func (m *Manager) CheckCluster(ctx context.Context, componentType TiUPComponentType, clusterID, home string, args []string, timeout int) (result string, err error) {
+	logInFunc := framework.LogWithContext(ctx)
+
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d", componentType, CMDCheck, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	return m.startSyncOperation(home, tiUPArgs, timeout)
+}
+
 // extract check result from tiup check cluster
 func (m *Manager) extractCheckResult(resultJsons []string) (result string) {
 	for _, jsonStr := range resultJsons {

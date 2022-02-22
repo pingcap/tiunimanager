@@ -92,6 +92,64 @@ func Contain(list interface{}, target interface{}) bool {
 	return false
 }
 
+// CompareTiDBVersion
+// @Description compare TiDB versions, such as v5.1.0 and v4.0.0
+// @Parameter   v1 and v2
+// @Return      if v1 >= v2 return true
+// @Return      error
+func CompareTiDBVersion(v1, v2 string) (bool, error) {
+	v1Nums := strings.Split(v1[1:len(v1)], ".")
+	v2Nums := strings.Split(v2[1:len(v2)], ".")
+
+	if len(v1Nums) != 3 || len(v2Nums) != 3 {
+		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+			"TiDB version format is invalid")
+	}
+
+	v1MajorVersionNumber, err := strconv.Atoi(v1Nums[0])
+	if err != nil {
+		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "TiDB version %s format is invalid", v1)
+	}
+	v2MajorVersionNumber, err := strconv.Atoi(v2Nums[0])
+	if err != nil {
+		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "TiDB version %s format is invalid", v2)
+	}
+	v1MinorVersionNumber, err := strconv.Atoi(v1Nums[1])
+	if err != nil {
+		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "TiDB version %s format is invalid", v1)
+	}
+	v2MinorVersionNumber, err := strconv.Atoi(v2Nums[1])
+	if err != nil {
+		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "TiDB version %s format is invalid", v2)
+	}
+	v1RevisionVersionNumber, err := strconv.Atoi(v1Nums[2])
+	if err != nil {
+		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "TiDB version %s format is invalid", v1)
+	}
+	v2RevisionVersionNumber, err := strconv.Atoi(v2Nums[2])
+	if err != nil {
+		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "TiDB version %s format is invalid", v2)
+	}
+
+	if v1MajorVersionNumber > v2MajorVersionNumber {
+		return true, nil
+	} else if v1MajorVersionNumber < v2MajorVersionNumber {
+		return false, nil
+	} else {
+		if v1MinorVersionNumber > v2MinorVersionNumber {
+			return true, nil
+		} else if v1MinorVersionNumber < v2MinorVersionNumber {
+			return false, nil
+		} else {
+			if v1RevisionVersionNumber >= v2RevisionVersionNumber {
+				return true, nil
+			} else {
+				return false, nil
+			}
+		}
+	}
+}
+
 // ScaleOutPreCheck
 // @Description when scale out TiFlash, check placement rules
 //				when scale out PD, suggest pd instances 1,3,5,7
@@ -214,6 +272,14 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 // When use CDCSyncClone strategy to clone cluster, source cluster must have CDC
 func ClonePreCheck(ctx context.Context, sourceMeta *ClusterMeta, meta *ClusterMeta, cloneStrategy string) error {
 	if cloneStrategy == string(constants.CDCSyncClone) {
+		cmp, err := CompareTiDBVersion(sourceMeta.Cluster.Version, "v5.2.2")
+		if err != nil {
+			return err
+		}
+		if !cmp {
+			return errors.NewErrorf(errors.TIEM_CHECK_CLUSTER_VERSION_ERROR,
+				"cluster %s version must be greater than or equal to v5.2.2", sourceMeta.Cluster.ID)
+		}
 		if _, ok := sourceMeta.Instances[string(constants.ComponentIDCDC)]; !ok {
 			return errors.NewErrorf(errors.TIEM_CDC_NOT_FOUND,
 				"cluster %s not found CDC, which cloned by %s", sourceMeta.Cluster.ID, cloneStrategy)
@@ -268,7 +334,7 @@ const retainedPortCount = 2
 // @return []int
 // @return error
 func getRetainedPortRange(ctx context.Context) ([]int, error) {
-	configResp , err := config.NewSystemConfigManager().GetSystemConfig(ctx, message.GetSystemConfigReq{
+	configResp, err := config.NewSystemConfigManager().GetSystemConfig(ctx, message.GetSystemConfigReq{
 		ConfigKey: constants.ConfigKeyRetainedPortRange,
 	})
 	if err != nil {

@@ -27,6 +27,7 @@ import (
 	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
 	switchoverApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/switchover"
+	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/upgrade"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
@@ -64,8 +65,8 @@ func Route(g *gin.Engine) {
 	// api
 	apiV1 := g.Group("/api/v1")
 	{
-		apiV1.Use(interceptor.GinOpenTracing())
 		apiV1.Use(interceptor.GinTraceIDHandler())
+		apiV1.Use(interceptor.GinOpenTracing())
 		apiV1.Use(interceptor.AccessLog(), gin.Recovery())
 
 		auth := apiV1.Group("/user")
@@ -140,10 +141,12 @@ func Route(g *gin.Engine) {
 			// Clone cluster
 			cluster.POST("/clone", metrics.HandleMetrics(constants.MetricsClusterClone), clusterApi.Clone)
 
+			// Switchover
+			cluster.POST("/switchover", metrics.HandleMetrics(constants.MetricsSwitchover), switchoverApi.Switchover)
+
 			// Params
 			cluster.GET("/:clusterId/params", metrics.HandleMetrics(constants.MetricsClusterQueryParameter), parameterApi.QueryParameters)
 			cluster.PUT("/:clusterId/params", metrics.HandleMetrics(constants.MetricsClusterModifyParameter), parameterApi.UpdateParameters)
-			//cluster.POST("/:clusterId/params/inspect", parameterApi.InspectParameters)
 
 			// Backup Strategy
 			cluster.GET("/:clusterId/strategy", metrics.HandleMetrics(constants.MetricsBackupQueryStrategy), backuprestore.GetBackupStrategy)
@@ -154,6 +157,11 @@ func Route(g *gin.Engine) {
 			cluster.POST("/export", metrics.HandleMetrics(constants.MetricsDataExport), importexport.ExportData)
 			cluster.GET("/transport", metrics.HandleMetrics(constants.MetricsDataExportImportQuery), importexport.QueryDataTransport)
 			cluster.DELETE("/transport/:recordId", metrics.HandleMetrics(constants.MetricsDataExportImportDelete), importexport.DeleteDataTransportRecord)
+
+			//Upgrade
+			cluster.GET("/:clusterId/upgrade/path", metrics.HandleMetrics(constants.MetricsClusterUpgradePath), upgrade.QueryUpgradePaths)
+			cluster.GET("/:clusterId/upgrade/diff", metrics.HandleMetrics(constants.MetricsClusterUpgradeDiff), upgrade.QueryUpgradeVersionDiffInfo)
+			cluster.POST("/:clusterId/upgrade", metrics.HandleMetrics(constants.MetricsClusterUpgrade), upgrade.Upgrade)
 		}
 
 		backup := apiV1.Group("/backups")
@@ -180,14 +188,6 @@ func Route(g *gin.Engine) {
 
 			changeFeeds.GET("/:changeFeedTaskId/", metrics.HandleMetrics(constants.MetricsCDCTaskDetail), changefeed.Detail)
 			changeFeeds.GET("/", metrics.HandleMetrics(constants.MetricsCDCTaskQuery), changefeed.Query)
-		}
-
-		switchover := apiV1.Group("/switchover")
-		{
-			switchover.Use(interceptor.VerifyIdentity)
-			switchover.Use(interceptor.AuditLog())
-
-			switchover.POST("/", metrics.HandleMetrics(constants.MetricsSwitchover), switchoverApi.Switchover)
 		}
 
 		flowworks := apiV1.Group("/workflow")

@@ -55,6 +55,42 @@ func TestContain(t *testing.T) {
 	assert.Equal(t, got, false)
 }
 
+func TestCompareTiDBVersion(t *testing.T) {
+	got, err := CompareTiDBVersion("v5.0.0", "v5.2.2")
+	assert.NoError(t, err)
+	assert.Equal(t, got, false)
+
+	got, err = CompareTiDBVersion("v5.2.2", "v5.0.0")
+	assert.NoError(t, err)
+	assert.Equal(t, got, true)
+
+	got, err = CompareTiDBVersion("v5.0.2", "v5.0.0")
+	assert.NoError(t, err)
+	assert.Equal(t, got, true)
+
+	got, err = CompareTiDBVersion("v5.0.0", "v5.0.0")
+	assert.NoError(t, err)
+	assert.Equal(t, got, true)
+
+	got, err = CompareTiDBVersion("vx.0.0", "v5.2.2")
+	assert.Error(t, err)
+
+	got, err = CompareTiDBVersion("v5.x.0", "v5.2.2")
+	assert.Error(t, err)
+
+	got, err = CompareTiDBVersion("v5.0.x", "v5.2.2")
+	assert.Error(t, err)
+
+	got, err = CompareTiDBVersion("v5.0.0", "vx.2.2")
+	assert.Error(t, err)
+
+	got, err = CompareTiDBVersion("v5.0.0", "v5.x.2")
+	assert.Error(t, err)
+
+	got, err = CompareTiDBVersion("v5.0.0", "v5.2.x")
+	assert.Error(t, err)
+}
+
 func TestScaleOutPreCheck(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -256,7 +292,7 @@ func TestScaleInPreCheck(t *testing.T) {
 
 func TestClonePreCheck(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		sourceMeta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
+		sourceMeta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.2.2", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDCDC): {
 				{
 					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
@@ -283,7 +319,7 @@ func TestClonePreCheck(t *testing.T) {
 			},
 		},
 		}
-		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
+		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.2.2", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDCDC): {
 				{
 					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
@@ -315,7 +351,7 @@ func TestClonePreCheck(t *testing.T) {
 	})
 
 	t.Run("cdc fail", func(t *testing.T) {
-		sourceMeta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
+		sourceMeta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.2.2", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDTiDB): {
 				{
 					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
@@ -342,7 +378,7 @@ func TestClonePreCheck(t *testing.T) {
 			},
 		},
 		}
-		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
+		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.2.2", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDTiDB): {
 				{
 					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
@@ -374,7 +410,7 @@ func TestClonePreCheck(t *testing.T) {
 	})
 
 	t.Run("copies fail", func(t *testing.T) {
-		sourceMeta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 3}, Instances: map[string][]*management.ClusterInstance{
+		sourceMeta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.2.2", Copies: 3}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDCDC): {
 				{
 					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
@@ -401,7 +437,7 @@ func TestClonePreCheck(t *testing.T) {
 			},
 		},
 		}
-		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 3}, Instances: map[string][]*management.ClusterInstance{
+		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.2.2", Copies: 3}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDCDC): {
 				{
 					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},

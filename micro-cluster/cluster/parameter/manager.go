@@ -93,13 +93,14 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 	resp.Params = make([]structs.ClusterParameterInfo, len(params))
 	for i, param := range params {
 		// convert range
-		ranges := make([]string, 0)
-		if len(param.Range) > 0 {
-			err = json.Unmarshal([]byte(param.Range), &ranges)
-			if err != nil {
-				framework.LogWithContext(ctx).Errorf("failed to convert parameter range. req: %v, err: %v", req, err)
-				return resp, page, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
-			}
+		ranges, err := UnmarshalCovertArray(param.Range)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("failed to convert parameter range. req: %v, err: %v", req, err)
+			return resp, page, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
+		}
+		unitOptions, err := UnmarshalCovertArray(param.UnitOptions)
+		if err != nil {
+			return resp, page, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
 		}
 		// convert realValue
 		realValue := structs.ParameterRealValue{}
@@ -118,7 +119,9 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 			SystemVariable: param.SystemVariable,
 			Type:           param.Type,
 			Unit:           param.Unit,
+			UnitOptions:    unitOptions,
 			Range:          ranges,
+			RangeType:      param.RangeType,
 			HasReboot:      param.HasReboot,
 			HasApply:       param.HasApply,
 			UpdateSource:   param.UpdateSource,
@@ -165,13 +168,14 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 	for _, detail := range paramDetails {
 		for _, param := range req.Params {
 			if detail.ID == param.ParamId {
-				ranges := make([]string, 0)
-				if len(detail.Range) > 0 {
-					err = json.Unmarshal([]byte(detail.Range), &ranges)
-					if err != nil {
-						framework.LogWithContext(ctx).Errorf("failed to convert parameter range. range: %v, err: %v", detail.Range, err)
-						return
-					}
+				ranges, err := UnmarshalCovertArray(detail.Range)
+				if err != nil {
+					framework.LogWithContext(ctx).Errorf("failed to convert parameter range. req: %v, err: %v", req, err)
+					return resp, err
+				}
+				unitOptions, err := UnmarshalCovertArray(detail.UnitOptions)
+				if err != nil {
+					return resp, err
 				}
 				params = append(params, &ModifyClusterParameterInfo{
 					ParamId:        param.ParamId,
@@ -183,6 +187,9 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 					SystemVariable: detail.SystemVariable,
 					Type:           detail.Type,
 					Range:          ranges,
+					RangeType:      detail.RangeType,
+					Unit:           detail.Unit,
+					UnitOptions:    unitOptions,
 					HasApply:       detail.HasApply,
 					RealValue:      param.RealValue,
 				})
@@ -229,13 +236,14 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 	// Constructing clusterParameter.ModifyParameter objects
 	params := make([]*ModifyClusterParameterInfo, len(pgm))
 	for i, param := range pgm {
-		ranges := make([]string, 0)
-		if len(param.Range) > 0 {
-			err = json.Unmarshal([]byte(param.Range), &ranges)
-			if err != nil {
-				framework.LogWithContext(ctx).Errorf("failed to convert parameter range. range: %v, err: %v", param.Range, err)
-				return
-			}
+		ranges, err := UnmarshalCovertArray(param.Range)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("failed to convert parameter range. req: %v, err: %v", req, err)
+			return resp, err
+		}
+		unitOptions, err := UnmarshalCovertArray(param.UnitOptions)
+		if err != nil {
+			return resp, err
 		}
 		params[i] = &ModifyClusterParameterInfo{
 			ParamId:        param.ID,
@@ -248,6 +256,9 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 			Type:           param.Type,
 			HasApply:       param.HasApply,
 			Range:          ranges,
+			RangeType:      param.RangeType,
+			Unit:           param.Unit,
+			UnitOptions:    unitOptions,
 			RealValue:      structs.ParameterRealValue{ClusterValue: param.DefaultValue},
 		}
 	}
@@ -309,7 +320,7 @@ func (m *Manager) PersistApplyParameterGroup(ctx context.Context, req message.Ap
 	return resp, nil
 }
 
-func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.InspectClusterParametersReq) (resp cluster.InspectClusterParametersResp, err error) {
+func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.InspectParametersReq) (resp cluster.InspectParametersResp, err error) {
 	// todo: Reliance on parameter source query implementation
 	return
 }

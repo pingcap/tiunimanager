@@ -26,6 +26,7 @@ package parameter
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -236,6 +237,65 @@ func DisplayFullParameterName(category, name string) string {
 		return name
 	}
 	return fmt.Sprintf("%s.%s", category, name)
+}
+
+// FlattenedParameters
+// @Description: flattened parameters
+// @Parameter inputs
+// @return map[string]string
+// @return error
+func FlattenedParameters(inputs map[string]interface{}) (map[string]string, error) {
+	result := make(map[string]string)
+	err := flattening(inputs, "", result)
+	return result, err
+}
+
+// flattening
+// @Description: Deep traversal flattening to get parameter names
+// @Parameter object
+// @Parameter name
+// @Parameter result
+// @return err
+func flattening(object map[string]interface{}, name string, result map[string]string) (err error) {
+	for k, v := range object {
+		if name != "" {
+			k = name + "." + k
+		}
+		if v == nil {
+			// value is null, skip directly
+			continue
+		} else if strings.HasPrefix(reflect.TypeOf(v).String(), "map") {
+			// value is an interface type
+			if err = flattening(v.(map[string]interface{}), k, result); err != nil {
+				return err
+			}
+		} else if strings.HasPrefix(reflect.TypeOf(v).String(), "[]interface") {
+			// value is an array type
+			array := v.([]interface{})
+			if len(array) > 0 {
+				if strings.HasPrefix(reflect.TypeOf(array[0]).String(), "map") {
+					for i, c := range v.([]interface{}) {
+						m := k
+						if name != "" {
+							m = fmt.Sprintf("%s[%d]", k, i)
+						}
+						if err = flattening(c.(map[string]interface{}), m, result); err != nil {
+							return err
+						}
+					}
+				} else {
+					b, err := json.Marshal(array)
+					if err != nil {
+						return err
+					}
+					result[k] = string(b)
+				}
+			}
+		} else {
+			result[k] = fmt.Sprintf("%v", v)
+		}
+	}
+	return nil
 }
 
 // UnmarshalCovertArray

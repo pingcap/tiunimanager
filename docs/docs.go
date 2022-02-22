@@ -9341,9 +9341,6 @@ var doc = `{
                 "clusterID": {
                     "type": "string"
                 },
-                "connectionCount": {
-                    "type": "integer"
-                },
                 "copies": {
                     "$ref": "#/definitions/structs.CheckInt32"
                 },
@@ -9372,13 +9369,7 @@ var doc = `{
                     "$ref": "#/definitions/structs.CheckBool"
                 },
                 "topology": {
-                    "$ref": "#/definitions/structs.CheckString"
-                },
-                "versions": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/structs.CheckString"
-                    }
+                    "type": "string"
                 }
             }
         },
@@ -10179,6 +10170,12 @@ var doc = `{
                 },
                 "status": {
                     "$ref": "#/definitions/structs.CheckStatus"
+                },
+                "versions": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckString"
+                    }
                 }
             }
         },

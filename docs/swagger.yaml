@@ -1862,8 +1862,6 @@ definitions:
         $ref: '#/definitions/structs.CheckString'
       clusterID:
         type: string
-      connectionCount:
-        type: integer
       copies:
         $ref: '#/definitions/structs.CheckInt32'
       cpu:
@@ -1883,11 +1881,7 @@ definitions:
       tls:
         $ref: '#/definitions/structs.CheckBool'
       topology:
-        $ref: '#/definitions/structs.CheckString'
-      versions:
-        additionalProperties:
-          $ref: '#/definitions/structs.CheckString'
-        type: object
+        type: string
     type: object
   structs.ClusterInfo:
     properties:
@@ -2448,6 +2442,10 @@ definitions:
         type: object
       status:
         $ref: '#/definitions/structs.CheckStatus'
+      versions:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckString'
+        type: object
     type: object
   structs.ParameterGroupParameterInfo:
     properties:

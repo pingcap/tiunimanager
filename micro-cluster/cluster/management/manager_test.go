@@ -1794,7 +1794,7 @@ func Test_compareConfigDifference(t *testing.T) {
 		},
 	}
 
-	resp := compareConfigDifference(cParamInfos, pgParamInfos)
+	resp := compareConfigDifference(context.TODO(), cParamInfos, pgParamInfos)
 	assert.Equal(t, 1, len(resp))
 	item := structs.ProductUpgradeVersionConfigDiffItem{
 		ParamId:      "1",

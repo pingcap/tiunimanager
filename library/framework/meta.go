@@ -26,10 +26,10 @@ import (
 type ServiceNameEnum string
 
 const (
-	MetaDBService  ServiceNameEnum = "go.micro.tiem.db"
-	ClusterService ServiceNameEnum = "go.micro.tiem.cluster"
-	ApiService     ServiceNameEnum = "go.micro.tiem.api"
-	FileService    ServiceNameEnum = "go.micro.tiem.filemng"
+	MetaDBService  ServiceNameEnum = "em.db"
+	ClusterService ServiceNameEnum = "em.cluster"
+	ApiService     ServiceNameEnum = "em.api"
+	FileService    ServiceNameEnum = "em.filemng"
 )
 
 func (s ServiceNameEnum) ServerName() string {

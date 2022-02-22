@@ -39,7 +39,7 @@ import (
 	"syscall"
 )
 
-var inTestingVersion = "InTest"
+var inTestingVersion = "InTesting"
 
 var allVersionInitializers = []system.VersionInitializer{
 	{"", fullDataBeforeVersions},
@@ -53,7 +53,7 @@ var allVersionInitializers = []system.VersionInitializer{
 
 	{inTestingVersion, func() error {
 		return defaultDb.base.Create(&system.VersionInfo{
-			ID:          "InTest",
+			ID:          "InTesting",
 			Desc:        "test version",
 			ReleaseNote: "test",
 		}).Error

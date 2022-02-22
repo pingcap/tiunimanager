@@ -44,3 +44,7 @@ func Test_allVersionInitializers(t *testing.T) {
 	assert.NoError(t, err)
 	// todo add assertion for each new version here
 }
+
+func Test_initBySql(t *testing.T) {
+
+}

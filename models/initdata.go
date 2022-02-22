@@ -122,66 +122,37 @@ func fullDataBeforeVersions() error {
 	}).BreakIf(func() error {
 		framework.LogForkFile(constants.LogFileSystem).Info("init default parameters")
 		parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters.sql"
-		err := syscall.Access(parameterSqlFile, syscall.F_OK)
-		if !os.IsNotExist(err) {
-			sqls, err := ioutil.ReadFile(parameterSqlFile)
-			if err != nil {
-				framework.LogForkFile(constants.LogFileSystem).Errorf("batch import parameters failed, err = %s", err.Error())
-				return err
-			}
-			sqlArr := strings.Split(string(sqls), ";")
-			for _, sql := range sqlArr {
-				if strings.TrimSpace(sql) == "" {
-					continue
-				}
-				// exec import sql
-				defaultDb.base.Exec(sql)
-			}
-		}
-		return nil
+		return initBySql(parameterSqlFile, "parameters")
 	}).BreakIf(func() error {
-		framework.LogForkFile(constants.LogFileSystem).Info("init tiup config")
 		tiUPSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/tiup_configs.sql"
-		err := syscall.Access(tiUPSqlFile, syscall.F_OK)
-		if !os.IsNotExist(err) {
-			sqls, err := ioutil.ReadFile(tiUPSqlFile)
-			if err != nil {
-				framework.LogForkFile(constants.LogFileSystem).Errorf("import tiupconfigs failed, err = %s", err.Error())
-				return err
-			}
-			sqlArr := strings.Split(string(sqls), ";")
-			for _, sql := range sqlArr {
-				if strings.TrimSpace(sql) == "" {
-					continue
-				}
-				// exec import sql
-				defaultDb.base.Exec(sql)
-			}
-		}
-		return nil
+		return initBySql(tiUPSqlFile, "tiup config")
 	}).BreakIf(func() error {
 		// import upgrade paths
 		upgradeSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/upgrades.sql"
-		err := syscall.Access(upgradeSqlFile, syscall.F_OK)
-		if !os.IsNotExist(err) {
-			sqls, err := ioutil.ReadFile(upgradeSqlFile)
-			if err != nil {
-				framework.LogForkFile(constants.LogFileSystem).Errorf("import upgrades failed, err = %s", err.Error())
-				return err
-			}
-			sqlArr := strings.Split(string(sqls), ";")
-			for _, sql := range sqlArr {
-				if strings.TrimSpace(sql) == "" {
-					continue
-				}
-				// exec import sql
-				defaultDb.base.Exec(sql)
-			}
-		}
-		return nil
+		return initBySql(upgradeSqlFile, "upgrade data")
 	}).If(func(err error) {
 		framework.LogForkFile(constants.LogFileSystem).Errorf("init data failed, err = %s", err.Error())
 	}).Else(func() {
 		framework.LogForkFile(constants.LogFileSystem).Infof("init default data succeed")
 	}).Present()
+}
+
+func initBySql(file string, module string) error {
+	err := syscall.Access(file, syscall.F_OK)
+	if !os.IsNotExist(err) {
+		sqls, err := ioutil.ReadFile(file)
+		if err != nil {
+			framework.LogForkFile(constants.LogFileSystem).Errorf("import %s failed, err = %s", module, err.Error())
+			return err
+		}
+		sqlArr := strings.Split(string(sqls), ";")
+		for _, sql := range sqlArr {
+			if strings.TrimSpace(sql) == "" {
+				continue
+			}
+			// exec import sql
+			defaultDb.base.Exec(sql)
+		}
+	}
+	return nil
 }

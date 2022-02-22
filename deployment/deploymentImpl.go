@@ -28,11 +28,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 
 	"github.com/pingcap-inc/tiem/util/disk"
 
@@ -556,6 +559,39 @@ func (m *Manager) Push(ctx context.Context, componentType TiUPComponentType, clu
 
 	m.startAsyncOperation(ctx, id, home, tiUPArgs, timeout)
 	return id, nil
+}
+
+// Pull
+// @Description: wrapper of `tiup cluster pull`
+// @Receiver m
+// @Parameter ctx
+// @Parameter componentType
+// @Parameter clusterID
+// @Parameter remotePath
+// @Parameter localPath
+// @Parameter home
+// @Parameter args
+// @Parameter timeout
+// @return result, content of the file pulled from remotePath
+// @return err
+func (m *Manager) Pull(ctx context.Context, componentType TiUPComponentType, clusterID, remotePath, home string, args []string, timeout int) (result string, err error) {
+	logInFunc := framework.LogWithContext(ctx)
+
+	localPath := fmt.Sprintf("/tmp/%s", uuidutil.GenerateID())
+	//defer os.Remove(localPath)
+	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %s %s %d %s", componentType, CMDPull, clusterID, remotePath, localPath, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
+	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+
+	_, err = m.startSyncOperation(home, tiUPArgs, timeout)
+	if err != nil {
+		return
+	}
+
+	data, err := ioutil.ReadFile(localPath)
+	if err != nil {
+		return
+	}
+	return string(data), nil
 }
 
 // Ctl

@@ -1238,7 +1238,6 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		constants.DBUserBackupRestore,
 		constants.DBUserParameterManagement,
 	}
-
 	cmp, err := meta.CompareTiDBVersion(clusterMeta.Cluster.Version, "v5.2.2")
 	if err != nil {
 		return err

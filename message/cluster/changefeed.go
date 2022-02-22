@@ -23,7 +23,7 @@ import (
 
 type CreateChangeFeedTaskReq struct {
 	Name           string      `json:"name" form:"name" example:"my_sync_name" validate:"required,min=4,max=64"`
-	ClusterID      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22" validate:"required,min=8,max=64"`
+	ClusterID      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22" validate:"required,min=4,max=64"`
 	StartTS        string      `json:"startTS" form:"startTS" example:"415241823337054209"`
 	FilterRules    []string    `json:"rules" form:"rules" example:"*.*"`
 	DownstreamType string      `json:"downstreamType"  form:"downstreamType" example:"tidb" enums:"tidb,kafka,mysql" validate:"required,oneof=tidb kafka mysql"`
@@ -35,7 +35,7 @@ type CreateChangeFeedTaskResp struct {
 }
 
 type QueryChangeFeedTaskReq struct {
-	ClusterId string `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22" validate:"required,min=8,max=64"`
+	ClusterId string `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22" validate:"required,min=4,max=64"`
 	structs.PageRequest
 }
 

@@ -52,6 +52,7 @@ type ClientArgs struct {
 	ElasticsearchAddress string
 	EMClusterName        string
 	EMVersion            string
+	DeployUser           string
 }
 
 func AllFlags(receiver *ClientArgs) []cli.Flag {
@@ -151,6 +152,12 @@ func AllFlags(receiver *ClientArgs) []cli.Flag {
 			Value:       "",
 			Usage:       "Specify the EM version.",
 			Destination: &receiver.EMVersion,
+		},
+		&cli.StringFlag{
+			Name:        "deploy-user",
+			Value:       "",
+			Usage:       "Specify the EM deploy user.",
+			Destination: &receiver.DeployUser,
 		},
 	}
 }

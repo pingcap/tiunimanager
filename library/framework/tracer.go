@@ -18,15 +18,20 @@ package framework
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"fmt"
 	"io"
 	"time"
+
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 
 	"github.com/asim/go-micro/v3/metadata"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
+	opentracinglog "github.com/opentracing/opentracing-go/log"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
+
+	"github.com/asim/go-micro/v3/server"
 )
 
 type Tracer opentracing.Tracer
@@ -38,11 +43,13 @@ type Tracer opentracing.Tracer
 //			metadata key $TiEM_X_TRACE_ID_KEY
 //    normal-ctx
 //			key traceIDCtxKey
-var TiEM_X_TRACE_ID_KEY = "Em-X-Trace-Id"
+const TiEM_X_TRACE_ID_KEY = "Em-X-Trace-Id"
 
-type traceIDCtxKeyType struct{}
+type traceCtxKeyType string
 
-var traceIDCtxKey traceIDCtxKeyType
+const traceIDCtxKey = traceCtxKeyType(TiEM_X_TRACE_ID_KEY)
+const traceMicroServiceNameCtxKey = traceCtxKeyType("Em-X-Micro-Service-Name")
+const traceMicroEndpointNameCtxKey = traceCtxKeyType("Em-X-Micro-Endpoint-Name")
 
 const TiEM_X_USER_ID_KEY = "Em-X-User-Id"
 
@@ -91,16 +98,23 @@ type BackgroundTask struct {
 	currentCtx     context.Context
 	currentTraceID string
 	fn             func(context.Context) error
-	comments       string
+	span           opentracing.Span
+	operationName  string
 	// close to notify error return is ready
 	retNotifyCh chan struct{}
 	retErr      error
 }
 
+// NewBackgroundMicroCtx is deprecated and now is only a noop function which the arg `fromMicroCtx` is returned.
+// Please use functions like `StartBackgroundTask` instead.
+func NewBackgroundMicroCtx(fromMicroCtx context.Context, newTraceIDFlag bool) context.Context {
+	return fromMicroCtx
+}
+
 // NewBackgroundMicroCtx return a new background micro ctx.
 // A new traceID would be generated if newTraceIDFlag is true. Otherwise, the old traceID would be used again.
 // The new ctx returned is never canceled, and has no deadline.
-func NewBackgroundMicroCtx(fromMicroCtx context.Context, newTraceIDFlag bool) context.Context {
+func newBackgroundMicroCtx(fromMicroCtx context.Context, newTraceIDFlag bool) context.Context {
 	if fromMicroCtx == nil {
 		retCtx := NewMicroContextWithKeyValuePairs(
 			context.Background(),
@@ -133,15 +147,41 @@ func NewBackgroundMicroCtx(fromMicroCtx context.Context, newTraceIDFlag bool) co
 	return retCtx
 }
 
+func getCurrentServiceName() string {
+	if Current == nil {
+		return ""
+	}
+	m := Current.GetServiceMeta()
+	if m == nil {
+		return ""
+	}
+	return string(m.ServiceName)
+}
+
+func getCurrentTracer() opentracing.Tracer {
+	if Current == nil {
+		return opentracing.GlobalTracer()
+	}
+	return *Current.GetTracer()
+}
+
 // NewBackgroundTask return a new background task but do not start it in this function call.
-func NewBackgroundTask(fromCtx context.Context, comments string, fn func(context.Context) error) *BackgroundTask {
+func NewBackgroundTask(fromCtx context.Context, operationName string, fn func(context.Context) error) *BackgroundTask {
+	currentCtxInfo := getCurrentMicroCtxInfo(fromCtx)
+	if len(operationName) <= 0 {
+		operationName = fmt.Sprintf("%s BackgroundTask", currentCtxInfo)
+	}
 	var fromTraceID string
 	if fromCtx == nil {
 		fromTraceID = ""
 	} else {
 		fromTraceID = GetTraceIDFromContext(fromCtx)
 	}
-	newCtx := NewBackgroundMicroCtx(fromCtx, true)
+	newCtx := newBackgroundMicroCtx(fromCtx, false)
+	span := getCurrentTracer().StartSpan(operationName)
+	span.LogKV("spawn-from", currentCtxInfo)
+	newCtx = opentracing.ContextWithSpan(newCtx, span)
+	span.SetTag(TiEM_X_TRACE_ID_KEY, GetTraceIDFromContext(newCtx))
 	currentTraceID := getStringValueFromMicroContext(newCtx, TiEM_X_TRACE_ID_KEY)
 	t := &BackgroundTask{
 		fromCtx:        fromCtx,
@@ -149,25 +189,39 @@ func NewBackgroundTask(fromCtx context.Context, comments string, fn func(context
 		currentCtx:     newCtx,
 		currentTraceID: currentTraceID,
 		fn:             fn,
-		comments:       comments,
+		span:           span,
+		operationName:  operationName,
 		retNotifyCh:    make(chan struct{}),
 	}
 	return t
 }
 
+func getCurrentMicroCtxInfo(ctx context.Context) string {
+	serviceName := GetMicroServiceNameFromContext(ctx)
+	endpointName := GetMicroEndpointNameFromContext(ctx)
+	if len(serviceName) <= 0 || len(endpointName) <= 0 {
+		return getCurrentServiceName()
+	} else {
+		return fmt.Sprintf("%s.%s", serviceName, endpointName)
+	}
+}
+
 // Exec exec this task in current goroutine
 func (p *BackgroundTask) Exec() error {
+	defer p.span.Finish()
 	if len(p.fromTraceID) > 0 {
 		LogWithContext(p.currentCtx).Infof("start new background task from traceID %s with comments: %s",
-			p.fromTraceID, p.comments,
+			p.fromTraceID, p.operationName,
 		)
 	} else {
-		LogWithContext(p.currentCtx).Infof("start new background task with comments: %s", p.comments)
+		LogWithContext(p.currentCtx).Infof("start new background task with comments: %s", p.operationName)
 	}
 	err := p.fn(p.currentCtx)
 	p.retErr = err
 	close(p.retNotifyCh)
 	if err != nil {
+		p.span.LogFields(opentracinglog.String("error", err.Error()))
+		p.span.SetTag("error", true)
 		LogWithContext(p.currentCtx).Errorf("background task returned an error: %s", err)
 	} else {
 		LogWithContext(p.currentCtx).Info("background task finished successfully")
@@ -257,8 +311,8 @@ func getTraceIDFromGinContext(ctx *gin.Context) string {
 	}
 }
 
-func getTraceIDFromNormalContext(ctx context.Context) string {
-	v := ctx.Value(traceIDCtxKey)
+func getStringValueFromNormalContext(ctx context.Context, key traceCtxKeyType) string {
+	v := ctx.Value(key)
 	if v == nil {
 		return ""
 	}
@@ -268,6 +322,10 @@ func getTraceIDFromNormalContext(ctx context.Context) string {
 	} else {
 		return ""
 	}
+}
+
+func getTraceIDFromNormalContext(ctx context.Context) string {
+	return getStringValueFromNormalContext(ctx, traceIDCtxKey)
 }
 
 // GetTraceIDFromContext Get TraceID from ctx
@@ -335,6 +393,16 @@ func GetTenantIDFromContext(ctx context.Context) string {
 	return getStringValueFromContext(ctx, TiEM_X_TENANT_ID_KEY)
 }
 
+// GetMicroServiceNameFromContext Get MicroServiceName from ctx, something like "em.cluster"
+func GetMicroServiceNameFromContext(ctx context.Context) string {
+	return getStringValueFromNormalContext(ctx, traceMicroServiceNameCtxKey)
+}
+
+// GetMicroEndpointNameFromContext Get MicroEndpointName from ctx, something like "ClusterService.Login"
+func GetMicroEndpointNameFromContext(ctx context.Context) string {
+	return getStringValueFromNormalContext(ctx, traceMicroEndpointNameCtxKey)
+}
+
 func getParentSpanFromGinContext(ctx context.Context) opentracing.Span {
 	AssertWithInfo(ctx != nil, "ctx should not be nil")
 	switch v := ctx.(type) {
@@ -347,5 +415,18 @@ func getParentSpanFromGinContext(ctx context.Context) opentracing.Span {
 		}
 	default:
 		return nil
+	}
+}
+
+// NewMicroHandlerWrapper inject serviceName and endpointName into current ctx
+func NewMicroHandlerWrapper() server.HandlerWrapper {
+	return func(h server.HandlerFunc) server.HandlerFunc {
+		return func(ctx context.Context, req server.Request, rsp interface{}) error {
+			serviceName := req.Service()
+			endpointName := req.Endpoint()
+			ctx = context.WithValue(ctx, traceMicroServiceNameCtxKey, serviceName)
+			ctx = context.WithValue(ctx, traceMicroEndpointNameCtxKey, endpointName)
+			return h(ctx, req, rsp)
+		}
 	}
 }

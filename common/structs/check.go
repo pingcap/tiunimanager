@@ -60,15 +60,13 @@ type TenantCheck struct {
 type ClusterCheck struct {
 	ID                string                             `json:"clusterID"`
 	MaintenanceStatus constants.ClusterMaintenanceStatus `json:"maintenanceStatus"`
-	ConnectionCount   int32                              `json:"connectionCount"`
 	CPU               int32                              `json:"cpu"`
 	Memory            int32                              `json:"memory"`
 	Storage           int32                              `json:"storage"`
 	Copies            CheckInt32                         `json:"copies"`
 	TLS               CheckBool                          `json:"tls"`
-	Versions          map[string]CheckString             `json:"versions"`
 	AccountStatus     CheckStatus                        `json:"accountStatus"`
-	Topology          CheckString                        `json:"topology"`
+	Topology          string                             `json:"topology"`
 	RegionStatus      CheckStatus                        `json:"regionStatus"`
 	Instances         []InstanceCheck                    `json:"instances"`
 	BackupStrategy    CheckString                        `json:"backupStrategy"`
@@ -76,9 +74,10 @@ type ClusterCheck struct {
 }
 
 type InstanceCheck struct {
-	ID         string              `json:"instanceID"`
-	Status     CheckStatus         `json:"status"`
-	Parameters map[string]CheckAny `json:"parameters"`
+	ID         string                 `json:"instanceID"`
+	Status     CheckStatus            `json:"status"`
+	Parameters map[string]CheckAny    `json:"parameters"`
+	Versions   map[string]CheckString `json:"versions"`
 }
 
 type CheckRangeInt32 struct {
@@ -104,14 +103,14 @@ type CheckError struct {
 }
 
 type HostCheck struct {
-	SELinux      CheckSwitch  `json:"selinux"`
-	Firewall     CheckSwitch  `json:"firewall"`
-	Swap         CheckSwitch  `json:"swap"`
-	Memory       CheckInt32   `json:"memory"`
-	CPU          CheckInt32   `json:"cpu"`
-	Disk         CheckInt32   `json:"disk"`
-	StorageRatio float32      `json:"storageRatio"`
-	Errors       []CheckError `json:"errors"`
+	SELinux         CheckSwitch  `json:"selinux"`
+	Firewall        CheckSwitch  `json:"firewall"`
+	Swap            CheckSwitch  `json:"swap"`
+	MemoryAllocated CheckInt32   `json:"memory"`
+	CPUAllocated    CheckInt32   `json:"cpu"`
+	DiskAllocated   CheckInt32   `json:"disk"`
+	StorageRatio    float32      `json:"storageRatio"`
+	Errors          []CheckError `json:"errors"`
 }
 
 type CheckReportInfo struct {

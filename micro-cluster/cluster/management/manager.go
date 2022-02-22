@@ -1019,7 +1019,9 @@ func compareConfigDifference(ctx context.Context, clusterParameterInfos []struct
 					SuggestValue: pgParam.DefaultValue,
 					Type:         pgParam.Type,
 					Unit:         pgParam.Unit,
+					UnitOptions:  pgParam.UnitOptions,
 					Range:        pgParam.Range,
+					RangeType:    pgParam.RangeType,
 					Description:  pgParam.Description,
 				})
 			}

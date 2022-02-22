@@ -1751,7 +1751,9 @@ func Test_compareConfigDifference(t *testing.T) {
 			},
 			Type:        1,
 			Unit:        "MB",
+			UnitOptions: []string{"KB", "MB", "GB"},
 			Range:       []string{"1, 100"},
+			RangeType:   1,
 			Description: "param1 desc",
 		},
 		{
@@ -1764,7 +1766,9 @@ func Test_compareConfigDifference(t *testing.T) {
 			},
 			Type:        2,
 			Unit:        "GB",
+			UnitOptions: []string{"KB", "MB", "GB"},
 			Range:       []string{"1, 1000"},
+			RangeType:   1,
 			Description: "param2 desc",
 		},
 	}
@@ -1778,7 +1782,9 @@ func Test_compareConfigDifference(t *testing.T) {
 			DefaultValue: "v1new",
 			Type:         1,
 			Unit:         "MB",
+			UnitOptions:  []string{"KB", "MB", "GB"},
 			Range:        []string{"1, 100"},
+			RangeType:    1,
 			Description:  "param1 desc",
 		},
 		{
@@ -1789,7 +1795,9 @@ func Test_compareConfigDifference(t *testing.T) {
 			DefaultValue: "v2",
 			Type:         2,
 			Unit:         "GB",
+			UnitOptions:  []string{"KB", "MB", "GB"},
 			Range:        []string{"1, 1000"},
+			RangeType:    1,
 			Description:  "param2 desc",
 		},
 	}
@@ -1805,7 +1813,9 @@ func Test_compareConfigDifference(t *testing.T) {
 		SuggestValue: "v1new",
 		Type:         1,
 		Unit:         "MB",
+		UnitOptions:  []string{"KB", "MB", "GB"},
 		Range:        []string{"1, 100"},
+		RangeType:    1,
 		Description:  "param1 desc",
 	}
 	assert.Equal(t, item, resp[0])

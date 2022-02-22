@@ -37,6 +37,10 @@ func NewHostInspector() HostInspector {
 	return hostInspector
 }
 
+func (p *HostInspect) SetResourceReaderWriter(rw resource.ReaderWriter) {
+	p.resouceRW = rw
+}
+
 func (p *HostInspect) CheckCpuCores(ctx context.Context, host *structs.HostInfo) (result *structs.CheckInt32, err error) {
 	return
 }
@@ -79,7 +83,7 @@ func (p *HostInspect) CheckCpuAllocated(ctx context.Context, hosts []structs.Hos
 				log.Errorf("used cores mismatch between resource module and cluster module on host %s, expected %d, got %d", k, (*v).ExpectedValue, (*v).RealValue)
 			}
 		}
-		return result, errors.NewError(errors.TIEM_RESOURCE_CHECK_DISKS_ERROR, "used cores mismatch between resource module and cluster module")
+		return result, errors.NewError(errors.TIEM_RESOURCE_CHECK_COMPUTES_ERROR, "used cores mismatch between resource module and cluster module")
 	}
 	return
 }
@@ -102,7 +106,7 @@ func (p *HostInspect) CheckMemAllocated(ctx context.Context, hosts []structs.Hos
 				log.Errorf("used memory mismatch between hosts table and used_compute on host %s, expected %d, got %d", k, (*v).ExpectedValue, (*v).RealValue)
 			}
 		}
-		return result, errors.NewError(errors.TIEM_RESOURCE_CHECK_COMPUTES_ERROR, "used cores mismatch between hosts table and used_compute")
+		return result, errors.NewError(errors.TIEM_RESOURCE_CHECK_COMPUTES_ERROR, "used memory mismatch between hosts table and used_compute")
 	}
 	result = p.generateCheckInt32Result(hostIds, resultFromHostTable, resultFromInstTable)
 	if !reflect.DeepEqual(resultFromHostTable, resultFromInstTable) {
@@ -112,7 +116,7 @@ func (p *HostInspect) CheckMemAllocated(ctx context.Context, hosts []structs.Hos
 				log.Errorf("used memory mismatch between resource module and cluster module on host %s, expected %d, got %d", k, (*v).ExpectedValue, (*v).RealValue)
 			}
 		}
-		return result, errors.NewError(errors.TIEM_RESOURCE_CHECK_DISKS_ERROR, "used memory mismatch between resource module and cluster module")
+		return result, errors.NewError(errors.TIEM_RESOURCE_CHECK_COMPUTES_ERROR, "used memory mismatch between resource module and cluster module")
 	}
 	return
 }
@@ -134,7 +138,7 @@ func (p *HostInspect) CheckDiskAllocated(ctx context.Context, hosts []structs.Ho
 		for hostId, disks := range result {
 			for diskId, status := range disks {
 				if !status.Valid {
-					log.Errorf("used disk mismatch between hosts table and used_compute on host %s, disk %s, expected %d, got %d",
+					log.Errorf("used disk status mismatch between hosts table and used_compute on host %s, disk %s, expected %s, got %s",
 						hostId, diskId, status.ExpectedValue, status.RealValue)
 				}
 			}
@@ -147,7 +151,7 @@ func (p *HostInspect) CheckDiskAllocated(ctx context.Context, hosts []structs.Ho
 		for hostId, disks := range result {
 			for diskId, status := range disks {
 				if !status.Valid {
-					log.Errorf("used disk mismatch between hosts table and used_compute on host %s, disk %s, expected %d, got %d",
+					log.Errorf("used disk status mismatch between hosts table and used_compute on host %s, disk %s, expected %s, got %s",
 						hostId, diskId, status.ExpectedValue, status.RealValue)
 				}
 			}

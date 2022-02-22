@@ -26,7 +26,7 @@ type HostInspector interface {
 	CheckMemorySize(ctx context.Context, host *structs.HostInfo) (result *structs.CheckInt32, err error)
 	CheckCpuAllocated(ctx context.Context, hosts []structs.HostInfo) (result map[string]*structs.CheckInt32, err error)
 	CheckMemAllocated(ctx context.Context, hosts []structs.HostInfo) (result map[string]*structs.CheckInt32, err error)
-	CheckDiskAllocated(ctx context.Context, hosts []structs.HostInfo) (inconsistDisks map[string]map[string]*structs.CheckString, err error)
-	CheckDiskSize(ctx context.Context, host *structs.HostInfo) (inconsistDisks map[string]*structs.CheckInt32, err error)
-	CheckDiskRatio(ctx context.Context, host *structs.HostInfo) (inconsistDisks map[string]*structs.CheckInt32, err error)
+	CheckDiskAllocated(ctx context.Context, hosts []structs.HostInfo) (result map[string]map[string]*structs.CheckString, err error)
+	CheckDiskSize(ctx context.Context, host *structs.HostInfo) (result map[string]*structs.CheckInt32, err error)
+	CheckDiskRatio(ctx context.Context, host *structs.HostInfo) (result map[string]*structs.CheckInt32, err error)
 }

@@ -1818,7 +1818,7 @@ func Test_compareConfigDifference(t *testing.T) {
 		RangeType:    1,
 		Description:  "param1 desc",
 	}
-	assert.Equal(t, item, resp[0])
+	assert.Equal(t, item, *resp[0])
 }
 
 func TestManager_InPlaceUpgradeCluster(t *testing.T) {

@@ -967,9 +967,18 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 			Name:       "cluster01",
 			DBPassword: "1234",
 			Region:     "Region01",
+		}, []structs.ClusterResourceParameterCompute{
+			{"TiDB", 2, []structs.ClusterResourceParameterComputeResource{
+				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+			}},
+			{"TiKV", 2, []structs.ClusterResourceParameterComputeResource{
+				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+			}},
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, 1, len(got.Instances))
+		assert.Equal(t, 5, len(got.Instances))
 	})
 
 	t.Run("version error", func(t *testing.T) {
@@ -979,6 +988,15 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 			DBPassword: "1234",
 			Region:     "Region01",
 			Version:    "v3.0.0",
+		}, []structs.ClusterResourceParameterCompute{
+			{"TiDB", 2, []structs.ClusterResourceParameterComputeResource{
+				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+			}},
+			{"TiKV", 2, []structs.ClusterResourceParameterComputeResource{
+				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+			}},
 		})
 		assert.Error(t, err)
 	})
@@ -1475,19 +1493,6 @@ func TestClusterMeta_Display(t *testing.T) {
 			MaintenanceStatus: constants.ClusterMaintenanceCreating,
 		},
 		Instances: map[string][]*management.ClusterInstance{
-			"Prometheus": {
-				{
-					Entity: common.Entity{
-						Status: string(constants.ClusterInstanceRunning),
-					},
-					Zone:     "zone1",
-					CpuCores: 4,
-					Memory:   8,
-					Type:     "Prometheus",
-					Version:  "v5.0.0",
-					HostIP:   []string{"127.0.0.1"},
-				},
-			},
 			"TiDB": {
 				{
 					Entity: common.Entity{
@@ -1538,21 +1543,6 @@ func TestClusterMeta_Display(t *testing.T) {
 					Version:  "v5.0.0",
 					Ports:    []int32{1},
 					HostIP:   []string{"127.0.0.1"},
-				},
-			},
-
-			"Grafana": {
-				{
-					Entity: common.Entity{
-						Status: string(constants.ClusterInstanceRunning),
-					},
-					Zone:     "zone1",
-					CpuCores: 4,
-					Memory:   8,
-					Type:     "Grafana",
-					Version:  "v5.0.0",
-					HostIP:   []string{"127.4.5.6"},
-					Ports:    []int32{888},
 				},
 			},
 			"TiKV": {
@@ -1616,6 +1606,34 @@ func TestClusterMeta_Display(t *testing.T) {
 					Ports:    []int32{999},
 				},
 			},
+
+			"Grafana": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone:     "zone1",
+					CpuCores: 4,
+					Memory:   8,
+					Type:     "Grafana",
+					Version:  "v5.0.0",
+					HostIP:   []string{"127.4.5.6"},
+					Ports:    []int32{888},
+				},
+			},
+			"Prometheus": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone:     "zone1",
+					CpuCores: 4,
+					Memory:   8,
+					Type:     "Prometheus",
+					Version:  "v5.0.0",
+					HostIP:   []string{"127.0.0.1"},
+				},
+			},
 		},
 	}
 
@@ -1636,16 +1654,16 @@ func TestClusterMeta_Display(t *testing.T) {
 	})
 	t.Run("instance", func(t *testing.T) {
 		topology, resource := meta.DisplayInstanceInfo(context.TODO())
-		assert.Equal(t, 8, len(topology.Topology))
+		assert.Equal(t, 11, len(topology.Topology))
 		assert.Equal(t, topology.Topology[1].Type, topology.Topology[0].Type)
 		assert.NotEqual(t, topology.Topology[3].Type, topology.Topology[4].Type)
 
-		assert.Equal(t, 2, len(resource.InstanceResource))
+		assert.Equal(t, 5, len(resource.InstanceResource))
 		assert.Equal(t, 4, resource.InstanceResource[0].Count)
 		assert.NotEqual(t, resource.InstanceResource[0].Type, resource.InstanceResource[1].Type)
-		assert.Equal(t, 3, len(resource.InstanceResource[1].Resource))
+		//assert.Equal(t, 3, len(resource.InstanceResource[1].Resource))
 		assert.Equal(t, 2, resource.InstanceResource[0].Resource[0].Count)
-		assert.Equal(t, 1, resource.InstanceResource[1].Resource[1].Count)
+		//assert.Equal(t, 1, resource.InstanceResource[1].Resource[1].Count)
 	})
 }
 

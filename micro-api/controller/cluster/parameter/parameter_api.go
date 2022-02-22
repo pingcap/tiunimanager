@@ -83,26 +83,3 @@ func UpdateParameters(c *gin.Context) {
 			controller.DefaultTimeout)
 	}
 }
-
-// InspectParameters inspect parameters
-// @Summary inspect parameters
-// @Description inspect parameters
-// @Tags cluster parameters
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param clusterId path string true "clusterId"
-// @Success 200 {object} controller.CommonResult{data=[]cluster.InspectClusterParametersResp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /clusters/{clusterId}/params/inspect [post]
-func InspectParameters(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.InspectClusterParametersReq{
-		ClusterID: c.Param(paramNameOfClusterId),
-	}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.InspectClusterParameters, &cluster.InspectClusterParametersResp{},
-			requestBody,
-			controller.DefaultTimeout)
-	}
-}

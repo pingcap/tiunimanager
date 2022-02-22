@@ -264,6 +264,7 @@ mock:
 	mockgen -destination ./test/mockmodels/mockmanagement/mock_management_interface.go -package mockmanagement -source ./models/cluster/management/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockworkflow/mock_workflow_interface.go -package mockworkflow -source ./models/workflow/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockbr/mock_br_interface.go -package mockbr -source ./models/cluster/backuprestore/readerwriter.go
+	mockgen -destination ./test/mockmodels/mockupgrade/mock_upgrade_interface.go -package mockupgrade -source ./models/cluster/upgrade/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockimportexport/mock_importexport_interface.go -package mockimportexport -source ./models/datatransfer/importexport/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockresource/mock_resource_interface.go -package mockresource -source ./models/resource/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockconfig/mock_config_interface.go -package mockconfig -source ./models/platform/config/readerwriter.go
@@ -292,6 +293,7 @@ mock:
 	mockgen -destination ./test/mockutiltikv/mock_utiltikv.go -package mockutiltikv -source ./util/api/tikv/clusterconfig.go
 	mockgen -destination ./test/mockutiltidbhttp/mock_utiltidbhttp.go -package mockutiltidbhttp -source ./util/api/tidb/http/clusterconfig.go
 	mockgen -destination ./test/mockutiltidbsql_config/mock_utiltidbsql_config.go -package mockutiltidbsqlconfig -source ./util/api/tidb/sql/clusterconfig.go
+	mockgen -destination ./test/mockutilcdc/mock_utilcdc_change_feed.go -package mockutilcdc -source ./util/api/cdc/changefeed.go
 
 swag:
 	$(GO) install github.com/swaggo/swag/cmd/swag@v1.7.1

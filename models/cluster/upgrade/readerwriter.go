@@ -13,4 +13,56 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
+/*******************************************************************************
+ * @File: productupgradepath
+ * @Description:
+ * @Author: shenhaibo@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/3
+*******************************************************************************/
+
 package upgrade
+
+import (
+	"context"
+
+	"github.com/pingcap-inc/tiem/common/constants"
+)
+
+type ReaderWriter interface {
+	// Create
+	// @Description: create a product upgrade path
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter task
+	// @return *ProductUpgradePath
+	// @return error
+	Create(ctx context.Context, upgradeType constants.UpgradeType, emProductIDType constants.EMProductIDType,
+		srcVersion string, dstVersion string) (*ProductUpgradePath, error)
+
+	// Get
+	// @Description: get from id
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter pathId
+	// @return *ProductUpgradePath
+	// @return error if task non-existent
+	Get(ctx context.Context, id string) (*ProductUpgradePath, error)
+
+	// QueryBySrcVersion
+	// @Description: query ProductUpgradePath s for given srcVersion
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter srcVersion
+	// @return []*ProductUpgradePath
+	// @return error if srcVersion is invalid
+	QueryBySrcVersion(ctx context.Context, srcVersion string) (paths []*ProductUpgradePath, err error)
+
+	// Delete
+	// @Description: delete a product upgrade path
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter id
+	// @return err if task non-existent
+	Delete(ctx context.Context, id string) (err error)
+}

@@ -35,11 +35,12 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/user/account"
 	"github.com/pingcap-inc/tiem/micro-cluster/user/identification"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
-
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
+
+	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
+
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 	clusterLog "github.com/pingcap-inc/tiem/micro-cluster/cluster/log"
 	clusterManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/management"
@@ -196,6 +197,7 @@ func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, 
 
 	return nil
 }
+
 func (handler *ClusterServiceHandler) DetailChangeFeedTask(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "DetailChangeFeedTask", int(resp.GetCode()))
@@ -418,7 +420,7 @@ func (handler *ClusterServiceHandler) InspectClusterParameters(ctx context.Conte
 	defer metrics.HandleClusterMetrics(start, "InspectClusterParameters", int(resp.GetCode()))
 	defer handlePanic(ctx, "InspectClusterParameters", resp)
 
-	request := &cluster.InspectClusterParametersReq{}
+	request := &cluster.InspectParametersReq{}
 
 	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceParameter), Action: string(constants.RbacActionRead)}}) {
 		result, err := handler.clusterParameterManager.InspectClusterParameters(framework.NewBackgroundMicroCtx(ctx, false), *request)
@@ -573,7 +575,7 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterser
 	request := cluster.QueryClustersReq{}
 
 	if handleRequest(ctx, req, resp, &request, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionRead)}}) {
-		result, total, err := c.clusterManager.QueryCluster(framework.NewBackgroundMicroCtx(ctx, false), request)
+		result, total, err := c.clusterManager.QueryCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, &clusterservices.RpcPage{
 			Page:     int32(request.Page),
 			PageSize: int32(request.PageSize),
@@ -872,7 +874,7 @@ func (c *ClusterServiceHandler) Login(ctx context.Context, req *clusterservices.
 
 	loginReq := message.LoginReq{}
 	if handleRequest(ctx, req, resp, &loginReq, []structs.RbacPermission{}) {
-		result, err := c.authManager.Login(framework.NewBackgroundMicroCtx(ctx, false), loginReq)
+		result, err := c.authManager.Login(ctx, loginReq)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -900,7 +902,7 @@ func (c *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *cluster
 
 	verReq := message.AccessibleReq{}
 	if handleRequest(ctx, req, resp, &verReq, []structs.RbacPermission{}) {
-		result, err := c.authManager.Accessible(framework.NewBackgroundMicroCtx(ctx, false), verReq)
+		result, err := c.authManager.Accessible(ctx, verReq)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -1453,5 +1455,62 @@ func (handler *ClusterServiceHandler) UpdateTenantProfile(ctx context.Context, r
 		resp, err := handler.accountManager.UpdateTenantProfile(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) CreateProductUpgradePath(context.Context, *clusterservices.RpcRequest, *clusterservices.RpcResponse) error {
+	panic("implement me")
+}
+
+func (handler *ClusterServiceHandler) DeleteProductUpgradePath(context.Context, *clusterservices.RpcRequest, *clusterservices.RpcResponse) error {
+	panic("implement me")
+}
+
+func (handler *ClusterServiceHandler) UpdateProductUpgradePath(context.Context, *clusterservices.RpcRequest, *clusterservices.RpcResponse) error {
+	panic("implement me")
+}
+
+func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "QueryProductUpgradePath", int(resp.GetCode()))
+	defer handlePanic(ctx, "QueryProductUpgradePath", resp)
+
+	request := &cluster.QueryUpgradePathReq{}
+
+	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionRead)}}) {
+		result, err := handler.clusterManager.QueryProductUpdatePath(ctx, request.ClusterID)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "QueryUpgradeVersionDiffInfo", int(resp.GetCode()))
+	defer handlePanic(ctx, "QueryUpgradeVersionDiffInfo", resp)
+
+	request := &cluster.QueryUpgradeVersionDiffInfoReq{}
+
+	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionRead)}}) {
+		result, err := handler.clusterManager.QueryUpgradeVersionDiffInfo(ctx, request.ClusterID, request.TargetVersion)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) UpgradeCluster(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "UpgradeCluster", int(resp.GetCode()))
+	defer handlePanic(ctx, "UpgradeCluster", resp)
+
+	request := &cluster.UpgradeClusterReq{}
+
+	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionUpdate)}}) {
+		result, err := handler.clusterManager.InPlaceUpgradeCluster(framework.NewBackgroundMicroCtx(ctx, false), *request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
 	return nil
 }

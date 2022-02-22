@@ -18,9 +18,11 @@ package models
 import (
 	"github.com/asim/go-micro/v3/util/file"
 	"github.com/pingcap-inc/tiem/common/errors"
+
 	"github.com/pingcap-inc/tiem/models/platform/product"
 	"github.com/pingcap-inc/tiem/models/platform/system"
 	"github.com/pingcap-inc/tiem/models/user/rbac"
+	gormopentracing "gorm.io/plugin/opentracing"
 
 	"github.com/pingcap-inc/tiem/models/tiup"
 
@@ -35,6 +37,7 @@ import (
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/cluster/parameter"
+	"github.com/pingcap-inc/tiem/models/cluster/upgrade"
 	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/models/parametergroup"
 	"github.com/pingcap-inc/tiem/models/platform/config"
@@ -55,6 +58,7 @@ type database struct {
 	importExportReaderWriter         importexport.ReaderWriter
 	brReaderWriter                   backuprestore.ReaderWriter
 	changeFeedReaderWriter           changefeed.ReaderWriter
+	upgradeReadWriter                upgrade.ReaderWriter
 	clusterReaderWriter              management.ReaderWriter
 	parameterGroupReaderWriter       parametergroup.ReaderWriter
 	clusterParameterReaderWriter     parameter.ReaderWriter
@@ -87,6 +91,15 @@ func Open(fw *framework.BaseFramework) error {
 	} else {
 		logins.Infof("open database succeed, filepath: %s", dbFilePath)
 	}
+	db.Use(gormopentracing.New(
+		gormopentracing.WithSqlParameters(false),
+		gormopentracing.WithCreateOpName("em.db.create"),
+		gormopentracing.WithDeleteOpName("em.db.delete"),
+		gormopentracing.WithQueryOpName("em.db.query"),
+		gormopentracing.WithRawOpName("em.db.raw"),
+		gormopentracing.WithRowOpName("em.db.row"),
+		gormopentracing.WithUpdateOpName("em.db.update"),
+	))
 
 	defaultDb = &database{
 		base: db,
@@ -167,6 +180,7 @@ func (p *database) migrateTables() (err error) {
 		new(changefeed.ChangeFeedTask),
 		new(workflow.WorkFlow),
 		new(workflow.WorkFlowNode),
+		new(upgrade.ProductUpgradePath),
 		new(management.Cluster),
 		new(management.ClusterInstance),
 		new(management.ClusterRelation),
@@ -205,6 +219,7 @@ func (p *database) initReaderWriters() {
 	defaultDb.workFlowReaderWriter = workflow.NewFlowReadWrite(defaultDb.base)
 	defaultDb.importExportReaderWriter = importexport.NewImportExportReadWrite(defaultDb.base)
 	defaultDb.brReaderWriter = backuprestore.NewBRReadWrite(defaultDb.base)
+	defaultDb.upgradeReadWriter = upgrade.NewGormProductUpgradePath(defaultDb.base)
 	defaultDb.resourceReaderWriter = resource_rw.NewGormResourceReadWrite(defaultDb.base)
 	defaultDb.parameterGroupReaderWriter = parametergroup.NewParameterGroupReadWrite(defaultDb.base)
 	defaultDb.clusterParameterReaderWriter = parameter.NewClusterParameterReadWrite(defaultDb.base)
@@ -245,6 +260,14 @@ func SetImportExportReaderWriter(rw importexport.ReaderWriter) {
 
 func GetBRReaderWriter() backuprestore.ReaderWriter {
 	return defaultDb.brReaderWriter
+}
+
+func GetUpgradeReaderWriter() upgrade.ReaderWriter {
+	return defaultDb.upgradeReadWriter
+}
+
+func SetUpgradeReaderWriter(rw upgrade.ReaderWriter) {
+	defaultDb.upgradeReadWriter = rw
 }
 
 func SetResourceReaderWriter(rw resource.ReaderWriter) {

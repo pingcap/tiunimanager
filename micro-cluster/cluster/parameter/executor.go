@@ -196,7 +196,7 @@ func validationParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCon
 	for _, param := range modifyParam.Params {
 		// validate parameter value by range field
 		if !ValidateRange(param, true) {
-			if len(param.Range) == 2 && (param.Type == int(Integer) || param.Type == int(Float)) {
+			if param.RangeType == int(ContinuousRange) && len(param.Range) == 2 {
 				return fmt.Errorf(fmt.Sprintf("Validation parameter `%s` failed, update value: %s, can take a range of values: %v",
 					DisplayFullParameterName(param.Category, param.Name), param.RealValue.ClusterValue, param.Range))
 			} else {
@@ -205,7 +205,7 @@ func validationParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCon
 			}
 		}
 	}
-	node.Record("validate parameters ")
+	node.Record("validate parameters")
 	return nil
 }
 
@@ -388,17 +388,13 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 		for comp, params := range compContainer {
 			cm := map[string]interface{}{}
 			for _, param := range params {
-				configKey := param.Name
-				// set config key from system variable
-				if param.SystemVariable != "" {
-					configKey = param.SystemVariable
-				}
 				clusterValue, err := convertRealParameterType(ctx, param)
 				if err != nil {
 					framework.LogWithContext(ctx).Errorf("convert real parameter type err = %v", err)
 					return err
 				}
-				cm[configKey] = clusterValue
+				// display full parameter name
+				cm[DisplayFullParameterName(param.Category, param.Name)] = clusterValue
 			}
 			clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
 

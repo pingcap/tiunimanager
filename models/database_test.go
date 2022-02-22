@@ -87,6 +87,9 @@ func TestGetReaderWriter(t *testing.T) {
 	SetProductReaderWriter(nil)
 	assert.Empty(t, GetProductReaderWriter())
 
+	assert.NotEmpty(t, GetUpgradeReaderWriter())
+	SetUpgradeReaderWriter(nil)
+	assert.Empty(t, GetUpgradeReaderWriter())
 
 	assert.NotEmpty(t, GetSystemReaderWriter())
 	SetSystemReaderWriter(nil)

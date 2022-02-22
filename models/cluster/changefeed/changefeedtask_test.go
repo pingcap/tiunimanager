@@ -18,11 +18,12 @@ package changefeed
 import (
 	"context"
 	"database/sql"
+	"testing"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func TestChangeFeedTask_Locked(t1 *testing.T) {
@@ -209,7 +210,7 @@ func TestGormChangeFeedReadWrite_Query(t *testing.T) {
 		assert.Equal(t, 1, int(total))
 		assert.Equal(t, 1111, int(tasks[0].StartTS))
 
-		tasks, total, err = testRW.Query(context.TODO(), "6666", []constants.DownstreamType{constants.DownstreamTypeTiDB,constants.DownstreamTypeMysql}, []constants.ChangeFeedStatus{}, 0, 8)
+		tasks, total, err = testRW.Query(context.TODO(), "6666", []constants.DownstreamType{constants.DownstreamTypeTiDB, constants.DownstreamTypeMysql}, []constants.ChangeFeedStatus{}, 0, 8)
 		assert.NoError(t, err)
 		assert.Equal(t, 2, int(total))
 		assert.Equal(t, 5555, int(tasks[1].StartTS))
@@ -220,7 +221,7 @@ func TestGormChangeFeedReadWrite_Query(t *testing.T) {
 		assert.Equal(t, 2, int(total))
 		assert.Equal(t, 9999, int(tasks[0].StartTS))
 
-		tasks, total, err = testRW.Query(context.TODO(), "6666", []constants.DownstreamType{constants.DownstreamTypeTiDB,constants.DownstreamTypeMysql,constants.DownstreamTypeKafka}, []constants.ChangeFeedStatus{constants.ChangeFeedStatusNormal}, 0, 8)
+		tasks, total, err = testRW.Query(context.TODO(), "6666", []constants.DownstreamType{constants.DownstreamTypeTiDB, constants.DownstreamTypeMysql, constants.DownstreamTypeKafka}, []constants.ChangeFeedStatus{constants.ChangeFeedStatusNormal}, 0, 8)
 		assert.NoError(t, err)
 		assert.Equal(t, 1, int(total))
 		assert.Equal(t, 5555, int(tasks[0].StartTS))
@@ -308,7 +309,6 @@ func TestGormChangeFeedReadWrite_UpdateConfig(t *testing.T) {
 			Entity: common.Entity{ID: "111"},
 		}}, true},
 		{"without id", args{context.TODO(), &ChangeFeedTask{}}, true},
-
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -404,12 +404,12 @@ func TestMysqlDownstream_GetSinkURI(t *testing.T) {
 		{
 			name: "normal",
 			fields: fields{
-				Username: "root",
-				Password: "123456",
-				Ip: "127.0.0.1",
-				Port: 3306,
+				Username:    "root",
+				Password:    "123456",
+				Ip:          "127.0.0.1",
+				Port:        3306,
 				WorkerCount: 16,
-				MaxTxnRow: 5000,
+				MaxTxnRow:   5000,
 			},
 			want: "mysql://root:123456@127.0.0.1:3306/?worker-count=16&max-txn-row=5000",
 		},
@@ -452,12 +452,12 @@ func TestTiDBDownstream_GetSinkURI(t *testing.T) {
 		{
 			name: "normal",
 			fields: fields{
-				Username: "root",
-				Password: "123456",
-				Ip: "127.0.0.1",
-				Port: 3306,
+				Username:    "root",
+				Password:    "123456",
+				Ip:          "127.0.0.1",
+				Port:        3306,
 				WorkerCount: 16,
-				MaxTxnRow: 5000,
+				MaxTxnRow:   5000,
 			},
 			want: "mysql://root:123456@127.0.0.1:3306/?worker-count=16&max-txn-row=5000",
 		},
@@ -504,16 +504,16 @@ func TestKafkaDownstream_GetSinkURI(t *testing.T) {
 		{
 			name: "normal",
 			fields: fields{
-				Ip: "127.0.0.1",
-				Port: 9092,
-				Version: "2.4.0",
-				Partitions: 6,
-				MaxMessageBytes: 67108864,
+				Ip:                "127.0.0.1",
+				Port:              9092,
+				Version:           "2.4.0",
+				Partitions:        6,
+				MaxMessageBytes:   67108864,
 				ReplicationFactor: 1,
-				MaxBatchSize: 3,
-				Protocol: "default",
-				ClientId: "client1",
-				TopicName: "myTopic",
+				MaxBatchSize:      3,
+				Protocol:          "default",
+				ClientId:          "client1",
+				TopicName:         "myTopic",
 			},
 			want: "kafka://127.0.0.1:9092/myTopic?kafka-version=2.4.0&partition-num=6&max-message-bytes=67108864&replication-factor=1&max-batch-size=3&protocol=default&kafka-client-id=client1",
 		},

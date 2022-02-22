@@ -829,30 +829,32 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	if clusterMeta.Cluster.Version == sourceClusterMeta.Cluster.Version {
 		targetParams := make([]structs.ClusterParameterSampleInfo, 0)
 		reboot := false
-		for instanceType, _ := range sourceClusterMeta.Instances {
-			sourceResponse, _, err := parameter.NewManager().QueryClusterParameters(context.Context,
-				cluster.QueryClusterParametersReq{ClusterID: sourceClusterMeta.Cluster.ID, InstanceType: instanceType})
-			if err != nil {
-				framework.LogWithContext(context.Context).Errorf(
-					"query cluster %s parameters error: %s", sourceClusterMeta.Cluster.ID, err.Error())
-				return err
-			}
+		for instanceType, _ := range clusterMeta.Instances {
+			if _, ok := sourceClusterMeta.Instances[instanceType]; ok {
+				sourceResponse, _, err := parameter.NewManager().QueryClusterParameters(context.Context,
+					cluster.QueryClusterParametersReq{ClusterID: sourceClusterMeta.Cluster.ID, InstanceType: instanceType})
+				if err != nil {
+					framework.LogWithContext(context.Context).Errorf(
+						"query cluster %s parameters error: %s", sourceClusterMeta.Cluster.ID, err.Error())
+					return err
+				}
 
-			for _, param := range sourceResponse.Params {
-				// if parameter is variable which related os(such as temp dir in os), can not update it
-				if param.HasApply == int(parameter.ModifyApply) {
-					continue
-				}
-				if param.ReadOnly == int(parameter.ReadOnly) {
-					continue
-				}
-				targetParam := structs.ClusterParameterSampleInfo{
-					ParamId:   param.ParamId,
-					RealValue: param.RealValue,
-				}
-				targetParams = append(targetParams, targetParam)
-				if param.HasReboot == int(parameter.Reboot) {
-					reboot = true
+				for _, param := range sourceResponse.Params {
+					// if parameter is variable which related os(such as temp dir in os), can not update it
+					if param.HasApply == int(parameter.ModifyApply) {
+						continue
+					}
+					if param.ReadOnly == int(parameter.ReadOnly) {
+						continue
+					}
+					targetParam := structs.ClusterParameterSampleInfo{
+						ParamId:   param.ParamId,
+						RealValue: param.RealValue,
+					}
+					targetParams = append(targetParams, targetParam)
+					if param.HasReboot == int(parameter.Reboot) {
+						reboot = true
+					}
 				}
 			}
 		}

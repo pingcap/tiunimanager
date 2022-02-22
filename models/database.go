@@ -83,7 +83,7 @@ func Open(fw *framework.BaseFramework) error {
 
 	logins := framework.LogForkFile(constants.LogFileSystem)
 
-	db, err := gorm.Open(sqlite.Open(dbFilePath+ "?_busy_timeout=60000"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(dbFilePath+"?_busy_timeout=60000"), &gorm.Config{})
 
 	if err != nil || db.Error != nil {
 		logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFilePath, err, db.Error)

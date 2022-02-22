@@ -41,20 +41,20 @@ import (
 
 var inTestingVersion = "InTest"
 
-var allVersionInitializers = []system.VersionInitializer {
+var allVersionInitializers = []system.VersionInitializer{
 	{"", fullDataBeforeVersions},
 	{"v1.0.0-beta10", func() error {
-		return defaultDb.base.Create(&system.VersionInfo {
-			ID: "v1.0.0-beta10",
-			Desc: "beta 10",
+		return defaultDb.base.Create(&system.VersionInfo{
+			ID:          "v1.0.0-beta10",
+			Desc:        "beta 10",
 			ReleaseNote: "release note",
 		}).Error
 	}},
 
 	{inTestingVersion, func() error {
-		return defaultDb.base.Create(&system.VersionInfo {
-			ID: "InTest",
-			Desc: "test version",
+		return defaultDb.base.Create(&system.VersionInfo{
+			ID:          "InTest",
+			Desc:        "test version",
 			ReleaseNote: "test",
 		}).Error
 	}},

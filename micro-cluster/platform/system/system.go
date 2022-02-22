@@ -44,7 +44,7 @@ func GetSystemManager() *SystemManager {
 	once.Do(func() {
 		if manager == nil {
 			manager = &SystemManager{}
-			manager.actionBindings = map[constants.SystemEvent]map[constants.SystemState]action {
+			manager.actionBindings = map[constants.SystemEvent]map[constants.SystemState]action{
 				constants.SystemProcessStarted: {
 					constants.SystemInitialing:    pushToServiceReady,
 					constants.SystemUpgrading:     pushToServiceReady,
@@ -53,21 +53,21 @@ func GetSystemManager() *SystemManager {
 					constants.SystemDataReady:     pushToServiceReady,
 					constants.SystemFailure:       pushToServiceReady,
 				},
-				constants.SystemDataInitialized : {
+				constants.SystemDataInitialized: {
 					constants.SystemServiceReady: pushToDataReady,
 				},
-				constants.SystemServe : {
-					constants.SystemDataReady: pushToRunning,
+				constants.SystemServe: {
+					constants.SystemDataReady:     pushToRunning,
 					constants.SystemUnserviceable: pushToRunning,
-					constants.SystemFailure: pushToRunning,
+					constants.SystemFailure:       pushToRunning,
 				},
-				constants.SystemStop : {
+				constants.SystemStop: {
 					constants.SystemRunning: pushToUnserviceable,
 				},
-				constants.SystemProcessUpgrade : {
+				constants.SystemProcessUpgrade: {
 					constants.SystemUnserviceable: pushToUpgrading,
 				},
-				constants.SystemFailureDetected : {
+				constants.SystemFailureDetected: {
 					constants.SystemRunning: pushToFailure,
 				},
 			}

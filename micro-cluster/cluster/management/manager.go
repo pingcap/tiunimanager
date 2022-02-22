@@ -938,7 +938,7 @@ func getFullVersion(version string) string {
 	return version
 }
 
-func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID string, version string) (resp []structs.ProductUpgradeVersionConfigDiffItem, err error) {
+func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID string, version string) (resp cluster.QueryUpgradeVersionDiffInfoResp, err error) {
 	clusterMeta, err := meta.Get(ctx, clusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
@@ -976,7 +976,8 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 	}
 	framework.LogWithContext(ctx).Debugf("query paramgroup for version %s result: %v", version, groups)
 
-	resp = compareConfigDifference(ctx, paramResp.Params, groups[0].Params)
+	configDiffInfos := compareConfigDifference(ctx, paramResp.Params, groups[0].Params)
+	resp.ConfigDiffInfos = configDiffInfos
 
 	return
 }
@@ -990,7 +991,7 @@ func getMinorVersion(version string) string {
 	}
 }
 
-func compareConfigDifference(ctx context.Context, clusterParameterInfos []structs.ClusterParameterInfo, parameterGroupParameterInfos []structs.ParameterGroupParameterInfo) (resp []structs.ProductUpgradeVersionConfigDiffItem) {
+func compareConfigDifference(ctx context.Context, clusterParameterInfos []structs.ClusterParameterInfo, parameterGroupParameterInfos []structs.ParameterGroupParameterInfo) (resp []*structs.ProductUpgradeVersionConfigDiffItem) {
 	framework.LogWithContext(ctx).Debugf("query config difference between clusterParameterInfos (%v) and parameterGroupParameterInfos (%v)",
 		clusterParameterInfos, parameterGroupParameterInfos)
 
@@ -1009,7 +1010,7 @@ func compareConfigDifference(ctx context.Context, clusterParameterInfos []struct
 		if pgParam, ok := pgParamMap[id]; ok {
 			framework.LogWithContext(ctx).Debugf("compare clusterParam (%v) and pgParam (%v)", clusterParam, pgParam)
 			if clusterParam.RealValue.ClusterValue != pgParam.DefaultValue {
-				resp = append(resp, structs.ProductUpgradeVersionConfigDiffItem{
+				resp = append(resp, &structs.ProductUpgradeVersionConfigDiffItem{
 					ParamId:      id,
 					Category:     pgParam.Category,
 					Name:         pgParam.Name,

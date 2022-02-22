@@ -27,10 +27,11 @@ package deployment
 import (
 	"context"
 	"errors"
-	asserts "github.com/stretchr/testify/assert"
 	"os"
 	"os/exec"
 	"testing"
+
+	asserts "github.com/stretchr/testify/assert"
 )
 
 var manager *Manager
@@ -157,6 +158,13 @@ func TestManager_Lightning(t *testing.T) {
 func TestManager_Push(t *testing.T) {
 	_, err := manager.Push(context.TODO(), TiUPComponentTypeCluster, TestClusterID, TestTiDBPushTopo, "/conf/input_tidb.yml", testTiUPHome, TestWorkFlowID, []string{"-N", "127.0.01"}, 360)
 	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestManager_Pull(t *testing.T) {
+	_, err := manager.Pull(context.TODO(), TiUPComponentTypeCluster, TestClusterID, "/remote/path", testTiUPHome, []string{}, 360)
+	if err == nil {
 		t.Error(err)
 	}
 }

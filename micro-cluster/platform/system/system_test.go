@@ -49,6 +49,5 @@ func TestSystemManager_GetSystemInfo(t *testing.T) {
 
 func TestSystemManager_GetSystemVersionInfo(t *testing.T) {
 	_, err := GetSystemManager().GetSystemVersionInfo(context.TODO())
-	assert.Error(t, err)
-
+	assert.NoError(t, err)
 }

@@ -16,6 +16,8 @@
 package system
 
 import (
+	"context"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models"
 	"os"
@@ -29,6 +31,9 @@ func TestMain(m *testing.M) {
 			testFilePath = d.GetDataDir()
 			os.MkdirAll(testFilePath, 0755)
 			return models.Open(d)
+		},
+		func(d *framework.BaseFramework) error {
+			return GetSystemManager().AcceptSystemEvent(context.TODO(), constants.SystemProcessStarted)
 		},
 	)
 	code := m.Run()

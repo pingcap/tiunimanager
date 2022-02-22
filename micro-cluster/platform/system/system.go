@@ -117,9 +117,7 @@ func (p *SystemManager) GetSystemVersionInfo(ctx context.Context) (*system.Versi
 		}).
 		BreakIf(func() error {
 			got, err := models.GetSystemReaderWriter().GetVersion(ctx, systemInfo.CurrentVersionID)
-			if err != nil {
-				versionInfo = got
-			}
+			versionInfo = got
 			return err
 		}).
 		If(func(err error) {

@@ -920,6 +920,9 @@ func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) 
 			UpgradeType: k,
 			Versions:    v,
 		}
+		if k == string(constants.UpgradeTypeInPlace) {
+			path.UpgradeWay = []string{string(constants.UpgradeWayOffline), string(constants.UpgradeWayOnline)}
+		}
 		paths = append(paths, &path)
 	}
 	framework.LogWithContext(ctx).Debugf("query paths for cluster %s version %s: %v", clusterID, version, paths)

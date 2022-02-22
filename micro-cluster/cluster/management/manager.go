@@ -960,6 +960,7 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 	groups, _, err := parametergroup.NewManager().QueryParameterGroup(ctx, message.QueryParameterGroupReq{
 		DBType:         int(parametergroup.TiDB),
 		HasDefault:     int(parametergroup.DEFAULT),
+		HasDetail:      true,
 		ClusterVersion: getMinorVersion(version),
 	})
 	if err != nil {

@@ -1237,7 +1237,13 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	roleType := []constants.DBUserRoleType{
 		constants.DBUserBackupRestore,
 		constants.DBUserParameterManagement,
-		constants.DBUserCDCDataSync,
+	}
+	cmp, err := meta.CompareTiDBVersion(clusterMeta.Cluster.Version, "v5.2.2")
+	if err != nil {
+		return err
+	}
+	if cmp {
+		roleType = append(roleType, constants.DBUserCDCDataSync)
 	}
 
 	for _, rt := range roleType {

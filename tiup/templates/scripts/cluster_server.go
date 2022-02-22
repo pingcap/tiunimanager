@@ -39,6 +39,7 @@ type TiEMClusterServerScript struct {
 	TracerAddress        string
 	ClusterName          string
 	ClusterVersion       string
+	DeployUser           string
 }
 
 // NewTiEMClusterServerScript returns a TiEMClusterServerScript with given arguments
@@ -107,6 +108,12 @@ func (c *TiEMClusterServerScript) WithClusterName(clusterName string) *TiEMClust
 // WithClusterVersion set ClusterVersion
 func (c *TiEMClusterServerScript) WithClusterVersion(clusterVersion string) *TiEMClusterServerScript {
 	c.ClusterVersion = clusterVersion
+	return c
+}
+
+// WithDeployUser set DeployUser
+func (c *TiEMClusterServerScript) WithDeployUser(deployUser string) *TiEMClusterServerScript {
+	c.DeployUser = deployUser
 	return c
 }
 

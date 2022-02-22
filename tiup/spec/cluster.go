@@ -180,7 +180,8 @@ func (i *ClusterServerInstance) InitConfig(
 		WithElasticsearch(i.topo.ElasticSearchEndpoints()).
 		WithTracer(i.topo.TracerEndpoints()).
 		WithClusterName(clusterName).
-		WithClusterVersion(clusterVersion)
+		WithClusterVersion(clusterVersion).
+		WithDeployUser(deployUser)
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_cluster-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	if err := scpt.ScriptToFile(fp); err != nil {
@@ -247,7 +248,8 @@ func (i *ClusterServerInstance) ScaleConfig(
 		WithElasticsearch(i.topo.ElasticSearchEndpoints()).
 		WithTracer(i.topo.TracerEndpoints()).
 		WithClusterName(clusterName).
-		WithClusterVersion(clusterVersion)
+		WithClusterVersion(clusterVersion).
+		WithDeployUser(deployUser)
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_cluster-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	log.Infof("script path: %s", fp)

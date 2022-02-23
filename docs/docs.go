@@ -5100,7 +5100,7 @@ var doc = `{
                 }
             }
         },
-        "/system/info/": {
+        "/system/info": {
             "get": {
                 "description": "get system info",
                 "consumes": [

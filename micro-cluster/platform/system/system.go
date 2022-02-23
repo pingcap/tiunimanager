@@ -53,6 +53,7 @@ func GetSystemManager() *SystemManager {
 					constants.SystemRunning:       pushToServiceReady,
 					constants.SystemDataReady:     pushToServiceReady,
 					constants.SystemFailure:       pushToServiceReady,
+					constants.SystemServiceReady:  pushToServiceReady,
 				},
 				constants.SystemDataInitialized: {
 					constants.SystemServiceReady: pushToDataReady,
@@ -109,13 +110,13 @@ func (p *SystemManager) GetSystemInfo(ctx context.Context, req message.GetSystem
 		framework.LogWithContext(ctx).Errorf("get system info failed, err = %s", err.Error())
 		return nil, err
 	} else {
-		resp = &message.GetSystemInfoResp {
-			Info: structs.SystemInfo {
+		resp = &message.GetSystemInfoResp{
+			Info: structs.SystemInfo{
 				SystemName:       systemInfo.SystemName,
 				SystemLogo:       systemInfo.SystemLogo,
 				CurrentVersionID: systemInfo.CurrentVersionID,
 				LastVersionID:    systemInfo.LastVersionID,
-				State: string(systemInfo.State),
+				State:            string(systemInfo.State),
 			},
 		}
 	}

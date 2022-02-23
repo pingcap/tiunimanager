@@ -101,6 +101,7 @@ type QueryProductDetailResp struct {
 type CreateSpecsReq struct {
 	Specs []structs.SpecInfo `json:"specs"`
 }
+
 type CreateSpecsResp struct {
 }
 
@@ -120,7 +121,7 @@ type QuerySpecsResp struct {
 }
 
 type GetSystemInfoReq struct {
-	WithVersionDetail bool `json:"withVersionDetail"`
+	WithVersionDetail bool `json:"withVersionDetail" form:"withVersionDetail" `
 }
 
 type GetSystemInfoResp struct {

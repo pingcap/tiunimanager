@@ -36,12 +36,13 @@ import (
 // @Tags platform
 // @Accept application/json
 // @Produce application/json
-// @Param req query message.GetSystemInfoReq false "request"
+// @Param req query message.GetSystemInfoReq true "request"
 // @Success 200 {object} controller.CommonResult{data=message.GetSystemInfoResp}
 // @Failure 500 {object} controller.CommonResult
-// @Router /system/info/ [get]
+// @Router /system/info [get]
 func GetSystemInfo(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.GetSystemInfoReq{}); ok {
+	var req message.GetSystemInfoReq
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &req); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.GetSystemInfo, &message.GetSystemInfoResp{},
 			requestBody,
 			controller.DefaultTimeout)

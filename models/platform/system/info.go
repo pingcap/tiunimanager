@@ -25,9 +25,11 @@ package system
 
 import (
 	"github.com/pingcap-inc/tiem/common/constants"
+	"gorm.io/gorm"
 )
 
 type SystemInfo struct {
+	gorm.Model
 	SystemName       string                `gorm:""`
 	SystemLogo       string                `gorm:""`
 	CurrentVersionID string                `gorm:""`

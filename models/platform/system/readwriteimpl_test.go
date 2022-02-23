@@ -155,4 +155,12 @@ func TestSystemReadWrite_UpdateVersion(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "v1", newInfo.LastVersionID)
 	assert.Equal(t, "v2", newInfo.CurrentVersionID)
+
+	err = testRW.UpdateVersion(context.TODO(), "v2")
+	assert.NoError(t, err)
+
+	newInfo, err = testRW.GetSystemInfo(context.TODO())
+	assert.NoError(t, err)
+	assert.Equal(t, "v1", newInfo.LastVersionID)
+	assert.Equal(t, "v2", newInfo.CurrentVersionID)
 }

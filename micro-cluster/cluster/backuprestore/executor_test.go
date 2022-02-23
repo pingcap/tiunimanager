@@ -29,7 +29,6 @@ import (
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockbr"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockmanagement"
-	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty"
 	"github.com/pingcap-inc/tiem/util/api/tidb/sql"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"
@@ -44,10 +43,6 @@ func init() {
 func TestExecutor_backupCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-
-	mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	mockTiupManager.EXPECT().BackUp(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
-	secondparty.Manager = mockTiupManager
 
 	confingRW := mockconfig.NewMockReaderWriter(ctrl)
 	confingRW.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: "test"}, nil).AnyTimes()
@@ -130,10 +125,6 @@ func TestExecutor_updateBackupRecord(t *testing.T) {
 func TestExecutor_restoreFromSrcCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-
-	mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	mockTiupManager.EXPECT().Restore(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
-	secondparty.Manager = mockTiupManager
 
 	confingRW := mockconfig.NewMockReaderWriter(ctrl)
 	confingRW.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: "test"}, nil).AnyTimes()

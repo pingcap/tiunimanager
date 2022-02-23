@@ -2557,7 +2557,7 @@ definitions:
         - in-place
         - migration
         type: string
-      upgradeWay:
+      upgradeWays:
         example:
         - offline
         - online

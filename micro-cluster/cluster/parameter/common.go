@@ -62,8 +62,9 @@ type UpdateParameterSource int
 const (
 	TiUP UpdateParameterSource = iota
 	SQL
-	TiupAndSql
+	TiUPAndSQL
 	API
+	TiUPAndAPI
 )
 
 type ParameterValueType int

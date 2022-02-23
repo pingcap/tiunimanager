@@ -271,11 +271,16 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 			return fmt.Errorf(fmt.Sprintf("Read-only parameters `%s` are not allowed to be modified", DisplayFullParameterName(param.Category, param.Name)))
 		}
 		framework.LogWithContext(ctx).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.ClusterValue)
-		// condition UpdateSource values is 2, then insert tiup and sql respectively
-		if param.UpdateSource == int(TiupAndSql) {
+		if param.UpdateSource == int(TiUPAndSQL) {
+			// condition UpdateSource values is 2, then insert tiup and sql respectively
 			hasPolling = true
 			putParameterContainer(paramContainer, int(TiUP), param)
 			putParameterContainer(paramContainer, int(SQL), param)
+		} else if param.UpdateSource == int(TiUPAndAPI) {
+			// condition UpdateSource values is 4, then insert tiup and api respectively
+			hasPolling = true
+			putParameterContainer(paramContainer, int(TiUP), param)
+			putParameterContainer(paramContainer, int(API), param)
 		} else {
 			if param.UpdateSource == int(TiUP) {
 				hasPolling = true

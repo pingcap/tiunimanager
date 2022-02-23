@@ -43,7 +43,8 @@ const (
 var ApiService TiDBApiService
 
 type TiDBApiService interface {
-	ApiEditConfig(ctx context.Context, apiEditConfigReq cluster.ApiEditConfigReq) (bool, error)
+	EditConfig(ctx context.Context, apiEditConfigReq cluster.ApiEditConfigReq) (bool, error)
+	ShowConfig(ctx context.Context, showConfigReq cluster.ApiShowConfigReq) ([]byte, error)
 }
 
 type TiDBApiServiceImpl struct{}
@@ -52,13 +53,13 @@ func init() {
 	ApiService = new(TiDBApiServiceImpl)
 }
 
-func (service *TiDBApiServiceImpl) ApiEditConfig(ctx context.Context, apiEditConfigReq cluster.ApiEditConfigReq) (bool, error) {
-	framework.LogWithContext(ctx).Infof("micro srv api edit config, api req: %v", apiEditConfigReq)
+func (service *TiDBApiServiceImpl) EditConfig(ctx context.Context, editConfigReq cluster.ApiEditConfigReq) (bool, error) {
+	framework.LogWithContext(ctx).Infof("request tidb api edit config, api req: %v", editConfigReq)
 
-	url := fmt.Sprintf("http://%s:%d%s", apiEditConfigReq.InstanceHost, apiEditConfigReq.InstancePort, TiDBApiUrl)
-	resp, err := util.PostForm(url, apiEditConfigReq.ConfigMap, apiEditConfigReq.Headers)
+	url := fmt.Sprintf("http://%s:%d%s", editConfigReq.InstanceHost, editConfigReq.InstancePort, TiDBApiUrl)
+	resp, err := util.PostForm(url, editConfigReq.ConfigMap, editConfigReq.Headers)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("apieditconfig, request tidb api resp err: %v", err.Error())
+		framework.LogWithContext(ctx).Errorf("request tidb api edit config resp err: %v", err.Error())
 		return false, err
 	}
 	if resp.StatusCode != http.StatusOK {
@@ -67,8 +68,29 @@ func (service *TiDBApiServiceImpl) ApiEditConfig(ctx context.Context, apiEditCon
 			return false, err
 		}
 		errMsg := fmt.Sprintf("request TiDB api response status code: %v, content: %v", resp.StatusCode, string(b))
-		framework.LogWithContext(ctx).Errorf("apieditconfig, %s", errMsg)
+		framework.LogWithContext(ctx).Errorf("tidb api edit config, %s", errMsg)
 		return false, errors.New(errMsg)
 	}
 	return resp.StatusCode == http.StatusOK, nil
+}
+
+func (service *TiDBApiServiceImpl) ShowConfig(ctx context.Context, showConfigReq cluster.ApiShowConfigReq) ([]byte, error) {
+	framework.LogWithContext(ctx).Infof("request tidb api show config, api req: %v", showConfigReq)
+
+	url := fmt.Sprintf("http://%s:%d%s", showConfigReq.InstanceHost, showConfigReq.InstancePort, TiDBApiUrl)
+	resp, err := util.Get(url, showConfigReq.Params, showConfigReq.Headers)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("request tidb api show config resp err: %v", err.Error())
+		return nil, err
+	}
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		errMsg := fmt.Sprintf("request TiDB api response status code: %v, content: %v", resp.StatusCode, string(b))
+		framework.LogWithContext(ctx).Errorf("tidb api show config, %s", errMsg)
+		return nil, errors.New(errMsg)
+	}
+	return b, nil
 }

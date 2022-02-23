@@ -921,7 +921,7 @@ func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) 
 			Versions:    v,
 		}
 		if k == string(constants.UpgradeTypeInPlace) {
-			path.UpgradeWay = []string{string(constants.UpgradeWayOffline), string(constants.UpgradeWayOnline)}
+			path.UpgradeWays = []string{string(constants.UpgradeWayOffline), string(constants.UpgradeWayOnline)}
 		}
 		paths = append(paths, &path)
 	}

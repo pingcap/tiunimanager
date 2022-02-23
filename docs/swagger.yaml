@@ -394,6 +394,11 @@ definitions:
           $ref: '#/definitions/cluster.InspectParameterInfo'
         type: array
     type: object
+  cluster.InspectParametersReq:
+    properties:
+      instanceId:
+        type: string
+    type: object
   cluster.InspectParametersResp:
     properties:
       params:
@@ -3893,11 +3898,12 @@ paths:
         name: clusterId
         required: true
         type: string
-      - description: instanceId
-        in: path
-        name: instanceId
+      - description: inspect params request
+        in: body
+        name: inspectReq
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/cluster.InspectParametersReq'
       produces:
       - application/json
       responses:

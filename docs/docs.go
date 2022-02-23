@@ -2368,11 +2368,13 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "instanceId",
-                        "name": "instanceId",
-                        "in": "path",
-                        "required": true
+                        "description": "inspect params request",
+                        "name": "inspectReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.InspectParametersReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -7048,6 +7050,14 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/cluster.InspectParameterInfo"
                     }
+                }
+            }
+        },
+        "cluster.InspectParametersReq": {
+            "type": "object",
+            "properties": {
+                "instanceId": {
+                    "type": "string"
                 }
             }
         },

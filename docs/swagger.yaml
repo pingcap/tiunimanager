@@ -1290,6 +1290,15 @@ definitions:
         description: map[zone] -> stocks
         type: object
     type: object
+  message.GetSystemInfoResp:
+    properties:
+      currentVersion:
+        $ref: '#/definitions/structs.SystemVersionInfo'
+      info:
+        $ref: '#/definitions/structs.SystemInfo'
+      lastVersion:
+        $ref: '#/definitions/structs.SystemVersionInfo'
+    type: object
   message.GetTenantReq:
     properties:
       id:
@@ -2613,6 +2622,28 @@ definitions:
       freeMemory:
         type: integer
       zone:
+        type: string
+    type: object
+  structs.SystemInfo:
+    properties:
+      currentVersionID:
+        type: string
+      lastVersionID:
+        type: string
+      state:
+        type: string
+      systemLogo:
+        type: string
+      systemName:
+        type: string
+    type: object
+  structs.SystemVersionInfo:
+    properties:
+      desc:
+        type: string
+      releaseNote:
+        type: string
+      versionID:
         type: string
     type: object
   structs.TenantInfo:
@@ -5810,6 +5841,34 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: created  specs
+      tags:
+      - platform
+  /system/:
+    get:
+      consumes:
+      - application/json
+      description: get system info
+      parameters:
+      - in: query
+        name: withVersion
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.GetSystemInfoResp'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: get system info
       tags:
       - platform
   /tenant:

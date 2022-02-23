@@ -28,6 +28,7 @@ import (
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
 	switchoverApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/switchover"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/upgrade"
+	"github.com/pingcap-inc/tiem/micro-api/controller/platform/system"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
@@ -251,6 +252,11 @@ func Route(g *gin.Engine) {
 			specGroup.POST("/", product.CreateSpecs)
 			specGroup.DELETE("/", product.DeleteSpecs)
 			specGroup.GET("/", product.QuerySpecs)
+		}
+
+		systemGroup := apiV1.Group("/system")
+		{
+			systemGroup.GET("/info", system.GetSystemInfo)
 		}
 	}
 

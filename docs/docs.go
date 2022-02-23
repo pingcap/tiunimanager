@@ -5100,6 +5100,54 @@ var doc = `{
                 }
             }
         },
+        "/system/": {
+            "get": {
+                "description": "get system info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "get system info",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "name": "withVersion",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.GetSystemInfoResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/tenant": {
             "get": {
                 "security": [
@@ -8284,6 +8332,20 @@ var doc = `{
                 }
             }
         },
+        "message.GetSystemInfoResp": {
+            "type": "object",
+            "properties": {
+                "currentVersion": {
+                    "$ref": "#/definitions/structs.SystemVersionInfo"
+                },
+                "info": {
+                    "$ref": "#/definitions/structs.SystemInfo"
+                },
+                "lastVersion": {
+                    "$ref": "#/definitions/structs.SystemVersionInfo"
+                }
+            }
+        },
         "message.GetTenantReq": {
             "type": "object",
             "properties": {
@@ -10175,6 +10237,40 @@ var doc = `{
                     "type": "integer"
                 },
                 "zone": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.SystemInfo": {
+            "type": "object",
+            "properties": {
+                "currentVersionID": {
+                    "type": "string"
+                },
+                "lastVersionID": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "systemLogo": {
+                    "type": "string"
+                },
+                "systemName": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.SystemVersionInfo": {
+            "type": "object",
+            "properties": {
+                "desc": {
+                    "type": "string"
+                },
+                "releaseNote": {
+                    "type": "string"
+                },
+                "versionID": {
                     "type": "string"
                 }
             }

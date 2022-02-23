@@ -22,7 +22,6 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/metrics"
 	"github.com/pingcap-inc/tiem/micro-cluster/registry"
 	clusterService "github.com/pingcap-inc/tiem/micro-cluster/service"
@@ -69,10 +68,6 @@ func main() {
 }
 
 func initLibForDev(f *framework.BaseFramework) error {
-	secondparty.Manager = &secondparty.SecondPartyManager{
-		TiUPBinPath: constants.TiUPBinPath,
-	}
-	secondparty.Manager.Init()
 	deployment.M = &deployment.Manager{
 		TiUPBinPath: constants.TiUPBinPath,
 	}

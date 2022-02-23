@@ -38,23 +38,7 @@ var doc = []byte(`
 		"weight": 52.4,
 		"male": true,
 		"hobby": ["swimming", "climbing", "music"],
-		"test": null,
-		"friends": [
-			{
-				"name": "lisi",
-				"age": 22,
-				"weight": 46.3,
-				"male": false,
-				"hobby": ["music", "books"]
-			},
-			{
-				"name": "wangwu",
-				"age": 19,
-				"weight": 49.0,
-				"male": true,
-				"hobby": ["golf", "skating"]
-			}
-		]
+		"test": null
 	}
 }`)
 
@@ -69,6 +53,6 @@ func Test_flattenedParameters(t *testing.T) {
 	assert.Equal(t, parameters["student.name"], "zhangsan")
 	assert.Equal(t, parameters["student.age"], "18")
 	assert.Equal(t, parameters["student.weight"], "52.4")
-	assert.Equal(t, parameters["student.friends[0].hobby"], "[\"music\",\"books\"]")
-	assert.Equal(t, parameters["student.friends[1].age"], "19")
+	assert.Equal(t, parameters["student.male"], "true")
+	assert.Equal(t, parameters["student.hobby"], "[\"swimming\",\"climbing\",\"music\"]")
 }

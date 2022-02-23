@@ -271,26 +271,11 @@ func flattening(object map[string]interface{}, name string, result map[string]st
 			}
 		} else if strings.HasPrefix(reflect.TypeOf(v).String(), "[]interface") {
 			// value is an array type
-			array := v.([]interface{})
-			if len(array) > 0 {
-				if strings.HasPrefix(reflect.TypeOf(array[0]).String(), "map") {
-					for i, c := range v.([]interface{}) {
-						m := k
-						if name != "" {
-							m = fmt.Sprintf("%s[%d]", k, i)
-						}
-						if err = flattening(c.(map[string]interface{}), m, result); err != nil {
-							return err
-						}
-					}
-				} else {
-					b, err := json.Marshal(array)
-					if err != nil {
-						return err
-					}
-					result[k] = string(b)
-				}
+			b, err := json.Marshal(v)
+			if err != nil {
+				return err
 			}
+			result[k] = string(b)
 		} else {
 			result[k] = fmt.Sprintf("%v", v)
 		}

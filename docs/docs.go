@@ -10513,7 +10513,7 @@ type swaggerInfo struct {
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
 	Version:     "1.0",
-	Host:        "localhost:4100",
+	Host:        "localhost:4116",
 	BasePath:    "/api/v1/",
 	Schemes:     []string{},
 	Title:       "TiEM UI API",

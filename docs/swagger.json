@@ -5086,7 +5086,7 @@
                 }
             }
         },
-        "/system/": {
+        "/system/info/": {
             "get": {
                 "description": "get system info",
                 "consumes": [
@@ -5102,7 +5102,7 @@
                 "parameters": [
                     {
                         "type": "boolean",
-                        "name": "withVersion",
+                        "name": "withVersionDetail",
                         "in": "query"
                     }
                 ],

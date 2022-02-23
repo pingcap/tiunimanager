@@ -5843,14 +5843,14 @@ paths:
       summary: created  specs
       tags:
       - platform
-  /system/:
+  /system/info/:
     get:
       consumes:
       - application/json
       description: get system info
       parameters:
       - in: query
-        name: withVersion
+        name: withVersionDetail
         type: boolean
       produces:
       - application/json

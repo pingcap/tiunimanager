@@ -5100,7 +5100,7 @@ var doc = `{
                 }
             }
         },
-        "/system/": {
+        "/system/info/": {
             "get": {
                 "description": "get system info",
                 "consumes": [
@@ -5116,7 +5116,7 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "boolean",
-                        "name": "withVersion",
+                        "name": "withVersionDetail",
                         "in": "query"
                     }
                 ],

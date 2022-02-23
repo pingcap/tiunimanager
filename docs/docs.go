@@ -2341,6 +2341,80 @@ var doc = `{
                 }
             }
         },
+        "/clusters/{clusterId}/params/inspect": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "inspect parameters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster parameters"
+                ],
+                "summary": "inspect parameters",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "instanceId",
+                        "name": "instanceId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.InspectParametersResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/clusters/{clusterId}/preview-scale-out": {
             "post": {
                 "security": [
@@ -6864,6 +6938,130 @@ var doc = `{
                 }
             }
         },
+        "cluster.InspectParameterInfo": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "log"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "binlog cache size"
+                },
+                "hasReboot": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "example": 0
+                },
+                "inspectValue": {
+                    "type": "object"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "binlog_cache"
+                },
+                "note": {
+                    "type": "string",
+                    "example": "binlog cache size"
+                },
+                "paramId": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "range": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "1",
+                        " 1000"
+                    ]
+                },
+                "rangeType": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ],
+                    "example": 1
+                },
+                "readOnly": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "example": 0
+                },
+                "realValue": {
+                    "$ref": "#/definitions/structs.ParameterRealValue"
+                },
+                "systemVariable": {
+                    "type": "string",
+                    "example": "log.log_level"
+                },
+                "type": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                    ],
+                    "example": 0
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "MB"
+                },
+                "unitOptions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "KB",
+                        "MB",
+                        "GB"
+                    ]
+                }
+            }
+        },
+        "cluster.InspectParameters": {
+            "type": "object",
+            "properties": {
+                "instanceId": {
+                    "type": "string"
+                },
+                "instanceType": {
+                    "type": "string"
+                },
+                "parameterInfos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/cluster.InspectParameterInfo"
+                    }
+                }
+            }
+        },
+        "cluster.InspectParametersResp": {
+            "type": "object",
+            "properties": {
+                "params": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/cluster.InspectParameters"
+                    }
+                }
+            }
+        },
         "cluster.KafkaDownstream": {
             "type": "object",
             "properties": {
@@ -8463,7 +8661,8 @@ var doc = `{
                         0,
                         1,
                         2,
-                        3
+                        3,
+                        4
                     ],
                     "example": 0
                 }
@@ -9299,7 +9498,8 @@ var doc = `{
                         0,
                         1,
                         2,
-                        3
+                        3,
+                        4
                     ],
                     "example": 0
                 },
@@ -9788,7 +9988,8 @@ var doc = `{
                         0,
                         1,
                         2,
-                        3
+                        3,
+                        4
                     ],
                     "example": 0
                 },
@@ -9965,8 +10166,11 @@ var doc = `{
                     ]
                 },
                 "upgradeWay": {
-                    "type": "string",
-                    "enum": [
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
                         "offline",
                         "online"
                     ]
@@ -9977,8 +10181,8 @@ var doc = `{
                         "type": "string"
                     },
                     "example": [
-                        "v5.0.0",
-                        "v5.3.0"
+                        "v5.3.0",
+                        "v5.4.0"
                     ]
                 }
             }
@@ -9992,9 +10196,11 @@ var doc = `{
                 "name",
                 "paramId",
                 "range",
+                "rangeType",
                 "suggestValue",
                 "type",
-                "unit"
+                "unit",
+                "unitOptions"
             ],
             "properties": {
                 "category": {
@@ -10031,6 +10237,15 @@ var doc = `{
                         " 1000"
                     ]
                 },
+                "rangeType": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ],
+                    "example": 1
+                },
                 "suggestValue": {
                     "type": "string",
                     "example": "30"
@@ -10049,6 +10264,17 @@ var doc = `{
                 "unit": {
                     "type": "string",
                     "example": "MB"
+                },
+                "unitOptions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "KB",
+                        "MB",
+                        "GB"
+                    ]
                 }
             }
         },

@@ -19,7 +19,6 @@ import (
 	"context"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
@@ -105,13 +104,6 @@ func TestExecutor_updateBackupRecord(t *testing.T) {
 	brRW := mockbr.NewMockReaderWriter(ctrl)
 	brRW.EXPECT().UpdateBackupRecord(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetBRReaderWriter(brRW)
-
-	mockTiupManager := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	mockTiupManager.EXPECT().ShowBackUpInfoThruMetaDB(gomock.Any(), gomock.Any()).Return(secondparty.CmdBrResp{
-		Size:     123,
-		BackupTS: 234,
-	}, nil).AnyTimes()
-	secondparty.Manager = mockTiupManager
 
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(contextBackupRecordKey, &backuprestore.BackupRecord{

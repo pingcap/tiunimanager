@@ -505,7 +505,6 @@ func TestManager_InspectClusterParameters(t *testing.T) {
 		})
 		assert.NoError(t, err)
 		assert.Equal(t, len(resp.Params), 1)
-		assert.Equal(t, len(resp.Params[0].ParameterInfos), 0)
 	})
 
 	t.Run("inspect tikv instance parameter", func(t *testing.T) {
@@ -548,7 +547,6 @@ func TestManager_InspectClusterParameters(t *testing.T) {
 		})
 		assert.NoError(t, err)
 		assert.Equal(t, len(resp.Params), 1)
-		assert.Equal(t, len(resp.Params[0].ParameterInfos), 0)
 	})
 
 	t.Run("inspect pd instance parameter", func(t *testing.T) {
@@ -591,7 +589,6 @@ func TestManager_InspectClusterParameters(t *testing.T) {
 		})
 		assert.NoError(t, err)
 		assert.Equal(t, len(resp.Params), 1)
-		assert.Equal(t, len(resp.Params[0].ParameterInfos), 0)
 	})
 
 	t.Run("inspect cdc and tiflash instance parameter", func(t *testing.T) {
@@ -636,7 +633,6 @@ func TestManager_InspectClusterParameters(t *testing.T) {
 		})
 		assert.NoError(t, err)
 		assert.Equal(t, len(resp.Params), 1)
-		assert.Equal(t, len(resp.Params[0].ParameterInfos), 0)
 	})
 
 	t.Run("query cluster parameter error", func(t *testing.T) {

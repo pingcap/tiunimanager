@@ -270,6 +270,10 @@ func (b *BaseFramework) GetClientArgs() *ClientArgs {
 	return b.args
 }
 
+func GetCurrentDeployUser() string {
+	return Current.GetClientArgs().DeployUser
+}
+
 func (b *BaseFramework) GetConfiguration() *Configuration {
 	return b.configuration
 }

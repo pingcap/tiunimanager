@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
@@ -30,6 +29,13 @@ import (
 	"os"
 	"strconv"
 	"time"
+)
+
+type StorageType string
+
+const (
+	StorageTypeLocal StorageType = "local"
+	StorageTypeS3    StorageType = "s3"
 )
 
 func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
@@ -265,11 +271,11 @@ func getBRStoragePath(ctx context.Context, storageType string, filePath string) 
 	}
 }
 
-func convertBrStorageType(storageType string) (secondparty.StorageType, error) {
+func convertBrStorageType(storageType string) (StorageType, error) {
 	if string(constants.StorageTypeS3) == storageType {
-		return secondparty.StorageTypeS3, nil
+		return StorageTypeS3, nil
 	} else if string(constants.StorageTypeNFS) == storageType {
-		return secondparty.StorageTypeLocal, nil
+		return StorageTypeLocal, nil
 	} else {
 		return "", fmt.Errorf("invalid storage type, %s", storageType)
 	}

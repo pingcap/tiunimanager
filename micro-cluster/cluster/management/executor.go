@@ -39,7 +39,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/library/util"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/log"
@@ -1027,7 +1027,7 @@ func syncIncrData(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 }
 
 func getClusterSpaceInTiUP(ctx context.Context, clusterID string) string {
-	tiupHome := secondparty.GetTiUPHomeForComponent(ctx, secondparty.ClusterComponentTypeStr)
+	tiupHome := util.GetTiUPHomeForComponent(ctx, deployment.TiUPComponentTypeCluster)
 	return fmt.Sprintf("%s/storage/cluster/clusters/%s/", tiupHome, clusterID)
 }
 
@@ -1195,7 +1195,7 @@ func initRootAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	tidbServerPort := clusterMeta.GetClusterConnectAddresses()[0].Port
 
 	rootUser := clusterMeta.DBUsers[string(constants.Root)]
-	conn := secondparty.DbConnParam{
+	conn := utilsql.DbConnParam{
 		Username: rootUser.Name,
 		Password: "",
 		IP:       tidbServerHost,
@@ -1226,7 +1226,7 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	tidbServerHost := clusterMeta.GetClusterConnectAddresses()[0].IP
 	tidbServerPort := clusterMeta.GetClusterConnectAddresses()[0].Port
 
-	conn := secondparty.DbConnParam{
+	conn := utilsql.DbConnParam{
 		Username: clusterMeta.DBUsers[string(constants.Root)].Name,
 		Password: string(clusterMeta.DBUsers[string(constants.Root)].Password),
 		IP:       tidbServerHost,

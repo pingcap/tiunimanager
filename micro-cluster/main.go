@@ -17,12 +17,14 @@
 package main
 
 import (
+	"context"
 	"github.com/asim/go-micro/v3"
 	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/metrics"
+	"github.com/pingcap-inc/tiem/micro-cluster/platform/system"
 	"github.com/pingcap-inc/tiem/micro-cluster/registry"
 	clusterService "github.com/pingcap-inc/tiem/micro-cluster/service"
 	"github.com/pingcap-inc/tiem/models"
@@ -33,8 +35,8 @@ import (
 func main() {
 	f := framework.InitBaseFrameworkFromArgs(framework.ClusterService,
 		initLibForDev,
-		initDatabase,
-		defaultPortForLocal,
+		openDatabase,
+		processStarted,
 		func(b *framework.BaseFramework) error {
 			go func() {
 				// init embed etcd.
@@ -74,14 +76,10 @@ func initLibForDev(f *framework.BaseFramework) error {
 	return nil
 }
 
-func initDatabase(f *framework.BaseFramework) error {
-	models.Open(f, false)
-	return nil
+func openDatabase(f *framework.BaseFramework) error {
+	return models.Open(f)
 }
 
-func defaultPortForLocal(f *framework.BaseFramework) error {
-	if f.GetServiceMeta().ServicePort <= 0 {
-		f.GetServiceMeta().ServicePort = constants.DefaultMicroClusterPort
-	}
-	return nil
+func processStarted(f *framework.BaseFramework) error {
+	return system.GetSystemManager().AcceptSystemEvent(context.TODO(), constants.SystemProcessStarted)
 }

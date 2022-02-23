@@ -28,18 +28,20 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/pingcap-inc/tiem/common/constants"
+
+	"github.com/pingcap-inc/tiem/models/common"
+
 	"github.com/pingcap-inc/tiem/deployment"
 	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
 
 	"github.com/pingcap-inc/tiem/test/mockutilcdc"
 	"github.com/pingcap-inc/tiem/test/mockutilpd"
 	"github.com/pingcap-inc/tiem/test/mockutiltidbhttp"
-	mockutiltidbsqlconfig "github.com/pingcap-inc/tiem/test/mockutiltidbsql_config"
 	"github.com/pingcap-inc/tiem/test/mockutiltikv"
 	"github.com/pingcap-inc/tiem/util/api/cdc"
 	"github.com/pingcap-inc/tiem/util/api/pd"
 	"github.com/pingcap-inc/tiem/util/api/tidb/http"
-	"github.com/pingcap-inc/tiem/util/api/tidb/sql"
 	"github.com/pingcap-inc/tiem/util/api/tikv"
 
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockparametergroup"
@@ -353,8 +355,6 @@ func TestManager_InspectClusterParameters(t *testing.T) {
 		pd.ApiService = mockPDApiService
 		mockTiDBApiService := mockutiltidbhttp.NewMockTiDBApiService(ctrl)
 		http.ApiService = mockTiDBApiService
-		mockTiDBSqlConfigService := mockutiltidbsqlconfig.NewMockClusterConfigService(ctrl)
-		sql.SqlService = mockTiDBSqlConfigService
 		mockTiKVApiService := mockutiltikv.NewMockTiKVApiService(ctrl)
 		tikv.ApiService = mockTiKVApiService
 		mock2rdService := mock_deployment.NewMockInterface(ctrl)
@@ -465,11 +465,178 @@ func TestManager_InspectClusterParameters(t *testing.T) {
 		assert.Equal(t, len(resp.Params), 5)
 	})
 
-	t.Run("inspect instance parameter", func(t *testing.T) {
-		_, err := mockManager.InspectClusterParameters(context.TODO(), cluster.InspectParametersReq{
+	t.Run("inspect tidb instance parameter", func(t *testing.T) {
+		clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterManagementRW)
+		clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
+		models.SetClusterParameterReaderWriter(clusterParameterRW)
+		mockTiDBApiService := mockutiltidbhttp.NewMockTiDBApiService(ctrl)
+		http.ApiService = mockTiDBApiService
+
+		mockTiDBApiService.EXPECT().ShowConfig(gomock.Any(), gomock.Any()).Return(apiContent, nil)
+		clusterManagementRW.EXPECT().GetInstance(gomock.Any(), gomock.Any()).
+			Return(&management.ClusterInstance{
+				Entity:    common.Entity{ID: "1", Status: string(constants.ClusterInstanceRunning)},
+				Type:      "TiDB",
+				Version:   "v5.0.0",
+				ClusterID: "123",
+				HostIP:    []string{"127.0.0.1"},
+				Ports:     []int32{10000, 10001},
+			}, nil)
+		clusterParameterRW.EXPECT().QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, clusterId, name, instanceType string, offset, size int) (paramGroupId string, params []*parameter.ClusterParamDetail, total int64, err error) {
+				return "1", []*parameter.ClusterParamDetail{
+					{
+						Parameter: parametergroup.Parameter{
+							ID:           "1",
+							Category:     "security",
+							Name:         "enable-sem",
+							InstanceType: "TiDB",
+							HasApply:     1,
+							Type:         2,
+						},
+						RealValue: "{\"clusterValue\":\"true\"}",
+					},
+				}, 1, nil
+			})
+
+		resp, err := mockManager.InspectClusterParameters(context.TODO(), cluster.InspectParametersReq{
 			InstanceID: "1",
 		})
 		assert.NoError(t, err)
+		assert.Equal(t, len(resp.Params), 1)
+		assert.Equal(t, len(resp.Params[0].ParameterInfos), 0)
+	})
+
+	t.Run("inspect tikv instance parameter", func(t *testing.T) {
+		clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterManagementRW)
+		clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
+		models.SetClusterParameterReaderWriter(clusterParameterRW)
+		mockTiKVApiService := mockutiltikv.NewMockTiKVApiService(ctrl)
+		tikv.ApiService = mockTiKVApiService
+
+		mockTiKVApiService.EXPECT().ShowConfig(gomock.Any(), gomock.Any()).Return(apiContent, nil)
+		clusterManagementRW.EXPECT().GetInstance(gomock.Any(), gomock.Any()).
+			Return(&management.ClusterInstance{
+				Entity:    common.Entity{ID: "1", Status: string(constants.ClusterInstanceRunning)},
+				Type:      "TiKV",
+				Version:   "v5.0.0",
+				ClusterID: "123",
+				HostIP:    []string{"127.0.0.1"},
+				Ports:     []int32{10000, 10001},
+			}, nil)
+		clusterParameterRW.EXPECT().QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, clusterId, name, instanceType string, offset, size int) (paramGroupId string, params []*parameter.ClusterParamDetail, total int64, err error) {
+				return "1", []*parameter.ClusterParamDetail{
+					{
+						Parameter: parametergroup.Parameter{
+							ID:           "2",
+							Category:     "basic",
+							Name:         "oom-action",
+							InstanceType: "TiKV",
+							HasApply:     1,
+							Type:         1,
+						},
+						RealValue: "{\"clusterValue\":\"cancel\"}",
+					},
+				}, 1, nil
+			})
+
+		resp, err := mockManager.InspectClusterParameters(context.TODO(), cluster.InspectParametersReq{
+			InstanceID: "1",
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, len(resp.Params), 1)
+		assert.Equal(t, len(resp.Params[0].ParameterInfos), 0)
+	})
+
+	t.Run("inspect pd instance parameter", func(t *testing.T) {
+		clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterManagementRW)
+		clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
+		models.SetClusterParameterReaderWriter(clusterParameterRW)
+		mockPDApiService := mockutilpd.NewMockPDApiService(ctrl)
+		pd.ApiService = mockPDApiService
+
+		mockPDApiService.EXPECT().ShowConfig(gomock.Any(), gomock.Any()).Return(apiContent, nil)
+		clusterManagementRW.EXPECT().GetInstance(gomock.Any(), gomock.Any()).
+			Return(&management.ClusterInstance{
+				Entity:    common.Entity{ID: "1", Status: string(constants.ClusterInstanceRunning)},
+				Type:      "PD",
+				Version:   "v5.0.0",
+				ClusterID: "123",
+				HostIP:    []string{"127.0.0.1"},
+				Ports:     []int32{10000, 10001},
+			}, nil)
+		clusterParameterRW.EXPECT().QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, clusterId, name, instanceType string, offset, size int) (paramGroupId string, params []*parameter.ClusterParamDetail, total int64, err error) {
+				return "1", []*parameter.ClusterParamDetail{
+					{
+						Parameter: parametergroup.Parameter{
+							ID:           "3",
+							Category:     "log.file",
+							Name:         "max-size",
+							InstanceType: "PD",
+							HasApply:     1,
+							Type:         0,
+						},
+						RealValue: "{\"clusterValue\":\"102400\"}",
+					},
+				}, 1, nil
+			})
+
+		resp, err := mockManager.InspectClusterParameters(context.TODO(), cluster.InspectParametersReq{
+			InstanceID: "1",
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, len(resp.Params), 1)
+		assert.Equal(t, len(resp.Params[0].ParameterInfos), 0)
+	})
+
+	t.Run("inspect cdc and tiflash instance parameter", func(t *testing.T) {
+		clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterManagementRW)
+		clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
+		models.SetClusterParameterReaderWriter(clusterParameterRW)
+		mock2rdService := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mock2rdService
+
+		mock2rdService.EXPECT().Pull(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(string(tomlConfigContent), nil)
+
+		clusterManagementRW.EXPECT().GetInstance(gomock.Any(), gomock.Any()).
+			Return(&management.ClusterInstance{
+				Entity:    common.Entity{ID: "1", Status: string(constants.ClusterInstanceRunning)},
+				Type:      "CDC",
+				Version:   "v5.0.0",
+				ClusterID: "123",
+				HostIP:    []string{"127.0.0.1"},
+				Ports:     []int32{10000, 10001},
+			}, nil)
+		clusterParameterRW.EXPECT().QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, clusterId, name, instanceType string, offset, size int) (paramGroupId string, params []*parameter.ClusterParamDetail, total int64, err error) {
+				return "1", []*parameter.ClusterParamDetail{
+					{
+						Parameter: parametergroup.Parameter{
+							ID:           "4",
+							Category:     "basic",
+							Name:         "quota-backend-bytes",
+							InstanceType: "CDC",
+							HasApply:     1,
+							Type:         0,
+						},
+						RealValue: "{\"clusterValue\":\"8589934592\"}",
+					},
+				}, 1, nil
+			})
+
+		resp, err := mockManager.InspectClusterParameters(context.TODO(), cluster.InspectParametersReq{
+			InstanceID: "1",
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, len(resp.Params), 1)
+		assert.Equal(t, len(resp.Params[0].ParameterInfos), 0)
 	})
 
 	t.Run("query cluster parameter error", func(t *testing.T) {
@@ -531,13 +698,88 @@ func TestManager_InspectClusterParameters(t *testing.T) {
 	})
 }
 
+func TestManager_inspectTiDBComponentInstance(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	instances := mockClusterInstances()
+	t.Run("request tidb api error", func(t *testing.T) {
+		mockTiDBApiService := mockutiltidbhttp.NewMockTiDBApiService(ctrl)
+		http.ApiService = mockTiDBApiService
+
+		mockTiDBApiService.EXPECT().ShowConfig(gomock.Any(), gomock.Any()).Return(apiContent, errors.New("request tidb api error"))
+
+		_, err := inspectTiDBComponentInstance(context.TODO(), instances[0], []structs.ClusterParameterInfo{
+			{
+				ParamId:      "1",
+				Category:     "basic",
+				Name:         "oom-action",
+				InstanceType: "TiDB",
+				Type:         1,
+				RealValue:    structs.ParameterRealValue{ClusterValue: "cancel"},
+			},
+		})
+		assert.Error(t, err)
+	})
+}
+
+func TestManager_inspectTiKVComponentInstance(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	instances := mockClusterInstances()
+	t.Run("request tikv api error", func(t *testing.T) {
+		mockTiKVApiService := mockutiltikv.NewMockTiKVApiService(ctrl)
+		tikv.ApiService = mockTiKVApiService
+
+		mockTiKVApiService.EXPECT().ShowConfig(gomock.Any(), gomock.Any()).Return(apiContent, errors.New("request tikv api error"))
+
+		_, err := inspectTiKVComponentInstance(context.TODO(), instances[0], []structs.ClusterParameterInfo{
+			{
+				ParamId:      "1",
+				Category:     "basic",
+				Name:         "oom-action",
+				InstanceType: "TiKV",
+				Type:         1,
+				RealValue:    structs.ParameterRealValue{ClusterValue: "cancel"},
+			},
+		})
+		assert.Error(t, err)
+	})
+}
+
+func TestManager_inspectPDComponentInstance(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	instances := mockClusterInstances()
+	t.Run("request pd api error", func(t *testing.T) {
+		mockPDApiService := mockutilpd.NewMockPDApiService(ctrl)
+		pd.ApiService = mockPDApiService
+
+		mockPDApiService.EXPECT().ShowConfig(gomock.Any(), gomock.Any()).Return(apiContent, errors.New("request pd api error"))
+
+		_, err := inspectPDComponentInstance(context.TODO(), instances[0], []structs.ClusterParameterInfo{
+			{
+				ParamId:      "1",
+				Category:     "basic",
+				Name:         "oom-action",
+				InstanceType: "PD",
+				Type:         1,
+				RealValue:    structs.ParameterRealValue{ClusterValue: "cancel"},
+			},
+		})
+		assert.Error(t, err)
+	})
+}
+
 func TestManager_inspectInstances(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	instances := mockClusterInstances()
 	t.Run("inspect instances success", func(t *testing.T) {
-		inspectInstanceInfo, err := inspectInstances(context.TODO(), instances[0], apiContent, []structs.ClusterParameterInfo{
+		inspectInstanceInfo, err := inspectInstancesByApiAndConfig(context.TODO(), instances[0], apiContent, []structs.ClusterParameterInfo{
 			{
 				ParamId:      "1",
 				Category:     "basic",
@@ -548,8 +790,8 @@ func TestManager_inspectInstances(t *testing.T) {
 			},
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, len(inspectInstanceInfo), 1)
-		assert.Equal(t, len(inspectInstanceInfo[0].ParameterInfos), 0)
+		assert.NotNil(t, inspectInstanceInfo)
+		assert.Equal(t, len(inspectInstanceInfo.ParameterInfos), 0)
 	})
 	t.Run("inspect instances diff", func(t *testing.T) {
 		mock2rdService := mock_deployment.NewMockInterface(ctrl)
@@ -557,7 +799,7 @@ func TestManager_inspectInstances(t *testing.T) {
 		mock2rdService.EXPECT().Pull(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return(string(tomlConfigContent), nil)
 
-		inspectInstanceInfo, err := inspectInstances(context.TODO(), instances[0], apiContent, []structs.ClusterParameterInfo{
+		inspectInstanceInfo, err := inspectInstancesByApiAndConfig(context.TODO(), instances[0], apiContent, []structs.ClusterParameterInfo{
 			{
 				ParamId:      "1",
 				Category:     "basic",
@@ -576,12 +818,12 @@ func TestManager_inspectInstances(t *testing.T) {
 			},
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, len(inspectInstanceInfo), 1)
-		assert.Equal(t, len(inspectInstanceInfo[0].ParameterInfos), 0)
+		assert.NotNil(t, inspectInstanceInfo)
+		assert.Equal(t, len(inspectInstanceInfo.ParameterInfos), 0)
 	})
 	t.Run("unmarshal error", func(t *testing.T) {
 		apiContent := []byte(`Unmarshal error`)
-		_, err := inspectInstances(context.TODO(), instances[0], apiContent, []structs.ClusterParameterInfo{
+		_, err := inspectInstancesByApiAndConfig(context.TODO(), instances[0], apiContent, []structs.ClusterParameterInfo{
 			{
 				ParamId:      "1",
 				Category:     "basic",

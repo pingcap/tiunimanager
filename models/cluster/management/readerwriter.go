@@ -31,6 +31,8 @@ type ReaderWriter interface {
 
 	QueryMetas(ctx context.Context, filters Filters, pageReq structs.PageRequest) ([]*Result, structs.Page, error)
 
+	GetInstance(ctx context.Context, ID string) (*ClusterInstance, error)
+
 	DeleteInstance(ctx context.Context, ID string) error
 
 	//

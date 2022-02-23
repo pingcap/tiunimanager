@@ -269,8 +269,8 @@ type UpdateClusterParametersResp struct {
 }
 
 type InspectParametersReq struct {
-	ClusterID  string `json:"clusterId" validate:"required,min=4,max=64"`
-	InstanceID string `json:"instanceId"`
+	ClusterID  string `json:"clusterId" swaggerignore:"true" validate:"required,min=4,max=64"`
+	InstanceID string `json:"instanceId" form:"instanceId"`
 }
 
 type InspectParametersResp struct {

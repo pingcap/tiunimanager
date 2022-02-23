@@ -24,7 +24,6 @@ import (
 )
 
 const paramNameOfClusterId = "clusterId"
-const paramNameOfInstanceId = "instanceId"
 
 // QueryParameters query parameters of a cluster
 // @Summary query parameters of a cluster
@@ -93,7 +92,7 @@ func UpdateParameters(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param clusterId path string true "clusterId"
-// @Param instanceId path string true "instanceId"
+// @Param inspectReq body cluster.InspectParametersReq true "inspect params request"
 // @Success 200 {object} controller.CommonResult{data=cluster.InspectParametersResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -102,11 +101,11 @@ func UpdateParameters(c *gin.Context) {
 func InspectParameters(c *gin.Context) {
 	var req cluster.InspectParametersReq
 
-	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &req,
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
+		&req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
 			req.(*cluster.InspectParametersReq).ClusterID = c.Param(paramNameOfClusterId)
-			req.(*cluster.InspectParametersReq).InstanceID = c.Param(paramNameOfInstanceId)
 			return nil
 		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.InspectClusterParameters, &cluster.InspectParametersResp{},

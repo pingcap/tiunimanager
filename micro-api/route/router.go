@@ -142,7 +142,7 @@ func Route(g *gin.Engine) {
 			cluster.POST("/clone", metrics.HandleMetrics(constants.MetricsClusterClone), clusterApi.Clone)
 
 			// Switchover
-			cluster.POST("/switchover", metrics.HandleMetrics(constants.MetricsSwitchover), switchoverApi.Switchover)
+			cluster.POST("/switchover", metrics.HandleMetrics(constants.MetricsClusterSwitchover), switchoverApi.Switchover)
 
 			// Params
 			cluster.GET("/:clusterId/params", metrics.HandleMetrics(constants.MetricsClusterQueryParameter), parameterApi.QueryParameters)

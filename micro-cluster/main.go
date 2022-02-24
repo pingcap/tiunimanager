@@ -36,19 +36,8 @@ func main() {
 	f := framework.InitBaseFrameworkFromArgs(framework.ClusterService,
 		initLibForDev,
 		openDatabase,
-		processStarted,
-		func(b *framework.BaseFramework) error {
-			go func() {
-				// init embed etcd.
-				err := registry.InitEmbedEtcd(b)
-				if err != nil {
-					b.GetRootLogger().ForkFile(b.GetServiceMeta().ServiceName.ServerName()).
-						Errorf("init embed etcd failed, error: %v", err)
-					return
-				}
-			}()
-			return nil
-		},
+		initEmbedEtcd,
+		notifySystemEvent,
 	)
 
 	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
@@ -80,6 +69,19 @@ func openDatabase(f *framework.BaseFramework) error {
 	return models.Open(f)
 }
 
-func processStarted(f *framework.BaseFramework) error {
+func notifySystemEvent(f *framework.BaseFramework) error {
 	return system.GetSystemManager().AcceptSystemEvent(context.TODO(), constants.SystemProcessStarted)
+}
+
+func initEmbedEtcd(b *framework.BaseFramework) error {
+	go func() {
+		// init embed etcd.
+		err := registry.InitEmbedEtcd(b)
+		if err != nil {
+			b.GetRootLogger().ForkFile(b.GetServiceMeta().ServiceName.ServerName()).
+				Errorf("init embed etcd failed, error: %v", err)
+			return
+		}
+	}()
+	return nil
 }

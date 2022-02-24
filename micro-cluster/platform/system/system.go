@@ -27,9 +27,10 @@ import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/platform/system"
 	"sync"
 )
 
@@ -52,6 +53,7 @@ func GetSystemManager() *SystemManager {
 					constants.SystemRunning:       pushToServiceReady,
 					constants.SystemDataReady:     pushToServiceReady,
 					constants.SystemFailure:       pushToServiceReady,
+					constants.SystemServiceReady:  pushToServiceReady,
 				},
 				constants.SystemDataInitialized: {
 					constants.SystemServiceReady: pushToDataReady,
@@ -102,29 +104,50 @@ func acceptSystemEvent(ctx context.Context, event constants.SystemEvent) error {
 	}
 }
 
-func (p *SystemManager) GetSystemInfo(ctx context.Context) (*system.SystemInfo, error) {
-	return models.GetSystemReaderWriter().GetSystemInfo(ctx)
-}
+func (p *SystemManager) GetSystemInfo(ctx context.Context, req message.GetSystemInfoReq) (resp *message.GetSystemInfoResp, err error) {
+	systemInfo, err := models.GetSystemReaderWriter().GetSystemInfo(ctx)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get system info failed, err = %s", err.Error())
+		return nil, err
+	} else {
+		resp = &message.GetSystemInfoResp{
+			Info: structs.SystemInfo{
+				SystemName:       systemInfo.SystemName,
+				SystemLogo:       systemInfo.SystemLogo,
+				CurrentVersionID: systemInfo.CurrentVersionID,
+				LastVersionID:    systemInfo.LastVersionID,
+				State:            string(systemInfo.State),
+			},
+		}
+	}
 
-func (p *SystemManager) GetSystemVersionInfo(ctx context.Context) (*system.VersionInfo, error) {
-	var systemInfo *system.SystemInfo
-	var versionInfo *system.VersionInfo
-	return versionInfo, errors.OfNullable(nil).
-		BreakIf(func() error {
-			got, err := p.GetSystemInfo(ctx)
-			systemInfo = got
-			return err
-		}).
-		BreakIf(func() error {
-			got, err := models.GetSystemReaderWriter().GetVersion(ctx, systemInfo.CurrentVersionID)
-			versionInfo = got
-			return err
-		}).
-		If(func(err error) {
-			framework.LogWithContext(ctx).Errorf("get system version info failed, err = %s", err.Error())
-		}).
-		Else(func() {
-			framework.LogWithContext(ctx).Infof("get system version info succeed, info = %v", *versionInfo)
-		}).
-		Present()
+	if req.WithVersionDetail && len(systemInfo.CurrentVersionID) > 0 {
+		// current version
+		if got, versionError := models.GetSystemReaderWriter().GetVersion(ctx, systemInfo.CurrentVersionID); versionError == nil {
+			resp.CurrentVersion = structs.SystemVersionInfo {
+				VersionID: got.ID,
+				Desc: got.Desc,
+				ReleaseNote: got.ReleaseNote,
+			}
+		} else {
+			framework.LogWithContext(ctx).Errorf("get system current version failed, err = %s", versionError.Error())
+			return nil, versionError
+		}
+	}
+
+	if req.WithVersionDetail && len(systemInfo.LastVersionID) > 0 {
+		// last version
+		if got, versionError := models.GetSystemReaderWriter().GetVersion(ctx, systemInfo.LastVersionID); versionError == nil {
+			resp.LastVersion = structs.SystemVersionInfo {
+				VersionID: got.ID,
+				Desc: got.Desc,
+				ReleaseNote: got.ReleaseNote,
+			}
+		} else {
+			framework.LogWithContext(ctx).Errorf("get system current version failed, err = %s", versionError.Error())
+			return nil, versionError
+		}
+	}
+
+	return resp, nil
 }

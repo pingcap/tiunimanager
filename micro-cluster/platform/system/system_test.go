@@ -25,6 +25,13 @@ package system
 
 import (
 	"context"
+	"github.com/golang/mock/gomock"
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/platform/system"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mocksystem"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -41,13 +48,117 @@ func TestSystemManager_AcceptSystemEvent(t *testing.T) {
 }
 
 func TestSystemManager_GetSystemInfo(t *testing.T) {
-	systemInfo, err := GetSystemManager().GetSystemInfo(context.TODO())
-	assert.NoError(t, err)
-	assert.NotEmpty(t, systemInfo.SystemName)
-	assert.NotEmpty(t, systemInfo.State)
-}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-func TestSystemManager_GetSystemVersionInfo(t *testing.T) {
-	_, err := GetSystemManager().GetSystemVersionInfo(context.TODO())
-	assert.NoError(t, err)
+	systemRW := mocksystem.NewMockReaderWriter(ctrl)
+	models.SetSystemReaderWriter(systemRW)
+
+	systemRW.EXPECT().GetVersion(gomock.Any(), "v1").Return(&system.VersionInfo{
+		ID: "v1",
+		Desc: "v1",
+		ReleaseNote: "this is v1",
+	}, nil).AnyTimes()
+	systemRW.EXPECT().GetVersion(gomock.Any(), "v2").Return(&system.VersionInfo{
+		ID: "v2",
+		Desc: "v2",
+		ReleaseNote: "this is v2",
+	}, nil).AnyTimes()
+	systemRW.EXPECT().GetVersion(gomock.Any(), "v3").Return(nil, errors.Error(errors.TIEM_SYSTEM_INVALID_VERSION)).AnyTimes()
+
+	t.Run("normal", func(t *testing.T) {
+		systemRW.EXPECT().GetSystemInfo(gomock.Any()).Return(&system.SystemInfo{
+			SystemName: "EM",
+			SystemLogo: "111",
+			CurrentVersionID: "v2",
+			LastVersionID: "v1",
+			State: constants.SystemRunning,
+		}, nil).Times(1)
+
+		got, err := GetSystemManager().GetSystemInfo(context.TODO(), message.GetSystemInfoReq{WithVersionDetail: true})
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, got)
+		assert.Equal(t, "EM", got.Info.SystemName)
+		assert.Equal(t, "111", got.Info.SystemLogo)
+		assert.Equal(t, "v2", got.Info.CurrentVersionID)
+		assert.Equal(t, "v1", got.Info.LastVersionID)
+		assert.Equal(t, string(constants.SystemRunning), got.Info.State)
+		assert.Equal(t, "v2", got.CurrentVersion.VersionID)
+		assert.Equal(t, "v1", got.LastVersion.VersionID)
+	})
+	t.Run("error", func(t *testing.T) {
+		systemRW.EXPECT().GetSystemInfo(gomock.Any()).Return(nil, errors.Error(errors.TIEM_SYSTEM_MISSING_CONFIG)).Times(1)
+		_, err := GetSystemManager().GetSystemInfo(context.TODO(), message.GetSystemInfoReq{WithVersionDetail: true})
+		assert.Error(t, err)
+	})
+	t.Run("without version", func(t *testing.T) {
+		systemRW.EXPECT().GetSystemInfo(gomock.Any()).Return(&system.SystemInfo{
+			SystemName: "EM",
+			SystemLogo: "111",
+			CurrentVersionID: "v2",
+			LastVersionID: "v1",
+			State: constants.SystemRunning,
+		}, nil).Times(1)
+
+		got, err := GetSystemManager().GetSystemInfo(context.TODO(), message.GetSystemInfoReq{WithVersionDetail: false})
+
+		assert.NoError(t, err)
+		assert.Equal(t, "", got.LastVersion.VersionID)
+		assert.Equal(t, "", got.CurrentVersion.VersionID)
+	})
+	t.Run("empty current version", func(t *testing.T) {
+		systemRW.EXPECT().GetSystemInfo(gomock.Any()).Return(&system.SystemInfo{
+			SystemName: "EM",
+			SystemLogo: "111",
+			CurrentVersionID: "",
+			LastVersionID: "",
+			State: constants.SystemRunning,
+		}, nil).Times(1)
+
+		got, err := GetSystemManager().GetSystemInfo(context.TODO(), message.GetSystemInfoReq{WithVersionDetail: true})
+
+		assert.NoError(t, err)
+		assert.Equal(t, "", got.LastVersion.VersionID)
+		assert.Equal(t, "", got.CurrentVersion.VersionID)
+	})
+	t.Run("empty last version", func(t *testing.T) {
+		systemRW.EXPECT().GetSystemInfo(gomock.Any()).Return(&system.SystemInfo{
+			SystemName: "EM",
+			SystemLogo: "111",
+			CurrentVersionID: "v2",
+			LastVersionID: "",
+			State: constants.SystemRunning,
+		}, nil).Times(1)
+
+		got, err := GetSystemManager().GetSystemInfo(context.TODO(), message.GetSystemInfoReq{WithVersionDetail: true})
+
+		assert.NoError(t, err)
+		assert.Equal(t, "v2", got.CurrentVersion.VersionID)
+		assert.Equal(t, "", got.LastVersion.VersionID)
+	})
+	t.Run("version error", func(t *testing.T) {
+		systemRW.EXPECT().GetSystemInfo(gomock.Any()).Return(&system.SystemInfo{
+			SystemName: "EM",
+			SystemLogo: "111",
+			CurrentVersionID: "v3",
+			LastVersionID: "v2",
+			State: constants.SystemRunning,
+		}, nil).Times(1)
+
+		_, err := GetSystemManager().GetSystemInfo(context.TODO(), message.GetSystemInfoReq{WithVersionDetail: true})
+		assert.Error(t, err)
+	})
+	t.Run("version error", func(t *testing.T) {
+		systemRW.EXPECT().GetSystemInfo(gomock.Any()).Return(&system.SystemInfo{
+			SystemName: "EM",
+			SystemLogo: "111",
+			CurrentVersionID: "v2",
+			LastVersionID: "v3",
+			State: constants.SystemRunning,
+		}, nil).Times(1)
+
+		_, err := GetSystemManager().GetSystemInfo(context.TODO(), message.GetSystemInfoReq{WithVersionDetail: true})
+		assert.Error(t, err)
+	})
 }

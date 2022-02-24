@@ -147,7 +147,7 @@ func (p *FileHostInitiator) appendRemoteAuthorizedKeysFile(ctx context.Context, 
 
 	pk := strings.TrimSpace(string(pubKey))
 	sshAuthorizedKeys := p.findSSHAuthorizedKeysFile(ctx, h)
-	cmd = fmt.Sprintf(`su - %[1]s -c 'grep $(echo %[2]s) %[3]s || echo %[2]s >> %[3]s && chmod 600 %[3]s'`,
+	cmd = fmt.Sprintf(`su - %[1]s -c 'grep "$(echo %[2]s)" %[3]s || echo %[2]s >> %[3]s && chmod 600 %[3]s'`,
 		deployUser, pk, sshAuthorizedKeys)
 	_, err = p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, rp_consts.DefaultCopySshIDTimeOut, []string{cmd})
 	if err != nil {

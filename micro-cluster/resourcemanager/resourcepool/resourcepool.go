@@ -163,7 +163,12 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 		flowIds = append(flowIds, flow.Flow.ID)
 	}
 	// Sync start each flow in a goroutine: tiup-tiem/sqlite DO NOT support concurrent
-	go func() {
+	operationName := fmt.Sprintf(
+		"%s.%s BackgroundTask",
+		framework.GetMicroServiceNameFromContext(ctx),
+		framework.GetMicroEndpointNameFromContext(ctx),
+	)
+	framework.StartBackgroundTask(ctx, operationName, func(ctx context.Context) error {
 		for i, flow := range flows {
 			if err = flowManager.Start(ctx, flow); err != nil {
 				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for host %s %s, %s", rp_consts.FlowImportHosts, i, flow.Flow.ID, hosts[i].HostName, hosts[i].IP, err.Error())
@@ -173,7 +178,9 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for host %s %s", rp_consts.FlowImportHosts, i, flow.Flow.ID, hosts[i].HostName, hosts[i].IP)
 			}
 		}
-	}()
+		return nil
+	})
+
 	return flowIds, hostIds, nil
 }
 
@@ -209,8 +216,12 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 	if err != nil {
 		return nil, err
 	}
-
-	go func() {
+	operationName := fmt.Sprintf(
+		"%s.%s BackgroundTask",
+		framework.GetMicroServiceNameFromContext(ctx),
+		framework.GetMicroEndpointNameFromContext(ctx),
+	)
+	framework.StartBackgroundTask(ctx, operationName, func(ctx context.Context) error {
 		for i, flow := range flows {
 			if err = flowManager.Start(ctx, flow); err != nil {
 				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for delete host %s, %s", rp_consts.FlowDeleteHosts, i, flow.Flow.ID, hostIds[i], err.Error())
@@ -219,7 +230,9 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for delete host %s", rp_consts.FlowDeleteHosts, i, flow.Flow.ID, hostIds[i])
 			}
 		}
-	}()
+		return nil
+	})
+
 	return flowIds, nil
 }
 

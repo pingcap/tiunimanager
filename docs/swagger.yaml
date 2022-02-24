@@ -312,6 +312,100 @@ definitions:
         example: http://127.0.0.1:9093
         type: string
     type: object
+  cluster.InspectParameterInfo:
+    properties:
+      category:
+        example: log
+        type: string
+      description:
+        example: binlog cache size
+        type: string
+      hasReboot:
+        enum:
+        - 0
+        - 1
+        example: 0
+        type: integer
+      inspectValue:
+        type: object
+      name:
+        example: binlog_cache
+        type: string
+      note:
+        example: binlog cache size
+        type: string
+      paramId:
+        example: "1"
+        type: string
+      range:
+        example:
+        - "1"
+        - ' 1000'
+        items:
+          type: string
+        type: array
+      rangeType:
+        enum:
+        - 0
+        - 1
+        - 2
+        example: 1
+        type: integer
+      readOnly:
+        enum:
+        - 0
+        - 1
+        example: 0
+        type: integer
+      realValue:
+        $ref: '#/definitions/structs.ParameterRealValue'
+      systemVariable:
+        example: log.log_level
+        type: string
+      type:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        example: 0
+        type: integer
+      unit:
+        example: MB
+        type: string
+      unitOptions:
+        example:
+        - KB
+        - MB
+        - GB
+        items:
+          type: string
+        type: array
+    type: object
+  cluster.InspectParameters:
+    properties:
+      instanceId:
+        type: string
+      instanceType:
+        type: string
+      parameterInfos:
+        items:
+          $ref: '#/definitions/cluster.InspectParameterInfo'
+        type: array
+    type: object
+  cluster.InspectParametersReq:
+    properties:
+      instanceId:
+        type: string
+    type: object
+  cluster.InspectParametersResp:
+    properties:
+      params:
+        items:
+          $ref: '#/definitions/cluster.InspectParameters'
+        type: array
+    type: object
   cluster.KafkaDownstream:
     properties:
       clientId:
@@ -1430,6 +1524,7 @@ definitions:
         - 1
         - 2
         - 3
+        - 4
         example: 0
         type: integer
     type: object
@@ -1774,15 +1869,6 @@ definitions:
       valid:
         type: boolean
     type: object
-  structs.CheckBool:
-    properties:
-      expectedValue:
-        type: boolean
-      realValue:
-        type: boolean
-      valid:
-        type: boolean
-    type: object
   structs.CheckError:
     properties:
       message:
@@ -1878,8 +1964,6 @@ definitions:
         $ref: '#/definitions/structs.CheckStatus'
       storage:
         type: integer
-      tls:
-        $ref: '#/definitions/structs.CheckBool'
       topology:
         type: string
     type: object
@@ -2131,6 +2215,7 @@ definitions:
         - 1
         - 2
         - 3
+        - 4
         example: 0
         type: integer
       updateTime:
@@ -2303,7 +2388,9 @@ definitions:
       cpu:
         $ref: '#/definitions/structs.CheckInt32'
       disk:
-        $ref: '#/definitions/structs.CheckInt32'
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckString'
+        type: object
       errors:
         items:
           $ref: '#/definitions/structs.CheckError'
@@ -2534,6 +2621,7 @@ definitions:
         - 1
         - 2
         - 3
+        - 4
         example: 0
         type: integer
       updateTime:
@@ -2657,15 +2745,17 @@ definitions:
         - in-place
         - migration
         type: string
-      upgradeWay:
-        enum:
+      upgradeWays:
+        example:
         - offline
         - online
-        type: string
+        items:
+          type: string
+        type: array
       versions:
         example:
-        - v5.0.0
         - v5.3.0
+        - v5.4.0
         items:
           type: string
         type: array
@@ -2700,6 +2790,13 @@ definitions:
         items:
           type: string
         type: array
+      rangeType:
+        enum:
+        - 0
+        - 1
+        - 2
+        example: 1
+        type: integer
       suggestValue:
         example: "30"
         type: string
@@ -2715,6 +2812,14 @@ definitions:
       unit:
         example: MB
         type: string
+      unitOptions:
+        example:
+        - KB
+        - MB
+        - GB
+        items:
+          type: string
+        type: array
     required:
     - category
     - currentValue
@@ -2722,9 +2827,11 @@ definitions:
     - name
     - paramId
     - range
+    - rangeType
     - suggestValue
     - type
     - unit
+    - unitOptions
     type: object
   structs.ProductVersion:
     properties:
@@ -3981,6 +4088,52 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: submit parameters
+      tags:
+      - cluster parameters
+  /clusters/{clusterId}/params/inspect:
+    post:
+      consumes:
+      - application/json
+      description: inspect parameters
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: inspect params request
+        in: body
+        name: inspectReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.InspectParametersReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.InspectParametersResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: inspect parameters
       tags:
       - cluster parameters
   /clusters/{clusterId}/preview-scale-out:

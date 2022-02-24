@@ -14,50 +14,35 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: lib_tiup_test
+ * @File: tiup
  * @Description:
  * @Author: shenhaibo@pingcap.com
  * @Version: 1.0.0
- * @Date: 2022/2/9
+ * @Date: 2022/2/21
 *******************************************************************************/
 
-package secondparty
+package util
 
 import (
 	"context"
-	"errors"
-	"github.com/golang/mock/gomock"
+	"github.com/pingcap-inc/tiem/deployment"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/tiup"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mocktiupconfig"
-	asserts "github.com/stretchr/testify/assert"
-	"testing"
 )
 
-func TestGetTiUPHomeForComponent(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		tiupRW := mocktiupconfig.NewMockReaderWriter(ctrl)
-		models.SetTiUPConfigReaderWriter(tiupRW)
-		tiupRW.EXPECT().QueryByComponentType(gomock.Any(), gomock.Any()).Return(&tiup.TiupConfig{TiupHome: "testdata"}, nil).AnyTimes()
-
-		result := GetTiUPHomeForComponent(context.TODO(), TiEMComponentTypeStr)
-		asserts.Equal(t, "testdata", result)
-		result = GetTiUPHomeForComponent(context.TODO(), ClusterComponentTypeStr)
-		asserts.Equal(t, "testdata", result)
-	})
-
-	t.Run("fail", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		tiupRW := mocktiupconfig.NewMockReaderWriter(ctrl)
-		models.SetTiUPConfigReaderWriter(tiupRW)
-		tiupRW.EXPECT().QueryByComponentType(gomock.Any(), gomock.Any()).Return(nil, errors.New("cannot get")).AnyTimes()
-
-		result := GetTiUPHomeForComponent(context.TODO(), TiEMComponentTypeStr)
-		asserts.Equal(t, "", result)
-	})
+func GetTiUPHomeForComponent(ctx context.Context, tiUPComponent deployment.TiUPComponentType) string {
+	var component string
+	switch tiUPComponent {
+	case deployment.TiUPComponentTypeTiEM:
+		component = string(deployment.TiUPComponentTypeTiEM)
+	default:
+		component = string(deployment.TiUPComponentTypeDefault)
+	}
+	tiUPConfig, err := models.GetTiUPConfigReaderWriter().QueryByComponentType(context.Background(), component)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("fail get tiup_home for %s: %s", component, err.Error())
+		return ""
+	} else {
+		return tiUPConfig.TiupHome
+	}
 }

@@ -33,6 +33,8 @@ type ReaderWriter interface {
 
 	QueryClusters(ctx context.Context, tenantID string)([]*Result, error)
 
+	GetInstance(ctx context.Context, ID string) (*ClusterInstance, error)
+
 	DeleteInstance(ctx context.Context, ID string) error
 
 	//

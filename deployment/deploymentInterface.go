@@ -81,6 +81,7 @@ const (
 	CMDLightning    = "tidb-lightning"
 	CMDTopologyFile = "--topology-file"
 	CMDPush         = "push"
+	CMDPull         = "pull"
 	CMDCheck        = "check"
 	CMDPrune        = "prune"
 	FlagWaitTimeout = "--wait-timeout"
@@ -287,6 +288,18 @@ type Interface interface {
 	// @return ID
 	// @return err
 	Push(ctx context.Context, componentType TiUPComponentType, clusterID, collectorYaml, remotePath, home, workFlowID string, args []string, timeout int) (ID string, err error)
+	// Pull
+	// @Description:
+	// @param ctx
+	// @param componentType
+	// @param clusterID
+	// @param remotePath
+	// @param home
+	// @param args[]
+	// @param timeout
+	// @return result
+	// @return err
+	Pull(ctx context.Context, componentType TiUPComponentType, clusterID, remotePath, home string, args []string, timeout int) (result string, err error)
 	// Ctl
 	// @Description:
 	// @param ctx

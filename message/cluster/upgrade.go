@@ -39,7 +39,7 @@ type QueryUpgradePathRsp struct {
 // QueryUpgradeVersionDiffInfoReq Reply message for querying configuration difference between current cluster and target version
 type QueryUpgradeVersionDiffInfoReq struct {
 	ClusterID     string `json:"clusterId" swaggerignore:"true"`
-	TargetVersion string `json:"targetVersion" validate:"required" example:"v5.0.0"`
+	TargetVersion string `form:"targetVersion" validate:"required" example:"v5.0.0"`
 }
 
 // QueryUpgradeVersionDiffInfoResp Reply message for querying configuration difference between current cluster and target version

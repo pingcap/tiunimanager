@@ -18,15 +18,27 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
+	hostInspector "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/inspect"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
+	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"math"
+	"strconv"
+	"strings"
 )
 
 type Report struct {
 	Info *structs.CheckReportInfo
+}
+
+type Replication struct {
+	MaxReplicas int32 `json:"max-replicas"`
 }
 
 func (p *Report) ParseFrom(ctx context.Context, checkID string) error {
@@ -72,15 +84,49 @@ func (p *Report) GetClusterAllocatedResource(ctx context.Context, meta *manageme
 }
 
 func (p *Report) GetClusterCopies(ctx context.Context, clusterID string) (int32, error) {
-	return 0, nil
-}
+	// get cluster meta
+	clusterMeta, err := meta.Get(ctx, clusterID)
+	if err != nil {
+		return 0, err
+	}
 
-func (p *Report) GetClusterTLS(ctx context.Context, clusterID string) (bool, error) {
-	return false, nil
+	pdAddress := clusterMeta.GetPDClientAddresses()
+	if len(pdAddress) <= 0 {
+		return 0, errors.NewError(errors.TIEM_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
+	}
+
+	pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
+
+	config, err := deployment.M.Ctl(ctx, deployment.TiUPComponentTypeCtrl, clusterMeta.Cluster.Version, spec.ComponentPD,
+		"/home/tiem/.tiup", []string{"-u", pdID, "config", "show", "replication"}, meta.DefaultTiupTimeOut)
+	if err != nil {
+		return 0, err
+	}
+
+	replication := &Replication{}
+	if err = json.Unmarshal([]byte(config), replication); err != nil {
+		return 0, errors.WrapError(errors.TIEM_UNMARSHAL_ERROR,
+			fmt.Sprintf("parse placement rules error: %s", err.Error()), err)
+	}
+
+	return replication.MaxReplicas, nil
 }
 
 func (p *Report) GetClusterAccountStatus(ctx context.Context, clusterID string) (structs.CheckStatus, error) {
-	return structs.CheckStatus{}, nil
+	accountStatus := structs.CheckStatus{}
+	clusterMeta, err := meta.Get(ctx, clusterID)
+	if err != nil {
+		return accountStatus, err
+	}
+	_, err = meta.CreateSQLLink(ctx, clusterMeta)
+	if err != nil {
+		accountStatus.Health = false
+		accountStatus.Message = err.Error()
+	} else {
+		accountStatus.Health = true
+	}
+
+	return accountStatus, nil
 }
 
 func (p *Report) GetClusterTopology(ctx context.Context, clusterID string) (string, error) {
@@ -129,10 +175,6 @@ func (p *Report) CheckClusters(ctx context.Context, clusterMetas []*management.R
 		if err != nil {
 			return clusterChecks, err
 		}
-		tls, err := p.GetClusterTLS(ctx, meta.Cluster.ID)
-		if err != nil {
-			return clusterChecks, err
-		}
 		accountStatus, err := p.GetClusterAccountStatus(ctx, meta.Cluster.ID)
 		if err != nil {
 			return clusterChecks, err
@@ -159,11 +201,6 @@ func (p *Report) CheckClusters(ctx context.Context, clusterMetas []*management.R
 				Valid:         copies == int32(meta.Cluster.Copies),
 				RealValue:     copies,
 				ExpectedValue: int32(meta.Cluster.Copies),
-			},
-			TLS: structs.CheckBool{
-				Valid:         tls == meta.Cluster.TLS,
-				RealValue:     tls,
-				ExpectedValue: meta.Cluster.TLS,
 			},
 			AccountStatus: accountStatus,
 			Topology:      topology,
@@ -228,9 +265,25 @@ func (p *Report) CheckTenant(ctx context.Context, tenantID string) error {
 	return nil
 }
 
-func (p *Report) CheckHost(ctx context.Context, hostID string) (structs.HostCheck, error) {
-	
-	return structs.HostCheck{}, nil
+func (p *Report) CheckHostAllocatedResource(ctx context.Context, hostInfos []structs.HostInfo) (map[string]*structs.CheckInt32,
+	map[string]*structs.CheckInt32, map[string]map[string]*structs.CheckString, error) {
+
+	cpuAllocated, err := hostInspector.GetHostInspector().CheckCpuAllocated(ctx, hostInfos)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	memAllocated, err := hostInspector.GetHostInspector().CheckMemAllocated(ctx, hostInfos)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	diskAllocated, err := hostInspector.GetHostInspector().CheckDiskAllocated(ctx, hostInfos)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	return cpuAllocated, memAllocated, diskAllocated, nil
 }
 
 func (p *Report) CheckHosts(ctx context.Context) error {
@@ -242,15 +295,32 @@ func (p *Report) CheckHosts(ctx context.Context) error {
 	}
 
 	checkHosts := make(map[string]structs.HostCheck)
+	hostInfos := make([]structs.HostInfo, 0)
 	for _, host := range hosts {
-		checkHost, err := p.CheckHost(ctx, host.ID)
-		if err != nil {
-			return err
+		hostInfos = append(hostInfos, structs.HostInfo{ID: host.ID})
+	}
+
+	cpu, memory, disk, err := p.CheckHostAllocatedResource(ctx, hostInfos)
+	if err != nil {
+		return err
+	}
+
+	for key, _ := range cpu {
+		diskAllocated := make(map[string]structs.CheckString)
+		for path, value := range disk[key] {
+			if _, ok := diskAllocated[path]; !ok {
+				diskAllocated[path] = *value
+			}
 		}
-		if _, ok := checkHosts[host.ID]; !ok {
-			checkHosts[host.ID] = checkHost
+		if _, ok := checkHosts[key]; !ok {
+			checkHosts[key] = structs.HostCheck{
+				CPUAllocated:    *cpu[key],
+				MemoryAllocated: *memory[key],
+				DiskAllocated:   diskAllocated,
+			}
 		}
 	}
+
 	p.Info.Hosts = structs.HostsCheck{
 		Hosts: checkHosts,
 	}

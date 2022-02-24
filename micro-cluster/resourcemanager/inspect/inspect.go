@@ -18,6 +18,7 @@ package hostInspector
 import (
 	"context"
 	"reflect"
+	"sync"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -31,9 +32,16 @@ type HostInspect struct {
 	resouceRW resource.ReaderWriter
 }
 
-func NewHostInspector() HostInspector {
-	hostInspector := new(HostInspect)
-	hostInspector.resouceRW = models.GetResourceReaderWriter()
+var once sync.Once
+var hostInspector *HostInspect
+
+func GetHostInspector() HostInspector {
+	once.Do(func() {
+		if hostInspector == nil {
+			hostInspector = new(HostInspect)
+			hostInspector.resouceRW = models.GetResourceReaderWriter()
+		}
+	})
 	return hostInspector
 }
 

@@ -13,9 +13,11 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package management
+package system
 
 import (
+	"context"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models"
 	"os"
@@ -26,14 +28,16 @@ func TestMain(m *testing.M) {
 	var testFilePath string
 	framework.InitBaseFrameworkForUt(framework.ClusterService,
 		func(d *framework.BaseFramework) error {
-			models.MockDB()
 			testFilePath = d.GetDataDir()
 			os.MkdirAll(testFilePath, 0755)
-			models.MockDB()
 			return models.Open(d)
+		},
+		func(d *framework.BaseFramework) error {
+			return GetSystemManager().AcceptSystemEvent(context.TODO(), constants.SystemProcessStarted)
 		},
 	)
 	code := m.Run()
+	models.MockDB()
 	os.RemoveAll(testFilePath)
 
 	os.Exit(code)

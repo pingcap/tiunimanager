@@ -18,16 +18,27 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	hostInspector "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/inspect"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
+	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"math"
+	"strconv"
+	"strings"
 )
 
 type Report struct {
 	Info *structs.CheckReportInfo
+}
+
+type Replication struct {
+	MaxReplicas int32 `json:"max-replicas"`
 }
 
 func (p *Report) ParseFrom(ctx context.Context, checkID string) error {
@@ -73,15 +84,49 @@ func (p *Report) GetClusterAllocatedResource(ctx context.Context, meta *manageme
 }
 
 func (p *Report) GetClusterCopies(ctx context.Context, clusterID string) (int32, error) {
-	return 0, nil
-}
+	// get cluster meta
+	clusterMeta, err := meta.Get(ctx, clusterID)
+	if err != nil {
+		return 0, err
+	}
 
-func (p *Report) GetClusterTLS(ctx context.Context, clusterID string) (bool, error) {
-	return false, nil
+	pdAddress := clusterMeta.GetPDClientAddresses()
+	if len(pdAddress) <= 0 {
+		return 0, errors.NewError(errors.TIEM_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
+	}
+
+	pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
+
+	config, err := deployment.M.Ctl(ctx, deployment.TiUPComponentTypeCtrl, clusterMeta.Cluster.Version, spec.ComponentPD,
+		"/home/tiem/.tiup", []string{"-u", pdID, "config", "show", "replication"}, meta.DefaultTiupTimeOut)
+	if err != nil {
+		return 0, err
+	}
+
+	replication := &Replication{}
+	if err = json.Unmarshal([]byte(config), replication); err != nil {
+		return 0, errors.WrapError(errors.TIEM_UNMARSHAL_ERROR,
+			fmt.Sprintf("parse placement rules error: %s", err.Error()), err)
+	}
+
+	return replication.MaxReplicas, nil
 }
 
 func (p *Report) GetClusterAccountStatus(ctx context.Context, clusterID string) (structs.CheckStatus, error) {
-	return structs.CheckStatus{}, nil
+	accountStatus := structs.CheckStatus{}
+	clusterMeta, err := meta.Get(ctx, clusterID)
+	if err != nil {
+		return accountStatus, err
+	}
+	_, err = meta.CreateSQLLink(ctx, clusterMeta)
+	if err != nil {
+		accountStatus.Health = false
+		accountStatus.Message = err.Error()
+	} else {
+		accountStatus.Health = true
+	}
+
+	return accountStatus, nil
 }
 
 func (p *Report) GetClusterTopology(ctx context.Context, clusterID string) (string, error) {
@@ -130,10 +175,6 @@ func (p *Report) CheckClusters(ctx context.Context, clusterMetas []*management.R
 		if err != nil {
 			return clusterChecks, err
 		}
-		tls, err := p.GetClusterTLS(ctx, meta.Cluster.ID)
-		if err != nil {
-			return clusterChecks, err
-		}
 		accountStatus, err := p.GetClusterAccountStatus(ctx, meta.Cluster.ID)
 		if err != nil {
 			return clusterChecks, err
@@ -160,11 +201,6 @@ func (p *Report) CheckClusters(ctx context.Context, clusterMetas []*management.R
 				Valid:         copies == int32(meta.Cluster.Copies),
 				RealValue:     copies,
 				ExpectedValue: int32(meta.Cluster.Copies),
-			},
-			TLS: structs.CheckBool{
-				Valid:         tls == meta.Cluster.TLS,
-				RealValue:     tls,
-				ExpectedValue: meta.Cluster.TLS,
 			},
 			AccountStatus: accountStatus,
 			Topology:      topology,

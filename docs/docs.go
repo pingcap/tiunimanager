@@ -9414,20 +9414,6 @@ var doc = `{
                 }
             }
         },
-        "structs.CheckBool": {
-            "type": "object",
-            "properties": {
-                "expectedValue": {
-                    "type": "boolean"
-                },
-                "realValue": {
-                    "type": "boolean"
-                },
-                "valid": {
-                    "type": "boolean"
-                }
-            }
-        },
         "structs.CheckError": {
             "type": "object",
             "properties": {
@@ -9573,9 +9559,6 @@ var doc = `{
                 },
                 "storage": {
                     "type": "integer"
-                },
-                "tls": {
-                    "$ref": "#/definitions/structs.CheckBool"
                 },
                 "topology": {
                     "type": "string"

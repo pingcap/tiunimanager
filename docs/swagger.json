@@ -9400,20 +9400,6 @@
                 }
             }
         },
-        "structs.CheckBool": {
-            "type": "object",
-            "properties": {
-                "expectedValue": {
-                    "type": "boolean"
-                },
-                "realValue": {
-                    "type": "boolean"
-                },
-                "valid": {
-                    "type": "boolean"
-                }
-            }
-        },
         "structs.CheckError": {
             "type": "object",
             "properties": {
@@ -9559,9 +9545,6 @@
                 },
                 "storage": {
                     "type": "integer"
-                },
-                "tls": {
-                    "$ref": "#/definitions/structs.CheckBool"
                 },
                 "topology": {
                     "type": "string"

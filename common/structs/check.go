@@ -64,7 +64,6 @@ type ClusterCheck struct {
 	Memory            int32                              `json:"memory"`
 	Storage           int32                              `json:"storage"`
 	Copies            CheckInt32                         `json:"copies"`
-	TLS               CheckBool                          `json:"tls"`
 	AccountStatus     CheckStatus                        `json:"accountStatus"`
 	Topology          string                             `json:"topology"`
 	RegionStatus      CheckStatus                        `json:"regionStatus"`

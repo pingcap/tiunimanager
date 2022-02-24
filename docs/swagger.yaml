@@ -1869,15 +1869,6 @@ definitions:
       valid:
         type: boolean
     type: object
-  structs.CheckBool:
-    properties:
-      expectedValue:
-        type: boolean
-      realValue:
-        type: boolean
-      valid:
-        type: boolean
-    type: object
   structs.CheckError:
     properties:
       message:
@@ -1973,8 +1964,6 @@ definitions:
         $ref: '#/definitions/structs.CheckStatus'
       storage:
         type: integer
-      tls:
-        $ref: '#/definitions/structs.CheckBool'
       topology:
         type: string
     type: object

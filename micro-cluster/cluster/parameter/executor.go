@@ -400,8 +400,13 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 					framework.LogWithContext(ctx).Errorf("convert real parameter type err = %v", err)
 					return err
 				}
+				configKey := DisplayFullParameterName(param.Category, param.Name)
+				// If system variable not empty, set config key from system variable.
+				if param.SystemVariable != "" {
+					configKey = param.SystemVariable
+				}
 				// display full parameter name
-				cm[DisplayFullParameterName(param.Category, param.Name)] = clusterValue
+				cm[configKey] = clusterValue
 			}
 			clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
 

@@ -372,7 +372,7 @@ func mockModifyParameter() *ModifyParameter {
 				InstanceType:   "PD",
 				UpdateSource:   3,
 				HasApply:       1,
-				SystemVariable: "",
+				SystemVariable: "test_param_3",
 				Type:           1,
 				Unit:           "kB",
 				UnitOptions:    []string{"KB", "MB"},

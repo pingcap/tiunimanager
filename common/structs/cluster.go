@@ -181,7 +181,7 @@ type ClusterLogItem struct {
 
 type ProductUpgradePathItem struct {
 	UpgradeType string   `json:"upgradeType"  validate:"required" enums:"in-place,migration"`
-	UpgradeWay  []string `json:"upgradeWay,omitempty"  example:"offline,online"`
+	UpgradeWays []string `json:"upgradeWays,omitempty"  example:"offline,online"`
 	Versions    []string `json:"versions" validate:"required" example:"v5.3.0,v5.4.0"`
 }
 type ProductUpgradeVersionConfigDiffItem struct {
@@ -234,7 +234,7 @@ type ClusterParameterInfo struct {
 	RangeType      int                `json:"rangeType" example:"1" enums:"0,1,2"`
 	HasReboot      int                `json:"hasReboot" example:"0" enums:"0,1"`
 	HasApply       int                `json:"hasApply" example:"1" enums:"0,1"`
-	UpdateSource   int                `json:"updateSource" example:"0" enums:"0,1,2,3"`
+	UpdateSource   int                `json:"updateSource" example:"0" enums:"0,1,2,3,4"`
 	ReadOnly       int                `json:"readOnly" example:"0" enums:"0,1"`
 	DefaultValue   string             `json:"defaultValue" example:"1"`
 	RealValue      ParameterRealValue `json:"realValue"`

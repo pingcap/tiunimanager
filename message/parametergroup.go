@@ -138,7 +138,7 @@ type ParameterInfo struct {
 	RangeType      int      `json:"rangeType" example:"1" enums:"0,1,2"`
 	HasReboot      int      `json:"hasReboot" example:"0" enums:"0,1"`
 	HasApply       int      `json:"hasApply" example:"1" enums:"0,1"`
-	UpdateSource   int      `json:"updateSource" example:"0" enums:"0,1,2,3"`
+	UpdateSource   int      `json:"updateSource" example:"0" enums:"0,1,2,3,4"`
 	ReadOnly       int      `json:"readOnly" example:"0" enums:"0,1"`
 	Description    string   `json:"description" example:"binlog size"`
 	DefaultValue   string   `json:"defaultValue" example:"1024"`

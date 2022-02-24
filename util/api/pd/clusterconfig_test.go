@@ -34,7 +34,7 @@ import (
 	"github.com/pingcap-inc/tiem/message/cluster"
 )
 
-func TestSecondMicro_ApiEditConfig_Success(t *testing.T) {
+func Test_EditConfig_Success(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write(nil)
@@ -94,23 +94,24 @@ func TestSecondMicro_ApiEditConfig_Success(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			hasSuc, err := ApiService.ApiEditConfig(context.TODO(), tt.args.req)
+			hasSuc, err := ApiService.EditConfig(context.TODO(), tt.args.req)
 			if err != nil {
 				if tt.wantErr {
 					return
 				}
-				t.Errorf("ApiEditConfig() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("EditConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			for i, assert := range tt.wants {
 				if !assert(tt.args, hasSuc) {
-					t.Errorf("ApiEditConfig() test error, testname = %v, assert %v, args = %v, got param id = %v", tt.name, i, tt.args, hasSuc)
+					t.Errorf("EditConfig() test error, testname = %v, assert %v, args = %v, got param id = %v", tt.name, i, tt.args, hasSuc)
 				}
 			}
 		})
 	}
 }
-func TestSecondMicro_ApiEditConfig_Error(t *testing.T) {
+
+func Test_EditConfig_Error(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(nil)
@@ -155,17 +156,137 @@ func TestSecondMicro_ApiEditConfig_Error(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			hasSuc, err := ApiService.ApiEditConfig(context.TODO(), tt.args.req)
+			hasSuc, err := ApiService.EditConfig(context.TODO(), tt.args.req)
 			if err != nil {
 				if tt.wantErr {
 					return
 				}
-				t.Errorf("ApiEditConfig() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("EditConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			for i, assert := range tt.wants {
 				if !assert(tt.args, hasSuc) {
-					t.Errorf("ApiEditConfig() test error, testname = %v, assert %v, args = %v, got param id = %v", tt.name, i, tt.args, hasSuc)
+					t.Errorf("EditConfig() test error, testname = %v, assert %v, args = %v, got param id = %v", tt.name, i, tt.args, hasSuc)
+				}
+			}
+		})
+	}
+}
+
+func Test_ShowConfig_Success(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("{\"result\": true}"))
+		r.ParseForm()
+	}))
+	defer server.Close()
+
+	ipAndPort := strings.TrimPrefix(server.URL, "http://")
+	host := strings.Split(ipAndPort, ":")[0]
+	portStr := strings.Split(ipAndPort, ":")[1]
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	type args struct {
+		req cluster.ApiShowConfigReq
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+		wants   []func(a args, content []byte) bool
+	}{
+		{
+			"normal",
+			args{
+				req: cluster.ApiShowConfigReq{
+					InstanceHost: host,
+					InstancePort: uint(port),
+					Headers:      map[string]string{},
+					Params:       map[string]string{},
+				},
+			},
+			false,
+			[]func(a args, content []byte) bool{
+				func(a args, content []byte) bool { return len(content) > 0 },
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			content, err := ApiService.ShowConfig(context.TODO(), tt.args.req)
+			if err != nil {
+				if tt.wantErr {
+					return
+				}
+				t.Errorf("ShowConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			for i, assert := range tt.wants {
+				if !assert(tt.args, content) {
+					t.Errorf("ShowConfig() test error, testname = %v, assert %v, args = %v, got param id = %v", tt.name, i, tt.args, string(content))
+				}
+			}
+		})
+	}
+}
+
+func Test_ShowConfig_Error(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(nil)
+		r.ParseForm()
+	}))
+	defer server.Close()
+
+	ipAndPort := strings.TrimPrefix(server.URL, "http://")
+	host := strings.Split(ipAndPort, ":")[0]
+	portStr := strings.Split(ipAndPort, ":")[1]
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	type args struct {
+		req cluster.ApiShowConfigReq
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+		wants   []func(a args, content []byte) bool
+	}{
+		{
+			"error",
+			args{
+				req: cluster.ApiShowConfigReq{
+					InstanceHost: host,
+					InstancePort: uint(port),
+					Headers:      map[string]string{},
+					Params:       map[string]string{},
+				},
+			},
+			true,
+			[]func(a args, content []byte) bool{
+				func(a args, content []byte) bool { return len(content) > 0 },
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			content, err := ApiService.ShowConfig(context.TODO(), tt.args.req)
+			if err != nil {
+				if tt.wantErr {
+					return
+				}
+				t.Errorf("ShowConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			for i, assert := range tt.wants {
+				if !assert(tt.args, content) {
+					t.Errorf("ShowConfig() test error, testname = %v, assert %v, args = %v, got param id = %v", tt.name, i, tt.args, string(content))
 				}
 			}
 		})

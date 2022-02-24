@@ -94,6 +94,15 @@ func (g *ClusterReadWrite) Get(ctx context.Context, clusterID string) (*Cluster,
 
 }
 
+func (g *ClusterReadWrite) GetInstance(ctx context.Context, ID string) (*ClusterInstance, error) {
+	instance := &ClusterInstance{}
+	err := g.DB(ctx).First(instance, "id = ?", ID).Error
+	if err != nil {
+		return nil, errors.WrapError(errors.TIEM_INSTANCE_NOT_FOUND, "", err)
+	}
+	return instance, nil
+}
+
 func (g *ClusterReadWrite) GetMeta(ctx context.Context, clusterID string) (cluster *Cluster, instances []*ClusterInstance, users []*DBUser, err error) {
 	cluster, err = g.Get(ctx, clusterID)
 

@@ -40,7 +40,7 @@ type Parameter struct {
 	RangeType      int       `gorm:"default:0;comment:'range type. optional values: [0: none, 1: continuous, 2: discrete]'" json:"rangeType"`
 	HasReboot      int       `gorm:"default:0;comment:'whether parameter updates require a restart. optional values: [0: false, 1: true]'" json:"hasReboot"`
 	HasApply       int       `gorm:"default:1;comment:'whether to apply the parameter set by default. optional values: [0: false, 1: true]'" json:"hasApply"`
-	UpdateSource   int       `gorm:"default:0;comment:'parameter update data source. optional values: [0: tiup, 1: sql, 2: tiup+sql, 3: api]'" json:"updateSource"`
+	UpdateSource   int       `gorm:"default:0;comment:'parameter update data source. optional values: [0: tiup, 1: sql, 2: tiup+sql, 3: api, 4: tiup+api]'" json:"updateSource"`
 	ReadOnly       int       `gorm:"default:0;comment:'specify if the parameter is read-only. optional values: [0: false, 1: true]'" json:"readOnly"`
 	Description    string    `gorm:"comment:'parameter description information'" json:"description"`
 	CreatedAt      time.Time `gorm:"<-:create" json:"createdAt"`

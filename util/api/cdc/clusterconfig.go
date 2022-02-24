@@ -42,7 +42,7 @@ const (
 var ApiService CDCApiService
 
 type CDCApiService interface {
-	ApiEditConfig(ctx context.Context, apiEditConfigReq cluster.ApiEditConfigReq) (bool, error)
+	EditConfig(ctx context.Context, apiEditConfigReq cluster.ApiEditConfigReq) (bool, error)
 }
 
 type CDCApiServiceImpl struct{}
@@ -51,13 +51,13 @@ func init() {
 	ApiService = new(CDCApiServiceImpl)
 }
 
-func (service *CDCApiServiceImpl) ApiEditConfig(ctx context.Context, apiEditConfigReq cluster.ApiEditConfigReq) (bool, error) {
-	framework.LogWithContext(ctx).Infof("micro srv api edit config, api req: %v", apiEditConfigReq)
+func (service *CDCApiServiceImpl) EditConfig(ctx context.Context, editConfigReq cluster.ApiEditConfigReq) (bool, error) {
+	framework.LogWithContext(ctx).Infof("request cdc api edit config, api req: %v", editConfigReq)
 
-	url := fmt.Sprintf("http://%s:%d%s", apiEditConfigReq.InstanceHost, apiEditConfigReq.InstancePort, CdcLogApiUrl)
-	resp, err := util.PostJSON(url, apiEditConfigReq.ConfigMap, apiEditConfigReq.Headers)
+	url := fmt.Sprintf("http://%s:%d%s", editConfigReq.InstanceHost, editConfigReq.InstancePort, CdcLogApiUrl)
+	resp, err := util.PostJSON(url, editConfigReq.ConfigMap, editConfigReq.Headers)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("apieditconfig, request pd api resp err: %v", err.Error())
+		framework.LogWithContext(ctx).Errorf("request cdc api edit config resp err: %v", err.Error())
 		return false, err
 	}
 	if resp.StatusCode != http.StatusOK {
@@ -66,7 +66,7 @@ func (service *CDCApiServiceImpl) ApiEditConfig(ctx context.Context, apiEditConf
 			return false, err
 		}
 		errMsg := fmt.Sprintf("request CDC api response status code: %v, content: %v", resp.StatusCode, string(b))
-		framework.LogWithContext(ctx).Errorf("apieditconfig, %s", errMsg)
+		framework.LogWithContext(ctx).Errorf("cdc api edit config, %s", errMsg)
 		return false, errors.New(errMsg)
 	}
 	return resp.StatusCode == http.StatusOK, nil

@@ -18,13 +18,14 @@ package management
 import (
 	"context"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func TestGormClusterReadWrite_MaintenanceStatus(t *testing.T) {
@@ -267,6 +268,24 @@ func TestGormClusterReadWrite_ClearClusterPhysically(t *testing.T) {
 		err = testRW.ClearClusterPhysically(context.TODO(), "")
 		assert.Error(t, err)
 		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
+	})
+}
+
+func TestGormClusterReadWrite_GetInstance(t *testing.T) {
+	instance := &ClusterInstance{
+		Entity: common.Entity{
+			TenantId: "abc",
+		},
+		Type:      "TiDB",
+		Version:   "v5.0.0",
+		ClusterID: "testCluster",
+	}
+	t.Run("normal", func(t *testing.T) {
+		err := testRW.DB(context.TODO()).Create(instance).Error
+		assert.NoError(t, err)
+		instance, err = testRW.GetInstance(context.TODO(), instance.ID)
+		assert.NoError(t, err)
+		assert.NotNil(t, instance)
 	})
 }
 

@@ -673,7 +673,7 @@ func TestDefaultFail(t *testing.T) {
 		modifyParameter.Reboot = true
 		refreshCtx.SetData(contextModifyParameters, modifyParameter)
 		refreshCtx.SetData(contextClusterConfigStr, "user: tiem\ntiem_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiem\n    group: tiem\n")
-		err := refreshParameterFail(mockWorkFlowAggregation().CurrentNode, refreshCtx)
+		err := parameterFail(mockWorkFlowAggregation().CurrentNode, refreshCtx)
 		assert.NoError(t, err)
 	})
 
@@ -690,7 +690,7 @@ func TestDefaultFail(t *testing.T) {
 		modifyParameter.Reboot = true
 		refreshCtx.SetData(contextModifyParameters, modifyParameter)
 		refreshCtx.SetData(contextClusterConfigStr, "user: tiem\ntiem_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiem\n    group: tiem\n")
-		err := refreshParameterFail(mockWorkFlowAggregation().CurrentNode, refreshCtx)
+		err := parameterFail(mockWorkFlowAggregation().CurrentNode, refreshCtx)
 		assert.Error(t, err)
 	})
 }

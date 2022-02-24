@@ -72,6 +72,9 @@ var apiContent = []byte(`
 			"max-size": 102400
 		}
 	},
+	"coprocessor": {
+		"region-max-size": "144MiB"
+	},
 	"rocksdb": {
 		"defaultcf": {
 			"compression-per-level": ["no","no","lz4","lz4","lz4","zstd","zstd"]

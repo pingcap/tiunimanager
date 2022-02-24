@@ -31,6 +31,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/spec"
 	"gopkg.in/yaml.v2"
@@ -612,7 +614,13 @@ func generateNewYamlConfig(configs []GlobalComponentConfig, topo *tiupSpec.Speci
 func convertRealParameterType(ctx context.Context, paramType int, value string) (interface{}, error) {
 	switch paramType {
 	case int(Integer):
-		c, err := strconv.ParseInt(value, 0, 64)
+		// Compatible with scientific notation, e.g.: 1.44e+06
+		decimalNum, err := decimal.NewFromString(value)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("decimal.NewFromString error, numStr:%s, err:%v", value, err)
+			return nil, err
+		}
+		c, err := strconv.ParseInt(decimalNum.String(), 10, 64)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("strconv realvalue type int fail, err = %s", err.Error())
 			return nil, err

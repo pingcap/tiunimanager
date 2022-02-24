@@ -867,6 +867,16 @@ func TestManager_inspectApiParameter(t *testing.T) {
 				Type:         0,
 				RealValue:    structs.ParameterRealValue{ClusterValue: "102400"},
 			},
+			{
+				ParamId:      "4",
+				Category:     "coprocessor",
+				Name:         "region-max-size",
+				InstanceType: "TiDB",
+				Type:         1,
+				Range:        []string{"KB", "MB", "GB"},
+				RangeType:    1,
+				RealValue:    structs.ParameterRealValue{ClusterValue: "144MB"},
+			},
 		})
 		assert.NoError(t, err)
 		assert.Equal(t, len(inspectApiParams), 0)

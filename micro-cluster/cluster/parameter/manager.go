@@ -660,16 +660,12 @@ func inspectApiParameter(ctx context.Context, instance *management.ClusterInstan
 		fullName := DisplayFullParameterName(param.Category, param.Name)
 		// Determine whether the parameters of the api query contain the current metadata cluster parameters
 		if _, ok := flattenedApiParams[fullName]; ok {
-			instValue := flattenedApiParams[fullName]
-			// If the api parameter value is not equal to the metadata parameter set, add the result set
-			if instValue != param.RealValue.ClusterValue {
-				inspectValue, err := convertRealParameterType(ctx, param.Type, instValue)
-				if err != nil {
-					framework.LogWithContext(ctx).Errorf("convert real parameter type err = %s", err.Error())
-					return inspectParams, instDiffParams, err
-				}
-				inspectParams = append(inspectParams, convertInspectParameterInfo(param, inspectValue))
+			inspectParameterInfos, err := inspectParameterValue(ctx, flattenedApiParams, param)
+			if err != nil {
+				return inspectParams, instDiffParams, err
 			}
+			inspectParams = append(inspectParams, inspectParameterInfos...)
+
 		} else {
 			// Parameters that do not include the api result set are then compared by the configuration file
 			instDiffParams = append(instDiffParams, param)
@@ -715,19 +711,45 @@ func inspectConfigParameter(ctx context.Context, instance *management.ClusterIns
 		fullName := DisplayFullParameterName(param.Category, param.Name)
 		// Determine whether the parameters of the config file query contain the current metadata cluster parameters
 		if _, ok := flattenedConfigParams[fullName]; ok {
-			instValue := flattenedConfigParams[fullName]
-			// If the config file parameter value is not equal to the metadata parameter set, add the result set
-			if instValue != param.RealValue.ClusterValue {
-				inspectValue, err := convertRealParameterType(ctx, param.Type, instValue)
-				if err != nil {
-					framework.LogWithContext(ctx).Errorf("convert real parameter type err = %s", err.Error())
-					return inspectParams, err
-				}
-				inspectParams = append(inspectParams, convertInspectParameterInfo(param, inspectValue))
+			inspectParameterInfos, err := inspectParameterValue(ctx, flattenedConfigParams, param)
+			if err != nil {
+				return inspectParams, err
 			}
+			inspectParams = append(inspectParams, inspectParameterInfos...)
 		}
 	}
 	return inspectParams, nil
+}
+
+// inspectParameterValue
+// @Description: inspect parameter value
+// @Parameter ctx
+// @Parameter flattenedParams
+// @Parameter param
+// @return inspectParamInfos
+// @return err
+func inspectParameterValue(ctx context.Context, flattenedParams map[string]string, param structs.ClusterParameterInfo) (inspectParamInfos []cluster.InspectParameterInfo, err error) {
+	inspectParamInfos = make([]cluster.InspectParameterInfo, 0)
+	instValue := flattenedParams[DisplayFullParameterName(param.Category, param.Name)]
+	// If it is a string with units, need to determine whether the units need to be replaced
+	if param.Type == int(String) && param.RangeType == int(ContinuousRange) {
+		for srcUnit, replaceUnit := range replaceUnits {
+			if strings.HasSuffix(instValue, srcUnit) {
+				instValue = strings.ReplaceAll(instValue, srcUnit, replaceUnit)
+				break
+			}
+		}
+	}
+	// If the api parameter value is not equal to the metadata parameter set, add the result set
+	if instValue != param.RealValue.ClusterValue {
+		inspectValue, err := convertRealParameterType(ctx, param.Type, instValue)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("convert real parameter type err = %s", err.Error())
+			return inspectParamInfos, err
+		}
+		inspectParamInfos = append(inspectParamInfos, convertInspectParameterInfo(param, inspectValue))
+	}
+	return inspectParamInfos, nil
 }
 
 // convertInspectParameterInfo

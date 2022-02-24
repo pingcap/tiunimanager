@@ -174,10 +174,16 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 		Context:  context.TODO(),
 		FlowData: map[string]interface{}{},
 	}
-
 	v, err := convertRealParameterType(applyCtx, 0, "1")
 	assert.NoError(t, err)
 	assert.EqualValues(t, 1, v)
+
+	v, err = convertRealParameterType(applyCtx, 0, "1.44e+06")
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1440000, v)
+
+	v, err = convertRealParameterType(applyCtx, 0, "123abc")
+	assert.Error(t, err)
 
 	v, err = convertRealParameterType(applyCtx, 1, "debug")
 	assert.NoError(t, err)

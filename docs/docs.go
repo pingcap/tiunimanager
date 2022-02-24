@@ -10175,7 +10175,7 @@ var doc = `{
                         "migration"
                     ]
                 },
-                "upgradeWay": {
+                "upgradeWays": {
                     "type": "array",
                     "items": {
                         "type": "string"

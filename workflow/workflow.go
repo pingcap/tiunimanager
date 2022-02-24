@@ -17,13 +17,14 @@ package workflow
 
 import (
 	"context"
+	"sync"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
-	"sync"
 )
 
 // WorkFlowService workflow interface
@@ -251,6 +252,7 @@ func (mgr *WorkFlowManager) AsyncStart(ctx context.Context, flow *WorkFlowAggreg
 
 func (mgr *WorkFlowManager) Start(ctx context.Context, flow *WorkFlowAggregation) error {
 	framework.LogWithContext(ctx).Infof("Begin sync start workflow name %s, workflowId %s, bizId: %s", flow.Flow.Name, flow.Flow.ID, flow.Flow.BizID)
+	flow.Context.Context = ctx
 	flow.start(ctx)
 	return nil
 }

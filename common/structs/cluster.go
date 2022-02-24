@@ -181,7 +181,7 @@ type ClusterLogItem struct {
 
 type ProductUpgradePathItem struct {
 	UpgradeType string   `json:"upgradeType"  validate:"required" enums:"in-place,migration"`
-	UpgradeWay  []string `json:"upgradeWay,omitempty"  example:"offline,online"`
+	UpgradeWays []string `json:"upgradeWays,omitempty"  example:"offline,online"`
 	Versions    []string `json:"versions" validate:"required" example:"v5.3.0,v5.4.0"`
 }
 type ProductUpgradeVersionConfigDiffItem struct {

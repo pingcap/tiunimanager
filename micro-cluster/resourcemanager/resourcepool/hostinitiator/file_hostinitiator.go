@@ -19,10 +19,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/deployment"
 	"strings"
 
-	"github.com/pingcap-inc/tiem/util/scp"
+	"github.com/pingcap-inc/tiem/deployment"
+
 	sshclient "github.com/pingcap-inc/tiem/util/ssh"
 
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -51,16 +51,22 @@ func (p *FileHostInitiator) SetDeploymentServ(d deployment.Interface) {
 	p.deploymentServ = d
 }
 
-func (p *FileHostInitiator) CopySSHID(ctx context.Context, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) AuthHost(ctx context.Context, deployUser, userGroup string, h *structs.HostInfo) (err error) {
 	log := framework.LogWithContext(ctx)
-	log.Infof("copy ssh id to host %s %s@%s", h.HostName, h.UserName, h.IP)
-
-	err = scp.CopySSHID(ctx, h.IP, h.UserName, h.Passwd, rp_consts.DefaultCopySshIDTimeOut)
+	log.Infof("begin to auth host %s %s with %s:%s", h.HostName, h.IP, deployUser, userGroup)
+	err = p.createDeployUser(ctx, deployUser, userGroup, h)
 	if err != nil {
-		log.Errorf("copy ssh id to host %s %s@%s failed, %v", h.HostName, h.UserName, h.IP, err)
+		log.Errorf("auth host failed, %v", err)
 		return err
 	}
 
+	err = p.appendAuthorizedKeysFile(ctx, deployUser, h)
+	if err != nil {
+		log.Errorf("auth host failed after user created, %v", err)
+		return err
+	}
+
+	log.Infof("auth host %s %s succeed", h.HostName, h.IP)
 	return nil
 }
 

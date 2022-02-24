@@ -23,7 +23,6 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	sshclient "github.com/pingcap-inc/tiem/util/ssh"
 )
@@ -111,6 +110,10 @@ func (config *UserModuleConfig) buildUserCommand() string {
 }
 
 func (p *FileHostInitiator) createDeployUser(ctx context.Context, deployUser, userGroup string, h *structs.HostInfo) error {
+	if deployUser == "" || userGroup == "" {
+		return errors.NewError(errors.TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR, "deployUser and group should not be null")
+	}
+
 	um := UserModuleConfig{
 		Action: userActionAdd,
 		Name:   deployUser,
@@ -150,23 +153,6 @@ func (p *FileHostInitiator) appendAuthorizedKeysFile(ctx context.Context, deploy
 	if err != nil {
 		errMsg := fmt.Sprintf("write public keys '%s' to host '%s' for user '%s'", sshAuthorizedKeys, h.IP, deployUser)
 		return errors.NewError(errors.TIEM_RESOURCE_INIT_HOST_AUTH_ERROR, errMsg)
-	}
-
-	return nil
-}
-
-func (p *FileHostInitiator) AuthHost(ctx context.Context, deployUser, userGroup string, h *structs.HostInfo) (err error) {
-	log := framework.LogWithContext(ctx)
-	err = p.createDeployUser(ctx, deployUser, userGroup, h)
-	if err != nil {
-		log.Errorf("auth host failed, %v", err)
-		return err
-	}
-
-	err = p.appendAuthorizedKeysFile(ctx, deployUser, h)
-	if err != nil {
-		log.Errorf("auth host failed after user created, %v", err)
-		return err
 	}
 
 	return nil

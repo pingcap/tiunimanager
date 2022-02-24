@@ -29,8 +29,6 @@ import (
 
 const (
 	defaultShell = "/bin/bash"
-	// SSH public key file
-	publicKeyPath = "~/.ssh/id_rsa.pub"
 	// SSH authorized_keys file
 	defaultSSHAuthorizedKeys = "~/.ssh/authorized_keys"
 
@@ -133,7 +131,7 @@ func (p *FileHostInitiator) createDeployUser(ctx context.Context, deployUser, us
 func (p *FileHostInitiator) getLocalPublicKey(keyPath string) (pubKey []byte, err error) {
 	pubKey, err = os.ReadFile(keyPath)
 	if err != nil {
-		errMsg := fmt.Sprintf("read em user public key file %s failed, %v", publicKeyPath, err)
+		errMsg := fmt.Sprintf("read em user public key file %s failed, %v", keyPath, err)
 		return nil, errors.NewError(errors.TIEM_RESOURCE_INIT_HOST_AUTH_ERROR, errMsg)
 	}
 	return
@@ -160,7 +158,20 @@ func (p *FileHostInitiator) appendRemoteAuthorizedKeysFile(ctx context.Context, 
 	return nil
 }
 
+func (p *FileHostInitiator) getPublicKeyFilePath() (path string, err error) {
+	homePath, err := os.UserHomeDir()
+	if err != nil {
+		return "", errors.NewErrorf(errors.TIEM_RESOURCE_INIT_HOST_AUTH_ERROR, "get user home dir failed, %v", err)
+	}
+	path = fmt.Sprintf("%s/.ssh/id_rsa.pub", homePath)
+	return
+}
+
 func (p *FileHostInitiator) buildAuth(ctx context.Context, deployUser string, h *structs.HostInfo) error {
+	publicKeyPath, err := p.getPublicKeyFilePath()
+	if err != nil {
+		return err
+	}
 	pubKey, err := p.getLocalPublicKey(publicKeyPath)
 	if err != nil {
 		return err

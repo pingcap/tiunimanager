@@ -60,7 +60,7 @@ func (p *FileHostInitiator) AuthHost(ctx context.Context, deployUser, userGroup 
 		return err
 	}
 
-	err = p.appendAuthorizedKeysFile(ctx, deployUser, h)
+	err = p.buildAuth(ctx, deployUser, h)
 	if err != nil {
 		log.Errorf("auth host failed after user created, %v", err)
 		return err

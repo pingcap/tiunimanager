@@ -130,14 +130,16 @@ func (p *FileHostInitiator) createDeployUser(ctx context.Context, deployUser, us
 	return nil
 }
 
-func (p *FileHostInitiator) appendAuthorizedKeysFile(ctx context.Context, deployUser string, h *structs.HostInfo) error {
-	pubKey, err := os.ReadFile(publicKeyPath)
+func (p *FileHostInitiator) getLocalPublicKey(keyPath string) (pubKey []byte, err error) {
+	pubKey, err = os.ReadFile(keyPath)
 	if err != nil {
-		errMsg := fmt.Sprintf("read user em user public key file %s failed, %v", publicKeyPath, err)
-		return errors.NewError(errors.TIEM_RESOURCE_INIT_HOST_AUTH_ERROR, errMsg)
+		errMsg := fmt.Sprintf("read em user public key file %s failed, %v", publicKeyPath, err)
+		return nil, errors.NewError(errors.TIEM_RESOURCE_INIT_HOST_AUTH_ERROR, errMsg)
 	}
+	return
+}
 
-	// Authorize
+func (p *FileHostInitiator) appendRemoteAuthorizedKeysFile(ctx context.Context, pubKey []byte, deployUser string, h *structs.HostInfo) (err error) {
 	cmd := `su - ` + deployUser + ` -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh'`
 	_, err = p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, rp_consts.DefaultCopySshIDTimeOut, []string{cmd})
 	if err != nil {
@@ -156,6 +158,16 @@ func (p *FileHostInitiator) appendAuthorizedKeysFile(ctx context.Context, deploy
 	}
 
 	return nil
+}
+
+func (p *FileHostInitiator) buildAuth(ctx context.Context, deployUser string, h *structs.HostInfo) error {
+	pubKey, err := p.getLocalPublicKey(publicKeyPath)
+	if err != nil {
+		return err
+	}
+
+	// Authorize
+	return p.appendRemoteAuthorizedKeysFile(ctx, pubKey, deployUser, h)
 }
 
 // FindSSHAuthorizedKeysFile finds the correct path of SSH authorized keys file

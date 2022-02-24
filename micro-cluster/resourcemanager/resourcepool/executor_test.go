@@ -64,7 +64,7 @@ func Test_AuthHost(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockInitiator := mock_initiator.NewMockHostInitiator(ctrl)
-	mockInitiator.EXPECT().CopySSHID(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, h *structs.HostInfo) error {
+	mockInitiator.EXPECT().AuthHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, deployUser, userGroup string, h *structs.HostInfo) error {
 		return nil
 	})
 

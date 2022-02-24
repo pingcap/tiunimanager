@@ -57,6 +57,14 @@ var units = map[string]int64{
 	"d":  24 * 60 * 60 * 1000,
 }
 
+// Define replace unit, used to replace the result value returned by the component API
+var replaceUnits = map[string]string{
+	"KiB": "KB",
+	"MiB": "MB",
+	"GiB": "GB",
+	"TiB": "TB",
+}
+
 type UpdateParameterSource int
 
 const (

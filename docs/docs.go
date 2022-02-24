@@ -9967,7 +9967,10 @@ var doc = `{
                     "$ref": "#/definitions/structs.CheckInt32"
                 },
                 "disk": {
-                    "$ref": "#/definitions/structs.CheckInt32"
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckString"
+                    }
                 },
                 "errors": {
                     "type": "array",

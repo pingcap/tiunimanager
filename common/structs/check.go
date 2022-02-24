@@ -103,14 +103,14 @@ type CheckError struct {
 }
 
 type HostCheck struct {
-	SELinux         CheckSwitch  `json:"selinux"`
-	Firewall        CheckSwitch  `json:"firewall"`
-	Swap            CheckSwitch  `json:"swap"`
-	MemoryAllocated CheckInt32   `json:"memory"`
-	CPUAllocated    CheckInt32   `json:"cpu"`
-	DiskAllocated   CheckInt32   `json:"disk"`
-	StorageRatio    float32      `json:"storageRatio"`
-	Errors          []CheckError `json:"errors"`
+	SELinux         CheckSwitch             `json:"selinux"`
+	Firewall        CheckSwitch             `json:"firewall"`
+	Swap            CheckSwitch             `json:"swap"`
+	MemoryAllocated CheckInt32              `json:"memory"`
+	CPUAllocated    CheckInt32              `json:"cpu"`
+	DiskAllocated   map[string]CheckString `json:"disk"`
+	StorageRatio    float32                 `json:"storageRatio"`
+	Errors          []CheckError            `json:"errors"`
 }
 
 type CheckReportInfo struct {

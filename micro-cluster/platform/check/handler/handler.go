@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
+	hostInspector "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/inspect"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"math"
@@ -228,9 +229,25 @@ func (p *Report) CheckTenant(ctx context.Context, tenantID string) error {
 	return nil
 }
 
-func (p *Report) CheckHost(ctx context.Context, hostID string) (structs.HostCheck, error) {
-	
-	return structs.HostCheck{}, nil
+func (p *Report) CheckHostAllocatedResource(ctx context.Context, hostInfos []structs.HostInfo) (map[string]*structs.CheckInt32,
+	map[string]*structs.CheckInt32, map[string]map[string]*structs.CheckString, error) {
+
+	cpuAllocated, err := hostInspector.GetHostInspector().CheckCpuAllocated(ctx, hostInfos)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	memAllocated, err := hostInspector.GetHostInspector().CheckMemAllocated(ctx, hostInfos)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	diskAllocated, err := hostInspector.GetHostInspector().CheckDiskAllocated(ctx, hostInfos)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	return cpuAllocated, memAllocated, diskAllocated, nil
 }
 
 func (p *Report) CheckHosts(ctx context.Context) error {
@@ -242,15 +259,32 @@ func (p *Report) CheckHosts(ctx context.Context) error {
 	}
 
 	checkHosts := make(map[string]structs.HostCheck)
+	hostInfos := make([]structs.HostInfo, 0)
 	for _, host := range hosts {
-		checkHost, err := p.CheckHost(ctx, host.ID)
-		if err != nil {
-			return err
+		hostInfos = append(hostInfos, structs.HostInfo{ID: host.ID})
+	}
+
+	cpu, memory, disk, err := p.CheckHostAllocatedResource(ctx, hostInfos)
+	if err != nil {
+		return err
+	}
+
+	for key, _ := range cpu {
+		diskAllocated := make(map[string]structs.CheckString)
+		for path, value := range disk[key] {
+			if _, ok := diskAllocated[path]; !ok {
+				diskAllocated[path] = *value
+			}
 		}
-		if _, ok := checkHosts[host.ID]; !ok {
-			checkHosts[host.ID] = checkHost
+		if _, ok := checkHosts[key]; !ok {
+			checkHosts[key] = structs.HostCheck{
+				CPUAllocated:    *cpu[key],
+				MemoryAllocated: *memory[key],
+				DiskAllocated:   diskAllocated,
+			}
 		}
 	}
+
 	p.Info.Hosts = structs.HostsCheck{
 		Hosts: checkHosts,
 	}

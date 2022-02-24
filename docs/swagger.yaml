@@ -2303,7 +2303,9 @@ definitions:
       cpu:
         $ref: '#/definitions/structs.CheckInt32'
       disk:
-        $ref: '#/definitions/structs.CheckInt32'
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckString'
+        type: object
       errors:
         items:
           $ref: '#/definitions/structs.CheckError'

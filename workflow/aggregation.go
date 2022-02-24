@@ -103,13 +103,15 @@ func (flow *WorkFlowAggregation) asyncStart(ctx context.Context) {
 		framework.GetMicroEndpointNameFromContext(ctx),
 		flow.Flow.ID,
 	)
-	framework.StartBackgroundTask(
+	t := framework.NewBackgroundTask(
 		ctx, operationName,
 		func(ctx context.Context) error {
 			flow.start(ctx)
 			return nil
 		},
 	)
+	flow.Context.Context = t.GetContext()
+	go t.Exec()
 }
 
 func (flow *WorkFlowAggregation) destroy(ctx context.Context, reason string) {

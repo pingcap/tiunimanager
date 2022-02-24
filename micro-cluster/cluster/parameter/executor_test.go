@@ -175,48 +175,23 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 		FlowData: map[string]interface{}{},
 	}
 
-	v, err := convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
-		ParamId:   "1",
-		Name:      "param1",
-		Type:      0,
-		RealValue: structs.ParameterRealValue{ClusterValue: "1"},
-	})
+	v, err := convertRealParameterType(applyCtx, 0, "1")
 	assert.NoError(t, err)
 	assert.EqualValues(t, 1, v)
 
-	v, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
-		ParamId:   "2",
-		Name:      "param2",
-		Type:      1,
-		RealValue: structs.ParameterRealValue{ClusterValue: "debug"},
-	})
+	v, err = convertRealParameterType(applyCtx, 1, "debug")
 	assert.NoError(t, err)
 	assert.EqualValues(t, "debug", v)
 
-	v, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
-		ParamId:   "3",
-		Name:      "param3",
-		Type:      2,
-		RealValue: structs.ParameterRealValue{ClusterValue: "true"},
-	})
+	v, err = convertRealParameterType(applyCtx, 2, "true")
 	assert.NoError(t, err)
 	assert.EqualValues(t, true, v)
 
-	v, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
-		ParamId:   "4",
-		Name:      "param4",
-		Type:      3,
-		RealValue: structs.ParameterRealValue{ClusterValue: "3.00"},
-	})
+	v, err = convertRealParameterType(applyCtx, 3, "3.00")
 	assert.NoError(t, err)
 	assert.EqualValues(t, 3.00, math.Trunc(v.(float64)))
 
-	v, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
-		ParamId:   "5",
-		Name:      "param5",
-		Type:      4,
-		RealValue: structs.ParameterRealValue{ClusterValue: "[\"debug\",\"info\"]"},
-	})
+	v, err = convertRealParameterType(applyCtx, 4, "[\"debug\",\"info\"]")
 	assert.NoError(t, err)
 	expect := []interface{}{"debug", "info"}
 	assert.EqualValues(t, expect, v)
@@ -228,28 +203,13 @@ func TestExecutor_convertRealParameterType_Error(t *testing.T) {
 		FlowData: map[string]interface{}{},
 	}
 
-	_, err := convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
-		ParamId:   "2",
-		Name:      "param2",
-		Type:      2,
-		RealValue: structs.ParameterRealValue{ClusterValue: "debug"},
-	})
+	_, err := convertRealParameterType(applyCtx, 2, "debug")
 	assert.Error(t, err)
 
-	_, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
-		ParamId:   "3",
-		Name:      "param3",
-		Type:      3,
-		RealValue: structs.ParameterRealValue{ClusterValue: "true"},
-	})
+	_, err = convertRealParameterType(applyCtx, 3, "true")
 	assert.Error(t, err)
 
-	_, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
-		ParamId:   "5",
-		Name:      "param5",
-		Type:      0,
-		RealValue: structs.ParameterRealValue{ClusterValue: "[\"debug\",\"info\"]"},
-	})
+	_, err = convertRealParameterType(applyCtx, 0, "[\"debug\",\"info\"]")
 	assert.Error(t, err)
 }
 
@@ -388,10 +348,10 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		mock2rdService.EXPECT().EditConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("1", nil)
 		mock2rdService.EXPECT().ShowConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil)
 
-		mockPDApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
-		mockTiDBApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
-		mockTiKVApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
-		mockCDCApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
+		mockPDApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
+		mockTiDBApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
+		mockTiKVApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
+		mockCDCApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
 		mockTiDBSqlConfigService.EXPECT().EditClusterConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 		modifyCtx := &workflow.FlowContext{
@@ -481,7 +441,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		mockCDCApiService := mockutilcdc.NewMockCDCApiService(ctrl)
 		cdc.ApiService = mockCDCApiService
 
-		mockCDCApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
+		mockCDCApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
@@ -518,7 +478,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		mockCDCApiService := mockutilcdc.NewMockCDCApiService(ctrl)
 		cdc.ApiService = mockCDCApiService
 
-		mockCDCApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
+		mockCDCApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
@@ -553,7 +513,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		mockTiDBApiService := mockutiltidbhttp.NewMockTiDBApiService(ctrl)
 		http.ApiService = mockTiDBApiService
 
-		mockTiDBApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
+		mockTiDBApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
@@ -588,7 +548,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		mockTiKVApiService := mockutiltikv.NewMockTiKVApiService(ctrl)
 		tikv.ApiService = mockTiKVApiService
 
-		mockTiKVApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
+		mockTiKVApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
@@ -623,7 +583,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		mockPDApiService := mockutilpd.NewMockPDApiService(ctrl)
 		pd.ApiService = mockPDApiService
 
-		mockPDApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
+		mockPDApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
@@ -658,7 +618,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		mockCDCApiService := mockutilcdc.NewMockCDCApiService(ctrl)
 		cdc.ApiService = mockCDCApiService
 
-		mockCDCApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
+		mockCDCApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),

@@ -206,6 +206,11 @@ func getCurrentMicroCtxInfo(ctx context.Context) string {
 	}
 }
 
+// GetContext get context from task
+func (p *BackgroundTask) GetContext() context.Context {
+	return p.currentCtx
+}
+
 // Exec exec this task in current goroutine
 func (p *BackgroundTask) Exec() error {
 	defer p.span.Finish()

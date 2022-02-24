@@ -122,6 +122,7 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 		DataDir:            "./testdata",
 		LogLevel:           "info",
 		EMClusterName:      "em-test",
+		EMVersion: 			"InTest",
 	}
 	f.parseArgs(serviceName)
 

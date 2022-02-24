@@ -26,7 +26,20 @@ package parameter
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"strings"
 	"sync"
+
+	"github.com/BurntSushi/toml"
+	"github.com/pingcap-inc/tiem/deployment"
+
+	tidbApi "github.com/pingcap-inc/tiem/util/api/tidb/http"
+
+	"github.com/pingcap-inc/tiem/util/api/tikv"
+
+	"github.com/pingcap-inc/tiem/util/api/pd"
+
+	"github.com/pingcap-inc/tiem/models/cluster/management"
 
 	"github.com/pingcap-inc/tiem/models/cluster/parameter"
 
@@ -321,6 +334,423 @@ func (m *Manager) PersistApplyParameterGroup(ctx context.Context, req message.Ap
 }
 
 func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.InspectParametersReq) (resp cluster.InspectParametersResp, err error) {
-	// todo: Reliance on parameter source query implementation
-	return
+	if req.InstanceID == "" && req.ClusterID == "" {
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "both clusterID and instanceID are empty")
+	}
+
+	// Define cluster component instance
+	var clusterInstance *management.ClusterInstance
+	clusterID := req.ClusterID
+	if clusterID == "" && req.InstanceID != "" {
+		clusterInstance, err = models.GetClusterReaderWriter().GetInstance(ctx, req.InstanceID)
+		if err != nil {
+			return resp, err
+		}
+		clusterID = clusterInstance.ClusterID
+	}
+
+	// Query cluster parameters by meta
+	clusterParams, _, err := m.QueryClusterParameters(ctx, cluster.QueryClusterParametersReq{ClusterID: clusterID})
+	if err != nil {
+		return resp, err
+	}
+
+	// Define the component instance parameter container
+	compContainer := make(map[string][]structs.ClusterParameterInfo)
+	for _, param := range clusterParams.Params {
+		// If the cluster value is empty then it is skipped directly
+		if param.RealValue.ClusterValue == "" {
+			continue
+		}
+		if param.HasApply == int(ModifyApply) {
+			continue
+		}
+
+		instParams := compContainer[param.InstanceType]
+		if instParams == nil {
+			compContainer[param.InstanceType] = []structs.ClusterParameterInfo{param}
+		} else {
+			instParams = append(instParams, param)
+			compContainer[param.InstanceType] = instParams
+		}
+	}
+
+	// Define the set that holds the values of the inspection parameters
+	inspectAllParameters := make([]cluster.InspectParameters, 0)
+
+	// Instance level inspection
+	if req.InstanceID != "" {
+		for comp, compParams := range compContainer {
+			switch comp {
+			case string(constants.ComponentIDTiDB):
+				inspectParams, err := inspectTiDBComponentInstance(ctx, clusterInstance, compParams)
+				if err != nil {
+					return resp, err
+				}
+				inspectAllParameters = append(inspectAllParameters, inspectParams)
+			case string(constants.ComponentIDTiKV):
+				inspectParams, err := inspectTiKVComponentInstance(ctx, clusterInstance, compParams)
+				if err != nil {
+					return resp, err
+				}
+				inspectAllParameters = append(inspectAllParameters, inspectParams)
+			case string(constants.ComponentIDPD):
+				inspectParams, err := inspectPDComponentInstance(ctx, clusterInstance, compParams)
+				if err != nil {
+					return resp, err
+				}
+				inspectAllParameters = append(inspectAllParameters, inspectParams)
+			case string(constants.ComponentIDCDC), string(constants.ComponentIDTiFlash):
+				inspectParams, err := inspectInstanceByConfig(ctx, clusterInstance, compParams)
+				if err != nil {
+					return resp, err
+				}
+				inspectAllParameters = append(inspectAllParameters, inspectParams)
+			default:
+				return resp, fmt.Errorf(fmt.Sprintf("Component [%s] type is not supported", comp))
+			}
+		}
+		return cluster.InspectParametersResp{Params: inspectAllParameters}, nil
+	}
+
+	// Cluster level inspection
+	clusterMeta, err := meta.Get(ctx, req.ClusterID)
+	if err != nil {
+		return resp, err
+	}
+	for comp, compParams := range compContainer {
+		switch comp {
+		case string(constants.ComponentIDTiDB):
+			// Get tidb cluster instances
+			instances := clusterMeta.Instances[string(constants.ComponentIDTiDB)]
+			// Iterating over instances to get connection information
+			for _, instance := range instances {
+				inspectParams, err := inspectTiDBComponentInstance(ctx, instance, compParams)
+				if err != nil {
+					return resp, err
+				}
+				inspectAllParameters = append(inspectAllParameters, inspectParams)
+			}
+		case string(constants.ComponentIDTiKV):
+			// Get tikv cluster instances
+			instances := clusterMeta.Instances[string(constants.ComponentIDTiKV)]
+			for _, instance := range instances {
+				inspectParams, err := inspectTiKVComponentInstance(ctx, instance, compParams)
+				if err != nil {
+					return resp, err
+				}
+				inspectAllParameters = append(inspectAllParameters, inspectParams)
+			}
+		case string(constants.ComponentIDPD):
+			// Get pd cluster instances
+			instances := clusterMeta.Instances[string(constants.ComponentIDPD)]
+			for _, instance := range instances {
+				inspectParams, err := inspectPDComponentInstance(ctx, instance, compParams)
+				if err != nil {
+					return resp, err
+				}
+				inspectAllParameters = append(inspectAllParameters, inspectParams)
+			}
+		case string(constants.ComponentIDCDC):
+			// Get cdc cluster instances
+			instances := clusterMeta.Instances[string(constants.ComponentIDCDC)]
+			for _, instance := range instances {
+				inspectParams, err := inspectInstanceByConfig(ctx, instance, compParams)
+				if err != nil {
+					return resp, err
+				}
+				inspectAllParameters = append(inspectAllParameters, inspectParams)
+			}
+		case string(constants.ComponentIDTiFlash):
+			// Get tiflash cluster instances
+			instances := clusterMeta.Instances[string(constants.ComponentIDTiFlash)]
+			for _, instance := range instances {
+				inspectParams, err := inspectInstanceByConfig(ctx, instance, compParams)
+				if err != nil {
+					return resp, err
+				}
+				inspectAllParameters = append(inspectAllParameters, inspectParams)
+			}
+		default:
+			return resp, fmt.Errorf(fmt.Sprintf("Component [%s] type is not supported", comp))
+		}
+	}
+	return cluster.InspectParametersResp{Params: inspectAllParameters}, nil
+}
+
+// inspectPDComponentInstance
+// @Description: inspect pd component instance
+// @Parameter ctx
+// @Parameter instance
+// @Parameter compParams
+// @return inspectParams
+// @return err
+func inspectPDComponentInstance(ctx context.Context, instance *management.ClusterInstance, compParams []structs.ClusterParameterInfo) (inspectParams cluster.InspectParameters, err error) {
+	if instance.Status == string(constants.ClusterInstanceRunning) {
+		// pd api get instance parameters
+		apiContent, err := pd.ApiService.ShowConfig(ctx, cluster.ApiShowConfigReq{
+			InstanceHost: instance.HostIP[0],
+			InstancePort: uint(instance.Ports[0]),
+			Headers:      map[string]string{},
+			Params:       map[string]string{},
+		})
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("failed to call pd api show config, err = %s", err)
+			return inspectParams, err
+		}
+		inspectParams, err = inspectInstancesByApiAndConfig(ctx, instance, apiContent, compParams)
+		if err != nil {
+			return inspectParams, err
+		}
+	}
+	return inspectParams, nil
+}
+
+// inspectTiKVComponentInstance
+// @Description: inspect tikv component instance
+// @Parameter ctx
+// @Parameter instance
+// @Parameter compParams
+// @return inspectParams
+// @return err
+func inspectTiKVComponentInstance(ctx context.Context, instance *management.ClusterInstance, compParams []structs.ClusterParameterInfo) (inspectParams cluster.InspectParameters, err error) {
+	if instance.Status == string(constants.ClusterInstanceRunning) {
+		// tikv api get instance parameters
+		apiContent, err := tikv.ApiService.ShowConfig(ctx, cluster.ApiShowConfigReq{
+			InstanceHost: instance.HostIP[0],
+			InstancePort: uint(instance.Ports[1]),
+			Headers:      map[string]string{},
+			Params:       map[string]string{},
+		})
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("failed to call tikv api show config, err = %s", err)
+			return inspectParams, err
+		}
+		inspectParams, err = inspectInstancesByApiAndConfig(ctx, instance, apiContent, compParams)
+		if err != nil {
+			return inspectParams, err
+		}
+	}
+	return inspectParams, nil
+}
+
+// inspectTiDBComponentInstance
+// @Description: inspect tidb component instance
+// @Parameter ctx
+// @Parameter instance
+// @Parameter compParams
+// @return inspectParams
+// @return err
+func inspectTiDBComponentInstance(ctx context.Context, instance *management.ClusterInstance, compParams []structs.ClusterParameterInfo) (inspectParams cluster.InspectParameters, err error) {
+	if instance.Status == string(constants.ClusterInstanceRunning) {
+		// tidb api get instance parameters
+		apiContent, err := tidbApi.ApiService.ShowConfig(ctx, cluster.ApiShowConfigReq{
+			InstanceHost: instance.HostIP[0],
+			InstancePort: uint(instance.Ports[1]),
+			Headers:      map[string]string{},
+			Params:       map[string]string{},
+		})
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("failed to call %s api show config, err = %s", instance.Type, err)
+			return inspectParams, err
+		}
+		inspectParams, err = inspectInstancesByApiAndConfig(ctx, instance, apiContent, compParams)
+		if err != nil {
+			return inspectParams, err
+		}
+	}
+	return inspectParams, nil
+}
+
+// inspectInstanceByConfig
+// @Description: inspect instances by config file
+// @Parameter ctx
+// @Parameter instance
+// @Parameter compParams
+// @return inspectParameter
+// @return err
+func inspectInstanceByConfig(ctx context.Context, instance *management.ClusterInstance, compParams []structs.ClusterParameterInfo) (inspectParameter cluster.InspectParameters, err error) {
+	if instance.Status == string(constants.ClusterInstanceRunning) {
+		// Define the set of parameters to store the inspection
+		inspectParameterInfos := make([]cluster.InspectParameterInfo, 0)
+
+		// Inspect diff config file parameter
+		inspectConfigParams, err := inspectConfigParameter(ctx, instance, compParams)
+		if err != nil {
+			return inspectParameter, err
+		}
+		inspectParameterInfos = append(inspectParameterInfos, inspectConfigParams...)
+
+		// filling data
+		inspectParameter = cluster.InspectParameters{
+			InstanceID:     instance.ID,
+			InstanceType:   instance.Type,
+			ParameterInfos: inspectParameterInfos,
+		}
+	}
+	return inspectParameter, nil
+}
+
+// inspectInstancesByApiAndConfig
+// @Description: inspect instances by api and config api
+// @Parameter ctx
+// @Parameter instance
+// @Parameter apiContent
+// @Parameter compParams
+// @return inspectParams
+// @return err
+func inspectInstancesByApiAndConfig(ctx context.Context, instance *management.ClusterInstance, apiContent []byte, compParams []structs.ClusterParameterInfo) (inspectParams cluster.InspectParameters, err error) {
+	// Define the set of parameters to store the inspection
+	inspectParameterInfos := make([]cluster.InspectParameterInfo, 0)
+
+	// Inspect api parameter
+	inspectApiParams, instDiffParams, err := inspectApiParameter(ctx, instance, apiContent, compParams)
+	if err != nil {
+		return inspectParams, err
+	}
+	inspectParameterInfos = append(inspectParameterInfos, inspectApiParams...)
+
+	// If the diff params are not empty, then read the parsed configuration file and determine if the values are equal
+	if len(instDiffParams) > 0 {
+		// Inspect diff config file parameter
+		inspectConfigParams, err := inspectConfigParameter(ctx, instance, instDiffParams)
+		if err != nil {
+			return inspectParams, err
+		}
+		inspectParameterInfos = append(inspectParameterInfos, inspectConfigParams...)
+	}
+	// filling data
+	inspectParams = cluster.InspectParameters{
+		InstanceID:     instance.ID,
+		InstanceType:   instance.Type,
+		ParameterInfos: inspectParameterInfos,
+	}
+	return inspectParams, nil
+}
+
+// inspectApiParameter
+// @Description: inspect api parameter
+// @Parameter ctx
+// @Parameter instance
+// @Parameter apiContent
+// @Parameter compParams
+// @return inspectParams
+// @return instDiffParams
+// @return err
+func inspectApiParameter(ctx context.Context, instance *management.ClusterInstance, apiContent []byte, compParams []structs.ClusterParameterInfo) (
+	inspectParams []cluster.InspectParameterInfo, instDiffParams []structs.ClusterParameterInfo, err error) {
+	reqApiParams := map[string]interface{}{}
+	if err = json.Unmarshal(apiContent, &reqApiParams); err != nil {
+		framework.LogWithContext(ctx).Errorf("failed to convert %s api parameters, err = %v", instance.Type, err)
+		return inspectParams, instDiffParams, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "failed to convert %s api parameters, err = %v", instance.Type, err)
+	}
+	// Get api flattened parameter set
+	flattenedApiParams, err := FlattenedParameters(reqApiParams)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("failed to flattened %s api parameters, err = %v", instance.Type, err)
+		return inspectParams, instDiffParams, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "failed to flattened %s api parameters, err = %v", instance.Type, err)
+	}
+
+	// Define the set of parameters to store that are not included in the api return
+	instDiffParams = make([]structs.ClusterParameterInfo, 0)
+	inspectParams = make([]cluster.InspectParameterInfo, 0)
+
+	// Traversing metadata cluster parameters
+	for _, param := range compParams {
+		fullName := DisplayFullParameterName(param.Category, param.Name)
+		// Determine whether the parameters of the api query contain the current metadata cluster parameters
+		if _, ok := flattenedApiParams[fullName]; ok {
+			instValue := flattenedApiParams[fullName]
+			// If the api parameter value is not equal to the metadata parameter set, add the result set
+			if instValue != param.RealValue.ClusterValue {
+				inspectValue, err := convertRealParameterType(ctx, param.Type, instValue)
+				if err != nil {
+					framework.LogWithContext(ctx).Errorf("convert real parameter type err = %s", err.Error())
+					return inspectParams, instDiffParams, err
+				}
+				inspectParams = append(inspectParams, convertInspectParameterInfo(param, inspectValue))
+			}
+		} else {
+			// Parameters that do not include the api result set are then compared by the configuration file
+			instDiffParams = append(instDiffParams, param)
+		}
+	}
+	return inspectParams, instDiffParams, nil
+}
+
+// inspectConfigParameter
+// @Description: inspect config parameter
+// @Parameter ctx
+// @Parameter instance
+// @Parameter instDiffParams
+// @return inspectParams
+// @return err
+func inspectConfigParameter(ctx context.Context, instance *management.ClusterInstance, instDiffParams []structs.ClusterParameterInfo) (inspectParams []cluster.InspectParameterInfo, err error) {
+	inspectParams = make([]cluster.InspectParameterInfo, 0)
+
+	// Calling the tiup pull interface
+	configPath := fmt.Sprintf("%s/conf/%s.toml", instance.GetDeployDir(), strings.ToLower(instance.Type))
+	framework.LogWithContext(ctx).Debugf("current instance type %s config path is %s", instance.Type, configPath)
+
+	// Call the pull command to get the instance configuration
+	configContentStr, err := deployment.M.Pull(ctx, deployment.TiUPComponentTypeCluster, instance.ClusterID, configPath,
+		"/home/tiem/.tiup", []string{"-N", instance.HostIP[0]}, 0)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("call secondparty tiup pull %s config err = %s", instance.Type, err.Error())
+		return inspectParams, err
+	}
+	reqConfigParams := map[string]interface{}{}
+	if err := toml.Unmarshal([]byte(configContentStr), &reqConfigParams); err != nil {
+		framework.LogWithContext(ctx).Errorf("failed to convert %s config file parameters, err = %v", instance.Type, err)
+		return inspectParams, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "failed to convert %s config file parameters, err = %v", instance.Type, err)
+	}
+	// Get config file flattened parameter set
+	flattenedConfigParams, err := FlattenedParameters(reqConfigParams)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("failed to flattened %s config file parameters, err = %v", instance.Type, err)
+		return inspectParams, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "failed to flattened %s config file parameters, err = %v", instance.Type, err)
+	}
+
+	for _, param := range instDiffParams {
+		fullName := DisplayFullParameterName(param.Category, param.Name)
+		// Determine whether the parameters of the config file query contain the current metadata cluster parameters
+		if _, ok := flattenedConfigParams[fullName]; ok {
+			instValue := flattenedConfigParams[fullName]
+			// If the config file parameter value is not equal to the metadata parameter set, add the result set
+			if instValue != param.RealValue.ClusterValue {
+				inspectValue, err := convertRealParameterType(ctx, param.Type, instValue)
+				if err != nil {
+					framework.LogWithContext(ctx).Errorf("convert real parameter type err = %s", err.Error())
+					return inspectParams, err
+				}
+				inspectParams = append(inspectParams, convertInspectParameterInfo(param, inspectValue))
+			}
+		}
+	}
+	return inspectParams, nil
+}
+
+// convertInspectParameterInfo
+// @Description: convert inspect parameter info
+// @Parameter param
+// @Parameter inspectValue
+// @return cluster.InspectParameterInfo
+func convertInspectParameterInfo(param structs.ClusterParameterInfo, inspectValue interface{}) cluster.InspectParameterInfo {
+	return cluster.InspectParameterInfo{
+		ParamID:        param.ParamId,
+		Category:       param.Category,
+		Name:           param.Name,
+		SystemVariable: param.SystemVariable,
+		Type:           param.Type,
+		Unit:           param.Unit,
+		UnitOptions:    param.UnitOptions,
+		Range:          param.Range,
+		RangeType:      param.RangeType,
+		HasReboot:      param.HasReboot,
+		ReadOnly:       param.ReadOnly,
+		Description:    param.Description,
+		Note:           param.Note,
+		RealValue:      param.RealValue,
+		InspectValue:   inspectValue,
+	}
 }

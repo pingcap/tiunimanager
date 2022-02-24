@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/common"
@@ -32,17 +31,17 @@ func TestExecCommandThruSQL(t *testing.T) {
 	}
 }
 
-var dbConnParam1 secondparty.DbConnParam
-var dbConnParam2 secondparty.DbConnParam
+var dbConnParam1 DbConnParam
+var dbConnParam2 DbConnParam
 
 func init() {
-	dbConnParam1 = secondparty.DbConnParam{
+	dbConnParam1 = DbConnParam{
 		Username: "root",
 		Password: "",
 		IP:       "127.0.0.1",
 		Port:     "4000",
 	}
-	dbConnParam2 = secondparty.DbConnParam{
+	dbConnParam2 = DbConnParam{
 		Username: "root",
 		Password: "12345678",
 		IP:       "127.0.0.1",
@@ -62,7 +61,7 @@ func TestDBUserManager_CreateDBUser(t *testing.T) {
 	}
 	type args struct {
 		ctx            context.Context
-		connec         secondparty.DbConnParam
+		connec         DbConnParam
 		user           *management.DBUser
 		workFlowNodeID string
 	}

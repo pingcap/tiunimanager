@@ -29,7 +29,6 @@ import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 )
 
@@ -43,7 +42,7 @@ func ExecCommandThruSQL(ctx context.Context, db *sql.DB, sqlCommand string) erro
 	return nil
 }
 
-func CreateDBUser(ctx context.Context, connec secondparty.DbConnParam, user *management.DBUser, workFlowNodeID string) error {
+func CreateDBUser(ctx context.Context, connec DbConnParam, user *management.DBUser, workFlowNodeID string) error {
 	logInFunc := framework.LogWithContext(ctx).WithField("bizid", workFlowNodeID)
 	logInFunc.Infof("createDBUser, user: %v, bizId: %s", user, workFlowNodeID)
 
@@ -81,7 +80,7 @@ func CreateDBUser(ctx context.Context, connec secondparty.DbConnParam, user *man
 	return nil
 }
 
-func UpdateDBUserPassword(ctx context.Context, connec secondparty.DbConnParam, name string, password string, workFlowNodeID string) error {
+func UpdateDBUserPassword(ctx context.Context, connec DbConnParam, name string, password string, workFlowNodeID string) error {
 	logInFunc := framework.LogWithContext(ctx).WithField("bizid", workFlowNodeID)
 	logInFunc.Infof("UpdateDBUserPassword, name: %v, bizId: %s", name, workFlowNodeID)
 
@@ -104,7 +103,7 @@ func UpdateDBUserPassword(ctx context.Context, connec secondparty.DbConnParam, n
 	return nil
 }
 
-func DeleteDBUser(ctx context.Context, connec secondparty.DbConnParam, name string, workFlowNodeID string) error {
+func DeleteDBUser(ctx context.Context, connec DbConnParam, name string, workFlowNodeID string) error {
 	logInFunc := framework.LogWithContext(ctx).WithField("bizid", workFlowNodeID)
 	logInFunc.Infof("DeleteDBUser, name: %v, bizId: %s", name, workFlowNodeID)
 

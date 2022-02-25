@@ -167,8 +167,9 @@ func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 
 	framework.LogWithContext(context.Context).Infof(
 		"scale out cluster %s, version %s, yamlConfig %s", cluster.ID, cluster.Version, yamlConfig)
+	args := framework.GetTiupAuthorizaitonFlag()
 	operationID, err := deployment.M.ScaleOut(context.Context, deployment.TiUPComponentTypeCluster, cluster.ID, yamlConfig,
-		"/home/tiem/.tiup", node.ParentID, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, meta.DefaultTiupTimeOut)
+		"/home/tiem/.tiup", node.ParentID, args, meta.DefaultTiupTimeOut)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s scale out error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -667,9 +668,10 @@ func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 
 	framework.LogWithContext(context.Context).Infof(
 		"deploy cluster %s, version %s, yamlConfig %s", cluster.ID, cluster.Version, yamlConfig)
+	args := framework.GetTiupAuthorizaitonFlag()
 	// todo: use SystemConfig to store home
 	operationID, err := deployment.M.Deploy(context.Context, deployment.TiUPComponentTypeCluster, cluster.ID, cluster.Version, yamlConfig,
-		"/home/tiem/.tiup", node.ParentID, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, meta.DefaultTiupTimeOut)
+		"/home/tiem/.tiup", node.ParentID, args, meta.DefaultTiupTimeOut)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s deploy error: %s", clusterMeta.Cluster.ID, err.Error())

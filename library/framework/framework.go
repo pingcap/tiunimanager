@@ -122,7 +122,7 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 		DataDir:            "./testdata",
 		LogLevel:           "info",
 		EMClusterName:      "em-test",
-		EMVersion: 			"InTest",
+		EMVersion:          "InTest",
 	}
 	f.parseArgs(serviceName)
 
@@ -273,6 +273,16 @@ func (b *BaseFramework) GetClientArgs() *ClientArgs {
 
 func GetCurrentDeployUser() string {
 	return Current.GetClientArgs().DeployUser
+}
+
+func GetTiupAuthorizaitonFlag() (flags []string) {
+	userName := GetCurrentDeployUser()
+	keyPath := "/home/tiem/.ssh/tiup_rsa"
+	flags = append(flags, "--user")
+	flags = append(flags, userName)
+	flags = append(flags, "-i")
+	flags = append(flags, keyPath)
+	return
 }
 
 func (b *BaseFramework) GetConfiguration() *Configuration {

@@ -1,8 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "TiEM UI API",
-        "title": "TiEM UI API",
+        "description": "EM UI API",
+        "title": "EM UI API",
         "contact": {
             "name": "zhangpeijin",
             "email": "zhangpeijin@pingcap.com"
@@ -4843,7 +4843,7 @@
                 "tags": [
                     "resource"
                 ],
-                "summary": "Show all hosts list in TiEM",
+                "summary": "Show all hosts list in EM",
                 "parameters": [
                     {
                         "type": "string",
@@ -4940,7 +4940,7 @@
                 "tags": [
                     "resource"
                 ],
-                "summary": "Import a batch of hosts to TiEM",
+                "summary": "Import a batch of hosts to EM",
                 "parameters": [
                     {
                         "type": "string",
@@ -9612,7 +9612,7 @@
                     "type": "integer"
                 },
                 "topology": {
-                    "type": "string"
+                    "$ref": "#/definitions/structs.CheckString"
                 }
             }
         },

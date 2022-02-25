@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/deployment"
@@ -38,6 +39,12 @@ import (
 	"strings"
 )
 
+const GetClusterInfoCmd = "SELECT TYPE as type, count(TYPE) as count FROM information_schema.cluster_info GROUP BY TYPE;"
+
+type TopologyInfo struct {
+	Type  string `json:"type"`
+	Count int    `json:"count"`
+}
 type Report struct {
 	Info *structs.CheckReportInfo
 }
@@ -174,8 +181,66 @@ func (p *Report) GetClusterAccountStatus(ctx context.Context, clusterID string) 
 	return accountStatus, nil
 }
 
-func (p *Report) GetClusterTopology(ctx context.Context, clusterID string) (string, error) {
-	return "", nil
+func (p *Report) GetClusterTopology(ctx context.Context, clusterID string) (structs.CheckString, error) {
+	topologyCheck := structs.CheckString{}
+
+	clusterMeta, err := meta.Get(ctx, clusterID)
+	if err != nil {
+		return topologyCheck, err
+	}
+
+	db, err := meta.CreateSQLLink(ctx, clusterMeta)
+	if err != nil {
+		return topologyCheck, errors.WrapError(errors.TIEM_CONNECT_TIDB_ERROR, err.Error(), err)
+	}
+	defer db.Close()
+
+	rows, err := db.Query(GetClusterInfoCmd)
+	if err != nil {
+		return topologyCheck, err
+	}
+	realTopology := make(map[string]int)
+	realTopologyInfos := make([]TopologyInfo, 0)
+	for rows.Next() {
+		var topologyInfo TopologyInfo
+		err = rows.Scan(&topologyInfo.Type, &topologyInfo.Count)
+		if err != nil {
+			return topologyCheck, err
+		}
+		if _, ok := realTopology[topologyInfo.Type]; !ok {
+			realTopology[topologyInfo.Type] = topologyInfo.Count
+			realTopologyInfos = append(realTopologyInfos, topologyInfo)
+		}
+	}
+
+	topologyCheck.Valid = true
+	expectedTopologyInfos := make([]TopologyInfo, 0)
+	for componentType, instances := range clusterMeta.Instances {
+		if meta.Contain(constants.ParasiteComponentIDs, componentType) {
+			continue
+		}
+		if realTopology[strings.ToLower(componentType)] != len(instances) {
+			topologyCheck.Valid = false
+		}
+		expectedTopologyInfos = append(expectedTopologyInfos, TopologyInfo{
+			Type:  strings.ToLower(componentType),
+			Count: len(instances),
+		})
+	}
+
+	realInfos, err := json.Marshal(realTopologyInfos)
+	if err != nil {
+		return topologyCheck, err
+	}
+
+	expectedInfos, err := json.Marshal(expectedTopologyInfos)
+	if err != nil {
+		return topologyCheck, err
+	}
+	topologyCheck.RealValue = string(realInfos)
+	topologyCheck.ExpectedValue = string(expectedInfos)
+
+	return topologyCheck, nil
 }
 
 func (p *Report) GetClusterRegionStatus(ctx context.Context, clusterID string) (structs.CheckStatus, error) {
@@ -308,7 +373,7 @@ func (p *Report) CheckClusters(ctx context.Context, clusterMetas []*management.R
 		if err != nil {
 			return clusterChecks, err
 		}
-		topology, err := p.GetClusterTopology(ctx, meta.Cluster.ID)
+		topologyCheck, err := p.GetClusterTopology(ctx, meta.Cluster.ID)
 		if err != nil {
 			return clusterChecks, err
 		}
@@ -337,7 +402,7 @@ func (p *Report) CheckClusters(ctx context.Context, clusterMetas []*management.R
 			},
 			AccountStatus: accountStatus,
 			HealthStatus:  healthStatus,
-			Topology:      topology,
+			Topology:      topologyCheck,
 			RegionStatus:  regionStatus,
 			Instances:     instanceChecks,
 		})

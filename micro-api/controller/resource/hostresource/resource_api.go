@@ -150,7 +150,7 @@ func getBoolPostForm(c *gin.Context, field string, defaultValue string) (bool, e
 }
 
 // ImportHosts godoc
-// @Summary Import a batch of hosts to TiEM
+// @Summary Import a batch of hosts to EM
 // @Description import hosts by xlsx file
 // @Tags resource
 // @Accept mpfd
@@ -213,7 +213,7 @@ func ImportHosts(c *gin.Context) {
 }
 
 // QueryHosts godoc
-// @Summary Show all hosts list in TiEM
+// @Summary Show all hosts list in EM
 // @Description get hosts list
 // @Tags resource
 // @Accept json

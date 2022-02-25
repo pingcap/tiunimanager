@@ -73,12 +73,19 @@ var apiContent = []byte(`
 		}
 	},
 	"coprocessor": {
-		"region-max-size": "144MiB"
+		"region-max-size": "144MiB",
+		"region-max-keys": "1.44e+06"
 	},
 	"rocksdb": {
 		"defaultcf": {
 			"compression-per-level": ["no","no","lz4","lz4","lz4","zstd","zstd"]
 		}
+	},
+	"raftstore": {
+		"peer-stale-state-check-interval": "5m"
+	},
+	"rocksdb": {
+		"wal-size-limit": "0KiB"
 	}
 }
 `)

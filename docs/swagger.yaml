@@ -3117,11 +3117,11 @@ info:
   contact:
     email: zhangpeijin@pingcap.com
     name: zhangpeijin
-  description: TiEM UI API
+  description: EM UI API
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-  title: TiEM UI API
+  title: EM UI API
   version: "1.0"
 paths:
   /backups/:
@@ -6092,7 +6092,7 @@ paths:
               type: object
       security:
       - ApiKeyAuth: []
-      summary: Show all hosts list in TiEM
+      summary: Show all hosts list in EM
       tags:
       - resource
     post:
@@ -6134,7 +6134,7 @@ paths:
               type: object
       security:
       - ApiKeyAuth: []
-      summary: Import a batch of hosts to TiEM
+      summary: Import a batch of hosts to EM
       tags:
       - resource
   /resources/hosts-template:

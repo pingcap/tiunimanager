@@ -341,16 +341,19 @@ func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.Insp
 	// Define cluster component instance
 	var clusterInstance *management.ClusterInstance
 	clusterID := req.ClusterID
-	if clusterID == "" && req.InstanceID != "" {
+	instanceType := ""
+
+	if req.InstanceID != "" {
 		clusterInstance, err = models.GetClusterReaderWriter().GetInstance(ctx, req.InstanceID)
 		if err != nil {
 			return resp, err
 		}
 		clusterID = clusterInstance.ClusterID
+		instanceType = clusterInstance.Type
 	}
 
 	// Query cluster parameters by meta
-	clusterParams, _, err := m.QueryClusterParameters(ctx, cluster.QueryClusterParametersReq{ClusterID: clusterID})
+	clusterParams, _, err := m.QueryClusterParameters(ctx, cluster.QueryClusterParametersReq{ClusterID: clusterID, InstanceType: instanceType})
 	if err != nil {
 		return resp, err
 	}
@@ -380,35 +383,34 @@ func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.Insp
 
 	// Instance level inspection
 	if req.InstanceID != "" {
-		for comp, compParams := range compContainer {
-			switch comp {
-			case string(constants.ComponentIDTiDB):
-				inspectParams, err := inspectTiDBComponentInstance(ctx, clusterInstance, compParams)
-				if err != nil {
-					return resp, err
-				}
-				inspectAllParameters = append(inspectAllParameters, inspectParams)
-			case string(constants.ComponentIDTiKV):
-				inspectParams, err := inspectTiKVComponentInstance(ctx, clusterInstance, compParams)
-				if err != nil {
-					return resp, err
-				}
-				inspectAllParameters = append(inspectAllParameters, inspectParams)
-			case string(constants.ComponentIDPD):
-				inspectParams, err := inspectPDComponentInstance(ctx, clusterInstance, compParams)
-				if err != nil {
-					return resp, err
-				}
-				inspectAllParameters = append(inspectAllParameters, inspectParams)
-			case string(constants.ComponentIDCDC), string(constants.ComponentIDTiFlash):
-				inspectParams, err := inspectInstanceByConfig(ctx, clusterInstance, compParams)
-				if err != nil {
-					return resp, err
-				}
-				inspectAllParameters = append(inspectAllParameters, inspectParams)
-			default:
-				return resp, fmt.Errorf(fmt.Sprintf("Component [%s] type is not supported", comp))
+		compParams := compContainer[clusterInstance.Type]
+		switch clusterInstance.Type {
+		case string(constants.ComponentIDTiDB):
+			inspectParams, err := inspectTiDBComponentInstance(ctx, clusterInstance, compParams)
+			if err != nil {
+				return resp, err
 			}
+			inspectAllParameters = append(inspectAllParameters, inspectParams)
+		case string(constants.ComponentIDTiKV):
+			inspectParams, err := inspectTiKVComponentInstance(ctx, clusterInstance, compParams)
+			if err != nil {
+				return resp, err
+			}
+			inspectAllParameters = append(inspectAllParameters, inspectParams)
+		case string(constants.ComponentIDPD):
+			inspectParams, err := inspectPDComponentInstance(ctx, clusterInstance, compParams)
+			if err != nil {
+				return resp, err
+			}
+			inspectAllParameters = append(inspectAllParameters, inspectParams)
+		case string(constants.ComponentIDCDC), string(constants.ComponentIDTiFlash):
+			inspectParams, err := inspectInstanceByConfig(ctx, clusterInstance, compParams)
+			if err != nil {
+				return resp, err
+			}
+			inspectAllParameters = append(inspectAllParameters, inspectParams)
+		default:
+			return resp, fmt.Errorf(fmt.Sprintf("Component [%s] type is not supported", clusterInstance.Type))
 		}
 		return cluster.InspectParametersResp{Params: inspectAllParameters}, nil
 	}
@@ -730,18 +732,47 @@ func inspectConfigParameter(ctx context.Context, instance *management.ClusterIns
 // @return err
 func inspectParameterValue(ctx context.Context, flattenedParams map[string]string, param structs.ClusterParameterInfo) (inspectParamInfos []cluster.InspectParameterInfo, err error) {
 	inspectParamInfos = make([]cluster.InspectParameterInfo, 0)
-	instValue := flattenedParams[DisplayFullParameterName(param.Category, param.Name)]
-	// If it is a string with units, need to determine whether the units need to be replaced
-	if param.Type == int(String) && param.RangeType == int(ContinuousRange) {
-		for srcUnit, replaceUnit := range replaceUnits {
+	fullName := DisplayFullParameterName(param.Category, param.Name)
+	instValue := flattenedParams[fullName]
+	// If the value contains the unit, need to determine whether the units need to be replaced
+	for srcUnit, replaceUnit := range replaceUnits {
+		if strings.HasSuffix(instValue, srcUnit) {
+			instValue = strings.ReplaceAll(instValue, srcUnit, replaceUnit)
+			break
+		}
+	}
+
+	// If the value is numeric, inst value if it is with units, then convert the units
+	if param.Type == int(Integer) || param.Type == int(Float) {
+		for srcUnit, _ := range units {
 			if strings.HasSuffix(instValue, srcUnit) {
-				instValue = strings.ReplaceAll(instValue, srcUnit, replaceUnit)
-				break
+				if cvtInstValue, ok := convertUnitValue([]string{srcUnit}, instValue); ok {
+					instValue = fmt.Sprintf("%d", cvtInstValue)
+					break
+				}
 			}
 		}
 	}
 	// If the api parameter value is not equal to the metadata parameter set, add the result set
 	if instValue != param.RealValue.ClusterValue {
+		framework.LogWithContext(ctx).Debugf("inspect %s parameter `%s` cluster value: %s, inst value: %s", param.InstanceType, fullName, param.RealValue.ClusterValue, instValue)
+		// If it is a string with units, then convert the units to determine if they are equal
+		if param.Type == int(String) && param.RangeType == int(ContinuousRange) {
+			cvtClusterValue, ok1 := convertUnitValue(param.UnitOptions, param.RealValue.ClusterValue)
+			cvtInstValue, ok2 := convertUnitValue(param.UnitOptions, param.RealValue.ClusterValue)
+			if ok1 && ok2 && cvtClusterValue == cvtInstValue {
+				return inspectParamInfos, nil
+			}
+		}
+		// If integer or float type, compatible with scientific notation, e.g.: 1.048576e+07
+		if param.Type == int(Integer) || param.Type == int(Float) {
+			cvtClusterValue, err1 := convertRealParameterType(ctx, param.Type, param.RealValue.ClusterValue)
+			cvtInstValue, err2 := convertRealParameterType(ctx, param.Type, instValue)
+			if err1 == nil && err2 == nil && cvtClusterValue == cvtInstValue {
+				return inspectParamInfos, nil
+			}
+		}
+		framework.LogWithContext(ctx).Infof("inspect %s parameter `%s` cluster value: %s, inst value: %s", param.InstanceType, fullName, param.RealValue.ClusterValue, instValue)
 		inspectValue, err := convertRealParameterType(ctx, param.Type, instValue)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("convert real parameter type err = %s", err.Error())

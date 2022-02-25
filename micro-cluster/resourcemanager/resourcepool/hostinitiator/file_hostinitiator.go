@@ -19,10 +19,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/deployment"
 	"strings"
 
-	"github.com/pingcap-inc/tiem/util/scp"
+	"github.com/pingcap-inc/tiem/deployment"
+
 	sshclient "github.com/pingcap-inc/tiem/util/ssh"
 
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -51,16 +51,22 @@ func (p *FileHostInitiator) SetDeploymentServ(d deployment.Interface) {
 	p.deploymentServ = d
 }
 
-func (p *FileHostInitiator) CopySSHID(ctx context.Context, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) AuthHost(ctx context.Context, deployUser, userGroup string, h *structs.HostInfo) (err error) {
 	log := framework.LogWithContext(ctx)
-	log.Infof("copy ssh id to host %s %s@%s", h.HostName, h.UserName, h.IP)
-
-	err = scp.CopySSHID(ctx, h.IP, h.UserName, h.Passwd, rp_consts.DefaultCopySshIDTimeOut)
+	log.Infof("begin to auth host %s %s with %s:%s", h.HostName, h.IP, deployUser, userGroup)
+	err = p.createDeployUser(ctx, deployUser, userGroup, h)
 	if err != nil {
-		log.Errorf("copy ssh id to host %s %s@%s failed, %v", h.HostName, h.UserName, h.IP, err)
+		log.Errorf("auth host failed, %v", err)
 		return err
 	}
 
+	err = p.buildAuth(ctx, deployUser, h)
+	if err != nil {
+		log.Errorf("auth host failed after user created, %v", err)
+		return err
+	}
+
+	log.Infof("auth host %s %s succeed", h.HostName, h.IP)
 	return nil
 }
 
@@ -76,8 +82,13 @@ func (p *FileHostInitiator) Prepare(ctx context.Context, h *structs.HostInfo) (e
 		return err
 	}
 
+	// tiup args should be: []string{"--user", "xxx", "-i", "/home/tiem/.ssh/tiup_rsa", "--apply", "--format", "json"}
+	args := framework.GetTiupAuthorizaitonFlag()
+	args = append(args, "--apply")
+	args = append(args, "--format")
+	args = append(args, "json")
 	resultStr, err := deployment.M.CheckConfig(ctx, deployment.TiUPComponentTypeCluster, templateStr, "/home/tiem/.tiup",
-		[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--apply", "--format", "json"}, rp_consts.DefaultTiupTimeOut)
+		args, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
 		errMsg := fmt.Sprintf("call deployment serv to apply host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
 		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
@@ -116,8 +127,12 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 	}
 	log.Infof("verify host %s %s ignore warning (%t)", h.HostName, h.IP, ignoreWarnings)
 
+	// tiup args should be: []string{"--user", "xxx", "-i", "/home/tiem/.ssh/tiup_rsa", "--format", "json"}
+	args := framework.GetTiupAuthorizaitonFlag()
+	args = append(args, "--format")
+	args = append(args, "json")
 	resultStr, err := deployment.M.CheckConfig(ctx, deployment.TiUPComponentTypeCluster, templateStr, "/home/tiem/.tiup",
-		[]string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa", "--format", "json"}, rp_consts.DefaultTiupTimeOut)
+		args, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
 		errMsg := fmt.Sprintf("call deployment serv to check host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
 		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
@@ -218,8 +233,9 @@ func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.H
 
 	emClusterName := framework.Current.GetClientArgs().EMClusterName
 	framework.LogWithContext(ctx).Infof("join em cluster %s with work flow id %s", emClusterName, workFlowID)
+	args := framework.GetTiupAuthorizaitonFlag()
 	operationID, err = deployment.M.ScaleOut(ctx, deployment.TiUPComponentTypeTiEM, emClusterName, templateStr,
-		"/home/tiem/.tiuptiem", workFlowID, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, rp_consts.DefaultTiupTimeOut)
+		"/home/tiem/.tiuptiem", workFlowID, args, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
 		return "", errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "join em cluster %s [%v] failed, %v", emClusterName, templateStr, err)
 	}

@@ -22,7 +22,7 @@ import (
 )
 
 type HostInitiator interface {
-	CopySSHID(ctx context.Context, h *structs.HostInfo) (err error)
+	AuthHost(ctx context.Context, deployUser, userGroup string, h *structs.HostInfo) (err error)
 	Prepare(ctx context.Context, h *structs.HostInfo) (err error)
 	Verify(ctx context.Context, h *structs.HostInfo) (err error)
 	InstallSoftware(ctx context.Context, hosts []structs.HostInfo) (err error)

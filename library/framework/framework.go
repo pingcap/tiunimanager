@@ -271,6 +271,20 @@ func (b *BaseFramework) GetClientArgs() *ClientArgs {
 	return b.args
 }
 
+func GetCurrentDeployUser() string {
+	return Current.GetClientArgs().DeployUser
+}
+
+func GetTiupAuthorizaitonFlag() (flags []string) {
+	userName := GetCurrentDeployUser()
+	keyPath := "/home/tiem/.ssh/tiup_rsa"
+	flags = append(flags, "--user")
+	flags = append(flags, userName)
+	flags = append(flags, "-i")
+	flags = append(flags, keyPath)
+	return
+}
+
 func (b *BaseFramework) GetConfiguration() *Configuration {
 	return b.configuration
 }

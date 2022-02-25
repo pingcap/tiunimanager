@@ -9542,6 +9542,9 @@ var doc = `{
                 "cpu": {
                     "type": "integer"
                 },
+                "healthStatus": {
+                    "$ref": "#/definitions/structs.CheckStatus"
+                },
                 "instances": {
                     "type": "array",
                     "items": {
@@ -10363,9 +10366,6 @@ var doc = `{
                     "additionalProperties": {
                         "$ref": "#/definitions/structs.CheckAny"
                     }
-                },
-                "status": {
-                    "$ref": "#/definitions/structs.CheckStatus"
                 },
                 "versions": {
                     "type": "object",

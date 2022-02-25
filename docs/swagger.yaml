@@ -1952,6 +1952,8 @@ definitions:
         $ref: '#/definitions/structs.CheckInt32'
       cpu:
         type: integer
+      healthStatus:
+        $ref: '#/definitions/structs.CheckStatus'
       instances:
         items:
           $ref: '#/definitions/structs.InstanceCheck'
@@ -2527,8 +2529,6 @@ definitions:
         additionalProperties:
           $ref: '#/definitions/structs.CheckAny'
         type: object
-      status:
-        $ref: '#/definitions/structs.CheckStatus'
       versions:
         additionalProperties:
           $ref: '#/definitions/structs.CheckString'

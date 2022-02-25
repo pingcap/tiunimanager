@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/deployment"
@@ -27,7 +28,11 @@ import (
 	hostInspector "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/inspect"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
+	util "github.com/pingcap-inc/tiem/util/http"
+	"github.com/pingcap/kvproto/pkg/metapb"
+	"github.com/pingcap/kvproto/pkg/pdpb"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
+	"io/ioutil"
 	"math"
 	"strconv"
 	"strings"
@@ -39,6 +44,45 @@ type Report struct {
 
 type Replication struct {
 	MaxReplicas int32 `json:"max-replicas"`
+}
+
+// ReplicationStatus represents the replication mode status of the region.
+type ReplicationStatus struct {
+	State   string `json:"state"`
+	StateID uint64 `json:"state_id"`
+}
+
+// RegionInfo records detail region info for api usage.
+type RegionInfo struct {
+	ID          uint64              `json:"id"`
+	StartKey    string              `json:"start_key"`
+	EndKey      string              `json:"end_key"`
+	RegionEpoch *metapb.RegionEpoch `json:"epoch,omitempty"`
+	Peers       []*metapb.Peer      `json:"peers,omitempty"`
+
+	Leader          *metapb.Peer      `json:"leader,omitempty"`
+	DownPeers       []*pdpb.PeerStats `json:"down_peers,omitempty"`
+	PendingPeers    []*metapb.Peer    `json:"pending_peers,omitempty"`
+	WrittenBytes    uint64            `json:"written_bytes"`
+	ReadBytes       uint64            `json:"read_bytes"`
+	WrittenKeys     uint64            `json:"written_keys"`
+	ReadKeys        uint64            `json:"read_keys"`
+	ApproximateSize int64             `json:"approximate_size"`
+	ApproximateKeys int64             `json:"approximate_keys"`
+
+	ReplicationStatus *ReplicationStatus `json:"replication_status,omitempty"`
+}
+
+// RegionsInfo contains some regions with the detailed region info.
+type RegionsInfo struct {
+	Count   int           `json:"count"`
+	Regions []*RegionInfo `json:"regions"`
+}
+
+type HealthInfo struct {
+	Name     string `json:"name"`
+	MemberID int64  `json:"member_id"`
+	Health   bool   `json:"health"`
 }
 
 func (p *Report) ParseFrom(ctx context.Context, checkID string) error {
@@ -106,7 +150,7 @@ func (p *Report) GetClusterCopies(ctx context.Context, clusterID string) (int32,
 	replication := &Replication{}
 	if err = json.Unmarshal([]byte(config), replication); err != nil {
 		return 0, errors.WrapError(errors.TIEM_UNMARSHAL_ERROR,
-			fmt.Sprintf("parse placement rules error: %s", err.Error()), err)
+			fmt.Sprintf("parse max replicas error: %s", err.Error()), err)
 	}
 
 	return replication.MaxReplicas, nil
@@ -124,6 +168,7 @@ func (p *Report) GetClusterAccountStatus(ctx context.Context, clusterID string) 
 		accountStatus.Message = err.Error()
 	} else {
 		accountStatus.Health = true
+		accountStatus.Message = "Account status are healthy."
 	}
 
 	return accountStatus, nil
@@ -134,11 +179,100 @@ func (p *Report) GetClusterTopology(ctx context.Context, clusterID string) (stri
 }
 
 func (p *Report) GetClusterRegionStatus(ctx context.Context, clusterID string) (structs.CheckStatus, error) {
-	return structs.CheckStatus{}, nil
+	regionStatus := structs.CheckStatus{}
+
+	clusterMeta, err := meta.Get(ctx, clusterID)
+	if err != nil {
+		return regionStatus, err
+	}
+
+	pdAddress := clusterMeta.GetPDClientAddresses()
+	if len(pdAddress) <= 0 {
+		return regionStatus, errors.NewError(errors.TIEM_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
+	}
+
+	pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
+
+	hasUnhealthy := false
+	for _, state := range []string{"miss-peer", "pending-peer"} {
+		url := fmt.Sprintf("http://%s/pd/api/v1/regions/check/%s", pdID, state)
+		params := make(map[string]string)
+		headers := make(map[string]string)
+		resp, err := util.Get(url, params, headers)
+		if err != nil {
+			return regionStatus, err
+		}
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return regionStatus, err
+		}
+		regionsInfo := &RegionsInfo{}
+		if err = json.Unmarshal(body, regionsInfo); err != nil {
+			return regionStatus, errors.WrapError(errors.TIEM_UNMARSHAL_ERROR,
+				fmt.Sprintf("parse regions info error: %s", err.Error()), err)
+		}
+		if regionsInfo.Count > 0 {
+			regionStatus.Health = false
+			regionStatus.Message = fmt.Sprintf("Regions are not fully healthy: %s",
+				color.YellowString("%d %s", regionsInfo.Count, state))
+			hasUnhealthy = true
+		}
+	}
+	if !hasUnhealthy {
+		regionStatus.Health = true
+		regionStatus.Message = "All regions are healthy."
+	}
+
+	return regionStatus, nil
 }
 
-func (p *Report) GetInstanceStatus(ctx context.Context, instanceID string) (structs.CheckStatus, error) {
-	return structs.CheckStatus{}, nil
+func (p *Report) GetClusterHealthStatus(ctx context.Context, clusterID string) (structs.CheckStatus, error) {
+	healthStatus := structs.CheckStatus{}
+
+	clusterMeta, err := meta.Get(ctx, clusterID)
+	if err != nil {
+		return healthStatus, err
+	}
+
+	pdAddress := clusterMeta.GetPDClientAddresses()
+	if len(pdAddress) <= 0 {
+		return healthStatus, errors.NewError(errors.TIEM_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
+	}
+
+	pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
+	url := fmt.Sprintf("http://%s/pd/api/v1/health", pdID)
+	params := make(map[string]string)
+	headers := make(map[string]string)
+	resp, err := util.Get(url, params, headers)
+	if err != nil {
+		return healthStatus, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return healthStatus, err
+	}
+
+	healthsInfo := make([]HealthInfo, 0)
+	if err = json.Unmarshal(body, healthsInfo); err != nil {
+		return healthStatus, errors.WrapError(errors.TIEM_UNMARSHAL_ERROR,
+			fmt.Sprintf("parse health info error: %s", err.Error()), err)
+	}
+
+	hasUnhealthy := false
+	for _, info := range healthsInfo {
+		if !info.Health {
+			hasUnhealthy = true
+			healthStatus.Health = false
+			healthStatus.Message = fmt.Sprintf("Cluster node %s are not fully healthy", info.Name)
+		}
+	}
+
+	if !hasUnhealthy {
+		healthStatus.Health = true
+		healthStatus.Message = "Cluster are fully healthy"
+	}
+
+	return healthStatus, nil
 }
 
 func (p *Report) CheckInstanceParameters(ctx context.Context, instanceID string) (map[string]structs.CheckAny, error) {
@@ -149,17 +283,12 @@ func (p *Report) CheckInstances(ctx context.Context, instances []*management.Clu
 	instanceChecks := make([]structs.InstanceCheck, 0)
 
 	for _, instance := range instances {
-		status, err := p.GetInstanceStatus(ctx, instance.ID)
-		if err != nil {
-			return instanceChecks, err
-		}
 		parameters, err := p.CheckInstanceParameters(ctx, instance.ID)
 		if err != nil {
 			return instanceChecks, err
 		}
 		instanceChecks = append(instanceChecks, structs.InstanceCheck{
 			ID:         instance.ID,
-			Status:     status,
 			Parameters: parameters,
 		})
 	}
@@ -187,6 +316,10 @@ func (p *Report) CheckClusters(ctx context.Context, clusterMetas []*management.R
 		if err != nil {
 			return clusterChecks, err
 		}
+		healthStatus, err := p.GetClusterHealthStatus(ctx, meta.Cluster.ID)
+		if err != nil {
+			return clusterChecks, err
+		}
 		instanceChecks, err := p.CheckInstances(ctx, meta.Instances)
 		if err != nil {
 			return clusterChecks, err
@@ -203,6 +336,7 @@ func (p *Report) CheckClusters(ctx context.Context, clusterMetas []*management.R
 				ExpectedValue: int32(meta.Cluster.Copies),
 			},
 			AccountStatus: accountStatus,
+			HealthStatus:  healthStatus,
 			Topology:      topology,
 			RegionStatus:  regionStatus,
 			Instances:     instanceChecks,

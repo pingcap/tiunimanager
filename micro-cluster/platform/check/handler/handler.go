@@ -25,7 +25,9 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
 	hostInspector "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/inspect"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
@@ -341,7 +343,24 @@ func (p *Report) GetClusterHealthStatus(ctx context.Context, clusterID string) (
 }
 
 func (p *Report) CheckInstanceParameters(ctx context.Context, instanceID string) (map[string]structs.CheckAny, error) {
-	return nil, nil
+	checkParams := make(map[string]structs.CheckAny)
+
+	resp, err := parameter.NewManager().InspectClusterParameters(ctx, cluster.InspectParametersReq{InstanceID: instanceID})
+	if err != nil {
+		return checkParams, err
+	}
+
+	for _, param := range resp.Params[0].ParameterInfos {
+		paramName := strings.Join([]string{param.Category, param.Name}, ".")
+		if _, ok := checkParams[paramName]; !ok {
+			checkParams[paramName] = structs.CheckAny{
+				Valid:         false,
+				RealValue:     param.InspectValue,
+				ExpectedValue: param.RealValue.ClusterValue,
+			}
+		}
+	}
+	return checkParams, nil
 }
 
 func (p *Report) CheckInstances(ctx context.Context, instances []*management.ClusterInstance) ([]structs.InstanceCheck, error) {

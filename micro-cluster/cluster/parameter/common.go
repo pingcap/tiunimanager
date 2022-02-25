@@ -43,19 +43,20 @@ const (
 
 // Define unit conversion
 var units = map[string]int64{
-	// storage
+	// storage unit
 	"B":  1,
 	"KB": 1024,
 	"MB": 1024 * 1024,
 	"GB": 1024 * 1024 * 1024,
 	"TB": 1024 * 1024 * 1024 * 1024,
 
-	// time
-	"ms": 1,
-	"s":  1000,
-	"m":  60 * 1000,
-	"h":  60 * 60 * 1000,
-	"d":  24 * 60 * 60 * 1000,
+	// time unit
+	"us": 1,
+	"ms": 1 * 1000,
+	"s":  1000 * 1000,
+	"m":  60 * 1000 * 1000,
+	"h":  60 * 60 * 1000 * 1000,
+	"d":  24 * 60 * 60 * 1000 * 1000,
 }
 
 // Define replace unit, used to replace the result value returned by the component API

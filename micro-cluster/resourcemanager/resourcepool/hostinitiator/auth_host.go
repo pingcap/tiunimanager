@@ -23,6 +23,7 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/framework"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	sshclient "github.com/pingcap-inc/tiem/util/ssh"
 )
@@ -158,20 +159,9 @@ func (p *FileHostInitiator) appendRemoteAuthorizedKeysFile(ctx context.Context, 
 	return nil
 }
 
-func (p *FileHostInitiator) getPublicKeyFilePath() (path string, err error) {
-	homePath, err := os.UserHomeDir()
-	if err != nil {
-		return "", errors.NewErrorf(errors.TIEM_RESOURCE_INIT_HOST_AUTH_ERROR, "get user home dir failed, %v", err)
-	}
-	path = fmt.Sprintf("%s/.ssh/id_rsa.pub", homePath)
-	return
-}
-
 func (p *FileHostInitiator) buildAuth(ctx context.Context, deployUser string, h *structs.HostInfo) error {
-	publicKeyPath, err := p.getPublicKeyFilePath()
-	if err != nil {
-		return err
-	}
+	publicKeyPath := framework.GetPublicKeyFilePath(deployUser)
+
 	pubKey, err := p.getLocalPublicKey(publicKeyPath)
 	if err != nil {
 		return err

@@ -51,7 +51,7 @@ scrape_configs:
         replacement: {{$addr}}
 {{- end}}
 
-  - job_name: tiem
+  - job_name: em
     static_configs:
       - targets: 
 {{- range .TiEMAPIServers}}
@@ -73,6 +73,5 @@ scrape_configs:
 #     'match[]':
 #       - '{job=~".*"}'
 #    http_sd_configs:
-#        ### 3. 可否直接通过tiup获取tiem_api_servers的地址？比如：".tiem_api_servers.host":"".tiem_api_servers.port"
 #      - url: "http://".tiem_api_servers.host:".tiem_api_servers.port"/api/sd/metrics?address=".monitoring_servers.host":".monitoring_servers.port""
 #        refresh_interval: 15s

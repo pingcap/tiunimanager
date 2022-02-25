@@ -104,10 +104,10 @@ type BaseTopo struct {
 type Specification struct {
 	GlobalOptions        GlobalOptions        `yaml:"global,omitempty" validate:"global:editable"`
 	MonitoredOptions     *MonitoredOptions    `yaml:"monitored,omitempty" validate:"monitored:editable"`
-	ClusterServers       []*ClusterServerSpec `yaml:"tiem_cluster_servers"`
-	APIServers           []*APIServerSpec     `yaml:"tiem_api_servers"`
-	FileServers          []*FileServerSpec    `yaml:"tiem_file_servers"`
-	WebServers           []*WebServerSpec     `yaml:"tiem_web_servers"`
+	ClusterServers       []*ClusterServerSpec `yaml:"em_cluster_servers"`
+	APIServers           []*APIServerSpec     `yaml:"em_api_servers"`
+	FileServers          []*FileServerSpec    `yaml:"em_file_servers"`
+	WebServers           []*WebServerSpec     `yaml:"em_web_servers"`
 	TracerServers        []*TracerServerSpec  `yaml:"tracer_servers"`
 	ElasticSearchServers []*ElasticSearchSpec `yaml:"elasticsearch_servers"`
 	KibanaServers        []*KibanaSpec        `yaml:"kibana_servers,omitempty"`

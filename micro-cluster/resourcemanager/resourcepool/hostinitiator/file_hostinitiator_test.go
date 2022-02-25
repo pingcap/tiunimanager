@@ -225,7 +225,7 @@ func Test_Remount(t *testing.T) {
 	defer ctrl.Finish()
 	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
 	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-		func(host string, port int, sshType sshclient.SSHType, user, passwd string, timeoutS int, commands []string) (string, error) {
+		func(host string, port int, sshType sshclient.SSHType, user, passwd string, sudo bool, timeoutS int, commands []string) (string, error) {
 			if strings.HasPrefix(commands[0], "sed -n") {
 				return "/dev/mapper/centos-root /data    xfs     defaults        0 0", nil
 			} else if strings.HasPrefix(commands[0], "sed -i") {

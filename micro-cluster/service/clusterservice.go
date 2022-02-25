@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/micro-cluster/platform/system"
 	"runtime/debug"
 	"time"
 
@@ -64,6 +65,7 @@ type ClusterServiceHandler struct {
 	clusterParameterManager *clusterParameter.Manager
 	clusterManager          *clusterManager.Manager
 	systemConfigManager     *config.SystemConfigManager
+	systemManager     		*system.SystemManager
 	brManager               backuprestore.BRService
 	importexportManager     importexport.ImportExportService
 	clusterLogManager       *clusterLog.Manager
@@ -152,6 +154,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.clusterManager = clusterManager.NewClusterManager()
 	handler.switchoverManager = switchoverManager.GetManager()
 	handler.systemConfigManager = config.NewSystemConfigManager()
+	handler.systemManager = system.GetSystemManager()
 	handler.brManager = backuprestore.GetBRService()
 	handler.importexportManager = importexport.GetImportExportService()
 	handler.clusterLogManager = clusterLog.NewManager()
@@ -719,6 +722,20 @@ func (c *ClusterServiceHandler) GetSystemConfig(ctx context.Context, req *cluste
 
 	if handleRequest(ctx, req, resp, &getReq, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionRead)}}) {
 		result, err := c.systemConfigManager.GetSystemConfig(framework.NewBackgroundMicroCtx(ctx, false), getReq)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+func (c *ClusterServiceHandler) GetSystemInfo(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "GetSystemInfo", int(resp.GetCode()))
+	defer handlePanic(ctx, "GetSystemInfo", resp)
+
+	getReq := message.GetSystemInfoReq{}
+
+	if handleRequest(ctx, req, resp, &getReq, []structs.RbacPermission{}) {
+		result, err := c.systemManager.GetSystemInfo(framework.NewBackgroundMicroCtx(ctx, false), getReq)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 

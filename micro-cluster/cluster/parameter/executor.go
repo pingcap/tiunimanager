@@ -31,6 +31,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/spec"
 	"gopkg.in/yaml.v2"
@@ -118,17 +120,22 @@ func defaultEnd(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) err
 	return nil
 }
 
-// refreshParameterFail
+// parameterFail
 // @Description: Rollback logic for default failures
-func refreshParameterFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
-	framework.LogWithContext(ctx).Info("begin refresh parameter fail executor method")
-	defer framework.LogWithContext(ctx).Info("end refresh parameter fail executor method")
+func parameterFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	framework.LogWithContext(ctx).Info("begin parameter fail executor method")
+	defer framework.LogWithContext(ctx).Info("end parameter fail executor method")
+
+	// Get tiup show-config result
+	clusterConfigStr := ctx.GetData(contextClusterConfigStr)
+	if clusterConfigStr == nil {
+		return nil
+	}
 
 	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
-
 	// If the reload fails, then do a meta rollback
 	taskId, err := deployment.M.EditConfig(ctx, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID,
-		ctx.GetData(contextClusterConfigStr).(string), "/home/tiem/.tiup", node.ParentID, []string{}, 0)
+		clusterConfigStr.(string), "/home/tiem/.tiup", node.ParentID, []string{}, 0)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call secondparty tiup rollback global config task id = %v, err = %s", taskId, err.Error())
 		return err
@@ -398,8 +405,13 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 					framework.LogWithContext(ctx).Errorf("convert real parameter type err = %v", err)
 					return err
 				}
+				configKey := DisplayFullParameterName(param.Category, param.Name)
+				// If system variable not empty, set config key from system variable.
+				if param.SystemVariable != "" {
+					configKey = param.SystemVariable
+				}
 				// display full parameter name
-				cm[DisplayFullParameterName(param.Category, param.Name)] = clusterValue
+				cm[configKey] = clusterValue
 			}
 			clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
 
@@ -612,7 +624,13 @@ func generateNewYamlConfig(configs []GlobalComponentConfig, topo *tiupSpec.Speci
 func convertRealParameterType(ctx context.Context, paramType int, value string) (interface{}, error) {
 	switch paramType {
 	case int(Integer):
-		c, err := strconv.ParseInt(value, 0, 64)
+		// Compatible with scientific notation, e.g.: 1.44e+06
+		decimalNum, err := decimal.NewFromString(value)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("decimal.NewFromString error, numStr:%s, err:%v", value, err)
+			return nil, err
+		}
+		c, err := strconv.ParseInt(decimalNum.String(), 10, 64)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("strconv realvalue type int fail, err = %s", err.Error())
 			return nil, err

@@ -18,6 +18,10 @@ package importexport
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
+	"time"
+
 	"github.com/BurntSushi/toml"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/deployment"
@@ -26,9 +30,6 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
-	"os"
-	"strconv"
-	"time"
 )
 
 func buildDataImportConfig(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
@@ -68,7 +69,8 @@ func importDataToCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) 
 
 	framework.LogWithContext(ctx).Infof("begin do tiup tidb-lightning -config %s/tidb-lightning.toml, timeout: %d", info.ConfigPath, lightningTimeout)
 	//tiup tidb-lightning -config tidb-lightning.toml
-	importTaskId, err := deployment.M.Lightning(ctx, "/home/tiem/.tiup", node.ParentID, []string{"-config", fmt.Sprintf("%s/tidb-lightning.toml", info.ConfigPath)}, lightningTimeout)
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
+	importTaskId, err := deployment.M.Lightning(ctx, tiupHomeForTidb, node.ParentID, []string{"-config", fmt.Sprintf("%s/tidb-lightning.toml", info.ConfigPath)}, lightningTimeout)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call tiup lightning api failed, %s", err.Error())
 		return fmt.Errorf("call tiup lightning api failed, %s", err.Error())
@@ -148,7 +150,8 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 		cmd = append(cmd, "--sql", info.Sql)
 	}
 	framework.LogWithContext(ctx).Infof("call tiupmgr dumpling api, cmd: %v, timeout: %d", cmd, dumplingTimeout)
-	exportTaskId, err := deployment.M.Dumpling(ctx, "/home/tiem/.tiup", node.ParentID, cmd, dumplingTimeout)
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
+	exportTaskId, err := deployment.M.Dumpling(ctx, tiupHomeForTidb, node.ParentID, cmd, dumplingTimeout)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call tiup dumpling api failed, %s", err.Error())
 		return fmt.Errorf("call tiup dumpling api failed, %s", err.Error())

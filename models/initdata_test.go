@@ -48,7 +48,3 @@ func Test_allVersionInitializers(t *testing.T) {
 func Test_initBySql(t *testing.T) {
 
 }
-
-func Test_initBySql1(t *testing.T) {
-
-}

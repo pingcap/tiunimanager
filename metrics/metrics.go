@@ -18,12 +18,13 @@ package metrics
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/prometheus/client_golang/prometheus"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type Metrics struct {
@@ -51,7 +52,7 @@ type Metrics struct {
 func RegisterNewGaugeVec(metricDef MetricDef) *prometheus.GaugeVec {
 	metric := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Namespace: constants.TiEM,
+			Namespace: constants.EM,
 			Name:      metricDef.Name,
 			Help:      metricDef.Help,
 		},
@@ -64,7 +65,7 @@ func RegisterNewGaugeVec(metricDef MetricDef) *prometheus.GaugeVec {
 func RegisterNewCounterVec(metricDef MetricDef) *prometheus.CounterVec {
 	metric := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: constants.TiEM,
+			Namespace: constants.EM,
 			Name:      metricDef.Name,
 			Help:      metricDef.Help,
 		},
@@ -77,7 +78,7 @@ func RegisterNewCounterVec(metricDef MetricDef) *prometheus.CounterVec {
 func RegisterNewHistogramVec(metricDef MetricDef) *prometheus.HistogramVec {
 	metric := prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Namespace: constants.TiEM,
+			Namespace: constants.EM,
 			Name:      metricDef.Name,
 			Help:      metricDef.Help,
 		},
@@ -90,7 +91,7 @@ func RegisterNewHistogramVec(metricDef MetricDef) *prometheus.HistogramVec {
 func RegisterNewSummaryVec(metricDef MetricDef) *prometheus.SummaryVec {
 	metric := prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
-			Namespace: constants.TiEM,
+			Namespace: constants.EM,
 			Name:      metricDef.Name,
 			Help:      metricDef.Help,
 		},

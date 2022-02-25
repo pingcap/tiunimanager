@@ -286,6 +286,16 @@ func GetPublicKeyFilePath(userName string) (keyPath string) {
 	return
 }
 
+func GetTiupHomePathForTiem() string {
+	userName := GetCurrentDeployUser()
+	return fmt.Sprintf("/home/%s/.tiuptiem", userName)
+}
+
+func GetTiupHomePathForTidb() string {
+	userName := GetCurrentDeployUser()
+	return fmt.Sprintf("/home/%s/.tiup", userName)
+}
+
 func GetTiupAuthorizaitonFlag() (flags []string) {
 	userName := GetCurrentDeployUser()
 	keyPath := GetPrivateKeyFilePath(userName)

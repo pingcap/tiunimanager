@@ -1976,7 +1976,7 @@ definitions:
       storage:
         type: integer
       topology:
-        type: string
+        $ref: '#/definitions/structs.CheckString'
     type: object
   structs.ClusterInfo:
     properties:

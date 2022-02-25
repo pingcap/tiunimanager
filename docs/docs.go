@@ -9626,7 +9626,7 @@ var doc = `{
                     "type": "integer"
                 },
                 "topology": {
-                    "type": "string"
+                    "$ref": "#/definitions/structs.CheckString"
                 }
             }
         },

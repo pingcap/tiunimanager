@@ -38,6 +38,7 @@ const (
 	MetricsClusterPreviewScaleOut       MetricsType = "cluster/preview_scale_out"
 	MetricsClusterScaleOut              MetricsType = "cluster/scale_out"
 	MetricsClusterClone                 MetricsType = "cluster/clone"
+	MetricsClusterSwitchover            MetricsType = "cluster/switchover"
 	MetricsClusterRestore               MetricsType = "cluster/restore"
 	MetricsClusterTakeover              MetricsType = "cluster/takeover"
 	MetricsClusterPreview               MetricsType = "cluster/preview"
@@ -82,8 +83,6 @@ const (
 	MetricsCDCTaskQuery  MetricsType = "cdc/query"
 	MetricsCDCTaskDetail MetricsType = "cdc/detail"
 	MetricsCDCDownstream MetricsType = "cdc/downstream/delete"
-
-	MetricsSwitchover MetricsType = "switchover/switch"
 
 	// MetricsParameterGroupCreate define parameter group metrics
 	MetricsParameterGroupCreate MetricsType = "parameter_group/create"

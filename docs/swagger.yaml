@@ -1397,6 +1397,15 @@ definitions:
         description: map[zone] -> stocks
         type: object
     type: object
+  message.GetSystemInfoResp:
+    properties:
+      currentVersion:
+        $ref: '#/definitions/structs.SystemVersionInfo'
+      info:
+        $ref: '#/definitions/structs.SystemInfo'
+      lastVersion:
+        $ref: '#/definitions/structs.SystemVersionInfo'
+    type: object
   message.GetTenantReq:
     properties:
       id:
@@ -1952,6 +1961,8 @@ definitions:
         $ref: '#/definitions/structs.CheckInt32'
       cpu:
         type: integer
+      healthStatus:
+        $ref: '#/definitions/structs.CheckStatus'
       instances:
         items:
           $ref: '#/definitions/structs.InstanceCheck'
@@ -2527,8 +2538,6 @@ definitions:
         additionalProperties:
           $ref: '#/definitions/structs.CheckAny'
         type: object
-      status:
-        $ref: '#/definitions/structs.CheckStatus'
       versions:
         additionalProperties:
           $ref: '#/definitions/structs.CheckString'
@@ -2919,6 +2928,28 @@ definitions:
       zone:
         type: string
     type: object
+  structs.SystemInfo:
+    properties:
+      currentVersionID:
+        type: string
+      lastVersionID:
+        type: string
+      state:
+        type: string
+      systemLogo:
+        type: string
+      systemName:
+        type: string
+    type: object
+  structs.SystemVersionInfo:
+    properties:
+      desc:
+        type: string
+      releaseNote:
+        type: string
+      versionID:
+        type: string
+    type: object
   structs.TenantCheck:
     properties:
       clusterCount:
@@ -3081,7 +3112,7 @@ definitions:
         description: The value of the Name is similar to Hangzhou(H)
         type: string
     type: object
-host: localhost:4100
+host: localhost:4116
 info:
   contact:
     email: zhangpeijin@pingcap.com
@@ -6294,6 +6325,34 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: created  specs
+      tags:
+      - platform
+  /system/info:
+    get:
+      consumes:
+      - application/json
+      description: get system info
+      parameters:
+      - in: query
+        name: withVersionDetail
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.GetSystemInfoResp'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: get system info
       tags:
       - platform
   /tenant:

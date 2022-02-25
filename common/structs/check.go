@@ -68,13 +68,13 @@ type ClusterCheck struct {
 	Topology          string                             `json:"topology"`
 	RegionStatus      CheckStatus                        `json:"regionStatus"`
 	Instances         []InstanceCheck                    `json:"instances"`
+	HealthStatus      CheckStatus                        `json:"healthStatus"`
 	BackupStrategy    CheckString                        `json:"backupStrategy"`
 	BackupRecordValid map[string]bool                    `json:"backupRecordValid"`
 }
 
 type InstanceCheck struct {
 	ID         string                 `json:"instanceID"`
-	Status     CheckStatus            `json:"status"`
 	Parameters map[string]CheckAny    `json:"parameters"`
 	Versions   map[string]CheckString `json:"versions"`
 }
@@ -102,14 +102,14 @@ type CheckError struct {
 }
 
 type HostCheck struct {
-	SELinux         CheckSwitch             `json:"selinux"`
-	Firewall        CheckSwitch             `json:"firewall"`
-	Swap            CheckSwitch             `json:"swap"`
-	MemoryAllocated CheckInt32              `json:"memory"`
-	CPUAllocated    CheckInt32              `json:"cpu"`
+	SELinux         CheckSwitch            `json:"selinux"`
+	Firewall        CheckSwitch            `json:"firewall"`
+	Swap            CheckSwitch            `json:"swap"`
+	MemoryAllocated CheckInt32             `json:"memory"`
+	CPUAllocated    CheckInt32             `json:"cpu"`
 	DiskAllocated   map[string]CheckString `json:"disk"`
-	StorageRatio    float32                 `json:"storageRatio"`
-	Errors          []CheckError            `json:"errors"`
+	StorageRatio    float32                `json:"storageRatio"`
+	Errors          []CheckError           `json:"errors"`
 }
 
 type CheckReportInfo struct {

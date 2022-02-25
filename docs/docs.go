@@ -5378,6 +5378,54 @@ var doc = `{
                 }
             }
         },
+        "/system/info": {
+            "get": {
+                "description": "get system info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "get system info",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "name": "withVersionDetail",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.GetSystemInfoResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/tenant": {
             "get": {
                 "security": [
@@ -8714,6 +8762,20 @@ var doc = `{
                 }
             }
         },
+        "message.GetSystemInfoResp": {
+            "type": "object",
+            "properties": {
+                "currentVersion": {
+                    "$ref": "#/definitions/structs.SystemVersionInfo"
+                },
+                "info": {
+                    "$ref": "#/definitions/structs.SystemInfo"
+                },
+                "lastVersion": {
+                    "$ref": "#/definitions/structs.SystemVersionInfo"
+                }
+            }
+        },
         "message.GetTenantReq": {
             "type": "object",
             "properties": {
@@ -9542,6 +9604,9 @@ var doc = `{
                 "cpu": {
                     "type": "integer"
                 },
+                "healthStatus": {
+                    "$ref": "#/definitions/structs.CheckStatus"
+                },
                 "instances": {
                     "type": "array",
                     "items": {
@@ -10364,9 +10429,6 @@ var doc = `{
                         "$ref": "#/definitions/structs.CheckAny"
                     }
                 },
-                "status": {
-                    "$ref": "#/definitions/structs.CheckStatus"
-                },
                 "versions": {
                     "type": "object",
                     "additionalProperties": {
@@ -10906,6 +10968,40 @@ var doc = `{
                 }
             }
         },
+        "structs.SystemInfo": {
+            "type": "object",
+            "properties": {
+                "currentVersionID": {
+                    "type": "string"
+                },
+                "lastVersionID": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "systemLogo": {
+                    "type": "string"
+                },
+                "systemName": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.SystemVersionInfo": {
+            "type": "object",
+            "properties": {
+                "desc": {
+                    "type": "string"
+                },
+                "releaseNote": {
+                    "type": "string"
+                },
+                "versionID": {
+                    "type": "string"
+                }
+            }
+        },
         "structs.TenantCheck": {
             "type": "object",
             "properties": {
@@ -11167,7 +11263,7 @@ type swaggerInfo struct {
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
 	Version:     "1.0",
-	Host:        "localhost:4100",
+	Host:        "localhost:4116",
 	BasePath:    "/api/v1/",
 	Schemes:     []string{},
 	Title:       "TiEM UI API",

@@ -17,9 +17,13 @@ package importexport
 
 import (
 	"context"
+	"os"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/deployment"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
@@ -31,8 +35,6 @@ import (
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockimportexport"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"
-	"os"
-	"testing"
 )
 
 func TestExecutor_buildDataImportConfig(t *testing.T) {
@@ -66,6 +68,7 @@ func TestExecutor_buildDataImportConfig(t *testing.T) {
 }
 
 func TestExecutor_importDataToCluster(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 

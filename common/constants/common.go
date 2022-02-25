@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	TiEM string = "tiem"
+	EM string = "em"
 )
 
 //System log-related constants

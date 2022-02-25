@@ -28,6 +28,7 @@ import (
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
 	switchoverApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/switchover"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/upgrade"
+	"github.com/pingcap-inc/tiem/micro-api/controller/platform/system"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
@@ -79,7 +80,7 @@ func Route(g *gin.Engine) {
 		platform := apiV1.Group("/platform")
 		{
 			platform.Use(interceptor.VerifyIdentity)
-			platform.Use(interceptor.AuditLog())
+			platform.Use(interceptor.AuditLog)
 			platform.POST("/check", metrics.HandleMetrics(constants.MetricsPlatformCheck), platformApi.Check)
 			platform.GET("/report/:checkId", metrics.HandleMetrics(constants.MetricsQueryCheckReports), platformApi.GetCheckReport)
 			platform.GET("/reports", metrics.HandleMetrics(constants.MetricsGetCheckReport), platformApi.QueryCheckReports)
@@ -88,7 +89,7 @@ func Route(g *gin.Engine) {
 		user := apiV1.Group("/users")
 		{
 			user.Use(interceptor.VerifyIdentity)
-			user.Use(interceptor.AuditLog())
+			user.Use(interceptor.AuditLog)
 			user.POST("/", metrics.HandleMetrics(constants.MetricsUserCreate), userApi.CreateUser)
 			user.DELETE("/:userId", metrics.HandleMetrics(constants.MetricsUserDelete), userApi.DeleteUser)
 			user.POST("/:userId/update_profile", metrics.HandleMetrics(constants.MetricsUserUpdateProfile), userApi.UpdateUserProfile)
@@ -100,7 +101,7 @@ func Route(g *gin.Engine) {
 		tenant := apiV1.Group("/tenants")
 		{
 			tenant.Use(interceptor.VerifyIdentity)
-			tenant.Use(interceptor.AuditLog())
+			tenant.Use(interceptor.AuditLog)
 			tenant.POST("/", metrics.HandleMetrics(constants.MetricsTenantCreate), userApi.CreateTenant)
 			tenant.DELETE("/:tenantId", metrics.HandleMetrics(constants.MetricsTenantDelete), userApi.DeleteTenant)
 			tenant.POST("/:tenantId/update_profile", metrics.HandleMetrics(constants.MetricsTenantUpdateProfile), userApi.UpdateTenantProfile)
@@ -112,7 +113,7 @@ func Route(g *gin.Engine) {
 		rbac := apiV1.Group("/rbac")
 		{
 			rbac.Use(interceptor.VerifyIdentity)
-			rbac.Use(interceptor.AuditLog())
+			rbac.Use(interceptor.AuditLog)
 			rbac.POST("/role/", metrics.HandleMetrics(constants.MetricsRbacCreateRole), rbacApi.CreateRbacRole)
 			rbac.GET("/role/", metrics.HandleMetrics(constants.MetricsRbacQueryRole), rbacApi.QueryRbacRoles)
 			rbac.POST("/role/bind", metrics.HandleMetrics(constants.MetricsRbacBindRolesForUser), rbacApi.BindRolesForUser)
@@ -126,8 +127,9 @@ func Route(g *gin.Engine) {
 
 		cluster := apiV1.Group("/clusters")
 		{
+			cluster.Use(interceptor.SystemRunning)
 			cluster.Use(interceptor.VerifyIdentity)
-			cluster.Use(interceptor.AuditLog())
+			cluster.Use(interceptor.AuditLog)
 			cluster.GET("/:clusterId", metrics.HandleMetrics(constants.MetricsClusterDetail), clusterApi.Detail)
 			cluster.POST("/", metrics.HandleMetrics(constants.MetricsClusterCreate), clusterApi.Create)
 			cluster.POST("/takeover", metrics.HandleMetrics(constants.MetricsClusterTakeover), clusterApi.Takeover)
@@ -152,7 +154,7 @@ func Route(g *gin.Engine) {
 			cluster.POST("/clone", metrics.HandleMetrics(constants.MetricsClusterClone), clusterApi.Clone)
 
 			// Switchover
-			cluster.POST("/switchover", metrics.HandleMetrics(constants.MetricsSwitchover), switchoverApi.Switchover)
+			cluster.POST("/switchover", metrics.HandleMetrics(constants.MetricsClusterSwitchover), switchoverApi.Switchover)
 
 			// Params
 			cluster.GET("/:clusterId/params", metrics.HandleMetrics(constants.MetricsClusterQueryParameter), parameterApi.QueryParameters)
@@ -177,8 +179,9 @@ func Route(g *gin.Engine) {
 
 		backup := apiV1.Group("/backups")
 		{
+			backup.Use(interceptor.SystemRunning)
 			backup.Use(interceptor.VerifyIdentity)
-			backup.Use(interceptor.AuditLog())
+			backup.Use(interceptor.AuditLog)
 
 			backup.POST("/", metrics.HandleMetrics(constants.MetricsBackupCreate), backuprestore.Backup)
 			backup.GET("/", metrics.HandleMetrics(constants.MetricsBackupQuery), backuprestore.QueryBackupRecords)
@@ -187,8 +190,9 @@ func Route(g *gin.Engine) {
 
 		changeFeeds := apiV1.Group("/changefeeds")
 		{
+			changeFeeds.Use(interceptor.SystemRunning)
 			changeFeeds.Use(interceptor.VerifyIdentity)
-			changeFeeds.Use(interceptor.AuditLog())
+			changeFeeds.Use(interceptor.AuditLog)
 
 			changeFeeds.POST("/", metrics.HandleMetrics(constants.MetricsCDCTaskCreate), changefeed.Create)
 			changeFeeds.POST("/:changeFeedTaskId/pause", metrics.HandleMetrics(constants.MetricsCDCTaskPause), changefeed.Pause)
@@ -203,16 +207,18 @@ func Route(g *gin.Engine) {
 
 		flowworks := apiV1.Group("/workflow")
 		{
+			flowworks.Use(interceptor.SystemRunning)
 			flowworks.Use(interceptor.VerifyIdentity)
-			flowworks.Use(interceptor.AuditLog())
+			flowworks.Use(interceptor.AuditLog)
 			flowworks.GET("/", metrics.HandleMetrics(constants.MetricsWorkFlowQuery), flowtaskApi.Query)
 			flowworks.GET("/:workFlowId", metrics.HandleMetrics(constants.MetricsWorkFlowDetail), flowtaskApi.Detail)
 		}
 
 		host := apiV1.Group("/resources")
 		{
+			host.Use(interceptor.SystemRunning)
 			host.Use(interceptor.VerifyIdentity)
-			host.Use(interceptor.AuditLog())
+			host.Use(interceptor.AuditLog)
 			host.POST("hosts", metrics.HandleMetrics(constants.MetricsResourceImportHosts), resourceApi.ImportHosts)
 			host.GET("hosts", metrics.HandleMetrics(constants.MetricsResourceQueryHosts), resourceApi.QueryHosts)
 			host.DELETE("hosts", metrics.HandleMetrics(constants.MetricsResourceDeleteHost), resourceApi.RemoveHosts)
@@ -225,8 +231,9 @@ func Route(g *gin.Engine) {
 
 		paramGroups := apiV1.Group("/param-groups")
 		{
+			paramGroups.Use(interceptor.SystemRunning)
 			paramGroups.Use(interceptor.VerifyIdentity)
-			paramGroups.Use(interceptor.AuditLog())
+			paramGroups.Use(interceptor.AuditLog)
 			paramGroups.GET("/", metrics.HandleMetrics(constants.MetricsParameterGroupQuery), parametergroup.Query)
 			paramGroups.GET("/:paramGroupId", metrics.HandleMetrics(constants.MetricsParameterGroupDetail), parametergroup.Detail)
 			paramGroups.POST("/", metrics.HandleMetrics(constants.MetricsParameterGroupCreate), parametergroup.Create)
@@ -238,8 +245,9 @@ func Route(g *gin.Engine) {
 
 		productGroup := apiV1.Group("/products")
 		{
+			productGroup.Use(interceptor.SystemRunning)
 			productGroup.Use(interceptor.VerifyIdentity)
-			productGroup.Use(interceptor.AuditLog())
+			productGroup.Use(interceptor.AuditLog)
 			productGroup.POST("/", product.CreateProduct)
 			productGroup.DELETE("/", product.DeleteProduct)
 			productGroup.GET("/", product.QueryProducts)
@@ -248,8 +256,9 @@ func Route(g *gin.Engine) {
 
 		zoneGroup := apiV1.Group("/zones")
 		{
+			zoneGroup.Use(interceptor.SystemRunning)
 			zoneGroup.Use(interceptor.VerifyIdentity)
-			zoneGroup.Use(interceptor.AuditLog())
+			zoneGroup.Use(interceptor.AuditLog)
 			zoneGroup.POST("/", product.CreateZones)
 			zoneGroup.DELETE("/", product.DeleteZones)
 			zoneGroup.GET("/tree", product.QueryZonesTree)
@@ -257,11 +266,17 @@ func Route(g *gin.Engine) {
 
 		specGroup := apiV1.Group("/specs")
 		{
+			specGroup.Use(interceptor.SystemRunning)
 			specGroup.Use(interceptor.VerifyIdentity)
-			specGroup.Use(interceptor.AuditLog())
+			specGroup.Use(interceptor.AuditLog)
 			specGroup.POST("/", product.CreateSpecs)
 			specGroup.DELETE("/", product.DeleteSpecs)
 			specGroup.GET("/", product.QuerySpecs)
+		}
+
+		systemGroup := apiV1.Group("/system")
+		{
+			systemGroup.GET("/info", system.GetSystemInfo)
 		}
 	}
 

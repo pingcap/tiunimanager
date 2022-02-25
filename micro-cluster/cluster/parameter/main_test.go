@@ -72,6 +72,9 @@ var apiContent = []byte(`
 			"max-size": 102400
 		}
 	},
+	"coprocessor": {
+		"region-max-size": "144MiB"
+	},
 	"rocksdb": {
 		"defaultcf": {
 			"compression-per-level": ["no","no","lz4","lz4","lz4","zstd","zstd"]
@@ -369,7 +372,7 @@ func mockModifyParameter() *ModifyParameter {
 				InstanceType:   "PD",
 				UpdateSource:   3,
 				HasApply:       1,
-				SystemVariable: "",
+				SystemVariable: "test_param_3",
 				Type:           1,
 				Unit:           "kB",
 				UnitOptions:    []string{"KB", "MB"},

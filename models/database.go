@@ -122,6 +122,16 @@ func Open(fw *framework.BaseFramework) error {
 		logins.Infof("init default data for new database")
 		return allVersionInitializers[0].DataInitializer()
 	} else {
+		// compatible
+		if e := defaultDb.base.First(&system.SystemInfo{}).Error; e != nil {
+			defaultDb.base.Create(&system.SystemInfo{
+				SystemName:       "EM",
+				SystemLogo:       "",
+				CurrentVersionID: "",
+				LastVersionID:    "",
+				State:            constants.SystemInitialing,
+			})
+		}
 		logins.Infof("database is existed, skip init data")
 	}
 

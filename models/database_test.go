@@ -16,6 +16,7 @@
 package models
 
 import (
+	"context"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/platform/system"
@@ -94,7 +95,6 @@ func TestGetReaderWriter(t *testing.T) {
 	assert.NotEmpty(t, GetSystemReaderWriter())
 	SetSystemReaderWriter(nil)
 	assert.Empty(t, GetSystemReaderWriter())
-	MockDB()
 }
 
 func Test_Open(t *testing.T) {
@@ -291,4 +291,66 @@ func TestMain(m *testing.M) {
 	os.RemoveAll(testFilePath)
 
 	os.Exit(code)
+}
+
+func TestTransaction(t *testing.T) {
+	Open(framework.Current.(*framework.BaseFramework))
+	defer func() {
+		defaultDb = nil
+		os.RemoveAll(framework.Current.(*framework.BaseFramework).GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName)
+	}()
+
+	t.Run("normal", func(t *testing.T) {
+		defer GetSystemReaderWriter().UpdateState(context.TODO(), "Running", "Initialing")
+		err := Transaction(context.TODO(), func(transactionCtx context.Context) error {
+			GetSystemReaderWriter().UpdateVersion(transactionCtx, "999")
+			return GetSystemReaderWriter().UpdateState(transactionCtx, "Initialing", "Running")
+		})
+		assert.NoError(t, err)
+		info, err := GetSystemReaderWriter().GetSystemInfo(context.TODO())
+		assert.NoError(t, err)
+		assert.Equal(t, "999", info.CurrentVersionID)
+		assert.Equal(t, "Running", string(info.State))
+		// revert
+	})
+
+	t.Run("rollback", func(t *testing.T) {
+		GetSystemReaderWriter().UpdateVersion(context.TODO(), "444")
+		err := Transaction(context.TODO(), func(transactionCtx context.Context) error {
+			GetSystemReaderWriter().UpdateVersion(transactionCtx, "333")
+			return GetSystemReaderWriter().UpdateState(transactionCtx, "Upgrading", "Running")
+		})
+		assert.Error(t, err)
+		info, err := GetSystemReaderWriter().GetSystemInfo(context.TODO())
+		assert.NoError(t, err)
+		assert.NotEqual(t, "333", info.CurrentVersionID)
+		assert.Equal(t, "444", info.CurrentVersionID)
+		assert.NotEqual(t, "Running", string(info.State))
+		assert.Equal(t, "Initialing", string(info.State))
+	})
+
+	t.Run("not in a transaction", func(t *testing.T) {
+		err := Transaction(context.TODO(), func(transactionCtx context.Context) error {
+			GetSystemReaderWriter().UpdateVersion(context.TODO(), "555")
+			return GetSystemReaderWriter().UpdateState(transactionCtx, "Upgrading", "Running")
+		})
+		assert.Error(t, err)
+		info, err := GetSystemReaderWriter().GetSystemInfo(context.TODO())
+		assert.NoError(t, err)
+		assert.Equal(t, "555", info.CurrentVersionID)
+		assert.NotEqual(t, "Running", string(info.State))
+		assert.Equal(t, "Initialing", string(info.State))
+	})
+
+	t.Run("mock db", func(t *testing.T) {
+		db := defaultDb
+		defer func() {
+			defaultDb = db
+		}()
+		MockDB()
+		err := Transaction(context.TODO(), func(transactionCtx context.Context) error {
+			return nil
+		})
+		assert.NoError(t, err)
+	})
 }

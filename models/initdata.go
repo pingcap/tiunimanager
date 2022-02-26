@@ -43,9 +43,9 @@ var inTestingVersion = "InTesting"
 
 var allVersionInitializers = []system.VersionInitializer{
 	{"", fullDataBeforeVersions},
-	{"v1.0.0-beta10", func() error {
+	{"v1.0.0-beta.10", func() error {
 		return defaultDb.base.Create(&system.VersionInfo{
-			ID:          "v1.0.0-beta10",
+			ID:          "v1.0.0-beta.10",
 			Desc:        "beta 10",
 			ReleaseNote: "release note",
 		}).Error

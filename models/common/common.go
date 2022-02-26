@@ -70,7 +70,26 @@ func WrapDB(db *gorm.DB) GormDB {
 	return GormDB{db: db}
 }
 
+type ctxTransactionKeyStruct struct {}
+
+var ctxTransactionKey = ctxTransactionKeyStruct{}
+
+func CtxWithTransaction(ctx context.Context, db *gorm.DB) context.Context {
+	return context.WithValue(ctx, ctxTransactionKey, db)
+}
+
 func (m *GormDB) DB(ctx context.Context) *gorm.DB {
+	iface := ctx.Value(ctxTransactionKey)
+
+	if iface != nil {
+		tx, ok := iface.(*gorm.DB)
+		if !ok {
+			return nil
+		}
+
+		return tx
+	}
+
 	return m.db.WithContext(ctx)
 }
 

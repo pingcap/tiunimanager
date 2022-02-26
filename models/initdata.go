@@ -44,11 +44,13 @@ var inTestingVersion = "InTesting"
 var allVersionInitializers = []system.VersionInitializer{
 	{"", fullDataBeforeVersions},
 	{"v1.0.0-beta.10", func() error {
-		return defaultDb.base.Create(&system.VersionInfo{
+		defaultDb.base.Create(&system.VersionInfo{
 			ID:          "v1.0.0-beta.10",
 			Desc:        "beta 10",
 			ReleaseNote: "release note",
-		}).Error
+		})
+		upgradeSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/upgrades.sql"
+		return initBySql(upgradeSqlFile, "tiup upgrade")
 	}},
 
 	{inTestingVersion, func() error {
@@ -126,10 +128,6 @@ func fullDataBeforeVersions() error {
 	}).BreakIf(func() error {
 		tiUPSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/tiup_configs.sql"
 		return initBySql(tiUPSqlFile, "tiup config")
-	}).BreakIf(func() error {
-		// import upgrade paths
-		upgradeSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/upgrades.sql"
-		return initBySql(upgradeSqlFile, "upgrade data")
 	}).If(func(err error) {
 		framework.LogForkFile(constants.LogFileSystem).Errorf("init data failed, err = %s", err.Error())
 	}).Else(func() {

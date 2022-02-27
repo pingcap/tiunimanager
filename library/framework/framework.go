@@ -289,7 +289,7 @@ func GetPublicKeyFilePath(userName string) (keyPath string) {
 
 func GetTiupHomePathForTiem() string {
 	userName := GetCurrentDeployUser()
-	return fmt.Sprintf("/home/%s/.tiuptiem", userName)
+	return fmt.Sprintf("/home/%s/.em", userName)
 }
 
 func GetTiupHomePathForTidb() string {

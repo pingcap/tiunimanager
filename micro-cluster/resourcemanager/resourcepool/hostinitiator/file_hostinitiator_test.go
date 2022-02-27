@@ -286,8 +286,8 @@ func Test_PreCheckHostInstallFilebeat(t *testing.T) {
 			"os_arch": "linux/x86_64",
 			"status": "Up",
 			"since": "-",
-			"data_dir": "/tiem-data/alertmanager-4112",
-			"deploy_dir": "/tiem-deploy/alertmanager-4112",
+			"data_dir": "/em-data/alertmanager-4112",
+			"deploy_dir": "/em-deploy/alertmanager-4112",
 			"ComponentName": "alertmanager",
 			"Port": 4112
 		  },
@@ -299,8 +299,8 @@ func Test_PreCheckHostInstallFilebeat(t *testing.T) {
 			"os_arch": "linux/x86_64",
 			"status": "Up",
 			"since": "-",
-			"data_dir": "/tiem-data/filebeat-0",
-			"deploy_dir": "/tiem-deploy/filebeat-0",
+			"data_dir": "/em-data/filebeat-0",
+			"deploy_dir": "/em-deploy/filebeat-0",
 			"ComponentName": "filebeat",
 			"Port": 0
 		  }
@@ -375,7 +375,7 @@ func Test_BuildHostCheckResulsFromJson(t *testing.T) {
 		{"node":"172.16.6.252","name":"selinux","status":"Pass","message":"SELinux is disabled"},
 		{"node":"172.16.6.252","name":"thp","status":"Fail","message":"THP is enabled, please disable it for best performance"},
 		{"node":"172.16.6.252","name":"command","status":"Fail","message":"numactl not usable, bash: numactl: command not found"},
-		{"node":"172.16.5.168","name":"exist","status":"Fail","message":"/home/tiem already exists"},
+		{"node":"172.16.5.168","name":"exist","status":"Fail","message":"/home/tidb already exists"},
 		{"node":"172.16.5.168","name":"exist","status":"Fail","message":"/root already exists"},
 		{"node":"172.16.5.168","name":"os-version","status":"Pass","message":"OS is CentOS Linux 7 (Core) 7.6.1810"},
 		{"node":"172.16.5.168","name":"cpu-cores","status":"Pass","message":"number of CPU cores / threads: 8"},

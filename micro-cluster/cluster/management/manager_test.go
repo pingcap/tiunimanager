@@ -1844,7 +1844,7 @@ func Test_compareConfigDifference(t *testing.T) {
 		UnitOptions:  []string{"KB", "MB", "GB"},
 		Range:        []string{"1, 100"},
 		RangeType:    1,
-		Description:  "param3 desc",
+		Description:  "param1 desc",
 	}
 	assert.Equal(t, item, *resp[0])
 }

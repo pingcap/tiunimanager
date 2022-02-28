@@ -26,7 +26,13 @@ import (
 
 func checkTenants(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	checkID := context.GetData(ContextCheckID).(string)
-	report := &handler.Report{}
+
+	var report handler.ReportInterface
+	if context.GetData(ContextReportInfo) != nil { // for ut
+		report = context.GetData(ContextReportInfo).(handler.ReportInterface)
+	} else {
+		report = &handler.Report{}
+	}
 
 	err := report.ParseFrom(context.Context, checkID)
 	if err != nil {
@@ -61,7 +67,13 @@ func checkTenants(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 
 func checkHosts(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	checkID := context.GetData(ContextCheckID).(string)
-	report := handler.Report{}
+
+	var report handler.ReportInterface
+	if context.GetData(ContextReportInfo) != nil { // for ut
+		report = context.GetData(ContextReportInfo).(handler.ReportInterface)
+	} else {
+		report = &handler.Report{}
+	}
 
 	err := report.ParseFrom(context.Context, checkID)
 	if err != nil {

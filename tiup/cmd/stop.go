@@ -20,7 +20,7 @@ import (
 func newStopCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "stop <cluster-name>",
-		Short: "Stop a TiEM cluster",
+		Short: "Stop a EM cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return cmd.Help()

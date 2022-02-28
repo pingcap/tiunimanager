@@ -18,6 +18,6 @@ import (
 )
 
 func main() {
-	tui.RegisterArg0("tiup tiem")
+	tui.RegisterArg0("tiup em")
 	Execute()
 }

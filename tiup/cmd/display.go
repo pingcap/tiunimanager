@@ -23,7 +23,7 @@ func newDisplayCmd() *cobra.Command {
 	)
 	cmd := &cobra.Command{
 		Use:   "display <cluster-name>",
-		Short: "Display information of a TiEM cluster",
+		Short: "Display information of a EM cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return cmd.Help()

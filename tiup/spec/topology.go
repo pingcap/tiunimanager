@@ -58,7 +58,7 @@ const (
 	RoleLogServer   = "log"
 	RoleMonitor     = "monitor"
 
-	TopoTypeTiEM = "tiem"
+	TopoTypeTiEM = "em"
 )
 
 // MonitoredOptions represents the monitored node configuration
@@ -74,7 +74,7 @@ type MonitoredOptions struct {
 // GlobalOptions represents the global options for all groups in topology
 // specification in topology.yaml
 type GlobalOptions struct {
-	User            string               `yaml:"user,omitempty" default:"tiem"`
+	User            string               `yaml:"user,omitempty" default:"tidb"`
 	Group           string               `yaml:"group,omitempty"`
 	SSHPort         int                  `yaml:"ssh_port,omitempty" default:"22" validate:"ssh_port:editable"`
 	SSHType         executor.SSHType     `yaml:"ssh_type,omitempty" default:"builtin"`
@@ -691,7 +691,7 @@ func (s *Specification) NewPart() Topology {
 func (s *Specification) MergeTopo(rhs Topology) Topology {
 	other, ok := rhs.(*Specification)
 	if !ok {
-		panic("topo should be TiEM Topology")
+		panic("topo should be EM Topology")
 	}
 
 	return s.Merge(other)

@@ -20,7 +20,7 @@ import (
 func newStartCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start <cluster-name>",
-		Short: "Start a TiEM cluster",
+		Short: "Start a EM cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return cmd.Help()

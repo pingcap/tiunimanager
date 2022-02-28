@@ -24,7 +24,7 @@ func backupCmd() *cobra.Command {
 	opt := manager.BackupOptions{}
 	cmd := &cobra.Command{
 		Use:    "backup <cluster-name> <target-path>",
-		Short:  "Backing up tiem cluster metadata information",
+		Short:  "Backing up EM cluster metadata information",
 		Hidden: false,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 2 {

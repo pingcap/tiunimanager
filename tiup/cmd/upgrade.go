@@ -22,7 +22,7 @@ func newUpgradeCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "upgrade <cluster-name> <version>",
-		Short: "Upgrade a specified TiEM cluster",
+		Short: "Upgrade a specified EM cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 2 {
 				return cmd.Help()

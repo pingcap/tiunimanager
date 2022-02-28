@@ -24,7 +24,7 @@ func restoreCmd() *cobra.Command {
 	opt := manager.RestoreOptions{}
 	cmd := &cobra.Command{
 		Use:    "restore <cluster-name> <source-path>",
-		Short:  "Restore tiem cluster metadata information",
+		Short:  "Restore EM cluster metadata information",
 		Hidden: false,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 2 {

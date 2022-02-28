@@ -41,7 +41,7 @@ var (
 	gOpt        operator.Options
 	skipConfirm bool
 	cm          *manager.Manager
-	tiemspec    *spec.SpecManager
+	emspec      *spec.SpecManager
 )
 
 func init() {
@@ -58,22 +58,22 @@ func init() {
 
 	rootCmd = &cobra.Command{
 		Use:           tui.OsArgs0(),
-		Short:         "Deploy and manage TiEM clusters",
+		Short:         "Deploy and manage EM clusters",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		Version:       version.NewComponentVersion().String(),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 			var env *tiupmeta.Environment
-			// unset component data dir to use clusters'
+			// unset component data dir to use clusters
 			os.Unsetenv(localdata.EnvNameComponentDataDir)
-			if err = cspec.Initialize("tiem"); err != nil {
+			if err = cspec.Initialize("em"); err != nil {
 				return err
 			}
 
-			tiemspec = spec.GetSpecManager()
+			emspec = spec.GetSpecManager()
 			logger.EnableAuditLog(cspec.AuditDir())
-			cm = manager.NewManager("tiem", tiemspec, spec.TiEMComponentVersion)
+			cm = manager.NewManager("em", emspec, spec.TiEMComponentVersion)
 
 			// Running in other OS/ARCH Should be fine we only download manifest file.
 			env, err = tiupmeta.InitEnv(repository.Options{

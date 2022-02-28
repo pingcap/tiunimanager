@@ -25,7 +25,7 @@ var (
 	// ComponentVerPatch is the patch version of Component
 	ComponentVerPatch = 0
 	// ComponentVerName is an alternative name of the version
-	ComponentVerName = "tiem"
+	ComponentVerName = "em"
 	// GitHash is the current git commit hash
 	GitHash = "Unknown"
 	// GitRef is the current git reference name (branch or tag)

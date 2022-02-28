@@ -55,7 +55,7 @@ fmt:
 	@gofmt -s -l -w $(FILES) 2>&1 | $(FAIL_ON_STDOUT)
 
 tiup:
-	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/tiup-tiem cmd/*.go
+	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/tiup-em cmd/*.go
 
 check: lint
 

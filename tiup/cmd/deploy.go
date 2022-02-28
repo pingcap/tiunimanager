@@ -33,8 +33,8 @@ func newDeployCmd() *cobra.Command {
 	}
 	cmd := &cobra.Command{
 		Use:          "deploy <cluster-name> <version> <topology.yaml>",
-		Short:        "Deploy a TiEM cluster",
-		Long:         "Deploy a TiEM cluster. SSH connection will be used to deploy files, as well as creating system users for running the service.",
+		Short:        "Deploy a EM cluster",
+		Long:         "Deploy a EM cluster. SSH connection will be used to deploy files, as well as creating system users for running the service.",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			shouldContinue, err := tui.CheckCommandArgsAndMayPrintHelp(cmd, args, 3)

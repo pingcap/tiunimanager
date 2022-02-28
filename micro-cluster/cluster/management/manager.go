@@ -52,6 +52,7 @@ const (
 	ContextSourceClusterMeta = "SourceClusterMeta"
 	ContextCloneStrategy     = "CloneStrategy"
 	ContextBackupID          = "BackupID"
+	ContextOriginalVersion   = "OriginalVersion"
 	ContextUpgradeVersion    = "UpgradeVersion"
 	ContextUpgradeWay        = "UpgradeWay"
 	ContextWorkflowID        = "WorkflowID"
@@ -847,7 +848,9 @@ var onlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
 		"checkVersionDone":        {"checkMD5", "checkMD5Done", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeMD5},
 		"checkMD5Done":            {"checkUpgradeTime", "checkUpgradeTimeDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeTime},
 		"checkUpgradeTimeDone":    {"checkConfig", "checkConfigDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeConfig},
-		"checkConfigDone":         {"checkSystemHealth", "success", "failAfterUpgrade", workflow.SyncFuncNode, checkRegionHealth},
+		"checkConfigDone":         {"checkSystemHealth", "checkSystemHealthDone", "failAfterUpgrade", workflow.SyncFuncNode, checkRegionHealth},
+		"checkSystemHealthDone":   {"applyParameterGroup", "applyParameterGroupDone", "failAfterUpgrade", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
+		"applyParameterGroupDone": {"adjustParameters", "success", "failAfterUpgrade", workflow.SyncFuncNode, adjustParameters},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
 		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertConfigAfterFailure, endMaintenance)},
 		"failAfterUpgrade":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
@@ -1051,9 +1054,10 @@ func (p *Manager) InPlaceUpgradeCluster(ctx context.Context, req cluster.Upgrade
 	}
 
 	data := map[string]interface{}{
-		ContextClusterMeta:    clusterMeta,
-		ContextUpgradeVersion: req.TargetVersion,
-		ContextUpgradeWay:     req.UpgradeWay,
+		ContextClusterMeta:     clusterMeta,
+		ContextOriginalVersion: clusterMeta.Cluster.Version,
+		ContextUpgradeVersion:  req.TargetVersion,
+		ContextUpgradeWay:      req.UpgradeWay,
 	}
 	var flowID string
 	if req.UpgradeWay == string(constants.UpgradeWayOnline) {

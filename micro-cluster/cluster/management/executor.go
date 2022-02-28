@@ -1807,6 +1807,7 @@ func upgradeCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 		"get start cluster %s operation id: %s", clusterMeta.Cluster.ID, operationID)
 	node.Record(fmt.Sprintf("upgrade cluster %s version to %s from %s", clusterMeta.Cluster.ID, version, clusterInfo.Version))
 	node.OperationID = operationID
+	clusterInfo.Version = version
 	return nil
 }
 
@@ -1859,5 +1860,9 @@ func checkSystemHealth(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 }
 
 func revertConfigAfterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
+	clusterInfo := clusterMeta.Cluster
+	originalVersion := context.GetData(ContextOriginalVersion).(string)
+	clusterInfo.Version = originalVersion
 	return nil
 }

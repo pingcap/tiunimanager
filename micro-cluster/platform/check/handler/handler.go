@@ -94,6 +94,13 @@ type HealthInfo struct {
 	Health   bool   `json:"health"`
 }
 
+type ReportInterface interface {
+	ParseFrom(ctx context.Context, checkID string) error
+	CheckTenants(ctx context.Context) error
+	CheckHosts(ctx context.Context) error
+	Serialize(ctx context.Context) (string, error)
+}
+
 func (p *Report) ParseFrom(ctx context.Context, checkID string) error {
 	rw := models.GetReportReaderWriter()
 	reportInfo, err := rw.GetReport(ctx, checkID)

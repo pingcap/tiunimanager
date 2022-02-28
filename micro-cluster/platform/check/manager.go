@@ -27,7 +27,8 @@ import (
 )
 
 const (
-	ContextCheckID = "CheckID"
+	ContextCheckID    = "CheckID"
+	ContextReportInfo = "ReportInfo"
 )
 
 type CheckManager struct{}

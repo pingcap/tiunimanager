@@ -1826,7 +1826,7 @@ func Test_compareConfigDifference(t *testing.T) {
 			UnitOptions:  []string{"KB", "MB", "GB"},
 			Range:        []string{"1, 10000"},
 			RangeType:    1,
-			Description:  "param2 desc",
+			Description:  "param3 desc",
 		},
 	}
 

@@ -22,6 +22,12 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 )
 
+type HostInstanceItem struct {
+	HostID    string
+	ClusterID string
+	Component string
+}
+
 type ReaderWriter interface {
 	Create(ctx context.Context, cluster *Cluster) (*Cluster, error)
 	Delete(ctx context.Context, clusterID string) (err error)
@@ -64,6 +70,16 @@ type ReaderWriter interface {
 	// @return error
 	//
 	QueryInstancesByHost(ctx context.Context, hostId string, typeFilter []string, statusFilter []string) ([]*ClusterInstance, error)
+
+	//
+	// QueryHostInstances
+	// @Description: query the all instances on hosts
+	// @param ctx
+	// @param hostIds
+	// @return []HostInstanceItem
+	// @return error
+	//
+	QueryHostInstances(ctx context.Context, hostIds []string) ([]HostInstanceItem, error)
 
 	//
 	// UpdateClusterInfo

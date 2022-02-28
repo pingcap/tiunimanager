@@ -834,6 +834,53 @@ func TestClusterReadWrite_QueryInstancesByHost(t *testing.T) {
 	})
 }
 
+func TestClusterReadWrite_QueryHostInstances(t *testing.T) {
+	got, _ := testRW.Create(context.TODO(), &Cluster{
+		Name: "testQueryInstance",
+		Entity: common.Entity{
+			TenantId: "testQueryInstance",
+		},
+		Tags: []string{"tag1", "tag2"},
+	})
+	defer testRW.Delete(context.TODO(), got.ID)
+
+	instances := []*ClusterInstance{
+		{HostID: "testHostId3", Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceRunning)}, ClusterID: got.ID, Type: "TiKV", Version: "v5.0.0"},
+		{Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceInitializing)}, ClusterID: got.ID, Type: "PD", Version: "v5.0.0"},
+		{HostID: "testHostId3", Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceFailure)}, ClusterID: got.ID, Type: "CDC", Version: "v5.0.0"},
+	}
+	testRW.UpdateInstance(context.TODO(), instances...)
+
+	got2, _ := testRW.Create(context.TODO(), &Cluster{
+		Name: "another",
+		Entity: common.Entity{
+			TenantId: "testQueryInstance",
+		},
+		Tags: []string{"tag1", "tag2"},
+	})
+	defer testRW.Delete(context.TODO(), got2.ID)
+
+	instances2 := []*ClusterInstance{
+		{HostID: "testHostId3", Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceRecovering)}, ClusterID: got2.ID, Type: "TiKV", Version: "v5.0.0"},
+		{HostID: "testHostId3", Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceInitializing)}, ClusterID: got2.ID, Type: "PD", Version: "v5.0.0"},
+		{Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceRecovering)}, ClusterID: got2.ID, Type: "CDC", Version: "v5.0.0"},
+		{HostID: "testHostId4", Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceRecovering)}, ClusterID: got2.ID, Type: "TiDB", Version: "v5.0.0"},
+		{HostID: "testHostId4", Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceInitializing)}, ClusterID: got2.ID, Type: "TiFlash", Version: "v5.0.0"},
+	}
+	testRW.UpdateInstance(context.TODO(), instances2...)
+
+	t.Run("normal", func(t *testing.T) {
+		items, err := testRW.QueryHostInstances(context.TODO(), []string{"testHostId3"})
+		assert.NoError(t, err)
+		assert.Equal(t, 4, len(items))
+	})
+	t.Run("two hosts", func(t *testing.T) {
+		items, err := testRW.QueryHostInstances(context.TODO(), []string{"testHostId3", "testHostId4"})
+		assert.NoError(t, err)
+		assert.Equal(t, 6, len(items))
+	})
+}
+
 func TestClusterReadWrite_CreateDBUser(t *testing.T) {
 	user := &DBUser{
 		ClusterID:                "clusterid",

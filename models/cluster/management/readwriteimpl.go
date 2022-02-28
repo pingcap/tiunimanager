@@ -242,6 +242,19 @@ func (g *ClusterReadWrite) QueryInstancesByHost(ctx context.Context, hostId stri
 	return instances, dbCommon.WrapDBError(err)
 }
 
+func (g *ClusterReadWrite) QueryHostInstances(ctx context.Context, hostIds []string) ([]HostInstanceItem, error) {
+	db := g.DB(ctx).Table("cluster_instances").Select("host_id, cluster_id, type as component")
+	if hostIds != nil {
+		db.Where("host_id in ?", hostIds)
+	}
+	db.Group("host_id").Group("cluster_id").Group("type")
+
+	items := make([]HostInstanceItem, 0)
+	err := db.Scan(&items).Error
+
+	return items, dbCommon.WrapDBError(err)
+}
+
 func (g *ClusterReadWrite) UpdateInstance(ctx context.Context, instances ...*ClusterInstance) error {
 	return g.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		toCreate := make([]*ClusterInstance, 0)

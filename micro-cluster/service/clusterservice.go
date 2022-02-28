@@ -1483,7 +1483,7 @@ func (handler *ClusterServiceHandler) CheckPlatform(ctx context.Context, request
 	defer metrics.HandleClusterMetrics(start, "CheckPlatform", int(response.GetCode()))
 
 	req := message.CheckPlatformReq{}
-	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionRead)}}) {
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionCreate)}}) {
 		resp, err := handler.checkManager.Check(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
@@ -1555,6 +1555,7 @@ func (handler *ClusterServiceHandler) GetCheckReport(ctx context.Context, reques
 	}
 	return nil
 }
+
 func (handler *ClusterServiceHandler) UpgradeCluster(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "UpgradeCluster", int(resp.GetCode()))

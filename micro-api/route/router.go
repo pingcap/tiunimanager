@@ -82,8 +82,8 @@ func Route(g *gin.Engine) {
 			platform.Use(interceptor.VerifyIdentity)
 			platform.Use(interceptor.AuditLog)
 			platform.POST("/check", metrics.HandleMetrics(constants.MetricsPlatformCheck), platformApi.Check)
-			platform.GET("/report/:checkId", metrics.HandleMetrics(constants.MetricsQueryCheckReports), platformApi.GetCheckReport)
-			platform.GET("/reports", metrics.HandleMetrics(constants.MetricsGetCheckReport), platformApi.QueryCheckReports)
+			platform.GET("/report/:checkId", metrics.HandleMetrics(constants.MetricsGetCheckReport), platformApi.GetCheckReport)
+			platform.GET("/reports", metrics.HandleMetrics(constants.MetricsQueryCheckReports), platformApi.QueryCheckReports)
 		}
 
 		user := apiV1.Group("/users")

@@ -124,6 +124,7 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 		LogLevel:           "info",
 		EMClusterName:      "em-test",
 		EMVersion:          "InTesting",
+		DeployUser:         "test-user",
 	}
 	f.parseArgs(serviceName)
 
@@ -284,6 +285,16 @@ func GetPrivateKeyFilePath(userName string) (keyPath string) {
 func GetPublicKeyFilePath(userName string) (keyPath string) {
 	keyPath = fmt.Sprintf("/home/%s/.ssh/id_rsa.pub", userName)
 	return
+}
+
+func GetTiupHomePathForTiem() string {
+	userName := GetCurrentDeployUser()
+	return fmt.Sprintf("/home/%s/.em", userName)
+}
+
+func GetTiupHomePathForTidb() string {
+	userName := GetCurrentDeployUser()
+	return fmt.Sprintf("/home/%s/.tiup", userName)
 }
 
 func GetTiupAuthorizaitonFlag() (flags []string) {

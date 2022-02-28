@@ -133,9 +133,10 @@ func parameterFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) 
 	}
 
 	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	// If the reload fails, then do a meta rollback
 	taskId, err := deployment.M.EditConfig(ctx, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID,
-		clusterConfigStr.(string), "/home/tiem/.tiup", node.ParentID, []string{}, 0)
+		clusterConfigStr.(string), tiupHomeForTidb, node.ParentID, []string{}, 0)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call secondparty tiup rollback global config task id = %v, err = %s", taskId, err.Error())
 		return err
@@ -532,8 +533,9 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 	framework.LogWithContext(ctx).Debugf("modify global component configs: %v", configs)
 
 	// invoke tiup show-config
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	topoStr, err := deployment.M.ShowConfig(ctx, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID,
-		"/home/tiem/.tiup", []string{}, meta.DefaultTiupTimeOut)
+		tiupHomeForTidb, []string{}, meta.DefaultTiupTimeOut)
 	if err != nil {
 		return err
 	}
@@ -549,7 +551,7 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 		return err
 	}
 	editConfigId, err := deployment.M.EditConfig(ctx, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID,
-		yamlConfig, "/home/tiem/.tiup", node.ParentID, []string{}, 0)
+		yamlConfig, tiupHomeForTidb, node.ParentID, []string{}, 0)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call secondparty tiup edit global config err = %s", err.Error())
 		return err
@@ -707,8 +709,8 @@ func refreshParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 			flags = append(flags, "-N")
 			flags = append(flags, strings.Join(modifyParam.Nodes, ","))
 		}
-
-		reloadId, err := deployment.M.Reload(ctx, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID, "/home/tiem/.tiup", node.ParentID, flags, 0)
+		tiupHomeForTidb := framework.GetTiupHomePathForTidb()
+		reloadId, err := deployment.M.Reload(ctx, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID, tiupHomeForTidb, node.ParentID, flags, 0)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("call tiup api edit global config err = %s", err.Error())
 			return err

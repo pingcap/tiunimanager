@@ -21,6 +21,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/platform/check"
 	"github.com/pingcap-inc/tiem/models/platform/product"
 	"github.com/pingcap-inc/tiem/models/platform/system"
@@ -506,6 +507,21 @@ func GetSystemReaderWriter() system.ReaderWriter {
 
 func SetSystemReaderWriter(rw system.ReaderWriter) {
 	defaultDb.systemReaderWriter = rw
+}
+
+// Transaction
+// @Description: Transaction for service
+// @Parameter ctx
+// @Parameter fc
+// @return error
+func Transaction(ctx context.Context, fc func(transactionCtx context.Context) error) error {
+	if defaultDb.base == nil {
+		return fc(ctx)
+	}
+	db := defaultDb.base.WithContext(ctx)
+	return db.Transaction(func(tx *gorm.DB) error {
+		return fc(common.CtxWithTransaction(ctx, tx))
+	})
 }
 
 func MockDB() {

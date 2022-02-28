@@ -82,12 +82,13 @@ func (p *FileHostInitiator) Prepare(ctx context.Context, h *structs.HostInfo) (e
 		return err
 	}
 
-	// tiup args should be: []string{"--user", "xxx", "-i", "/home/tiem/.ssh/tiup_rsa", "--apply", "--format", "json"}
+	// tiup args should be: []string{"--user", "xxx", "-i", "/home/tidb/.ssh/tiup_rsa", "--apply", "--format", "json"}
 	args := framework.GetTiupAuthorizaitonFlag()
 	args = append(args, "--apply")
 	args = append(args, "--format")
 	args = append(args, "json")
-	resultStr, err := deployment.M.CheckConfig(ctx, deployment.TiUPComponentTypeCluster, templateStr, "/home/tiem/.tiup",
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
+	resultStr, err := deployment.M.CheckConfig(ctx, deployment.TiUPComponentTypeCluster, templateStr, tiupHomeForTidb,
 		args, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
 		errMsg := fmt.Sprintf("call deployment serv to apply host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
@@ -127,11 +128,12 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 	}
 	log.Infof("verify host %s %s ignore warning (%t)", h.HostName, h.IP, ignoreWarnings)
 
-	// tiup args should be: []string{"--user", "xxx", "-i", "/home/tiem/.ssh/tiup_rsa", "--format", "json"}
+	// tiup args should be: []string{"--user", "xxx", "-i", "/home/tidb/.ssh/tiup_rsa", "--format", "json"}
 	args := framework.GetTiupAuthorizaitonFlag()
 	args = append(args, "--format")
 	args = append(args, "json")
-	resultStr, err := deployment.M.CheckConfig(ctx, deployment.TiUPComponentTypeCluster, templateStr, "/home/tiem/.tiup",
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
+	resultStr, err := deployment.M.CheckConfig(ctx, deployment.TiUPComponentTypeCluster, templateStr, tiupHomeForTidb,
 		args, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
 		errMsg := fmt.Sprintf("call deployment serv to check host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
@@ -188,7 +190,8 @@ func (p *FileHostInitiator) PreCheckHostInstallFilebeat(ctx context.Context, hos
 	emClusterName := framework.Current.GetClientArgs().EMClusterName
 
 	// Parse EM topology structure to check whether filebeat has been installed already
-	result, err := p.deploymentServ.Display(ctx, deployment.TiUPComponentTypeTiEM, emClusterName, "/home/tiem/.tiuptiem", []string{"--json"}, rp_consts.DefaultTiupTimeOut)
+	tiupHomeForTiem := framework.GetTiupHomePathForTiem()
+	result, err := p.deploymentServ.Display(ctx, deployment.TiUPComponentTypeEM, emClusterName, tiupHomeForTiem, []string{"--json"}, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
 		log.Errorf("precheck before join em cluster failed, %v", err)
 		return false, errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "precheck join em cluster %s failed, %v", emClusterName, err)
@@ -234,8 +237,9 @@ func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.H
 	emClusterName := framework.Current.GetClientArgs().EMClusterName
 	framework.LogWithContext(ctx).Infof("join em cluster %s with work flow id %s", emClusterName, workFlowID)
 	args := framework.GetTiupAuthorizaitonFlag()
-	operationID, err = deployment.M.ScaleOut(ctx, deployment.TiUPComponentTypeTiEM, emClusterName, templateStr,
-		"/home/tiem/.tiuptiem", workFlowID, args, rp_consts.DefaultTiupTimeOut)
+	tiupHomeForTiem := framework.GetTiupHomePathForTiem()
+	operationID, err = deployment.M.ScaleOut(ctx, deployment.TiUPComponentTypeEM, emClusterName, templateStr,
+		tiupHomeForTiem, workFlowID, args, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
 		return "", errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "join em cluster %s [%v] failed, %v", emClusterName, templateStr, err)
 	}
@@ -253,9 +257,10 @@ func (p *FileHostInitiator) LeaveEMCluster(ctx context.Context, nodeId string) (
 	}
 
 	emClusterName := framework.Current.GetClientArgs().EMClusterName
+	tiupHomeForTiem := framework.GetTiupHomePathForTiem()
 	framework.LogWithContext(ctx).Infof("leave em cluster %s with work flow id %s", emClusterName, workFlowID)
-	operationID, err = deployment.M.ScaleIn(ctx, deployment.TiUPComponentTypeTiEM, emClusterName,
-		nodeId, "/home/tiem/.tiuptiem",
+	operationID, err = deployment.M.ScaleIn(ctx, deployment.TiUPComponentTypeEM, emClusterName,
+		nodeId, tiupHomeForTiem,
 		workFlowID, []string{}, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
 		return "", errors.NewErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "leave em cluster %s [%s] failed, %v", emClusterName, nodeId, err)
@@ -295,7 +300,7 @@ func (p *FileHostInitiator) isVirtualMachine(ctx context.Context, h *structs.Hos
 	log.Infof("begin to check host manufacturer on host %s %s", h.HostName, h.IP)
 	vmManufacturer := []string{"QEMU", "XEN", "KVM", "VMWARE", "VIRTUALBOX", "VBOX", "ORACLE", "MICROSOFT", "ZVM", "BOCHS", "PARALLELS", "UML"}
 	dmidecodeCmd := "dmidecode -s system-manufacturer | tr -d '\n'"
-	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, rp_consts.DefaultCopySshIDTimeOut, []string{dmidecodeCmd})
+	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{dmidecodeCmd})
 	if err != nil {
 		log.Errorf("execute %s on host %s %s failed, %v", dmidecodeCmd, h.HostName, h.IP, err)
 		return false, err

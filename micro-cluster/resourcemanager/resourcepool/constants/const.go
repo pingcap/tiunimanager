@@ -34,8 +34,8 @@ const (
 const (
 	HostSSHPort       = 22
 	HostFileBeatPort  = 0
-	FileBeatDataDir   = "/tiem-data"
-	FileBeatDeployDir = "/tiem-deploy"
+	FileBeatDataDir   = "/em-data"
+	FileBeatDeployDir = "/em-deploy"
 )
 
 const (

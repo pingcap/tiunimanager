@@ -37,7 +37,7 @@ type TiUPComponentType string
 const (
 	TiUPComponentTypeCluster TiUPComponentType = "cluster"
 	TiUPComponentTypeDM      TiUPComponentType = "dm"
-	TiUPComponentTypeTiEM    TiUPComponentType = "tiem"
+	TiUPComponentTypeEM      TiUPComponentType = "em"
 	TiUPComponentTypeCtrl    TiUPComponentType = "ctl"
 	TiUPComponentTypeDefault TiUPComponentType = "default"
 )

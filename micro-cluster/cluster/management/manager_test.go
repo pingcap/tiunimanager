@@ -1771,6 +1771,21 @@ func Test_compareConfigDifference(t *testing.T) {
 			RangeType:   1,
 			Description: "param2 desc",
 		},
+		{
+			ParamId:      "3",
+			Category:     "basic3",
+			Name:         "param3",
+			InstanceType: "pd",
+			RealValue: structs.ParameterRealValue{
+				ClusterValue: "",
+			},
+			Type:        3,
+			Unit:        "KB",
+			UnitOptions: []string{"KB", "MB", "GB"},
+			Range:       []string{"1, 10000"},
+			RangeType:   1,
+			Description: "param3 desc",
+		},
 	}
 
 	pgParamInfos := []structs.ParameterGroupParameterInfo{
@@ -1800,6 +1815,19 @@ func Test_compareConfigDifference(t *testing.T) {
 			RangeType:    1,
 			Description:  "param2 desc",
 		},
+		{
+			ID:           "3",
+			Category:     "basic3",
+			Name:         "param3",
+			InstanceType: "pd",
+			DefaultValue: " ",
+			Type:         3,
+			Unit:         "KB",
+			UnitOptions:  []string{"KB", "MB", "GB"},
+			Range:        []string{"1, 10000"},
+			RangeType:    1,
+			Description:  "param2 desc",
+		},
 	}
 
 	resp := compareConfigDifference(context.TODO(), cParamInfos, pgParamInfos)
@@ -1816,7 +1844,7 @@ func Test_compareConfigDifference(t *testing.T) {
 		UnitOptions:  []string{"KB", "MB", "GB"},
 		Range:        []string{"1, 100"},
 		RangeType:    1,
-		Description:  "param1 desc",
+		Description:  "param3 desc",
 	}
 	assert.Equal(t, item, *resp[0])
 }

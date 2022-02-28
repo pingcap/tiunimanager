@@ -1017,7 +1017,7 @@ func compareConfigDifference(ctx context.Context, clusterParameterInfos []struct
 		framework.LogWithContext(ctx).Debugf("check clusterParam (%v)", clusterParam)
 		if pgParam, ok := pgParamMap[id]; ok {
 			framework.LogWithContext(ctx).Debugf("compare clusterParam (%v) and pgParam (%v)", clusterParam, pgParam)
-			if clusterParam.RealValue.ClusterValue != pgParam.DefaultValue {
+			if strings.Trim(clusterParam.RealValue.ClusterValue, " ") != strings.Trim(pgParam.DefaultValue, " ") {
 				resp = append(resp, &structs.ProductUpgradeVersionConfigDiffItem{
 					ParamId:      id,
 					Category:     pgParam.Category,

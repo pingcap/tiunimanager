@@ -68,7 +68,7 @@ http {
 
         location ~ ^/env {
             default_type application/json;
-            return 200 '{"protocol": "{{.Protocol}}", "tlsPort": {{.TlsPort}}, "service": {"grafana": "http://{{.GrafanaAddress}}/d/tiem000001/tiem-server?orgId=1&refresh=10s&kiosk=tv", "kibana": "http://{{.KibanaAddress}}/app/discover", "alert": "http://{{.AlertManagerAddress}}", "tracer": "http://{{.TracerAddress}}"}}';
+            return 200 '{"protocol": "{{.Protocol}}", "tlsPort": {{.TlsPort}}, "service": {"grafana": "http://{{.GrafanaAddress}}/d/em000001/tiem-server?orgId=1&refresh=10s&kiosk=tv", "kibana": "http://{{.KibanaAddress}}/app/discover", "alert": "http://{{.AlertManagerAddress}}", "tracer": "http://{{.TracerAddress}}"}}';
         }
 
         location = /upstream_show {

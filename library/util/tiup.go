@@ -33,8 +33,8 @@ import (
 func GetTiUPHomeForComponent(ctx context.Context, tiUPComponent deployment.TiUPComponentType) string {
 	var component string
 	switch tiUPComponent {
-	case deployment.TiUPComponentTypeTiEM:
-		component = string(deployment.TiUPComponentTypeTiEM)
+	case deployment.TiUPComponentTypeEM:
+		component = string(deployment.TiUPComponentTypeEM)
 	default:
 		component = string(deployment.TiUPComponentTypeDefault)
 	}

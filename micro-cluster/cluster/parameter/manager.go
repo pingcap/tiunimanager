@@ -691,8 +691,9 @@ func inspectConfigParameter(ctx context.Context, instance *management.ClusterIns
 	framework.LogWithContext(ctx).Debugf("current instance type %s config path is %s", instance.Type, configPath)
 
 	// Call the pull command to get the instance configuration
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	configContentStr, err := deployment.M.Pull(ctx, deployment.TiUPComponentTypeCluster, instance.ClusterID, configPath,
-		"/home/tiem/.tiup", []string{"-N", instance.HostIP[0]}, 0)
+		tiupHomeForTidb, []string{"-N", instance.HostIP[0]}, 0)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call secondparty tiup pull %s config err = %s", instance.Type, err.Error())
 		return inspectParams, err

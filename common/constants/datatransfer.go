@@ -27,8 +27,8 @@ package constants
 type TransportType string
 
 const (
-	DefaultImportPath        string        = "/home/tiem/import"
-	DefaultExportPath        string        = "/home/tiem/export"
+	DefaultImportPath        string        = "/home/tidb/import"
+	DefaultExportPath        string        = "/home/tidb/export"
 	DefaultZipName           string        = "data.zip"
 	DefaultDumplingThreadNum string        = "8"
 	TransportTypeExport      TransportType = "export"

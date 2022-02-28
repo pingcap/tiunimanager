@@ -25,6 +25,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models"
 
+	cluster_rw "github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/resource"
 	"github.com/pingcap-inc/tiem/models/resource/resourcepool"
 )
@@ -223,4 +224,39 @@ func (p *FileHostProvider) GetStocks(ctx context.Context, location *structs.Loca
 		}
 	}
 	return stocks, nil
+}
+
+func (p *FileHostProvider) buildInstancesOnHost(ctx context.Context, items []cluster_rw.HostInstanceItem) map[string]map[string][]string {
+	result := make(map[string]map[string][]string)
+	for i := range items {
+		if instances, ok := result[items[i].HostID]; !ok {
+			result[items[i].HostID] = make(map[string][]string)
+			result[items[i].HostID][items[i].ClusterID] = []string{items[i].Component}
+		} else {
+			instances[items[i].ClusterID] = append(instances[items[i].ClusterID], items[i].Component)
+		}
+	}
+	return result
+}
+
+func (p *FileHostProvider) GetInstancesOnHost(ctx context.Context, hosts []structs.HostInfo) (err error) {
+	clusterRW := models.GetClusterReaderWriter()
+	var hostIds []string
+
+	items, err := clusterRW.QueryHostInstances(ctx, hostIds)
+	if err != nil {
+		return err
+	}
+
+	instances := p.buildInstancesOnHost(ctx, items)
+
+	for i := range hosts {
+		if hostInstances, ok := instances[hosts[i].ID]; ok {
+			hosts[i].Instances = hostInstances
+		} else {
+			hosts[i].Instances = make(map[string][]string)
+		}
+	}
+
+	return nil
 }

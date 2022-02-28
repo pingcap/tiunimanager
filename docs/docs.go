@@ -4655,7 +4655,7 @@ var doc = `{
                 "tags": [
                     "resource"
                 ],
-                "summary": "Show all hosts list in TiEM",
+                "summary": "Show all hosts list in EM",
                 "parameters": [
                     {
                         "type": "string",
@@ -4752,7 +4752,7 @@ var doc = `{
                 "tags": [
                     "resource"
                 ],
-                "summary": "Import a batch of hosts to TiEM",
+                "summary": "Import a batch of hosts to EM",
                 "parameters": [
                     {
                         "type": "string",
@@ -10752,8 +10752,8 @@ var SwaggerInfo = swaggerInfo{
 	Host:        "localhost:4116",
 	BasePath:    "/api/v1/",
 	Schemes:     []string{},
-	Title:       "TiEM UI API",
-	Description: "TiEM UI API",
+	Title:       "EM UI API",
+	Description: "EM UI API",
 }
 
 type s struct{}

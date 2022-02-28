@@ -105,16 +105,16 @@ func collectorClusterLogConfig(node *workflowModel.WorkFlowNode, ctx *workflow.F
 func getDeployInfo(clusterMeta *meta.ClusterMeta, ctx *workflow.FlowContext, hostIP string) (deployment.TiUPComponentType, string, string, string, error) {
 	deployDir := "/tiem-test/filebeat"
 	clusterComponentType := deployment.TiUPComponentTypeCluster
-	home := "/home/tiem/.tiup"
+	home := framework.GetTiupHomePathForTidb()
 	clusterName := clusterMeta.Cluster.ID
 	if framework.Current.GetClientArgs().EMClusterName != "" {
-		deployDir = "/tiem-deploy/filebeat-0"
-		clusterComponentType = deployment.TiUPComponentTypeTiEM
-		home = "/home/tiem/.tiuptiem"
+		deployDir = "/em-deploy/filebeat-0"
+		clusterComponentType = deployment.TiUPComponentTypeEM
+		home = framework.GetTiupHomePathForTiem()
 		clusterName = framework.Current.GetClientArgs().EMClusterName
 
 		// Parse EM topology structure to get filebeat deploy dir
-		result, err := deployment.M.Display(ctx, clusterComponentType, clusterName, "/home/tiem/.tiuptiem", []string{"--json"}, 0)
+		result, err := deployment.M.Display(ctx, clusterComponentType, clusterName, framework.GetTiupHomePathForTiem(), []string{"--json"}, 0)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("invoke tiup cluster display err： %v", err)
 			return "", "", "", "", err

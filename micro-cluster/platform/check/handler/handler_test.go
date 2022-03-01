@@ -533,3 +533,113 @@ func TestReport_GetClusterAccountStatus(t *testing.T) {
 	})
 }
 
+func TestReport_GetClusterRegionStatus(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	models.MockDB()
+
+	t.Run("get region status error", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+			{
+				Entity: common.Entity{
+					ID:     "instance",
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Type:   "PD",
+				HostIP: []string{"127.0.0.3"},
+				Ports:  []int32{8001},
+			},
+		}, make([]*management.DBUser, 0), nil)
+
+		report := &Report{}
+		_, err := report.GetClusterRegionStatus(ctx.TODO(), "111")
+		assert.Error(t, err)
+	})
+
+	t.Run("get cluster meta error", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+			{
+				Entity: common.Entity{
+					ID:     "instance",
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Type:   "PD",
+				HostIP: []string{"127.0.0.3"},
+				Ports:  []int32{8001},
+			},
+		}, make([]*management.DBUser, 0), errors.New("get cluster meta error"))
+		report := &Report{}
+		_, err := report.GetClusterRegionStatus(ctx.TODO(), "111")
+		assert.Error(t, err)
+	})
+
+	t.Run("pd address is empty", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{},
+			[]*management.ClusterInstance{}, make([]*management.DBUser, 0), nil)
+		report := &Report{}
+		_, err := report.GetClusterRegionStatus(ctx.TODO(), "111")
+		assert.Error(t, err)
+	})
+}
+
+func TestReport_GetClusterHealthStatus(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	models.MockDB()
+
+	t.Run("get cluster meta error", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+			{
+				Entity: common.Entity{
+					ID:     "instance",
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Type:   "PD",
+				HostIP: []string{"127.0.0.3"},
+				Ports:  []int32{8001},
+			},
+		}, make([]*management.DBUser, 0), errors.New("get cluster meta error"))
+		report := &Report{}
+		_, err := report.GetClusterHealthStatus(ctx.TODO(), "111")
+		assert.Error(t, err)
+	})
+
+	t.Run("pd address is empty", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{},
+			[]*management.ClusterInstance{}, make([]*management.DBUser, 0), nil)
+		report := &Report{}
+		_, err := report.GetClusterHealthStatus(ctx.TODO(), "111")
+		assert.Error(t, err)
+	})
+
+	t.Run("get health status error", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+			{
+				Entity: common.Entity{
+					ID:     "instance",
+					Status: string(constants.ClusterInstanceRunning),
+				},
+				Type:   "PD",
+				HostIP: []string{"127.0.0.3"},
+				Ports:  []int32{8001},
+			},
+		}, make([]*management.DBUser, 0), nil)
+
+		report := &Report{}
+		_, err := report.GetClusterHealthStatus(ctx.TODO(), "111")
+		assert.Error(t, err)
+	})
+}
+

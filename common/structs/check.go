@@ -60,6 +60,7 @@ type TenantCheck struct {
 type ClusterCheck struct {
 	ID                string                             `json:"clusterID"`
 	MaintenanceStatus constants.ClusterMaintenanceStatus `json:"maintenanceStatus"`
+	Status            string                             `json:"runningStatus"`
 	CPU               int32                              `json:"cpu"`
 	Memory            int32                              `json:"memory"`
 	Storage           int32                              `json:"storage"`

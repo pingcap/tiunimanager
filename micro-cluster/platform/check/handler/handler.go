@@ -390,48 +390,57 @@ func (p *Report) CheckClusters(ctx context.Context, clusterMetas []*management.R
 	clusterChecks := make([]structs.ClusterCheck, 0)
 
 	for _, meta := range clusterMetas {
-		allocatedCPUCores, allocatedMemory, allocatedStorage := p.GetClusterAllocatedResource(ctx, meta)
-		copies, err := p.GetClusterCopies(ctx, meta.Cluster.ID)
-		if err != nil {
-			return clusterChecks, err
+		if meta.Cluster.Status == string(constants.ClusterRunning) {
+			allocatedCPUCores, allocatedMemory, allocatedStorage := p.GetClusterAllocatedResource(ctx, meta)
+			copies, err := p.GetClusterCopies(ctx, meta.Cluster.ID)
+			if err != nil {
+				return clusterChecks, err
+			}
+			accountStatus, err := p.GetClusterAccountStatus(ctx, meta.Cluster.ID)
+			if err != nil {
+				return clusterChecks, err
+			}
+			topologyCheck, err := p.GetClusterTopology(ctx, meta.Cluster.ID)
+			if err != nil {
+				return clusterChecks, err
+			}
+			regionStatus, err := p.GetClusterRegionStatus(ctx, meta.Cluster.ID)
+			if err != nil {
+				return clusterChecks, err
+			}
+			healthStatus, err := p.GetClusterHealthStatus(ctx, meta.Cluster.ID)
+			if err != nil {
+				return clusterChecks, err
+			}
+			instanceChecks, err := p.CheckInstances(ctx, meta.Instances)
+			if err != nil {
+				return clusterChecks, err
+			}
+			clusterChecks = append(clusterChecks, structs.ClusterCheck{
+				ID:                meta.Cluster.ID,
+				MaintenanceStatus: meta.Cluster.MaintenanceStatus,
+				Status:            meta.Cluster.Status,
+				CPU:               allocatedCPUCores,
+				Memory:            allocatedMemory,
+				Storage:           allocatedStorage,
+				Copies: structs.CheckInt32{
+					Valid:         copies == int32(meta.Cluster.Copies),
+					RealValue:     copies,
+					ExpectedValue: int32(meta.Cluster.Copies),
+				},
+				AccountStatus: accountStatus,
+				HealthStatus:  healthStatus,
+				Topology:      topologyCheck,
+				RegionStatus:  regionStatus,
+				Instances:     instanceChecks,
+			})
+		} else {
+			clusterChecks = append(clusterChecks, structs.ClusterCheck{
+				ID:                meta.Cluster.ID,
+				MaintenanceStatus: meta.Cluster.MaintenanceStatus,
+				Status:            meta.Cluster.Status,
+			})
 		}
-		accountStatus, err := p.GetClusterAccountStatus(ctx, meta.Cluster.ID)
-		if err != nil {
-			return clusterChecks, err
-		}
-		topologyCheck, err := p.GetClusterTopology(ctx, meta.Cluster.ID)
-		if err != nil {
-			return clusterChecks, err
-		}
-		regionStatus, err := p.GetClusterRegionStatus(ctx, meta.Cluster.ID)
-		if err != nil {
-			return clusterChecks, err
-		}
-		healthStatus, err := p.GetClusterHealthStatus(ctx, meta.Cluster.ID)
-		if err != nil {
-			return clusterChecks, err
-		}
-		instanceChecks, err := p.CheckInstances(ctx, meta.Instances)
-		if err != nil {
-			return clusterChecks, err
-		}
-		clusterChecks = append(clusterChecks, structs.ClusterCheck{
-			ID:                meta.Cluster.ID,
-			MaintenanceStatus: meta.Cluster.MaintenanceStatus,
-			CPU:               allocatedCPUCores,
-			Memory:            allocatedMemory,
-			Storage:           allocatedStorage,
-			Copies: structs.CheckInt32{
-				Valid:         copies == int32(meta.Cluster.Copies),
-				RealValue:     copies,
-				ExpectedValue: int32(meta.Cluster.Copies),
-			},
-			AccountStatus: accountStatus,
-			HealthStatus:  healthStatus,
-			Topology:      topologyCheck,
-			RegionStatus:  regionStatus,
-			Instances:     instanceChecks,
-		})
 	}
 	return clusterChecks, nil
 }
@@ -469,6 +478,9 @@ func (p *Report) CheckTenant(ctx context.Context, tenantID string) error {
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get tenant %s error: %s", tenantID, err.Error())
 		return err
+	}
+	if p.Info == nil {
+		p.Info = &structs.CheckReportInfo{}
 	}
 	if len(p.Info.Tenants) == 0 {
 		p.Info.Tenants = make(map[string]structs.TenantCheck)

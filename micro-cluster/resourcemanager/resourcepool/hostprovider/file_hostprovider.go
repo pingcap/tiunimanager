@@ -84,6 +84,12 @@ func (p *FileHostProvider) QueryHosts(ctx context.Context, location *structs.Loc
 		dbhost.ToHostInfo(&host)
 		hosts = append(hosts, host)
 	}
+
+	err = p.getInstancesOnHosts(ctx, hosts)
+	if err != nil {
+		// maybe query cluster_instances table failed, return hosts info without instances relationship
+		framework.LogWithContext(ctx).Warnf("get hosts instances failed, %v", err)
+	}
 	return
 }
 
@@ -239,9 +245,12 @@ func (p *FileHostProvider) buildInstancesOnHost(ctx context.Context, items []clu
 	return result
 }
 
-func (p *FileHostProvider) GetInstancesOnHost(ctx context.Context, hosts []structs.HostInfo) (err error) {
+func (p *FileHostProvider) getInstancesOnHosts(ctx context.Context, hosts []structs.HostInfo) (err error) {
 	clusterRW := models.GetClusterReaderWriter()
 	var hostIds []string
+	for i := range hosts {
+		hostIds = append(hostIds, hosts[i].ID)
+	}
 
 	items, err := clusterRW.QueryHostInstances(ctx, hostIds)
 	if err != nil {

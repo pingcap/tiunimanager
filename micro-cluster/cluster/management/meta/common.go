@@ -20,18 +20,22 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/workflow"
+	"math/rand"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/deployment"
+	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
+	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/workflow"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 )
@@ -89,6 +93,64 @@ func Contain(list interface{}, target interface{}) bool {
 	return false
 }
 
+// CompareTiDBVersion
+// @Description compare TiDB versions, such as v5.1.0 and v4.0.0
+// @Parameter   v1 and v2
+// @Return      if v1 >= v2 return true
+// @Return      error
+func CompareTiDBVersion(v1, v2 string) (bool, error) {
+	v1Nums := strings.Split(v1[1:len(v1)], ".")
+	v2Nums := strings.Split(v2[1:len(v2)], ".")
+
+	if len(v1Nums) != 3 || len(v2Nums) != 3 {
+		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+			"TiDB version format is invalid")
+	}
+
+	v1MajorVersionNumber, err := strconv.Atoi(v1Nums[0])
+	if err != nil {
+		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "TiDB version %s format is invalid", v1)
+	}
+	v2MajorVersionNumber, err := strconv.Atoi(v2Nums[0])
+	if err != nil {
+		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "TiDB version %s format is invalid", v2)
+	}
+	v1MinorVersionNumber, err := strconv.Atoi(v1Nums[1])
+	if err != nil {
+		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "TiDB version %s format is invalid", v1)
+	}
+	v2MinorVersionNumber, err := strconv.Atoi(v2Nums[1])
+	if err != nil {
+		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "TiDB version %s format is invalid", v2)
+	}
+	v1RevisionVersionNumber, err := strconv.Atoi(v1Nums[2])
+	if err != nil {
+		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "TiDB version %s format is invalid", v1)
+	}
+	v2RevisionVersionNumber, err := strconv.Atoi(v2Nums[2])
+	if err != nil {
+		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "TiDB version %s format is invalid", v2)
+	}
+
+	if v1MajorVersionNumber > v2MajorVersionNumber {
+		return true, nil
+	} else if v1MajorVersionNumber < v2MajorVersionNumber {
+		return false, nil
+	} else {
+		if v1MinorVersionNumber > v2MinorVersionNumber {
+			return true, nil
+		} else if v1MinorVersionNumber < v2MinorVersionNumber {
+			return false, nil
+		} else {
+			if v1RevisionVersionNumber >= v2RevisionVersionNumber {
+				return true, nil
+			} else {
+				return false, nil
+			}
+		}
+	}
+}
+
 // ScaleOutPreCheck
 // @Description when scale out TiFlash, check placement rules
 //				when scale out PD, suggest pd instances 1,3,5,7
@@ -100,6 +162,7 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "parameter is invalid!")
 	}
 
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	for _, component := range computes {
 		// Suggest PD instances 1, 3, 5, 7
 		if component.Type == string(constants.ComponentIDPD) {
@@ -117,8 +180,8 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 			}
 			pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
 
-			config, err := secondparty.Manager.ClusterComponentCtl(ctx, secondparty.CTLComponentTypeStr,
-				meta.Cluster.Version, spec.ComponentPD, []string{"-u", pdID, "config", "show", "replication"}, DefaultTiupTimeOut)
+			config, err := deployment.M.Ctl(ctx, deployment.TiUPComponentTypeCtrl, meta.Cluster.Version, spec.ComponentPD,
+				tiupHomeForTidb, []string{"-u", pdID, "config", "show", "replication"}, DefaultTiupTimeOut)
 			if err != nil {
 				return err
 			}
@@ -211,6 +274,14 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 // When use CDCSyncClone strategy to clone cluster, source cluster must have CDC
 func ClonePreCheck(ctx context.Context, sourceMeta *ClusterMeta, meta *ClusterMeta, cloneStrategy string) error {
 	if cloneStrategy == string(constants.CDCSyncClone) {
+		cmp, err := CompareTiDBVersion(sourceMeta.Cluster.Version, "v5.2.2")
+		if err != nil {
+			return err
+		}
+		if !cmp {
+			return errors.NewErrorf(errors.TIEM_CHECK_CLUSTER_VERSION_ERROR,
+				"cluster %s version must be greater than or equal to v5.2.2", sourceMeta.Cluster.ID)
+		}
 		if _, ok := sourceMeta.Instances[string(constants.ComponentIDCDC)]; !ok {
 			return errors.NewErrorf(errors.TIEM_CDC_NOT_FOUND,
 				"cluster %s not found CDC, which cloned by %s", sourceMeta.Cluster.ID, cloneStrategy)
@@ -255,4 +326,59 @@ func WaitWorkflow(ctx context.Context, workflowID string, interval, timeout time
 	}
 
 	return nil
+}
+
+const retainedPortCount = 2
+
+// getRetainedPortRange
+// @Description: get retained port range for all clusters
+// @Parameter ctx
+// @return []int
+// @return error
+func getRetainedPortRange(ctx context.Context) ([]int, error) {
+	configResp, err := config.NewSystemConfigManager().GetSystemConfig(ctx, message.GetSystemConfigReq{
+		ConfigKey: constants.ConfigKeyRetainedPortRange,
+	})
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get config %s failed, err = %s", constants.ConfigKeyRetainedPortRange, err.Error())
+		return nil, err
+	}
+
+	if len(configResp.ConfigValue) == 0 {
+		err = errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_CONFIG, "missing config %s", constants.ConfigKeyRetainedPortRange)
+		framework.LogWithContext(ctx).Error(err)
+		return nil, err
+	}
+
+	portRange := make([]int, retainedPortCount)
+	err = json.Unmarshal([]byte(configResp.ConfigValue), &portRange)
+	if err != nil {
+		err = errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_CONFIG, "invalid value for config %s, value = %s", constants.ConfigKeyRetainedPortRange, configResp.ConfigValue)
+		framework.LogWithContext(ctx).Error(err)
+		return nil, err
+	}
+	return portRange, nil
+}
+
+func GetProductDetail(ctx context.Context, vendor, region, clusterType string) (*structs.ProductDetail, error) {
+	products, err := models.GetProductReaderWriter().QueryProductDetail(ctx, vendor, region, clusterType, constants.ProductStatusOnline, constants.EMInternalProductNo)
+	if err != nil {
+		errMsg := fmt.Sprintf("get product detail failed, vendor = %s, region = %s, productID = %s", vendor, region, clusterType)
+		framework.LogWithContext(ctx).Errorf("%s, err = %s", errMsg, err.Error())
+		return nil, err
+	}
+	if product, ok := products[clusterType]; !ok {
+		errMsg := fmt.Sprintf("product is not existed, vendor = %s, region = %s, productID = %s", vendor, region, clusterType)
+		framework.LogWithContext(ctx).Error(errMsg)
+		return nil, errors.NewErrorf(errors.TIEM_UNSUPPORT_PRODUCT, errMsg)
+	} else {
+		return &product, nil
+	}
+}
+
+// GetRandomString get random password
+func GetRandomString(n int) string {
+	randBytes := make([]byte, n/2)
+	rand.Read(randBytes)
+	return fmt.Sprintf("%x", randBytes)
 }

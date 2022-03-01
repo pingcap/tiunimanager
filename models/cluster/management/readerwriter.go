@@ -17,6 +17,7 @@ package management
 
 import (
 	"context"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 )
@@ -29,6 +30,8 @@ type ReaderWriter interface {
 	GetRelations(ctx context.Context, clusterID string) ([]*ClusterRelation, error)
 
 	QueryMetas(ctx context.Context, filters Filters, pageReq structs.PageRequest) ([]*Result, structs.Page, error)
+
+	GetInstance(ctx context.Context, ID string) (*ClusterInstance, error)
 
 	DeleteInstance(ctx context.Context, ID string) error
 
@@ -106,6 +109,7 @@ type ReaderWriter interface {
 
 	CreateRelation(ctx context.Context, relation *ClusterRelation) error
 	DeleteRelation(ctx context.Context, relationID uint) error
+	SwapMasterSlaveRelation(ctx context.Context, oldMasterClusterId, oldSlaveClusterId, newSyncChangeFeedTaskId string) error
 
 	CreateClusterTopologySnapshot(ctx context.Context, snapshot ClusterTopologySnapshot) error
 	GetCurrentClusterTopologySnapshot(ctx context.Context, clusterID string) (ClusterTopologySnapshot, error)

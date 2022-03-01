@@ -18,8 +18,11 @@ package meta
 import (
 	"context"
 	"errors"
-	"fmt"
+	errors2 "github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap-inc/tiem/models/platform/config"
+	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"sort"
 	"testing"
@@ -139,6 +142,12 @@ func TestClusterMeta_AddDefaultInstances(t *testing.T) {
 }
 
 func TestClusterMeta_GenerateInstanceResourceRequirements(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	productRW := mock_product.NewMockProductReadWriterInterface(ctrl)
+	models.SetProductReaderWriter(productRW)
+
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -149,7 +158,7 @@ func TestClusterMeta_GenerateInstanceResourceRequirements(t *testing.T) {
 			},
 			Name:              "koojdafij",
 			Type:              "TiDB",
-			Version:           "v5.0.0",
+			Version:           "v5.2.2",
 			Tags:              []string{"111", "333"},
 			OwnerId:           "436534636u",
 			ParameterGroupID:  "352467890",
@@ -212,13 +221,344 @@ func TestClusterMeta_GenerateInstanceResourceRequirements(t *testing.T) {
 	}
 
 	t.Run("normal", func(t *testing.T) {
-		got1, got2 := meta.GenerateInstanceResourceRequirements(context.TODO())
+		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
+			"TiDB": {
+				Versions: map[string]structs.ProductVersion{
+					"v5.2.2": {
+						Version: "v5.2.2",
+						Arch: map[string][]structs.ProductComponentProperty{
+							"x86_64": {
+								{
+									ID:                      "TiDB",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+								{
+									ID:                      "TiKV",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+								{
+									ID:                      "PD",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{1, 3, 5, 7},
+								},
+								{
+									ID:                      "TiFlash",
+									MinInstance:             0,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+							},
+						},
+					},
+				},
+			},
+		}, nil).Times(1)
+
+		got1, got2, err := meta.GenerateInstanceResourceRequirements(context.TODO())
 		assert.Equal(t, 3, len(got1))
 		assert.Equal(t, 3, len(got2))
+		assert.NoError(t, err)
 	})
 }
 
+func TestClusterMeta_GetClusterComponentProperties(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	productRW := mock_product.NewMockProductReadWriterInterface(ctrl)
+	models.SetProductReaderWriter(productRW)
+	meta := &ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID:        "2145635758",
+				TenantId:  "324567",
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+			Name:              "koojdafij",
+			Type:              "TiDB",
+			Version:           "v5.2.2",
+			Tags:              []string{"111", "333"},
+			OwnerId:           "436534636u",
+			ParameterGroupID:  "352467890",
+			Copies:            4,
+			Region:            "Region1",
+			Exclusive:         false,
+			CpuArchitecture:   "x86_64",
+			MaintenanceStatus: constants.ClusterMaintenanceCreating,
+		},
+		Instances: map[string][]*management.ClusterInstance{
+			"TiDB": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceInitializing),
+					},
+					Zone:         "zone1",
+					CpuCores:     4,
+					Memory:       8,
+					Type:         "TiDB",
+					Version:      "v5.0.0",
+					Ports:        []int32{10001, 10002, 10003, 10004},
+					HostIP:       []string{"127.0.0.1"},
+					DiskType:     "SSD",
+					DiskCapacity: 128,
+				},
+			},
+			"TiKV": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceInitializing),
+					},
+					Zone:         "zone1",
+					CpuCores:     4,
+					Memory:       8,
+					Type:         "TiKV",
+					Version:      "v5.0.0",
+					Ports:        []int32{20001, 20002, 20003, 20004},
+					HostIP:       []string{"127.0.0.2"},
+					DiskType:     "SSD",
+					DiskCapacity: 128,
+				},
+			},
+			"PD": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceInitializing),
+					},
+					Zone:         "zone1",
+					CpuCores:     4,
+					Memory:       8,
+					Type:         "PD",
+					Version:      "v5.0.0",
+					Ports:        []int32{30001, 30002, 30003, 30004},
+					HostIP:       []string{"127.0.0.3"},
+					DiskType:     "SSD",
+					DiskCapacity: 128,
+				},
+			},
+		},
+	}
+
+	t.Run("normal", func(t *testing.T) {
+		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
+			"TiDB": {
+				Versions: map[string]structs.ProductVersion{
+					"v5.2.2": {
+						Version: "v5.2.2",
+						Arch: map[string][]structs.ProductComponentProperty{
+							"x86_64": {
+								{
+									ID:                      "TiDB",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+								{
+									ID:                      "TiKV",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+								{
+									ID:                      "PD",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{1, 3, 5, 7},
+								},
+								{
+									ID:                      "TiFlash",
+									MinInstance:             0,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+							},
+						},
+					},
+				},
+			},
+		}, nil).Times(1)
+		_, err := meta.GetClusterComponentProperties(context.TODO())
+		assert.NoError(t, err)
+	})
+	t.Run("error", func(t *testing.T) {
+		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
+			"TiDB": {
+				Versions: map[string]structs.ProductVersion{
+					"v5.2.2": {
+						Version: "v5.2.2",
+						Arch: map[string][]structs.ProductComponentProperty{
+							"x86_64": {
+								{
+									ID:                      "TiDB",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+								{
+									ID:                      "TiKV",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+								{
+									ID:                      "PD",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{1, 3, 5, 7},
+								},
+								{
+									ID:                      "TiFlash",
+									MinInstance:             0,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+							},
+						},
+					},
+				},
+			},
+		}, errors2.Error(errors2.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		_, err := meta.GetClusterComponentProperties(context.TODO())
+		assert.Error(t, err)
+	})
+
+	t.Run("type error", func(t *testing.T) {
+		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
+			"whatever": {
+				Versions: map[string]structs.ProductVersion{
+					"v5.2.2": {
+						Version: "v5.2.2",
+						Arch: map[string][]structs.ProductComponentProperty{
+							"x86_64": {
+								{
+									ID:                      "TiDB",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+								{
+									ID:                      "TiKV",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+								{
+									ID:                      "PD",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{1, 3, 5, 7},
+								},
+								{
+									ID:                      "TiFlash",
+									MinInstance:             0,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+							},
+						},
+					},
+				},
+			},
+		}, nil).Times(1)
+		_, err := meta.GetClusterComponentProperties(context.TODO())
+		assert.Error(t, err)
+	})
+	t.Run("version error", func(t *testing.T) {
+		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
+			"TiDB": {
+				Versions: map[string]structs.ProductVersion{
+					"v5.4.2": {
+						Version: "v5.2.2",
+						Arch: map[string][]structs.ProductComponentProperty{
+							"x86_64": {
+								{
+									ID:                      "TiDB",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+								{
+									ID:                      "TiKV",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+								{
+									ID:                      "PD",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{1, 3, 5, 7},
+								},
+								{
+									ID:                      "TiFlash",
+									MinInstance:             0,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+							},
+						},
+					},
+				},
+			},
+		}, nil).Times(1)
+		_, err := meta.GetClusterComponentProperties(context.TODO())
+		assert.Error(t, err)
+	})
+	t.Run("arch error", func(t *testing.T) {
+		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
+			"TiDB": {
+				Versions: map[string]structs.ProductVersion{
+					"v5.2.2": {
+						Version: "v5.2.2",
+						Arch: map[string][]structs.ProductComponentProperty{
+							"amd64": {
+								{
+									ID:                      "TiDB",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+								{
+									ID:                      "TiKV",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+								{
+									ID:                      "PD",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{1, 3, 5, 7},
+								},
+								{
+									ID:                      "TiFlash",
+									MinInstance:             0,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+							},
+						},
+					},
+				},
+			},
+		}, nil).Times(1)
+		_, err := meta.GetClusterComponentProperties(context.TODO())
+		assert.Error(t, err)
+	})
+
+}
 func TestClusterMeta_GenerateGlobalPortRequirements(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	rw := mockconfig.NewMockReaderWriter(ctrl)
+	models.SetConfigReaderWriter(rw)
+
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -243,8 +583,19 @@ func TestClusterMeta_GenerateGlobalPortRequirements(t *testing.T) {
 	}
 
 	t.Run("normal", func(t *testing.T) {
-		got := meta.GenerateGlobalPortRequirements(context.TODO())
+		rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{
+			ConfigValue: "[10,11]",
+		}, nil).Times(1)
+		got, err := meta.GenerateGlobalPortRequirements(context.TODO())
+		assert.NoError(t, err)
 		assert.Equal(t, 1, len(got))
+	})
+	t.Run("error", func(t *testing.T) {
+		rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{
+			ConfigValue: "",
+		}, nil).Times(1)
+		_, err := meta.GenerateGlobalPortRequirements(context.TODO())
+		assert.Error(t, err)
 	})
 }
 
@@ -411,14 +762,110 @@ func TestClusterMeta_GetInstance(t *testing.T) {
 }
 
 func TestClusterMeta_IsComponentRequired(t *testing.T) {
-	meta := &ClusterMeta{
-		Cluster: &management.Cluster{
-			Type:    "TiDB",
-			Version: "v4.0.12",
-		},
-	}
-	assert.True(t, meta.IsComponentRequired(context.TODO(), "TiKV"))
-	assert.False(t, meta.IsComponentRequired(context.TODO(), "TiFlash"))
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	productRW := mock_product.NewMockProductReadWriterInterface(ctrl)
+	models.SetProductReaderWriter(productRW)
+
+	t.Run("error", func(t *testing.T) {
+		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
+			"TiDB": {
+				Versions: map[string]structs.ProductVersion{
+					"v5.2.2": {
+						Version: "v5.2.2",
+						Arch: map[string][]structs.ProductComponentProperty{
+							"x86_64": {
+								{
+									ID:                      "TiDB",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+								{
+									ID:                      "TiKV",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+								{
+									ID:                      "PD",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{1, 3, 5, 7},
+								},
+								{
+									ID:                      "TiFlash",
+									MinInstance:             0,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+							},
+						},
+					},
+				},
+			},
+		}, nil).Times(1)
+
+		meta := &ClusterMeta{
+			Cluster: &management.Cluster{
+				Type:    "TiDB",
+				Version: "v5.0.0",
+				CpuArchitecture: "x86_64",
+			},
+		}
+		assert.False(t, meta.IsComponentRequired(context.TODO(), "TiKV"))
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
+			"TiDB": {
+				Versions: map[string]structs.ProductVersion{
+					"v5.2.2": {
+						Version: "v5.2.2",
+						Arch: map[string][]structs.ProductComponentProperty{
+							"x86_64": {
+								{
+									ID:                      "TiDB",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+								{
+									ID:                      "TiKV",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+								{
+									ID:                      "PD",
+									MinInstance:             1,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{1, 3, 5, 7},
+								},
+								{
+									ID:                      "TiFlash",
+									MinInstance:             0,
+									MaxInstance:             8,
+									SuggestedInstancesCount: []int32{},
+								},
+							},
+						},
+					},
+				},
+			},
+		}, nil).Times(2)
+
+		meta := &ClusterMeta{
+			Cluster: &management.Cluster{
+				Type:    "TiDB",
+				Version: "v5.2.2",
+				CpuArchitecture: "x86_64",
+			},
+		}
+		assert.True(t, meta.IsComponentRequired(context.TODO(), "TiKV"))
+		assert.False(t, meta.IsComponentRequired(context.TODO(), "TiFlash"))
+	})
 }
 
 func TestClusterMeta_DeleteInstance(t *testing.T) {
@@ -484,7 +931,6 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(rw)
 
-	rw.EXPECT().CreateRelation(gomock.Any(), gomock.Any()).Return(nil)
 	rw.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&management.Cluster{Entity: common.Entity{ID: "cluster01"}}, nil)
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
@@ -521,9 +967,18 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 			Name:       "cluster01",
 			DBPassword: "1234",
 			Region:     "Region01",
+		}, []structs.ClusterResourceParameterCompute{
+			{"TiDB", 2, []structs.ClusterResourceParameterComputeResource{
+				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+			}},
+			{"TiKV", 2, []structs.ClusterResourceParameterComputeResource{
+				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+			}},
 		})
 		assert.NoError(t, err)
-		assert.Equal(t, 1, len(got.Instances))
+		assert.Equal(t, 5, len(got.Instances))
 	})
 
 	t.Run("version error", func(t *testing.T) {
@@ -533,6 +988,15 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 			DBPassword: "1234",
 			Region:     "Region01",
 			Version:    "v3.0.0",
+		}, []structs.ClusterResourceParameterCompute{
+			{"TiDB", 2, []structs.ClusterResourceParameterComputeResource{
+				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+			}},
+			{"TiKV", 2, []structs.ClusterResourceParameterComputeResource{
+				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+			}},
 		})
 		assert.Error(t, err)
 	})
@@ -546,9 +1010,10 @@ func TestClusterMeta_GetRelations(t *testing.T) {
 
 	rw.EXPECT().GetRelations(gomock.Any(), "111").Return([]*management.ClusterRelation{
 		{
-			RelationType:     constants.ClusterRelationCloneFrom,
-			SubjectClusterID: "111",
-			ObjectClusterID:  "222",
+			RelationType:         constants.ClusterRelationStandBy,
+			SubjectClusterID:     "111",
+			ObjectClusterID:      "222",
+			SyncChangeFeedTaskID: "task01",
 		},
 	}, nil)
 	meta := &ClusterMeta{
@@ -1041,6 +1506,67 @@ func TestClusterMeta_Display(t *testing.T) {
 					HostIP:   []string{"127.0.0.1"},
 				},
 			},
+			"AlertManger": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone:     "zone1",
+					CpuCores: 4,
+					Memory:   8,
+					Type:     "AlertManger",
+					Version:  "v5.0.0",
+					HostIP:   []string{"127.0.0.1"},
+					Ports:    []int32{999},
+				},
+			},
+			"TiKV": {
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone:     "zone1",
+					CpuCores: 4,
+					Memory:   8,
+					Type:     "TiKV",
+					Version:  "v5.0.0",
+					HostIP:   []string{"127.0.0.1"},
+				},
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone:     "zone1",
+					CpuCores: 3,
+					Memory:   7,
+					Type:     "TiKV",
+					Version:  "v5.0.0",
+					HostIP:   []string{"127.0.0.1"},
+				},
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone:     "zone2",
+					CpuCores: 4,
+					Memory:   8,
+					Type:     "TiKV",
+					Version:  "v5.0.0",
+					HostIP:   []string{"127.0.0.1"},
+				},
+				{
+					Entity: common.Entity{
+						Status: string(constants.ClusterInstanceRunning),
+					},
+					Zone:     "zone1",
+					CpuCores: 4,
+					Memory:   8,
+					Type:     "TiKV",
+					Version:  "v5.0.0",
+					HostIP:   []string{"127.0.0.1"},
+					Ports:    []int32{1},
+				},
+			},
 			"TiDB": {
 				{
 					Entity: common.Entity{
@@ -1093,7 +1619,6 @@ func TestClusterMeta_Display(t *testing.T) {
 					HostIP:   []string{"127.0.0.1"},
 				},
 			},
-
 			"Grafana": {
 				{
 					Entity: common.Entity{
@@ -1106,67 +1631,6 @@ func TestClusterMeta_Display(t *testing.T) {
 					Version:  "v5.0.0",
 					HostIP:   []string{"127.4.5.6"},
 					Ports:    []int32{888},
-				},
-			},
-			"TiKV": {
-				{
-					Entity: common.Entity{
-						Status: string(constants.ClusterInstanceRunning),
-					},
-					Zone:     "zone1",
-					CpuCores: 4,
-					Memory:   8,
-					Type:     "TiKV",
-					Version:  "v5.0.0",
-					HostIP:   []string{"127.0.0.1"},
-				},
-				{
-					Entity: common.Entity{
-						Status: string(constants.ClusterInstanceRunning),
-					},
-					Zone:     "zone1",
-					CpuCores: 3,
-					Memory:   7,
-					Type:     "TiKV",
-					Version:  "v5.0.0",
-					HostIP:   []string{"127.0.0.1"},
-				},
-				{
-					Entity: common.Entity{
-						Status: string(constants.ClusterInstanceRunning),
-					},
-					Zone:     "zone2",
-					CpuCores: 4,
-					Memory:   8,
-					Type:     "TiKV",
-					Version:  "v5.0.0",
-					HostIP:   []string{"127.0.0.1"},
-				},
-				{
-					Entity: common.Entity{
-						Status: string(constants.ClusterInstanceRunning),
-					},
-					Zone:     "zone1",
-					CpuCores: 4,
-					Memory:   8,
-					Type:     "TiKV",
-					Version:  "v5.0.0",
-					HostIP:   []string{"127.0.0.1"},
-					Ports:    []int32{1},
-				},
-			},
-			"AlertManger": {
-				{
-					Entity: common.Entity{
-						Status: string(constants.ClusterInstanceRunning),
-					},
-					Zone:     "zone1",
-					CpuCores: 4,
-					Memory:   8,
-					Type:     "AlertManger",
-					Version:  "v5.0.0",
-					HostIP:   []string{"127.0.0.1"},
-					Ports:    []int32{999},
 				},
 			},
 		},
@@ -1189,16 +1653,14 @@ func TestClusterMeta_Display(t *testing.T) {
 	})
 	t.Run("instance", func(t *testing.T) {
 		topology, resource := meta.DisplayInstanceInfo(context.TODO())
-		assert.Equal(t, 8, len(topology.Topology))
+		// sorted topology
+		assert.Equal(t, 11, len(topology.Topology))
 		assert.Equal(t, topology.Topology[1].Type, topology.Topology[0].Type)
 		assert.NotEqual(t, topology.Topology[3].Type, topology.Topology[4].Type)
 
-		assert.Equal(t, 2, len(resource.InstanceResource))
-		assert.Equal(t, 4, resource.InstanceResource[0].Count)
+		// unsorted instanceResource
+		assert.Equal(t, 5, len(resource.InstanceResource))
 		assert.NotEqual(t, resource.InstanceResource[0].Type, resource.InstanceResource[1].Type)
-		assert.Equal(t, 3, len(resource.InstanceResource[1].Resource))
-		assert.Equal(t, 2, resource.InstanceResource[0].Resource[0].Count)
-		assert.Equal(t, 1, resource.InstanceResource[1].Resource[1].Count)
 	})
 }
 
@@ -1484,24 +1946,6 @@ func TestClusterMeta_GetVersion(t *testing.T) {
 
 }
 
-func TestGetRandomString(t *testing.T) {
-	type args struct {
-		n int
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-		{"normal", args{10}},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := GetRandomString(tt.args.n)
-			fmt.Println(got)
-		})
-	}
-}
 
 func TestClusterMeta_BuildForTakeover(t *testing.T) {
 	ctrl := gomock.NewController(t)

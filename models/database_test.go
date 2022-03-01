@@ -16,13 +16,22 @@
 package models
 
 import (
+	"context"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/models/platform/system"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 )
 
 func TestGetReaderWriter(t *testing.T) {
+	err := Open(framework.Current.(*framework.BaseFramework))
+	assert.NoError(t, err)
+	defer func() {
+		defaultDb = nil
+		os.RemoveAll(framework.Current.(*framework.BaseFramework).GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName)
+	}()
 	assert.NotEmpty(t, GetBRReaderWriter())
 	SetBRReaderWriter(nil)
 	assert.Empty(t, GetBRReaderWriter())
@@ -78,7 +87,196 @@ func TestGetReaderWriter(t *testing.T) {
 	assert.NotEmpty(t, GetProductReaderWriter())
 	SetProductReaderWriter(nil)
 	assert.Empty(t, GetProductReaderWriter())
-	MockDB()
+
+	assert.NotEmpty(t, GetUpgradeReaderWriter())
+	SetUpgradeReaderWriter(nil)
+	assert.Empty(t, GetUpgradeReaderWriter())
+
+	assert.NotEmpty(t, GetSystemReaderWriter())
+	SetSystemReaderWriter(nil)
+	assert.Empty(t, GetSystemReaderWriter())
+}
+
+func Test_Open(t *testing.T) {
+	// open
+	err := Open(framework.Current.(*framework.BaseFramework))
+	defer func() {
+		defaultDb = nil
+		os.RemoveAll(framework.Current.(*framework.BaseFramework).GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName)
+	}()
+	assert.NoError(t, err)
+
+	// reopen
+	err = Open(framework.Current.(*framework.BaseFramework))
+	assert.NoError(t, err)
+}
+
+var mockVersionInitializers =  []system.VersionInitializer {
+	{"", fullDataBeforeVersions},
+	{"v1", func() error {
+		return defaultDb.base.Create(&system.VersionInfo {
+			ID: "v1",
+			Desc: "v1",
+			ReleaseNote: "v1",
+		}).Error
+	}},
+	{"v2", func() error {
+		return defaultDb.base.Create(&system.VersionInfo {
+			ID: "v2",
+			Desc: "v2",
+			ReleaseNote: "v2",
+		}).Error
+	}},
+	{"v3", func() error {
+		return defaultDb.base.Create(&system.VersionInfo {
+			ID: "v3",
+			Desc: "v3",
+			ReleaseNote: "v3",
+		}).Error
+	}},
+	{"v4", func() error {
+		return defaultDb.base.Create(&system.VersionInfo {
+			ID: "v4",
+			Desc: "v4",
+			ReleaseNote: "v4",
+		}).Error
+	}},
+}
+
+func Test_MockVersionData(t *testing.T) {
+	temp := allVersionInitializers
+	defer func() {
+		allVersionInitializers = temp
+	}()
+	allVersionInitializers = mockVersionInitializers
+
+	// open empty
+	err := Open(framework.Current.(*framework.BaseFramework))
+	defer func() {
+		defaultDb = nil
+		os.RemoveAll(framework.Current.(*framework.BaseFramework).GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName)
+	}()
+	assert.NoError(t, err)
+
+	// return error if targetVersion is empty
+	err = IncrementVersionData("", "")
+	assert.Error(t, err)
+
+	// reopen and upgrade from empty version to v2
+	err = IncrementVersionData("", "v2")
+	assert.NoError(t, err)
+	v := &system.VersionInfo{}
+
+	// v1 existed
+	v.ID = "v1"
+	err = defaultDb.base.First(v).Error
+	assert.NoError(t, err)
+
+	// v2 existed
+	v.ID = "v2"
+	err = defaultDb.base.First(v).Error
+	assert.NoError(t, err)
+
+	// v3 is not existed
+	v.ID = "v3"
+	err = defaultDb.base.First(v).Error
+	assert.Error(t, err)
+
+	// reopen
+	err = IncrementVersionData("v2", "v2")
+	assert.NoError(t, err)
+
+	// reopen and upgrade from v2 to v3
+	err = IncrementVersionData("v2", "v3")
+	assert.NoError(t, err)
+	// v1 existed
+	v.ID = "v1"
+	err = defaultDb.base.First(v).Error
+	assert.NoError(t, err)
+
+	// v2 existed
+	v.ID = "v2"
+	err = defaultDb.base.First(v).Error
+	assert.NoError(t, err)
+
+	// v3 existed
+	v.ID = "v3"
+	err = defaultDb.base.First(v).Error
+	assert.NoError(t, err)
+
+	// reopen and upgrade from v3 to v1
+	err = IncrementVersionData("v3", "v1")
+	assert.Error(t, err)
+
+	// reopen and upgrade to empty version
+	err = IncrementVersionData("v3", "")
+	assert.Error(t, err)
+}
+
+func Test_RealVersionData(t *testing.T) {
+	temp := allVersionInitializers
+	defer func() {
+		allVersionInitializers = temp
+	}()
+	allVersionInitializers = mockVersionInitializers
+
+	// open empty
+	err := Open(framework.Current.(*framework.BaseFramework))
+	defer func() {
+		defaultDb = nil
+		os.RemoveAll(framework.Current.(*framework.BaseFramework).GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName)
+	}()
+	assert.NoError(t, err)
+
+	// return error if targetVersion is empty
+	err = IncrementVersionData("", "")
+	assert.Error(t, err)
+
+	// reopen and upgrade from empty version to v2
+	err = IncrementVersionData("", "v2")
+	assert.NoError(t, err)
+	v := &system.VersionInfo{}
+
+	// v1 existed
+	v.ID = "v1"
+	err = defaultDb.base.First(v).Error
+	assert.NoError(t, err)
+
+	// v2 existed
+	v.ID = "v2"
+	err = defaultDb.base.First(v).Error
+	assert.NoError(t, err)
+
+	// v3 is not existed
+	v.ID = "v3"
+	err = defaultDb.base.First(v).Error
+	assert.Error(t, err)
+
+	// reopen and upgrade from v2 to v3
+	err = IncrementVersionData("v2", "v3")
+	assert.NoError(t, err)
+	// v1 existed
+	v.ID = "v1"
+	err = defaultDb.base.First(v).Error
+	assert.NoError(t, err)
+
+	// v2 existed
+	v.ID = "v2"
+	err = defaultDb.base.First(v).Error
+	assert.NoError(t, err)
+
+	// v3 existed
+	v.ID = "v3"
+	err = defaultDb.base.First(v).Error
+	assert.NoError(t, err)
+
+	// reopen and upgrade from v3 to v1
+	err = IncrementVersionData("v3", "v1")
+	assert.Error(t, err)
+
+	// reopen and upgrade to empty version
+	err = IncrementVersionData("v3", "")
+	assert.Error(t, err)
 }
 
 func TestMain(m *testing.M) {
@@ -86,13 +284,73 @@ func TestMain(m *testing.M) {
 	framework.InitBaseFrameworkForUt(framework.ClusterService,
 		func(d *framework.BaseFramework) error {
 			testFilePath = d.GetDataDir()
-			os.MkdirAll(testFilePath, 0755)
-
-			return Open(d, false)
+			return os.MkdirAll(testFilePath, 0755)
 		},
 	)
 	code := m.Run()
 	os.RemoveAll(testFilePath)
 
 	os.Exit(code)
+}
+
+func TestTransaction(t *testing.T) {
+	Open(framework.Current.(*framework.BaseFramework))
+	defer func() {
+		defaultDb = nil
+		os.RemoveAll(framework.Current.(*framework.BaseFramework).GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName)
+	}()
+
+	t.Run("normal", func(t *testing.T) {
+		defer GetSystemReaderWriter().UpdateState(context.TODO(), "Running", "Initialing")
+		err := Transaction(context.TODO(), func(transactionCtx context.Context) error {
+			GetSystemReaderWriter().UpdateVersion(transactionCtx, "999")
+			return GetSystemReaderWriter().UpdateState(transactionCtx, "Initialing", "Running")
+		})
+		assert.NoError(t, err)
+		info, err := GetSystemReaderWriter().GetSystemInfo(context.TODO())
+		assert.NoError(t, err)
+		assert.Equal(t, "999", info.CurrentVersionID)
+		assert.Equal(t, "Running", string(info.State))
+		// revert
+	})
+
+	t.Run("rollback", func(t *testing.T) {
+		GetSystemReaderWriter().UpdateVersion(context.TODO(), "444")
+		err := Transaction(context.TODO(), func(transactionCtx context.Context) error {
+			GetSystemReaderWriter().UpdateVersion(transactionCtx, "333")
+			return GetSystemReaderWriter().UpdateState(transactionCtx, "Upgrading", "Running")
+		})
+		assert.Error(t, err)
+		info, err := GetSystemReaderWriter().GetSystemInfo(context.TODO())
+		assert.NoError(t, err)
+		assert.NotEqual(t, "333", info.CurrentVersionID)
+		assert.Equal(t, "444", info.CurrentVersionID)
+		assert.NotEqual(t, "Running", string(info.State))
+		assert.Equal(t, "Initialing", string(info.State))
+	})
+
+	t.Run("not in a transaction", func(t *testing.T) {
+		err := Transaction(context.TODO(), func(transactionCtx context.Context) error {
+			GetSystemReaderWriter().UpdateVersion(context.TODO(), "555")
+			return GetSystemReaderWriter().UpdateState(transactionCtx, "Upgrading", "Running")
+		})
+		assert.Error(t, err)
+		info, err := GetSystemReaderWriter().GetSystemInfo(context.TODO())
+		assert.NoError(t, err)
+		assert.Equal(t, "555", info.CurrentVersionID)
+		assert.NotEqual(t, "Running", string(info.State))
+		assert.Equal(t, "Initialing", string(info.State))
+	})
+
+	t.Run("mock db", func(t *testing.T) {
+		db := defaultDb
+		defer func() {
+			defaultDb = db
+		}()
+		MockDB()
+		err := Transaction(context.TODO(), func(transactionCtx context.Context) error {
+			return nil
+		})
+		assert.NoError(t, err)
+	})
 }

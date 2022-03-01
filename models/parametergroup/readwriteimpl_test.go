@@ -26,6 +26,7 @@ package parametergroup
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/pingcap-inc/tiem/message"
 
@@ -82,6 +83,7 @@ func TestParameterGroupReadWrite_CreateParameterGroup(t *testing.T) {
 						Type:           0,
 						Unit:           "mb",
 						Range:          []string{"0", "1024"},
+						RangeType:      1,
 						HasReboot:      0,
 						HasApply:       1,
 						UpdateSource:   0,
@@ -98,6 +100,7 @@ func TestParameterGroupReadWrite_CreateParameterGroup(t *testing.T) {
 						Type:           0,
 						Unit:           "",
 						Range:          nil,
+						RangeType:      1,
 						HasReboot:      0,
 						HasApply:       1,
 						UpdateSource:   0,
@@ -209,6 +212,32 @@ func TestParameterGroupReadWrite_CreateParameterGroup(t *testing.T) {
 	}
 }
 
+func TestParameterGroupReadWrite_CreateParameterGroup_Fail(t *testing.T) {
+	t.Run("create parameter group fail", func(t *testing.T) {
+		_, err := testNilRW.CreateParameterGroup(context.TODO(), &ParameterGroup{
+			Name:           "pg1",
+			ParentID:       "",
+			ClusterSpec:    "4C16G",
+			HasDefault:     1,
+			DBType:         1,
+			GroupType:      1,
+			ClusterVersion: "v5.0",
+			Note:           "",
+			CreatedAt:      time.Time{},
+			UpdatedAt:      time.Time{},
+		}, []*ParameterGroupMapping{
+			{
+				ParameterGroupID: "pg1",
+				ParameterID:      "param1",
+				DefaultValue:     "10",
+				CreatedAt:        time.Time{},
+				UpdatedAt:        time.Time{},
+			},
+		}, nil)
+		assert.Error(t, err)
+	})
+}
+
 func TestParameterGroupReadWrite_DeleteParameterGroup(t *testing.T) {
 	params, err := buildParams(2)
 	if err != nil {
@@ -274,6 +303,13 @@ func TestParameterGroupReadWrite_DeleteParameterGroup(t *testing.T) {
 	}
 }
 
+func TestParameterGroupReadWrite_DeleteParameterGroup_Fail(t *testing.T) {
+	t.Run("delete parameter group fail", func(t *testing.T) {
+		err := testNilRW.DeleteParameterGroup(context.TODO(), "pg1")
+		assert.Error(t, err)
+	})
+}
+
 func TestParameterGroupReadWrite_UpdateParameterGroup(t *testing.T) {
 	params, err := buildParams(3)
 	if err != nil {
@@ -328,6 +364,7 @@ func TestParameterGroupReadWrite_UpdateParameterGroup(t *testing.T) {
 						Type:           0,
 						Unit:           "mb",
 						Range:          []string{"0", "1024"},
+						RangeType:      1,
 						HasReboot:      0,
 						HasApply:       1,
 						UpdateSource:   0,
@@ -469,6 +506,33 @@ func TestParameterGroupReadWrite_UpdateParameterGroup(t *testing.T) {
 	}
 }
 
+func TestParameterGroupReadWrite_UpdateParameterGroup_Fail(t *testing.T) {
+	t.Run("update parameter group fail", func(t *testing.T) {
+		err := testNilRW.UpdateParameterGroup(context.TODO(), &ParameterGroup{
+			ID:             "pg1",
+			Name:           "pg1",
+			ParentID:       "1",
+			ClusterSpec:    "8C16G",
+			HasDefault:     1,
+			DBType:         1,
+			GroupType:      1,
+			ClusterVersion: "v5.0",
+			Note:           "",
+			CreatedAt:      time.Time{},
+			UpdatedAt:      time.Time{},
+		}, []*ParameterGroupMapping{
+			{
+				ParameterGroupID: "pg1",
+				ParameterID:      "param1",
+				DefaultValue:     "10",
+				CreatedAt:        time.Time{},
+				UpdatedAt:        time.Time{},
+			},
+		}, nil, nil)
+		assert.Error(t, err)
+	})
+}
+
 func TestParameterGroupReadWrite_QueryParameterGroup(t *testing.T) {
 	params, err := buildParams(2)
 	if err != nil {
@@ -540,6 +604,13 @@ func TestParameterGroupReadWrite_QueryParameterGroup(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestParameterGroupReadWrite_QueryParameterGroup_Fail(t *testing.T) {
+	t.Run("query parameter group fail", func(t *testing.T) {
+		_, _, err := testNilRW.QueryParameterGroup(context.TODO(), "pg1", "", "v5.0", 1, 1, 1, 10)
+		assert.Error(t, err)
+	})
 }
 
 func TestParameterGroupReadWrite_GetParameterGroup(t *testing.T) {
@@ -629,6 +700,13 @@ func TestParameterGroupReadWrite_GetParameterGroup(t *testing.T) {
 	}
 }
 
+func TestParameterGroupReadWrite_GetParameterGroup_Fail(t *testing.T) {
+	t.Run("get parameter group fail", func(t *testing.T) {
+		_, _, err := testNilRW.GetParameterGroup(context.TODO(), "pg1", "pg1", "")
+		assert.Error(t, err)
+	})
+}
+
 func TestParameterGroupReadWrite_CreateParameter(t *testing.T) {
 	type args struct {
 		p *Parameter
@@ -671,6 +749,7 @@ func TestParameterGroupReadWrite_CreateParameter(t *testing.T) {
 					Type:         0,
 					Unit:         "",
 					Range:        "[\"1\",\"10\"]",
+					RangeType:    1,
 					HasReboot:    0,
 					UpdateSource: 1,
 					Description:  "param 2",
@@ -1009,6 +1088,49 @@ func TestParameterGroupReadWrite_QueryParameter(t *testing.T) {
 			for i, assert := range tt.wants {
 				if !assert(tt.args, params) {
 					t.Errorf("QueryParameters() test error, testname = %v, assert %v, args = %v, got params = %v", tt.name, i, tt.args, params)
+				}
+			}
+		})
+	}
+}
+
+func TestParameterGroupReadWrite_ExistsParameter(t *testing.T) {
+	params, err := buildParams(2)
+	if err != nil {
+		t.Errorf("TestParameterGroupReadWrite_ExistsParameter() test error, build params err.")
+		return
+	}
+
+	type args struct{}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+		wants   []func(a args, p *Parameter) bool
+	}{
+		{
+			"normal",
+			args{},
+			false,
+			[]func(a args, p *Parameter) bool{
+				func(a args, p *Parameter) bool { return p != nil },
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			parameter, err := testRW.ExistsParameter(context.TODO(), params[0].Category, params[0].Name, params[0].InstanceType)
+			if err != nil {
+				if tt.wantErr {
+					return
+				}
+				t.Errorf("ExistsParameter() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			for i, assert := range tt.wants {
+				if !assert(tt.args, parameter) {
+					t.Errorf("ExistsParameter() test error, testname = %v, assert %v, args = %v, got params = %v", tt.name, i, tt.args, parameter)
 				}
 			}
 		})

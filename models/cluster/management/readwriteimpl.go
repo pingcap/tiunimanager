@@ -18,6 +18,7 @@ package management
 import (
 	"context"
 	"fmt"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -83,7 +84,7 @@ func (g *ClusterReadWrite) Get(ctx context.Context, clusterID string) (*Cluster,
 	err := g.DB(ctx).First(cluster, "id = ?", clusterID).Error
 
 	if err != nil {
-		errInfo := fmt.Sprintf("get cluster failed : clusterID = %s", clusterID)
+		errInfo := fmt.Sprintf("get cluster failed : clusterID = %s, err = %s", clusterID, err.Error())
 		framework.LogWithContext(ctx).Error(errInfo)
 
 		return nil, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, errInfo, err)
@@ -91,6 +92,15 @@ func (g *ClusterReadWrite) Get(ctx context.Context, clusterID string) (*Cluster,
 		return cluster, nil
 	}
 
+}
+
+func (g *ClusterReadWrite) GetInstance(ctx context.Context, ID string) (*ClusterInstance, error) {
+	instance := &ClusterInstance{}
+	err := g.DB(ctx).First(instance, "id = ?", ID).Error
+	if err != nil {
+		return nil, errors.WrapError(errors.TIEM_INSTANCE_NOT_FOUND, "", err)
+	}
+	return instance, nil
 }
 
 func (g *ClusterReadWrite) GetMeta(ctx context.Context, clusterID string) (cluster *Cluster, instances []*ClusterInstance, users []*DBUser, err error) {
@@ -340,6 +350,50 @@ func (g *ClusterReadWrite) DeleteRelation(ctx context.Context, relationID uint) 
 	return dbCommon.WrapDBError(err)
 }
 
+func (g *ClusterReadWrite) SwapMasterSlaveRelation(ctx context.Context, oldMasterClusterId, oldSlaveClusterId, newSyncChangeFeedTaskId string) error {
+	tx := g.DB(ctx).Begin()
+
+	if err := tx.Error; err != nil {
+		return err
+	}
+	relations := make([]*ClusterRelation, 0)
+	err := tx.Model(&ClusterRelation{}).
+		Where("subject_cluster_id  = ? ", oldMasterClusterId).
+		Where("object_cluster_id  = ? ", oldSlaveClusterId).
+		Where("relation_type  = ? ", string(constants.ClusterRelationStandBy)).
+		Find(&relations).Error
+	if err != nil {
+		err = dbCommon.WrapDBError(err)
+		tx.Rollback()
+		return err
+	}
+	framework.Assert(len(relations) > 0)
+	for _, relation := range relations {
+		framework.Assert(relation.SubjectClusterID == oldMasterClusterId)
+		framework.LogWithContext(ctx).Debugf("gorm SwapMasterSlaveRelation get relation %v %s %s %s",
+			relation.ID, relation.SubjectClusterID, relation.ObjectClusterID, relation.SyncChangeFeedTaskID)
+		err = tx.Debug().Delete(relation).Error
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("1st gorm SwapMasterSlaveRelation %s", err)
+			tx.Rollback()
+			return err
+		}
+	}
+	err = tx.Debug().Create(&ClusterRelation{
+		RelationType:         constants.ClusterRelationStandBy,
+		ObjectClusterID:      oldMasterClusterId,
+		SubjectClusterID:     oldSlaveClusterId,
+		SyncChangeFeedTaskID: newSyncChangeFeedTaskId,
+	}).Error
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("2st gorm SwapMasterSlaveRelation %s", err)
+		tx.Rollback()
+		return err
+	}
+
+	return dbCommon.WrapDBError(tx.Commit().Error)
+}
+
 func (g *ClusterReadWrite) CreateClusterTopologySnapshot(ctx context.Context, snapshot ClusterTopologySnapshot) error {
 	if len(snapshot.ClusterID) == 0 || len(snapshot.TenantID) == 0 {
 		errInfo := fmt.Sprintf("CreateClusterTopologySnapshot failed : parameter invalid, ClusterID = %s, TenantID = %s", snapshot.ClusterID, snapshot.TenantID)
@@ -394,10 +448,9 @@ func (g *ClusterReadWrite) ClearClusterPhysically(ctx context.Context, clusterID
 	}
 
 	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&ClusterInstance{}).Error
-	if err != nil {
-		return dbCommon.WrapDBError(err)
-	}
 	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&ClusterTopologySnapshot{}).Error
+	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&DBUser{}).Error
+
 	return dbCommon.WrapDBError(err)
 }
 

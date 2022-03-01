@@ -18,17 +18,18 @@ package importexport
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
+	"time"
+
 	"github.com/BurntSushi/toml"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
-	"os"
-	"strconv"
-	"time"
 )
 
 func buildDataImportConfig(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
@@ -68,15 +69,15 @@ func importDataToCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) 
 
 	framework.LogWithContext(ctx).Infof("begin do tiup tidb-lightning -config %s/tidb-lightning.toml, timeout: %d", info.ConfigPath, lightningTimeout)
 	//tiup tidb-lightning -config tidb-lightning.toml
-	importTaskId, err := secondparty.Manager.Lightning(ctx, lightningTimeout,
-		[]string{"-config", fmt.Sprintf("%s/tidb-lightning.toml", info.ConfigPath)},
-		node.ID)
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
+	importTaskId, err := deployment.M.Lightning(ctx, tiupHomeForTidb, node.ParentID, []string{"-config", fmt.Sprintf("%s/tidb-lightning.toml", info.ConfigPath)}, lightningTimeout)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call tiup lightning api failed, %s", err.Error())
 		return fmt.Errorf("call tiup lightning api failed, %s", err.Error())
 	}
 	framework.LogWithContext(ctx).Infof("call tiupmgr tidb-lightning api success, importTaskId %s", importTaskId)
 	node.Record("import data to cluster ")
+	node.OperationID = importTaskId
 	return nil
 }
 
@@ -120,16 +121,28 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 		}
 	}
 
-	//tiup dumpling -u root -P 4000 --host 127.0.0.1 --filetype sql -t 8 -o /tmp/test -r 200000 -F 256MiB --filter "user*"
+	configRW := models.GetConfigReaderWriter()
+	dumplingThreadNumConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyDumplingThreadNum)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("get conifg %s failed: %s", constants.ConfigKeyDumplingThreadNum, err.Error())
+	}
+
+	//tiup dumpling -u root -P 4000 --host 127.0.0.1 --filetype sql -t 8 -o /tmp/test -r 200000 -F 256MiB --filter "db.tb"
 	cmd := []string{"-u", info.UserName,
 		"-p", info.Password,
 		"-P", strconv.Itoa(tidbPort),
 		"--host", tidbHost,
 		"--filetype", info.FileType,
-		"-t", "8",
 		"-o", info.FilePath,
 		"-r", "200000",
-		"-F", "256MiB"}
+		"-F", "256MiB",
+		"--loglevel", "debug",
+		"--logfile", fmt.Sprintf("%s/dumpling.log", info.ConfigPath)}
+	if dumplingThreadNumConfig != nil && dumplingThreadNumConfig.ConfigValue != "" {
+		cmd = append(cmd, "-t", dumplingThreadNumConfig.ConfigValue)
+	} else {
+		cmd = append(cmd, "-t", "8")
+	}
 	if info.Filter != "" {
 		cmd = append(cmd, "--filter", info.Filter)
 	}
@@ -137,7 +150,8 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 		cmd = append(cmd, "--sql", info.Sql)
 	}
 	framework.LogWithContext(ctx).Infof("call tiupmgr dumpling api, cmd: %v, timeout: %d", cmd, dumplingTimeout)
-	exportTaskId, err := secondparty.Manager.Dumpling(ctx, dumplingTimeout, cmd, node.ID)
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
+	exportTaskId, err := deployment.M.Dumpling(ctx, tiupHomeForTidb, node.ParentID, cmd, dumplingTimeout)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call tiup dumpling api failed, %s", err.Error())
 		return fmt.Errorf("call tiup dumpling api failed, %s", err.Error())
@@ -146,6 +160,7 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	framework.LogWithContext(ctx).Infof("call tiupmgr succee, exportTaskId: %s", exportTaskId)
 	node.Record(fmt.Sprintf("export data from cluster %s ", meta.Cluster.ID),
 		fmt.Sprintf("host: %s, port: %d ", tidbHost, tidbPort))
+	node.OperationID = exportTaskId
 	return nil
 }
 

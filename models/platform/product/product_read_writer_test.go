@@ -25,11 +25,12 @@ package product
 
 import (
 	"context"
+	"testing"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var prw *ProductReadWriter
@@ -271,6 +272,39 @@ func TestProductReadWriter_QueryZones(t *testing.T) {
 		results, err = prw.QueryZones(context.TODO())
 		assert.NoError(t, err)
 		//assert.Equal(t, errors.TIEM_SQL_ERROR,err.(errors.EMError).GetCode())
+	})
+
+	prw.DB(context.TODO()).Exec("DELETE FROM zones")
+}
+
+func TestProductReadWriter_GetZone(t *testing.T) {
+	t.Run("GetZone", func(t *testing.T) {
+		var err error
+		err = prw.CreateZones(context.TODO(), zones)
+		assert.NoError(t, err)
+		var results []structs.ZoneInfo
+
+		for i := range zones {
+			result, count, err := prw.GetZone(context.TODO(), zones[i].VendorID, zones[i].RegionID, zones[i].ZoneID)
+			assert.NoError(t, err)
+			assert.Equal(t, zones[i].VendorID, result.VendorID)
+			assert.Equal(t, zones[i].RegionID, result.RegionID)
+			assert.Equal(t, zones[i].ZoneID, result.ZoneID)
+			assert.Equal(t, int64(1), count)
+
+			results = append(results, *result)
+		}
+
+		err = prw.DeleteZones(context.TODO(), results)
+		assert.NoError(t, err)
+	})
+
+	t.Run("QueryZonesWithDBError", func(t *testing.T) {
+		result, count, err := prw.GetZone(context.TODO(), "", "", "fakeZoneID")
+		assert.NotNil(t, err)
+		assert.Nil(t, result)
+		assert.Equal(t, int64(0), count)
+		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
 
 	prw.DB(context.TODO()).Exec("DELETE FROM zones")

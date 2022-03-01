@@ -19,11 +19,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
-	"time"
 )
 
 type GormChangeFeedReadWrite struct {
@@ -143,6 +144,11 @@ func (m *GormChangeFeedReadWrite) Query(ctx context.Context, clusterId string, t
 		query = query.Where("status in ?", statuses)
 	}
 
-	err = query.Order("created_at").Offset(offset).Limit(length).Find(&tasks).Count(&total).Error
+	if length == 0 {
+		err = query.Order("created_at").Offset(offset).Find(&tasks).Count(&total).Error
+	} else {
+		err = query.Order("created_at").Offset(offset).Limit(length).Find(&tasks).Count(&total).Error
+	}
+
 	return tasks, total, dbCommon.WrapDBError(err)
 }

@@ -17,6 +17,8 @@ package gormreadwrite
 
 import (
 	"context"
+	"sort"
+
 	"github.com/pingcap-inc/tiem/util/bitmap"
 	crypto "github.com/pingcap-inc/tiem/util/encrypt"
 
@@ -249,11 +251,16 @@ func (rw *GormResourceReadWrite) allocResourceInHost(ctx context.Context, tx *go
 	log := framework.LogWithContext(ctx)
 	log.Infof("allocResourceInHost[%d] for application %v, require: %v", seq, *applicant, *require)
 	hostIp := require.Location.HostIp
-	if require.Count != 1 {
-		return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "request host count should be 1 for UserSpecifyHost allocation(%d)", require.Count)
+	if hostIp == "" {
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "request should have host ip")
+	}
+	if require.Count < 1 {
+		return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "count invalid for UserSpecifyHost allocation(%d)", require.Count)
 	}
 	reqCores := require.Require.ComputeReq.CpuCores
 	reqMem := require.Require.ComputeReq.Memory
+	totalRequireCores := reqCores * require.Count
+	totalRequireMemory := reqCores * require.Count
 	exclusive := require.Require.Exclusive
 	isTakeOver := applicant.TakeoverOperation
 
@@ -277,7 +284,7 @@ func (rw *GormResourceReadWrite) allocResourceInHost(ctx context.Context, tx *go
 		if count < int64(require.Count) {
 			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "disk is not enough(%d|%d) in host (%s), takeover operation (%v)", count, require.Count, hostIp, isTakeOver)
 		}
-		db = db.Where("hosts.free_cpu_cores >= ? and hosts.free_memory >= ?", reqCores, reqMem).Count(&count)
+		db = db.Where("hosts.free_cpu_cores >= ? and hosts.free_memory >= ?", totalRequireCores, totalRequireMemory).Count(&count)
 		if count < int64(require.Count) {
 			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "cpucores or memory in host (%s) is not enough", hostIp)
 		}
@@ -311,11 +318,11 @@ func (rw *GormResourceReadWrite) allocResourceInHost(ctx context.Context, tx *go
 		if !isTakeOver {
 			db = db.Where("hosts.reserved = 0").Count(&count)
 		}
-		if count < int64(require.Count) {
+		if count < 1 {
 			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) is not existed or reserved, takeover operation(%v)", hostIp, isTakeOver)
 		}
-		db = db.Where("free_cpu_cores >= ? and free_memory >= ?", reqCores, reqMem).Count(&count)
-		if count < int64(require.Count) {
+		db = db.Where("free_cpu_cores >= ? and free_memory >= ?", totalRequireCores, totalRequireMemory).Count(&count)
+		if count < 1 {
 			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "cpucores or memory in host (%s) is not enough", hostIp)
 		}
 		if !exclusive {
@@ -327,21 +334,39 @@ func (rw *GormResourceReadWrite) allocResourceInHost(ctx context.Context, tx *go
 		if err != nil {
 			return nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "select resources failed, %v", err)
 		}
-		if len(resources) < int(require.Count) {
+		if len(resources) < int(1) {
 			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) status/stat is not expected for exlusive(%v) condition", hostIp, exclusive)
+		}
+		for len(resources) < int(require.Count) {
+			resources = append(resources, &Resource{
+				HostId:   resources[0].HostId,
+				HostName: resources[0].HostName,
+				Region:   resources[0].Region,
+				AZ:       resources[0].AZ,
+				Rack:     resources[0].Rack,
+				Ip:       resources[0].Ip,
+				UserName: resources[0].UserName,
+				Passwd:   resources[0].Passwd,
+				CpuCores: resources[0].CpuCores,
+				Memory:   resources[0].Memory,
+			})
 		}
 	}
 
 	// 2. Choose Ports in Hosts
+	var usedPorts []int32
+	tx.Order("port").Model(&mm.UsedPort{}).Select("port").Where("host_id = ?", resources[0].HostId).Scan(&usedPorts)
 	for _, resource := range resources {
-		var usedPorts []int32
-		tx.Order("port").Model(&mm.UsedPort{}).Select("port").Where("host_id = ?", resource.HostId).Scan(&usedPorts)
 		for _, portReq := range require.Require.PortReq {
 			res, err := rw.getPortsInRange(usedPorts, portReq.Start, portReq.End, int(portReq.PortCnt))
 			if err != nil {
 				return nil, errors.NewErrorf(errors.TIEM_RESOURCE_NO_ENOUGH_PORT, "host %s(%s) has no enough ports on range [%d, %d]", resource.HostId, resource.Ip, portReq.Start, portReq.End)
 			}
 			resource.portRes = append(resource.portRes, res)
+			usedPorts = append(usedPorts, res.Ports...)
+			sort.Slice(usedPorts, func(i, j int) bool {
+				return usedPorts[i] < usedPorts[j]
+			})
 		}
 	}
 

@@ -26,7 +26,12 @@ package deployment
 
 import (
 	"context"
+	"errors"
+	"os"
+	"os/exec"
 	"testing"
+
+	asserts "github.com/stretchr/testify/assert"
 )
 
 var manager *Manager
@@ -116,14 +121,14 @@ func TestManager_List(t *testing.T) {
 }
 
 func TestManager_Display(t *testing.T) {
-	_, err := manager.Display(context.TODO(), TiUPComponentTypeCluster, TestClusterID, testTiUPHome, TestWorkFlowID, []string{"--format", "json"}, 360)
+	_, err := manager.Display(context.TODO(), TiUPComponentTypeCluster, TestClusterID, testTiUPHome, []string{"--format", "json"}, 360)
 	if err == nil {
 		t.Error("nil error")
 	}
 }
 
 func TestManager_ShowConfig(t *testing.T) {
-	_, err := manager.ShowConfig(context.TODO(), TiUPComponentTypeCluster, TestClusterID, testTiUPHome, TestWorkFlowID, []string{"--format", "json"}, 360)
+	_, err := manager.ShowConfig(context.TODO(), TiUPComponentTypeCluster, TestClusterID, testTiUPHome, []string{"--format", "json"}, 360)
 	if err == nil {
 		t.Error("nil error")
 	}
@@ -157,6 +162,13 @@ func TestManager_Push(t *testing.T) {
 	}
 }
 
+func TestManager_Pull(t *testing.T) {
+	_, err := manager.Pull(context.TODO(), TiUPComponentTypeCluster, TestClusterID, "/remote/path", testTiUPHome, []string{}, 360)
+	if err == nil {
+		t.Error(err)
+	}
+}
+
 func TestManager_Ctl(t *testing.T) {
 	_, err := manager.Ctl(context.TODO(), TiUPComponentTypeCluster, TestVersion, "tidb", testTiUPHome, []string{}, 360)
 	if err == nil {
@@ -166,6 +178,42 @@ func TestManager_Ctl(t *testing.T) {
 
 func TestManager_Exec(t *testing.T) {
 	_, err := manager.Exec(context.TODO(), TiUPComponentTypeCluster, TestClusterID, testTiUPHome, TestWorkFlowID, []string{}, 360)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestManager_CheckConfig(t *testing.T) {
+	_, err := manager.CheckConfig(context.TODO(), TiUPComponentTypeCluster, TestTiDBCheckTopo, testTiUPHome, []string{}, 360)
+	if err == nil {
+		t.Error("nil err")
+	}
+}
+
+func TestManager_ExtractCheckResult(t *testing.T) {
+	type want struct {
+		result string
+	}
+	tests := []struct {
+		testName string
+		results  []string
+		want     want
+	}{
+		{"Test_WithResult", []string{"{\"prefix\":", "{\"prefix\":", "{\"prefix\":", "{\"result\":", "{\"exit_code\":"}, want{"{\"result\":"}},
+		{"Test_WithoutResult", []string{"{\"prefix\":", "{\"prefix\":", "{\"prefix\":", "{\"exit_code\":"}, want{""}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.testName, func(t *testing.T) {
+			result := manager.extractCheckResult(tt.results)
+			if result != tt.want.result {
+				t.Errorf("case extract check result %s . err(expected %v, actual %v)", tt.testName, tt.want.result, result)
+			}
+		})
+	}
+}
+
+func TestManager_Prune(t *testing.T) {
+	_, err := manager.Prune(context.TODO(), TiUPComponentTypeCluster, TestClusterID, testTiUPHome, TestWorkFlowID, []string{}, 360)
 	if err != nil {
 		t.Error(err)
 	}
@@ -190,6 +238,27 @@ func TestManager_startAsyncOperation(t *testing.T) {
 			TiUPBinPath: "ls",
 		}
 		m.startAsyncOperation(context.TODO(), "", "", "-lh", 1)
+	})
+}
+
+func TestManager_ExitStatusZero(t *testing.T) {
+	t.Run("zero", func(t *testing.T) {
+		m := &Manager{
+			TiUPBinPath: "mock_tiup",
+		}
+		err := exec.ExitError{
+			&os.ProcessState{},
+			[]byte{},
+		}
+		asserts.True(t, m.ExitStatusZero(&err))
+	})
+
+	t.Run("nonzero", func(t *testing.T) {
+		m := &Manager{
+			TiUPBinPath: "mock_tiup",
+		}
+		err := errors.New("")
+		asserts.False(t, m.ExitStatusZero(err))
 	})
 }
 

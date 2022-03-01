@@ -19,11 +19,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+	"time"
+
+	"github.com/pingcap-inc/tiem/models/cluster/upgrade"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	em_errors "github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
@@ -34,16 +39,16 @@ import (
 	"github.com/pingcap-inc/tiem/models/common"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	mock_br_service "github.com/pingcap-inc/tiem/test/mockbr"
+	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
+	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
-	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
+	mock_upgrade "github.com/pingcap-inc/tiem/test/mockmodels/mockupgrade"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/pkg/sftp"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/ssh"
-	"testing"
-	"time"
 )
 
 var emptyNode = func(task *wfModel.WorkFlowNode, context *workflow.FlowContext) error {
@@ -145,10 +150,10 @@ func TestManager_ScaleOut(t *testing.T) {
 	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
-		mockTiup := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-		secondparty.Manager = mockTiup
-		mockTiup.EXPECT().ClusterComponentCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"true\"}", nil)
+		mockTiup := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mockTiup
+		mockTiup.EXPECT().Ctl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"true\"}", nil)
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
@@ -210,8 +215,8 @@ func TestManager_ScaleOut(t *testing.T) {
 	})
 
 	t.Run("check fail", func(t *testing.T) {
-		mockTiup := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-		secondparty.Manager = mockTiup
+		mockTiup := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mockTiup
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
@@ -227,8 +232,8 @@ func TestManager_ScaleOut(t *testing.T) {
 			},
 			{},
 		}, make([]*management.DBUser, 0), nil).AnyTimes()
-		mockTiup.EXPECT().ClusterComponentCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"false\"}", nil).AnyTimes()
+		mockTiup.EXPECT().Ctl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"false\"}", nil).AnyTimes()
 		_, err := manager.ScaleOut(context.TODO(), cluster.ScaleOutClusterReq{
 			ClusterID: "111",
 			ClusterResourceInfo: structs.ClusterResourceInfo{
@@ -243,10 +248,10 @@ func TestManager_ScaleOut(t *testing.T) {
 	})
 
 	t.Run("aync fail", func(t *testing.T) {
-		mockTiup := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-		secondparty.Manager = mockTiup
-		mockTiup.EXPECT().ClusterComponentCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"true\"}", nil)
+		mockTiup := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mockTiup
+		mockTiup.EXPECT().Ctl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"true\"}", nil)
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
@@ -299,6 +304,46 @@ func TestManager_ScaleIn(t *testing.T) {
 		{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
 		{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
 	}, make([]*management.DBUser, 0), nil).AnyTimes()
+
+	productRW := mock_product.NewMockProductReadWriterInterface(ctrl)
+	models.SetProductReaderWriter(productRW)
+	productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
+		"TiDB": {
+			Versions: map[string]structs.ProductVersion{
+				"v5.2.2": {
+					Version: "v5.2.2",
+					Arch: map[string][]structs.ProductComponentProperty{
+						"x86_64": {
+							{
+								ID:                      "TiDB",
+								MinInstance:             1,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{},
+							},
+							{
+								ID:                      "TiKV",
+								MinInstance:             1,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{},
+							},
+							{
+								ID:                      "PD",
+								MinInstance:             1,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{1, 3, 5, 7},
+							},
+							{
+								ID:                      "TiFlash",
+								MinInstance:             0,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, nil).AnyTimes()
 
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 	workflow.MockWorkFlowService(workflowService)
@@ -359,7 +404,7 @@ func TestManager_ScaleIn(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Type: "TiDB", Version: "v4.0.12"}, []*management.ClusterInstance{
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Type: "TiDB", Version: "v5.2.2", CpuArchitecture: "x86_64"}, []*management.ClusterInstance{
 			{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
 			{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
 		}, make([]*management.DBUser, 0), nil).AnyTimes()
@@ -414,7 +459,7 @@ func TestManager_Clone(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Version: "v5.2.2"}, []*management.ClusterInstance{
 			{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
 			{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
 		}, []*management.DBUser{
@@ -436,7 +481,20 @@ func TestManager_Clone(t *testing.T) {
 				DBUser:     "user01",
 				DBPassword: "password01",
 				Type:       "TiDB",
-				Version:    "v5.0.0",
+				Version:    "v5.2.2",
+			},
+			ResourceParameter: structs.ClusterResourceInfo{
+				InstanceResource: []structs.ClusterResourceParameterCompute{
+					{Type: "TiDB", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+					{Type: "TiKV", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+					{Type: "PD", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+				},
 			},
 		})
 		assert.NoError(t, err)
@@ -446,7 +504,7 @@ func TestManager_Clone(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Version: "v5.2.2"}, []*management.ClusterInstance{
 			{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
 			{Entity: common.Entity{ID: "instance02"}, Type: "PD"},
 		}, make([]*management.DBUser, 0), fmt.Errorf("not found cluster")).AnyTimes()
@@ -457,7 +515,20 @@ func TestManager_Clone(t *testing.T) {
 				DBUser:     "user01",
 				DBPassword: "password01",
 				Type:       "TiDB",
-				Version:    "v5.0.0",
+				Version:    "v5.2.2",
+			},
+			ResourceParameter: structs.ClusterResourceInfo{
+				InstanceResource: []structs.ClusterResourceParameterCompute{
+					{Type: "TiDB", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+					{Type: "TiKV", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+					{Type: "PD", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+				},
 			},
 		})
 		assert.Error(t, err)
@@ -467,7 +538,7 @@ func TestManager_Clone(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Version: "v5.0.0"},
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Version: "v5.2.2"},
 			[]*management.ClusterInstance{
 				{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
 				{Entity: common.Entity{ID: "instance02"}, Type: "PD"},
@@ -481,6 +552,19 @@ func TestManager_Clone(t *testing.T) {
 				Type:       "TiDB",
 				Version:    "v3.0.0",
 			},
+			ResourceParameter: structs.ClusterResourceInfo{
+				InstanceResource: []structs.ClusterResourceParameterCompute{
+					{Type: "TiDB", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+					{Type: "TiKV", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+					{Type: "PD", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+				},
+			},
 		})
 		assert.Error(t, err)
 	})
@@ -489,7 +573,7 @@ func TestManager_Clone(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{Version: "v5.2.2"}, []*management.ClusterInstance{
 			{Entity: common.Entity{ID: "instance01"}, Type: "TiDB"},
 			{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
 		}, make([]*management.DBUser, 0), nil).AnyTimes()
@@ -504,7 +588,20 @@ func TestManager_Clone(t *testing.T) {
 				DBUser:     "user01",
 				DBPassword: "password01",
 				Type:       "TiDB",
-				Version:    "v5.0.0",
+				Version:    "v5.2.2",
+			},
+			ResourceParameter: structs.ClusterResourceInfo{
+				InstanceResource: []structs.ClusterResourceParameterCompute{
+					{Type: "TiDB", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+					{Type: "TiKV", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+					{Type: "PD", Count: 1, Resource: []structs.ClusterResourceParameterComputeResource{
+						{Zone: "Test_Zone1", DiskType: "SATA", DiskCapacity: 0, Spec: "4C8G", Count: 1},
+					}},
+				},
 			},
 		})
 		assert.Error(t, err)
@@ -1537,6 +1634,303 @@ func TestManager_TakeoverCluster(t *testing.T) {
 			DBPassword:       "password",
 		})
 
+		assert.Error(t, err)
+	})
+}
+
+func TestManager_QueryProductUpdatePath(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	manager := Manager{}
+	t.Run("normal", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{
+			Version: "v5.2.2",
+		}, []*management.ClusterInstance{
+			{},
+			{},
+		}, make([]*management.DBUser, 0), nil)
+
+		mockUpgrade := mock_upgrade.NewMockReaderWriter(ctrl)
+		mockUpgrade.EXPECT().QueryBySrcVersion(gomock.Any(), gomock.Any()).Return([]*upgrade.ProductUpgradePath{
+			{
+				Type:       "in-place",
+				SrcVersion: "v5.2",
+				DstVersion: "v5.3",
+			},
+			{
+				Type:       "in-place",
+				SrcVersion: "v5.2",
+				DstVersion: "v5.4",
+			},
+		}, nil)
+		models.SetUpgradeReaderWriter(mockUpgrade)
+
+		_, err := manager.QueryProductUpdatePath(context.TODO(), "111")
+		assert.NoError(t, err)
+	})
+	t.Run("not found meta", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(nil, nil, nil, errors.New(""))
+
+		_, err := manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
+			ClusterID: "111",
+		})
+		assert.Error(t, err)
+	})
+	t.Run("not found path", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{
+			Version: "v5.2.2",
+		}, []*management.ClusterInstance{
+			{},
+			{},
+		}, make([]*management.DBUser, 0), nil)
+
+		mockUpgrade := mock_upgrade.NewMockReaderWriter(ctrl)
+		mockUpgrade.EXPECT().QueryBySrcVersion(gomock.Any(), gomock.Any()).Return(nil, errors.New(""))
+		models.SetUpgradeReaderWriter(mockUpgrade)
+
+		_, err := manager.QueryProductUpdatePath(context.TODO(), "111")
+		assert.Error(t, err)
+	})
+}
+
+func Test_getFullVersion(t *testing.T) {
+	t.Run("len 1", func(t *testing.T) {
+		version := getFullVersion("v5")
+		assert.Equal(t, "v5.0.0", version)
+	})
+	t.Run("len 2", func(t *testing.T) {
+		version := getFullVersion("v5.1")
+		assert.Equal(t, "v5.1.0", version)
+	})
+}
+
+func TestManager_QueryUpgradeVersionDiffInfo(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	manager := Manager{}
+	t.Run("not found", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(nil, nil, nil, errors.New(""))
+
+		_, err := manager.QueryUpgradeVersionDiffInfo(context.TODO(), "111", "v5.4.0")
+		assert.Error(t, err)
+	})
+}
+
+func Test_getMinorVersion(t *testing.T) {
+	t.Run("len 1", func(t *testing.T) {
+		version := getMinorVersion("v5")
+		assert.Equal(t, "v5", version)
+	})
+	t.Run("len 3", func(t *testing.T) {
+		version := getMinorVersion("v5.2.2")
+		assert.Equal(t, "v5.2", version)
+	})
+}
+
+func Test_compareConfigDifference(t *testing.T) {
+	cParamInfos := []structs.ClusterParameterInfo{
+		{
+			ParamId:      "1",
+			Category:     "basic1",
+			Name:         "param1",
+			InstanceType: "tidb",
+			RealValue: structs.ParameterRealValue{
+				ClusterValue: "v1_real",
+			},
+			Type:        1,
+			Unit:        "MB",
+			UnitOptions: []string{"KB", "MB", "GB"},
+			Range:       []string{"1, 100"},
+			RangeType:   1,
+			Description: "param1 desc",
+		},
+		{
+			ParamId:      "2",
+			Category:     "basic2",
+			Name:         "param2",
+			InstanceType: "tikv",
+			RealValue: structs.ParameterRealValue{
+				ClusterValue: "v2",
+			},
+			Type:        2,
+			Unit:        "GB",
+			UnitOptions: []string{"KB", "MB", "GB"},
+			Range:       []string{"1, 1000"},
+			RangeType:   1,
+			Description: "param2 desc",
+		},
+		{
+			ParamId:      "3",
+			Category:     "basic3",
+			Name:         "param3",
+			InstanceType: "pd",
+			RealValue: structs.ParameterRealValue{
+				ClusterValue: "",
+			},
+			Type:        3,
+			Unit:        "KB",
+			UnitOptions: []string{"KB", "MB", "GB"},
+			Range:       []string{"1, 10000"},
+			RangeType:   1,
+			Description: "param3 desc",
+		},
+	}
+
+	pgParamInfos := []structs.ParameterGroupParameterInfo{
+		{
+			ID:           "1",
+			Category:     "basic1",
+			Name:         "param1",
+			InstanceType: "tidb",
+			DefaultValue: "v1new",
+			Type:         1,
+			Unit:         "MB",
+			UnitOptions:  []string{"KB", "MB", "GB"},
+			Range:        []string{"1, 100"},
+			RangeType:    1,
+			Description:  "param1 desc",
+		},
+		{
+			ID:           "2",
+			Category:     "basic2",
+			Name:         "param2",
+			InstanceType: "tikv",
+			DefaultValue: "v2",
+			Type:         2,
+			Unit:         "GB",
+			UnitOptions:  []string{"KB", "MB", "GB"},
+			Range:        []string{"1, 1000"},
+			RangeType:    1,
+			Description:  "param2 desc",
+		},
+		{
+			ID:           "3",
+			Category:     "basic3",
+			Name:         "param3",
+			InstanceType: "pd",
+			DefaultValue: " ",
+			Type:         3,
+			Unit:         "KB",
+			UnitOptions:  []string{"KB", "MB", "GB"},
+			Range:        []string{"1, 10000"},
+			RangeType:    1,
+			Description:  "param3 desc",
+		},
+	}
+
+	resp := compareConfigDifference(context.TODO(), cParamInfos, pgParamInfos)
+	assert.Equal(t, 1, len(resp))
+	item := structs.ProductUpgradeVersionConfigDiffItem{
+		ParamId:      "1",
+		Category:     "basic1",
+		Name:         "param1",
+		InstanceType: "tidb",
+		CurrentValue: "v1_real",
+		SuggestValue: "v1new",
+		Type:         1,
+		Unit:         "MB",
+		UnitOptions:  []string{"KB", "MB", "GB"},
+		Range:        []string{"1, 100"},
+		RangeType:    1,
+		Description:  "param1 desc",
+	}
+	assert.Equal(t, item, *resp[0])
+}
+
+func TestManager_InPlaceUpgradeCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	workflow.GetWorkFlowService().RegisterWorkFlow(context.TODO(), constants.FlowOnlineInPlaceUpgradeCluster, getEmptyFlow(constants.FlowOnlineInPlaceUpgradeCluster))
+	workflow.GetWorkFlowService().RegisterWorkFlow(context.TODO(), constants.FlowOfflineInPlaceUpgradeCluster, getEmptyFlow(constants.FlowOfflineInPlaceUpgradeCluster))
+
+	manager := Manager{}
+	t.Run("normal offline", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+			{},
+			{},
+		}, make([]*management.DBUser, 0), nil)
+
+		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+		workflow.MockWorkFlowService(workflowService)
+		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
+		}, nil).AnyTimes()
+		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+		_, err := manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
+			ClusterID:  "111",
+			UpgradeWay: string(constants.UpgradeWayOffline),
+		})
+		assert.NoError(t, err)
+	})
+	t.Run("normal online", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+			{},
+			{},
+		}, make([]*management.DBUser, 0), nil)
+
+		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
+		workflow.MockWorkFlowService(workflowService)
+		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
+			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
+			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
+		}, nil).AnyTimes()
+		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+		_, err := manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
+			ClusterID:  "111",
+			UpgradeWay: string(constants.UpgradeWayOnline),
+		})
+		assert.NoError(t, err)
+	})
+	t.Run("not found", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(nil, nil, nil, errors.New(""))
+
+		_, err := manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
+			ClusterID: "111",
+		})
+		assert.Error(t, err)
+	})
+	t.Run("status", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{}, []*management.ClusterInstance{
+			{},
+			{},
+		}, make([]*management.DBUser, 0), nil)
+		clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New(""))
+
+		_, err := manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
+			ClusterID: "111",
+		})
 		assert.Error(t, err)
 	})
 }

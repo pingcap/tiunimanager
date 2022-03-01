@@ -27,11 +27,12 @@ package constants
 type TransportType string
 
 const (
-	DefaultImportPath   string        = "/home/tiem/import"
-	DefaultExportPath   string        = "/home/tiem/export"
-	DefaultZipName      string        = "data.zip"
-	TransportTypeExport TransportType = "export"
-	TransportTypeImport TransportType = "import"
+	DefaultImportPath        string        = "/home/tidb/import"
+	DefaultExportPath        string        = "/home/tidb/export"
+	DefaultZipName           string        = "data.zip"
+	DefaultDumplingThreadNum string        = "8"
+	TransportTypeExport      TransportType = "export"
+	TransportTypeImport      TransportType = "import"
 )
 
 type DataImportExportStatus string

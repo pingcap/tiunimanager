@@ -17,55 +17,11 @@
 package product
 
 import (
-	"encoding/json"
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/common/client"
-	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
-
-// ClusterKnowledge show cluster knowledge
-// @Summary show cluster knowledge
-// @Description show cluster knowledge
-// @Tags knowledge
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Success 200 {object} controller.CommonResult{data=[]knowledge.ClusterTypeSpec}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /knowledges/ [get]
-func ClusterKnowledge(c *gin.Context) {
-	var allSpec = new([]knowledge.ClusterTypeSpec)
-	b, err := json.Marshal(knowledge.SpecKnowledge.Specs)
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, ""))
-	} else {
-		json.Unmarshal(b, allSpec)
-		if allSpec != nil {
-			for i := range *allSpec {
-				eachSpec := &((*allSpec)[i])
-				for j := range eachSpec.VersionSpecs {
-					eachVersion := &(eachSpec.VersionSpecs[j])
-
-					for k := 0; k < len(eachVersion.ComponentSpecs); k++ {
-						if eachVersion.ComponentSpecs[k].ComponentConstraint.Parasite {
-							eachVersion.ComponentSpecs = append(eachVersion.ComponentSpecs[:k], eachVersion.ComponentSpecs[k+1:]...)
-							k--
-						}
-					}
-				}
-			}
-			c.JSON(http.StatusOK, controller.Success(allSpec))
-		}
-	}
-
-}
 
 // CreateZones create zones interface
 // @Summary created  zones
@@ -263,7 +219,7 @@ func DeleteSpecs(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param QuerySpecsReq query message.QuerySpecsReq true "query specs reqeust parameter"
+// @Param QuerySpecsReq query message.QuerySpecsReq true "query specs request parameter"
 // @Success 200 {object} controller.CommonResult{data=message.QuerySpecsResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult

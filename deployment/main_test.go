@@ -35,11 +35,12 @@ import (
 const (
 	TestWorkFlowID         = "testworkflowid"
 	TestClusterID          = "testclusterid"
-	TestOperation          = "TIUP_HOME=/home/tiem/.tiup tiup cluster start testclusterid --wait-timeout 360 --yes"
+	TestOperation          = "TIUP_HOME=/home/tidb/.tiup tiup cluster start testclusterid --wait-timeout 360 --yes"
 	TestVersion            = "v4.0.12"
 	TestDstVersion         = "v5.2.2"
 	TestTiDBTopo           = ""
 	TestTiDBScaleOutTopo   = ""
+	TestTiDBCheckTopo      = ""
 	TestTiDBEditConfigTopo = ""
 	TestTiDBPushTopo       = ""
 	TestNodeID             = ""

@@ -24,18 +24,18 @@ const (
 )
 
 const (
-	ContextResourcePoolKey   string = "resourcePool"
-	ContextHostInfoArrayKey  string = "hostInfoArray"
-	ContextHostIDArrayKey    string = "hostIDArray"
-	ContextWorkFlowNodeIDKey string = "resourceWorkFlowNodeID"
-	ContextIgnoreWarnings    string = "checkHostIgnoreWarns"
+	ContextResourcePoolKey  string = "resourcePool"
+	ContextHostInfoArrayKey string = "hostInfoArray"
+	ContextHostIDArrayKey   string = "hostIDArray"
+	ContextWorkFlowIDKey    string = "resourceWorkFlowID"
+	ContextIgnoreWarnings   string = "checkHostIgnoreWarns"
 )
 
 const (
 	HostSSHPort       = 22
 	HostFileBeatPort  = 0
-	FileBeatDataDir   = "/tiem-data"
-	FileBeatDeployDir = "/tiem-deploy"
+	FileBeatDataDir   = "/em-data"
+	FileBeatDeployDir = "/em-deploy"
 )
 
 const (

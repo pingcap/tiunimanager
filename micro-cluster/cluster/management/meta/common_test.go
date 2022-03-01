@@ -17,17 +17,24 @@ package meta
 
 import (
 	ctx "context"
+	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/common"
-	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
+	"github.com/pingcap-inc/tiem/models/platform/config"
+	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
+	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/net/context"
 	"testing"
 	"time"
 )
@@ -48,16 +55,52 @@ func TestContain(t *testing.T) {
 	assert.Equal(t, got, false)
 }
 
+func TestCompareTiDBVersion(t *testing.T) {
+	got, err := CompareTiDBVersion("v5.0.0", "v5.2.2")
+	assert.NoError(t, err)
+	assert.Equal(t, got, false)
+
+	got, err = CompareTiDBVersion("v5.2.2", "v5.0.0")
+	assert.NoError(t, err)
+	assert.Equal(t, got, true)
+
+	got, err = CompareTiDBVersion("v5.0.2", "v5.0.0")
+	assert.NoError(t, err)
+	assert.Equal(t, got, true)
+
+	got, err = CompareTiDBVersion("v5.0.0", "v5.0.0")
+	assert.NoError(t, err)
+	assert.Equal(t, got, true)
+
+	got, err = CompareTiDBVersion("vx.0.0", "v5.2.2")
+	assert.Error(t, err)
+
+	got, err = CompareTiDBVersion("v5.x.0", "v5.2.2")
+	assert.Error(t, err)
+
+	got, err = CompareTiDBVersion("v5.0.x", "v5.2.2")
+	assert.Error(t, err)
+
+	got, err = CompareTiDBVersion("v5.0.0", "vx.2.2")
+	assert.Error(t, err)
+
+	got, err = CompareTiDBVersion("v5.0.0", "v5.x.2")
+	assert.Error(t, err)
+
+	got, err = CompareTiDBVersion("v5.0.0", "v5.2.x")
+	assert.Error(t, err)
+}
+
 func TestScaleOutPreCheck(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTiup := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	secondparty.Manager = mockTiup
+	mockTiup := mock_deployment.NewMockInterface(ctrl)
+	deployment.M = mockTiup
 
 	t.Run("normal", func(t *testing.T) {
-		mockTiup.EXPECT().ClusterComponentCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"true\"}", nil)
+		mockTiup.EXPECT().Ctl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"true\"}", nil)
 		meta := &ClusterMeta{
 			Cluster: &management.Cluster{
 				Version: "v5.0.0",
@@ -86,8 +129,8 @@ func TestScaleOutPreCheck(t *testing.T) {
 	})
 
 	t.Run("fail", func(t *testing.T) {
-		mockTiup.EXPECT().ClusterComponentCtl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"false\"}", nil)
+		mockTiup.EXPECT().Ctl(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("{\"enable-placement-rules\": \"false\"}", nil)
 		meta := &ClusterMeta{
 			Cluster: &management.Cluster{
 				Version: "v5.0.0",
@@ -125,6 +168,50 @@ func TestScaleOutPreCheck(t *testing.T) {
 }
 
 func TestScaleInPreCheck(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	productRW := mock_product.NewMockProductReadWriterInterface(ctrl)
+	models.SetProductReaderWriter(productRW)
+
+	productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
+		"TiDB": {
+			Versions: map[string]structs.ProductVersion{
+				"v5.2.2": {
+					Version: "v5.2.2",
+					Arch: map[string][]structs.ProductComponentProperty{
+						"x86_64": {
+							{
+								ID:                      "TiDB",
+								MinInstance:             1,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{},
+							},
+							{
+								ID:                      "TiKV",
+								MinInstance:             1,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{},
+							},
+							{
+								ID:                      "PD",
+								MinInstance:             1,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{1, 3, 5, 7},
+							},
+							{
+								ID:                      "TiFlash",
+								MinInstance:             0,
+								MaxInstance:             8,
+								SuggestedInstancesCount: []int32{},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, nil).AnyTimes()
+
 	t.Run("parameter invalid", func(t *testing.T) {
 		err := ScaleInPreCheck(ctx.TODO(), nil, nil)
 		assert.Error(t, err)
@@ -153,7 +240,7 @@ func TestScaleInPreCheck(t *testing.T) {
 	})
 
 	t.Run("component required error", func(t *testing.T) {
-		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0"}, Instances: map[string][]*management.ClusterInstance{
+		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.2.2", CpuArchitecture: "x86_64"}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDTiDB): {
 				{
 					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
@@ -205,7 +292,7 @@ func TestScaleInPreCheck(t *testing.T) {
 
 func TestClonePreCheck(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		sourceMeta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
+		sourceMeta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.2.2", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDCDC): {
 				{
 					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
@@ -232,7 +319,7 @@ func TestClonePreCheck(t *testing.T) {
 			},
 		},
 		}
-		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
+		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.2.2", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDCDC): {
 				{
 					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
@@ -264,7 +351,7 @@ func TestClonePreCheck(t *testing.T) {
 	})
 
 	t.Run("cdc fail", func(t *testing.T) {
-		sourceMeta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
+		sourceMeta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.2.2", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDTiDB): {
 				{
 					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
@@ -291,7 +378,7 @@ func TestClonePreCheck(t *testing.T) {
 			},
 		},
 		}
-		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
+		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.2.2", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDTiDB): {
 				{
 					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
@@ -323,7 +410,7 @@ func TestClonePreCheck(t *testing.T) {
 	})
 
 	t.Run("copies fail", func(t *testing.T) {
-		sourceMeta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 3}, Instances: map[string][]*management.ClusterInstance{
+		sourceMeta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.2.2", Copies: 3}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDCDC): {
 				{
 					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
@@ -350,7 +437,7 @@ func TestClonePreCheck(t *testing.T) {
 			},
 		},
 		}
-		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 3}, Instances: map[string][]*management.ClusterInstance{
+		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.2.2", Copies: 3}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDCDC): {
 				{
 					Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)},
@@ -421,4 +508,62 @@ func TestWaitWorkflow(t *testing.T) {
 		err := WaitWorkflow(ctx.TODO(), "111", 1*time.Second, 2*time.Second)
 		assert.Error(t, err)
 	})
+}
+
+func Test_getRetainedPortRange(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	rw := mockconfig.NewMockReaderWriter(ctrl)
+	models.SetConfigReaderWriter(rw)
+
+	t.Run("normal", func(t *testing.T) {
+		rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{
+			ConfigValue: "[10,11]",
+		}, nil).Times(1)
+		portRange, err := getRetainedPortRange(context.TODO())
+		assert.NoError(t, err)
+		assert.Equal(t, []int{10,11}, portRange)
+	})
+	t.Run("error", func(t *testing.T) {
+		rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{}, errors.Error(errors.TIEM_SYSTEM_MISSING_CONFIG)).Times(1)
+		_, err := getRetainedPortRange(context.TODO())
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "missing system config")
+	})
+	t.Run("empty", func(t *testing.T) {
+		rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{
+			ConfigValue: "",
+		}, nil).Times(1)
+		_, err := getRetainedPortRange(context.TODO())
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "missing config config_retained_port_range")
+	})
+	t.Run("unmarshal error", func(t *testing.T) {
+		rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{
+			ConfigValue: "ssss",
+		}, nil).Times(1)
+		_, err := getRetainedPortRange(context.TODO())
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid value for config config_retained_port_range")
+	})
+}
+
+func TestGetRandomString(t *testing.T) {
+	type args struct {
+		n int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+		{"normal", args{10}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := GetRandomString(tt.args.n)
+			fmt.Println(got)
+		})
+	}
 }

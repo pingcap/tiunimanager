@@ -20,8 +20,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/knowledge"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
@@ -30,7 +28,8 @@ import (
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockchangefeed"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
-	mock_secondparty_v2 "github.com/pingcap-inc/tiem/test/mocksecondparty_v2"
+	"github.com/pingcap-inc/tiem/test/mockutilcdc"
+	"github.com/pingcap-inc/tiem/util/api/cdc"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -38,7 +37,6 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	knowledge.LoadKnowledge()
 	models.MockDB()
 
 	os.Exit(m.Run())
@@ -67,10 +65,9 @@ func TestManager_Create(t *testing.T) {
 	}, nil).AnyTimes()
 	changefeedRW.EXPECT().UnlockStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
-	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	secondparty.Manager = mockSecond
-
-	mockSecond.EXPECT().CreateChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+	mockCDCService := mockutilcdc.NewMockChangeFeedService(ctrl)
+	cdc.CDCService = mockCDCService
+	mockCDCService.EXPECT().CreateChangeFeedTask(gomock.Any(), gomock.Any()).Return(cdc.ChangeFeedCmdAcceptResp{
 		Accepted: true,
 		Succeed:  true,
 	}, nil).AnyTimes()
@@ -116,10 +113,9 @@ func TestManager_Delete(t *testing.T) {
 	}, nil).AnyTimes()
 	changefeedRW.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
-	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	secondparty.Manager = mockSecond
-
-	mockSecond.EXPECT().DeleteChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+	mockCDCService := mockutilcdc.NewMockChangeFeedService(ctrl)
+	cdc.CDCService = mockCDCService
+	mockCDCService.EXPECT().DeleteChangeFeedTask(gomock.Any(), gomock.Any()).Return(cdc.ChangeFeedCmdAcceptResp{
 		Accepted: true,
 		Succeed:  true,
 	}, nil).AnyTimes()
@@ -151,10 +147,9 @@ func TestManager_Pause(t *testing.T) {
 	models.SetChangeFeedReaderWriter(changefeedRW)
 	changefeedRW.EXPECT().UnlockStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
-	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	secondparty.Manager = mockSecond
-
-	mockSecond.EXPECT().PauseChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+	mockCDCService := mockutilcdc.NewMockChangeFeedService(ctrl)
+	cdc.CDCService = mockCDCService
+	mockCDCService.EXPECT().PauseChangeFeedTask(gomock.Any(), gomock.Any()).Return(cdc.ChangeFeedCmdAcceptResp{
 		Accepted: true,
 		Succeed:  true,
 	}, nil).AnyTimes()
@@ -247,10 +242,9 @@ func TestManager_Resume(t *testing.T) {
 
 	changefeedRW.EXPECT().UnlockStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
-	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	secondparty.Manager = mockSecond
-
-	mockSecond.EXPECT().ResumeChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+	mockCDCService := mockutilcdc.NewMockChangeFeedService(ctrl)
+	cdc.CDCService = mockCDCService
+	mockCDCService.EXPECT().ResumeChangeFeedTask(gomock.Any(), gomock.Any()).Return(cdc.ChangeFeedCmdAcceptResp{
 		Accepted: true,
 		Succeed:  true,
 	}, nil).AnyTimes()
@@ -308,20 +302,19 @@ func TestManager_Update(t *testing.T) {
 	changefeedRW.EXPECT().UnlockStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	changefeedRW.EXPECT().UpdateConfig(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
-	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	secondparty.Manager = mockSecond
-
-	mockSecond.EXPECT().UpdateChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+	mockCDCService := mockutilcdc.NewMockChangeFeedService(ctrl)
+	cdc.CDCService = mockCDCService
+	mockCDCService.EXPECT().UpdateChangeFeedTask(gomock.Any(), gomock.Any()).Return(cdc.ChangeFeedCmdAcceptResp{
 		Accepted: true,
 		Succeed:  true,
 	}, nil).AnyTimes()
 
-	mockSecond.EXPECT().PauseChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+	mockCDCService.EXPECT().PauseChangeFeedTask(gomock.Any(), gomock.Any()).Return(cdc.ChangeFeedCmdAcceptResp{
 		Accepted: true,
 		Succeed:  true,
 	}, nil).AnyTimes()
 
-	mockSecond.EXPECT().ResumeChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+	mockCDCService.EXPECT().ResumeChangeFeedTask(gomock.Any(), gomock.Any()).Return(cdc.ChangeFeedCmdAcceptResp{
 		Accepted: true,
 		Succeed:  true,
 	}, nil).AnyTimes()
@@ -409,11 +402,10 @@ func TestManager_Query(t *testing.T) {
 		},
 	}, int64(3), nil).AnyTimes()
 
-	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	secondparty.Manager = mockSecond
-
-	mockSecond.EXPECT().QueryChangeFeedTasks(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedQueryResp{
-		Tasks: []secondparty.ChangeFeedInfo{
+	mockCDCService := mockutilcdc.NewMockChangeFeedService(ctrl)
+	cdc.CDCService = mockCDCService
+	mockCDCService.EXPECT().QueryChangeFeedTasks(gomock.Any(), gomock.Any()).Return(cdc.ChangeFeedQueryResp{
+		Tasks: []cdc.ChangeFeedInfo{
 			{ChangeFeedID: "2222", CheckPointTSO: 9999},
 			{ChangeFeedID: "3333", CheckPointTSO: 9999},
 			{ChangeFeedID: "4444", CheckPointTSO: 9999},
@@ -449,11 +441,10 @@ func TestManager_Detail(t *testing.T) {
 	changefeedRW := mockchangefeed.NewMockReaderWriter(ctrl)
 	models.SetChangeFeedReaderWriter(changefeedRW)
 
-	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	secondparty.Manager = mockSecond
-
-	mockSecond.EXPECT().DetailChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedDetailResp{
-		ChangeFeedInfo: secondparty.ChangeFeedInfo{
+	mockCDCService := mockutilcdc.NewMockChangeFeedService(ctrl)
+	cdc.CDCService = mockCDCService
+	mockCDCService.EXPECT().DetailChangeFeedTask(gomock.Any(), gomock.Any()).Return(cdc.ChangeFeedDetailResp{
+		ChangeFeedInfo: cdc.ChangeFeedInfo{
 			CheckPointTSO: 9999,
 		},
 	}, nil).AnyTimes()
@@ -485,7 +476,7 @@ func TestManager_Detail(t *testing.T) {
 		}, errors.Error(errors.TIEM_UNMARSHAL_ERROR)).Times(1)
 
 		_, err := GetManager().Detail(context.TODO(), cluster.DetailChangeFeedTaskReq{
-			"taskId",
+			ID: "taskId",
 		})
 		assert.Error(t, err)
 
@@ -496,10 +487,9 @@ func TestManager_updateExecutor(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	secondparty.Manager = mockSecond
-
-	mockSecond.EXPECT().UpdateChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+	mockCDCService := mockutilcdc.NewMockChangeFeedService(ctrl)
+	cdc.CDCService = mockCDCService
+	mockCDCService.EXPECT().UpdateChangeFeedTask(gomock.Any(), gomock.Any()).Return(cdc.ChangeFeedCmdAcceptResp{
 		Accepted: false,
 		Succeed:  false,
 	}, nil).AnyTimes()
@@ -529,10 +519,9 @@ func TestManager_pauseExecutor(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	secondparty.Manager = mockSecond
-
-	mockSecond.EXPECT().PauseChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+	mockCDCService := mockutilcdc.NewMockChangeFeedService(ctrl)
+	cdc.CDCService = mockCDCService
+	mockCDCService.EXPECT().PauseChangeFeedTask(gomock.Any(), gomock.Any()).Return(cdc.ChangeFeedCmdAcceptResp{
 		Accepted: false,
 		Succeed:  false,
 	}, nil).AnyTimes()
@@ -558,14 +547,14 @@ func TestManager_pauseExecutor(t *testing.T) {
 	})
 
 }
+
 func TestManager_resumeExecutor(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	secondparty.Manager = mockSecond
-
-	mockSecond.EXPECT().ResumeChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+	mockCDCService := mockutilcdc.NewMockChangeFeedService(ctrl)
+	cdc.CDCService = mockCDCService
+	mockCDCService.EXPECT().ResumeChangeFeedTask(gomock.Any(), gomock.Any()).Return(cdc.ChangeFeedCmdAcceptResp{
 		Accepted: false,
 		Succeed:  false,
 	}, nil).AnyTimes()
@@ -591,14 +580,14 @@ func TestManager_resumeExecutor(t *testing.T) {
 	})
 
 }
+
 func TestManager_createExecutor(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockSecond := mock_secondparty_v2.NewMockSecondPartyService(ctrl)
-	secondparty.Manager = mockSecond
-
-	mockSecond.EXPECT().CreateChangeFeedTask(gomock.Any(), gomock.Any()).Return(secondparty.ChangeFeedCmdAcceptResp{
+	mockCDCService := mockutilcdc.NewMockChangeFeedService(ctrl)
+	cdc.CDCService = mockCDCService
+	mockCDCService.EXPECT().CreateChangeFeedTask(gomock.Any(), gomock.Any()).Return(cdc.ChangeFeedCmdAcceptResp{
 		Accepted: false,
 		Succeed:  false,
 	}, nil).AnyTimes()

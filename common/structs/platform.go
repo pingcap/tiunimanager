@@ -115,6 +115,21 @@ type SystemConfig struct {
 	ConfigValue string `json:"configValue"`
 }
 
+// SystemInfo system info of platform
+type SystemInfo struct {
+	SystemName       string `json:"systemName"`
+	SystemLogo       string `json:"systemLogo"`
+	CurrentVersionID string `json:"currentVersionID"`
+	LastVersionID    string `json:"lastVersionID"`
+	State            string `json:"state"`
+}
+
+type SystemVersionInfo struct {
+	VersionID   string `json:"versionID"`
+	Desc        string `json:"desc"`
+	ReleaseNote string `json:"releaseNote"`
+}
+
 // DBUserRole role information of the DBUser
 type DBUserRole struct {
 	ClusterType constants.EMProductIDType
@@ -124,28 +139,28 @@ type DBUserRole struct {
 }
 
 var DBUserRoleRecords = map[constants.DBUserRoleType]DBUserRole{
-	constants.Root: DBUserRole{
+	constants.Root: {
 		ClusterType: constants.EMProductIDTiDB,
 		RoleName:    "root",
 		RoleType:    constants.Root,
 		Permission:  constants.DBUserPermission[constants.Root],
-	},
-	constants.DBUserBackupRestore: DBUserRole{
+		},
+	constants.DBUserBackupRestore: {
 		ClusterType: constants.EMProductIDTiDB,
 		RoleName:    "backup_restore",
 		RoleType:    constants.DBUserBackupRestore,
 		Permission:  constants.DBUserPermission[constants.DBUserBackupRestore],
-	},
-	constants.DBUserParameterManagement: DBUserRole{
+		},
+	constants.DBUserParameterManagement: {
 		ClusterType: constants.EMProductIDTiDB,
 		RoleName:    "parameter_management",
 		RoleType:    constants.DBUserParameterManagement,
 		Permission:  constants.DBUserPermission[constants.DBUserParameterManagement],
-	},
-	constants.DBUserCDCDataSync: DBUserRole{
+		},
+	constants.DBUserCDCDataSync: {
 		ClusterType: constants.EMProductIDTiDB,
 		RoleName:    "data_sync",
 		RoleType:    constants.DBUserCDCDataSync,
 		Permission:  constants.DBUserPermission[constants.DBUserCDCDataSync],
-	},
+		},
 }

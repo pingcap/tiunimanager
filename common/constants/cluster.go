@@ -55,21 +55,26 @@ const (
 )
 
 const (
-	FlowCreateCluster       = "CreateCluster"
-	FlowDeleteCluster       = "DeleteCluster"
-	FlowBackupCluster       = "BackupCluster"
-	FlowRestoreNewCluster   = "RestoreNewCluster"
-	FlowRestoreExistCluster = "RestoreExistCluster"
-	FlowModifyParameters    = "ModifyParameters"
-	FlowExportData          = "ExportData"
-	FlowImportData          = "ImportData"
-	FlowRestartCluster      = "RestartCluster"
-	FlowStopCluster         = "StopCluster"
-	FlowTakeoverCluster     = "TakeoverCluster"
-	FlowBuildLogConfig      = "BuildLogConfig"
-	FlowScaleOutCluster     = "ScaleOutCluster"
-	FlowScaleInCluster      = "ScaleInCluster"
-	FlowCloneCluster        = "CloneCluster"
+	FlowCreateCluster                                   = "CreateCluster"
+	FlowDeleteCluster                                   = "DeleteCluster"
+	FlowBackupCluster                                   = "BackupCluster"
+	FlowRestoreNewCluster                               = "RestoreNewCluster"
+	FlowRestoreExistCluster                             = "RestoreExistCluster"
+	FlowModifyParameters                                = "ModifyParameters"
+	FlowExportData                                      = "ExportData"
+	FlowImportData                                      = "ImportData"
+	FlowRestartCluster                                  = "RestartCluster"
+	FlowStopCluster                                     = "StopCluster"
+	FlowTakeoverCluster                                 = "TakeoverCluster"
+	FlowBuildLogConfig                                  = "BuildLogConfig"
+	FlowScaleOutCluster                                 = "ScaleOutCluster"
+	FlowScaleInCluster                                  = "ScaleInCluster"
+	FlowCloneCluster                                    = "CloneCluster"
+	FlowOnlineInPlaceUpgradeCluster                     = "OnlineInPlaceUpgradeCluster"
+	FlowOfflineInPlaceUpgradeCluster                    = "OfflineInPlaceUpgradeCluster"
+	FlowMasterSlaveSwitchoverNormal                     = "SwitchoverNormal"
+	FlowMasterSlaveSwitchoverForce                      = "SwitchoverForce"
+	FlowMasterSlaveSwitchoverForceWithMasterUnavailable = "SwitchoverForceWithMasterUnavailable"
 )
 
 type ClusterInstanceRunningStatus string
@@ -109,10 +114,7 @@ type ClusterRelationType string
 
 //Constants for the relationships between clusters
 const (
-	ClusterRelationSlaveTo     ClusterRelationType = "SlaveTo"
-	ClusterRelationStandBy     ClusterRelationType = "StandBy"
-	ClusterRelationCloneFrom   ClusterRelationType = "CloneFrom"
-	ClusterRelationRecoverFrom ClusterRelationType = "RecoverFrom"
+	ClusterRelationStandBy ClusterRelationType = "StandBy"
 )
 
 type ClusterCloneStrategy string
@@ -157,4 +159,35 @@ const (
 	DefaultBackupS3AccessKey       string = "minioadmin"
 	DefaultBackupS3SecretAccessKey string = "minioadmin"
 	DefaultBackupS3Endpoint        string = "http://minio.pingcap.net:9000"
+	DefaultBackupRateLimit         string = ""
+	DefaultRestoreRateLimit        string = ""
+	DefaultBackupConcurrency       string = ""
+	DefaultRestoreConcurrency      string = ""
 )
+
+type DBUserRoleType string
+
+// DBUser role type
+const (
+	Root                      DBUserRoleType = "Root"                    // root
+	DBUserBackupRestore       DBUserRoleType = "EM_Backup_Restore"       // user for backup and restore
+	DBUserParameterManagement DBUserRoleType = "EM_Parameter_Management" // user for managing parameters
+	DBUserCDCDataSync         DBUserRoleType = "CDC_Data_Sync"           // user for CDC data synchronization
+)
+
+var DBUserName = map[DBUserRoleType]string{
+	Root:                      "root",
+	DBUserBackupRestore:       "EM_Backup_Restore",
+	DBUserParameterManagement: "EM_Parameter_Management",
+	DBUserCDCDataSync:         "CDC_Data_Sync",
+}
+
+var DBUserPermission = map[DBUserRoleType][]string{
+	Root:                      {"ALL PRIVILEGES"},
+	DBUserBackupRestore:       {"ALL PRIVILEGES", "BACKUP_ADMIN,RESTORE_ADMIN"},
+	DBUserParameterManagement: {"ALL PRIVILEGES", "CONFIG,RELOAD,SYSTEM_VARIABLES_ADMIN"},
+	DBUserCDCDataSync:         {"ALL PRIVILEGES", "RESTRICTED_REPLICA_WRITER_ADMIN"},
+}
+
+// DefaultRetainedPortRange default retained port range for tiem
+var DefaultRetainedPortRange = "[11000,12000]"

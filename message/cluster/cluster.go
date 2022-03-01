@@ -41,7 +41,7 @@ type CreateClusterResp struct {
 
 // DeleteClusterReq Message for delete a new cluster
 type DeleteClusterReq struct {
-	ClusterID                string `json:"clusterID" swaggerignore:"true" validate:"required,min=8,max=64"`
+	ClusterID                string `json:"clusterID" swaggerignore:"true" validate:"required,min=4,max=64"`
 	AutoBackup               bool   `json:"autoBackup" form:"autoBackup"`
 	KeepHistoryBackupRecords bool   `json:"keepHistoryBackupRecords" form:"keepHistoryBackupRecords"`
 	Force                    bool   `json:"force" form:"force"`
@@ -55,7 +55,7 @@ type DeleteClusterResp struct {
 
 // StopClusterReq Message for stop a new cluster
 type StopClusterReq struct {
-	ClusterID string `json:"clusterId" validate:"required,min=8,max=64"`
+	ClusterID string `json:"clusterId" validate:"required,min=4,max=64"`
 }
 
 // StopClusterResp Reply message for stop a new cluster
@@ -66,7 +66,7 @@ type StopClusterResp struct {
 
 // RestartClusterReq Message for restart a new cluster
 type RestartClusterReq struct {
-	ClusterID string `json:"clusterId" validate:"required,min=8,max=64"`
+	ClusterID string `json:"clusterId" validate:"required,min=4,max=64"`
 }
 
 // RestartClusterResp Reply message for restart a new cluster
@@ -77,7 +77,7 @@ type RestartClusterResp struct {
 
 // ScaleInClusterReq Message for delete an instance in the cluster
 type ScaleInClusterReq struct {
-	ClusterID  string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
+	ClusterID  string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=4,max=64"`
 	InstanceID string `json:"instanceId"  form:"instanceId"`
 }
 
@@ -89,13 +89,13 @@ type ScaleInClusterResp struct {
 
 // PreviewScaleOutClusterReq Message for cluster expansion operation
 type PreviewScaleOutClusterReq struct {
-	ClusterID string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
+	ClusterID string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=4,max=64"`
 	structs.ClusterResourceInfo
 }
 
 // ScaleOutClusterReq Message for cluster expansion operation
 type ScaleOutClusterReq struct {
-	ClusterID string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
+	ClusterID string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=4,max=64"`
 
 	structs.ClusterResourceInfo
 }
@@ -121,7 +121,7 @@ type RestoreNewClusterResp struct {
 
 //RestoreExistClusterReq Restore to exist cluster message using the backup file
 type RestoreExistClusterReq struct {
-	ClusterID string `json:"clusterID" validate:"required,min=8,max=64"`
+	ClusterID string `json:"clusterID" validate:"required,min=4,max=64"`
 	BackupID  string `json:"backupID" validate:"required,min=8,max=64"`
 }
 
@@ -133,8 +133,9 @@ type RestoreExistClusterResp struct {
 // CloneClusterReq Message for clone a new cluster
 type CloneClusterReq struct {
 	structs.CreateClusterParameter
-	CloneStrategy   string `json:"cloneStrategy" validate:"required"`                // specify clone strategy, include empty, snapshot and sync, default empty(option)
-	SourceClusterID string `json:"sourceClusterId" validate:"required,min=8,max=64"` // specify source cluster id(require)
+	ResourceParameter structs.ClusterResourceInfo `json:"resourceParameters" form:"resourceParameters"`
+	CloneStrategy     string                      `json:"cloneStrategy" validate:"required"`                // specify clone strategy, include empty, snapshot and sync, default empty(option)
+	SourceClusterID   string                      `json:"sourceClusterId" validate:"required,min=4,max=64"` // specify source cluster id(require)
 }
 
 // CloneClusterResp Reply message for clone a new cluster
@@ -145,38 +146,15 @@ type CloneClusterResp struct {
 
 // MasterSlaveClusterSwitchoverReq Master and slave cluster switchover messages
 type MasterSlaveClusterSwitchoverReq struct {
-	SourceClusterID string `json:"sourceClusterID" validate:"required,min=8,max=64"`
-	TargetClusterID string `json:"targetClusterID" validate:"required,min=8,max=64"`
+	// old master/new slave
+	SourceClusterID string `json:"sourceClusterID" validate:"required,min=4,max=64"`
+	// new master/old slave
+	TargetClusterID string `json:"targetClusterID" validate:"required,min=4,max=64"`
 	Force           bool   `json:"force"`
 }
 
 // MasterSlaveClusterSwitchoverResp Master and slave cluster switchover reply message
 type MasterSlaveClusterSwitchoverResp struct {
-	structs.AsyncTaskWorkFlowInfo
-}
-
-type QueryUpgradeVersionDiffInfoReq struct {
-	ClusterID string `json:"clusterId"`
-	Version   string `json:"version"`
-}
-
-type QueryUpgradeVersionDiffInfoResp struct {
-	ConfigDiffInfos []structs.ProductUpgradeVersionConfigDiffItem `json:"configDiffInfos"`
-}
-
-type ClusterUpgradeVersionConfigItem struct {
-	Name         string `json:"name"`
-	InstanceType string `json:"instanceType"`
-	Value        string `json:"value"`
-}
-
-type ClusterUpgradeReq struct {
-	ClusterID     string `json:"ClusterId"`
-	TargetVersion string `json:"targetVersion"`
-	Configs       []ClusterUpgradeVersionConfigItem
-}
-
-type ClusterUpgradeResp struct {
 	structs.AsyncTaskWorkFlowInfo
 }
 
@@ -187,7 +165,7 @@ type TakeoverClusterReq struct {
 	TiUPUserName     string `json:"TiUPUserName" example:"root" form:"TiUPUserName" validate:"required"`
 	TiUPUserPassword string `json:"TiUPUserPassword" example:"password" form:"TiUPUserPassword" validate:"required"`
 	TiUPPath         string `json:"TiUPPath" example:".tiup/" form:"TiUPPath" validate:"required"`
-	ClusterName      string `json:"clusterName" example:"myClusterName" form:"clusterName" validate:"required"`
+	ClusterName      string `json:"clusterName" example:"myClusterName" form:"clusterName" validate:"required,min=4,max=64"`
 	DBPassword       string `json:"dbPassword" example:"myPassword" form:"dbPassword" validate:"required"`
 }
 
@@ -267,7 +245,7 @@ type QueryClusterLogResp struct {
 }
 
 type QueryClusterParametersReq struct {
-	ClusterID    string `json:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
+	ClusterID    string `json:"clusterId" swaggerignore:"true" validate:"required,min=4,max=64"`
 	ParamName    string `json:"paramName" form:"paramName"`
 	InstanceType string `json:"instanceType" form:"instanceType"`
 	structs.PageRequest
@@ -279,7 +257,7 @@ type QueryClusterParametersResp struct {
 }
 
 type UpdateClusterParametersReq struct {
-	ClusterID string                               `json:"clusterId" swaggerignore:"true" validate:"required,min=8,max=64"`
+	ClusterID string                               `json:"clusterId" swaggerignore:"true" validate:"required,min=4,max=64"`
 	Params    []structs.ClusterParameterSampleInfo `json:"params" validate:"required"`
 	Reboot    bool                                 `json:"reboot"`
 	Nodes     []string                             `json:"nodes" swaggerignore:"true"`
@@ -290,17 +268,37 @@ type UpdateClusterParametersResp struct {
 	structs.AsyncTaskWorkFlowInfo
 }
 
-type InspectClusterParametersReq struct {
-	ClusterID string `json:"clusterId" validate:"required,min=8,max=64"`
+type InspectParametersReq struct {
+	ClusterID  string `json:"clusterId" swaggerignore:"true" validate:"required,min=4,max=64"`
+	InstanceID string `json:"instanceId" form:"instanceId"`
 }
 
-type InspectClusterParametersResp struct {
-	ParamID      int64                      `json:"paramId" example:"1"`
-	Name         string                     `json:"name" example:"binlog_cache"`
-	InstanceType string                     `json:"instanceType" example:"tidb"`
-	Instance     string                     `json:"instance" example:"172.16.5.23"`
-	RealValue    structs.ParameterRealValue `json:"realValue"`
-	InspectValue string                     `json:"inspectValue" example:"1"`
+type InspectParametersResp struct {
+	Params []InspectParameters `json:"params"`
+}
+
+type InspectParameters struct {
+	InstanceID     string                 `json:"instanceId"`
+	InstanceType   string                 `json:"instanceType"`
+	ParameterInfos []InspectParameterInfo `json:"parameterInfos"`
+}
+
+type InspectParameterInfo struct {
+	ParamID        string                     `json:"paramId" example:"1"`
+	Category       string                     `json:"category" example:"log"`
+	Name           string                     `json:"name" example:"binlog_cache"`
+	SystemVariable string                     `json:"systemVariable" example:"log.log_level"`
+	Type           int                        `json:"type" example:"0" enums:"0,1,2,3,4"`
+	Unit           string                     `json:"unit" example:"MB"`
+	UnitOptions    []string                   `json:"unitOptions" example:"KB,MB,GB"`
+	Range          []string                   `json:"range" example:"1, 1000"`
+	RangeType      int                        `json:"rangeType" example:"1" enums:"0,1,2"`
+	HasReboot      int                        `json:"hasReboot" example:"0" enums:"0,1"`
+	ReadOnly       int                        `json:"readOnly" example:"0" enums:"0,1"`
+	Description    string                     `json:"description" example:"binlog cache size"`
+	Note           string                     `json:"note" example:"binlog cache size"`
+	RealValue      structs.ParameterRealValue `json:"realValue"`
+	InspectValue   interface{}                `json:"inspectValue"`
 }
 
 type PreviewClusterResp struct {
@@ -318,4 +316,18 @@ type PreviewClusterResp struct {
 type ScaleOutPreviewResp struct {
 	StockCheckResult  []structs.ResourceStockCheckResult `json:"stockCheckResult"`
 	CapabilityIndexes []structs.Index                    `json:"capabilityIndexes"`
+}
+
+type ApiEditConfigReq struct {
+	InstanceHost string
+	InstancePort uint
+	Headers      map[string]string
+	ConfigMap    map[string]interface{}
+}
+
+type ApiShowConfigReq struct {
+	InstanceHost string
+	InstancePort uint
+	Params       map[string]string
+	Headers      map[string]string
 }

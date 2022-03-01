@@ -24,34 +24,32 @@ import (
 	"time"
 )
 
-func AuditLog() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		visitor := &VisitorIdentity{
-			"unknown",
-			"unknown",
-			"unknown",
-		}
-		v, _ := c.Get(VisitorIdentityKey)
-		if v != nil {
-			visitor, _ = v.(*VisitorIdentity)
-		}
-
-		//process request
-		c.Next()
-
-		path := c.Request.URL.Path
-		entry := framework.LogForkFile(constants.LogFileAudit).WithFields(
-			log.Fields{
-				"operatorID":   visitor.AccountId,
-				"operatorName": visitor.AccountName,
-				"clientIP":     c.ClientIP(),
-				"operatorFinishTime": time.Now(),
-				"event":        c.Request.Method,
-				"operation":    path,
-				"status":       c.Writer.Status(),
-				"referer":      c.Request.Referer(),
-				"userAgent":    c.Request.UserAgent(),
-			})
-		entry.Info()
+func AuditLog(c *gin.Context) {
+	visitor := &VisitorIdentity{
+		"unknown",
+		"unknown",
+		"unknown",
 	}
+	v, _ := c.Get(VisitorIdentityKey)
+	if v != nil {
+		visitor, _ = v.(*VisitorIdentity)
+	}
+
+	//process request
+	c.Next()
+
+	path := c.Request.URL.Path
+	entry := framework.LogForkFile(constants.LogFileAudit).WithFields(
+		log.Fields{
+			"operatorID":   visitor.AccountId,
+			"operatorName": visitor.AccountName,
+			"clientIP":     c.ClientIP(),
+			"operatorFinishTime": time.Now(),
+			"event":        c.Request.Method,
+			"operation":    path,
+			"status":       c.Writer.Status(),
+			"referer":      c.Request.Referer(),
+			"userAgent":    c.Request.UserAgent(),
+		})
+	entry.Info()
 }

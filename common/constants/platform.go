@@ -30,34 +30,40 @@ const (
 	ConfigKeyBackupS3Endpoint        string = "BackupS3Endpoint"
 	ConfigKeyBackupS3AccessKey       string = "BackupS3AccessKey"
 	ConfigKeyBackupS3SecretAccessKey string = "BackupS3SecretAccessKey"
+	ConfigKeyBackupRateLimit         string = "BackupRateLimit"
+	ConfigKeyRestoreRateLimit        string = "RestoreRateLimit"
+	ConfigKeyBackupConcurrency       string = "BackupConcurrency"
+	ConfigKeyRestoreConcurrency      string = "RestoreConcurrency"
 
 	ConfigKeyImportShareStoragePath string = "ImportShareStoragePath"
 	ConfigKeyExportShareStoragePath string = "ExportShareStoragePath"
+	ConfigKeyDumplingThreadNum      string = "DumplingThreadNum"
 
 	ConfigTelemetrySwitch   string = "config_telemetry_switch"
 	ConfigPrometheusAddress string = "config_prometheus_address"
+
+	ConfigKeyRetainedPortRange string = "config_retained_port_range"
 )
 
-type DBUserRoleType string
+type SystemState string
 
-// DBUser role type
 const (
-	Root                      DBUserRoleType = "Root"                    // root
-	DBUserBackupRestore       DBUserRoleType = "EM_Backup_Restore"       // user for backup and restore
-	DBUserParameterManagement DBUserRoleType = "EM_Parameter_Management" // user for managing parameters
-	DBUserCDCDataSync         DBUserRoleType = "CDC_Data_Sync"           // user for CDC data synchronization
+	SystemInitialing    SystemState = "Initialing"
+	SystemServiceReady  SystemState = "ServiceReady"
+	SystemDataReady     SystemState = "DataReady"
+	SystemUpgrading     SystemState = "Upgrading"
+	SystemUnserviceable SystemState = "Unserviceable"
+	SystemRunning       SystemState = "Running"
+	SystemFailure       SystemState = "Failure"
 )
 
-var DBUserName = map[DBUserRoleType]string{
-	Root:                      "root",
-	DBUserBackupRestore:       "EM_Backup_Restore",
-	DBUserParameterManagement: "EM_Parameter_Management",
-	DBUserCDCDataSync:         "CDC_Data_Sync",
-}
+type SystemEvent string
 
-var DBUserPermission = map[DBUserRoleType][]string{
-	Root:                      {"ALL PRIVILEGES"},
-	DBUserBackupRestore:       {"ALL PRIVILEGES", "BACKUP_ADMIN,RESTORE_ADMIN"},
-	DBUserParameterManagement: {"ALL PRIVILEGES", "CONFIG,RELOAD,SYSTEM_VARIABLES_ADMIN"},
-	DBUserCDCDataSync:         {"ALL PRIVILEGES", "RESTRICTED_REPLICA_WRITER_ADMIN"},
-}
+const (
+	SystemProcessStarted  SystemEvent = "ProcessStarted"
+	SystemDataInitialized SystemEvent = "DataInitialized"
+	SystemProcessUpgrade  SystemEvent = "ProcessUpgrade"
+	SystemServe           SystemEvent = "Serve"
+	SystemStop            SystemEvent = "Stop"
+	SystemFailureDetected SystemEvent = "FailureDetected"
+)

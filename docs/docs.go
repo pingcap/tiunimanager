@@ -922,6 +922,223 @@ var doc = `{
                 }
             }
         },
+        "/clusters/:clusterId/upgrade": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "request for upgrade TiDB cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster upgrade"
+                ],
+                "summary": "request for upgrade TiDB cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "upgrade request",
+                        "name": "upgradeReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.UpgradeClusterReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.UpgradeClusterResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/clusters/:clusterId/upgrade/diff": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query config diff between current cluster and target upgrade version",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster upgrade"
+                ],
+                "summary": "query config diff between current cluster and target upgrade version",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "v5.0.0",
+                        "name": "targetVersion",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.QueryUpgradeVersionDiffInfoResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/clusters/:clusterId/upgrade/path": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query upgrade path for given cluster id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster upgrade"
+                ],
+                "summary": "query upgrade path for given cluster id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.QueryUpgradePathRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/clusters/clone": {
             "post": {
                 "security": [
@@ -1240,6 +1457,75 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/cluster.RestoreNewClusterResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/clusters/switchover": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "master/slave switchover",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "switchover"
+                ],
+                "summary": "master/slave switchover",
+                "parameters": [
+                    {
+                        "description": "switchover request",
+                        "name": "masterSlaveClusterSwitchoverReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.MasterSlaveClusterSwitchoverReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.MasterSlaveClusterSwitchoverResp"
                                         }
                                     }
                                 }
@@ -2080,6 +2366,15 @@ var doc = `{
                         "name": "clusterId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "inspect params request",
+                        "name": "inspectReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.InspectParametersReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -2094,10 +2389,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/cluster.InspectClusterParametersResp"
-                                            }
+                                            "$ref": "#/definitions/cluster.InspectParametersResp"
                                         }
                                     }
                                 }
@@ -2680,67 +2972,6 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/knowledges/": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "show cluster knowledge",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "knowledge"
-                ],
-                "summary": "show cluster knowledge",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/knowledge.ClusterTypeSpec"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
                         }
                     },
                     "401": {
@@ -4424,7 +4655,7 @@ var doc = `{
                 "tags": [
                     "resource"
                 ],
-                "summary": "Show all hosts list in TiEM",
+                "summary": "Show all hosts list in EM",
                 "parameters": [
                     {
                         "type": "string",
@@ -4521,7 +4752,7 @@ var doc = `{
                 "tags": [
                     "resource"
                 ],
-                "summary": "Import a batch of hosts to TiEM",
+                "summary": "Import a batch of hosts to EM",
                 "parameters": [
                     {
                         "type": "string",
@@ -4934,6 +5165,54 @@ var doc = `{
                         "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/system/info": {
+            "get": {
+                "description": "get system info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "get system info",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "name": "withVersionDetail",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.GetSystemInfoResp"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
@@ -6359,6 +6638,9 @@ var doc = `{
                     "description": "The Region where the cluster is located",
                     "type": "string"
                 },
+                "resourceParameters": {
+                    "$ref": "#/definitions/structs.ClusterResourceInfo"
+                },
                 "sourceClusterId": {
                     "description": "specify source cluster id(require)",
                     "type": "string"
@@ -6706,31 +6988,135 @@ var doc = `{
                 }
             }
         },
-        "cluster.InspectClusterParametersResp": {
+        "cluster.InspectParameterInfo": {
             "type": "object",
             "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "log"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "binlog cache size"
+                },
+                "hasReboot": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "example": 0
+                },
                 "inspectValue": {
-                    "type": "string",
-                    "example": "1"
-                },
-                "instance": {
-                    "type": "string",
-                    "example": "172.16.5.23"
-                },
-                "instanceType": {
-                    "type": "string",
-                    "example": "tidb"
+                    "type": "object"
                 },
                 "name": {
                     "type": "string",
                     "example": "binlog_cache"
                 },
+                "note": {
+                    "type": "string",
+                    "example": "binlog cache size"
+                },
                 "paramId": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "range": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "1",
+                        " 1000"
+                    ]
+                },
+                "rangeType": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ],
                     "example": 1
+                },
+                "readOnly": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "example": 0
                 },
                 "realValue": {
                     "$ref": "#/definitions/structs.ParameterRealValue"
+                },
+                "systemVariable": {
+                    "type": "string",
+                    "example": "log.log_level"
+                },
+                "type": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                    ],
+                    "example": 0
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "MB"
+                },
+                "unitOptions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "KB",
+                        "MB",
+                        "GB"
+                    ]
+                }
+            }
+        },
+        "cluster.InspectParameters": {
+            "type": "object",
+            "properties": {
+                "instanceId": {
+                    "type": "string"
+                },
+                "instanceType": {
+                    "type": "string"
+                },
+                "parameterInfos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/cluster.InspectParameterInfo"
+                    }
+                }
+            }
+        },
+        "cluster.InspectParametersReq": {
+            "type": "object",
+            "properties": {
+                "instanceId": {
+                    "type": "string"
+                }
+            }
+        },
+        "cluster.InspectParametersResp": {
+            "type": "object",
+            "properties": {
+                "params": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/cluster.InspectParameters"
+                    }
                 }
             }
         },
@@ -6792,6 +7178,35 @@ var doc = `{
                 "version": {
                     "type": "string",
                     "example": "2.4.0"
+                }
+            }
+        },
+        "cluster.MasterSlaveClusterSwitchoverReq": {
+            "type": "object",
+            "required": [
+                "sourceClusterID",
+                "targetClusterID"
+            ],
+            "properties": {
+                "force": {
+                    "type": "boolean"
+                },
+                "sourceClusterID": {
+                    "description": "old master/new slave",
+                    "type": "string"
+                },
+                "targetClusterID": {
+                    "description": "new master/old slave",
+                    "type": "string"
+                }
+            }
+        },
+        "cluster.MasterSlaveClusterSwitchoverResp": {
+            "type": "object",
+            "properties": {
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
                 }
             }
         },
@@ -7058,6 +7473,28 @@ var doc = `{
                 "grafanaUrl": {
                     "type": "string",
                     "example": "http://127.0.0.1:3000"
+                }
+            }
+        },
+        "cluster.QueryUpgradePathRsp": {
+            "type": "object",
+            "properties": {
+                "paths": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ProductUpgradePathItem"
+                    }
+                }
+            }
+        },
+        "cluster.QueryUpgradeVersionDiffInfoResp": {
+            "type": "object",
+            "properties": {
+                "configDiffInfos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ProductUpgradeVersionConfigDiffItem"
+                    }
                 }
             }
         },
@@ -7410,6 +7847,51 @@ var doc = `{
                 }
             }
         },
+        "cluster.UpgradeClusterReq": {
+            "type": "object",
+            "required": [
+                "targetVersion",
+                "upgradeType"
+            ],
+            "properties": {
+                "configs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ClusterUpgradeVersionConfigItem"
+                    }
+                },
+                "targetVersion": {
+                    "type": "string",
+                    "example": "v5.0.0"
+                },
+                "upgradeType": {
+                    "type": "string",
+                    "enum": [
+                        "in-place",
+                        "migration"
+                    ]
+                },
+                "upgradeWay": {
+                    "type": "string",
+                    "enum": [
+                        "offline",
+                        "online"
+                    ]
+                }
+            }
+        },
+        "cluster.UpgradeClusterResp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
         "controller.CommonResult": {
             "type": "object",
             "properties": {
@@ -7452,133 +7934,6 @@ var doc = `{
                 },
                 "page": {
                     "$ref": "#/definitions/controller.Page"
-                }
-            }
-        },
-        "knowledge.ClusterComponent": {
-            "type": "object",
-            "properties": {
-                "componentName": {
-                    "type": "string"
-                },
-                "componentPurpose": {
-                    "type": "string"
-                },
-                "componentType": {
-                    "type": "string"
-                }
-            }
-        },
-        "knowledge.ClusterComponentSpec": {
-            "type": "object",
-            "properties": {
-                "clusterComponent": {
-                    "$ref": "#/definitions/knowledge.ClusterComponent"
-                },
-                "componentConstraint": {
-                    "$ref": "#/definitions/knowledge.ComponentConstraint"
-                },
-                "componentPortConstraint": {
-                    "$ref": "#/definitions/knowledge.ComponentPortConstraint"
-                }
-            }
-        },
-        "knowledge.ClusterType": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "knowledge.ClusterTypeSpec": {
-            "type": "object",
-            "properties": {
-                "clusterType": {
-                    "$ref": "#/definitions/knowledge.ClusterType"
-                },
-                "versionSpecs": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/knowledge.ClusterVersionSpec"
-                    }
-                }
-            }
-        },
-        "knowledge.ClusterVersion": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "knowledge.ClusterVersionSpec": {
-            "type": "object",
-            "properties": {
-                "archTypes": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "clusterPortConstraint": {
-                    "$ref": "#/definitions/knowledge.ComponentPortConstraint"
-                },
-                "clusterVersion": {
-                    "$ref": "#/definitions/knowledge.ClusterVersion"
-                },
-                "componentSpecs": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/knowledge.ClusterComponentSpec"
-                    }
-                }
-            }
-        },
-        "knowledge.ComponentConstraint": {
-            "type": "object",
-            "properties": {
-                "availableSpecCodes": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "componentRequired": {
-                    "type": "boolean"
-                },
-                "minZoneQuantity": {
-                    "type": "integer"
-                },
-                "parasite": {
-                    "type": "boolean"
-                },
-                "suggestedNodeQuantities": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "knowledge.ComponentPortConstraint": {
-            "type": "object",
-            "properties": {
-                "portCount": {
-                    "type": "integer"
-                },
-                "portRangeEnd": {
-                    "type": "integer"
-                },
-                "portRangeStart": {
-                    "type": "integer"
                 }
             }
         },
@@ -8185,6 +8540,20 @@ var doc = `{
                 }
             }
         },
+        "message.GetSystemInfoResp": {
+            "type": "object",
+            "properties": {
+                "currentVersion": {
+                    "$ref": "#/definitions/structs.SystemVersionInfo"
+                },
+                "info": {
+                    "$ref": "#/definitions/structs.SystemInfo"
+                },
+                "lastVersion": {
+                    "$ref": "#/definitions/structs.SystemVersionInfo"
+                }
+            }
+        },
         "message.GetTenantReq": {
             "type": "object",
             "properties": {
@@ -8280,10 +8649,18 @@ var doc = `{
                 },
                 "hasApply": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
                     "example": 1
                 },
                 "hasReboot": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
                     "example": 0
                 },
                 "instanceType": {
@@ -8303,8 +8680,21 @@ var doc = `{
                         "type": "string"
                     }
                 },
+                "rangeType": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ],
+                    "example": 1
+                },
                 "readOnly": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
                     "example": 0
                 },
                 "systemVariable": {
@@ -8313,14 +8703,39 @@ var doc = `{
                 },
                 "type": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                    ],
                     "example": 0
                 },
                 "unit": {
                     "type": "string",
-                    "example": "mb"
+                    "example": "MB"
+                },
+                "unitOptions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "KB",
+                        "MB",
+                        "GB"
+                    ]
                 },
                 "updateSource": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                    ],
                     "example": 0
                 }
             }
@@ -9099,6 +9514,15 @@ var doc = `{
                         " 1000"
                     ]
                 },
+                "rangeType": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ],
+                    "example": 1
+                },
                 "readOnly": {
                     "type": "integer",
                     "enum": [
@@ -9127,7 +9551,18 @@ var doc = `{
                 },
                 "unit": {
                     "type": "string",
-                    "example": "mb"
+                    "example": "MB"
+                },
+                "unitOptions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "KB",
+                        "MB",
+                        "GB"
+                    ]
                 },
                 "updateSource": {
                     "type": "integer",
@@ -9135,7 +9570,8 @@ var doc = `{
                         0,
                         1,
                         2,
-                        3
+                        3,
+                        4
                     ],
                     "example": 0
                 },
@@ -9209,6 +9645,33 @@ var doc = `{
                 },
                 "zoneCode": {
                     "type": "string"
+                }
+            }
+        },
+        "structs.ClusterUpgradeVersionConfigItem": {
+            "type": "object",
+            "required": [
+                "instanceType",
+                "name",
+                "paramId",
+                "value"
+            ],
+            "properties": {
+                "instanceType": {
+                    "type": "string",
+                    "example": "pd-server"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "max-merge-region-size"
+                },
+                "paramId": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "value": {
+                    "type": "string",
+                    "example": "20"
                 }
             }
         },
@@ -9544,6 +10007,15 @@ var doc = `{
                         " 1000"
                     ]
                 },
+                "rangeType": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ],
+                    "example": 1
+                },
                 "readOnly": {
                     "type": "integer",
                     "enum": [
@@ -9569,7 +10041,18 @@ var doc = `{
                 },
                 "unit": {
                     "type": "string",
-                    "example": "mb"
+                    "example": "MB"
+                },
+                "unitOptions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "KB",
+                        "MB",
+                        "GB"
+                    ]
                 },
                 "updateSource": {
                     "type": "integer",
@@ -9577,7 +10060,8 @@ var doc = `{
                         0,
                         1,
                         2,
-                        3
+                        3,
+                        4
                     ],
                     "example": 0
                 },
@@ -9739,6 +10223,133 @@ var doc = `{
                 }
             }
         },
+        "structs.ProductUpgradePathItem": {
+            "type": "object",
+            "required": [
+                "upgradeType",
+                "versions"
+            ],
+            "properties": {
+                "upgradeType": {
+                    "type": "string",
+                    "enum": [
+                        "in-place",
+                        "migration"
+                    ]
+                },
+                "upgradeWays": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "offline",
+                        "online"
+                    ]
+                },
+                "versions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "v5.3.0",
+                        "v5.4.0"
+                    ]
+                }
+            }
+        },
+        "structs.ProductUpgradeVersionConfigDiffItem": {
+            "type": "object",
+            "required": [
+                "category",
+                "currentValue",
+                "instanceType",
+                "name",
+                "paramId",
+                "range",
+                "rangeType",
+                "suggestValue",
+                "type",
+                "unit",
+                "unitOptions"
+            ],
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "basic"
+                },
+                "currentValue": {
+                    "type": "string",
+                    "example": "20"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "desc for max-merge-region-size"
+                },
+                "instanceType": {
+                    "type": "string",
+                    "example": "pd-server"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "max-merge-region-size"
+                },
+                "paramId": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "range": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "1",
+                        " 1000"
+                    ]
+                },
+                "rangeType": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ],
+                    "example": 1
+                },
+                "suggestValue": {
+                    "type": "string",
+                    "example": "30"
+                },
+                "type": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                    ],
+                    "example": 0
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "MB"
+                },
+                "unitOptions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "KB",
+                        "MB",
+                        "GB"
+                    ]
+                }
+            }
+        },
         "structs.ProductVersion": {
             "type": "object",
             "properties": {
@@ -9862,6 +10473,40 @@ var doc = `{
                     "type": "integer"
                 },
                 "zone": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.SystemInfo": {
+            "type": "object",
+            "properties": {
+                "currentVersionID": {
+                    "type": "string"
+                },
+                "lastVersionID": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "systemLogo": {
+                    "type": "string"
+                },
+                "systemName": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.SystemVersionInfo": {
+            "type": "object",
+            "properties": {
+                "desc": {
+                    "type": "string"
+                },
+                "releaseNote": {
+                    "type": "string"
+                },
+                "versionID": {
                     "type": "string"
                 }
             }
@@ -10104,11 +10749,11 @@ type swaggerInfo struct {
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
 	Version:     "1.0",
-	Host:        "localhost:4100",
+	Host:        "localhost:4116",
 	BasePath:    "/api/v1/",
 	Schemes:     []string{},
-	Title:       "TiEM UI API",
-	Description: "TiEM UI API",
+	Title:       "EM UI API",
+	Description: "EM UI API",
 }
 
 type s struct{}

@@ -1,3 +1,26 @@
+/******************************************************************************
+ * Copyright (c)  2022 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ ******************************************************************************/
+
+/*******************************************************************************
+ * @File: clusteruser.go
+ * @Description:
+ * @Author: xieyujie@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2022/1/21 14:31
+*******************************************************************************/
+
 package sql
 
 import (
@@ -6,7 +29,6 @@ import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 )
 
@@ -20,7 +42,7 @@ func ExecCommandThruSQL(ctx context.Context, db *sql.DB, sqlCommand string) erro
 	return nil
 }
 
-func CreateDBUser(ctx context.Context, connec secondparty.DbConnParam, user *management.DBUser, workFlowNodeID string) error {
+func CreateDBUser(ctx context.Context, connec DbConnParam, user *management.DBUser, workFlowNodeID string) error {
 	logInFunc := framework.LogWithContext(ctx).WithField("bizid", workFlowNodeID)
 	logInFunc.Infof("createDBUser, user: %v, bizId: %s", user, workFlowNodeID)
 
@@ -58,7 +80,7 @@ func CreateDBUser(ctx context.Context, connec secondparty.DbConnParam, user *man
 	return nil
 }
 
-func UpdateDBUserPassword(ctx context.Context, connec secondparty.DbConnParam, name string, password string, workFlowNodeID string) error {
+func UpdateDBUserPassword(ctx context.Context, connec DbConnParam, name string, password string, workFlowNodeID string) error {
 	logInFunc := framework.LogWithContext(ctx).WithField("bizid", workFlowNodeID)
 	logInFunc.Infof("UpdateDBUserPassword, name: %v, bizId: %s", name, workFlowNodeID)
 
@@ -81,7 +103,7 @@ func UpdateDBUserPassword(ctx context.Context, connec secondparty.DbConnParam, n
 	return nil
 }
 
-func DeleteDBUser(ctx context.Context, connec secondparty.DbConnParam, name string, workFlowNodeID string) error {
+func DeleteDBUser(ctx context.Context, connec DbConnParam, name string, workFlowNodeID string) error {
 	logInFunc := framework.LogWithContext(ctx).WithField("bizid", workFlowNodeID)
 	logInFunc.Infof("DeleteDBUser, name: %v, bizId: %s", name, workFlowNodeID)
 

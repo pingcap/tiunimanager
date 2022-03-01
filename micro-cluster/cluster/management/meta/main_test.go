@@ -16,15 +16,15 @@
 package meta
 
 import (
-	"github.com/pingcap-inc/tiem/library/knowledge"
-	"github.com/pingcap-inc/tiem/models"
 	"os"
 	"testing"
+
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/models"
 )
 
 func TestMain(m *testing.M) {
-	knowledge.LoadKnowledge()
 	models.MockDB()
-
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
 	os.Exit(m.Run())
 }

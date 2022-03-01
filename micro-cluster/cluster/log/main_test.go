@@ -49,7 +49,7 @@ func TestMain(m *testing.M) {
 			testFilePath = d.GetDataDir()
 			os.MkdirAll(testFilePath, 0755)
 			models.MockDB()
-			return models.Open(d, false)
+			return models.Open(d)
 		},
 	)
 	code := m.Run()

@@ -29,9 +29,33 @@ import (
 	"github.com/pingcap-inc/tiem/workflow"
 )
 
+func validateHostInfo(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
+	log := framework.LogWithContext(ctx)
+	log.Infoln("begin validate host info")
+
+	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
+	if err != nil {
+		log.Errorf("validate host failed for get flow context, %v", err)
+		return err
+	}
+	for _, host := range hosts {
+		err = resourcePool.ValidateZoneInfo(ctx, &host)
+		if err != nil {
+			log.Errorf("validate host %s %s failed, %v", host.HostName, host.IP, err)
+			return err
+		}
+		log.Infof("validate host %v succeed", host)
+	}
+	node.Record(fmt.Sprintf("validate hosts %v succeed", hosts))
+	return nil
+}
+
 func authHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin authHosts")
+
+	deployUser := framework.GetCurrentDeployUser()
+	userGroup := deployUser
 
 	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
@@ -39,14 +63,14 @@ func authHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err
 		return err
 	}
 	for _, host := range hosts {
-		err = resourcePool.hostInitiator.CopySSHID(ctx, &host)
+		err = resourcePool.hostInitiator.AuthHost(ctx, deployUser, userGroup, &host)
 		if err != nil {
 			log.Errorf("auth host %s %s@%s failed, %v", host.HostName, host.UserName, host.IP, err)
 			return err
 		}
-		log.Infof("auth host %v succeed", host)
+		log.Infof("auth host %s %s succeed", host.HostName, host.IP)
 	}
-	node.Record("auth hosts ")
+	node.Record(fmt.Sprintf("auth host %s %s with %s:%s succeed", hosts[0].HostName, hosts[0].IP, deployUser, userGroup))
 	return nil
 }
 
@@ -67,9 +91,9 @@ func prepare(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err e
 			log.Errorf("prepare host %s %s failed, %v", host.HostName, host.IP, err)
 			return err
 		}
-		log.Infof("prepare host %v succeed", host)
+		log.Infof("prepare host %s %s succeed", host.HostName, host.IP)
 	}
-	node.Record("prepare hosts ")
+	node.Record(fmt.Sprintf("prepare host %s %s succeed", hosts[0].HostName, hosts[0].IP))
 	return nil
 }
 
@@ -95,15 +119,9 @@ func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 			log.Errorf("verify host %s %s failed, %v", host.HostName, host.IP, err)
 			return err
 		}
-		log.Infof("verify host %v succeed", host)
+		log.Infof("verify host %s %s succeed", host.HostName, host.IP)
 	}
-	node.Record("verify hosts ")
-	return nil
-}
-
-func configHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
-	framework.LogWithContext(ctx).Info("begin configHosts")
-	defer framework.LogWithContext(ctx).Info("end configHosts")
+	node.Record(fmt.Sprintf("verify host %s %s succeed", hosts[0].HostName, hosts[0].IP))
 	return nil
 }
 
@@ -121,8 +139,8 @@ func installSoftware(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext
 		log.Errorf("install software failed for %v, %v", hosts, err)
 		return err
 	}
-	log.Infof("install software succeed for %v", hosts)
-	node.Record("install software for hosts ")
+	log.Infof("install software succeed for host %s %s", hosts[0].HostName, hosts[0].IP)
+	node.Record(fmt.Sprintf("install software for host %s %s succeed", hosts[0].HostName, hosts[0].IP))
 	return nil
 }
 
@@ -135,14 +153,30 @@ func joinEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) 
 		log.Errorf("join em cluster failed for get flow context, %v", err)
 		return err
 	}
+
+	// Check whether host has already install filebeat
+	installed, err := resourcePool.hostInitiator.PreCheckHostInstallFilebeat(ctx, hosts)
+	if err != nil {
+		log.Errorf("precheck host %v filebeat failed, %v", hosts, err)
+		return err
+	}
+	if installed {
+		msg := fmt.Sprintf("host %v has already installed filebeat, no need to re-join em cluster", hosts)
+		log.Infoln(msg)
+		node.Success(msg)
+		return nil
+	}
+
 	// Store nodeID for second party service
-	installSoftwareCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowNodeIDKey, node.ID)
-	if err = resourcePool.hostInitiator.JoinEMCluster(installSoftwareCtx, hosts); err != nil {
+	installSoftwareCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowIDKey, node.ID)
+	operationID, err := resourcePool.hostInitiator.JoinEMCluster(installSoftwareCtx, hosts)
+	if err != nil {
 		log.Errorf("join em cluster failed for %v, %v", hosts, err)
 		return err
 	}
 
-	node.Record("join em cluster for hosts ")
+	node.Record(fmt.Sprintf("join em cluster for host %s %s succeed", hosts[0].HostName, hosts[0].IP))
+	node.OperationID = operationID
 	return nil
 }
 
@@ -238,16 +272,32 @@ func leaveEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 		log.Errorf("leave em cluster failed for get flow context, %v", err)
 		return err
 	}
+
+	installed, err := resourcePool.hostInitiator.PreCheckHostInstallFilebeat(ctx, hosts)
+	if err != nil {
+		log.Errorf("precheck host %v filebeat failed, %v", hosts, err)
+		return err
+	}
+	if !installed {
+		msg := fmt.Sprintf("host %v has already uninstalled filebeat, no need to leave em cluster", hosts)
+		log.Infoln(msg)
+		node.Success(msg)
+		return nil
+	}
+
 	// Store nodeID for second party service
-	wrapCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowNodeIDKey, node.ID)
+	wrapCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowIDKey, node.ID)
+
 	for _, host := range hosts {
 		clusterNodeId := fmt.Sprintf("%s:%d", host.IP, rp_consts.HostFileBeatPort)
-		if err = resourcePool.hostInitiator.LeaveEMCluster(wrapCtx, clusterNodeId); err != nil {
+		operationID, err := resourcePool.hostInitiator.LeaveEMCluster(wrapCtx, clusterNodeId)
+		if err != nil {
 			log.Errorf("leave em cluster failed for %v, %v", host.IP, err)
 			return err
 		}
+		node.OperationID = operationID
 	}
-	node.Record("leave em cluster for hosts ")
+	node.Record(fmt.Sprintf("leave em cluster for host %s %s succeed", hosts[0].HostName, hosts[0].IP))
 	return nil
 }
 

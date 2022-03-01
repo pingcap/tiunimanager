@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	TiEM string = "tiem"
+	EM string = "em"
 )
 
 //System log-related constants
@@ -47,6 +47,7 @@ const (
 const (
 	DBDirPrefix      string = "/"
 	DatabaseFileName string = "em.db"
+	SqliteFileName   string = "sqlite.db"
 )
 
 // Enterprise Manager Certificates constants

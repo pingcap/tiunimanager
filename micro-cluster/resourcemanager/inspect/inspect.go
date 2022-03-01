@@ -33,16 +33,21 @@ type HostInspect struct {
 }
 
 var once sync.Once
-var hostInspector *HostInspect
+var hostInspector HostInspector
 
 func GetHostInspector() HostInspector {
 	once.Do(func() {
 		if hostInspector == nil {
-			hostInspector = new(HostInspect)
-			hostInspector.resouceRW = models.GetResourceReaderWriter()
+			inspect := new(HostInspect)
+			inspect.resouceRW = models.GetResourceReaderWriter()
+			hostInspector = inspect
 		}
 	})
 	return hostInspector
+}
+
+func MockHostInspector(inspector HostInspector) {
+	hostInspector = inspector
 }
 
 func (p *HostInspect) SetResourceReaderWriter(rw resource.ReaderWriter) {

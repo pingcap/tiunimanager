@@ -871,7 +871,9 @@ var offlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
 		"checkVersionDone":        {"checkMD5", "checkMD5Done", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeMD5},
 		"checkMD5Done":            {"checkUpgradeTime", "checkUpgradeTimeDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeTime},
 		"checkUpgradeTimeDone":    {"checkConfig", "checkConfigDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeConfig},
-		"checkConfigDone":         {"checkSystemHealth", "success", "failAfterUpgrade", workflow.SyncFuncNode, checkRegionHealth},
+		"checkConfigDone":         {"checkSystemHealth", "checkSystemHealthDone", "failAfterUpgrade", workflow.SyncFuncNode, checkRegionHealth},
+		"checkSystemHealthDone":   {"applyParameterGroup", "applyParameterGroupDone", "failAfterUpgrade", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
+		"applyParameterGroupDone": {"adjustParameters", "success", "failAfterUpgrade", workflow.SyncFuncNode, adjustParameters},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
 		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertConfigAfterFailure, endMaintenance)},
 		"failAfterUpgrade":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
@@ -1015,7 +1017,7 @@ func compareConfigDifference(ctx context.Context, clusterParameterInfos []struct
 		framework.LogWithContext(ctx).Debugf("check clusterParam (%v)", clusterParam)
 		if pgParam, ok := pgParamMap[id]; ok {
 			framework.LogWithContext(ctx).Debugf("compare clusterParam (%v) and pgParam (%v)", clusterParam, pgParam)
-			if clusterParam.RealValue.ClusterValue != pgParam.DefaultValue {
+			if strings.Trim(clusterParam.RealValue.ClusterValue, " ") != strings.Trim(pgParam.DefaultValue, " ") {
 				resp = append(resp, &structs.ProductUpgradeVersionConfigDiffItem{
 					ParamId:      id,
 					Category:     pgParam.Category,

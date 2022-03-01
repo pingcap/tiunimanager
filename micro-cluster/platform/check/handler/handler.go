@@ -19,7 +19,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/fatih/color"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -268,6 +267,7 @@ func (p *Report) GetClusterRegionStatus(ctx context.Context, clusterID string) (
 	pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
 
 	hasUnhealthy := false
+	var errMsg string
 	for _, state := range []string{"miss-peer", "pending-peer"} {
 		url := fmt.Sprintf("http://%s/pd/api/v1/regions/check/%s", pdID, state)
 		params := make(map[string]string)
@@ -286,15 +286,16 @@ func (p *Report) GetClusterRegionStatus(ctx context.Context, clusterID string) (
 				fmt.Sprintf("parse regions info error: %s", err.Error()), err)
 		}
 		if regionsInfo.Count > 0 {
-			regionStatus.Health = false
-			regionStatus.Message = fmt.Sprintf("Regions are not fully healthy: %s",
-				color.YellowString("%d %s", regionsInfo.Count, state))
+			errMsg += fmt.Sprintf("[%d %s]", regionsInfo.Count, state)
 			hasUnhealthy = true
 		}
 	}
 	if !hasUnhealthy {
 		regionStatus.Health = true
 		regionStatus.Message = "All regions are healthy."
+	} else {
+		regionStatus.Health = false
+		regionStatus.Message = fmt.Sprintf("Regions are not fully healthy: %s", errMsg)
 	}
 
 	return regionStatus, nil
@@ -333,17 +334,20 @@ func (p *Report) GetClusterHealthStatus(ctx context.Context, clusterID string) (
 	}
 
 	hasUnhealthy := false
+	var errMsg string
 	for _, info := range healthsInfo {
 		if !info.Health {
 			hasUnhealthy = true
-			healthStatus.Health = false
-			healthStatus.Message = fmt.Sprintf("Cluster node %s are not fully healthy", info.Name)
+			errMsg += fmt.Sprintf("[node %s]", info.Name)
 		}
 	}
 
 	if !hasUnhealthy {
 		healthStatus.Health = true
 		healthStatus.Message = "Cluster are fully healthy"
+	} else {
+		healthStatus.Health = false
+		healthStatus.Message = fmt.Sprintf("Cluster %s are not fully healthy", errMsg)
 	}
 
 	return healthStatus, nil

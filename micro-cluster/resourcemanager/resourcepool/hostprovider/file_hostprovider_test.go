@@ -25,6 +25,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/models"
+	cluster_rw "github.com/pingcap-inc/tiem/models/cluster/management"
 	resource_models "github.com/pingcap-inc/tiem/models/resource"
 	resourcepool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
@@ -386,4 +387,30 @@ func Test_ValidateZoneInfo_Succeed(t *testing.T) {
 	err = hostProvider.ValidateZoneInfo(context.TODO(), &structs.HostInfo{Vendor: "Fake_Vendor3", Region: "Fake_Region", AZ: "Fake_Zone"})
 	assert.NotNil(t, err)
 	assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
+}
+
+func Test_buildInstancesOnHost(t *testing.T) {
+	items := []cluster_rw.HostInstanceItem{
+		{HostID: "F6ejwHdcQNeHQxQDF0HzMQ", ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "TiDB"},
+		{HostID: "F6ejwHdcQNeHQxQDF0HzMQ", ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "TiDB"},
+		{HostID: "HWlv9r2ORayaZlUs6HUgTg", ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "TiKV"},
+		{HostID: "HWlv9r2ORayaZlUs6HUgTg", ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "TiKV"},
+		{HostID: "KU8QP0-uQfyqP7TvPp0deQ", ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "CDC"},
+		{HostID: "ZIqy0JAuTxuglIPHNL83hg", ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "AlertManger"},
+		{HostID: "ZIqy0JAuTxuglIPHNL83hg", ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "Grafana"},
+		{HostID: "ZIqy0JAuTxuglIPHNL83hg", ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "PD"},
+		{HostID: "ZIqy0JAuTxuglIPHNL83hg", ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "Prometheus"},
+		{HostID: "ZIqy0JAuTxuglIPHNL83hg", ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "AlertManger"},
+		{HostID: "ZIqy0JAuTxuglIPHNL83hg", ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "Grafana"},
+		{HostID: "ZIqy0JAuTxuglIPHNL83hg", ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "PD"},
+		{HostID: "ZIqy0JAuTxuglIPHNL83hg", ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "Prometheus"},
+	}
+	hostProvider := mockFileHostProvider(nil)
+
+	results := hostProvider.buildInstancesOnHost(context.TODO(), items)
+	assert.Equal(t, 4, len(results))
+	assert.Equal(t, 2, len(results["F6ejwHdcQNeHQxQDF0HzMQ"]))
+	assert.Equal(t, 2, len(results["ZIqy0JAuTxuglIPHNL83hg"]))
+	assert.Equal(t, 4, len(results["ZIqy0JAuTxuglIPHNL83hg"]["Jt_r1RnfT3i0O7YWtMhBzw"]))
+	assert.Equal(t, 4, len(results["ZIqy0JAuTxuglIPHNL83hg"]["THwF-s3hTL-SZbZsytBMTw"]))
 }

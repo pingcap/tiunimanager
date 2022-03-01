@@ -20,7 +20,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/metrics"
-	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/changefeed"
 	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
@@ -44,12 +43,6 @@ import (
 )
 
 func Route(g *gin.Engine) {
-	// system check
-	check := g.Group("/system")
-	{
-		check.GET("/check", controller.Hello)
-	}
-
 	// support swagger
 	swagger := g.Group("/swagger")
 	{
@@ -60,7 +53,7 @@ func Route(g *gin.Engine) {
 	web := g.Group("/web")
 	{
 		web.Use(interceptor.AccessLog(), gin.Recovery())
-		web.GET("/*any", controller.HelloPage)
+		web.GET("/*any", system.GetSystemInfo)
 	}
 
 	// api

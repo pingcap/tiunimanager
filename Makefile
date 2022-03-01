@@ -296,6 +296,7 @@ mock:
 	mockgen -destination ./test/mockutilcdc/mock_utilcdc_change_feed.go -package mockutilcdc -source ./util/api/cdc/changefeed.go
 	mockgen -destination ./test/mockcheck/mock_check.go -package mock_check -source ./models/platform/check/report_read_writer.go
 	mockgen -destination ./test/mockreport/mock_report.go -package mock_report -source ./micro-cluster/platform/check/handler/handler.go
+	mockgen -destination ./test/mockhostsinspect/mock_hosts_inspect.go -package mock_hosts_inspect -source ./micro-cluster/resourcemanager/inspect/hostinspector.go
 
 swag:
 	$(GO) install github.com/swaggo/swag/cmd/swag@v1.7.1

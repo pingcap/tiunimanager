@@ -29,6 +29,7 @@ import (
 	resource_models "github.com/pingcap-inc/tiem/models/resource"
 	resourcepool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
+	mock_cluster "github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	mock_resource "github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
 	"github.com/stretchr/testify/assert"
 )
@@ -167,6 +168,24 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 			return nil, 0, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
+
+	models.MockDB()
+	rw := mock_cluster.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(rw)
+	rw.EXPECT().QueryHostInstances(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hostIds []string) ([]cluster_rw.HostInstanceItem, error) {
+		items := []cluster_rw.HostInstanceItem{
+			{HostID: fake_hostId, ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "AlertManger"},
+			{HostID: fake_hostId, ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "Grafana"},
+			{HostID: fake_hostId, ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "PD"},
+			{HostID: fake_hostId, ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "Prometheus"},
+			{HostID: fake_hostId, ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "AlertManger"},
+			{HostID: fake_hostId, ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "Grafana"},
+			{HostID: fake_hostId, ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "PD"},
+			{HostID: fake_hostId, ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "Prometheus"},
+		}
+		return items, nil
+	})
+
 	hostprovider := mockFileHostProvider(mockClient)
 
 	filter := &structs.HostFilter{
@@ -185,6 +204,9 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 	assert.Equal(t, "TEST_REGION", hosts[0].Region)
 	assert.Equal(t, "TEST_AZ", hosts[0].AZ)
 	assert.Equal(t, "TEST_RACK", hosts[0].Rack)
+	assert.Equal(t, 2, len(hosts[0].Instances))
+	assert.Equal(t, 4, len(hosts[0].Instances["Jt_r1RnfT3i0O7YWtMhBzw"]))
+	assert.Equal(t, 4, len(hosts[0].Instances["THwF-s3hTL-SZbZsytBMTw"]))
 }
 
 func Test_DeleteHosts_Succeed(t *testing.T) {

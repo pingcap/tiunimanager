@@ -31,11 +31,9 @@
 package controller
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/asim/go-micro/v3/client"
-	"github.com/gin-gonic/gin"
 )
 
 // DefaultTimeout
@@ -65,14 +63,6 @@ var DefaultPageRequest = PageRequest{
 type PageRequest struct {
 	Page     int `json:"page" form:"page"`
 	PageSize int `json:"pageSize" form:"pageSize"`
-}
-
-func Hello(c *gin.Context) {
-	c.JSON(http.StatusOK, Success("hello"))
-}
-
-func HelloPage(c *gin.Context) {
-	c.JSON(http.StatusOK, Success("hello world"))
 }
 
 type StatusInfo struct {

@@ -157,7 +157,7 @@ func (p *Report) GetClusterCopies(ctx context.Context, clusterID string) (int32,
 	pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
 
 	config, err := deployment.M.Ctl(ctx, deployment.TiUPComponentTypeCtrl, clusterMeta.Cluster.Version, spec.ComponentPD,
-		"/home/tiem/.tiup", []string{"-u", pdID, "config", "show", "replication"}, meta.DefaultTiupTimeOut)
+		framework.GetTiupHomePathForTidb(), []string{"-u", pdID, "config", "show", "replication"}, meta.DefaultTiupTimeOut)
 	if err != nil {
 		return 0, err
 	}

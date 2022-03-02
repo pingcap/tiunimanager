@@ -3552,7 +3552,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "queries all products' information",
                 "parameters": [
@@ -3625,7 +3625,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "created product",
                 "parameters": [
@@ -3692,7 +3692,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "delete product",
                 "parameters": [
@@ -3761,7 +3761,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "query all product detail",
                 "parameters": [
@@ -3846,7 +3846,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "query product component properties",
                 "parameters": [
@@ -3911,7 +3911,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "update product component properties",
                 "parameters": [
@@ -3987,7 +3987,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "query online products",
                 "parameters": [
@@ -4061,7 +4061,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "product online",
                 "parameters": [
@@ -5276,7 +5276,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "queries all specs information",
                 "responses": {
@@ -5332,7 +5332,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "created  specs",
                 "parameters": [
@@ -5399,7 +5399,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "deleted  specs",
                 "parameters": [
@@ -6654,7 +6654,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "query zones",
                 "parameters": [
@@ -6722,7 +6722,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "created  zones",
                 "parameters": [
@@ -6789,7 +6789,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "deleted zones",
                 "parameters": [
@@ -6858,7 +6858,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "queries all regions information",
                 "responses": {

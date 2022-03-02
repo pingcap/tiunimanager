@@ -5161,7 +5161,7 @@ paths:
       - ApiKeyAuth: []
       summary: delete product
       tags:
-      - platform
+      - product
     get:
       consumes:
       - application/json
@@ -5204,7 +5204,7 @@ paths:
       - ApiKeyAuth: []
       summary: queries all products' information
       tags:
-      - platform
+      - product
     post:
       consumes:
       - application/json
@@ -5244,7 +5244,7 @@ paths:
       - ApiKeyAuth: []
       summary: created product
       tags:
-      - platform
+      - product
   /products/{productID}/components:
     get:
       consumes:
@@ -5284,7 +5284,7 @@ paths:
       - ApiKeyAuth: []
       summary: query product component properties
       tags:
-      - platform
+      - product
     post:
       consumes:
       - application/json
@@ -5329,7 +5329,7 @@ paths:
       - ApiKeyAuth: []
       summary: update product component properties
       tags:
-      - platform
+      - product
   /products/{productID}/online:
     get:
       consumes:
@@ -5375,7 +5375,7 @@ paths:
       - ApiKeyAuth: []
       summary: query online products
       tags:
-      - platform
+      - product
     post:
       consumes:
       - application/json
@@ -5420,7 +5420,7 @@ paths:
       - ApiKeyAuth: []
       summary: product online
       tags:
-      - platform
+      - product
   /products/detail:
     get:
       consumes:
@@ -5470,7 +5470,7 @@ paths:
       - ApiKeyAuth: []
       summary: query all product detail
       tags:
-      - platform
+      - product
   /rbac/permission/{userId}:
     get:
       consumes:
@@ -6183,7 +6183,7 @@ paths:
       - ApiKeyAuth: []
       summary: deleted  specs
       tags:
-      - platform
+      - product
     get:
       consumes:
       - application/json
@@ -6216,7 +6216,7 @@ paths:
       - ApiKeyAuth: []
       summary: queries all specs information
       tags:
-      - platform
+      - product
     post:
       consumes:
       - application/json
@@ -6256,7 +6256,7 @@ paths:
       - ApiKeyAuth: []
       summary: created  specs
       tags:
-      - platform
+      - product
   /system/info:
     get:
       consumes:
@@ -7008,7 +7008,7 @@ paths:
       - ApiKeyAuth: []
       summary: deleted zones
       tags:
-      - platform
+      - product
     get:
       consumes:
       - application/json
@@ -7048,7 +7048,7 @@ paths:
       - ApiKeyAuth: []
       summary: query zones
       tags:
-      - platform
+      - product
     post:
       consumes:
       - application/json
@@ -7088,7 +7088,7 @@ paths:
       - ApiKeyAuth: []
       summary: created  zones
       tags:
-      - platform
+      - product
   /zones/regions:
     get:
       consumes:
@@ -7122,7 +7122,7 @@ paths:
       - ApiKeyAuth: []
       summary: queries all regions information
       tags:
-      - platform
+      - product
 securityDefinitions:
   ApiKeyAuth:
     in: header

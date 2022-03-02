@@ -3566,7 +3566,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "queries all products' information",
                 "parameters": [
@@ -3639,7 +3639,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "created product",
                 "parameters": [
@@ -3706,7 +3706,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "delete product",
                 "parameters": [
@@ -3775,7 +3775,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "query all product detail",
                 "parameters": [
@@ -3860,7 +3860,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "query product component properties",
                 "parameters": [
@@ -3925,7 +3925,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "update product component properties",
                 "parameters": [
@@ -4001,7 +4001,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "query online products",
                 "parameters": [
@@ -4075,7 +4075,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "product online",
                 "parameters": [
@@ -5290,7 +5290,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "queries all specs information",
                 "responses": {
@@ -5346,7 +5346,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "created  specs",
                 "parameters": [
@@ -5413,7 +5413,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "deleted  specs",
                 "parameters": [
@@ -6668,7 +6668,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "query zones",
                 "parameters": [
@@ -6736,7 +6736,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "created  zones",
                 "parameters": [
@@ -6803,7 +6803,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "deleted zones",
                 "parameters": [
@@ -6872,7 +6872,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "queries all regions information",
                 "responses": {

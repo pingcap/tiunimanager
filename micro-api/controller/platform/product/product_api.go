@@ -26,7 +26,7 @@ import (
 // CreateZones create zones interface
 // @Summary created  zones
 // @Description created  zones
-// @Tags platform
+// @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -47,7 +47,7 @@ func CreateZones(c *gin.Context) {
 // DeleteZones delete zones
 // @Summary deleted zones
 // @Description deleted zones
-// @Tags platform
+// @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -68,7 +68,7 @@ func DeleteZones(c *gin.Context) {
 // QueryRegions query all regions information
 // @Summary queries all regions information
 // @Description queries all regions information
-// @Tags platform
+// @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -89,7 +89,7 @@ func QueryRegions(c *gin.Context) {
 // QueryZones query zones
 // @Summary query zones
 // @Description query zones
-// @Tags platform
+// @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -106,7 +106,7 @@ func QueryZones(c *gin.Context) {
 // CreateSpecs create specs interface
 // @Summary created  specs
 // @Description created specs
-// @Tags platform
+// @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -127,7 +127,7 @@ func CreateSpecs(c *gin.Context) {
 // DeleteSpecs delete specs interface
 // @Summary deleted  specs
 // @Description deleted specs
-// @Tags platform
+// @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -148,7 +148,7 @@ func DeleteSpecs(c *gin.Context) {
 // QuerySpecs query all specs information
 // @Summary queries all specs information
 // @Description queries all specs information
-// @Tags platform
+// @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -169,7 +169,7 @@ func QuerySpecs(c *gin.Context) {
 // QueryComponentProperties query product component properties
 // @Summary query product component properties
 // @Description query product component properties
-// @Tags platform
+// @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -185,7 +185,7 @@ func QueryComponentProperties(c *gin.Context) {
 // UpdateComponentProperties update product component properties
 // @Summary update product component properties
 // @Description update product component properties
-// @Tags platform
+// @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -202,7 +202,7 @@ func UpdateComponentProperties(c *gin.Context) {
 // QueryOnlineProducts query online products
 // @Summary query online products
 // @Description query online products
-// @Tags platform
+// @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -220,7 +220,7 @@ func QueryOnlineProducts(c *gin.Context) {
 // UpdateOnlineProducts product online
 // @Summary  product online
 // @Description product online
-// @Tags platform
+// @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -238,7 +238,7 @@ func UpdateOnlineProducts(c *gin.Context) {
 // CreateProduct create product interface
 // @Summary created product
 // @Description created product
-// @Tags platform
+// @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -259,7 +259,7 @@ func CreateProduct(c *gin.Context) {
 // DeleteProduct delete product interface
 // @Summary delete product
 // @Description delete product
-// @Tags platform
+// @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -280,7 +280,7 @@ func DeleteProduct(c *gin.Context) {
 // QueryAvailableProducts query all products' information
 // @Summary queries all products' information
 // @Description queries all products' information
-// @Tags platform
+// @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -301,7 +301,7 @@ func QueryAvailableProducts(c *gin.Context) {
 // QueryProductDetail query all product detail
 // @Summary query all product detail
 // @Description query all product detail
-// @Tags platform
+// @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth

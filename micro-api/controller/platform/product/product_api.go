@@ -199,24 +199,6 @@ func QueryComponentProperties(c *gin.Context) {
 func UpdateComponentProperties(c *gin.Context) {
 }
 
-// UpdateOnlineProducts product online
-// @Summary  product online
-// @Description product online
-// @Tags platform
-// @Accept application/json
-// @Produce application/json
-// @Security ApiKeyAuth
-// @Param UpdateOnlineProductsReq body message.UpdateOnlineProductsReq true "product online request parameter"
-// @Param productId path string true "product id"
-// @Success 200 {object} controller.CommonResult{data=message.UpdateOnlineProductsResp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /products/{productID}/online [post]
-func UpdateOnlineProducts(c *gin.Context) {
-
-}
-
 // QueryOnlineProducts query online products
 // @Summary query online products
 // @Description query online products
@@ -232,6 +214,24 @@ func UpdateOnlineProducts(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /products/{productID}/online [get]
 func QueryOnlineProducts(c *gin.Context) {
+
+}
+
+// UpdateOnlineProducts product online
+// @Summary  product online
+// @Description product online
+// @Tags platform
+// @Accept application/json
+// @Produce application/json
+// @Security ApiKeyAuth
+// @Param UpdateOnlineProductsReq body message.UpdateOnlineProductsReq true "product online request parameter"
+// @Param productId path string true "product id"
+// @Success 200 {object} controller.CommonResult{data=message.UpdateOnlineProductsResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /products/{productID}/online [post]
+func UpdateOnlineProducts(c *gin.Context) {
 
 }
 

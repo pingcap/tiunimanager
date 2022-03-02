@@ -2779,21 +2779,13 @@ definitions:
     type: object
   structs.SystemInfo:
     properties:
-      configInitialized:
-        type: boolean
       currentVersionID:
         type: string
       lastVersionID:
         type: string
-      productInitialized:
+      productComponentsInitialized:
         type: boolean
-      productOnlineInitialized:
-        type: boolean
-      specBindingProductInitialized:
-        type: boolean
-      specBindingZoneInitialized:
-        type: boolean
-      specInitialized:
+      productVersionsInitialized:
         type: boolean
       state:
         type: string
@@ -2804,12 +2796,16 @@ definitions:
           type: array
         type: object
       supportedVendors:
-        type: string
+        additionalProperties:
+          type: string
+        type: object
       systemLogo:
         type: string
       systemName:
         type: string
-      zoneInitialized:
+      vendorSpecInitialized:
+        type: boolean
+      vendorZoneInitialized:
         type: boolean
     type: object
   structs.SystemVersionInfo:

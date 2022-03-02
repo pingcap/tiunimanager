@@ -130,17 +130,13 @@ type SystemInfo struct {
 	LastVersionID    string `json:"lastVersionID"`
 	State            string `json:"state"`
 
-	SupportedVendors  string                              `json:"supportedVendors"`
+	SupportedVendors  map[string]string                   `json:"supportedVendors"`
 	SupportedProducts map[string][]SpecificVersionProduct `json:"supportedProducts"`
 
-	ZoneInitialized          bool `json:"zoneInitialized"`
-	SpecInitialized          bool `json:"specInitialized"`
-	ProductInitialized       bool `json:"productInitialized"`
-	ProductOnlineInitialized bool `json:"productOnlineInitialized"`
-
-	SpecBindingZoneInitialized    bool `json:"specBindingZoneInitialized"`
-	SpecBindingProductInitialized bool `json:"specBindingProductInitialized"`
-	ConfigInitialized             bool `json:"configInitialized"`
+	VendorZoneInitialized        bool `json:"vendorZoneInitialized"`
+	VendorSpecInitialized        bool `json:"vendorSpecInitialized"`
+	ProductComponentsInitialized bool `json:"productComponentsInitialized"`
+	ProductVersionsInitialized   bool `json:"productVersionsInitialized"`
 }
 
 type SpecificVersionProduct struct {

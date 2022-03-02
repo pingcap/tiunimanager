@@ -10616,28 +10616,16 @@ var doc = `{
         "structs.SystemInfo": {
             "type": "object",
             "properties": {
-                "configInitialized": {
-                    "type": "boolean"
-                },
                 "currentVersionID": {
                     "type": "string"
                 },
                 "lastVersionID": {
                     "type": "string"
                 },
-                "productInitialized": {
+                "productComponentsInitialized": {
                     "type": "boolean"
                 },
-                "productOnlineInitialized": {
-                    "type": "boolean"
-                },
-                "specBindingProductInitialized": {
-                    "type": "boolean"
-                },
-                "specBindingZoneInitialized": {
-                    "type": "boolean"
-                },
-                "specInitialized": {
+                "productVersionsInitialized": {
                     "type": "boolean"
                 },
                 "state": {
@@ -10653,7 +10641,10 @@ var doc = `{
                     }
                 },
                 "supportedVendors": {
-                    "type": "string"
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "systemLogo": {
                     "type": "string"
@@ -10661,7 +10652,10 @@ var doc = `{
                 "systemName": {
                     "type": "string"
                 },
-                "zoneInitialized": {
+                "vendorSpecInitialized": {
+                    "type": "boolean"
+                },
+                "vendorZoneInitialized": {
                     "type": "boolean"
                 }
             }

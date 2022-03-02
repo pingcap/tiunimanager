@@ -13,7 +13,7 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package handler
+package check
 
 import (
 	"context"

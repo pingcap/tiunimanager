@@ -23,49 +23,75 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
 
-// CreateZones create zones interface
-// @Summary created  zones
-// @Description created  zones
+// UpdateVendorZones update vendor zones
+// @Summary update vendor zones
+// @Description update vendor zones
 // @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param CreateZoneReq body message.CreateZonesReq true "create zones request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.CreateZonesResp}
+// @Param UpdateVendorZonesReq body message.UpdateVendorZonesReq true "update vendor zones request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.UpdateVendorZonesResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /zones/ [post]
-func CreateZones(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.CreateZonesReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateZones, &message.CreateZonesResp{},
-			requestBody,
-			controller.DefaultTimeout)
-	}
+// @Router /vendors/zones [post]
+func UpdateVendorZones(c *gin.Context) {
+
 }
 
-// DeleteZones delete zones
-// @Summary deleted zones
-// @Description deleted zones
+// QueryVendorZones query vendor zones
+// @Summary query vendor zones
+// @Description query vendor zones
 // @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param CreateZoneReq body message.DeleteZoneReq true "delete zone request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.DeleteZoneResp}
+// @Param QueryVendorZonesReq query message.QueryVendorZonesReq true "query vendor zones request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.QueryVendorZonesResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /zones/ [delete]
-func DeleteZones(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.DeleteZoneReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteZone, &message.DeleteZoneResp{},
-			requestBody,
-			controller.DefaultTimeout)
-	}
+// @Router /vendors/zones [get]
+func QueryVendorZones(c *gin.Context) {
+
 }
 
-// QueryRegions query all regions information
+// UpdateVendorSpecs update vendor specs
+// @Summary update vendor specs
+// @Description update vendor specs
+// @Tags product
+// @Accept application/json
+// @Produce application/json
+// @Security ApiKeyAuth
+// @Param UpdateVendorSpecsReq body message.UpdateVendorSpecsReq true "update vendor specs request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.UpdateVendorSpecsResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /vendors/specs [post]
+func UpdateVendorSpecs(c *gin.Context) {
+
+}
+
+// QueryVendorSpecs query vendor specs
+// @Summary query vendor specs
+// @Description query vendor specs
+// @Tags product
+// @Accept application/json
+// @Produce application/json
+// @Security ApiKeyAuth
+// @Param QueryVendorSpecsReq query message.QueryVendorSpecsReq true "query vendor specs request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.QueryVendorSpecsResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /vendors/specs [get]
+func QueryVendorSpecs(c *gin.Context) {
+
+}
+
+// QueryVendorRegions query all regions information
 // @Summary queries all regions information
 // @Description queries all regions information
 // @Tags product
@@ -77,204 +103,77 @@ func DeleteZones(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /zones/regions [get]
-func QueryRegions(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryRegionsReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryZones, &message.QueryRegionsResp{},
-			requestBody,
-			controller.DefaultTimeout)
-	}
+// @Router /vendors/regions [get]
+func QueryVendorRegions(c *gin.Context) {
+
 }
 
-// QueryZones query zones
-// @Summary query zones
-// @Description query zones
+// QueryProductComponents query product components
+// @Summary query product components
+// @Description query product components
 // @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param QueryZonesReq query message.QueryZonesReq true "query zones"
-// @Success 200 {object} controller.CommonResult{data=message.QueryZonesResp}
+// @Param QueryProductComponentReq query message.QueryProductComponentReq true "query product component parameter"
+// @Success 200 {object} controller.CommonResult{data=message.QueryProductComponentsResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /zones/ [get]
-func QueryZones(c *gin.Context) {
-	// todo
+// @Router /products/components [get]
+func QueryProductComponents(c *gin.Context) {
 }
 
-// CreateSpecs create specs interface
-// @Summary created  specs
-// @Description created specs
+// UpdateProductComponents update product components
+// @Summary update product components
+// @Description update product components
 // @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param CreateSpecsReq body message.CreateSpecsReq true "create specs request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.CreateSpecsResp}
+// @Param UpdateProductComponentReq body message.UpdateProductComponentReq true "update product component properties parameter"
+// @Success 200 {object} controller.CommonResult{data=message.UpdateProductComponentResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /specs/ [post]
-func CreateSpecs(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.CreateSpecsReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateSpecs, &message.CreateSpecsResp{},
-			requestBody,
-			controller.DefaultTimeout)
-	}
+// @Router /products/components [post]
+func UpdateProductComponents(c *gin.Context) {
 }
 
-// DeleteSpecs delete specs interface
-// @Summary deleted  specs
-// @Description deleted specs
-// @Tags product
-// @Accept application/json
-// @Produce application/json
-// @Security ApiKeyAuth
-// @Param DeleteSpecsReq body message.DeleteSpecsReq true "delete specs request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.DeleteSpecsResp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /specs/ [delete]
-func DeleteSpecs(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.DeleteSpecsReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteSpecs, &message.DeleteSpecsResp{},
-			requestBody,
-			controller.DefaultTimeout)
-	}
-}
-
-// QuerySpecs query all specs information
-// @Summary queries all specs information
-// @Description queries all specs information
-// @Tags product
-// @Accept application/json
-// @Produce application/json
-// @Security ApiKeyAuth
-// @Param QuerySpecsReq query message.QuerySpecsReq true "query specs request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.QuerySpecsResp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /specs/ [get]
-func QuerySpecs(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QuerySpecsReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QuerySpecs, &message.QuerySpecsResp{},
-			requestBody,
-			controller.DefaultTimeout)
-	}
-}
-
-// QueryComponentProperties query product component properties
-// @Summary query product component properties
-// @Description query product component properties
+// QueryProductVersions query online products versions
+// @Summary query online products versions
+// @Description query online products versions
 // @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
 // @Param productId path string true "product id"
-// @Success 200 {object} controller.CommonResult{data=message.QueryComponentPropertiesResp}
+// @Param QueryProductVersionsReq body message.QueryProductVersionsReq true "query online products request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.QueryProductVersionsResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /products/{productID}/components [get]
-func QueryComponentProperties(c *gin.Context) {
+// @Router /products/versions [get]
+func QueryProductVersions(c *gin.Context) {
+
 }
 
-// UpdateComponentProperties update product component properties
-// @Summary update product component properties
-// @Description update product component properties
+// UpdateProductVersions update online products versions
+// @Summary update online products versions
+// @Description update online products versions
 // @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param UpdateComponentPropertiesReq body message.UpdateComponentPropertiesReq true "update product component properties parameter"
+// @Param UpdateProductVersionsReq body message.UpdateProductVersionsReq true "product online request parameter"
 // @Param productId path string true "product id"
-// @Success 200 {object} controller.CommonResult{data=message.UpdateComponentPropertiesResp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /products/{productID}/components [post]
-func UpdateComponentProperties(c *gin.Context) {
-}
-
-// QueryOnlineProducts query online products
-// @Summary query online products
-// @Description query online products
-// @Tags product
-// @Accept application/json
-// @Produce application/json
-// @Security ApiKeyAuth
-// @Param productId path string true "product id"
-// @Param QueryOnlineProductsReq body message.QueryOnlineProductsReq true "query online products request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.QueryOnlineProductsResp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /products/{productID}/online [get]
-func QueryOnlineProducts(c *gin.Context) {
-
-}
-
-// UpdateOnlineProducts product online
-// @Summary  product online
-// @Description product online
-// @Tags product
-// @Accept application/json
-// @Produce application/json
-// @Security ApiKeyAuth
-// @Param UpdateOnlineProductsReq body message.UpdateOnlineProductsReq true "product online request parameter"
-// @Param productId path string true "product id"
-// @Success 200 {object} controller.CommonResult{data=message.UpdateOnlineProductsResp}
+// @Success 200 {object} controller.CommonResult{data=message.UpdateProductVersionsResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /products/{productID}/online [post]
-func UpdateOnlineProducts(c *gin.Context) {
+func UpdateProductVersions(c *gin.Context) {
 
-}
-
-// CreateProduct create product interface
-// @Summary created product
-// @Description created product
-// @Tags product
-// @Accept application/json
-// @Produce application/json
-// @Security ApiKeyAuth
-// @Param CreateProductReq body message.CreateProductReq true "create product request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.CreateProductResp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /products/ [post]
-func CreateProduct(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.CreateProductReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateProduct, &message.CreateProductResp{},
-			requestBody,
-			controller.DefaultTimeout)
-	}
-}
-
-// DeleteProduct delete product interface
-// @Summary delete product
-// @Description delete product
-// @Tags product
-// @Accept application/json
-// @Produce application/json
-// @Security ApiKeyAuth
-// @Param CreateProductReq body message.DeleteProductReq true "create product request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.DeleteProductResp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /products/ [delete]
-func DeleteProduct(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.DeleteProductReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteProduct, &message.DeleteProductResp{},
-			requestBody,
-			controller.DefaultTimeout)
-	}
 }
 
 // QueryAvailableProducts query all products' information

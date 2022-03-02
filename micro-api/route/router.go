@@ -231,8 +231,6 @@ func Route(g *gin.Engine) {
 			productGroup.Use(interceptor.SystemRunning)
 			productGroup.Use(interceptor.VerifyIdentity)
 			productGroup.Use(interceptor.AuditLog)
-			productGroup.POST("/", product.CreateProduct)
-			productGroup.DELETE("/", product.DeleteProduct)
 			productGroup.GET("/", product.QueryAvailableProducts)
 			productGroup.GET("/detail", product.QueryProductDetail)
 		}
@@ -242,9 +240,6 @@ func Route(g *gin.Engine) {
 			zoneGroup.Use(interceptor.SystemRunning)
 			zoneGroup.Use(interceptor.VerifyIdentity)
 			zoneGroup.Use(interceptor.AuditLog)
-			zoneGroup.POST("/", product.CreateZones)
-			zoneGroup.DELETE("/", product.DeleteZones)
-			zoneGroup.GET("/tree", product.QueryRegions)
 		}
 
 		specGroup := apiV1.Group("/specs")
@@ -252,9 +247,6 @@ func Route(g *gin.Engine) {
 			specGroup.Use(interceptor.SystemRunning)
 			specGroup.Use(interceptor.VerifyIdentity)
 			specGroup.Use(interceptor.AuditLog)
-			specGroup.POST("/", product.CreateSpecs)
-			specGroup.DELETE("/", product.DeleteSpecs)
-			specGroup.GET("/", product.QuerySpecs)
 		}
 
 		systemGroup := apiV1.Group("/system")

@@ -121,6 +121,9 @@ func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID str
 	}
 
 	err = p.createExecutor(ctx, sourceCluster, task)
+	if err != nil {
+		models.GetChangeFeedReaderWriter().Delete(ctx, ID)
+	}
 
 	return
 }

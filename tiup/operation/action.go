@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	stderrors "errors"
 	"fmt"
 	"strings"
 	"time"
@@ -136,11 +137,15 @@ func Start(
 			}
 			// init elasticsearch index settings
 			if comp.Name() == spec.ComponentElasticSearchServer {
-				initElasticSearch(tlsCfg, inst)
+				if err = initElasticSearch(tlsCfg, inst); err != nil {
+					return err
+				}
 			}
 			// init kibana index patterns
 			if comp.Name() == spec.ComponentKibana {
-				initKibana(tlsCfg, inst)
+				if err = initKibana(ctx, tlsCfg, inst); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -156,7 +161,7 @@ func Start(
 	return StartMonitored(ctx, hosts, noAgentHosts, monitoredOptions, options.OptTimeout)
 }
 
-func initElasticSearch(tlsCfg *tls.Config, inst spec.Instance) {
+func initElasticSearch(tlsCfg *tls.Config, inst spec.Instance) error {
 	// loop get es status
 	for {
 		client := tiuputils.NewHTTPClient(2*time.Second, tlsCfg)
@@ -180,10 +185,10 @@ func initElasticSearch(tlsCfg *tls.Config, inst spec.Instance) {
 	log.Debugf("init elasticsearch index template params: %s", content)
 	resp := utils.PUT(url, content, map[string]string{})
 	log.Debugf("init elasticsearch index template response: %s", resp)
-
+	return nil
 }
 
-func initKibana(tlsCfg *tls.Config, inst spec.Instance) {
+func initKibana(ctx context.Context, tlsCfg *tls.Config, inst spec.Instance) error {
 	// loop get kibana status
 	for {
 		client := tiuputils.NewHTTPClient(2*time.Second, tlsCfg)
@@ -195,18 +200,31 @@ func initKibana(tlsCfg *tls.Config, inst spec.Instance) {
 		log.Debugf("check kibana status error: %s", err.Error())
 	}
 
+	// Copy to remote server
+	exec, found := ctxt.GetInner(ctx).GetExecutor(inst.GetHost())
+	if !found {
+		return stderrors.New("no executor")
+	}
+
 	path := "/api/saved_objects/_import?overwrite=true"
 	url := fmt.Sprintf("http://%s:%d%s", inst.GetHost(), inst.GetPort(), path)
 	log.Debugf("init kibana index patterns url: %s", url)
 
+	fileName := "index_patterns.ndjson"
+	dstPath := "/tmp/" + fileName
+	if err := exec.Transfer(ctx, inst.DeployDir()+"/bin/"+fileName, dstPath, true, 0); err != nil {
+		return err
+	}
+
 	uploads := make([]utils.UploadFile, 0)
 	uploads = append(uploads, utils.UploadFile{
 		Name:     "file",
-		Filepath: inst.DeployDir() + "/bin/index_patterns.ndjson",
+		Filepath: dstPath,
 	})
 	headers := map[string]string{"kbn-xsrf": "reporting"}
 	resp := utils.PostFile(url, map[string]interface{}{}, uploads, headers)
 	log.Debugf("init kibana index patterns response: %s", resp)
+	return nil
 }
 
 // Stop the cluster.

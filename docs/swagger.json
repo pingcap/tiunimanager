@@ -3906,9 +3906,7 @@
                         }
                     }
                 }
-            }
-        },
-        "/products/{productID}/online": {
+            },
             "post": {
                 "security": [
                     {
@@ -6165,7 +6163,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "product"
+                    "vendor"
                 ],
                 "summary": "queries all regions information",
                 "responses": {
@@ -6180,7 +6178,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/message.QueryRegionsResp"
+                                            "$ref": "#/definitions/message.QueryAvailableRegionsResp"
                                         }
                                     }
                                 }
@@ -6223,7 +6221,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "product"
+                    "vendor"
                 ],
                 "summary": "query vendor specs",
                 "parameters": [
@@ -6289,7 +6287,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "product"
+                    "vendor"
                 ],
                 "summary": "update vendor specs",
                 "parameters": [
@@ -6358,7 +6356,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "product"
+                    "vendor"
                 ],
                 "summary": "query vendor zones",
                 "parameters": [
@@ -6424,7 +6422,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "product"
+                    "vendor"
                 ],
                 "summary": "update vendor zones",
                 "parameters": [
@@ -8758,6 +8756,20 @@
                 }
             }
         },
+        "message.QueryAvailableRegionsResp": {
+            "type": "object",
+            "properties": {
+                "vendors": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/structs.VendorWithRegion"
+                        }
+                    }
+                }
+            }
+        },
         "message.QueryDataImportExportRecordsResp": {
             "type": "object",
             "properties": {
@@ -8907,17 +8919,6 @@
                 }
             }
         },
-        "message.QueryRegionsResp": {
-            "type": "object",
-            "properties": {
-                "vendors": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/structs.VendorWithRegion"
-                    }
-                }
-            }
-        },
         "message.QueryRolesResp": {
             "type": "object",
             "properties": {
@@ -8983,7 +8984,10 @@
                 "vendors": {
                     "type": "object",
                     "additionalProperties": {
-                        "$ref": "#/definitions/structs.SpecInfo"
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/structs.SpecInfo"
+                        }
                     }
                 }
             }
@@ -9246,7 +9250,10 @@
                 "vendors": {
                     "type": "object",
                     "additionalProperties": {
-                        "$ref": "#/definitions/structs.SpecInfo"
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/structs.SpecInfo"
+                        }
                     }
                 }
             }
@@ -9502,7 +9509,7 @@
                 },
                 "zone": {
                     "description": "??",
-                    "$ref": "#/definitions/structs.ZoneInfo"
+                    "$ref": "#/definitions/structs.ZoneFullInfo"
                 }
             }
         },
@@ -10857,7 +10864,7 @@
                 }
             }
         },
-        "structs.ZoneInfo": {
+        "structs.ZoneFullInfo": {
             "type": "object",
             "properties": {
                 "comment": {
@@ -10877,6 +10884,22 @@
                 },
                 "vendorName": {
                     "description": "The value of the Name is similar to AWS",
+                    "type": "string"
+                },
+                "zoneId": {
+                    "description": "The value of the ZoneID is similar to CN-HANGZHOU-H",
+                    "type": "string"
+                },
+                "zoneName": {
+                    "description": "The value of the Name is similar to Hangzhou(H)",
+                    "type": "string"
+                }
+            }
+        },
+        "structs.ZoneInfo": {
+            "type": "object",
+            "properties": {
+                "comment": {
                     "type": "string"
                 },
                 "zoneId": {

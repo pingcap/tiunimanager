@@ -174,11 +174,11 @@ func TestProductReadWriter_CreateZones(t *testing.T) {
 		var err error
 		err = prw.CreateZones(context.TODO(), zones)
 		assert.NoError(t, err)
-		var results []structs.ZoneInfo
+		var results []structs.ZoneFullInfo
 		results, err = prw.QueryZones(context.TODO())
 		assert.NoError(t, err)
 		//First convert the query results into a map to facilitate comparison of results
-		tmp := make(map[string]structs.ZoneInfo)
+		tmp := make(map[string]structs.ZoneFullInfo)
 		for _, num := range results {
 			key := num.VendorID + num.RegionID + num.ZoneID
 			if _, ok := tmp[key]; !ok {
@@ -203,7 +203,7 @@ func TestProductReadWriter_CreateZones(t *testing.T) {
 
 	t.Run("CreateZonesWithDBError", func(t *testing.T) {
 		var err error
-		var results []structs.ZoneInfo
+		var results []structs.ZoneFullInfo
 		err = prw.CreateZones(context.TODO(), zones)
 		assert.NoError(t, err)
 
@@ -230,12 +230,12 @@ func TestProductReadWriter_QueryZones(t *testing.T) {
 		var err error
 		err = prw.CreateZones(context.TODO(), zones)
 		assert.NoError(t, err)
-		var results []structs.ZoneInfo
+		var results []structs.ZoneFullInfo
 		results, err = prw.QueryZones(context.TODO())
 		assert.NoError(t, err)
 
 		//First convert the query results into a map to facilitate comparison of results
-		tmp := make(map[string]structs.ZoneInfo)
+		tmp := make(map[string]structs.ZoneFullInfo)
 		for _, num := range results {
 			key := num.VendorID + num.RegionID + num.ZoneID
 			if _, ok := tmp[key]; !ok {
@@ -259,7 +259,7 @@ func TestProductReadWriter_QueryZones(t *testing.T) {
 
 	t.Run("QueryZonesWithDBError", func(t *testing.T) {
 		var err error
-		var results []structs.ZoneInfo
+		var results []structs.ZoneFullInfo
 		err = prw.CreateZones(context.TODO(), zones)
 		assert.NoError(t, err)
 
@@ -282,7 +282,7 @@ func TestProductReadWriter_GetZone(t *testing.T) {
 		var err error
 		err = prw.CreateZones(context.TODO(), zones)
 		assert.NoError(t, err)
-		var results []structs.ZoneInfo
+		var results []structs.ZoneFullInfo
 
 		for i := range zones {
 			result, count, err := prw.GetZone(context.TODO(), zones[i].VendorID, zones[i].RegionID, zones[i].ZoneID)
@@ -316,7 +316,7 @@ func TestProductReadWriter_DeleteZones(t *testing.T) {
 		var err error
 		err = prw.CreateZones(context.TODO(), zones)
 		assert.NoError(t, err)
-		var results []structs.ZoneInfo
+		var results []structs.ZoneFullInfo
 		results, err = prw.QueryZones(context.TODO())
 		assert.NoError(t, err)
 		err = prw.DeleteZones(context.TODO(), results)
@@ -325,7 +325,7 @@ func TestProductReadWriter_DeleteZones(t *testing.T) {
 
 	t.Run("DeleteZonesWithDBError", func(t *testing.T) {
 		var err error
-		var results []structs.ZoneInfo
+		var results []structs.ZoneFullInfo
 		err = prw.CreateZones(context.TODO(), zones)
 		assert.NoError(t, err)
 
@@ -342,7 +342,7 @@ func TestProductReadWriter_DeleteZones(t *testing.T) {
 	})
 
 	t.Run("CreateZonesWithEmptyParameter", func(t *testing.T) {
-		err := prw.DeleteZones(context.TODO(), make([]structs.ZoneInfo, 0))
+		err := prw.DeleteZones(context.TODO(), make([]structs.ZoneFullInfo, 0))
 		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
 
@@ -352,7 +352,7 @@ func TestProductReadWriter_DeleteZones(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, len(zones)+len(DeleteZones), len(re))
 	//First convert the query results into a map to facilitate comparison of results
-	tmp := make(map[string]structs.ZoneInfo)
+	tmp := make(map[string]structs.ZoneFullInfo)
 	for _, num := range re {
 		key := num.VendorID + num.RegionID + num.ZoneID
 		if _, ok := tmp[key]; !ok {
@@ -371,7 +371,7 @@ func TestProductReadWriter_DeleteZones(t *testing.T) {
 		assert.Equal(t, zone.ZoneName, val.ZoneName)
 	}
 
-	dzones := []structs.ZoneInfo{
+	dzones := []structs.ZoneFullInfo{
 		{ZoneID: DeleteZones[0].ZoneID, ZoneName: DeleteZones[0].ZoneName,
 			RegionID: DeleteZones[0].RegionID, RegionName: DeleteZones[0].RegionName,
 			VendorID: DeleteZones[0].VendorID, VendorName: DeleteZones[0].VendorName},
@@ -380,11 +380,11 @@ func TestProductReadWriter_DeleteZones(t *testing.T) {
 	err = prw.DeleteZones(context.TODO(), dzones)
 	assert.NoError(t, err)
 
-	var zt []structs.ZoneInfo
+	var zt []structs.ZoneFullInfo
 	zt, err = prw.QueryZones(context.TODO())
 	assert.Equal(t, len(zones), len(zt))
 
-	dtmp := make(map[string]structs.ZoneInfo)
+	dtmp := make(map[string]structs.ZoneFullInfo)
 	for _, num := range zt {
 		key := num.VendorID + num.RegionID + num.ZoneID
 		if _, ok := dtmp[key]; !ok {

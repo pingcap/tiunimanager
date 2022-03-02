@@ -26,7 +26,7 @@ import (
 // UpdateVendorZones update vendor zones
 // @Summary update vendor zones
 // @Description update vendor zones
-// @Tags product
+// @Tags vendor
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -43,7 +43,7 @@ func UpdateVendorZones(c *gin.Context) {
 // QueryVendorZones query vendor zones
 // @Summary query vendor zones
 // @Description query vendor zones
-// @Tags product
+// @Tags vendor
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -60,7 +60,7 @@ func QueryVendorZones(c *gin.Context) {
 // UpdateVendorSpecs update vendor specs
 // @Summary update vendor specs
 // @Description update vendor specs
-// @Tags product
+// @Tags vendor
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -77,7 +77,7 @@ func UpdateVendorSpecs(c *gin.Context) {
 // QueryVendorSpecs query vendor specs
 // @Summary query vendor specs
 // @Description query vendor specs
-// @Tags product
+// @Tags vendor
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
@@ -94,12 +94,12 @@ func QueryVendorSpecs(c *gin.Context) {
 // QueryVendorRegions query all regions information
 // @Summary queries all regions information
 // @Description queries all regions information
-// @Tags product
+// @Tags vendor
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param QueryRegionsReq query message.QueryRegionsReq true "query region request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.QueryRegionsResp}
+// @Param QueryAvailableRegionsReq query message.QueryAvailableRegionsReq true "query region request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.QueryAvailableRegionsResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
@@ -171,7 +171,7 @@ func QueryProductVersions(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /products/{productID}/online [post]
+// @Router /products/versions [post]
 func UpdateProductVersions(c *gin.Context) {
 
 }

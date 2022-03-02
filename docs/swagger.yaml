@@ -1484,6 +1484,15 @@ definitions:
         description: arch version
         type: object
     type: object
+  message.QueryAvailableRegionsResp:
+    properties:
+      vendors:
+        additionalProperties:
+          items:
+            $ref: '#/definitions/structs.VendorWithRegion'
+          type: array
+        type: object
+    type: object
   message.QueryDataImportExportRecordsResp:
     properties:
       transportRecords:
@@ -1585,13 +1594,6 @@ definitions:
           type: array
         type: object
     type: object
-  message.QueryRegionsResp:
-    properties:
-      vendors:
-        additionalProperties:
-          $ref: '#/definitions/structs.VendorWithRegion'
-        type: object
-    type: object
   message.QueryRolesResp:
     properties:
       roles:
@@ -1635,7 +1637,9 @@ definitions:
     properties:
       vendors:
         additionalProperties:
-          $ref: '#/definitions/structs.SpecInfo'
+          items:
+            $ref: '#/definitions/structs.SpecInfo'
+          type: array
         type: object
     type: object
   message.QueryVendorZonesResp:
@@ -1807,7 +1811,9 @@ definitions:
     properties:
       vendors:
         additionalProperties:
-          $ref: '#/definitions/structs.SpecInfo'
+          items:
+            $ref: '#/definitions/structs.SpecInfo'
+          type: array
         type: object
     type: object
   message.UpdateVendorSpecsResp:
@@ -1983,7 +1989,7 @@ definitions:
       version:
         type: string
       zone:
-        $ref: '#/definitions/structs.ZoneInfo'
+        $ref: '#/definitions/structs.ZoneFullInfo'
         description: ??
     type: object
   structs.ClusterInstanceParameterValue:
@@ -2939,7 +2945,7 @@ definitions:
         - Canceled
         type: string
     type: object
-  structs.ZoneInfo:
+  structs.ZoneFullInfo:
     properties:
       comment:
         type: string
@@ -2954,6 +2960,17 @@ definitions:
         type: string
       vendorName:
         description: The value of the Name is similar to AWS
+        type: string
+      zoneId:
+        description: The value of the ZoneID is similar to CN-HANGZHOU-H
+        type: string
+      zoneName:
+        description: The value of the Name is similar to Hangzhou(H)
+        type: string
+    type: object
+  structs.ZoneInfo:
+    properties:
+      comment:
         type: string
       zoneId:
         description: The value of the ZoneID is similar to CN-HANGZHOU-H
@@ -5142,52 +5159,6 @@ paths:
       summary: queries all products' information
       tags:
       - product
-  /products/{productID}/online:
-    post:
-      consumes:
-      - application/json
-      description: update online products versions
-      parameters:
-      - description: product online request parameter
-        in: body
-        name: UpdateProductVersionsReq
-        required: true
-        schema:
-          $ref: '#/definitions/message.UpdateProductVersionsReq'
-      - description: product id
-        in: path
-        name: productId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.UpdateProductVersionsResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: update online products versions
-      tags:
-      - product
   /products/components:
     get:
       consumes:
@@ -5362,6 +5333,51 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: query online products versions
+      tags:
+      - product
+    post:
+      consumes:
+      - application/json
+      description: update online products versions
+      parameters:
+      - description: product online request parameter
+        in: body
+        name: UpdateProductVersionsReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateProductVersionsReq'
+      - description: product id
+        in: path
+        name: productId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateProductVersionsResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: update online products versions
       tags:
       - product
   /rbac/permission/{userId}:
@@ -6667,7 +6683,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/message.QueryRegionsResp'
+                  $ref: '#/definitions/message.QueryAvailableRegionsResp'
               type: object
         "401":
           description: Unauthorized
@@ -6685,7 +6701,7 @@ paths:
       - ApiKeyAuth: []
       summary: queries all regions information
       tags:
-      - product
+      - vendor
   /vendors/specs:
     get:
       consumes:
@@ -6725,7 +6741,7 @@ paths:
       - ApiKeyAuth: []
       summary: query vendor specs
       tags:
-      - product
+      - vendor
     post:
       consumes:
       - application/json
@@ -6765,7 +6781,7 @@ paths:
       - ApiKeyAuth: []
       summary: update vendor specs
       tags:
-      - product
+      - vendor
   /vendors/zones:
     get:
       consumes:
@@ -6805,7 +6821,7 @@ paths:
       - ApiKeyAuth: []
       summary: query vendor zones
       tags:
-      - product
+      - vendor
     post:
       consumes:
       - application/json
@@ -6845,7 +6861,7 @@ paths:
       - ApiKeyAuth: []
       summary: update vendor zones
       tags:
-      - product
+      - vendor
   /workflow/:
     get:
       consumes:

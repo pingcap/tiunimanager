@@ -42,7 +42,7 @@ type ProductReadWriterInterface interface {
 	// @param ctx
 	// @return zones
 	// @return err
-	QueryZones(ctx context.Context) (zones []structs.ZoneInfo, err error)
+	QueryZones(ctx context.Context) (zones []structs.ZoneFullInfo, err error)
 
 	// GetZone
 	// @Description: Get region & zone information provided by Enterprise Manager
@@ -52,7 +52,7 @@ type ProductReadWriterInterface interface {
 	// @param zoneID
 	// @return zone
 	// @return err
-	GetZone(ctx context.Context, vendorID, regionID, zoneID string) (zone *structs.ZoneInfo, count int64, err error)
+	GetZone(ctx context.Context, vendorID, regionID, zoneID string) (zone *structs.ZoneFullInfo, count int64, err error)
 
 	// CreateZones
 	// @Description: batch create zones interface
@@ -66,7 +66,7 @@ type ProductReadWriterInterface interface {
 	// @param ctx
 	// @param zones
 	// @return err
-	DeleteZones(ctx context.Context, zones []structs.ZoneInfo) (er error)
+	DeleteZones(ctx context.Context, zones []structs.ZoneFullInfo) (er error)
 
 	// QueryProductDetail
 	// @Description: Query the product detail information provided by EM
@@ -158,7 +158,7 @@ func (p *ProductReadWriter) CreateZones(ctx context.Context, zones []Zone) (er e
 }
 
 //DeleteZones batch delete zones
-func (p *ProductReadWriter) DeleteZones(ctx context.Context, zones []structs.ZoneInfo) (er error) {
+func (p *ProductReadWriter) DeleteZones(ctx context.Context, zones []structs.ZoneFullInfo) (er error) {
 	if len(zones) <= 0 {
 		framework.LogWithContext(ctx).Warningf("delete zones %v, len: %d, parameter invalid", zones, len(zones))
 		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "delete zones %v, parameter invalid", zones)
@@ -177,8 +177,8 @@ func (p *ProductReadWriter) DeleteZones(ctx context.Context, zones []structs.Zon
 }
 
 //QueryZones Query vendor & region & zone information provided by Enterprise Manager
-func (p *ProductReadWriter) QueryZones(ctx context.Context) (zones []structs.ZoneInfo, err error) {
-	var info structs.ZoneInfo
+func (p *ProductReadWriter) QueryZones(ctx context.Context) (zones []structs.ZoneFullInfo, err error) {
+	var info structs.ZoneFullInfo
 	SQL := "SELECT t1.zone_id,t1.zone_name,t1.region_id,t1.region_name,t1.vendor_id,t1.vendor_name FROM zones t1;"
 	rows, err := p.DB(ctx).Raw(SQL).Rows()
 
@@ -200,14 +200,14 @@ func (p *ProductReadWriter) QueryZones(ctx context.Context) (zones []structs.Zon
 }
 
 // GetZone zone by vendorID, regionID, zoneID
-func (p *ProductReadWriter) GetZone(ctx context.Context, vendorID, regionID, zoneID string) (zone *structs.ZoneInfo, count int64, err error) {
+func (p *ProductReadWriter) GetZone(ctx context.Context, vendorID, regionID, zoneID string) (zone *structs.ZoneFullInfo, count int64, err error) {
 	if vendorID == "" || regionID == "" || zoneID == "" {
 		errMsg := fmt.Sprintf("get zone without vendorID %s, regionID %s, zoneID %s, parameter invalid", vendorID, regionID, zoneID)
 		framework.LogWithContext(ctx).Warningln(errMsg)
 		return nil, 0, errors.NewError(errors.TIEM_PARAMETER_INVALID, errMsg)
 	}
 
-	zone = new(structs.ZoneInfo)
+	zone = new(structs.ZoneFullInfo)
 	err = p.DB(ctx).Model(&Zone{}).Where("vendor_id = ? AND  region_id = ? AND zone_id = ?", vendorID, regionID, zoneID).Count(&count).Find(zone).Error
 	if err != nil {
 		errMsg := fmt.Sprintf("get zone, vendorID: %s regionID: %s, zoneID:%s, failed: %v", zone.VendorID, zone.RegionID, zone.ZoneID, err)

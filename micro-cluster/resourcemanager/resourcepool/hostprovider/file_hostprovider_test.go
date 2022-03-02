@@ -364,9 +364,9 @@ func Test_ValidateZoneInfo_Succeed(t *testing.T) {
 	defer ctrl.Finish()
 	prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 	models.SetProductReaderWriter(prw)
-	prw.EXPECT().GetZone(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, vendorID, regionID, zoneID string) (*structs.ZoneInfo, int64, error) {
+	prw.EXPECT().GetZone(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, vendorID, regionID, zoneID string) (*structs.ZoneFullInfo, int64, error) {
 		if vendorID == "Fake_Vendor0" {
-			return &structs.ZoneInfo{VendorID: vendorID, RegionID: regionID, ZoneID: zoneID}, 1, nil
+			return &structs.ZoneFullInfo{VendorID: vendorID, RegionID: regionID, ZoneID: zoneID}, 1, nil
 		} else if vendorID == "Fake_Vendor1" {
 			return nil, 0, nil
 		} else {

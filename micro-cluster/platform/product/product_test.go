@@ -134,7 +134,7 @@ var EMALIYUNHZX8610Components = []structs.ProductComponentProperty{
 	{ID: "AlertManger", Name: "Alert", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 }
 
-var zones = []structs.ZoneInfo{
+var zones = []structs.ZoneFullInfo{
 	{ZoneID: CNBeijingG, ZoneName: ZoneNameG, RegionID: CNBeijing, RegionName: CNBeijingName, VendorID: AliYun, VendorName: AliYun, Comment: ""},
 	{ZoneID: CNBeijingH, ZoneName: ZoneNameH, RegionID: CNBeijing, RegionName: CNBeijingName, VendorID: AliYun, VendorName: AliYun, Comment: ""},
 	{ZoneID: CNHangzhouG, ZoneName: ZoneNameG, RegionID: CNHangzhou, RegionName: CNHangzhouName, VendorID: AliYun, VendorName: AliYun, Comment: ""},
@@ -251,7 +251,7 @@ func TestProductManager_QueryZones(t *testing.T) {
 	t.Run("QueryZonesWithEmptyParameter", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().QueryZones(gomock.Any()).Return(make([]structs.ZoneInfo, 0), errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
+		prw.EXPECT().QueryZones(gomock.Any()).Return(make([]structs.ZoneFullInfo, 0), errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid parameter")).AnyTimes()
 		_, err := mgr.QueryZones(context.TODO())
 		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
@@ -259,7 +259,7 @@ func TestProductManager_QueryZones(t *testing.T) {
 	t.Run("QueryZonesWithDBError", func(t *testing.T) {
 		prw := mock_product.NewMockProductReadWriterInterface(ctrl)
 		models.SetProductReaderWriter(prw)
-		prw.EXPECT().QueryZones(gomock.Any()).Return(make([]structs.ZoneInfo, 0), errors.NewErrorf(errors.QueryZoneScanRowError, "scan data database error")).AnyTimes()
+		prw.EXPECT().QueryZones(gomock.Any()).Return(make([]structs.ZoneFullInfo, 0), errors.NewErrorf(errors.QueryZoneScanRowError, "scan data database error")).AnyTimes()
 		_, err := mgr.QueryZones(context.TODO())
 		assert.Equal(t, errors.QueryZoneScanRowError, err.(errors.EMError).GetCode())
 	})

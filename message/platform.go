@@ -27,14 +27,6 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 )
 
-type GetSystemConfigReq struct {
-	ConfigKey string `json:"configKey" form:"configKey"`
-}
-
-type GetSystemConfigResp struct {
-	structs.SystemConfig
-}
-
 type QueryVendorZonesReq struct {
 	Vendors []string  `json:"vendors" form:"vendors"`
 }
@@ -55,55 +47,14 @@ type QueryVendorSpecsReq struct {
 }
 
 type QueryVendorSpecsResp struct {
-	Vendors map[string]structs.SpecInfo  `json:"vendors"`
+	Vendors map[string][]structs.SpecInfo  `json:"vendors"`
 }
 
 type UpdateVendorSpecsReq struct {
-	Vendors map[string]structs.SpecInfo  `json:"vendors"`
+	Vendors map[string][]structs.SpecInfo  `json:"vendors"`
 }
 
 type UpdateVendorSpecsResp struct {
-}
-
-//CreateZonesReq create zone message, include vendor、region、zone
-type CreateZonesReq struct {
-	Zones []structs.ZoneInfo `json:"zones"`
-}
-type CreateZonesResp struct {
-}
-
-//QueryRegionsReq query all zone information message, include vendor、region、zone
-type QueryRegionsReq struct {
-}
-
-type QueryRegionsResp struct {
-	Vendors map[string]structs.VendorWithRegion `json:"vendors" form:"vendors"`
-}
-
-//DeleteZoneReq delete a zone message
-type DeleteZoneReq struct {
-	Zones []structs.ZoneInfo `json:"zones"`
-}
-type DeleteZoneResp struct {
-}
-
-//QueryZonesReq query all zone
-type QueryZonesReq struct {
-	VendorID string `json:"vendorID" form:"vendorID"`
-	RegionID string `json:"regionID" form:"regionID"`
-}
-
-type QueryZonesResp struct {
-	Zones []structs.ZoneInfo `json:"zones"`
-}
-
-//CreateProductReq create a product message
-type CreateProductReq struct {
-	ProductInfo structs.Product                    `json:"productInfo"`
-	Components  []structs.ProductComponentProperty `json:"components"`
-}
-
-type CreateProductResp struct {
 }
 
 type UpdateProductComponentReq struct {
@@ -136,13 +87,13 @@ type QueryProductVersionsResp struct {
 	Products map[string][]structs.SpecificVersionProduct `json:"products"`
 }
 
-//DeleteProductReq delete a product message
-type DeleteProductReq struct {
-	ProductInfo structs.Product `json:"productInfo"`
-}
-type DeleteProductResp struct {
+//QueryAvailableRegionsReq query all zone information message, include vendor、region、zone
+type QueryAvailableRegionsReq struct {
 }
 
+type QueryAvailableRegionsResp struct {
+	Vendors map[string][]structs.VendorWithRegion `json:"vendors" form:"vendors"`
+}
 //QueryAvailableProductsReq query all products message
 type QueryAvailableProductsReq struct {
 	VendorID        string `json:"vendorId" form:"vendorId"`
@@ -167,28 +118,12 @@ type QueryProductDetailResp struct {
 	Products map[string]structs.ProductDetail `json:"products"`
 }
 
-// CreateSpecsReq component instance resource spec message
-//CreateSpecsReq create spec message
-type CreateSpecsReq struct {
-	Specs []structs.SpecInfo `json:"specs"`
+type GetSystemConfigReq struct {
+	ConfigKey string `json:"configKey" form:"configKey"`
 }
 
-type CreateSpecsResp struct {
-}
-
-//DeleteSpecsReq delete spec message
-type DeleteSpecsReq struct {
-	SpecIDs []string `json:"specIds"`
-}
-type DeleteSpecsResp struct {
-}
-
-//QuerySpecsReq query spec message
-type QuerySpecsReq struct {
-}
-
-type QuerySpecsResp struct {
-	Specs []structs.SpecInfo `json:"specs"`
+type GetSystemConfigResp struct {
+	structs.SystemConfig
 }
 
 type GetSystemInfoReq struct {

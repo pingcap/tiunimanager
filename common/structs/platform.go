@@ -98,14 +98,21 @@ type Product struct {
 	Internal   int    `json:"internal"`
 }
 
-//ZoneInfo vendor & region & zone information provided by Enterprise Manager
-type ZoneInfo struct {
+// ZoneFullInfo vendor & region & zone information provided by Enterprise Manager
+type ZoneFullInfo struct {
 	ZoneID     string `json:"zoneId" form:"zoneId"`         //The value of the ZoneID is similar to CN-HANGZHOU-H
 	ZoneName   string `json:"zoneName" form:"zoneName"`     //The value of the Name is similar to Hangzhou(H)
 	RegionID   string `json:"regionId" form:"regionId"`     //The value of the RegionID is similar to CN-HANGZHOU
 	RegionName string `json:"regionName" form:"regionName"` //The value of the Name is similar to East China(Hangzhou)
 	VendorID   string `json:"vendorId" form:"vendorId"`     //The value of the VendorID is similar to AWS
 	VendorName string `json:"vendorName" form:"vendorName"` //The value of the Name is similar to AWS
+	Comment    string `json:"comment" form:"comment"`
+}
+
+// ZoneInfo zone information
+type ZoneInfo struct {
+	ZoneID     string `json:"zoneId" form:"zoneId"`         //The value of the ZoneID is similar to CN-HANGZHOU-H
+	ZoneName   string `json:"zoneName" form:"zoneName"`     //The value of the Name is similar to Hangzhou(H)
 	Comment    string `json:"comment" form:"comment"`
 }
 

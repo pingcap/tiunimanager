@@ -403,7 +403,7 @@ func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterT
 					ID:   structs.GenSpecCode(int32(instance.CpuCores), int32(instance.Memory)),
 					Name: structs.GenSpecCode(int32(instance.CpuCores), int32(instance.Memory)),
 				},
-				Zone: structs.ZoneInfo{
+				Zone: structs.ZoneFullInfo{
 					ZoneID:   structs.GenDomainCodeByName(p.Cluster.Region, instance.Zone),
 					ZoneName: instance.Zone,
 				},

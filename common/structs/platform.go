@@ -133,8 +133,8 @@ type SystemInfo struct {
 	SupportedVendors  map[string]string                   `json:"supportedVendors"`
 	SupportedProducts map[string][]SpecificVersionProduct `json:"supportedProducts"`
 
-	VendorZoneInitialized        bool `json:"vendorZoneInitialized"`
-	VendorSpecInitialized        bool `json:"vendorSpecInitialized"`
+	VendorZonesInitialized       bool `json:"vendorZonesInitialized"`
+	VendorSpecsInitialized       bool `json:"vendorSpecsInitialized"`
 	ProductComponentsInitialized bool `json:"productComponentsInitialized"`
 	ProductVersionsInitialized   bool `json:"productVersionsInitialized"`
 }

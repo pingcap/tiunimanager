@@ -147,7 +147,6 @@ func UpdateProductComponents(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param productId path string true "product id"
 // @Param QueryProductVersionsReq body message.QueryProductVersionsReq true "query online products request parameter"
 // @Success 200 {object} controller.CommonResult{data=message.QueryProductVersionsResp}
 // @Failure 401 {object} controller.CommonResult
@@ -166,7 +165,6 @@ func QueryProductVersions(c *gin.Context) {
 // @Produce application/json
 // @Security ApiKeyAuth
 // @Param UpdateProductVersionsReq body message.UpdateProductVersionsReq true "product online request parameter"
-// @Param productId path string true "product id"
 // @Success 200 {object} controller.CommonResult{data=message.UpdateProductVersionsResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult

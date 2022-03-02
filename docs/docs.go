@@ -3866,13 +3866,6 @@ var doc = `{
                 "summary": "query online products versions",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "product id",
-                        "name": "productId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "description": "query online products request parameter",
                         "name": "QueryProductVersionsReq",
                         "in": "body",
@@ -3947,13 +3940,6 @@ var doc = `{
                         "schema": {
                             "$ref": "#/definitions/message.UpdateProductVersionsReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "product id",
-                        "name": "productId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {

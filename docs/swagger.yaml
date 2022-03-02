@@ -5295,11 +5295,6 @@ paths:
       - application/json
       description: query online products versions
       parameters:
-      - description: product id
-        in: path
-        name: productId
-        required: true
-        type: string
       - description: query online products request parameter
         in: body
         name: QueryProductVersionsReq
@@ -5346,11 +5341,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/message.UpdateProductVersionsReq'
-      - description: product id
-        in: path
-        name: productId
-        required: true
-        type: string
       produces:
       - application/json
       responses:

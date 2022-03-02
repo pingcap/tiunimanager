@@ -89,7 +89,6 @@ type RegionsInfo struct {
 
 type HealthInfo struct {
 	Name     string `json:"name"`
-	MemberID int64  `json:"member_id"`
 	Health   bool   `json:"health"`
 }
 
@@ -224,7 +223,7 @@ func (p *Report) GetClusterTopology(ctx context.Context, clusterID string) (stru
 	topologyCheck.Valid = true
 	expectedTopologyInfos := make([]TopologyInfo, 0)
 	for componentType, instances := range clusterMeta.Instances {
-		if meta.Contain(constants.ParasiteComponentIDs, componentType) {
+		if meta.Contain(constants.ParasiteComponentIDs, constants.EMProductComponentIDType(componentType)) {
 			continue
 		}
 		if realTopology[strings.ToLower(componentType)] != len(instances) {
@@ -328,7 +327,7 @@ func (p *Report) GetClusterHealthStatus(ctx context.Context, clusterID string) (
 	}
 
 	healthsInfo := make([]HealthInfo, 0)
-	if err = json.Unmarshal(body, healthsInfo); err != nil {
+	if err = json.Unmarshal(body, &healthsInfo); err != nil {
 		return healthStatus, errors.WrapError(errors.TIEM_UNMARSHAL_ERROR,
 			fmt.Sprintf("parse health info error: %s", err.Error()), err)
 	}
@@ -378,6 +377,9 @@ func (p *Report) CheckInstances(ctx context.Context, instances []*management.Clu
 	instanceChecks := make([]structs.InstanceCheck, 0)
 
 	for _, instance := range instances {
+		if meta.Contain(constants.ParasiteComponentIDs, constants.EMProductComponentIDType(instance.Type)) {
+			continue
+		}
 		parameters, err := p.CheckInstanceParameters(ctx, instance.ID)
 		if err != nil {
 			return instanceChecks, err

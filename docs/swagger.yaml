@@ -1039,6 +1039,14 @@ definitions:
       result:
         type: boolean
     type: object
+  message.CheckPlatformRsp:
+    properties:
+      checkID:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
   message.CopyParameterGroupReq:
     properties:
       name:
@@ -1371,6 +1379,11 @@ definitions:
         example: 1636698675
         type: integer
     type: object
+  message.GetCheckReportRsp:
+    properties:
+      reportInfo:
+        $ref: '#/definitions/structs.CheckReportInfo'
+    type: object
   message.GetHierarchyResp:
     properties:
       root:
@@ -1523,6 +1536,13 @@ definitions:
         - 4
         example: 0
         type: integer
+    type: object
+  message.QueryCheckReportsRsp:
+    properties:
+      reportMetas:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckReportMeta'
+        type: object
     type: object
   message.QueryDataImportExportRecordsResp:
     properties:
@@ -1848,6 +1868,117 @@ definitions:
         type: string
       period:
         type: string
+    type: object
+  structs.CheckAny:
+    properties:
+      expectedValue:
+        type: object
+      realValue:
+        type: object
+      valid:
+        type: boolean
+    type: object
+  structs.CheckError:
+    properties:
+      message:
+        type: string
+      type:
+        type: string
+    type: object
+  structs.CheckInt32:
+    properties:
+      expectedValue:
+        type: integer
+      realValue:
+        type: integer
+      valid:
+        type: boolean
+    type: object
+  structs.CheckRangeInt32:
+    properties:
+      expectedRange:
+        description: Left closed right closed interval
+        items:
+          type: integer
+        type: array
+      realValue:
+        type: integer
+      valid:
+        type: boolean
+    type: object
+  structs.CheckReportInfo:
+    properties:
+      hosts:
+        $ref: '#/definitions/structs.HostsCheck'
+      tenants:
+        additionalProperties:
+          $ref: '#/definitions/structs.TenantCheck'
+        type: object
+    type: object
+  structs.CheckReportMeta:
+    properties:
+      checkID:
+        type: string
+      createAt:
+        type: string
+      creator:
+        type: string
+    type: object
+  structs.CheckStatus:
+    properties:
+      health:
+        type: boolean
+      message:
+        type: string
+    type: object
+  structs.CheckString:
+    properties:
+      expectedValue:
+        type: string
+      realValue:
+        type: string
+      valid:
+        type: boolean
+    type: object
+  structs.CheckSwitch:
+    properties:
+      enable:
+        type: boolean
+    type: object
+  structs.ClusterCheck:
+    properties:
+      accountStatus:
+        $ref: '#/definitions/structs.CheckStatus'
+      backupRecordValid:
+        additionalProperties:
+          type: boolean
+        type: object
+      backupStrategy:
+        $ref: '#/definitions/structs.CheckString'
+      clusterID:
+        type: string
+      copies:
+        $ref: '#/definitions/structs.CheckInt32'
+      cpu:
+        type: integer
+      healthStatus:
+        $ref: '#/definitions/structs.CheckStatus'
+      instances:
+        items:
+          $ref: '#/definitions/structs.InstanceCheck'
+        type: array
+      maintenanceStatus:
+        type: string
+      memory:
+        type: integer
+      regionStatus:
+        $ref: '#/definitions/structs.CheckStatus'
+      runningStatus:
+        type: string
+      storage:
+        type: integer
+      topology:
+        $ref: '#/definitions/structs.CheckString'
     type: object
   structs.ClusterInfo:
     properties:
@@ -2265,6 +2396,29 @@ definitions:
           $ref: '#/definitions/structs.HierarchyTreeNode'
         type: array
     type: object
+  structs.HostCheck:
+    properties:
+      cpu:
+        $ref: '#/definitions/structs.CheckInt32'
+      disk:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckString'
+        type: object
+      errors:
+        items:
+          $ref: '#/definitions/structs.CheckError'
+        type: array
+      firewall:
+        $ref: '#/definitions/structs.CheckSwitch'
+      memory:
+        $ref: '#/definitions/structs.CheckInt32'
+      selinux:
+        $ref: '#/definitions/structs.CheckSwitch'
+      storageRatio:
+        type: number
+      swap:
+        $ref: '#/definitions/structs.CheckSwitch'
+    type: object
   structs.HostInfo:
     properties:
       arch:
@@ -2344,6 +2498,29 @@ definitions:
       vendor:
         type: string
     type: object
+  structs.HostsCheck:
+    properties:
+      delay:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckRangeInt32'
+        type: object
+      hosts:
+        additionalProperties:
+          $ref: '#/definitions/structs.HostCheck'
+        type: object
+      ntp:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckRangeInt32'
+        type: object
+      ping:
+        additionalProperties:
+          type: boolean
+        type: object
+      timeZoneConsistency:
+        additionalProperties:
+          type: boolean
+        type: object
+    type: object
   structs.Index:
     properties:
       description:
@@ -2353,6 +2530,19 @@ definitions:
       unit:
         type: string
       value:
+        type: object
+    type: object
+  structs.InstanceCheck:
+    properties:
+      instanceID:
+        type: string
+      parameters:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckAny'
+        type: object
+      versions:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckString'
         type: object
     type: object
   structs.ParameterGroupParameterInfo:
@@ -2761,6 +2951,21 @@ definitions:
         type: string
       versionID:
         type: string
+    type: object
+  structs.TenantCheck:
+    properties:
+      clusterCount:
+        $ref: '#/definitions/structs.CheckRangeInt32'
+      clusters:
+        items:
+          $ref: '#/definitions/structs.ClusterCheck'
+        type: array
+      cpuRatio:
+        type: number
+      memoryRatio:
+        type: number
+      storageRatio:
+        type: number
     type: object
   structs.TenantInfo:
     properties:
@@ -5045,6 +5250,125 @@ paths:
       summary: copy a parameter group
       tags:
       - parameter group
+  /platform/check:
+    post:
+      consumes:
+      - application/json
+      description: platform check
+      parameters:
+      - in: query
+        name: displayMode
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.CheckPlatformRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: platform check
+      tags:
+      - platform
+  /platform/report/:checkId:
+    get:
+      consumes:
+      - application/json
+      description: get check report based on checkId
+      parameters:
+      - in: query
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.GetCheckReportRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: get check report based on checkId
+      tags:
+      - platform
+  /platform/reports:
+    get:
+      consumes:
+      - application/json
+      description: get query check reports
+      parameters:
+      - description: Current page location
+        in: query
+        name: page
+        type: integer
+      - description: Number of this request
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryCheckReportsRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query check reports
+      tags:
+      - platform
   /products/:
     delete:
       consumes:

@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/micro-cluster/platform/check"
 	"github.com/pingcap-inc/tiem/micro-cluster/platform/system"
 	"runtime/debug"
 	"time"
@@ -73,6 +74,7 @@ type ClusterServiceHandler struct {
 	authManager             *identification.Manager
 	productManager          *product.ProductManager
 	rbacManager             rbac.RBACService
+	checkManager            *check.CheckManager
 }
 
 func handleRequest(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse, requestBody interface{}, permissions []structs.RbacPermission) bool {
@@ -162,6 +164,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.authManager = identification.NewIdentificationManager()
 	handler.productManager = product.NewProductManager()
 	handler.rbacManager = rbac.GetRBACService()
+	handler.checkManager = check.NewCheckManager()
 
 	return handler
 }
@@ -1475,6 +1478,18 @@ func (handler *ClusterServiceHandler) UpdateTenantProfile(ctx context.Context, r
 	return nil
 }
 
+func (handler *ClusterServiceHandler) CheckPlatform(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "CheckPlatform", int(response.GetCode()))
+
+	req := message.CheckPlatformReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionCreate)}}) {
+		resp, err := handler.checkManager.Check(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+	return nil
+}
+
 func (handler *ClusterServiceHandler) CreateProductUpgradePath(context.Context, *clusterservices.RpcRequest, *clusterservices.RpcResponse) error {
 	panic("implement me")
 }
@@ -1502,6 +1517,18 @@ func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Contex
 	return nil
 }
 
+func (handler *ClusterServiceHandler) QueryCheckReports(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "QueryCheckReports", int(response.GetCode()))
+
+	req := message.QueryCheckReportsReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionRead)}}) {
+		resp, err := handler.checkManager.QueryCheckReports(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+	return nil
+}
+
 func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "QueryUpgradeVersionDiffInfo", int(resp.GetCode()))
@@ -1514,6 +1541,18 @@ func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Co
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
+	return nil
+}
+
+func (handler *ClusterServiceHandler) GetCheckReport(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "GetCheckReport", int(response.GetCode()))
+
+	req := message.GetCheckReportReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionRead)}}) {
+		resp, err := handler.checkManager.GetCheckReport(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
 	return nil
 }
 

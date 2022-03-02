@@ -440,7 +440,7 @@ func TestProductManager_QueryProducts(t *testing.T) {
 	defer ctrl.Finish()
 
 	mgr := NewProductManager()
-	msg := message.QueryProductsReq{
+	msg := message.QueryAvailableProductsReq{
 		VendorID:        AliYun,
 		Status:          string(constants.ProductStatusOnline),
 		InternalProduct: constants.EMInternalProductNo,

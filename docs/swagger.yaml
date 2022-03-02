@@ -1524,6 +1524,20 @@ definitions:
         example: 0
         type: integer
     type: object
+  message.QueryAvailableProductsResp:
+    properties:
+      products:
+        additionalProperties:
+          additionalProperties:
+            additionalProperties:
+              additionalProperties:
+                $ref: '#/definitions/structs.Product'
+              type: object
+            type: object
+          type: object
+        description: arch version
+        type: object
+    type: object
   message.QueryComponentPropertiesResp:
     properties:
       componentProperties:
@@ -1618,20 +1632,6 @@ definitions:
       products:
         additionalProperties:
           $ref: '#/definitions/structs.ProductDetail'
-        type: object
-    type: object
-  message.QueryProductsResp:
-    properties:
-      products:
-        additionalProperties:
-          additionalProperties:
-            additionalProperties:
-              additionalProperties:
-                $ref: '#/definitions/structs.Product'
-              type: object
-            type: object
-          type: object
-        description: arch version
         type: object
     type: object
   message.QueryRegionsResp:
@@ -5186,7 +5186,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/message.QueryProductsResp'
+                  $ref: '#/definitions/message.QueryAvailableProductsResp'
               type: object
         "401":
           description: Unauthorized

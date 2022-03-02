@@ -233,7 +233,7 @@ func Route(g *gin.Engine) {
 			productGroup.Use(interceptor.AuditLog)
 			productGroup.POST("/", product.CreateProduct)
 			productGroup.DELETE("/", product.DeleteProduct)
-			productGroup.GET("/", product.QueryProducts)
+			productGroup.GET("/", product.QueryAvailableProducts)
 			productGroup.GET("/detail", product.QueryProductDetail)
 		}
 

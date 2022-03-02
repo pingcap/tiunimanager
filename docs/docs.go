@@ -3598,7 +3598,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/message.QueryProductsResp"
+                                            "$ref": "#/definitions/message.QueryAvailableProductsResp"
                                         }
                                     }
                                 }
@@ -9099,6 +9099,27 @@ var doc = `{
                 }
             }
         },
+        "message.QueryAvailableProductsResp": {
+            "type": "object",
+            "properties": {
+                "products": {
+                    "description": "arch version",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "$ref": "#/definitions/structs.Product"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "message.QueryComponentPropertiesResp": {
             "type": "object",
             "properties": {
@@ -9236,27 +9257,6 @@ var doc = `{
                     "type": "object",
                     "additionalProperties": {
                         "$ref": "#/definitions/structs.ProductDetail"
-                    }
-                }
-            }
-        },
-        "message.QueryProductsResp": {
-            "type": "object",
-            "properties": {
-                "products": {
-                    "description": "arch version",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "object",
-                                "additionalProperties": {
-                                    "$ref": "#/definitions/structs.Product"
-                                }
-                            }
-                        }
                     }
                 }
             }

@@ -115,7 +115,7 @@ func (manager *ProductManager) QueryZones(ctx context.Context) (resp message.Que
 	return
 }
 
-func (manager *ProductManager) QueryProducts(ctx context.Context, request message.QueryProductsReq) (resp message.QueryProductsResp, err error) {
+func (manager *ProductManager) QueryProducts(ctx context.Context, request message.QueryAvailableProductsReq) (resp message.QueryAvailableProductsResp, err error) {
 	log := framework.LogWithContext(ctx)
 	rw := models.GetProductReaderWriter()
 	products, err := rw.QueryProducts(ctx, request.VendorID, constants.ProductStatus(request.Status), constants.EMInternalProduct(request.InternalProduct))

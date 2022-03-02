@@ -277,22 +277,22 @@ func DeleteProduct(c *gin.Context) {
 	}
 }
 
-// QueryProducts query all products' information
+// QueryAvailableProducts query all products' information
 // @Summary queries all products' information
 // @Description queries all products' information
 // @Tags platform
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param QueryProducts query message.QueryProductsReq true "query products request"
-// @Success 200 {object} controller.CommonResult{data=message.QueryProductsResp}
+// @Param QueryAvailableProducts query message.QueryAvailableProductsReq true "query products request"
+// @Success 200 {object} controller.CommonResult{data=message.QueryAvailableProductsResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /products/ [get]
-func QueryProducts(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryProductsReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryProducts, &message.QueryProductsResp{},
+func QueryAvailableProducts(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryAvailableProductsReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryProducts, &message.QueryAvailableProductsResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

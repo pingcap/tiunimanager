@@ -117,14 +117,14 @@ type DeleteProductReq struct {
 type DeleteProductResp struct {
 }
 
-//QueryProductsReq query all products message
-type QueryProductsReq struct {
+//QueryAvailableProductsReq query all products message
+type QueryAvailableProductsReq struct {
 	VendorID        string `json:"vendorId" form:"vendorId"`
 	Status          string `json:"status" form:"status"`
 	InternalProduct int    `json:"internalProduct" form:"internalProduct"`
 }
 
-type QueryProductsResp struct {
+type QueryAvailableProductsResp struct {
 	// arch version
 	Products map[string]map[string]map[string]map[string]structs.Product `json:"products"`
 }

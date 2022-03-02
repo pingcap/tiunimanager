@@ -1265,9 +1265,9 @@ func (handler *ClusterServiceHandler) DeleteProduct(ctx context.Context, request
 
 func (handler *ClusterServiceHandler) QueryProducts(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "QueryProducts", int(response.GetCode()))
+	defer metrics.HandleClusterMetrics(start, "QueryAvailableProducts", int(response.GetCode()))
 
-	req := message.QueryProductsReq{}
+	req := message.QueryAvailableProductsReq{}
 	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionRead)}}) {
 		resp, err := handler.productManager.QueryProducts(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)

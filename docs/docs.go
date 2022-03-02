@@ -10652,10 +10652,10 @@ var doc = `{
                 "systemName": {
                     "type": "string"
                 },
-                "vendorSpecInitialized": {
+                "vendorSpecsInitialized": {
                     "type": "boolean"
                 },
-                "vendorZoneInitialized": {
+                "vendorZonesInitialized": {
                     "type": "boolean"
                 }
             }

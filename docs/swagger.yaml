@@ -2803,9 +2803,9 @@ definitions:
         type: string
       systemName:
         type: string
-      vendorSpecInitialized:
+      vendorSpecsInitialized:
         type: boolean
-      vendorZoneInitialized:
+      vendorZonesInitialized:
         type: boolean
     type: object
   structs.SystemVersionInfo:

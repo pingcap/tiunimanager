@@ -18,7 +18,6 @@ package check
 import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/micro-cluster/platform/check/handler"
 	"github.com/pingcap-inc/tiem/models"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -27,11 +26,11 @@ import (
 func checkTenants(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	checkID := context.GetData(ContextCheckID).(string)
 
-	var report handler.ReportInterface
+	var report ReportInterface
 	if context.GetData(ContextReportInfo) != nil { // for ut
-		report = context.GetData(ContextReportInfo).(handler.ReportInterface)
+		report = context.GetData(ContextReportInfo).(ReportInterface)
 	} else {
-		report = &handler.Report{}
+		report = &Report{}
 	}
 
 	err := report.ParseFrom(context.Context, checkID)
@@ -68,11 +67,11 @@ func checkTenants(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 func checkHosts(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	checkID := context.GetData(ContextCheckID).(string)
 
-	var report handler.ReportInterface
+	var report ReportInterface
 	if context.GetData(ContextReportInfo) != nil { // for ut
-		report = context.GetData(ContextReportInfo).(handler.ReportInterface)
+		report = context.GetData(ContextReportInfo).(ReportInterface)
 	} else {
-		report = &handler.Report{}
+		report = &Report{}
 	}
 
 	err := report.ParseFrom(context.Context, checkID)

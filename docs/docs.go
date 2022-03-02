@@ -9622,6 +9622,9 @@ var doc = `{
                 "regionStatus": {
                     "$ref": "#/definitions/structs.CheckStatus"
                 },
+                "runningStatus": {
+                    "type": "string"
+                },
                 "storage": {
                     "type": "integer"
                 },

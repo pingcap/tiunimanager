@@ -295,7 +295,7 @@ mock:
 	mockgen -destination ./test/mockutiltidbsql_config/mock_utiltidbsql_config.go -package mockutiltidbsqlconfig -source ./util/api/tidb/sql/clusterconfig.go
 	mockgen -destination ./test/mockutilcdc/mock_utilcdc_change_feed.go -package mockutilcdc -source ./util/api/cdc/changefeed.go
 	mockgen -destination ./test/mockcheck/mock_check.go -package mock_check -source ./models/platform/check/report_read_writer.go
-	mockgen -destination ./test/mockreport/mock_report.go -package mock_report -source ./micro-cluster/platform/check/handler/handler.go
+	mockgen -destination ./test/mockreport/mock_report.go -package mock_report -source ./micro-cluster/platform/check/handler.go
 	mockgen -destination ./test/mockhostsinspect/mock_hosts_inspect.go -package mock_hosts_inspect -source ./micro-cluster/resourcemanager/inspect/hostinspector.go
 
 swag:

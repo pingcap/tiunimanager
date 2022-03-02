@@ -65,25 +65,174 @@ func DeleteZones(c *gin.Context) {
 	}
 }
 
-// QueryZonesTree query all regions information
+// QueryRegions query all regions information
 // @Summary queries all regions information
 // @Description queries all regions information
 // @Tags platform
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param QueryZonesTreeReq query message.QueryZonesTreeReq true "query region request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.QueryZonesTreeResp}
+// @Param QueryRegionsReq query message.QueryRegionsReq true "query region request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.QueryRegionsResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /zones/tree [get]
-func QueryZonesTree(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryZonesTreeReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryZones, &message.QueryZonesTreeResp{},
+// @Router /zones/regions [get]
+func QueryRegions(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryRegionsReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryZones, &message.QueryRegionsResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
+}
+
+// QueryZones query zones
+// @Summary query zones
+// @Description query zones
+// @Tags platform
+// @Accept application/json
+// @Produce application/json
+// @Security ApiKeyAuth
+// @Param QueryZonesReq query message.QueryZonesReq true "query zones"
+// @Success 200 {object} controller.CommonResult{data=message.QueryZonesResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /zones/ [get]
+func QueryZones(c *gin.Context) {
+	// todo
+}
+
+// CreateSpecs create specs interface
+// @Summary created  specs
+// @Description created specs
+// @Tags platform
+// @Accept application/json
+// @Produce application/json
+// @Security ApiKeyAuth
+// @Param CreateSpecsReq body message.CreateSpecsReq true "create specs request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.CreateSpecsResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /specs/ [post]
+func CreateSpecs(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.CreateSpecsReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateSpecs, &message.CreateSpecsResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// DeleteSpecs delete specs interface
+// @Summary deleted  specs
+// @Description deleted specs
+// @Tags platform
+// @Accept application/json
+// @Produce application/json
+// @Security ApiKeyAuth
+// @Param DeleteSpecsReq body message.DeleteSpecsReq true "delete specs request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.DeleteSpecsResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /specs/ [delete]
+func DeleteSpecs(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.DeleteSpecsReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteSpecs, &message.DeleteSpecsResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// QuerySpecs query all specs information
+// @Summary queries all specs information
+// @Description queries all specs information
+// @Tags platform
+// @Accept application/json
+// @Produce application/json
+// @Security ApiKeyAuth
+// @Param QuerySpecsReq query message.QuerySpecsReq true "query specs request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.QuerySpecsResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /specs/ [get]
+func QuerySpecs(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QuerySpecsReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QuerySpecs, &message.QuerySpecsResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// QueryComponentProperties query product component properties
+// @Summary query product component properties
+// @Description query product component properties
+// @Tags platform
+// @Accept application/json
+// @Produce application/json
+// @Security ApiKeyAuth
+// @Param productId path string true "product id"
+// @Success 200 {object} controller.CommonResult{data=message.QueryComponentPropertiesResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /products/{productID}/components [get]
+func QueryComponentProperties(c *gin.Context) {
+}
+
+// UpdateComponentProperties update product component properties
+// @Summary update product component properties
+// @Description update product component properties
+// @Tags platform
+// @Accept application/json
+// @Produce application/json
+// @Security ApiKeyAuth
+// @Param UpdateComponentPropertiesReq body message.UpdateComponentPropertiesReq true "update product component properties parameter"
+// @Param productId path string true "product id"
+// @Success 200 {object} controller.CommonResult{data=message.UpdateComponentPropertiesResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /products/{productID}/components [post]
+func UpdateComponentProperties(c *gin.Context) {
+}
+
+// UpdateOnlineProducts product online
+// @Summary  product online
+// @Description product online
+// @Tags platform
+// @Accept application/json
+// @Produce application/json
+// @Security ApiKeyAuth
+// @Param UpdateOnlineProductsReq body message.UpdateOnlineProductsReq true "product online request parameter"
+// @Param productId path string true "product id"
+// @Success 200 {object} controller.CommonResult{data=message.UpdateOnlineProductsResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /products/{productID}/online [post]
+func UpdateOnlineProducts(c *gin.Context) {
+
+}
+
+// QueryOnlineProducts query online products
+// @Summary query online products
+// @Description query online products
+// @Tags platform
+// @Accept application/json
+// @Produce application/json
+// @Security ApiKeyAuth
+// @Param productId path string true "product id"
+// @Param QueryOnlineProductsReq body message.QueryOnlineProductsReq true "query online products request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.QueryOnlineProductsResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /products/{productID}/online [get]
+func QueryOnlineProducts(c *gin.Context) {
+
 }
 
 // CreateProduct create product interface
@@ -165,69 +314,6 @@ func QueryProducts(c *gin.Context) {
 func QueryProductDetail(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryProductDetailReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.QueryProductDetail, &message.QueryProductDetailResp{},
-			requestBody,
-			controller.DefaultTimeout)
-	}
-}
-
-// CreateSpecs create specs interface
-// @Summary created  specs
-// @Description created specs
-// @Tags platform
-// @Accept application/json
-// @Produce application/json
-// @Security ApiKeyAuth
-// @Param CreateSpecsReq body message.CreateSpecsReq true "create specs request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.CreateSpecsResp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /specs/ [post]
-func CreateSpecs(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.CreateSpecsReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateSpecs, &message.CreateSpecsResp{},
-			requestBody,
-			controller.DefaultTimeout)
-	}
-}
-
-// DeleteSpecs delete specs interface
-// @Summary deleted  specs
-// @Description deleted specs
-// @Tags platform
-// @Accept application/json
-// @Produce application/json
-// @Security ApiKeyAuth
-// @Param DeleteSpecsReq body message.DeleteSpecsReq true "delete specs request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.DeleteSpecsResp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /specs/ [delete]
-func DeleteSpecs(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.DeleteSpecsReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteSpecs, &message.DeleteSpecsResp{},
-			requestBody,
-			controller.DefaultTimeout)
-	}
-}
-
-// QuerySpecs query all specs information
-// @Summary queries all specs information
-// @Description queries all specs information
-// @Tags platform
-// @Accept application/json
-// @Produce application/json
-// @Security ApiKeyAuth
-// @Param QuerySpecsReq query message.QuerySpecsReq true "query specs request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.QuerySpecsResp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /specs/ [get]
-func QuerySpecs(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QuerySpecsReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QuerySpecs, &message.QuerySpecsResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

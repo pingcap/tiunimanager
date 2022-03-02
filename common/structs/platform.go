@@ -122,6 +122,24 @@ type SystemInfo struct {
 	CurrentVersionID string `json:"currentVersionID"`
 	LastVersionID    string `json:"lastVersionID"`
 	State            string `json:"state"`
+
+	SupportedVendors  string                              `json:"supportedVendors"`
+	SupportedProducts map[string][]SpecificVersionProduct `json:"supportedProducts"`
+
+	ZoneInitialized          bool `json:"zoneInitialized"`
+	SpecInitialized          bool `json:"specInitialized"`
+	ProductInitialized       bool `json:"productInitialized"`
+	ProductOnlineInitialized bool `json:"productOnlineInitialized"`
+
+	SpecBindingZoneInitialized    bool `json:"specBindingZoneInitialized"`
+	SpecBindingProductInitialized bool `json:"specBindingProductInitialized"`
+	ConfigInitialized             bool `json:"configInitialized"`
+}
+
+type SpecificVersionProduct struct {
+	ProductID string   `json:"productID"`
+	Arch      string   `json:"arch"`
+	Version   string   `json:"version"`
 }
 
 type SystemVersionInfo struct {

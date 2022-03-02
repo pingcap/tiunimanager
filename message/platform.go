@@ -42,19 +42,29 @@ type CreateZonesReq struct {
 type CreateZonesResp struct {
 }
 
-//QueryZonesTreeReq query all zone information message, include vendor、region、zone
-type QueryZonesTreeReq struct {
+//QueryRegionsReq query all zone information message, include vendor、region、zone
+type QueryRegionsReq struct {
 }
 
-type QueryZonesTreeResp struct {
+type QueryRegionsResp struct {
 	Vendors map[string]structs.VendorWithRegion `json:"vendors" form:"vendors"`
 }
 
 //DeleteZoneReq delete a zone message
 type DeleteZoneReq struct {
-	Zones []structs.ZoneInfo `json:"zone"`
+	Zones []structs.ZoneInfo `json:"zones"`
 }
 type DeleteZoneResp struct {
+}
+
+//QueryZonesReq query all zone
+type QueryZonesReq struct {
+	VendorID string `json:"vendorID" form:"vendorID"`
+	RegionID string `json:"regionID" form:"regionID"`
+}
+
+type QueryZonesResp struct {
+	Zones []structs.ZoneInfo `json:"zones"`
 }
 
 //CreateProductReq create a product message
@@ -62,7 +72,42 @@ type CreateProductReq struct {
 	ProductInfo structs.Product                    `json:"productInfo"`
 	Components  []structs.ProductComponentProperty `json:"components"`
 }
+
 type CreateProductResp struct {
+}
+
+type UpdateComponentPropertiesReq struct {
+	ProductID           string                             `json:"productID" swaggerignore:"true"`
+	ComponentProperties []structs.ProductComponentProperty `json:"componentProperties"`
+}
+
+type UpdateComponentPropertiesResp struct {
+}
+
+type QueryComponentPropertiesReq struct {
+	ProductID           string                             `json:"productID" swaggerignore:"true"`
+}
+
+type QueryComponentPropertiesResp struct {
+	ProductID           string                             `json:"productID"`
+	ComponentProperties []structs.ProductComponentProperty `json:"componentProperties"`
+}
+
+type UpdateOnlineProductsReq struct {
+	ProductID           string                             `json:"productID" swaggerignore:"true"`
+	SpecificVersionProducts []structs.SpecificVersionProduct `json:"specificVersionProducts"`
+}
+
+type UpdateOnlineProductsResp struct {
+}
+
+type QueryOnlineProductsReq struct {
+	ProductID           string                             `json:"productID" swaggerignore:"true"`
+}
+
+type QueryOnlineProductsResp struct {
+	ProductID           string                             `json:"productID"`
+	SpecificVersionProducts []structs.SpecificVersionProduct `json:"specificVersionProducts"`
 }
 
 //DeleteProductReq delete a product message

@@ -1318,7 +1318,7 @@ definitions:
     type: object
   message.DeleteZoneReq:
     properties:
-      zone:
+      zones:
         items:
           $ref: '#/definitions/structs.ZoneInfo'
         type: array
@@ -1524,6 +1524,15 @@ definitions:
         example: 0
         type: integer
     type: object
+  message.QueryComponentPropertiesResp:
+    properties:
+      componentProperties:
+        items:
+          $ref: '#/definitions/structs.ProductComponentProperty'
+        type: array
+      productID:
+        type: string
+    type: object
   message.QueryDataImportExportRecordsResp:
     properties:
       transportRecords:
@@ -1536,6 +1545,17 @@ definitions:
       hosts:
         items:
           $ref: '#/definitions/structs.HostInfo'
+        type: array
+    type: object
+  message.QueryOnlineProductsReq:
+    type: object
+  message.QueryOnlineProductsResp:
+    properties:
+      productID:
+        type: string
+      specificVersionProducts:
+        items:
+          $ref: '#/definitions/structs.SpecificVersionProduct'
         type: array
     type: object
   message.QueryParameterGroupResp:
@@ -1614,6 +1634,13 @@ definitions:
         description: arch version
         type: object
     type: object
+  message.QueryRegionsResp:
+    properties:
+      vendors:
+        additionalProperties:
+          $ref: '#/definitions/structs.VendorWithRegion'
+        type: object
+    type: object
   message.QueryRolesResp:
     properties:
       roles:
@@ -1680,12 +1707,12 @@ definitions:
           $ref: '#/definitions/structs.WorkFlowInfo'
         type: array
     type: object
-  message.QueryZonesTreeResp:
+  message.QueryZonesResp:
     properties:
-      vendors:
-        additionalProperties:
-          $ref: '#/definitions/structs.VendorWithRegion'
-        type: object
+      zones:
+        items:
+          $ref: '#/definitions/structs.ZoneInfo'
+        type: array
     type: object
   message.UnbindRoleForUserReq:
     properties:
@@ -1695,6 +1722,15 @@ definitions:
         type: string
     type: object
   message.UnbindRoleForUserResp:
+    type: object
+  message.UpdateComponentPropertiesReq:
+    properties:
+      componentProperties:
+        items:
+          $ref: '#/definitions/structs.ProductComponentProperty'
+        type: array
+    type: object
+  message.UpdateComponentPropertiesResp:
     type: object
   message.UpdateHostReservedReq:
     properties:
@@ -1717,6 +1753,15 @@ definitions:
         type: string
     type: object
   message.UpdateHostStatusResp:
+    type: object
+  message.UpdateOnlineProductsReq:
+    properties:
+      specificVersionProducts:
+        items:
+          $ref: '#/definitions/structs.SpecificVersionProduct'
+        type: array
+    type: object
+  message.UpdateOnlineProductsResp:
     type: object
   message.UpdateParameterGroupReq:
     properties:
@@ -2725,6 +2770,15 @@ definitions:
         description: e.g. Online/Offline
         type: string
     type: object
+  structs.SpecificVersionProduct:
+    properties:
+      arch:
+        type: string
+      productID:
+        type: string
+      version:
+        type: string
+    type: object
   structs.Stocks:
     properties:
       freeCpuCores:
@@ -2742,16 +2796,38 @@ definitions:
     type: object
   structs.SystemInfo:
     properties:
+      configInitialized:
+        type: boolean
       currentVersionID:
         type: string
       lastVersionID:
         type: string
+      productInitialized:
+        type: boolean
+      productOnlineInitialized:
+        type: boolean
+      specBindingProductInitialized:
+        type: boolean
+      specBindingZoneInitialized:
+        type: boolean
+      specInitialized:
+        type: boolean
       state:
+        type: string
+      supportedProducts:
+        additionalProperties:
+          items:
+            $ref: '#/definitions/structs.SpecificVersionProduct'
+          type: array
+        type: object
+      supportedVendors:
         type: string
       systemLogo:
         type: string
       systemName:
         type: string
+      zoneInitialized:
+        type: boolean
     type: object
   structs.SystemVersionInfo:
     properties:
@@ -5169,6 +5245,182 @@ paths:
       summary: created product
       tags:
       - platform
+  /products/{productID}/components:
+    get:
+      consumes:
+      - application/json
+      description: query product component properties
+      parameters:
+      - description: product id
+        in: path
+        name: productId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryComponentPropertiesResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query product component properties
+      tags:
+      - platform
+    post:
+      consumes:
+      - application/json
+      description: update product component properties
+      parameters:
+      - description: update product component properties parameter
+        in: body
+        name: UpdateComponentPropertiesReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateComponentPropertiesReq'
+      - description: product id
+        in: path
+        name: productId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateComponentPropertiesResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: update product component properties
+      tags:
+      - platform
+  /products/{productID}/online:
+    get:
+      consumes:
+      - application/json
+      description: query online products
+      parameters:
+      - description: product id
+        in: path
+        name: productId
+        required: true
+        type: string
+      - description: query online products request parameter
+        in: body
+        name: QueryOnlineProductsReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.QueryOnlineProductsReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryOnlineProductsResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query online products
+      tags:
+      - platform
+    post:
+      consumes:
+      - application/json
+      description: product online
+      parameters:
+      - description: product online request parameter
+        in: body
+        name: UpdateOnlineProductsReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateOnlineProductsReq'
+      - description: product id
+        in: path
+        name: productId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateOnlineProductsResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: product online
+      tags:
+      - platform
   /products/detail:
     get:
       consumes:
@@ -6757,6 +7009,46 @@ paths:
       summary: deleted zones
       tags:
       - platform
+    get:
+      consumes:
+      - application/json
+      description: query zones
+      parameters:
+      - in: query
+        name: regionID
+        type: string
+      - in: query
+        name: vendorID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryZonesResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query zones
+      tags:
+      - platform
     post:
       consumes:
       - application/json
@@ -6797,7 +7089,7 @@ paths:
       summary: created  zones
       tags:
       - platform
-  /zones/tree:
+  /zones/regions:
     get:
       consumes:
       - application/json
@@ -6812,7 +7104,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/message.QueryZonesTreeResp'
+                  $ref: '#/definitions/message.QueryRegionsResp'
               type: object
         "401":
           description: Unauthorized

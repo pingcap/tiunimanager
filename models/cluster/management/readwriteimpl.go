@@ -243,7 +243,7 @@ func (g *ClusterReadWrite) QueryInstancesByHost(ctx context.Context, hostId stri
 }
 
 func (g *ClusterReadWrite) QueryHostInstances(ctx context.Context, hostIds []string) ([]HostInstanceItem, error) {
-	db := g.DB(ctx).Table("cluster_instances").Select("host_id, cluster_id, type as component")
+	db := g.DB(ctx).Model(&ClusterInstance{}).Select("host_id, cluster_id, type as component")
 	if hostIds != nil {
 		db.Where("host_id in ?", hostIds)
 	}

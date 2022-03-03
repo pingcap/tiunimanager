@@ -18,9 +18,9 @@ package template
 var ClusterTopology = `
 {{ if eq .Cluster.Status "Initializing" }}
 global:
-  user: {{ .DeployUser }}
-  group: {{ .DeployUser }}
-  ssh_port: 22
+  user: {{ .GlobalUser }}
+  group: {{ .GlobalGroup }}
+  ssh_port: {{ .GlobalSSHPort }}
   enable_tls: false
   deploy_dir: {{ .Cluster.ID }}/tidb-deploy
   data_dir: {{ .Cluster.ID }}/tidb-data

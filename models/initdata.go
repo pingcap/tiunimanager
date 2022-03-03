@@ -33,6 +33,7 @@ import (
 	"github.com/pingcap-inc/tiem/models/platform/system"
 	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	"github.com/pingcap-inc/tiem/models/user/account"
+	"gorm.io/gorm"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -51,6 +52,19 @@ var allVersionInitializers = []system.VersionInitializer{
 		})
 		upgradeSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/upgrades.sql"
 		return initBySql(upgradeSqlFile, "tiup upgrade")
+	}},
+	{"v1.0.0-beta.11", func() error {
+		return defaultDb.base.WithContext(context.TODO()).Transaction(func(tx *gorm.DB) error {
+			defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{
+				ConfigKey:   constants.ConfigKeyDefaultSSHPort,
+				ConfigValue: "22",
+			})
+			return tx.Create(&system.VersionInfo{
+				ID:          "v1.0.0-beta.11",
+				Desc:        "beta 11",
+				ReleaseNote: "release note",
+			}).Error
+		})
 	}},
 
 	{inTestingVersion, func() error {

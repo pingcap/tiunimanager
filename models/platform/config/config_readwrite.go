@@ -58,6 +58,5 @@ func (m *ConfigReadWrite) UpdateConfig(ctx context.Context, config *SystemConfig
 	if err != nil {
 		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "config key %s not exist", config.ConfigKey)
 	}
-	return m.DB(ctx).Model(cfg).Update("config_key", config.ConfigKey).
-		Update("config_value", config.ConfigValue).Error
+	return m.DB(ctx).Model(cfg).Update("config_value", config.ConfigValue).Error
 }

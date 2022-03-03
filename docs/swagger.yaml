@@ -2291,6 +2291,12 @@ definitions:
         type: string
       hostName:
         type: string
+      instances:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        type: object
       ip:
         type: string
       kernel:

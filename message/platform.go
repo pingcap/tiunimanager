@@ -35,6 +35,14 @@ type GetSystemConfigResp struct {
 	structs.SystemConfig
 }
 
+type UpdateSystemConfigReq struct {
+	ConfigKey   string `json:"configKey" form:"configKey"`
+	ConfigValue string `json:"configValue" form:"configValue"`
+}
+
+type UpdateSystemConfigResp struct {
+}
+
 //CreateZonesReq create zone message, include vendor、region、zone
 type CreateZonesReq struct {
 	Zones []structs.ZoneInfo `json:"zones"`

@@ -27,10 +27,12 @@ import (
 	allocrecycle "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/allocator_recycler"
 	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	host_provider "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
+	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/common"
 	resource_models "github.com/pingcap-inc/tiem/models/resource"
 	resourcepool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
+	mock_cluster "github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	mock_resource "github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
 	mock_initiator "github.com/pingcap-inc/tiem/test/mockresource/mockinitiator"
 	mock_workflow "github.com/pingcap-inc/tiem/test/mockworkflow"
@@ -227,6 +229,11 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_resource.NewMockReaderWriter(ctrl)
+	models.MockDB()
+	clusterRW := mock_cluster.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().QueryHostInstances(gomock.Any(), gomock.Any()).Return(nil, nil)
+
 	mockClient.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, location *structs.Location, filter *structs.HostFilter, offset, limit int) (hosts []resourcepool.Host, total int64, err error) {
 		assert.Equal(t, 20, offset)
 		assert.Equal(t, 10, limit)
@@ -273,6 +280,10 @@ func Test_DeleteHosts_Succeed(t *testing.T) {
 		int64(1),
 		nil,
 	).Times(2)
+	models.MockDB()
+	clusterRW := mock_cluster.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().QueryHostInstances(gomock.Any(), gomock.Any()).Return(nil, nil).Times(2)
 
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
 	file_hostprovider, ok := (hostprovider).(*(host_provider.FileHostProvider))

@@ -94,15 +94,15 @@ func QueryProducts(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param QueryAvailableRegionsReq query message.QueryAvailableRegionsReq true "query available vendors parameter"
-// @Success 200 {object} controller.CommonResult{data=message.QueryAvailableRegionsResp}
+// @Param QueryAvailableVendorsReq query message.QueryAvailableVendorsReq true "query available vendors parameter"
+// @Success 200 {object} controller.CommonResult{data=message.QueryAvailableVendorsResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /vendors/available [get]
 func QueryAvailableVendors(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryAvailableRegionsReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryZones, &message.QueryAvailableRegionsResp{},
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryAvailableVendorsReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryZones, &message.QueryAvailableVendorsResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

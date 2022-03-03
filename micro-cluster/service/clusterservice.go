@@ -1231,7 +1231,7 @@ func (handler *ClusterServiceHandler) QueryZones(ctx context.Context, request *c
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "QueryZones", int(response.GetCode()))
 
-	req := message.QueryAvailableRegionsReq{}
+	req := message.QueryAvailableVendorsReq{}
 	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionRead)}}) {
 		resp, err := handler.productManager.QueryZones(ctx)
 		handleResponse(ctx, response, err, resp, nil)

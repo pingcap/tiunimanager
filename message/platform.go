@@ -29,7 +29,7 @@ import (
 
 //UpdateVendorInfoReq update vendor info request
 type UpdateVendorInfoReq struct {
-	Vendors []structs.VendorConfigInfo `json:"vendors"`
+	Vendors []structs.VendorConfigInfo `json:"vendors" form:"vendors"`
 }
 
 //UpdateVendorInfoResp update vendor info response
@@ -38,7 +38,7 @@ type UpdateVendorInfoResp struct {
 
 //QueryVendorInfoReq query vendor info request
 type QueryVendorInfoReq struct {
-	VendorIDs []string `json:"vendorIDs"`
+	VendorIDs []string `json:"vendorIDs" form:"vendors"`
 }
 
 //QueryVendorInfoResp query vendor info response
@@ -48,7 +48,7 @@ type QueryVendorInfoResp struct {
 
 //UpdateProductsInfoReq update product info request
 type UpdateProductsInfoReq struct {
-	Products []structs.ProductConfigInfo `json:"products"`
+	Products []structs.ProductConfigInfo `json:"products" form:"products"`
 }
 
 //UpdateProductsInfoResp update product info response
@@ -65,27 +65,29 @@ type QueryProductsInfoResp struct {
 	Products []structs.ProductConfigInfo `json:"products"`
 }
 
-//QueryAvailableRegionsReq query all zone information message, include vendor、region、zone
-type QueryAvailableRegionsReq struct {
+//QueryAvailableVendorsReq query all available vendors request
+type QueryAvailableVendorsReq struct {
 }
 
-type QueryAvailableRegionsResp struct {
-	Vendors map[string][]structs.VendorWithRegion `json:"vendors" form:"vendors"`
+//QueryAvailableVendorsResp query all available vendors response
+type QueryAvailableVendorsResp struct {
+	Vendors map[string][]structs.VendorWithRegion `json:"vendors"`
 }
 
-//QueryAvailableProductsReq query all products message
+//QueryAvailableProductsReq query all products message request
 type QueryAvailableProductsReq struct {
 	VendorID        string `json:"vendorId" form:"vendorId"`
 	Status          string `json:"status" form:"status"`
 	InternalProduct int    `json:"internalProduct" form:"internalProduct"`
 }
 
+//QueryAvailableProductsResp query all products message response
 type QueryAvailableProductsResp struct {
 	// arch version
 	Products map[string]map[string]map[string]map[string]structs.Product `json:"products"`
 }
 
-//QueryProductDetailReq query product detail message
+//QueryProductDetailReq query product detail info request
 type QueryProductDetailReq struct {
 	VendorID        string `json:"vendorId" form:"vendorId"`
 	RegionID        string `json:"regionId" form:"regionId"`
@@ -93,6 +95,8 @@ type QueryProductDetailReq struct {
 	Status          string `json:"status" form:"status"`
 	InternalProduct int    `json:"internalProduct" form:"internalProduct"`
 }
+
+//QueryProductDetailResp query product detail info response
 type QueryProductDetailResp struct {
 	Products map[string]structs.ProductDetail `json:"products"`
 }

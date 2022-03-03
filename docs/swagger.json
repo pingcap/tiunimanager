@@ -6365,7 +6365,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/message.QueryAvailableRegionsResp"
+                                            "$ref": "#/definitions/message.QueryAvailableVendorsResp"
                                         }
                                     }
                                 }
@@ -8693,7 +8693,7 @@
                 }
             }
         },
-        "message.QueryAvailableRegionsResp": {
+        "message.QueryAvailableVendorsResp": {
             "type": "object",
             "properties": {
                 "vendors": {

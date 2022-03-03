@@ -1497,7 +1497,7 @@ definitions:
         description: arch version
         type: object
     type: object
-  message.QueryAvailableRegionsResp:
+  message.QueryAvailableVendorsResp:
     properties:
       vendors:
         additionalProperties:
@@ -6991,7 +6991,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/message.QueryAvailableRegionsResp'
+                  $ref: '#/definitions/message.QueryAvailableVendorsResp'
               type: object
         "401":
           description: Unauthorized

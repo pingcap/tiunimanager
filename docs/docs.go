@@ -6379,7 +6379,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/message.QueryAvailableRegionsResp"
+                                            "$ref": "#/definitions/message.QueryAvailableVendorsResp"
                                         }
                                     }
                                 }
@@ -8707,7 +8707,7 @@ var doc = `{
                 }
             }
         },
-        "message.QueryAvailableRegionsResp": {
+        "message.QueryAvailableVendorsResp": {
             "type": "object",
             "properties": {
                 "vendors": {

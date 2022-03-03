@@ -803,6 +803,13 @@ func TestClusterReadWrite_Relations(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(r))
 
+	r, err = testRW.GetMasters(context.TODO(), "test_relation")
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(r))
+
+	r, err = testRW.GetSlaves(context.TODO(), "test_relation")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(r))
 }
 
 func TestClusterReadWrite_QueryInstancesByHost(t *testing.T) {

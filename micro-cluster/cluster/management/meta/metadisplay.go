@@ -360,6 +360,28 @@ func (p *ClusterMeta) DisplayClusterInfo(ctx context.Context) structs.ClusterInf
 		clusterInfo.GrafanaUrl = fmt.Sprintf("%s:%d", grafanaAddress[0].IP, grafanaAddress[0].Port)
 	}
 
+	masterIds := make([]string, 0)
+	slaveIds := make([]string, 0)
+
+	masters, err := models.GetClusterReaderWriter().GetMasters(ctx, p.Cluster.ID)
+	if err == nil {
+		for _, master := range masters {
+			masterIds = append(masterIds, master.SubjectClusterID)
+		}
+	}
+
+	slaves, err := models.GetClusterReaderWriter().GetSlaves(ctx, p.Cluster.ID)
+	if err == nil {
+		for _, slave := range slaves {
+			slaveIds = append(slaveIds, slave.ObjectClusterID)
+		}
+	}
+
+	clusterInfo.Relations = structs.ClusterRelations{
+		Masters: masterIds,
+		Slaves:  slaveIds,
+	}
+
 	mockUsage := func() structs.Usage {
 		return structs.Usage{
 			Total:     100,

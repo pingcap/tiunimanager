@@ -18,8 +18,8 @@ package template
 var ClusterTopology = `
 {{ if eq .Cluster.Status "Initializing" }}
 global:
-  user: tidb
-  group: tidb
+  user: {{ .DeployUser }}
+  group: {{ .DeployUser }}
   ssh_port: 22
   enable_tls: false
   deploy_dir: {{ .Cluster.ID }}/tidb-deploy

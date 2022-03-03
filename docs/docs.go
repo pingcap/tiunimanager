@@ -9704,6 +9704,9 @@ var doc = `{
                 "region": {
                     "type": "string"
                 },
+                "relations": {
+                    "$ref": "#/definitions/structs.ClusterRelations"
+                },
                 "role": {
                     "type": "string"
                 },
@@ -9998,6 +10001,23 @@ var doc = `{
                 },
                 "realValue": {
                     "$ref": "#/definitions/structs.ParameterRealValue"
+                }
+            }
+        },
+        "structs.ClusterRelations": {
+            "type": "object",
+            "properties": {
+                "masters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "slaves": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

@@ -63,6 +63,10 @@ func NewClusterMetaRenderData(ctx context.Context, meta ClusterMeta) *ClusterMet
 	if len(globalUser) == 0 {
 		globalUser = "tidb"
 	}
+	globalGroup := framework.Current.GetClientArgs().DeployGroup
+	if len(globalGroup) == 0 {
+		globalGroup = "tidb"
+	}
 	sshConfigPort, err := models.GetConfigReaderWriter().GetConfig(ctx, constants.ConfigKeyDefaultSSHPort)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get config ConfigKeyDefaultSSHPort failed, err = %s", err.Error())
@@ -74,7 +78,7 @@ func NewClusterMetaRenderData(ctx context.Context, meta ClusterMeta) *ClusterMet
 	return &ClusterMetaRenderData{
 		ClusterMeta:   meta,
 		GlobalUser:    globalUser,
-		GlobalGroup:   globalUser,
+		GlobalGroup:   globalGroup,
 		GlobalSSHPort: sshConfigPort.ConfigValue,
 	}
 }

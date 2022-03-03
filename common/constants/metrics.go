@@ -54,6 +54,10 @@ const (
 	MetricsClusterUpgradePath           MetricsType = "cluster/upgrade_path"
 	MetricsClusterUpgradeDiff           MetricsType = "cluster/upgrade_diff"
 
+	MetricsPlatformCheck     MetricsType = "platform/check"
+	MetricsQueryCheckReports MetricsType = "platform/reports"
+	MetricsGetCheckReport    MetricsType = "platform/report"
+
 	// MetricsBackupCreate define backup metrics
 	MetricsBackupCreate         MetricsType = "backup/create"
 	MetricsBackupDelete         MetricsType = "backup/delete"

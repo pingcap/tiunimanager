@@ -55,15 +55,23 @@ var allVersionInitializers = []system.VersionInitializer{
 	}},
 	{"v1.0.0-beta.11", func() error {
 		return defaultDb.base.WithContext(context.TODO()).Transaction(func(tx *gorm.DB) error {
-			defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{
+			_, err := defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{
 				ConfigKey:   constants.ConfigKeyDefaultSSHPort,
 				ConfigValue: "22",
 			})
-			return tx.Create(&system.VersionInfo{
+			if err != nil {
+				return err
+			}
+			parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters_v1.0.0-beta.11.sql"
+			err = tx.Create(&system.VersionInfo{
 				ID:          "v1.0.0-beta.11",
 				Desc:        "beta 11",
 				ReleaseNote: "release note",
 			}).Error
+			if err != nil {
+				return err
+			}
+			return initBySql(parameterSqlFile, "parameters")
 		})
 	}},
 

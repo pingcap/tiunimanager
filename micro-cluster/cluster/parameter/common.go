@@ -30,6 +30,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pingcap-inc/tiem/library/spec"
+
 	"github.com/pingcap-inc/tiem/common/structs"
 )
 
@@ -140,6 +142,11 @@ const (
 	NonReboot ClusterReboot = iota
 	Reboot
 )
+
+type GlobalComponentConfig struct {
+	TiDBClusterComponent spec.TiDBClusterComponent
+	ConfigMap            map[string]interface{}
+}
 
 // ValidateRange
 // @Description: validate parameter value by range field

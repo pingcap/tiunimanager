@@ -138,6 +138,60 @@ func (g *ClusterReadWrite) GetRelations(ctx context.Context, clusterID string) (
 	return relations, err
 }
 
+func (g *ClusterReadWrite) GetMasters(ctx context.Context, clusterID string)([]*ClusterRelation, error) {
+	if "" == clusterID {
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster id is invalid")
+	}
+	relations := make([]*ClusterRelation, 0)
+	err := g.DB(ctx).Model(&ClusterRelation{}).Where("object_cluster_id  = ? ", clusterID).Find(&relations).Error
+	return relations, err
+}
+
+func (g *ClusterReadWrite) GetSlaves(ctx context.Context, clusterID string) ([]*ClusterRelation, error) {
+	if "" == clusterID {
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster id is invalid")
+	}
+	relations := make([]*ClusterRelation, 0)
+	err := g.DB(ctx).Model(&ClusterRelation{}).Where("subject_cluster_id  = ? ", clusterID).Find(&relations).Error
+	return relations, err
+}
+
+func (g *ClusterReadWrite) QueryClusters(ctx context.Context, tenantID string) ([]*Result, error) {
+	if "" == tenantID {
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "tenant id is invalid")
+	}
+
+	clusters := make([]*Cluster, 0)
+	err := g.DB(ctx).Table("clusters").Where("tenant_id = ?",
+		tenantID).Where("deleted_at is null").Find(&clusters).Error
+	if err != nil {
+		return nil, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, "", err)
+	}
+
+	results := make([]*Result, 0)
+	for _, c := range clusters {
+		instances := make([]*ClusterInstance, 0)
+
+		err = g.DB(ctx).Model(&ClusterInstance{}).Where("cluster_id = ?", c.ID).Find(&instances).Error
+
+		if err != nil {
+			return nil, errors.WrapError(errors.TIEM_INSTANCE_NOT_FOUND, "", err)
+		}
+
+		users, err := g.GetDBUser(ctx, c.ID)
+		if err != nil {
+			return nil, dbCommon.WrapDBError(err)
+		}
+		results = append(results, &Result{
+			Cluster:   c,
+			Instances: instances,
+			DBUsers:   users,
+		})
+	}
+
+	return results, nil
+}
+
 // todo
 func (g *ClusterReadWrite) QueryMetas(ctx context.Context, filters Filters, pageReq structs.PageRequest) ([]*Result, structs.Page, error) {
 	page := structs.Page{

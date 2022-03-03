@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Copyright (c)  2022 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
  * you may not use this file except in compliance with the License.           *
  * You may obtain a copy of the License at                                    *
@@ -13,21 +13,16 @@
  *  limitations under the License.                                            *
  ******************************************************************************/
 
-package workflow
-
-type NodeReturnType string
+package constants
 
 const (
-	SyncFuncNode NodeReturnType = "SyncFuncNode"
-	PollingNode  NodeReturnType = "PollingNode"
+	FlowCheckPlatform = "CheckPlatform"
 )
 
-const (
-	BizTypeCluster  string = "cluster"
-	BizTypeHost     string = "host"
-	BizTypePlatform string = "platform"
-)
+type CheckStatus string
 
 const (
-	maxPollingSequence int32 = 10 * 24 * 3600
+	CheckRunning   CheckStatus = "Running"
+	CheckFailure   CheckStatus = "Failure"
+	CheckCompleted CheckStatus = "Completed"
 )

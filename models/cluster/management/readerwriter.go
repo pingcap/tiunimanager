@@ -28,10 +28,12 @@ type ReaderWriter interface {
 	Get(ctx context.Context, clusterID string) (*Cluster, error)
 	GetMeta(ctx context.Context, clusterID string) (*Cluster, []*ClusterInstance, []*DBUser, error)
 	GetRelations(ctx context.Context, clusterID string) ([]*ClusterRelation, error)
+	GetMasters(ctx context.Context, clusterID string) ([]*ClusterRelation, error)
+	GetSlaves(ctx context.Context, clusterID string) ([]*ClusterRelation, error)
 
 	QueryMetas(ctx context.Context, filters Filters, pageReq structs.PageRequest) ([]*Result, structs.Page, error)
 
-	QueryClusters(ctx context.Context, tenantID string)([]*Result, error)
+	QueryClusters(ctx context.Context, tenantID string) ([]*Result, error)
 
 	GetInstance(ctx context.Context, ID string) (*ClusterInstance, error)
 

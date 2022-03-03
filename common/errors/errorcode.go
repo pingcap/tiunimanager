@@ -206,6 +206,7 @@ const (
 	TIEM_CHECK_CLUSTER_VERSION_ERROR EM_ERROR_CODE = 21301
 	TIEM_CDC_NOT_FOUND               EM_ERROR_CODE = 21302
 	TIEM_CLONE_TIKV_ERROR            EM_ERROR_CODE = 21303
+	TIEM_CLONE_SLAVE_ERROR           EM_ERROR_CODE = 21304
 
 	CreateZonesError              EM_ERROR_CODE = 70001
 	DeleteZonesError              EM_ERROR_CODE = 70002
@@ -286,7 +287,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_SYSTEM_MISSING_DATA:       {"missing system data", 500},
 	TIEM_SYSTEM_MISSING_CONFIG:     {"missing system config", 500},
 	TIEM_SYSTEM_STATE_CONFLICT:     {"system state conflict", 500},
-	TIEM_SYSTEM_INVALID_VERSION:     {"invalid system version", 500},
+	TIEM_SYSTEM_INVALID_VERSION:    {"invalid system version", 500},
 
 	TIEM_TASK_TIMEOUT:          {"task timeout", 500},
 	TIEM_FLOW_NOT_FOUND:        {"flow not found", 500},

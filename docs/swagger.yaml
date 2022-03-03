@@ -2032,6 +2032,8 @@ definitions:
         $ref: '#/definitions/structs.Usage'
       region:
         type: string
+      relations:
+        $ref: '#/definitions/structs.ClusterRelations'
       role:
         type: string
       status:
@@ -2245,6 +2247,17 @@ definitions:
     required:
     - paramId
     - realValue
+    type: object
+  structs.ClusterRelations:
+    properties:
+      masters:
+        items:
+          type: string
+        type: array
+      slaves:
+        items:
+          type: string
+        type: array
     type: object
   structs.ClusterResourceInfo:
     properties:

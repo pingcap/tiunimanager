@@ -274,6 +274,15 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 // When use CDCSyncClone strategy to clone cluster, source cluster must have CDC
 func ClonePreCheck(ctx context.Context, sourceMeta *ClusterMeta, meta *ClusterMeta, cloneStrategy string) error {
 	if cloneStrategy == string(constants.CDCSyncClone) {
+		masters, err := models.GetClusterReaderWriter().GetMasters(ctx, sourceMeta.Cluster.ID)
+		if err != nil {
+			return err
+		}
+		if len(masters) > 0 {
+			return errors.NewErrorf(errors.TIEM_CLONE_SLAVE_ERROR,
+				"cluster %s is slave, which can not be cloned by %s", sourceMeta.Cluster.ID, cloneStrategy)
+		}
+
 		cmp, err := CompareTiDBVersion(sourceMeta.Cluster.Version, "v5.2.2")
 		if err != nil {
 			return err

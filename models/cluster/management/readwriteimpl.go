@@ -138,6 +138,24 @@ func (g *ClusterReadWrite) GetRelations(ctx context.Context, clusterID string) (
 	return relations, err
 }
 
+func (g *ClusterReadWrite) GetMasters(ctx context.Context, clusterID string)([]*ClusterRelation, error) {
+	if "" == clusterID {
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster id is invalid")
+	}
+	relations := make([]*ClusterRelation, 0)
+	err := g.DB(ctx).Model(&ClusterRelation{}).Where("object_cluster_id  = ? ", clusterID).Find(&relations).Error
+	return relations, err
+}
+
+func (g *ClusterReadWrite) GetSlaves(ctx context.Context, clusterID string) ([]*ClusterRelation, error) {
+	if "" == clusterID {
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster id is invalid")
+	}
+	relations := make([]*ClusterRelation, 0)
+	err := g.DB(ctx).Model(&ClusterRelation{}).Where("subject_cluster_id  = ? ", clusterID).Find(&relations).Error
+	return relations, err
+}
+
 func (g *ClusterReadWrite) QueryClusters(ctx context.Context, tenantID string) ([]*Result, error) {
 	if "" == tenantID {
 		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "tenant id is invalid")

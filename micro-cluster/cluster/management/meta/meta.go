@@ -34,6 +34,7 @@ type ClusterMeta struct {
 	DBUsers              map[string]*management.DBUser
 	NodeExporterPort     int32
 	BlackboxExporterPort int32
+	DeployUser           string
 }
 
 type ComponentAddress struct {

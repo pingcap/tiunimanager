@@ -277,6 +277,10 @@ func GetCurrentDeployUser() string {
 	return Current.GetClientArgs().DeployUser
 }
 
+func GetCurrentDeployGroup() string {
+	return Current.GetClientArgs().DeployGroup
+}
+
 func GetPrivateKeyFilePath(userName string) (keyPath string) {
 	keyPath = fmt.Sprintf("/home/%s/.ssh/tiup_rsa", userName)
 	return

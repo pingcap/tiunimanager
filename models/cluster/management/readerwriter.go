@@ -28,7 +28,23 @@ type ReaderWriter interface {
 	Get(ctx context.Context, clusterID string) (*Cluster, error)
 	GetMeta(ctx context.Context, clusterID string) (*Cluster, []*ClusterInstance, []*DBUser, error)
 	GetRelations(ctx context.Context, clusterID string) ([]*ClusterRelation, error)
+	//
+	// GetMasters
+	// @Description: get masters for specified cluster
+	// @param ctx
+	// @param cluster id
+	// @return []*ClusterRelation
+	// @return error
+	//
 	GetMasters(ctx context.Context, clusterID string) ([]*ClusterRelation, error)
+	//
+	// GetSlaves
+	// @Description: get slaves for specified cluster
+	// @param ctx
+	// @param cluster id
+	// @return []*ClusterRelation
+	// @return error
+	//
 	GetSlaves(ctx context.Context, clusterID string) ([]*ClusterRelation, error)
 
 	QueryMetas(ctx context.Context, filters Filters, pageReq structs.PageRequest) ([]*Result, structs.Page, error)

@@ -84,6 +84,7 @@ type CreateClusterParameter struct {
 	ParameterGroupID string   `json:"parameterGroupID" form:"parameterGroupID"`
 }
 
+// ClusterRelations Cluster relations info
 type ClusterRelations struct {
 	Masters []string `json:"masters"`
 	Slaves  []string `json:"slaves"`

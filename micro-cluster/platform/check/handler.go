@@ -88,8 +88,8 @@ type RegionsInfo struct {
 }
 
 type HealthInfo struct {
-	Name     string `json:"name"`
-	Health   bool   `json:"health"`
+	Name   string `json:"name"`
+	Health bool   `json:"health"`
 }
 
 type ReportInterface interface {
@@ -223,16 +223,15 @@ func (p *Report) GetClusterTopology(ctx context.Context, clusterID string) (stru
 	topologyCheck.Valid = true
 	expectedTopologyInfos := make([]TopologyInfo, 0)
 	for componentType, instances := range clusterMeta.Instances {
-		if meta.Contain(constants.ParasiteComponentIDs, constants.EMProductComponentIDType(componentType)) {
-			continue
+		if meta.Contain(constants.KernelComponentIDs, constants.EMProductComponentIDType(componentType)) {
+			if realTopology[strings.ToLower(componentType)] != len(instances) {
+				topologyCheck.Valid = false
+			}
+			expectedTopologyInfos = append(expectedTopologyInfos, TopologyInfo{
+				Type:  strings.ToLower(componentType),
+				Count: len(instances),
+			})
 		}
-		if realTopology[strings.ToLower(componentType)] != len(instances) {
-			topologyCheck.Valid = false
-		}
-		expectedTopologyInfos = append(expectedTopologyInfos, TopologyInfo{
-			Type:  strings.ToLower(componentType),
-			Count: len(instances),
-		})
 	}
 
 	realInfos, err := json.Marshal(realTopologyInfos)

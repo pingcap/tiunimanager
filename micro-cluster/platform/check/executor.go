@@ -16,6 +16,7 @@
 package check
 
 import (
+	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models"
@@ -101,6 +102,7 @@ func checkHosts(node *workflowModel.WorkFlowNode, context *workflow.FlowContext)
 			"update check report %s error: %s", checkID, err.Error())
 		return err
 	}
+	node.Record(fmt.Sprintf("Check report: %s", info))
 
 	return nil
 }

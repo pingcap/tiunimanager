@@ -31,6 +31,7 @@ import (
 
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
+	platformApi "github.com/pingcap-inc/tiem/micro-api/controller/platform"
 	"github.com/pingcap-inc/tiem/micro-api/controller/platform/product"
 	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
 	warehouseApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
@@ -67,6 +68,15 @@ func Route(g *gin.Engine) {
 		{
 			auth.POST("/login", metrics.HandleMetrics(constants.MetricsUserLogin), userApi.Login)
 			auth.POST("/logout", metrics.HandleMetrics(constants.MetricsUserLogout), userApi.Logout)
+		}
+
+		platform := apiV1.Group("/platform")
+		{
+			platform.Use(interceptor.VerifyIdentity)
+			platform.Use(interceptor.AuditLog)
+			platform.POST("/check", metrics.HandleMetrics(constants.MetricsPlatformCheck), platformApi.Check)
+			platform.GET("/report/:checkId", metrics.HandleMetrics(constants.MetricsGetCheckReport), platformApi.GetCheckReport)
+			platform.GET("/reports", metrics.HandleMetrics(constants.MetricsQueryCheckReports), platformApi.QueryCheckReports)
 		}
 
 		user := apiV1.Group("/users")
@@ -231,7 +241,7 @@ func Route(g *gin.Engine) {
 			productGroup.Use(interceptor.SystemRunning)
 			productGroup.Use(interceptor.VerifyIdentity)
 			productGroup.Use(interceptor.AuditLog)
-			productGroup.GET("/", product.QueryAvailableProducts)
+			productGroup.GET("/available", product.QueryAvailableProducts)
 			productGroup.GET("/detail", product.QueryProductDetail)
 		}
 

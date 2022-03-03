@@ -226,7 +226,7 @@ func TestClusterMeta_GenerateInstanceResourceRequirements(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty{
+						Arch: map[string][]structs.ProductComponentPropertyWithZones{
 							"x86_64": {
 								{
 									ID:                      "TiDB",
@@ -350,7 +350,7 @@ func TestClusterMeta_GetClusterComponentProperties(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty{
+						Arch: map[string][]structs.ProductComponentPropertyWithZones{
 							"x86_64": {
 								{
 									ID:                      "TiDB",
@@ -391,7 +391,7 @@ func TestClusterMeta_GetClusterComponentProperties(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty{
+						Arch: map[string][]structs.ProductComponentPropertyWithZones{
 							"x86_64": {
 								{
 									ID:                      "TiDB",
@@ -433,7 +433,7 @@ func TestClusterMeta_GetClusterComponentProperties(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty{
+						Arch: map[string][]structs.ProductComponentPropertyWithZones{
 							"x86_64": {
 								{
 									ID:                      "TiDB",
@@ -474,7 +474,7 @@ func TestClusterMeta_GetClusterComponentProperties(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.4.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty{
+						Arch: map[string][]structs.ProductComponentPropertyWithZones{
 							"x86_64": {
 								{
 									ID:                      "TiDB",
@@ -515,7 +515,7 @@ func TestClusterMeta_GetClusterComponentProperties(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty{
+						Arch: map[string][]structs.ProductComponentPropertyWithZones{
 							"amd64": {
 								{
 									ID:                      "TiDB",
@@ -774,7 +774,7 @@ func TestClusterMeta_IsComponentRequired(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty{
+						Arch: map[string][]structs.ProductComponentPropertyWithZones{
 							"x86_64": {
 								{
 									ID:                      "TiDB",
@@ -809,8 +809,8 @@ func TestClusterMeta_IsComponentRequired(t *testing.T) {
 
 		meta := &ClusterMeta{
 			Cluster: &management.Cluster{
-				Type:    "TiDB",
-				Version: "v5.0.0",
+				Type:            "TiDB",
+				Version:         "v5.0.0",
 				CpuArchitecture: "x86_64",
 			},
 		}
@@ -823,7 +823,7 @@ func TestClusterMeta_IsComponentRequired(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty{
+						Arch: map[string][]structs.ProductComponentPropertyWithZones{
 							"x86_64": {
 								{
 									ID:                      "TiDB",
@@ -858,8 +858,8 @@ func TestClusterMeta_IsComponentRequired(t *testing.T) {
 
 		meta := &ClusterMeta{
 			Cluster: &management.Cluster{
-				Type:    "TiDB",
-				Version: "v5.2.2",
+				Type:            "TiDB",
+				Version:         "v5.2.2",
 				CpuArchitecture: "x86_64",
 			},
 		}
@@ -1474,6 +1474,7 @@ func TestClusterMeta_Address(t *testing.T) {
 	//})
 }
 func TestClusterMeta_Display(t *testing.T) {
+
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -1637,6 +1638,22 @@ func TestClusterMeta_Display(t *testing.T) {
 	}
 
 	t.Run("cluster", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(rw)
+		rw.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return([]*management.ClusterRelation{
+			{
+				SubjectClusterID: "01",
+				ObjectClusterID:  "02",
+			},
+		}, nil)
+		rw.EXPECT().GetSlaves(gomock.Any(), gomock.Any()).Return([]*management.ClusterRelation{
+			{
+				SubjectClusterID: "01",
+				ObjectClusterID:  "02",
+			},
+		}, nil)
 		cluster := meta.DisplayClusterInfo(context.TODO())
 		assert.Equal(t, meta.Cluster.ID, cluster.ID)
 		assert.Equal(t, meta.Cluster.Name, cluster.Name)
@@ -1710,6 +1727,19 @@ func TestClusterMeta_Query(t *testing.T) {
 		structs.Page{
 			Page: 1, PageSize: 1, Total: 5,
 		}, nil)
+
+	rw.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return([]*management.ClusterRelation{
+		{
+			SubjectClusterID: "01",
+			ObjectClusterID:  "02",
+		},
+	}, nil)
+	rw.EXPECT().GetSlaves(gomock.Any(), gomock.Any()).Return([]*management.ClusterRelation{
+		{
+			SubjectClusterID: "01",
+			ObjectClusterID:  "02",
+		},
+	}, nil)
 
 	resp, total, err := Query(context.TODO(), cluster.QueryClustersReq{
 		ClusterID: "111",
@@ -1945,7 +1975,6 @@ func TestClusterMeta_GetVersion(t *testing.T) {
 	assert.Equal(t, "v5.2.2", meta.GetRevision())
 
 }
-
 
 func TestClusterMeta_BuildForTakeover(t *testing.T) {
 	ctrl := gomock.NewController(t)

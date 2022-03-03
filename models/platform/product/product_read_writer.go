@@ -110,7 +110,7 @@ type ProductReadWriterInterface interface {
 	// @param productVersion
 	// @return err
 	// @return property[]
-	QueryProductComponentProperty(ctx context.Context, vendorID, regionID, productID, productVersion, arch string, productStatus constants.ProductComponentStatus) (property []structs.ProductComponentProperty, er error)
+	QueryProductComponentProperty(ctx context.Context, vendorID, regionID, productID, productVersion, arch string, productStatus constants.ProductComponentStatus) (property []structs.ProductComponentPropertyWithZones, er error)
 
 	// CreateSpecs
 	// @Description: batch create specs
@@ -336,9 +336,9 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 	var detail structs.ProductDetail
 	var productVersion structs.ProductVersion
 	var spec structs.ComponentInstanceResourceSpec
-	var info, productComponentInfo structs.ProductComponentProperty
+	var info, productComponentInfo structs.ProductComponentPropertyWithZones
 	var productName, version, arch string
-	var components []structs.ProductComponentProperty
+	var components []structs.ProductComponentPropertyWithZones
 	products = make(map[string]structs.ProductDetail)
 	rows, err := p.DB(ctx).Raw(SQL, vendorID, regionID, internal, productID, status, constants.ProductSpecStatusOnline, constants.ProductSpecStatusOnline).Rows()
 	log := framework.LogWithContext(ctx)
@@ -374,7 +374,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			//if it already exists, then directly modify the relevant data structure
 			productVersion, ok = detail.Versions[version]
 			if !ok {
-				detail.Versions[version] = structs.ProductVersion{Version: version, Arch: make(map[string][]structs.ProductComponentProperty)}
+				detail.Versions[version] = structs.ProductVersion{Version: version, Arch: make(map[string][]structs.ProductComponentPropertyWithZones)}
 				productVersion = detail.Versions[version]
 			}
 
@@ -382,7 +382,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			//if it already exists, then directly modify the relevant data structure
 			components, ok = productVersion.Arch[arch]
 			if !ok {
-				components = make([]structs.ProductComponentProperty, 0)
+				components = make([]structs.ProductComponentPropertyWithZones, 0)
 			}
 
 			//Query whether the product component information is already in Components,
@@ -407,7 +407,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 				}
 			}
 			if !componentExisted {
-				productComponentInfo = structs.ProductComponentProperty{ID: info.ID, Name: info.Name, PurposeType: info.PurposeType,
+				productComponentInfo = structs.ProductComponentPropertyWithZones{ID: info.ID, Name: info.Name, PurposeType: info.PurposeType,
 					StartPort: info.StartPort, EndPort: info.EndPort, MaxPort: info.MaxPort, MinInstance: info.MinInstance, MaxInstance: info.MaxInstance, SuggestedInstancesCount: constants.EMProductComponentIDType(info.ID).SuggestedNodeCount(), AvailableZones: []structs.ComponentInstanceZoneWithSpecs{{ZoneID: spec.ZoneID, ZoneName: spec.ZoneName, Specs: []structs.ComponentInstanceResourceSpec{spec}}}}
 				components = append(components, productComponentInfo)
 			}
@@ -423,7 +423,7 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 			for key, a := range v.Arch {
 				componentSortWrapper := ComponentSortWrapper{
 					infos: a,
-					by: func(p, q *structs.ProductComponentProperty) bool {
+					by: func(p, q *structs.ProductComponentPropertyWithZones) bool {
 						return constants.EMProductComponentIDType(p.ID).SortWeight() > constants.EMProductComponentIDType(q.ID).SortWeight()
 					},
 				}
@@ -436,8 +436,8 @@ AND t1.status = ? AND t3.status = ? AND t4.status = ?;`
 }
 
 type ComponentSortWrapper struct {
-	infos []structs.ProductComponentProperty
-	by    func(p, q *structs.ProductComponentProperty) bool
+	infos []structs.ProductComponentPropertyWithZones
+	by    func(p, q *structs.ProductComponentPropertyWithZones) bool
 }
 
 func (pw ComponentSortWrapper) Len() int {
@@ -451,14 +451,14 @@ func (pw ComponentSortWrapper) Less(i, j int) bool {
 }
 
 // QueryProductComponentProperty Query the properties of a product component,For creating, expanding and shrinking clusters only
-func (p *ProductReadWriter) QueryProductComponentProperty(ctx context.Context, vendorID, regionID, productID, productVersion, arch string, productStatus constants.ProductComponentStatus) (property []structs.ProductComponentProperty, er error) {
+func (p *ProductReadWriter) QueryProductComponentProperty(ctx context.Context, vendorID, regionID, productID, productVersion, arch string, productStatus constants.ProductComponentStatus) (property []structs.ProductComponentPropertyWithZones, er error) {
 	if "" == vendorID || "" == regionID || "" == productID || "" == productVersion || "" == arch {
 		framework.LogWithContext(ctx).Warningf("query product component property invalid parameter, vendorID: %s, regionID: %s, productID: %s, version: %s, arch: %s,status: %s",
 			vendorID, regionID, productID, productVersion, arch, string(productStatus))
 		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "query product component property invalid parameter, vendorID: %s, regionID: %s, productID: %s, version: %s, arch: %s,status: %s",
 			vendorID, regionID, productID, productVersion, arch, string(productStatus))
 	}
-	var info structs.ProductComponentProperty
+	var info structs.ProductComponentPropertyWithZones
 	SQL := "SELECT component_id,name,purpose_type,start_port,end_port,max_port,max_instance,min_instance FROM product_components " +
 		"WHERE vendor_id = ? AND region_id = ? AND product_id =? AND product_version = ? AND arch = ? AND status=?"
 	//The number of components of the product does not exceed 20

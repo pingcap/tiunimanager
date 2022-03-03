@@ -157,7 +157,7 @@ func TestPrepareResource(t *testing.T) {
 			Versions: map[string]structs2.ProductVersion{
 				"v5.0.0": {
 					Version: "v5.0.0",
-					Arch: map[string][]structs2.ProductComponentProperty{
+					Arch: map[string][]structs2.ProductComponentPropertyWithZones{
 						"x86_64": {
 							{
 								ID:                      "TiDB",

@@ -49,8 +49,8 @@ type ComponentInstanceResourceSpec struct {
 	ZoneName string `json:"zoneName"`
 }
 
-// ProductComponentProperty Information about the components of the product, each of which consists of several different types of components
-type ProductComponentProperty struct {
+// ProductComponentPropertyWithZones Information about the components of the product, each of which consists of several different types of components
+type ProductComponentPropertyWithZones struct {
 	ID                      string                           `json:"id"`          //ID of the product component, globally unique
 	Name                    string                           `json:"name"`        //Name of the product component, globally unique
 	PurposeType             string                           `json:"purposeType"` //The type of resources required by the product component at runtime, e.g. storage class
@@ -72,9 +72,9 @@ type ComponentInstanceZoneWithSpecs struct {
 
 //ProductVersion Product version and component details, with each product categorized by version and supported CPU architecture
 type ProductVersion struct {
-	Version string                                `json:"version"` //Version information of the product, e.g. v5.0.0
-	Arch    map[string][]ProductComponentProperty `json:"arch"`    //Arch information of the product, e.g. X86/X86_64
-	//Components map[string]ProductComponentProperty `json:"components"` //Component Info of the product
+	Version string                                         `json:"version"` //Version information of the product, e.g. v5.0.0
+	Arch    map[string][]ProductComponentPropertyWithZones `json:"arch"`    //Arch information of the product, e.g. X86/X86_64
+	//Components map[string]ProductComponentPropertyWithZones `json:"components"` //Component Info of the product
 }
 
 // ProductDetail product information provided by Enterprise Manager
@@ -149,6 +149,24 @@ type SystemVersionInfo struct {
 	VersionID   string `json:"versionID"`
 	Desc        string `json:"desc"`
 	ReleaseNote string `json:"releaseNote"`
+}
+
+type VendorConfigInfo struct {
+	VendorInfo
+	Regions []RegionConfigInfo  `json:"regions" form:"regions"`
+	Specs []SpecInfo `json:"specs" form:"specs"`
+}
+
+type RegionConfigInfo struct {
+	RegionInfo
+	Zones []ZoneInfo `json:"zones" form:"zones"`
+}
+
+type ProductConfigInfo struct {
+	ProductID   string                              `json:"productID" form:"productID"`
+	ProductName string                              `json:"productName" form:"productName"`
+	Components  []ProductComponentPropertyWithZones `json:"components" form:"components"`
+	Versions    []SpecificVersionProduct            `json:"versions" form:"versions"`
 }
 
 // DBUserRole role information of the DBUser

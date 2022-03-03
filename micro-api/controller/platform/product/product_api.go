@@ -23,155 +23,89 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
 
-// UpdateVendorZones update vendor zones
-// @Summary update vendor zones
-// @Description update vendor zones
+// UpdateVendors update vendors
+// @Summary update vendors
+// @Description update vendors
 // @Tags vendor
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param UpdateVendorZonesReq body message.UpdateVendorZonesReq true "update vendor zones request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.UpdateVendorZonesResp}
+// @Param UpdateVendorInfoReq body message.UpdateVendorInfoReq true "update vendor info request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.UpdateVendorInfoReq}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /vendors/zones [post]
-func UpdateVendorZones(c *gin.Context) {
-
+// @Router /vendors/ [post]
+func UpdateVendors(c *gin.Context) {
 }
 
-// QueryVendorZones query vendor zones
-// @Summary query vendor zones
-// @Description query vendor zones
+// QueryVendors query vendors
+// @Summary query vendors
+// @Description query vendors
 // @Tags vendor
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param QueryVendorZonesReq query message.QueryVendorZonesReq true "query vendor zones request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.QueryVendorZonesResp}
+// @Param QueryVendorInfoReq query message.QueryVendorInfoReq true "query vendor info request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.QueryVendorInfoResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /vendors/zones [get]
-func QueryVendorZones(c *gin.Context) {
-
+// @Router /vendors/ [get]
+func QueryVendors(c *gin.Context) {
 }
 
-// UpdateVendorSpecs update vendor specs
-// @Summary update vendor specs
-// @Description update vendor specs
-// @Tags vendor
+// UpdateProducts update products
+// @Summary update products
+// @Description update products
+// @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param UpdateVendorSpecsReq body message.UpdateVendorSpecsReq true "update vendor specs request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.UpdateVendorSpecsResp}
+// @Param UpdateProductsInfoReq body message.UpdateProductsInfoReq true "update products info request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.UpdateProductsInfoResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /vendors/specs [post]
-func UpdateVendorSpecs(c *gin.Context) {
-
+// @Router /products/ [post]
+func UpdateProducts(c *gin.Context) {
 }
 
-// QueryVendorSpecs query vendor specs
-// @Summary query vendor specs
-// @Description query vendor specs
-// @Tags vendor
+// QueryProducts query products
+// @Summary query products
+// @Description query products
+// @Tags product
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param QueryVendorSpecsReq query message.QueryVendorSpecsReq true "query vendor specs request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.QueryVendorSpecsResp}
+// @Param QueryProductsInfoReq query message.QueryProductsInfoReq true "query products info request parameter"
+// @Success 200 {object} controller.CommonResult{data=message.QueryProductsInfoResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /vendors/specs [get]
-func QueryVendorSpecs(c *gin.Context) {
-
+// @Router /products/ [get]
+func QueryProducts(c *gin.Context) {
 }
 
-// QueryVendorRegions query all regions information
-// @Summary queries all regions information
-// @Description queries all regions information
+// QueryAvailableVendors query available vendors and regions
+// @Summary query available vendors and regions
+// @Description query available vendors and regions
 // @Tags vendor
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param QueryAvailableRegionsReq query message.QueryAvailableRegionsReq true "query region request parameter"
+// @Param QueryAvailableRegionsReq query message.QueryAvailableRegionsReq true "query available vendors parameter"
 // @Success 200 {object} controller.CommonResult{data=message.QueryAvailableRegionsResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /vendors/regions [get]
-func QueryVendorRegions(c *gin.Context) {
-
-}
-
-// QueryProductComponents query product components
-// @Summary query product components
-// @Description query product components
-// @Tags product
-// @Accept application/json
-// @Produce application/json
-// @Security ApiKeyAuth
-// @Param QueryProductComponentReq query message.QueryProductComponentReq true "query product component parameter"
-// @Success 200 {object} controller.CommonResult{data=message.QueryProductComponentsResp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /products/components [get]
-func QueryProductComponents(c *gin.Context) {
-}
-
-// UpdateProductComponents update product components
-// @Summary update product components
-// @Description update product components
-// @Tags product
-// @Accept application/json
-// @Produce application/json
-// @Security ApiKeyAuth
-// @Param UpdateProductComponentReq body message.UpdateProductComponentReq true "update product component properties parameter"
-// @Success 200 {object} controller.CommonResult{data=message.UpdateProductComponentResp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /products/components [post]
-func UpdateProductComponents(c *gin.Context) {
-}
-
-// QueryProductVersions query online products versions
-// @Summary query online products versions
-// @Description query online products versions
-// @Tags product
-// @Accept application/json
-// @Produce application/json
-// @Security ApiKeyAuth
-// @Param QueryProductVersionsReq body message.QueryProductVersionsReq true "query online products request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.QueryProductVersionsResp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /products/versions [get]
-func QueryProductVersions(c *gin.Context) {
-
-}
-
-// UpdateProductVersions update online products versions
-// @Summary update online products versions
-// @Description update online products versions
-// @Tags product
-// @Accept application/json
-// @Produce application/json
-// @Security ApiKeyAuth
-// @Param UpdateProductVersionsReq body message.UpdateProductVersionsReq true "product online request parameter"
-// @Success 200 {object} controller.CommonResult{data=message.UpdateProductVersionsResp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /products/versions [post]
-func UpdateProductVersions(c *gin.Context) {
-
+// @Router /vendors/available [get]
+func QueryAvailableVendors(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryAvailableRegionsReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryZones, &message.QueryAvailableRegionsResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
 }
 
 // QueryAvailableProducts query all products' information
@@ -186,7 +120,7 @@ func UpdateProductVersions(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /products/ [get]
+// @Router /products/available [get]
 func QueryAvailableProducts(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryAvailableProductsReq{}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.QueryProducts, &message.QueryAvailableProductsResp{},

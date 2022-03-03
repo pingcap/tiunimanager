@@ -312,7 +312,7 @@ func TestManager_ScaleIn(t *testing.T) {
 			Versions: map[string]structs.ProductVersion{
 				"v5.2.2": {
 					Version: "v5.2.2",
-					Arch: map[string][]structs.ProductComponentProperty{
+					Arch: map[string][]structs.ProductComponentPropertyWithZones{
 						"x86_64": {
 							{
 								ID:                      "TiDB",
@@ -1014,6 +1014,18 @@ func TestManager_DetailCluster(t *testing.T) {
 				Name:      constants.DBUserName[constants.Root],
 				Password:  "12345678",
 				RoleType:  string(constants.Root),
+			},
+		}, nil)
+		clusterRW.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return([]*management.ClusterRelation{
+			{
+				SubjectClusterID: "01",
+				ObjectClusterID:  "02",
+			},
+		}, nil)
+		clusterRW.EXPECT().GetSlaves(gomock.Any(), gomock.Any()).Return([]*management.ClusterRelation{
+			{
+				SubjectClusterID: "01",
+				ObjectClusterID:  "02",
 			},
 		}, nil)
 		got, err := manager.DetailCluster(context.TODO(), cluster.QueryClusterDetailReq{

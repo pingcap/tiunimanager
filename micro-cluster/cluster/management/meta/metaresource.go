@@ -42,14 +42,14 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 		return nil, nil, err
 	}
 
-	propertyMap := make(map[string]structs.ProductComponentProperty)
+	propertyMap := make(map[string]structs.ProductComponentPropertyWithZones)
 	for _, property := range properties {
 		propertyMap[property.ID] = property
 	}
 
 	allocInstances := make([]*management.ClusterInstance, 0)
 	for _, instance := range instances {
-		var instanceProperty structs.ProductComponentProperty
+		var instanceProperty structs.ProductComponentPropertyWithZones
 		if Contain(constants.ParasiteComponentIDs, constants.EMProductComponentIDType(instance.Type)) {
 			continue
 		}

@@ -208,7 +208,7 @@ func (p *ClusterMeta) GetAlertManagerAddresses() []ComponentAddress {
 	return address
 }
 
-func (p *ClusterMeta) GetClusterComponentProperties(ctx context.Context) ([]structs.ProductComponentProperty, error) {
+func (p *ClusterMeta) GetClusterComponentProperties(ctx context.Context) ([]structs.ProductComponentPropertyWithZones, error) {
 	detail, err := GetProductDetail(ctx, p.Cluster.Vendor, p.Cluster.Region, p.Cluster.Type)
 	if err != nil {
 		return nil, err
@@ -358,6 +358,28 @@ func (p *ClusterMeta) DisplayClusterInfo(ctx context.Context) structs.ClusterInf
 
 	if grafanaAddress := p.GetGrafanaAddresses(); len(grafanaAddress) > 0 {
 		clusterInfo.GrafanaUrl = fmt.Sprintf("%s:%d", grafanaAddress[0].IP, grafanaAddress[0].Port)
+	}
+
+	masterIds := make([]string, 0)
+	slaveIds := make([]string, 0)
+
+	masters, err := models.GetClusterReaderWriter().GetMasters(ctx, p.Cluster.ID)
+	if err == nil {
+		for _, master := range masters {
+			masterIds = append(masterIds, master.SubjectClusterID)
+		}
+	}
+
+	slaves, err := models.GetClusterReaderWriter().GetSlaves(ctx, p.Cluster.ID)
+	if err == nil {
+		for _, slave := range slaves {
+			slaveIds = append(slaveIds, slave.ObjectClusterID)
+		}
+	}
+
+	clusterInfo.Relations = structs.ClusterRelations{
+		Masters: masterIds,
+		Slaves:  slaveIds,
 	}
 
 	mockUsage := func() structs.Usage {

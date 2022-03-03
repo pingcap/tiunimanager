@@ -445,7 +445,7 @@ func TestProductReadWriter_QueryProductComponentProperty(t *testing.T) {
 				tt.args.Version, tt.args.Arch, constants.ProductComponentStatus(tt.args.Status))
 			assert.NoError(t, err)
 
-			tmp := make(map[string]structs.ProductComponentProperty)
+			tmp := make(map[string]structs.ProductComponentPropertyWithZones)
 
 			//First convert the query results into a map to facilitate comparison of results
 			for _, component := range result {

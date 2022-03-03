@@ -69,7 +69,7 @@ var products = []structs.Product{
 	{VendorID: AliYun, RegionID: CNHangzhou, ID: EnterpriseManager, Name: EnterpriseManager, Version: EnterpriseManagerVersion, Arch: string(constants.ArchX8664), Status: string(constants.ProductStatusOnline), Internal: constants.EMInternalProductYes},
 }
 
-var TiDBALIYUNHZX8650Components = []structs.ProductComponentProperty{
+var TiDBALIYUNHZX8650Components = []structs.ProductComponentPropertyWithZones{
 	//TiDB v5.0.0
 	{ID: "TiDB", Name: "Compute Engine", PurposeType: "Compute", StartPort: 10000, EndPort: 10020, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
 	{ID: "TiKV", Name: "Storage Engine", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
@@ -83,7 +83,7 @@ var TiDBALIYUNHZX8650Components = []structs.ProductComponentProperty{
 	{ID: "BlackboxExporter", Name: "BlackboxExporter", PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 }
 
-var TiDBALIYUNBJX8650Components = []structs.ProductComponentProperty{
+var TiDBALIYUNBJX8650Components = []structs.ProductComponentPropertyWithZones{
 	//TiDB v5.0.0
 	{ID: "TiDB", Name: "Compute Engine", PurposeType: "Compute", StartPort: 10000, EndPort: 10020, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
 	{ID: "TiKV", Name: "Storage Engine", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
@@ -97,7 +97,7 @@ var TiDBALIYUNBJX8650Components = []structs.ProductComponentProperty{
 	{ID: "BlackboxExporter", Name: "BlackboxExporter", PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 }
 
-var TiDBALIYUNBJX8651Components = []structs.ProductComponentProperty{
+var TiDBALIYUNBJX8651Components = []structs.ProductComponentPropertyWithZones{
 	//TiDB v5.1.0
 	{ID: "TiDB", Name: "Compute Engine", PurposeType: "Compute", StartPort: 10000, EndPort: 10020, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
 	{ID: "TiKV", Name: "Storage Engine", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
@@ -111,7 +111,7 @@ var TiDBALIYUNBJX8651Components = []structs.ProductComponentProperty{
 	{ID: "BlackboxExporter", Name: "BlackboxExporter", PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 }
 
-var TiDBALIYUNHZARM6451Components = []structs.ProductComponentProperty{
+var TiDBALIYUNHZARM6451Components = []structs.ProductComponentPropertyWithZones{
 	//TiDB v5.1.0
 	{ID: "TiDB", Name: "Compute Engine", PurposeType: "Compute", StartPort: 10000, EndPort: 10020, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
 	{ID: "TiKV", Name: "Storage Engine", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 10240},
@@ -125,7 +125,7 @@ var TiDBALIYUNHZARM6451Components = []structs.ProductComponentProperty{
 	{ID: "BlackboxExporter", Name: "BlackboxExporter", PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 }
 
-var EMALIYUNHZX8610Components = []structs.ProductComponentProperty{
+var EMALIYUNHZX8610Components = []structs.ProductComponentPropertyWithZones{
 	//Enterprise Manager v1.0.0
 	{ID: "cluster-server", Name: "cluster-server", PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
 	{ID: "openapi-server", Name: "openapi-server", PurposeType: "Schedule", StartPort: 11000, EndPort: 12000, MaxPort: 1, MinInstance: 1, MaxInstance: 1},
@@ -494,7 +494,7 @@ func TestProductManager_QueryProductDetail(t *testing.T) {
 
 		type Args struct {
 			Product    structs.Product
-			Components []structs.ProductComponentProperty
+			Components []structs.ProductComponentPropertyWithZones
 		}
 		Products := make(map[string]structs.ProductDetail)
 

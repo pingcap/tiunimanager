@@ -50,4 +50,11 @@ type ReaderWriter interface {
 	// Alloc/Recycle resources, used by cluster module internal
 	AllocResources(ctx context.Context, batchReq *resource_structs.BatchAllocRequest) (results *resource_structs.BatchAllocResponse, err error)
 	RecycleResources(ctx context.Context, request *resource_structs.RecycleRequest) (err error)
+
+	// Get used CpuCore count from used_cpucores
+	GetUsedCpuCores(ctx context.Context, hostIds []string) (resultFromHostTable, resultFromUsedTable, resultFromInstTable map[string]int, err error)
+	// Get used Memory
+	GetUsedMemory(ctx context.Context, hostIds []string) (resultFromHostTable, resultFromUsedTable, resultFromInstTable map[string]int, err error)
+	// Get used Disk
+	GetUsedDisks(ctx context.Context, hostIds []string) (resultFromHostTable, resultFromUsedTable, resultFromInstTable map[string]*[]string, err error)
 }

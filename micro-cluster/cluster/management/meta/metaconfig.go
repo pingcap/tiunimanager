@@ -47,6 +47,7 @@ func (p *ClusterMeta) GenerateTopologyConfig(ctx context.Context) (string, error
 	}
 
 	topology := new(bytes.Buffer)
+	p.DeployUser = framework.GetCurrentDeployUser()
 	if err = t.Execute(topology, p); err != nil {
 		return "", errors.NewError(errors.TIEM_UNRECOGNIZED_ERROR, err.Error())
 	}
@@ -54,4 +55,3 @@ func (p *ClusterMeta) GenerateTopologyConfig(ctx context.Context) (string, error
 
 	return topology.String(), nil
 }
-

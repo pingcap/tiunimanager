@@ -27,64 +27,42 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 )
 
-type QueryVendorZonesReq struct {
-	Vendors []string  `json:"vendors" form:"vendors"`
+//UpdateVendorInfoReq update vendor info request
+type UpdateVendorInfoReq struct {
+	Vendors []structs.VendorConfigInfo `json:"vendors"`
 }
 
-type QueryVendorZonesResp struct {
-	Vendors map[string]structs.VendorWithRegion  `json:"vendors"`
+//UpdateVendorInfoResp update vendor info response
+type UpdateVendorInfoResp struct {
 }
 
-type UpdateVendorZonesReq struct {
-	Vendors map[string]structs.VendorWithRegion  `json:"vendors"`
+//QueryVendorInfoReq query vendor info request
+type QueryVendorInfoReq struct {
+	VendorIDs []string `json:"vendorIDs"`
 }
 
-type UpdateVendorZonesResp struct {
+//QueryVendorInfoResp query vendor info response
+type QueryVendorInfoResp struct {
+	Vendors []structs.VendorConfigInfo `json:"vendors"`
 }
 
-type QueryVendorSpecsReq struct {
-	Vendors []string  `json:"vendors" form:"vendors"`
+//UpdateProductsInfoReq update product info request
+type UpdateProductsInfoReq struct {
+	Products []structs.ProductConfigInfo `json:"products"`
 }
 
-type QueryVendorSpecsResp struct {
-	Vendors map[string][]structs.SpecInfo  `json:"vendors"`
+//UpdateProductsInfoResp update product info response
+type UpdateProductsInfoResp struct {
 }
 
-type UpdateVendorSpecsReq struct {
-	Vendors map[string][]structs.SpecInfo  `json:"vendors"`
+//QueryProductsInfoReq query product info request
+type QueryProductsInfoReq struct {
+	ProductIDs []string `json:"productIDs"`
 }
 
-type UpdateVendorSpecsResp struct {
-}
-
-type UpdateProductComponentReq struct {
-	Products map[string][]structs.ProductComponentProperty `json:"products"`
-}
-
-type UpdateProductComponentResp struct {
-}
-
-type QueryProductComponentReq struct {
-	Products []string  `json:"productIDs"`
-}
-
-type QueryProductComponentsResp struct {
-	Products map[string][]structs.ProductComponentProperty `json:"products"`
-}
-
-type UpdateProductVersionsReq struct {
-	Products map[string][]structs.SpecificVersionProduct `json:"products"`
-}
-
-type UpdateProductVersionsResp struct {
-}
-
-type QueryProductVersionsReq struct {
-	Products []string  `json:"productIDs"`
-}
-
-type QueryProductVersionsResp struct {
-	Products map[string][]structs.SpecificVersionProduct `json:"products"`
+//QueryProductsInfoResp query product info response
+type QueryProductsInfoResp struct {
+	Products []structs.ProductConfigInfo `json:"products"`
 }
 
 //QueryAvailableRegionsReq query all zone information message, include vendor、region、zone
@@ -94,6 +72,7 @@ type QueryAvailableRegionsReq struct {
 type QueryAvailableRegionsResp struct {
 	Vendors map[string][]structs.VendorWithRegion `json:"vendors" form:"vendors"`
 }
+
 //QueryAvailableProductsReq query all products message
 type QueryAvailableProductsReq struct {
 	VendorID        string `json:"vendorId" form:"vendorId"`

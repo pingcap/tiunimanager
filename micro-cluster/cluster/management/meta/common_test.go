@@ -30,6 +30,7 @@ import (
 	"github.com/pingcap-inc/tiem/models/platform/config"
 	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
 	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -179,7 +180,7 @@ func TestScaleInPreCheck(t *testing.T) {
 			Versions: map[string]structs.ProductVersion{
 				"v5.2.2": {
 					Version: "v5.2.2",
-					Arch: map[string][]structs.ProductComponentProperty{
+					Arch: map[string][]structs.ProductComponentPropertyWithZones{
 						"x86_64": {
 							{
 								ID:                      "TiDB",
@@ -291,6 +292,13 @@ func TestScaleInPreCheck(t *testing.T) {
 }
 
 func TestClonePreCheck(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(rw)
+	rw.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return(make([]*management.ClusterRelation, 0), nil).AnyTimes()
+
 	t.Run("normal", func(t *testing.T) {
 		sourceMeta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.2.2", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDCDC): {

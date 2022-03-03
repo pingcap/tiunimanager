@@ -31,12 +31,7 @@ type Usage struct {
 
 type VendorWithRegion struct {
 	VendorInfo
-	Regions map[string]RegionWithZone  `json:"regions" form:"regions"`
-}
-
-type RegionWithZone struct {
-	RegionInfo
-	Zones map[string]ZoneInfo `json:"zones" form:"zones"`
+	Regions map[string]RegionInfo  `json:"regions" form:"regions"`
 }
 
 //VendorInfo vendor information provided by Enterprise Manager

@@ -1039,6 +1039,14 @@ definitions:
       result:
         type: boolean
     type: object
+  message.CheckPlatformRsp:
+    properties:
+      checkID:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
   message.CopyParameterGroupReq:
     properties:
       name:
@@ -1317,6 +1325,11 @@ definitions:
         example: 1636698675
         type: integer
     type: object
+  message.GetCheckReportRsp:
+    properties:
+      reportInfo:
+        $ref: '#/definitions/structs.CheckReportInfo'
+    type: object
   message.GetHierarchyResp:
     properties:
       root:
@@ -1493,6 +1506,13 @@ definitions:
           type: array
         type: object
     type: object
+  message.QueryCheckReportsRsp:
+    properties:
+      reportMetas:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckReportMeta'
+        type: object
+    type: object
   message.QueryDataImportExportRecordsResp:
     properties:
       transportRecords:
@@ -1562,15 +1582,6 @@ definitions:
       userId:
         type: string
     type: object
-  message.QueryProductComponentsResp:
-    properties:
-      products:
-        additionalProperties:
-          items:
-            $ref: '#/definitions/structs.ProductComponentProperty'
-          type: array
-        type: object
-    type: object
   message.QueryProductDetailResp:
     properties:
       products:
@@ -1578,21 +1589,12 @@ definitions:
           $ref: '#/definitions/structs.ProductDetail'
         type: object
     type: object
-  message.QueryProductVersionsReq:
-    properties:
-      productIDs:
-        items:
-          type: string
-        type: array
-    type: object
-  message.QueryProductVersionsResp:
+  message.QueryProductsInfoResp:
     properties:
       products:
-        additionalProperties:
-          items:
-            $ref: '#/definitions/structs.SpecificVersionProduct'
-          type: array
-        type: object
+        items:
+          $ref: '#/definitions/structs.ProductConfigInfo'
+        type: array
     type: object
   message.QueryRolesResp:
     properties:
@@ -1633,21 +1635,12 @@ definitions:
           $ref: '#/definitions/structs.UserInfo'
         type: object
     type: object
-  message.QueryVendorSpecsResp:
+  message.QueryVendorInfoResp:
     properties:
       vendors:
-        additionalProperties:
-          items:
-            $ref: '#/definitions/structs.SpecInfo'
-          type: array
-        type: object
-    type: object
-  message.QueryVendorZonesResp:
-    properties:
-      vendors:
-        additionalProperties:
-          $ref: '#/definitions/structs.VendorWithRegion'
-        type: object
+        items:
+          $ref: '#/definitions/structs.VendorConfigInfo'
+        type: array
     type: object
   message.QueryWorkFlowDetailResp:
     properties:
@@ -1737,27 +1730,14 @@ definitions:
         example: "1"
         type: string
     type: object
-  message.UpdateProductComponentReq:
+  message.UpdateProductsInfoReq:
     properties:
       products:
-        additionalProperties:
-          items:
-            $ref: '#/definitions/structs.ProductComponentProperty'
-          type: array
-        type: object
+        items:
+          $ref: '#/definitions/structs.ProductConfigInfo'
+        type: array
     type: object
-  message.UpdateProductComponentResp:
-    type: object
-  message.UpdateProductVersionsReq:
-    properties:
-      products:
-        additionalProperties:
-          items:
-            $ref: '#/definitions/structs.SpecificVersionProduct'
-          type: array
-        type: object
-    type: object
-  message.UpdateProductVersionsResp:
+  message.UpdateProductsInfoResp:
     type: object
   message.UpdateTenantOnBoardingStatusReq:
     properties:
@@ -1807,25 +1787,12 @@ definitions:
     type: object
   message.UpdateUserProfileResp:
     type: object
-  message.UpdateVendorSpecsReq:
+  message.UpdateVendorInfoReq:
     properties:
       vendors:
-        additionalProperties:
-          items:
-            $ref: '#/definitions/structs.SpecInfo'
-          type: array
-        type: object
-    type: object
-  message.UpdateVendorSpecsResp:
-    type: object
-  message.UpdateVendorZonesReq:
-    properties:
-      vendors:
-        additionalProperties:
-          $ref: '#/definitions/structs.VendorWithRegion'
-        type: object
-    type: object
-  message.UpdateVendorZonesResp:
+        items:
+          $ref: '#/definitions/structs.VendorConfigInfo'
+        type: array
     type: object
   structs.AsyncTaskWorkFlowInfo:
     properties:
@@ -1872,6 +1839,117 @@ definitions:
         type: string
       period:
         type: string
+    type: object
+  structs.CheckAny:
+    properties:
+      expectedValue:
+        type: object
+      realValue:
+        type: object
+      valid:
+        type: boolean
+    type: object
+  structs.CheckError:
+    properties:
+      message:
+        type: string
+      type:
+        type: string
+    type: object
+  structs.CheckInt32:
+    properties:
+      expectedValue:
+        type: integer
+      realValue:
+        type: integer
+      valid:
+        type: boolean
+    type: object
+  structs.CheckRangeInt32:
+    properties:
+      expectedRange:
+        description: Left closed right closed interval
+        items:
+          type: integer
+        type: array
+      realValue:
+        type: integer
+      valid:
+        type: boolean
+    type: object
+  structs.CheckReportInfo:
+    properties:
+      hosts:
+        $ref: '#/definitions/structs.HostsCheck'
+      tenants:
+        additionalProperties:
+          $ref: '#/definitions/structs.TenantCheck'
+        type: object
+    type: object
+  structs.CheckReportMeta:
+    properties:
+      checkID:
+        type: string
+      createAt:
+        type: string
+      creator:
+        type: string
+    type: object
+  structs.CheckStatus:
+    properties:
+      health:
+        type: boolean
+      message:
+        type: string
+    type: object
+  structs.CheckString:
+    properties:
+      expectedValue:
+        type: string
+      realValue:
+        type: string
+      valid:
+        type: boolean
+    type: object
+  structs.CheckSwitch:
+    properties:
+      enable:
+        type: boolean
+    type: object
+  structs.ClusterCheck:
+    properties:
+      accountStatus:
+        $ref: '#/definitions/structs.CheckStatus'
+      backupRecordValid:
+        additionalProperties:
+          type: boolean
+        type: object
+      backupStrategy:
+        $ref: '#/definitions/structs.CheckString'
+      clusterID:
+        type: string
+      copies:
+        $ref: '#/definitions/structs.CheckInt32'
+      cpu:
+        type: integer
+      healthStatus:
+        $ref: '#/definitions/structs.CheckStatus'
+      instances:
+        items:
+          $ref: '#/definitions/structs.InstanceCheck'
+        type: array
+      maintenanceStatus:
+        type: string
+      memory:
+        type: integer
+      regionStatus:
+        $ref: '#/definitions/structs.CheckStatus'
+      runningStatus:
+        type: string
+      storage:
+        type: integer
+      topology:
+        $ref: '#/definitions/structs.CheckString'
     type: object
   structs.ClusterInfo:
     properties:
@@ -1925,6 +2003,8 @@ definitions:
         $ref: '#/definitions/structs.Usage'
       region:
         type: string
+      relations:
+        $ref: '#/definitions/structs.ClusterRelations'
       role:
         type: string
       status:
@@ -2139,6 +2219,17 @@ definitions:
     - paramId
     - realValue
     type: object
+  structs.ClusterRelations:
+    properties:
+      masters:
+        items:
+          type: string
+        type: array
+      slaves:
+        items:
+          type: string
+        type: array
+    type: object
   structs.ClusterResourceInfo:
     properties:
       instanceResource:
@@ -2289,6 +2380,29 @@ definitions:
           $ref: '#/definitions/structs.HierarchyTreeNode'
         type: array
     type: object
+  structs.HostCheck:
+    properties:
+      cpu:
+        $ref: '#/definitions/structs.CheckInt32'
+      disk:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckString'
+        type: object
+      errors:
+        items:
+          $ref: '#/definitions/structs.CheckError'
+        type: array
+      firewall:
+        $ref: '#/definitions/structs.CheckSwitch'
+      memory:
+        $ref: '#/definitions/structs.CheckInt32'
+      selinux:
+        $ref: '#/definitions/structs.CheckSwitch'
+      storageRatio:
+        type: number
+      swap:
+        $ref: '#/definitions/structs.CheckSwitch'
+    type: object
   structs.HostInfo:
     properties:
       arch:
@@ -2368,6 +2482,29 @@ definitions:
       vendor:
         type: string
     type: object
+  structs.HostsCheck:
+    properties:
+      delay:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckRangeInt32'
+        type: object
+      hosts:
+        additionalProperties:
+          $ref: '#/definitions/structs.HostCheck'
+        type: object
+      ntp:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckRangeInt32'
+        type: object
+      ping:
+        additionalProperties:
+          type: boolean
+        type: object
+      timeZoneConsistency:
+        additionalProperties:
+          type: boolean
+        type: object
+    type: object
   structs.Index:
     properties:
       description:
@@ -2377,6 +2514,19 @@ definitions:
       unit:
         type: string
       value:
+        type: object
+    type: object
+  structs.InstanceCheck:
+    properties:
+      instanceID:
+        type: string
+      parameters:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckAny'
+        type: object
+      versions:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckString'
         type: object
     type: object
   structs.ParameterGroupParameterInfo:
@@ -2524,7 +2674,7 @@ definitions:
       version:
         type: string
     type: object
-  structs.ProductComponentProperty:
+  structs.ProductComponentPropertyWithZones:
     properties:
       availableZones:
         description: Information on the specifications of the resources online for
@@ -2559,6 +2709,21 @@ definitions:
       suggestedInstancesCount:
         items:
           type: integer
+        type: array
+    type: object
+  structs.ProductConfigInfo:
+    properties:
+      components:
+        items:
+          $ref: '#/definitions/structs.ProductComponentPropertyWithZones'
+        type: array
+      productID:
+        type: string
+      productName:
+        type: string
+      versions:
+        items:
+          $ref: '#/definitions/structs.SpecificVersionProduct'
         type: array
     type: object
   structs.ProductDetail:
@@ -2683,7 +2848,7 @@ definitions:
       arch:
         additionalProperties:
           items:
-            $ref: '#/definitions/structs.ProductComponentProperty'
+            $ref: '#/definitions/structs.ProductComponentPropertyWithZones'
           type: array
         description: Arch information of the product, e.g. X86/X86_64
         type: object
@@ -2698,16 +2863,23 @@ definitions:
       resource:
         type: string
     type: object
-  structs.RegionWithZone:
+  structs.RegionConfigInfo:
     properties:
       id:
         type: string
       name:
         type: string
       zones:
-        additionalProperties:
+        items:
           $ref: '#/definitions/structs.ZoneInfo'
-        type: object
+        type: array
+    type: object
+  structs.RegionInfo:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
     type: object
   structs.ResourceStockCheckResult:
     properties:
@@ -2817,6 +2989,21 @@ definitions:
       versionID:
         type: string
     type: object
+  structs.TenantCheck:
+    properties:
+      clusterCount:
+        $ref: '#/definitions/structs.CheckRangeInt32'
+      clusters:
+        items:
+          $ref: '#/definitions/structs.ClusterCheck'
+        type: array
+      cpuRatio:
+        type: number
+      memoryRatio:
+        type: number
+      storageRatio:
+        type: number
+    type: object
   structs.TenantInfo:
     properties:
       createAt:
@@ -2880,6 +3067,23 @@ definitions:
       updateAt:
         type: string
     type: object
+  structs.VendorConfigInfo:
+    properties:
+      id:
+        description: The value of the VendorID is similar to AWS
+        type: string
+      name:
+        description: The value of the Name is similar to AWS
+        type: string
+      regions:
+        items:
+          $ref: '#/definitions/structs.RegionConfigInfo'
+        type: array
+      specs:
+        items:
+          $ref: '#/definitions/structs.SpecInfo'
+        type: array
+    type: object
   structs.VendorWithRegion:
     properties:
       id:
@@ -2890,7 +3094,7 @@ definitions:
         type: string
       regions:
         additionalProperties:
-          $ref: '#/definitions/structs.RegionWithZone'
+          $ref: '#/definitions/structs.RegionInfo'
         type: object
     type: object
   structs.WorkFlowInfo:
@@ -5111,7 +5315,206 @@ paths:
       summary: copy a parameter group
       tags:
       - parameter group
+  /platform/check:
+    post:
+      consumes:
+      - application/json
+      description: platform check
+      parameters:
+      - in: query
+        name: displayMode
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.CheckPlatformRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: platform check
+      tags:
+      - platform
+  /platform/report/:checkId:
+    get:
+      consumes:
+      - application/json
+      description: get check report based on checkId
+      parameters:
+      - in: query
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.GetCheckReportRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: get check report based on checkId
+      tags:
+      - platform
+  /platform/reports:
+    get:
+      consumes:
+      - application/json
+      description: get query check reports
+      parameters:
+      - description: Current page location
+        in: query
+        name: page
+        type: integer
+      - description: Number of this request
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryCheckReportsRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query check reports
+      tags:
+      - platform
   /products/:
+    get:
+      consumes:
+      - application/json
+      description: query products
+      parameters:
+      - in: query
+        items:
+          type: string
+        name: productIDs
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryProductsInfoResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query products
+      tags:
+      - product
+    post:
+      consumes:
+      - application/json
+      description: update products
+      parameters:
+      - description: update products info request parameter
+        in: body
+        name: UpdateProductsInfoReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateProductsInfoReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateProductsInfoResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: update products
+      tags:
+      - product
+  /products/available:
     get:
       consumes:
       - application/json
@@ -5153,86 +5556,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: queries all products' information
-      tags:
-      - product
-  /products/components:
-    get:
-      consumes:
-      - application/json
-      description: query product components
-      parameters:
-      - in: query
-        items:
-          type: string
-        name: productIDs
-        type: array
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.QueryProductComponentsResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: query product components
-      tags:
-      - product
-    post:
-      consumes:
-      - application/json
-      description: update product components
-      parameters:
-      - description: update product component properties parameter
-        in: body
-        name: UpdateProductComponentReq
-        required: true
-        schema:
-          $ref: '#/definitions/message.UpdateProductComponentReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.UpdateProductComponentResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: update product components
       tags:
       - product
   /products/detail:
@@ -5283,87 +5606,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: query all product detail
-      tags:
-      - product
-  /products/versions:
-    get:
-      consumes:
-      - application/json
-      description: query online products versions
-      parameters:
-      - description: query online products request parameter
-        in: body
-        name: QueryProductVersionsReq
-        required: true
-        schema:
-          $ref: '#/definitions/message.QueryProductVersionsReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.QueryProductVersionsResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: query online products versions
-      tags:
-      - product
-    post:
-      consumes:
-      - application/json
-      description: update online products versions
-      parameters:
-      - description: product online request parameter
-        in: body
-        name: UpdateProductVersionsReq
-        required: true
-        schema:
-          $ref: '#/definitions/message.UpdateProductVersionsReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.UpdateProductVersionsResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: update online products versions
       tags:
       - product
   /rbac/permission/{userId}:
@@ -6654,11 +6896,91 @@ paths:
       summary: update user profile
       tags:
       - platform
-  /vendors/regions:
+  /vendors/:
     get:
       consumes:
       - application/json
-      description: queries all regions information
+      description: query vendors
+      parameters:
+      - in: query
+        items:
+          type: string
+        name: vendorIDs
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryVendorInfoResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query vendors
+      tags:
+      - vendor
+    post:
+      consumes:
+      - application/json
+      description: update vendors
+      parameters:
+      - description: update vendor info request parameter
+        in: body
+        name: UpdateVendorInfoReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateVendorInfoReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateVendorInfoReq'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: update vendors
+      tags:
+      - vendor
+  /vendors/available:
+    get:
+      consumes:
+      - application/json
+      description: query available vendors and regions
       produces:
       - application/json
       responses:
@@ -6685,167 +7007,7 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: queries all regions information
-      tags:
-      - vendor
-  /vendors/specs:
-    get:
-      consumes:
-      - application/json
-      description: query vendor specs
-      parameters:
-      - in: query
-        items:
-          type: string
-        name: vendors
-        type: array
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.QueryVendorSpecsResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: query vendor specs
-      tags:
-      - vendor
-    post:
-      consumes:
-      - application/json
-      description: update vendor specs
-      parameters:
-      - description: update vendor specs request parameter
-        in: body
-        name: UpdateVendorSpecsReq
-        required: true
-        schema:
-          $ref: '#/definitions/message.UpdateVendorSpecsReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.UpdateVendorSpecsResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: update vendor specs
-      tags:
-      - vendor
-  /vendors/zones:
-    get:
-      consumes:
-      - application/json
-      description: query vendor zones
-      parameters:
-      - in: query
-        items:
-          type: string
-        name: vendors
-        type: array
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.QueryVendorZonesResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: query vendor zones
-      tags:
-      - vendor
-    post:
-      consumes:
-      - application/json
-      description: update vendor zones
-      parameters:
-      - description: update vendor zones request parameter
-        in: body
-        name: UpdateVendorZonesReq
-        required: true
-        schema:
-          $ref: '#/definitions/message.UpdateVendorZonesReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.UpdateVendorZonesResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: update vendor zones
+      summary: query available vendors and regions
       tags:
       - vendor
   /workflow/:

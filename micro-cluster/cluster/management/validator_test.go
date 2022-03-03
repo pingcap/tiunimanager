@@ -78,7 +78,7 @@ func Test_validateCreating(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty{
+						Arch: map[string][]structs.ProductComponentPropertyWithZones{
 							"amd64": {},
 						},
 					},
@@ -102,7 +102,7 @@ func Test_validateCreating(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty{
+						Arch: map[string][]structs.ProductComponentPropertyWithZones{
 							"x86_64": {
 								{
 									ID:                      "TiDB",
@@ -156,7 +156,7 @@ func Test_validateCreating(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty{
+						Arch: map[string][]structs.ProductComponentPropertyWithZones{
 							"x86_64": {
 								{
 									ID:                      "TiDB",
@@ -210,7 +210,7 @@ func Test_validateCreating(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty{
+						Arch: map[string][]structs.ProductComponentPropertyWithZones{
 							"x86_64": {
 								{
 									ID:                      "TiDB",
@@ -267,7 +267,7 @@ func Test_validateCreating(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty{
+						Arch: map[string][]structs.ProductComponentPropertyWithZones{
 							"x86_64": {
 								{
 									ID:                      "TiDB",
@@ -324,7 +324,7 @@ func Test_validateCreating(t *testing.T) {
 				Versions: map[string]structs.ProductVersion{
 					"v5.2.2": {
 						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentProperty{
+						Arch: map[string][]structs.ProductComponentPropertyWithZones{
 							"x86_64": {
 								{
 									ID:                      "TiDB",

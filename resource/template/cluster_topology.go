@@ -19,7 +19,7 @@ var ClusterTopology = `
 {{ if eq .Cluster.Status "Initializing" }}
 global:
   user: {{ .GlobalUser }}
-  group: {{ .GlobalUser }}
+  group: {{ .GlobalGroup }}
   ssh_port: {{ .GlobalSSHPort }}
   enable_tls: false
   deploy_dir: {{ .Cluster.ID }}/tidb-deploy

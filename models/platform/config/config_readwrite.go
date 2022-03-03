@@ -48,3 +48,16 @@ func (m *ConfigReadWrite) GetConfig(ctx context.Context, configKey string) (conf
 	}
 	return config, err
 }
+
+func (m *ConfigReadWrite) UpdateConfig(ctx context.Context, config *SystemConfig) (err error) {
+	if "" == config.ConfigKey {
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "config key required")
+	}
+	cfg := &SystemConfig{}
+	err = m.DB(ctx).First(cfg, "config_key = ?", config.ConfigKey).Error
+	if err != nil {
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "config key %s not exist", config.ConfigKey)
+	}
+	return m.DB(ctx).Model(cfg).Update("config_key", config.ConfigKey).
+		Update("config_value", config.ConfigValue).Error
+}

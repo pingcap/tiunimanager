@@ -58,6 +58,9 @@ const (
 	MetricsQueryCheckReports MetricsType = "platform/reports"
 	MetricsGetCheckReport    MetricsType = "platform/report"
 
+	MetricsSystemConfigUpdate MetricsType = "config/update"
+	MetricsSystemConfigGet    MetricsType = "config/get"
+
 	// MetricsBackupCreate define backup metrics
 	MetricsBackupCreate         MetricsType = "backup/create"
 	MetricsBackupDelete         MetricsType = "backup/delete"

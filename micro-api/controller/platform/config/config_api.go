@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -16,3 +15,54 @@
  ******************************************************************************/
 
 package platformconfig
+
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/common/client"
+	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+)
+
+// UpdateSystemConfig
+// @Summary update system config
+// @Description UpdateSystemConfig
+// @Tags UpdateSystemConfig
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param systemConfig body message.UpdateSystemConfigReq true "system config for update"
+// @Success 200 {object} controller.CommonResult{data=message.UpdateSystemConfigResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /config/update [post]
+func UpdateSystemConfig(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.UpdateSystemConfigReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateSystemConfig, &message.UpdateSystemConfigResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// GetSystemConfig
+// @Summary get system config
+// @Description get system config
+// @Tags get system config
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param getSystemConfigReq query message.GetSystemConfigReq true "system config key"
+// @Success 200 {object} controller.CommonResult{data=message.GetSystemConfigResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /config/ [get]
+func GetSystemConfig(c *gin.Context) {
+	var request message.GetSystemConfigReq
+
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &request); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.GetSystemConfig, &message.GetSystemConfigResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}

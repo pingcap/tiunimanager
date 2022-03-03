@@ -20,6 +20,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/platform/config"
 )
 
 type SystemConfigManager struct{}
@@ -37,6 +38,15 @@ func (mgr *SystemConfigManager) GetSystemConfig(ctx context.Context, request mes
 	resp.SystemConfig = structs.SystemConfig{
 		ConfigKey:   config.ConfigKey,
 		ConfigValue: config.ConfigValue,
+	}
+	return resp, nil
+}
+
+func (mgr *SystemConfigManager) UpdateSystemConfig(ctx context.Context, request message.UpdateSystemConfigReq) (resp message.UpdateSystemConfigResp, err error) {
+	configRW := models.GetConfigReaderWriter()
+	err = configRW.UpdateConfig(ctx, &config.SystemConfig{ConfigKey: request.ConfigKey, ConfigValue: request.ConfigValue})
+	if err != nil {
+		return resp, err
 	}
 	return resp, nil
 }

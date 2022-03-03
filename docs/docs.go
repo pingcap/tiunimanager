@@ -10313,6 +10313,15 @@ var doc = `{
                 "hostName": {
                     "type": "string"
                 },
+                "instances": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "ip": {
                     "type": "string"
                 },

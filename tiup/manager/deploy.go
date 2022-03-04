@@ -327,6 +327,6 @@ func (m *Manager) Deploy(
 	}
 
 	hint := color.New(color.Bold).Sprintf("%s start %s", tui.OsArgs0(), name)
-	log.Infof("Cluster `%s` deployed successfully, you can start it with command: `<TIUP_HOME> %s`", name, hint)
+	log.Infof("Cluster `%s` deployed successfully, you can start it with command: `TIUP_HOME=/home/<user>/.em %s`, where user is defined in config.yaml. by default: `TIUP_HOME=/home/tidb/.em %s`", name, hint, hint)
 	return nil
 }

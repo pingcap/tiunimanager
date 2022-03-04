@@ -300,7 +300,7 @@ func (p *FileHostInitiator) isVirtualMachine(ctx context.Context, h *structs.Hos
 	log.Infof("begin to check host manufacturer on host %s %s", h.HostName, h.IP)
 	vmManufacturer := []string{"QEMU", "XEN", "KVM", "VMWARE", "VIRTUALBOX", "VBOX", "ORACLE", "MICROSOFT", "ZVM", "BOCHS", "PARALLELS", "UML"}
 	dmidecodeCmd := "dmidecode -s system-manufacturer | tr -d '\n'"
-	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{dmidecodeCmd})
+	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{dmidecodeCmd})
 	if err != nil {
 		log.Errorf("execute %s on host %s %s failed, %v", dmidecodeCmd, h.HostName, h.IP, err)
 		return false, err

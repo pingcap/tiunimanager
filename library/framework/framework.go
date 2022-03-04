@@ -125,6 +125,7 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 		EMClusterName:      "em-test",
 		EMVersion:          "InTesting",
 		DeployUser:         "test-user",
+		DeployGroup:        "test-group",
 	}
 	f.parseArgs(serviceName)
 

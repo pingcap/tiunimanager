@@ -219,6 +219,9 @@ LOOP:
 
 func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.HostInfo) (operationID string, err error) {
 	tempateInfo := templateScaleOut{}
+	tempateInfo.GlobalUser = framework.GetCurrentDeployUser()
+	tempateInfo.GlobalGroup = framework.GetCurrentDeployGroup()
+	tempateInfo.GlobalSSHPort = int(hosts[0].SSHPort)
 	for _, host := range hosts {
 		tempateInfo.HostIPs = append(tempateInfo.HostIPs, host.IP)
 	}

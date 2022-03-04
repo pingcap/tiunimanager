@@ -145,9 +145,13 @@ func (p *ResourcePool) getSSHConfigPort(ctx context.Context) int {
 		return rp_consts.HostSSHPort
 	}
 	portStr := sshConfigPort.ConfigValue
+	if portStr == "" {
+		framework.LogWithContext(ctx).Warnln("get config ConfigKeyDefaultSSHPort is null")
+		return rp_consts.HostSSHPort
+	}
 	port, err := strconv.Atoi(portStr)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("convert port string %s to port failed, %v", portStr, err)
+		framework.LogWithContext(ctx).Errorf("get config ConfigKeyDefaultSSHPort invalid string %s to atoi, %v", portStr, err)
 		return rp_consts.HostSSHPort
 	}
 	return port

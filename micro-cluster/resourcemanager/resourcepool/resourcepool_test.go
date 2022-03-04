@@ -249,12 +249,26 @@ func Test_getSSHConfigPort_Succeed(t *testing.T) {
 	assert.Equal(t, 9527, port)
 }
 
-func Test_getSSHConfigPort_Failed(t *testing.T) {
+func Test_getSSHConfigPort_InvalidString(t *testing.T) {
 	models.MockDB()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	rw := mock_config.NewMockReaderWriter(ctrl)
 	rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: "fault"}, nil)
+	models.SetConfigReaderWriter(rw)
+
+	resourcePool := GetResourcePool()
+
+	port := resourcePool.getSSHConfigPort(context.TODO())
+	assert.Equal(t, rp_consts.HostSSHPort, port)
+}
+
+func Test_getSSHConfigPort_NullString(t *testing.T) {
+	models.MockDB()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	rw := mock_config.NewMockReaderWriter(ctrl)
+	rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: ""}, nil)
 	models.SetConfigReaderWriter(rw)
 
 	resourcePool := GetResourcePool()

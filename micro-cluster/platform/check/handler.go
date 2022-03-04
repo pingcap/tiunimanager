@@ -16,6 +16,7 @@
 package check
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -385,6 +386,7 @@ func (p *Report) CheckInstances(ctx context.Context, instances []*management.Clu
 		}
 		instanceChecks = append(instanceChecks, structs.InstanceCheck{
 			ID:         instance.ID,
+			Address:    instance.HostIP[0],
 			Parameters: parameters,
 		})
 	}
@@ -516,8 +518,12 @@ func (p *Report) CheckHosts(ctx context.Context) error {
 	}
 
 	hostInfos := make([]structs.HostInfo, 0)
+	addressMap := make(map[string]string)
 	for _, host := range hosts {
 		hostInfos = append(hostInfos, structs.HostInfo{ID: host.ID})
+		if _, ok := addressMap[host.ID]; !ok {
+			addressMap[host.ID] = host.IP
+		}
 	}
 
 	cpu, err := hostInspector.GetHostInspector().CheckCpuAllocated(ctx, hostInfos)
@@ -548,6 +554,7 @@ func (p *Report) CheckHosts(ctx context.Context) error {
 				CPUAllocated:    *cpu[key],
 				MemoryAllocated: *memory[key],
 				DiskAllocated:   diskAllocated,
+				Address:         addressMap[key],
 			}
 		}
 	}
@@ -566,5 +573,11 @@ func (p *Report) Serialize(ctx context.Context) (string, error) {
 		framework.LogWithContext(ctx).Errorf("serialize report info error: %s", err.Error())
 		return "", err
 	}
-	return string(report), nil
+	// format report
+	var out bytes.Buffer
+	err = json.Indent(&out, report, "", "\t")
+	if err != nil {
+		return "", err
+	}
+	return out.String(), nil
 }

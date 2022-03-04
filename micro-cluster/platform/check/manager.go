@@ -31,14 +31,18 @@ const (
 	ContextReportInfo = "ReportInfo"
 )
 
-type CheckManager struct{}
+type CheckManager struct{
+	autoCheckMgr *autoCheckManager
+}
 
 func NewCheckManager() *CheckManager {
 	workflowManager := workflow.GetWorkFlowService()
 
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowCheckPlatform, &checkDefine)
 
-	return &CheckManager{}
+	return &CheckManager{
+		autoCheckMgr: NewAutoCheckManager(),
+	}
 }
 
 var checkDefine = workflow.WorkFlowDefine{

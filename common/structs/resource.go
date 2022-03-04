@@ -86,6 +86,7 @@ type DiskInfo struct {
 type HostInfo struct {
 	ID           string              `json:"hostId"`
 	IP           string              `json:"ip"`
+	SSHPort      int32               `json:"sshPort,omitempty"`
 	UserName     string              `json:"userName,omitempty"`
 	Passwd       string              `json:"passwd,omitempty"`
 	HostName     string              `json:"hostName"`

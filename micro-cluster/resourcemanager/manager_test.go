@@ -29,10 +29,12 @@ import (
 	host_provider "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/common"
+	config "github.com/pingcap-inc/tiem/models/platform/config"
 	resource_models "github.com/pingcap-inc/tiem/models/resource"
 	resourcepool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	mock_cluster "github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
+	mock_config "github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	mock_resource "github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
 	mock_initiator "github.com/pingcap-inc/tiem/test/mockresource/mockinitiator"
 	mock_workflow "github.com/pingcap-inc/tiem/test/mockworkflow"
@@ -135,6 +137,10 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
+	mockConfigModels := mock_config.NewMockReaderWriter(ctrl1)
+	mockConfigModels.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: "9527"}, nil)
+	models.MockDB()
+	models.SetConfigReaderWriter(mockConfigModels)
 
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
 	file_hostprovider, ok := (hostprovider).(*(host_provider.FileHostProvider))

@@ -16,6 +16,7 @@
 package check
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -566,5 +567,11 @@ func (p *Report) Serialize(ctx context.Context) (string, error) {
 		framework.LogWithContext(ctx).Errorf("serialize report info error: %s", err.Error())
 		return "", err
 	}
-	return string(report), nil
+	// format report
+	var out bytes.Buffer
+	err = json.Indent(&out, report, "", "\t")
+	if err != nil {
+		return "", err
+	}
+	return out.String(), nil
 }

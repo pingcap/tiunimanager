@@ -25,7 +25,9 @@ import (
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiem/models/platform/config"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
+	mock_config "github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	mock_provider "github.com/pingcap-inc/tiem/test/mockresource/mockprovider"
 	mock_workflow "github.com/pingcap-inc/tiem/test/mockworkflow"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -112,6 +114,12 @@ func Test_SelectDeleteFlowName(t *testing.T) {
 func Test_ImportHosts(t *testing.T) {
 	models.MockDB()
 	resourcePool := GetResourcePool()
+
+	ctrl0 := gomock.NewController(t)
+	defer ctrl0.Finish()
+	rw := mock_config.NewMockReaderWriter(ctrl0)
+	rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: "9527"}, nil)
+	models.SetConfigReaderWriter(rw)
 
 	// Mock host provider
 	ctrl1 := gomock.NewController(t)
@@ -225,4 +233,32 @@ func Test_UpdateHostReserved(t *testing.T) {
 
 	err := resourcePool.UpdateHostReserved(context.TODO(), []string{"hostId1", "hostId2"}, true)
 	assert.Nil(t, err)
+}
+
+func Test_getSSHConfigPort_Succeed(t *testing.T) {
+	models.MockDB()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	rw := mock_config.NewMockReaderWriter(ctrl)
+	rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: "9527"}, nil)
+	models.SetConfigReaderWriter(rw)
+
+	resourcePool := GetResourcePool()
+
+	port := resourcePool.getSSHConfigPort(context.TODO())
+	assert.Equal(t, 9527, port)
+}
+
+func Test_getSSHConfigPort_Failed(t *testing.T) {
+	models.MockDB()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	rw := mock_config.NewMockReaderWriter(ctrl)
+	rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: "fault"}, nil)
+	models.SetConfigReaderWriter(rw)
+
+	resourcePool := GetResourcePool()
+
+	port := resourcePool.getSSHConfigPort(context.TODO())
+	assert.Equal(t, 22, port)
 }

@@ -21,7 +21,7 @@ global:
   user: {{ .GlobalUser }}
   group: {{ .GlobalGroup }}
   ssh_port: {{ .GlobalSSHPort }}
-  enable_tls: false
+  enable_tls: {{ .Cluster.TLS }}
   deploy_dir: {{ .Cluster.ID }}/tidb-deploy
   data_dir: {{ .Cluster.ID }}/tidb-data
   log_dir: {{ .Cluster.ID }}/tidb-log
@@ -136,6 +136,7 @@ pd_servers:
   - host: {{ index .HostIP 0 }}
     client_port: {{ index .Ports 0 }}
     peer_port: {{ index .Ports 1 }}
+    name: {{ .ID }}
     deploy_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/pd-deploy
     data_dir: {{ .DiskPath }}/{{ $.Cluster.ID }}/pd-data
   {{ end }}

@@ -75,8 +75,10 @@ const (
 	TIEM_UPGRADE_VERSION_INCORRECT EM_ERROR_CODE = 21105
 
 	// switchover
-	TIEM_MASTER_SLAVE_SWITCHOVER_NOT_FOUND EM_ERROR_CODE = 21000
-	TIEM_MASTER_SLAVE_SWITCHOVER_FAILED    EM_ERROR_CODE = 21001
+	TIEM_MASTER_SLAVE_SWITCHOVER_NOT_FOUND               EM_ERROR_CODE = 21000
+	TIEM_MASTER_SLAVE_SWITCHOVER_FAILED                  EM_ERROR_CODE = 21001
+	TIEM_MASTER_SLAVE_SWITCHOVER_CDC_SYNC_TASK_NOT_FOUND EM_ERROR_CODE = 21002
+	TIEM_MASTER_SLAVE_SWITCHOVER_SLAVE_NO_CDC_COMPONENT  EM_ERROR_CODE = 21003
 
 	// workflow
 	TIEM_WORKFLOW_CREATE_FAILED         EM_ERROR_CODE = 40100
@@ -281,7 +283,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_SYSTEM_MISSING_DATA:       {"missing system data", 500},
 	TIEM_SYSTEM_MISSING_CONFIG:     {"missing system config", 500},
 	TIEM_SYSTEM_STATE_CONFLICT:     {"system state conflict", 500},
-	TIEM_SYSTEM_INVALID_VERSION:     {"invalid system version", 500},
+	TIEM_SYSTEM_INVALID_VERSION:    {"invalid system version", 500},
 
 	TIEM_TASK_TIMEOUT:          {"task timeout", 500},
 	TIEM_FLOW_NOT_FOUND:        {"flow not found", 500},
@@ -407,8 +409,10 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM: {"Task downstream type not supported", 500},
 	TIEM_CHANGE_FEED_EXECUTE_ERROR:          {"Failed to execute task command", 500},
 
-	TIEM_MASTER_SLAVE_SWITCHOVER_NOT_FOUND: {"master/slave relation not found", 404},
-	TIEM_MASTER_SLAVE_SWITCHOVER_FAILED:    {"master/slave switchover failed", 500},
+	TIEM_MASTER_SLAVE_SWITCHOVER_NOT_FOUND:               {"master/slave relation not found", 404},
+	TIEM_MASTER_SLAVE_SWITCHOVER_FAILED:                  {"master/slave switchover failed", 500},
+	TIEM_MASTER_SLAVE_SWITCHOVER_CDC_SYNC_TASK_NOT_FOUND: {"master/slave CDC sync task not found", 400},
+	TIEM_MASTER_SLAVE_SWITCHOVER_SLAVE_NO_CDC_COMPONENT:  {"slave has no CDC component", 400},
 
 	TIEM_CLUSTER_LOG_QUERY_FAILED: {"Failed to query cluster log", 500},
 	TIEM_CLUSTER_LOG_TIME_AFTER:   {"query log parameter startTime after endTime", 401},

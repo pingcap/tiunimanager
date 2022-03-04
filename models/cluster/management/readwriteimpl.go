@@ -128,6 +128,16 @@ func (g *ClusterReadWrite) GetMeta(ctx context.Context, clusterID string) (clust
 	return
 }
 
+func (g *ClusterReadWrite) GetRelationsBySubject(ctx context.Context, subjectClusterID string) ([]*ClusterRelation, error) {
+	relations := make([]*ClusterRelation, 0)
+	err := g.DB(ctx).Model(&ClusterRelation{}).Where("subject_cluster_id  = ? ", subjectClusterID).Find(&relations).Error
+	if err != nil {
+		err = dbCommon.WrapDBError(err)
+	}
+
+	return relations, err
+}
+
 func (g *ClusterReadWrite) GetRelations(ctx context.Context, clusterID string) ([]*ClusterRelation, error) {
 	relations := make([]*ClusterRelation, 0)
 	err := g.DB(ctx).Model(&ClusterRelation{}).Where("object_cluster_id  = ? ", clusterID).Find(&relations).Error
@@ -389,6 +399,83 @@ func (g *ClusterReadWrite) SwapMasterSlaveRelation(ctx context.Context, oldMaste
 		framework.LogWithContext(ctx).Errorf("2st gorm SwapMasterSlaveRelation %s", err)
 		tx.Rollback()
 		return err
+	}
+
+	return dbCommon.WrapDBError(tx.Commit().Error)
+}
+
+func (g *ClusterReadWrite) SwapMasterSlaveRelations(ctx context.Context, oldMasterClusterId, slaveToBeMasterClusterId string, newSlaveClusterIdMapToSyncCDCTaskId map[string]string) error {
+	tx := g.DB(ctx).Begin()
+	if err := tx.Error; err != nil {
+		return err
+	}
+	relations := make([]*ClusterRelation, 0)
+	err := tx.Model(&ClusterRelation{}).
+		Where("subject_cluster_id  = ? ", oldMasterClusterId).
+		Where("relation_type  = ? ", string(constants.ClusterRelationStandBy)).
+		Find(&relations).Error
+	if err != nil {
+		err = dbCommon.WrapDBError(err)
+		tx.Rollback()
+		return err
+	}
+	if len(relations) <= 0 {
+		err = dbCommon.WrapDBError(fmt.Errorf("gorm SwapMasterSlaveRelations no relation found"))
+		tx.Rollback()
+		return err
+	}
+	if len(relations) != len(newSlaveClusterIdMapToSyncCDCTaskId) {
+		err = dbCommon.WrapDBError(fmt.Errorf("gorm SwapMasterSlaveRelations relations amount does not match: %d != %d",
+			len(relations), len(newSlaveClusterIdMapToSyncCDCTaskId)))
+		tx.Rollback()
+		return err
+	}
+	var dupNewSlaveClusterIdMapToSyncCDCTaskId map[string]string
+	for k, v := range newSlaveClusterIdMapToSyncCDCTaskId {
+		dupNewSlaveClusterIdMapToSyncCDCTaskId[k] = v
+	}
+	_, ok := dupNewSlaveClusterIdMapToSyncCDCTaskId[oldMasterClusterId]
+	if ok {
+		delete(dupNewSlaveClusterIdMapToSyncCDCTaskId, oldMasterClusterId)
+	} else {
+		err = dbCommon.WrapDBError(fmt.Errorf("gorm SwapMasterSlaveRelations dupNewSlaveClusterIdMapToSyncCDCTaskId has no oldMasterClusterId"))
+		tx.Rollback()
+	}
+	equalSlaveToBeMasterClusterIdCt := 0
+	for _, relation := range relations {
+		framework.Assert(relation.SubjectClusterID == oldMasterClusterId)
+		framework.LogWithContext(ctx).Debugf("gorm SwapMasterSlaveRelations get relation %v %s %s %s",
+			relation.ID, relation.SubjectClusterID, relation.ObjectClusterID, relation.SyncChangeFeedTaskID)
+		if relation.ObjectClusterID == slaveToBeMasterClusterId {
+			equalSlaveToBeMasterClusterIdCt++
+		} else {
+			delete(dupNewSlaveClusterIdMapToSyncCDCTaskId, relation.ObjectClusterID)
+		}
+		err = tx.Debug().Delete(relation).Error
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("gorm SwapMasterSlaveRelations %s", err)
+			tx.Rollback()
+			return err
+		}
+	}
+	if equalSlaveToBeMasterClusterIdCt != 1 || len(dupNewSlaveClusterIdMapToSyncCDCTaskId) != 0 {
+		framework.LogWithContext(ctx).Errorf("gorm SwapMasterSlaveRelations check failed, %v,%v",
+			equalSlaveToBeMasterClusterIdCt == 1, len(dupNewSlaveClusterIdMapToSyncCDCTaskId) == 0)
+		tx.Rollback()
+		return err
+	}
+	for newSlaveId, newSyncCDCId := range newSlaveClusterIdMapToSyncCDCTaskId {
+		err = tx.Debug().Create(&ClusterRelation{
+			RelationType:         constants.ClusterRelationStandBy,
+			ObjectClusterID:      newSlaveId,
+			SubjectClusterID:     slaveToBeMasterClusterId,
+			SyncChangeFeedTaskID: newSyncCDCId,
+		}).Error
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("gorm SwapMasterSlaveRelation create relation failed, %s", err)
+			tx.Rollback()
+			return err
+		}
 	}
 
 	return dbCommon.WrapDBError(tx.Commit().Error)

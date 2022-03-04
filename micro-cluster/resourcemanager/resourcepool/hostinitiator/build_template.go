@@ -28,12 +28,14 @@ import (
 	resourceTemplate "github.com/pingcap-inc/tiem/resource/template"
 )
 
+type HostAddr struct {
+	HostIP  string
+	SSHPort int
+}
+
 // template info to parse em cluster scale out yaml template file
 type templateScaleOut struct {
-	GlobalSSHPort int
-	GlobalUser    string
-	GlobalGroup   string
-	HostIPs       []string
+	HostAddrs []HostAddr
 }
 
 func (p *templateScaleOut) generateTopologyConfig(ctx context.Context) (string, error) {

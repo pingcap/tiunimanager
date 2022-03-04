@@ -16,13 +16,9 @@
 package template
 
 var EMClusterScaleOut = `
-global:
-  user: {{ .GlobalUser }}
-  group: {{ .GlobalGroup }}
-  ssh_port: {{ .GlobalSSHPort }}
-
 filebeat_servers:
-{{ range .HostIPs }}
-  - host: {{ . }}
+{{ range .HostAddrs }}
+  - host: {{ .HostIP }}
+    ssh_port: {{ .SSHPort }}
 {{ end }}
 `

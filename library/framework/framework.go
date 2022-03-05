@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -122,6 +123,9 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 		DataDir:            "./testdata",
 		LogLevel:           "info",
 		EMClusterName:      "em-test",
+		EMVersion:          "InTesting",
+		DeployUser:         "test-user",
+		DeployGroup:        "test-group",
 	}
 	f.parseArgs(serviceName)
 
@@ -268,6 +272,44 @@ func (b *BaseFramework) Shutdown() error {
 
 func (b *BaseFramework) GetClientArgs() *ClientArgs {
 	return b.args
+}
+
+func GetCurrentDeployUser() string {
+	return Current.GetClientArgs().DeployUser
+}
+
+func GetCurrentDeployGroup() string {
+	return Current.GetClientArgs().DeployGroup
+}
+
+func GetPrivateKeyFilePath(userName string) (keyPath string) {
+	keyPath = fmt.Sprintf("/home/%s/.ssh/tiup_rsa", userName)
+	return
+}
+
+func GetPublicKeyFilePath(userName string) (keyPath string) {
+	keyPath = fmt.Sprintf("/home/%s/.ssh/id_rsa.pub", userName)
+	return
+}
+
+func GetTiupHomePathForTiem() string {
+	userName := GetCurrentDeployUser()
+	return fmt.Sprintf("/home/%s/.em", userName)
+}
+
+func GetTiupHomePathForTidb() string {
+	userName := GetCurrentDeployUser()
+	return fmt.Sprintf("/home/%s/.tiup", userName)
+}
+
+func GetTiupAuthorizaitonFlag() (flags []string) {
+	userName := GetCurrentDeployUser()
+	keyPath := GetPrivateKeyFilePath(userName)
+	flags = append(flags, "--user")
+	flags = append(flags, userName)
+	flags = append(flags, "-i")
+	flags = append(flags, keyPath)
+	return
 }
 
 func (b *BaseFramework) GetConfiguration() *Configuration {

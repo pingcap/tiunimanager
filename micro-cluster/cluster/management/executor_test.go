@@ -18,8 +18,9 @@ package management
 import (
 	"context"
 	"fmt"
-	utilsql "github.com/pingcap-inc/tiem/util/api/tidb/sql"
 	"strconv"
+
+	utilsql "github.com/pingcap-inc/tiem/util/api/tidb/sql"
 
 	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
@@ -2097,6 +2098,8 @@ func Test_validateHostsStatus(t *testing.T) {
 
 	resourceRW := mockresource.NewMockReaderWriter(ctrl)
 	models.SetResourceReaderWriter(resourceRW)
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
 
 	provider := resourcepool.GetResourcePool().GetHostProvider().(*hostprovider.FileHostProvider)
 	provider.SetResourceReaderWriter(resourceRW)
@@ -2105,6 +2108,7 @@ func Test_validateHostsStatus(t *testing.T) {
 		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host{
 			{Status: string(constants.HostOnline)},
 		}, int64(1), nil).Times(1)
+		clusterRW.EXPECT().QueryHostInstances(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 
 		node := &workflowModel.WorkFlowNode{}
 
@@ -2150,6 +2154,7 @@ func Test_validateHostsStatus(t *testing.T) {
 		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host{
 			{Status: string(constants.HostFailed)},
 		}, int64(1), nil).Times(1)
+		clusterRW.EXPECT().QueryHostInstances(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 
 		node := &workflowModel.WorkFlowNode{}
 
@@ -2177,6 +2182,7 @@ func Test_validateHostsStatus(t *testing.T) {
 		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host{
 			{Status: string(constants.HostInit)},
 		}, int64(1), nil).Times(1)
+		clusterRW.EXPECT().QueryHostInstances(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 
 		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host{
 			{Status: string(constants.HostOnline)},
@@ -2207,6 +2213,7 @@ func Test_validateHostsStatus(t *testing.T) {
 		resourceRW.EXPECT().Query(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]rp.Host{
 			{Status: string(constants.HostInit)},
 		}, int64(1), nil).Times(2)
+		clusterRW.EXPECT().QueryHostInstances(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 
 		node := &workflowModel.WorkFlowNode{}
 		validateHostTimeout = time.Second * 6

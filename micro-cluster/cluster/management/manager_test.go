@@ -1016,6 +1016,18 @@ func TestManager_DetailCluster(t *testing.T) {
 				RoleType:  string(constants.Root),
 			},
 		}, nil)
+		clusterRW.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return([]*management.ClusterRelation{
+			{
+				SubjectClusterID: "01",
+				ObjectClusterID:  "02",
+			},
+		}, nil)
+		clusterRW.EXPECT().GetSlaves(gomock.Any(), gomock.Any()).Return([]*management.ClusterRelation{
+			{
+				SubjectClusterID: "01",
+				ObjectClusterID:  "02",
+			},
+		}, nil)
 		got, err := manager.DetailCluster(context.TODO(), cluster.QueryClusterDetailReq{
 			ClusterID: "111",
 		})
@@ -1771,6 +1783,21 @@ func Test_compareConfigDifference(t *testing.T) {
 			RangeType:   1,
 			Description: "param2 desc",
 		},
+		{
+			ParamId:      "3",
+			Category:     "basic3",
+			Name:         "param3",
+			InstanceType: "pd",
+			RealValue: structs.ParameterRealValue{
+				ClusterValue: "",
+			},
+			Type:        3,
+			Unit:        "KB",
+			UnitOptions: []string{"KB", "MB", "GB"},
+			Range:       []string{"1, 10000"},
+			RangeType:   1,
+			Description: "param3 desc",
+		},
 	}
 
 	pgParamInfos := []structs.ParameterGroupParameterInfo{
@@ -1799,6 +1826,19 @@ func Test_compareConfigDifference(t *testing.T) {
 			Range:        []string{"1, 1000"},
 			RangeType:    1,
 			Description:  "param2 desc",
+		},
+		{
+			ID:           "3",
+			Category:     "basic3",
+			Name:         "param3",
+			InstanceType: "pd",
+			DefaultValue: " ",
+			Type:         3,
+			Unit:         "KB",
+			UnitOptions:  []string{"KB", "MB", "GB"},
+			Range:        []string{"1, 10000"},
+			RangeType:    1,
+			Description:  "param3 desc",
 		},
 	}
 

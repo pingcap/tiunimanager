@@ -18,6 +18,7 @@ package resourcepool
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"sync"
 
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -27,6 +28,7 @@ import (
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostinitiator"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
+	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/workflow"
 )
 
@@ -135,6 +137,26 @@ func (p *ResourcePool) SetHostInitiator(initiator hostinitiator.HostInitiator) {
 	p.hostInitiator = initiator
 }
 
+func (p *ResourcePool) getSSHConfigPort(ctx context.Context) int {
+	sshConfigPort, err := models.GetConfigReaderWriter().GetConfig(ctx, constants.ConfigKeyDefaultSSHPort)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get config ConfigKeyDefaultSSHPort failed, %v", err)
+		// return a default ssh port. If can not connect host using the default port, will fail in host initiator
+		return rp_consts.HostSSHPort
+	}
+	portStr := sshConfigPort.ConfigValue
+	if portStr == "" {
+		framework.LogWithContext(ctx).Warnln("get config ConfigKeyDefaultSSHPort is null")
+		return rp_consts.HostSSHPort
+	}
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get config ConfigKeyDefaultSSHPort invalid string %s to atoi, %v", portStr, err)
+		return rp_consts.HostSSHPort
+	}
+	return port
+}
+
 func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo, condition *structs.ImportCondition) (flowIds []string, hostIds []string, err error) {
 	hostIds, err = p.hostProvider.ImportHosts(ctx, hosts)
 	if err != nil {
@@ -143,7 +165,8 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 	var flows []*workflow.WorkFlowAggregation
 	flowManager := workflow.GetWorkFlowService()
 	flowName := p.selectImportFlowName(condition)
-	framework.LogWithContext(ctx).Infof("import hosts select %s", flowName)
+	hostSSHPort := p.getSSHConfigPort(ctx)
+	framework.LogWithContext(ctx).Infof("import hosts select %s, with ssh port %d", flowName, hostSSHPort)
 	for i, host := range hosts {
 		flow, err := flowManager.CreateWorkFlow(ctx, hostIds[i], workflow.BizTypeHost, flowName)
 		if err != nil {
@@ -153,6 +176,7 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 		}
 
 		flowManager.AddContext(flow, rp_consts.ContextResourcePoolKey, p)
+		host.SSHPort = int32(hostSSHPort)
 		flowManager.AddContext(flow, rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{host})
 		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostIds[i]})
 		// Whether ignore warnings when verify host
@@ -163,7 +187,12 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 		flowIds = append(flowIds, flow.Flow.ID)
 	}
 	// Sync start each flow in a goroutine: tiup-tiem/sqlite DO NOT support concurrent
-	go func() {
+	operationName := fmt.Sprintf(
+		"%s.%s BackgroundTask",
+		framework.GetMicroServiceNameFromContext(ctx),
+		framework.GetMicroEndpointNameFromContext(ctx),
+	)
+	framework.StartBackgroundTask(ctx, operationName, func(ctx context.Context) error {
 		for i, flow := range flows {
 			if err = flowManager.Start(ctx, flow); err != nil {
 				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for host %s %s, %s", rp_consts.FlowImportHosts, i, flow.Flow.ID, hosts[i].HostName, hosts[i].IP, err.Error())
@@ -173,7 +202,9 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for host %s %s", rp_consts.FlowImportHosts, i, flow.Flow.ID, hosts[i].HostName, hosts[i].IP)
 			}
 		}
-	}()
+		return nil
+	})
+
 	return flowIds, hostIds, nil
 }
 
@@ -209,8 +240,12 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 	if err != nil {
 		return nil, err
 	}
-
-	go func() {
+	operationName := fmt.Sprintf(
+		"%s.%s BackgroundTask",
+		framework.GetMicroServiceNameFromContext(ctx),
+		framework.GetMicroEndpointNameFromContext(ctx),
+	)
+	framework.StartBackgroundTask(ctx, operationName, func(ctx context.Context) error {
 		for i, flow := range flows {
 			if err = flowManager.Start(ctx, flow); err != nil {
 				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for delete host %s, %s", rp_consts.FlowDeleteHosts, i, flow.Flow.ID, hostIds[i], err.Error())
@@ -219,7 +254,9 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for delete host %s", rp_consts.FlowDeleteHosts, i, flow.Flow.ID, hostIds[i])
 			}
 		}
-	}()
+		return nil
+	})
+
 	return flowIds, nil
 }
 

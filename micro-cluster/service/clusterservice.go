@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/micro-cluster/platform/check"
+	"github.com/pingcap-inc/tiem/micro-cluster/platform/system"
 	"runtime/debug"
 	"time"
 
@@ -64,6 +66,7 @@ type ClusterServiceHandler struct {
 	clusterParameterManager *clusterParameter.Manager
 	clusterManager          *clusterManager.Manager
 	systemConfigManager     *config.SystemConfigManager
+	systemManager           *system.SystemManager
 	brManager               backuprestore.BRService
 	importexportManager     importexport.ImportExportService
 	clusterLogManager       *clusterLog.Manager
@@ -71,6 +74,7 @@ type ClusterServiceHandler struct {
 	authManager             *identification.Manager
 	productManager          *product.ProductManager
 	rbacManager             rbac.RBACService
+	checkManager            *check.CheckManager
 }
 
 func handleRequest(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse, requestBody interface{}, permissions []structs.RbacPermission) bool {
@@ -152,6 +156,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.clusterManager = clusterManager.NewClusterManager()
 	handler.switchoverManager = switchoverManager.GetManager()
 	handler.systemConfigManager = config.NewSystemConfigManager()
+	handler.systemManager = system.GetSystemManager()
 	handler.brManager = backuprestore.GetBRService()
 	handler.importexportManager = importexport.GetImportExportService()
 	handler.clusterLogManager = clusterLog.NewManager()
@@ -159,6 +164,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.authManager = identification.NewIdentificationManager()
 	handler.productManager = product.NewProductManager()
 	handler.rbacManager = rbac.GetRBACService()
+	handler.checkManager = check.NewCheckManager()
 
 	return handler
 }
@@ -719,6 +725,36 @@ func (c *ClusterServiceHandler) GetSystemConfig(ctx context.Context, req *cluste
 
 	if handleRequest(ctx, req, resp, &getReq, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionRead)}}) {
 		result, err := c.systemConfigManager.GetSystemConfig(framework.NewBackgroundMicroCtx(ctx, false), getReq)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (c *ClusterServiceHandler) UpdateSystemConfig(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "UpdateSystemConfig", int(resp.GetCode()))
+	defer handlePanic(ctx, "UpdateSystemConfig", resp)
+
+	updateReq := message.UpdateSystemConfigReq{}
+
+	if handleRequest(ctx, req, resp, &updateReq, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionUpdate)}}) {
+		result, err := c.systemConfigManager.UpdateSystemConfig(framework.NewBackgroundMicroCtx(ctx, false), updateReq)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (c *ClusterServiceHandler) GetSystemInfo(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "GetSystemInfo", int(resp.GetCode()))
+	defer handlePanic(ctx, "GetSystemInfo", resp)
+
+	getReq := message.GetSystemInfoReq{}
+
+	if handleRequest(ctx, req, resp, &getReq, []structs.RbacPermission{}) {
+		result, err := c.systemManager.GetSystemInfo(framework.NewBackgroundMicroCtx(ctx, false), getReq)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
@@ -1458,6 +1494,18 @@ func (handler *ClusterServiceHandler) UpdateTenantProfile(ctx context.Context, r
 	return nil
 }
 
+func (handler *ClusterServiceHandler) CheckPlatform(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "CheckPlatform", int(response.GetCode()))
+
+	req := message.CheckPlatformReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionCreate)}}) {
+		resp, err := handler.checkManager.Check(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+	return nil
+}
+
 func (handler *ClusterServiceHandler) CreateProductUpgradePath(context.Context, *clusterservices.RpcRequest, *clusterservices.RpcResponse) error {
 	panic("implement me")
 }
@@ -1485,6 +1533,18 @@ func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Contex
 	return nil
 }
 
+func (handler *ClusterServiceHandler) QueryCheckReports(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "QueryCheckReports", int(response.GetCode()))
+
+	req := message.QueryCheckReportsReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionRead)}}) {
+		resp, err := handler.checkManager.QueryCheckReports(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+	return nil
+}
+
 func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "QueryUpgradeVersionDiffInfo", int(resp.GetCode()))
@@ -1497,6 +1557,18 @@ func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Co
 		handleResponse(ctx, resp, err, result, nil)
 	}
 
+	return nil
+}
+
+func (handler *ClusterServiceHandler) GetCheckReport(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "GetCheckReport", int(response.GetCode()))
+
+	req := message.GetCheckReportReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionRead)}}) {
+		resp, err := handler.checkManager.GetCheckReport(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
 	return nil
 }
 

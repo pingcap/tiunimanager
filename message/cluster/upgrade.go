@@ -33,7 +33,7 @@ type QueryUpgradePathReq struct {
 
 // QueryUpgradePathRsp Reply message for querying available upgrade path for given cluster ID
 type QueryUpgradePathRsp struct {
-	Paths []*structs.ProductUpgradePathItem
+	Paths []*structs.ProductUpgradePathItem `json:"paths"`
 }
 
 // QueryUpgradeVersionDiffInfoReq Reply message for querying configuration difference between current cluster and target version

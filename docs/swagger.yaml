@@ -312,6 +312,100 @@ definitions:
         example: http://127.0.0.1:9093
         type: string
     type: object
+  cluster.InspectParameterInfo:
+    properties:
+      category:
+        example: log
+        type: string
+      description:
+        example: binlog cache size
+        type: string
+      hasReboot:
+        enum:
+        - 0
+        - 1
+        example: 0
+        type: integer
+      inspectValue:
+        type: object
+      name:
+        example: binlog_cache
+        type: string
+      note:
+        example: binlog cache size
+        type: string
+      paramId:
+        example: "1"
+        type: string
+      range:
+        example:
+        - "1"
+        - ' 1000'
+        items:
+          type: string
+        type: array
+      rangeType:
+        enum:
+        - 0
+        - 1
+        - 2
+        example: 1
+        type: integer
+      readOnly:
+        enum:
+        - 0
+        - 1
+        example: 0
+        type: integer
+      realValue:
+        $ref: '#/definitions/structs.ParameterRealValue'
+      systemVariable:
+        example: log.log_level
+        type: string
+      type:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        example: 0
+        type: integer
+      unit:
+        example: MB
+        type: string
+      unitOptions:
+        example:
+        - KB
+        - MB
+        - GB
+        items:
+          type: string
+        type: array
+    type: object
+  cluster.InspectParameters:
+    properties:
+      instanceId:
+        type: string
+      instanceType:
+        type: string
+      parameterInfos:
+        items:
+          $ref: '#/definitions/cluster.InspectParameterInfo'
+        type: array
+    type: object
+  cluster.InspectParametersReq:
+    properties:
+      instanceId:
+        type: string
+    type: object
+  cluster.InspectParametersResp:
+    properties:
+      params:
+        items:
+          $ref: '#/definitions/cluster.InspectParameters'
+        type: array
+    type: object
   cluster.KafkaDownstream:
     properties:
       clientId:
@@ -945,6 +1039,14 @@ definitions:
       result:
         type: boolean
     type: object
+  message.CheckPlatformRsp:
+    properties:
+      checkID:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
   message.CopyParameterGroupReq:
     properties:
       name:
@@ -1277,6 +1379,11 @@ definitions:
         example: 1636698675
         type: integer
     type: object
+  message.GetCheckReportRsp:
+    properties:
+      reportInfo:
+        $ref: '#/definitions/structs.CheckReportInfo'
+    type: object
   message.GetHierarchyResp:
     properties:
       root:
@@ -1289,6 +1396,22 @@ definitions:
           $ref: '#/definitions/structs.Stocks'
         description: map[zone] -> stocks
         type: object
+    type: object
+  message.GetSystemConfigResp:
+    properties:
+      configKey:
+        type: string
+      configValue:
+        type: string
+    type: object
+  message.GetSystemInfoResp:
+    properties:
+      currentVersion:
+        $ref: '#/definitions/structs.SystemVersionInfo'
+      info:
+        $ref: '#/definitions/structs.SystemInfo'
+      lastVersion:
+        $ref: '#/definitions/structs.SystemVersionInfo'
     type: object
   message.GetTenantReq:
     properties:
@@ -1328,8 +1451,6 @@ definitions:
     type: object
   message.LoginResp:
     properties:
-      passwordExpired:
-        type: boolean
       tenantId:
         type: string
       token:
@@ -1419,8 +1540,16 @@ definitions:
         - 1
         - 2
         - 3
+        - 4
         example: 0
         type: integer
+    type: object
+  message.QueryCheckReportsRsp:
+    properties:
+      reportMetas:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckReportMeta'
+        type: object
     type: object
   message.QueryDataImportExportRecordsResp:
     properties:
@@ -1653,6 +1782,15 @@ definitions:
         example: "1"
         type: string
     type: object
+  message.UpdateSystemConfigReq:
+    properties:
+      configKey:
+        type: string
+      configValue:
+        type: string
+    type: object
+  message.UpdateSystemConfigResp:
+    type: object
   message.UpdateTenantOnBoardingStatusReq:
     properties:
       id:
@@ -1747,6 +1885,117 @@ definitions:
       period:
         type: string
     type: object
+  structs.CheckAny:
+    properties:
+      expectedValue:
+        type: object
+      realValue:
+        type: object
+      valid:
+        type: boolean
+    type: object
+  structs.CheckError:
+    properties:
+      message:
+        type: string
+      type:
+        type: string
+    type: object
+  structs.CheckInt32:
+    properties:
+      expectedValue:
+        type: integer
+      realValue:
+        type: integer
+      valid:
+        type: boolean
+    type: object
+  structs.CheckRangeInt32:
+    properties:
+      expectedRange:
+        description: Left closed right closed interval
+        items:
+          type: integer
+        type: array
+      realValue:
+        type: integer
+      valid:
+        type: boolean
+    type: object
+  structs.CheckReportInfo:
+    properties:
+      hosts:
+        $ref: '#/definitions/structs.HostsCheck'
+      tenants:
+        additionalProperties:
+          $ref: '#/definitions/structs.TenantCheck'
+        type: object
+    type: object
+  structs.CheckReportMeta:
+    properties:
+      checkID:
+        type: string
+      createAt:
+        type: string
+      creator:
+        type: string
+    type: object
+  structs.CheckStatus:
+    properties:
+      health:
+        type: boolean
+      message:
+        type: string
+    type: object
+  structs.CheckString:
+    properties:
+      expectedValue:
+        type: string
+      realValue:
+        type: string
+      valid:
+        type: boolean
+    type: object
+  structs.CheckSwitch:
+    properties:
+      enable:
+        type: boolean
+    type: object
+  structs.ClusterCheck:
+    properties:
+      accountStatus:
+        $ref: '#/definitions/structs.CheckStatus'
+      backupRecordValid:
+        additionalProperties:
+          type: boolean
+        type: object
+      backupStrategy:
+        $ref: '#/definitions/structs.CheckString'
+      clusterID:
+        type: string
+      copies:
+        $ref: '#/definitions/structs.CheckInt32'
+      cpu:
+        type: integer
+      healthStatus:
+        $ref: '#/definitions/structs.CheckStatus'
+      instances:
+        items:
+          $ref: '#/definitions/structs.InstanceCheck'
+        type: array
+      maintenanceStatus:
+        type: string
+      memory:
+        type: integer
+      regionStatus:
+        $ref: '#/definitions/structs.CheckStatus'
+      runningStatus:
+        type: string
+      storage:
+        type: integer
+      topology:
+        $ref: '#/definitions/structs.CheckString'
+    type: object
   structs.ClusterInfo:
     properties:
       alertUrl:
@@ -1799,6 +2048,8 @@ definitions:
         $ref: '#/definitions/structs.Usage'
       region:
         type: string
+      relations:
+        $ref: '#/definitions/structs.ClusterRelations'
       role:
         type: string
       status:
@@ -1995,6 +2246,7 @@ definitions:
         - 1
         - 2
         - 3
+        - 4
         example: 0
         type: integer
       updateTime:
@@ -2011,6 +2263,17 @@ definitions:
     required:
     - paramId
     - realValue
+    type: object
+  structs.ClusterRelations:
+    properties:
+      masters:
+        items:
+          type: string
+        type: array
+      slaves:
+        items:
+          type: string
+        type: array
     type: object
   structs.ClusterResourceInfo:
     properties:
@@ -2162,6 +2425,29 @@ definitions:
           $ref: '#/definitions/structs.HierarchyTreeNode'
         type: array
     type: object
+  structs.HostCheck:
+    properties:
+      cpu:
+        $ref: '#/definitions/structs.CheckInt32'
+      disk:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckString'
+        type: object
+      errors:
+        items:
+          $ref: '#/definitions/structs.CheckError'
+        type: array
+      firewall:
+        $ref: '#/definitions/structs.CheckSwitch'
+      memory:
+        $ref: '#/definitions/structs.CheckInt32'
+      selinux:
+        $ref: '#/definitions/structs.CheckSwitch'
+      storageRatio:
+        type: number
+      swap:
+        $ref: '#/definitions/structs.CheckSwitch'
+    type: object
   structs.HostInfo:
     properties:
       arch:
@@ -2188,6 +2474,12 @@ definitions:
         type: string
       hostName:
         type: string
+      instances:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        type: object
       ip:
         type: string
       kernel:
@@ -2241,6 +2533,29 @@ definitions:
       vendor:
         type: string
     type: object
+  structs.HostsCheck:
+    properties:
+      delay:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckRangeInt32'
+        type: object
+      hosts:
+        additionalProperties:
+          $ref: '#/definitions/structs.HostCheck'
+        type: object
+      ntp:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckRangeInt32'
+        type: object
+      ping:
+        additionalProperties:
+          type: boolean
+        type: object
+      timeZoneConsistency:
+        additionalProperties:
+          type: boolean
+        type: object
+    type: object
   structs.Index:
     properties:
       description:
@@ -2250,6 +2565,19 @@ definitions:
       unit:
         type: string
       value:
+        type: object
+    type: object
+  structs.InstanceCheck:
+    properties:
+      instanceID:
+        type: string
+      parameters:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckAny'
+        type: object
+      versions:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckString'
         type: object
     type: object
   structs.ParameterGroupParameterInfo:
@@ -2339,6 +2667,7 @@ definitions:
         - 1
         - 2
         - 3
+        - 4
         example: 0
         type: integer
       updateTime:
@@ -2462,7 +2791,7 @@ definitions:
         - in-place
         - migration
         type: string
-      upgradeWay:
+      upgradeWays:
         example:
         - offline
         - online
@@ -2636,6 +2965,43 @@ definitions:
       zone:
         type: string
     type: object
+  structs.SystemInfo:
+    properties:
+      currentVersionID:
+        type: string
+      lastVersionID:
+        type: string
+      state:
+        type: string
+      systemLogo:
+        type: string
+      systemName:
+        type: string
+    type: object
+  structs.SystemVersionInfo:
+    properties:
+      desc:
+        type: string
+      releaseNote:
+        type: string
+      versionID:
+        type: string
+    type: object
+  structs.TenantCheck:
+    properties:
+      clusterCount:
+        $ref: '#/definitions/structs.CheckRangeInt32'
+      clusters:
+        items:
+          $ref: '#/definitions/structs.ClusterCheck'
+        type: array
+      cpuRatio:
+        type: number
+      memoryRatio:
+        type: number
+      storageRatio:
+        type: number
+    type: object
   structs.TenantInfo:
     properties:
       createAt:
@@ -2783,16 +3149,16 @@ definitions:
         description: The value of the Name is similar to Hangzhou(H)
         type: string
     type: object
-host: localhost:4100
+host: localhost:4116
 info:
   contact:
     email: zhangpeijin@pingcap.com
     name: zhangpeijin
-  description: TiEM UI API
+  description: EM UI API
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-  title: TiEM UI API
+  title: EM UI API
   version: "1.0"
 paths:
   /backups/:
@@ -3792,6 +4158,52 @@ paths:
       summary: submit parameters
       tags:
       - cluster parameters
+  /clusters/{clusterId}/params/inspect:
+    post:
+      consumes:
+      - application/json
+      description: inspect parameters
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: inspect params request
+        in: body
+        name: inspectReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.InspectParametersReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.InspectParametersResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: inspect parameters
+      tags:
+      - cluster parameters
   /clusters/{clusterId}/preview-scale-out:
     post:
       consumes:
@@ -4486,6 +4898,85 @@ paths:
       summary: delete data transport record
       tags:
       - cluster data transport
+  /config/:
+    get:
+      consumes:
+      - application/json
+      description: get system config
+      parameters:
+      - in: query
+        name: configKey
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.GetSystemConfigResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: get system config
+      tags:
+      - get system config
+  /config/update:
+    post:
+      consumes:
+      - application/json
+      description: UpdateSystemConfig
+      parameters:
+      - description: system config for update
+        in: body
+        name: systemConfig
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateSystemConfigReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateSystemConfigResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: update system config
+      tags:
+      - UpdateSystemConfig
   /downstream/:
     delete:
       consumes:
@@ -4873,6 +5364,125 @@ paths:
       summary: copy a parameter group
       tags:
       - parameter group
+  /platform/check:
+    post:
+      consumes:
+      - application/json
+      description: platform check
+      parameters:
+      - in: query
+        name: displayMode
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.CheckPlatformRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: platform check
+      tags:
+      - platform
+  /platform/report/:checkId:
+    get:
+      consumes:
+      - application/json
+      description: get check report based on checkId
+      parameters:
+      - in: query
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.GetCheckReportRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: get check report based on checkId
+      tags:
+      - platform
+  /platform/reports:
+    get:
+      consumes:
+      - application/json
+      description: get query check reports
+      parameters:
+      - description: Current page location
+        in: query
+        name: page
+        type: integer
+      - description: Number of this request
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryCheckReportsRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query check reports
+      tags:
+      - platform
   /products/:
     delete:
       consumes:
@@ -5598,7 +6208,7 @@ paths:
               type: object
       security:
       - ApiKeyAuth: []
-      summary: Show all hosts list in TiEM
+      summary: Show all hosts list in EM
       tags:
       - resource
     post:
@@ -5640,7 +6250,7 @@ paths:
               type: object
       security:
       - ApiKeyAuth: []
-      summary: Import a batch of hosts to TiEM
+      summary: Import a batch of hosts to EM
       tags:
       - resource
   /resources/hosts-template:
@@ -5831,6 +6441,34 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: created  specs
+      tags:
+      - platform
+  /system/info:
+    get:
+      consumes:
+      - application/json
+      description: get system info
+      parameters:
+      - in: query
+        name: withVersionDetail
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.GetSystemInfoResp'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: get system info
       tags:
       - platform
   /tenant:

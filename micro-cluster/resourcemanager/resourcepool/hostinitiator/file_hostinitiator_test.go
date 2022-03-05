@@ -67,12 +67,22 @@ func genHostInfo(hostName string, purpose string) *structs.HostInfo {
 	return &host
 }
 
-func Test_CopySSHID(t *testing.T) {
-	fileInitiator := NewFileHostInitiator()
+func Test_AuthHost(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
+	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
 
-	framework.InitBaseFrameworkForUt(framework.ClusterService)
-	err := fileInitiator.CopySSHID(context.TODO(), &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"})
-	assert.NotNil(t, err)
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSSHClient(mockClient)
+
+	err := fileInitiator.AuthHost(context.TODO(), "tiem", "tiem", &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"})
+	// depend on whether user home dir has public key
+	if err != nil {
+		emErr, ok := err.(errors.EMError)
+		assert.True(t, ok)
+		assert.Equal(t, errors.TIEM_RESOURCE_INIT_HOST_AUTH_ERROR, emErr.GetCode())
+	}
 }
 
 func Test_Verify_ignoreWarings(t *testing.T) {
@@ -188,7 +198,7 @@ func Test_SetOffSwap(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
-	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
+	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
@@ -201,7 +211,7 @@ func Test_installNumaCtl(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
-	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
+	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
@@ -214,8 +224,8 @@ func Test_Remount(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
-	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
-		func(host string, port int, sshType sshclient.SSHType, user, passwd string, timeoutS int, commands []string) (string, error) {
+	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+		func(host string, port int, sshType sshclient.SSHType, user, passwd string, sudo bool, timeoutS int, commands []string) (string, error) {
 			if strings.HasPrefix(commands[0], "sed -n") {
 				return "/dev/mapper/centos-root /data    xfs     defaults        0 0", nil
 			} else if strings.HasPrefix(commands[0], "sed -i") {
@@ -236,9 +246,9 @@ func Test_Remount(t *testing.T) {
 
 func Test_GenerateTopologyConfig(t *testing.T) {
 	template_struct := templateScaleOut{}
-	template_struct.HostIPs = append(template_struct.HostIPs, "192.168.177.177")
-	template_struct.HostIPs = append(template_struct.HostIPs, "192.168.177.178")
-	template_struct.HostIPs = append(template_struct.HostIPs, "192.168.177.179")
+	template_struct.HostAddrs = append(template_struct.HostAddrs, HostAddr{"192.168.177.177", 10086})
+	template_struct.HostAddrs = append(template_struct.HostAddrs, HostAddr{"192.168.177.178", 10087})
+	template_struct.HostAddrs = append(template_struct.HostAddrs, HostAddr{"192.168.177.179", 10088})
 
 	str, err := template_struct.generateTopologyConfig(context.TODO())
 	assert.Nil(t, err)
@@ -249,7 +259,7 @@ func Test_InstallSoftware(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
-	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
+	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
@@ -276,8 +286,8 @@ func Test_PreCheckHostInstallFilebeat(t *testing.T) {
 			"os_arch": "linux/x86_64",
 			"status": "Up",
 			"since": "-",
-			"data_dir": "/tiem-data/alertmanager-4112",
-			"deploy_dir": "/tiem-deploy/alertmanager-4112",
+			"data_dir": "/em-data/alertmanager-4112",
+			"deploy_dir": "/em-deploy/alertmanager-4112",
 			"ComponentName": "alertmanager",
 			"Port": 4112
 		  },
@@ -289,8 +299,8 @@ func Test_PreCheckHostInstallFilebeat(t *testing.T) {
 			"os_arch": "linux/x86_64",
 			"status": "Up",
 			"since": "-",
-			"data_dir": "/tiem-data/filebeat-0",
-			"deploy_dir": "/tiem-deploy/filebeat-0",
+			"data_dir": "/em-data/filebeat-0",
+			"deploy_dir": "/em-deploy/filebeat-0",
 			"ComponentName": "filebeat",
 			"Port": 0
 		  }
@@ -365,7 +375,7 @@ func Test_BuildHostCheckResulsFromJson(t *testing.T) {
 		{"node":"172.16.6.252","name":"selinux","status":"Pass","message":"SELinux is disabled"},
 		{"node":"172.16.6.252","name":"thp","status":"Fail","message":"THP is enabled, please disable it for best performance"},
 		{"node":"172.16.6.252","name":"command","status":"Fail","message":"numactl not usable, bash: numactl: command not found"},
-		{"node":"172.16.5.168","name":"exist","status":"Fail","message":"/home/tiem already exists"},
+		{"node":"172.16.5.168","name":"exist","status":"Fail","message":"/home/tidb already exists"},
 		{"node":"172.16.5.168","name":"exist","status":"Fail","message":"/root already exists"},
 		{"node":"172.16.5.168","name":"os-version","status":"Pass","message":"OS is CentOS Linux 7 (Core) 7.6.1810"},
 		{"node":"172.16.5.168","name":"cpu-cores","status":"Pass","message":"number of CPU cores / threads: 8"},
@@ -390,13 +400,16 @@ func Test_BuildHostCheckResulsFromJson(t *testing.T) {
 }
 
 func Test_BuildCheckHostTemplateItems(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
 	host := genHostInfo("Test_Host1", "Compute,Storage,Schedule")
 	templateInfo := templateCheckHost{}
+	host.SSHPort = 10086
 	(&templateInfo).buildCheckHostTemplateItems(host)
 
 	assert.Equal(t, 2, len(templateInfo.TemplateItemsForCompute))
 	assert.Equal(t, 2, len(templateInfo.TemplateItemsForStorage))
 	assert.Equal(t, 2, len(templateInfo.TemplateItemsForSchedule))
+	assert.Equal(t, 10086, templateInfo.GlobalSSHPort)
 
 	t.Log(templateInfo)
 
@@ -463,7 +476,7 @@ func Test_isVirtualMachine_True(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
-	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("QEMU", nil).AnyTimes()
+	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("QEMU", nil).AnyTimes()
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
@@ -476,7 +489,7 @@ func Test_isVirtualMachine_False(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
-	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("Cisco Systems Inc", nil).AnyTimes()
+	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("Cisco Systems Inc", nil).AnyTimes()
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
@@ -489,7 +502,7 @@ func Test_passCpuGovernorWarn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
-	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("QEMU", nil).AnyTimes()
+	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("QEMU", nil).AnyTimes()
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)

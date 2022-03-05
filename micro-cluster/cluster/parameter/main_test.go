@@ -53,7 +53,7 @@ func TestMain(m *testing.M) {
 			testFilePath = d.GetDataDir()
 			os.MkdirAll(testFilePath, 0755)
 			models.MockDB()
-			return models.Open(d, false)
+			return models.Open(d)
 		},
 	)
 	code := m.Run()
@@ -61,6 +61,71 @@ func TestMain(m *testing.M) {
 
 	os.Exit(code)
 }
+
+var apiContent = []byte(`
+{
+	"oom-action": "cancel",
+	"security": {
+		"enable-sem": true
+	},
+	"log": {
+		"file": {
+			"max-size": 102400
+		}
+	},
+	"coprocessor": {
+		"region-max-size": "144MiB",
+		"region-max-keys": "1.44e+06"
+	},
+	"rocksdb": {
+		"defaultcf": {
+			"compression-per-level": ["no","no","lz4","lz4","lz4","zstd","zstd"]
+		}
+	},
+	"raftstore": {
+		"peer-stale-state-check-interval": "5m"
+	},
+	"rocksdb": {
+		"wal-size-limit": "0KiB"
+	}
+}
+`)
+
+var tomlConfigContent = []byte(`
+# WARNING: This file is auto-generated. Do not edit! All your modification will be overwritten!
+# You can use 'tiup cluster edit-config' and 'tiup cluster reload' to update the configuration
+# All configuration items you want to change can be added to:
+# server_configs:
+#   pd:
+#     aa.b1.c3: value
+#     aa.b2.c4: value
+auto-compaction-mod = "periodic"
+auto-compaction-retention = "1h"
+lease = 3
+quota-backend-bytes = 8589934592
+
+[dashboard]
+public-path-prefix = "/dashboard"
+
+[label-property]
+key = ["test"]
+value = ["test"]
+
+[log]
+[log.file]
+max-backups = 7
+max-days = 28
+max-size = 300
+
+[metric]
+interval = "15s"
+
+[replication]
+location-labels = ["region", "zone", "rack", "host"]
+
+[security]
+redact-info-log = false
+`)
 
 func mockClusterMeta() *meta.ClusterMeta {
 	return &meta.ClusterMeta{
@@ -126,9 +191,110 @@ func mockCluster() *management.Cluster {
 func mockClusterInstances() []*management.ClusterInstance {
 	return []*management.ClusterInstance{
 		{
-			Entity:       common.Entity{ID: "123", TenantId: "1", Status: string(constants.ClusterInstanceRunning)},
-			Type:         "0",
-			Version:      "5.0",
+			Entity:       common.Entity{ID: "1", TenantId: "1", Status: string(constants.ClusterInstanceRunning)},
+			Type:         "TiDB",
+			Version:      "v5.0.0",
+			ClusterID:    "123",
+			Role:         "admin",
+			DiskType:     "ssd",
+			DiskCapacity: 16,
+			CpuCores:     32,
+			Memory:       8,
+			HostID:       "127.0.0.1",
+			Zone:         "1",
+			Rack:         "1",
+			HostIP:       []string{"127.0.0.1"},
+			Ports:        []int32{10000, 10001},
+			DiskID:       "1",
+			DiskPath:     "/tmp",
+			HostInfo:     "host",
+			PortInfo:     "port",
+		},
+	}
+}
+
+func mockClusterAllInstances() []*management.ClusterInstance {
+	return []*management.ClusterInstance{
+		{
+			Entity:       common.Entity{ID: "1", TenantId: "1", Status: string(constants.ClusterInstanceRunning)},
+			Type:         "TiDB",
+			Version:      "v5.0.0",
+			ClusterID:    "123",
+			Role:         "admin",
+			DiskType:     "ssd",
+			DiskCapacity: 16,
+			CpuCores:     32,
+			Memory:       8,
+			HostID:       "127.0.0.1",
+			Zone:         "1",
+			Rack:         "1",
+			HostIP:       []string{"127.0.0.1"},
+			Ports:        []int32{10000, 10001},
+			DiskID:       "1",
+			DiskPath:     "/tmp",
+			HostInfo:     "host",
+			PortInfo:     "port",
+		}, {
+			Entity:       common.Entity{ID: "2", TenantId: "1", Status: string(constants.ClusterInstanceRunning)},
+			Type:         "TiKV",
+			Version:      "v5.0.0",
+			ClusterID:    "123",
+			Role:         "admin",
+			DiskType:     "ssd",
+			DiskCapacity: 16,
+			CpuCores:     32,
+			Memory:       8,
+			HostID:       "127.0.0.1",
+			Zone:         "1",
+			Rack:         "1",
+			HostIP:       []string{"127.0.0.1"},
+			Ports:        []int32{10000, 10001},
+			DiskID:       "1",
+			DiskPath:     "/tmp",
+			HostInfo:     "host",
+			PortInfo:     "port",
+		}, {
+			Entity:       common.Entity{ID: "3", TenantId: "1", Status: string(constants.ClusterInstanceRunning)},
+			Type:         "PD",
+			Version:      "v5.0.0",
+			ClusterID:    "123",
+			Role:         "admin",
+			DiskType:     "ssd",
+			DiskCapacity: 16,
+			CpuCores:     32,
+			Memory:       8,
+			HostID:       "127.0.0.1",
+			Zone:         "1",
+			Rack:         "1",
+			HostIP:       []string{"127.0.0.1"},
+			Ports:        []int32{10000, 10001},
+			DiskID:       "1",
+			DiskPath:     "/tmp",
+			HostInfo:     "host",
+			PortInfo:     "port",
+		}, {
+			Entity:       common.Entity{ID: "4", TenantId: "1", Status: string(constants.ClusterInstanceRunning)},
+			Type:         "CDC",
+			Version:      "v5.0.0",
+			ClusterID:    "123",
+			Role:         "admin",
+			DiskType:     "ssd",
+			DiskCapacity: 16,
+			CpuCores:     32,
+			Memory:       8,
+			HostID:       "127.0.0.1",
+			Zone:         "1",
+			Rack:         "1",
+			HostIP:       []string{"127.0.0.1"},
+			Ports:        []int32{10000, 10001},
+			DiskID:       "1",
+			DiskPath:     "/tmp",
+			HostInfo:     "host",
+			PortInfo:     "port",
+		}, {
+			Entity:       common.Entity{ID: "5", TenantId: "1", Status: string(constants.ClusterInstanceRunning)},
+			Type:         "TiFlash",
+			Version:      "v5.0.0",
 			ClusterID:    "123",
 			Role:         "admin",
 			DiskType:     "ssd",
@@ -200,7 +366,7 @@ func mockModifyParameter() *ModifyParameter {
 				Category:       "log",
 				Name:           "test_param_2",
 				InstanceType:   "TiKV",
-				UpdateSource:   0,
+				UpdateSource:   2,
 				HasApply:       1,
 				SystemVariable: "",
 				Type:           0,
@@ -214,7 +380,7 @@ func mockModifyParameter() *ModifyParameter {
 				InstanceType:   "PD",
 				UpdateSource:   3,
 				HasApply:       1,
-				SystemVariable: "",
+				SystemVariable: "test_param_3",
 				Type:           1,
 				Unit:           "kB",
 				UnitOptions:    []string{"KB", "MB"},
@@ -236,7 +402,7 @@ func mockModifyParameter() *ModifyParameter {
 				ParamId:        "5",
 				Name:           "test_param_5",
 				InstanceType:   "TiDB",
-				UpdateSource:   1,
+				UpdateSource:   4,
 				HasApply:       1,
 				SystemVariable: "",
 				Type:           0,
@@ -299,7 +465,7 @@ func mockModifyParameter() *ModifyParameter {
 				Name:           "test_param_11",
 				InstanceType:   "drainer",
 				UpdateSource:   0,
-				HasApply:       1,
+				HasApply:       0,
 				SystemVariable: "",
 				Type:           4,
 				Range:          []string{"10"},
@@ -309,7 +475,7 @@ func mockModifyParameter() *ModifyParameter {
 			{
 				ParamId:        "12",
 				Name:           "test_param_12",
-				InstanceType:   "CDC",
+				InstanceType:   "TiFlash",
 				UpdateSource:   0,
 				HasApply:       1,
 				SystemVariable: "",

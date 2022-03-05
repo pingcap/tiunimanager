@@ -94,6 +94,15 @@ func (g *ClusterReadWrite) Get(ctx context.Context, clusterID string) (*Cluster,
 
 }
 
+func (g *ClusterReadWrite) GetInstance(ctx context.Context, ID string) (*ClusterInstance, error) {
+	instance := &ClusterInstance{}
+	err := g.DB(ctx).First(instance, "id = ?", ID).Error
+	if err != nil {
+		return nil, errors.WrapError(errors.TIEM_INSTANCE_NOT_FOUND, "", err)
+	}
+	return instance, nil
+}
+
 func (g *ClusterReadWrite) GetMeta(ctx context.Context, clusterID string) (cluster *Cluster, instances []*ClusterInstance, users []*DBUser, err error) {
 	cluster, err = g.Get(ctx, clusterID)
 
@@ -127,6 +136,60 @@ func (g *ClusterReadWrite) GetRelations(ctx context.Context, clusterID string) (
 	}
 
 	return relations, err
+}
+
+func (g *ClusterReadWrite) GetMasters(ctx context.Context, clusterID string)([]*ClusterRelation, error) {
+	if "" == clusterID {
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster id is invalid")
+	}
+	relations := make([]*ClusterRelation, 0)
+	err := g.DB(ctx).Model(&ClusterRelation{}).Where("object_cluster_id  = ? ", clusterID).Find(&relations).Error
+	return relations, err
+}
+
+func (g *ClusterReadWrite) GetSlaves(ctx context.Context, clusterID string) ([]*ClusterRelation, error) {
+	if "" == clusterID {
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster id is invalid")
+	}
+	relations := make([]*ClusterRelation, 0)
+	err := g.DB(ctx).Model(&ClusterRelation{}).Where("subject_cluster_id  = ? ", clusterID).Find(&relations).Error
+	return relations, err
+}
+
+func (g *ClusterReadWrite) QueryClusters(ctx context.Context, tenantID string) ([]*Result, error) {
+	if "" == tenantID {
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "tenant id is invalid")
+	}
+
+	clusters := make([]*Cluster, 0)
+	err := g.DB(ctx).Table("clusters").Where("tenant_id = ?",
+		tenantID).Where("deleted_at is null").Find(&clusters).Error
+	if err != nil {
+		return nil, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, "", err)
+	}
+
+	results := make([]*Result, 0)
+	for _, c := range clusters {
+		instances := make([]*ClusterInstance, 0)
+
+		err = g.DB(ctx).Model(&ClusterInstance{}).Where("cluster_id = ?", c.ID).Find(&instances).Error
+
+		if err != nil {
+			return nil, errors.WrapError(errors.TIEM_INSTANCE_NOT_FOUND, "", err)
+		}
+
+		users, err := g.GetDBUser(ctx, c.ID)
+		if err != nil {
+			return nil, dbCommon.WrapDBError(err)
+		}
+		results = append(results, &Result{
+			Cluster:   c,
+			Instances: instances,
+			DBUsers:   users,
+		})
+	}
+
+	return results, nil
 }
 
 // todo
@@ -231,6 +294,19 @@ func (g *ClusterReadWrite) QueryInstancesByHost(ctx context.Context, hostId stri
 	err := query.Find(&instances).Error
 
 	return instances, dbCommon.WrapDBError(err)
+}
+
+func (g *ClusterReadWrite) QueryHostInstances(ctx context.Context, hostIds []string) ([]HostInstanceItem, error) {
+	db := g.DB(ctx).Model(&ClusterInstance{}).Select("host_id, cluster_id, type as component")
+	if hostIds != nil {
+		db.Where("host_id in ?", hostIds)
+	}
+	db.Group("host_id").Group("cluster_id").Group("type")
+
+	items := make([]HostInstanceItem, 0)
+	err := db.Scan(&items).Error
+
+	return items, dbCommon.WrapDBError(err)
 }
 
 func (g *ClusterReadWrite) UpdateInstance(ctx context.Context, instances ...*ClusterInstance) error {

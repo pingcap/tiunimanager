@@ -54,20 +54,23 @@ func authHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin authHosts")
 
+	deployUser := framework.GetCurrentDeployUser()
+	userGroup := framework.GetCurrentDeployGroup()
+
 	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("auth host failed for get flow context, %v", err)
 		return err
 	}
 	for _, host := range hosts {
-		err = resourcePool.hostInitiator.CopySSHID(ctx, &host)
+		err = resourcePool.hostInitiator.AuthHost(ctx, deployUser, userGroup, &host)
 		if err != nil {
 			log.Errorf("auth host %s %s@%s failed, %v", host.HostName, host.UserName, host.IP, err)
 			return err
 		}
-		log.Infof("auth host %v succeed", host)
+		log.Infof("auth host %s %s succeed", host.HostName, host.IP)
 	}
-	node.Record(fmt.Sprintf("auth hosts %v succeed", hosts))
+	node.Record(fmt.Sprintf("auth host %s %s with %s:%s succeed", hosts[0].HostName, hosts[0].IP, deployUser, userGroup))
 	return nil
 }
 
@@ -88,9 +91,9 @@ func prepare(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err e
 			log.Errorf("prepare host %s %s failed, %v", host.HostName, host.IP, err)
 			return err
 		}
-		log.Infof("prepare host %v succeed", host)
+		log.Infof("prepare host %s %s succeed", host.HostName, host.IP)
 	}
-	node.Record(fmt.Sprintf("prepare hosts %v succeed", hosts))
+	node.Record(fmt.Sprintf("prepare host %s %s succeed", hosts[0].HostName, hosts[0].IP))
 	return nil
 }
 
@@ -116,9 +119,9 @@ func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 			log.Errorf("verify host %s %s failed, %v", host.HostName, host.IP, err)
 			return err
 		}
-		log.Infof("verify host %v succeed", host)
+		log.Infof("verify host %s %s succeed", host.HostName, host.IP)
 	}
-	node.Record(fmt.Sprintf("verify hosts %v succeed", hosts))
+	node.Record(fmt.Sprintf("verify host %s %s succeed", hosts[0].HostName, hosts[0].IP))
 	return nil
 }
 
@@ -136,8 +139,8 @@ func installSoftware(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext
 		log.Errorf("install software failed for %v, %v", hosts, err)
 		return err
 	}
-	log.Infof("install software succeed for %v", hosts)
-	node.Record(fmt.Sprintf("install software for hosts %v succeed", hosts))
+	log.Infof("install software succeed for host %s %s", hosts[0].HostName, hosts[0].IP)
+	node.Record(fmt.Sprintf("install software for host %s %s succeed", hosts[0].HostName, hosts[0].IP))
 	return nil
 }
 

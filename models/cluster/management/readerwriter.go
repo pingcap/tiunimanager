@@ -22,14 +22,42 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 )
 
+type HostInstanceItem struct {
+	HostID    string
+	ClusterID string
+	Component string
+}
+
 type ReaderWriter interface {
 	Create(ctx context.Context, cluster *Cluster) (*Cluster, error)
 	Delete(ctx context.Context, clusterID string) (err error)
 	Get(ctx context.Context, clusterID string) (*Cluster, error)
 	GetMeta(ctx context.Context, clusterID string) (*Cluster, []*ClusterInstance, []*DBUser, error)
 	GetRelations(ctx context.Context, clusterID string) ([]*ClusterRelation, error)
+	//
+	// GetMasters
+	// @Description: get masters for specified cluster
+	// @param ctx
+	// @param cluster id
+	// @return []*ClusterRelation
+	// @return error
+	//
+	GetMasters(ctx context.Context, clusterID string) ([]*ClusterRelation, error)
+	//
+	// GetSlaves
+	// @Description: get slaves for specified cluster
+	// @param ctx
+	// @param cluster id
+	// @return []*ClusterRelation
+	// @return error
+	//
+	GetSlaves(ctx context.Context, clusterID string) ([]*ClusterRelation, error)
 
 	QueryMetas(ctx context.Context, filters Filters, pageReq structs.PageRequest) ([]*Result, structs.Page, error)
+
+	QueryClusters(ctx context.Context, tenantID string) ([]*Result, error)
+
+	GetInstance(ctx context.Context, ID string) (*ClusterInstance, error)
 
 	DeleteInstance(ctx context.Context, ID string) error
 
@@ -62,6 +90,16 @@ type ReaderWriter interface {
 	// @return error
 	//
 	QueryInstancesByHost(ctx context.Context, hostId string, typeFilter []string, statusFilter []string) ([]*ClusterInstance, error)
+
+	//
+	// QueryHostInstances
+	// @Description: query the all instances on hosts
+	// @param ctx
+	// @param hostIds
+	// @return []HostInstanceItem
+	// @return error
+	//
+	QueryHostInstances(ctx context.Context, hostIds []string) ([]HostInstanceItem, error)
 
 	//
 	// UpdateClusterInfo

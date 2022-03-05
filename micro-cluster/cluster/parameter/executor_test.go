@@ -29,6 +29,8 @@ import (
 	"math"
 	"testing"
 
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 
 	"github.com/pingcap-inc/tiem/deployment"
@@ -174,49 +176,30 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 		Context:  context.TODO(),
 		FlowData: map[string]interface{}{},
 	}
-
-	v, err := convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
-		ParamId:   "1",
-		Name:      "param1",
-		Type:      0,
-		RealValue: structs.ParameterRealValue{ClusterValue: "1"},
-	})
+	v, err := convertRealParameterType(applyCtx, 0, "1")
 	assert.NoError(t, err)
 	assert.EqualValues(t, 1, v)
 
-	v, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
-		ParamId:   "2",
-		Name:      "param2",
-		Type:      1,
-		RealValue: structs.ParameterRealValue{ClusterValue: "debug"},
-	})
+	v, err = convertRealParameterType(applyCtx, 0, "1.44e+06")
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1440000, v)
+
+	v, err = convertRealParameterType(applyCtx, 0, "123abc")
+	assert.Error(t, err)
+
+	v, err = convertRealParameterType(applyCtx, 1, "debug")
 	assert.NoError(t, err)
 	assert.EqualValues(t, "debug", v)
 
-	v, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
-		ParamId:   "3",
-		Name:      "param3",
-		Type:      2,
-		RealValue: structs.ParameterRealValue{ClusterValue: "true"},
-	})
+	v, err = convertRealParameterType(applyCtx, 2, "true")
 	assert.NoError(t, err)
 	assert.EqualValues(t, true, v)
 
-	v, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
-		ParamId:   "4",
-		Name:      "param4",
-		Type:      3,
-		RealValue: structs.ParameterRealValue{ClusterValue: "3.00"},
-	})
+	v, err = convertRealParameterType(applyCtx, 3, "3.00")
 	assert.NoError(t, err)
 	assert.EqualValues(t, 3.00, math.Trunc(v.(float64)))
 
-	v, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
-		ParamId:   "5",
-		Name:      "param5",
-		Type:      4,
-		RealValue: structs.ParameterRealValue{ClusterValue: "[\"debug\",\"info\"]"},
-	})
+	v, err = convertRealParameterType(applyCtx, 4, "[\"debug\",\"info\"]")
 	assert.NoError(t, err)
 	expect := []interface{}{"debug", "info"}
 	assert.EqualValues(t, expect, v)
@@ -228,28 +211,13 @@ func TestExecutor_convertRealParameterType_Error(t *testing.T) {
 		FlowData: map[string]interface{}{},
 	}
 
-	_, err := convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
-		ParamId:   "2",
-		Name:      "param2",
-		Type:      2,
-		RealValue: structs.ParameterRealValue{ClusterValue: "debug"},
-	})
+	_, err := convertRealParameterType(applyCtx, 2, "debug")
 	assert.Error(t, err)
 
-	_, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
-		ParamId:   "3",
-		Name:      "param3",
-		Type:      3,
-		RealValue: structs.ParameterRealValue{ClusterValue: "true"},
-	})
+	_, err = convertRealParameterType(applyCtx, 3, "true")
 	assert.Error(t, err)
 
-	_, err = convertRealParameterType(applyCtx, &ModifyClusterParameterInfo{
-		ParamId:   "5",
-		Name:      "param5",
-		Type:      0,
-		RealValue: structs.ParameterRealValue{ClusterValue: "[\"debug\",\"info\"]"},
-	})
+	_, err = convertRealParameterType(applyCtx, 0, "[\"debug\",\"info\"]")
 	assert.Error(t, err)
 }
 
@@ -388,10 +356,10 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		mock2rdService.EXPECT().EditConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("1", nil)
 		mock2rdService.EXPECT().ShowConfig(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil)
 
-		mockPDApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
-		mockTiDBApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
-		mockTiKVApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
-		mockCDCApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
+		mockPDApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
+		mockTiDBApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
+		mockTiKVApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
+		mockCDCApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
 		mockTiDBSqlConfigService.EXPECT().EditClusterConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 		modifyCtx := &workflow.FlowContext{
@@ -403,6 +371,160 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		modifyCtx.SetData(contextHasApplyParameter, true)
 		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
 		assert.NoError(t, err)
+	})
+
+	t.Run("no cdc instance apply parameter", func(t *testing.T) {
+		mock2rdService := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mock2rdService
+
+		mockCDCApiService := mockutilcdc.NewMockCDCApiService(ctrl)
+		cdc.ApiService = mockCDCApiService
+
+		modifyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		modifyCtx.SetData(contextClusterMeta, &meta.ClusterMeta{Cluster: mockCluster()})
+		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
+			Params: []*ModifyClusterParameterInfo{
+				{
+					ParamId:        "7",
+					Name:           "test_param_7",
+					InstanceType:   "CDC",
+					UpdateSource:   3,
+					HasApply:       1,
+					SystemVariable: "",
+					Type:           1,
+					RealValue:      structs.ParameterRealValue{ClusterValue: "info"},
+				},
+			},
+		})
+		modifyCtx.SetData(contextHasApplyParameter, true)
+		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		assert.NoError(t, err)
+	})
+
+	t.Run("no cdc instance modify parameter", func(t *testing.T) {
+		mock2rdService := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mock2rdService
+
+		mockCDCApiService := mockutilcdc.NewMockCDCApiService(ctrl)
+		cdc.ApiService = mockCDCApiService
+
+		modifyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		modifyCtx.SetData(contextClusterMeta, &meta.ClusterMeta{Cluster: mockCluster()})
+		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
+			Params: []*ModifyClusterParameterInfo{
+				{
+					ParamId:        "7",
+					Name:           "test_param_7",
+					InstanceType:   "CDC",
+					UpdateSource:   3,
+					HasApply:       1,
+					SystemVariable: "",
+					Type:           1,
+					RealValue:      structs.ParameterRealValue{ClusterValue: "info"},
+				},
+			},
+		})
+		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		assert.Error(t, err)
+	})
+
+	t.Run("no tiflash instance apply parameter", func(t *testing.T) {
+		mock2rdService := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mock2rdService
+
+		mockCDCApiService := mockutilcdc.NewMockCDCApiService(ctrl)
+		cdc.ApiService = mockCDCApiService
+
+		modifyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		modifyCtx.SetData(contextClusterMeta, &meta.ClusterMeta{Cluster: mockCluster()})
+		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
+			Params: []*ModifyClusterParameterInfo{
+				{
+					ParamId:        "7",
+					Name:           "test_param_7",
+					InstanceType:   "TiFlash",
+					UpdateSource:   3,
+					HasApply:       1,
+					SystemVariable: "",
+					Type:           1,
+					RealValue:      structs.ParameterRealValue{ClusterValue: "info"},
+				},
+			},
+		})
+		modifyCtx.SetData(contextHasApplyParameter, true)
+		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		assert.NoError(t, err)
+	})
+
+	t.Run("no tiflash instance modify parameter", func(t *testing.T) {
+		mock2rdService := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mock2rdService
+
+		mockCDCApiService := mockutilcdc.NewMockCDCApiService(ctrl)
+		cdc.ApiService = mockCDCApiService
+
+		modifyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		modifyCtx.SetData(contextClusterMeta, &meta.ClusterMeta{Cluster: mockCluster()})
+		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
+			Params: []*ModifyClusterParameterInfo{
+				{
+					ParamId:        "7",
+					Name:           "test_param_7",
+					InstanceType:   "TiFlash",
+					UpdateSource:   3,
+					HasApply:       1,
+					SystemVariable: "",
+					Type:           1,
+					RealValue:      structs.ParameterRealValue{ClusterValue: "info"},
+				},
+			},
+		})
+		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		assert.Error(t, err)
+	})
+
+	t.Run("read only parameter not modify", func(t *testing.T) {
+		mock2rdService := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mock2rdService
+
+		modifyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
+		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
+			Reboot: false,
+			Params: []*ModifyClusterParameterInfo{
+				{
+					ParamId:        "1",
+					Name:           "test_param_1",
+					InstanceType:   "TiDB",
+					UpdateSource:   0,
+					HasApply:       1,
+					SystemVariable: "",
+					Type:           0,
+					Range:          []string{"0", "1024"},
+					RangeType:      1,
+					ReadOnly:       1,
+					RealValue:      structs.ParameterRealValue{ClusterValue: "1"},
+				},
+			},
+			Nodes: []string{"172.16.1.12:9000"},
+		})
+		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		assert.Error(t, err)
 	})
 
 	t.Run("no tiflash apply parameter", func(t *testing.T) {
@@ -481,7 +603,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		mockCDCApiService := mockutilcdc.NewMockCDCApiService(ctrl)
 		cdc.ApiService = mockCDCApiService
 
-		mockCDCApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
+		mockCDCApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
@@ -518,7 +640,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		mockCDCApiService := mockutilcdc.NewMockCDCApiService(ctrl)
 		cdc.ApiService = mockCDCApiService
 
-		mockCDCApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
+		mockCDCApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
@@ -553,7 +675,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		mockTiDBApiService := mockutiltidbhttp.NewMockTiDBApiService(ctrl)
 		http.ApiService = mockTiDBApiService
 
-		mockTiDBApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
+		mockTiDBApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
@@ -588,7 +710,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		mockTiKVApiService := mockutiltikv.NewMockTiKVApiService(ctrl)
 		tikv.ApiService = mockTiKVApiService
 
-		mockTiKVApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
+		mockTiKVApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
@@ -623,7 +745,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		mockPDApiService := mockutilpd.NewMockPDApiService(ctrl)
 		pd.ApiService = mockPDApiService
 
-		mockPDApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
+		mockPDApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
@@ -658,7 +780,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		mockCDCApiService := mockutilcdc.NewMockCDCApiService(ctrl)
 		cdc.ApiService = mockCDCApiService
 
-		mockCDCApiService.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
+		mockCDCApiService.EXPECT().EditConfig(gomock.Any(), gomock.Any()).Return(true, errors.New("update fail"))
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
@@ -707,7 +829,7 @@ func TestDefaultFail(t *testing.T) {
 		modifyParameter.Reboot = true
 		refreshCtx.SetData(contextModifyParameters, modifyParameter)
 		refreshCtx.SetData(contextClusterConfigStr, "user: tiem\ntiem_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiem\n    group: tiem\n")
-		err := refreshParameterFail(mockWorkFlowAggregation().CurrentNode, refreshCtx)
+		err := parameterFail(mockWorkFlowAggregation().CurrentNode, refreshCtx)
 		assert.NoError(t, err)
 	})
 
@@ -724,7 +846,7 @@ func TestDefaultFail(t *testing.T) {
 		modifyParameter.Reboot = true
 		refreshCtx.SetData(contextModifyParameters, modifyParameter)
 		refreshCtx.SetData(contextClusterConfigStr, "user: tiem\ntiem_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiem\n    group: tiem\n")
-		err := refreshParameterFail(mockWorkFlowAggregation().CurrentNode, refreshCtx)
+		err := parameterFail(mockWorkFlowAggregation().CurrentNode, refreshCtx)
 		assert.Error(t, err)
 	})
 }
@@ -813,5 +935,173 @@ func TestExecutor_persistParameter2(t *testing.T) {
 		applyCtx.SetData(contextHasApplyParameter, false)
 		err := persistParameter(mockWorkFlowAggregation().CurrentNode, applyCtx)
 		assert.NoError(t, err)
+	})
+}
+
+func TestManager_fillParameters(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	t.Run("fill parameter success", func(t *testing.T) {
+		mockTiDBApiService := mockutiltidbhttp.NewMockTiDBApiService(ctrl)
+		http.ApiService = mockTiDBApiService
+		mockTiKVApiService := mockutiltikv.NewMockTiKVApiService(ctrl)
+		tikv.ApiService = mockTiKVApiService
+		mockPDApiService := mockutilpd.NewMockPDApiService(ctrl)
+		pd.ApiService = mockPDApiService
+
+		mockTiDBApiService.EXPECT().ShowConfig(gomock.Any(), gomock.Any()).Return(apiContent, nil)
+		mockTiKVApiService.EXPECT().ShowConfig(gomock.Any(), gomock.Any()).Return(apiContent, nil)
+		mockPDApiService.EXPECT().ShowConfig(gomock.Any(), gomock.Any()).Return(apiContent, nil)
+
+		modifyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
+		modifyCtx.SetData(contextHasApplyParameter, true)
+		err := fillParameters(modifyCtx, map[interface{}][]*ModifyClusterParameterInfo{
+			"TiDB": {
+				{
+					ParamId:      "1",
+					Category:     "coprocessor",
+					Name:         "region-max-size",
+					InstanceType: "TiDB",
+					Type:         1,
+					RealValue:    structs.ParameterRealValue{ClusterValue: "144MiB"},
+				},
+			},
+			"TiKV": {
+				{
+					ParamId:      "2",
+					Category:     "security",
+					Name:         "enable-sem",
+					InstanceType: "TiKV",
+					HasApply:     1,
+					Type:         2,
+					RealValue:    structs.ParameterRealValue{ClusterValue: "true"},
+				},
+			},
+			"PD": {
+				{
+					ParamId:      "3",
+					Category:     "log.file",
+					Name:         "max-size",
+					InstanceType: "PD",
+					HasApply:     1,
+					Type:         0,
+					RealValue:    structs.ParameterRealValue{ClusterValue: "102400"},
+				},
+			},
+		})
+		assert.NoError(t, err)
+	})
+
+	t.Run("request tidb api error", func(t *testing.T) {
+		mockTiDBApiService := mockutiltidbhttp.NewMockTiDBApiService(ctrl)
+		http.ApiService = mockTiDBApiService
+
+		mockTiDBApiService.EXPECT().ShowConfig(gomock.Any(), gomock.Any()).Return(apiContent, errors.New("request tidb api error"))
+
+		modifyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
+		modifyCtx.SetData(contextHasApplyParameter, true)
+		err := fillParameters(modifyCtx, map[interface{}][]*ModifyClusterParameterInfo{
+			"TiDB": {
+				{
+					ParamId:      "1",
+					Category:     "basic",
+					Name:         "oom-action",
+					InstanceType: "TiDB",
+					Type:         1,
+					RealValue:    structs.ParameterRealValue{ClusterValue: "cancel"},
+				},
+			},
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("request tikv api error", func(t *testing.T) {
+		mockTiKVApiService := mockutiltikv.NewMockTiKVApiService(ctrl)
+		tikv.ApiService = mockTiKVApiService
+
+		mockTiKVApiService.EXPECT().ShowConfig(gomock.Any(), gomock.Any()).Return(apiContent, errors.New("request tikv api error"))
+
+		modifyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
+		modifyCtx.SetData(contextHasApplyParameter, true)
+		err := fillParameters(modifyCtx, map[interface{}][]*ModifyClusterParameterInfo{
+			"TiKV": {
+				{
+					ParamId:      "1",
+					Category:     "basic",
+					Name:         "oom-action",
+					InstanceType: "TiDB",
+					Type:         1,
+					RealValue:    structs.ParameterRealValue{ClusterValue: "cancel"},
+				},
+			},
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("request pd api error", func(t *testing.T) {
+		mockPDApiService := mockutilpd.NewMockPDApiService(ctrl)
+		pd.ApiService = mockPDApiService
+
+		mockPDApiService.EXPECT().ShowConfig(gomock.Any(), gomock.Any()).Return(apiContent, errors.New("request pd api error"))
+
+		modifyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
+		modifyCtx.SetData(contextHasApplyParameter, true)
+		err := fillParameters(modifyCtx, map[interface{}][]*ModifyClusterParameterInfo{
+			"PD": {
+				{
+					ParamId:      "1",
+					Category:     "basic",
+					Name:         "oom-action",
+					InstanceType: "TiDB",
+					Type:         1,
+					RealValue:    structs.ParameterRealValue{ClusterValue: "cancel"},
+				},
+			},
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("json decode error", func(t *testing.T) {
+		mockTiDBApiService := mockutiltidbhttp.NewMockTiDBApiService(ctrl)
+		http.ApiService = mockTiDBApiService
+
+		mockTiDBApiService.EXPECT().ShowConfig(gomock.Any(), gomock.Any()).Return([]byte("json decode error"), nil)
+
+		modifyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
+		modifyCtx.SetData(contextHasApplyParameter, true)
+		err := fillParameters(modifyCtx, map[interface{}][]*ModifyClusterParameterInfo{
+			"TiDB": {
+				{
+					ParamId:      "1",
+					Category:     "basic",
+					Name:         "oom-action",
+					InstanceType: "TiDB",
+					Type:         1,
+					RealValue:    structs.ParameterRealValue{ClusterValue: "cancel"},
+				},
+			},
+		})
+		assert.Error(t, err)
 	})
 }

@@ -31,12 +31,12 @@ import (
 )
 
 type SSHClientExecutor interface {
-	RunCommandsInRemoteHost(host string, port int, sshType SSHType, user, passwd string, timeoutS int, commands []string) (result string, err error)
+	RunCommandsInRemoteHost(host string, port int, sshType SSHType, user, passwd string, sudo bool, timeoutS int, commands []string) (result string, err error)
 }
 
 type SSHExecutor struct{}
 
-func (client SSHExecutor) RunCommandsInRemoteHost(host string, port int, sshType SSHType, user, passwd string, timeoutS int, commands []string) (result string, err error) {
+func (client SSHExecutor) RunCommandsInRemoteHost(host string, port int, sshType SSHType, user, passwd string, sudo bool, timeoutS int, commands []string) (result string, err error) {
 	c := new(SSHClient)
 	c.InitSSHClient(host, port, sshType, user, passwd, timeoutS)
 	if err = c.Connect(); err != nil {
@@ -44,7 +44,7 @@ func (client SSHExecutor) RunCommandsInRemoteHost(host string, port int, sshType
 	}
 	defer c.Close()
 
-	return c.RunCommandsInSession(commands)
+	return c.RunCommandsInSession(sudo, commands)
 }
 
 type SSHType string
@@ -116,7 +116,7 @@ func (c *SSHClient) Close() {
 	}
 }
 
-func (c *SSHClient) RunCommandsInSession(commands []string) (result string, err error) {
+func (c *SSHClient) RunCommandsInSession(sudo bool, commands []string) (result string, err error) {
 	session, err := c.client.NewSession()
 	if err != nil {
 		return "", errors.NewErrorf(errors.TIEM_RESOURCE_NEW_SESSION_ERROR, "new ssh session failed for %s@%s:%d, %v", c.sshUser, c.sshHost, c.sshPort, err)
@@ -124,6 +124,9 @@ func (c *SSHClient) RunCommandsInSession(commands []string) (result string, err 
 	defer session.Close()
 
 	command := strings.Join(commands, ";")
+	if sudo {
+		command = fmt.Sprintf("/usr/bin/sudo -H bash -c \"%s\"", command)
+	}
 	combo, err := session.CombinedOutput(command)
 	if err != nil {
 		return "", errors.NewErrorf(errors.TIEM_RESOURCE_RUN_COMMAND_ERROR, "exec command %s on %s@%s:%d failed, %v", command, c.sshUser, c.sshHost, c.sshPort, err)

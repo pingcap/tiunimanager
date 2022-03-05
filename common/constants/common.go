@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	TiEM string = "tiem"
+	EM string = "em"
 )
 
 //System log-related constants
@@ -103,6 +103,13 @@ var ParasiteComponentIDs = []EMProductComponentIDType{
 	ComponentIDGrafana,
 	ComponentIDPrometheus,
 	ComponentIDAlertManger,
+}
+
+var KernelComponentIDs = []EMProductComponentIDType{
+	ComponentIDTiDB,
+	ComponentIDTiKV,
+	ComponentIDPD,
+	ComponentIDTiFlash,
 }
 
 //Definition of product component ID provided by Enterprise manager

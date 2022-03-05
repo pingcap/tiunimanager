@@ -20,17 +20,18 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"reflect"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/workflow"
-	"math/rand"
-	"reflect"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -161,6 +162,7 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "parameter is invalid!")
 	}
 
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	for _, component := range computes {
 		// Suggest PD instances 1, 3, 5, 7
 		if component.Type == string(constants.ComponentIDPD) {
@@ -179,7 +181,7 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 			pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
 
 			config, err := deployment.M.Ctl(ctx, deployment.TiUPComponentTypeCtrl, meta.Cluster.Version, spec.ComponentPD,
-				"/home/tiem/.tiup", []string{"-u", pdID, "config", "show", "replication"}, DefaultTiupTimeOut)
+				tiupHomeForTidb, []string{"-u", pdID, "config", "show", "replication"}, DefaultTiupTimeOut)
 			if err != nil {
 				return err
 			}
@@ -272,6 +274,15 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 // When use CDCSyncClone strategy to clone cluster, source cluster must have CDC
 func ClonePreCheck(ctx context.Context, sourceMeta *ClusterMeta, meta *ClusterMeta, cloneStrategy string) error {
 	if cloneStrategy == string(constants.CDCSyncClone) {
+		masters, err := models.GetClusterReaderWriter().GetMasters(ctx, sourceMeta.Cluster.ID)
+		if err != nil {
+			return err
+		}
+		if len(masters) > 0 {
+			return errors.NewErrorf(errors.TIEM_CLONE_SLAVE_ERROR,
+				"cluster %s is slave, which can not be cloned by %s", sourceMeta.Cluster.ID, cloneStrategy)
+		}
+
 		cmp, err := CompareTiDBVersion(sourceMeta.Cluster.Version, "v5.2.2")
 		if err != nil {
 			return err

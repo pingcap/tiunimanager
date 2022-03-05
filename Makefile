@@ -268,6 +268,7 @@ mock:
 	mockgen -destination ./test/mockmodels/mockimportexport/mock_importexport_interface.go -package mockimportexport -source ./models/datatransfer/importexport/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockresource/mock_resource_interface.go -package mockresource -source ./models/resource/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockconfig/mock_config_interface.go -package mockconfig -source ./models/platform/config/readerwriter.go
+	mockgen -destination ./test/mockmodels/mocksystem/mock_system_interface.go -package mocksystem -source ./models/platform/system/readerwriter.go
 	mockgen -destination ./test/mockmodels/mocksecondparty/mock_secondparty_interface.go -package mocksecondparty -source ./models/workflow/secondparty/readerwriter.go
 	mockgen -destination ./test/mockmodels/mocktiupconfig/mock_tiupconfig_interface.go -package mocktiupconfig -source ./models/tiup/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockparametergroup/mock_parametergroup_interface.go -package mockparametergroup -source ./models/parametergroup/readerwriter.go
@@ -293,6 +294,9 @@ mock:
 	mockgen -destination ./test/mockutiltidbhttp/mock_utiltidbhttp.go -package mockutiltidbhttp -source ./util/api/tidb/http/clusterconfig.go
 	mockgen -destination ./test/mockutiltidbsql_config/mock_utiltidbsql_config.go -package mockutiltidbsqlconfig -source ./util/api/tidb/sql/clusterconfig.go
 	mockgen -destination ./test/mockutilcdc/mock_utilcdc_change_feed.go -package mockutilcdc -source ./util/api/cdc/changefeed.go
+	mockgen -destination ./test/mockcheck/mock_check.go -package mock_check -source ./models/platform/check/report_read_writer.go
+	mockgen -destination ./test/mockreport/mock_report.go -package mock_report -source ./micro-cluster/platform/check/handler.go
+	mockgen -destination ./test/mockhostsinspect/mock_hosts_inspect.go -package mock_hosts_inspect -source ./micro-cluster/resourcemanager/inspect/hostinspector.go
 
 swag:
 	$(GO) install github.com/swaggo/swag/cmd/swag@v1.7.1

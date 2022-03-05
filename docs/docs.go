@@ -2341,6 +2341,82 @@ var doc = `{
                 }
             }
         },
+        "/clusters/{clusterId}/params/inspect": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "inspect parameters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster parameters"
+                ],
+                "summary": "inspect parameters",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "inspect params request",
+                        "name": "inspectReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.InspectParametersReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.InspectParametersResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/clusters/{clusterId}/preview-scale-out": {
             "post": {
                 "security": [
@@ -2817,6 +2893,140 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/cluster.SaveBackupStrategyResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/config/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get system config",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "get system config"
+                ],
+                "summary": "get system config",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "configKey",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.GetSystemConfigResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/config/update": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "UpdateSystemConfig",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "UpdateSystemConfig"
+                ],
+                "summary": "update system config",
+                "parameters": [
+                    {
+                        "description": "system config for update",
+                        "name": "systemConfig",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UpdateSystemConfigReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UpdateSystemConfigResp"
                                         }
                                     }
                                 }
@@ -3448,6 +3658,208 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/message.CopyParameterGroupResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/platform/check": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "platform check",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "platform check",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "displayMode",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.CheckPlatformRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/platform/report/:checkId": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get check report based on checkId",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "get check report based on checkId",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.GetCheckReportRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/platform/reports": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get query check reports",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "query check reports",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Current page location",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of this request",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.QueryCheckReportsRsp"
                                         }
                                     }
                                 }
@@ -4579,7 +4991,7 @@ var doc = `{
                 "tags": [
                     "resource"
                 ],
-                "summary": "Show all hosts list in TiEM",
+                "summary": "Show all hosts list in EM",
                 "parameters": [
                     {
                         "type": "string",
@@ -4676,7 +5088,7 @@ var doc = `{
                 "tags": [
                     "resource"
                 ],
-                "summary": "Import a batch of hosts to TiEM",
+                "summary": "Import a batch of hosts to EM",
                 "parameters": [
                     {
                         "type": "string",
@@ -5089,6 +5501,54 @@ var doc = `{
                         "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/system/info": {
+            "get": {
+                "description": "get system info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "get system info",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "name": "withVersionDetail",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.GetSystemInfoResp"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
@@ -6864,6 +7324,138 @@ var doc = `{
                 }
             }
         },
+        "cluster.InspectParameterInfo": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "log"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "binlog cache size"
+                },
+                "hasReboot": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "example": 0
+                },
+                "inspectValue": {
+                    "type": "object"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "binlog_cache"
+                },
+                "note": {
+                    "type": "string",
+                    "example": "binlog cache size"
+                },
+                "paramId": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "range": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "1",
+                        " 1000"
+                    ]
+                },
+                "rangeType": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ],
+                    "example": 1
+                },
+                "readOnly": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "example": 0
+                },
+                "realValue": {
+                    "$ref": "#/definitions/structs.ParameterRealValue"
+                },
+                "systemVariable": {
+                    "type": "string",
+                    "example": "log.log_level"
+                },
+                "type": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                    ],
+                    "example": 0
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "MB"
+                },
+                "unitOptions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "KB",
+                        "MB",
+                        "GB"
+                    ]
+                }
+            }
+        },
+        "cluster.InspectParameters": {
+            "type": "object",
+            "properties": {
+                "instanceId": {
+                    "type": "string"
+                },
+                "instanceType": {
+                    "type": "string"
+                },
+                "parameterInfos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/cluster.InspectParameterInfo"
+                    }
+                }
+            }
+        },
+        "cluster.InspectParametersReq": {
+            "type": "object",
+            "properties": {
+                "instanceId": {
+                    "type": "string"
+                }
+            }
+        },
+        "cluster.InspectParametersResp": {
+            "type": "object",
+            "properties": {
+                "params": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/cluster.InspectParameters"
+                    }
+                }
+            }
+        },
         "cluster.KafkaDownstream": {
             "type": "object",
             "properties": {
@@ -7769,6 +8361,18 @@ var doc = `{
                 }
             }
         },
+        "message.CheckPlatformRsp": {
+            "type": "object",
+            "properties": {
+                "checkID": {
+                    "type": "string"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
         "message.CopyParameterGroupReq": {
             "type": "object",
             "required": [
@@ -8264,6 +8868,14 @@ var doc = `{
                 }
             }
         },
+        "message.GetCheckReportRsp": {
+            "type": "object",
+            "properties": {
+                "reportInfo": {
+                    "$ref": "#/definitions/structs.CheckReportInfo"
+                }
+            }
+        },
         "message.GetHierarchyResp": {
             "type": "object",
             "properties": {
@@ -8281,6 +8893,31 @@ var doc = `{
                     "additionalProperties": {
                         "$ref": "#/definitions/structs.Stocks"
                     }
+                }
+            }
+        },
+        "message.GetSystemConfigResp": {
+            "type": "object",
+            "properties": {
+                "configKey": {
+                    "type": "string"
+                },
+                "configValue": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.GetSystemInfoResp": {
+            "type": "object",
+            "properties": {
+                "currentVersion": {
+                    "$ref": "#/definitions/structs.SystemVersionInfo"
+                },
+                "info": {
+                    "$ref": "#/definitions/structs.SystemInfo"
+                },
+                "lastVersion": {
+                    "$ref": "#/definitions/structs.SystemVersionInfo"
                 }
             }
         },
@@ -8343,9 +8980,6 @@ var doc = `{
         "message.LoginResp": {
             "type": "object",
             "properties": {
-                "passwordExpired": {
-                    "type": "boolean"
-                },
                 "tenantId": {
                     "type": "string"
                 },
@@ -8466,9 +9100,21 @@ var doc = `{
                         0,
                         1,
                         2,
-                        3
+                        3,
+                        4
                     ],
                     "example": 0
+                }
+            }
+        },
+        "message.QueryCheckReportsRsp": {
+            "type": "object",
+            "properties": {
+                "reportMetas": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckReportMeta"
+                    }
                 }
             }
         },
@@ -8817,6 +9463,20 @@ var doc = `{
                 }
             }
         },
+        "message.UpdateSystemConfigReq": {
+            "type": "object",
+            "properties": {
+                "configKey": {
+                    "type": "string"
+                },
+                "configValue": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.UpdateSystemConfigResp": {
+            "type": "object"
+        },
         "message.UpdateTenantOnBoardingStatusReq": {
             "type": "object",
             "properties": {
@@ -8961,6 +9621,177 @@ var doc = `{
                 }
             }
         },
+        "structs.CheckAny": {
+            "type": "object",
+            "properties": {
+                "expectedValue": {
+                    "type": "object"
+                },
+                "realValue": {
+                    "type": "object"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "structs.CheckError": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.CheckInt32": {
+            "type": "object",
+            "properties": {
+                "expectedValue": {
+                    "type": "integer"
+                },
+                "realValue": {
+                    "type": "integer"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "structs.CheckRangeInt32": {
+            "type": "object",
+            "properties": {
+                "expectedRange": {
+                    "description": "Left closed right closed interval",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "realValue": {
+                    "type": "integer"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "structs.CheckReportInfo": {
+            "type": "object",
+            "properties": {
+                "hosts": {
+                    "$ref": "#/definitions/structs.HostsCheck"
+                },
+                "tenants": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.TenantCheck"
+                    }
+                }
+            }
+        },
+        "structs.CheckReportMeta": {
+            "type": "object",
+            "properties": {
+                "checkID": {
+                    "type": "string"
+                },
+                "createAt": {
+                    "type": "string"
+                },
+                "creator": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.CheckStatus": {
+            "type": "object",
+            "properties": {
+                "health": {
+                    "type": "boolean"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.CheckString": {
+            "type": "object",
+            "properties": {
+                "expectedValue": {
+                    "type": "string"
+                },
+                "realValue": {
+                    "type": "string"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "structs.CheckSwitch": {
+            "type": "object",
+            "properties": {
+                "enable": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "structs.ClusterCheck": {
+            "type": "object",
+            "properties": {
+                "accountStatus": {
+                    "$ref": "#/definitions/structs.CheckStatus"
+                },
+                "backupRecordValid": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                },
+                "backupStrategy": {
+                    "$ref": "#/definitions/structs.CheckString"
+                },
+                "clusterID": {
+                    "type": "string"
+                },
+                "copies": {
+                    "$ref": "#/definitions/structs.CheckInt32"
+                },
+                "cpu": {
+                    "type": "integer"
+                },
+                "healthStatus": {
+                    "$ref": "#/definitions/structs.CheckStatus"
+                },
+                "instances": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.InstanceCheck"
+                    }
+                },
+                "maintenanceStatus": {
+                    "type": "string"
+                },
+                "memory": {
+                    "type": "integer"
+                },
+                "regionStatus": {
+                    "$ref": "#/definitions/structs.CheckStatus"
+                },
+                "runningStatus": {
+                    "type": "string"
+                },
+                "storage": {
+                    "type": "integer"
+                },
+                "topology": {
+                    "$ref": "#/definitions/structs.CheckString"
+                }
+            }
+        },
         "structs.ClusterInfo": {
             "type": "object",
             "properties": {
@@ -9031,6 +9862,9 @@ var doc = `{
                 },
                 "region": {
                     "type": "string"
+                },
+                "relations": {
+                    "$ref": "#/definitions/structs.ClusterRelations"
                 },
                 "role": {
                     "type": "string"
@@ -9302,7 +10136,8 @@ var doc = `{
                         0,
                         1,
                         2,
-                        3
+                        3,
+                        4
                     ],
                     "example": 0
                 },
@@ -9325,6 +10160,23 @@ var doc = `{
                 },
                 "realValue": {
                     "$ref": "#/definitions/structs.ParameterRealValue"
+                }
+            }
+        },
+        "structs.ClusterRelations": {
+            "type": "object",
+            "properties": {
+                "masters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "slaves": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -9548,6 +10400,41 @@ var doc = `{
                 }
             }
         },
+        "structs.HostCheck": {
+            "type": "object",
+            "properties": {
+                "cpu": {
+                    "$ref": "#/definitions/structs.CheckInt32"
+                },
+                "disk": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckString"
+                    }
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.CheckError"
+                    }
+                },
+                "firewall": {
+                    "$ref": "#/definitions/structs.CheckSwitch"
+                },
+                "memory": {
+                    "$ref": "#/definitions/structs.CheckInt32"
+                },
+                "selinux": {
+                    "$ref": "#/definitions/structs.CheckSwitch"
+                },
+                "storageRatio": {
+                    "type": "number"
+                },
+                "swap": {
+                    "$ref": "#/definitions/structs.CheckSwitch"
+                }
+            }
+        },
         "structs.HostInfo": {
             "type": "object",
             "properties": {
@@ -9584,6 +10471,15 @@ var doc = `{
                 },
                 "hostName": {
                     "type": "string"
+                },
+                "instances": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "ip": {
                     "type": "string"
@@ -9660,6 +10556,41 @@ var doc = `{
                 }
             }
         },
+        "structs.HostsCheck": {
+            "type": "object",
+            "properties": {
+                "delay": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckRangeInt32"
+                    }
+                },
+                "hosts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.HostCheck"
+                    }
+                },
+                "ntp": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckRangeInt32"
+                    }
+                },
+                "ping": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                },
+                "timeZoneConsistency": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                }
+            }
+        },
         "structs.Index": {
             "type": "object",
             "properties": {
@@ -9674,6 +10605,26 @@ var doc = `{
                 },
                 "value": {
                     "type": "object"
+                }
+            }
+        },
+        "structs.InstanceCheck": {
+            "type": "object",
+            "properties": {
+                "instanceID": {
+                    "type": "string"
+                },
+                "parameters": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckAny"
+                    }
+                },
+                "versions": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckString"
+                    }
                 }
             }
         },
@@ -9791,7 +10742,8 @@ var doc = `{
                         0,
                         1,
                         2,
-                        3
+                        3,
+                        4
                     ],
                     "example": 0
                 },
@@ -9967,7 +10919,7 @@ var doc = `{
                         "migration"
                     ]
                 },
-                "upgradeWay": {
+                "upgradeWays": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -10204,6 +11156,63 @@ var doc = `{
                 },
                 "zone": {
                     "type": "string"
+                }
+            }
+        },
+        "structs.SystemInfo": {
+            "type": "object",
+            "properties": {
+                "currentVersionID": {
+                    "type": "string"
+                },
+                "lastVersionID": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "systemLogo": {
+                    "type": "string"
+                },
+                "systemName": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.SystemVersionInfo": {
+            "type": "object",
+            "properties": {
+                "desc": {
+                    "type": "string"
+                },
+                "releaseNote": {
+                    "type": "string"
+                },
+                "versionID": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.TenantCheck": {
+            "type": "object",
+            "properties": {
+                "clusterCount": {
+                    "$ref": "#/definitions/structs.CheckRangeInt32"
+                },
+                "clusters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ClusterCheck"
+                    }
+                },
+                "cpuRatio": {
+                    "type": "number"
+                },
+                "memoryRatio": {
+                    "type": "number"
+                },
+                "storageRatio": {
+                    "type": "number"
                 }
             }
         },
@@ -10445,11 +11454,11 @@ type swaggerInfo struct {
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
 	Version:     "1.0",
-	Host:        "localhost:4100",
+	Host:        "localhost:4116",
 	BasePath:    "/api/v1/",
 	Schemes:     []string{},
-	Title:       "TiEM UI API",
-	Description: "TiEM UI API",
+	Title:       "EM UI API",
+	Description: "EM UI API",
 }
 
 type s struct{}

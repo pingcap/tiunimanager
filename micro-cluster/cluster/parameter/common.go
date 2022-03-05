@@ -26,8 +26,11 @@ package parameter
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/pingcap-inc/tiem/library/spec"
 
 	"github.com/pingcap-inc/tiem/common/structs"
 )
@@ -42,18 +45,28 @@ const (
 
 // Define unit conversion
 var units = map[string]int64{
-	// storage
-	"KB": 1,
-	"MB": 1024,
-	"GB": 1024 * 1024,
-	"TB": 1024 * 1024 * 1024,
+	// storage unit
+	"B":  1,
+	"KB": 1024,
+	"MB": 1024 * 1024,
+	"GB": 1024 * 1024 * 1024,
+	"TB": 1024 * 1024 * 1024 * 1024,
 
-	// time
-	"ms": 1,
-	"s":  1000,
-	"m":  60 * 1000,
-	"h":  60 * 60 * 1000,
-	"d":  24 * 60 * 60 * 1000,
+	// time unit
+	"us": 1,
+	"ms": 1 * 1000,
+	"s":  1000 * 1000,
+	"m":  60 * 1000 * 1000,
+	"h":  60 * 60 * 1000 * 1000,
+	"d":  24 * 60 * 60 * 1000 * 1000,
+}
+
+// Define replace unit, used to replace the result value returned by the component API
+var replaceUnits = map[string]string{
+	"KiB": "KB",
+	"MiB": "MB",
+	"GiB": "GB",
+	"TiB": "TB",
 }
 
 type UpdateParameterSource int
@@ -61,8 +74,9 @@ type UpdateParameterSource int
 const (
 	TiUP UpdateParameterSource = iota
 	SQL
-	TiupAndSql
+	TiUPAndSQL
 	API
+	TiUPAndAPI
 )
 
 type ParameterValueType int
@@ -128,6 +142,11 @@ const (
 	NonReboot ClusterReboot = iota
 	Reboot
 )
+
+type GlobalComponentConfig struct {
+	TiDBClusterComponent spec.TiDBClusterComponent
+	ConfigMap            map[string]interface{}
+}
 
 // ValidateRange
 // @Description: validate parameter value by range field
@@ -236,6 +255,50 @@ func DisplayFullParameterName(category, name string) string {
 		return name
 	}
 	return fmt.Sprintf("%s.%s", category, name)
+}
+
+// FlattenedParameters
+// @Description: flattened parameters
+// @Parameter inputs
+// @return map[string]string
+// @return error
+func FlattenedParameters(inputs map[string]interface{}) (map[string]string, error) {
+	result := make(map[string]string)
+	err := flattening(inputs, "", result)
+	return result, err
+}
+
+// flattening
+// @Description: Deep traversal flattening to get parameter names
+// @Parameter object
+// @Parameter name
+// @Parameter result
+// @return err
+func flattening(object map[string]interface{}, name string, result map[string]string) (err error) {
+	for k, v := range object {
+		if name != "" {
+			k = name + "." + k
+		}
+		if v == nil {
+			// value is null, skip directly
+			continue
+		} else if strings.HasPrefix(reflect.TypeOf(v).String(), "map") {
+			// value is an interface type
+			if err = flattening(v.(map[string]interface{}), k, result); err != nil {
+				return err
+			}
+		} else if strings.HasPrefix(reflect.TypeOf(v).String(), "[]interface") {
+			// value is an array type
+			b, err := json.Marshal(v)
+			if err != nil {
+				return err
+			}
+			result[k] = string(b)
+		} else {
+			result[k] = fmt.Sprintf("%v", v)
+		}
+	}
+	return nil
 }
 
 // UnmarshalCovertArray

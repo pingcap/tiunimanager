@@ -98,6 +98,8 @@ service ClusterService {
 
     // system config
     rpc GetSystemConfig(RpcRequest) returns (RpcResponse);
+    rpc GetSystemInfo(RpcRequest) returns (RpcResponse);
+    rpc UpdateSystemConfig(RpcRequest) returns (RpcResponse);
 
     //product & spec
     rpc CreateZones(RpcRequest) returns (RpcResponse);
@@ -124,6 +126,11 @@ service ClusterService {
     rpc QueryTenants(RpcRequest) returns (RpcResponse);
     rpc UpdateTenantOnBoardingStatus(RpcRequest) returns (RpcResponse);
     rpc UpdateTenantProfile(RpcRequest) returns (RpcResponse);
+
+    // platform
+    rpc CheckPlatform(RpcRequest) returns(RpcResponse);
+    rpc QueryCheckReports(RpcRequest) returns(RpcResponse);
+    rpc GetCheckReport(RpcRequest) returns(RpcResponse);
 }
 
 message RpcRequest {

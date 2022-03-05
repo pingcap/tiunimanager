@@ -20,6 +20,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pingcap-inc/tiem/metrics"
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/proto/clusterservices"
 
@@ -68,6 +71,10 @@ func initGinEngine(d *framework.BaseFramework) error {
 	addr := fmt.Sprintf(":%d", port)
 	// file-server service registry
 	serviceRegistry(d)
+
+	d.GetMetrics().ServerStartTimeGaugeMetric.
+		With(prometheus.Labels{metrics.ServiceLabel: d.GetServiceMeta().ServiceName.ServerName()}).
+		SetToCurrentTime()
 
 	if d.GetClientArgs().EnableHttps {
 		g.Use(interceptor.TlsHandler(addr))

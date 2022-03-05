@@ -38,6 +38,7 @@ const (
 	MetricsClusterPreviewScaleOut       MetricsType = "cluster/preview_scale_out"
 	MetricsClusterScaleOut              MetricsType = "cluster/scale_out"
 	MetricsClusterClone                 MetricsType = "cluster/clone"
+	MetricsClusterSwitchover            MetricsType = "cluster/switchover"
 	MetricsClusterRestore               MetricsType = "cluster/restore"
 	MetricsClusterTakeover              MetricsType = "cluster/takeover"
 	MetricsClusterPreview               MetricsType = "cluster/preview"
@@ -52,6 +53,13 @@ const (
 	MetricsClusterUpgrade               MetricsType = "cluster/upgrade"
 	MetricsClusterUpgradePath           MetricsType = "cluster/upgrade_path"
 	MetricsClusterUpgradeDiff           MetricsType = "cluster/upgrade_diff"
+
+	MetricsPlatformCheck     MetricsType = "platform/check"
+	MetricsQueryCheckReports MetricsType = "platform/reports"
+	MetricsGetCheckReport    MetricsType = "platform/report"
+
+	MetricsSystemConfigUpdate MetricsType = "config/update"
+	MetricsSystemConfigGet    MetricsType = "config/get"
 
 	// MetricsBackupCreate define backup metrics
 	MetricsBackupCreate         MetricsType = "backup/create"
@@ -78,8 +86,6 @@ const (
 	MetricsCDCTaskQuery  MetricsType = "cdc/query"
 	MetricsCDCTaskDetail MetricsType = "cdc/detail"
 	MetricsCDCDownstream MetricsType = "cdc/downstream/delete"
-
-	MetricsSwitchover MetricsType = "switchover/switch"
 
 	// MetricsParameterGroupCreate define parameter group metrics
 	MetricsParameterGroupCreate MetricsType = "parameter_group/create"

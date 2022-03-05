@@ -23,7 +23,9 @@
 
 package message
 
-import "github.com/pingcap-inc/tiem/common/structs"
+import (
+	"github.com/pingcap-inc/tiem/common/structs"
+)
 
 type GetSystemConfigReq struct {
 	ConfigKey string `json:"configKey" form:"configKey"`
@@ -31,6 +33,14 @@ type GetSystemConfigReq struct {
 
 type GetSystemConfigResp struct {
 	structs.SystemConfig
+}
+
+type UpdateSystemConfigReq struct {
+	ConfigKey   string `json:"configKey" form:"configKey"`
+	ConfigValue string `json:"configValue" form:"configValue"`
+}
+
+type UpdateSystemConfigResp struct {
 }
 
 //CreateZonesReq create zone message, include vendor、region、zone
@@ -99,6 +109,7 @@ type QueryProductDetailResp struct {
 type CreateSpecsReq struct {
 	Specs []structs.SpecInfo `json:"specs"`
 }
+
 type CreateSpecsResp struct {
 }
 
@@ -112,6 +123,17 @@ type DeleteSpecsResp struct {
 //QuerySpecsReq query spec message
 type QuerySpecsReq struct {
 }
+
 type QuerySpecsResp struct {
 	Specs []structs.SpecInfo `json:"specs"`
+}
+
+type GetSystemInfoReq struct {
+	WithVersionDetail bool `json:"withVersionDetail" form:"withVersionDetail" `
+}
+
+type GetSystemInfoResp struct {
+	Info           structs.SystemInfo        `json:"info"`
+	CurrentVersion structs.SystemVersionInfo `json:"currentVersion"`
+	LastVersion    structs.SystemVersionInfo `json:"lastVersion"`
 }

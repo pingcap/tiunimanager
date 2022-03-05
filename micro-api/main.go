@@ -19,10 +19,11 @@ package main
 import (
 	"fmt"
 
+	"time"
+
 	"github.com/pingcap-inc/tiem/common/client"
 	"github.com/pingcap-inc/tiem/metrics"
 	"github.com/pingcap-inc/tiem/proto/clusterservices"
-	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 
@@ -38,9 +39,9 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/route"
 )
 
-// @title TiEM UI API
+// @title EM UI API
 // @version 1.0
-// @description TiEM UI API
+// @description EM UI API
 
 // @contact.name zhangpeijin
 // @contact.email zhangpeijin@pingcap.com
@@ -48,7 +49,7 @@ import (
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host localhost:4100
+// @host localhost:4116
 // @BasePath /api/v1/
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header

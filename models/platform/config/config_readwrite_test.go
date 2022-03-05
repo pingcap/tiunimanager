@@ -25,7 +25,7 @@ var rw *ConfigReadWrite
 
 func TestConfigReadWrite_GetConfig(t *testing.T) {
 	config := &SystemConfig{
-		ConfigKey:   "key",
+		ConfigKey:   "key1",
 		ConfigValue: "value",
 	}
 	configCreate, errCreate := rw.CreateConfig(context.TODO(), config)
@@ -34,4 +34,21 @@ func TestConfigReadWrite_GetConfig(t *testing.T) {
 	configGet, errGet := rw.GetConfig(context.TODO(), configCreate.ConfigKey)
 	assert.NoError(t, errGet)
 	assert.Equal(t, configCreate.ConfigValue, configGet.ConfigValue)
+}
+
+func TestConfigReadWrite_UpdateConfig(t *testing.T) {
+	config := &SystemConfig{
+		ConfigKey:   "key2",
+		ConfigValue: "value",
+	}
+	configCreate, errCreate := rw.CreateConfig(context.TODO(), config)
+	assert.NoError(t, errCreate)
+
+	config.ConfigValue = "value2"
+	errUpdate := rw.UpdateConfig(context.TODO(), config)
+	assert.NoError(t, errUpdate)
+
+	configGet, errGet := rw.GetConfig(context.TODO(), configCreate.ConfigKey)
+	assert.NoError(t, errGet)
+	assert.Equal(t, config.ConfigValue, configGet.ConfigValue)
 }

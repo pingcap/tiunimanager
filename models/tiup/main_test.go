@@ -40,7 +40,7 @@ var testRW *GormTiupConfigReadWrite
 const (
 	TestComponentType = "tiem"
 	TestTiUPHome      = ""
-	TestTiUPHome2     = "/home/tiem/.tiuptiem"
+	TestTiUPHome2     = "/home/tidb/.em"
 )
 
 func TestMain(m *testing.M) {

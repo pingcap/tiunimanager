@@ -167,8 +167,10 @@ func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 
 	framework.LogWithContext(context.Context).Infof(
 		"scale out cluster %s, version %s, yamlConfig %s", cluster.ID, cluster.Version, yamlConfig)
+	args := framework.GetTiupAuthorizaitonFlag()
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	operationID, err := deployment.M.ScaleOut(context.Context, deployment.TiUPComponentTypeCluster, cluster.ID, yamlConfig,
-		"/home/tiem/.tiup", node.ParentID, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, meta.DefaultTiupTimeOut)
+		tiupHomeForTidb, node.ParentID, args, meta.DefaultTiupTimeOut)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s scale out error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -196,8 +198,9 @@ func scaleInCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	}
 	framework.LogWithContext(context.Context).Infof(
 		"scale in cluster %s, delete instance %s", clusterMeta.Cluster.ID, instanceID)
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	operationID, err := deployment.M.ScaleIn(context.Context, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID,
-		strings.Join([]string{instance.HostIP[0], strconv.Itoa(int(instance.Ports[0]))}, ":"), "/home/tiem/.tiup",
+		strings.Join([]string{instance.HostIP[0], strconv.Itoa(int(instance.Ports[0]))}, ":"), tiupHomeForTidb,
 		node.ParentID, []string{}, meta.DefaultTiupTimeOut)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -242,8 +245,9 @@ func checkInstanceStatus(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	}
 	pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
 
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	config, err := deployment.M.Ctl(context.Context, deployment.TiUPComponentTypeCtrl, clusterMeta.Cluster.Version, spec.ComponentPD,
-		"/home/tiem/.tiup", []string{"-u", pdID, "store", "--state", "Tombstone,Up,Offline"}, meta.DefaultTiupTimeOut)
+		tiupHomeForTidb, []string{"-u", pdID, "store", "--state", "Tombstone,Up,Offline"}, meta.DefaultTiupTimeOut)
 	if err != nil {
 		return err
 	}
@@ -276,7 +280,7 @@ func checkInstanceStatus(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
 
 		config, err := deployment.M.Ctl(context.Context, deployment.TiUPComponentTypeCtrl, clusterMeta.Cluster.Version, spec.ComponentPD,
-			"/home/tiem/.tiup", []string{"-u", pdID, "store", storeID}, meta.DefaultTiupTimeOut)
+			tiupHomeForTidb, []string{"-u", pdID, "store", storeID}, meta.DefaultTiupTimeOut)
 		if err != nil {
 			return err
 		}
@@ -306,7 +310,7 @@ func checkInstanceStatus(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		"prune cluster %s, delete instance %s", clusterMeta.Cluster.ID, instanceID)
 	taskId, err := deployment.M.Prune(
 		context.Context, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID,
-		"/home/tiem/.tiup", node.ParentID, []string{}, meta.DefaultTiupTimeOut)
+		tiupHomeForTidb, node.ParentID, []string{}, meta.DefaultTiupTimeOut)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s prune error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -667,9 +671,11 @@ func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 
 	framework.LogWithContext(context.Context).Infof(
 		"deploy cluster %s, version %s, yamlConfig %s", cluster.ID, cluster.Version, yamlConfig)
+	args := framework.GetTiupAuthorizaitonFlag()
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	// todo: use SystemConfig to store home
 	operationID, err := deployment.M.Deploy(context.Context, deployment.TiUPComponentTypeCluster, cluster.ID, cluster.Version, yamlConfig,
-		"/home/tiem/.tiup", node.ParentID, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, meta.DefaultTiupTimeOut)
+		tiupHomeForTidb, node.ParentID, args, meta.DefaultTiupTimeOut)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s deploy error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -690,9 +696,10 @@ func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 
 	framework.LogWithContext(context.Context).Infof(
 		"start cluster %s, version %s", cluster.ID, cluster.Version)
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	// todo: use SystemConfig to store home
 	operationID, err := deployment.M.Start(context.Context, deployment.TiUPComponentTypeCluster, cluster.ID,
-		"/home/tiem/.tiup", node.ParentID, []string{}, meta.DefaultTiupTimeOut)
+		tiupHomeForTidb, node.ParentID, []string{}, meta.DefaultTiupTimeOut)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s start error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -1103,8 +1110,9 @@ func stopCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext
 
 	framework.LogWithContext(context.Context).Infof(
 		"stop cluster %s, version = %s", cluster.ID, cluster.Version)
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	operationID, err := deployment.M.Stop(context.Context, deployment.TiUPComponentTypeCluster, cluster.ID,
-		"/home/tiem/.tiup", node.ParentID, []string{}, meta.DefaultTiupTimeOut)
+		tiupHomeForTidb, node.ParentID, []string{}, meta.DefaultTiupTimeOut)
 
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -1132,8 +1140,9 @@ func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 		return nil
 	}
 
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	operationID, err := deployment.M.Destroy(context.Context, deployment.TiUPComponentTypeCluster, cluster.ID,
-		"/home/tiem/.tiup", node.ParentID, []string{}, meta.DefaultTiupTimeOut)
+		tiupHomeForTidb, node.ParentID, []string{}, meta.DefaultTiupTimeOut)
 
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -1756,8 +1765,9 @@ func checkRegionHealth(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 
 	framework.LogWithContext(context.Context).Infof(
 		"check cluster %s, version %s health", cluster.ID, cluster.Version)
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	result, err := deployment.M.CheckCluster(context.Context, deployment.TiUPComponentTypeCluster, cluster.ID,
-		"/home/tiem/.tiup", []string{"--cluster"}, meta.DefaultTiupTimeOut)
+		tiupHomeForTidb, []string{"--cluster"}, meta.DefaultTiupTimeOut)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"check cluster %s health error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -1784,8 +1794,9 @@ func upgradeCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	if way == string(constants.UpgradeWayOffline) {
 		args = append(args, "--offline")
 	}
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	operationID, err := deployment.M.Upgrade(context.Context, deployment.TiUPComponentTypeCluster, clusterInfo.ID, version,
-		"/home/tiem/.tiup", node.ParentID, args, 3600,
+		tiupHomeForTidb, node.ParentID, args, 3600,
 	)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -1796,6 +1807,7 @@ func upgradeCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 		"get start cluster %s operation id: %s", clusterMeta.Cluster.ID, operationID)
 	node.Record(fmt.Sprintf("upgrade cluster %s version to %s from %s", clusterMeta.Cluster.ID, version, clusterInfo.Version))
 	node.OperationID = operationID
+	clusterInfo.Version = version
 	return nil
 }
 
@@ -1806,8 +1818,9 @@ func checkUpgradeVersion(node *workflowModel.WorkFlowNode, context *workflow.Flo
 
 	framework.LogWithContext(context.Context).Infof(
 		"check cluster %s real version, expect %s", clusterInfo.ID, version)
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	result, err := deployment.M.Display(context.Context, deployment.TiUPComponentTypeCluster, clusterInfo.ID,
-		"/home/tiem/.tiup", []string{"--format", "json"}, 3600,
+		tiupHomeForTidb, []string{"--format", "json"}, 3600,
 	)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
@@ -1847,5 +1860,9 @@ func checkSystemHealth(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 }
 
 func revertConfigAfterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
+	clusterInfo := clusterMeta.Cluster
+	originalVersion := context.GetData(ContextOriginalVersion).(string)
+	clusterInfo.Version = originalVersion
 	return nil
 }

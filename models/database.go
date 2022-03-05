@@ -17,23 +17,25 @@ package models
 
 import (
 	"context"
+	"github.com/asim/go-micro/v3/util/file"
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiem/models/platform/check"
+	"github.com/pingcap-inc/tiem/models/platform/product"
+	"github.com/pingcap-inc/tiem/models/platform/system"
+	mm "github.com/pingcap-inc/tiem/models/resource/management"
+	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
+	"github.com/pingcap-inc/tiem/models/tiup"
+	"github.com/pingcap-inc/tiem/models/user/account"
+	"github.com/pingcap-inc/tiem/models/user/identification"
+	"github.com/pingcap-inc/tiem/models/user/rbac"
+	gormopentracing "gorm.io/plugin/opentracing"
 	"io/ioutil"
 	"os"
 	"strings"
 	"syscall"
-
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/models/platform/product"
-	"github.com/pingcap-inc/tiem/models/user/rbac"
-	gormopentracing "gorm.io/plugin/opentracing"
-
-	"github.com/pingcap-inc/tiem/models/tiup"
-
-	"github.com/pingcap-inc/tiem/common/constants"
-	mm "github.com/pingcap-inc/tiem/models/resource/management"
-	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
-	"github.com/pingcap-inc/tiem/models/user/account"
-	"github.com/pingcap-inc/tiem/models/user/identification"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
@@ -73,23 +75,28 @@ type database struct {
 	tokenReaderWriter                identification.ReaderWriter
 	productReaderWriter              product.ProductReadWriterInterface
 	tiUPConfigReaderWriter           tiup.ReaderWriter
+	reportReaderWriter               check.ReaderWriter
+	systemReaderWriter               system.ReaderWriter
 }
 
-func Open(fw *framework.BaseFramework, reentry bool) error {
-	dbFile := fw.GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName + "?_busy_timeout=60000"
+func Open(fw *framework.BaseFramework) error {
+	dbFilePath := fw.GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName
+
+	dbFileExisted, err := file.Exists(dbFilePath)
+	if err != nil {
+		return err
+	}
+
 	logins := framework.LogForkFile(constants.LogFileSystem)
 
-	//newLogger := framework.New(
-	//	log.New(os.Stdout, "\r\n", log.LstdFlags),
-	//	framework.Config{
-	//		SlowThreshold:             time.Second,
-	//		LogLevel:                  framework.Info,
-	//		IgnoreRecordNotFoundError: true,
-	//	},
-	//)
-	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{
-		//Logger: newLogger,
-	})
+	db, err := gorm.Open(sqlite.Open(dbFilePath+"?_busy_timeout=60000"), &gorm.Config{})
+
+	if err != nil || db.Error != nil {
+		logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFilePath, err, db.Error)
+		return err
+	} else {
+		logins.Infof("open database succeed, filepath: %s", dbFilePath)
+	}
 	db.Use(gormopentracing.New(
 		gormopentracing.WithSqlParameters(false),
 		gormopentracing.WithCreateOpName("em.db.create"),
@@ -100,27 +107,72 @@ func Open(fw *framework.BaseFramework, reentry bool) error {
 		gormopentracing.WithUpdateOpName("em.db.update"),
 	))
 
-	if err != nil || db.Error != nil {
-		logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)
-		return err
-	} else {
-		logins.Infof("open database succeed, filepath: %s", dbFile)
-	}
-
 	defaultDb = &database{
 		base: db,
 	}
 
 	defaultDb.initReaderWriters()
 
-	if !reentry {
-		err := defaultDb.initTables()
-		if err != nil {
-			logins.Fatalf("init tables failed, %v", err)
-			return err
+	err = defaultDb.migrateTables()
+	if err != nil {
+		return err
+	}
+
+	// init data for empty database
+	if !dbFileExisted {
+		logins.Infof("init default data for new database")
+		return allVersionInitializers[0].DataInitializer()
+	} else {
+		// compatible
+		if e := defaultDb.base.First(&system.SystemInfo{}).Error; e != nil {
+			defaultDb.base.Create(&system.SystemInfo{
+				SystemName:       "EM",
+				SystemLogo:       "",
+				CurrentVersionID: "",
+				LastVersionID:    "",
+				State:            constants.SystemInitialing,
+			})
 		}
-		defaultDb.initSystemData()
-		defaultDb.initSystemConfig()
+		logins.Infof("database is existed, skip init data")
+	}
+
+	return nil
+}
+
+// IncrementVersionData
+// @Description: execute data initializer between originalVersion and targetVersion
+// @Parameter originalVersion
+// @Parameter targetVersion
+// @return error
+func IncrementVersionData(originalVersion string, targetVersion string) error {
+	if len(targetVersion) == 0 {
+		return errors.NewErrorf(errors.TIEM_SYSTEM_INVALID_VERSION, "invalid version %s", targetVersion)
+	}
+
+	if originalVersion == targetVersion {
+		return nil
+	}
+	originalVersionIndex := -1
+	for i, eachVersion := range allVersionInitializers {
+		// match target version before originalVersion, return err
+		if originalVersionIndex == -1 && targetVersion == eachVersion.VersionID {
+			return errors.NewErrorf(errors.TIEM_SYSTEM_INVALID_VERSION, "unable to upgrade version from %s to %s", originalVersion, targetVersion)
+		}
+		if originalVersionIndex == -1 && originalVersion == eachVersion.VersionID {
+			originalVersionIndex = i
+		}
+
+		// execute DataInitializer for versions between originalVersion and targetVersion
+		if originalVersionIndex != -1 && i > originalVersionIndex {
+			err := eachVersion.DataInitializer()
+			if err != nil {
+				return err
+			}
+		}
+		// target version reached, break
+		if targetVersion == eachVersion.VersionID {
+			break
+		}
 	}
 
 	return nil
@@ -137,8 +189,10 @@ func (p *database) migrateStream(models ...interface{}) (err error) {
 	return nil
 }
 
-func (p *database) initTables() (err error) {
+func (p *database) migrateTables() (err error) {
 	return p.migrateStream(
+		new(system.SystemInfo),
+		new(system.VersionInfo),
 		new(changefeed.ChangeFeedTask),
 		new(workflow.WorkFlow),
 		new(workflow.WorkFlowNode),
@@ -173,6 +227,7 @@ func (p *database) initTables() (err error) {
 		new(account.Tenant),
 		new(account.UserLogin),
 		new(account.UserTenantRelation),
+		new(check.CheckReport),
 	)
 }
 
@@ -193,6 +248,8 @@ func (p *database) initReaderWriters() {
 	defaultDb.tokenReaderWriter = identification.NewTokenReadWrite(defaultDb.base)
 	defaultDb.productReaderWriter = product.NewProductReadWriter(defaultDb.base)
 	defaultDb.tiUPConfigReaderWriter = tiup.NewGormTiupConfigReadWrite(defaultDb.base)
+	defaultDb.reportReaderWriter = check.NewReportReadWrite(defaultDb.base)
+	defaultDb.systemReaderWriter = system.NewSystemReadWrite(defaultDb.base)
 }
 
 func (p *database) initSystemConfig() {
@@ -423,6 +480,7 @@ func SetTokenReaderWriter(rw identification.ReaderWriter) {
 func GetProductReaderWriter() product.ProductReadWriterInterface {
 	return defaultDb.productReaderWriter
 }
+
 func SetProductReaderWriter(rw product.ProductReadWriterInterface) {
 	defaultDb.productReaderWriter = rw
 }
@@ -433,6 +491,37 @@ func GetTiUPConfigReaderWriter() tiup.ReaderWriter {
 
 func SetTiUPConfigReaderWriter(rw tiup.ReaderWriter) {
 	defaultDb.tiUPConfigReaderWriter = rw
+}
+
+func SetReportReaderWriter(rw check.ReaderWriter) {
+	defaultDb.reportReaderWriter = rw
+}
+
+func GetReportReaderWriter() check.ReaderWriter {
+	return defaultDb.reportReaderWriter
+}
+
+func GetSystemReaderWriter() system.ReaderWriter {
+	return defaultDb.systemReaderWriter
+}
+
+func SetSystemReaderWriter(rw system.ReaderWriter) {
+	defaultDb.systemReaderWriter = rw
+}
+
+// Transaction
+// @Description: Transaction for service
+// @Parameter ctx
+// @Parameter fc
+// @return error
+func Transaction(ctx context.Context, fc func(transactionCtx context.Context) error) error {
+	if defaultDb.base == nil {
+		return fc(ctx)
+	}
+	db := defaultDb.base.WithContext(ctx)
+	return db.Transaction(func(tx *gorm.DB) error {
+		return fc(common.CtxWithTransaction(ctx, tx))
+	})
 }
 
 func MockDB() {

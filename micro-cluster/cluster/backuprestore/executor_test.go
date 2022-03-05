@@ -34,6 +34,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+	"time"
 )
 
 func init() {
@@ -79,11 +80,12 @@ func TestExecutor_backupCluster(t *testing.T) {
 			},
 		},
 		DBUsers: map[string]*management.DBUser{
-			string(constants.DBUserBackupRestore): &management.DBUser{
+			string(constants.DBUserBackupRestore): {
 				ClusterID: "cls-test",
 				Name:      constants.DBUserName[constants.DBUserBackupRestore],
-				Password:  "12345678",
-				RoleType:  string(constants.DBUserBackupRestore),
+				Password:  common.Password{Val: "12345678", UpdateTime: time.Now()},
+
+				RoleType: string(constants.DBUserBackupRestore),
 			},
 		},
 	})
@@ -154,10 +156,10 @@ func TestExecutor_restoreFromSrcCluster(t *testing.T) {
 			},
 		},
 		DBUsers: map[string]*management.DBUser{
-			string(constants.DBUserBackupRestore): &management.DBUser{
+			string(constants.DBUserBackupRestore): {
 				ClusterID: "cls-test",
 				Name:      constants.DBUserName[constants.DBUserBackupRestore],
-				Password:  "12345678",
+				Password:  common.Password{Val: "12345678", UpdateTime: time.Now()},
 				RoleType:  string(constants.DBUserBackupRestore),
 			},
 		},

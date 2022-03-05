@@ -25,6 +25,7 @@ package meta
 
 import (
 	"context"
+	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -112,7 +113,7 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 	meta.DBUsers[string(constants.Root)] = &management.DBUser{
 		ClusterID: got.ID,
 		Name:      constants.DBUserName[constants.Root],
-		Password:  dbCommon.Password(parameter.DBPassword),
+		Password:  dbCommon.Password{Val: parameter.DBPassword, UpdateTime: time.Now()},
 		RoleType:  string(constants.Root),
 	}
 	// add instances
@@ -164,7 +165,7 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 		p.DBUsers[string(constants.Root)] = &management.DBUser{
 			ClusterID: got.ID,
 			Name:      constants.DBUserName[constants.Root],
-			Password:  dbCommon.Password(param.DBPassword),
+			Password:  dbCommon.Password{Val: param.DBPassword, UpdateTime: time.Now()},
 			RoleType:  string(constants.Root),
 		}
 		//fmt.Println("got: ",got.ID, "user: ", p.DBUsers[string(constants.Root)].ClusterID)
@@ -197,7 +198,7 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbPassw
 		rootUser := &management.DBUser{
 			ClusterID: got.ID,
 			Name:      constants.DBUserName[constants.Root],
-			Password:  dbCommon.Password(dbPassword),
+			Password:  dbCommon.Password{Val: dbPassword, UpdateTime: time.Now()},
 			RoleType:  string(constants.Root),
 		}
 		p.DBUsers[string(constants.Root)] = rootUser

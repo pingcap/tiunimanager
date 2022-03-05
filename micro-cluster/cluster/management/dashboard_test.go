@@ -109,7 +109,7 @@ func TestGetDashboardInfo(t *testing.T) {
 		{
 			ClusterID: "2145635758",
 			Name:      constants.DBUserName[constants.Root],
-			Password:  "12345678",
+			Password:  common.Password{Val: "123455678", UpdateTime: time.Now().AddDate(0, -1, 0)},
 			RoleType:  string(constants.Root),
 		},
 	}, nil).Times(1)
@@ -186,7 +186,7 @@ func TestGetDashboardInfo(t *testing.T) {
 		{
 			ClusterID: "2145635758",
 			Name:      constants.DBUserName[constants.Root],
-			Password:  "12345678",
+			Password:  common.Password{Val: "123455678", UpdateTime: time.Now().AddDate(0, -1, 0)},
 			RoleType:  string(constants.Root),
 		},
 	}, errors.Error(errors.TIEM_MARSHAL_ERROR)).Times(1)

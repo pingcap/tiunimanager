@@ -331,12 +331,13 @@ func TestGormClusterReadWrite_GetMeta(t *testing.T) {
 	}
 	err := testRW.UpdateInstance(context.TODO(), instances...)
 	users := []*DBUser{
-		{ClusterID: got.ID, Name: "root", Password: "12222", RoleType: string(constants.Root)},
+		{ClusterID: got.ID, Name: "root", Password: common.Password{Val: "123456"}, RoleType: string(constants.Root)},
 	}
 	err = testRW.UpdateDBUser(context.TODO(), users[0])
 	assert.NoError(t, err)
 
 	gotCluster, gotInstances, gotUsers, err := testRW.GetMeta(context.TODO(), got.ID)
+	fmt.Println(gotUsers[0].Password.UpdateTime)
 	assert.NoError(t, err)
 	assert.Equal(t, gotCluster.Tags, gotCluster.Tags)
 	assert.Equal(t, 2, len(gotInstances))
@@ -819,7 +820,7 @@ func TestClusterReadWrite_CreateDBUser(t *testing.T) {
 	user := &DBUser{
 		ClusterID:                "clusterid",
 		Name:                     "testName1",
-		Password:                 "ppppppp",
+		Password:                 common.Password{Val: "123456"},
 		RoleType:                 string(constants.DBUserBackupRestore),
 		LastPasswordGenerateTime: time.Now(),
 	}
@@ -839,6 +840,9 @@ func TestClusterReadWrite_CreateDBUser(t *testing.T) {
 			if err := testRW.CreateDBUser(tt.args.ctx, tt.args.user); (err != nil) != tt.wantErr {
 				t.Errorf("CreateDBUser() error = %v, wantErr %v", err, tt.wantErr)
 			} else {
+				got, _ := testRW.GetDBUser(context.TODO(), "clusterid")
+				fmt.Println(got[0].Password.UpdateTime)
+				assert.NotEmpty(t, got[0].Password.UpdateTime)
 				assert.NotEmpty(t, user.ID)
 				assert.NotEmpty(t, user.CreatedAt)
 			}
@@ -850,7 +854,7 @@ func TestClusterReadWrite_GetDBUser(t *testing.T) {
 	user := DBUser{
 		ClusterID:                "clusterid",
 		Name:                     "testName2",
-		Password:                 "ppppppp",
+		Password:                 common.Password{Val: "abcd12345"},
 		RoleType:                 string(constants.DBUserBackupRestore),
 		LastPasswordGenerateTime: time.Now(),
 	}
@@ -877,7 +881,8 @@ func TestClusterReadWrite_GetDBUser(t *testing.T) {
 				return
 			}
 			if len(got) != 0 {
-				fmt.Println(got[0].ID, len(got))
+				fmt.Println(got[0].Password)
+				assert.Equal(t, got[0].Password.Val, "abcd12345")
 				assert.NotEmpty(t, got[0].ID)
 				assert.NotEmpty(t, got[0].CreatedAt)
 			}
@@ -889,7 +894,7 @@ func TestClusterReadWrite_DeleteDBUser(t *testing.T) {
 	user := DBUser{
 		ClusterID:                "clusterid",
 		Name:                     "12333",
-		Password:                 "ppppppp",
+		Password:                 common.Password{Val: "123456"},
 		RoleType:                 string(constants.DBUserBackupRestore),
 		LastPasswordGenerateTime: time.Now(),
 	}
@@ -924,14 +929,15 @@ func TestClusterReadWrite_UpdateDBUser(t *testing.T) {
 	user := DBUser{
 		ClusterID:                "clusterid",
 		Name:                     "update",
-		Password:                 "ppppppp",
+		Password:                 common.Password{Val: "pppppp"},
 		RoleType:                 string(constants.DBUserBackupRestore),
 		LastPasswordGenerateTime: time.Now(),
 	}
 	testRW.CreateDBUser(context.TODO(), &user)
 	defer testRW.Delete(context.TODO(), user.ClusterID)
 	users, _ := testRW.GetDBUser(context.TODO(), user.ClusterID)
-	users[0].Password = "12345"
+	fmt.Println(users[0].Password)
+	users[0].Password = common.Password{Val: "123456"}
 	type args struct {
 		ctx  context.Context
 		user *DBUser
@@ -949,8 +955,9 @@ func TestClusterReadWrite_UpdateDBUser(t *testing.T) {
 				t.Errorf("UpdateDBUser() error = %v, wantErr %v", err, tt.wantErr)
 			} else {
 				got, err := testRW.GetDBUser(tt.args.ctx, tt.args.user.ClusterID)
+				fmt.Println(got[0].Password)
 				assert.NoError(t, err)
-				assert.Equal(t, string(got[0].Password), "12345")
+				assert.Equal(t, got[0].Password.Val, "123456")
 			}
 		})
 	}

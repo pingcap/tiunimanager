@@ -1328,6 +1328,8 @@ definitions:
     type: object
   message.LoginResp:
     properties:
+      passwordExpired:
+        type: boolean
       tenantId:
         type: string
       token:
@@ -2461,14 +2463,16 @@ definitions:
         - migration
         type: string
       upgradeWay:
-        enum:
+        example:
         - offline
         - online
-        type: string
+        items:
+          type: string
+        type: array
       versions:
         example:
-        - v5.0.0
         - v5.3.0
+        - v5.4.0
         items:
           type: string
         type: array
@@ -2503,6 +2507,13 @@ definitions:
         items:
           type: string
         type: array
+      rangeType:
+        enum:
+        - 0
+        - 1
+        - 2
+        example: 1
+        type: integer
       suggestValue:
         example: "30"
         type: string
@@ -2518,6 +2529,14 @@ definitions:
       unit:
         example: MB
         type: string
+      unitOptions:
+        example:
+        - KB
+        - MB
+        - GB
+        items:
+          type: string
+        type: array
     required:
     - category
     - currentValue
@@ -2525,9 +2544,11 @@ definitions:
     - name
     - paramId
     - range
+    - rangeType
     - suggestValue
     - type
     - unit
+    - unitOptions
     type: object
   structs.ProductVersion:
     properties:

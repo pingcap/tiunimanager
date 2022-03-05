@@ -25,6 +25,7 @@ type DBUser struct {
 	gorm.Model
 	ClusterID                string          `gorm:"not null;type:varchar(22);default:null"`
 	Name                     string          `gorm:"default:null;not null;comment:'name of the user'"`
+	// password 引用的地方
 	Password                 common.Password `gorm:"not null;size:256;comment:'password of the user'"`
 	RoleType                 string          `gorm:"not null;size:64;comment:'role type of the user'"`
 	LastPasswordGenerateTime time.Time

@@ -8343,6 +8343,9 @@ var doc = `{
         "message.LoginResp": {
             "type": "object",
             "properties": {
+                "passwordExpired": {
+                    "type": "boolean"
+                },
                 "tenantId": {
                     "type": "string"
                 },
@@ -9965,8 +9968,11 @@ var doc = `{
                     ]
                 },
                 "upgradeWay": {
-                    "type": "string",
-                    "enum": [
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
                         "offline",
                         "online"
                     ]
@@ -9977,8 +9983,8 @@ var doc = `{
                         "type": "string"
                     },
                     "example": [
-                        "v5.0.0",
-                        "v5.3.0"
+                        "v5.3.0",
+                        "v5.4.0"
                     ]
                 }
             }
@@ -9992,9 +9998,11 @@ var doc = `{
                 "name",
                 "paramId",
                 "range",
+                "rangeType",
                 "suggestValue",
                 "type",
-                "unit"
+                "unit",
+                "unitOptions"
             ],
             "properties": {
                 "category": {
@@ -10031,6 +10039,15 @@ var doc = `{
                         " 1000"
                     ]
                 },
+                "rangeType": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ],
+                    "example": 1
+                },
                 "suggestValue": {
                     "type": "string",
                     "example": "30"
@@ -10049,6 +10066,17 @@ var doc = `{
                 "unit": {
                     "type": "string",
                     "example": "MB"
+                },
+                "unitOptions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "KB",
+                        "MB",
+                        "GB"
+                    ]
                 }
             }
         },

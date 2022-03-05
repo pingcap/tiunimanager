@@ -16,6 +16,7 @@
 package common
 
 import (
+	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/util/uuidutil"
@@ -136,14 +137,14 @@ func TestPassword(t *testing.T) {
 				TenantId: "111",
 			},
 			Name:     "createpassword",
-			Password: "N&HIO(*(&#Y*&HNS&D*#*GF*RS*FY&DF",
+			Password: Password{Val: "N&HIO(*(&#Y*&HNS&D*#*GF*RS*FY&DF", UpdateTime: time.Now()},
 		}).Error
 		assert.NoError(t, err)
 
 		result := &TestEntity{}
 		err = baseDB.Model(&TestEntity{}).Where("name = ?", "createpassword").First(result).Error
 		assert.NoError(t, err)
-		assert.Equal(t, "N&HIO(*(&#Y*&HNS&D*#*GF*RS*FY&DF", string(result.Password))
+		assert.Equal(t, "N&HIO(*(&#Y*&HNS&D*#*GF*RS*FY&DF", result.Password.Val)
 	})
 	t.Run("update", func(t *testing.T) {
 		a := &TestEntity{
@@ -151,16 +152,40 @@ func TestPassword(t *testing.T) {
 				TenantId: "111",
 			},
 			Name:     "updatepassword",
-			Password: "abcd",
+			Password: Password{Val: "abcd", UpdateTime: time.Now()},
 		}
 		baseDB.Create(a)
-		a.Password = "dddd"
+		fmt.Println("time1:", a.Password.UpdateTime)
+		a.Password.Val = "dddd"
 		err := baseDB.Model(a).Save(a).Error
 		assert.NoError(t, err)
 
 		result := &TestEntity{}
 		err = baseDB.Model(&TestEntity{}).Where("name = ?", "updatepassword").First(result).Error
+		fmt.Println("time2:", result.Password.UpdateTime)
+
 		assert.NoError(t, err)
-		assert.Equal(t, "dddd", string(result.Password))
+		assert.Equal(t, "dddd", result.Password.Val)
+	})
+
+	t.Run("expired", func(t *testing.T) {
+		a := &TestEntity{
+			Entity: Entity{
+				TenantId: "333",
+			},
+			Name:     "check",
+			Password: Password{Val: "abc123"},
+		}
+		baseDB.Create(a)
+
+		result := &TestEntity{}
+		err := baseDB.Model(&TestEntity{}).Where("name = ?", "check").First(result).Error
+		fmt.Println("time1:", result.Password.UpdateTime)
+		result.Password.UpdateTime = time.Now().AddDate(0, 0, -31)
+		fmt.Println("time1:", result.Password.UpdateTime)
+		expired := result.Password.CheckUpdateTimeExpired()
+		assert.NoError(t, err)
+		assert.Equal(t, "abc123", result.Password.Val)
+		assert.Equal(t, expired, true)
 	})
 }

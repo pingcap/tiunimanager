@@ -48,6 +48,9 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (message.
 		return resp, errors.NewError(errors.TIEM_LOGIN_FAILED, "incorrect username or password")
 	}
 
+	// check password update time
+	resp.PasswordExpired = user.FinalHash.CheckUpdateTimeExpired()
+
 	// create token
 	tokenString := uuid.New().String()
 	expirationTime := time.Now().Add(constants.DefaultTokenValidPeriod)

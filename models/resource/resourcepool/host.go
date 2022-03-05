@@ -137,12 +137,12 @@ func (h *Host) ConstructFromHostInfo(src *structs.HostInfo) error {
 	h.HostName = src.HostName
 	h.IP = src.IP
 	h.UserName = src.UserName
-	h.Passwd = common.Password(src.Passwd)
+	h.Passwd = common.Password{Val: src.Passwd} // todo: time?
 	h.Arch = src.Arch
 	h.OS = src.OS
 	h.Kernel = src.Kernel
-	h.FreeCpuCores = (src.CpuCores - src.UsedCpuCores)
-	h.FreeMemory = (src.Memory - src.UsedMemory)
+	h.FreeCpuCores = src.CpuCores - src.UsedCpuCores
+	h.FreeMemory = src.Memory - src.UsedMemory
 	h.Spec = src.GetSpecString()
 	h.CpuCores = src.CpuCores
 	h.Memory = src.Memory

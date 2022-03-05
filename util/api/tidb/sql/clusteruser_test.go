@@ -55,7 +55,7 @@ func TestDBUserManager_CreateDBUser(t *testing.T) {
 	user1 := &management.DBUser{
 		ClusterID:                "clusterID",
 		Name:                     "backup",
-		Password:                 common.Password(meta.GetRandomString(10)),
+		Password:                 common.Password{Val: meta.GetRandomString(10), UpdateTime: time.Now()},
 		RoleType:                 string(constants.DBUserBackupRestore),
 		LastPasswordGenerateTime: time.Now(),
 	}
@@ -96,7 +96,7 @@ func TestDBUserManager_DeleteDBUser(t *testing.T) {
 	user1 := &management.DBUser{
 		ClusterID:                "clusterID",
 		Name:                     "backup",
-		Password:                 common.Password(meta.GetRandomString(10)),
+		Password:                 common.Password{Val: meta.GetRandomString(10)}, // todo: test the time with the last one
 		RoleType:                 string(constants.DBUserBackupRestore),
 		LastPasswordGenerateTime: time.Now(),
 	}

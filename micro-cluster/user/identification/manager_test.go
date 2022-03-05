@@ -68,7 +68,7 @@ func TestManager_Login(t *testing.T) {
 		accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(&account.User{
 			ID:        "user01",
 			Salt:      salt,
-			FinalHash: hash,
+			FinalHash: common.Password{Val: hash, UpdateTime: time.Now().AddDate(0, 0, -10)},
 		}, nil)
 
 		tokenRW.EXPECT().CreateToken(gomock.Any(), gomock.Any(),
@@ -76,6 +76,7 @@ func TestManager_Login(t *testing.T) {
 		got, err := manager.Login(ctx.TODO(), message.LoginReq{Name: "user01", Password: "123"})
 		assert.NoError(t, err)
 		assert.Equal(t, got.UserID, "user01")
+		assert.Equal(t, got.PasswordExpired, false)
 	})
 
 	t.Run("get user fail", func(t *testing.T) {
@@ -97,7 +98,7 @@ func TestManager_Login(t *testing.T) {
 		accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(&account.User{
 			ID:        "user01",
 			Salt:      salt,
-			FinalHash: hash,
+			FinalHash: common.Password{Val: hash, UpdateTime: time.Now().AddDate(0, 0, -10)},
 		}, nil)
 
 		_, err = manager.Login(ctx.TODO(), message.LoginReq{Name: "user01", Password: ""})
@@ -113,7 +114,7 @@ func TestManager_Login(t *testing.T) {
 		accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(&account.User{
 			ID:        "user01",
 			Salt:      salt,
-			FinalHash: hash,
+			FinalHash: common.Password{Val: hash, UpdateTime: time.Now().AddDate(0, 0, -10)},
 		}, nil)
 
 		_, err = manager.Login(ctx.TODO(), message.LoginReq{Name: "user01", Password: "234"})
@@ -131,13 +132,35 @@ func TestManager_Login(t *testing.T) {
 		accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(&account.User{
 			ID:        "user01",
 			Salt:      salt,
-			FinalHash: hash,
+			FinalHash: common.Password{Val: hash, UpdateTime: time.Now().AddDate(0, 0, -10)},
 		}, nil)
 
 		tokenRW.EXPECT().CreateToken(gomock.Any(), gomock.Any(), gomock.Any(),
 			gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("create token fail"))
 		_, err = manager.Login(ctx.TODO(), message.LoginReq{Name: "user01", Password: "123"})
 		assert.Error(t, err)
+	})
+
+	t.Run("password expired", func(t *testing.T) {
+		accountRW := mockaccount.NewMockReaderWriter(ctrl)
+		models.SetAccountReaderWriter(accountRW)
+
+		tokenRW := mockidentification.NewMockReaderWriter(ctrl)
+		models.SetTokenReaderWriter(tokenRW)
+		salt, hash, err := genSaltAndHash("123456")
+		assert.NoError(t, err)
+		accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(&account.User{
+			ID:        "user06",
+			Salt:      salt,
+			FinalHash: common.Password{Val: hash, UpdateTime: time.Now().AddDate(0, 0, -40)},
+		}, nil)
+
+		tokenRW.EXPECT().CreateToken(gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any()).Return(&identification.Token{}, nil)
+		got, err := manager.Login(ctx.TODO(), message.LoginReq{Name: "user06", Password: "123456"})
+		assert.NoError(t, err)
+		assert.Equal(t, got.UserID, "user06")
+		assert.Equal(t, got.PasswordExpired, true)
 	})
 }
 

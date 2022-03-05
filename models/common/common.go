@@ -18,6 +18,8 @@ package common
 import (
 	"context"
 	"database/sql/driver"
+	"encoding/json"
+	"github.com/pingcap-inc/tiem/common/constants"
 	crypto "github.com/pingcap-inc/tiem/util/encrypt"
 	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"golang.org/x/crypto/bcrypt"
@@ -37,21 +39,42 @@ type Entity struct {
 	Status   string `gorm:"not null;"`
 }
 
-type Password string
+type Password struct {
+	Val        string  // Value is the value of the password
+	UpdateTime time.Time // Last update time
+}
 
 // Scan implements the Scanner interface.
 func (p *Password) Scan(value interface{}) error {
-	enc, err := crypto.AesDecryptCFB(value.(string))
+	if value == nil {
+		p.Val, p.UpdateTime = "", time.Time{}
+		return nil
+	}
+	val := []byte(value.(string))
+	err := json.Unmarshal(val, p)
 	if err != nil {
 		return err
 	}
-	*p = Password(enc)
+	dec, err := crypto.AesDecryptCFB(p.Val)
+
+	if err != nil {
+		return err
+	}
+	p.Val = dec
 	return nil
 }
 
 // Value implements the driver Valuer interface.
 func (p Password) Value() (driver.Value, error) {
-	return crypto.AesEncryptCFB(string(p))
+	enc, err := crypto.AesEncryptCFB(p.Val)
+	if err != nil {
+		return nil, err
+	}
+	p.Val = enc
+	// 密码有修改 就应该修改更新时间对吧
+	p.UpdateTime = time.Now()
+	res, err := json.Marshal(p)
+	return string(res), err
 }
 
 func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
@@ -91,12 +114,23 @@ func WrapDBError(err error) error {
 	}
 }
 
-func FinalHash(salt string, passwd string) ([]byte, error) {
-	if passwd == "" {
+func FinalHash(salt string, password string) ([]byte, error) {
+	if password == "" {
 		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "password cannot be empty")
 	}
-	s := salt + passwd
+	s := salt + password
 	finalSalt, err := bcrypt.GenerateFromPassword([]byte(s), bcrypt.DefaultCost)
 
 	return finalSalt, err
+}
+// CheckUpdateTimeExpired
+// @Description: check if the update time of the password is expired
+// @Parameter
+// @return bool
+func (p Password) CheckUpdateTimeExpired() bool {
+	duration := time.Now().Sub(p.UpdateTime)
+	if duration < constants.ExpirationTime {
+		return false
+	}
+	return true
 }

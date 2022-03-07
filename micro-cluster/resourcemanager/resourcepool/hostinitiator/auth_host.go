@@ -120,7 +120,7 @@ func (p *FileHostInitiator) createDeployUser(ctx context.Context, deployUser, us
 		Sudoer: true,
 	}
 	createUserCmd := um.buildUserCommand()
-	_, err := p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{createUserCmd})
+	_, err := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{createUserCmd})
 	if err != nil {
 		errMsg := fmt.Sprintf("create user %s on remote host %s failed by cmd %s, err: %v", deployUser, h.IP, createUserCmd, err)
 		return errors.NewError(errors.TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR, errMsg)
@@ -140,7 +140,7 @@ func (p *FileHostInitiator) getLocalPublicKey(keyPath string) (pubKey []byte, er
 
 func (p *FileHostInitiator) appendRemoteAuthorizedKeysFile(ctx context.Context, pubKey []byte, deployUser string, h *structs.HostInfo) (err error) {
 	cmd := `su - ` + deployUser + ` -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh'`
-	_, err = p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{cmd})
+	_, err = p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{cmd})
 	if err != nil {
 		errMsg := fmt.Sprintf("create '~/.ssh' directory for user '%s' on host %s failed, %v", deployUser, h.IP, err)
 		return errors.NewError(errors.TIEM_RESOURCE_INIT_HOST_AUTH_ERROR, errMsg)
@@ -150,7 +150,7 @@ func (p *FileHostInitiator) appendRemoteAuthorizedKeysFile(ctx context.Context, 
 	sshAuthorizedKeys := p.findSSHAuthorizedKeysFile(ctx, h)
 	cmd = fmt.Sprintf(`su - %[1]s -c 'grep \"%[2]s\" %[3]s || echo %[2]s >> %[3]s && chmod 600 %[3]s'`,
 		deployUser, pk, sshAuthorizedKeys)
-	_, err = p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{cmd})
+	_, err = p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{cmd})
 	if err != nil {
 		errMsg := fmt.Sprintf("write public keys '%s' to host '%s' for user '%s'", sshAuthorizedKeys, h.IP, deployUser)
 		return errors.NewError(errors.TIEM_RESOURCE_INIT_HOST_AUTH_ERROR, errMsg)
@@ -181,7 +181,7 @@ func (p *FileHostInitiator) findSSHAuthorizedKeysFile(ctx context.Context, h *st
 	sshAuthorizedKeys := defaultSSHAuthorizedKeys
 	cmd := "grep -Ev '^\\s*#|^\\s*$' /etc/ssh/sshd_config"
 	// error ignored as we have default value
-	stdout, _ := p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{cmd})
+	stdout, _ := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{cmd})
 
 	for _, line := range strings.Split(string(stdout), "\n") {
 		if !strings.Contains(line, "AuthorizedKeysFile") {

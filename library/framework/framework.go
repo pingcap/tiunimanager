@@ -125,6 +125,7 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 		EMClusterName:      "em-test",
 		EMVersion:          "InTesting",
 		DeployUser:         "test-user",
+		DeployGroup:        "test-group",
 	}
 	f.parseArgs(serviceName)
 
@@ -275,6 +276,10 @@ func (b *BaseFramework) GetClientArgs() *ClientArgs {
 
 func GetCurrentDeployUser() string {
 	return Current.GetClientArgs().DeployUser
+}
+
+func GetCurrentDeployGroup() string {
+	return Current.GetClientArgs().DeployGroup
 }
 
 func GetPrivateKeyFilePath(userName string) (keyPath string) {

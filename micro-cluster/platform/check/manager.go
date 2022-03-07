@@ -24,6 +24,7 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/platform/check"
 	"github.com/pingcap-inc/tiem/workflow"
+	"sync"
 )
 
 const (
@@ -31,7 +32,19 @@ const (
 	ContextReportInfo = "ReportInfo"
 )
 
-type CheckManager struct{
+var checkService CheckService
+var once sync.Once
+
+func GetCheckService() CheckService {
+	once.Do(func() {
+		if checkService == nil {
+			checkService = NewCheckManager()
+		}
+	})
+	return checkService
+}
+
+type CheckManager struct {
 	autoCheckMgr *autoCheckManager
 }
 

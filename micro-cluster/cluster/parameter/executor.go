@@ -32,6 +32,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/BurntSushi/toml"
+
 	"github.com/shopspring/decimal"
 
 	"github.com/pingcap-inc/tiem/deployment"
@@ -362,7 +364,7 @@ func fillParameters(ctx *workflow.FlowContext, fillParamContainer map[interface{
 				return err
 			}
 			// handle fill parameter value
-			if err := handleFillParams(ctx, apiContent, instanceType.(string), params); err != nil {
+			if err := handleApiFillParams(ctx, apiContent, instanceType.(string), params); err != nil {
 				return err
 			}
 		case string(constants.ComponentIDTiKV):
@@ -381,7 +383,7 @@ func fillParameters(ctx *workflow.FlowContext, fillParamContainer map[interface{
 				return err
 			}
 			// handle fill parameter value
-			if err := handleFillParams(ctx, apiContent, instanceType.(string), params); err != nil {
+			if err := handleApiFillParams(ctx, apiContent, instanceType.(string), params); err != nil {
 				return err
 			}
 		case string(constants.ComponentIDPD):
@@ -400,39 +402,82 @@ func fillParameters(ctx *workflow.FlowContext, fillParamContainer map[interface{
 				return err
 			}
 			// handle fill parameter value
-			if err := handleFillParams(ctx, apiContent, instanceType.(string), params); err != nil {
+			if err := handleApiFillParams(ctx, apiContent, instanceType.(string), params); err != nil {
 				return err
+			}
+		case string(constants.ComponentIDCDC), string(constants.ComponentIDTiFlash):
+			// Get component cluster instances
+			instances := clusterMeta.Instances[instanceType.(string)]
+			if len(instances) > 0 {
+				// pull config
+				configContentStr, err := pullConfig(ctx, instances[0].ClusterID, instances[0].Type, instances[0].DeployDir, instances[0].HostIP[0])
+				if err != nil {
+					framework.LogWithContext(ctx).Errorf("failed to call %s pull show config, err = %s", instanceType, err)
+					return err
+				}
+				// handle fill parameter value
+				if err := handleConfigFillParams(ctx, []byte(configContentStr), instanceType.(string), params); err != nil {
+					return err
+				}
 			}
 		}
 	}
 	return nil
 }
 
-// handleFillParams
-// @Description: handle fill parameters value
+// handleApiFillParams
+// @Description: handle api fill parameters value
 // @Parameter ctx
-// @Parameter apiContent
+// @Parameter content
 // @Parameter instanceType
 // @Parameter params
 // @return err
-func handleFillParams(ctx *workflow.FlowContext, apiContent []byte, instanceType string, params []*ModifyClusterParameterInfo) (err error) {
+func handleApiFillParams(ctx *workflow.FlowContext, content []byte, instanceType string, params []*ModifyClusterParameterInfo) (err error) {
 	reqApiParams := map[string]interface{}{}
-	d := json.NewDecoder(bytes.NewReader(apiContent))
+	d := json.NewDecoder(bytes.NewReader(content))
 	d.UseNumber()
 	if err = d.Decode(&reqApiParams); err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to convert %s api parameters, err = %v", instanceType, err)
 		return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "failed to convert %s api parameters, err = %v", instanceType, err)
 	}
 	// Get api flattened parameter set
-	flattenedApiParams, err := FlattenedParameters(reqApiParams)
+	return handleFillParamResult(ctx, reqApiParams, instanceType, params)
+}
+
+// handleConfigFillParams
+// @Description: handle config fill parameters value
+// @Parameter ctx
+// @Parameter content
+// @Parameter instanceType
+// @Parameter params
+// @return err
+func handleConfigFillParams(ctx *workflow.FlowContext, content []byte, instanceType string, params []*ModifyClusterParameterInfo) (err error) {
+	reqConfigParams := map[string]interface{}{}
+	if err = toml.Unmarshal(content, &reqConfigParams); err != nil {
+		framework.LogWithContext(ctx).Errorf("failed to convert %s config parameters, err = %v", instanceType, err)
+		return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "failed to convert %s config parameters, err = %v", instanceType, err)
+	}
+	// Get config flattened parameter set
+	return handleFillParamResult(ctx, reqConfigParams, instanceType, params)
+}
+
+// handleFillParamResult
+// @Description: handle fill parameter result
+// @Parameter ctx
+// @Parameter reqConfigParams
+// @Parameter instanceType
+// @Parameter params
+// @return err
+func handleFillParamResult(ctx *workflow.FlowContext, reqConfigParams map[string]interface{}, instanceType string, params []*ModifyClusterParameterInfo) (err error) {
+	flattenedParams, err := FlattenedParameters(reqConfigParams)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("failed to flattened %s api parameters, err = %v", instanceType, err)
-		return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "failed to flattened %s api parameters, err = %v", instanceType, err)
+		framework.LogWithContext(ctx).Errorf("failed to flattened %s parameters, err = %v", instanceType, err)
+		return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "failed to flattened %s parameters, err = %v", instanceType, err)
 	}
 	for _, param := range params {
 		fullName := DisplayFullParameterName(param.Category, param.Name)
-		if _, ok := flattenedApiParams[fullName]; ok {
-			instValue := flattenedApiParams[fullName]
+		if _, ok := flattenedParams[fullName]; ok {
+			instValue := flattenedParams[fullName]
 			// If the value contains the unit, need to determine whether the units need to be replaced
 			for srcUnit, replaceUnit := range replaceUnits {
 				if strings.HasSuffix(instValue, srcUnit) {

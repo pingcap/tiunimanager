@@ -1218,11 +1218,29 @@ func (handler *ClusterServiceHandler) GetStocks(ctx context.Context, req *cluste
 }
 
 func (handler *ClusterServiceHandler) UpdateVendors(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
-	panic("implement me")
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "UpdateVendors", int(response.GetCode()))
+
+	req := message.UpdateVendorInfoReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionUpdate)}}) {
+		resp, err := handler.productManager.UpdateVendors(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
 }
 
 func (handler *ClusterServiceHandler) QueryVendors(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
-	panic("implement me")
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "QueryVendors", int(response.GetCode()))
+
+	req := message.QueryVendorInfoReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionRead)}}) {
+		resp, err := handler.productManager.QueryVendors(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
 }
 
 func (handler *ClusterServiceHandler) QueryAvailableVendors(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
@@ -1230,11 +1248,29 @@ func (handler *ClusterServiceHandler) QueryAvailableVendors(ctx context.Context,
 }
 
 func (handler *ClusterServiceHandler) UpdateProducts(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
-	panic("implement me")
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "UpdateProducts", int(response.GetCode()))
+
+	req := message.UpdateProductsInfoReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionUpdate)}}) {
+		resp, err := handler.productManager.UpdateProducts(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
 }
 
 func (handler *ClusterServiceHandler) QueryProducts(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
-	panic("implement me")
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "QueryProducts", int(response.GetCode()))
+
+	req := message.QueryProductsInfoReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionRead)}}) {
+		resp, err := handler.productManager.QueryProducts(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
 }
 
 func (handler *ClusterServiceHandler) QueryAvailableProducts(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {

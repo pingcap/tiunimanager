@@ -1743,6 +1743,8 @@ definitions:
         items:
           $ref: '#/definitions/structs.ProductConfigInfo'
         type: array
+    required:
+    - products
     type: object
   message.UpdateProductsInfoResp:
     type: object
@@ -2948,9 +2950,6 @@ definitions:
         type: string
       purpose_type:
         description: eg:Compute/Storage/Schedule
-        type: string
-      status:
-        description: e.g. Online/Offline
         type: string
     type: object
   structs.SpecificVersionProduct:
@@ -7013,6 +7012,7 @@ paths:
         items:
           type: string
         name: vendorIDs
+        required: true
         type: array
       produces:
       - application/json

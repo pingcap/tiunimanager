@@ -6373,7 +6373,8 @@ var doc = `{
                             "type": "string"
                         },
                         "name": "vendorIDs",
-                        "in": "query"
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -9203,6 +9204,9 @@ var doc = `{
         },
         "message.UpdateProductsInfoReq": {
             "type": "object",
+            "required": [
+                "products"
+            ],
             "properties": {
                 "products": {
                     "type": "array",
@@ -10940,10 +10944,6 @@ var doc = `{
                 },
                 "purpose_type": {
                     "description": "eg:Compute/Storage/Schedule",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "e.g. Online/Offline",
                     "type": "string"
                 }
             }

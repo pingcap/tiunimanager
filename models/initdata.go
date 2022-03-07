@@ -212,11 +212,11 @@ func initDefaultProductsAndVendors(tx *gorm.DB) error {
 		return tx.Create(&product.ProductInfo{ProductID: "TiDB", ProductName: "TiDB"}).Error
 	}).BreakIf(func() error {
 		return tx.CreateInBatches([]*product.ProductComponentInfo{
-			{ProductID: "TiDB", ComponentID: "TiDB", PurposeType: "Compute", StartPort: 10000, EndPort: 10020, MaxPort: 2, MinInstance: 1, MaxInstance: 128, SuggestedInstancesCount: []int32{}},
-			{ProductID: "TiDB", ComponentID: "TiKV", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 128, SuggestedInstancesCount: []int32{}},
-			{ProductID: "TiDB", ComponentID: "PD", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 128, SuggestedInstancesCount: []int32{1, 3, 5, 7}},
-			{ProductID: "TiDB", ComponentID: "TiFlash", PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 0, MaxInstance: 128, SuggestedInstancesCount: []int32{}},
-			{ProductID: "TiDB", ComponentID: "CDC", PurposeType: "Compute", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 0, MaxInstance: 128, SuggestedInstancesCount: []int32{}},
+			{ProductID: "TiDB", ComponentID: "TiDB", ComponentName: "TiDB", PurposeType: "Compute", StartPort: 10000, EndPort: 10020, MaxPort: 2, MinInstance: 1, MaxInstance: 128, SuggestedInstancesCount: []int32{}},
+			{ProductID: "TiDB", ComponentID: "TiKV", ComponentName: "TiKV", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 128, SuggestedInstancesCount: []int32{}},
+			{ProductID: "TiDB", ComponentID: "PD", ComponentName: "PD", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 128, SuggestedInstancesCount: []int32{1, 3, 5, 7}},
+			{ProductID: "TiDB", ComponentID: "TiFlash", ComponentName: "TiFlash", PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 0, MaxInstance: 128, SuggestedInstancesCount: []int32{}},
+			{ProductID: "TiDB", ComponentID: "CDC", ComponentName: "CDC", PurposeType: "Compute", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 0, MaxInstance: 128, SuggestedInstancesCount: []int32{}},
 		}, 5).Error
 	}).BreakIf(func() error {
 		return tx.CreateInBatches([]*product.ProductVersion{

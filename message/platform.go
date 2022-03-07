@@ -38,17 +38,17 @@ type UpdateVendorInfoResp struct {
 
 //QueryVendorInfoReq query vendor info request
 type QueryVendorInfoReq struct {
-	VendorIDs []string `json:"vendorIDs" form:"vendors"`
+	VendorIDs []string `json:"vendorIDs" form:"vendorIDs" validate:"required"`
 }
 
 //QueryVendorInfoResp query vendor info response
 type QueryVendorInfoResp struct {
-	Vendors []structs.VendorConfigInfo `json:"vendors"`
+	Vendors []structs.VendorConfigInfo `json:"vendors" `
 }
 
 //UpdateProductsInfoReq update product info request
 type UpdateProductsInfoReq struct {
-	Products []structs.ProductConfigInfo `json:"products" form:"products"`
+	Products []structs.ProductConfigInfo `json:"products" form:"products" validate:"required"`
 }
 
 //UpdateProductsInfoResp update product info response
@@ -57,7 +57,7 @@ type UpdateProductsInfoResp struct {
 
 //QueryProductsInfoReq query product info request
 type QueryProductsInfoReq struct {
-	ProductIDs []string `json:"productIDs"`
+	ProductIDs []string `json:"productIDs" form:"productIDs"`
 }
 
 //QueryProductsInfoResp query product info response

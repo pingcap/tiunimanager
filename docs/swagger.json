@@ -6359,7 +6359,8 @@
                             "type": "string"
                         },
                         "name": "vendorIDs",
-                        "in": "query"
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -9189,6 +9190,9 @@
         },
         "message.UpdateProductsInfoReq": {
             "type": "object",
+            "required": [
+                "products"
+            ],
             "properties": {
                 "products": {
                     "type": "array",
@@ -10926,10 +10930,6 @@
                 },
                 "purpose_type": {
                     "description": "eg:Compute/Storage/Schedule",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "e.g. Online/Offline",
                     "type": "string"
                 }
             }

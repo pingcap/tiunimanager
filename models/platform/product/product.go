@@ -42,6 +42,7 @@ type ProductVersion struct {
 type ProductComponentInfo struct {
 	ProductID               string  `gorm:"uniqueIndex:product_component;"`
 	ComponentID             string  `gorm:"uniqueIndex:product_component;"`
+	ComponentName 			string  `gorm:"size:32;"`
 	PurposeType             string  `gorm:"size:32;comment:Compute/Storage/Schedule"`
 	StartPort               int32   `gorm:"comment:'starting value of the port opened by the component'"`
 	EndPort                 int32   `gorm:"comment:'ending value of the port opened by the component'"`

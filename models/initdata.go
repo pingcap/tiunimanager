@@ -25,6 +25,11 @@ package models
 
 import (
 	"context"
+	"io/ioutil"
+	"os"
+	"strings"
+	"syscall"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -34,10 +39,6 @@ import (
 	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	"github.com/pingcap-inc/tiem/models/user/account"
 	"gorm.io/gorm"
-	"io/ioutil"
-	"os"
-	"strings"
-	"syscall"
 )
 
 var inTestingVersion = "InTesting"
@@ -51,14 +52,14 @@ var allVersionInitializers = []system.VersionInitializer{
 			ReleaseNote: "release note",
 		})
 		upgradeSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/upgrades.sql"
-		return initBySql(upgradeSqlFile, "tiup upgrade")
+		return initBySql(nil, upgradeSqlFile, "tiup upgrade")
 	}},
 	{"v1.0.0-beta.11", func() error {
 		return defaultDb.base.WithContext(context.TODO()).Transaction(func(tx *gorm.DB) error {
-			_, err := defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{
+			err := tx.Create(&config.SystemConfig{
 				ConfigKey:   constants.ConfigKeyDefaultSSHPort,
 				ConfigValue: "22",
-			})
+			}).Error
 			if err != nil {
 				return err
 			}
@@ -71,7 +72,7 @@ var allVersionInitializers = []system.VersionInitializer{
 			if err != nil {
 				return err
 			}
-			return initBySql(parameterSqlFile, "parameters")
+			return initBySql(tx, parameterSqlFile, "parameters")
 		})
 	}},
 
@@ -146,10 +147,10 @@ func fullDataBeforeVersions() error {
 	}).BreakIf(func() error {
 		framework.LogForkFile(constants.LogFileSystem).Info("init default parameters")
 		parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters.sql"
-		return initBySql(parameterSqlFile, "parameters")
+		return initBySql(nil, parameterSqlFile, "parameters")
 	}).BreakIf(func() error {
 		tiUPSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/tiup_configs.sql"
-		return initBySql(tiUPSqlFile, "tiup config")
+		return initBySql(nil, tiUPSqlFile, "tiup config")
 	}).If(func(err error) {
 		framework.LogForkFile(constants.LogFileSystem).Errorf("init data failed, err = %s", err.Error())
 	}).Else(func() {
@@ -157,7 +158,7 @@ func fullDataBeforeVersions() error {
 	}).Present()
 }
 
-func initBySql(file string, module string) error {
+func initBySql(tx *gorm.DB, file string, module string) error {
 	err := syscall.Access(file, syscall.F_OK)
 	if !os.IsNotExist(err) {
 		sqls, err := ioutil.ReadFile(file)
@@ -166,12 +167,15 @@ func initBySql(file string, module string) error {
 			return err
 		}
 		sqlArr := strings.Split(string(sqls), ";")
+		if tx == nil {
+			tx = defaultDb.base
+		}
 		for _, sql := range sqlArr {
 			if strings.TrimSpace(sql) == "" {
 				continue
 			}
 			// exec import sql
-			defaultDb.base.Exec(sql)
+			tx.Exec(sql)
 		}
 	}
 	return nil

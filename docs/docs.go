@@ -10526,6 +10526,9 @@ var doc = `{
                     "description": "Host Spec, init while importing",
                     "type": "string"
                 },
+                "sshPort": {
+                    "type": "integer"
+                },
                 "status": {
                     "description": "Host Status, 0 for Online, 1 for offline",
                     "type": "string"

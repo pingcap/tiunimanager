@@ -150,6 +150,7 @@ func (m *Manager) Upgrade(name string, clusterVersion string, opt operator.Optio
 				m.specManager,
 				inst,
 				base.User,
+				base.Group,
 				opt.IgnoreConfigCheck,
 				meta.DirPaths{
 					Deploy: deployDir,

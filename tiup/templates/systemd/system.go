@@ -26,6 +26,7 @@ import (
 type Config struct {
 	ServiceName         string
 	User                string
+	Group               string
 	MemoryLimit         string
 	CPUQuota            string
 	IOReadBandwidthMax  string
@@ -41,10 +42,11 @@ type Config struct {
 }
 
 // NewConfig returns a Config with given arguments
-func NewConfig(service, user, deployDir string) *Config {
+func NewConfig(service, user, group, deployDir string) *Config {
 	return &Config{
 		ServiceName: service,
 		User:        user,
+		Group:       group,
 		DeployDir:   deployDir,
 	}
 }

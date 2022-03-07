@@ -158,9 +158,10 @@ func (i *ClusterServerInstance) InitConfig(
 	clusterName,
 	clusterVersion,
 	deployUser string,
+	deployGroup string,
 	paths meta.DirPaths,
 ) error {
-	if err := i.BaseInstance.InitConfig(ctx, e, i.topo.GlobalOptions, deployUser, paths); err != nil {
+	if err := i.BaseInstance.InitConfig(ctx, e, i.topo.GlobalOptions, deployUser, deployGroup, paths); err != nil {
 		return err
 	}
 
@@ -181,7 +182,8 @@ func (i *ClusterServerInstance) InitConfig(
 		WithTracer(i.topo.TracerEndpoints()).
 		WithClusterName(clusterName).
 		WithClusterVersion(clusterVersion).
-		WithDeployUser(deployUser)
+		WithDeployUser(deployUser).
+		WithDeployGroup(deployGroup)
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_cluster-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	if err := scpt.ScriptToFile(fp); err != nil {
@@ -226,9 +228,10 @@ func (i *ClusterServerInstance) ScaleConfig(
 	clusterName,
 	clusterVersion,
 	deployUser string,
+	deployGroup string,
 	paths meta.DirPaths,
 ) error {
-	if err := i.InitConfig(ctx, e, clusterName, clusterVersion, deployUser, paths); err != nil {
+	if err := i.InitConfig(ctx, e, clusterName, clusterVersion, deployUser, deployGroup, paths); err != nil {
 		return err
 	}
 
@@ -249,7 +252,8 @@ func (i *ClusterServerInstance) ScaleConfig(
 		WithTracer(i.topo.TracerEndpoints()).
 		WithClusterName(clusterName).
 		WithClusterVersion(clusterVersion).
-		WithDeployUser(deployUser)
+		WithDeployUser(deployUser).
+		WithDeployGroup(deployGroup)
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_cluster-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	log.Infof("script path: %s", fp)

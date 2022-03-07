@@ -263,6 +263,7 @@ func (m *Manager) Deploy(
 			m.specManager,
 			inst,
 			globalOptions.User,
+			globalOptions.Group,
 			opt.IgnoreConfigCheck,
 			meta.DirPaths{
 				Deploy: deployDir,
@@ -319,6 +320,7 @@ func (m *Manager) Deploy(
 	}
 
 	metadata.SetUser(globalOptions.User)
+	metadata.SetGroup(globalOptions.Group)
 	metadata.SetVersion(clusterVersion)
 	err = m.specManager.SaveMeta(name, metadata)
 

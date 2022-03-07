@@ -34,14 +34,15 @@ import (
 
 // MonitoredConfig is used to generate the monitor node configuration
 type MonitoredConfig struct {
-	name       string
-	component  string
-	host       string
-	globResCtl meta.ResourceControl
-	options    *spec.MonitoredOptions
-	deployUser string
-	tlsEnabled bool
-	paths      meta.DirPaths
+	name        string
+	component   string
+	host        string
+	globResCtl  meta.ResourceControl
+	options     *spec.MonitoredOptions
+	deployUser  string
+	deployGroup string
+	tlsEnabled  bool
+	paths       meta.DirPaths
 }
 
 // Execute implements the Task interface
@@ -93,7 +94,7 @@ func (m *MonitoredConfig) syncMonitoredSystemConfig(ctx context.Context, exec ct
 	}
 
 	resource := spec.MergeResourceControl(m.globResCtl, m.options.ResourceControl)
-	systemCfg := system.NewConfig(comp, m.deployUser, m.paths.Deploy).
+	systemCfg := system.NewConfig(comp, m.deployUser, m.deployGroup, m.paths.Deploy).
 		WithMemoryLimit(resource.MemoryLimit).
 		WithCPUQuota(resource.CPUQuota).
 		WithIOReadBandwidthMax(resource.IOReadBandwidthMax).
@@ -150,6 +151,6 @@ func (m *MonitoredConfig) Rollback(ctx context.Context) error {
 
 // String implements the fmt.Stringer interface
 func (m *MonitoredConfig) String() string {
-	return fmt.Sprintf("MonitoredConfig: cluster=%s, user=%s, node_exporter_port=%d, %v",
-		m.name, m.deployUser, m.options.NodeExporterPort, m.paths)
+	return fmt.Sprintf("MonitoredConfig: cluster=%s, user=%s, group=%s, node_exporter_port=%d, %v",
+		m.name, m.deployUser, m.deployGroup, m.options.NodeExporterPort, m.paths)
 }

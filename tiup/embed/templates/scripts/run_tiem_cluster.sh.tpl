@@ -22,6 +22,7 @@ exec env GODEBUG=madvdontneed=1 bin/cluster-server \
     --elasticsearch-address="{{.ElasticsearchAddress}}" \
     --tracer-address="{{.TracerAddress}}" \
     --deploy-user="{{.DeployUser}}" \
+    --deploy-group="{{.DeployGroup}}" \
     --deploy-dir="{{.DeployDir}}/bin" \
     --data-dir="{{.DataDir}}" \
     --log-level="{{.LogLevel}}"

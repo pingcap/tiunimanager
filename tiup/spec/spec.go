@@ -73,4 +73,5 @@ type BaseMeta struct {
 type UpgradableMetadata interface {
 	SetVersion(s string)
 	SetUser(u string)
+	SetGroup(u string)
 }

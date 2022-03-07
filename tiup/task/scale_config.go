@@ -31,6 +31,7 @@ type ScaleConfig struct {
 	instance       spec.Instance
 	base           spec.Topology
 	deployUser     string
+	deployGroup    string
 	paths          meta.DirPaths
 }
 
@@ -47,7 +48,7 @@ func (c *ScaleConfig) Execute(ctx context.Context) error {
 		return err
 	}
 
-	return c.instance.ScaleConfig(ctx, exec, c.base, c.clusterName, c.clusterVersion, c.deployUser, c.paths)
+	return c.instance.ScaleConfig(ctx, exec, c.base, c.clusterName, c.clusterVersion, c.deployUser, c.deployGroup, c.paths)
 }
 
 // Rollback implements the Task interface

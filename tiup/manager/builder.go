@@ -213,6 +213,7 @@ func buildScaleOutTask(
 			topo,
 			inst,
 			base.User,
+			base.Group,
 			meta.DirPaths{
 				Deploy: deployDir,
 				Data:   dataDirs,
@@ -248,6 +249,7 @@ func buildScaleOutTask(
 			m.specManager,
 			inst,
 			base.User,
+			base.Group,
 			true, // always ignore config check result in scale out
 			meta.DirPaths{
 				Deploy: deployDir,
@@ -439,6 +441,7 @@ func buildMonitoredDeployTask(
 					globalOptions.ResourceControl,
 					monitoredOptions,
 					globalOptions.User,
+					globalOptions.Group,
 					meta.DirPaths{
 						Deploy: deployDir,
 						Data:   []string{dataDir},
@@ -517,6 +520,7 @@ func buildRefreshMonitoredConfigTasks(
 					globalOptions.ResourceControl,
 					monitoredOptions,
 					globalOptions.User,
+					globalOptions.Group,
 					meta.DirPaths{
 						Deploy: deployDir,
 						Data:   []string{dataDir},
@@ -561,6 +565,7 @@ func buildRegenConfigTasks(m *Manager, name string, topo spec.Topology, base *sp
 				m.specManager,
 				instance,
 				base.User,
+				base.Group,
 				ignoreCheck,
 				meta.DirPaths{
 					Deploy: deployDir,

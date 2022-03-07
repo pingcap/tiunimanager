@@ -125,10 +125,11 @@ func (i *FilebeatInstance) InitConfig(
 	clusterName,
 	clusterVersion,
 	deployUser string,
+	deployGroup string,
 	paths meta.DirPaths,
 ) error {
 	gOpts := *i.topo.BaseTopo().GlobalOptions
-	if err := i.BaseInstance.InitConfig(ctx, e, gOpts, deployUser, paths); err != nil {
+	if err := i.BaseInstance.InitConfig(ctx, e, gOpts, deployUser, deployGroup, paths); err != nil {
 		return err
 	}
 	cfg := config.NewFilebeatConfig(
@@ -174,9 +175,10 @@ func (i *FilebeatInstance) ScaleConfig(
 	clusterName,
 	clusterVersion,
 	deployUser string,
+	deployGroup string,
 	paths meta.DirPaths,
 ) error {
-	if err := i.InitConfig(ctx, e, clusterName, clusterVersion, deployUser, paths); err != nil {
+	if err := i.InitConfig(ctx, e, clusterName, clusterVersion, deployUser, deployGroup, paths); err != nil {
 		return err
 	}
 

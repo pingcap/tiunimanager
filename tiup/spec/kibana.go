@@ -142,6 +142,7 @@ func (i *KibanaInstance) InitConfig(
 	clusterName,
 	clusterVersion,
 	deployUser string,
+	deployGroup string,
 	paths meta.DirPaths,
 ) error {
 	comp := i.ComponentName()
@@ -226,9 +227,10 @@ func (i *KibanaInstance) ScaleConfig(
 	clusterName,
 	clusterVersion,
 	deployUser string,
+	deployGroup string,
 	paths meta.DirPaths,
 ) error {
-	if err := i.InitConfig(ctx, e, clusterName, clusterVersion, deployUser, paths); err != nil {
+	if err := i.InitConfig(ctx, e, clusterName, clusterVersion, deployUser, deployGroup, paths); err != nil {
 		return err
 	}
 

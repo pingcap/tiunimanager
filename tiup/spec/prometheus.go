@@ -145,10 +145,11 @@ func (i *MonitorInstance) InitConfig(
 	clusterName,
 	clusterVersion,
 	deployUser string,
+	deployGroup string,
 	paths meta.DirPaths,
 ) error {
 	gOpts := *i.topo.BaseTopo().GlobalOptions
-	if err := i.BaseInstance.InitConfig(ctx, e, gOpts, deployUser, paths); err != nil {
+	if err := i.BaseInstance.InitConfig(ctx, e, gOpts, deployUser, deployGroup, paths); err != nil {
 		return err
 	}
 
@@ -329,10 +330,11 @@ func (i *MonitorInstance) ScaleConfig(
 	clusterName string,
 	clusterVersion string,
 	deployUser string,
+	deployGroup string,
 	paths meta.DirPaths,
 ) error {
 	s := i.topo
 	defer func() { i.topo = s }()
 	i.topo = topo
-	return i.InitConfig(ctx, e, clusterName, clusterVersion, deployUser, paths)
+	return i.InitConfig(ctx, e, clusterName, clusterVersion, deployUser, deployGroup, paths)
 }

@@ -32,6 +32,7 @@ type InitConfig struct {
 	clusterVersion string
 	instance       spec.Instance
 	deployUser     string
+	deployGroup    string
 	ignoreCheck    bool
 	paths          meta.DirPaths
 }
@@ -48,7 +49,7 @@ func (c *InitConfig) Execute(ctx context.Context) error {
 		return errors.Annotatef(err, "create cache directory failed: %s", c.paths.Cache)
 	}
 
-	err := c.instance.InitConfig(ctx, exec, c.clusterName, c.clusterVersion, c.deployUser, c.paths)
+	err := c.instance.InitConfig(ctx, exec, c.clusterName, c.clusterVersion, c.deployUser, c.deployGroup, c.paths)
 	if err != nil {
 		if c.ignoreCheck && errors.Cause(err) == spec.ErrorCheckConfig {
 			return nil
@@ -65,7 +66,7 @@ func (c *InitConfig) Rollback(ctx context.Context) error {
 
 // String implements the fmt.Stringer interface
 func (c *InitConfig) String() string {
-	return fmt.Sprintf("InitConfig: cluster=%s, user=%s, host=%s, path=%s, %s",
-		c.clusterName, c.deployUser, c.instance.GetHost(),
+	return fmt.Sprintf("InitConfig: cluster=%s, user=%s, group=%s, host=%s, path=%s, %s",
+		c.clusterName, c.deployUser, c.deployGroup, c.instance.GetHost(),
 		filepath.Join(c.specManager.Path(c.clusterName, spec.TempConfigPath, c.instance.ServiceName())), c.paths)
 }

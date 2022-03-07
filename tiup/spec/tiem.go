@@ -28,6 +28,7 @@ var (
 // TiEMMeta is the specification of generic cluster metadata
 type TiEMMeta struct {
 	User    string `yaml:"user"`                   // the user to run and manage cluster on remote
+	Group   string `yaml:"group"`                  // the group to run and manage cluster on remote
 	Version string `yaml:"tiem_version"`           // the version of TiEM
 	OpsVer  string `yaml:"last_ops_ver,omitempty"` // the version of ourself that updated the meta last time
 
@@ -44,6 +45,11 @@ func (m *TiEMMeta) SetVersion(s string) {
 // SetUser implement UpgradableTiEMMeta interface.
 func (m *TiEMMeta) SetUser(s string) {
 	m.User = s
+}
+
+// SetGroup implement UpgradableTiEMMeta interface.
+func (m *TiEMMeta) SetGroup(s string) {
+	m.Group = s
 }
 
 // GetTopology implements TiEMMeta interface.
@@ -66,6 +72,7 @@ func (m *TiEMMeta) GetBaseMeta() *BaseMeta {
 	return &BaseMeta{
 		Version: m.Version,
 		User:    m.User,
+		Group:   m.Group,
 	}
 }
 

@@ -134,10 +134,11 @@ func (i *GrafanaInstance) InitConfig(
 	clusterName,
 	clusterVersion,
 	deployUser string,
+	deployGroup string,
 	paths meta.DirPaths,
 ) error {
 	gOpts := *i.topo.BaseTopo().GlobalOptions
-	if err := i.BaseInstance.InitConfig(ctx, e, gOpts, deployUser, paths); err != nil {
+	if err := i.BaseInstance.InitConfig(ctx, e, gOpts, deployUser, deployGroup, paths); err != nil {
 		return err
 	}
 
@@ -309,10 +310,11 @@ func (i *GrafanaInstance) ScaleConfig(
 	clusterName string,
 	clusterVersion string,
 	deployUser string,
+	deployGroup string,
 	paths meta.DirPaths,
 ) error {
 	s := i.topo
 	defer func() { i.topo = s }()
 	i.topo = topo.Merge(i.topo)
-	return i.InitConfig(ctx, e, clusterName, clusterVersion, deployUser, paths)
+	return i.InitConfig(ctx, e, clusterName, clusterVersion, deployUser, deployGroup, paths)
 }

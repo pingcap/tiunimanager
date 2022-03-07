@@ -60,8 +60,8 @@ type Instance interface {
 	InstanceSpec
 	ID() string
 	Ready(context.Context, ctxt.Executor, uint64) error
-	InitConfig(ctx context.Context, e ctxt.Executor, clusterName string, clusterVersion string, deployUser string, paths meta.DirPaths) error
-	ScaleConfig(ctx context.Context, e ctxt.Executor, topo Topology, clusterName string, clusterVersion string, deployUser string, paths meta.DirPaths) error
+	InitConfig(ctx context.Context, e ctxt.Executor, clusterName string, clusterVersion string, deployUser string, deployGroup string, paths meta.DirPaths) error
+	ScaleConfig(ctx context.Context, e ctxt.Executor, topo Topology, clusterName string, clusterVersion string, deployUser string, deployGroup string, paths meta.DirPaths) error
 	PrepareStart(ctx context.Context, tlsCfg *tls.Config) error
 	ComponentName() string
 	InstanceName() string
@@ -132,7 +132,7 @@ func (i *BaseInstance) Ready(ctx context.Context, e ctxt.Executor, timeout uint6
 }
 
 // InitConfig init the service configuration.
-func (i *BaseInstance) InitConfig(ctx context.Context, e ctxt.Executor, opt GlobalOptions, user string, paths meta.DirPaths) (err error) {
+func (i *BaseInstance) InitConfig(ctx context.Context, e ctxt.Executor, opt GlobalOptions, user string, group string, paths meta.DirPaths) (err error) {
 	comp := i.ComponentName()
 	host := i.GetHost()
 	port := i.GetPort()
@@ -149,7 +149,7 @@ func (i *BaseInstance) InitConfig(ctx context.Context, e ctxt.Executor, opt Glob
 	}
 
 	resource := MergeResourceControl(opt.ResourceControl, i.resourceControl())
-	systemCfg := system.NewConfig(comp, user, paths.Deploy).
+	systemCfg := system.NewConfig(comp, user, group, paths.Deploy).
 		WithMemoryLimit(resource.MemoryLimit).
 		WithCPUQuota(resource.CPUQuota).
 		WithLimitCORE(resource.LimitCORE).

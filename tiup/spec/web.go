@@ -152,6 +152,7 @@ func (i *WebServerInstance) InitConfig(
 	clusterName,
 	clusterVersion,
 	deployUser string,
+	deployGroup string,
 	paths meta.DirPaths,
 ) error {
 	// build systemd service file
@@ -172,7 +173,7 @@ func (i *WebServerInstance) InitConfig(
 	}
 
 	resource := MergeResourceControl(i.topo.GlobalOptions.ResourceControl, i.resourceControl())
-	systemCfg := system.NewConfig(comp, deployUser, paths.Deploy).
+	systemCfg := system.NewConfig(comp, deployUser, deployGroup, paths.Deploy).
 		WithMemoryLimit(resource.MemoryLimit).
 		WithCPUQuota(resource.CPUQuota).
 		WithLimitCORE(resource.LimitCORE).
@@ -279,9 +280,10 @@ func (i *WebServerInstance) ScaleConfig(
 	clusterName,
 	clusterVersion,
 	deployUser string,
+	deployGroup string,
 	paths meta.DirPaths,
 ) error {
-	if err := i.InitConfig(ctx, e, clusterName, clusterVersion, deployUser, paths); err != nil {
+	if err := i.InitConfig(ctx, e, clusterName, clusterVersion, deployUser, deployGroup, paths); err != nil {
 		return err
 	}
 

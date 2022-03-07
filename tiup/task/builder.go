@@ -201,13 +201,14 @@ func (b *Builder) BackupComponent(component, fromVer string, host, deployDir str
 }
 
 // InitConfig appends a CopyComponent task to the current task collection
-func (b *Builder) InitConfig(clusterName, clusterVersion string, specManager *spec.SpecManager, inst spec.Instance, deployUser string, ignoreCheck bool, paths meta.DirPaths) *Builder {
+func (b *Builder) InitConfig(clusterName, clusterVersion string, specManager *spec.SpecManager, inst spec.Instance, deployUser, deployGroup string, ignoreCheck bool, paths meta.DirPaths) *Builder {
 	b.tasks = append(b.tasks, &InitConfig{
 		specManager:    specManager,
 		clusterName:    clusterName,
 		clusterVersion: clusterVersion,
 		instance:       inst,
 		deployUser:     deployUser,
+		deployGroup:    deployGroup,
 		ignoreCheck:    ignoreCheck,
 		paths:          paths,
 	})
@@ -215,7 +216,7 @@ func (b *Builder) InitConfig(clusterName, clusterVersion string, specManager *sp
 }
 
 // ScaleConfig generate temporary config on scaling
-func (b *Builder) ScaleConfig(clusterName, clusterVersion string, specManager *spec.SpecManager, topo spec.Topology, inst spec.Instance, deployUser string, paths meta.DirPaths) *Builder {
+func (b *Builder) ScaleConfig(clusterName, clusterVersion string, specManager *spec.SpecManager, topo spec.Topology, inst spec.Instance, deployUser string, deployGroup string, paths meta.DirPaths) *Builder {
 	b.tasks = append(b.tasks, &ScaleConfig{
 		specManager:    specManager,
 		clusterName:    clusterName,
@@ -223,6 +224,7 @@ func (b *Builder) ScaleConfig(clusterName, clusterVersion string, specManager *s
 		base:           topo,
 		instance:       inst,
 		deployUser:     deployUser,
+		deployGroup:    deployGroup,
 		paths:          paths,
 	})
 	return b
@@ -234,16 +236,18 @@ func (b *Builder) MonitoredConfig(
 	globResCtl meta.ResourceControl,
 	options *spec.MonitoredOptions,
 	deployUser string,
+	deployGroup string,
 	paths meta.DirPaths,
 ) *Builder {
 	b.tasks = append(b.tasks, &MonitoredConfig{
-		name:       name,
-		component:  comp,
-		host:       host,
-		globResCtl: globResCtl,
-		options:    options,
-		deployUser: deployUser,
-		paths:      paths,
+		name:        name,
+		component:   comp,
+		host:        host,
+		globResCtl:  globResCtl,
+		options:     options,
+		deployUser:  deployUser,
+		deployGroup: deployGroup,
+		paths:       paths,
 	})
 	return b
 }

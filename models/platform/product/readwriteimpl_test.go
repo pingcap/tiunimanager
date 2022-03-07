@@ -119,10 +119,12 @@ func TestProductReadWrite_Product(t *testing.T) {
 	})
 	t.Run("components conflict", func(t *testing.T) {
 		defer testRW.DeleteProduct(context.TODO(), "TiDB")
-		err := testRW.SaveProduct(context.TODO(), &ProductInfo{
+		err := testRW.SaveProduct(context.TODO(),
+			&ProductInfo{
 			ProductID: "TiDB",
 			ProductName: "my-tidb",
-		}, []*ProductVersion{
+		},
+		[]*ProductVersion{
 			{
 				ProductID: "TiDB",
 				Arch: "x86_64",
@@ -141,7 +143,8 @@ func TestProductReadWrite_Product(t *testing.T) {
 				Version: "v5.4.0",
 				Desc: "default",
 			},
-		}, []*ProductComponentInfo{
+		},
+		[]*ProductComponentInfo{
 			{
 				ProductID: "TiDB",
 				ComponentID: "TiKV",
@@ -187,12 +190,17 @@ func TestProductReadWrite_Product(t *testing.T) {
 				SuggestedInstancesInfo: "[]",
 			},
 		})
-		assert.NoError(t, err)
+		assert.Error(t, err)
 	})
 	t.Run("save", func(t *testing.T) {
 		defer testRW.DeleteProduct(context.TODO(), "TiDB")
 		defer testRW.DeleteProduct(context.TODO(), "DM")
-		err := testRW.SaveProduct(context.TODO(), &ProductInfo{
+
+		all, err := testRW.QueryAllProducts(context.TODO())
+		assert.NoError(t, err)
+		assert.Equal(t, 0, len(all))
+
+		err = testRW.SaveProduct(context.TODO(), &ProductInfo{
 			ProductID: "DM",
 			ProductName: "DM",
 		}, []*ProductVersion{
@@ -250,6 +258,10 @@ func TestProductReadWrite_Product(t *testing.T) {
 			},
 		})
 		assert.NoError(t, err)
+
+		all, err = testRW.QueryAllProducts(context.TODO())
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(all))
 
 		product := &ProductInfo{
 			ProductID: "TiDB",
@@ -312,6 +324,10 @@ func TestProductReadWrite_Product(t *testing.T) {
 		}
 		err = testRW.SaveProduct(context.TODO(), product, versions, components)
 		assert.NoError(t, err)
+
+		all, err = testRW.QueryAllProducts(context.TODO())
+		assert.NoError(t, err)
+		assert.Equal(t, 2, len(all))
 
 		gotProduct, gotVersions, gotComponents, err := testRW.GetProduct(context.TODO(), "TiDB")
 		assert.NoError(t, err)
@@ -492,8 +508,13 @@ func TestProductReadWrite_Vendor(t *testing.T) {
 	t.Run("save", func(t *testing.T) {
 		defer testRW.DeleteVendor(context.TODO(), "Local")
 		defer testRW.DeleteVendor(context.TODO(), "AWS")
+
+		all, err := testRW.QueryAllVendors(context.TODO())
+		assert.NoError(t, err)
+		assert.Equal(t, 0, len(all))
+
 		// save local
-		err := testRW.SaveVendor(context.TODO(), &Vendor{
+		err = testRW.SaveVendor(context.TODO(), &Vendor{
 			VendorID: "Local",
 			VendorName: "datacenter",
 		}, []*VendorZone{
@@ -523,6 +544,10 @@ func TestProductReadWrite_Vendor(t *testing.T) {
 			},
 		})
 		assert.NoError(t, err)
+
+		all, err = testRW.QueryAllVendors(context.TODO())
+		assert.NoError(t, err)
+		assert.Equal(t, 1, len(all))
 
 		// save aws
 		err = testRW.SaveVendor(context.TODO(), &Vendor{
@@ -554,6 +579,11 @@ func TestProductReadWrite_Vendor(t *testing.T) {
 				SpecID: "xxx.large",
 			},
 		})
+
+		all, err = testRW.QueryAllVendors(context.TODO())
+		assert.NoError(t, err)
+		assert.Equal(t, 2, len(all))
+
 		// get local
 		vendor, zones, specs, err := testRW.GetVendor(context.TODO(), "Local")
 		assert.NoError(t, err)

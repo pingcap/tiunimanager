@@ -3911,6 +3911,8 @@ var doc = `{
                         "items": {
                             "type": "string"
                         },
+                        "collectionFormat": "multi",
+                        "description": "product id collection",
                         "name": "productIDs",
                         "in": "query"
                     }
@@ -6372,9 +6374,10 @@ var doc = `{
                         "items": {
                             "type": "string"
                         },
+                        "collectionFormat": "multi",
+                        "description": "vendor id collection",
                         "name": "vendorIDs",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     }
                 ],
                 "responses": {

@@ -27,6 +27,14 @@ import "context"
 
 type ReaderWriter interface {
 	//
+    // QueryAllVendors
+    //  @Description: query all vendors
+    //  @param ctx
+    //  @return []*Vendor
+    //  @return error
+    //
+	QueryAllVendors(ctx context.Context) ([]*Vendor, error)
+	//
     // SaveVendor
     // @Description: save all vendor info, including vendor name, zones, specs
     // @param ctx
@@ -47,6 +55,7 @@ type ReaderWriter interface {
     //  @return err
     //
 	GetVendor(ctx context.Context, vendorID string) (vendor *Vendor, zones []*VendorZone, specs []*VendorSpec, err error)
+
 	//
     // DeleteVendor
     //  @Description: delete all vendor info by vendorID, including vendor name, zones, specs
@@ -56,6 +65,14 @@ type ReaderWriter interface {
     //
 	DeleteVendor(ctx context.Context, vendorID string) error
 
+	//
+    // QueryAllProducts
+    //  @Description:
+    //  @param ctx
+    //  @return []*ProductInfo
+    //  @return error
+    //
+	QueryAllProducts(ctx context.Context) ([]*ProductInfo, error)
 	//
     // SaveProduct
     //  @Description: save all product info, including product name, versions, components

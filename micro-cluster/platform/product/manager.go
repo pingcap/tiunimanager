@@ -25,7 +25,6 @@ package product
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
@@ -65,16 +64,24 @@ func (p *Manager) UpdateVendors(ctx context.Context, req message.UpdateVendorInf
 }
 
 func (p *Manager) QueryVendors(ctx context.Context, req message.QueryVendorInfoReq) (resp message.QueryVendorInfoResp, err error){
-	if len(req.VendorIDs) == 0 {
-		err = errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "vendorIDs is empty")
-		return
+	vendorIDs := req.VendorIDs
+	// empty vendorIDs means query all vendors
+	if len(vendorIDs) == 0 {
+		vendors, innerErr := models.GetProductReaderWriter().QueryAllVendors(ctx)
+		if innerErr != nil {
+			return
+		}
+		for _, v := range vendors {
+			vendorIDs = append(vendorIDs, v.VendorID)
+		}
 	}
 
 	resp.Vendors = make([]structs.VendorConfigInfo, 0)
-	for _, vendorID := range req.VendorIDs {
+	for _, vendorID := range vendorIDs {
 		vendorInfo, zones, specs, innerErr := models.GetProductReaderWriter().GetVendor(ctx, vendorID)
 		if innerErr != nil {
 			framework.LogWithContext(ctx).Errorf("get vendors failed, req = %v, err = %s", req, innerErr.Error())
+			err = innerErr
 			return
 		}
 		resp.Vendors = append(resp.Vendors, convertToVendorResponse(vendorInfo, zones, specs))
@@ -103,16 +110,24 @@ func (p *Manager) UpdateProducts(ctx context.Context, req message.UpdateProducts
 }
 
 func (p *Manager) QueryProducts(ctx context.Context, req message.QueryProductsInfoReq) (resp message.QueryProductsInfoResp, err error){
-	if len(req.ProductIDs) == 0 {
-		err = errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "ProductIDs is empty")
-		return
+	productIDs := req.ProductIDs
+	// empty productIDs means query all products
+	if len(productIDs) == 0 {
+		products, innerErr := models.GetProductReaderWriter().QueryAllProducts(ctx)
+		if innerErr != nil {
+			return
+		}
+		for _, v := range products {
+			productIDs = append(productIDs, v.ProductID)
+		}
 	}
 
 	resp.Products = make([]structs.ProductConfigInfo, 0)
-	for _, productId := range req.ProductIDs {
+	for _, productId := range productIDs {
 		productInfo, versions, components, innerErr := models.GetProductReaderWriter().GetProduct(ctx, productId)
 		if innerErr != nil {
 			framework.LogWithContext(ctx).Errorf("get products failed, req = %v, err = %s", req, innerErr.Error())
+			err = innerErr
 			return
 		}
 		resp.Products = append(resp.Products, convertToProductResponse(productInfo, versions, components))

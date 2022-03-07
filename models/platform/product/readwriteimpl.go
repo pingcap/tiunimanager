@@ -42,6 +42,11 @@ func NewProductReadWrite(db *gorm.DB) *ProductReadWrite {
 	}
 }
 
+func (p *ProductReadWrite) QueryAllVendors(ctx context.Context) ([]*Vendor, error) {
+	vendors := make([]*Vendor, 0)
+	return vendors, dbCommon.WrapDBError(p.DB(ctx).Model(&Vendor{}).Scan(&vendors).Error)
+}
+
 func (p *ProductReadWrite) SaveVendor(ctx context.Context, vendor *Vendor, zones []*VendorZone, specs []*VendorSpec) error {
 	if vendor == nil || len(vendor.VendorID) == 0{
 		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "vendor is empty")
@@ -111,6 +116,11 @@ func (p *ProductReadWrite) DeleteVendor(ctx context.Context, vendorID string) er
 	}).Else(func() {
 		framework.LogWithContext(ctx).Infof("delete vendor info succeed, vendorID = %s", vendorID)
 	}).Present())
+}
+
+func (p *ProductReadWrite) QueryAllProducts(ctx context.Context) ([]*ProductInfo, error) {
+	products := make([]*ProductInfo, 0)
+	return products, dbCommon.WrapDBError(p.DB(ctx).Model(&ProductInfo{}).Scan(&products).Error)
 }
 
 func (p *ProductReadWrite) SaveProduct(ctx context.Context, product *ProductInfo, versions []*ProductVersion, components []*ProductComponentInfo) error {

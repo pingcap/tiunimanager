@@ -5546,7 +5546,9 @@ paths:
       - application/json
       description: query products
       parameters:
-      - in: query
+      - collectionFormat: multi
+        description: product id collection
+        in: query
         items:
           type: string
         name: productIDs
@@ -7008,11 +7010,12 @@ paths:
       - application/json
       description: query vendors
       parameters:
-      - in: query
+      - collectionFormat: multi
+        description: vendor id collection
+        in: query
         items:
           type: string
         name: vendorIDs
-        required: true
         type: array
       produces:
       - application/json

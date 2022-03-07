@@ -38,7 +38,7 @@ type UpdateVendorInfoResp struct {
 
 //QueryVendorInfoReq query vendor info request
 type QueryVendorInfoReq struct {
-	VendorIDs []string `json:"vendorIDs" form:"vendorIDs" validate:"required"`
+	VendorIDs []string `json:"vendorIDs" form:"vendorIDs"`
 }
 
 //QueryVendorInfoResp query vendor info response

@@ -51,7 +51,7 @@ func UpdateVendors(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param QueryVendorInfoReq query message.QueryVendorInfoReq true "query vendor info request parameter"
+// @Param vendorIDs query []string false "vendor id collection" collectionFormat(multi)
 // @Success 200 {object} controller.CommonResult{data=message.QueryVendorInfoResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -93,7 +93,7 @@ func UpdateProducts(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param QueryProductsInfoReq query message.QueryProductsInfoReq true "query products info request parameter"
+// @Param productIDs query []string false "product id collection" collectionFormat(multi)
 // @Success 200 {object} controller.CommonResult{data=message.QueryProductsInfoResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult

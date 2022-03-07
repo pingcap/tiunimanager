@@ -84,6 +84,12 @@ type CreateClusterParameter struct {
 	ParameterGroupID string   `json:"parameterGroupID" form:"parameterGroupID"`
 }
 
+// ClusterRelations Cluster relations info
+type ClusterRelations struct {
+	Masters []string `json:"masters"`
+	Slaves  []string `json:"slaves"`
+}
+
 // ClusterInfo Cluster details information
 type ClusterInfo struct {
 	ID      string `json:"clusterId"`
@@ -92,29 +98,30 @@ type ClusterInfo struct {
 	Type    string `json:"clusterType"`
 	Version string `json:"clusterVersion"`
 	//DBUser                   string    `json:"dbUser"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
-	Vendor                   string    `json:"vendor" form:"vendor"`
-	Tags                     []string  `json:"tags"`
-	TLS                      bool      `json:"tls"`
-	Region                   string    `json:"region"`
-	Status                   string    `json:"status"`
-	Role                     string    `json:"role"`
-	Copies                   int       `json:"copies"`                                 //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
-	Exclusive                bool      `json:"exclusive" form:"exclusive"`             //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
-	CpuArchitecture          string    `json:"cpuArchitecture" form:"cpuArchitecture"` //X86/X86_64/ARM
-	AlertUrl                 string    `json:"alertUrl" example:"http://127.0.0.1:9093"`
-	GrafanaUrl               string    `json:"grafanaUrl" example:"http://127.0.0.1:3000"`
-	MaintainStatus           string    `json:"maintainStatus"`
-	MaintainWindow           string    `json:"maintainWindow"`
-	IntranetConnectAddresses []string  `json:"intranetConnectAddresses"`
-	ExtranetConnectAddresses []string  `json:"extranetConnectAddresses"`
-	Whitelist                []string  `json:"whitelist"`
-	CpuUsage                 Usage     `json:"cpuUsage"`
-	MemoryUsage              Usage     `json:"memoryUsage"`
-	StorageUsage             Usage     `json:"storageUsage"`
-	BackupSpaceUsage         Usage     `json:"backupFileUsage"`
-	CreateTime               time.Time `json:"createTime"`
-	UpdateTime               time.Time `json:"updateTime"`
-	DeleteTime               time.Time `json:"deleteTime"`
+	Vendor                   string           `json:"vendor" form:"vendor"`
+	Tags                     []string         `json:"tags"`
+	TLS                      bool             `json:"tls"`
+	Region                   string           `json:"region"`
+	Status                   string           `json:"status"`
+	Role                     string           `json:"role"`
+	Copies                   int              `json:"copies"`                                 //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
+	Exclusive                bool             `json:"exclusive" form:"exclusive"`             //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+	CpuArchitecture          string           `json:"cpuArchitecture" form:"cpuArchitecture"` //X86/X86_64/ARM
+	AlertUrl                 string           `json:"alertUrl" example:"http://127.0.0.1:9093"`
+	GrafanaUrl               string           `json:"grafanaUrl" example:"http://127.0.0.1:3000"`
+	MaintainStatus           string           `json:"maintainStatus"`
+	MaintainWindow           string           `json:"maintainWindow"`
+	IntranetConnectAddresses []string         `json:"intranetConnectAddresses"`
+	ExtranetConnectAddresses []string         `json:"extranetConnectAddresses"`
+	Whitelist                []string         `json:"whitelist"`
+	Relations                ClusterRelations `json:"relations"`
+	CpuUsage                 Usage            `json:"cpuUsage"`
+	MemoryUsage              Usage            `json:"memoryUsage"`
+	StorageUsage             Usage            `json:"storageUsage"`
+	BackupSpaceUsage         Usage            `json:"backupFileUsage"`
+	CreateTime               time.Time        `json:"createTime"`
+	UpdateTime               time.Time        `json:"updateTime"`
+	DeleteTime               time.Time        `json:"deleteTime"`
 }
 
 // ClusterInstanceInfo Details of the instances in the cluster

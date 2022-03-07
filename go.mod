@@ -16,12 +16,12 @@ require (
 	github.com/casbin/casbin/v2 v2.40.6
 	github.com/casbin/gorm-adapter/v3 v3.4.6
 	github.com/elastic/go-elasticsearch/v7 v7.15.0
+	github.com/fatih/color v1.13.0
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-playground/validator/v10 v10.4.1
-	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/goexpect v0.0.0-20210430020637-ab937bf7fd6f
@@ -30,18 +30,19 @@ require (
 	github.com/labstack/gommon v0.3.0
 	github.com/lithammer/shortuuid v3.0.0+incompatible
 	github.com/micro/cli/v2 v2.1.2
-	github.com/minio/minio-go/v7 v7.0.21 // indirect
+	github.com/minio/minio-go/v7 v7.0.21
 	github.com/opentracing/basictracer-go v1.0.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pingcap/check v0.0.0-20211026125417-57bd13f7b5f0
 	github.com/pingcap/errors v0.11.5-0.20201126102027-b0a155152ca3
+	github.com/pingcap/kvproto v0.0.0-20220125073028-58f2ac94aa38
 	github.com/pingcap/tiup v1.9.0
 	github.com/pkg/sftp v1.10.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/common v0.32.1
 	github.com/robfig/cron v1.2.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
-	github.com/shopspring/decimal v1.2.0 // indirect
+	github.com/shopspring/decimal v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 	github.com/swaggo/files v0.0.0-20210815190702-a29dd2bc99b2
@@ -66,8 +67,8 @@ require (
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v2 v2.4.0
-	gorm.io/driver/mysql v1.2.0 // indirect
+	gorm.io/driver/mysql v1.2.0
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.22.3
-	gorm.io/plugin/opentracing v0.0.0-20211220013347-7d2b2af23560 // indirect
+	gorm.io/plugin/opentracing v0.0.0-20211220013347-7d2b2af23560
 )

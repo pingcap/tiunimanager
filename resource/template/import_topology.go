@@ -17,7 +17,8 @@ package template
 
 var EMClusterScaleOut = `
 filebeat_servers:
-{{ range .HostIPs }}
-  - host: {{ . }}
+{{ range .HostAddrs }}
+  - host: {{ .HostIP }}
+    ssh_port: {{ .SSHPort }}
 {{ end }}
 `

@@ -1016,6 +1016,18 @@ func TestManager_DetailCluster(t *testing.T) {
 				RoleType:  string(constants.Root),
 			},
 		}, nil)
+		clusterRW.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return([]*management.ClusterRelation{
+			{
+				SubjectClusterID: "01",
+				ObjectClusterID:  "02",
+			},
+		}, nil)
+		clusterRW.EXPECT().GetSlaves(gomock.Any(), gomock.Any()).Return([]*management.ClusterRelation{
+			{
+				SubjectClusterID: "01",
+				ObjectClusterID:  "02",
+			},
+		}, nil)
 		got, err := manager.DetailCluster(context.TODO(), cluster.QueryClusterDetailReq{
 			ClusterID: "111",
 		})

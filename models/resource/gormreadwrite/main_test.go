@@ -17,11 +17,13 @@
 package gormreadwrite
 
 import (
+	"os"
+	"testing"
+
+	cl "github.com/pingcap-inc/tiem/models/cluster/management"
 	mm "github.com/pingcap-inc/tiem/models/resource/management"
 	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	"github.com/pingcap-inc/tiem/util/uuidutil"
-	"os"
-	"testing"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/resource"
@@ -56,6 +58,7 @@ func TestMain(m *testing.M) {
 			MetaDB.AutoMigrate(new(mm.UsedCompute))
 			MetaDB.AutoMigrate(new(mm.UsedPort))
 			MetaDB.AutoMigrate(new(mm.UsedDisk))
+			MetaDB.AutoMigrate(new(cl.ClusterInstance))
 			return nil
 		},
 	)

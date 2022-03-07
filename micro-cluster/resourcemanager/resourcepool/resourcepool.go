@@ -18,6 +18,7 @@ package resourcepool
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"sync"
 
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -27,6 +28,7 @@ import (
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostinitiator"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
+	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/workflow"
 )
 
@@ -135,6 +137,26 @@ func (p *ResourcePool) SetHostInitiator(initiator hostinitiator.HostInitiator) {
 	p.hostInitiator = initiator
 }
 
+func (p *ResourcePool) getSSHConfigPort(ctx context.Context) int {
+	sshConfigPort, err := models.GetConfigReaderWriter().GetConfig(ctx, constants.ConfigKeyDefaultSSHPort)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get config ConfigKeyDefaultSSHPort failed, %v", err)
+		// return a default ssh port. If can not connect host using the default port, will fail in host initiator
+		return rp_consts.HostSSHPort
+	}
+	portStr := sshConfigPort.ConfigValue
+	if portStr == "" {
+		framework.LogWithContext(ctx).Warnln("get config ConfigKeyDefaultSSHPort is null")
+		return rp_consts.HostSSHPort
+	}
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get config ConfigKeyDefaultSSHPort invalid string %s to atoi, %v", portStr, err)
+		return rp_consts.HostSSHPort
+	}
+	return port
+}
+
 func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo, condition *structs.ImportCondition) (flowIds []string, hostIds []string, err error) {
 	hostIds, err = p.hostProvider.ImportHosts(ctx, hosts)
 	if err != nil {
@@ -143,7 +165,8 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 	var flows []*workflow.WorkFlowAggregation
 	flowManager := workflow.GetWorkFlowService()
 	flowName := p.selectImportFlowName(condition)
-	framework.LogWithContext(ctx).Infof("import hosts select %s", flowName)
+	hostSSHPort := p.getSSHConfigPort(ctx)
+	framework.LogWithContext(ctx).Infof("import hosts select %s, with ssh port %d", flowName, hostSSHPort)
 	for i, host := range hosts {
 		flow, err := flowManager.CreateWorkFlow(ctx, hostIds[i], workflow.BizTypeHost, flowName)
 		if err != nil {
@@ -153,6 +176,7 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 		}
 
 		flowManager.AddContext(flow, rp_consts.ContextResourcePoolKey, p)
+		host.SSHPort = int32(hostSSHPort)
 		flowManager.AddContext(flow, rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{host})
 		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostIds[i]})
 		// Whether ignore warnings when verify host

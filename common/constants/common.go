@@ -105,6 +105,13 @@ var ParasiteComponentIDs = []EMProductComponentIDType{
 	ComponentIDAlertManger,
 }
 
+var KernelComponentIDs = []EMProductComponentIDType{
+	ComponentIDTiDB,
+	ComponentIDTiKV,
+	ComponentIDPD,
+	ComponentIDTiFlash,
+}
+
 //Definition of product component ID provided by Enterprise manager
 const (
 	ComponentIDTiDB    EMProductComponentIDType = "TiDB"

@@ -2920,6 +2920,140 @@ var doc = `{
                 }
             }
         },
+        "/config/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get system config",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "get system config"
+                ],
+                "summary": "get system config",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "configKey",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.GetSystemConfigResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/config/update": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "UpdateSystemConfig",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "UpdateSystemConfig"
+                ],
+                "summary": "update system config",
+                "parameters": [
+                    {
+                        "description": "system config for update",
+                        "name": "systemConfig",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UpdateSystemConfigReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UpdateSystemConfigResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/downstream/": {
             "delete": {
                 "security": [
@@ -3524,6 +3658,208 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/message.CopyParameterGroupResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/platform/check": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "platform check",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "platform check",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "displayMode",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.CheckPlatformRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/platform/report/:checkId": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get check report based on checkId",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "get check report based on checkId",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.GetCheckReportRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/platform/reports": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get query check reports",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "query check reports",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Current page location",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of this request",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.QueryCheckReportsRsp"
                                         }
                                     }
                                 }
@@ -8025,6 +8361,18 @@ var doc = `{
                 }
             }
         },
+        "message.CheckPlatformRsp": {
+            "type": "object",
+            "properties": {
+                "checkID": {
+                    "type": "string"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
         "message.CopyParameterGroupReq": {
             "type": "object",
             "required": [
@@ -8520,6 +8868,14 @@ var doc = `{
                 }
             }
         },
+        "message.GetCheckReportRsp": {
+            "type": "object",
+            "properties": {
+                "reportInfo": {
+                    "$ref": "#/definitions/structs.CheckReportInfo"
+                }
+            }
+        },
         "message.GetHierarchyResp": {
             "type": "object",
             "properties": {
@@ -8537,6 +8893,17 @@ var doc = `{
                     "additionalProperties": {
                         "$ref": "#/definitions/structs.Stocks"
                     }
+                }
+            }
+        },
+        "message.GetSystemConfigResp": {
+            "type": "object",
+            "properties": {
+                "configKey": {
+                    "type": "string"
+                },
+                "configValue": {
+                    "type": "string"
                 }
             }
         },
@@ -8737,6 +9104,17 @@ var doc = `{
                         4
                     ],
                     "example": 0
+                }
+            }
+        },
+        "message.QueryCheckReportsRsp": {
+            "type": "object",
+            "properties": {
+                "reportMetas": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckReportMeta"
+                    }
                 }
             }
         },
@@ -9085,6 +9463,20 @@ var doc = `{
                 }
             }
         },
+        "message.UpdateSystemConfigReq": {
+            "type": "object",
+            "properties": {
+                "configKey": {
+                    "type": "string"
+                },
+                "configValue": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.UpdateSystemConfigResp": {
+            "type": "object"
+        },
         "message.UpdateTenantOnBoardingStatusReq": {
             "type": "object",
             "properties": {
@@ -9229,6 +9621,177 @@ var doc = `{
                 }
             }
         },
+        "structs.CheckAny": {
+            "type": "object",
+            "properties": {
+                "expectedValue": {
+                    "type": "object"
+                },
+                "realValue": {
+                    "type": "object"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "structs.CheckError": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.CheckInt32": {
+            "type": "object",
+            "properties": {
+                "expectedValue": {
+                    "type": "integer"
+                },
+                "realValue": {
+                    "type": "integer"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "structs.CheckRangeInt32": {
+            "type": "object",
+            "properties": {
+                "expectedRange": {
+                    "description": "Left closed right closed interval",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "realValue": {
+                    "type": "integer"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "structs.CheckReportInfo": {
+            "type": "object",
+            "properties": {
+                "hosts": {
+                    "$ref": "#/definitions/structs.HostsCheck"
+                },
+                "tenants": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.TenantCheck"
+                    }
+                }
+            }
+        },
+        "structs.CheckReportMeta": {
+            "type": "object",
+            "properties": {
+                "checkID": {
+                    "type": "string"
+                },
+                "createAt": {
+                    "type": "string"
+                },
+                "creator": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.CheckStatus": {
+            "type": "object",
+            "properties": {
+                "health": {
+                    "type": "boolean"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.CheckString": {
+            "type": "object",
+            "properties": {
+                "expectedValue": {
+                    "type": "string"
+                },
+                "realValue": {
+                    "type": "string"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "structs.CheckSwitch": {
+            "type": "object",
+            "properties": {
+                "enable": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "structs.ClusterCheck": {
+            "type": "object",
+            "properties": {
+                "accountStatus": {
+                    "$ref": "#/definitions/structs.CheckStatus"
+                },
+                "backupRecordValid": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                },
+                "backupStrategy": {
+                    "$ref": "#/definitions/structs.CheckString"
+                },
+                "clusterID": {
+                    "type": "string"
+                },
+                "copies": {
+                    "$ref": "#/definitions/structs.CheckInt32"
+                },
+                "cpu": {
+                    "type": "integer"
+                },
+                "healthStatus": {
+                    "$ref": "#/definitions/structs.CheckStatus"
+                },
+                "instances": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.InstanceCheck"
+                    }
+                },
+                "maintenanceStatus": {
+                    "type": "string"
+                },
+                "memory": {
+                    "type": "integer"
+                },
+                "regionStatus": {
+                    "$ref": "#/definitions/structs.CheckStatus"
+                },
+                "runningStatus": {
+                    "type": "string"
+                },
+                "storage": {
+                    "type": "integer"
+                },
+                "topology": {
+                    "$ref": "#/definitions/structs.CheckString"
+                }
+            }
+        },
         "structs.ClusterInfo": {
             "type": "object",
             "properties": {
@@ -9299,6 +9862,9 @@ var doc = `{
                 },
                 "region": {
                     "type": "string"
+                },
+                "relations": {
+                    "$ref": "#/definitions/structs.ClusterRelations"
                 },
                 "role": {
                     "type": "string"
@@ -9597,6 +10163,23 @@ var doc = `{
                 }
             }
         },
+        "structs.ClusterRelations": {
+            "type": "object",
+            "properties": {
+                "masters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "slaves": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "structs.ClusterResourceInfo": {
             "type": "object",
             "properties": {
@@ -9817,6 +10400,44 @@ var doc = `{
                 }
             }
         },
+        "structs.HostCheck": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "cpuAllocated": {
+                    "$ref": "#/definitions/structs.CheckInt32"
+                },
+                "diskAllocated": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckString"
+                    }
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.CheckError"
+                    }
+                },
+                "firewall": {
+                    "$ref": "#/definitions/structs.CheckSwitch"
+                },
+                "memoryAllocated": {
+                    "$ref": "#/definitions/structs.CheckInt32"
+                },
+                "selinux": {
+                    "$ref": "#/definitions/structs.CheckSwitch"
+                },
+                "storageRatio": {
+                    "type": "number"
+                },
+                "swap": {
+                    "$ref": "#/definitions/structs.CheckSwitch"
+                }
+            }
+        },
         "structs.HostInfo": {
             "type": "object",
             "properties": {
@@ -9853,6 +10474,15 @@ var doc = `{
                 },
                 "hostName": {
                     "type": "string"
+                },
+                "instances": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "ip": {
                     "type": "string"
@@ -9896,6 +10526,9 @@ var doc = `{
                     "description": "Host Spec, init while importing",
                     "type": "string"
                 },
+                "sshPort": {
+                    "type": "integer"
+                },
                 "status": {
                     "description": "Host Status, 0 for Online, 1 for offline",
                     "type": "string"
@@ -9929,6 +10562,41 @@ var doc = `{
                 }
             }
         },
+        "structs.HostsCheck": {
+            "type": "object",
+            "properties": {
+                "delay": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckRangeInt32"
+                    }
+                },
+                "hosts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.HostCheck"
+                    }
+                },
+                "ntp": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckRangeInt32"
+                    }
+                },
+                "ping": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                },
+                "timeZoneConsistency": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                }
+            }
+        },
         "structs.Index": {
             "type": "object",
             "properties": {
@@ -9943,6 +10611,29 @@ var doc = `{
                 },
                 "value": {
                     "type": "object"
+                }
+            }
+        },
+        "structs.InstanceCheck": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "instanceID": {
+                    "type": "string"
+                },
+                "parameters": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckAny"
+                    }
+                },
+                "versions": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckString"
+                    }
                 }
             }
         },
@@ -10508,6 +11199,29 @@ var doc = `{
                 },
                 "versionID": {
                     "type": "string"
+                }
+            }
+        },
+        "structs.TenantCheck": {
+            "type": "object",
+            "properties": {
+                "clusterCount": {
+                    "$ref": "#/definitions/structs.CheckRangeInt32"
+                },
+                "clusters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ClusterCheck"
+                    }
+                },
+                "cpuRatio": {
+                    "type": "number"
+                },
+                "memoryRatio": {
+                    "type": "number"
+                },
+                "storageRatio": {
+                    "type": "number"
                 }
             }
         },

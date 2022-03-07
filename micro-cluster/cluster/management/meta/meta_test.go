@@ -17,8 +17,7 @@ package meta
 
 import (
 	"context"
-	"errors"
-	errors2 "github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/models/platform/config"
 	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
@@ -422,7 +421,7 @@ func TestClusterMeta_GetClusterComponentProperties(t *testing.T) {
 					},
 				},
 			},
-		}, errors2.Error(errors2.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		}, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
 		_, err := meta.GetClusterComponentProperties(context.TODO())
 		assert.Error(t, err)
 	})
@@ -640,6 +639,12 @@ func TestClusterMeta_GetInstanceByStatus(t *testing.T) {
 }
 
 func TestClusterMeta_GenerateTopologyConfig(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	rw := mockconfig.NewMockReaderWriter(ctrl)
+	models.SetConfigReaderWriter(rw)
+	rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT))
 	t.Run("normal", func(t *testing.T) {
 		meta := &ClusterMeta{
 			Cluster: &management.Cluster{
@@ -699,9 +704,9 @@ func TestClusterMeta_UpdateClusterStatus(t *testing.T) {
 	defer ctrl.Finish()
 	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(rw)
-	rw.EXPECT().UpdateStatus(gomock.Any(), "111", gomock.Any()).Return(errors.New("not existed"))
+	rw.EXPECT().UpdateStatus(gomock.Any(), "111", gomock.Any()).Return(errors.Error(errors.TIEM_CLUSTER_NOT_FOUND))
 	rw.EXPECT().UpdateStatus(gomock.Any(), "222", gomock.Any()).Return(nil)
-	rw.EXPECT().UpdateStatus(gomock.Any(), "", gomock.Any()).Return(errors.New("empty"))
+	rw.EXPECT().UpdateStatus(gomock.Any(), "", gomock.Any()).Return(errors.Error(errors.TIEM_CLUSTER_NOT_FOUND))
 
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{},
@@ -809,8 +814,8 @@ func TestClusterMeta_IsComponentRequired(t *testing.T) {
 
 		meta := &ClusterMeta{
 			Cluster: &management.Cluster{
-				Type:    "TiDB",
-				Version: "v5.0.0",
+				Type:            "TiDB",
+				Version:         "v5.0.0",
 				CpuArchitecture: "x86_64",
 			},
 		}
@@ -858,8 +863,8 @@ func TestClusterMeta_IsComponentRequired(t *testing.T) {
 
 		meta := &ClusterMeta{
 			Cluster: &management.Cluster{
-				Type:    "TiDB",
-				Version: "v5.2.2",
+				Type:            "TiDB",
+				Version:         "v5.2.2",
 				CpuArchitecture: "x86_64",
 			},
 		}
@@ -1037,7 +1042,7 @@ func TestClusterMeta_StartMaintenance(t *testing.T) {
 	models.SetClusterReaderWriter(rw)
 
 	rw.EXPECT().SetMaintenanceStatus(gomock.Any(), "111", constants.ClusterMaintenanceScaleIn).Return(nil)
-	rw.EXPECT().SetMaintenanceStatus(gomock.Any(), "111", constants.ClusterMaintenanceStopping).Return(errors.New("conflicted"))
+	rw.EXPECT().SetMaintenanceStatus(gomock.Any(), "111", constants.ClusterMaintenanceStopping).Return(errors.Error(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT))
 
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
@@ -1066,7 +1071,7 @@ func TestClusterMeta_EndMaintenance(t *testing.T) {
 	models.SetClusterReaderWriter(rw)
 
 	rw.EXPECT().ClearMaintenanceStatus(gomock.Any(), "111", constants.ClusterMaintenanceScaleIn).Return(nil)
-	rw.EXPECT().ClearMaintenanceStatus(gomock.Any(), "111", constants.ClusterMaintenanceStopping).Return(errors.New("conflicted"))
+	rw.EXPECT().ClearMaintenanceStatus(gomock.Any(), "111", constants.ClusterMaintenanceStopping).Return(errors.Error(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT))
 
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
@@ -1149,7 +1154,7 @@ func TestClusterMeta_Delete(t *testing.T) {
 	models.SetClusterReaderWriter(rw)
 
 	rw.EXPECT().Delete(gomock.Any(), "111").Return(nil)
-	rw.EXPECT().Delete(gomock.Any(), "").Return(errors.New("empty"))
+	rw.EXPECT().Delete(gomock.Any(), "").Return(errors.Error(errors.TIEM_CLUSTER_NOT_FOUND))
 
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
@@ -1180,7 +1185,7 @@ func TestClusterMeta_ClearClusterPhysically(t *testing.T) {
 	models.SetClusterReaderWriter(rw)
 
 	rw.EXPECT().ClearClusterPhysically(gomock.Any(), "111").Return(nil)
-	rw.EXPECT().ClearClusterPhysically(gomock.Any(), "").Return(errors.New("empty"))
+	rw.EXPECT().ClearClusterPhysically(gomock.Any(), "").Return(errors.Error(errors.TIEM_UNSUPPORT_PRODUCT))
 
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
@@ -1251,7 +1256,7 @@ func TestClusterMeta_Get(t *testing.T) {
 			RoleType:  string(constants.Root),
 		}}, nil)
 
-	rw.EXPECT().GetMeta(gomock.Any(), "222").Return(nil, nil, nil, errors.New("empty"))
+	rw.EXPECT().GetMeta(gomock.Any(), "222").Return(nil, nil, nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT))
 
 	t.Run("normal", func(t *testing.T) {
 		meta, err := Get(context.TODO(), "111")
@@ -1474,6 +1479,7 @@ func TestClusterMeta_Address(t *testing.T) {
 	//})
 }
 func TestClusterMeta_Display(t *testing.T) {
+
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -1637,6 +1643,22 @@ func TestClusterMeta_Display(t *testing.T) {
 	}
 
 	t.Run("cluster", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(rw)
+		rw.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return([]*management.ClusterRelation{
+			{
+				SubjectClusterID: "01",
+				ObjectClusterID:  "02",
+			},
+		}, nil)
+		rw.EXPECT().GetSlaves(gomock.Any(), gomock.Any()).Return([]*management.ClusterRelation{
+			{
+				SubjectClusterID: "01",
+				ObjectClusterID:  "02",
+			},
+		}, nil)
 		cluster := meta.DisplayClusterInfo(context.TODO())
 		assert.Equal(t, meta.Cluster.ID, cluster.ID)
 		assert.Equal(t, meta.Cluster.Name, cluster.Name)
@@ -1710,6 +1732,19 @@ func TestClusterMeta_Query(t *testing.T) {
 		structs.Page{
 			Page: 1, PageSize: 1, Total: 5,
 		}, nil)
+
+	rw.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return([]*management.ClusterRelation{
+		{
+			SubjectClusterID: "01",
+			ObjectClusterID:  "02",
+		},
+	}, nil)
+	rw.EXPECT().GetSlaves(gomock.Any(), gomock.Any()).Return([]*management.ClusterRelation{
+		{
+			SubjectClusterID: "01",
+			ObjectClusterID:  "02",
+		},
+	}, nil)
 
 	resp, total, err := Query(context.TODO(), cluster.QueryClustersReq{
 		ClusterID: "111",
@@ -1945,7 +1980,6 @@ func TestClusterMeta_GetVersion(t *testing.T) {
 	assert.Equal(t, "v5.2.2", meta.GetRevision())
 
 }
-
 
 func TestClusterMeta_BuildForTakeover(t *testing.T) {
 	ctrl := gomock.NewController(t)

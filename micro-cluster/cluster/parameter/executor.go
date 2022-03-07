@@ -245,12 +245,6 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 	// grouping by parameter source
 	modifyParamContainer := make(map[interface{}][]*ModifyClusterParameterInfo)
 	for i, param := range modifyParam.Params {
-		// condition apply parameter and HasApply values is 0, then filter directly
-		if applyParameter != nil && param.HasApply != int(DirectApply) {
-			putParameterContainer(fillParamContainer, param.InstanceType, param)
-			continue
-		}
-		fmt.Println(param.InstanceType == string(constants.ComponentIDCDC), len(clusterMeta.GetCDCClientAddresses()))
 		if param.InstanceType == string(constants.ComponentIDCDC) && len(clusterMeta.GetCDCClientAddresses()) == 0 {
 			// If it is a parameter of CDC, apply the parameter without installing CDC, then skip directly
 			if applyParameter != nil {
@@ -270,6 +264,11 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 			} else {
 				return fmt.Errorf("get %s address from meta failed, empty address", constants.ComponentIDTiFlash)
 			}
+		}
+		// condition apply parameter and HasApply values is 0, then filter directly
+		if applyParameter != nil && param.HasApply != int(DirectApply) {
+			putParameterContainer(fillParamContainer, param.InstanceType, param)
+			continue
 		}
 		// If it is an apply parameter with an empty parameter value, it is skipped directly
 		if applyParameter != nil && strings.TrimSpace(param.RealValue.ClusterValue) == "" {

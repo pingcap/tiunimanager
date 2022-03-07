@@ -27,6 +27,7 @@ import (
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
 	switchoverApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/switchover"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/upgrade"
+	configApi "github.com/pingcap-inc/tiem/micro-api/controller/platform/config"
 	"github.com/pingcap-inc/tiem/micro-api/controller/platform/system"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
@@ -77,6 +78,14 @@ func Route(g *gin.Engine) {
 			platform.POST("/check", metrics.HandleMetrics(constants.MetricsPlatformCheck), platformApi.Check)
 			platform.GET("/report/:checkId", metrics.HandleMetrics(constants.MetricsGetCheckReport), platformApi.GetCheckReport)
 			platform.GET("/reports", metrics.HandleMetrics(constants.MetricsQueryCheckReports), platformApi.QueryCheckReports)
+		}
+
+		config := apiV1.Group("/config")
+		{
+			config.Use(interceptor.VerifyIdentity)
+			config.Use(interceptor.AuditLog)
+			config.POST("/update", metrics.HandleMetrics(constants.MetricsSystemConfigUpdate), configApi.UpdateSystemConfig)
+			config.GET("/", metrics.HandleMetrics(constants.MetricsSystemConfigGet), configApi.GetSystemConfig)
 		}
 
 		user := apiV1.Group("/users")

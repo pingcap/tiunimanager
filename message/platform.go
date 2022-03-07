@@ -109,6 +109,14 @@ type GetSystemConfigResp struct {
 	structs.SystemConfig
 }
 
+type UpdateSystemConfigReq struct {
+	ConfigKey   string `json:"configKey" form:"configKey"`
+	ConfigValue string `json:"configValue" form:"configValue"`
+}
+
+type UpdateSystemConfigResp struct {
+}
+
 type GetSystemInfoReq struct {
 	WithVersionDetail bool `json:"withVersionDetail" form:"withVersionDetail" `
 }

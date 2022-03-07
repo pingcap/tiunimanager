@@ -246,9 +246,9 @@ func Test_Remount(t *testing.T) {
 
 func Test_GenerateTopologyConfig(t *testing.T) {
 	template_struct := templateScaleOut{}
-	template_struct.HostIPs = append(template_struct.HostIPs, "192.168.177.177")
-	template_struct.HostIPs = append(template_struct.HostIPs, "192.168.177.178")
-	template_struct.HostIPs = append(template_struct.HostIPs, "192.168.177.179")
+	template_struct.HostAddrs = append(template_struct.HostAddrs, HostAddr{"192.168.177.177", 10086})
+	template_struct.HostAddrs = append(template_struct.HostAddrs, HostAddr{"192.168.177.178", 10087})
+	template_struct.HostAddrs = append(template_struct.HostAddrs, HostAddr{"192.168.177.179", 10088})
 
 	str, err := template_struct.generateTopologyConfig(context.TODO())
 	assert.Nil(t, err)
@@ -400,13 +400,16 @@ func Test_BuildHostCheckResulsFromJson(t *testing.T) {
 }
 
 func Test_BuildCheckHostTemplateItems(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
 	host := genHostInfo("Test_Host1", "Compute,Storage,Schedule")
 	templateInfo := templateCheckHost{}
+	host.SSHPort = 10086
 	(&templateInfo).buildCheckHostTemplateItems(host)
 
 	assert.Equal(t, 2, len(templateInfo.TemplateItemsForCompute))
 	assert.Equal(t, 2, len(templateInfo.TemplateItemsForStorage))
 	assert.Equal(t, 2, len(templateInfo.TemplateItemsForSchedule))
+	assert.Equal(t, 10086, templateInfo.GlobalSSHPort)
 
 	t.Log(templateInfo)
 

@@ -25,11 +25,6 @@ package models
 
 import (
 	"context"
-	"io/ioutil"
-	"os"
-	"strings"
-	"syscall"
-
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -38,6 +33,11 @@ import (
 	"github.com/pingcap-inc/tiem/models/platform/system"
 	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	"github.com/pingcap-inc/tiem/models/user/account"
+	"gorm.io/gorm"
+	"io/ioutil"
+	"os"
+	"strings"
+	"syscall"
 )
 
 var inTestingVersion = "InTesting"
@@ -54,13 +54,25 @@ var allVersionInitializers = []system.VersionInitializer{
 		return initBySql(upgradeSqlFile, "tiup upgrade")
 	}},
 	{"v1.0.0-beta.11", func() error {
-		defaultDb.base.Create(&system.VersionInfo{
-			ID:          "v1.0.0-beta.11",
-			Desc:        "beta 11",
-			ReleaseNote: "release note",
+		return defaultDb.base.WithContext(context.TODO()).Transaction(func(tx *gorm.DB) error {
+			_, err := defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{
+				ConfigKey:   constants.ConfigKeyDefaultSSHPort,
+				ConfigValue: "22",
+			})
+			if err != nil {
+				return err
+			}
+			parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters_v1.0.0-beta.11.sql"
+			err = tx.Create(&system.VersionInfo{
+				ID:          "v1.0.0-beta.11",
+				Desc:        "beta 11",
+				ReleaseNote: "release note",
+			}).Error
+			if err != nil {
+				return err
+			}
+			return initBySql(parameterSqlFile, "parameters")
 		})
-		parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters_v1.0.0-beta.11.sql"
-		return initBySql(parameterSqlFile, "parameters")
 	}},
 
 	{inTestingVersion, func() error {

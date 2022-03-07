@@ -66,7 +66,7 @@ type ClusterServiceHandler struct {
 	clusterParameterManager *clusterParameter.Manager
 	clusterManager          *clusterManager.Manager
 	systemConfigManager     *config.SystemConfigManager
-	systemManager     		*system.SystemManager
+	systemManager           *system.SystemManager
 	brManager               backuprestore.BRService
 	importexportManager     importexport.ImportExportService
 	clusterLogManager       *clusterLog.Manager
@@ -730,6 +730,22 @@ func (c *ClusterServiceHandler) GetSystemConfig(ctx context.Context, req *cluste
 
 	return nil
 }
+
+func (c *ClusterServiceHandler) UpdateSystemConfig(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "UpdateSystemConfig", int(resp.GetCode()))
+	defer handlePanic(ctx, "UpdateSystemConfig", resp)
+
+	updateReq := message.UpdateSystemConfigReq{}
+
+	if handleRequest(ctx, req, resp, &updateReq, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionUpdate)}}) {
+		result, err := c.systemConfigManager.UpdateSystemConfig(framework.NewBackgroundMicroCtx(ctx, false), updateReq)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
 func (c *ClusterServiceHandler) GetSystemInfo(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "GetSystemInfo", int(resp.GetCode()))

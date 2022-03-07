@@ -36,7 +36,7 @@ import (
 func TestNewCheckManager(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		manager := NewCheckManager()
-		assert.Empty(t, manager)
+		assert.NotNil(t, manager)
 	})
 }
 

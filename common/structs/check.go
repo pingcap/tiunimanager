@@ -76,6 +76,7 @@ type ClusterCheck struct {
 
 type InstanceCheck struct {
 	ID         string                 `json:"instanceID"`
+	Address    string                 `json:"address"`
 	Parameters map[string]CheckAny    `json:"parameters"`
 	Versions   map[string]CheckString `json:"versions"`
 }
@@ -103,12 +104,13 @@ type CheckError struct {
 }
 
 type HostCheck struct {
+	Address         string                 `json:"address"`
 	SELinux         CheckSwitch            `json:"selinux"`
 	Firewall        CheckSwitch            `json:"firewall"`
 	Swap            CheckSwitch            `json:"swap"`
-	MemoryAllocated CheckInt32             `json:"memory"`
-	CPUAllocated    CheckInt32             `json:"cpu"`
-	DiskAllocated   map[string]CheckString `json:"disk"`
+	MemoryAllocated CheckInt32             `json:"memoryAllocated"`
+	CPUAllocated    CheckInt32             `json:"cpuAllocated"`
+	DiskAllocated   map[string]CheckString `json:"diskAllocated"`
 	StorageRatio    float32                `json:"storageRatio"`
 	Errors          []CheckError           `json:"errors"`
 }

@@ -4,3 +4,7 @@ update parameters set unit = null, unit_options = '["MB", "GB"]' where id = '271
 update parameters set unit = null, unit_options = '["MB", "GB"]', range = '["1MB", "512GB"]' where id = '98';
 update parameters set range = '["0", "102400"]' where id = '110';
 update parameters set range = '["4", "256"]', range_type = 1 where id = '86';
+update parameters set has_apply = 0, read_only = 1 where id = '62';
+update parameters set has_apply = 0, read_only = 1 where id = '363';
+update parameters set has_apply = 0, read_only = 1 where id = '364';
+update parameters set read_only = 1 where id = '404';

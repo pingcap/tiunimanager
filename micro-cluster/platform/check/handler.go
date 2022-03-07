@@ -16,6 +16,7 @@
 package check
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -88,8 +89,8 @@ type RegionsInfo struct {
 }
 
 type HealthInfo struct {
-	Name     string `json:"name"`
-	Health   bool   `json:"health"`
+	Name   string `json:"name"`
+	Health bool   `json:"health"`
 }
 
 type ReportInterface interface {
@@ -223,16 +224,15 @@ func (p *Report) GetClusterTopology(ctx context.Context, clusterID string) (stru
 	topologyCheck.Valid = true
 	expectedTopologyInfos := make([]TopologyInfo, 0)
 	for componentType, instances := range clusterMeta.Instances {
-		if meta.Contain(constants.ParasiteComponentIDs, constants.EMProductComponentIDType(componentType)) {
-			continue
+		if meta.Contain(constants.KernelComponentIDs, constants.EMProductComponentIDType(componentType)) {
+			if realTopology[strings.ToLower(componentType)] != len(instances) {
+				topologyCheck.Valid = false
+			}
+			expectedTopologyInfos = append(expectedTopologyInfos, TopologyInfo{
+				Type:  strings.ToLower(componentType),
+				Count: len(instances),
+			})
 		}
-		if realTopology[strings.ToLower(componentType)] != len(instances) {
-			topologyCheck.Valid = false
-		}
-		expectedTopologyInfos = append(expectedTopologyInfos, TopologyInfo{
-			Type:  strings.ToLower(componentType),
-			Count: len(instances),
-		})
 	}
 
 	realInfos, err := json.Marshal(realTopologyInfos)
@@ -386,6 +386,7 @@ func (p *Report) CheckInstances(ctx context.Context, instances []*management.Clu
 		}
 		instanceChecks = append(instanceChecks, structs.InstanceCheck{
 			ID:         instance.ID,
+			Address:    instance.HostIP[0],
 			Parameters: parameters,
 		})
 	}
@@ -517,8 +518,12 @@ func (p *Report) CheckHosts(ctx context.Context) error {
 	}
 
 	hostInfos := make([]structs.HostInfo, 0)
+	addressMap := make(map[string]string)
 	for _, host := range hosts {
 		hostInfos = append(hostInfos, structs.HostInfo{ID: host.ID})
+		if _, ok := addressMap[host.ID]; !ok {
+			addressMap[host.ID] = host.IP
+		}
 	}
 
 	cpu, err := hostInspector.GetHostInspector().CheckCpuAllocated(ctx, hostInfos)
@@ -549,6 +554,7 @@ func (p *Report) CheckHosts(ctx context.Context) error {
 				CPUAllocated:    *cpu[key],
 				MemoryAllocated: *memory[key],
 				DiskAllocated:   diskAllocated,
+				Address:         addressMap[key],
 			}
 		}
 	}
@@ -567,5 +573,11 @@ func (p *Report) Serialize(ctx context.Context) (string, error) {
 		framework.LogWithContext(ctx).Errorf("serialize report info error: %s", err.Error())
 		return "", err
 	}
-	return string(report), nil
+	// format report
+	var out bytes.Buffer
+	err = json.Indent(&out, report, "", "\t")
+	if err != nil {
+		return "", err
+	}
+	return out.String(), nil
 }

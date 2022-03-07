@@ -485,6 +485,19 @@ func Test_isVirtualMachine_True(t *testing.T) {
 	assert.True(t, isVM)
 }
 
+func Test_isVirtualMachine_Contains(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
+	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("VMware, Inc.", nil).AnyTimes()
+
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSSHClient(mockClient)
+	isVM, err := fileInitiator.isVirtualMachine(context.TODO(), &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180"})
+	assert.Nil(t, err)
+	assert.True(t, isVM)
+}
+
 func Test_isVirtualMachine_False(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

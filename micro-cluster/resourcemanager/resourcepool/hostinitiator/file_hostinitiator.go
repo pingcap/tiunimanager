@@ -310,7 +310,7 @@ func (p *FileHostInitiator) isVirtualMachine(ctx context.Context, h *structs.Hos
 	}
 	isVM = false
 	for _, vm := range vmManufacturer {
-		if strings.EqualFold(result, vm) {
+		if strings.Contains(strings.ToLower(result), strings.ToLower(vm)) {
 			isVM = true
 			break
 		}

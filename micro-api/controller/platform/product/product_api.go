@@ -37,6 +37,11 @@ import (
 // @Failure 500 {object} controller.CommonResult
 // @Router /vendors/ [post]
 func UpdateVendors(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.UpdateVendorInfoReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateVendors, &message.UpdateVendorInfoResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
 }
 
 // QueryVendors query vendors
@@ -53,6 +58,11 @@ func UpdateVendors(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /vendors/ [get]
 func QueryVendors(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryVendorInfoReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryVendors, &message.QueryVendorInfoResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
 }
 
 // UpdateProducts update products
@@ -69,6 +79,11 @@ func QueryVendors(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /products/ [post]
 func UpdateProducts(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.UpdateProductsInfoReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateProducts, &message.UpdateProductsInfoResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
 }
 
 // QueryProducts query products
@@ -85,6 +100,11 @@ func UpdateProducts(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /products/ [get]
 func QueryProducts(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryProductsInfoReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryProducts, &message.QueryProductsInfoResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
 }
 
 // QueryAvailableVendors query available vendors and regions
@@ -102,7 +122,7 @@ func QueryProducts(c *gin.Context) {
 // @Router /vendors/available [get]
 func QueryAvailableVendors(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryAvailableVendorsReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryZones, &message.QueryAvailableVendorsResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryAvailableVendors, &message.QueryAvailableVendorsResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -123,7 +143,7 @@ func QueryAvailableVendors(c *gin.Context) {
 // @Router /products/available [get]
 func QueryAvailableProducts(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.QueryAvailableProductsReq{}); ok {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryProducts, &message.QueryAvailableProductsResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryAvailableProducts, &message.QueryAvailableProductsResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

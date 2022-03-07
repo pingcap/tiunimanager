@@ -14,7 +14,7 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: zone.go
+ * @File: vendor.go
  * @Description:
  * @Author: duanbing@pingcap.com
  * @Version: 1.0.0
@@ -23,21 +23,30 @@
 
 package product
 
-import (
-	"gorm.io/gorm"
-	"time"
-)
+// Vendor information provided by Enterprise Manager
+type Vendor struct {
+	VendorID string 	`gorm:"primaryKey;size:32"`
+	VendorName string 	`gorm:"size:32"`
+	// accessKey and secretKey
+}
 
-// Zone information provided by Enterprise Manager
-type Zone struct {
-	VendorID   string         `gorm:"primaryKey;size:32"`
-	VendorName string         `gorm:"size:32"`
-	RegionID   string         `gorm:"primaryKey;size:32"`
+// VendorZone information provided by Enterprise Manager
+type VendorZone struct {
+	VendorID   string         `gorm:"uniqueIndex:vendor_region_zone;size:32"`
+	RegionID   string         `gorm:"uniqueIndex:vendor_region_zone;size:32"`
 	RegionName string         `gorm:"size:32"`
-	ZoneID     string         `gorm:"primaryKey;size:32"`
+	ZoneID     string         `gorm:"uniqueIndex:vendor_region_zone;size:32"`
 	ZoneName   string         `gorm:"size:32"`
 	Comment    string         `gorm:"size:1024;"`
-	CreatedAt  time.Time      `gorm:"autoCreateTime;<-:create;->;"`
-	UpdatedAt  time.Time      `gorm:"autoUpdateTime"`
-	DeletedAt  gorm.DeletedAt `gorm:""`
+}
+
+//VendorSpec specification information provided by Enterprise Manager
+type VendorSpec struct {
+	VendorID 	string 		   `gorm:"uniqueIndex:vendor_spec;size:32"`
+	SpecID      string         `gorm:"uniqueIndex:vendor_spec;size:32"`
+	SpecName    string     	   `gorm:"not null;size 16;comment: original spec of the product, eg 8C16G"`
+	CPU         int            `gorm:"comment: unit: vCPU"`
+	Memory      int            `gorm:"comment: unit: GiB"`
+	DiskType    string         `gorm:"comment:NVMeSSD/SSD/SATA"`
+	PurposeType string         `gorm:"comment:Compute/Storage/Schedule"`
 }

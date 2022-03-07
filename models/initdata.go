@@ -25,6 +25,7 @@ package models
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/models/platform/product"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -73,6 +74,27 @@ var allVersionInitializers = []system.VersionInitializer{
 				return err
 			}
 			return initBySql(tx, parameterSqlFile, "parameters")
+		})
+	}},
+	{"v1.0.0-beta.12", func() error {
+		return defaultDb.base.WithContext(context.TODO()).Transaction(func(tx *gorm.DB) error {
+			return errors.OfNullable(nil).BreakIf(func() error {
+				return tx.Create(&system.VersionInfo{
+					ID:          "v1.0.0-beta.12",
+					Desc:        "beta 12",
+					ReleaseNote: "release note",
+				}).Error
+			}).BreakIf(func() error {
+				return nil
+			}).BreakIf(func() error {
+				existed := false
+				if existed {
+					// todo migrate product infos
+				} else {
+					return initDefaultProductsAndVendors(tx)
+				}
+				return nil
+			}).Present()
 		})
 	}},
 
@@ -179,4 +201,45 @@ func initBySql(tx *gorm.DB, file string, module string) error {
 		}
 	}
 	return nil
+}
+
+// initDefaultProductsAndVendors
+// @Description: init default products and vendors data for TiEM v1.0.0-beta.12
+// @Parameter tx
+// @return error
+func initDefaultProductsAndVendors(tx *gorm.DB) error {
+	return errors.OfNullable(nil).BreakIf(func() error {
+		return tx.Create(&product.ProductInfo{ProductID: "TiDB", ProductName: "TiDB"}).Error
+	}).BreakIf(func() error {
+		return tx.CreateInBatches([]*product.ProductComponentInfo{
+			{ProductID: "TiDB", ComponentID: "TiDB", PurposeType: "Compute", StartPort: 10000, EndPort: 10020, MaxPort: 2, MinInstance: 1, MaxInstance: 128, SuggestedInstancesCount: []int32{}},
+			{ProductID: "TiDB", ComponentID: "TiKV", PurposeType: "Storage", StartPort: 10020, EndPort: 10040, MaxPort: 2, MinInstance: 1, MaxInstance: 128, SuggestedInstancesCount: []int32{}},
+			{ProductID: "TiDB", ComponentID: "PD", PurposeType: "Schedule", StartPort: 10040, EndPort: 10120, MaxPort: 8, MinInstance: 1, MaxInstance: 128, SuggestedInstancesCount: []int32{1, 3, 5, 7}},
+			{ProductID: "TiDB", ComponentID: "TiFlash", PurposeType: "Storage", StartPort: 10120, EndPort: 10180, MaxPort: 6, MinInstance: 0, MaxInstance: 128, SuggestedInstancesCount: []int32{}},
+			{ProductID: "TiDB", ComponentID: "CDC", PurposeType: "Compute", StartPort: 10180, EndPort: 10200, MaxPort: 2, MinInstance: 0, MaxInstance: 128, SuggestedInstancesCount: []int32{}},
+		}, 5).Error
+	}).BreakIf(func() error {
+		return tx.CreateInBatches([]*product.ProductVersion{
+			{ProductID: "TiDB", Arch: string(constants.ArchX8664), Version: "v5.2.2"},
+			{ProductID: "TiDB", Arch: string(constants.ArchArm64), Version: "v5.2.2"},
+		}, 1).Error
+	}).BreakIf(func() error {
+		return tx.Create(&product.Vendor{VendorID: "Local", VendorName: "local datacenter"}).Error
+	}).BreakIf(func() error {
+		return tx.CreateInBatches([]product.VendorSpec {
+			{VendorID: "Local", SpecID: "c.large", SpecName: "4C8G", CPU: 4, Memory: 8, DiskType: "SATA", PurposeType: "Compute"},
+			{VendorID: "Local", SpecID: "c.xlarge", SpecName: "8C16G", CPU: 8, Memory: 16, DiskType: "SATA", PurposeType: "Compute"},
+			{VendorID: "Local", SpecID: "st.large", SpecName: "4C8G", CPU: 4, Memory: 8, DiskType: "SATA", PurposeType: "Storage"},
+			{VendorID: "Local", SpecID: "st.xlarge", SpecName: "8C16G", CPU: 8, Memory: 16, DiskType: "SATA", PurposeType: "Storage"},
+			{VendorID: "Local", SpecID: "sc.large", SpecName: "4C8G", CPU: 4, Memory: 8, DiskType: "SATA", PurposeType: "Schedule"},
+			{VendorID: "Local", SpecID: "sc.xlarge", SpecName: "8C16G", CPU: 8, Memory: 16, DiskType: "SATA", PurposeType: "Schedule"},
+		}, 8).Error
+	}).BreakIf(func() error {
+		return tx.CreateInBatches([]product.VendorZone {
+			{VendorID: "Local", RegionID: "Region1", RegionName: "Region1", ZoneID: "Zone1_1", ZoneName: "Zone1_1"},
+			{VendorID: "Local", RegionID: "Region1", RegionName: "Region1", ZoneID: "Zone1_2", ZoneName: "Zone1_2"},
+			{VendorID: "Local", RegionID: "Region2", RegionName: "Region2", ZoneID: "Zone2_1", ZoneName: "Zone2_1"},
+			{VendorID: "Local", RegionID: "Region2", RegionName: "Region2", ZoneID: "Zone2_2", ZoneName: "Zone2_2"},
+		}, 4).Error
+	}).Present()
 }

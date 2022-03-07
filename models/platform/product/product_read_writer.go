@@ -59,7 +59,7 @@ type ProductReadWriterInterface interface {
 	// @param ctx
 	// @param zones
 	// @return err
-	CreateZones(ctx context.Context, zones []Zone) (er error)
+	CreateZones(ctx context.Context, zones []VendorZone) (er error)
 
 	// DeleteZones
 	// @Description: batch delete zones
@@ -94,7 +94,7 @@ type ProductReadWriterInterface interface {
 	// @param product
 	// @param components
 	// @return err
-	CreateProduct(ctx context.Context, product Product, components []ProductComponent) (err error)
+	CreateProduct(ctx context.Context, product ProductInfo, components []ProductComponentInfo) (err error)
 
 	// DeleteProduct
 	// @Description: delete a product by product information
@@ -117,7 +117,7 @@ type ProductReadWriterInterface interface {
 	// @param ctx
 	// @param specs
 	// @return err
-	CreateSpecs(ctx context.Context, specs []Spec) (er error)
+	CreateSpecs(ctx context.Context, specs []VendorSpec) (er error)
 
 	// DeleteSpecs batch delete specs
 	// @param ctx
@@ -143,7 +143,7 @@ type ProductReadWriter struct {
 }
 
 //CreateZones batch create zones
-func (p *ProductReadWriter) CreateZones(ctx context.Context, zones []Zone) (er error) {
+func (p *ProductReadWriter) CreateZones(ctx context.Context, zones []VendorZone) (er error) {
 	if len(zones) <= 0 {
 		framework.LogWithContext(ctx).Warningf("create zones %v, len: %d, parameter invalid", zones, len(zones))
 		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "create zones %v, parameter invalid", zones)
@@ -165,7 +165,7 @@ func (p *ProductReadWriter) DeleteZones(ctx context.Context, zones []structs.Zon
 	}
 	p.DB(ctx).Begin()
 	for _, zone := range zones {
-		err := p.DB(ctx).Where("vendor_id = ? AND  region_id = ? AND zone_id = ?", zone.VendorID, zone.RegionID, zone.ZoneID).Unscoped().Delete(&Zone{}).Error
+		err := p.DB(ctx).Where("vendor_id = ? AND  region_id = ? AND zone_id = ?", zone.VendorID, zone.RegionID, zone.ZoneID).Unscoped().Delete(&VendorZone{}).Error
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("delete zone, VendorID:%s RegeionID: %s, ZoneID:%s, errors: %v", zone.VendorID, zone.RegionID, zone.ZoneID, err)
 			p.DB(ctx).Rollback()
@@ -208,7 +208,7 @@ func (p *ProductReadWriter) GetZone(ctx context.Context, vendorID, regionID, zon
 	}
 
 	zone = new(structs.ZoneFullInfo)
-	err = p.DB(ctx).Model(&Zone{}).Where("vendor_id = ? AND  region_id = ? AND zone_id = ?", vendorID, regionID, zoneID).Count(&count).Find(zone).Error
+	err = p.DB(ctx).Model(&VendorZone{}).Where("vendor_id = ? AND  region_id = ? AND zone_id = ?", vendorID, regionID, zoneID).Count(&count).Find(zone).Error
 	if err != nil {
 		errMsg := fmt.Sprintf("get zone, vendorID: %s regionID: %s, zoneID:%s, failed: %v", zone.VendorID, zone.RegionID, zone.ZoneID, err)
 		framework.LogWithContext(ctx).Errorf(errMsg)
@@ -219,7 +219,7 @@ func (p *ProductReadWriter) GetZone(ctx context.Context, vendorID, regionID, zon
 }
 
 //CreateProduct create a product by product information and components
-func (p *ProductReadWriter) CreateProduct(ctx context.Context, product Product, components []ProductComponent) (er error) {
+func (p *ProductReadWriter) CreateProduct(ctx context.Context, product ProductInfo, components []ProductComponentInfo) (er error) {
 	if len(components) <= 0 {
 		framework.LogWithContext(ctx).Warningf("create product invalid parameter,product: %v, components: %v", product, components)
 		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "create product invalid parameter, product: %v, components: %v",
@@ -259,7 +259,7 @@ func (p *ProductReadWriter) DeleteProduct(ctx context.Context, product structs.P
 
 	p.DB(ctx).Begin()
 	err = p.DB(ctx).Where("vendor_id = ? AND  region_id = ? AND product_id = ? AND version = ? AND arch = ?",
-		product.VendorID, product.RegionID, product.ID, product.Version, product.Arch).Unscoped().Delete(&Product{}).Error
+		product.VendorID, product.RegionID, product.ID, product.Version, product.Arch).Unscoped().Delete(&ProductInfo{}).Error
 	framework.LogWithContext(ctx).Warningf("delete product, delete product information form product table failed,product: %v", product)
 	if err != nil {
 		p.DB(ctx).Rollback()
@@ -269,7 +269,7 @@ func (p *ProductReadWriter) DeleteProduct(ctx context.Context, product structs.P
 
 	for _, component := range components {
 		err = p.DB(ctx).Where("vendor_id = ? AND  region_id = ? AND product_id = ? AND product_version = ? AND arch = ? AND component_id AND name = ?",
-			product.VendorID, product.RegionID, product.ID, product.Version, product.Arch, component.ID, component.Name).Unscoped().Delete(&ProductComponent{}).Error
+			product.VendorID, product.RegionID, product.ID, product.Version, product.Arch, component.ID, component.Name).Unscoped().Delete(&ProductComponentInfo{}).Error
 		if err != nil {
 			p.DB(ctx).Rollback()
 			framework.LogWithContext(ctx).Warningf("delete product, delete product component form product_component table failed,product: %v, component: %v", product, component)
@@ -485,7 +485,7 @@ func (p *ProductReadWriter) QueryProductComponentProperty(ctx context.Context, v
 }
 
 //CreateSpecs batch create specs
-func (p *ProductReadWriter) CreateSpecs(ctx context.Context, specs []Spec) (er error) {
+func (p *ProductReadWriter) CreateSpecs(ctx context.Context, specs []VendorSpec) (er error) {
 	if len(specs) <= 0 || len(specs) > 1024 {
 		framework.LogWithContext(ctx).Warningf("create specs %v, len: %d, parameter invalid", specs, len(specs))
 		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "create specs %v, parameter invalid", specs)
@@ -507,7 +507,7 @@ func (p *ProductReadWriter) DeleteSpecs(ctx context.Context, specs []string) (er
 	}
 	p.DB(ctx).Begin()
 	for _, spec := range specs {
-		err := p.DB(ctx).Where("id= ?", spec).Delete(&Spec{}).Error
+		err := p.DB(ctx).Where("id= ?", spec).Delete(&VendorSpec{}).Error
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("delete specs, spec: %s errors: %v", spec, err)
 			p.DB(ctx).Rollback()

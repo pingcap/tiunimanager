@@ -250,15 +250,20 @@ func Route(g *gin.Engine) {
 			productGroup.Use(interceptor.SystemRunning)
 			productGroup.Use(interceptor.VerifyIdentity)
 			productGroup.Use(interceptor.AuditLog)
-			productGroup.GET("/available", product.QueryAvailableProducts)
-			productGroup.GET("/detail", product.QueryProductDetail)
+			productGroup.POST("/", metrics.HandleMetrics(constants.MetricsProductUpdate), product.UpdateProducts)
+			productGroup.GET("/", metrics.HandleMetrics(constants.MetricsProductQuery), product.QueryProducts)
+			productGroup.GET("/available", metrics.HandleMetrics(constants.MetricsProductQueryAvailable), product.QueryAvailableProducts)
+			productGroup.GET("/detail", metrics.HandleMetrics(constants.MetricsProductQueryDetail), product.QueryProductDetail)
 		}
 
-		zoneGroup := apiV1.Group("/zones")
+		vendorGroup := apiV1.Group("/vendors")
 		{
-			zoneGroup.Use(interceptor.SystemRunning)
-			zoneGroup.Use(interceptor.VerifyIdentity)
-			zoneGroup.Use(interceptor.AuditLog)
+			vendorGroup.Use(interceptor.SystemRunning)
+			vendorGroup.Use(interceptor.VerifyIdentity)
+			vendorGroup.Use(interceptor.AuditLog)
+			vendorGroup.POST("/", metrics.HandleMetrics(constants.MetricsVendorUpdate), product.UpdateVendors)
+			vendorGroup.GET("/", metrics.HandleMetrics(constants.MetricsVendorQuery), product.QueryVendors)
+			vendorGroup.GET("/available", metrics.HandleMetrics(constants.MetricsVendorQueryAvailable), product.QueryAvailableVendors)
 		}
 
 		specGroup := apiV1.Group("/specs")

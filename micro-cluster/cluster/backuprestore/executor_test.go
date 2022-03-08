@@ -83,7 +83,7 @@ func TestExecutor_backupCluster(t *testing.T) {
 			string(constants.DBUserBackupRestore): {
 				ClusterID: "cls-test",
 				Name:      constants.DBUserName[constants.DBUserBackupRestore],
-				Password:  common.Password{Val: "12345678", UpdateTime: time.Now()},
+				Password:  common.PasswordInExpired{Val: "12345678", UpdateTime: time.Now()},
 
 				RoleType: string(constants.DBUserBackupRestore),
 			},
@@ -159,7 +159,7 @@ func TestExecutor_restoreFromSrcCluster(t *testing.T) {
 			string(constants.DBUserBackupRestore): {
 				ClusterID: "cls-test",
 				Name:      constants.DBUserName[constants.DBUserBackupRestore],
-				Password:  common.Password{Val: "12345678", UpdateTime: time.Now()},
+				Password:  common.PasswordInExpired{Val: "12345678", UpdateTime: time.Now()},
 				RoleType:  string(constants.DBUserBackupRestore),
 			},
 		},

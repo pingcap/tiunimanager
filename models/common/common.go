@@ -39,13 +39,30 @@ type Entity struct {
 	Status   string `gorm:"not null;"`
 }
 
-type Password struct {
-	Val        string  // Value is the value of the password
-	UpdateTime time.Time // Last update time
-}
+type Password string
 
 // Scan implements the Scanner interface.
 func (p *Password) Scan(value interface{}) error {
+	enc, err := crypto.AesDecryptCFB(value.(string))
+	if err != nil {
+		return err
+	}
+	*p = Password(enc)
+	return nil
+}
+
+// Value implements the driver Valuer interface.
+func (p Password) Value() (driver.Value, error) {
+	return crypto.AesEncryptCFB(string(p))
+}
+
+type PasswordInExpired struct {
+	Val        string  // Value is the value of the password
+	UpdateTime time.Time // UpdateTime is the last update time
+}
+
+// Scan implements the Scanner interface.
+func (p *PasswordInExpired) Scan(value interface{}) error {
 	if value == nil {
 		p.Val, p.UpdateTime = "", time.Time{}
 		return nil
@@ -65,7 +82,7 @@ func (p *Password) Scan(value interface{}) error {
 }
 
 // Value implements the driver Valuer interface.
-func (p Password) Value() (driver.Value, error) {
+func (p PasswordInExpired) Value() (driver.Value, error) {
 	enc, err := crypto.AesEncryptCFB(p.Val)
 	if err != nil {
 		return nil, err
@@ -75,6 +92,18 @@ func (p Password) Value() (driver.Value, error) {
 	p.UpdateTime = time.Now()
 	res, err := json.Marshal(p)
 	return string(res), err
+}
+
+// CheckUpdateTimeExpired
+// @Description: check if the update time of the password is expired
+// @Parameter
+// @return bool
+func (p PasswordInExpired) CheckUpdateTimeExpired() bool {
+	duration := time.Now().Sub(p.UpdateTime)
+	if duration < constants.ExpirationTime {
+		return false
+	}
+	return true
 }
 
 func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
@@ -141,15 +170,4 @@ func FinalHash(salt string, password string) ([]byte, error) {
 	finalSalt, err := bcrypt.GenerateFromPassword([]byte(s), bcrypt.DefaultCost)
 
 	return finalSalt, err
-}
-// CheckUpdateTimeExpired
-// @Description: check if the update time of the password is expired
-// @Parameter
-// @return bool
-func (p Password) CheckUpdateTimeExpired() bool {
-	duration := time.Now().Sub(p.UpdateTime)
-	if duration < constants.ExpirationTime {
-		return false
-	}
-	return true
 }

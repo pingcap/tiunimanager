@@ -137,7 +137,7 @@ func (h *Host) ConstructFromHostInfo(src *structs.HostInfo) error {
 	h.HostName = src.HostName
 	h.IP = src.IP
 	h.UserName = src.UserName
-	h.Passwd = common.Password{Val: src.Passwd} // todo: time?
+	h.Passwd = common.Password(src.Passwd)
 	h.Arch = src.Arch
 	h.OS = src.OS
 	h.Kernel = src.Kernel

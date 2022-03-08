@@ -27,16 +27,16 @@ import (
 )
 
 type User struct {
-	ID              string          `gorm:"primarykey"`
-	DefaultTenantID string          `gorm:"default:null;not null;"`
-	Creator         string          `gorm:"default:null;not null;"`
-	Name            string          `gorm:"default:null;not null;"`
-	Salt            string          `gorm:"default:null;not null;"` //password
-	FinalHash       common.Password `gorm:"default:null;not null;"`
-	Email           string          `gorm:"default:null"`
-	Phone           string          `gorm:"default:null"`
-	Status          string          `gorm:"not null;"`
-	CreatedAt       time.Time       `gorm:"<-:create"`
+	ID              string                  `gorm:"primarykey"`
+	DefaultTenantID string                  `gorm:"default:null;not null;"`
+	Creator         string                  `gorm:"default:null;not null;"`
+	Name            string                  `gorm:"default:null;not null;"`
+	Salt            string                  `gorm:"default:null;not null;"` //password
+	FinalHash       common.PasswordInExpired `gorm:"default:null;not null;"`
+	Email           string                  `gorm:"default:null"`
+	Phone           string                  `gorm:"default:null"`
+	Status          string                  `gorm:"not null;"`
+	CreatedAt       time.Time               `gorm:"<-:create"`
 	UpdatedAt       time.Time
 	DeletedAt       gorm.DeletedAt
 }

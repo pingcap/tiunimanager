@@ -68,7 +68,7 @@ func TestManager_Login(t *testing.T) {
 		accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(&account.User{
 			ID:        "user01",
 			Salt:      salt,
-			FinalHash: common.Password{Val: hash, UpdateTime: time.Now().AddDate(0, 0, -10)},
+			FinalHash: common.PasswordInExpired{Val: hash, UpdateTime: time.Now().AddDate(0, 0, -10)},
 		}, nil)
 
 		tokenRW.EXPECT().CreateToken(gomock.Any(), gomock.Any(),
@@ -98,7 +98,7 @@ func TestManager_Login(t *testing.T) {
 		accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(&account.User{
 			ID:        "user01",
 			Salt:      salt,
-			FinalHash: common.Password{Val: hash, UpdateTime: time.Now().AddDate(0, 0, -10)},
+			FinalHash: common.PasswordInExpired{Val: hash, UpdateTime: time.Now().AddDate(0, 0, -10)},
 		}, nil)
 
 		_, err = manager.Login(ctx.TODO(), message.LoginReq{Name: "user01", Password: ""})
@@ -114,7 +114,7 @@ func TestManager_Login(t *testing.T) {
 		accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(&account.User{
 			ID:        "user01",
 			Salt:      salt,
-			FinalHash: common.Password{Val: hash, UpdateTime: time.Now().AddDate(0, 0, -10)},
+			FinalHash: common.PasswordInExpired{Val: hash, UpdateTime: time.Now().AddDate(0, 0, -10)},
 		}, nil)
 
 		_, err = manager.Login(ctx.TODO(), message.LoginReq{Name: "user01", Password: "234"})
@@ -132,7 +132,7 @@ func TestManager_Login(t *testing.T) {
 		accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(&account.User{
 			ID:        "user01",
 			Salt:      salt,
-			FinalHash: common.Password{Val: hash, UpdateTime: time.Now().AddDate(0, 0, -10)},
+			FinalHash: common.PasswordInExpired{Val: hash, UpdateTime: time.Now().AddDate(0, 0, -10)},
 		}, nil)
 
 		tokenRW.EXPECT().CreateToken(gomock.Any(), gomock.Any(), gomock.Any(),
@@ -152,7 +152,7 @@ func TestManager_Login(t *testing.T) {
 		accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(&account.User{
 			ID:        "user06",
 			Salt:      salt,
-			FinalHash: common.Password{Val: hash, UpdateTime: time.Now().AddDate(0, 0, -40)},
+			FinalHash: common.PasswordInExpired{Val: hash, UpdateTime: time.Now().AddDate(0, 0, -40)},
 		}, nil)
 
 		tokenRW.EXPECT().CreateToken(gomock.Any(), gomock.Any(),

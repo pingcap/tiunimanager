@@ -1252,7 +1252,7 @@ func TestClusterMeta_Get(t *testing.T) {
 		{
 			ClusterID: "111",
 			Name:      constants.DBUserName[constants.Root],
-			Password:  common.Password{Val: "12345678", UpdateTime: time.Now().AddDate(0, 0, -5)},
+			Password:  common.PasswordInExpired{Val: "12345678", UpdateTime: time.Now().AddDate(0, 0, -5)},
 			RoleType:  string(constants.Root),
 		}}, nil)
 
@@ -1846,7 +1846,7 @@ func mockResult(name string) []*management.Result {
 			{
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.Root],
-				Password:  common.Password{Val: "12345678", UpdateTime: time.Now().AddDate(0, 0, -5)},
+				Password:  common.PasswordInExpired{Val: "12345678", UpdateTime: time.Now().AddDate(0, 0, -5)},
 				RoleType:  string(constants.Root),
 			},
 		},

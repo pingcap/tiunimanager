@@ -1602,7 +1602,7 @@ func TestInitDatabaseAccount(t *testing.T) {
 			string(constants.Root): &management.DBUser{
 				ClusterID: "2145635758",
 				Name:      constants.DBUserName[constants.Root],
-				Password:  common.Password{Val: "123455678"},
+				Password:  common.PasswordInExpired{Val: "123455678"},
 				RoleType:  string(constants.Root),
 			},
 		},
@@ -1675,7 +1675,7 @@ func Test_testConnectivity(t *testing.T) {
 				string(constants.Root): &management.DBUser{
 					ClusterID: "2145635758",
 					Name:      constants.DBUserName[constants.Root],
-					Password:  common.Password{Val: "wrong"},
+					Password:  common.PasswordInExpired{Val: "wrong"},
 					RoleType:  string(constants.Root),
 				},
 			},
@@ -1712,7 +1712,7 @@ func Test_initDatabaseData(t *testing.T) {
 				string(constants.Root): {
 					ClusterID: "testID",
 					Name:      "root",
-					Password:  common.Password{Val: "sssssss"},
+					Password:  common.PasswordInExpired{Val: "sssssss"},
 					RoleType:  string(constants.Root),
 				},
 			},
@@ -1757,7 +1757,7 @@ func Test_initDatabaseData(t *testing.T) {
 				string(constants.Root): {
 					ClusterID: "testID",
 					Name:      "root",
-					Password:  common.Password{Val: "ssssssss"},
+					Password:  common.PasswordInExpired{Val: "ssssssss"},
 					RoleType:  string(constants.Root),
 				},
 			},
@@ -1880,7 +1880,7 @@ func TestTakeoverResource(t *testing.T) {
 			string(constants.Root): &management.DBUser{
 				ClusterID: "2145635758",
 				Name:      constants.DBUserName[constants.Root],
-				Password:  common.Password{Val: "123455678"},
+				Password:  common.PasswordInExpired{Val: "123455678"},
 				RoleType:  string(constants.Root),
 			},
 		},

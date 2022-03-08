@@ -466,7 +466,7 @@ func TestManager_Clone(t *testing.T) {
 			{
 				ClusterID: "111",
 				Name:      constants.DBUserName[constants.Root],
-				Password:  common.Password{Val: "123455678"},
+				Password:  common.PasswordInExpired{Val: "123455678"},
 				RoleType:  string(constants.Root),
 			},
 		}, nil).AnyTimes()
@@ -1012,7 +1012,7 @@ func TestManager_DetailCluster(t *testing.T) {
 			{
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.Root],
-				Password:  common.Password{Val: "123455678"},
+				Password:  common.PasswordInExpired{Val: "123455678"},
 				RoleType:  string(constants.Root),
 			},
 		}, nil)

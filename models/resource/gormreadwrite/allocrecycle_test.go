@@ -19,7 +19,6 @@ package gormreadwrite
 import (
 	"context"
 	"fmt"
-	"github.com/pingcap-inc/tiem/models/common"
 	"testing"
 
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -36,7 +35,7 @@ func createTestHost(region, zone, rack, hostName, ip, clusterType, purpose, disk
 		HostName:     hostName,
 		IP:           ip,
 		UserName:     "root",
-		Passwd:       common.Password{Val: "admin2"},
+		Passwd:       "admin2",
 		Status:       string(constants.HostOnline),
 		Stat:         string(constants.HostLoadLoadLess),
 		Arch:         string(constants.ArchX8664),

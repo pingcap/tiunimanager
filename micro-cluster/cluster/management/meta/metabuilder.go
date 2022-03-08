@@ -113,7 +113,7 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 	meta.DBUsers[string(constants.Root)] = &management.DBUser{
 		ClusterID: got.ID,
 		Name:      constants.DBUserName[constants.Root],
-		Password:  dbCommon.Password{Val: parameter.DBPassword, UpdateTime: time.Now()},
+		Password:  dbCommon.PasswordInExpired{Val: parameter.DBPassword, UpdateTime: time.Now()},
 		RoleType:  string(constants.Root),
 	}
 	// add instances
@@ -165,7 +165,7 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 		p.DBUsers[string(constants.Root)] = &management.DBUser{
 			ClusterID: got.ID,
 			Name:      constants.DBUserName[constants.Root],
-			Password:  dbCommon.Password{Val: param.DBPassword, UpdateTime: time.Now()},
+			Password:  dbCommon.PasswordInExpired{Val: param.DBPassword, UpdateTime: time.Now()},
 			RoleType:  string(constants.Root),
 		}
 		//fmt.Println("got: ",got.ID, "user: ", p.DBUsers[string(constants.Root)].ClusterID)
@@ -198,7 +198,7 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbPassw
 		rootUser := &management.DBUser{
 			ClusterID: got.ID,
 			Name:      constants.DBUserName[constants.Root],
-			Password:  dbCommon.Password{Val: dbPassword, UpdateTime: time.Now()},
+			Password:  dbCommon.PasswordInExpired{Val: dbPassword, UpdateTime: time.Now()},
 			RoleType:  string(constants.Root),
 		}
 		p.DBUsers[string(constants.Root)] = rootUser

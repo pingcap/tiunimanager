@@ -121,25 +121,25 @@ func mockDBUsers() []*management.DBUser {
 		{
 			ClusterID: "123",
 			Name:      "backup",
-			Password:  common.Password{Val: "123455678"},
+			Password:  common.PasswordInExpired{Val: "123455678"},
 			RoleType:  string(constants.DBUserBackupRestore),
 		},
 		{
 			ClusterID: "123",
 			Name:      "root",
-			Password:  common.Password{Val: "123455678"},
+			Password:  common.PasswordInExpired{Val: "123455678"},
 			RoleType:  string(constants.Root),
 		},
 		{
 			ClusterID: "123",
 			Name:      "parameter",
-			Password:  common.Password{Val: "123455678"},
+			Password:  common.PasswordInExpired{Val: "123455678"},
 			RoleType:  string(constants.DBUserParameterManagement),
 		},
 		{
 			ClusterID: "123",
 			Name:      "data_sync",
-			Password:  common.Password{Val: "123455678"},
+			Password:  common.PasswordInExpired{Val: "123455678"},
 			RoleType:  string(constants.DBUserCDCDataSync),
 		},
 	}

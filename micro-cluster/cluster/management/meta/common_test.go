@@ -231,7 +231,7 @@ func TestScaleInPreCheck(t *testing.T) {
 			string(constants.Root): {
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.Root],
-				Password:  common.Password{Val: "12345678", UpdateTime: time.Now()},
+				Password:  common.PasswordInExpired{Val: "12345678", UpdateTime: time.Now()},
 				RoleType:  string(constants.Root),
 			},
 		}}
@@ -253,7 +253,7 @@ func TestScaleInPreCheck(t *testing.T) {
 			string(constants.Root): {
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.Root],
-				Password:  common.Password{Val: "12345678", UpdateTime: time.Now()},
+				Password:  common.PasswordInExpired{Val: "12345678", UpdateTime: time.Now()},
 				RoleType:  string(constants.Root),
 			},
 		}}
@@ -280,7 +280,7 @@ func TestScaleInPreCheck(t *testing.T) {
 			string(constants.Root): {
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.Root],
-				Password:  common.Password{Val: "12345678", UpdateTime: time.Now()},
+				Password:  common.PasswordInExpired{Val: "12345678", UpdateTime: time.Now()},
 				RoleType:  string(constants.Root),
 			},
 		}}

@@ -194,7 +194,7 @@ func (arw *AccountReadWrite) UpdateUserPassword(ctx context.Context, userID, sal
 	}
 
 	//value := dbCommon.Password{Val: finalHash, UpdateTime: time.Now()}
-	value := dbCommon.Password{Val: finalHash}
+	value := dbCommon.PasswordInExpired{Val: finalHash}
 	return arw.DB(ctx).Model(&User{}).Where("id = ?",
 		userID).Update("salt", salt).Update("final_hash", value).Error
 }

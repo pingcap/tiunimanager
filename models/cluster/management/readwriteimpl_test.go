@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -350,7 +349,7 @@ func TestGormClusterReadWrite_GetMeta(t *testing.T) {
 	}
 	err := testRW.UpdateInstance(context.TODO(), instances...)
 	users := []*DBUser{
-		{ClusterID: got.ID, Name: "root", Password: common.Password{Val: "123456"}, RoleType: string(constants.Root)},
+		{ClusterID: got.ID, Name: "root", Password: common.PasswordInExpired{Val: "123456"}, RoleType: string(constants.Root)},
 	}
 	err = testRW.UpdateDBUser(context.TODO(), users[0])
 	assert.NoError(t, err)
@@ -918,9 +917,8 @@ func TestClusterReadWrite_CreateDBUser(t *testing.T) {
 	user := &DBUser{
 		ClusterID:                "clusterid",
 		Name:                     "testName1",
-		Password:                 common.Password{Val: "123456"},
+		Password:                 common.PasswordInExpired{Val: "123456"},
 		RoleType:                 string(constants.DBUserBackupRestore),
-		LastPasswordGenerateTime: time.Now(),
 	}
 	type args struct {
 		ctx  context.Context
@@ -950,11 +948,10 @@ func TestClusterReadWrite_CreateDBUser(t *testing.T) {
 
 func TestClusterReadWrite_GetDBUser(t *testing.T) {
 	user := DBUser{
-		ClusterID:                "clusterid",
+		ClusterID:                "clusterid1",
 		Name:                     "testName2",
-		Password:                 common.Password{Val: "abcd12345"},
+		Password:                 common.PasswordInExpired{Val: "abcd12345"},
 		RoleType:                 string(constants.DBUserBackupRestore),
-		LastPasswordGenerateTime: time.Now(),
 	}
 	testRW.CreateDBUser(context.TODO(), &user)
 	defer testRW.DeleteDBUser(context.TODO(), user.ID)
@@ -992,9 +989,8 @@ func TestClusterReadWrite_DeleteDBUser(t *testing.T) {
 	user := DBUser{
 		ClusterID:                "clusterid",
 		Name:                     "12333",
-		Password:                 common.Password{Val: "123456"},
+		Password:                 common.PasswordInExpired{Val: "123456"},
 		RoleType:                 string(constants.DBUserBackupRestore),
-		LastPasswordGenerateTime: time.Now(),
 	}
 	testRW.CreateDBUser(context.TODO(), &user)
 	type args struct {
@@ -1027,15 +1023,14 @@ func TestClusterReadWrite_UpdateDBUser(t *testing.T) {
 	user := DBUser{
 		ClusterID:                "clusterid",
 		Name:                     "update",
-		Password:                 common.Password{Val: "pppppp"},
+		Password:                 common.PasswordInExpired{Val: "pppppp"},
 		RoleType:                 string(constants.DBUserBackupRestore),
-		LastPasswordGenerateTime: time.Now(),
 	}
 	testRW.CreateDBUser(context.TODO(), &user)
 	defer testRW.Delete(context.TODO(), user.ClusterID)
 	users, _ := testRW.GetDBUser(context.TODO(), user.ClusterID)
 	fmt.Println(users[0].Password)
-	users[0].Password = common.Password{Val: "123456"}
+	users[0].Password = common.PasswordInExpired{Val: "123456"}
 	type args struct {
 		ctx  context.Context
 		user *DBUser

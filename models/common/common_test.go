@@ -30,9 +30,9 @@ import (
 
 type TestEntity struct {
 	Entity
-	Name       string   `gorm:"uniqueIndex:myIndex"`
-	DeleteTime int64    `gorm:"uniqueIndex:myIndex"`
-	Password   Password `gorm:"password"`
+	Name       string            `gorm:"uniqueIndex:myIndex"`
+	DeleteTime int64             `gorm:"uniqueIndex:myIndex"`
+	Password   PasswordInExpired `gorm:"password"`
 }
 
 func (e *TestEntity) BeforeDelete(tx *gorm.DB) (err error) {
@@ -137,7 +137,7 @@ func TestPassword(t *testing.T) {
 				TenantId: "111",
 			},
 			Name:     "createpassword",
-			Password: Password{Val: "N&HIO(*(&#Y*&HNS&D*#*GF*RS*FY&DF", UpdateTime: time.Now()},
+			Password: PasswordInExpired{Val: "N&HIO(*(&#Y*&HNS&D*#*GF*RS*FY&DF", UpdateTime: time.Now()},
 		}).Error
 		assert.NoError(t, err)
 
@@ -152,7 +152,7 @@ func TestPassword(t *testing.T) {
 				TenantId: "111",
 			},
 			Name:     "updatepassword",
-			Password: Password{Val: "abcd", UpdateTime: time.Now()},
+			Password: PasswordInExpired{Val: "abcd", UpdateTime: time.Now()},
 		}
 		baseDB.Create(a)
 		fmt.Println("time1:", a.Password.UpdateTime)
@@ -174,7 +174,7 @@ func TestPassword(t *testing.T) {
 				TenantId: "333",
 			},
 			Name:     "check",
-			Password: Password{Val: "abc123"},
+			Password: PasswordInExpired{Val: "abc123"},
 		}
 		baseDB.Create(a)
 

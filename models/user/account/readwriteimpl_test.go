@@ -239,9 +239,9 @@ func TestAccountReadWrite_UpdateUserPassword(t *testing.T) {
 			Phone:           "123",
 			Status:          "Normal",
 		}
-		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user")
+		_, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user")
 		assert.NoError(t, err)
-		got, err = testRW.GetUserByName(ctx.TODO(), "user")
+		got, err := testRW.GetUserByName(ctx.TODO(), "user")
 		fmt.Println("create time:", got.FinalHash.UpdateTime)
 
 		user.GenSaltAndHash("abcd")

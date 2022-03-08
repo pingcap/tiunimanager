@@ -49,7 +49,7 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (message.
 	}
 
 	// check password update time
-	resp.PasswordExpired = user.FinalHash.CheckUpdateTimeExpired()
+	resp.PasswordExpired, err = user.FinalHash.CheckUpdateTimeExpired()
 
 	// create token
 	tokenString := uuid.New().String()

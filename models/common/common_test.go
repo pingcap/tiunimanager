@@ -183,7 +183,7 @@ func TestPassword(t *testing.T) {
 		fmt.Println("time1:", result.Password.UpdateTime)
 		result.Password.UpdateTime = time.Now().AddDate(0, 0, -31)
 		fmt.Println("time1:", result.Password.UpdateTime)
-		expired := result.Password.CheckUpdateTimeExpired()
+		expired, err := result.Password.CheckUpdateTimeExpired()
 		assert.NoError(t, err)
 		assert.Equal(t, "abc123", result.Password.Val)
 		assert.Equal(t, expired, true)

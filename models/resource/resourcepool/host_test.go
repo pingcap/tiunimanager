@@ -17,7 +17,6 @@
 package resourcepool
 
 import (
-	"github.com/pingcap-inc/tiem/models/common"
 	"os"
 	"testing"
 
@@ -121,7 +120,7 @@ func genFakeHost(region, zone, rack, hostName, ip string, freeCpuCores, freeMemo
 		HostName:     hostName,
 		IP:           ip,
 		UserName:     "root",
-		Passwd:       common.Password{Val: "admin2"},
+		Passwd:       "admin2",
 		Status:       string(constants.HostOnline),
 		Stat:         string(constants.HostLoadLoadLess),
 		Arch:         "X86",

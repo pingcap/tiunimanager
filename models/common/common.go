@@ -88,7 +88,6 @@ func (p PasswordInExpired) Value() (driver.Value, error) {
 		return nil, err
 	}
 	p.Val = enc
-	// 密码有修改 就应该修改更新时间对吧
 	p.UpdateTime = time.Now()
 	res, err := json.Marshal(p)
 	return string(res), err
@@ -98,12 +97,9 @@ func (p PasswordInExpired) Value() (driver.Value, error) {
 // @Description: check if the update time of the password is expired
 // @Parameter
 // @return bool
-func (p PasswordInExpired) CheckUpdateTimeExpired() bool {
-	duration := time.Now().Sub(p.UpdateTime)
-	if duration < constants.ExpirationTime {
-		return false
-	}
-	return true
+func (p PasswordInExpired) CheckUpdateTimeExpired() (bool, error) {
+	duration := time.Since(p.UpdateTime)
+	return duration > constants.ExpirationTime, nil
 }
 
 func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {

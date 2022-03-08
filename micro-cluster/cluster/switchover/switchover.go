@@ -524,10 +524,19 @@ func (m *Manager) getAllChangeFeedTasksOnCluster(ctx context.Context, clusterId 
 	if err != nil {
 		return nil, err
 	}
+	framework.LogWithContext(ctx).Infof("getAllChangeFeedTasksOnCluster tasks:%v err:%v", tasks, err)
 	var myTasks []*cluster.ChangeFeedTask
 	for _, v := range tasks {
-		myTasks = append(myTasks, &v.ChangeFeedTask)
+		framework.LogWithContext(ctx).Infof("getAllChangeFeedTasksOnCluster task:%v id:%v", v, v.ID)
+		dupV := v
+		myTasks = append(myTasks, &dupV.ChangeFeedTask)
 	}
+
+	framework.LogWithContext(ctx).Infof("getAllChangeFeedTasksOnCluster ret myTasks:%v err:%v", myTasks, err)
+	for _, v := range myTasks {
+		framework.LogWithContext(ctx).Infof("getAllChangeFeedTasksOnCluster ret task:%v id:%v", v, v.ID)
+	}
+
 	return myTasks, err
 }
 
@@ -552,9 +561,12 @@ func (m *Manager) createChangeFeedTask(ctx context.Context, task *cluster.Change
 		Downstream:     task.Downstream,
 	}
 	resp, err := mgr.changefeedMgr.Create(ctx, req)
+	framework.LogWithContext(ctx).Infof("createChangeFeedTask clusterID:%s", task.ClusterID)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("createChangeFeedTask err:%s", err)
 		return "", err
 	}
+	framework.LogWithContext(ctx).Infof("createChangeFeedTask success, ret taskID:%s", resp.ID)
 	return resp.ID, nil
 }
 

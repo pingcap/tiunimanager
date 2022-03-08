@@ -400,7 +400,7 @@ func wfnCreateReverseSyncChangeFeedTask(node *workflowModel.WorkFlowNode, ctx *w
 		return "", err
 	} else {
 		framework.LogWithContext(ctx).Infof(
-			"%s createChangeFeedTask req:%s success", funcName, wfGetReqJson(ctx))
+			"%s createChangeFeedTask req:%s success, taskID:%s", funcName, wfGetReqJson(ctx), newTaskId)
 	}
 
 	return newTaskId, err
@@ -494,7 +494,8 @@ func wfnMigrateAllDownStreamSyncChangeFeedTasksBackToOldMaster(node *workflowMod
 func wfnMigrateAllDownStreamSyncChangeFeedTasks(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext,
 	fromCluster, toCluster, exceptSyncChangeFeedTaskId string) (map[string]string, error) {
 	funcName := "wfnMigrateAllDownStreamSyncChangeFeedTasks"
-	framework.LogWithContext(ctx).Infof("start %s", funcName)
+	framework.LogWithContext(ctx).Infof("start %s: fromCluster %s, toCluster: %s, exceptSyncChangeFeedTaskId: %s",
+		funcName, fromCluster, toCluster, exceptSyncChangeFeedTaskId)
 	defer framework.LogWithContext(ctx).Infof("exit %s", funcName)
 
 	if len(fromCluster) == 0 || len(toCluster) == 0 {
@@ -507,14 +508,26 @@ func wfnMigrateAllDownStreamSyncChangeFeedTasks(node *workflowModel.WorkFlowNode
 			"%s req:%s err:%s", funcName, wfGetReqJson(ctx), err)
 		return nil, err
 	} else {
+		var ids []string
+		for _, v := range tasks {
+			ids = append(ids, v.ID)
+		}
 		framework.LogWithContext(ctx).Infof(
-			"%s req:%s success", funcName, wfGetReqJson(ctx))
+			"%s req:%s success taskIDs:%s", funcName, wfGetReqJson(ctx), ids)
 	}
 	var finalTasks []*cluster.ChangeFeedTask
 	for _, v := range tasks {
 		if v != nil && v.ID != exceptSyncChangeFeedTaskId {
 			finalTasks = append(finalTasks, v)
 		}
+	}
+	{
+		var ids []string
+		for _, v := range finalTasks {
+			ids = append(ids, v.ID)
+		}
+		framework.LogWithContext(ctx).Infof(
+			"%s req:%s finalTaskIDs:%s", funcName, wfGetReqJson(ctx), ids)
 	}
 	var cancelFps []func()
 	cancelFlag := true
@@ -534,7 +547,7 @@ func wfnMigrateAllDownStreamSyncChangeFeedTasks(node *workflowModel.WorkFlowNode
 			return nil, err
 		} else {
 			framework.LogWithContext(ctx).Infof(
-				"%s pauseChangeFeedTask req:%s success", funcName, wfGetReqJson(ctx))
+				"%s pauseChangeFeedTask req:%s taskId:%s success", funcName, wfGetReqJson(ctx), v.ID)
 		}
 		thisCDCID := v.ID
 		cancelFps = append(cancelFps, func() {
@@ -562,11 +575,11 @@ func wfnMigrateAllDownStreamSyncChangeFeedTasks(node *workflowModel.WorkFlowNode
 		id, err := mgr.createChangeFeedTask(ctx, v)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf(
-				"%s pauseChangeFeedTask req:%s taskId:%s err:%s", funcName, wfGetReqJson(ctx), v.ID, err)
+				"%s createChangeFeedTask req:%s originTaskId:%s err:%s", funcName, wfGetReqJson(ctx), originID, err)
 			return nil, err
 		} else {
 			framework.LogWithContext(ctx).Infof(
-				"%s pauseChangeFeedTask req:%s success taskId:%s", funcName, wfGetReqJson(ctx), id)
+				"%s createChangeFeedTask req:%s success, originTaskId:%s, ret new taskId:%s", funcName, wfGetReqJson(ctx), originID, id)
 			retMap[originID] = id
 		}
 		cancelFps = append(cancelFps, func() {
@@ -588,7 +601,7 @@ func wfnMigrateAllDownStreamSyncChangeFeedTasks(node *workflowModel.WorkFlowNode
 				"%s removeChangeFeedTask req:%s taskId:%s err:%s", funcName, wfGetReqJson(ctx), originCDCID, err)
 		} else {
 			framework.LogWithContext(ctx).Infof(
-				"%s removeChangeFeedTask req:%s success", funcName, wfGetReqJson(ctx))
+				"%s removeChangeFeedTask req:%s taskId:%s, success", funcName, wfGetReqJson(ctx), originCDCID)
 		}
 	}
 	return retMap, err
@@ -609,11 +622,14 @@ func wfnCheckSyncChangeFeedTaskMaxLagTime(node *workflowModel.WorkFlowNode, ctx 
 	}
 	nowT := time.Now()
 	if nowT.After(slaveT) {
+		framework.LogWithContext(ctx).Infof(
+			"%s req:%s nowT.Sub(slaveT):%s", funcName, wfGetReqJson(ctx), nowT.Sub(slaveT))
 		minSyncT := nowT.Add(-constants.SwitchoverCheckMasterSlaveMaxLagTime)
 		if slaveT.After(minSyncT) {
 			return nil
 		} else {
-			return fmt.Errorf("%s slave checkpoint lag time is bigger than %v", funcName, constants.SwitchoverCheckMasterSlaveMaxLagTime)
+			return fmt.Errorf("%s slave checkpoint lag time is bigger than %v, nowT:%s, slaveT:%s", funcName,
+				constants.SwitchoverCheckMasterSlaveMaxLagTime, nowT, slaveT)
 		}
 	} else {
 		framework.LogWithContext(ctx).Infof(
@@ -631,6 +647,7 @@ func wfnCheckCDCsCaughtUp(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCo
 	var err error
 	funcName := "wfnCheckCDCsCaughtUp"
 	for _, changeFeedTaskID := range changeFeedTaskIDs {
+		err = nil
 		for i := range make([]struct{}, constants.SwitchoverCheckChangeFeedTaskCaughtUpRetriesCount+1) {
 			if err != nil {
 				time.Sleep(constants.SwitchoverCheckChangeFeedTaskCaughtUpRetryWait)
@@ -638,8 +655,11 @@ func wfnCheckCDCsCaughtUp(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCo
 			}
 			err = wfnCheckCDCCaughtUp(node, ctx, changeFeedTaskID)
 			if err == nil {
-				return nil
+				break
 			}
+		}
+		if err != nil {
+			return err
 		}
 	}
 	return err
@@ -694,11 +714,14 @@ func wfnCheckCDCCaughtUpHelper(node *workflowModel.WorkFlowNode, ctx *workflow.F
 	}
 	nowT := time.Now()
 	if nowT.After(slaveT) {
+		framework.LogWithContext(ctx).Infof(
+			"%s req:%s nowT.Sub(slaveT):%s", funcName, wfGetReqJson(ctx), nowT.Sub(slaveT))
 		minSyncT := nowT.Add(-constants.SwitchoverCheckChangeFeedTaskCaughtUpMaxLagTime)
 		if slaveT.After(minSyncT) {
 			return nil
 		} else {
-			return fmt.Errorf("%s slave checkpoint lag time is bigger than %v", funcName, constants.SwitchoverCheckChangeFeedTaskCaughtUpMaxLagTime)
+			return fmt.Errorf("%s slave checkpoint lag time is bigger than %v, nowT:%s, slaveT:%s", funcName,
+				constants.SwitchoverCheckChangeFeedTaskCaughtUpMaxLagTime, nowT, slaveT)
 		}
 	} else {
 		framework.LogWithContext(ctx).Infof(

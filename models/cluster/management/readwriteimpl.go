@@ -430,7 +430,7 @@ func (g *ClusterReadWrite) SwapMasterSlaveRelations(ctx context.Context, oldMast
 		tx.Rollback()
 		return err
 	}
-	var dupNewSlaveClusterIdMapToSyncCDCTaskId map[string]string
+	dupNewSlaveClusterIdMapToSyncCDCTaskId := make(map[string]string)
 	for k, v := range newSlaveClusterIdMapToSyncCDCTaskId {
 		dupNewSlaveClusterIdMapToSyncCDCTaskId[k] = v
 	}

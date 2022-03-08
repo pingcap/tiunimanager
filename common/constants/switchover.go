@@ -32,7 +32,7 @@ const SwitchoverCheckSyncChangeFeedTaskHealthRetryWait = 500 * time.Millisecond
 
 const SwitchoverCheckChangeFeedTaskCaughtUpRetriesCount = 60
 const SwitchoverCheckChangeFeedTaskCaughtUpRetryWait = 1000 * time.Millisecond
-const SwitchoverCheckChangeFeedTaskCaughtUpMaxLagTime = 2000 * time.Millisecond
+const SwitchoverCheckChangeFeedTaskCaughtUpMaxLagTime = 3000 * time.Millisecond
 const SwitchoverCheckChangeFeedTaskCaughtUpMakeSureRetriesCount = 3
 
 const SwitchoverReadWriteHealthTestDBName = "test"

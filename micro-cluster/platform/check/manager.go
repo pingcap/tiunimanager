@@ -30,6 +30,7 @@ import (
 const (
 	ContextCheckID    = "CheckID"
 	ContextReportInfo = "ReportInfo"
+	DefaultCreator = "System"
 )
 
 var checkService CheckService
@@ -78,9 +79,13 @@ func (manager *CheckManager) Check(ctx context.Context, request message.CheckPla
 	rw := models.GetReportReaderWriter()
 
 	// create and init check report
+	creator := framework.GetUserIDFromContext(ctx)
+	if len(creator) == 0 {
+		creator = DefaultCreator
+	}
 	report := &check.CheckReport{
 		Report:  "{}",
-		Creator: framework.GetUserIDFromContext(ctx),
+		Creator: creator,
 		Status:  string(constants.CheckRunning),
 	}
 	report, err = rw.CreateReport(ctx, report)

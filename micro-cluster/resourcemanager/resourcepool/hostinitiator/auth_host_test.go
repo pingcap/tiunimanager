@@ -22,6 +22,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/framework"
 	mock_ssh "github.com/pingcap-inc/tiem/test/mockutil/mocksshclientexecutor"
 	sshclient "github.com/pingcap-inc/tiem/util/ssh"
 	"github.com/stretchr/testify/assert"
@@ -160,4 +161,41 @@ func Test_findSSHAuthorizedKeysFile(t *testing.T) {
 
 	keyFile := fileInitiator.findSSHAuthorizedKeysFile(context.TODO(), &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"}, &sshclient.HostAuthenticate{})
 	assert.Equal(t, "~/.ssh/authorized_keys_test", keyFile)
+}
+
+func Test_getUserSpecifiedAuthenticateToHost(t *testing.T) {
+	fileInitiator := NewFileHostInitiator()
+	authenticate, err := fileInitiator.getUserSpecifiedAuthenticateToHost(context.TODO(), &structs.HostInfo{UserName: "test", Passwd: "password"})
+	assert.Nil(t, err)
+	assert.Equal(t, sshclient.Passwd, authenticate.SshType)
+	assert.Equal(t, "test", authenticate.AuthenticatedUser)
+	assert.Equal(t, "password", authenticate.AuthenticateContent)
+
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	authenticate, err = fileInitiator.getUserSpecifiedAuthenticateToHost(context.TODO(), &structs.HostInfo{UserName: "test"})
+	assert.Nil(t, err)
+	assert.Equal(t, sshclient.Key, authenticate.SshType)
+	assert.Equal(t, "root", authenticate.AuthenticatedUser)
+	assert.Equal(t, "/fake/private/key/path", authenticate.AuthenticateContent)
+
+	framework.Current.GetClientArgs().LoginHostUser = ""
+	authenticate, err = fileInitiator.getUserSpecifiedAuthenticateToHost(context.TODO(), &structs.HostInfo{UserName: "test"})
+	assert.NotNil(t, err)
+
+}
+
+func Test_getEMAuthenticateToHost(t *testing.T) {
+	fileInitiator := NewFileHostInitiator()
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
+
+	authenticate := fileInitiator.getEMAuthenticateToHost(context.TODO())
+	assert.Equal(t, sshclient.Key, authenticate.SshType)
+	assert.Equal(t, "test-user", authenticate.AuthenticatedUser)
+	assert.Equal(t, "/home/test-user/.ssh/tiup_rsa", authenticate.AuthenticateContent)
+
+	framework.SetLocalConfig(framework.UsingSpecifiedKeyPair, true)
+	authenticate = fileInitiator.getEMAuthenticateToHost(context.TODO())
+	assert.Equal(t, sshclient.Key, authenticate.SshType)
+	assert.Equal(t, "test-user", authenticate.AuthenticatedUser)
+	assert.Equal(t, "/fake/private/key/path", authenticate.AuthenticateContent)
 }

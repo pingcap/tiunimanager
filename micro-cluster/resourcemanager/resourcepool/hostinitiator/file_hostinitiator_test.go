@@ -528,3 +528,40 @@ func Test_passCpuGovernorWarn(t *testing.T) {
 	assert.Nil(t, err)
 	assert.True(t, ok)
 }
+
+func Test_skipAuthHost_Skip(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
+	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil)
+
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSSHClient(mockClient)
+
+	skip := fileInitiator.skipAuthHost(context.TODO(), "root", &structs.HostInfo{IP: "666.666.66.66"})
+	assert.True(t, skip)
+}
+
+func Test_skipAuthHost_NotSkip(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
+	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", errors.NewErrorf(errors.TIEM_RESOURCE_CONNECT_TO_HOST_ERROR, "bad host"))
+
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSSHClient(mockClient)
+
+	// specified user is 'root', deploy user is 'test-user'
+	skip := fileInitiator.skipAuthHost(context.TODO(), "test-user", &structs.HostInfo{IP: "666.666.66.66"})
+	assert.False(t, skip)
+
+	skip = fileInitiator.skipAuthHost(context.TODO(), "root", &structs.HostInfo{IP: "666.666.66.66"})
+	assert.False(t, skip)
+
+	framework.Current.GetClientArgs().LoginPrivateKeyPath = ""
+	framework.Current.GetClientArgs().LoginPublicKeyPath = ""
+	skip = fileInitiator.skipAuthHost(context.TODO(), "root", &structs.HostInfo{IP: "666.666.66.66"})
+	assert.False(t, skip)
+}

@@ -71,6 +71,8 @@ func (p *FileHostInitiator) skipAuthHost(ctx context.Context, deployUser string,
 			log.Infof("skip auth host %s %s succeed", h.HostName, h.IP)
 			return true
 		}
+		log.Infof("specified user %s is different with deploy user %s", specifiedUser, deployUser)
+		return false
 	}
 	log.Infof("can not skip auth host %s %s because either public key %s or private key %s is not specified", h.HostName, h.IP, specifiedPublicKey, specifiedPrivateKey)
 	return false

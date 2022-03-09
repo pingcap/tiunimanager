@@ -87,7 +87,7 @@ func asyncMaintenance(ctx context.Context, meta *meta.ClusterMeta, data map[stri
 	}
 
 	if flow, flowError := workflow.GetWorkFlowService().CreateWorkFlow(ctx, meta.Cluster.ID, workflow.BizTypeCluster, flowName); flowError != nil {
-		framework.LogWithContext(ctx).Errorf("create flow %s failed, clusterID = %s, error = %s", flow.Flow.Name, meta.Cluster.ID, err)
+		framework.LogWithContext(ctx).Errorf("create flow failed, clusterID = %s, error = %s", meta.Cluster.ID, err)
 		err = flowError
 		return
 	} else {

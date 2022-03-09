@@ -97,7 +97,7 @@ func (m Manager) BuildClusterLogConfig(ctx context.Context, clusterId string) (f
 	}
 
 	if flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, clusterMeta.Cluster.ID, workflow.BizTypeCluster, buildLogConfigDefine.FlowName); err != nil {
-		framework.LogWithContext(ctx).Errorf("create flow %s failed, clusterID = %s, error = %s", flow.Flow.Name, clusterMeta.Cluster.ID, err.Error())
+		framework.LogWithContext(ctx).Errorf("create flow failed, clusterID = %s, error = %s", clusterMeta.Cluster.ID, err.Error())
 		return "", err
 	} else {
 		flowID = flow.Flow.ID

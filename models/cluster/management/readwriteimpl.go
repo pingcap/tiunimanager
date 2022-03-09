@@ -128,16 +128,6 @@ func (g *ClusterReadWrite) GetMeta(ctx context.Context, clusterID string) (clust
 	return
 }
 
-func (g *ClusterReadWrite) GetRelationsBySubject(ctx context.Context, subjectClusterID string) ([]*ClusterRelation, error) {
-	relations := make([]*ClusterRelation, 0)
-	err := g.DB(ctx).Model(&ClusterRelation{}).Where("subject_cluster_id  = ? ", subjectClusterID).Find(&relations).Error
-	if err != nil {
-		err = dbCommon.WrapDBError(err)
-	}
-
-	return relations, err
-}
-
 func (g *ClusterReadWrite) GetRelations(ctx context.Context, clusterID string) ([]*ClusterRelation, error) {
 	relations := make([]*ClusterRelation, 0)
 	err := g.DB(ctx).Model(&ClusterRelation{}).Where("object_cluster_id  = ? ", clusterID).Find(&relations).Error
@@ -148,7 +138,7 @@ func (g *ClusterReadWrite) GetRelations(ctx context.Context, clusterID string) (
 	return relations, err
 }
 
-func (g *ClusterReadWrite) GetMasters(ctx context.Context, clusterID string)([]*ClusterRelation, error) {
+func (g *ClusterReadWrite) GetMasters(ctx context.Context, clusterID string) ([]*ClusterRelation, error) {
 	if "" == clusterID {
 		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster id is invalid")
 	}

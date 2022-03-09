@@ -462,7 +462,7 @@ func (m *Manager) clusterGetRelationByMasterSlaveClusterId(ctx context.Context, 
 }
 
 func (m *Manager) clusterGetRelationsByMasterClusterId(ctx context.Context, masterClusterId string) ([]*clusterMgr.ClusterRelation, error) {
-	relations, err := models.GetClusterReaderWriter().GetRelationsBySubject(ctx, masterClusterId)
+	relations, err := models.GetClusterReaderWriter().GetSlaves(ctx, masterClusterId)
 	if err != nil {
 		return nil, err
 	}

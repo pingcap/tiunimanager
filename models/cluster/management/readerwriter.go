@@ -34,7 +34,6 @@ type ReaderWriter interface {
 	Get(ctx context.Context, clusterID string) (*Cluster, error)
 	GetMeta(ctx context.Context, clusterID string) (*Cluster, []*ClusterInstance, []*DBUser, error)
 	GetRelations(ctx context.Context, clusterID string) ([]*ClusterRelation, error)
-	GetRelationsBySubject(ctx context.Context, subjectClusterID string) ([]*ClusterRelation, error)
 	//
 	// GetMasters
 	// @Description: get masters for specified cluster

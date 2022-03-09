@@ -145,7 +145,6 @@ type ReaderWriter interface {
 
 	CreateRelation(ctx context.Context, relation *ClusterRelation) error
 	DeleteRelation(ctx context.Context, relationID uint) error
-	SwapMasterSlaveRelation(ctx context.Context, oldMasterClusterId, oldSlaveClusterId, newSyncChangeFeedTaskId string) error
 	SwapMasterSlaveRelations(ctx context.Context, oldMasterClusterId, slaveToBeMasterClusterId string, newSlaveClusterIdMapToSyncCDCTaskId map[string]string) error
 
 	CreateClusterTopologySnapshot(ctx context.Context, snapshot ClusterTopologySnapshot) error

@@ -502,10 +502,6 @@ func (m *Manager) clusterGetOtherSlavesMapToOldSyncCDCTask(ctx context.Context, 
 	return ret, err
 }
 
-func (m *Manager) swapClusterRelationInDB(ctx context.Context, oldMasterClusterId, oldSlaveClusterId, newSyncChangeFeedTaskId string) error {
-	return models.GetClusterReaderWriter().SwapMasterSlaveRelation(ctx, oldMasterClusterId, oldSlaveClusterId, newSyncChangeFeedTaskId)
-}
-
 func (m *Manager) swapClusterRelationsInDB(ctx context.Context, oldMasterClusterId, slaveToBeMasterClusterId string, newSlaveClusterIdMapToSyncCDCTaskId map[string]string) error {
 	return models.GetClusterReaderWriter().SwapMasterSlaveRelations(ctx, oldMasterClusterId, slaveToBeMasterClusterId, newSlaveClusterIdMapToSyncCDCTaskId)
 }

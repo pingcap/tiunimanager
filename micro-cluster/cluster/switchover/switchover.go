@@ -77,9 +77,7 @@ func GetManager() *Manager {
 				"createReverseSyncChangeFeedTask": {
 					"createReverseSyncChangeFeedTask", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfStepCreateReverseSyncChangeFeedTask},
 				"setNewMasterReadWrite": {
-					"setNewMasterReadWrite", "checkNewMasterReadWriteHealth", "fail", workflow.SyncFuncNode, wfStepSetNewMasterReadWrite},
-				"checkNewMasterReadWriteHealth": {
-					"checkNewMasterReadWriteHealth", "checkNewSyncChangeFeedTaskHealth", "fail", workflow.SyncFuncNode, wfStepCheckNewMasterReadWriteHealth},
+					"setNewMasterReadWrite", "checkNewSyncChangeFeedTaskHealth", "fail", workflow.SyncFuncNode, wfStepSetNewMasterReadWrite},
 				"checkNewSyncChangeFeedTaskHealth": {
 					"checkNewSyncChangeFeedTaskHealth", "migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "fail", workflow.SyncFuncNode, wfStepCheckNewSyncChangeFeedTaskHealth},
 				"migrateAllDownStreamSyncChangeFeedTasksToNewMaster": {
@@ -587,6 +585,7 @@ func (m *Manager) resumeChangeFeedTask(ctx context.Context, changeFeedTaskId str
 }
 
 func (m *Manager) queryChangeFeedTask(ctx context.Context, changeFeedTaskId string) (*cluster.ChangeFeedTaskInfo, error) {
+	funcName := "queryChangeFeedTask"
 	req := cluster.DetailChangeFeedTaskReq{
 		ID: changeFeedTaskId,
 	}
@@ -594,6 +593,8 @@ func (m *Manager) queryChangeFeedTask(ctx context.Context, changeFeedTaskId stri
 	if err != nil {
 		return nil, err
 	}
+	framework.LogWithContext(ctx).Infof(
+		"%s queryChangeFeedTask changeFeedTaskId:%s success, status:%s", funcName, changeFeedTaskId, resp.Status)
 	return &resp.ChangeFeedTaskInfo, err
 }
 

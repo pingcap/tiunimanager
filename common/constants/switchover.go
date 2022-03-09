@@ -27,7 +27,7 @@ const SwitchoverCheckMasterSlaveMaxLagTimeRetriesCount = 3
 const SwitchoverCheckMasterSlaveMaxLagTimeRetryWait = 3000 * time.Millisecond
 
 const SwitchoverCheckSyncChangeFeedTaskHealthTimeInterval = 5000 * time.Millisecond
-const SwitchoverCheckSyncChangeFeedTaskHealthRetriesCount = 3
+const SwitchoverCheckSyncChangeFeedTaskHealthRetriesCount = 60
 const SwitchoverCheckSyncChangeFeedTaskHealthRetryWait = 500 * time.Millisecond
 
 const SwitchoverCheckChangeFeedTaskCaughtUpRetriesCount = 60

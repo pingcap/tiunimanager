@@ -358,7 +358,8 @@ func wfnCreateReverseSyncChangeFeedTask(node *workflowModel.WorkFlowNode, ctx *w
 		framework.LogWithContext(ctx).Infof(
 			"%s dupChangeFeedTaskStructWithTiDBDownStream req:%s success", funcName, wfGetReqJson(ctx))
 	}
-
+	framework.LogWithContext(ctx).Infof(
+		"%s newMasterClusterId:%s, newSlaveClusterId:%s", funcName, wfGetNewMasterClusterId(ctx), wfGetNewSlaveClusterId(ctx))
 	var zeroT time.Time
 	newTask.ID = ""
 	newTask.Name = ""
@@ -375,6 +376,8 @@ func wfnCreateReverseSyncChangeFeedTask(node *workflowModel.WorkFlowNode, ctx *w
 	userName, password, err = mgr.clusterGetCDCUserNameAndPwd(ctx, wfGetNewSlaveClusterId(ctx))
 	var err2 error
 	ip, port, err2 = mgr.clusterGetOneConnectIPPort(ctx, wfGetNewSlaveClusterId(ctx))
+	framework.LogWithContext(ctx).Infof(
+		"%s clusterGetOneConnectIPPort clusterID:%s, ip:%s port:%s err:%v", funcName, wfGetNewMasterClusterId(ctx), ip, port, err2)
 	var err3 error
 	tls, err3 = mgr.clusterGetTLSMode(ctx, wfGetNewSlaveClusterId(ctx))
 	if err != nil || err2 != nil || err3 != nil {
@@ -982,7 +985,7 @@ func wfStepCheckNewSyncChangeFeedTaskHealth(node *workflowModel.WorkFlowNode, ct
 	for i := range make([]struct{}, constants.SwitchoverCheckSyncChangeFeedTaskHealthRetriesCount+1) {
 		if err != nil {
 			time.Sleep(constants.SwitchoverCheckSyncChangeFeedTaskHealthRetryWait)
-			framework.LogWithContext(ctx).Infof("%s retry %d", funcName, i)
+			framework.LogWithContext(ctx).Infof("%s retry %d, previous err:", funcName, i, err)
 		}
 		err = wfnCheckSyncChangeFeedTaskHealth(node, ctx, wfGetNewSyncChangeFeedTaskId(ctx))
 		if err == nil {

@@ -728,7 +728,7 @@ func asyncMaintenance(ctx context.Context, meta *meta.ClusterMeta,
 	if err != nil {
 		meta.EndMaintenance(ctx, status)
 		framework.LogWithContext(ctx).Errorf(
-			"create flow %s failed, cluster %s, error: %s", flow.Flow.ID, meta.Cluster.ID, err.Error())
+			"create flow failed, cluster %s, error: %s", meta.Cluster.ID, err.Error())
 		return "", err
 	}
 

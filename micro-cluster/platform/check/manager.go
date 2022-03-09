@@ -31,6 +31,7 @@ const (
 	ContextCheckID    = "CheckID"
 	ContextReportInfo = "ReportInfo"
 	DefaultCreator = "System"
+	DefaultTenantID = "admin"
 )
 
 var checkService CheckService
@@ -97,7 +98,7 @@ func (manager *CheckManager) Check(ctx context.Context, request message.CheckPla
 	// create workflow
 	flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, report.ID, workflow.BizTypePlatform, checkDefine.FlowName)
 	if err != nil {
-		log.Errorf("create flow %s failed, check report %s, error: %s", flow.Flow.ID, report.ID, err.Error())
+		log.Errorf("create flow failed, check report %s, error: %s", report.ID, err.Error())
 		return resp, err
 	}
 

@@ -587,6 +587,31 @@ func TestGormClusterReadWrite_ClusterTopologySnapshot(t *testing.T) {
 	})
 }
 
+func TestClusterReadWrite_QueryClusters(t *testing.T) {
+	cluster1 := mockCluster("QueryMetas_test1", "TiDB", constants.ClusterRunning, []string{"tag1", "tag2"})
+	cluster2 := mockCluster("QueryMetas_test2", "TiDB", constants.ClusterInitializing, []string{"tag2", "tag1"})
+	cluster3 := mockCluster("3test_QueryMetas", "TiDB", constants.ClusterInitializing, []string{"tag1", "tag2"})
+
+	cluster4 := mockCluster("tes_QueryMetas", "Other", constants.ClusterRunning, []string{"tag1", "tag2"})
+	cluster5 := mockCluster("QueryMetas_test5", "TiDB", constants.ClusterRunning, []string{"tag121"})
+	cluster6 := mockCluster("QueryMetas_test6", "TiDB", constants.ClusterRunning, []string{""})
+	cluster7 := mockCluster("QueryMetas_test7", "TiDB", constants.ClusterStopped, []string{"tag1"})
+
+	defer testRW.Delete(context.TODO(), cluster1)
+	defer testRW.Delete(context.TODO(), cluster2)
+	defer testRW.Delete(context.TODO(), cluster3)
+	defer testRW.Delete(context.TODO(), cluster4)
+	defer testRW.Delete(context.TODO(), cluster5)
+	defer testRW.Delete(context.TODO(), cluster6)
+	defer testRW.Delete(context.TODO(), cluster7)
+
+	t.Run("normal", func(t *testing.T) {
+		results, err := testRW.QueryClusters(context.TODO(), "1919")
+		assert.NoError(t, err)
+		assert.Equal(t, len(results), 7)
+	})
+}
+
 func TestClusterReadWrite_QueryMetas(t *testing.T) {
 	cluster1 := mockCluster("QueryMetas_test1", "TiDB", constants.ClusterRunning, []string{"tag1", "tag2"})
 	cluster2 := mockCluster("QueryMetas_test2", "TiDB", constants.ClusterInitializing, []string{"tag2", "tag1"})
@@ -778,6 +803,13 @@ func TestClusterReadWrite_Relations(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(r))
 
+	r, err = testRW.GetMasters(context.TODO(), "test_relation")
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(r))
+
+	r, err = testRW.GetSlaves(context.TODO(), "test_relation")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(r))
 }
 
 func TestClusterReadWrite_QueryInstancesByHost(t *testing.T) {
@@ -831,6 +863,53 @@ func TestClusterReadWrite_QueryInstancesByHost(t *testing.T) {
 		result, err := testRW.QueryInstancesByHost(context.TODO(), "testHostId", []string{"TiKV"}, []string{string(constants.ClusterInstanceRunning)})
 		assert.NoError(t, err)
 		assert.Equal(t, 1, len(result))
+	})
+}
+
+func TestClusterReadWrite_QueryHostInstances(t *testing.T) {
+	got, _ := testRW.Create(context.TODO(), &Cluster{
+		Name: "testQueryInstance",
+		Entity: common.Entity{
+			TenantId: "testQueryInstance",
+		},
+		Tags: []string{"tag1", "tag2"},
+	})
+	defer testRW.Delete(context.TODO(), got.ID)
+
+	instances := []*ClusterInstance{
+		{HostID: "testHostId3", Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceRunning)}, ClusterID: got.ID, Type: "TiKV", Version: "v5.0.0"},
+		{Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceInitializing)}, ClusterID: got.ID, Type: "PD", Version: "v5.0.0"},
+		{HostID: "testHostId3", Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceFailure)}, ClusterID: got.ID, Type: "CDC", Version: "v5.0.0"},
+	}
+	testRW.UpdateInstance(context.TODO(), instances...)
+
+	got2, _ := testRW.Create(context.TODO(), &Cluster{
+		Name: "another",
+		Entity: common.Entity{
+			TenantId: "testQueryInstance",
+		},
+		Tags: []string{"tag1", "tag2"},
+	})
+	defer testRW.Delete(context.TODO(), got2.ID)
+
+	instances2 := []*ClusterInstance{
+		{HostID: "testHostId3", Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceRecovering)}, ClusterID: got2.ID, Type: "TiKV", Version: "v5.0.0"},
+		{HostID: "testHostId3", Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceInitializing)}, ClusterID: got2.ID, Type: "PD", Version: "v5.0.0"},
+		{Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceRecovering)}, ClusterID: got2.ID, Type: "CDC", Version: "v5.0.0"},
+		{HostID: "testHostId4", Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceRecovering)}, ClusterID: got2.ID, Type: "TiDB", Version: "v5.0.0"},
+		{HostID: "testHostId4", Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceInitializing)}, ClusterID: got2.ID, Type: "TiFlash", Version: "v5.0.0"},
+	}
+	testRW.UpdateInstance(context.TODO(), instances2...)
+
+	t.Run("normal", func(t *testing.T) {
+		items, err := testRW.QueryHostInstances(context.TODO(), []string{"testHostId3"})
+		assert.NoError(t, err)
+		assert.Equal(t, 4, len(items))
+	})
+	t.Run("two hosts", func(t *testing.T) {
+		items, err := testRW.QueryHostInstances(context.TODO(), []string{"testHostId3", "testHostId4"})
+		assert.NoError(t, err)
+		assert.Equal(t, 6, len(items))
 	})
 }
 

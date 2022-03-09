@@ -25,9 +25,10 @@ package structs
 
 import (
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"strconv"
 	"strings"
+
+	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 )
@@ -83,35 +84,37 @@ type DiskInfo struct {
 }
 
 type HostInfo struct {
-	ID           string     `json:"hostId"`
-	IP           string     `json:"ip"`
-	UserName     string     `json:"userName,omitempty"`
-	Passwd       string     `json:"passwd,omitempty"`
-	HostName     string     `json:"hostName"`
-	Status       string     `json:"status"`   // Host Status, 0 for Online, 1 for offline
-	Stat         string     `json:"loadStat"` // Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
-	Arch         string     `json:"arch"`     // x86 or arm64
-	OS           string     `json:"os"`
-	Kernel       string     `json:"kernel"`
-	Spec         string     `json:"spec"`         // Host Spec, init while importing
-	CpuCores     int32      `json:"cpuCores"`     // Host cpu cores spec, init while importing
-	Memory       int32      `json:"memory"`       // Host memory, init while importing
-	UsedCpuCores int32      `json:"usedCpuCores"` // Unused CpuCore, used for allocation
-	UsedMemory   int32      `json:"usedMemory"`   // Unused memory size, Unit:GiB, used for allocation
-	Nic          string     `json:"nic"`          // Host network type: 1GE or 10GE
-	Vendor       string     `json:"vendor"`
-	Region       string     `json:"region"`
-	AZ           string     `json:"az"`
-	Rack         string     `json:"rack"`
-	ClusterType  string     `json:"clusterType"` // What cluster is the host used for? [database/data migration]
-	Purpose      string     `json:"purpose"`     // What Purpose is the host used for? [compute/storage/schedule]
-	DiskType     string     `json:"diskType"`    // Disk type of this host [SATA/SSD/NVMeSSD]
-	Reserved     bool       `json:"reserved"`    // Whether this host is reserved - will not be allocated
-	Traits       int64      `json:"traits"`      // Traits of labels
-	SysLabels    []string   `json:"sysLabels"`
-	CreatedAt    int64      `json:"createTime"`
-	UpdatedAt    int64      `json:"updateTime"`
-	Disks        []DiskInfo `json:"disks"`
+	ID           string              `json:"hostId"`
+	IP           string              `json:"ip"`
+	SSHPort      int32               `json:"sshPort,omitempty"`
+	UserName     string              `json:"userName,omitempty"`
+	Passwd       string              `json:"passwd,omitempty"`
+	HostName     string              `json:"hostName"`
+	Status       string              `json:"status"`   // Host Status, 0 for Online, 1 for offline
+	Stat         string              `json:"loadStat"` // Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
+	Arch         string              `json:"arch"`     // x86 or arm64
+	OS           string              `json:"os"`
+	Kernel       string              `json:"kernel"`
+	Spec         string              `json:"spec"`         // Host Spec, init while importing
+	CpuCores     int32               `json:"cpuCores"`     // Host cpu cores spec, init while importing
+	Memory       int32               `json:"memory"`       // Host memory, init while importing
+	UsedCpuCores int32               `json:"usedCpuCores"` // Unused CpuCore, used for allocation
+	UsedMemory   int32               `json:"usedMemory"`   // Unused memory size, Unit:GiB, used for allocation
+	Nic          string              `json:"nic"`          // Host network type: 1GE or 10GE
+	Vendor       string              `json:"vendor"`
+	Region       string              `json:"region"`
+	AZ           string              `json:"az"`
+	Rack         string              `json:"rack"`
+	ClusterType  string              `json:"clusterType"` // What cluster is the host used for? [database/data migration]
+	Purpose      string              `json:"purpose"`     // What Purpose is the host used for? [compute/storage/schedule]
+	DiskType     string              `json:"diskType"`    // Disk type of this host [SATA/SSD/NVMeSSD]
+	Reserved     bool                `json:"reserved"`    // Whether this host is reserved - will not be allocated
+	Traits       int64               `json:"traits"`      // Traits of labels
+	SysLabels    []string            `json:"sysLabels"`
+	Instances    map[string][]string `json:"instances"`
+	CreatedAt    int64               `json:"createTime"`
+	UpdatedAt    int64               `json:"updateTime"`
+	Disks        []DiskInfo          `json:"disks"`
 }
 
 func ParseCpu(specCode string) int {

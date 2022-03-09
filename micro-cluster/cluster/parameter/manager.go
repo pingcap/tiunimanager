@@ -421,10 +421,10 @@ func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.Insp
 		return resp, err
 	}
 	for comp, compParams := range compContainer {
+		// Get component cluster instances
+		instances := clusterMeta.Instances[comp]
 		switch comp {
 		case string(constants.ComponentIDTiDB):
-			// Get tidb cluster instances
-			instances := clusterMeta.Instances[string(constants.ComponentIDTiDB)]
 			// Iterating over instances to get connection information
 			for _, instance := range instances {
 				inspectParams, err := inspectTiDBComponentInstance(ctx, instance, compParams)
@@ -434,8 +434,6 @@ func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.Insp
 				inspectAllParameters = append(inspectAllParameters, inspectParams)
 			}
 		case string(constants.ComponentIDTiKV):
-			// Get tikv cluster instances
-			instances := clusterMeta.Instances[string(constants.ComponentIDTiKV)]
 			for _, instance := range instances {
 				inspectParams, err := inspectTiKVComponentInstance(ctx, instance, compParams)
 				if err != nil {
@@ -444,8 +442,6 @@ func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.Insp
 				inspectAllParameters = append(inspectAllParameters, inspectParams)
 			}
 		case string(constants.ComponentIDPD):
-			// Get pd cluster instances
-			instances := clusterMeta.Instances[string(constants.ComponentIDPD)]
 			for _, instance := range instances {
 				inspectParams, err := inspectPDComponentInstance(ctx, instance, compParams)
 				if err != nil {
@@ -453,19 +449,7 @@ func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.Insp
 				}
 				inspectAllParameters = append(inspectAllParameters, inspectParams)
 			}
-		case string(constants.ComponentIDCDC):
-			// Get cdc cluster instances
-			instances := clusterMeta.Instances[string(constants.ComponentIDCDC)]
-			for _, instance := range instances {
-				inspectParams, err := inspectInstanceByConfig(ctx, instance, compParams)
-				if err != nil {
-					return resp, err
-				}
-				inspectAllParameters = append(inspectAllParameters, inspectParams)
-			}
-		case string(constants.ComponentIDTiFlash):
-			// Get tiflash cluster instances
-			instances := clusterMeta.Instances[string(constants.ComponentIDTiFlash)]
+		case string(constants.ComponentIDCDC), string(constants.ComponentIDTiFlash):
 			for _, instance := range instances {
 				inspectParams, err := inspectInstanceByConfig(ctx, instance, compParams)
 				if err != nil {
@@ -685,17 +669,9 @@ func inspectApiParameter(ctx context.Context, instance *management.ClusterInstan
 // @return err
 func inspectConfigParameter(ctx context.Context, instance *management.ClusterInstance, instDiffParams []structs.ClusterParameterInfo) (inspectParams []cluster.InspectParameterInfo, err error) {
 	inspectParams = make([]cluster.InspectParameterInfo, 0)
-
-	// Calling the tiup pull interface
-	configPath := fmt.Sprintf("%s/conf/%s.toml", instance.GetDeployDir(), strings.ToLower(instance.Type))
-	framework.LogWithContext(ctx).Debugf("current instance type %s config path is %s", instance.Type, configPath)
-
-	// Call the pull command to get the instance configuration
-	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
-	configContentStr, err := deployment.M.Pull(ctx, deployment.TiUPComponentTypeCluster, instance.ClusterID, configPath,
-		tiupHomeForTidb, []string{"-N", instance.HostIP[0]}, 0)
+	// pull config
+	configContentStr, err := pullConfig(ctx, instance.ClusterID, instance.Type, instance.DeployDir, instance.HostIP[0])
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("call secondparty tiup pull %s config err = %s", instance.Type, err.Error())
 		return inspectParams, err
 	}
 	reqConfigParams := map[string]interface{}{}
@@ -722,6 +698,31 @@ func inspectConfigParameter(ctx context.Context, instance *management.ClusterIns
 		}
 	}
 	return inspectParams, nil
+}
+
+// pullConfig
+// @Description: pull component config by tiup
+// @Parameter ctx
+// @Parameter clusterID
+// @Parameter instanceType
+// @Parameter deployDir
+// @Parameter remoteHostIP
+// @return string
+// @return error
+func pullConfig(ctx context.Context, clusterID, instanceType, deployDir, remoteHostIP string) (string, error) {
+	// Calling the tiup pull interface
+	configPath := fmt.Sprintf("%s/conf/%s.toml", deployDir, strings.ToLower(instanceType))
+	framework.LogWithContext(ctx).Debugf("current instance type %s config path is %s", instanceType, configPath)
+
+	// Call the pull command to get the instance configuration
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
+	configContentStr, err := deployment.M.Pull(ctx, deployment.TiUPComponentTypeCluster, clusterID, configPath,
+		tiupHomeForTidb, []string{"-N", remoteHostIP}, 0)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("call secondparty tiup pull %s config err = %s", instanceType, err.Error())
+		return "", err
+	}
+	return configContentStr, nil
 }
 
 // inspectParameterValue

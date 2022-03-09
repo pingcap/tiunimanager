@@ -43,6 +43,8 @@ const (
 	ConfigPrometheusAddress string = "config_prometheus_address"
 
 	ConfigKeyRetainedPortRange string = "config_retained_port_range"
+
+	ConfigKeyDefaultSSHPort string = "config_default_ssh_port"
 )
 
 type SystemState string

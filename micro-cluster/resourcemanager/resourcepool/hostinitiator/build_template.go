@@ -28,9 +28,14 @@ import (
 	resourceTemplate "github.com/pingcap-inc/tiem/resource/template"
 )
 
+type HostAddr struct {
+	HostIP  string
+	SSHPort int
+}
+
 // template info to parse em cluster scale out yaml template file
 type templateScaleOut struct {
-	HostIPs []string
+	HostAddrs []HostAddr
 }
 
 func (p *templateScaleOut) generateTopologyConfig(ctx context.Context) (string, error) {
@@ -50,6 +55,9 @@ func (p *templateScaleOut) generateTopologyConfig(ctx context.Context) (string, 
 
 // template info to parse cluster check yaml template file
 type templateCheckHost struct {
+	GlobalSSHPort            int
+	GlobalUser               string
+	GlobalGroup              string
 	TemplateItemsForCompute  []checkHostTemplateItem
 	TemplateItemsForSchedule []checkHostTemplateItem
 	TemplateItemsForStorage  []checkHostTemplateItem
@@ -64,6 +72,9 @@ type checkHostTemplateItem struct {
 }
 
 func (p *templateCheckHost) buildCheckHostTemplateItems(h *structs.HostInfo) {
+	p.GlobalUser = framework.GetCurrentDeployUser()
+	p.GlobalGroup = framework.GetCurrentDeployGroup()
+	p.GlobalSSHPort = int(h.SSHPort)
 	p.TemplateItemsForCompute = make([]checkHostTemplateItem, 0)
 	p.TemplateItemsForSchedule = make([]checkHostTemplateItem, 0)
 	p.TemplateItemsForStorage = make([]checkHostTemplateItem, 0)

@@ -35,4 +35,13 @@ type ReaderWriter interface {
 	// @Return *SystemConfig
 	// @Return error
 	GetConfig(ctx context.Context, configKey string) (config *SystemConfig, err error)
+
+	// UpdateConfig
+	// @Description: update system config
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter configKey
+	// @Return *SystemConfig
+	// @Return error
+	UpdateConfig(ctx context.Context, config *SystemConfig) (err error)
 }

@@ -55,7 +55,7 @@ func authHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err
 	log.Infoln("begin authHosts")
 
 	deployUser := framework.GetCurrentDeployUser()
-	userGroup := deployUser
+	userGroup := framework.GetCurrentDeployGroup()
 
 	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {

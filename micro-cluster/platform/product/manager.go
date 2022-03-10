@@ -25,6 +25,7 @@ package product
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
@@ -181,17 +182,52 @@ func (p *Manager) QueryProducts(ctx context.Context, req message.QueryProductsIn
 }
 
 func (p *Manager) QueryAvailableProducts(ctx context.Context, req message.QueryAvailableProductsReq) (resp message.QueryAvailableProductsResp, err error){
-	//productResp, err := p.QueryProducts(ctx, message.QueryProductsInfoReq{
-	//	ProductIDs: []string{},
-	//})
-	//
-	//resp := message.QueryAvailableProductsResp{}
+	productResp, err := p.QueryProducts(ctx, message.QueryProductsInfoReq{
+		ProductIDs: []string{},
+	})
+
+	if err != nil {
+		return
+	}
+
+	vendorResp, err := p.QueryVendors(ctx, message.QueryVendorInfoReq{VendorIDs: []string{req.VendorID}})
+	if err != nil {
+		return
+	}
+	
+	productsMap := make(map[string]map[string]map[string]map[string]structs.Product)
+
+	for _, vendor := range vendorResp.Vendors {
+		for _, region := range vendor.Regions {
+			productsMap[region.ID] = make(map[string]map[string]map[string]structs.Product)
+			for _, product := range productResp.Products {
+				productsMap[region.ID][product.ProductID] = make(map[string]map[string]structs.Product)
+				for _, version := range product.Versions {
+					if _, ok := productsMap[region.ID][product.ProductID][version.Arch]; !ok {
+						productsMap[region.ID][product.ProductID][version.Arch] = make(map[string]structs.Product)
+					}
+					if _, ok := productsMap[region.ID][product.ProductID][version.Arch][version.Version]; !ok {
+						productsMap[region.ID][product.ProductID][version.Arch][version.Version] = structs.Product{
+							ID:         product.ProductID,
+							Name:       product.ProductName,
+							Arch:       version.Arch,
+							RegionID:   region.ID,
+							RegionName: region.Name,
+							VendorID:   vendor.ID,
+							VendorName: vendor.Name,
+							Status:     string(constants.ProductStatusOnline),
+							Internal:   constants.EMInternalProductNo,
+						}
+					}
+				}
+			}
+		}
+	}
 
 	return
 }
 
 func (p *Manager) QueryProductDetail(ctx context.Context, req message.QueryProductDetailReq) (message.QueryProductDetailResp, error){
-	//
 	return message.QueryProductDetailResp{}, nil
 }
 

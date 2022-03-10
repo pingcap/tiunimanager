@@ -112,11 +112,13 @@ func (p *SystemManager) GetSystemInfo(ctx context.Context, req message.GetSystem
 	} else {
 		resp = &message.GetSystemInfoResp{
 			Info: structs.SystemInfo{
-				SystemName:       systemInfo.SystemName,
-				SystemLogo:       systemInfo.SystemLogo,
-				CurrentVersionID: systemInfo.CurrentVersionID,
-				LastVersionID:    systemInfo.LastVersionID,
-				State:            string(systemInfo.State),
+				SystemName:        systemInfo.SystemName,
+				SystemLogo:        systemInfo.SystemLogo,
+				CurrentVersionID:  systemInfo.CurrentVersionID,
+				LastVersionID:     systemInfo.LastVersionID,
+				State:             string(systemInfo.State),
+				SupportedProducts: constants.SupportedProducts,
+				SupportedVendors:  constants.SupportedVendors,
 			},
 		}
 	}

@@ -184,7 +184,7 @@ func (p *Manager) QueryProducts(ctx context.Context, req message.QueryProductsIn
 }
 
 func (p *Manager) QueryAvailableProducts(ctx context.Context, req message.QueryAvailableProductsReq) (resp message.QueryAvailableProductsResp, err error){
-	productResp, err := p.QueryProducts(ctx, message.QueryProductsInfoReq{
+	productResp, err := p.QueryProducts(ctx, message.QueryProductsInfoReq {
 		ProductIDs: []string{},
 	})
 
@@ -232,11 +232,6 @@ func (p *Manager) QueryAvailableProducts(ctx context.Context, req message.QueryA
 }
 
 func (p *Manager) QueryProductDetail(ctx context.Context, req message.QueryProductDetailReq) (resp message.QueryProductDetailResp, err error){
-	//	VendorID        string `json:"vendorId" form:"vendorId"`
-	//	RegionID        string `json:"regionId" form:"regionId"`
-	//	ProductID       string `json:"productId" form:"productId"`
-	//	Status          string `json:"status" form:"status"`
-	//	InternalProduct int    `json:"internalProduct" form:"internalProduct"`
 	productResp, err := p.QueryProducts(ctx, message.QueryProductsInfoReq {
 		ProductIDs: []string{req.ProductID},
 	})

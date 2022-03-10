@@ -143,10 +143,8 @@ func TestClusterMeta_AddDefaultInstances(t *testing.T) {
 func TestClusterMeta_GenerateInstanceResourceRequirements(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-
-	productRW := mock_product.NewMockProductReadWriterInterface(ctrl)
+	productRW := mock_product.NewMockReaderWriter(ctrl)
 	models.SetProductReaderWriter(productRW)
-
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -220,43 +218,7 @@ func TestClusterMeta_GenerateInstanceResourceRequirements(t *testing.T) {
 	}
 
 	t.Run("normal", func(t *testing.T) {
-		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
-			"TiDB": {
-				Versions: map[string]structs.ProductVersion{
-					"v5.2.2": {
-						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentPropertyWithZones{
-							"x86_64": {
-								{
-									ID:                      "TiDB",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-								{
-									ID:                      "TiKV",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-								{
-									ID:                      "PD",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{1, 3, 5, 7},
-								},
-								{
-									ID:                      "TiFlash",
-									MinInstance:             0,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-							},
-						},
-					},
-				},
-			},
-		}, nil).Times(1)
+		mockQueryTiDBFromDB(productRW.EXPECT())
 
 		got1, got2, err := meta.GenerateInstanceResourceRequirements(context.TODO())
 		assert.Equal(t, 3, len(got1))
@@ -483,49 +445,10 @@ func TestClusterMeta_GetInstance(t *testing.T) {
 func TestClusterMeta_IsComponentRequired(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-
-	productRW := mock_product.NewMockProductReadWriterInterface(ctrl)
+	productRW := mock_product.NewMockReaderWriter(ctrl)
 	models.SetProductReaderWriter(productRW)
-
 	t.Run("error", func(t *testing.T) {
-		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
-			"TiDB": {
-				Versions: map[string]structs.ProductVersion{
-					"v5.2.2": {
-						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentPropertyWithZones{
-							"x86_64": {
-								{
-									ID:                      "TiDB",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-								{
-									ID:                      "TiKV",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-								{
-									ID:                      "PD",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{1, 3, 5, 7},
-								},
-								{
-									ID:                      "TiFlash",
-									MinInstance:             0,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-							},
-						},
-					},
-				},
-			},
-		}, nil).Times(1)
-
+		mockQueryTiDBFromDB(productRW.EXPECT())
 		meta := &ClusterMeta{
 			Cluster: &management.Cluster{
 				Type:            "TiDB",
@@ -533,48 +456,11 @@ func TestClusterMeta_IsComponentRequired(t *testing.T) {
 				CpuArchitecture: "x86_64",
 			},
 		}
-		assert.False(t, meta.IsComponentRequired(context.TODO(), "TiKV"))
+		assert.False(t, meta.IsComponentRequired(context.TODO(), "TTT"))
 	})
 
 	t.Run("normal", func(t *testing.T) {
-		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
-			"TiDB": {
-				Versions: map[string]structs.ProductVersion{
-					"v5.2.2": {
-						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentPropertyWithZones{
-							"x86_64": {
-								{
-									ID:                      "TiDB",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-								{
-									ID:                      "TiKV",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-								{
-									ID:                      "PD",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{1, 3, 5, 7},
-								},
-								{
-									ID:                      "TiFlash",
-									MinInstance:             0,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-							},
-						},
-					},
-				},
-			},
-		}, nil).Times(2)
-
+		mockQueryTiDBFromDBAnyTimes(productRW.EXPECT())
 		meta := &ClusterMeta{
 			Cluster: &management.Cluster{
 				Type:            "TiDB",
@@ -583,7 +469,7 @@ func TestClusterMeta_IsComponentRequired(t *testing.T) {
 			},
 		}
 		assert.True(t, meta.IsComponentRequired(context.TODO(), "TiKV"))
-		assert.False(t, meta.IsComponentRequired(context.TODO(), "TiFlash"))
+		assert.False(t, meta.IsComponentRequired(context.TODO(), "CDC"))
 	})
 }
 

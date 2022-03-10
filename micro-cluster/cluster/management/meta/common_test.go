@@ -28,6 +28,7 @@ import (
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/platform/config"
+	"github.com/pingcap-inc/tiem/models/platform/product"
 	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
 	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
@@ -171,47 +172,8 @@ func TestScaleOutPreCheck(t *testing.T) {
 func TestScaleInPreCheck(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-
-	productRW := mock_product.NewMockProductReadWriterInterface(ctrl)
+	productRW := mock_product.NewMockReaderWriter(ctrl)
 	models.SetProductReaderWriter(productRW)
-
-	productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
-		"TiDB": {
-			Versions: map[string]structs.ProductVersion{
-				"v5.2.2": {
-					Version: "v5.2.2",
-					Arch: map[string][]structs.ProductComponentPropertyWithZones{
-						"x86_64": {
-							{
-								ID:                      "TiDB",
-								MinInstance:             1,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{},
-							},
-							{
-								ID:                      "TiKV",
-								MinInstance:             1,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{},
-							},
-							{
-								ID:                      "PD",
-								MinInstance:             1,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{1, 3, 5, 7},
-							},
-							{
-								ID:                      "TiFlash",
-								MinInstance:             0,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{},
-							},
-						},
-					},
-				},
-			},
-		},
-	}, nil).AnyTimes()
 
 	t.Run("parameter invalid", func(t *testing.T) {
 		err := ScaleInPreCheck(ctx.TODO(), nil, nil)
@@ -235,12 +197,14 @@ func TestScaleInPreCheck(t *testing.T) {
 				RoleType:  string(constants.Root),
 			},
 		}}
+		mockQueryTiDBFromDB(productRW.EXPECT())
 		instance := &management.ClusterInstance{Type: string(constants.ComponentIDTiFlash)}
 		err := ScaleInPreCheck(ctx.TODO(), meta, instance)
 		assert.Error(t, err)
 	})
 
 	t.Run("component required error", func(t *testing.T) {
+		mockQueryTiDBFromDB(productRW.EXPECT())
 		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.2.2", CpuArchitecture: "x86_64"}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDTiDB): {
 				{
@@ -263,6 +227,8 @@ func TestScaleInPreCheck(t *testing.T) {
 	})
 
 	t.Run("check copies error", func(t *testing.T) {
+		mockQueryTiDBFromDB(productRW.EXPECT())
+
 		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 3}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDTiKV): {
 				{
@@ -574,4 +540,139 @@ func TestGetRandomString(t *testing.T) {
 			fmt.Println(got)
 		})
 	}
+}
+func mockQueryTiDBFromDBAnyTimes(expect *mock_product.MockReaderWriterMockRecorder) {
+	expect.GetProduct(gomock.Any(), gomock.Any()).Return(&product.ProductInfo{
+		ProductID: "TiDB",
+		ProductName: "tidb",
+	},[]*product.ProductVersion{
+		{
+			ProductID: "TiDB",
+			Arch: "x86_64",
+			Version: "v5.2.2",
+		},{
+			ProductID: "TiDB",
+			Arch: "ARM64",
+			Version: "v5.2.2",
+		},{
+			ProductID: "TiDB",
+			Arch: "x86_64",
+			Version: "v5.3.0",
+		},
+	},[]*product.ProductComponentInfo {
+		{
+			ProductID: "TiDB",
+			ComponentID: "TiDB",
+			ComponentName: "TiDB",
+			PurposeType: "Compute",
+			StartPort: 8,
+			EndPort: 16,
+			MaxPort: 4,
+			MinInstance: 1,
+			MaxInstance: 128,
+			SuggestedInstancesCount: []int32{},
+		},
+		{
+			ProductID: "TiDB",
+			ComponentID: "TiKV",
+			ComponentName: "TiKV",
+			PurposeType: "Storage",
+			StartPort: 1,
+			EndPort: 2,
+			MaxPort: 2,
+			MinInstance: 1,
+			MaxInstance: 128,
+			SuggestedInstancesCount: []int32{},
+		},{
+			ProductID: "TiDB",
+			ComponentID: "PD",
+			ComponentName: "PD",
+			PurposeType: "Schedule",
+			StartPort: 23,
+			EndPort: 413,
+			MaxPort: 22,
+			MinInstance: 1,
+			MaxInstance: 128,
+			SuggestedInstancesCount: []int32{1,3,5,7},
+		},{
+			ProductID: "TiDB",
+			ComponentID: "CDC",
+			ComponentName: "CDC",
+			PurposeType: "Compute",
+			StartPort: 23,
+			EndPort: 43,
+			MaxPort: 2,
+			MinInstance: 0,
+			MaxInstance: 128,
+			SuggestedInstancesCount: []int32{},
+		},
+	}, nil).AnyTimes()
+}
+
+func mockQueryTiDBFromDB(expect *mock_product.MockReaderWriterMockRecorder) {
+	expect.GetProduct(gomock.Any(), gomock.Any()).Return(&product.ProductInfo{
+		ProductID: "TiDB",
+		ProductName: "tidb",
+	},[]*product.ProductVersion{
+		{
+			ProductID: "TiDB",
+			Arch: "x86_64",
+			Version: "v5.2.2",
+		},{
+			ProductID: "TiDB",
+			Arch: "ARM64",
+			Version: "v5.2.2",
+		},{
+			ProductID: "TiDB",
+			Arch: "x86_64",
+			Version: "v5.3.0",
+		},
+	},[]*product.ProductComponentInfo {
+		{
+			ProductID: "TiDB",
+			ComponentID: "TiDB",
+			ComponentName: "TiDB",
+			PurposeType: "Compute",
+			StartPort: 8,
+			EndPort: 16,
+			MaxPort: 4,
+			MinInstance: 1,
+			MaxInstance: 128,
+			SuggestedInstancesCount: []int32{},
+		},
+		{
+			ProductID: "TiDB",
+			ComponentID: "TiKV",
+			ComponentName: "TiKV",
+			PurposeType: "Storage",
+			StartPort: 1,
+			EndPort: 2,
+			MaxPort: 2,
+			MinInstance: 1,
+			MaxInstance: 128,
+			SuggestedInstancesCount: []int32{},
+		},{
+			ProductID: "TiDB",
+			ComponentID: "PD",
+			ComponentName: "PD",
+			PurposeType: "Schedule",
+			StartPort: 23,
+			EndPort: 413,
+			MaxPort: 22,
+			MinInstance: 1,
+			MaxInstance: 128,
+			SuggestedInstancesCount: []int32{1,3,5,7},
+		},{
+			ProductID: "TiDB",
+			ComponentID: "CDC",
+			ComponentName: "CDC",
+			PurposeType: "Compute",
+			StartPort: 23,
+			EndPort: 43,
+			MaxPort: 2,
+			MinInstance: 0,
+			MaxInstance: 128,
+			SuggestedInstancesCount: []int32{},
+		},
+	}, nil).Times(1)
 }

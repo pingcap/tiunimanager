@@ -31,21 +31,19 @@ func Test_validateCreating(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	productRW := mock_product.NewMockProductReadWriterInterface(ctrl)
+	productRW := mock_product.NewMockReaderWriter(ctrl)
 	models.SetProductReaderWriter(productRW)
 
 	t.Run("product error", func(t *testing.T) {
-		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.Error(errors.TIEM_PARAMETER_INVALID)).Times(1)
+		productRW.EXPECT().GetProduct(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_PARAMETER_INVALID))
 		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{})
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIEM_UNSUPPORT_PRODUCT, err.(errors.EMError).GetCode())
 	})
 
 	t.Run("unsupported product", func(t *testing.T) {
-		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
-			"DM": {},
-		}, nil).Times(1)
-		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{
+		productRW.EXPECT().GetProduct(gomock.Any(), gomock.Any()).Return(nil, nil,nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		err := validateCreating(context.TODO(), &cluster.CreateClusterReq {
 			CreateClusterParameter: structs.CreateClusterParameter{
 				Type: "TiDB",
 			},
@@ -55,85 +53,31 @@ func Test_validateCreating(t *testing.T) {
 	})
 
 	t.Run("unsupported version", func(t *testing.T) {
-		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
-			"TiDB": {
-				Versions: map[string]structs.ProductVersion{
-					"v5.0.0": {},
-				},
-			},
-		}, nil).Times(1)
+		mockQueryTiDBFromDB(productRW.EXPECT())
 		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{
 			CreateClusterParameter: structs.CreateClusterParameter{
 				Type:    "TiDB",
-				Version: "v5.2.2",
+				Version: "v9.9",
 			},
 		})
 		assert.Error(t, err)
 		assert.Equal(t, errors.TIEM_UNSUPPORT_PRODUCT, err.(errors.EMError).GetCode())
-		assert.Contains(t, err.Error(), "version v5.2.2 is not supported")
 	})
 	t.Run("unsupported arch", func(t *testing.T) {
-		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
-			"TiDB": {
-				Versions: map[string]structs.ProductVersion{
-					"v5.2.2": {
-						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentPropertyWithZones{
-							"amd64": {},
-						},
-					},
-				},
-			},
-		}, nil).Times(1)
+		mockQueryTiDBFromDB(productRW.EXPECT())
+
 		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{
 			CreateClusterParameter: structs.CreateClusterParameter{
 				Type:            "TiDB",
 				Version:         "v5.2.2",
-				CpuArchitecture: "x86_64",
+				CpuArchitecture: "xXXX",
 			},
 		})
 		assert.Error(t, err)
 		assert.Equal(t, errors.TIEM_UNSUPPORT_PRODUCT, err.(errors.EMError).GetCode())
-		assert.Contains(t, err.Error(), "arch x86_64 is not supported")
 	})
 	t.Run("max instance", func(t *testing.T) {
-		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
-			"TiDB": {
-				Versions: map[string]structs.ProductVersion{
-					"v5.2.2": {
-						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentPropertyWithZones{
-							"x86_64": {
-								{
-									ID:                      "TiDB",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-								{
-									ID:                      "TiKV",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-								{
-									ID:                      "PD",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-								{
-									ID:                      "TiFlash",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-							},
-						},
-					},
-				},
-			},
-		}, nil).Times(1)
+		mockQueryTiDBFromDB(productRW.EXPECT())
 		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{
 			CreateClusterParameter: structs.CreateClusterParameter{
 				Type:            "TiDB",
@@ -142,52 +86,15 @@ func Test_validateCreating(t *testing.T) {
 			},
 			ResourceParameter: structs.ClusterResourceInfo{
 				InstanceResource: []structs.ClusterResourceParameterCompute{
-					{Type: "TiDB", Count: 10},
+					{Type: "TiDB", Count: 111111},
 				},
 			},
 		})
 		assert.Error(t, err)
 		assert.Equal(t, errors.TIEM_INVALID_TOPOLOGY, err.(errors.EMError).GetCode())
-		assert.Contains(t, err.Error(), "should be less than")
 	})
 	t.Run("min instance", func(t *testing.T) {
-		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
-			"TiDB": {
-				Versions: map[string]structs.ProductVersion{
-					"v5.2.2": {
-						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentPropertyWithZones{
-							"x86_64": {
-								{
-									ID:                      "TiDB",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-								{
-									ID:                      "TiKV",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-								{
-									ID:                      "PD",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{1, 3, 5, 7},
-								},
-								{
-									ID:                      "TiFlash",
-									MinInstance:             0,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-							},
-						},
-					},
-				},
-			},
-		}, nil).Times(1)
+		mockQueryTiDBFromDB(productRW.EXPECT())
 		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{
 			CreateClusterParameter: structs.CreateClusterParameter{
 				Type:            "TiDB",
@@ -196,52 +103,15 @@ func Test_validateCreating(t *testing.T) {
 			},
 			ResourceParameter: structs.ClusterResourceInfo{
 				InstanceResource: []structs.ClusterResourceParameterCompute{
-					{Type: "TiDB", Count: 4},
+					{Type: "TiDB", Count: 0},
 				},
 			},
 		})
 		assert.Error(t, err)
 		assert.Equal(t, errors.TIEM_INVALID_TOPOLOGY, err.(errors.EMError).GetCode())
-		assert.Contains(t, err.Error(), "should be more than")
 	})
 	t.Run("TiKV and copies", func(t *testing.T) {
-		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
-			"TiDB": {
-				Versions: map[string]structs.ProductVersion{
-					"v5.2.2": {
-						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentPropertyWithZones{
-							"x86_64": {
-								{
-									ID:                      "TiDB",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-								{
-									ID:                      "TiKV",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-								{
-									ID:                      "PD",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{1, 3, 5, 7},
-								},
-								{
-									ID:                      "TiFlash",
-									MinInstance:             0,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-							},
-						},
-					},
-				},
-			},
-		}, nil).Times(1)
+		mockQueryTiDBFromDB(productRW.EXPECT())
 		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{
 			CreateClusterParameter: structs.CreateClusterParameter{
 				Type:            "TiDB",
@@ -262,43 +132,7 @@ func Test_validateCreating(t *testing.T) {
 		assert.Contains(t, err.Error(), "is less than copies ")
 	})
 	t.Run("suggested count", func(t *testing.T) {
-		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
-			"TiDB": {
-				Versions: map[string]structs.ProductVersion{
-					"v5.2.2": {
-						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentPropertyWithZones{
-							"x86_64": {
-								{
-									ID:                      "TiDB",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-								{
-									ID:                      "TiKV",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-								{
-									ID:                      "PD",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{1, 3, 5, 7},
-								},
-								{
-									ID:                      "TiFlash",
-									MinInstance:             0,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-							},
-						},
-					},
-				},
-			},
-		}, nil).Times(1)
+		mockQueryTiDBFromDB(productRW.EXPECT())
 		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{
 			CreateClusterParameter: structs.CreateClusterParameter{
 				Type:            "TiDB",
@@ -319,43 +153,7 @@ func Test_validateCreating(t *testing.T) {
 		assert.Contains(t, err.Error(), "total number of PD should be in ")
 	})
 	t.Run("OK", func(t *testing.T) {
-		productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
-			"TiDB": {
-				Versions: map[string]structs.ProductVersion{
-					"v5.2.2": {
-						Version: "v5.2.2",
-						Arch: map[string][]structs.ProductComponentPropertyWithZones{
-							"x86_64": {
-								{
-									ID:                      "TiDB",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-								{
-									ID:                      "TiKV",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-								{
-									ID:                      "PD",
-									MinInstance:             1,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{1, 3, 5, 7},
-								},
-								{
-									ID:                      "TiFlash",
-									MinInstance:             0,
-									MaxInstance:             8,
-									SuggestedInstancesCount: []int32{},
-								},
-							},
-						},
-					},
-				},
-			},
-		}, nil).Times(1)
+		mockQueryTiDBFromDB(productRW.EXPECT())
 		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{
 			CreateClusterParameter: structs.CreateClusterParameter{
 				Type:            "TiDB",

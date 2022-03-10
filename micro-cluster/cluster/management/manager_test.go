@@ -305,45 +305,9 @@ func TestManager_ScaleIn(t *testing.T) {
 		{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
 	}, make([]*management.DBUser, 0), nil).AnyTimes()
 
-	productRW := mock_product.NewMockProductReadWriterInterface(ctrl)
+	productRW := mock_product.NewMockReaderWriter(ctrl)
 	models.SetProductReaderWriter(productRW)
-	productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
-		"TiDB": {
-			Versions: map[string]structs.ProductVersion{
-				"v5.2.2": {
-					Version: "v5.2.2",
-					Arch: map[string][]structs.ProductComponentPropertyWithZones{
-						"x86_64": {
-							{
-								ID:                      "TiDB",
-								MinInstance:             1,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{},
-							},
-							{
-								ID:                      "TiKV",
-								MinInstance:             1,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{},
-							},
-							{
-								ID:                      "PD",
-								MinInstance:             1,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{1, 3, 5, 7},
-							},
-							{
-								ID:                      "TiFlash",
-								MinInstance:             0,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{},
-							},
-						},
-					},
-				},
-			},
-		},
-	}, nil).AnyTimes()
+	mockQueryTiDBFromDBAnyTimes(productRW.EXPECT())
 
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 	workflow.MockWorkFlowService(workflowService)

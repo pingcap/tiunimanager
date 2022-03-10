@@ -71,7 +71,7 @@ type QueryAvailableVendorsReq struct {
 
 //QueryAvailableVendorsResp query all available vendors response
 type QueryAvailableVendorsResp struct {
-	Vendors map[string][]structs.VendorWithRegion `json:"vendors"`
+	Vendors map[string]structs.VendorWithRegion `json:"vendors"`
 }
 
 //QueryAvailableProductsReq query all products message request

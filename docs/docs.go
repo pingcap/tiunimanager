@@ -8862,10 +8862,7 @@ var doc = `{
                 "vendors": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/definitions/structs.VendorWithRegion"
-                        }
+                        "$ref": "#/definitions/structs.VendorWithRegion"
                     }
                 }
             }

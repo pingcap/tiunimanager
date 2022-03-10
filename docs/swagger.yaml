@@ -1508,9 +1508,7 @@ definitions:
     properties:
       vendors:
         additionalProperties:
-          items:
-            $ref: '#/definitions/structs.VendorWithRegion'
-          type: array
+          $ref: '#/definitions/structs.VendorWithRegion'
         type: object
     type: object
   message.QueryCheckReportsRsp:

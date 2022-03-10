@@ -69,6 +69,7 @@ func (p *Manager) QueryVendors(ctx context.Context, req message.QueryVendorInfoR
 	if len(vendorIDs) == 0 {
 		vendors, innerErr := models.GetProductReaderWriter().QueryAllVendors(ctx)
 		if innerErr != nil {
+			err = innerErr
 			return
 		}
 		for _, v := range vendors {
@@ -89,8 +90,40 @@ func (p *Manager) QueryVendors(ctx context.Context, req message.QueryVendorInfoR
 	return
 }
 
-func (p *Manager) QueryAvailableVendors(ctx context.Context, req message.QueryAvailableVendorsReq) (message.QueryAvailableVendorsResp, error){
-	return message.QueryAvailableVendorsResp{}, nil
+func (p *Manager) QueryAvailableVendors(ctx context.Context, req message.QueryAvailableVendorsReq) (resp message.QueryAvailableVendorsResp, err error){
+	vendorInfos, queryVendorsError := models.GetProductReaderWriter().QueryAllVendors(ctx)
+	if queryVendorsError != nil {
+		framework.LogWithContext(ctx).Errorf("query available vendors failed, err = %s", queryVendorsError.Error())
+		return resp, queryVendorsError
+	}
+
+	resp.Vendors = make(map[string]structs.VendorWithRegion)
+	for _, v := range vendorInfos {
+		vendorInfo, zones, specs, getVendorError := models.GetProductReaderWriter().GetVendor(ctx, v.VendorID)
+		if getVendorError != nil {
+			framework.LogWithContext(ctx).Errorf("query available vendors failed, err = %s", getVendorError.Error())
+			return resp, getVendorError
+		}
+		// ignore empty vendor
+		if len(zones) == 0 || len(specs) == 0 {
+			continue
+		} else {
+			resp.Vendors[v.VendorID] = structs.VendorWithRegion {
+				VendorInfo: structs.VendorInfo{
+					ID: vendorInfo.VendorID,
+					Name: vendorInfo.VendorName,
+				},
+				Regions: map[string]structs.RegionInfo{},
+			}
+		}
+		for _, z := range zones {
+			resp.Vendors[v.VendorID].Regions[z.RegionID] = structs.RegionInfo{
+				ID: z.RegionID,
+				Name: z.RegionName,
+			}
+		}
+	}
+	return
 }
 
 func (p *Manager) UpdateProducts(ctx context.Context, req message.UpdateProductsInfoReq) (resp message.UpdateProductsInfoResp, err error){
@@ -115,6 +148,7 @@ func (p *Manager) QueryProducts(ctx context.Context, req message.QueryProductsIn
 	if len(productIDs) == 0 {
 		products, innerErr := models.GetProductReaderWriter().QueryAllProducts(ctx)
 		if innerErr != nil {
+			err = innerErr
 			return
 		}
 		for _, v := range products {
@@ -135,11 +169,18 @@ func (p *Manager) QueryProducts(ctx context.Context, req message.QueryProductsIn
 	return
 }
 
-func (p *Manager) QueryAvailableProducts(ctx context.Context, req message.QueryAvailableProductsReq) (message.QueryAvailableProductsResp, error){
-	return message.QueryAvailableProductsResp{}, nil
+func (p *Manager) QueryAvailableProducts(ctx context.Context, req message.QueryAvailableProductsReq) (resp message.QueryAvailableProductsResp, err error){
+	//productResp, err := p.QueryProducts(ctx, message.QueryProductsInfoReq{
+	//	ProductIDs: []string{},
+	//})
+	//
+	//resp := message.QueryAvailableProductsResp{}
+
+	return
 }
 
 func (p *Manager) QueryProductDetail(ctx context.Context, req message.QueryProductDetailReq) (message.QueryProductDetailResp, error){
+	//
 	return message.QueryProductDetailResp{}, nil
 }
 

@@ -113,19 +113,22 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 
 	Current = f
 	f.args = &ClientArgs{
-		Host:               "127.0.0.1",
-		Port:               4116,
-		MetricsPort:        4121,
-		RegistryClientPort: 4101,
-		RegistryPeerPort:   4102,
-		RegistryAddress:    "127.0.0.1:4101",
-		DeployDir:          "./../bin",
-		DataDir:            "./testdata",
-		LogLevel:           "info",
-		EMClusterName:      "em-test",
-		EMVersion:          "InTesting",
-		DeployUser:         "test-user",
-		DeployGroup:        "test-group",
+		Host:                "127.0.0.1",
+		Port:                4116,
+		MetricsPort:         4121,
+		RegistryClientPort:  4101,
+		RegistryPeerPort:    4102,
+		RegistryAddress:     "127.0.0.1:4101",
+		DeployDir:           "./../bin",
+		DataDir:             "./testdata",
+		LogLevel:            "info",
+		EMClusterName:       "em-test",
+		EMVersion:           "InTesting",
+		DeployUser:          "test-user",
+		DeployGroup:         "test-group",
+		LoginHostUser:       "root",
+		LoginPrivateKeyPath: "/fake/private/key/path",
+		LoginPublicKeyPath:  "/fake/public/key/path",
 	}
 	f.parseArgs(serviceName)
 
@@ -177,6 +180,7 @@ func (b *BaseFramework) parseArgs(serviceName ServiceNameEnum) {
 	b.trace = NewTracerFromArgs(b.args)
 	// now empty
 	b.configuration = &Configuration{}
+	LocalConfig = make(map[Key]Instance)
 }
 
 func (b *BaseFramework) initMicroClient() {
@@ -282,13 +286,37 @@ func GetCurrentDeployGroup() string {
 	return Current.GetClientArgs().DeployGroup
 }
 
+func GetCurrentSpecifiedUser() string {
+	return Current.GetClientArgs().LoginHostUser
+}
+
+func GetCurrentSpecifiedPrivateKeyPath() string {
+	return Current.GetClientArgs().LoginPrivateKeyPath
+}
+
+func GetCurrentSpecifiedPublicKeyPath() string {
+	return Current.GetClientArgs().LoginPublicKeyPath
+}
+
 func GetPrivateKeyFilePath(userName string) (keyPath string) {
-	keyPath = fmt.Sprintf("/home/%s/.ssh/tiup_rsa", userName)
+	useSpecifiedKeyPair := GetBoolWithDefault(UsingSpecifiedKeyPair, false)
+	if useSpecifiedKeyPair {
+		keyPath = GetCurrentSpecifiedPrivateKeyPath()
+	} else {
+		// use default private key under deploy user ssh dir
+		keyPath = fmt.Sprintf("/home/%s/.ssh/tiup_rsa", userName)
+	}
 	return
 }
 
 func GetPublicKeyFilePath(userName string) (keyPath string) {
-	keyPath = fmt.Sprintf("/home/%s/.ssh/id_rsa.pub", userName)
+	useSpecifiedKeyPair := GetBoolWithDefault(UsingSpecifiedKeyPair, false)
+	if useSpecifiedKeyPair {
+		keyPath = GetCurrentSpecifiedPublicKeyPath()
+	} else {
+		// use default public key under deploy user ssh dir
+		keyPath = fmt.Sprintf("/home/%s/.ssh/id_rsa.pub", userName)
+	}
 	return
 }
 

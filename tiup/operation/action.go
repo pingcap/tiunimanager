@@ -163,6 +163,7 @@ func Start(
 
 func initElasticSearch(tlsCfg *tls.Config, inst spec.Instance) error {
 	// loop get es status
+	startTime := time.Now().Unix()
 	for {
 		client := tiuputils.NewHTTPClient(2*time.Second, tlsCfg)
 		_, err := client.Get(context.TODO(), fmt.Sprintf("http://%s:%d/_cat", inst.GetHost(), inst.GetPort()))
@@ -171,6 +172,9 @@ func initElasticSearch(tlsCfg *tls.Config, inst spec.Instance) error {
 		}
 		time.Sleep(2 * time.Second)
 		log.Debugf("check elasticsearch status error: %s", err.Error())
+		if time.Now().Unix()-startTime > 180 {
+			return fmt.Errorf("Start compoent %s timeout, more than 180s, please check logs: %s/kibana.log ", spec.ComponentElasticSearchServer, inst.LogDir())
+		}
 	}
 	path := "/_template/custom_em"
 	url := fmt.Sprintf("http://%s:%d%s", inst.GetHost(), inst.GetPort(), path)
@@ -190,6 +194,7 @@ func initElasticSearch(tlsCfg *tls.Config, inst spec.Instance) error {
 
 func initKibana(ctx context.Context, tlsCfg *tls.Config, inst spec.Instance) error {
 	// loop get kibana status
+	startTime := time.Now().Unix()
 	for {
 		client := tiuputils.NewHTTPClient(2*time.Second, tlsCfg)
 		_, err := client.Get(context.TODO(), fmt.Sprintf("http://%s:%d/status", inst.GetHost(), inst.GetPort()))
@@ -198,6 +203,9 @@ func initKibana(ctx context.Context, tlsCfg *tls.Config, inst spec.Instance) err
 		}
 		time.Sleep(2 * time.Second)
 		log.Debugf("check kibana status error: %s", err.Error())
+		if time.Now().Unix()-startTime > 180 {
+			return fmt.Errorf("Start compoent %s timeout, more than 180s, please check logs: %s/kibana.log ", spec.ComponentKibana, inst.LogDir())
+		}
 	}
 
 	// Copy to remote server

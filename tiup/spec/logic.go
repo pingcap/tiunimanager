@@ -71,8 +71,8 @@ func (topo *Specification) ComponentsByStartOrder() (comps []Component) {
 	comps = append(comps, &APIServerComponent{topo})
 	comps = append(comps, &FileServerComponent{topo})
 	comps = append(comps, &WebServerComponent{topo})
-	comps = append(comps, &KibanaComponent{topo})
 	comps = append(comps, &FilebeatComponent{topo})
+	comps = append(comps, &KibanaComponent{topo})
 	return
 }
 
@@ -88,8 +88,8 @@ func (topo *Specification) ComponentsByUpdateOrder() (comps []Component) {
 	comps = append(comps, &GrafanaComponent{Topology: topo})
 	comps = append(comps, &AlertManagerComponent{Topology: topo})
 	comps = append(comps, &ElasticSearchComponent{topo})
-	comps = append(comps, &KibanaComponent{topo})
 	comps = append(comps, &FilebeatComponent{topo})
+	comps = append(comps, &KibanaComponent{topo})
 	return
 }
 

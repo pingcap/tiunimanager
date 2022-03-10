@@ -106,6 +106,10 @@ func (m *Manager) Deploy(
 		base.GlobalOptions.SSHType = sshType
 	}
 
+	if base.GlobalOptions.ExternalElasticsearchUrl != "" && len(base.ElasticSearchs) > 0 {
+		return fmt.Errorf("external_elasticsearch_url and elasticsearch_servers cannot both have values, please check your config")
+	}
+
 	var (
 		sshConnProps  *tui.SSHConnectionProps = &tui.SSHConnectionProps{}
 		sshProxyProps *tui.SSHConnectionProps = &tui.SSHConnectionProps{}

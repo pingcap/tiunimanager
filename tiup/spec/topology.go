@@ -74,17 +74,18 @@ type MonitoredOptions struct {
 // GlobalOptions represents the global options for all groups in topology
 // specification in topology.yaml
 type GlobalOptions struct {
-	User            string               `yaml:"user,omitempty" default:"tidb"`
-	Group           string               `yaml:"group,omitempty"`
-	SSHPort         int                  `yaml:"ssh_port,omitempty" default:"22" validate:"ssh_port:editable"`
-	SSHType         executor.SSHType     `yaml:"ssh_type,omitempty" default:"builtin"`
-	DeployDir       string               `yaml:"deploy_dir,omitempty" default:"deploy"`
-	DataDir         string               `yaml:"data_dir,omitempty" default:"data"`
-	LogDir          string               `yaml:"log_dir,omitempty"`
-	LogLevel        string               `yaml:"log_level,omitempty"`
-	ResourceControl meta.ResourceControl `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
-	OS              string               `yaml:"os,omitempty" default:"linux"`
-	Arch            string               `yaml:"arch,omitempty"`
+	User                     string               `yaml:"user,omitempty" default:"tidb"`
+	Group                    string               `yaml:"group,omitempty"`
+	SSHPort                  int                  `yaml:"ssh_port,omitempty" default:"22" validate:"ssh_port:editable"`
+	SSHType                  executor.SSHType     `yaml:"ssh_type,omitempty" default:"builtin"`
+	DeployDir                string               `yaml:"deploy_dir,omitempty" default:"deploy"`
+	DataDir                  string               `yaml:"data_dir,omitempty" default:"data"`
+	LogDir                   string               `yaml:"log_dir,omitempty"`
+	LogLevel                 string               `yaml:"log_level,omitempty"`
+	ExternalElasticsearchUrl string               `yaml:"external_elasticsearch_url" validate:"external_elasticsearch_url:editable"`
+	ResourceControl          meta.ResourceControl `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
+	OS                       string               `yaml:"os,omitempty" default:"linux"`
+	Arch                     string               `yaml:"arch,omitempty"`
 }
 
 // BaseTopo is the base info to topology.
@@ -93,9 +94,10 @@ type BaseTopo struct {
 	MonitoredOptions *MonitoredOptions
 	MasterList       []string
 
-	Monitors      []*PrometheusSpec
-	Grafanas      []*GrafanaSpec
-	Alertmanagers []*AlertmanagerSpec
+	Monitors       []*PrometheusSpec
+	Grafanas       []*GrafanaSpec
+	Alertmanagers  []*AlertmanagerSpec
+	ElasticSearchs []*ElasticSearchSpec
 
 	WebServers []*WebServerSpec
 }
@@ -586,8 +588,13 @@ func (s *Specification) TracerWebAddress() []string {
 // ElasticSearchEndpoints return the list of es endpoints in the specification
 func (s *Specification) ElasticSearchEndpoints() []string {
 	result := make([]string, 0)
-	for _, inst := range s.ElasticSearchServers {
-		result = append(result, fmt.Sprintf("%s:%d", inst.Host, inst.Port))
+	if s.GlobalOptions.ExternalElasticsearchUrl != "" {
+		result = strings.Split(s.GlobalOptions.ExternalElasticsearchUrl, ",")
+	}
+	if len(s.ElasticSearchServers) > 0 {
+		for _, inst := range s.ElasticSearchServers {
+			result = append(result, fmt.Sprintf("%s:%d", inst.Host, inst.Port))
+		}
 	}
 	return result
 }
@@ -675,6 +682,7 @@ func (s *Specification) BaseTopo() *BaseTopo {
 		Monitors:         s.Monitors,
 		Grafanas:         s.Grafanas,
 		Alertmanagers:    s.Alertmanagers,
+		ElasticSearchs:   s.ElasticSearchServers,
 		WebServers:       s.WebServers,
 	}
 }
@@ -813,6 +821,10 @@ func setTiEMCustomDefaults(globalOptions *GlobalOptions, field reflect.Value) er
 		case "LogLevel":
 			if field.Field(j).String() == "" && defaults.CanUpdate(field.Field(j).Interface()) {
 				field.Field(j).Set(reflect.ValueOf(globalOptions.LogLevel))
+			}
+		case "ExternalElasticsearchUrl":
+			if field.Field(j).String() == "" && defaults.CanUpdate(field.Field(j).Interface()) {
+				field.Field(j).Set(reflect.ValueOf(globalOptions.ExternalElasticsearchUrl))
 			}
 		case "Arch":
 			// default values of globalOptions are set before fillCustomDefaults in Unmarshal

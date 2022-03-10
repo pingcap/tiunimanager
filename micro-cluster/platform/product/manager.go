@@ -225,6 +225,7 @@ func (p *Manager) QueryAvailableProducts(ctx context.Context, req message.QueryA
 		}
 	}
 
+	resp.Products = productsMap
 	return
 }
 

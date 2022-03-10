@@ -156,7 +156,7 @@ func (p *FileHostInitiator) Prepare(ctx context.Context, h *structs.HostInfo) (e
 
 func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (err error) {
 	log := framework.LogWithContext(ctx)
-	log.Infof("verify host %v begins", *h)
+	log.Infof("verify host %s %s begins", h.HostName, h.IP)
 	tempateInfo := templateCheckHost{}
 	tempateInfo.buildCheckHostTemplateItems(h)
 

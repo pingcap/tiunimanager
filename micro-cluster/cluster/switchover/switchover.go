@@ -69,17 +69,15 @@ func GetManager() *Manager {
 				"checkSyncChangeFeedTaskMaxLagTime": {
 					"checkSyncChangeFeedTaskMaxLagTime", "setOldMasterReadOnly", "fail", workflow.SyncFuncNode, wfStepCheckSyncChangeFeedTaskMaxLagTime},
 				"setOldMasterReadOnly": {
-					"setOldMasterReadOnly", "checkSyncCaughtUp", "fail", workflow.SyncFuncNode, wfStepSetOldMasterReadOnly},
-				"checkSyncCaughtUp": {
-					"checkSyncCaughtUp", "pauseOldSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfStepCheckSyncCaughtUp},
+					"setOldMasterReadOnly", "waitOldMasterCDCsCaughtUp", "fail", workflow.SyncFuncNode, wfStepSetOldMasterReadOnly},
+				"waitOldMasterCDCsCaughtUp": {
+					"waitOldMasterCDCsCaughtUp", "pauseOldSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfStepWaitOldMasterCDCsCaughtUp},
 				"pauseOldSyncChangeFeedTask": {
 					"pauseOldSyncChangeFeedTask", "createReverseSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfStepPauseOldSyncChangeFeedTask},
 				"createReverseSyncChangeFeedTask": {
 					"createReverseSyncChangeFeedTask", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfStepCreateReverseSyncChangeFeedTask},
 				"setNewMasterReadWrite": {
-					"setNewMasterReadWrite", "checkNewMasterReadWriteHealth", "fail", workflow.SyncFuncNode, wfStepSetNewMasterReadWrite},
-				"checkNewMasterReadWriteHealth": {
-					"checkNewMasterReadWriteHealth", "checkNewSyncChangeFeedTaskHealth", "fail", workflow.SyncFuncNode, wfStepCheckNewMasterReadWriteHealth},
+					"setNewMasterReadWrite", "checkNewSyncChangeFeedTaskHealth", "fail", workflow.SyncFuncNode, wfStepSetNewMasterReadWrite},
 				"checkNewSyncChangeFeedTaskHealth": {
 					"checkNewSyncChangeFeedTaskHealth", "migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "fail", workflow.SyncFuncNode, wfStepCheckNewSyncChangeFeedTaskHealth},
 				"migrateAllDownStreamSyncChangeFeedTasksToNewMaster": {
@@ -150,10 +148,34 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 	funcName := "Switchover"
 	oldMasterId := req.SourceClusterID
 	oldSlaveId := req.TargetClusterID
+	// pre check
+	//   1. cluster relation is valid?
+	//   2. cdc sync task is valid?
+	//   3. slaveToBeNewMasterCluster has CDC component?
 	oldSyncChangeFeedTaskId, err := mgr.getOldSyncChangeFeedTaskId(ctx, reqJson, funcName, oldMasterId, oldSlaveId)
 	if err != nil {
 		return resp, err
 	}
+	if len(oldSyncChangeFeedTaskId) <= 0 {
+		return resp, emerr.Error(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_CDC_SYNC_TASK_NOT_FOUND)
+	}
+	otherSlavesMapToOldSyncCDCTask, err := mgr.clusterGetOtherSlavesMapToOldSyncCDCTask(ctx, oldMasterId, oldSlaveId)
+	if err != nil {
+		return resp, err
+	}
+	otherSlavesMapToOldSyncCDCTaskBs, err := json.Marshal(&otherSlavesMapToOldSyncCDCTask)
+	if err != nil {
+		return resp, fmt.Errorf("marshal otherSlavesMapToOldSyncCDCTask failed, err: %s", err)
+	}
+	otherSlavesMapToOldSyncCDCTaskStr := string(otherSlavesMapToOldSyncCDCTaskBs)
+	err = mgr.clusterCheckHasCDCComponent(ctx, oldSlaveId, emerr.Error(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_SLAVE_NO_CDC_COMPONENT))
+	if err != nil {
+		return resp, err
+	}
+	if req.OnlyCheck {
+		return &cluster.MasterSlaveClusterSwitchoverResp{}, nil
+	}
+	// workflow switch
 	if req.Force { // A -> B
 		err = mgr.checkClusterReadWriteHealth(ctx, oldMasterId)
 		if err == nil { // A rw-able
@@ -194,6 +216,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 
 	flowManager.AddContext(flow, wfContextReqKey, req)
 	flowManager.AddContext(flow, wfContextOldSyncChangeFeedTaskIDKey, oldSyncChangeFeedTaskId)
+	flowManager.AddContext(flow, wfContextOtherSlavesMapToOldSyncCDCTaskKey, otherSlavesMapToOldSyncCDCTaskStr)
 
 	var cancelFps []func()
 	cancelFps = append(cancelFps, func() {
@@ -245,6 +268,28 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 			framework.LogWithContext(ctx).Errorf("end maintenance of cluster %s failed:%s", req.TargetClusterID, err.Error())
 		}
 	})
+
+	for otherSlaveClusterID := range otherSlavesMapToOldSyncCDCTask {
+		metaOfOtherSlave, err := meta.Get(ctx, otherSlaveClusterID)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("get meta of cluster %s failed:%s", otherSlaveClusterID, err.Error())
+			return resp, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
+				"get meta of cluster %s failed, %s", otherSlaveClusterID, err.Error())
+		}
+
+		if err := metaOfOtherSlave.StartMaintenance(ctx, constants.ClusterMaintenanceSwitching); err != nil {
+			framework.LogWithContext(ctx).Errorf("start maintenance failed:%s", err.Error())
+			return resp, errors.WrapError(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT, fmt.Sprintf("start maintenance failed, %s", err.Error()), err)
+		}
+		//flowManager.AddContext(flow, wfContextOldSlavePreviousMaintenanceStatusKey, string(metaOfOtherSlave.Cluster.MaintenanceStatus))
+		thisSlaveID := otherSlaveClusterID
+		cancelFps = append(cancelFps, func() {
+			err := metaOfOtherSlave.EndMaintenance(ctx, constants.ClusterMaintenanceSwitching)
+			if err != nil {
+				framework.LogWithContext(ctx).Errorf("end maintenance of cluster %s failed:%s", thisSlaveID, err.Error())
+			}
+		})
+	}
 
 	if err = flowManager.AsyncStart(ctx, flow); err != nil {
 		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", flowName, err.Error())
@@ -382,6 +427,22 @@ func (p *Manager) convertPhysicalTimeToTSO(ctx context.Context, t time.Time) (ts
 	return tsoLib.GenerateTSO(t, 0)
 }
 
+func (m *Manager) clusterCheckHasCDCComponent(ctx context.Context, clusterId string, myNotFoundErr error) error {
+	myMeta, err := meta.Get(ctx, clusterId)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"load cluster %s meta from db error: %s", clusterId, err.Error())
+		return err
+	}
+	toplogy, _ := myMeta.DisplayInstanceInfo(ctx)
+	for _, t := range toplogy.Topology {
+		if t.Type == string(constants.ComponentIDCDC) {
+			return nil
+		}
+	}
+	return myNotFoundErr
+}
+
 func (m *Manager) clusterGetRelationByMasterSlaveClusterId(ctx context.Context, masterClusterId, slaveClusterId string) (relation *clusterMgr.ClusterRelation, err error) {
 	relations, err := models.GetClusterReaderWriter().GetRelations(ctx, slaveClusterId)
 	if err != nil {
@@ -400,8 +461,49 @@ func (m *Manager) clusterGetRelationByMasterSlaveClusterId(ctx context.Context, 
 	return relation, err
 }
 
-func (m *Manager) swapClusterRelationInDB(ctx context.Context, oldMasterClusterId, oldSlaveClusterId, newSyncChangeFeedTaskId string) error {
-	return models.GetClusterReaderWriter().SwapMasterSlaveRelation(ctx, oldMasterClusterId, oldSlaveClusterId, newSyncChangeFeedTaskId)
+func (m *Manager) clusterGetRelationsByMasterClusterId(ctx context.Context, masterClusterId string) ([]*clusterMgr.ClusterRelation, error) {
+	relations, err := models.GetClusterReaderWriter().GetSlaves(ctx, masterClusterId)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*clusterMgr.ClusterRelation
+	for _, v := range relations {
+		if v.RelationType == constants.ClusterRelationStandBy {
+			ret = append(ret, v)
+		}
+	}
+	return ret, err
+}
+
+func (m *Manager) clusterGetOtherSlavesMapToOldSyncCDCTask(ctx context.Context, oldMasterClusterId, oldSlaveClusterId string) (map[string]string, error) {
+	relations, err := m.clusterGetRelationsByMasterClusterId(ctx, oldMasterClusterId)
+	if err != nil {
+		return nil, err
+	}
+	ret := make(map[string]string)
+	for _, v := range relations {
+		if len(v.ObjectClusterID) <= 0 {
+			return nil, fmt.Errorf("clusterGetOtherSlavesMapToOldSyncCDCTask: ObjectClusterID is invalid"+
+				"relationID:%v, objectClusterID:%s, syncChangeFeedTaskID:%s",
+				v.ID, v.ObjectClusterID, v.SyncChangeFeedTaskID,
+			)
+		}
+		if len(v.SyncChangeFeedTaskID) <= 0 {
+			return nil, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_CDC_SYNC_TASK_NOT_FOUND,
+				"clusterGetOtherSlavesMapToOldSyncCDCTask: SyncChangeFeedTaskID is invalid"+
+					"relationID:%v, objectClusterID:%s, syncChangeFeedTaskID:%s",
+				v.ID, v.ObjectClusterID, v.SyncChangeFeedTaskID,
+			)
+		}
+		if v.ObjectClusterID != oldSlaveClusterId {
+			ret[v.ObjectClusterID] = v.SyncChangeFeedTaskID
+		}
+	}
+	return ret, err
+}
+
+func (m *Manager) swapClusterRelationsInDB(ctx context.Context, oldMasterClusterId, slaveToBeMasterClusterId string, newSlaveClusterIdMapToSyncCDCTaskId map[string]string) error {
+	return models.GetClusterReaderWriter().SwapMasterSlaveRelations(ctx, oldMasterClusterId, slaveToBeMasterClusterId, newSlaveClusterIdMapToSyncCDCTaskId)
 }
 
 func (m *Manager) getAllChangeFeedTasksOnCluster(ctx context.Context, clusterId string) ([]*cluster.ChangeFeedTask, error) {
@@ -416,10 +518,19 @@ func (m *Manager) getAllChangeFeedTasksOnCluster(ctx context.Context, clusterId 
 	if err != nil {
 		return nil, err
 	}
+	framework.LogWithContext(ctx).Infof("getAllChangeFeedTasksOnCluster tasks:%v err:%v", tasks, err)
 	var myTasks []*cluster.ChangeFeedTask
 	for _, v := range tasks {
-		myTasks = append(myTasks, &v.ChangeFeedTask)
+		framework.LogWithContext(ctx).Infof("getAllChangeFeedTasksOnCluster task:%v id:%v", v, v.ID)
+		dupV := v
+		myTasks = append(myTasks, &dupV.ChangeFeedTask)
 	}
+
+	framework.LogWithContext(ctx).Infof("getAllChangeFeedTasksOnCluster ret myTasks:%v err:%v", myTasks, err)
+	for _, v := range myTasks {
+		framework.LogWithContext(ctx).Infof("getAllChangeFeedTasksOnCluster ret task:%v id:%v", v, v.ID)
+	}
+
 	return myTasks, err
 }
 
@@ -444,9 +555,12 @@ func (m *Manager) createChangeFeedTask(ctx context.Context, task *cluster.Change
 		Downstream:     task.Downstream,
 	}
 	resp, err := mgr.changefeedMgr.Create(ctx, req)
+	framework.LogWithContext(ctx).Infof("createChangeFeedTask clusterID:%s", task.ClusterID)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("createChangeFeedTask err:%s", err)
 		return "", err
 	}
+	framework.LogWithContext(ctx).Infof("createChangeFeedTask success, ret taskID:%s", resp.ID)
 	return resp.ID, nil
 }
 
@@ -467,6 +581,7 @@ func (m *Manager) resumeChangeFeedTask(ctx context.Context, changeFeedTaskId str
 }
 
 func (m *Manager) queryChangeFeedTask(ctx context.Context, changeFeedTaskId string) (*cluster.ChangeFeedTaskInfo, error) {
+	funcName := "queryChangeFeedTask"
 	req := cluster.DetailChangeFeedTaskReq{
 		ID: changeFeedTaskId,
 	}
@@ -474,7 +589,21 @@ func (m *Manager) queryChangeFeedTask(ctx context.Context, changeFeedTaskId stri
 	if err != nil {
 		return nil, err
 	}
+	framework.LogWithContext(ctx).Infof(
+		"%s queryChangeFeedTask changeFeedTaskId:%s success, status:%s", funcName, changeFeedTaskId, resp.Status)
 	return &resp.ChangeFeedTaskInfo, err
+}
+
+func (m *Manager) getAllChangeFeedTaskIDsOnCluster(ctx context.Context, clusterID string) ([]string, error) {
+	resp, err := mgr.getAllChangeFeedTasksOnCluster(ctx, clusterID)
+	if err != nil {
+		return nil, err
+	}
+	var ids []string
+	for _, v := range resp {
+		ids = append(ids, v.ID)
+	}
+	return ids, err
 }
 
 func (m *Manager) removeChangeFeedTask(ctx context.Context, changeFeedTaskId string) error {

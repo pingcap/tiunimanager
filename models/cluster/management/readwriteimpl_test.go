@@ -810,6 +810,9 @@ func TestClusterReadWrite_Relations(t *testing.T) {
 	r, err = testRW.GetSlaves(context.TODO(), "test_relation")
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(r))
+
+	err = testRW.SwapMasterSlaveRelations(context.TODO(), "test_relation", "333", map[string]string{"test_relation": "task02"})
+	assert.NoError(t, err)
 }
 
 func TestClusterReadWrite_QueryInstancesByHost(t *testing.T) {

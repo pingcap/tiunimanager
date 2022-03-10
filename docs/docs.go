@@ -7527,6 +7527,10 @@ var doc = `{
                 "force": {
                     "type": "boolean"
                 },
+                "onlyCheck": {
+                    "description": "only check if this flag is true",
+                    "type": "boolean"
+                },
                 "sourceClusterID": {
                     "description": "old master/new slave",
                     "type": "string"

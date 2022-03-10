@@ -409,7 +409,7 @@ func fillParameters(ctx *workflow.FlowContext, fillParamContainer map[interface{
 			instances := clusterMeta.Instances[instanceType.(string)]
 			if len(instances) > 0 {
 				// pull config
-				configContentStr, err := pullConfig(ctx, instances[0].ClusterID, instances[0].Type, instances[0].DeployDir, instances[0].HostIP[0])
+				configContentStr, err := pullConfig(ctx, instances[0].ClusterID, instances[0].Type, instances[0].GetDeployDir(), instances[0].HostIP[0])
 				if err != nil {
 					framework.LogWithContext(ctx).Errorf("failed to call %s pull show config, err = %s", instanceType, err)
 					return err

@@ -26,6 +26,7 @@ package product
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
@@ -230,8 +231,101 @@ func (p *Manager) QueryAvailableProducts(ctx context.Context, req message.QueryA
 	return
 }
 
-func (p *Manager) QueryProductDetail(ctx context.Context, req message.QueryProductDetailReq) (message.QueryProductDetailResp, error){
-	return message.QueryProductDetailResp{}, nil
+func (p *Manager) QueryProductDetail(ctx context.Context, req message.QueryProductDetailReq) (resp message.QueryProductDetailResp, err error){
+	//	VendorID        string `json:"vendorId" form:"vendorId"`
+	//	RegionID        string `json:"regionId" form:"regionId"`
+	//	ProductID       string `json:"productId" form:"productId"`
+	//	Status          string `json:"status" form:"status"`
+	//	InternalProduct int    `json:"internalProduct" form:"internalProduct"`
+	productResp, err := p.QueryProducts(ctx, message.QueryProductsInfoReq {
+		ProductIDs: []string{req.ProductID},
+	})
+	if err != nil || len(productResp.Products) == 0 {
+		return resp, errors.WrapError(errors.TIEM_UNSUPPORT_PRODUCT, "query products failed", err)
+	}
+
+	vendorResp, err := p.QueryVendors(ctx, message.QueryVendorInfoReq{
+		VendorIDs: []string{req.VendorID},
+	})
+	if err != nil || len(vendorResp.Vendors) == 0 {
+		return resp, errors.WrapError(errors.TIEM_UNSUPPORT_PRODUCT, "query vendors failed", err)
+	}
+
+	products := make(map[string]structs.ProductDetail)
+
+	product := productResp.Products[0]
+	vendor := vendorResp.Vendors[0]
+	var region structs.RegionConfigInfo
+	for _, r := range vendor.Regions {
+		if r.ID == req.RegionID {
+			region = r
+		}
+	}
+	if region.ID != req.RegionID {
+		return resp, errors.WrapError(errors.TIEM_UNSUPPORT_PRODUCT, "query region failed", nil)
+	}
+	products[product.ProductID] = structs.ProductDetail {
+		ID: product.ProductID,
+		Name: product.ProductName,
+		Versions: make(map[string]structs.ProductVersion),
+	}
+
+	productComponentPropertyWithZones := make([]structs.ProductComponentPropertyWithZones, 0)
+	for _, component := range product.Components {
+		componentInstanceZoneWithSpecs := make([]structs.ComponentInstanceZoneWithSpecs, 0)
+		for _, zone := range region.Zones {
+			componentInstanceZoneWithSpecs = append(componentInstanceZoneWithSpecs, structs.ComponentInstanceZoneWithSpecs {
+				ZoneID: zone.ZoneID,
+				ZoneName: zone.ZoneName,
+				Specs: convertComponentInstanceResourceSpecs(vendor, component, zone.ZoneID, zone.ZoneName),
+			})
+		}
+		productComponentPropertyWithZones = append(productComponentPropertyWithZones, structs.ProductComponentPropertyWithZones {
+			ID: component.ID,
+			Name: component.Name,
+			PurposeType: component.PurposeType,
+			StartPort: component.StartPort,
+			EndPort: component.EndPort,
+			MaxPort: component.MaxPort,
+			MinInstance: component.MinInstance,
+			MaxInstance: component.MaxInstance,
+			SuggestedInstancesCount: component.SuggestedInstancesCount,
+			AvailableZones: componentInstanceZoneWithSpecs,
+		})
+	}
+
+	for _, version := range product.Versions {
+		if _, ok := products[product.ProductID].Versions[version.Version]; !ok {
+			products[product.ProductID].Versions[version.Version] = structs.ProductVersion {
+				Version: version.Version,
+				Arch: make(map[string][]structs.ProductComponentPropertyWithZones),
+			}
+		}
+		if _, ok := products[product.ProductID].Versions[version.Version].Arch[version.Arch]; !ok {
+			products[product.ProductID].Versions[version.Version].Arch[version.Arch] = productComponentPropertyWithZones
+		}
+	}
+
+	resp.Products = products
+	return
+}
+
+func convertComponentInstanceResourceSpecs(vendor structs.VendorConfigInfo, component structs.ProductComponentPropertyWithZones, zoneID, zoneName string) []structs.ComponentInstanceResourceSpec {
+	componentInstanceResourceSpecs := make([]structs.ComponentInstanceResourceSpec, 0)
+	for _, spec := range vendor.Specs {
+		if spec.PurposeType == component.PurposeType {
+			componentInstanceResourceSpecs = append(componentInstanceResourceSpecs, structs.ComponentInstanceResourceSpec{
+				ID: spec.ID,
+				Name: spec.Name,
+				CPU: spec.CPU,
+				Memory: spec.Memory,
+				DiskType: spec.DiskType,
+				ZoneID: zoneID,
+				ZoneName: zoneName,
+			})
+		}
+	}
+	return componentInstanceResourceSpecs
 }
 
 func convertVendorRequest(reqConfig structs.VendorConfigInfo) (*product.Vendor, []*product.VendorZone, []*product.VendorSpec){

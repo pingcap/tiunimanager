@@ -295,6 +295,10 @@ func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request cluster.D
 				framework.LogWithContext(ctx).Infof("current backupId %s in excludeBackupIds, skip delete!", record.ID)
 				continue
 			}
+			if string(constants.ClusterBackupProcessing) == record.Status {
+				framework.LogWithContext(ctx).Infof("current backupId %s status can not delete, skip delete!", record.ID)
+				continue
+			}
 			deleteRecordMap[record.ID] = record
 		}
 	}

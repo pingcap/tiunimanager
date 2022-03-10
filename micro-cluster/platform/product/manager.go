@@ -212,6 +212,7 @@ func (p *Manager) QueryAvailableProducts(ctx context.Context, req message.QueryA
 							ID:         product.ProductID,
 							Name:       product.ProductName,
 							Arch:       version.Arch,
+							Version:    version.Version,
 							RegionID:   region.ID,
 							RegionName: region.Name,
 							VendorID:   vendor.ID,

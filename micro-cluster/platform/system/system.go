@@ -106,18 +106,18 @@ func acceptSystemEvent(ctx context.Context, event constants.SystemEvent) error {
 
 var SupportedProducts = map[string][]structs.SpecificVersionProduct{
 	string(constants.EMProductIDTiDB): {
-		{ProductID: string(constants.EMProductIDTiDB), Arch: "X86_64", Version: "v5.0.0"},
-		{ProductID: string(constants.EMProductIDTiDB), Arch: "X86_64", Version: "v5.1.0"},
-		{ProductID: string(constants.EMProductIDTiDB), Arch: "X86_64", Version: "v5.2.0"},
-		{ProductID: string(constants.EMProductIDTiDB), Arch: "X86_64", Version: "v5.2.2"},
-		{ProductID: string(constants.EMProductIDTiDB), Arch: "X86_64", Version: "v5.3.0"},
-		{ProductID: string(constants.EMProductIDTiDB), Arch: "X86_64", Version: "v5.4.0"},
-		{ProductID: string(constants.EMProductIDTiDB), Arch: "ARM64", Version: "v5.0.0"},
-		{ProductID: string(constants.EMProductIDTiDB), Arch: "ARM64", Version: "v5.1.0"},
-		{ProductID: string(constants.EMProductIDTiDB), Arch: "ARM64", Version: "v5.2.0"},
-		{ProductID: string(constants.EMProductIDTiDB), Arch: "ARM64", Version: "v5.2.2"},
-		{ProductID: string(constants.EMProductIDTiDB), Arch: "ARM64", Version: "v5.3.0"},
-		{ProductID: string(constants.EMProductIDTiDB), Arch: "ARM64", Version: "v5.4.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v5.0.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v5.1.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v5.2.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v5.2.2"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v5.3.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v5.4.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchArm64), Version: "v5.0.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchArm64), Version: "v5.1.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchArm64), Version: "v5.2.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchArm64), Version: "v5.2.2"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchArm64), Version: "v5.3.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchArm64), Version: "v5.4.0"},
 	},
 }
 

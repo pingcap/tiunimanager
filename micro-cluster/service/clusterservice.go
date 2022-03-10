@@ -74,7 +74,7 @@ type ClusterServiceHandler struct {
 	authManager             *identification.Manager
 	productManager         	*product.Manager
 	rbacManager             rbac.RBACService
-	checkManager            *check.CheckManager
+	checkManager            check.CheckService
 }
 
 func handleRequest(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse, requestBody interface{}, permissions []structs.RbacPermission) bool {
@@ -164,7 +164,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.authManager = identification.NewIdentificationManager()
 	handler.productManager = product.NewManager()
 	handler.rbacManager = rbac.GetRBACService()
-	handler.checkManager = check.NewCheckManager()
+	handler.checkManager = check.GetCheckService()
 
 	return handler
 }

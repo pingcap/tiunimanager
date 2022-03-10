@@ -51,16 +51,58 @@ func (p *FileHostInitiator) SetDeploymentServ(d deployment.Interface) {
 	p.deploymentServ = d
 }
 
+func (p *FileHostInitiator) skipAuthHost(ctx context.Context, deployUser string, h *structs.HostInfo) bool {
+	log := framework.LogWithContext(ctx)
+	specifiedUser := framework.GetCurrentSpecifiedUser()
+	specifiedPrivateKey := framework.GetCurrentSpecifiedPrivateKeyPath()
+	specifiedPublicKey := framework.GetCurrentSpecifiedPublicKeyPath()
+	log.Infof("begin to test whether skip auth host %s %s with deploy user %s, with key pair <%s, %s> and specified user %s",
+		h.HostName, h.IP, deployUser, specifiedPublicKey, specifiedPrivateKey, specifiedUser)
+	// try to test connection if user specify key pair and specified username == deployUser
+	if specifiedPrivateKey != "" && specifiedPublicKey != "" {
+		if specifiedUser == deployUser {
+			lsCmd := "ls -l"
+			authenticate := sshclient.HostAuthenticate{SshType: sshclient.Key, AuthenticatedUser: deployUser, AuthenticateContent: specifiedPrivateKey}
+			_, err := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), authenticate, true, rp_consts.DefaultCopySshIDTimeOut, []string{lsCmd})
+			if err != nil {
+				log.Errorf("check connection to host %s %s@%s:%d by execute \"%s\" failed, %v", h.HostName, deployUser, h.IP, h.SSHPort, lsCmd, err)
+				return false
+			}
+			log.Infof("skip auth host %s %s succeed", h.HostName, h.IP)
+			return true
+		}
+		log.Infof("specified user %s is different with deploy user %s", specifiedUser, deployUser)
+		return false
+	}
+	log.Infof("can not skip auth host %s %s because either public key %s or private key %s is not specified", h.HostName, h.IP, specifiedPublicKey, specifiedPrivateKey)
+	return false
+}
+
+// Create deployUser on target host and set up auth key
 func (p *FileHostInitiator) AuthHost(ctx context.Context, deployUser, userGroup string, h *structs.HostInfo) (err error) {
 	log := framework.LogWithContext(ctx)
 	log.Infof("begin to auth host %s %s with %s:%s", h.HostName, h.IP, deployUser, userGroup)
-	err = p.createDeployUser(ctx, deployUser, userGroup, h)
+
+	if p.skipAuthHost(ctx, deployUser, h) {
+		log.Infof("skip auth host %s %s@%s:%d with specified private key %s", h.HostName, deployUser, h.IP, h.SSHPort, framework.GetCurrentSpecifiedPrivateKeyPath())
+		framework.SetLocalConfig(framework.UsingSpecifiedKeyPair, true)
+		return nil
+	}
+
+	authenticate, err := p.getUserSpecifiedAuthenticateToHost(ctx, h)
+	if err != nil {
+		log.Errorf("get host %s %s authenticate content failed, %v", h.HostName, h.IP, err)
+		return err
+	}
+
+	// create deploy user on target host and set up auth key
+	err = p.createDeployUser(ctx, deployUser, userGroup, h, authenticate)
 	if err != nil {
 		log.Errorf("auth host failed, %v", err)
 		return err
 	}
 
-	err = p.buildAuth(ctx, deployUser, h)
+	err = p.buildAuth(ctx, deployUser, h, authenticate)
 	if err != nil {
 		log.Errorf("auth host failed after user created, %v", err)
 		return err
@@ -114,7 +156,7 @@ func (p *FileHostInitiator) Prepare(ctx context.Context, h *structs.HostInfo) (e
 
 func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (err error) {
 	log := framework.LogWithContext(ctx)
-	log.Infof("verify host %v begins", *h)
+	log.Infof("verify host %s %s begins", h.HostName, h.IP)
 	tempateInfo := templateCheckHost{}
 	tempateInfo.buildCheckHostTemplateItems(h)
 
@@ -303,14 +345,15 @@ func (p *FileHostInitiator) isVirtualMachine(ctx context.Context, h *structs.Hos
 	log.Infof("begin to check host manufacturer on host %s %s", h.HostName, h.IP)
 	vmManufacturer := []string{"QEMU", "XEN", "KVM", "VMWARE", "VIRTUALBOX", "VBOX", "ORACLE", "MICROSOFT", "ZVM", "BOCHS", "PARALLELS", "UML"}
 	dmidecodeCmd := "dmidecode -s system-manufacturer | tr -d '\n'"
-	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{dmidecodeCmd})
+	authenticate := p.getEMAuthenticateToHost(ctx)
+	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), *authenticate, true, rp_consts.DefaultCopySshIDTimeOut, []string{dmidecodeCmd})
 	if err != nil {
 		log.Errorf("execute %s on host %s %s failed, %v", dmidecodeCmd, h.HostName, h.IP, err)
 		return false, err
 	}
 	isVM = false
 	for _, vm := range vmManufacturer {
-		if strings.EqualFold(result, vm) {
+		if strings.Contains(strings.ToLower(result), strings.ToLower(vm)) {
 			isVM = true
 			break
 		}

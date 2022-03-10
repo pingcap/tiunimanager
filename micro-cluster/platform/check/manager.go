@@ -24,14 +24,29 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/platform/check"
 	"github.com/pingcap-inc/tiem/workflow"
+	"sync"
 )
 
 const (
 	ContextCheckID    = "CheckID"
 	ContextReportInfo = "ReportInfo"
+	DefaultCreator = "System"
+	DefaultTenantID = "admin"
 )
 
-type CheckManager struct{
+var checkService CheckService
+var once sync.Once
+
+func GetCheckService() CheckService {
+	once.Do(func() {
+		if checkService == nil {
+			checkService = NewCheckManager()
+		}
+	})
+	return checkService
+}
+
+type CheckManager struct {
 	autoCheckMgr *autoCheckManager
 }
 
@@ -65,9 +80,13 @@ func (manager *CheckManager) Check(ctx context.Context, request message.CheckPla
 	rw := models.GetReportReaderWriter()
 
 	// create and init check report
+	creator := framework.GetUserIDFromContext(ctx)
+	if len(creator) == 0 {
+		creator = DefaultCreator
+	}
 	report := &check.CheckReport{
 		Report:  "{}",
-		Creator: framework.GetUserIDFromContext(ctx),
+		Creator: creator,
 		Status:  string(constants.CheckRunning),
 	}
 	report, err = rw.CreateReport(ctx, report)
@@ -79,7 +98,7 @@ func (manager *CheckManager) Check(ctx context.Context, request message.CheckPla
 	// create workflow
 	flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, report.ID, workflow.BizTypePlatform, checkDefine.FlowName)
 	if err != nil {
-		log.Errorf("create flow %s failed, check report %s, error: %s", flow.Flow.ID, report.ID, err.Error())
+		log.Errorf("create flow failed, check report %s, error: %s", report.ID, err.Error())
 		return resp, err
 	}
 

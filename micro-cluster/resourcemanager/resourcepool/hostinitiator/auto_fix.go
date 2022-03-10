@@ -20,8 +20,6 @@ import (
 	"fmt"
 	"strings"
 
-	sshclient "github.com/pingcap-inc/tiem/util/ssh"
-
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -124,7 +122,8 @@ func (p *FileHostInitiator) setOffSwap(ctx context.Context, h *structs.HostInfo)
 	flushCmd := "swapoff -a"
 	updateCmd := "sysctl -p"
 	fstabCmd := "sed -i '/swap/s/^\\(.*\\)$/#\\1/g' /etc/fstab"
-	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{checkExisted, changeConf, flushCmd, updateCmd, fstabCmd})
+	authenticate := p.getEMAuthenticateToHost(ctx)
+	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), *authenticate, true, rp_consts.DefaultCopySshIDTimeOut, []string{checkExisted, changeConf, flushCmd, updateCmd, fstabCmd})
 	if err != nil {
 		return err
 	}
@@ -135,7 +134,8 @@ func (p *FileHostInitiator) setOffSwap(ctx context.Context, h *structs.HostInfo)
 func (p *FileHostInitiator) installNumaCtl(ctx context.Context, h *structs.HostInfo) (err error) {
 	framework.LogWithContext(ctx).Infof("begin to install numactl on host %s %s", h.HostName, h.IP)
 	installNumaCtrlCmd := "yum install -y numactl"
-	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{installNumaCtrlCmd})
+	authenticate := p.getEMAuthenticateToHost(ctx)
+	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), *authenticate, true, rp_consts.DefaultCopySshIDTimeOut, []string{installNumaCtrlCmd})
 	if err != nil {
 		return err
 	}
@@ -148,7 +148,8 @@ func (p *FileHostInitiator) remountFS(ctx context.Context, h *structs.HostInfo, 
 	log.Infof("begin to remount path %s by adding opts %s on host %s %s", path, opts, h.HostName, h.IP)
 	addingOpts := strings.Join(opts, ",")
 	getMountInfoCmd := fmt.Sprintf("sed -n '\\# %s #p' /etc/fstab", path)
-	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{getMountInfoCmd})
+	authenticate := p.getEMAuthenticateToHost(ctx)
+	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), *authenticate, true, rp_consts.DefaultCopySshIDTimeOut, []string{getMountInfoCmd})
 	if err != nil {
 		log.Errorf("host %s %s execute command %s failed, %v", h.HostName, h.IP, getMountInfoCmd, err)
 		return err
@@ -165,7 +166,7 @@ func (p *FileHostInitiator) remountFS(ctx context.Context, h *structs.HostInfo, 
 	updateFsTabCmd := fmt.Sprintf("sed -i '\\# %s #s#%s#%s#g' /etc/fstab", path, originOpts, targetOpts)
 	log.Infof("update fstab on host %s %s, using %s", h.HostName, h.IP, updateFsTabCmd)
 	remountCMD := fmt.Sprintf("mount -o remount %s", path)
-	result, err = p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{updateFsTabCmd, remountCMD})
+	result, err = p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), *authenticate, true, rp_consts.DefaultCopySshIDTimeOut, []string{updateFsTabCmd, remountCMD})
 	if err != nil {
 		return err
 	}

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -32,6 +31,15 @@ type Instance struct {
 }
 
 type Key string
+
+const (
+	UsingSpecifiedKeyPair Key = "UsingSpecifiedKeyPair"
+)
+
+func SetLocalConfig(key Key, value interface{}) {
+	instance := CreateInstance(key, value)
+	LocalConfig[key] = instance
+}
 
 func CreateInstance(key Key, value interface{}) Instance {
 	return Instance{
@@ -74,6 +82,11 @@ func GetStringWithDefault(key Key, value string) string {
 func GetIntegerWithDefault(key Key, value int) int {
 	result := GetWithDefault(key, value)
 	return result.(int)
+}
+
+func GetBoolWithDefault(key Key, value bool) bool {
+	result := GetWithDefault(key, value)
+	return result.(bool)
 }
 
 func UpdateLocalConfig(key Key, value interface{}, newVersion int) (bool, int) {

@@ -949,10 +949,14 @@ func TestManager_fillParameters(t *testing.T) {
 		tikv.ApiService = mockTiKVApiService
 		mockPDApiService := mockutilpd.NewMockPDApiService(ctrl)
 		pd.ApiService = mockPDApiService
+		mock2rdService := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mock2rdService
 
 		mockTiDBApiService.EXPECT().ShowConfig(gomock.Any(), gomock.Any()).Return(apiContent, nil)
 		mockTiKVApiService.EXPECT().ShowConfig(gomock.Any(), gomock.Any()).Return(apiContent, nil)
 		mockPDApiService.EXPECT().ShowConfig(gomock.Any(), gomock.Any()).Return(apiContent, nil)
+		mock2rdService.EXPECT().Pull(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(string(tomlConfigContent), nil)
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
@@ -991,6 +995,17 @@ func TestManager_fillParameters(t *testing.T) {
 					HasApply:     1,
 					Type:         0,
 					RealValue:    structs.ParameterRealValue{ClusterValue: "102400"},
+				},
+			},
+			"TiFlash": {
+				{
+					ParamId:      "4",
+					Category:     "basic",
+					Name:         "quota-backend-bytes",
+					InstanceType: "TiFlash",
+					HasApply:     1,
+					Type:         0,
+					RealValue:    structs.ParameterRealValue{ClusterValue: "8589934592"},
 				},
 			},
 		})
@@ -1070,6 +1085,34 @@ func TestManager_fillParameters(t *testing.T) {
 					Category:     "basic",
 					Name:         "oom-action",
 					InstanceType: "TiDB",
+					Type:         1,
+					RealValue:    structs.ParameterRealValue{ClusterValue: "cancel"},
+				},
+			},
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("request tiflash config error", func(t *testing.T) {
+		mock2rdService := mock_deployment.NewMockInterface(ctrl)
+		deployment.M = mock2rdService
+
+		mock2rdService.EXPECT().Pull(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(string(tomlConfigContent), errors.New("request tiflash config error"))
+
+		modifyCtx := &workflow.FlowContext{
+			Context:  context.TODO(),
+			FlowData: map[string]interface{}{},
+		}
+		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
+		modifyCtx.SetData(contextHasApplyParameter, true)
+		err := fillParameters(modifyCtx, map[interface{}][]*ModifyClusterParameterInfo{
+			"TiFlash": {
+				{
+					ParamId:      "1",
+					Category:     "basic",
+					Name:         "oom-action",
+					InstanceType: "TiFlash",
 					Type:         1,
 					RealValue:    structs.ParameterRealValue{ClusterValue: "cancel"},
 				},

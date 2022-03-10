@@ -164,3 +164,45 @@ func TestSystemReadWrite_UpdateVersion(t *testing.T) {
 	assert.Equal(t, "v1", newInfo.LastVersionID)
 	assert.Equal(t, "v2", newInfo.CurrentVersionID)
 }
+
+func TestSystemReadWrite_Initialized(t *testing.T) {
+	err := testRW.VendorInitialized(context.TODO())
+	assert.Error(t, err)
+	assert.Equal(t, errors.TIEM_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
+
+	err = testRW.ProductInitialized(context.TODO())
+	assert.Error(t, err)
+	assert.Equal(t, errors.TIEM_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
+
+	systemInfo := &SystemInfo{
+		SystemName: "EM",
+		SystemLogo: "sss",
+		CurrentVersionID: "",
+		LastVersionID: "",
+		State: constants.SystemRunning,
+	}
+	err = testRW.DB(context.TODO()).Create(systemInfo).Error
+	defer testRW.DB(context.TODO()).Delete(&SystemInfo{}, "system_name = 'EM'")
+	assert.NoError(t, err)
+
+	info, err := testRW.GetSystemInfo(context.TODO())
+	assert.NoError(t, err)
+	assert.Equal(t, false, info.VendorSpecsInitialized)
+	assert.Equal(t, false, info.VendorZonesInitialized)
+	assert.Equal(t, false, info.ProductVersionsInitialized)
+	assert.Equal(t, false, info.ProductComponentsInitialized)
+
+	err = testRW.VendorInitialized(context.TODO())
+	assert.NoError(t, err)
+
+	err = testRW.ProductInitialized(context.TODO())
+	assert.NoError(t, err)
+
+	newInfo, err := testRW.GetSystemInfo(context.TODO())
+	assert.NoError(t, err)
+	assert.Equal(t, true, newInfo.VendorSpecsInitialized)
+	assert.Equal(t, true, newInfo.VendorZonesInitialized)
+	assert.Equal(t, true, newInfo.ProductVersionsInitialized)
+	assert.Equal(t, true, newInfo.ProductComponentsInitialized)
+
+}

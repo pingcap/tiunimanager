@@ -51,7 +51,12 @@ func (p *Manager) UpdateVendors(ctx context.Context, req message.UpdateVendorInf
 	err = models.Transaction(ctx, func(transactionCtx context.Context) error {
 		for _, vendor := range req.Vendors {
 			vendorInfo, zones, specs := convertVendorRequest(vendor)
-			return models.GetProductReaderWriter().SaveVendor(transactionCtx, vendorInfo, zones, specs)
+			if innerError := models.GetProductReaderWriter().SaveVendor(transactionCtx, vendorInfo, zones, specs);innerError != nil{
+				return innerError
+			}
+		}
+		if innerError := models.GetSystemReaderWriter().VendorInitialized(transactionCtx); innerError != nil {
+			return innerError
 		}
 		return nil
 	})
@@ -60,6 +65,7 @@ func (p *Manager) UpdateVendors(ctx context.Context, req message.UpdateVendorInf
 	} else {
 		framework.LogWithContext(ctx).Infof("update vendors succeed, req = %v", req)
 	}
+
 	return
 }
 
@@ -130,7 +136,12 @@ func (p *Manager) UpdateProducts(ctx context.Context, req message.UpdateProducts
 	err = models.Transaction(ctx, func(transactionCtx context.Context) error {
 		for _, product := range req.Products {
 			productInfo, versions, components := convertProductRequest(product)
-			return models.GetProductReaderWriter().SaveProduct(transactionCtx, productInfo, versions, components)
+			if innerError := models.GetProductReaderWriter().SaveProduct(transactionCtx, productInfo, versions, components); innerError != nil {
+				return innerError
+			}
+		}
+		if innerError := models.GetSystemReaderWriter().ProductInitialized(transactionCtx); innerError != nil {
+			return innerError
 		}
 		return nil
 	})

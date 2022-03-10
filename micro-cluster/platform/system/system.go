@@ -104,6 +104,27 @@ func acceptSystemEvent(ctx context.Context, event constants.SystemEvent) error {
 	}
 }
 
+var SupportedProducts = map[string][]structs.SpecificVersionProduct{
+	string(constants.EMProductIDTiDB): {
+		{ProductID: string(constants.EMProductIDTiDB), Arch: "X86_64", Version: "v5.0.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: "X86_64", Version: "v5.1.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: "X86_64", Version: "v5.2.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: "X86_64", Version: "v5.2.2"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: "X86_64", Version: "v5.3.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: "X86_64", Version: "v5.4.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: "ARM64", Version: "v5.0.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: "ARM64", Version: "v5.1.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: "ARM64", Version: "v5.2.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: "ARM64", Version: "v5.2.2"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: "ARM64", Version: "v5.3.0"},
+		{ProductID: string(constants.EMProductIDTiDB), Arch: "ARM64", Version: "v5.4.0"},
+	},
+}
+
+var SupportedVendors = map[string]string{
+	"Local": "local datacenter center",
+}
+
 func (p *SystemManager) GetSystemInfo(ctx context.Context, req message.GetSystemInfoReq) (resp *message.GetSystemInfoResp, err error) {
 	systemInfo, err := models.GetSystemReaderWriter().GetSystemInfo(ctx)
 	if err != nil {
@@ -117,8 +138,8 @@ func (p *SystemManager) GetSystemInfo(ctx context.Context, req message.GetSystem
 				CurrentVersionID:  systemInfo.CurrentVersionID,
 				LastVersionID:     systemInfo.LastVersionID,
 				State:             string(systemInfo.State),
-				SupportedProducts: constants.SupportedProducts,
-				SupportedVendors:  constants.SupportedVendors,
+				SupportedProducts: SupportedProducts,
+				SupportedVendors:  SupportedVendors,
 			},
 		}
 	}

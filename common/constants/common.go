@@ -24,7 +24,6 @@
 package constants
 
 import (
-	"github.com/pingcap-inc/tiem/common/structs"
 	"time"
 
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -238,25 +237,3 @@ const (
 )
 
 const DefaultTokenValidPeriod time.Duration = 4 * time.Hour
-
-var SupportedProducts = map[string][]structs.SpecificVersionProduct{
-	string(EMProductIDTiDB): {
-		{ProductID: string(EMProductIDTiDB), Arch: "X86_64", Version: "v5.0.0"},
-		{ProductID: string(EMProductIDTiDB), Arch: "X86_64", Version: "v5.1.0"},
-		{ProductID: string(EMProductIDTiDB), Arch: "X86_64", Version: "v5.2.0"},
-		{ProductID: string(EMProductIDTiDB), Arch: "X86_64", Version: "v5.2.2"},
-		{ProductID: string(EMProductIDTiDB), Arch: "X86_64", Version: "v5.3.0"},
-		{ProductID: string(EMProductIDTiDB), Arch: "X86_64", Version: "v5.4.0"},
-		{ProductID: string(EMProductIDTiDB), Arch: "ARM64", Version: "v5.0.0"},
-		{ProductID: string(EMProductIDTiDB), Arch: "ARM64", Version: "v5.1.0"},
-		{ProductID: string(EMProductIDTiDB), Arch: "ARM64", Version: "v5.2.0"},
-		{ProductID: string(EMProductIDTiDB), Arch: "ARM64", Version: "v5.2.2"},
-		{ProductID: string(EMProductIDTiDB), Arch: "ARM64", Version: "v5.3.0"},
-		{ProductID: string(EMProductIDTiDB), Arch: "ARM64", Version: "v5.4.0"},
-	},
-}
-
-var SupportedVendors = map[string]string{
-	"Local": "local datacenter center",
-}
-

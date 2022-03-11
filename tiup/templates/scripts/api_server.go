@@ -90,7 +90,7 @@ func (c *TiEMAPIServerScript) WithEnableHttps(enableHttps string) *TiEMAPIServer
 
 // Script generate the config file data.
 func (c *TiEMAPIServerScript) Script() ([]byte, error) {
-	fp := path.Join("templates", "scripts", "run_tiem_api.sh.tpl")
+	fp := path.Join("templates", "scripts", "run_em_api.sh.tpl")
 	tpl, err := embed.ReadTemplate(fp)
 	if err != nil {
 		return nil, err

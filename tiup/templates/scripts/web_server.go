@@ -40,7 +40,7 @@ func NewTiEMWebServerScript(ip, deployDir, logDir string) *TiEMWebServerScript {
 
 // Script generate the config file data.
 func (c *TiEMWebServerScript) Script() ([]byte, error) {
-	fp := path.Join("templates", "scripts", "run_tiem_web.sh.tpl")
+	fp := path.Join("templates", "scripts", "run_em_web.sh.tpl")
 	tpl, err := embed.ReadTemplate(fp)
 	if err != nil {
 		return nil, err

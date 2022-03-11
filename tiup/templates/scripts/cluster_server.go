@@ -41,6 +41,9 @@ type TiEMClusterServerScript struct {
 	ClusterVersion       string
 	DeployUser           string
 	DeployGroup          string
+	LoginHostUser        string
+	LoginPrivateKeyPath  string
+	LoginPublicKeyPath   string
 }
 
 // NewTiEMClusterServerScript returns a TiEMClusterServerScript with given arguments
@@ -124,9 +127,27 @@ func (c *TiEMClusterServerScript) WithDeployGroup(deployGroup string) *TiEMClust
 	return c
 }
 
+// WithLoginHostUser set LoginHostUser
+func (c *TiEMClusterServerScript) WithLoginHostUser(loginHostUser string) *TiEMClusterServerScript {
+	c.LoginHostUser = loginHostUser
+	return c
+}
+
+// WithLoginPrivateKeyPath set LoginPrivateKeyPath
+func (c *TiEMClusterServerScript) WithLoginPrivateKeyPath(loginPrivateKeyPath string) *TiEMClusterServerScript {
+	c.LoginPrivateKeyPath = loginPrivateKeyPath
+	return c
+}
+
+// WithLoginPublicKeyPath set LoginPublicKeyPath
+func (c *TiEMClusterServerScript) WithLoginPublicKeyPath(loginPublicKeyPath string) *TiEMClusterServerScript {
+	c.LoginPublicKeyPath = loginPublicKeyPath
+	return c
+}
+
 // Script generate the config file data.
 func (c *TiEMClusterServerScript) Script() ([]byte, error) {
-	fp := path.Join("templates", "scripts", "run_tiem_cluster.sh.tpl")
+	fp := path.Join("templates", "scripts", "run_em_cluster.sh.tpl")
 	tpl, err := embed.ReadTemplate(fp)
 	if err != nil {
 		return nil, err

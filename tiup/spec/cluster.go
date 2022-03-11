@@ -183,7 +183,10 @@ func (i *ClusterServerInstance) InitConfig(
 		WithClusterName(clusterName).
 		WithClusterVersion(clusterVersion).
 		WithDeployUser(deployUser).
-		WithDeployGroup(deployGroup)
+		WithDeployGroup(deployGroup).
+		WithLoginHostUser(i.topo.GlobalOptions.LoginHostUser).
+		WithLoginPrivateKeyPath(i.topo.GlobalOptions.LoginPrivateKeyPath).
+		WithLoginPublicKeyPath(i.topo.GlobalOptions.LoginPublicKeyPath)
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_cluster-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	if err := scpt.ScriptToFile(fp); err != nil {
@@ -253,7 +256,10 @@ func (i *ClusterServerInstance) ScaleConfig(
 		WithClusterName(clusterName).
 		WithClusterVersion(clusterVersion).
 		WithDeployUser(deployUser).
-		WithDeployGroup(deployGroup)
+		WithDeployGroup(deployGroup).
+		WithLoginHostUser(i.topo.GlobalOptions.LoginHostUser).
+		WithLoginPrivateKeyPath(i.topo.GlobalOptions.LoginPrivateKeyPath).
+		WithLoginPublicKeyPath(i.topo.GlobalOptions.LoginPublicKeyPath)
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_cluster-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	log.Infof("script path: %s", fp)

@@ -86,6 +86,9 @@ type GlobalOptions struct {
 	ResourceControl          meta.ResourceControl `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
 	OS                       string               `yaml:"os,omitempty" default:"linux"`
 	Arch                     string               `yaml:"arch,omitempty"`
+	LoginHostUser            string               `yaml:"login_host_user"`
+	LoginPrivateKeyPath      string               `yaml:"login_private_key_path"`
+	LoginPublicKeyPath       string               `yaml:"login_public_key_path"`
 }
 
 // BaseTopo is the base info to topology.

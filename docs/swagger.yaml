@@ -1400,6 +1400,8 @@ definitions:
     type: object
   message.LoginResp:
     properties:
+      passwordExpired:
+        type: boolean
       tenantId:
         type: string
       token:

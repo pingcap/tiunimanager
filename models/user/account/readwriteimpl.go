@@ -192,8 +192,11 @@ func (arw *AccountReadWrite) UpdateUserPassword(ctx context.Context, userID, sal
 		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
 			"update user %s password, salt: %s, finalHash: %s, parameter invalid", userID, salt, finalHash)
 	}
+
+	//value := dbCommon.Password{Val: finalHash, UpdateTime: time.Now()}
+	value := dbCommon.PasswordInExpired{Val: finalHash}
 	return arw.DB(ctx).Model(&User{}).Where("id = ?",
-		userID).Update("salt", salt).Update("final_hash", finalHash).Error
+		userID).Update("salt", salt).Update("final_hash", value).Error
 }
 
 func (arw *AccountReadWrite) GetUserByName(ctx context.Context, name string) (*User, error) {

@@ -358,7 +358,7 @@ func (p *Manager) clusterGetCDCUserNameAndPwd(ctx context.Context, clusterID str
 	if err != nil {
 		return "", "", err
 	}
-	return user.Name, string(user.Password), nil
+	return user.Name, user.Password.Val, nil
 }
 
 // addr: ip:port

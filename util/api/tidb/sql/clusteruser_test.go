@@ -55,9 +55,8 @@ func TestDBUserManager_CreateDBUser(t *testing.T) {
 	user1 := &management.DBUser{
 		ClusterID:                "clusterID",
 		Name:                     "backup",
-		Password:                 common.Password(meta.GetRandomString(10)),
+		Password:                 common.PasswordInExpired{Val: meta.GetRandomString(10), UpdateTime: time.Now()},
 		RoleType:                 string(constants.DBUserBackupRestore),
-		LastPasswordGenerateTime: time.Now(),
 	}
 	type args struct {
 		ctx            context.Context
@@ -96,9 +95,8 @@ func TestDBUserManager_DeleteDBUser(t *testing.T) {
 	user1 := &management.DBUser{
 		ClusterID:                "clusterID",
 		Name:                     "backup",
-		Password:                 common.Password(meta.GetRandomString(10)),
+		Password:                 common.PasswordInExpired{Val: meta.GetRandomString(10)},
 		RoleType:                 string(constants.DBUserBackupRestore),
-		LastPasswordGenerateTime: time.Now(),
 	}
 	CreateDBUser(context.TODO(), dbConnParam1, user1, "22")
 	err := DeleteDBUser(context.TODO(), dbConnParam1, "test", "22")

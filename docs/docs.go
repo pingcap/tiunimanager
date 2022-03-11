@@ -8712,6 +8712,9 @@ var doc = `{
         "message.LoginResp": {
             "type": "object",
             "properties": {
+                "passwordExpired": {
+                    "type": "boolean"
+                },
                 "tenantId": {
                     "type": "string"
                 },

@@ -152,7 +152,7 @@ func TestManager_Login(t *testing.T) {
 		accountRW.EXPECT().GetUserByName(gomock.Any(), gomock.Any()).Return(&account.User{
 			ID:        "user06",
 			Salt:      salt,
-			FinalHash: common.PasswordInExpired{Val: hash, UpdateTime: time.Now().AddDate(0, 0, -40)},
+			FinalHash: common.PasswordInExpired{Val: hash, UpdateTime: time.Now().AddDate(-2, 0, 0)},
 		}, nil)
 
 		tokenRW.EXPECT().CreateToken(gomock.Any(), gomock.Any(),

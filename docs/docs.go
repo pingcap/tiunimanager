@@ -10857,6 +10857,23 @@ var doc = `{
                 }
             }
         },
+        "structs.ProductWithVersions": {
+            "type": "object",
+            "properties": {
+                "productID": {
+                    "type": "string"
+                },
+                "productName": {
+                    "type": "string"
+                },
+                "versions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.SpecificVersionProduct"
+                    }
+                }
+            }
+        },
         "structs.RbacPermission": {
             "type": "object",
             "properties": {
@@ -11011,18 +11028,15 @@ var doc = `{
                     "type": "string"
                 },
                 "supportedProducts": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/definitions/structs.SpecificVersionProduct"
-                        }
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ProductWithVersions"
                     }
                 },
                 "supportedVendors": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.VendorInfo"
                     }
                 },
                 "systemLogo": {
@@ -11194,6 +11208,19 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/structs.SpecInfo"
                     }
+                }
+            }
+        },
+        "structs.VendorInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "The value of the VendorID is similar to AWS",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The value of the Name is similar to AWS",
+                    "type": "string"
                 }
             }
         },

@@ -23,6 +23,12 @@
 
 package product
 
+import (
+	"encoding/json"
+	"github.com/pingcap-inc/tiem/common/errors"
+	"gorm.io/gorm"
+)
+
 // ProductInfo info provided by Enterprise Manager
 type ProductInfo struct {
 	ProductID   string `gorm:"uniqueIndex;size:32"`
@@ -53,4 +59,25 @@ type ProductComponentInfo struct {
 	SuggestedInstancesInfo  string  `gorm:""`
 }
 
+func (t *ProductComponentInfo) BeforeSave(tx *gorm.DB) (err error) {
+	if t.SuggestedInstancesCount == nil {
+		t.SuggestedInstancesCount = make([]int32, 0)
+	}
+	p, jsonErr := json.Marshal(t.SuggestedInstancesCount)
+	if jsonErr == nil {
+		t.SuggestedInstancesInfo = string(p)
+	} else {
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, jsonErr.Error())
+	}
+
+	return nil
+}
+
+func (t *ProductComponentInfo) AfterFind(tx *gorm.DB) (err error) {
+	if len(t.SuggestedInstancesInfo) > 0 {
+		t.SuggestedInstancesCount = make([]int32, 0)
+		err = json.Unmarshal([]byte(t.SuggestedInstancesInfo), &t.SuggestedInstancesCount)
+	}
+	return err
+}
 

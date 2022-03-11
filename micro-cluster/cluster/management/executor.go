@@ -713,6 +713,31 @@ func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	return nil
 }
 
+// restartCluster
+// @Description: execute command, restart
+func restartCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
+	cluster := clusterMeta.Cluster
+
+	framework.LogWithContext(context.Context).Infof(
+		"restart cluster %s, version %s", cluster.ID, cluster.Version)
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
+	// todo: use SystemConfig to store home
+	operationID, err := deployment.M.Restart(context.Context, deployment.TiUPComponentTypeCluster, cluster.ID,
+		tiupHomeForTidb, node.ParentID, []string{}, meta.DefaultTiupTimeOut)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"restart %s start error: %s", clusterMeta.Cluster.ID, err.Error())
+		return err
+	}
+	framework.LogWithContext(context.Context).Infof(
+		"get restart cluster %s operation id: %s", clusterMeta.Cluster.ID, operationID)
+
+	node.Record(fmt.Sprintf("start cluster %s, version: %s ", clusterMeta.Cluster.ID, cluster.Version))
+	node.OperationID = operationID
+	return nil
+}
+
 func syncBackupStrategy(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*meta.ClusterMeta)
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)

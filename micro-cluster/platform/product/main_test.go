@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c)  2022 PingCAP, Inc.                                          *
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
  * you may not use this file except in compliance with the License.           *
  * You may obtain a copy of the License at                                    *
@@ -13,27 +13,28 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-/*******************************************************************************
- * @File: readerwriter.go
- * @Description:
- * @Author: zhangpeijin@pingcap.com
- * @Version: 1.0.0
- * @Date: 2022/2/16
-*******************************************************************************/
-
-package system
+package product
 
 import (
-	"context"
-	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/models"
+	"os"
+	"testing"
 )
 
-type ReaderWriter interface {
-	GetVersion(ctx context.Context, versionID string) (*VersionInfo, error)
-	QueryVersions(ctx context.Context) ([]*VersionInfo, error)
-	GetSystemInfo(ctx context.Context) (*SystemInfo, error)
-	UpdateState(ctx context.Context, original, target constants.SystemState) error
-	UpdateVersion(ctx context.Context, target string) error
-	VendorInitialized(ctx context.Context) error
-	ProductInitialized(ctx context.Context) error
+func TestMain(m *testing.M) {
+	var testFilePath string
+	framework.InitBaseFrameworkForUt(framework.ClusterService,
+		func(d *framework.BaseFramework) error {
+			models.MockDB()
+			testFilePath = d.GetDataDir()
+			os.MkdirAll(testFilePath, 0755)
+			models.MockDB()
+			return models.Open(d)
+		},
+	)
+	code := m.Run()
+	os.RemoveAll(testFilePath)
+
+	os.Exit(code)
 }

@@ -54,6 +54,7 @@ import (
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
 // @name Authorization
+// @query.collection.format multi
 func main() {
 	f := framework.InitBaseFrameworkFromArgs(framework.ApiService,
 		defaultPortForLocal,

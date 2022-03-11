@@ -20,7 +20,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/metrics"
-	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/changefeed"
 	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
@@ -46,12 +45,6 @@ import (
 )
 
 func Route(g *gin.Engine) {
-	// system check
-	check := g.Group("/system")
-	{
-		check.GET("/check", controller.Hello)
-	}
-
 	// support swagger
 	swagger := g.Group("/swagger")
 	{
@@ -62,7 +55,7 @@ func Route(g *gin.Engine) {
 	web := g.Group("/web")
 	{
 		web.Use(interceptor.AccessLog(), gin.Recovery())
-		web.GET("/*any", controller.HelloPage)
+		web.GET("/*any", system.GetSystemInfo)
 	}
 
 	// api
@@ -257,20 +250,20 @@ func Route(g *gin.Engine) {
 			productGroup.Use(interceptor.SystemRunning)
 			productGroup.Use(interceptor.VerifyIdentity)
 			productGroup.Use(interceptor.AuditLog)
-			productGroup.POST("/", product.CreateProduct)
-			productGroup.DELETE("/", product.DeleteProduct)
-			productGroup.GET("/", product.QueryProducts)
-			productGroup.GET("/detail", product.QueryProductDetail)
+			productGroup.POST("/", metrics.HandleMetrics(constants.MetricsProductUpdate), product.UpdateProducts)
+			productGroup.GET("/", metrics.HandleMetrics(constants.MetricsProductQuery), product.QueryProducts)
+			productGroup.GET("/available", metrics.HandleMetrics(constants.MetricsProductQueryAvailable), product.QueryAvailableProducts)
+			productGroup.GET("/detail", metrics.HandleMetrics(constants.MetricsProductQueryDetail), product.QueryProductDetail)
 		}
 
-		zoneGroup := apiV1.Group("/zones")
+		vendorGroup := apiV1.Group("/vendors")
 		{
-			zoneGroup.Use(interceptor.SystemRunning)
-			zoneGroup.Use(interceptor.VerifyIdentity)
-			zoneGroup.Use(interceptor.AuditLog)
-			zoneGroup.POST("/", product.CreateZones)
-			zoneGroup.DELETE("/", product.DeleteZones)
-			zoneGroup.GET("/tree", product.QueryZonesTree)
+			vendorGroup.Use(interceptor.SystemRunning)
+			vendorGroup.Use(interceptor.VerifyIdentity)
+			vendorGroup.Use(interceptor.AuditLog)
+			vendorGroup.POST("/", metrics.HandleMetrics(constants.MetricsVendorUpdate), product.UpdateVendors)
+			vendorGroup.GET("/", metrics.HandleMetrics(constants.MetricsVendorQuery), product.QueryVendors)
+			vendorGroup.GET("/available", metrics.HandleMetrics(constants.MetricsVendorQueryAvailable), product.QueryAvailableVendors)
 		}
 
 		specGroup := apiV1.Group("/specs")
@@ -278,9 +271,6 @@ func Route(g *gin.Engine) {
 			specGroup.Use(interceptor.SystemRunning)
 			specGroup.Use(interceptor.VerifyIdentity)
 			specGroup.Use(interceptor.AuditLog)
-			specGroup.POST("/", product.CreateSpecs)
-			specGroup.DELETE("/", product.DeleteSpecs)
-			specGroup.GET("/", product.QuerySpecs)
 		}
 
 		systemGroup := apiV1.Group("/system")

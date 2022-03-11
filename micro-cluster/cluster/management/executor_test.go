@@ -151,45 +151,10 @@ func TestPrepareResource(t *testing.T) {
 		},
 	})
 
-	productRW := mock_product.NewMockProductReadWriterInterface(ctrl)
+
+	productRW := mock_product.NewMockReaderWriter(ctrl)
 	models.SetProductReaderWriter(productRW)
-	productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs2.ProductDetail{
-		"TiDB": {
-			Versions: map[string]structs2.ProductVersion{
-				"v5.0.0": {
-					Version: "v5.0.0",
-					Arch: map[string][]structs2.ProductComponentProperty{
-						"x86_64": {
-							{
-								ID:                      "TiDB",
-								MinInstance:             1,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{},
-							},
-							{
-								ID:                      "TiKV",
-								MinInstance:             1,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{},
-							},
-							{
-								ID:                      "PD",
-								MinInstance:             1,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{1, 3, 5, 7},
-							},
-							{
-								ID:                      "TiFlash",
-								MinInstance:             0,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{},
-							},
-						},
-					},
-				},
-			},
-		},
-	}, nil).AnyTimes()
+	mockQueryTiDBFromDBAnyTimes(productRW.EXPECT())
 
 	t.Run("normal", func(t *testing.T) {
 		resourceManager := mock_allocator_recycler.NewMockAllocatorRecycler(ctrl)
@@ -1130,6 +1095,49 @@ func TestStartCluster(t *testing.T) {
 			},
 		})
 		err := startCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
+}
+
+func TestRestartCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	t.Run("normal", func(t *testing.T) {
+		mockTiupManager := mock_deployment.NewMockInterface(ctrl)
+		mockTiupManager.EXPECT().Restart(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
+		deployment.M = mockTiupManager
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		err := restartCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
+
+	t.Run("restart fail", func(t *testing.T) {
+		mockTiupManager := mock_deployment.NewMockInterface(ctrl)
+		mockTiupManager.EXPECT().Restart(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", fmt.Errorf("fail")).AnyTimes()
+		deployment.M = mockTiupManager
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		err := restartCluster(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
 	})
 }

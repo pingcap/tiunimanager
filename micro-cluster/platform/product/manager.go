@@ -32,6 +32,7 @@ import (
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/platform/product"
+	"sort"
 	"sync"
 )
 
@@ -288,6 +289,10 @@ func (p *Manager) QueryProductDetail(ctx context.Context, req message.QueryProdu
 			AvailableZones: componentInstanceZoneWithSpecs,
 		})
 	}
+
+	sort.Slice(productComponentPropertyWithZones, func(i, j int) bool {
+		return constants.EMProductComponentIDType(productComponentPropertyWithZones[i].ID).SortWeight() > constants.EMProductComponentIDType(productComponentPropertyWithZones[j].ID).SortWeight()
+	})
 
 	for _, version := range product.Versions {
 		if _, ok := products[product.ProductID].Versions[version.Version]; !ok {

@@ -440,26 +440,9 @@ func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterT
 		resourceInfo.InstanceResource = append(resourceInfo.InstanceResource, instanceResource)
 	}
 
-	instanceWrapper := InstanceWrapper{topologyInfo.Topology, func(p, q *structs.ClusterInstanceInfo) bool {
-		return constants.EMProductComponentIDType(p.Type).SortWeight() > constants.EMProductComponentIDType(q.Type).SortWeight()
-	}}
-	sort.Sort(instanceWrapper)
+	sort.Slice(topologyInfo.Topology, func(i, j int) bool {
+		return constants.EMProductComponentIDType(topologyInfo.Topology[i].Type).SortWeight() > constants.EMProductComponentIDType(topologyInfo.Topology[j].Type).SortWeight()
+	})
 
-	topologyInfo.Topology = instanceWrapper.infos
 	return *topologyInfo, *resourceInfo
-}
-
-type InstanceWrapper struct {
-	infos []structs.ClusterInstanceInfo
-	by    func(p, q *structs.ClusterInstanceInfo) bool
-}
-
-func (pw InstanceWrapper) Len() int {
-	return len(pw.infos)
-}
-func (pw InstanceWrapper) Swap(i, j int) {
-	pw.infos[i], pw.infos[j] = pw.infos[j], pw.infos[i]
-}
-func (pw InstanceWrapper) Less(i, j int) bool {
-	return pw.by(&pw.infos[i], &pw.infos[j])
 }

@@ -129,13 +129,19 @@ type SystemInfo struct {
 	LastVersionID    string `json:"lastVersionID"`
 	State            string `json:"state"`
 
-	SupportedVendors  map[string]string                   `json:"supportedVendors"`
-	SupportedProducts map[string][]SpecificVersionProduct `json:"supportedProducts"`
+	SupportedVendors  []VendorInfo          `json:"supportedVendors"`
+	SupportedProducts []ProductWithVersions `json:"supportedProducts"`
 
 	VendorZonesInitialized       bool `json:"vendorZonesInitialized"`
 	VendorSpecsInitialized       bool `json:"vendorSpecsInitialized"`
 	ProductComponentsInitialized bool `json:"productComponentsInitialized"`
 	ProductVersionsInitialized   bool `json:"productVersionsInitialized"`
+}
+
+type ProductWithVersions struct {
+	ProductID   string                   `json:"productID"`
+	ProductName string                   `json:"productName"`
+	Versions    []SpecificVersionProduct "versions"
 }
 
 type SpecificVersionProduct struct {

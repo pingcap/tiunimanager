@@ -2887,6 +2887,17 @@ definitions:
         description: Version information of the product, e.g. v5.0.0
         type: string
     type: object
+  structs.ProductWithVersions:
+    properties:
+      productID:
+        type: string
+      productName:
+        type: string
+      versions:
+        items:
+          $ref: '#/definitions/structs.SpecificVersionProduct'
+        type: array
+    type: object
   structs.RbacPermission:
     properties:
       action:
@@ -2990,15 +3001,13 @@ definitions:
       state:
         type: string
       supportedProducts:
-        additionalProperties:
-          items:
-            $ref: '#/definitions/structs.SpecificVersionProduct'
-          type: array
-        type: object
+        items:
+          $ref: '#/definitions/structs.ProductWithVersions'
+        type: array
       supportedVendors:
-        additionalProperties:
-          type: string
-        type: object
+        items:
+          $ref: '#/definitions/structs.VendorInfo'
+        type: array
       systemLogo:
         type: string
       systemName:
@@ -3111,6 +3120,15 @@ definitions:
         items:
           $ref: '#/definitions/structs.SpecInfo'
         type: array
+    type: object
+  structs.VendorInfo:
+    properties:
+      id:
+        description: The value of the VendorID is similar to AWS
+        type: string
+      name:
+        description: The value of the Name is similar to AWS
+        type: string
     type: object
   structs.VendorWithRegion:
     properties:

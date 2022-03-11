@@ -591,10 +591,20 @@ func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterRe
 	return
 }
 
-var restartClusterFlow = workflow.WorkFlowDefine{
+var startClusterFlow = workflow.WorkFlowDefine{
 	FlowName: constants.FlowRestartCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":      {"startCluster", "startDone", "fail", workflow.PollingNode, startCluster},
+		"startDone":  {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
+		"onlineDone": {"end", "", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
+		"fail":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+	},
+}
+
+var restartClusterFlow = workflow.WorkFlowDefine{
+	FlowName: constants.FlowRestartCluster,
+	TaskNodes: map[string]*workflow.NodeDefine{
+		"start":      {"restartCluster", "startDone", "fail", workflow.PollingNode, restartCluster},
 		"startDone":  {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
 		"onlineDone": {"end", "", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
 		"fail":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
@@ -612,7 +622,14 @@ func (p *Manager) RestartCluster(ctx context.Context, req cluster.RestartCluster
 	data := map[string]interface{}{
 		ContextClusterMeta: meta,
 	}
-	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceRestarting, restartClusterFlow.FlowName, data)
+
+	// default restart
+	maintenanceFlowName := restartClusterFlow.FlowName
+	if meta.Cluster.Status == string(constants.ClusterStopped) {
+		maintenanceFlowName = startClusterFlow.FlowName
+	}
+
+	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceRestarting, maintenanceFlowName, data)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"cluster %s async maintenance error: %s", meta.Cluster.ID, err.Error())

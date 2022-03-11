@@ -1099,6 +1099,49 @@ func TestStartCluster(t *testing.T) {
 	})
 }
 
+func TestRestartCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	t.Run("normal", func(t *testing.T) {
+		mockTiupManager := mock_deployment.NewMockInterface(ctrl)
+		mockTiupManager.EXPECT().Restart(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
+		deployment.M = mockTiupManager
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		err := restartCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
+
+	t.Run("restart fail", func(t *testing.T) {
+		mockTiupManager := mock_deployment.NewMockInterface(ctrl)
+		mockTiupManager.EXPECT().Restart(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", fmt.Errorf("fail")).AnyTimes()
+		deployment.M = mockTiupManager
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		err := restartCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
+}
+
 func TestSyncBackupStrategy(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

@@ -27,6 +27,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 
@@ -140,25 +141,25 @@ func mockClusterMeta() *meta.ClusterMeta {
 			string(constants.Root): &management.DBUser{
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.Root],
-				Password:  "12345678",
+				Password:  common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()},
 				RoleType:  string(constants.Root),
 			},
 			string(constants.DBUserBackupRestore): &management.DBUser{
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.DBUserBackupRestore],
-				Password:  "12345678",
+				Password:  common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()},
 				RoleType:  string(constants.DBUserBackupRestore),
 			},
 			string(constants.DBUserParameterManagement): &management.DBUser{
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.DBUserParameterManagement],
-				Password:  "12345678",
+				Password:  common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()},
 				RoleType:  string(constants.DBUserParameterManagement),
 			},
 			string(constants.DBUserCDCDataSync): &management.DBUser{
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.DBUserCDCDataSync],
-				Password:  "12345678",
+				Password:  common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()},
 				RoleType:  string(constants.DBUserCDCDataSync),
 			},
 		},
@@ -318,25 +319,25 @@ func mockDBUsers() []*management.DBUser {
 		{
 			ClusterID: "clusterId",
 			Name:      "backup",
-			Password:  "123455678",
+			Password:  common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()},
 			RoleType:  string(constants.DBUserBackupRestore),
 		},
 		{
 			ClusterID: "clusterId",
 			Name:      "root",
-			Password:  "123455678",
+			Password:  common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()},
 			RoleType:  string(constants.Root),
 		},
 		{
 			ClusterID: "clusterId",
 			Name:      "parameter",
-			Password:  "123455678",
+			Password:  common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()},
 			RoleType:  string(constants.DBUserParameterManagement),
 		},
 		{
 			ClusterID: "clusterId",
 			Name:      "data_sync",
-			Password:  "123455678",
+			Password:  common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()},
 			RoleType:  string(constants.DBUserCDCDataSync),
 		},
 	}

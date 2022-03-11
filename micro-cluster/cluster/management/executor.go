@@ -1236,7 +1236,7 @@ func initRootAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		Port:     strconv.Itoa(tidbServerPort),
 	}
 
-	err := utilsql.UpdateDBUserPassword(context, conn, rootUser.Name, string(rootUser.Password), node.ID)
+	err := utilsql.UpdateDBUserPassword(context, conn, rootUser.Name, rootUser.Password.Val, node.ID)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s set user %s password error: %s", clusterMeta.Cluster.ID, rootUser.Name, err.Error())
@@ -1262,7 +1262,7 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 
 	conn := utilsql.DbConnParam{
 		Username: clusterMeta.DBUsers[string(constants.Root)].Name,
-		Password: string(clusterMeta.DBUsers[string(constants.Root)].Password),
+		Password: clusterMeta.DBUsers[string(constants.Root)].Password.Val,
 		IP:       tidbServerHost,
 		Port:     strconv.Itoa(tidbServerPort),
 	}
@@ -1695,7 +1695,7 @@ func testConnectivity(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 	return errors.OfNullable(nil).
 		BreakIf(func() error {
 			user := clusterMeta.DBUsers[string(constants.Root)] // todo
-			sqlDB, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql", user.Name, user.Password, connectAddress.IP, connectAddress.Port))
+			sqlDB, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql", user.Name, user.Password.Val, connectAddress.IP, connectAddress.Port))
 			db = sqlDB
 			return err
 		}).
@@ -1719,9 +1719,8 @@ func GenerateDBUser(context *workflow.FlowContext, roleTyp constants.DBUserRoleT
 	dbUser := &management.DBUser{
 		ClusterID:                cluster.ID,
 		Name:                     constants.DBUserName[roleTyp],
-		Password:                 common.Password(meta.GetRandomString(10)),
+		Password:                 common.PasswordInExpired{Val: meta.GetRandomString(10), UpdateTime: time.Now()},
 		RoleType:                 string(roleTyp),
-		LastPasswordGenerateTime: time.Now(),
 	}
 	return dbUser
 }

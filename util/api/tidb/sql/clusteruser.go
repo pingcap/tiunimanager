@@ -55,7 +55,7 @@ func CreateDBUser(ctx context.Context, connec DbConnParam, user *management.DBUs
 	defer db.Close()
 
 	// execute sql command of creating user
-	createSqlCommand := fmt.Sprintf("CREATE USER '%s'@'%s' IDENTIFIED BY '%s'", user.Name, "%", user.Password)
+	createSqlCommand := fmt.Sprintf("CREATE USER '%s'@'%s' IDENTIFIED BY '%s'", user.Name, "%", user.Password.Val)
 	err = ExecCommandThruSQL(ctx, db, createSqlCommand)
 	if err != nil {
 		return err
@@ -64,7 +64,7 @@ func CreateDBUser(ctx context.Context, connec DbConnParam, user *management.DBUs
 	//	execute sql command of granting privileges to user
 	for _, permission := range constants.DBUserPermission[constants.DBUserRoleType(user.RoleType)] {
 		grantSqlCommand := fmt.Sprintf("GRANT %s ON %s.%s TO '%s'@'%s' IDENTIFIED BY '%s'",
-			permission, "*", "*", user.Name, "%", user.Password)
+			permission, "*", "*", user.Name, "%", user.Password.Val)
 		err = ExecCommandThruSQL(ctx, db, grantSqlCommand)
 		if err != nil {
 			return err

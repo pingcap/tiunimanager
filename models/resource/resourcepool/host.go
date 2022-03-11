@@ -141,8 +141,8 @@ func (h *Host) ConstructFromHostInfo(src *structs.HostInfo) error {
 	h.Arch = src.Arch
 	h.OS = src.OS
 	h.Kernel = src.Kernel
-	h.FreeCpuCores = (src.CpuCores - src.UsedCpuCores)
-	h.FreeMemory = (src.Memory - src.UsedMemory)
+	h.FreeCpuCores = src.CpuCores - src.UsedCpuCores
+	h.FreeMemory = src.Memory - src.UsedMemory
 	h.Spec = src.GetSpecString()
 	h.CpuCores = src.CpuCores
 	h.Memory = src.Memory

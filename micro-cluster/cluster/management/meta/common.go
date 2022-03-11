@@ -211,7 +211,7 @@ func CreateSQLLink(ctx context.Context, meta *ClusterMeta) (*sql.DB, error) {
 	}
 	rootUser, _ := meta.GetDBUserNamePassword(ctx, constants.Root)
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql",
-		rootUser.Name, rootUser.Password, address[0].IP, address[0].Port))
+		rootUser.Name, rootUser.Password.Val, address[0].IP, address[0].Port))
 	if err != nil {
 		return nil, errors.WrapError(errors.TIEM_CONNECT_TIDB_ERROR, err.Error(), err)
 	}

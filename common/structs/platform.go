@@ -34,7 +34,7 @@ type SpecInfo struct {
 	CPU         int    `json:"cpu"`
 	Memory      int    `json:"memory"`       //The amount of memory occupied by the instance, in GiB
 	DiskType    string `json:"diskType"`     //eg: NVMeSSD/SSD/SATA
-	PurposeType string `json:"purpose_type"` // eg:Compute/Storage/Schedule
+	PurposeType string `json:"purposeType"` // eg:Compute/Storage/Schedule
 }
 
 // ComponentInstanceResourceSpec Information on the resources required for the product components to run, including: memory, CPU, etc.

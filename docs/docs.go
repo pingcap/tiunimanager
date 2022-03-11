@@ -10946,7 +10946,7 @@ var doc = `{
                     "description": "Name of the resource specification,eg: TiDB.c1.large",
                     "type": "string"
                 },
-                "purpose_type": {
+                "purposeType": {
                     "description": "eg:Compute/Storage/Schedule",
                     "type": "string"
                 }

@@ -8980,6 +8980,9 @@ var doc = `{
         "message.LoginResp": {
             "type": "object",
             "properties": {
+                "passwordExpired": {
+                    "type": "boolean"
+                },
                 "tenantId": {
                     "type": "string"
                 },
@@ -10403,10 +10406,13 @@ var doc = `{
         "structs.HostCheck": {
             "type": "object",
             "properties": {
-                "cpu": {
+                "address": {
+                    "type": "string"
+                },
+                "cpuAllocated": {
                     "$ref": "#/definitions/structs.CheckInt32"
                 },
-                "disk": {
+                "diskAllocated": {
                     "type": "object",
                     "additionalProperties": {
                         "$ref": "#/definitions/structs.CheckString"
@@ -10421,7 +10427,7 @@ var doc = `{
                 "firewall": {
                     "$ref": "#/definitions/structs.CheckSwitch"
                 },
-                "memory": {
+                "memoryAllocated": {
                     "$ref": "#/definitions/structs.CheckInt32"
                 },
                 "selinux": {
@@ -10523,6 +10529,9 @@ var doc = `{
                     "description": "Host Spec, init while importing",
                     "type": "string"
                 },
+                "sshPort": {
+                    "type": "integer"
+                },
                 "status": {
                     "description": "Host Status, 0 for Online, 1 for offline",
                     "type": "string"
@@ -10611,6 +10620,9 @@ var doc = `{
         "structs.InstanceCheck": {
             "type": "object",
             "properties": {
+                "address": {
+                    "type": "string"
+                },
                 "instanceID": {
                     "type": "string"
                 },

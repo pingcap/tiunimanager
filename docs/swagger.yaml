@@ -1451,6 +1451,8 @@ definitions:
     type: object
   message.LoginResp:
     properties:
+      passwordExpired:
+        type: boolean
       tenantId:
         type: string
       token:
@@ -2427,9 +2429,11 @@ definitions:
     type: object
   structs.HostCheck:
     properties:
-      cpu:
+      address:
+        type: string
+      cpuAllocated:
         $ref: '#/definitions/structs.CheckInt32'
-      disk:
+      diskAllocated:
         additionalProperties:
           $ref: '#/definitions/structs.CheckString'
         type: object
@@ -2439,7 +2443,7 @@ definitions:
         type: array
       firewall:
         $ref: '#/definitions/structs.CheckSwitch'
-      memory:
+      memoryAllocated:
         $ref: '#/definitions/structs.CheckInt32'
       selinux:
         $ref: '#/definitions/structs.CheckSwitch'
@@ -2510,6 +2514,8 @@ definitions:
       spec:
         description: Host Spec, init while importing
         type: string
+      sshPort:
+        type: integer
       status:
         description: Host Status, 0 for Online, 1 for offline
         type: string
@@ -2569,6 +2575,8 @@ definitions:
     type: object
   structs.InstanceCheck:
     properties:
+      address:
+        type: string
       instanceID:
         type: string
       parameters:

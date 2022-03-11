@@ -68,5 +68,5 @@ func (s CommonStatus) IsValid() bool {
 	return s == Valid
 }
 
-// 30 days
-const ExpirationTime = 30 * 24 * time.Hour
+// 1 year
+const ExpirationTime = 365 * 24 * time.Hour

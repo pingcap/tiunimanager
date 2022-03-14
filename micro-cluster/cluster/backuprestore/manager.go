@@ -276,7 +276,7 @@ func (mgr *BRManager) CancelBackup(ctx context.Context, request cluster.CancelBa
 		Password: tidbUserInfo.Password.Val,
 		IP:       tidbServerHost,
 		Port:     strconv.Itoa(tidbServerPort),
-	}})
+	}, Destination: "touvt09lRhSad_SnvQFNyQ/2022-03-14-13-46-55-full"})
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("show cluster %s backups falied, %s ", request.ClusterID, err.Error())
 		return resp, err

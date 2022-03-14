@@ -56,6 +56,7 @@ type RestoreSQLReq struct {
 
 type ShowBackupReq struct {
 	DbConnParameter DbConnParam
+	Destination     string
 }
 
 type ShowBackupResp struct {
@@ -178,6 +179,9 @@ func ExecShowBackupSQL(ctx context.Context, request ShowBackupReq) (resp ShowBac
 
 	var args []string
 	args = append(args, "SHOW", "BACKUPS")
+	if request.Destination != "" {
+		args = append(args, "LIKE", fmt.Sprintf("'%%%s%%'", request.Destination))
+	}
 	showSQLCmd := strings.Join(args, " ")
 	err = db.QueryRow(showSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.QueueTime, &resp.ExecutionTime, &resp.FinishTime, &resp.Connection, &resp.Message)
 	if err != nil {

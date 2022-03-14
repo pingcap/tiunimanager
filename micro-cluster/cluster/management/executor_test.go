@@ -151,7 +151,6 @@ func TestPrepareResource(t *testing.T) {
 		},
 	})
 
-
 	productRW := mock_product.NewMockReaderWriter(ctrl)
 	models.SetProductReaderWriter(productRW)
 	mockQueryTiDBFromDBAnyTimes(productRW.EXPECT())
@@ -1632,6 +1631,90 @@ func TestInitDatabaseAccount(t *testing.T) {
 		//	deployment.M = mockTiupManager
 		err := initDatabaseAccount(&workflowModel.WorkFlowNode{}, flowContext)
 		fmt.Println(err)
+		assert.Error(t, err)
+	})
+}
+
+func TestInitGrafanaAccount(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clusterMeta := &meta.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID:        "2145635758",
+				TenantId:  "324567",
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+			Name:              "koojdafij",
+			Type:              "TiDB",
+			Version:           "v5.2.2",
+			Tags:              []string{"111", "333"},
+			OwnerId:           "436534636u",
+			ParameterGroupID:  "352467890",
+			Copies:            4,
+			Region:            "Region1",
+			CpuArchitecture:   "x86_64",
+			MaintenanceStatus: constants.ClusterMaintenanceCreating,
+		},
+	}
+
+	t.Run("normal", func(t *testing.T) {
+		rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(rw)
+
+		rw.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil)
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, clusterMeta)
+		metadata := &spec.ClusterMeta{
+			Version: "v5.2.2",
+			Topology: &spec.Specification{
+				Grafanas: []*spec.GrafanaSpec{
+					{Host: "127.0.0.11", Port: 21, Username: "root", Password: "123"},
+				},
+			},
+		}
+		bytes, err := yaml.Marshal(metadata)
+		assert.NoError(t, err)
+		flowContext.SetData(ContextTopology, string(bytes))
+		err = initGrafanaAccount(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
+
+	t.Run("not found grafana", func(t *testing.T) {
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, clusterMeta)
+		metadata := &spec.ClusterMeta{
+			Version:  "v5.2.2",
+			Topology: &spec.Specification{},
+		}
+		bytes, err := yaml.Marshal(metadata)
+		assert.NoError(t, err)
+		flowContext.SetData(ContextTopology, string(bytes))
+		err = initGrafanaAccount(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
+
+	t.Run("create DBUser error", func(t *testing.T) {
+		rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+
+		rw.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(fmt.Errorf("create DBUser error"))
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, clusterMeta)
+		metadata := &spec.ClusterMeta{
+			Version: "v5.2.2",
+			Topology: &spec.Specification{
+				Grafanas: []*spec.GrafanaSpec{
+					{Host: "127.0.0.11", Port: 21, Username: "root", Password: "123"},
+				},
+			},
+		}
+		bytes, err := yaml.Marshal(metadata)
+		assert.NoError(t, err)
+		flowContext.SetData(ContextTopology, string(bytes))
+		models.SetClusterReaderWriter(rw)
+		err = initGrafanaAccount(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
 	})
 }

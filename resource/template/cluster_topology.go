@@ -104,8 +104,8 @@ grafana_servers:
     default_theme: light
     org_name: Main Org.
     org_role: Viewer
-    username: {{ .GrafanaUser }}
-    password: {{ .GrafanaPassword }}
+    username: {{ $.GrafanaUser }}
+    password: {{ $.GrafanaPassword }}
     config:
       security.allow_embedding: true
   {{ end }}

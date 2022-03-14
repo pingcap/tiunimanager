@@ -66,7 +66,7 @@ type ShowBackupResp struct {
 	QueueTime     string
 	ExecutionTime string
 	FinishTime    string
-	Message       string
+	Message       sql.NullString
 }
 
 type CancelBackupReq struct {

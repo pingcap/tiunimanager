@@ -60,7 +60,7 @@ type ShowBackupReq struct {
 
 type ShowBackupResp struct {
 	Destination   string
-	State         uint64
+	State         string
 	Progress      float32
 	Connection    int
 	QueueTime     string

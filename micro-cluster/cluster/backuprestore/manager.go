@@ -232,6 +232,8 @@ func (mgr *BRManager) CancelBackup(ctx context.Context, request cluster.CancelBa
 	framework.LogWithContext(ctx).Infof("Begin CancelBackup, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End CancelBackup")
 
+	//todo: precheck
+
 	/*
 		meta, err := meta.Get(ctx, request.ClusterID)
 		if err != nil {
@@ -276,7 +278,7 @@ func (mgr *BRManager) CancelBackup(ctx context.Context, request cluster.CancelBa
 		Port:     strconv.Itoa(tidbServerPort),
 	}})
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("show cluster %s backups falied, %s ", meta.Cluster.ID, err.Error())
+		framework.LogWithContext(ctx).Errorf("show cluster %s backups falied, %s ", request.ClusterID, err.Error())
 		return resp, err
 	}
 
@@ -287,7 +289,7 @@ func (mgr *BRManager) CancelBackup(ctx context.Context, request cluster.CancelBa
 		Port:     strconv.Itoa(tidbServerPort),
 	}})
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("cancel cluster %s backups falied, %s ", meta.Cluster.ID, err.Error())
+		framework.LogWithContext(ctx).Errorf("cancel cluster %s backups falied, %s ", request.ClusterID, err.Error())
 		return resp, err
 	}
 	return

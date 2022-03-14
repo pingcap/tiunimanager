@@ -174,7 +174,7 @@ type BackupRecord struct {
 }
 
 type ClusterLogItem struct {
-	Index      string                 `json:"index" example:"tiem-tidb-cluster-2021.09.23"`
+	Index      string                 `json:"index" example:"em-tidb-cluster-2021.09.23"`
 	Id         string                 `json:"id" example:"zvadfwf"`
 	Level      string                 `json:"level" example:"warn"`
 	SourceLine string                 `json:"sourceLine" example:"main.go:210"`

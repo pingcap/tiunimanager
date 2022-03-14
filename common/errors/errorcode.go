@@ -232,8 +232,8 @@ const (
 	DeleteUserFailed              EM_ERROR_CODE = 70613
 	UpdateUserProfileFailed       EM_ERROR_CODE = 70614
 
-	TIEM_CLUSTER_LOG_QUERY_FAILED EM_ERROR_CODE = 80300
-	TIEM_CLUSTER_LOG_TIME_AFTER   EM_ERROR_CODE = 80301
+	TIEM_LOG_QUERY_FAILED EM_ERROR_CODE = 80300
+	TIEM_LOG_TIME_AFTER   EM_ERROR_CODE = 80301
 
 	QueryReportsScanRowError EM_ERROR_CODE = 90001
 	CheckReportNotExist      EM_ERROR_CODE = 90002
@@ -418,8 +418,8 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_MASTER_SLAVE_SWITCHOVER_NOT_FOUND: {"master/slave relation not found", 404},
 	TIEM_MASTER_SLAVE_SWITCHOVER_FAILED:    {"master/slave switchover failed", 500},
 
-	TIEM_CLUSTER_LOG_QUERY_FAILED: {"Failed to query cluster log", 500},
-	TIEM_CLUSTER_LOG_TIME_AFTER:   {"query log parameter startTime after endTime", 401},
+	TIEM_LOG_QUERY_FAILED: {"Failed to query cluster log", 500},
+	TIEM_LOG_TIME_AFTER:   {"query log parameter startTime after endTime", 401},
 
 	// scale out & scale in
 	TIEM_INSTANCE_NOT_FOUND:               {"Instance of cluster is not found", 404},

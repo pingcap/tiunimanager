@@ -1278,6 +1278,40 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	return nil
 }
 
+// initGrafanaAccount
+// @Description: init grafana account for new cluster
+func initGrafanaAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
+	if context.GetData(ContextTopology) == nil {
+		framework.LogWithContext(context.Context).Infof(
+			"when deploy cluster, not found topology yaml config")
+		return nil
+	}
+	yamlConfig := context.GetData(ContextTopology).(string)
+	grafanaConfig := &spec.GrafanaSpec{}
+	if err := yaml.Unmarshal([]byte(yamlConfig), grafanaConfig); err != nil {
+		framework.LogWithContext(context.Context).Errorf("init grafana account error: %s", err.Error())
+		return err
+	}
+
+	grafanaUser := &management.DBUser{
+		ClusterID: clusterMeta.Cluster.ID,
+		Name:      grafanaConfig.Username,
+		Password:  common.Password(grafanaConfig.Password),
+		RoleType:  string(constants.Grafana),
+	}
+
+	if err := models.GetClusterReaderWriter().CreateDBUser(context.Context, grafanaUser); err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster %s create grafana user %s error: %s", clusterMeta.Cluster.ID, grafanaConfig.Username, err.Error())
+		return err
+	}
+
+	node.Record(fmt.Sprintf("cluster %s init grafana account ", clusterMeta.Cluster.ID))
+
+	return nil
+}
+
 // applyParameterGroup
 // @Description: apply parameter group to cluster
 func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {

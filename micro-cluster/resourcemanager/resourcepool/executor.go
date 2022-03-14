@@ -44,9 +44,9 @@ func validateHostInfo(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 			log.Errorf("validate host %s %s failed, %v", host.HostName, host.IP, err)
 			return err
 		}
-		log.Infof("validate host %v succeed", host)
+		log.Infof("validate host %s %s on %s %s succeed", host.HostName, host.IP, host.Region, host.AZ)
 	}
-	node.Record(fmt.Sprintf("validate hosts %v succeed", hosts))
+	node.Record(fmt.Sprintf("validate hosts %s %s on %s %s succeed", hosts[0].HostName, hosts[0].IP, hosts[0].Region, hosts[0].AZ))
 	return nil
 }
 
@@ -157,11 +157,11 @@ func joinEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) 
 	// Check whether host has already install filebeat
 	installed, err := resourcePool.hostInitiator.PreCheckHostInstallFilebeat(ctx, hosts)
 	if err != nil {
-		log.Errorf("precheck host %v filebeat failed, %v", hosts, err)
+		log.Errorf("precheck host %s %s filebeat failed, %v", hosts[0].HostName, hosts[0].IP, err)
 		return err
 	}
 	if installed {
-		msg := fmt.Sprintf("host %v has already installed filebeat, no need to re-join em cluster", hosts)
+		msg := fmt.Sprintf("host %s %s has already installed filebeat, no need to re-join em cluster", hosts[0].HostName, hosts[0].IP)
 		log.Infoln(msg)
 		node.Success(msg)
 		return nil
@@ -171,7 +171,7 @@ func joinEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) 
 	installSoftwareCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowIDKey, node.ID)
 	operationID, err := resourcePool.hostInitiator.JoinEMCluster(installSoftwareCtx, hosts)
 	if err != nil {
-		log.Errorf("join em cluster failed for %v, %v", hosts, err)
+		log.Errorf("join em cluster failed for host %s %s, %v", hosts[0].HostName, hosts[0].IP, err)
 		return err
 	}
 
@@ -275,11 +275,11 @@ func leaveEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 
 	installed, err := resourcePool.hostInitiator.PreCheckHostInstallFilebeat(ctx, hosts)
 	if err != nil {
-		log.Errorf("precheck host %v filebeat failed, %v", hosts, err)
+		log.Errorf("precheck host %s %s filebeat failed, %v", hosts[0].HostName, hosts[0].IP, err)
 		return err
 	}
 	if !installed {
-		msg := fmt.Sprintf("host %v has already uninstalled filebeat, no need to leave em cluster", hosts)
+		msg := fmt.Sprintf("host %s %s has already uninstalled filebeat, no need to leave em cluster", hosts[0].HostName, hosts[0].IP)
 		log.Infoln(msg)
 		node.Success(msg)
 		return nil

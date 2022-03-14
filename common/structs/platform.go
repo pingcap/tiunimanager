@@ -32,10 +32,9 @@ type SpecInfo struct {
 	ID          string `json:"id"`   //ID of the resource specification
 	Name        string `json:"name"` //Name of the resource specification,eg: TiDB.c1.large
 	CPU         int    `json:"cpu"`
-	Memory      int    `json:"memory"`       //The amount of memory occupied by the instance, in GiB
-	DiskType    string `json:"diskType"`     //eg: NVMeSSD/SSD/SATA
-	PurposeType string `json:"purpose_type"` // eg:Compute/Storage/Schedule
-	Status      string `json:"status"`       //e.g. Online/Offline
+	Memory      int    `json:"memory"`      //The amount of memory occupied by the instance, in GiB
+	DiskType    string `json:"diskType"`    //eg: NVMeSSD/SSD/SATA
+	PurposeType string `json:"purposeType"` // eg:Compute/Storage/Schedule
 }
 
 // ComponentInstanceResourceSpec Information on the resources required for the product components to run, including: memory, CPU, etc.
@@ -49,8 +48,8 @@ type ComponentInstanceResourceSpec struct {
 	ZoneName string `json:"zoneName"`
 }
 
-// ProductComponentProperty Information about the components of the product, each of which consists of several different types of components
-type ProductComponentProperty struct {
+// ProductComponentPropertyWithZones Information about the components of the product, each of which consists of several different types of components
+type ProductComponentPropertyWithZones struct {
 	ID                      string                           `json:"id"`          //ID of the product component, globally unique
 	Name                    string                           `json:"name"`        //Name of the product component, globally unique
 	PurposeType             string                           `json:"purposeType"` //The type of resources required by the product component at runtime, e.g. storage class
@@ -72,9 +71,9 @@ type ComponentInstanceZoneWithSpecs struct {
 
 //ProductVersion Product version and component details, with each product categorized by version and supported CPU architecture
 type ProductVersion struct {
-	Version string                                `json:"version"` //Version information of the product, e.g. v5.0.0
-	Arch    map[string][]ProductComponentProperty `json:"arch"`    //Arch information of the product, e.g. X86/X86_64
-	//Components map[string]ProductComponentProperty `json:"components"` //Component Info of the product
+	Version string                                         `json:"version"` //Version information of the product, e.g. v5.0.0
+	Arch    map[string][]ProductComponentPropertyWithZones `json:"arch"`    //Arch information of the product, e.g. X86/X86_64
+	//Components map[string]ProductComponentPropertyWithZones `json:"components"` //Component Info of the product
 }
 
 // ProductDetail product information provided by Enterprise Manager
@@ -98,8 +97,8 @@ type Product struct {
 	Internal   int    `json:"internal"`
 }
 
-//ZoneInfo vendor & region & zone information provided by Enterprise Manager
-type ZoneInfo struct {
+// ZoneFullInfo vendor & region & zone information provided by Enterprise Manager
+type ZoneFullInfo struct {
 	ZoneID     string `json:"zoneId" form:"zoneId"`         //The value of the ZoneID is similar to CN-HANGZHOU-H
 	ZoneName   string `json:"zoneName" form:"zoneName"`     //The value of the Name is similar to Hangzhou(H)
 	RegionID   string `json:"regionId" form:"regionId"`     //The value of the RegionID is similar to CN-HANGZHOU
@@ -107,6 +106,13 @@ type ZoneInfo struct {
 	VendorID   string `json:"vendorId" form:"vendorId"`     //The value of the VendorID is similar to AWS
 	VendorName string `json:"vendorName" form:"vendorName"` //The value of the Name is similar to AWS
 	Comment    string `json:"comment" form:"comment"`
+}
+
+// ZoneInfo zone information
+type ZoneInfo struct {
+	ZoneID   string `json:"zoneId" form:"zoneId"`     //The value of the ZoneID is similar to CN-HANGZHOU-H
+	ZoneName string `json:"zoneName" form:"zoneName"` //The value of the Name is similar to Hangzhou(H)
+	Comment  string `json:"comment" form:"comment"`
 }
 
 // SystemConfig system config of platform
@@ -122,12 +128,50 @@ type SystemInfo struct {
 	CurrentVersionID string `json:"currentVersionID"`
 	LastVersionID    string `json:"lastVersionID"`
 	State            string `json:"state"`
+
+	SupportedVendors  []VendorInfo          `json:"supportedVendors"`
+	SupportedProducts []ProductWithVersions `json:"supportedProducts"`
+
+	VendorZonesInitialized       bool `json:"vendorZonesInitialized"`
+	VendorSpecsInitialized       bool `json:"vendorSpecsInitialized"`
+	ProductComponentsInitialized bool `json:"productComponentsInitialized"`
+	ProductVersionsInitialized   bool `json:"productVersionsInitialized"`
+}
+
+type ProductWithVersions struct {
+	ProductID   string                   `json:"productID"`
+	ProductName string                   `json:"productName"`
+	Versions    []SpecificVersionProduct "versions"
+}
+
+type SpecificVersionProduct struct {
+	ProductID string `json:"productID"`
+	Arch      string `json:"arch"`
+	Version   string `json:"version"`
 }
 
 type SystemVersionInfo struct {
 	VersionID   string `json:"versionID"`
 	Desc        string `json:"desc"`
 	ReleaseNote string `json:"releaseNote"`
+}
+
+type VendorConfigInfo struct {
+	VendorInfo
+	Regions []RegionConfigInfo `json:"regions" form:"regions"`
+	Specs   []SpecInfo         `json:"specs" form:"specs"`
+}
+
+type RegionConfigInfo struct {
+	RegionInfo
+	Zones []ZoneInfo `json:"zones" form:"zones"`
+}
+
+type ProductConfigInfo struct {
+	ProductID   string                              `json:"productID" form:"productID"`
+	ProductName string                              `json:"productName" form:"productName"`
+	Components  []ProductComponentPropertyWithZones `json:"components" form:"components"`
+	Versions    []SpecificVersionProduct            `json:"versions" form:"versions"`
 }
 
 // DBUserRole role information of the DBUser
@@ -144,23 +188,23 @@ var DBUserRoleRecords = map[constants.DBUserRoleType]DBUserRole{
 		RoleName:    "root",
 		RoleType:    constants.Root,
 		Permission:  constants.DBUserPermission[constants.Root],
-		},
+	},
 	constants.DBUserBackupRestore: {
 		ClusterType: constants.EMProductIDTiDB,
 		RoleName:    "backup_restore",
 		RoleType:    constants.DBUserBackupRestore,
 		Permission:  constants.DBUserPermission[constants.DBUserBackupRestore],
-		},
+	},
 	constants.DBUserParameterManagement: {
 		ClusterType: constants.EMProductIDTiDB,
 		RoleName:    "parameter_management",
 		RoleType:    constants.DBUserParameterManagement,
 		Permission:  constants.DBUserPermission[constants.DBUserParameterManagement],
-		},
+	},
 	constants.DBUserCDCDataSync: {
 		ClusterType: constants.EMProductIDTiDB,
 		RoleName:    "data_sync",
 		RoleType:    constants.DBUserCDCDataSync,
 		Permission:  constants.DBUserPermission[constants.DBUserCDCDataSync],
-		},
+	},
 }

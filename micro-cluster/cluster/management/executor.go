@@ -713,6 +713,31 @@ func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	return nil
 }
 
+// restartCluster
+// @Description: execute command, restart
+func restartCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
+	cluster := clusterMeta.Cluster
+
+	framework.LogWithContext(context.Context).Infof(
+		"restart cluster %s, version %s", cluster.ID, cluster.Version)
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
+	// todo: use SystemConfig to store home
+	operationID, err := deployment.M.Restart(context.Context, deployment.TiUPComponentTypeCluster, cluster.ID,
+		tiupHomeForTidb, node.ParentID, []string{}, meta.DefaultTiupTimeOut)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"restart %s start error: %s", clusterMeta.Cluster.ID, err.Error())
+		return err
+	}
+	framework.LogWithContext(context.Context).Infof(
+		"get restart cluster %s operation id: %s", clusterMeta.Cluster.ID, operationID)
+
+	node.Record(fmt.Sprintf("start cluster %s, version: %s ", clusterMeta.Cluster.ID, cluster.Version))
+	node.OperationID = operationID
+	return nil
+}
+
 func syncBackupStrategy(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*meta.ClusterMeta)
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
@@ -1211,7 +1236,7 @@ func initRootAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		Port:     strconv.Itoa(tidbServerPort),
 	}
 
-	err := utilsql.UpdateDBUserPassword(context, conn, rootUser.Name, string(rootUser.Password), node.ID)
+	err := utilsql.UpdateDBUserPassword(context, conn, rootUser.Name, rootUser.Password.Val, node.ID)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s set user %s password error: %s", clusterMeta.Cluster.ID, rootUser.Name, err.Error())
@@ -1237,7 +1262,7 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 
 	conn := utilsql.DbConnParam{
 		Username: clusterMeta.DBUsers[string(constants.Root)].Name,
-		Password: string(clusterMeta.DBUsers[string(constants.Root)].Password),
+		Password: clusterMeta.DBUsers[string(constants.Root)].Password.Val,
 		IP:       tidbServerHost,
 		Port:     strconv.Itoa(tidbServerPort),
 	}
@@ -1670,7 +1695,7 @@ func testConnectivity(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 	return errors.OfNullable(nil).
 		BreakIf(func() error {
 			user := clusterMeta.DBUsers[string(constants.Root)] // todo
-			sqlDB, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql", user.Name, user.Password, connectAddress.IP, connectAddress.Port))
+			sqlDB, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql", user.Name, user.Password.Val, connectAddress.IP, connectAddress.Port))
 			db = sqlDB
 			return err
 		}).
@@ -1692,11 +1717,10 @@ func GenerateDBUser(context *workflow.FlowContext, roleTyp constants.DBUserRoleT
 	cluster := clusterMeta.Cluster
 
 	dbUser := &management.DBUser{
-		ClusterID:                cluster.ID,
-		Name:                     constants.DBUserName[roleTyp],
-		Password:                 common.Password(meta.GetRandomString(10)),
-		RoleType:                 string(roleTyp),
-		LastPasswordGenerateTime: time.Now(),
+		ClusterID: cluster.ID,
+		Name:      constants.DBUserName[roleTyp],
+		Password:  common.PasswordInExpired{Val: meta.GetRandomString(10), UpdateTime: time.Now()},
+		RoleType:  string(roleTyp),
 	}
 	return dbUser
 }

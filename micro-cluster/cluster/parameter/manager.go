@@ -670,7 +670,7 @@ func inspectApiParameter(ctx context.Context, instance *management.ClusterInstan
 func inspectConfigParameter(ctx context.Context, instance *management.ClusterInstance, instDiffParams []structs.ClusterParameterInfo) (inspectParams []cluster.InspectParameterInfo, err error) {
 	inspectParams = make([]cluster.InspectParameterInfo, 0)
 	// pull config
-	configContentStr, err := pullConfig(ctx, instance.ClusterID, instance.Type, instance.DeployDir, instance.HostIP[0])
+	configContentStr, err := pullConfig(ctx, instance.ClusterID, instance.Type, instance.GetDeployDir(), instance.HostIP[0])
 	if err != nil {
 		return inspectParams, err
 	}

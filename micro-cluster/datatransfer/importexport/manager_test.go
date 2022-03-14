@@ -34,6 +34,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+	"time"
 )
 
 func init() {
@@ -60,7 +61,7 @@ func TestImportExportManager_ExportData_case1(t *testing.T) {
 			TenantId: "tid-xxx",
 		},
 	}, make([]*management.ClusterInstance, 0), []*management.DBUser{
-		{ClusterID: "clusterId", Name: "root", Password: "123455678", RoleType: string(constants.Root)},
+		{ClusterID: "clusterId", Name: "root", Password: common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()}, RoleType: string(constants.Root)},
 	}, nil).AnyTimes()
 	clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
@@ -120,7 +121,7 @@ func TestImportExportManager_ExportData_case2(t *testing.T) {
 			TenantId: "tid-xxx",
 		},
 	}, make([]*management.ClusterInstance, 0), []*management.DBUser{
-		{ClusterID: "clusterId", Name: "root", Password: "123455678", RoleType: string(constants.Root)},
+		{ClusterID: "clusterId", Name: "root", Password: common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()}, RoleType: string(constants.Root)},
 	}, nil).AnyTimes()
 	clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
@@ -305,7 +306,7 @@ func TestImportExportManager_ImportData_case1(t *testing.T) {
 			TenantId: "tid-xxx",
 		},
 	}, make([]*management.ClusterInstance, 0), []*management.DBUser{
-		{ClusterID: "clusterId", Name: "root", Password: "123455678", RoleType: string(constants.Root)},
+		{ClusterID: "clusterId", Name: "root", Password: common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()}, RoleType: string(constants.Root)},
 	}, nil).AnyTimes()
 	clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
@@ -426,7 +427,7 @@ func TestImportExportManager_ImportData_case3(t *testing.T) {
 			TenantId: "tid-xxx",
 		},
 	}, make([]*management.ClusterInstance, 0), []*management.DBUser{
-		{ClusterID: "clusterId", Name: "root", Password: "123455678", RoleType: string(constants.Root)},
+		{ClusterID: "clusterId", Name: "root", Password: common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()}, RoleType: string(constants.Root)},
 	}, nil).AnyTimes()
 	clusterRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 

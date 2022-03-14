@@ -140,7 +140,7 @@ type ClusterInstanceInfo struct {
 	IOUtil       float32         `json:"ioUtil"`
 	IOPS         []float32       `json:"iops"`
 	Spec         ProductSpecInfo `json:"spec"` //??
-	Zone         ZoneInfo        `json:"zone"` //??
+	Zone         ZoneFullInfo    `json:"zone"` //??
 }
 
 // ClusterTopologyInfo Topology of the cluster

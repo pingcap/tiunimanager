@@ -27,16 +27,16 @@ import (
 )
 
 type User struct {
-	ID              string    `gorm:"primarykey"`
-	DefaultTenantID string    `gorm:"default:null;not null;"`
-	Creator         string    `gorm:"default:null;not null;"`
-	Name            string    `gorm:"default:null;not null;"`
-	Salt            string    `gorm:"default:null;not null;"` //password
-	FinalHash       string    `gorm:"default:null;not null"`
-	Email           string    `gorm:"default:null"`
-	Phone           string    `gorm:"default:null"`
-	Status          string    `gorm:"not null;"`
-	CreatedAt       time.Time `gorm:"<-:create"`
+	ID              string                   `gorm:"primarykey"`
+	DefaultTenantID string                   `gorm:"default:null;not null;"`
+	Creator         string                   `gorm:"default:null;not null;"`
+	Name            string                   `gorm:"default:null;not null;"`
+	Salt            string                   `gorm:"default:null;not null;"` //password
+	FinalHash       common.PasswordInExpired `gorm:"default:null;not null;"`
+	Email           string                   `gorm:"default:null"`
+	Phone           string                   `gorm:"default:null"`
+	Status          string                   `gorm:"not null;"`
+	CreatedAt       time.Time                `gorm:"<-:create"`
 	UpdatedAt       time.Time
 	DeletedAt       gorm.DeletedAt
 }
@@ -80,7 +80,8 @@ func (user *User) BeforeCreate(tx *gorm.DB) (err error) {
 	return nil
 }
 
-func (user *User) GenSaltAndHash(passwd string) error {
+func (user *User) GenSaltAndHash(password string) error {
+	// todo: check length
 	b := make([]byte, 16)
 	_, err := cryrand.Read(b)
 
@@ -90,29 +91,28 @@ func (user *User) GenSaltAndHash(passwd string) error {
 
 	salt := base64.URLEncoding.EncodeToString(b)
 
-	finalSalt, err := common.FinalHash(salt, passwd)
+	finalSalt, err := common.FinalHash(salt, password)
 
 	if err != nil {
 		return err
 	}
 
 	user.Salt = salt
-	user.FinalHash = string(finalSalt)
+	user.FinalHash.Val = string(finalSalt)
 
 	return nil
 }
 
-func (user *User) CheckPassword(passwd string) (bool, error) {
-	if passwd == "" {
+func (user *User) CheckPassword(password string) (bool, error) {
+	if password == "" {
 		return false, errors.New("password cannot be empty")
 	}
-	if len(passwd) > 20 {
+	if len(password) > 20 {
 		return false, errors.New("password is too long")
 	}
-	s := user.Salt + passwd
+	s := user.Salt + password
 
-	err := bcrypt.CompareHashAndPassword([]byte(user.FinalHash), []byte(s))
-
+	err := bcrypt.CompareHashAndPassword([]byte(user.FinalHash.Val), []byte(s))
 	if err != nil {
 		if err == bcrypt.ErrMismatchedHashAndPassword {
 			return false, nil

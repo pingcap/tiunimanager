@@ -87,7 +87,7 @@ func asyncMaintenance(ctx context.Context, meta *meta.ClusterMeta, data map[stri
 	}
 
 	if flow, flowError := workflow.GetWorkFlowService().CreateWorkFlow(ctx, meta.Cluster.ID, workflow.BizTypeCluster, flowName); flowError != nil {
-		framework.LogWithContext(ctx).Errorf("create flow %s failed, clusterID = %s, error = %s", flow.Flow.Name, meta.Cluster.ID, err)
+		framework.LogWithContext(ctx).Errorf("create flow failed, clusterID = %s, error = %s", meta.Cluster.ID, err)
 		err = flowError
 		return
 	} else {
@@ -409,7 +409,7 @@ func fillParameters(ctx *workflow.FlowContext, fillParamContainer map[interface{
 			instances := clusterMeta.Instances[instanceType.(string)]
 			if len(instances) > 0 {
 				// pull config
-				configContentStr, err := pullConfig(ctx, instances[0].ClusterID, instances[0].Type, instances[0].DeployDir, instances[0].HostIP[0])
+				configContentStr, err := pullConfig(ctx, instances[0].ClusterID, instances[0].Type, instances[0].GetDeployDir(), instances[0].HostIP[0])
 				if err != nil {
 					framework.LogWithContext(ctx).Errorf("failed to call %s pull show config, err = %s", instanceType, err)
 					return err
@@ -543,7 +543,7 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 	req := sql.ClusterEditConfigReq{
 		DbConnParameter: sql.DbConnParam{
 			Username: tidbUserInfo.Name,
-			Password: string(tidbUserInfo.Password),
+			Password: tidbUserInfo.Password.Val,
 			IP:       tidbServer.IP,
 			Port:     strconv.Itoa(tidbServer.Port),
 		},

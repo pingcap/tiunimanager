@@ -102,16 +102,14 @@ service ClusterService {
     rpc UpdateSystemConfig(RpcRequest) returns (RpcResponse);
 
     //product & spec
-    rpc CreateZones(RpcRequest) returns (RpcResponse);
-    rpc DeleteZone(RpcRequest) returns (RpcResponse);
-    rpc QueryZones(RpcRequest) returns (RpcResponse);
+    rpc UpdateVendors(RpcRequest) returns (RpcResponse);
+    rpc QueryVendors(RpcRequest) returns (RpcResponse);
+    rpc QueryAvailableVendors(RpcRequest) returns (RpcResponse);
+
+    rpc UpdateProducts(RpcRequest) returns (RpcResponse);
     rpc QueryProducts(RpcRequest) returns (RpcResponse);
-    rpc CreateProduct(RpcRequest) returns (RpcResponse);
-    rpc DeleteProduct(RpcRequest) returns (RpcResponse);
+    rpc QueryAvailableProducts(RpcRequest) returns (RpcResponse);
     rpc QueryProductDetail(RpcRequest) returns (RpcResponse);
-    rpc CreateSpecs(RpcRequest) returns (RpcResponse);
-    rpc DeleteSpecs(RpcRequest) returns (RpcResponse);
-    rpc QuerySpecs(RpcRequest) returns (RpcResponse);
 
     //user & tenant
     rpc CreateUser(RpcRequest) returns (RpcResponse);

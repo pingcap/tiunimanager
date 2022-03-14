@@ -34,4 +34,6 @@ type ReaderWriter interface {
 	GetSystemInfo(ctx context.Context) (*SystemInfo, error)
 	UpdateState(ctx context.Context, original, target constants.SystemState) error
 	UpdateVersion(ctx context.Context, target string) error
+	VendorInitialized(ctx context.Context) error
+	ProductInitialized(ctx context.Context) error
 }

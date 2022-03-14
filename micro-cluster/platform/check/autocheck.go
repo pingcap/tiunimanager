@@ -16,10 +16,10 @@
 package check
 
 import (
-	ctx "context"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/robfig/cron"
+	"golang.org/x/net/context"
 	"time"
 )
 
@@ -63,6 +63,7 @@ func (auto *autoCheckHandler) Run() {
 
 	go func() {
 		framework.Log().Infof("Start to check platform")
-		GetCheckService().Check(ctx.TODO(), message.CheckPlatformReq{})
+		ctx := framework.NewMicroContextWithKeyValuePairs(context.Background(), map[string]string{framework.TiEM_X_TENANT_ID_KEY: DefaultTenantID})
+		GetCheckService().Check(ctx, message.CheckPlatformReq{})
 	}()
 }

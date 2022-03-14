@@ -48,6 +48,9 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (message.
 		return resp, errors.NewError(errors.TIEM_LOGIN_FAILED, "incorrect username or password")
 	}
 
+	// check password update time
+	resp.PasswordExpired, err = user.FinalHash.CheckUpdateTimeExpired()
+
 	// create token
 	tokenString := uuid.New().String()
 	expirationTime := time.Now().Add(constants.DefaultTokenValidPeriod)
@@ -84,7 +87,7 @@ func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq)
 	resp := message.AccessibleResp{}
 	token, err := models.GetTokenReaderWriter().GetToken(ctx, request.TokenString)
 	if err != nil {
-		return resp, err
+		return resp, errors.WrapError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized", err)
 	}
 
 	if !token.IsValid() {

@@ -13,31 +13,28 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-/*******************************************************************************
- * @File: zone.go
- * @Description:
- * @Author: duanbing@pingcap.com
- * @Version: 1.0.0
- * @Date: 2021/12/6
-*******************************************************************************/
-
 package product
 
 import (
-	"gorm.io/gorm"
-	"time"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/models"
+	"os"
+	"testing"
 )
 
-// Zone information provided by Enterprise Manager
-type Zone struct {
-	VendorID   string         `gorm:"primaryKey;size:32"`
-	VendorName string         `gorm:"size:32"`
-	RegionID   string         `gorm:"primaryKey;size:32"`
-	RegionName string         `gorm:"size:32"`
-	ZoneID     string         `gorm:"primaryKey;size:32"`
-	ZoneName   string         `gorm:"size:32"`
-	Comment    string         `gorm:"size:1024;"`
-	CreatedAt  time.Time      `gorm:"autoCreateTime;<-:create;->;"`
-	UpdatedAt  time.Time      `gorm:"autoUpdateTime"`
-	DeletedAt  gorm.DeletedAt `gorm:""`
+func TestMain(m *testing.M) {
+	var testFilePath string
+	framework.InitBaseFrameworkForUt(framework.ClusterService,
+		func(d *framework.BaseFramework) error {
+			models.MockDB()
+			testFilePath = d.GetDataDir()
+			os.MkdirAll(testFilePath, 0755)
+			models.MockDB()
+			return models.Open(d)
+		},
+	)
+	code := m.Run()
+	os.RemoveAll(testFilePath)
+
+	os.Exit(code)
 }

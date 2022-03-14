@@ -455,6 +455,9 @@ definitions:
     properties:
       force:
         type: boolean
+      onlyCheck:
+        description: only check if this flag is true
+        type: boolean
       sourceClusterID:
         description: old master/new slave
         type: string
@@ -1107,32 +1110,12 @@ definitions:
         example: "1"
         type: string
     type: object
-  message.CreateProductReq:
-    properties:
-      components:
-        items:
-          $ref: '#/definitions/structs.ProductComponentProperty'
-        type: array
-      productInfo:
-        $ref: '#/definitions/structs.Product'
-    type: object
-  message.CreateProductResp:
-    type: object
   message.CreateRoleReq:
     properties:
       role:
         type: string
     type: object
   message.CreateRoleResp:
-    type: object
-  message.CreateSpecsReq:
-    properties:
-      specs:
-        items:
-          $ref: '#/definitions/structs.SpecInfo'
-        type: array
-    type: object
-  message.CreateSpecsResp:
     type: object
   message.CreateTenantReq:
     properties:
@@ -1177,15 +1160,6 @@ definitions:
     - password
     type: object
   message.CreateUserResp:
-    type: object
-  message.CreateZonesReq:
-    properties:
-      zones:
-        items:
-          $ref: '#/definitions/structs.ZoneInfo'
-        type: array
-    type: object
-  message.CreateZonesResp:
     type: object
   message.DataExportReq:
     properties:
@@ -1295,23 +1269,7 @@ definitions:
     type: object
   message.DeletePermissionsForRoleResp:
     type: object
-  message.DeleteProductReq:
-    properties:
-      productInfo:
-        $ref: '#/definitions/structs.Product'
-    type: object
-  message.DeleteProductResp:
-    type: object
   message.DeleteRoleResp:
-    type: object
-  message.DeleteSpecsReq:
-    properties:
-      specIds:
-        items:
-          type: string
-        type: array
-    type: object
-  message.DeleteSpecsResp:
     type: object
   message.DeleteTenantReq:
     properties:
@@ -1323,15 +1281,6 @@ definitions:
   message.DeleteUserReq:
     type: object
   message.DeleteUserResp:
-    type: object
-  message.DeleteZoneReq:
-    properties:
-      zone:
-        items:
-          $ref: '#/definitions/structs.ZoneInfo'
-        type: array
-    type: object
-  message.DeleteZoneResp:
     type: object
   message.DetailParameterGroupResp:
     properties:
@@ -1451,6 +1400,8 @@ definitions:
     type: object
   message.LoginResp:
     properties:
+      passwordExpired:
+        type: boolean
       tenantId:
         type: string
       token:
@@ -1568,6 +1519,27 @@ definitions:
         example: UNe7K1uERa-2fwSxGJ6CFQ
         type: string
     type: object
+  message.QueryAvailableProductsResp:
+    properties:
+      products:
+        additionalProperties:
+          additionalProperties:
+            additionalProperties:
+              additionalProperties:
+                $ref: '#/definitions/structs.Product'
+              type: object
+            type: object
+          type: object
+        description: arch version
+        type: object
+    type: object
+  message.QueryAvailableVendorsResp:
+    properties:
+      vendors:
+        additionalProperties:
+          $ref: '#/definitions/structs.VendorWithRegion'
+        type: object
+    type: object
   message.QueryCheckReportsRsp:
     properties:
       reportMetas:
@@ -1661,32 +1633,18 @@ definitions:
           $ref: '#/definitions/structs.ProductDetail'
         type: object
     type: object
-  message.QueryProductsResp:
+  message.QueryProductsInfoResp:
     properties:
       products:
-        additionalProperties:
-          additionalProperties:
-            additionalProperties:
-              additionalProperties:
-                $ref: '#/definitions/structs.Product'
-              type: object
-            type: object
-          type: object
-        description: arch version
-        type: object
+        items:
+          $ref: '#/definitions/structs.ProductConfigInfo'
+        type: array
     type: object
   message.QueryRolesResp:
     properties:
       roles:
         items:
           type: string
-        type: array
-    type: object
-  message.QuerySpecsResp:
-    properties:
-      specs:
-        items:
-          $ref: '#/definitions/structs.SpecInfo'
         type: array
     type: object
   message.QueryTenantReq:
@@ -1721,6 +1679,13 @@ definitions:
           $ref: '#/definitions/structs.UserInfo'
         type: object
     type: object
+  message.QueryVendorInfoResp:
+    properties:
+      vendors:
+        items:
+          $ref: '#/definitions/structs.VendorConfigInfo'
+        type: array
+    type: object
   message.QueryWorkFlowDetailResp:
     properties:
       info:
@@ -1740,13 +1705,6 @@ definitions:
         items:
           $ref: '#/definitions/structs.WorkFlowInfo'
         type: array
-    type: object
-  message.QueryZonesTreeResp:
-    properties:
-      vendors:
-        additionalProperties:
-          $ref: '#/definitions/structs.VendorWithRegion'
-        type: object
     type: object
   message.UnbindRoleForUserReq:
     properties:
@@ -1816,6 +1774,17 @@ definitions:
         example: "1"
         type: string
     type: object
+  message.UpdateProductsInfoReq:
+    properties:
+      products:
+        items:
+          $ref: '#/definitions/structs.ProductConfigInfo'
+        type: array
+    required:
+    - products
+    type: object
+  message.UpdateProductsInfoResp:
+    type: object
   message.UpdateSystemConfigReq:
     properties:
       configKey:
@@ -1872,6 +1841,13 @@ definitions:
         type: string
     type: object
   message.UpdateUserProfileResp:
+    type: object
+  message.UpdateVendorInfoReq:
+    properties:
+      vendors:
+        items:
+          $ref: '#/definitions/structs.VendorConfigInfo'
+        type: array
     type: object
   structs.AsyncTaskWorkFlowInfo:
     properties:
@@ -2148,7 +2124,7 @@ definitions:
       version:
         type: string
       zone:
-        $ref: '#/definitions/structs.ZoneInfo'
+        $ref: '#/definitions/structs.ZoneFullInfo'
         description: ??
     type: object
   structs.ClusterInstanceParameterValue:
@@ -2765,7 +2741,7 @@ definitions:
       version:
         type: string
     type: object
-  structs.ProductComponentProperty:
+  structs.ProductComponentPropertyWithZones:
     properties:
       availableZones:
         description: Information on the specifications of the resources online for
@@ -2800,6 +2776,21 @@ definitions:
       suggestedInstancesCount:
         items:
           type: integer
+        type: array
+    type: object
+  structs.ProductConfigInfo:
+    properties:
+      components:
+        items:
+          $ref: '#/definitions/structs.ProductComponentPropertyWithZones'
+        type: array
+      productID:
+        type: string
+      productName:
+        type: string
+      versions:
+        items:
+          $ref: '#/definitions/structs.SpecificVersionProduct'
         type: array
     type: object
   structs.ProductDetail:
@@ -2924,7 +2915,7 @@ definitions:
       arch:
         additionalProperties:
           items:
-            $ref: '#/definitions/structs.ProductComponentProperty'
+            $ref: '#/definitions/structs.ProductComponentPropertyWithZones'
           type: array
         description: Arch information of the product, e.g. X86/X86_64
         type: object
@@ -2932,12 +2923,34 @@ definitions:
         description: Version information of the product, e.g. v5.0.0
         type: string
     type: object
+  structs.ProductWithVersions:
+    properties:
+      productID:
+        type: string
+      productName:
+        type: string
+      versions:
+        items:
+          $ref: '#/definitions/structs.SpecificVersionProduct'
+        type: array
+    type: object
   structs.RbacPermission:
     properties:
       action:
         type: string
       resource:
         type: string
+    type: object
+  structs.RegionConfigInfo:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      zones:
+        items:
+          $ref: '#/definitions/structs.ZoneInfo'
+        type: array
     type: object
   structs.RegionInfo:
     properties:
@@ -2983,11 +2996,17 @@ definitions:
       name:
         description: 'Name of the resource specification,eg: TiDB.c1.large'
         type: string
-      purpose_type:
+      purposeType:
         description: eg:Compute/Storage/Schedule
         type: string
-      status:
-        description: e.g. Online/Offline
+    type: object
+  structs.SpecificVersionProduct:
+    properties:
+      arch:
+        type: string
+      productID:
+        type: string
+      version:
         type: string
     type: object
   structs.Stocks:
@@ -3011,12 +3030,28 @@ definitions:
         type: string
       lastVersionID:
         type: string
+      productComponentsInitialized:
+        type: boolean
+      productVersionsInitialized:
+        type: boolean
       state:
         type: string
+      supportedProducts:
+        items:
+          $ref: '#/definitions/structs.ProductWithVersions'
+        type: array
+      supportedVendors:
+        items:
+          $ref: '#/definitions/structs.VendorInfo'
+        type: array
       systemLogo:
         type: string
       systemName:
         type: string
+      vendorSpecsInitialized:
+        type: boolean
+      vendorZonesInitialized:
+        type: boolean
     type: object
   structs.SystemVersionInfo:
     properties:
@@ -3105,6 +3140,32 @@ definitions:
       updateAt:
         type: string
     type: object
+  structs.VendorConfigInfo:
+    properties:
+      id:
+        description: The value of the VendorID is similar to AWS
+        type: string
+      name:
+        description: The value of the Name is similar to AWS
+        type: string
+      regions:
+        items:
+          $ref: '#/definitions/structs.RegionConfigInfo'
+        type: array
+      specs:
+        items:
+          $ref: '#/definitions/structs.SpecInfo'
+        type: array
+    type: object
+  structs.VendorInfo:
+    properties:
+      id:
+        description: The value of the VendorID is similar to AWS
+        type: string
+      name:
+        description: The value of the Name is similar to AWS
+        type: string
+    type: object
   structs.VendorWithRegion:
     properties:
       id:
@@ -3166,7 +3227,7 @@ definitions:
         - Canceled
         type: string
     type: object
-  structs.ZoneInfo:
+  structs.ZoneFullInfo:
     properties:
       comment:
         type: string
@@ -3181,6 +3242,17 @@ definitions:
         type: string
       vendorName:
         description: The value of the Name is similar to AWS
+        type: string
+      zoneId:
+        description: The value of the ZoneID is similar to CN-HANGZHOU-H
+        type: string
+      zoneName:
+        description: The value of the Name is similar to Hangzhou(H)
+        type: string
+    type: object
+  structs.ZoneInfo:
+    properties:
+      comment:
         type: string
       zoneId:
         description: The value of the ZoneID is similar to CN-HANGZHOU-H
@@ -5583,17 +5655,18 @@ paths:
       tags:
       - platform
   /products/:
-    delete:
+    get:
       consumes:
       - application/json
-      description: delete product
+      description: query products
       parameters:
-      - description: create product request parameter
-        in: body
-        name: CreateProductReq
-        required: true
-        schema:
-          $ref: '#/definitions/message.DeleteProductReq'
+      - collectionFormat: multi
+        description: product id collection
+        in: query
+        items:
+          type: string
+        name: productIDs
+        type: array
       produces:
       - application/json
       responses:
@@ -5604,7 +5677,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/message.DeleteProductResp'
+                  $ref: '#/definitions/message.QueryProductsInfoResp'
               type: object
         "401":
           description: Unauthorized
@@ -5620,9 +5693,50 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: delete product
+      summary: query products
       tags:
-      - platform
+      - product
+    post:
+      consumes:
+      - application/json
+      description: update products
+      parameters:
+      - description: update products info request parameter
+        in: body
+        name: UpdateProductsInfoReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateProductsInfoReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateProductsInfoResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: update products
+      tags:
+      - product
+  /products/available:
     get:
       consumes:
       - application/json
@@ -5647,7 +5761,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/message.QueryProductsResp'
+                  $ref: '#/definitions/message.QueryAvailableProductsResp'
               type: object
         "401":
           description: Unauthorized
@@ -5665,47 +5779,7 @@ paths:
       - ApiKeyAuth: []
       summary: queries all products' information
       tags:
-      - platform
-    post:
-      consumes:
-      - application/json
-      description: created product
-      parameters:
-      - description: create product request parameter
-        in: body
-        name: CreateProductReq
-        required: true
-        schema:
-          $ref: '#/definitions/message.CreateProductReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.CreateProductResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: created product
-      tags:
-      - platform
+      - product
   /products/detail:
     get:
       consumes:
@@ -5755,7 +5829,7 @@ paths:
       - ApiKeyAuth: []
       summary: query all product detail
       tags:
-      - platform
+      - product
   /rbac/permission/{userId}:
     get:
       consumes:
@@ -6428,120 +6502,6 @@ paths:
       summary: Show the resources stocks
       tags:
       - resource
-  /specs/:
-    delete:
-      consumes:
-      - application/json
-      description: deleted specs
-      parameters:
-      - description: delete specs request parameter
-        in: body
-        name: DeleteSpecsReq
-        required: true
-        schema:
-          $ref: '#/definitions/message.DeleteSpecsReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.DeleteSpecsResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: deleted  specs
-      tags:
-      - platform
-    get:
-      consumes:
-      - application/json
-      description: queries all specs information
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.QuerySpecsResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: queries all specs information
-      tags:
-      - platform
-    post:
-      consumes:
-      - application/json
-      description: created specs
-      parameters:
-      - description: create specs request parameter
-        in: body
-        name: CreateSpecsReq
-        required: true
-        schema:
-          $ref: '#/definitions/message.CreateSpecsReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.CreateSpecsResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: created  specs
-      tags:
-      - platform
   /system/info:
     get:
       consumes:
@@ -7158,6 +7118,122 @@ paths:
       summary: update user profile
       tags:
       - platform
+  /vendors/:
+    get:
+      consumes:
+      - application/json
+      description: query vendors
+      parameters:
+      - collectionFormat: multi
+        description: vendor id collection
+        in: query
+        items:
+          type: string
+        name: vendorIDs
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryVendorInfoResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query vendors
+      tags:
+      - vendor
+    post:
+      consumes:
+      - application/json
+      description: update vendors
+      parameters:
+      - description: update vendor info request parameter
+        in: body
+        name: UpdateVendorInfoReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateVendorInfoReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateVendorInfoReq'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: update vendors
+      tags:
+      - vendor
+  /vendors/available:
+    get:
+      consumes:
+      - application/json
+      description: query available vendors and regions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryAvailableVendorsResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query available vendors and regions
+      tags:
+      - vendor
   /workflow/:
     get:
       consumes:
@@ -7253,121 +7329,6 @@ paths:
       summary: show details of a flow work
       tags:
       - task
-  /zones/:
-    delete:
-      consumes:
-      - application/json
-      description: deleted zones
-      parameters:
-      - description: delete zone request parameter
-        in: body
-        name: CreateZoneReq
-        required: true
-        schema:
-          $ref: '#/definitions/message.DeleteZoneReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.DeleteZoneResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: deleted zones
-      tags:
-      - platform
-    post:
-      consumes:
-      - application/json
-      description: created  zones
-      parameters:
-      - description: create zones request parameter
-        in: body
-        name: CreateZoneReq
-        required: true
-        schema:
-          $ref: '#/definitions/message.CreateZonesReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.CreateZonesResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: created  zones
-      tags:
-      - platform
-  /zones/tree:
-    get:
-      consumes:
-      - application/json
-      description: queries all regions information
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.QueryZonesTreeResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: queries all regions information
-      tags:
-      - platform
 securityDefinitions:
   ApiKeyAuth:
     in: header

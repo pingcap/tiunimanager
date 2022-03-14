@@ -54,6 +54,9 @@ type ClientArgs struct {
 	EMVersion            string
 	DeployUser           string
 	DeployGroup          string
+	LoginHostUser        string
+	LoginPrivateKeyPath  string
+	LoginPublicKeyPath   string
 }
 
 func AllFlags(receiver *ClientArgs) []cli.Flag {
@@ -165,6 +168,24 @@ func AllFlags(receiver *ClientArgs) []cli.Flag {
 			Value:       "",
 			Usage:       "Specify the EM deploy user group.",
 			Destination: &receiver.DeployGroup,
+		},
+		&cli.StringFlag{
+			Name:        "login-host-user",
+			Value:       "",
+			Usage:       "Specify the existed login user on resource host.",
+			Destination: &receiver.LoginHostUser,
+		},
+		&cli.StringFlag{
+			Name:        "login-private-key-path",
+			Value:       "",
+			Usage:       "Specify the path of private key to login resource host as LoginHostUser.",
+			Destination: &receiver.LoginPrivateKeyPath,
+		},
+		&cli.StringFlag{
+			Name:        "login-public-key-path",
+			Value:       "",
+			Usage:       "Specify the path of public key of the LoginPrivateKey.",
+			Destination: &receiver.LoginPublicKeyPath,
 		},
 	}
 }

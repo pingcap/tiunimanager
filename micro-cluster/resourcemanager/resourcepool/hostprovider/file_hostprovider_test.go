@@ -18,6 +18,7 @@ package hostprovider
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/models/platform/product"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -385,28 +386,22 @@ func Test_ValidateZoneInfo_Succeed(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	prw := mock_product.NewMockProductReadWriterInterface(ctrl)
+	prw := mock_product.NewMockReaderWriter(ctrl)
 	models.SetProductReaderWriter(prw)
-	prw.EXPECT().GetZone(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, vendorID, regionID, zoneID string) (*structs.ZoneInfo, int64, error) {
-		if vendorID == "Fake_Vendor0" {
-			return &structs.ZoneInfo{VendorID: vendorID, RegionID: regionID, ZoneID: zoneID}, 1, nil
-		} else if vendorID == "Fake_Vendor1" {
-			return nil, 0, nil
-		} else {
-			return nil, 0, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "get zone without vendorID %s, regionID %s, zoneID %s, parameter invalid", vendorID, regionID, zoneID)
-		}
-	}).Times(3)
 
 	hostProvider := mockFileHostProvider(nil)
 
-	err := hostProvider.ValidateZoneInfo(context.TODO(), &structs.HostInfo{Vendor: "Fake_Vendor0", Region: "Fake_Region", AZ: "Fake_Zone"})
+	mockQueryLocalFromDB(prw.EXPECT())
+	err := hostProvider.ValidateZoneInfo(context.TODO(), &structs.HostInfo{Vendor: "Local", Region: "Region1", AZ: "Zone1_1"})
 	assert.Nil(t, err)
 
-	err = hostProvider.ValidateZoneInfo(context.TODO(), &structs.HostInfo{Vendor: "Fake_Vendor1", Region: "Fake_Region", AZ: "Fake_Zone"})
+	mockQueryLocalFromDB(prw.EXPECT())
+	err = hostProvider.ValidateZoneInfo(context.TODO(), &structs.HostInfo{Vendor: "Local", Region: "Fake_Region", AZ: "Fake_Zone"})
 	assert.NotNil(t, err)
 	assert.Equal(t, errors.TIEM_RESOURCE_INVALID_ZONE_INFO, err.(errors.EMError).GetCode())
 
-	err = hostProvider.ValidateZoneInfo(context.TODO(), &structs.HostInfo{Vendor: "Fake_Vendor3", Region: "Fake_Region", AZ: "Fake_Zone"})
+	prw.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_PARAMETER_INVALID)).Times(1)
+	err = hostProvider.ValidateZoneInfo(context.TODO(), &structs.HostInfo{Vendor: "", Region: "Fake_Region", AZ: "Fake_Zone"})
 	assert.NotNil(t, err)
 	assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 }
@@ -435,4 +430,73 @@ func Test_buildInstancesOnHost(t *testing.T) {
 	assert.Equal(t, 2, len(results["ZIqy0JAuTxuglIPHNL83hg"]))
 	assert.Equal(t, 4, len(results["ZIqy0JAuTxuglIPHNL83hg"]["Jt_r1RnfT3i0O7YWtMhBzw"]))
 	assert.Equal(t, 4, len(results["ZIqy0JAuTxuglIPHNL83hg"]["THwF-s3hTL-SZbZsytBMTw"]))
+}
+
+func mockQueryLocalFromDB(expect *mock_product.MockReaderWriterMockRecorder) {
+	expect.GetVendor(gomock.Any(), gomock.Any()).Return(&product.Vendor{
+		VendorID:   "Local",
+		VendorName: "local",
+	}, []*product.VendorZone{
+		{
+			VendorID:   "Local",
+			RegionID:   "Region1",
+			RegionName: "region1",
+			ZoneID:     "Zone1_1",
+			ZoneName:   "zone1_1",
+			Comment:    "aa",
+		},
+		{
+			VendorID:   "Local",
+			RegionID:   "Region1",
+			RegionName: "region1",
+			ZoneID:     "Zone1_2",
+			ZoneName:   "zone1_2",
+			Comment:    "aa",
+		},
+		{
+			VendorID:   "Local",
+			RegionID:   "Region2",
+			RegionName: "region2",
+			ZoneID:     "Zone2_1",
+			ZoneName:   "zone2_1",
+			Comment:    "aa",
+		},
+	}, []*product.VendorSpec{
+		{
+			VendorID:    "Local",
+			SpecID:      "c.large",
+			SpecName:    "c.large",
+			CPU:         4,
+			Memory:      8,
+			DiskType:    "SATA",
+			PurposeType: "Compute",
+		},
+		{
+			VendorID:    "Local",
+			SpecID:      "s.large",
+			SpecName:    "s.large",
+			CPU:         4,
+			Memory:      8,
+			DiskType:    "SATA",
+			PurposeType: "Storage",
+		},
+		{
+			VendorID:    "Local",
+			SpecID:      "s.xlarge",
+			SpecName:    "s.xlarge",
+			CPU:         8,
+			Memory:      16,
+			DiskType:    "SATA",
+			PurposeType: "Storage",
+		},
+		{
+			VendorID:    "Local",
+			SpecID:      "sc.large",
+			SpecName:    "sc.large",
+			CPU:         4,
+			Memory:      8,
+			DiskType:    "SATA",
+			PurposeType: "Schedule",
+		},
+	}, nil).Times(1)
 }

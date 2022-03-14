@@ -75,7 +75,7 @@ type ClusterServiceHandler struct {
 	clusterLogManager       *clusterLog.Manager
 	accountManager          *account.Manager
 	authManager             *identification.Manager
-	productManager          *product.ProductManager
+	productManager          *product.Manager
 	rbacManager             rbac.RBACService
 	checkManager            check.CheckService
 	platformLogManager      *platformLog.Manager
@@ -166,7 +166,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.clusterLogManager = clusterLog.NewManager()
 	handler.accountManager = account.NewAccountManager()
 	handler.authManager = identification.NewIdentificationManager()
-	handler.productManager = product.NewProductManager()
+	handler.productManager = product.NewManager()
 	handler.rbacManager = rbac.GetRBACService()
 	handler.checkManager = check.GetCheckService()
 	handler.platformLogManager = platformLog.NewManager()
@@ -1235,65 +1235,52 @@ func (handler *ClusterServiceHandler) GetStocks(ctx context.Context, req *cluste
 	return nil
 }
 
-func (handler *ClusterServiceHandler) CreateZones(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+func (handler *ClusterServiceHandler) UpdateVendors(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "CreateZones", int(response.GetCode()))
+	defer metrics.HandleClusterMetrics(start, "UpdateVendors", int(response.GetCode()))
 
-	req := message.CreateZonesReq{}
-	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionCreate)}}) {
-		resp, err := handler.productManager.CreateZones(ctx, req)
+	req := message.UpdateVendorInfoReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionUpdate)}}) {
+		resp, err := handler.productManager.UpdateVendors(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 
 	return nil
 }
 
-func (handler *ClusterServiceHandler) DeleteZone(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+func (handler *ClusterServiceHandler) QueryVendors(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "DeleteZone", int(response.GetCode()))
+	defer metrics.HandleClusterMetrics(start, "QueryVendors", int(response.GetCode()))
 
-	req := message.DeleteZoneReq{}
-	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionDelete)}}) {
-		resp, err := handler.productManager.DeleteZones(ctx, req)
-		handleResponse(ctx, response, err, resp, nil)
-	}
-
-	return nil
-}
-
-func (handler *ClusterServiceHandler) QueryZones(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
-	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "QueryZones", int(response.GetCode()))
-
-	req := message.QueryZonesTreeReq{}
+	req := message.QueryVendorInfoReq{}
 	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionRead)}}) {
-		resp, err := handler.productManager.QueryZones(ctx)
+		resp, err := handler.productManager.QueryVendors(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 
 	return nil
 }
 
-func (handler *ClusterServiceHandler) CreateProduct(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+func (handler *ClusterServiceHandler) QueryAvailableVendors(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "CreateProduct", int(response.GetCode()))
+	defer metrics.HandleClusterMetrics(start, "QueryAvailableVendors", int(response.GetCode()))
 
-	req := message.CreateProductReq{}
-	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionCreate)}}) {
-		resp, err := handler.productManager.CreateProduct(ctx, req)
+	req := message.QueryAvailableVendorsReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionRead)}}) {
+		resp, err := handler.productManager.QueryAvailableVendors(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 
 	return nil
 }
 
-func (handler *ClusterServiceHandler) DeleteProduct(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+func (handler *ClusterServiceHandler) UpdateProducts(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "DeleteProduct", int(response.GetCode()))
+	defer metrics.HandleClusterMetrics(start, "UpdateProducts", int(response.GetCode()))
 
-	req := message.DeleteProductReq{}
-	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionDelete)}}) {
-		resp, err := handler.productManager.DeleteProduct(ctx, req)
+	req := message.UpdateProductsInfoReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionUpdate)}}) {
+		resp, err := handler.productManager.UpdateProducts(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 
@@ -1304,9 +1291,22 @@ func (handler *ClusterServiceHandler) QueryProducts(ctx context.Context, request
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "QueryProducts", int(response.GetCode()))
 
-	req := message.QueryProductsReq{}
+	req := message.QueryProductsInfoReq{}
 	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionRead)}}) {
 		resp, err := handler.productManager.QueryProducts(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) QueryAvailableProducts(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "QueryAvailableProducts", int(response.GetCode()))
+
+	req := message.QueryAvailableProductsReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionRead)}}) {
+		resp, err := handler.productManager.QueryAvailableProducts(ctx, req)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 
@@ -1320,45 +1320,6 @@ func (handler *ClusterServiceHandler) QueryProductDetail(ctx context.Context, re
 	req := message.QueryProductDetailReq{}
 	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionRead)}}) {
 		resp, err := handler.productManager.QueryProductDetail(ctx, req)
-		handleResponse(ctx, response, err, resp, nil)
-	}
-
-	return nil
-}
-
-func (handler *ClusterServiceHandler) CreateSpecs(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
-	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "CreateSpecs", int(response.GetCode()))
-
-	req := message.CreateSpecsReq{}
-	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionCreate)}}) {
-		resp, err := handler.productManager.CreateSpecs(ctx, req)
-		handleResponse(ctx, response, err, resp, nil)
-	}
-
-	return nil
-}
-
-func (handler *ClusterServiceHandler) DeleteSpecs(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
-	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "DeleteSpecs", int(response.GetCode()))
-
-	req := message.DeleteSpecsReq{}
-	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionDelete)}}) {
-		resp, err := handler.productManager.DeleteSpecs(ctx, req)
-		handleResponse(ctx, response, err, resp, nil)
-	}
-
-	return nil
-}
-
-func (handler *ClusterServiceHandler) QuerySpecs(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
-	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "QuerySpecs", int(response.GetCode()))
-
-	req := message.QuerySpecsReq{}
-	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceProduct), Action: string(constants.RbacActionRead)}}) {
-		resp, err := handler.productManager.QuerySpecs(ctx)
 		handleResponse(ctx, response, err, resp, nil)
 	}
 

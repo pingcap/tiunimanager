@@ -14,60 +14,39 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: user_api.go
+ * @File: vendor.go
  * @Description:
  * @Author: duanbing@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/4
+ * @Date: 2021/12/6
 *******************************************************************************/
 
-package constants
+package product
 
-import "time"
-
-type TenantStatus string
-
-//Definition tenant status information
-const (
-	TenantStatusNormal     TenantStatus = "Normal"
-	TenantStatusDeactivate TenantStatus = "Deactivate"
-)
-
-type TenantOnBoardingStatus string
-
-const (
-	TenantOnBoarding  TenantOnBoardingStatus = "On"
-	TenantOFFBoarding TenantOnBoardingStatus = "Off"
-)
-
-type UserStatus string
-
-//Definition user status information
-const (
-	UserStatusNormal     UserStatus = "Normal"
-	UserStatusDeactivate UserStatus = "Deactivate"
-)
-
-type TokenStatus string
-
-//Definition token status information
-const (
-	TokenStatusNormal     TokenStatus = "Normal"
-	TokenStatusDeactivate TokenStatus = "Deactivate"
-)
-
-type CommonStatus int
-
-const (
-	Valid              CommonStatus = 0
-	Invalid            CommonStatus = 1
-	Deleted            CommonStatus = 2
-	UnrecognizedStatus CommonStatus = -1
-)
-
-func (s CommonStatus) IsValid() bool {
-	return s == Valid
+// Vendor information provided by Enterprise Manager
+type Vendor struct {
+	VendorID   string `gorm:"primaryKey;size:32"`
+	VendorName string `gorm:"size:32"`
+	// accessKey and secretKey
 }
 
-// 1 year
-const ExpirationTime = 365 * 24 * time.Hour
+// VendorZone information provided by Enterprise Manager
+type VendorZone struct {
+	VendorID   string `gorm:"uniqueIndex:vendor_region_zone;size:32"`
+	RegionID   string `gorm:"uniqueIndex:vendor_region_zone;size:32"`
+	RegionName string `gorm:"size:32"`
+	ZoneID     string `gorm:"uniqueIndex:vendor_region_zone;size:32"`
+	ZoneName   string `gorm:"size:32"`
+	Comment    string `gorm:"size:1024;"`
+}
+
+//VendorSpec specification information provided by Enterprise Manager
+type VendorSpec struct {
+	VendorID    string `gorm:"uniqueIndex:vendor_spec;size:32"`
+	SpecID      string `gorm:"uniqueIndex:vendor_spec;size:32"`
+	SpecName    string `gorm:"not null;size 16;comment: original spec of the product, eg 8C16G"`
+	CPU         int    `gorm:"comment: unit: vCPU"`
+	Memory      int    `gorm:"comment: unit: GiB"`
+	DiskType    string `gorm:"comment:NVMeSSD/SSD/SATA"`
+	PurposeType string `gorm:"comment:Compute/Storage/Schedule"`
+}

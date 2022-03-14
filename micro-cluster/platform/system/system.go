@@ -104,6 +104,31 @@ func acceptSystemEvent(ctx context.Context, event constants.SystemEvent) error {
 	}
 }
 
+var SupportedProducts = []structs.ProductWithVersions{
+	{
+		ProductID:   string(constants.EMProductIDTiDB),
+		ProductName: string(constants.EMProductIDTiDB),
+		Versions: []structs.SpecificVersionProduct{
+			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v5.0.0"},
+			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v5.1.0"},
+			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v5.2.0"},
+			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v5.2.2"},
+			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v5.3.0"},
+			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v5.4.0"},
+			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchArm64), Version: "v5.0.0"},
+			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchArm64), Version: "v5.1.0"},
+			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchArm64), Version: "v5.2.0"},
+			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchArm64), Version: "v5.2.2"},
+			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchArm64), Version: "v5.3.0"},
+			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchArm64), Version: "v5.4.0"},
+		},
+	},
+}
+
+var SupportedVendors = []structs.VendorInfo{
+	{ID: string(constants.Local), Name: "local datacenter"},
+}
+
 func (p *SystemManager) GetSystemInfo(ctx context.Context, req message.GetSystemInfoReq) (resp *message.GetSystemInfoResp, err error) {
 	systemInfo, err := models.GetSystemReaderWriter().GetSystemInfo(ctx)
 	if err != nil {
@@ -112,11 +137,13 @@ func (p *SystemManager) GetSystemInfo(ctx context.Context, req message.GetSystem
 	} else {
 		resp = &message.GetSystemInfoResp{
 			Info: structs.SystemInfo{
-				SystemName:       systemInfo.SystemName,
-				SystemLogo:       systemInfo.SystemLogo,
-				CurrentVersionID: systemInfo.CurrentVersionID,
-				LastVersionID:    systemInfo.LastVersionID,
-				State:            string(systemInfo.State),
+				SystemName:        systemInfo.SystemName,
+				SystemLogo:        systemInfo.SystemLogo,
+				CurrentVersionID:  systemInfo.CurrentVersionID,
+				LastVersionID:     systemInfo.LastVersionID,
+				State:             string(systemInfo.State),
+				SupportedProducts: SupportedProducts,
+				SupportedVendors:  SupportedVendors,
 			},
 		}
 	}
@@ -124,9 +151,9 @@ func (p *SystemManager) GetSystemInfo(ctx context.Context, req message.GetSystem
 	if req.WithVersionDetail && len(systemInfo.CurrentVersionID) > 0 {
 		// current version
 		if got, versionError := models.GetSystemReaderWriter().GetVersion(ctx, systemInfo.CurrentVersionID); versionError == nil {
-			resp.CurrentVersion = structs.SystemVersionInfo {
-				VersionID: got.ID,
-				Desc: got.Desc,
+			resp.CurrentVersion = structs.SystemVersionInfo{
+				VersionID:   got.ID,
+				Desc:        got.Desc,
 				ReleaseNote: got.ReleaseNote,
 			}
 		} else {
@@ -138,9 +165,9 @@ func (p *SystemManager) GetSystemInfo(ctx context.Context, req message.GetSystem
 	if req.WithVersionDetail && len(systemInfo.LastVersionID) > 0 {
 		// last version
 		if got, versionError := models.GetSystemReaderWriter().GetVersion(ctx, systemInfo.LastVersionID); versionError == nil {
-			resp.LastVersion = structs.SystemVersionInfo {
-				VersionID: got.ID,
-				Desc: got.Desc,
+			resp.LastVersion = structs.SystemVersionInfo{
+				VersionID:   got.ID,
+				Desc:        got.Desc,
 				ReleaseNote: got.ReleaseNote,
 			}
 		} else {

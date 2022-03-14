@@ -18,7 +18,6 @@ package hostprovider
 import (
 	"context"
 	"fmt"
-
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -46,15 +45,20 @@ func (p *FileHostProvider) SetResourceReaderWriter(rw resource.ReaderWriter) {
 
 func (p *FileHostProvider) ValidateZoneInfo(ctx context.Context, host *structs.HostInfo) (err error) {
 	productRW := models.GetProductReaderWriter()
-	_, count, err := productRW.GetZone(ctx, host.Vendor, host.Region, host.AZ)
+	_, zones, _, err := productRW.GetVendor(ctx, host.Vendor)
 	if err != nil {
 		return err
 	}
-	if count == 0 {
-		errMsg := fmt.Sprintf("can not get zone info for host %s %s, with vendor %s, region %s, zone %s", host.HostName, host.IP, host.Vendor, host.Region, host.AZ)
-		return errors.NewError(errors.TIEM_RESOURCE_INVALID_ZONE_INFO, errMsg)
+
+	// any matched
+	for _, zone := range zones {
+		if zone.RegionID == host.Region && zone.ZoneID == host.AZ {
+			return nil
+		}
 	}
-	return nil
+	errMsg := fmt.Sprintf("can not get zone info for host %s %s, with vendor %s, region %s, zone %s", host.HostName, host.IP, host.Vendor, host.Region, host.AZ)
+	return errors.NewError(errors.TIEM_RESOURCE_INVALID_ZONE_INFO, errMsg)
+
 }
 
 func (p *FileHostProvider) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error) {

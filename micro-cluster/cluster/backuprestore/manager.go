@@ -29,6 +29,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
+	"github.com/pingcap-inc/tiem/models/cluster/management"
 	dbModel "github.com/pingcap-inc/tiem/models/common"
 	utilsql "github.com/pingcap-inc/tiem/util/api/tidb/sql"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -231,26 +232,42 @@ func (mgr *BRManager) CancelBackup(ctx context.Context, request cluster.CancelBa
 	framework.LogWithContext(ctx).Infof("Begin CancelBackup, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End CancelBackup")
 
-	meta, err := meta.Get(ctx, request.ClusterID)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
-		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
-	}
+	/*
+		meta, err := meta.Get(ctx, request.ClusterID)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
+			return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
+		}
 
-	tidbServers := meta.GetClusterConnectAddresses()
-	if len(tidbServers) == 0 {
-		framework.LogWithContext(ctx).Error("get tidb servers from meta result empty")
-		return resp, fmt.Errorf("get tidb servers from meta result empty")
-	}
-	framework.LogWithContext(ctx).Infof("get cluster %s tidb address from meta, %+v", meta.Cluster.ID, tidbServers)
+		tidbServers := meta.GetClusterConnectAddresses()
+		if len(tidbServers) == 0 {
+			framework.LogWithContext(ctx).Error("get tidb servers from meta result empty")
+			return resp, fmt.Errorf("get tidb servers from meta result empty")
+		}
+		framework.LogWithContext(ctx).Infof("get cluster %s tidb address from meta, %+v", meta.Cluster.ID, tidbServers)
+		tidbServerHost := tidbServers[0].IP
+		tidbServerPort := tidbServers[0].Port
+		tidbUserInfo, err := meta.GetDBUserNamePassword(ctx, constants.DBUserBackupRestore)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("get cluster %s user info from meta falied, %s ", meta.Cluster.ID, err.Error())
+			return resp, err
+		}
+		framework.LogWithContext(ctx).Infof("get cluster %s user info from meta", meta.Cluster.ID)
+	*/
+	//todo: test
+	tidbServers := make([]meta.ComponentAddress, 0)
+	tidbServers = append(tidbServers, meta.ComponentAddress{
+		IP:   "172.16.5.148",
+		Port: 10000,
+	})
 	tidbServerHost := tidbServers[0].IP
 	tidbServerPort := tidbServers[0].Port
-	tidbUserInfo, err := meta.GetDBUserNamePassword(ctx, constants.DBUserBackupRestore)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("get cluster %s user info from meta falied, %s ", meta.Cluster.ID, err.Error())
-		return resp, err
+	tidbUserInfo := &management.DBUser{
+		Name: "root",
+		Password: dbModel.PasswordInExpired{
+			Val: "ssssssss",
+		},
 	}
-	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta", meta.Cluster.ID)
 
 	showResp, err := utilsql.ExecShowBackupSQL(ctx, utilsql.ShowBackupReq{DbConnParameter: utilsql.DbConnParam{
 		Username: tidbUserInfo.Name,

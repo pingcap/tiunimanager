@@ -748,21 +748,21 @@ func (m *Manager) startAsyncOperation(ctx context.Context, id, home, tiUPArgs st
 	go func() {
 		cmd, cancelFunc := genCommand(home, m.TiUPBinPath, tiUPArgs, timeoutS)
 		var out bytes.Buffer
-		var stderr bytes.Buffer
-		cmd.Stderr = &stderr
+		//var stderr bytes.Buffer
+		//cmd.Stderr = &stderr
 		cmd.Stdout = &out
 		defer cancelFunc()
 
 		t0 := time.Now()
 		if err := cmd.Start(); err != nil {
-			updateStatus(ctx, id, fmt.Sprintf("operation starts err: %+v, errStr: %s\n\n%s", err, stderr.String(), out.String()), Error, t0)
+			updateStatus(ctx, id, fmt.Sprintf("operation starts err: %+v, errStr: %s", err, out.String()), Error, t0)
 			return
 		}
 		updateStatus(ctx, id, "operation processing", Processing, time.Time{})
 
 		err := cmd.Wait()
 		if err != nil && !m.ExitStatusZero(err) {
-			updateStatus(ctx, id, fmt.Sprintf("operation failed with err: %+v, errstr: %s\n\n%s", err, stderr.String(), out.String()), Error, t0)
+			updateStatus(ctx, id, fmt.Sprintf("operation failed with err: %+v, errstr: %s", err, out.String()), Error, t0)
 			return
 		}
 

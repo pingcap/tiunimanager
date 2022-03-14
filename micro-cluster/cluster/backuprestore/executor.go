@@ -93,7 +93,7 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 		StorageAddress: fmt.Sprintf("%s://%s", storageType, getBRStoragePath(ctx, record.StorageType, record.FilePath)),
 		DbConnParameter: sql.DbConnParam{
 			Username: tidbUserInfo.Name,
-			Password: string(tidbUserInfo.Password),
+			Password: tidbUserInfo.Password.Val,
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),
 		},
@@ -183,7 +183,7 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 		StorageAddress: fmt.Sprintf("%s://%s", storageType, getBRStoragePath(ctx, record.StorageType, record.FilePath)),
 		DbConnParameter: sql.DbConnParam{
 			Username: tidbUserInfo.Name,
-			Password: string(tidbUserInfo.Password),
+			Password: tidbUserInfo.Password.Val,
 			IP:       tidbServerHost,
 			Port:     strconv.Itoa(tidbServerPort),
 		},

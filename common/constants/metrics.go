@@ -74,9 +74,6 @@ const (
 	MetricsDataExportImportQuery  MetricsType = "data/query_export_import_record"
 	MetricsDataExportImportDelete MetricsType = "data/delete_export_import_record"
 
-	// MetricsPlatformQueryKnowledge define knowledge metrics
-	MetricsPlatformQueryKnowledge MetricsType = "platform/query_knowledge"
-
 	// MetricsCDCTaskCreate define cdc metrics
 	MetricsCDCTaskCreate MetricsType = "cdc/create"
 	MetricsCDCTaskDelete MetricsType = "cdc/delete"
@@ -139,6 +136,16 @@ const (
 	MetricsResourceImportHosts              MetricsType = "resource/import_host"
 	MetricsResourceDeleteHost               MetricsType = "resource/delete_host"
 	MetricsResourceQueryHosts               MetricsType = "resource/query"
+
+	// MetricsProductUpdate define product metrics
+	MetricsProductUpdate         MetricsType = "product/update_products"
+	MetricsProductQuery          MetricsType = "product/query_products"
+	MetricsProductQueryAvailable MetricsType = "product/query_available_products"
+	MetricsProductQueryDetail    MetricsType = "product/query_product_detail"
+
+	MetricsVendorUpdate         MetricsType = "vendor/update_vendors"
+	MetricsVendorQuery          MetricsType = "vendor/query_vendors"
+	MetricsVendorQueryAvailable MetricsType = "vendor/query_available_vendors"
 )
 
 var EMMetrics = []MetricsType{
@@ -174,9 +181,6 @@ var EMMetrics = []MetricsType{
 	MetricsDataImport,
 	MetricsDataExportImportQuery,
 	MetricsDataExportImportDelete,
-
-	// MetricsPlatformQueryKnowledge define knowledge metrics
-	MetricsPlatformQueryKnowledge,
 
 	// MetricsCDCTaskCreate define cdc metrics
 	MetricsCDCTaskCreate,
@@ -215,4 +219,16 @@ var EMMetrics = []MetricsType{
 	MetricsResourceDeleteHost,
 	MetricsResourceQueryHosts,
 	MetricsResourceReservedHost,
+
+	// define product metrics
+	MetricsProductUpdate,
+	MetricsProductQuery,
+	MetricsProductQueryAvailable,
+	MetricsProductQueryDetail,
+
+	// define vendor metrics
+	MetricsVendorUpdate,
+	MetricsVendorQuery,
+	MetricsVendorQueryAvailable,
+
 }

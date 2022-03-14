@@ -23,6 +23,8 @@
 
 package constants
 
+import "time"
+
 type TenantStatus string
 
 //Definition tenant status information
@@ -65,3 +67,6 @@ const (
 func (s CommonStatus) IsValid() bool {
 	return s == Valid
 }
+
+// 1 year
+const ExpirationTime = 365 * 24 * time.Hour

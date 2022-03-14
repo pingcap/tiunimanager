@@ -593,10 +593,20 @@ func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterRe
 	return
 }
 
-var restartClusterFlow = workflow.WorkFlowDefine{
+var startClusterFlow = workflow.WorkFlowDefine{
 	FlowName: constants.FlowRestartCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":      {"startCluster", "startDone", "fail", workflow.PollingNode, startCluster},
+		"startDone":  {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
+		"onlineDone": {"end", "", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
+		"fail":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+	},
+}
+
+var restartClusterFlow = workflow.WorkFlowDefine{
+	FlowName: constants.FlowRestartCluster,
+	TaskNodes: map[string]*workflow.NodeDefine{
+		"start":      {"restartCluster", "startDone", "fail", workflow.PollingNode, restartCluster},
 		"startDone":  {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
 		"onlineDone": {"end", "", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
 		"fail":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
@@ -614,7 +624,14 @@ func (p *Manager) RestartCluster(ctx context.Context, req cluster.RestartCluster
 	data := map[string]interface{}{
 		ContextClusterMeta: meta,
 	}
-	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceRestarting, restartClusterFlow.FlowName, data)
+
+	// default restart
+	maintenanceFlowName := restartClusterFlow.FlowName
+	if meta.Cluster.Status == string(constants.ClusterStopped) {
+		maintenanceFlowName = startClusterFlow.FlowName
+	}
+
+	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceRestarting, maintenanceFlowName, data)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"cluster %s async maintenance error: %s", meta.Cluster.ID, err.Error())
@@ -719,34 +736,38 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 // @return flowID
 // @return err
 func asyncMaintenance(ctx context.Context, meta *meta.ClusterMeta,
-	status constants.ClusterMaintenanceStatus, flowName string, data map[string]interface{}) (string, error) {
-	if err := meta.StartMaintenance(ctx, status); err != nil {
-		framework.LogWithContext(ctx).Errorf(
-			"start maintenance failed, cluster %s, status %s, error: %s", meta.Cluster.ID, status, err.Error())
-		return "", err
-	}
+	status constants.ClusterMaintenanceStatus, flowName string, data map[string]interface{}) (flowID string, err error) {
 
-	flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, meta.Cluster.ID, workflow.BizTypeCluster, flowName)
-	if err != nil {
-		meta.EndMaintenance(ctx, status)
-		framework.LogWithContext(ctx).Errorf(
-			"create flow failed, cluster %s, error: %s", meta.Cluster.ID, err.Error())
-		return "", err
-	}
-
-	for key, value := range data {
-		flow.Context.SetData(key, value)
-	}
-	if err = workflow.GetWorkFlowService().AsyncStart(ctx, flow); err != nil {
-		meta.EndMaintenance(ctx, status)
-		framework.LogWithContext(ctx).Errorf(
-			"start flow %s failed, cluster %s, error: %s", flow.Flow.ID, meta.Cluster.ID, err.Error())
-		return "", err
-	}
-	framework.LogWithContext(ctx).Infof(
-		"create flow %s succeed, cluster %s", flow.Flow.ID, meta.Cluster.ID)
-
-	return flow.Flow.ID, nil
+	var flow *workflow.WorkFlowAggregation
+	err = models.Transaction(ctx, func(transactionCtx context.Context) error {
+		return errors.OfNullable(nil).BreakIf(func() error {
+			// update maintenance statue
+			return meta.StartMaintenance(transactionCtx, status)
+		}).BreakIf(func() error {
+			// create flow
+			if newFlow, flowError := workflow.GetWorkFlowService().
+				CreateWorkFlow(transactionCtx, meta.Cluster.ID, workflow.BizTypeCluster, flowName); flowError == nil {
+				flow = newFlow
+				flowID = newFlow.Flow.ID
+				for key, value := range data {
+					flow.Context.SetData(key, value)
+				}
+				return nil
+			} else {
+				return flowError
+			}
+		}).BreakIf(func() error {
+			// async start flow
+			return workflow.GetWorkFlowService().AsyncStart(transactionCtx, flow)
+		}).If(func(err error) {
+			framework.LogWithContext(ctx).Errorf(
+				"maintenance cluster %s failed", meta.Cluster.ID)
+		}).Else(func() {
+			framework.LogWithContext(ctx).Infof(
+				"create flow %s succeed, cluster %s", flowID, meta.Cluster.ID)
+		}).Present()
+	})
+	return
 }
 
 func (p *Manager) QueryCluster(ctx context.Context, req cluster.QueryClustersReq) (resp cluster.QueryClusterResp, total int, err error) {

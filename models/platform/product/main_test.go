@@ -33,6 +33,8 @@ import (
 	"testing"
 )
 
+var testRW *ProductReadWrite
+
 func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
 	os.MkdirAll(testFilePath, 0755)
@@ -54,12 +56,14 @@ func TestMain(m *testing.M) {
 			} else {
 				logins.Infof("open database successful, filepath: %s", dbFile)
 			}
-			db.Migrator().CreateTable(Zone{})
-			db.Migrator().CreateTable(Spec{})
-			db.Migrator().CreateTable(ProductComponent{})
-			db.Migrator().CreateTable(Product{})
+			db.Migrator().CreateTable(Vendor{})
+			db.Migrator().CreateTable(VendorZone{})
+			db.Migrator().CreateTable(VendorSpec{})
+			db.Migrator().CreateTable(ProductInfo{})
+			db.Migrator().CreateTable(ProductVersion{})
+			db.Migrator().CreateTable(ProductComponentInfo{})
 			//init test data
-			prw = NewProductReadWriter(db)
+			testRW = NewProductReadWrite(db)
 			return nil
 		},
 	)

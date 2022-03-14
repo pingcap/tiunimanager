@@ -30,33 +30,36 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	resource "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
+	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
+	"github.com/pingcap-inc/tiem/models/platform/product"
 )
 
 func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance, error) {
 	instances := p.GetInstanceByStatus(ctx, constants.ClusterInstanceInitializing)
 	requirements := make([]resource.AllocRequirement, 0)
 
-	properties, err := p.GetClusterComponentProperties(ctx)
+	_, _, components, err := models.GetProductReaderWriter().GetProduct(ctx, p.Cluster.Type)
 	if err != nil {
+		err = errors.WrapError(errors.TIEM_UNSUPPORT_PRODUCT, "get product failed", err)
 		return nil, nil, err
 	}
 
-	propertyMap := make(map[string]structs.ProductComponentProperty)
-	for _, property := range properties {
-		propertyMap[property.ID] = property
+	componentsMap := make(map[string]*product.ProductComponentInfo)
+	for _, c := range components {
+		componentsMap[c.ComponentID] = c
 	}
 
 	allocInstances := make([]*management.ClusterInstance, 0)
 	for _, instance := range instances {
-		var instanceProperty structs.ProductComponentProperty
+		var componentInfo product.ProductComponentInfo
 		if Contain(constants.ParasiteComponentIDs, constants.EMProductComponentIDType(instance.Type)) {
 			continue
 		}
-		if property, ok := propertyMap[instance.Type]; !ok {
+		if c, ok := componentsMap[instance.Type]; !ok {
 			return nil, nil, errors.NewError(errors.TIEM_UNSUPPORT_PRODUCT, "")
 		} else {
-			instanceProperty = property
+			componentInfo = *c
 		}
 		requirements = append(requirements, resource.AllocRequirement{
 			Location: structs.Location{
@@ -67,9 +70,9 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 				Exclusive: p.Cluster.Exclusive,
 				PortReq: []resource.PortRequirement{
 					{
-						Start:   instanceProperty.StartPort,
-						End:     instanceProperty.EndPort,
-						PortCnt: instanceProperty.MaxPort,
+						Start:   componentInfo.StartPort,
+						End:     componentInfo.EndPort,
+						PortCnt: componentInfo.MaxPort,
 					},
 				},
 				DiskReq: resource.DiskRequirement{

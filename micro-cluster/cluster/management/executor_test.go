@@ -151,45 +151,10 @@ func TestPrepareResource(t *testing.T) {
 		},
 	})
 
-	productRW := mock_product.NewMockProductReadWriterInterface(ctrl)
+
+	productRW := mock_product.NewMockReaderWriter(ctrl)
 	models.SetProductReaderWriter(productRW)
-	productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs2.ProductDetail{
-		"TiDB": {
-			Versions: map[string]structs2.ProductVersion{
-				"v5.0.0": {
-					Version: "v5.0.0",
-					Arch: map[string][]structs2.ProductComponentProperty{
-						"x86_64": {
-							{
-								ID:                      "TiDB",
-								MinInstance:             1,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{},
-							},
-							{
-								ID:                      "TiKV",
-								MinInstance:             1,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{},
-							},
-							{
-								ID:                      "PD",
-								MinInstance:             1,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{1, 3, 5, 7},
-							},
-							{
-								ID:                      "TiFlash",
-								MinInstance:             0,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{},
-							},
-						},
-					},
-				},
-			},
-		},
-	}, nil).AnyTimes()
+	mockQueryTiDBFromDBAnyTimes(productRW.EXPECT())
 
 	t.Run("normal", func(t *testing.T) {
 		resourceManager := mock_allocator_recycler.NewMockAllocatorRecycler(ctrl)
@@ -1134,6 +1099,49 @@ func TestStartCluster(t *testing.T) {
 	})
 }
 
+func TestRestartCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	t.Run("normal", func(t *testing.T) {
+		mockTiupManager := mock_deployment.NewMockInterface(ctrl)
+		mockTiupManager.EXPECT().Restart(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
+		deployment.M = mockTiupManager
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		err := restartCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
+
+	t.Run("restart fail", func(t *testing.T) {
+		mockTiupManager := mock_deployment.NewMockInterface(ctrl)
+		mockTiupManager.EXPECT().Restart(gomock.Any(), gomock.Any(), gomock.Any(),
+			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", fmt.Errorf("fail")).AnyTimes()
+		deployment.M = mockTiupManager
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "testCluster",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		err := restartCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
+}
+
 func TestSyncBackupStrategy(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -1602,7 +1610,7 @@ func TestInitDatabaseAccount(t *testing.T) {
 			string(constants.Root): &management.DBUser{
 				ClusterID: "2145635758",
 				Name:      constants.DBUserName[constants.Root],
-				Password:  "12345678",
+				Password:  common.PasswordInExpired{Val: "123455678"},
 				RoleType:  string(constants.Root),
 			},
 		},
@@ -1675,7 +1683,7 @@ func Test_testConnectivity(t *testing.T) {
 				string(constants.Root): &management.DBUser{
 					ClusterID: "2145635758",
 					Name:      constants.DBUserName[constants.Root],
-					Password:  "wrong",
+					Password:  common.PasswordInExpired{Val: "wrong"},
 					RoleType:  string(constants.Root),
 				},
 			},
@@ -1712,7 +1720,7 @@ func Test_initDatabaseData(t *testing.T) {
 				string(constants.Root): {
 					ClusterID: "testID",
 					Name:      "root",
-					Password:  "ssssssss",
+					Password:  common.PasswordInExpired{Val: "sssssss"},
 					RoleType:  string(constants.Root),
 				},
 			},
@@ -1757,7 +1765,7 @@ func Test_initDatabaseData(t *testing.T) {
 				string(constants.Root): {
 					ClusterID: "testID",
 					Name:      "root",
-					Password:  "ssssssss",
+					Password:  common.PasswordInExpired{Val: "ssssssss"},
 					RoleType:  string(constants.Root),
 				},
 			},
@@ -1880,7 +1888,7 @@ func TestTakeoverResource(t *testing.T) {
 			string(constants.Root): &management.DBUser{
 				ClusterID: "2145635758",
 				Name:      constants.DBUserName[constants.Root],
-				Password:  "12345678",
+				Password:  common.PasswordInExpired{Val: "123455678"},
 				RoleType:  string(constants.Root),
 			},
 		},

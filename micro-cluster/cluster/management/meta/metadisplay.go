@@ -208,21 +208,6 @@ func (p *ClusterMeta) GetAlertManagerAddresses() []ComponentAddress {
 	return address
 }
 
-func (p *ClusterMeta) GetClusterComponentProperties(ctx context.Context) ([]structs.ProductComponentProperty, error) {
-	detail, err := GetProductDetail(ctx, p.Cluster.Vendor, p.Cluster.Region, p.Cluster.Type)
-	if err != nil {
-		return nil, err
-	}
-
-	if v, versionOK := detail.Versions[p.Cluster.Version]; !versionOK {
-		return nil, errors.NewErrorf(errors.TIEM_UNSUPPORT_PRODUCT, "version %s is not supported", p.Cluster.Version)
-	} else if properties, archOK := v.Arch[string(p.Cluster.CpuArchitecture)]; !archOK {
-		return nil, errors.NewErrorf(errors.TIEM_UNSUPPORT_PRODUCT, "arch %s is not supported", p.Cluster.CpuArchitecture)
-	} else {
-		return properties, nil
-	}
-}
-
 func (p *ClusterMeta) GetInstanceByStatus(ctx context.Context, status constants.ClusterInstanceRunningStatus) []*management.ClusterInstance {
 	instances := make([]*management.ClusterInstance, 0)
 	for _, components := range p.Instances {
@@ -271,14 +256,14 @@ func (p *ClusterMeta) GetInstance(ctx context.Context, instanceID string) (*mana
 // @Parameter	component type
 // @Return		bool
 func (p *ClusterMeta) IsComponentRequired(ctx context.Context, componentType string) bool {
-	properties, err := p.GetClusterComponentProperties(ctx)
+	_, _, components, err := models.GetProductReaderWriter().GetProduct(ctx, p.Cluster.Type)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(err.Error())
 		return false
 	}
 
-	for _, property := range properties {
-		if property.ID == componentType && property.MinInstance > 0 {
+	for _, component := range components {
+		if component.ComponentID == componentType && component.MinInstance > 0 {
 			return true
 		}
 	}
@@ -425,7 +410,7 @@ func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterT
 					ID:   structs.GenSpecCode(int32(instance.CpuCores), int32(instance.Memory)),
 					Name: structs.GenSpecCode(int32(instance.CpuCores), int32(instance.Memory)),
 				},
-				Zone: structs.ZoneInfo{
+				Zone: structs.ZoneFullInfo{
 					ZoneID:   structs.GenDomainCodeByName(p.Cluster.Region, instance.Zone),
 					ZoneName: instance.Zone,
 				},
@@ -455,26 +440,9 @@ func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterT
 		resourceInfo.InstanceResource = append(resourceInfo.InstanceResource, instanceResource)
 	}
 
-	instanceWrapper := InstanceWrapper{topologyInfo.Topology, func(p, q *structs.ClusterInstanceInfo) bool {
-		return constants.EMProductComponentIDType(p.Type).SortWeight() > constants.EMProductComponentIDType(q.Type).SortWeight()
-	}}
-	sort.Sort(instanceWrapper)
+	sort.Slice(topologyInfo.Topology, func(i, j int) bool {
+		return constants.EMProductComponentIDType(topologyInfo.Topology[i].Type).SortWeight() > constants.EMProductComponentIDType(topologyInfo.Topology[j].Type).SortWeight()
+	})
 
-	topologyInfo.Topology = instanceWrapper.infos
 	return *topologyInfo, *resourceInfo
-}
-
-type InstanceWrapper struct {
-	infos []structs.ClusterInstanceInfo
-	by    func(p, q *structs.ClusterInstanceInfo) bool
-}
-
-func (pw InstanceWrapper) Len() int {
-	return len(pw.infos)
-}
-func (pw InstanceWrapper) Swap(i, j int) {
-	pw.infos[i], pw.infos[j] = pw.infos[j], pw.infos[i]
-}
-func (pw InstanceWrapper) Less(i, j int) bool {
-	return pw.by(&pw.infos[i], &pw.infos[j])
 }

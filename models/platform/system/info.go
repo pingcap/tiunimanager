@@ -35,4 +35,9 @@ type SystemInfo struct {
 	CurrentVersionID string                `gorm:""`
 	LastVersionID    string                `gorm:""`
 	State            constants.SystemState `gorm:"default:Initialing;"`
+
+	VendorZonesInitialized       bool `gorm:"default:false;"`
+	VendorSpecsInitialized       bool `gorm:"default:false;"`
+	ProductComponentsInitialized bool `gorm:"default:false;"`
+	ProductVersionsInitialized   bool `gorm:"default:false;"`
 }

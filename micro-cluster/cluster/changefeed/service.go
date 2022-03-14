@@ -107,7 +107,7 @@ func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID str
 			Ip:              address.IP,
 			Port:            address.Port,
 			Username:        user.Name,
-			Password:        string(user.Password),
+			Password:        user.Password.Val,
 			TargetClusterId: targetClusterID,
 		},
 	}
@@ -121,6 +121,9 @@ func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID str
 	}
 
 	err = p.createExecutor(ctx, sourceCluster, task)
+	if err != nil {
+		models.GetChangeFeedReaderWriter().Delete(ctx, ID)
+	}
 
 	return
 }

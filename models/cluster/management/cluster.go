@@ -33,7 +33,7 @@ type Cluster struct {
 	TLS               bool                               `gorm:"default:false;comment:'whether to enable TLS, value: true or false'"`
 	Tags              []string                           `gorm:"-"`
 	TagInfo           string                             `gorm:"comment:'cluster tag information'"`
-	OwnerId           string                             `gorm:"not null:size:32;<-:create;->"`
+	OwnerId           string                             `gorm:"not null;size:32;<-:create;->"`
 	ParameterGroupID  string                             `gorm:"comment: parameter group id"`
 	Copies            int                                `gorm:"comment: copies"`
 	Exclusive         bool                               `gorm:"comment: exclusive"`

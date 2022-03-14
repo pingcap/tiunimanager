@@ -18,6 +18,8 @@ package common
 import (
 	"context"
 	"database/sql/driver"
+	"encoding/json"
+	"github.com/pingcap-inc/tiem/common/constants"
 	crypto "github.com/pingcap-inc/tiem/util/encrypt"
 	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"golang.org/x/crypto/bcrypt"
@@ -52,6 +54,52 @@ func (p *Password) Scan(value interface{}) error {
 // Value implements the driver Valuer interface.
 func (p Password) Value() (driver.Value, error) {
 	return crypto.AesEncryptCFB(string(p))
+}
+
+type PasswordInExpired struct {
+	Val        string  // Value is the value of the password
+	UpdateTime time.Time // UpdateTime is the last update time
+}
+
+// Scan implements the Scanner interface.
+func (p *PasswordInExpired) Scan(value interface{}) error {
+	if value == nil {
+		p.Val, p.UpdateTime = "", time.Time{}
+		return nil
+	}
+	val := []byte(value.(string))
+	err := json.Unmarshal(val, p)
+	if err != nil {
+		return err
+	}
+	dec, err := crypto.AesDecryptCFB(p.Val)
+
+	if err != nil {
+		return err
+	}
+	p.Val = dec
+	return nil
+}
+
+// Value implements the driver Valuer interface.
+func (p PasswordInExpired) Value() (driver.Value, error) {
+	enc, err := crypto.AesEncryptCFB(p.Val)
+	if err != nil {
+		return nil, err
+	}
+	p.Val = enc
+	p.UpdateTime = time.Now()
+	res, err := json.Marshal(p)
+	return string(res), err
+}
+
+// CheckUpdateTimeExpired
+// @Description: check if the update time of the password is expired
+// @Parameter
+// @return bool
+func (p PasswordInExpired) CheckUpdateTimeExpired() (bool, error) {
+	duration := time.Since(p.UpdateTime)
+	return duration > constants.ExpirationTime, nil
 }
 
 func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
@@ -110,11 +158,11 @@ func WrapDBError(err error) error {
 	}
 }
 
-func FinalHash(salt string, passwd string) ([]byte, error) {
-	if passwd == "" {
+func FinalHash(salt string, password string) ([]byte, error) {
+	if password == "" {
 		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "password cannot be empty")
 	}
-	s := salt + passwd
+	s := salt + password
 	finalSalt, err := bcrypt.GenerateFromPassword([]byte(s), bcrypt.DefaultCost)
 
 	return finalSalt, err

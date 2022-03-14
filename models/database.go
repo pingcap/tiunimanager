@@ -73,7 +73,7 @@ type database struct {
 	rbacReaderWriter                 rbac.ReaderWriter
 	accountReaderWriter              account.ReaderWriter
 	tokenReaderWriter                identification.ReaderWriter
-	productReaderWriter              product.ProductReadWriterInterface
+	productReaderWriter              product.ReaderWriter
 	tiUPConfigReaderWriter           tiup.ReaderWriter
 	reportReaderWriter               check.ReaderWriter
 	systemReaderWriter               system.ReaderWriter
@@ -219,10 +219,12 @@ func (p *database) migrateTables() (err error) {
 		new(mm.UsedCompute),
 		new(mm.UsedPort),
 		new(mm.UsedDisk),
-		new(product.Zone),
-		new(product.Spec),
-		new(product.Product),
-		new(product.ProductComponent),
+		new(product.Vendor),
+		new(product.VendorZone),
+		new(product.VendorSpec),
+		new(product.ProductInfo),
+		new(product.ProductVersion),
+		new(product.ProductComponentInfo),
 		new(account.User),
 		new(account.Tenant),
 		new(account.UserLogin),
@@ -246,7 +248,7 @@ func (p *database) initReaderWriters() {
 	defaultDb.rbacReaderWriter = rbac.NewRBACReadWrite(defaultDb.base)
 	defaultDb.accountReaderWriter = account.NewAccountReadWrite(defaultDb.base)
 	defaultDb.tokenReaderWriter = identification.NewTokenReadWrite(defaultDb.base)
-	defaultDb.productReaderWriter = product.NewProductReadWriter(defaultDb.base)
+	defaultDb.productReaderWriter = product.NewProductReadWrite(defaultDb.base)
 	defaultDb.tiUPConfigReaderWriter = tiup.NewGormTiupConfigReadWrite(defaultDb.base)
 	defaultDb.reportReaderWriter = check.NewReportReadWrite(defaultDb.base)
 	defaultDb.systemReaderWriter = system.NewSystemReadWrite(defaultDb.base)
@@ -477,11 +479,11 @@ func SetTokenReaderWriter(rw identification.ReaderWriter) {
 	defaultDb.tokenReaderWriter = rw
 }
 
-func GetProductReaderWriter() product.ProductReadWriterInterface {
+func GetProductReaderWriter() product.ReaderWriter {
 	return defaultDb.productReaderWriter
 }
 
-func SetProductReaderWriter(rw product.ProductReadWriterInterface) {
+func SetProductReaderWriter(rw product.ReaderWriter) {
 	defaultDb.productReaderWriter = rw
 }
 

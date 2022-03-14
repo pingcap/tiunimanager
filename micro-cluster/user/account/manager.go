@@ -136,7 +136,7 @@ func (p *Manager) UpdateUserPassword(ctx context.Context, request message.Update
 		return resp, errors.NewErrorf(errors.UserGenSaltAndHashValueFailed,
 			"user %s generate salt and hash error: %v", request.ID, err)
 	}
-	err = rw.UpdateUserPassword(ctx, request.ID, user.Salt, user.FinalHash)
+	err = rw.UpdateUserPassword(ctx, request.ID, user.Salt, user.FinalHash.Val)
 	if err != nil {
 		errMsg := fmt.Sprintf("update user %s password error: %v", request.ID, err)
 		log.Errorf(errMsg)

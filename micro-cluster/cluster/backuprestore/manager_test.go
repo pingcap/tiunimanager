@@ -178,6 +178,35 @@ func TestBRManager_BackupCluster_case3(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestBRManager_CancelBackup_case1(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{
+		Entity: common.Entity{
+			ID:       "id-xxxx",
+			TenantId: "tid-xxx",
+		},
+	}, make([]*management.ClusterInstance, 0), make([]*management.DBUser, 0), nil).AnyTimes()
+
+	records := make([]*backuprestore.BackupRecord, 1)
+	records[0] = &backuprestore.BackupRecord{
+		Entity: common.Entity{
+			ID: "record-xxx",
+		},
+		FilePath: "./testdata",
+	}
+	brRW := mockbr.NewMockReaderWriter(ctrl)
+	brRW.EXPECT().QueryBackupRecords(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(records, int64(1), nil)
+	models.SetBRReaderWriter(brRW)
+
+	service := GetBRService()
+	_, err := service.CancelBackup(context.TODO(), cluster.CancelBackupReq{ClusterID: "test-cls", BackupID: "record-xxx"})
+	assert.NotNil(t, err)
+}
+
 func TestBRManager_RestoreExistCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

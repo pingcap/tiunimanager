@@ -20,6 +20,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"strconv"
 	"strings"
 )
 
@@ -51,6 +52,27 @@ type RestoreSQLReq struct {
 	RateLimitM      string
 	Concurrency     string // only for SQL command, not used in br command
 	CheckSum        string // only for SQL command, not used in br command
+}
+
+type ShowBackupReq struct {
+	DbConnParameter DbConnParam
+	Destination     string
+}
+
+type ShowBackupResp struct {
+	Destination   string
+	State         string
+	Progress      float32
+	Connection    int
+	QueueTime     string
+	ExecutionTime string
+	FinishTime    string
+	Message       sql.NullString
+}
+
+type CancelBackupReq struct {
+	DbConnParameter DbConnParam
+	Connection      int
 }
 
 func ExecBackupSQL(ctx context.Context, request BackupSQLReq, workflowNodeId string) (resp BRSQLResp, err error) {
@@ -140,5 +162,57 @@ func ExecRestoreSQL(ctx context.Context, request RestoreSQLReq, workflowNodeId s
 		return
 	}
 	framework.LogWithContext(ctx).Infof("do restore sql cmd %s succeed", brSQLCmd)
+	return
+}
+
+func ExecShowBackupSQL(ctx context.Context, request ShowBackupReq) (resp ShowBackupResp, err error) {
+	framework.LogWithContext(ctx).Infof("begin exec show backup sql, request: %+v", request)
+
+	dbConnParam := request.DbConnParameter
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username,
+		dbConnParam.Password, dbConnParam.IP, dbConnParam.Port))
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("open tidb connection failed %s", err.Error())
+		return
+	}
+	defer db.Close()
+
+	var args []string
+	args = append(args, "SHOW", "BACKUPS")
+	if request.Destination != "" {
+		args = append(args, "LIKE", fmt.Sprintf("'%%%s%%'", request.Destination))
+	}
+	showSQLCmd := strings.Join(args, " ")
+	err = db.QueryRow(showSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.QueueTime, &resp.ExecutionTime, &resp.FinishTime, &resp.Connection, &resp.Message)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("query backup sql cmd failed %s", err.Error())
+		return
+	}
+	framework.LogWithContext(ctx).Infof("do show backup sql cmd %s succeed, resp: %+v", showSQLCmd, resp)
+	return
+}
+
+func CancelBackupSQL(ctx context.Context, request CancelBackupReq) (err error) {
+	framework.LogWithContext(ctx).Infof("begin exec show backup sql, request: %+v", request)
+
+	dbConnParam := request.DbConnParameter
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username,
+		dbConnParam.Password, dbConnParam.IP, dbConnParam.Port))
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("open tidb connection failed %s", err.Error())
+		return
+	}
+	defer db.Close()
+
+	var args []string
+	args = append(args, "KILL", "TIDB", "QUERY", strconv.Itoa(request.Connection))
+
+	cancelSQLCmd := strings.Join(args, " ")
+	_, err = db.Exec(cancelSQLCmd)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("query backup sql cmd failed %s", err.Error())
+		return
+	}
+	framework.LogWithContext(ctx).Infof("do show backup sql cmd %s succeed", cancelSQLCmd)
 	return
 }

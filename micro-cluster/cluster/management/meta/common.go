@@ -42,6 +42,7 @@ import (
 
 const CheckMaxReplicaCmd = "SELECT MAX(replica_count) as max_replica_count FROM information_schema.tiflash_replica;"
 const DefaultTiupTimeOut = 360
+const LongTiupTimeOut = 600
 const DefaultPDMaxCount = 7
 const CheckInstanceStatusTimeout = 30 * 24 * time.Hour
 const CheckInstanceStatusInterval = 10 * time.Second

@@ -66,6 +66,7 @@ type ShowBackupResp struct {
 	QueueTime     string
 	ExecutionTime string
 	FinishTime    string
+	Message       string
 }
 
 type CancelBackupReq struct {
@@ -178,12 +179,12 @@ func ExecShowBackupSQL(ctx context.Context, request ShowBackupReq) (resp ShowBac
 	var args []string
 	args = append(args, "SHOW", "BACKUPS")
 	showSQLCmd := strings.Join(args, " ")
-	err = db.QueryRow(showSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.QueueTime, &resp.ExecutionTime, &resp.FinishTime, &resp.Connection)
+	err = db.QueryRow(showSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.QueueTime, &resp.ExecutionTime, &resp.FinishTime, &resp.Connection, &resp.Message)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("query backup sql cmd failed %s", err.Error())
 		return
 	}
-	framework.LogWithContext(ctx).Infof("do show backup sql cmd %s succeed", showSQLCmd)
+	framework.LogWithContext(ctx).Infof("do show backup sql cmd %s succeed, resp: %+v", showSQLCmd, resp)
 	return
 }
 

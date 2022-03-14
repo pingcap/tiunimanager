@@ -1667,12 +1667,9 @@ func TestInitGrafanaAccount(t *testing.T) {
 		rw.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil)
 		flowContext := workflow.NewFlowContext(context.TODO())
 		flowContext.SetData(ContextClusterMeta, clusterMeta)
-		metadata := &spec.ClusterMeta{
-			Version: "v5.2.2",
-			Topology: &spec.Specification{
-				Grafanas: []*spec.GrafanaSpec{
-					{Host: "127.0.0.11", Port: 21, Username: "root", Password: "123"},
-				},
+		metadata := &spec.Specification{
+			Grafanas: []*spec.GrafanaSpec{
+				{Host: "127.0.0.11", Port: 21, Username: "root", Password: "123"},
 			},
 		}
 		bytes, err := yaml.Marshal(metadata)
@@ -1685,10 +1682,7 @@ func TestInitGrafanaAccount(t *testing.T) {
 	t.Run("not found grafana", func(t *testing.T) {
 		flowContext := workflow.NewFlowContext(context.TODO())
 		flowContext.SetData(ContextClusterMeta, clusterMeta)
-		metadata := &spec.ClusterMeta{
-			Version:  "v5.2.2",
-			Topology: &spec.Specification{},
-		}
+		metadata := &spec.Specification{}
 		bytes, err := yaml.Marshal(metadata)
 		assert.NoError(t, err)
 		flowContext.SetData(ContextTopology, string(bytes))
@@ -1702,12 +1696,9 @@ func TestInitGrafanaAccount(t *testing.T) {
 		rw.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(fmt.Errorf("create DBUser error"))
 		flowContext := workflow.NewFlowContext(context.TODO())
 		flowContext.SetData(ContextClusterMeta, clusterMeta)
-		metadata := &spec.ClusterMeta{
-			Version: "v5.2.2",
-			Topology: &spec.Specification{
-				Grafanas: []*spec.GrafanaSpec{
-					{Host: "127.0.0.11", Port: 21, Username: "root", Password: "123"},
-				},
+		metadata := &spec.Specification{
+			Grafanas: []*spec.GrafanaSpec{
+				{Host: "127.0.0.11", Port: 21, Username: "root", Password: "123"},
 			},
 		}
 		bytes, err := yaml.Marshal(metadata)

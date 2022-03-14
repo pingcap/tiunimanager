@@ -1717,10 +1717,10 @@ func GenerateDBUser(context *workflow.FlowContext, roleTyp constants.DBUserRoleT
 	cluster := clusterMeta.Cluster
 
 	dbUser := &management.DBUser{
-		ClusterID:                cluster.ID,
-		Name:                     constants.DBUserName[roleTyp],
-		Password:                 common.PasswordInExpired{Val: meta.GetRandomString(10), UpdateTime: time.Now()},
-		RoleType:                 string(roleTyp),
+		ClusterID: cluster.ID,
+		Name:      constants.DBUserName[roleTyp],
+		Password:  common.PasswordInExpired{Val: meta.GetRandomString(10), UpdateTime: time.Now()},
+		RoleType:  string(roleTyp),
 	}
 	return dbUser
 }

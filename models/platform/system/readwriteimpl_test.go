@@ -37,11 +37,11 @@ func TestSystemReadWrite_GetSystemInfo(t *testing.T) {
 	assert.Equal(t, errors.TIEM_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
 
 	systemInfo := &SystemInfo{
-		SystemName: "EM",
-		SystemLogo: "sss",
+		SystemName:       "EM",
+		SystemLogo:       "sss",
 		CurrentVersionID: "v1",
-		LastVersionID: "",
-		State: constants.SystemRunning,
+		LastVersionID:    "",
+		State:            constants.SystemRunning,
 	}
 	err = testRW.DB(context.TODO()).Create(systemInfo).Error
 	defer testRW.DB(context.TODO()).Delete(&SystemInfo{}, "system_name = 'EM'")
@@ -53,13 +53,13 @@ func TestSystemReadWrite_GetSystemInfo(t *testing.T) {
 
 func TestSystemReadWrite_VersionInfo(t *testing.T) {
 	testRW.DB(context.TODO()).Create(&VersionInfo{
-		"v1","test","",
+		"v1", "test", "",
 	})
 	testRW.DB(context.TODO()).Create(&VersionInfo{
-		"v2","test","",
+		"v2", "test", "",
 	})
 	testRW.DB(context.TODO()).Create(&VersionInfo{
-		"v3","test","",
+		"v3", "test", "",
 	})
 	defer testRW.DB(context.TODO()).Delete(&SystemInfo{}, "desc = 'test'")
 
@@ -93,11 +93,11 @@ func TestSystemReadWrite_UpdateState(t *testing.T) {
 	assert.Equal(t, errors.TIEM_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
 
 	systemInfo := &SystemInfo{
-		SystemName: "EM",
-		SystemLogo: "sss",
+		SystemName:       "EM",
+		SystemLogo:       "sss",
 		CurrentVersionID: "",
-		LastVersionID: "",
-		State: constants.SystemRunning,
+		LastVersionID:    "",
+		State:            constants.SystemRunning,
 	}
 	err = testRW.DB(context.TODO()).Create(systemInfo).Error
 	defer testRW.DB(context.TODO()).Delete(&SystemInfo{}, "system_name = 'EM'")
@@ -130,11 +130,11 @@ func TestSystemReadWrite_UpdateVersion(t *testing.T) {
 	assert.Equal(t, errors.TIEM_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
 
 	systemInfo := &SystemInfo{
-		SystemName: "EM",
-		SystemLogo: "sss",
+		SystemName:       "EM",
+		SystemLogo:       "sss",
 		CurrentVersionID: "",
-		LastVersionID: "",
-		State: constants.SystemRunning,
+		LastVersionID:    "",
+		State:            constants.SystemRunning,
 	}
 	err = testRW.DB(context.TODO()).Create(systemInfo).Error
 	defer testRW.DB(context.TODO()).Delete(&SystemInfo{}, "system_name = 'EM'")
@@ -175,11 +175,11 @@ func TestSystemReadWrite_Initialized(t *testing.T) {
 	assert.Equal(t, errors.TIEM_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
 
 	systemInfo := &SystemInfo{
-		SystemName: "EM",
-		SystemLogo: "sss",
+		SystemName:       "EM",
+		SystemLogo:       "sss",
 		CurrentVersionID: "",
-		LastVersionID: "",
-		State: constants.SystemRunning,
+		LastVersionID:    "",
+		State:            constants.SystemRunning,
 	}
 	err = testRW.DB(context.TODO()).Create(systemInfo).Error
 	defer testRW.DB(context.TODO()).Delete(&SystemInfo{}, "system_name = 'EM'")

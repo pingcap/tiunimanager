@@ -37,7 +37,7 @@ import (
 	"testing"
 )
 
-func TestManager_QueryVendors(t *testing.T)  {
+func TestManager_QueryVendors(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	productRW := mock_product.NewMockReaderWriter(ctrl)
@@ -54,18 +54,18 @@ func TestManager_QueryVendors(t *testing.T)  {
 	t.Run("get vendor failed", func(t *testing.T) {
 		productRW.EXPECT().QueryAllVendors(gomock.Any()).Return([]*product.Vendor{
 			{
-				VendorID: "AWS",
+				VendorID:   "AWS",
 				VendorName: "aws",
 			},
 		}, nil).Times(1)
-		productRW.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil,nil,nil,errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		productRW.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
 		_, err := NewManager().QueryVendors(context.TODO(), message.QueryVendorInfoReq{VendorIDs: []string{}})
 		assert.Error(t, err)
 	})
 	t.Run("query all", func(t *testing.T) {
 		productRW.EXPECT().QueryAllVendors(gomock.Any()).Return([]*product.Vendor{
 			{
-				VendorID: "Local",
+				VendorID:   "Local",
 				VendorName: "local",
 			},
 		}, nil).Times(1)
@@ -124,7 +124,7 @@ func TestManager_QueryAvailableVendors(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		productRW.EXPECT().QueryAllVendors(gomock.Any()).Return([]*product.Vendor{
 			{
-				VendorID: "Local",
+				VendorID:   "Local",
 				VendorName: "local",
 			},
 		}, nil).Times(1)
@@ -144,18 +144,18 @@ func TestManager_QueryAvailableVendors(t *testing.T) {
 	t.Run("get vendor failed", func(t *testing.T) {
 		productRW.EXPECT().QueryAllVendors(gomock.Any()).Return([]*product.Vendor{
 			{
-				VendorID: "AWS",
+				VendorID:   "AWS",
 				VendorName: "aws",
 			},
 		}, nil).Times(1)
-		productRW.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil,nil,nil,errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		productRW.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
 		_, err := NewManager().QueryAvailableVendors(context.TODO(), message.QueryAvailableVendorsReq{})
 		assert.Error(t, err)
 	})
 
 }
 
-func TestManager_QueryProducts(t *testing.T)  {
+func TestManager_QueryProducts(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	productRW := mock_product.NewMockReaderWriter(ctrl)
@@ -172,18 +172,18 @@ func TestManager_QueryProducts(t *testing.T)  {
 	t.Run("get product failed", func(t *testing.T) {
 		productRW.EXPECT().QueryAllProducts(gomock.Any()).Return([]*product.ProductInfo{
 			{
-				ProductID: "TiDB",
+				ProductID:   "TiDB",
 				ProductName: "tidb",
 			},
 		}, nil).Times(1)
-		productRW.EXPECT().GetProduct(gomock.Any(), gomock.Any()).Return(nil,nil,nil,errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		productRW.EXPECT().GetProduct(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
 		_, err := NewManager().QueryProducts(context.TODO(), message.QueryProductsInfoReq{ProductIDs: []string{}})
 		assert.Error(t, err)
 	})
 	t.Run("query all", func(t *testing.T) {
 		productRW.EXPECT().QueryAllProducts(gomock.Any()).Return([]*product.ProductInfo{
 			{
-				ProductID: "TiDB",
+				ProductID:   "TiDB",
 				ProductName: "tidb",
 			},
 		}, nil).Times(1)
@@ -252,12 +252,12 @@ func TestManager_QueryAvailableProducts(t *testing.T) {
 	t.Run("QueryVendors failed", func(t *testing.T) {
 		productRW.EXPECT().QueryAllProducts(gomock.Any()).Return([]*product.ProductInfo{
 			{
-				ProductID: "TiDB",
+				ProductID:   "TiDB",
 				ProductName: "tidb",
 			},
 		}, nil).Times(1)
 		mockQueryTiDBFromDB(productRW.EXPECT())
-		productRW.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil,nil,nil,errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		productRW.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
 
 		_, err := NewManager().QueryAvailableProducts(context.TODO(), message.QueryAvailableProductsReq{
 			VendorID: "Local",
@@ -267,7 +267,7 @@ func TestManager_QueryAvailableProducts(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		productRW.EXPECT().QueryAllProducts(gomock.Any()).Return([]*product.ProductInfo{
 			{
-				ProductID: "TiDB",
+				ProductID:   "TiDB",
 				ProductName: "tidb",
 			},
 		}, nil).Times(1)
@@ -288,23 +288,23 @@ func TestManager_QueryProductDetail(t *testing.T) {
 	productRW := mock_product.NewMockReaderWriter(ctrl)
 	models.SetProductReaderWriter(productRW)
 	t.Run("QueryProducts failed", func(t *testing.T) {
-		productRW.EXPECT().GetProduct(gomock.Any(), gomock.Any()).Return(nil,nil,nil,errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		productRW.EXPECT().GetProduct(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
 
-		_, err := NewManager().QueryProductDetail(context.TODO(), message.QueryProductDetailReq {
-			VendorID: "Local",
+		_, err := NewManager().QueryProductDetail(context.TODO(), message.QueryProductDetailReq{
+			VendorID:  "Local",
 			ProductID: "TiDB",
-			RegionID: "Region1",
+			RegionID:  "Region1",
 		})
 		assert.Error(t, err)
 	})
 	t.Run("QueryVendors failed", func(t *testing.T) {
 		mockQueryTiDBFromDB(productRW.EXPECT())
-		productRW.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil,nil,nil,errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		productRW.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
 
-		_, err := NewManager().QueryProductDetail(context.TODO(), message.QueryProductDetailReq {
-			VendorID: "Local",
+		_, err := NewManager().QueryProductDetail(context.TODO(), message.QueryProductDetailReq{
+			VendorID:  "Local",
 			ProductID: "TiDB",
-			RegionID: "Region1",
+			RegionID:  "Region1",
 		})
 		assert.Error(t, err)
 	})
@@ -313,10 +313,10 @@ func TestManager_QueryProductDetail(t *testing.T) {
 		mockQueryTiDBFromDB(productRW.EXPECT())
 		mockQueryLocalFromDB(productRW.EXPECT())
 
-		_, err := NewManager().QueryProductDetail(context.TODO(), message.QueryProductDetailReq {
-			VendorID: "Local",
+		_, err := NewManager().QueryProductDetail(context.TODO(), message.QueryProductDetailReq{
+			VendorID:  "Local",
 			ProductID: "TiDB",
-			RegionID: "Region999",
+			RegionID:  "Region999",
 		})
 		assert.Error(t, err)
 	})
@@ -325,10 +325,10 @@ func TestManager_QueryProductDetail(t *testing.T) {
 		mockQueryTiDBFromDB(productRW.EXPECT())
 		mockQueryLocalFromDB(productRW.EXPECT())
 
-		_, err := NewManager().QueryProductDetail(context.TODO(), message.QueryProductDetailReq {
-			VendorID: "Local",
+		_, err := NewManager().QueryProductDetail(context.TODO(), message.QueryProductDetailReq{
+			VendorID:  "Local",
 			ProductID: "TiDB",
-			RegionID: "Region1",
+			RegionID:  "Region1",
 		})
 		assert.NoError(t, err)
 	})
@@ -336,10 +336,10 @@ func TestManager_QueryProductDetail(t *testing.T) {
 }
 
 func vendors() []structs.VendorConfigInfo {
-	return []structs.VendorConfigInfo {
+	return []structs.VendorConfigInfo{
 		{
 			VendorInfo: structs.VendorInfo{
-				ID: "Local",
+				ID:   "Local",
 				Name: "local",
 			},
 			Regions: []structs.RegionConfigInfo{
@@ -357,37 +357,37 @@ func vendors() []structs.VendorConfigInfo {
 					},
 				},
 			},
-			Specs:  []structs.SpecInfo{
+			Specs: []structs.SpecInfo{
 				{
-					ID: "c.large",
-					Name: "c.large",
-					CPU: 4,
-					Memory: 8,
-					DiskType: "SATA",
+					ID:          "c.large",
+					Name:        "c.large",
+					CPU:         4,
+					Memory:      8,
+					DiskType:    "SATA",
 					PurposeType: "Compute",
 				},
 				{
-					ID: "s.large",
-					Name: "s.large",
-					CPU: 4,
-					Memory: 8,
-					DiskType: "SATA",
+					ID:          "s.large",
+					Name:        "s.large",
+					CPU:         4,
+					Memory:      8,
+					DiskType:    "SATA",
 					PurposeType: "Storage",
 				},
 				{
-					ID: "s.xlarge",
-					Name: "s.xlarge",
-					CPU: 8,
-					Memory: 16,
-					DiskType: "SATA",
+					ID:          "s.xlarge",
+					Name:        "s.xlarge",
+					CPU:         8,
+					Memory:      16,
+					DiskType:    "SATA",
 					PurposeType: "Storage",
 				},
 				{
-					ID: "sc.large",
-					Name: "sc.large",
-					CPU: 4,
-					Memory: 8,
-					DiskType: "SATA",
+					ID:          "sc.large",
+					Name:        "sc.large",
+					CPU:         4,
+					Memory:      8,
+					DiskType:    "SATA",
 					PurposeType: "Schedule",
 				},
 			},
@@ -397,68 +397,68 @@ func vendors() []structs.VendorConfigInfo {
 
 func mockQueryLocalFromDB(expect *mock_product.MockReaderWriterMockRecorder) {
 	expect.GetVendor(gomock.Any(), gomock.Any()).Return(&product.Vendor{
-		VendorID: "Local",
+		VendorID:   "Local",
 		VendorName: "local",
-	},[]*product.VendorZone{
+	}, []*product.VendorZone{
 		{
-			VendorID: "Local",
-			RegionID: "Region1",
+			VendorID:   "Local",
+			RegionID:   "Region1",
 			RegionName: "region1",
-			ZoneID: "Zone1_1",
-			ZoneName: "zone1_1",
-			Comment: "aa",
+			ZoneID:     "Zone1_1",
+			ZoneName:   "zone1_1",
+			Comment:    "aa",
 		},
 		{
-			VendorID: "Local",
-			RegionID: "Region1",
+			VendorID:   "Local",
+			RegionID:   "Region1",
 			RegionName: "region1",
-			ZoneID: "Zone1_2",
-			ZoneName: "zone1_2",
-			Comment: "aa",
+			ZoneID:     "Zone1_2",
+			ZoneName:   "zone1_2",
+			Comment:    "aa",
 		},
 		{
-			VendorID: "Local",
-			RegionID: "Region2",
+			VendorID:   "Local",
+			RegionID:   "Region2",
 			RegionName: "region2",
-			ZoneID: "Zone2_1",
-			ZoneName: "zone2_1",
-			Comment: "aa",
+			ZoneID:     "Zone2_1",
+			ZoneName:   "zone2_1",
+			Comment:    "aa",
 		},
-	},[]*product.VendorSpec {
+	}, []*product.VendorSpec{
 		{
-			VendorID: "Local",
-			SpecID: "c.large",
-			SpecName: "c.large",
-			CPU: 4,
-			Memory: 8,
-			DiskType: "SATA",
+			VendorID:    "Local",
+			SpecID:      "c.large",
+			SpecName:    "c.large",
+			CPU:         4,
+			Memory:      8,
+			DiskType:    "SATA",
 			PurposeType: "Compute",
 		},
 		{
-			VendorID: "Local",
-			SpecID: "s.large",
-			SpecName: "s.large",
-			CPU: 4,
-			Memory: 8,
-			DiskType: "SATA",
+			VendorID:    "Local",
+			SpecID:      "s.large",
+			SpecName:    "s.large",
+			CPU:         4,
+			Memory:      8,
+			DiskType:    "SATA",
 			PurposeType: "Storage",
 		},
 		{
-			VendorID: "Local",
-			SpecID: "s.xlarge",
-			SpecName: "s.xlarge",
-			CPU: 8,
-			Memory: 16,
-			DiskType: "SATA",
+			VendorID:    "Local",
+			SpecID:      "s.xlarge",
+			SpecName:    "s.xlarge",
+			CPU:         8,
+			Memory:      16,
+			DiskType:    "SATA",
 			PurposeType: "Storage",
 		},
 		{
-			VendorID: "Local",
-			SpecID: "sc.large",
-			SpecName: "sc.large",
-			CPU: 4,
-			Memory: 8,
-			DiskType: "SATA",
+			VendorID:    "Local",
+			SpecID:      "sc.large",
+			SpecName:    "sc.large",
+			CPU:         4,
+			Memory:      8,
+			DiskType:    "SATA",
 			PurposeType: "Schedule",
 		},
 	}, nil).Times(1)
@@ -467,65 +467,65 @@ func mockQueryLocalFromDB(expect *mock_product.MockReaderWriterMockRecorder) {
 func products() []structs.ProductConfigInfo {
 	return []structs.ProductConfigInfo{
 		{
-			ProductID: "TiDB",
+			ProductID:   "TiDB",
 			ProductName: "whatever",
 			Components: []structs.ProductComponentPropertyWithZones{
 				{
-					ID: "TiDB",
-					Name: "TiDB",
-					PurposeType: "Compute",
-					StartPort: 8,
-					EndPort: 16,
-					MaxPort: 4,
-					MinInstance: 1,
-					MaxInstance: 128,
+					ID:                      "TiDB",
+					Name:                    "TiDB",
+					PurposeType:             "Compute",
+					StartPort:               8,
+					EndPort:                 16,
+					MaxPort:                 4,
+					MinInstance:             1,
+					MaxInstance:             128,
 					SuggestedInstancesCount: []int32{},
 				},
 				{
-					ID: "TiKV",
-					Name: "TiKV",
-					PurposeType: "Storage",
-					StartPort: 1,
-					EndPort: 2,
-					MaxPort: 2,
-					MinInstance: 1,
-					MaxInstance: 128,
+					ID:                      "TiKV",
+					Name:                    "TiKV",
+					PurposeType:             "Storage",
+					StartPort:               1,
+					EndPort:                 2,
+					MaxPort:                 2,
+					MinInstance:             1,
+					MaxInstance:             128,
 					SuggestedInstancesCount: []int32{},
-				},{
-					ID: "PD",
-					Name: "PD",
-					PurposeType: "Schedule",
-					StartPort: 23,
-					EndPort: 413,
-					MaxPort: 22,
-					MinInstance: 1,
-					MaxInstance: 128,
-					SuggestedInstancesCount: []int32{1,3,5,7},
-				},{
-					ID: "CDC",
-					Name: "CDC",
-					PurposeType: "Compute",
-					StartPort: 23,
-					EndPort: 43,
-					MaxPort: 2,
-					MinInstance: 0,
-					MaxInstance: 128,
+				}, {
+					ID:                      "PD",
+					Name:                    "PD",
+					PurposeType:             "Schedule",
+					StartPort:               23,
+					EndPort:                 413,
+					MaxPort:                 22,
+					MinInstance:             1,
+					MaxInstance:             128,
+					SuggestedInstancesCount: []int32{1, 3, 5, 7},
+				}, {
+					ID:                      "CDC",
+					Name:                    "CDC",
+					PurposeType:             "Compute",
+					StartPort:               23,
+					EndPort:                 43,
+					MaxPort:                 2,
+					MinInstance:             0,
+					MaxInstance:             128,
 					SuggestedInstancesCount: []int32{},
 				},
 			},
 			Versions: []structs.SpecificVersionProduct{
 				{
 					ProductID: "TiDB",
-					Arch: "x86_64",
-					Version: "v5.2.2",
-				},{
+					Arch:      "x86_64",
+					Version:   "v5.2.2",
+				}, {
 					ProductID: "TiDB",
-					Arch: "ARM64",
-					Version: "v5.2.2",
-				},{
+					Arch:      "ARM64",
+					Version:   "v5.2.2",
+				}, {
 					ProductID: "TiDB",
-					Arch: "x86_64",
-					Version: "v5.3.0",
+					Arch:      "x86_64",
+					Version:   "v5.3.0",
 				},
 			},
 		},
@@ -534,67 +534,67 @@ func products() []structs.ProductConfigInfo {
 
 func mockQueryTiDBFromDB(expect *mock_product.MockReaderWriterMockRecorder) {
 	expect.GetProduct(gomock.Any(), gomock.Any()).Return(&product.ProductInfo{
-		ProductID: "TiDB",
+		ProductID:   "TiDB",
 		ProductName: "tidb",
-	},[]*product.ProductVersion{
+	}, []*product.ProductVersion{
 		{
 			ProductID: "TiDB",
-			Arch: "x86_64",
-			Version: "v5.2.2",
-		},{
+			Arch:      "x86_64",
+			Version:   "v5.2.2",
+		}, {
 			ProductID: "TiDB",
-			Arch: "ARM64",
-			Version: "v5.2.2",
-		},{
+			Arch:      "ARM64",
+			Version:   "v5.2.2",
+		}, {
 			ProductID: "TiDB",
-			Arch: "x86_64",
-			Version: "v5.3.0",
+			Arch:      "x86_64",
+			Version:   "v5.3.0",
 		},
-	},[]*product.ProductComponentInfo {
+	}, []*product.ProductComponentInfo{
 		{
-			ProductID: "TiDB",
-			ComponentID: "TiDB",
-			ComponentName: "TiDB",
-			PurposeType: "Compute",
-			StartPort: 8,
-			EndPort: 16,
-			MaxPort: 4,
-			MinInstance: 1,
-			MaxInstance: 128,
+			ProductID:               "TiDB",
+			ComponentID:             "TiDB",
+			ComponentName:           "TiDB",
+			PurposeType:             "Compute",
+			StartPort:               8,
+			EndPort:                 16,
+			MaxPort:                 4,
+			MinInstance:             1,
+			MaxInstance:             128,
 			SuggestedInstancesCount: []int32{},
 		},
 		{
-			ProductID: "TiDB",
-			ComponentID: "TiKV",
-			ComponentName: "TiKV",
-			PurposeType: "Storage",
-			StartPort: 1,
-			EndPort: 2,
-			MaxPort: 2,
-			MinInstance: 1,
-			MaxInstance: 128,
+			ProductID:               "TiDB",
+			ComponentID:             "TiKV",
+			ComponentName:           "TiKV",
+			PurposeType:             "Storage",
+			StartPort:               1,
+			EndPort:                 2,
+			MaxPort:                 2,
+			MinInstance:             1,
+			MaxInstance:             128,
 			SuggestedInstancesCount: []int32{},
-		},{
-			ProductID: "TiDB",
-			ComponentID: "PD",
-			ComponentName: "PD",
-			PurposeType: "Schedule",
-			StartPort: 23,
-			EndPort: 413,
-			MaxPort: 22,
-			MinInstance: 1,
-			MaxInstance: 128,
-			SuggestedInstancesCount: []int32{1,3,5,7},
-		},{
-			ProductID: "TiDB",
-			ComponentID: "CDC",
-			ComponentName: "CDC",
-			PurposeType: "Compute",
-			StartPort: 23,
-			EndPort: 43,
-			MaxPort: 2,
-			MinInstance: 0,
-			MaxInstance: 128,
+		}, {
+			ProductID:               "TiDB",
+			ComponentID:             "PD",
+			ComponentName:           "PD",
+			PurposeType:             "Schedule",
+			StartPort:               23,
+			EndPort:                 413,
+			MaxPort:                 22,
+			MinInstance:             1,
+			MaxInstance:             128,
+			SuggestedInstancesCount: []int32{1, 3, 5, 7},
+		}, {
+			ProductID:               "TiDB",
+			ComponentID:             "CDC",
+			ComponentName:           "CDC",
+			PurposeType:             "Compute",
+			StartPort:               23,
+			EndPort:                 43,
+			MaxPort:                 2,
+			MinInstance:             0,
+			MaxInstance:             128,
 			SuggestedInstancesCount: []int32{},
 		},
 	}, nil).Times(1)

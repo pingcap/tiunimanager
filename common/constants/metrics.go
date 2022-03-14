@@ -57,6 +57,7 @@ const (
 	MetricsPlatformCheck     MetricsType = "platform/check"
 	MetricsQueryCheckReports MetricsType = "platform/reports"
 	MetricsGetCheckReport    MetricsType = "platform/report"
+	MetricsQueryPlatformLog  MetricsType = "platform/log"
 
 	MetricsSystemConfigUpdate MetricsType = "config/update"
 	MetricsSystemConfigGet    MetricsType = "config/get"

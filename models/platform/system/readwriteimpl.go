@@ -39,7 +39,7 @@ type SystemReadWrite struct {
 
 func NewSystemReadWrite(db *gorm.DB) ReaderWriter {
 	return &SystemReadWrite{
-	dbCommon.WrapDB(db),
+		dbCommon.WrapDB(db),
 	}
 }
 func (s *SystemReadWrite) QueryVersions(ctx context.Context) ([]*VersionInfo, error) {
@@ -129,6 +129,3 @@ func (s *SystemReadWrite) ProductInitialized(ctx context.Context) error {
 		Error
 	return dbCommon.WrapDBError(err)
 }
-
-
-

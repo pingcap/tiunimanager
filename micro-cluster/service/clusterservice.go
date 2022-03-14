@@ -20,10 +20,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/micro-cluster/platform/check"
-	"github.com/pingcap-inc/tiem/micro-cluster/platform/system"
 	"runtime/debug"
 	"time"
+
+	platformLog "github.com/pingcap-inc/tiem/micro-cluster/platform/log"
+
+	"github.com/pingcap-inc/tiem/micro-cluster/platform/check"
+	"github.com/pingcap-inc/tiem/micro-cluster/platform/system"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 
@@ -75,6 +78,7 @@ type ClusterServiceHandler struct {
 	productManager          *product.Manager
 	rbacManager             rbac.RBACService
 	checkManager            check.CheckService
+	platformLogManager      *platformLog.Manager
 }
 
 func handleRequest(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse, requestBody interface{}, permissions []structs.RbacPermission) bool {
@@ -165,7 +169,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.productManager = product.NewManager()
 	handler.rbacManager = rbac.GetRBACService()
 	handler.checkManager = check.GetCheckService()
-
+	handler.platformLogManager = platformLog.NewManager()
 	return handler
 }
 
@@ -444,6 +448,20 @@ func (handler *ClusterServiceHandler) QueryClusterLog(ctx context.Context, req *
 
 	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionRead)}}) {
 		result, page, err := handler.clusterLogManager.QueryClusterLog(framework.NewBackgroundMicroCtx(ctx, false), *request)
+		handleResponse(ctx, resp, err, result, page)
+	}
+	return nil
+}
+
+func (handler *ClusterServiceHandler) QueryPlatformLog(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "QueryPlatformLog", int(resp.GetCode()))
+	defer handlePanic(ctx, "QueryPlatformLog", resp)
+
+	request := &message.QueryPlatformLogReq{}
+
+	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionRead)}}) {
+		result, page, err := handler.platformLogManager.QueryPlatformLog(framework.NewBackgroundMicroCtx(ctx, false), *request)
 		handleResponse(ctx, resp, err, result, page)
 	}
 	return nil

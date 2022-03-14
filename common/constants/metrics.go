@@ -63,6 +63,7 @@ const (
 
 	// MetricsBackupCreate define backup metrics
 	MetricsBackupCreate         MetricsType = "backup/create"
+	MetricsBackupCancel         MetricsType = "backup/cancel"
 	MetricsBackupDelete         MetricsType = "backup/delete"
 	MetricsBackupQuery          MetricsType = "backup/query"
 	MetricsBackupQueryStrategy  MetricsType = "backup/query_strategy"
@@ -230,5 +231,4 @@ var EMMetrics = []MetricsType{
 	MetricsVendorUpdate,
 	MetricsVendorQuery,
 	MetricsVendorQueryAvailable,
-
 }

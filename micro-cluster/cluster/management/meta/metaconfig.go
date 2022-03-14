@@ -75,17 +75,28 @@ func NewClusterMetaRenderData(ctx context.Context, meta ClusterMeta) *ClusterMet
 		}
 	}
 
+	// init grafana user and password
+	grafanaUser := framework.Current.GetClientArgs().DeployUser
+	if len(grafanaUser) == 0 {
+		grafanaUser = "admin"
+	}
+	grafanaPassword := GetRandomString(10)
+
 	return &ClusterMetaRenderData{
-		ClusterMeta:   meta,
-		GlobalUser:    globalUser,
-		GlobalGroup:   globalGroup,
-		GlobalSSHPort: sshConfigPort.ConfigValue,
+		ClusterMeta:     meta,
+		GlobalUser:      globalUser,
+		GlobalGroup:     globalGroup,
+		GlobalSSHPort:   sshConfigPort.ConfigValue,
+		GrafanaUser:     grafanaUser,
+		GrafanaPassword: grafanaPassword,
 	}
 }
 
 type ClusterMetaRenderData struct {
 	ClusterMeta
-	GlobalUser    string
-	GlobalGroup   string
-	GlobalSSHPort string
+	GlobalUser      string
+	GlobalGroup     string
+	GlobalSSHPort   string
+	GrafanaUser     string
+	GrafanaPassword string
 }

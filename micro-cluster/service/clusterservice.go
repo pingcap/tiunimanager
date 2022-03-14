@@ -72,7 +72,7 @@ type ClusterServiceHandler struct {
 	clusterLogManager       *clusterLog.Manager
 	accountManager          *account.Manager
 	authManager             *identification.Manager
-	productManager         	*product.Manager
+	productManager          *product.Manager
 	rbacManager             rbac.RBACService
 	checkManager            check.CheckService
 }
@@ -770,6 +770,21 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, req *clusterser
 
 	if handleRequest(ctx, req, resp, &backupReq, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionUpdate)}}) {
 		result, err := c.brManager.BackupCluster(framework.NewBackgroundMicroCtx(ctx, false), backupReq, true)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (c ClusterServiceHandler) CancelBackup(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "CancelBackup", int(resp.GetCode()))
+	defer handlePanic(ctx, "CancelBackup", resp)
+
+	cancelReq := cluster.CancelBackupReq{}
+
+	if handleRequest(ctx, req, resp, &cancelReq, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionUpdate)}}) {
+		result, err := c.brManager.CancelBackup(framework.NewBackgroundMicroCtx(ctx, false), cancelReq)
 		handleResponse(ctx, resp, err, result, nil)
 	}
 

@@ -40,6 +40,16 @@ type BackupClusterDataResp struct {
 	BackupID string `json:"backupId"`
 }
 
+// CancelBackupReq Requests for cancel backup
+type CancelBackupReq struct {
+	ClusterID string `json:"clusterId"`
+	BackupID  string `json:"backupId"`
+}
+
+// CancelBackupResp Response for cancel backup
+type CancelBackupResp struct {
+}
+
 // DeleteBackupDataReq Delete a backup file based on the cluster ID and the ID of the backup file
 type DeleteBackupDataReq struct {
 	ClusterID        string   `json:"clusterId"`

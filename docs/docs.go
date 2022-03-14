@@ -189,6 +189,75 @@ var doc = `{
                 }
             }
         },
+        "/backups/cancel": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "cancel backup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cancel cluster backup"
+                ],
+                "summary": "cancel backup",
+                "parameters": [
+                    {
+                        "description": "cancel backup request",
+                        "name": "backupReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.CancelBackupReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.CancelBackupResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/backups/{backupId}": {
             "delete": {
                 "security": [
@@ -6733,6 +6802,20 @@ var doc = `{
                     "type": "string"
                 }
             }
+        },
+        "cluster.CancelBackupReq": {
+            "type": "object",
+            "properties": {
+                "backupId": {
+                    "type": "string"
+                },
+                "clusterId": {
+                    "type": "string"
+                }
+            }
+        },
+        "cluster.CancelBackupResp": {
+            "type": "object"
         },
         "cluster.CloneClusterReq": {
             "type": "object",

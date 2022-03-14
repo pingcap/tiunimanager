@@ -186,6 +186,7 @@ func Route(g *gin.Engine) {
 			backup.Use(interceptor.AuditLog)
 
 			backup.POST("/", metrics.HandleMetrics(constants.MetricsBackupCreate), backuprestore.Backup)
+			backup.POST("/cancel", metrics.HandleMetrics(constants.MetricsBackupCancel), backuprestore.CancelBackup)
 			backup.GET("/", metrics.HandleMetrics(constants.MetricsBackupQuery), backuprestore.QueryBackupRecords)
 			backup.DELETE("/:backupId", metrics.HandleMetrics(constants.MetricsBackupDelete), backuprestore.DeleteBackup)
 		}

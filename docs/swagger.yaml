@@ -1544,6 +1544,30 @@ definitions:
         example: 0
         type: integer
     type: object
+  message.PlatformLogItem:
+    properties:
+      id:
+        example: zvadfwf
+        type: string
+      index:
+        example: em-system-logs-2021.12.30
+        type: string
+      level:
+        example: warn
+        type: string
+      message:
+        example: some do something
+        type: string
+      microMethod:
+        example: em.cluster.ClusterService.GetSystemInfo
+        type: string
+      timestamp:
+        example: "2021-09-23 14:23:10"
+        type: string
+      traceId:
+        example: UNe7K1uERa-2fwSxGJ6CFQ
+        type: string
+    type: object
   message.QueryCheckReportsRsp:
     properties:
       reportMetas:
@@ -1619,6 +1643,16 @@ definitions:
         type: array
       userId:
         type: string
+    type: object
+  message.QueryPlatformLogResp:
+    properties:
+      results:
+        items:
+          $ref: '#/definitions/message.PlatformLogItem'
+        type: array
+      took:
+        example: 10
+        type: integer
     type: object
   message.QueryProductDetailResp:
     properties:
@@ -2136,7 +2170,7 @@ definitions:
         example: zvadfwf
         type: string
       index:
-        example: tiem-tidb-cluster-2021.09.23
+        example: em-tidb-cluster-2021.09.23
         type: string
       ip:
         example: 127.0.0.1
@@ -5408,6 +5442,65 @@ paths:
       summary: platform check
       tags:
       - platform
+  /platform/log:
+    get:
+      consumes:
+      - application/json
+      description: query platform log
+      parameters:
+      - example: 1638331200
+        in: query
+        name: endTime
+        type: integer
+      - example: warn
+        in: query
+        name: level
+        type: string
+      - example: some do something
+        in: query
+        name: message
+        type: string
+      - description: Current page location
+        in: query
+        name: page
+        type: integer
+      - description: Number of this request
+        in: query
+        name: pageSize
+        type: integer
+      - example: 1630468800
+        in: query
+        name: startTime
+        type: integer
+      - example: UNe7K1uERa-2fwSxGJ6CFQ
+        in: query
+        name: traceId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryPlatformLogResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query platform log
+      tags:
+      - platform log
   /platform/report/:checkId:
     get:
       consumes:

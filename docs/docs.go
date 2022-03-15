@@ -7515,6 +7515,12 @@ var doc = `{
                 "targetClusterID"
             ],
             "properties": {
+                "checkMasterWritableFlag": {
+                    "type": "boolean"
+                },
+                "checkSlaveReadOnlyFlag": {
+                    "type": "boolean"
+                },
                 "force": {
                     "type": "boolean"
                 },
@@ -10908,7 +10914,7 @@ var doc = `{
                         "$ref": "#/definitions/structs.ProductComponentPropertyWithZones"
                     }
                 },
-                "productID": {
+                "productId": {
                     "type": "string"
                 },
                 "productName": {
@@ -11102,7 +11108,7 @@ var doc = `{
         "structs.ProductWithVersions": {
             "type": "object",
             "properties": {
-                "productID": {
+                "productId": {
                     "type": "string"
                 },
                 "productName": {
@@ -11226,7 +11232,7 @@ var doc = `{
                 "arch": {
                     "type": "string"
                 },
-                "productID": {
+                "productId": {
                     "type": "string"
                 },
                 "version": {
@@ -11260,10 +11266,10 @@ var doc = `{
         "structs.SystemInfo": {
             "type": "object",
             "properties": {
-                "currentVersionID": {
+                "currentVersionId": {
                     "type": "string"
                 },
-                "lastVersionID": {
+                "lastVersionId": {
                     "type": "string"
                 },
                 "productComponentsInitialized": {
@@ -11310,7 +11316,7 @@ var doc = `{
                 "releaseNote": {
                     "type": "string"
                 },
-                "versionID": {
+                "versionId": {
                     "type": "string"
                 }
             }

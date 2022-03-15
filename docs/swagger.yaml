@@ -2793,7 +2793,7 @@ definitions:
         items:
           $ref: '#/definitions/structs.ProductComponentPropertyWithZones'
         type: array
-      productID:
+      productId:
         type: string
       productName:
         type: string
@@ -2934,7 +2934,7 @@ definitions:
     type: object
   structs.ProductWithVersions:
     properties:
-      productID:
+      productId:
         type: string
       productName:
         type: string
@@ -3013,7 +3013,7 @@ definitions:
     properties:
       arch:
         type: string
-      productID:
+      productId:
         type: string
       version:
         type: string
@@ -3035,9 +3035,9 @@ definitions:
     type: object
   structs.SystemInfo:
     properties:
-      currentVersionID:
+      currentVersionId:
         type: string
-      lastVersionID:
+      lastVersionId:
         type: string
       productComponentsInitialized:
         type: boolean
@@ -3068,7 +3068,7 @@ definitions:
         type: string
       releaseNote:
         type: string
-      versionID:
+      versionId:
         type: string
     type: object
   structs.TenantCheck:

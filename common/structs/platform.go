@@ -125,8 +125,8 @@ type SystemConfig struct {
 type SystemInfo struct {
 	SystemName       string `json:"systemName"`
 	SystemLogo       string `json:"systemLogo"`
-	CurrentVersionID string `json:"currentVersionID"`
-	LastVersionID    string `json:"lastVersionID"`
+	CurrentVersionID string `json:"currentVersionId"`
+	LastVersionID    string `json:"lastVersionId"`
 	State            string `json:"state"`
 
 	SupportedVendors  []VendorInfo          `json:"supportedVendors"`
@@ -139,19 +139,19 @@ type SystemInfo struct {
 }
 
 type ProductWithVersions struct {
-	ProductID   string                   `json:"productID"`
+	ProductID   string                   `json:"productId"`
 	ProductName string                   `json:"productName"`
 	Versions    []SpecificVersionProduct "versions"
 }
 
 type SpecificVersionProduct struct {
-	ProductID string `json:"productID"`
-	Arch      string `json:"arch"`
-	Version   string `json:"version"`
+	ProductID string   `json:"productId"`
+	Arch      string   `json:"arch"`
+	Version   string   `json:"version"`
 }
 
 type SystemVersionInfo struct {
-	VersionID   string `json:"versionID"`
+	VersionID   string `json:"versionId"`
 	Desc        string `json:"desc"`
 	ReleaseNote string `json:"releaseNote"`
 }
@@ -168,7 +168,7 @@ type RegionConfigInfo struct {
 }
 
 type ProductConfigInfo struct {
-	ProductID   string                              `json:"productID" form:"productID"`
+	ProductID   string                              `json:"productId" form:"productId"`
 	ProductName string                              `json:"productName" form:"productName"`
 	Components  []ProductComponentPropertyWithZones `json:"components" form:"components"`
 	Versions    []SpecificVersionProduct            `json:"versions" form:"versions"`

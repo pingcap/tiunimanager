@@ -1303,6 +1303,45 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	return nil
 }
 
+// initGrafanaAccount
+// @Description: init grafana account for new cluster
+func initGrafanaAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
+	if context.GetData(ContextTopology) == nil {
+		framework.LogWithContext(context.Context).Infof(
+			"when deploy cluster, not found topology yaml config")
+		return nil
+	}
+	yamlConfig := context.GetData(ContextTopology).(string)
+	meta := &spec.Specification{}
+	if err := yaml.Unmarshal([]byte(yamlConfig), meta); err != nil {
+		framework.LogWithContext(context.Context).Errorf("init grafana account error: %s", err.Error())
+		return err
+	}
+
+	if len(meta.Grafanas) <= 0 || len(meta.Grafanas[0].Username) == 0 {
+		framework.LogWithContext(context.Context).Errorf("not found grafana config")
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "not found grafana config")
+	}
+
+	grafanaUser := &management.DBUser{
+		ClusterID: clusterMeta.Cluster.ID,
+		Name:      meta.Grafanas[0].Username,
+		Password:  common.PasswordInExpired{Val: meta.Grafanas[0].Password, UpdateTime: time.Now()},
+		RoleType:  string(constants.DBUserGrafana),
+	}
+
+	if err := models.GetClusterReaderWriter().CreateDBUser(context.Context, grafanaUser); err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster %s create grafana user %s error: %s", clusterMeta.Cluster.ID, meta.Grafanas[0].Username, err.Error())
+		return err
+	}
+
+	node.Record(fmt.Sprintf("cluster %s init grafana account ", clusterMeta.Cluster.ID))
+
+	return nil
+}
+
 // applyParameterGroup
 // @Description: apply parameter group to cluster
 func applyParameterGroup(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {

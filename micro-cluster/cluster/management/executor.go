@@ -1328,7 +1328,7 @@ func initGrafanaAccount(node *workflowModel.WorkFlowNode, context *workflow.Flow
 		ClusterID: clusterMeta.Cluster.ID,
 		Name:      meta.Grafanas[0].Username,
 		Password:  common.PasswordInExpired{Val: meta.Grafanas[0].Password, UpdateTime: time.Now()},
-		RoleType:  string(constants.Grafana),
+		RoleType:  string(constants.DBUserGrafana),
 	}
 
 	if err := models.GetClusterReaderWriter().CreateDBUser(context.Context, grafanaUser); err != nil {

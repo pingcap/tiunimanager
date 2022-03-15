@@ -57,7 +57,9 @@ func (g *ClusterReadWrite) Delete(ctx context.Context, clusterID string) (err er
 		}).BreakIf(func() error {
 			return tx.Where("cluster_id = ?", clusterID).Delete(&ClusterInstance{}).Error
 		}).BreakIf(func() error {
-			return tx.Where("cluster_id = ?", clusterID).Delete(&ClusterRelation{}).Error
+			return tx.Where("subject_cluster_id = ?", clusterID).Delete(&ClusterRelation{}).Error
+		}).BreakIf(func() error {
+			return tx.Where("object_cluster_id = ?", clusterID).Delete(&ClusterRelation{}).Error
 		}).BreakIf(func() error {
 			return tx.Where("cluster_id = ?", clusterID).Delete(&DBUser{}).Error
 		}).BreakIf(func() error {

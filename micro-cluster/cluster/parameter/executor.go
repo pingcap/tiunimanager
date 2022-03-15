@@ -346,78 +346,85 @@ func fillParameters(ctx *workflow.FlowContext, fillParamContainer map[interface{
 	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
 
 	for instanceType, params := range fillParamContainer {
-		switch instanceType.(string) {
-		case string(constants.ComponentIDTiDB):
-			tidbServers := clusterMeta.GetClusterStatusAddress()
-			if len(tidbServers) == 0 {
-				return fmt.Errorf("get tidb status address from meta failed, empty address")
-			}
-			// api edit config
-			apiContent, err := tidbApi.ApiService.ShowConfig(ctx, cluster.ApiShowConfigReq{
-				InstanceHost: tidbServers[0].IP,
-				InstancePort: uint(tidbServers[0].Port),
-				Headers:      map[string]string{},
-			})
+		if err := fillParameter(ctx, instanceType.(string), clusterMeta, params); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func fillParameter(ctx context.Context, componentID string, clusterMeta *meta.ClusterMeta, params []*ModifyClusterParameterInfo) error {
+	switch componentID {
+	case string(constants.ComponentIDTiDB):
+		tidbServers := clusterMeta.GetClusterStatusAddress()
+		if len(tidbServers) == 0 {
+			return fmt.Errorf("get tidb status address from meta failed, empty address")
+		}
+		// api edit config
+		apiContent, err := tidbApi.ApiService.ShowConfig(ctx, cluster.ApiShowConfigReq{
+			InstanceHost: tidbServers[0].IP,
+			InstancePort: uint(tidbServers[0].Port),
+			Headers:      map[string]string{},
+		})
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("failed to call %s api show config, err = %s", componentID, err)
+			return err
+		}
+		// handle fill parameter value
+		if err := handleApiFillParams(ctx, apiContent, componentID, params); err != nil {
+			return err
+		}
+	case string(constants.ComponentIDTiKV):
+		tikvServers := clusterMeta.GetTiKVStatusAddress()
+		if len(tikvServers) == 0 {
+			return fmt.Errorf("get tikv status address from meta failed, empty address")
+		}
+		// api edit config
+		apiContent, err := tikv.ApiService.ShowConfig(ctx, cluster.ApiShowConfigReq{
+			InstanceHost: tikvServers[0].IP,
+			InstancePort: uint(tikvServers[0].Port),
+			Headers:      map[string]string{},
+		})
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("failed to call %s api show config, err = %s", componentID, err)
+			return err
+		}
+		// handle fill parameter value
+		if err := handleApiFillParams(ctx, apiContent, componentID, params); err != nil {
+			return err
+		}
+	case string(constants.ComponentIDPD):
+		pdServers := clusterMeta.GetPDClientAddresses()
+		if len(pdServers) == 0 {
+			return fmt.Errorf("get pd status address from meta failed, empty address")
+		}
+		// api edit config
+		apiContent, err := pd.ApiService.ShowConfig(ctx, cluster.ApiShowConfigReq{
+			InstanceHost: pdServers[0].IP,
+			InstancePort: uint(pdServers[0].Port),
+			Headers:      map[string]string{},
+		})
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("failed to call %s api show config, err = %s", componentID, err)
+			return err
+		}
+		// handle fill parameter value
+		if err := handleApiFillParams(ctx, apiContent, componentID, params); err != nil {
+			return err
+		}
+	case string(constants.ComponentIDCDC), string(constants.ComponentIDTiFlash):
+		// Get component cluster instances
+		instances := clusterMeta.Instances[componentID]
+		if len(instances) > 0 {
+			// pull config
+			configContentStr, err := pullConfig(ctx, instances[0].ClusterID, instances[0].Type, instances[0].GetDeployDir(), instances[0].HostIP[0])
 			if err != nil {
-				framework.LogWithContext(ctx).Errorf("failed to call %s api show config, err = %s", instanceType, err)
+				framework.LogWithContext(ctx).Errorf("failed to call %s pull show config, err = %s", componentID, err)
 				return err
 			}
 			// handle fill parameter value
-			if err := handleApiFillParams(ctx, apiContent, instanceType.(string), params); err != nil {
+			if err := handleConfigFillParams(ctx, []byte(configContentStr), componentID, params); err != nil {
 				return err
-			}
-		case string(constants.ComponentIDTiKV):
-			tikvServers := clusterMeta.GetTiKVStatusAddress()
-			if len(tikvServers) == 0 {
-				return fmt.Errorf("get tikv status address from meta failed, empty address")
-			}
-			// api edit config
-			apiContent, err := tikv.ApiService.ShowConfig(ctx, cluster.ApiShowConfigReq{
-				InstanceHost: tikvServers[0].IP,
-				InstancePort: uint(tikvServers[0].Port),
-				Headers:      map[string]string{},
-			})
-			if err != nil {
-				framework.LogWithContext(ctx).Errorf("failed to call %s api show config, err = %s", instanceType, err)
-				return err
-			}
-			// handle fill parameter value
-			if err := handleApiFillParams(ctx, apiContent, instanceType.(string), params); err != nil {
-				return err
-			}
-		case string(constants.ComponentIDPD):
-			pdServers := clusterMeta.GetPDClientAddresses()
-			if len(pdServers) == 0 {
-				return fmt.Errorf("get pd status address from meta failed, empty address")
-			}
-			// api edit config
-			apiContent, err := pd.ApiService.ShowConfig(ctx, cluster.ApiShowConfigReq{
-				InstanceHost: pdServers[0].IP,
-				InstancePort: uint(pdServers[0].Port),
-				Headers:      map[string]string{},
-			})
-			if err != nil {
-				framework.LogWithContext(ctx).Errorf("failed to call %s api show config, err = %s", instanceType, err)
-				return err
-			}
-			// handle fill parameter value
-			if err := handleApiFillParams(ctx, apiContent, instanceType.(string), params); err != nil {
-				return err
-			}
-		case string(constants.ComponentIDCDC), string(constants.ComponentIDTiFlash):
-			// Get component cluster instances
-			instances := clusterMeta.Instances[instanceType.(string)]
-			if len(instances) > 0 {
-				// pull config
-				configContentStr, err := pullConfig(ctx, instances[0].ClusterID, instances[0].Type, instances[0].GetDeployDir(), instances[0].HostIP[0])
-				if err != nil {
-					framework.LogWithContext(ctx).Errorf("failed to call %s pull show config, err = %s", instanceType, err)
-					return err
-				}
-				// handle fill parameter value
-				if err := handleConfigFillParams(ctx, []byte(configContentStr), instanceType.(string), params); err != nil {
-					return err
-				}
 			}
 		}
 	}
@@ -431,7 +438,7 @@ func fillParameters(ctx *workflow.FlowContext, fillParamContainer map[interface{
 // @Parameter instanceType
 // @Parameter params
 // @return err
-func handleApiFillParams(ctx *workflow.FlowContext, content []byte, instanceType string, params []*ModifyClusterParameterInfo) (err error) {
+func handleApiFillParams(ctx context.Context, content []byte, instanceType string, params []*ModifyClusterParameterInfo) (err error) {
 	reqApiParams := map[string]interface{}{}
 	d := json.NewDecoder(bytes.NewReader(content))
 	d.UseNumber()
@@ -450,7 +457,7 @@ func handleApiFillParams(ctx *workflow.FlowContext, content []byte, instanceType
 // @Parameter instanceType
 // @Parameter params
 // @return err
-func handleConfigFillParams(ctx *workflow.FlowContext, content []byte, instanceType string, params []*ModifyClusterParameterInfo) (err error) {
+func handleConfigFillParams(ctx context.Context, content []byte, instanceType string, params []*ModifyClusterParameterInfo) (err error) {
 	reqConfigParams := map[string]interface{}{}
 	if err = toml.Unmarshal(content, &reqConfigParams); err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to convert %s config parameters, err = %v", instanceType, err)
@@ -467,7 +474,7 @@ func handleConfigFillParams(ctx *workflow.FlowContext, content []byte, instanceT
 // @Parameter instanceType
 // @Parameter params
 // @return err
-func handleFillParamResult(ctx *workflow.FlowContext, reqConfigParams map[string]interface{}, instanceType string, params []*ModifyClusterParameterInfo) (err error) {
+func handleFillParamResult(ctx context.Context, reqConfigParams map[string]interface{}, instanceType string, params []*ModifyClusterParameterInfo) (err error) {
 	flattenedParams, err := FlattenedParameters(reqConfigParams)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to flattened %s parameters, err = %v", instanceType, err)

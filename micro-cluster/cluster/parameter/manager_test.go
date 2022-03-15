@@ -321,6 +321,59 @@ func TestManager_PersistApplyParameterGroup(t *testing.T) {
 		assert.NotEmpty(t, resp.ParamGroupID)
 	})
 
+	t.Run("inspect parameter success", func(t *testing.T) {
+		parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+		models.SetParameterGroupReaderWriter(parameterGroupRW)
+		clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
+		models.SetClusterParameterReaderWriter(clusterParameterRW)
+		mockTiDBApiService := mockutiltidbhttp.NewMockTiDBApiService(ctrl)
+		http.ApiService = mockTiDBApiService
+		clusterManagementRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterManagementRW)
+
+		clusterManagementRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, clusterID string) (*management.Cluster, []*management.ClusterInstance, []*management.DBUser, error) {
+				return mockCluster(), mockClusterInstances(), mockDBUsers(), nil
+			})
+		mockTiDBApiService.EXPECT().ShowConfig(gomock.Any(), gomock.Any()).Return(apiContent, nil)
+
+		parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, parameterGroupId, paramName, instanceType string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+				return &parametergroup.ParameterGroup{ID: "1"}, []*parametergroup.ParamDetail{
+					{
+						Parameter: parametergroup.Parameter{
+							ID:             "1",
+							Category:       "basic",
+							Name:           "oom-action",
+							InstanceType:   "TiDB",
+							SystemVariable: "",
+							Type:           1,
+							HasApply:       1,
+							UpdateSource:   0,
+							Range:          "[\"log\", \"cancel\"]",
+							RangeType:      2,
+							Unit:           "",
+						},
+						DefaultValue: "",
+						Note:         "param1",
+					},
+				}, nil
+			})
+		clusterParameterRW.EXPECT().ApplyClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, parameterGroupId string, clusterId string, param []*parameter.ClusterParameterMapping) error {
+				return nil
+			})
+
+		resp, err := mockManager.PersistApplyParameterGroup(context.TODO(), message.ApplyParameterGroupReq{
+			ParamGroupId: "1",
+			ClusterID:    "1",
+			Reboot:       false,
+		}, true)
+		assert.NotEmpty(t, resp)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, resp.ParamGroupID)
+	})
+
 	t.Run("get parameter group fail", func(t *testing.T) {
 		parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
 		models.SetParameterGroupReaderWriter(parameterGroupRW)
@@ -328,6 +381,47 @@ func TestManager_PersistApplyParameterGroup(t *testing.T) {
 		parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			DoAndReturn(func(ctx context.Context, parameterGroupId, paramName, instanceType string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
 				return &parametergroup.ParameterGroup{ID: "1"}, []*parametergroup.ParamDetail{}, errors.New("get parameter group fail")
+			})
+
+		_, err := mockManager.PersistApplyParameterGroup(context.TODO(), message.ApplyParameterGroupReq{
+			ParamGroupId: "1",
+			ClusterID:    "1",
+			Reboot:       false,
+		}, false)
+		assert.Error(t, err)
+	})
+
+	t.Run("apply cluster parameter fail", func(t *testing.T) {
+		parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+		models.SetParameterGroupReaderWriter(parameterGroupRW)
+		clusterParameterRW := mockclusterparameter.NewMockReaderWriter(ctrl)
+		models.SetClusterParameterReaderWriter(clusterParameterRW)
+		parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, parameterGroupId, paramName, instanceType string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
+				return &parametergroup.ParameterGroup{ID: "1"}, []*parametergroup.ParamDetail{
+					{
+						Parameter: parametergroup.Parameter{
+							ID:             "1",
+							Name:           "param1",
+							InstanceType:   "TiDB",
+							SystemVariable: "",
+							Type:           0,
+							HasApply:       1,
+							UpdateSource:   0,
+							Range:          "[\"0\", \"1024\"]",
+							RangeType:      1,
+							Unit:           "MB",
+							UnitOptions:    "[\"KB\", \"MB\", \"GB\"]",
+						},
+						DefaultValue: "1",
+						Note:         "param1",
+					},
+				}, nil
+			})
+
+		clusterParameterRW.EXPECT().ApplyClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(ctx context.Context, parameterGroupId string, clusterId string, param []*parameter.ClusterParameterMapping) error {
+				return errors.New("apply cluster parameter fail")
 			})
 
 		_, err := mockManager.PersistApplyParameterGroup(context.TODO(), message.ApplyParameterGroupReq{

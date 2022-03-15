@@ -462,6 +462,10 @@ definitions:
     type: object
   cluster.MasterSlaveClusterSwitchoverReq:
     properties:
+      checkMasterWritableFlag:
+        type: boolean
+      checkSlaveReadOnlyFlag:
+        type: boolean
       force:
         type: boolean
       onlyCheck:

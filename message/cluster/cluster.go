@@ -152,7 +152,9 @@ type MasterSlaveClusterSwitchoverReq struct {
 	TargetClusterID string `json:"targetClusterID" validate:"required,min=4,max=64"`
 	Force           bool   `json:"force"`
 	// only check if this flag is true
-	OnlyCheck bool `json:"onlyCheck"`
+	OnlyCheck               bool `json:"onlyCheck"`
+	CheckSlaveReadOnlyFlag  bool `json:"checkSlaveReadOnlyFlag"`
+	CheckMasterWritableFlag bool `json:"checkMasterWritableFlag"`
 }
 
 // MasterSlaveClusterSwitchoverResp Master and slave cluster switchover reply message

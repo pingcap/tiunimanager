@@ -432,6 +432,7 @@ func convertProductRequest(reqConfig structs.ProductConfigInfo) (*product.Produc
 		components = append(components, &product.ProductComponentInfo{
 			ProductID:               reqConfig.ProductID,
 			ComponentID:             component.ID,
+			ComponentName:           component.Name,
 			PurposeType:             component.PurposeType,
 			StartPort:               component.StartPort,
 			EndPort:                 component.EndPort,

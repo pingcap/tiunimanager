@@ -918,10 +918,10 @@ func TestClusterReadWrite_QueryHostInstances(t *testing.T) {
 
 func TestClusterReadWrite_CreateDBUser(t *testing.T) {
 	user := &DBUser{
-		ClusterID:                "clusterid",
-		Name:                     "testName1",
-		Password:                 common.PasswordInExpired{Val: "123456"},
-		RoleType:                 string(constants.DBUserBackupRestore),
+		ClusterID: "clusterid",
+		Name:      "testName1",
+		Password:  common.PasswordInExpired{Val: "123456"},
+		RoleType:  string(constants.DBUserBackupRestore),
 	}
 	type args struct {
 		ctx  context.Context
@@ -951,10 +951,10 @@ func TestClusterReadWrite_CreateDBUser(t *testing.T) {
 
 func TestClusterReadWrite_GetDBUser(t *testing.T) {
 	user := DBUser{
-		ClusterID:                "clusterid1",
-		Name:                     "testName2",
-		Password:                 common.PasswordInExpired{Val: "abcd12345"},
-		RoleType:                 string(constants.DBUserBackupRestore),
+		ClusterID: "clusterid1",
+		Name:      "testName2",
+		Password:  common.PasswordInExpired{Val: "abcd12345"},
+		RoleType:  string(constants.DBUserBackupRestore),
 	}
 	testRW.CreateDBUser(context.TODO(), &user)
 	defer testRW.DeleteDBUser(context.TODO(), user.ID)
@@ -990,10 +990,10 @@ func TestClusterReadWrite_GetDBUser(t *testing.T) {
 
 func TestClusterReadWrite_DeleteDBUser(t *testing.T) {
 	user := DBUser{
-		ClusterID:                "clusterid",
-		Name:                     "12333",
-		Password:                 common.PasswordInExpired{Val: "123456"},
-		RoleType:                 string(constants.DBUserBackupRestore),
+		ClusterID: "clusterid",
+		Name:      "12333",
+		Password:  common.PasswordInExpired{Val: "123456"},
+		RoleType:  string(constants.DBUserBackupRestore),
 	}
 	testRW.CreateDBUser(context.TODO(), &user)
 	type args struct {
@@ -1024,10 +1024,10 @@ func TestClusterReadWrite_DeleteDBUser(t *testing.T) {
 
 func TestClusterReadWrite_UpdateDBUser(t *testing.T) {
 	user := DBUser{
-		ClusterID:                "clusterid",
-		Name:                     "update",
-		Password:                 common.PasswordInExpired{Val: "pppppp"},
-		RoleType:                 string(constants.DBUserBackupRestore),
+		ClusterID: "clusterid",
+		Name:      "update",
+		Password:  common.PasswordInExpired{Val: "pppppp"},
+		RoleType:  string(constants.DBUserBackupRestore),
 	}
 	testRW.CreateDBUser(context.TODO(), &user)
 	defer testRW.Delete(context.TODO(), user.ClusterID)

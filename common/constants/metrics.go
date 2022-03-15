@@ -57,12 +57,14 @@ const (
 	MetricsPlatformCheck     MetricsType = "platform/check"
 	MetricsQueryCheckReports MetricsType = "platform/reports"
 	MetricsGetCheckReport    MetricsType = "platform/report"
+	MetricsQueryPlatformLog  MetricsType = "platform/log"
 
 	MetricsSystemConfigUpdate MetricsType = "config/update"
 	MetricsSystemConfigGet    MetricsType = "config/get"
 
 	// MetricsBackupCreate define backup metrics
 	MetricsBackupCreate         MetricsType = "backup/create"
+	MetricsBackupCancel         MetricsType = "backup/cancel"
 	MetricsBackupDelete         MetricsType = "backup/delete"
 	MetricsBackupQuery          MetricsType = "backup/query"
 	MetricsBackupQueryStrategy  MetricsType = "backup/query_strategy"
@@ -230,5 +232,4 @@ var EMMetrics = []MetricsType{
 	MetricsVendorUpdate,
 	MetricsVendorQuery,
 	MetricsVendorQueryAvailable,
-
 }

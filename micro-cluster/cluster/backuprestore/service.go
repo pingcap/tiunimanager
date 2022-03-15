@@ -42,6 +42,15 @@ type BRService interface {
 	// @Return error
 	RestoreExistCluster(ctx context.Context, request cluster.RestoreExistClusterReq, maintenanceStatusChange bool) (resp cluster.RestoreExistClusterResp, restoreErr error)
 
+	// CancelBackup
+	// @Description: cancel backup cluster
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter request
+	// @Return cluster.CancelBackupResp
+	// @Return error
+	CancelBackup(ctx context.Context, request cluster.CancelBackupReq) (resp cluster.CancelBackupResp, cancelErr error)
+
 	// QueryClusterBackupRecords
 	// @Description: query backup records of cluster
 	// @Receiver m

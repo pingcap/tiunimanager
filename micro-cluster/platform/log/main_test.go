@@ -14,60 +14,37 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: user_api.go
- * @Description:
- * @Author: duanbing@pingcap.com
+ * @File: main_test.go
+ * @Description: main unit test
+ * @Author: jiangxunyu@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/4
+ * @Date: 2021/12/16 11:32
 *******************************************************************************/
 
-package constants
+package log
 
-import "time"
+import (
+	"os"
+	"testing"
 
-type TenantStatus string
-
-//Definition tenant status information
-const (
-	TenantStatusNormal     TenantStatus = "Normal"
-	TenantStatusDeactivate TenantStatus = "Deactivate"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/models"
 )
 
-type TenantOnBoardingStatus string
+var mockManager = NewManager()
 
-const (
-	TenantOnBoarding  TenantOnBoardingStatus = "On"
-	TenantOFFBoarding TenantOnBoardingStatus = "Off"
-)
+func TestMain(m *testing.M) {
+	var testFilePath string
+	framework.InitBaseFrameworkForUt(framework.ClusterService,
+		func(d *framework.BaseFramework) error {
+			testFilePath = d.GetDataDir()
+			os.MkdirAll(testFilePath, 0755)
+			models.MockDB()
+			return models.Open(d)
+		},
+	)
+	code := m.Run()
+	os.RemoveAll(testFilePath)
 
-type UserStatus string
-
-//Definition user status information
-const (
-	UserStatusNormal     UserStatus = "Normal"
-	UserStatusDeactivate UserStatus = "Deactivate"
-)
-
-type TokenStatus string
-
-//Definition token status information
-const (
-	TokenStatusNormal     TokenStatus = "Normal"
-	TokenStatusDeactivate TokenStatus = "Deactivate"
-)
-
-type CommonStatus int
-
-const (
-	Valid              CommonStatus = 0
-	Invalid            CommonStatus = 1
-	Deleted            CommonStatus = 2
-	UnrecognizedStatus CommonStatus = -1
-)
-
-func (s CommonStatus) IsValid() bool {
-	return s == Valid
+	os.Exit(code)
 }
-
-// 1 year
-const ExpirationTime = 365 * 24 * time.Hour

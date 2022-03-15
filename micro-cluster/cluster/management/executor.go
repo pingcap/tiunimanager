@@ -675,7 +675,7 @@ func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	// todo: use SystemConfig to store home
 	operationID, err := deployment.M.Deploy(context.Context, deployment.TiUPComponentTypeCluster, cluster.ID, cluster.Version, yamlConfig,
-		tiupHomeForTidb, node.ParentID, args, meta.DefaultTiupTimeOut)
+		tiupHomeForTidb, node.ParentID, args, meta.LongTiupTimeOut)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s deploy error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -1717,10 +1717,10 @@ func GenerateDBUser(context *workflow.FlowContext, roleTyp constants.DBUserRoleT
 	cluster := clusterMeta.Cluster
 
 	dbUser := &management.DBUser{
-		ClusterID:                cluster.ID,
-		Name:                     constants.DBUserName[roleTyp],
-		Password:                 common.PasswordInExpired{Val: meta.GetRandomString(10), UpdateTime: time.Now()},
-		RoleType:                 string(roleTyp),
+		ClusterID: cluster.ID,
+		Name:      constants.DBUserName[roleTyp],
+		Password:  common.PasswordInExpired{Val: meta.GetRandomString(10), UpdateTime: time.Now()},
+		RoleType:  string(roleTyp),
 	}
 	return dbUser
 }

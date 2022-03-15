@@ -44,6 +44,27 @@ func Backup(c *gin.Context) {
 	}
 }
 
+// CancelBackup
+// @Summary cancel backup
+// @Description cancel backup
+// @Tags cancel cluster backup
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param backupReq body cluster.CancelBackupReq true "cancel backup request"
+// @Success 200 {object} controller.CommonResult{data=cluster.CancelBackupResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /backups/cancel [post]
+func CancelBackup(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &cluster.CancelBackupReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.CancelBackup, &cluster.CancelBackupResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
 // GetBackupStrategy show the backup strategy of a cluster
 // @Summary show the backup strategy of a cluster
 // @Description show the backup strategy of a cluster

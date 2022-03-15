@@ -34,10 +34,10 @@ type LoginReq struct {
 }
 
 type LoginResp struct {
-	TokenString      string `json:"token" form:"token"`
-	UserID           string `json:"userId" form:"userId"`
-	TenantID         string `json:"tenantId" form:"tenantId"`
-	PasswordExpired  bool   `json:"passwordExpired" form:"passwordExpired"`
+	TokenString     string `json:"token" form:"token"`
+	UserID          string `json:"userId" form:"userId"`
+	TenantID        string `json:"tenantId" form:"tenantId"`
+	PasswordExpired bool   `json:"passwordExpired" form:"passwordExpired"`
 }
 
 // LogoutReq logout

@@ -68,6 +68,7 @@ const (
 	TIEM_BACKUP_FILE_DELETE_FAILED      EM_ERROR_CODE = 20608
 	TIEM_BACKUP_PATH_CREATE_FAILED      EM_ERROR_CODE = 20609
 	TIEM_BACKUP_RECORD_INVALID          EM_ERROR_CODE = 20610
+	TIEM_BACKUP_RECORD_CANCEL_FAILED    EM_ERROR_CODE = 20611
 
 	// upgrade
 	TIEM_UPGRADE_QUERY_PATH_FAILED EM_ERROR_CODE = 21100
@@ -234,8 +235,8 @@ const (
 	DeleteUserFailed              EM_ERROR_CODE = 70613
 	UpdateUserProfileFailed       EM_ERROR_CODE = 70614
 
-	TIEM_CLUSTER_LOG_QUERY_FAILED EM_ERROR_CODE = 80300
-	TIEM_CLUSTER_LOG_TIME_AFTER   EM_ERROR_CODE = 80301
+	TIEM_LOG_QUERY_FAILED EM_ERROR_CODE = 80300
+	TIEM_LOG_TIME_AFTER   EM_ERROR_CODE = 80301
 
 	QueryReportsScanRowError EM_ERROR_CODE = 90001
 	CheckReportNotExist      EM_ERROR_CODE = 90002
@@ -346,6 +347,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_BACKUP_FILE_DELETE_FAILED:      {"remove backup file failed", 500},
 	TIEM_BACKUP_PATH_CREATE_FAILED:      {"backup filepath create failed", 500},
 	TIEM_BACKUP_RECORD_INVALID:          {"backup record invalid", 400},
+	TIEM_BACKUP_RECORD_CANCEL_FAILED:    {"cancel backup record failed", 500},
 
 	// resource
 	TIEM_RESOURCE_HOST_NOT_FOUND:            {"host not found", 500},
@@ -422,8 +424,8 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_MASTER_SLAVE_SWITCHOVER_CDC_SYNC_TASK_NOT_FOUND: {"master/slave CDC sync task not found", 400},
 	TIEM_MASTER_SLAVE_SWITCHOVER_SLAVE_NO_CDC_COMPONENT:  {"slave has no CDC component", 400},
 
-	TIEM_CLUSTER_LOG_QUERY_FAILED: {"Failed to query cluster log", 500},
-	TIEM_CLUSTER_LOG_TIME_AFTER:   {"query log parameter startTime after endTime", 401},
+	TIEM_LOG_QUERY_FAILED: {"Failed to query cluster log", 500},
+	TIEM_LOG_TIME_AFTER:   {"query log parameter startTime after endTime", 401},
 
 	// scale out & scale in
 	TIEM_INSTANCE_NOT_FOUND:               {"Instance of cluster is not found", 404},

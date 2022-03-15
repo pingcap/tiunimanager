@@ -151,7 +151,6 @@ func TestPrepareResource(t *testing.T) {
 		},
 	})
 
-
 	productRW := mock_product.NewMockReaderWriter(ctrl)
 	models.SetProductReaderWriter(productRW)
 	mockQueryTiDBFromDBAnyTimes(productRW.EXPECT())

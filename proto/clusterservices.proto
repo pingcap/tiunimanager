@@ -25,12 +25,14 @@ service ClusterService {
 
     rpc QueryClusterLog(RpcRequest) returns (RpcResponse);
 
+    // Backup && Restore
     rpc QueryBackupRecords(RpcRequest) returns (RpcResponse);
     rpc CreateBackup(RpcRequest) returns (RpcResponse);
     rpc RestoreNewCluster(RpcRequest) returns (RpcResponse);
     rpc DeleteBackupRecords(RpcRequest) returns (RpcResponse);
     rpc SaveBackupStrategy(RpcRequest) returns (RpcResponse);
     rpc GetBackupStrategy(RpcRequest) returns (RpcResponse);
+    rpc CancelBackup(RpcRequest) returns (RpcResponse);
 
     rpc GetDashboardInfo(RpcRequest) returns (RpcResponse);
     rpc GetMonitorInfo(RpcRequest) returns (RpcResponse);
@@ -129,6 +131,7 @@ service ClusterService {
     rpc CheckPlatform(RpcRequest) returns(RpcResponse);
     rpc QueryCheckReports(RpcRequest) returns(RpcResponse);
     rpc GetCheckReport(RpcRequest) returns(RpcResponse);
+    rpc QueryPlatformLog(RpcRequest) returns(RpcResponse);
 }
 
 message RpcRequest {

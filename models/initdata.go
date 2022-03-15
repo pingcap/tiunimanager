@@ -226,7 +226,7 @@ func initDefaultProductsAndVendors(tx *gorm.DB) error {
 	}).BreakIf(func() error {
 		return tx.Create(&product.Vendor{VendorID: "Local", VendorName: "local datacenter"}).Error
 	}).BreakIf(func() error {
-		return tx.CreateInBatches([]product.VendorSpec {
+		return tx.CreateInBatches([]product.VendorSpec{
 			{VendorID: "Local", SpecID: "c.large", SpecName: "4C8G", CPU: 4, Memory: 8, DiskType: "SATA", PurposeType: "Compute"},
 			{VendorID: "Local", SpecID: "c.xlarge", SpecName: "8C16G", CPU: 8, Memory: 16, DiskType: "SATA", PurposeType: "Compute"},
 			{VendorID: "Local", SpecID: "st.large", SpecName: "4C8G", CPU: 4, Memory: 8, DiskType: "SATA", PurposeType: "Storage"},
@@ -235,7 +235,7 @@ func initDefaultProductsAndVendors(tx *gorm.DB) error {
 			{VendorID: "Local", SpecID: "sc.xlarge", SpecName: "8C16G", CPU: 8, Memory: 16, DiskType: "SATA", PurposeType: "Schedule"},
 		}, 8).Error
 	}).BreakIf(func() error {
-		return tx.CreateInBatches([]product.VendorZone {
+		return tx.CreateInBatches([]product.VendorZone{
 			{VendorID: "Local", RegionID: "Region1", RegionName: "Region1", ZoneID: "Zone1_1", ZoneName: "Zone1_1"},
 			{VendorID: "Local", RegionID: "Region1", RegionName: "Region1", ZoneID: "Zone1_2", ZoneName: "Zone1_2"},
 			{VendorID: "Local", RegionID: "Region2", RegionName: "Region2", ZoneID: "Zone2_1", ZoneName: "Zone2_1"},

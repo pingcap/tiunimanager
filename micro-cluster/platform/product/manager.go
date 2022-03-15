@@ -36,8 +36,8 @@ import (
 	"sync"
 )
 
-
 type Manager struct{}
+
 var once sync.Once
 
 var manager *Manager
@@ -51,11 +51,11 @@ func NewManager() *Manager {
 	return manager
 }
 
-func (p *Manager) UpdateVendors(ctx context.Context, req message.UpdateVendorInfoReq) (resp message.UpdateVendorInfoResp, err error){
+func (p *Manager) UpdateVendors(ctx context.Context, req message.UpdateVendorInfoReq) (resp message.UpdateVendorInfoResp, err error) {
 	err = models.Transaction(ctx, func(transactionCtx context.Context) error {
 		for _, vendor := range req.Vendors {
 			vendorInfo, zones, specs := convertVendorRequest(vendor)
-			if innerError := models.GetProductReaderWriter().SaveVendor(transactionCtx, vendorInfo, zones, specs);innerError != nil{
+			if innerError := models.GetProductReaderWriter().SaveVendor(transactionCtx, vendorInfo, zones, specs); innerError != nil {
 				return innerError
 			}
 		}
@@ -73,7 +73,7 @@ func (p *Manager) UpdateVendors(ctx context.Context, req message.UpdateVendorInf
 	return
 }
 
-func (p *Manager) QueryVendors(ctx context.Context, req message.QueryVendorInfoReq) (resp message.QueryVendorInfoResp, err error){
+func (p *Manager) QueryVendors(ctx context.Context, req message.QueryVendorInfoReq) (resp message.QueryVendorInfoResp, err error) {
 	vendorIDs := req.VendorIDs
 	// empty vendorIDs means query all vendors
 	if len(vendorIDs) == 0 {
@@ -100,7 +100,7 @@ func (p *Manager) QueryVendors(ctx context.Context, req message.QueryVendorInfoR
 	return
 }
 
-func (p *Manager) QueryAvailableVendors(ctx context.Context, req message.QueryAvailableVendorsReq) (resp message.QueryAvailableVendorsResp, err error){
+func (p *Manager) QueryAvailableVendors(ctx context.Context, req message.QueryAvailableVendorsReq) (resp message.QueryAvailableVendorsResp, err error) {
 	vendorInfos, queryVendorsError := models.GetProductReaderWriter().QueryAllVendors(ctx)
 	if queryVendorsError != nil {
 		framework.LogWithContext(ctx).Errorf("query available vendors failed, err = %s", queryVendorsError.Error())
@@ -118,9 +118,9 @@ func (p *Manager) QueryAvailableVendors(ctx context.Context, req message.QueryAv
 		if len(zones) == 0 || len(specs) == 0 {
 			continue
 		} else {
-			resp.Vendors[v.VendorID] = structs.VendorWithRegion {
+			resp.Vendors[v.VendorID] = structs.VendorWithRegion{
 				VendorInfo: structs.VendorInfo{
-					ID: vendorInfo.VendorID,
+					ID:   vendorInfo.VendorID,
 					Name: vendorInfo.VendorName,
 				},
 				Regions: map[string]structs.RegionInfo{},
@@ -128,7 +128,7 @@ func (p *Manager) QueryAvailableVendors(ctx context.Context, req message.QueryAv
 		}
 		for _, z := range zones {
 			resp.Vendors[v.VendorID].Regions[z.RegionID] = structs.RegionInfo{
-				ID: z.RegionID,
+				ID:   z.RegionID,
 				Name: z.RegionName,
 			}
 		}
@@ -136,7 +136,7 @@ func (p *Manager) QueryAvailableVendors(ctx context.Context, req message.QueryAv
 	return
 }
 
-func (p *Manager) UpdateProducts(ctx context.Context, req message.UpdateProductsInfoReq) (resp message.UpdateProductsInfoResp, err error){
+func (p *Manager) UpdateProducts(ctx context.Context, req message.UpdateProductsInfoReq) (resp message.UpdateProductsInfoResp, err error) {
 	err = models.Transaction(ctx, func(transactionCtx context.Context) error {
 		for _, product := range req.Products {
 			productInfo, versions, components := convertProductRequest(product)
@@ -157,7 +157,7 @@ func (p *Manager) UpdateProducts(ctx context.Context, req message.UpdateProducts
 	return
 }
 
-func (p *Manager) QueryProducts(ctx context.Context, req message.QueryProductsInfoReq) (resp message.QueryProductsInfoResp, err error){
+func (p *Manager) QueryProducts(ctx context.Context, req message.QueryProductsInfoReq) (resp message.QueryProductsInfoResp, err error) {
 	productIDs := req.ProductIDs
 	// empty productIDs means query all products
 	if len(productIDs) == 0 {
@@ -184,8 +184,8 @@ func (p *Manager) QueryProducts(ctx context.Context, req message.QueryProductsIn
 	return
 }
 
-func (p *Manager) QueryAvailableProducts(ctx context.Context, req message.QueryAvailableProductsReq) (resp message.QueryAvailableProductsResp, err error){
-	productResp, err := p.QueryProducts(ctx, message.QueryProductsInfoReq {
+func (p *Manager) QueryAvailableProducts(ctx context.Context, req message.QueryAvailableProductsReq) (resp message.QueryAvailableProductsResp, err error) {
+	productResp, err := p.QueryProducts(ctx, message.QueryProductsInfoReq{
 		ProductIDs: []string{},
 	})
 
@@ -197,7 +197,7 @@ func (p *Manager) QueryAvailableProducts(ctx context.Context, req message.QueryA
 	if err != nil {
 		return
 	}
-	
+
 	productsMap := make(map[string]map[string]map[string]map[string]structs.Product)
 
 	for _, vendor := range vendorResp.Vendors {
@@ -232,8 +232,8 @@ func (p *Manager) QueryAvailableProducts(ctx context.Context, req message.QueryA
 	return
 }
 
-func (p *Manager) QueryProductDetail(ctx context.Context, req message.QueryProductDetailReq) (resp message.QueryProductDetailResp, err error){
-	productResp, err := p.QueryProducts(ctx, message.QueryProductsInfoReq {
+func (p *Manager) QueryProductDetail(ctx context.Context, req message.QueryProductDetailReq) (resp message.QueryProductDetailResp, err error) {
+	productResp, err := p.QueryProducts(ctx, message.QueryProductsInfoReq{
 		ProductIDs: []string{req.ProductID},
 	})
 	if err != nil || len(productResp.Products) == 0 {
@@ -260,9 +260,9 @@ func (p *Manager) QueryProductDetail(ctx context.Context, req message.QueryProdu
 	if region.ID != req.RegionID {
 		return resp, errors.WrapError(errors.TIEM_UNSUPPORT_PRODUCT, "query region failed", nil)
 	}
-	products[product.ProductID] = structs.ProductDetail {
-		ID: product.ProductID,
-		Name: product.ProductName,
+	products[product.ProductID] = structs.ProductDetail{
+		ID:       product.ProductID,
+		Name:     product.ProductName,
 		Versions: make(map[string]structs.ProductVersion),
 	}
 
@@ -270,23 +270,23 @@ func (p *Manager) QueryProductDetail(ctx context.Context, req message.QueryProdu
 	for _, component := range product.Components {
 		componentInstanceZoneWithSpecs := make([]structs.ComponentInstanceZoneWithSpecs, 0)
 		for _, zone := range region.Zones {
-			componentInstanceZoneWithSpecs = append(componentInstanceZoneWithSpecs, structs.ComponentInstanceZoneWithSpecs {
-				ZoneID: zone.ZoneID,
+			componentInstanceZoneWithSpecs = append(componentInstanceZoneWithSpecs, structs.ComponentInstanceZoneWithSpecs{
+				ZoneID:   zone.ZoneID,
 				ZoneName: zone.ZoneName,
-				Specs: convertComponentInstanceResourceSpecs(vendor, component, zone.ZoneID, zone.ZoneName),
+				Specs:    convertComponentInstanceResourceSpecs(vendor, component, zone.ZoneID, zone.ZoneName),
 			})
 		}
-		productComponentPropertyWithZones = append(productComponentPropertyWithZones, structs.ProductComponentPropertyWithZones {
-			ID: component.ID,
-			Name: component.Name,
-			PurposeType: component.PurposeType,
-			StartPort: component.StartPort,
-			EndPort: component.EndPort,
-			MaxPort: component.MaxPort,
-			MinInstance: component.MinInstance,
-			MaxInstance: component.MaxInstance,
+		productComponentPropertyWithZones = append(productComponentPropertyWithZones, structs.ProductComponentPropertyWithZones{
+			ID:                      component.ID,
+			Name:                    component.Name,
+			PurposeType:             component.PurposeType,
+			StartPort:               component.StartPort,
+			EndPort:                 component.EndPort,
+			MaxPort:                 component.MaxPort,
+			MinInstance:             component.MinInstance,
+			MaxInstance:             component.MaxInstance,
 			SuggestedInstancesCount: component.SuggestedInstancesCount,
-			AvailableZones: componentInstanceZoneWithSpecs,
+			AvailableZones:          componentInstanceZoneWithSpecs,
 		})
 	}
 
@@ -296,9 +296,9 @@ func (p *Manager) QueryProductDetail(ctx context.Context, req message.QueryProdu
 
 	for _, version := range product.Versions {
 		if _, ok := products[product.ProductID].Versions[version.Version]; !ok {
-			products[product.ProductID].Versions[version.Version] = structs.ProductVersion {
+			products[product.ProductID].Versions[version.Version] = structs.ProductVersion{
 				Version: version.Version,
-				Arch: make(map[string][]structs.ProductComponentPropertyWithZones),
+				Arch:    make(map[string][]structs.ProductComponentPropertyWithZones),
 			}
 		}
 		if _, ok := products[product.ProductID].Versions[version.Version].Arch[version.Arch]; !ok {
@@ -315,12 +315,12 @@ func convertComponentInstanceResourceSpecs(vendor structs.VendorConfigInfo, comp
 	for _, spec := range vendor.Specs {
 		if spec.PurposeType == component.PurposeType {
 			componentInstanceResourceSpecs = append(componentInstanceResourceSpecs, structs.ComponentInstanceResourceSpec{
-				ID: spec.ID,
-				Name: spec.Name,
-				CPU: spec.CPU,
-				Memory: spec.Memory,
+				ID:       spec.ID,
+				Name:     spec.Name,
+				CPU:      spec.CPU,
+				Memory:   spec.Memory,
 				DiskType: spec.DiskType,
-				ZoneID: zoneID,
+				ZoneID:   zoneID,
 				ZoneName: zoneName,
 			})
 		}
@@ -328,33 +328,33 @@ func convertComponentInstanceResourceSpecs(vendor structs.VendorConfigInfo, comp
 	return componentInstanceResourceSpecs
 }
 
-func convertVendorRequest(reqConfig structs.VendorConfigInfo) (*product.Vendor, []*product.VendorZone, []*product.VendorSpec){
-	vendorInfo := &product.Vendor {
-		VendorID: reqConfig.ID,
+func convertVendorRequest(reqConfig structs.VendorConfigInfo) (*product.Vendor, []*product.VendorZone, []*product.VendorSpec) {
+	vendorInfo := &product.Vendor{
+		VendorID:   reqConfig.ID,
 		VendorName: reqConfig.Name,
 	}
 	zones := make([]*product.VendorZone, 0)
 	for _, region := range reqConfig.Regions {
 		for _, zone := range region.Zones {
 			zones = append(zones, &product.VendorZone{
-				VendorID: reqConfig.ID,
-				RegionID: region.ID,
+				VendorID:   reqConfig.ID,
+				RegionID:   region.ID,
 				RegionName: region.Name,
-				ZoneID: zone.ZoneID,
-				ZoneName: zone.ZoneName,
-				Comment: zone.Comment,
+				ZoneID:     zone.ZoneID,
+				ZoneName:   zone.ZoneName,
+				Comment:    zone.Comment,
 			})
 		}
 	}
 	specs := make([]*product.VendorSpec, 0)
 	for _, spec := range reqConfig.Specs {
-		specs = append(specs, &product.VendorSpec {
-			VendorID: reqConfig.ID,
-			SpecID: spec.ID,
-			SpecName: spec.Name,
-			CPU: spec.CPU,
-			Memory: spec.Memory,
-			DiskType: spec.DiskType,
+		specs = append(specs, &product.VendorSpec{
+			VendorID:    reqConfig.ID,
+			SpecID:      spec.ID,
+			SpecName:    spec.Name,
+			CPU:         spec.CPU,
+			Memory:      spec.Memory,
+			DiskType:    spec.DiskType,
 			PurposeType: spec.PurposeType,
 		})
 	}
@@ -362,9 +362,9 @@ func convertVendorRequest(reqConfig structs.VendorConfigInfo) (*product.Vendor, 
 }
 
 func convertToVendorResponse(vendor *product.Vendor, zones []*product.VendorZone, specs []*product.VendorSpec) structs.VendorConfigInfo {
-	return structs.VendorConfigInfo {
-		VendorInfo: structs.VendorInfo {
-			ID: vendor.VendorID,
+	return structs.VendorConfigInfo{
+		VendorInfo: structs.VendorInfo{
+			ID:   vendor.VendorID,
 			Name: vendor.VendorName,
 		},
 		Regions: convertToRegionResponse(zones),
@@ -376,9 +376,9 @@ func convertToRegionResponse(zones []*product.VendorZone) []structs.RegionConfig
 	regionMap := map[string]*structs.RegionConfigInfo{}
 	for _, zone := range zones {
 		if _, ok := regionMap[zone.RegionID]; !ok {
-			regionMap[zone.RegionID] = &structs.RegionConfigInfo {
-				RegionInfo: structs.RegionInfo {
-					ID: zone.RegionID,
+			regionMap[zone.RegionID] = &structs.RegionConfigInfo{
+				RegionInfo: structs.RegionInfo{
+					ID:   zone.RegionID,
 					Name: zone.RegionName,
 				},
 				Zones: make([]structs.ZoneInfo, 0),
@@ -386,9 +386,9 @@ func convertToRegionResponse(zones []*product.VendorZone) []structs.RegionConfig
 		}
 
 		newZones := append(regionMap[zone.RegionID].Zones, structs.ZoneInfo{
-			ZoneID: zone.ZoneID,
+			ZoneID:   zone.ZoneID,
 			ZoneName: zone.ZoneName,
-			Comment: zone.Comment,
+			Comment:  zone.Comment,
 		})
 		regionMap[zone.RegionID].Zones = newZones
 	}
@@ -402,42 +402,42 @@ func convertToRegionResponse(zones []*product.VendorZone) []structs.RegionConfig
 func convertToSpecResponse(specs []*product.VendorSpec) []structs.SpecInfo {
 	result := make([]structs.SpecInfo, 0)
 	for _, spec := range specs {
-		result = append(result, structs.SpecInfo {
-			ID: spec.SpecID,
-			Name: spec.SpecName,
-			CPU: spec.CPU,
-			Memory: spec.Memory,
-			DiskType: spec.DiskType,
+		result = append(result, structs.SpecInfo{
+			ID:          spec.SpecID,
+			Name:        spec.SpecName,
+			CPU:         spec.CPU,
+			Memory:      spec.Memory,
+			DiskType:    spec.DiskType,
 			PurposeType: spec.PurposeType,
 		})
 	}
 	return result
 }
 
-func convertProductRequest(reqConfig structs.ProductConfigInfo) (*product.ProductInfo, []*product.ProductVersion, []*product.ProductComponentInfo){
+func convertProductRequest(reqConfig structs.ProductConfigInfo) (*product.ProductInfo, []*product.ProductVersion, []*product.ProductComponentInfo) {
 	productInfo := &product.ProductInfo{
-		ProductID: reqConfig.ProductID,
+		ProductID:   reqConfig.ProductID,
 		ProductName: reqConfig.ProductName,
 	}
 	versions := make([]*product.ProductVersion, 0)
 	for _, version := range reqConfig.Versions {
-		versions = append(versions, &product.ProductVersion {
+		versions = append(versions, &product.ProductVersion{
 			ProductID: reqConfig.ProductID,
-			Arch: version.Arch,
-			Version: version.Version,
+			Arch:      version.Arch,
+			Version:   version.Version,
 		})
 	}
 	components := make([]*product.ProductComponentInfo, 0)
 	for _, component := range reqConfig.Components {
-		components = append(components, &product.ProductComponentInfo {
-			ProductID: reqConfig.ProductID,
-			ComponentID: component.ID,
-			PurposeType: component.PurposeType,
-			StartPort: component.StartPort,
-			EndPort: component.EndPort,
-			MaxPort: component.MaxPort,
-			MinInstance: component.MinInstance,
-			MaxInstance: component.MaxInstance,
+		components = append(components, &product.ProductComponentInfo{
+			ProductID:               reqConfig.ProductID,
+			ComponentID:             component.ID,
+			PurposeType:             component.PurposeType,
+			StartPort:               component.StartPort,
+			EndPort:                 component.EndPort,
+			MaxPort:                 component.MaxPort,
+			MinInstance:             component.MinInstance,
+			MaxInstance:             component.MaxInstance,
 			SuggestedInstancesCount: component.SuggestedInstancesCount,
 		})
 	}
@@ -446,21 +446,21 @@ func convertProductRequest(reqConfig structs.ProductConfigInfo) (*product.Produc
 }
 
 func convertToProductResponse(productInfo *product.ProductInfo, versions []*product.ProductVersion, components []*product.ProductComponentInfo) structs.ProductConfigInfo {
-	productConfigInfo := structs.ProductConfigInfo {
-		ProductID: productInfo.ProductID,
+	productConfigInfo := structs.ProductConfigInfo{
+		ProductID:   productInfo.ProductID,
 		ProductName: productInfo.ProductName,
 	}
 	productConfigInfo.Components = make([]structs.ProductComponentPropertyWithZones, 0)
 	for _, component := range components {
 		productConfigInfo.Components = append(productConfigInfo.Components, structs.ProductComponentPropertyWithZones{
-			ID: component.ComponentID,
-			Name: component.ComponentName,
-			PurposeType: component.PurposeType,
-			StartPort: component.StartPort,
-			EndPort: component.EndPort,
-			MaxPort: component.MaxPort,
-			MinInstance: component.MinInstance,
-			MaxInstance: component.MaxInstance,
+			ID:                      component.ComponentID,
+			Name:                    component.ComponentName,
+			PurposeType:             component.PurposeType,
+			StartPort:               component.StartPort,
+			EndPort:                 component.EndPort,
+			MaxPort:                 component.MaxPort,
+			MinInstance:             component.MinInstance,
+			MaxInstance:             component.MaxInstance,
 			SuggestedInstancesCount: component.SuggestedInstancesCount,
 		})
 	}
@@ -468,8 +468,8 @@ func convertToProductResponse(productInfo *product.ProductInfo, versions []*prod
 	for _, version := range versions {
 		productConfigInfo.Versions = append(productConfigInfo.Versions, structs.SpecificVersionProduct{
 			ProductID: version.ProductID,
-			Arch: version.Arch,
-			Version: version.Version,
+			Arch:      version.Arch,
+			Version:   version.Version,
 		})
 	}
 	return productConfigInfo

@@ -30,8 +30,8 @@ import (
 const (
 	ContextCheckID    = "CheckID"
 	ContextReportInfo = "ReportInfo"
-	DefaultCreator = "System"
-	DefaultTenantID = "admin"
+	DefaultCreator    = "System"
+	DefaultTenantID   = "admin"
 )
 
 var checkService CheckService

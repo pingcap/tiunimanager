@@ -7524,6 +7524,12 @@ var doc = `{
                 "targetClusterID"
             ],
             "properties": {
+                "checkMasterWritableFlag": {
+                    "type": "boolean"
+                },
+                "checkSlaveReadOnlyFlag": {
+                    "type": "boolean"
+                },
                 "force": {
                     "type": "boolean"
                 },

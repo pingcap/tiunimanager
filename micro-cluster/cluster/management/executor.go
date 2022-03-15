@@ -1466,6 +1466,8 @@ func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 	req := context.GetData(ContextTakeoverRequest).(cluster.TakeoverClusterReq)
 	clusterHome := fmt.Sprintf("%s/storage/cluster/clusters/%s/", req.TiUPPath, clusterMeta.Cluster.ID)
 
+	node.Record("try to get meta.yaml from " + clusterHome)
+
 	var sshClient *ssh.Client
 	var sftpClient *sftp.Client
 	defer func() {

@@ -28,6 +28,7 @@ import (
 	switchoverApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/switchover"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/upgrade"
 	configApi "github.com/pingcap-inc/tiem/micro-api/controller/platform/config"
+	platformdignose "github.com/pingcap-inc/tiem/micro-api/controller/platform/dignose"
 	"github.com/pingcap-inc/tiem/micro-api/controller/platform/system"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
@@ -78,6 +79,7 @@ func Route(g *gin.Engine) {
 			platform.POST("/check", metrics.HandleMetrics(constants.MetricsPlatformCheck), platformApi.Check)
 			platform.GET("/report/:checkId", metrics.HandleMetrics(constants.MetricsGetCheckReport), platformApi.GetCheckReport)
 			platform.GET("/reports", metrics.HandleMetrics(constants.MetricsQueryCheckReports), platformApi.QueryCheckReports)
+			platform.GET("/log", metrics.HandleMetrics(constants.MetricsQueryPlatformLog), platformdignose.QueryPlatformLog)
 		}
 
 		config := apiV1.Group("/config")

@@ -32,8 +32,8 @@ type SpecInfo struct {
 	ID          string `json:"id"`   //ID of the resource specification
 	Name        string `json:"name"` //Name of the resource specification,eg: TiDB.c1.large
 	CPU         int    `json:"cpu"`
-	Memory      int    `json:"memory"`       //The amount of memory occupied by the instance, in GiB
-	DiskType    string `json:"diskType"`     //eg: NVMeSSD/SSD/SATA
+	Memory      int    `json:"memory"`      //The amount of memory occupied by the instance, in GiB
+	DiskType    string `json:"diskType"`    //eg: NVMeSSD/SSD/SATA
 	PurposeType string `json:"purposeType"` // eg:Compute/Storage/Schedule
 }
 
@@ -110,9 +110,9 @@ type ZoneFullInfo struct {
 
 // ZoneInfo zone information
 type ZoneInfo struct {
-	ZoneID     string `json:"zoneId" form:"zoneId"`         //The value of the ZoneID is similar to CN-HANGZHOU-H
-	ZoneName   string `json:"zoneName" form:"zoneName"`     //The value of the Name is similar to Hangzhou(H)
-	Comment    string `json:"comment" form:"comment"`
+	ZoneID   string `json:"zoneId" form:"zoneId"`     //The value of the ZoneID is similar to CN-HANGZHOU-H
+	ZoneName string `json:"zoneName" form:"zoneName"` //The value of the Name is similar to Hangzhou(H)
+	Comment  string `json:"comment" form:"comment"`
 }
 
 // SystemConfig system config of platform
@@ -145,9 +145,9 @@ type ProductWithVersions struct {
 }
 
 type SpecificVersionProduct struct {
-	ProductID string   `json:"productID"`
-	Arch      string   `json:"arch"`
-	Version   string   `json:"version"`
+	ProductID string `json:"productID"`
+	Arch      string `json:"arch"`
+	Version   string `json:"version"`
 }
 
 type SystemVersionInfo struct {
@@ -158,8 +158,8 @@ type SystemVersionInfo struct {
 
 type VendorConfigInfo struct {
 	VendorInfo
-	Regions []RegionConfigInfo  `json:"regions" form:"regions"`
-	Specs []SpecInfo `json:"specs" form:"specs"`
+	Regions []RegionConfigInfo `json:"regions" form:"regions"`
+	Specs   []SpecInfo         `json:"specs" form:"specs"`
 }
 
 type RegionConfigInfo struct {
@@ -188,23 +188,23 @@ var DBUserRoleRecords = map[constants.DBUserRoleType]DBUserRole{
 		RoleName:    "root",
 		RoleType:    constants.Root,
 		Permission:  constants.DBUserPermission[constants.Root],
-		},
+	},
 	constants.DBUserBackupRestore: {
 		ClusterType: constants.EMProductIDTiDB,
 		RoleName:    "backup_restore",
 		RoleType:    constants.DBUserBackupRestore,
 		Permission:  constants.DBUserPermission[constants.DBUserBackupRestore],
-		},
+	},
 	constants.DBUserParameterManagement: {
 		ClusterType: constants.EMProductIDTiDB,
 		RoleName:    "parameter_management",
 		RoleType:    constants.DBUserParameterManagement,
 		Permission:  constants.DBUserPermission[constants.DBUserParameterManagement],
-		},
+	},
 	constants.DBUserCDCDataSync: {
 		ClusterType: constants.EMProductIDTiDB,
 		RoleName:    "data_sync",
 		RoleType:    constants.DBUserCDCDataSync,
 		Permission:  constants.DBUserPermission[constants.DBUserCDCDataSync],
-		},
+	},
 }

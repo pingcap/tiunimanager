@@ -19,7 +19,7 @@ test/
 /template
 /nohup.out
 .vscode/
-log/
+/log
 logs/
 out.txt
 run.sh

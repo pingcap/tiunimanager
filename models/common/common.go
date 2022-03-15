@@ -57,7 +57,7 @@ func (p Password) Value() (driver.Value, error) {
 }
 
 type PasswordInExpired struct {
-	Val        string  // Value is the value of the password
+	Val        string    // Value is the value of the password
 	UpdateTime time.Time // UpdateTime is the last update time
 }
 
@@ -118,7 +118,7 @@ func WrapDB(db *gorm.DB) GormDB {
 	return GormDB{db: db}
 }
 
-type ctxTransactionKeyStruct struct {}
+type ctxTransactionKeyStruct struct{}
 
 var ctxTransactionKey = ctxTransactionKeyStruct{}
 

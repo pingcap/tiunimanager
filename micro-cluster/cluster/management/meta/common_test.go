@@ -497,7 +497,7 @@ func Test_getRetainedPortRange(t *testing.T) {
 		}, nil).Times(1)
 		portRange, err := getRetainedPortRange(context.TODO())
 		assert.NoError(t, err)
-		assert.Equal(t, []int{10,11}, portRange)
+		assert.Equal(t, []int{10, 11}, portRange)
 	})
 	t.Run("error", func(t *testing.T) {
 		rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{}, errors.Error(errors.TIEM_SYSTEM_MISSING_CONFIG)).Times(1)
@@ -543,67 +543,67 @@ func TestGetRandomString(t *testing.T) {
 }
 func mockQueryTiDBFromDBAnyTimes(expect *mock_product.MockReaderWriterMockRecorder) {
 	expect.GetProduct(gomock.Any(), gomock.Any()).Return(&product.ProductInfo{
-		ProductID: "TiDB",
+		ProductID:   "TiDB",
 		ProductName: "tidb",
-	},[]*product.ProductVersion{
+	}, []*product.ProductVersion{
 		{
 			ProductID: "TiDB",
-			Arch: "x86_64",
-			Version: "v5.2.2",
-		},{
+			Arch:      "x86_64",
+			Version:   "v5.2.2",
+		}, {
 			ProductID: "TiDB",
-			Arch: "ARM64",
-			Version: "v5.2.2",
-		},{
+			Arch:      "ARM64",
+			Version:   "v5.2.2",
+		}, {
 			ProductID: "TiDB",
-			Arch: "x86_64",
-			Version: "v5.3.0",
+			Arch:      "x86_64",
+			Version:   "v5.3.0",
 		},
-	},[]*product.ProductComponentInfo {
+	}, []*product.ProductComponentInfo{
 		{
-			ProductID: "TiDB",
-			ComponentID: "TiDB",
-			ComponentName: "TiDB",
-			PurposeType: "Compute",
-			StartPort: 8,
-			EndPort: 16,
-			MaxPort: 4,
-			MinInstance: 1,
-			MaxInstance: 128,
+			ProductID:               "TiDB",
+			ComponentID:             "TiDB",
+			ComponentName:           "TiDB",
+			PurposeType:             "Compute",
+			StartPort:               8,
+			EndPort:                 16,
+			MaxPort:                 4,
+			MinInstance:             1,
+			MaxInstance:             128,
 			SuggestedInstancesCount: []int32{},
 		},
 		{
-			ProductID: "TiDB",
-			ComponentID: "TiKV",
-			ComponentName: "TiKV",
-			PurposeType: "Storage",
-			StartPort: 1,
-			EndPort: 2,
-			MaxPort: 2,
-			MinInstance: 1,
-			MaxInstance: 128,
+			ProductID:               "TiDB",
+			ComponentID:             "TiKV",
+			ComponentName:           "TiKV",
+			PurposeType:             "Storage",
+			StartPort:               1,
+			EndPort:                 2,
+			MaxPort:                 2,
+			MinInstance:             1,
+			MaxInstance:             128,
 			SuggestedInstancesCount: []int32{},
-		},{
-			ProductID: "TiDB",
-			ComponentID: "PD",
-			ComponentName: "PD",
-			PurposeType: "Schedule",
-			StartPort: 23,
-			EndPort: 413,
-			MaxPort: 22,
-			MinInstance: 1,
-			MaxInstance: 128,
-			SuggestedInstancesCount: []int32{1,3,5,7},
-		},{
-			ProductID: "TiDB",
-			ComponentID: "CDC",
-			ComponentName: "CDC",
-			PurposeType: "Compute",
-			StartPort: 23,
-			EndPort: 43,
-			MaxPort: 2,
-			MinInstance: 0,
-			MaxInstance: 128,
+		}, {
+			ProductID:               "TiDB",
+			ComponentID:             "PD",
+			ComponentName:           "PD",
+			PurposeType:             "Schedule",
+			StartPort:               23,
+			EndPort:                 413,
+			MaxPort:                 22,
+			MinInstance:             1,
+			MaxInstance:             128,
+			SuggestedInstancesCount: []int32{1, 3, 5, 7},
+		}, {
+			ProductID:               "TiDB",
+			ComponentID:             "CDC",
+			ComponentName:           "CDC",
+			PurposeType:             "Compute",
+			StartPort:               23,
+			EndPort:                 43,
+			MaxPort:                 2,
+			MinInstance:             0,
+			MaxInstance:             128,
 			SuggestedInstancesCount: []int32{},
 		},
 	}, nil).AnyTimes()
@@ -611,67 +611,67 @@ func mockQueryTiDBFromDBAnyTimes(expect *mock_product.MockReaderWriterMockRecord
 
 func mockQueryTiDBFromDB(expect *mock_product.MockReaderWriterMockRecorder) {
 	expect.GetProduct(gomock.Any(), gomock.Any()).Return(&product.ProductInfo{
-		ProductID: "TiDB",
+		ProductID:   "TiDB",
 		ProductName: "tidb",
-	},[]*product.ProductVersion{
+	}, []*product.ProductVersion{
 		{
 			ProductID: "TiDB",
-			Arch: "x86_64",
-			Version: "v5.2.2",
-		},{
+			Arch:      "x86_64",
+			Version:   "v5.2.2",
+		}, {
 			ProductID: "TiDB",
-			Arch: "ARM64",
-			Version: "v5.2.2",
-		},{
+			Arch:      "ARM64",
+			Version:   "v5.2.2",
+		}, {
 			ProductID: "TiDB",
-			Arch: "x86_64",
-			Version: "v5.3.0",
+			Arch:      "x86_64",
+			Version:   "v5.3.0",
 		},
-	},[]*product.ProductComponentInfo {
+	}, []*product.ProductComponentInfo{
 		{
-			ProductID: "TiDB",
-			ComponentID: "TiDB",
-			ComponentName: "TiDB",
-			PurposeType: "Compute",
-			StartPort: 8,
-			EndPort: 16,
-			MaxPort: 4,
-			MinInstance: 1,
-			MaxInstance: 128,
+			ProductID:               "TiDB",
+			ComponentID:             "TiDB",
+			ComponentName:           "TiDB",
+			PurposeType:             "Compute",
+			StartPort:               8,
+			EndPort:                 16,
+			MaxPort:                 4,
+			MinInstance:             1,
+			MaxInstance:             128,
 			SuggestedInstancesCount: []int32{},
 		},
 		{
-			ProductID: "TiDB",
-			ComponentID: "TiKV",
-			ComponentName: "TiKV",
-			PurposeType: "Storage",
-			StartPort: 1,
-			EndPort: 2,
-			MaxPort: 2,
-			MinInstance: 1,
-			MaxInstance: 128,
+			ProductID:               "TiDB",
+			ComponentID:             "TiKV",
+			ComponentName:           "TiKV",
+			PurposeType:             "Storage",
+			StartPort:               1,
+			EndPort:                 2,
+			MaxPort:                 2,
+			MinInstance:             1,
+			MaxInstance:             128,
 			SuggestedInstancesCount: []int32{},
-		},{
-			ProductID: "TiDB",
-			ComponentID: "PD",
-			ComponentName: "PD",
-			PurposeType: "Schedule",
-			StartPort: 23,
-			EndPort: 413,
-			MaxPort: 22,
-			MinInstance: 1,
-			MaxInstance: 128,
-			SuggestedInstancesCount: []int32{1,3,5,7},
-		},{
-			ProductID: "TiDB",
-			ComponentID: "CDC",
-			ComponentName: "CDC",
-			PurposeType: "Compute",
-			StartPort: 23,
-			EndPort: 43,
-			MaxPort: 2,
-			MinInstance: 0,
-			MaxInstance: 128,
+		}, {
+			ProductID:               "TiDB",
+			ComponentID:             "PD",
+			ComponentName:           "PD",
+			PurposeType:             "Schedule",
+			StartPort:               23,
+			EndPort:                 413,
+			MaxPort:                 22,
+			MinInstance:             1,
+			MaxInstance:             128,
+			SuggestedInstancesCount: []int32{1, 3, 5, 7},
+		}, {
+			ProductID:               "TiDB",
+			ComponentID:             "CDC",
+			ComponentName:           "CDC",
+			PurposeType:             "Compute",
+			StartPort:               23,
+			EndPort:                 43,
+			MaxPort:                 2,
+			MinInstance:             0,
+			MaxInstance:             128,
 			SuggestedInstancesCount: []int32{},
 		},
 	}, nil).Times(1)

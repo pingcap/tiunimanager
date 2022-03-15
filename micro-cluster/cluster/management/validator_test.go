@@ -42,8 +42,8 @@ func Test_validateCreating(t *testing.T) {
 	})
 
 	t.Run("unsupported product", func(t *testing.T) {
-		productRW.EXPECT().GetProduct(gomock.Any(), gomock.Any()).Return(nil, nil,nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
-		err := validateCreating(context.TODO(), &cluster.CreateClusterReq {
+		productRW.EXPECT().GetProduct(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{
 			CreateClusterParameter: structs.CreateClusterParameter{
 				Type: "TiDB",
 			},

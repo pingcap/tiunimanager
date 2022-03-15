@@ -25,28 +25,28 @@ package product
 
 // Vendor information provided by Enterprise Manager
 type Vendor struct {
-	VendorID string 	`gorm:"primaryKey;size:32"`
-	VendorName string 	`gorm:"size:32"`
+	VendorID   string `gorm:"primaryKey;size:32"`
+	VendorName string `gorm:"size:32"`
 	// accessKey and secretKey
 }
 
 // VendorZone information provided by Enterprise Manager
 type VendorZone struct {
-	VendorID   string         `gorm:"uniqueIndex:vendor_region_zone;size:32"`
-	RegionID   string         `gorm:"uniqueIndex:vendor_region_zone;size:32"`
-	RegionName string         `gorm:"size:32"`
-	ZoneID     string         `gorm:"uniqueIndex:vendor_region_zone;size:32"`
-	ZoneName   string         `gorm:"size:32"`
-	Comment    string         `gorm:"size:1024;"`
+	VendorID   string `gorm:"uniqueIndex:vendor_region_zone;size:32"`
+	RegionID   string `gorm:"uniqueIndex:vendor_region_zone;size:32"`
+	RegionName string `gorm:"size:32"`
+	ZoneID     string `gorm:"uniqueIndex:vendor_region_zone;size:32"`
+	ZoneName   string `gorm:"size:32"`
+	Comment    string `gorm:"size:1024;"`
 }
 
 //VendorSpec specification information provided by Enterprise Manager
 type VendorSpec struct {
-	VendorID 	string 		   `gorm:"uniqueIndex:vendor_spec;size:32"`
-	SpecID      string         `gorm:"uniqueIndex:vendor_spec;size:32"`
-	SpecName    string     	   `gorm:"not null;size 16;comment: original spec of the product, eg 8C16G"`
-	CPU         int            `gorm:"comment: unit: vCPU"`
-	Memory      int            `gorm:"comment: unit: GiB"`
-	DiskType    string         `gorm:"comment:NVMeSSD/SSD/SATA"`
-	PurposeType string         `gorm:"comment:Compute/Storage/Schedule"`
+	VendorID    string `gorm:"uniqueIndex:vendor_spec;size:32"`
+	SpecID      string `gorm:"uniqueIndex:vendor_spec;size:32"`
+	SpecName    string `gorm:"not null;size 16;comment: original spec of the product, eg 8C16G"`
+	CPU         int    `gorm:"comment: unit: vCPU"`
+	Memory      int    `gorm:"comment: unit: GiB"`
+	DiskType    string `gorm:"comment:NVMeSSD/SSD/SATA"`
+	PurposeType string `gorm:"comment:Compute/Storage/Schedule"`
 }

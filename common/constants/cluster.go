@@ -191,3 +191,14 @@ var DBUserPermission = map[DBUserRoleType][]string{
 
 // DefaultRetainedPortRange default retained port range for tiem
 var DefaultRetainedPortRange = "[11000,12000]"
+
+// RequestResourceMode specifying resource mode, enums : SpecificZone
+type RequestResourceMode string
+const (
+	ResourceModeSpecificZone = "SpecificZone"
+	ResourceModeSpecificHost = "SpecificHost"
+)
+
+func DefaultResourceMode() string {
+	return ResourceModeSpecificZone
+}

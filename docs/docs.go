@@ -7742,6 +7742,9 @@ var doc = `{
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
                     }
                 },
+                "requestResourceMode": {
+                    "type": "string"
+                },
                 "topology": {
                     "type": "array",
                     "items": {
@@ -7976,6 +7979,9 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
                     }
+                },
+                "requestResourceMode": {
+                    "type": "string"
                 }
             }
         },
@@ -10189,6 +10195,9 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
                     }
+                },
+                "requestResourceMode": {
+                    "type": "string"
                 }
             }
         },
@@ -10219,8 +10228,14 @@ var doc = `{
                 "diskCapacity": {
                     "type": "integer"
                 },
+                "diskId": {
+                    "type": "string"
+                },
                 "diskType": {
                     "description": "NVMeSSD/SSD/SATA",
+                    "type": "string"
+                },
+                "hostId": {
                     "type": "string"
                 },
                 "specCode": {
@@ -11155,12 +11170,18 @@ var doc = `{
                 "diskCapacity": {
                     "type": "integer"
                 },
+                "diskId": {
+                    "type": "string"
+                },
                 "diskType": {
                     "description": "NVMeSSD/SSD/SATA",
                     "type": "string"
                 },
                 "enough": {
                     "type": "boolean"
+                },
+                "hostId": {
+                    "type": "string"
                 },
                 "specCode": {
                     "description": "4C8G/8C16G ?",

@@ -627,6 +627,8 @@ definitions:
         items:
           $ref: '#/definitions/structs.ClusterResourceParameterCompute'
         type: array
+      requestResourceMode:
+        type: string
       topology:
         items:
           $ref: '#/definitions/structs.ClusterInstanceInfo'
@@ -790,6 +792,8 @@ definitions:
         items:
           $ref: '#/definitions/structs.ClusterResourceParameterCompute'
         type: array
+      requestResourceMode:
+        type: string
     type: object
   cluster.ScaleOutClusterResp:
     properties:
@@ -2300,6 +2304,8 @@ definitions:
         items:
           $ref: '#/definitions/structs.ClusterResourceParameterCompute'
         type: array
+      requestResourceMode:
+        type: string
     type: object
   structs.ClusterResourceParameterCompute:
     properties:
@@ -2319,8 +2325,12 @@ definitions:
         type: integer
       diskCapacity:
         type: integer
+      diskId:
+        type: string
       diskType:
         description: NVMeSSD/SSD/SATA
+        type: string
+      hostId:
         type: string
       specCode:
         description: 4C8G/8C16G ?
@@ -2978,11 +2988,15 @@ definitions:
         type: integer
       diskCapacity:
         type: integer
+      diskId:
+        type: string
       diskType:
         description: NVMeSSD/SSD/SATA
         type: string
       enough:
         type: boolean
+      hostId:
+        type: string
       specCode:
         description: 4C8G/8C16G ?
         type: string

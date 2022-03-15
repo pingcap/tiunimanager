@@ -135,6 +135,7 @@ func GetManager() *Manager {
 	return mgr
 }
 
+// Switchover switchover between master and slave cluster
 func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveClusterSwitchoverReq) (resp *cluster.MasterSlaveClusterSwitchoverResp, err error) {
 	framework.LogWithContext(ctx).Info("Manager.Switchover")
 
@@ -329,6 +330,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 	}, nil
 }
 
+//CheckSwitchover check whether the master cluster and slave cluster are in normal state
 func (p *Manager) CheckSwitchover(ctx context.Context, req *cluster.MasterSlaveClusterSwitchoverReq) (resp *cluster.MasterSlaveClusterSwitchoverResp, err error) {
 	funcName := "CheckSwitchover"
 	framework.LogWithContext(ctx).Infof("enter %s", funcName)

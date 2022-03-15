@@ -38,9 +38,9 @@ func TestAccountReadWrite_CreateUser(t *testing.T) {
 			Name:            "nick01",
 			//Salt:            "salt",
 			//FinalHash:       common.Password{Val: "hash", UpdateTime: time.Now()},
-			Email:           "email",
-			Phone:           "123",
-			Status:          "Normal",
+			Email:  "email",
+			Phone:  "123",
+			Status: "Normal",
 		}
 		user.GenSaltAndHash("1234")
 		got1, got2, got3, err := testRW.CreateUser(ctx.TODO(), user, "user")

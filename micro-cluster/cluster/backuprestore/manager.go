@@ -232,10 +232,14 @@ func (mgr *BRManager) CancelBackup(ctx context.Context, request cluster.CancelBa
 	defer framework.LogWithContext(ctx).Infof("End CancelBackup")
 
 	brRW := models.GetBRReaderWriter()
-	records, _, err := brRW.QueryBackupRecords(ctx, request.ClusterID, request.BackupID, "", 0, 0, 1, 1)
-	if err != nil || len(records) != 1 {
+	records, _, err := brRW.QueryBackupRecords(ctx, request.ClusterID, request.BackupID, "", 0, 0, 1, 10)
+	if err != nil {
 		framework.LogWithContext(ctx).Errorf("query cluster backup records %+v failed %s", request, err.Error())
-		return resp, errors.WrapError(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("query cluster backup records %+v failed %s", request, err.Error()), err)
+		return resp, errors.WrapError(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("query cluster %s backup record %s failed %s", request.ClusterID, request.BackupID, err.Error()), err)
+	}
+	if len(records) < 1 {
+		framework.LogWithContext(ctx).Errorf("query cluster backup records %+v not found", request)
+		return resp, errors.NewErrorf(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("query cluster %s backup record %s not found", request.ClusterID, request.BackupID))
 	}
 
 	meta, err := meta.Get(ctx, request.ClusterID)
@@ -246,8 +250,8 @@ func (mgr *BRManager) CancelBackup(ctx context.Context, request cluster.CancelBa
 
 	tidbServers := meta.GetClusterConnectAddresses()
 	if len(tidbServers) == 0 {
-		framework.LogWithContext(ctx).Error("get tidb servers from meta result empty")
-		return resp, fmt.Errorf("get tidb servers from meta result empty")
+		framework.LogWithContext(ctx).Errorf("get tidb servers address from cluster %s meta result empty", request.ClusterID)
+		return resp, errors.NewErrorf(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("get tidb servers address from cluster %s meta result empty", request.ClusterID))
 	}
 	framework.LogWithContext(ctx).Infof("get cluster %s tidb address from meta, %+v", meta.Cluster.ID, tidbServers)
 	tidbServerHost := tidbServers[0].IP
@@ -255,7 +259,7 @@ func (mgr *BRManager) CancelBackup(ctx context.Context, request cluster.CancelBa
 	tidbUserInfo, err := meta.GetDBUserNamePassword(ctx, constants.DBUserBackupRestore)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get cluster %s user info from meta falied, %s ", meta.Cluster.ID, err.Error())
-		return resp, err
+		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("get cluster %s user info from meta falied", meta.Cluster.ID), err)
 	}
 	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta", meta.Cluster.ID)
 
@@ -267,7 +271,7 @@ func (mgr *BRManager) CancelBackup(ctx context.Context, request cluster.CancelBa
 	}, Destination: records[0].FilePath})
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("show cluster %s backups falied, %s ", request.ClusterID, err.Error())
-		return resp, err
+		return resp, errors.WrapError(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("show cluster %s backups falied", request.ClusterID), err)
 	}
 
 	err = utilsql.CancelBackupSQL(ctx, utilsql.CancelBackupReq{Connection: showResp.Connection, DbConnParameter: utilsql.DbConnParam{
@@ -278,7 +282,7 @@ func (mgr *BRManager) CancelBackup(ctx context.Context, request cluster.CancelBa
 	}})
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("cancel cluster %s backups falied, %s ", request.ClusterID, err.Error())
-		return resp, err
+		return resp, errors.WrapError(errors.TIEM_BACKUP_RECORD_CANCEL_FAILED, fmt.Sprintf("cancel cluster %s backups falied", request.ClusterID), err)
 	}
 	return
 }

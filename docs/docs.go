@@ -3819,6 +3819,102 @@ var doc = `{
                 }
             }
         },
+        "/platform/log": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query platform log",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform log"
+                ],
+                "summary": "query platform log",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "example": 1638331200,
+                        "name": "endTime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "warn",
+                        "name": "level",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "some do something",
+                        "name": "message",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Current page location",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of this request",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1630468800,
+                        "name": "startTime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "UNe7K1uERa-2fwSxGJ6CFQ",
+                        "name": "traceId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.QueryPlatformLogResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/platform/report/:checkId": {
             "get": {
                 "security": [
@@ -8925,6 +9021,39 @@ var doc = `{
                 }
             }
         },
+        "message.PlatformLogItem": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "zvadfwf"
+                },
+                "index": {
+                    "type": "string",
+                    "example": "em-system-logs-2021.12.30"
+                },
+                "level": {
+                    "type": "string",
+                    "example": "warn"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "some do something"
+                },
+                "microMethod": {
+                    "type": "string",
+                    "example": "em.cluster.ClusterService.GetSystemInfo"
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2021-09-23 14:23:10"
+                },
+                "traceId": {
+                    "type": "string",
+                    "example": "UNe7K1uERa-2fwSxGJ6CFQ"
+                }
+            }
+        },
         "message.QueryAvailableProductsResp": {
             "type": "object",
             "properties": {
@@ -9064,6 +9193,21 @@ var doc = `{
                 },
                 "userId": {
                     "type": "string"
+                }
+            }
+        },
+        "message.QueryPlatformLogResp": {
+            "type": "object",
+            "properties": {
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/message.PlatformLogItem"
+                    }
+                },
+                "took": {
+                    "type": "integer",
+                    "example": 10
                 }
             }
         },
@@ -9848,7 +9992,7 @@ var doc = `{
                 },
                 "index": {
                     "type": "string",
-                    "example": "tiem-tidb-cluster-2021.09.23"
+                    "example": "em-tidb-cluster-2021.09.23"
                 },
                 "ip": {
                     "type": "string",

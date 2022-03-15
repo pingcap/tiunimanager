@@ -173,7 +173,7 @@ const (
 	DBUserBackupRestore       DBUserRoleType = "EM_Backup_Restore"       // user for backup and restore
 	DBUserParameterManagement DBUserRoleType = "EM_Parameter_Management" // user for managing parameters
 	DBUserCDCDataSync         DBUserRoleType = "CDC_Data_Sync"           // user for CDC data synchronization
-	Grafana                   DBUserRoleType = "Grafana"                 // user for Grafana
+	DBUserGrafana             DBUserRoleType = "Grafana"                 // user for Grafana
 )
 
 var DBUserName = map[DBUserRoleType]string{

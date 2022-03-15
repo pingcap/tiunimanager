@@ -48,7 +48,7 @@ func (p *ProductReadWrite) QueryAllVendors(ctx context.Context) ([]*Vendor, erro
 }
 
 func (p *ProductReadWrite) SaveVendor(ctx context.Context, vendor *Vendor, zones []*VendorZone, specs []*VendorSpec) error {
-	if vendor == nil || len(vendor.VendorID) == 0{
+	if vendor == nil || len(vendor.VendorID) == 0 {
 		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "vendor is empty")
 	}
 	existed := int64(0)
@@ -124,7 +124,7 @@ func (p *ProductReadWrite) QueryAllProducts(ctx context.Context) ([]*ProductInfo
 }
 
 func (p *ProductReadWrite) SaveProduct(ctx context.Context, product *ProductInfo, versions []*ProductVersion, components []*ProductComponentInfo) error {
-	if product == nil || len(product.ProductID) == 0{
+	if product == nil || len(product.ProductID) == 0 {
 		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "product is empty")
 	}
 	existed := int64(0)
@@ -194,4 +194,3 @@ func (p *ProductReadWrite) DeleteProduct(ctx context.Context, productID string) 
 		framework.LogWithContext(ctx).Infof("delete product info succeed, productID = %s", productID)
 	}).Present())
 }
-

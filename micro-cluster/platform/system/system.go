@@ -125,7 +125,7 @@ var SupportedProducts = []structs.ProductWithVersions{
 	},
 }
 
-var SupportedVendors = []structs.VendorInfo {
+var SupportedVendors = []structs.VendorInfo{
 	{ID: string(constants.Local), Name: "local datacenter"},
 }
 
@@ -151,9 +151,9 @@ func (p *SystemManager) GetSystemInfo(ctx context.Context, req message.GetSystem
 	if req.WithVersionDetail && len(systemInfo.CurrentVersionID) > 0 {
 		// current version
 		if got, versionError := models.GetSystemReaderWriter().GetVersion(ctx, systemInfo.CurrentVersionID); versionError == nil {
-			resp.CurrentVersion = structs.SystemVersionInfo {
-				VersionID: got.ID,
-				Desc: got.Desc,
+			resp.CurrentVersion = structs.SystemVersionInfo{
+				VersionID:   got.ID,
+				Desc:        got.Desc,
 				ReleaseNote: got.ReleaseNote,
 			}
 		} else {
@@ -165,9 +165,9 @@ func (p *SystemManager) GetSystemInfo(ctx context.Context, req message.GetSystem
 	if req.WithVersionDetail && len(systemInfo.LastVersionID) > 0 {
 		// last version
 		if got, versionError := models.GetSystemReaderWriter().GetVersion(ctx, systemInfo.LastVersionID); versionError == nil {
-			resp.LastVersion = structs.SystemVersionInfo {
-				VersionID: got.ID,
-				Desc: got.Desc,
+			resp.LastVersion = structs.SystemVersionInfo{
+				VersionID:   got.ID,
+				Desc:        got.Desc,
 				ReleaseNote: got.ReleaseNote,
 			}
 		} else {

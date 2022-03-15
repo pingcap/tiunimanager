@@ -53,65 +53,65 @@ func TestProductReadWrite_Product(t *testing.T) {
 	t.Run("versions conflict", func(t *testing.T) {
 		defer testRW.DeleteProduct(context.TODO(), "TiDB")
 		err := testRW.SaveProduct(context.TODO(), &ProductInfo{
-			ProductID: "TiDB",
+			ProductID:   "TiDB",
 			ProductName: "my-tidb",
 		}, []*ProductVersion{
 			{
 				ProductID: "TiDB",
-				Arch: "x86_64",
-				Version: "v5.2.2",
-				Desc: "default",
+				Arch:      "x86_64",
+				Version:   "v5.2.2",
+				Desc:      "default",
 			},
 			{
 				ProductID: "TiDB",
-				Arch: "x86_64",
-				Version: "v5.2.2",
-				Desc: "default",
+				Arch:      "x86_64",
+				Version:   "v5.2.2",
+				Desc:      "default",
 			},
 			{
 				ProductID: "TiDB",
-				Arch: "arm64",
-				Version: "v5.2.2",
-				Desc: "default",
+				Arch:      "arm64",
+				Version:   "v5.2.2",
+				Desc:      "default",
 			},
 			{
 				ProductID: "TiDB",
-				Arch: "x86_64",
-				Version: "v5.4.0",
-				Desc: "default",
+				Arch:      "x86_64",
+				Version:   "v5.4.0",
+				Desc:      "default",
 			},
 		}, []*ProductComponentInfo{
 			{
-				ProductID: "TiDB",
-				ComponentID: "TiKV",
-				PurposeType:"Storage",
-				StartPort:12,
-				EndPort:17,
-				MaxPort:3,
-				MinInstance:9,
-				MaxInstance:18,
+				ProductID:              "TiDB",
+				ComponentID:            "TiKV",
+				PurposeType:            "Storage",
+				StartPort:              12,
+				EndPort:                17,
+				MaxPort:                3,
+				MinInstance:            9,
+				MaxInstance:            18,
 				SuggestedInstancesInfo: "[1,3,5,7]",
 			},
 			{
-				ProductID: "TiDB",
-				ComponentID: "PD",
-				PurposeType:"Schedule",
-				StartPort:12,
-				EndPort:17,
-				MaxPort:3,
-				MinInstance:9,
-				MaxInstance:18,
+				ProductID:              "TiDB",
+				ComponentID:            "PD",
+				PurposeType:            "Schedule",
+				StartPort:              12,
+				EndPort:                17,
+				MaxPort:                3,
+				MinInstance:            9,
+				MaxInstance:            18,
 				SuggestedInstancesInfo: "[]",
 			},
 			{
-				ProductID: "TiDB",
-				ComponentID: "TiDB",
-				PurposeType:"Compute",
-				StartPort:2,
-				EndPort:5,
-				MaxPort:3,
-				MinInstance:3,
-				MaxInstance:18,
+				ProductID:              "TiDB",
+				ComponentID:            "TiDB",
+				PurposeType:            "Compute",
+				StartPort:              2,
+				EndPort:                5,
+				MaxPort:                3,
+				MinInstance:            3,
+				MaxInstance:            18,
 				SuggestedInstancesInfo: "[]",
 			},
 		})
@@ -121,75 +121,75 @@ func TestProductReadWrite_Product(t *testing.T) {
 		defer testRW.DeleteProduct(context.TODO(), "TiDB")
 		err := testRW.SaveProduct(context.TODO(),
 			&ProductInfo{
-			ProductID: "TiDB",
-			ProductName: "my-tidb",
-		},
-		[]*ProductVersion{
-			{
-				ProductID: "TiDB",
-				Arch: "x86_64",
-				Version: "v5.2.2",
-				Desc: "default",
+				ProductID:   "TiDB",
+				ProductName: "my-tidb",
 			},
-			{
-				ProductID: "TiDB",
-				Arch: "arm64",
-				Version: "v5.2.2",
-				Desc: "default",
+			[]*ProductVersion{
+				{
+					ProductID: "TiDB",
+					Arch:      "x86_64",
+					Version:   "v5.2.2",
+					Desc:      "default",
+				},
+				{
+					ProductID: "TiDB",
+					Arch:      "arm64",
+					Version:   "v5.2.2",
+					Desc:      "default",
+				},
+				{
+					ProductID: "TiDB",
+					Arch:      "x86_64",
+					Version:   "v5.4.0",
+					Desc:      "default",
+				},
 			},
-			{
-				ProductID: "TiDB",
-				Arch: "x86_64",
-				Version: "v5.4.0",
-				Desc: "default",
-			},
-		},
-		[]*ProductComponentInfo{
-			{
-				ProductID: "TiDB",
-				ComponentID: "TiKV",
-				PurposeType:"Storage",
-				StartPort:12,
-				EndPort:17,
-				MaxPort:3,
-				MinInstance:9,
-				MaxInstance:18,
-				SuggestedInstancesInfo: "[1,3,5,7]",
-			},
-			{
-				ProductID: "TiDB",
-				ComponentID: "TiKV",
-				PurposeType:"Storage",
-				StartPort:12,
-				EndPort:17,
-				MaxPort:3,
-				MinInstance:9,
-				MaxInstance:18,
-				SuggestedInstancesInfo: "[1,3,5,7]",
-			},
-			{
-				ProductID: "TiDB",
-				ComponentID: "PD",
-				PurposeType:"Schedule",
-				StartPort:12,
-				EndPort:17,
-				MaxPort:3,
-				MinInstance:9,
-				MaxInstance:18,
-				SuggestedInstancesInfo: "[]",
-			},
-			{
-				ProductID: "TiDB",
-				ComponentID: "TiDB",
-				PurposeType:"Compute",
-				StartPort:2,
-				EndPort:5,
-				MaxPort:3,
-				MinInstance:3,
-				MaxInstance:18,
-				SuggestedInstancesInfo: "[]",
-			},
-		})
+			[]*ProductComponentInfo{
+				{
+					ProductID:              "TiDB",
+					ComponentID:            "TiKV",
+					PurposeType:            "Storage",
+					StartPort:              12,
+					EndPort:                17,
+					MaxPort:                3,
+					MinInstance:            9,
+					MaxInstance:            18,
+					SuggestedInstancesInfo: "[1,3,5,7]",
+				},
+				{
+					ProductID:              "TiDB",
+					ComponentID:            "TiKV",
+					PurposeType:            "Storage",
+					StartPort:              12,
+					EndPort:                17,
+					MaxPort:                3,
+					MinInstance:            9,
+					MaxInstance:            18,
+					SuggestedInstancesInfo: "[1,3,5,7]",
+				},
+				{
+					ProductID:              "TiDB",
+					ComponentID:            "PD",
+					PurposeType:            "Schedule",
+					StartPort:              12,
+					EndPort:                17,
+					MaxPort:                3,
+					MinInstance:            9,
+					MaxInstance:            18,
+					SuggestedInstancesInfo: "[]",
+				},
+				{
+					ProductID:              "TiDB",
+					ComponentID:            "TiDB",
+					PurposeType:            "Compute",
+					StartPort:              2,
+					EndPort:                5,
+					MaxPort:                3,
+					MinInstance:            3,
+					MaxInstance:            18,
+					SuggestedInstancesInfo: "[]",
+				},
+			})
 		assert.Error(t, err)
 	})
 	t.Run("save", func(t *testing.T) {
@@ -201,59 +201,59 @@ func TestProductReadWrite_Product(t *testing.T) {
 		assert.Equal(t, 0, len(all))
 
 		err = testRW.SaveProduct(context.TODO(), &ProductInfo{
-			ProductID: "DM",
+			ProductID:   "DM",
 			ProductName: "DM",
 		}, []*ProductVersion{
 			{
 				ProductID: "DM",
-				Arch: "x86_64",
-				Version: "v5.2.2",
-				Desc: "default",
+				Arch:      "x86_64",
+				Version:   "v5.2.2",
+				Desc:      "default",
 			},
 			{
 				ProductID: "DM",
-				Arch: "arm64",
-				Version: "v5.2.2",
-				Desc: "default",
+				Arch:      "arm64",
+				Version:   "v5.2.2",
+				Desc:      "default",
 			},
 			{
 				ProductID: "DM",
-				Arch: "x86_64",
-				Version: "v5.4.0",
-				Desc: "default",
+				Arch:      "x86_64",
+				Version:   "v5.4.0",
+				Desc:      "default",
 			},
 		}, []*ProductComponentInfo{
 			{
-				ProductID: "DM",
-				ComponentID: "TiKV",
-				PurposeType:"Storage",
-				StartPort:12,
-				EndPort:17,
-				MaxPort:3,
-				MinInstance:9,
-				MaxInstance:18,
+				ProductID:              "DM",
+				ComponentID:            "TiKV",
+				PurposeType:            "Storage",
+				StartPort:              12,
+				EndPort:                17,
+				MaxPort:                3,
+				MinInstance:            9,
+				MaxInstance:            18,
 				SuggestedInstancesInfo: "[1,3,5,7]",
 			},
 			{
-				ProductID: "DM",
-				ComponentID: "PD",
-				PurposeType:"Schedule",
-				StartPort:12,
-				EndPort:17,
-				MaxPort:3,
-				MinInstance:9,
-				MaxInstance:18,
+				ProductID:              "DM",
+				ComponentID:            "PD",
+				PurposeType:            "Schedule",
+				StartPort:              12,
+				EndPort:                17,
+				MaxPort:                3,
+				MinInstance:            9,
+				MaxInstance:            18,
 				SuggestedInstancesInfo: "[]",
 			},
 			{
-				ProductID: "DM",
-				ComponentID: "TiDB",
-				PurposeType:"Compute",
-				StartPort:2,
-				EndPort:5,
-				MaxPort:3,
-				MinInstance:3,
-				MaxInstance:18,
+				ProductID:              "DM",
+				ComponentID:            "TiDB",
+				PurposeType:            "Compute",
+				StartPort:              2,
+				EndPort:                5,
+				MaxPort:                3,
+				MinInstance:            3,
+				MaxInstance:            18,
 				SuggestedInstancesInfo: "[]",
 			},
 		})
@@ -264,61 +264,61 @@ func TestProductReadWrite_Product(t *testing.T) {
 		assert.Equal(t, 1, len(all))
 
 		product := &ProductInfo{
-			ProductID: "TiDB",
+			ProductID:   "TiDB",
 			ProductName: "my-tidb",
 		}
 		versions := []*ProductVersion{
 			{
 				ProductID: "TiDB",
-				Arch: "x86_64",
-				Version: "v5.2.2",
-				Desc: "default",
+				Arch:      "x86_64",
+				Version:   "v5.2.2",
+				Desc:      "default",
 			},
 			{
 				ProductID: "TiDB",
-				Arch: "arm64",
-				Version: "v5.2.2",
-				Desc: "default",
+				Arch:      "arm64",
+				Version:   "v5.2.2",
+				Desc:      "default",
 			},
 			{
 				ProductID: "TiDB",
-				Arch: "x86_64",
-				Version: "v5.4.0",
-				Desc: "default",
+				Arch:      "x86_64",
+				Version:   "v5.4.0",
+				Desc:      "default",
 			},
 		}
 		components := []*ProductComponentInfo{
 			{
-				ProductID: "TiDB",
-				ComponentID: "TiKV",
-				PurposeType:"Storage",
-				StartPort:12,
-				EndPort:17,
-				MaxPort:3,
-				MinInstance:9,
-				MaxInstance:18,
+				ProductID:              "TiDB",
+				ComponentID:            "TiKV",
+				PurposeType:            "Storage",
+				StartPort:              12,
+				EndPort:                17,
+				MaxPort:                3,
+				MinInstance:            9,
+				MaxInstance:            18,
 				SuggestedInstancesInfo: "[1,3,5,7]",
 			},
 			{
-				ProductID: "TiDB",
-				ComponentID: "PD",
-				PurposeType:"Schedule",
-				StartPort:12,
-				EndPort:17,
-				MaxPort:3,
-				MinInstance:9,
-				MaxInstance:18,
+				ProductID:              "TiDB",
+				ComponentID:            "PD",
+				PurposeType:            "Schedule",
+				StartPort:              12,
+				EndPort:                17,
+				MaxPort:                3,
+				MinInstance:            9,
+				MaxInstance:            18,
 				SuggestedInstancesInfo: "[]",
 			},
 			{
-				ProductID: "TiDB",
-				ComponentID: "TiDB",
-				PurposeType:"Compute",
-				StartPort:2,
-				EndPort:5,
-				MaxPort:3,
-				MinInstance:3,
-				MaxInstance:18,
+				ProductID:              "TiDB",
+				ComponentID:            "TiDB",
+				PurposeType:            "Compute",
+				StartPort:              2,
+				EndPort:                5,
+				MaxPort:                3,
+				MinInstance:            3,
+				MaxInstance:            18,
 				SuggestedInstancesInfo: "[]",
 			},
 		}
@@ -340,86 +340,86 @@ func TestProductReadWrite_Product(t *testing.T) {
 	t.Run("save again", func(t *testing.T) {
 		defer testRW.DeleteProduct(context.TODO(), "TiDB")
 		err := testRW.SaveProduct(context.TODO(), &ProductInfo{
-			ProductID: "TiDB",
+			ProductID:   "TiDB",
 			ProductName: "existed",
 		}, []*ProductVersion{
 			{
 				ProductID: "TiDB",
-				Arch: "x86_64",
-				Version: "v9.9.9",
-				Desc: "default",
+				Arch:      "x86_64",
+				Version:   "v9.9.9",
+				Desc:      "default",
 			},
 		}, []*ProductComponentInfo{
 			{
-				ProductID: "TiDB",
-				ComponentID: "TiKV",
-				PurposeType:"Storage",
-				StartPort:999,
-				EndPort:17,
-				MaxPort:3,
-				MinInstance:9,
-				MaxInstance:18,
+				ProductID:              "TiDB",
+				ComponentID:            "TiKV",
+				PurposeType:            "Storage",
+				StartPort:              999,
+				EndPort:                17,
+				MaxPort:                3,
+				MinInstance:            9,
+				MaxInstance:            18,
 				SuggestedInstancesInfo: "[1,3,5,7]",
 			},
 		})
 		assert.NoError(t, err)
 
 		product := &ProductInfo{
-			ProductID: "TiDB",
+			ProductID:   "TiDB",
 			ProductName: "my-tidb",
 		}
 		versions := []*ProductVersion{
 			{
 				ProductID: "TiDB",
-				Arch: "x86_64",
-				Version: "v5.2.2",
-				Desc: "default",
+				Arch:      "x86_64",
+				Version:   "v5.2.2",
+				Desc:      "default",
 			},
 			{
 				ProductID: "TiDB",
-				Arch: "arm64",
-				Version: "v5.2.2",
-				Desc: "default",
+				Arch:      "arm64",
+				Version:   "v5.2.2",
+				Desc:      "default",
 			},
 			{
 				ProductID: "TiDB",
-				Arch: "x86_64",
-				Version: "v5.4.0",
-				Desc: "default",
+				Arch:      "x86_64",
+				Version:   "v5.4.0",
+				Desc:      "default",
 			},
 		}
 		components := []*ProductComponentInfo{
 			{
-				ProductID: "TiDB",
-				ComponentID: "TiKV",
-				PurposeType:"Storage",
-				StartPort:12,
-				EndPort:17,
-				MaxPort:3,
-				MinInstance:9,
-				MaxInstance:18,
+				ProductID:              "TiDB",
+				ComponentID:            "TiKV",
+				PurposeType:            "Storage",
+				StartPort:              12,
+				EndPort:                17,
+				MaxPort:                3,
+				MinInstance:            9,
+				MaxInstance:            18,
 				SuggestedInstancesInfo: "[1,3,5,7]",
 			},
 			{
-				ProductID: "TiDB",
-				ComponentID: "PD",
-				PurposeType:"Schedule",
-				StartPort:12,
-				EndPort:17,
-				MaxPort:3,
-				MinInstance:9,
-				MaxInstance:18,
+				ProductID:              "TiDB",
+				ComponentID:            "PD",
+				PurposeType:            "Schedule",
+				StartPort:              12,
+				EndPort:                17,
+				MaxPort:                3,
+				MinInstance:            9,
+				MaxInstance:            18,
 				SuggestedInstancesInfo: "[]",
 			},
 			{
-				ProductID: "TiDB",
-				ComponentID: "TiDB",
-				PurposeType:"Compute",
-				StartPort:2,
-				EndPort:5,
-				MaxPort:3,
-				MinInstance:3,
-				MaxInstance:18,
+				ProductID:              "TiDB",
+				ComponentID:            "TiDB",
+				PurposeType:            "Compute",
+				StartPort:              2,
+				EndPort:                5,
+				MaxPort:                3,
+				MinInstance:            3,
+				MaxInstance:            18,
 				SuggestedInstancesInfo: "[]",
 			},
 		}
@@ -464,43 +464,41 @@ func TestProductReadWrite_Vendor(t *testing.T) {
 	t.Run("zone conflict", func(t *testing.T) {
 		defer testRW.DeleteVendor(context.TODO(), "Local")
 		err := testRW.SaveVendor(context.TODO(), &Vendor{
-			VendorID: "Local",
+			VendorID:   "Local",
 			VendorName: "datacenter",
 		}, []*VendorZone{
 			{
 				VendorID: "Local",
 				RegionID: "region1",
-				ZoneID: "zone1",
+				ZoneID:   "zone1",
 			},
 			{
 				VendorID: "Local",
 				RegionID: "region1",
-				ZoneID: "zone1",
+				ZoneID:   "zone1",
 			},
-		}, []*VendorSpec{
-
-		})
+		}, []*VendorSpec{})
 		assert.Error(t, err)
 	})
 	t.Run("spec conflict", func(t *testing.T) {
 		defer testRW.DeleteVendor(context.TODO(), "Local")
 		err := testRW.SaveVendor(context.TODO(), &Vendor{
-			VendorID: "Local",
+			VendorID:   "Local",
 			VendorName: "datacenter",
 		}, []*VendorZone{
 			{
 				VendorID: "Local",
 				RegionID: "region1",
-				ZoneID: "zone1",
+				ZoneID:   "zone1",
 			},
 		}, []*VendorSpec{
 			{
 				VendorID: "Local",
-				SpecID: "x.large",
+				SpecID:   "x.large",
 			},
 			{
 				VendorID: "Local",
-				SpecID: "x.large",
+				SpecID:   "x.large",
 			},
 		})
 		assert.Error(t, err)
@@ -515,32 +513,32 @@ func TestProductReadWrite_Vendor(t *testing.T) {
 
 		// save local
 		err = testRW.SaveVendor(context.TODO(), &Vendor{
-			VendorID: "Local",
+			VendorID:   "Local",
 			VendorName: "datacenter",
 		}, []*VendorZone{
 			{
 				VendorID: "Local",
 				RegionID: "region1",
-				ZoneID: "zone1",
+				ZoneID:   "zone1",
 			},
 			{
 				VendorID: "Local",
 				RegionID: "region1",
-				ZoneID: "zone2",
+				ZoneID:   "zone2",
 			},
 			{
 				VendorID: "Local",
 				RegionID: "region2",
-				ZoneID: "zone1",
+				ZoneID:   "zone1",
 			},
 		}, []*VendorSpec{
 			{
 				VendorID: "Local",
-				SpecID: "x.large",
+				SpecID:   "x.large",
 			},
 			{
 				VendorID: "Local",
-				SpecID: "xxx.large",
+				SpecID:   "xxx.large",
 			},
 		})
 		assert.NoError(t, err)
@@ -551,32 +549,32 @@ func TestProductReadWrite_Vendor(t *testing.T) {
 
 		// save aws
 		err = testRW.SaveVendor(context.TODO(), &Vendor{
-			VendorID: "AWS",
+			VendorID:   "AWS",
 			VendorName: "AWS",
 		}, []*VendorZone{
 			{
 				VendorID: "AWS",
 				RegionID: "region1",
-				ZoneID: "zone1",
+				ZoneID:   "zone1",
 			},
 			{
 				VendorID: "AWS",
 				RegionID: "region1",
-				ZoneID: "zone2",
+				ZoneID:   "zone2",
 			},
 			{
 				VendorID: "AWS",
 				RegionID: "region2",
-				ZoneID: "zone1",
+				ZoneID:   "zone1",
 			},
 		}, []*VendorSpec{
 			{
 				VendorID: "AWS",
-				SpecID: "x.large",
+				SpecID:   "x.large",
 			},
 			{
 				VendorID: "AWS",
-				SpecID: "xxx.large",
+				SpecID:   "xxx.large",
 			},
 		})
 
@@ -607,58 +605,58 @@ func TestProductReadWrite_Vendor(t *testing.T) {
 	t.Run("save again", func(t *testing.T) {
 		defer testRW.DeleteVendor(context.TODO(), "Local")
 		err := testRW.SaveVendor(context.TODO(), &Vendor{
-			VendorID: "Local",
+			VendorID:   "Local",
 			VendorName: "datacenter",
 		}, []*VendorZone{
 			{
 				VendorID: "Local",
 				RegionID: "aaa",
-				ZoneID: "aaa",
+				ZoneID:   "aaa",
 			},
 			{
 				VendorID: "Local",
 				RegionID: "aaa",
-				ZoneID: "bbb",
+				ZoneID:   "bbb",
 			},
 		}, []*VendorSpec{
 			{
 				VendorID: "Local",
-				SpecID: "aaa",
+				SpecID:   "aaa",
 			},
 			{
 				VendorID: "Local",
-				SpecID: "aaa",
+				SpecID:   "aaa",
 			},
 		})
 
 		// save local
 		err = testRW.SaveVendor(context.TODO(), &Vendor{
-			VendorID: "Local",
+			VendorID:   "Local",
 			VendorName: "datacenter",
 		}, []*VendorZone{
 			{
 				VendorID: "Local",
 				RegionID: "region1",
-				ZoneID: "zone1",
+				ZoneID:   "zone1",
 			},
 			{
 				VendorID: "Local",
 				RegionID: "region1",
-				ZoneID: "zone2",
+				ZoneID:   "zone2",
 			},
 			{
 				VendorID: "Local",
 				RegionID: "region2",
-				ZoneID: "zone1",
+				ZoneID:   "zone1",
 			},
 		}, []*VendorSpec{
 			{
 				VendorID: "Local",
-				SpecID: "x.large",
+				SpecID:   "x.large",
 			},
 			{
 				VendorID: "Local",
-				SpecID: "xxx.large",
+				SpecID:   "xxx.large",
 			},
 		})
 		assert.NoError(t, err)

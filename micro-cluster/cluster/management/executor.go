@@ -675,7 +675,7 @@ func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	// todo: use SystemConfig to store home
 	operationID, err := deployment.M.Deploy(context.Context, deployment.TiUPComponentTypeCluster, cluster.ID, cluster.Version, yamlConfig,
-		tiupHomeForTidb, node.ParentID, args, meta.DefaultTiupTimeOut)
+		tiupHomeForTidb, node.ParentID, args, meta.LongTiupTimeOut)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster %s deploy error: %s", clusterMeta.Cluster.ID, err.Error())
@@ -1328,7 +1328,7 @@ func initGrafanaAccount(node *workflowModel.WorkFlowNode, context *workflow.Flow
 		ClusterID: clusterMeta.Cluster.ID,
 		Name:      meta.Grafanas[0].Username,
 		Password:  common.PasswordInExpired{Val: meta.Grafanas[0].Password, UpdateTime: time.Now()},
-		RoleType:  string(constants.Grafana),
+		RoleType:  string(constants.DBUserGrafana),
 	}
 
 	if err := models.GetClusterReaderWriter().CreateDBUser(context.Context, grafanaUser); err != nil {

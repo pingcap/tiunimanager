@@ -30,6 +30,15 @@ type CheckService interface {
 	// @Return error
 	Check(ctx context.Context, request message.CheckPlatformReq) (resp message.CheckPlatformRsp, err error)
 
+	// CheckCluster
+	// @Description: check cluster
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter request
+	// @Return message.CheckClusterRsp
+	// @Return error
+	CheckCluster(ctx context.Context, request message.CheckClusterReq) (resp message.CheckClusterRsp, err error)
+
 	// QueryCheckReports
 	// @Description: query check reports
 	// @Receiver m

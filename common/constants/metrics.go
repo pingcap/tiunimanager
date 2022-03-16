@@ -55,6 +55,7 @@ const (
 	MetricsClusterUpgradeDiff           MetricsType = "cluster/upgrade_diff"
 
 	MetricsPlatformCheck     MetricsType = "platform/check"
+	MetricsClusterCheck      MetricsType = "platform/check/cluster"
 	MetricsQueryCheckReports MetricsType = "platform/reports"
 	MetricsGetCheckReport    MetricsType = "platform/report"
 	MetricsQueryPlatformLog  MetricsType = "platform/log"

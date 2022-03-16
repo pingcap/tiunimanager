@@ -1500,6 +1500,18 @@ func (handler *ClusterServiceHandler) CheckPlatform(ctx context.Context, request
 	return nil
 }
 
+func (handler *ClusterServiceHandler) CheckCluster(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "CheckCluster", int(response.GetCode()))
+
+	req := message.CheckClusterReq{}
+	if handleRequest(ctx, request, response, &req, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionCreate)}}) {
+		resp, err := handler.checkManager.CheckCluster(ctx, req)
+		handleResponse(ctx, response, err, resp, nil)
+	}
+	return nil
+}
+
 func (handler *ClusterServiceHandler) CreateProductUpgradePath(context.Context, *clusterservices.RpcRequest, *clusterservices.RpcResponse) error {
 	panic("implement me")
 }

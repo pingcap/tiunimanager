@@ -115,7 +115,7 @@ type HostCheck struct {
 	Errors          []CheckError           `json:"errors"`
 }
 
-type CheckReportInfo struct {
+type CheckPlatformReportInfo struct {
 	Tenants map[string]TenantCheck `json:"tenants"`
 	Hosts   HostsCheck             `json:"hosts"`
 }
@@ -123,5 +123,11 @@ type CheckReportInfo struct {
 type CheckReportMeta struct {
 	ID        string    `json:"checkID"`
 	Creator   string    `json:"creator"`
+	Type      string    `json:"type"`
+	Status    string    `json:"status"`
 	CreatedAt time.Time `json:"createAt"`
+}
+
+type CheckClusterReportInfo struct {
+	ClusterCheck
 }

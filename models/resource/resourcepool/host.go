@@ -196,6 +196,8 @@ func (h *Host) ToHostInfo(dst *structs.HostInfo) {
 	dst.Reserved = h.Reserved
 	dst.Traits = h.Traits
 	dst.SysLabels = structs.GetLabelNamesByTraits(dst.Traits)
+
+	dst.AvailableDiskCount = 0
 	for _, disk := range h.Disks {
 		dst.Disks = append(dst.Disks, structs.DiskInfo{
 			ID:       disk.ID,
@@ -205,6 +207,9 @@ func (h *Host) ToHostInfo(dst *structs.HostInfo) {
 			Status:   disk.Status,
 			Type:     disk.Type,
 		})
+		if disk.Status == string(constants.DiskAvailable) {
+			dst.AvailableDiskCount++
+		}
 	}
 	// Update Host's load stat after diskInfo is updated
 	dst.Stat = h.Stat

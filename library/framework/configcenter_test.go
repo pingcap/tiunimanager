@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -20,6 +19,8 @@ package framework
 import (
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateInstance(t *testing.T) {
@@ -155,7 +156,7 @@ func TestGetStringWithDefault(t *testing.T) {
 
 func TestGetWithDefault(t *testing.T) {
 	LocalConfig = map[Key]Instance{
-		"existed": {"existed", "111", 1},
+		"existed":    {"existed", "111", 1},
 		"existedInt": {"existedInt", 222, 1},
 	}
 	type args struct {
@@ -172,7 +173,6 @@ func TestGetWithDefault(t *testing.T) {
 
 		{"existedInt", args{"existedInt", 999}, 222},
 		{"not existedInt", args{"not existedInt", 999}, 999},
-
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -255,4 +255,16 @@ func TestUpdateLocalConfig(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_CheckAndSetInEMTiupProcess(t *testing.T) {
+	InitBaseFrameworkForUt(ClusterService)
+	ok := CheckAndSetInEMTiupProcess()
+	assert.True(t, ok)
+	ok = CheckAndSetInEMTiupProcess()
+	assert.False(t, ok)
+	UnsetInEmTiupProcess()
+	ok = CheckAndSetInEMTiupProcess()
+	assert.True(t, ok)
+	UnsetInEmTiupProcess()
 }

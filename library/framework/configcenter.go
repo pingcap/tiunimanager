@@ -18,11 +18,14 @@ package framework
 
 import (
 	"errors"
+	"sync"
 )
 
 type Configuration map[Key]Instance
 
 var LocalConfig map[Key]Instance
+
+var mutex sync.Mutex
 
 type Instance struct {
 	Key     Key
@@ -34,7 +37,31 @@ type Key string
 
 const (
 	UsingSpecifiedKeyPair Key = "UsingSpecifiedKeyPair"
+	DuringEMTiupProcess   Key = "DuringEMTiupProcess" // In process which will call em tiup
 )
+
+func CheckAndSetInEMTiupProcess() bool {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	inEmTiup := GetBoolWithDefault(DuringEMTiupProcess, false)
+	if inEmTiup {
+		return false
+	}
+
+	SetLocalConfig(DuringEMTiupProcess, true)
+	return true
+}
+
+func UnsetInEmTiupProcess() {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	inEmTiup := GetBoolWithDefault(DuringEMTiupProcess, false)
+	if inEmTiup {
+		SetLocalConfig(DuringEMTiupProcess, false)
+	}
+}
 
 func SetLocalConfig(key Key, value interface{}) {
 	instance := CreateInstance(key, value)

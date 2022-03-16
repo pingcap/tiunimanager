@@ -450,9 +450,9 @@ func convertToProductResponse(productInfo *product.ProductInfo, versions []*prod
 		ProductID:   productInfo.ProductID,
 		ProductName: productInfo.ProductName,
 	}
-	productConfigInfo.Components = make([]structs.ProductComponentPropertyWithZones, 0)
+	allComponents := make([]structs.ProductComponentPropertyWithZones, 0)
 	for _, component := range components {
-		productConfigInfo.Components = append(productConfigInfo.Components, structs.ProductComponentPropertyWithZones{
+		allComponents = append(allComponents, structs.ProductComponentPropertyWithZones{
 			ID:                      component.ComponentID,
 			Name:                    component.ComponentName,
 			PurposeType:             component.PurposeType,
@@ -464,6 +464,12 @@ func convertToProductResponse(productInfo *product.ProductInfo, versions []*prod
 			SuggestedInstancesCount: component.SuggestedInstancesCount,
 		})
 	}
+
+	sort.Slice(allComponents, func(i, j int) bool {
+		return constants.EMProductComponentIDType(allComponents[i].ID).SortWeight() > constants.EMProductComponentIDType(allComponents[j].ID).SortWeight()
+	})
+	productConfigInfo.Components = allComponents
+
 	productConfigInfo.Versions = make([]structs.SpecificVersionProduct, 0)
 	for _, version := range versions {
 		productConfigInfo.Versions = append(productConfigInfo.Versions, structs.SpecificVersionProduct{

@@ -40,7 +40,7 @@ type Service interface {
 	// @return ID
 	// @return err
 	//
-	CreateBetweenClusters(ctx context.Context, sourceClusterID string, targetClusterID string, relationType constants.ClusterRelationType) (ID string, err error)
+	CreateBetweenClusters(ctx context.Context, sourceClusterID string, targetClusterID string, startTS int64, relationType constants.ClusterRelationType) (ID string, err error)
 
 	//
 	// ReverseBetweenClusters reverse change feed task
@@ -77,7 +77,7 @@ func MockChangeFeedService(s Service) {
 	service = s
 }
 
-func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID string, targetClusterID string, relationType constants.ClusterRelationType) (ID string, err error) {
+func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID string, targetClusterID string, startTS int64, relationType constants.ClusterRelationType) (ID string, err error) {
 	sourceCluster, err := meta.Get(ctx, sourceClusterID)
 	if err != nil {
 		return
@@ -100,7 +100,7 @@ func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID str
 		},
 		Name:        fmt.Sprintf("from-%s-to-%s", sourceCluster.Cluster.Name, targetCluster.Cluster.Name),
 		ClusterId:   sourceClusterID,
-		StartTS:     0,
+		StartTS:     startTS,
 		FilterRules: []string{},
 		Type:        constants.DownstreamTypeTiDB,
 		Downstream: &changefeed.TiDBDownstream{
@@ -161,7 +161,7 @@ func (p *Manager) ReverseBetweenClusters(ctx context.Context, sourceClusterID st
 		}
 	}
 
-	return p.CreateBetweenClusters(ctx, targetClusterID, sourceClusterID, relationType)
+	return p.CreateBetweenClusters(ctx, targetClusterID, sourceClusterID, 0, relationType)
 }
 
 func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTaskReq) (resp cluster.DetailChangeFeedTaskResp, err error) {

@@ -3819,6 +3819,71 @@ var doc = `{
                 }
             }
         },
+        "/platform/check/{clusterId}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "platform check cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "platform check cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "clusterId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.CheckClusterRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/platform/log": {
             "get": {
                 "security": [
@@ -3915,7 +3980,7 @@ var doc = `{
                 }
             }
         },
-        "/platform/report/:checkId": {
+        "/platform/report/{checkId}": {
             "get": {
                 "security": [
                     {
@@ -8340,6 +8405,18 @@ var doc = `{
         "message.BindRolesForUserResp": {
             "type": "object"
         },
+        "message.CheckClusterRsp": {
+            "type": "object",
+            "properties": {
+                "checkId": {
+                    "type": "string"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
         "message.CheckPermissionForUserReq": {
             "type": "object",
             "properties": {
@@ -8365,7 +8442,7 @@ var doc = `{
         "message.CheckPlatformRsp": {
             "type": "object",
             "properties": {
-                "checkID": {
+                "checkId": {
                     "type": "string"
                 },
                 "workFlowId": {
@@ -8789,7 +8866,7 @@ var doc = `{
             "type": "object",
             "properties": {
                 "reportInfo": {
-                    "$ref": "#/definitions/structs.CheckReportInfo"
+                    "type": "object"
                 }
             }
         },
@@ -9628,77 +9705,6 @@ var doc = `{
                 }
             }
         },
-        "structs.CheckAny": {
-            "type": "object",
-            "properties": {
-                "expectedValue": {
-                    "type": "object"
-                },
-                "realValue": {
-                    "type": "object"
-                },
-                "valid": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "structs.CheckError": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "structs.CheckInt32": {
-            "type": "object",
-            "properties": {
-                "expectedValue": {
-                    "type": "integer"
-                },
-                "realValue": {
-                    "type": "integer"
-                },
-                "valid": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "structs.CheckRangeInt32": {
-            "type": "object",
-            "properties": {
-                "expectedRange": {
-                    "description": "Left closed right closed interval",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "realValue": {
-                    "type": "integer"
-                },
-                "valid": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "structs.CheckReportInfo": {
-            "type": "object",
-            "properties": {
-                "hosts": {
-                    "$ref": "#/definitions/structs.HostsCheck"
-                },
-                "tenants": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/structs.TenantCheck"
-                    }
-                }
-            }
-        },
         "structs.CheckReportMeta": {
             "type": "object",
             "properties": {
@@ -9710,92 +9716,12 @@ var doc = `{
                 },
                 "creator": {
                     "type": "string"
-                }
-            }
-        },
-        "structs.CheckStatus": {
-            "type": "object",
-            "properties": {
-                "health": {
-                    "type": "boolean"
                 },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "structs.CheckString": {
-            "type": "object",
-            "properties": {
-                "expectedValue": {
+                "status": {
                     "type": "string"
                 },
-                "realValue": {
+                "type": {
                     "type": "string"
-                },
-                "valid": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "structs.CheckSwitch": {
-            "type": "object",
-            "properties": {
-                "enable": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "structs.ClusterCheck": {
-            "type": "object",
-            "properties": {
-                "accountStatus": {
-                    "$ref": "#/definitions/structs.CheckStatus"
-                },
-                "backupRecordValid": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "boolean"
-                    }
-                },
-                "backupStrategy": {
-                    "$ref": "#/definitions/structs.CheckString"
-                },
-                "clusterID": {
-                    "type": "string"
-                },
-                "copies": {
-                    "$ref": "#/definitions/structs.CheckInt32"
-                },
-                "cpu": {
-                    "type": "integer"
-                },
-                "healthStatus": {
-                    "$ref": "#/definitions/structs.CheckStatus"
-                },
-                "instances": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.InstanceCheck"
-                    }
-                },
-                "maintenanceStatus": {
-                    "type": "string"
-                },
-                "memory": {
-                    "type": "integer"
-                },
-                "regionStatus": {
-                    "$ref": "#/definitions/structs.CheckStatus"
-                },
-                "runningStatus": {
-                    "type": "string"
-                },
-                "storage": {
-                    "type": "integer"
-                },
-                "topology": {
-                    "$ref": "#/definitions/structs.CheckString"
                 }
             }
         },
@@ -10407,44 +10333,6 @@ var doc = `{
                 }
             }
         },
-        "structs.HostCheck": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "cpuAllocated": {
-                    "$ref": "#/definitions/structs.CheckInt32"
-                },
-                "diskAllocated": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/structs.CheckString"
-                    }
-                },
-                "errors": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.CheckError"
-                    }
-                },
-                "firewall": {
-                    "$ref": "#/definitions/structs.CheckSwitch"
-                },
-                "memoryAllocated": {
-                    "$ref": "#/definitions/structs.CheckInt32"
-                },
-                "selinux": {
-                    "$ref": "#/definitions/structs.CheckSwitch"
-                },
-                "storageRatio": {
-                    "type": "number"
-                },
-                "swap": {
-                    "$ref": "#/definitions/structs.CheckSwitch"
-                }
-            }
-        },
         "structs.HostInfo": {
             "type": "object",
             "properties": {
@@ -10569,41 +10457,6 @@ var doc = `{
                 }
             }
         },
-        "structs.HostsCheck": {
-            "type": "object",
-            "properties": {
-                "delay": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/structs.CheckRangeInt32"
-                    }
-                },
-                "hosts": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/structs.HostCheck"
-                    }
-                },
-                "ntp": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/structs.CheckRangeInt32"
-                    }
-                },
-                "ping": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "boolean"
-                    }
-                },
-                "timeZoneConsistency": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "boolean"
-                    }
-                }
-            }
-        },
         "structs.Index": {
             "type": "object",
             "properties": {
@@ -10618,29 +10471,6 @@ var doc = `{
                 },
                 "value": {
                     "type": "object"
-                }
-            }
-        },
-        "structs.InstanceCheck": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "instanceID": {
-                    "type": "string"
-                },
-                "parameters": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/structs.CheckAny"
-                    }
-                },
-                "versions": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/structs.CheckString"
-                    }
                 }
             }
         },
@@ -11297,29 +11127,6 @@ var doc = `{
                 },
                 "versionId": {
                     "type": "string"
-                }
-            }
-        },
-        "structs.TenantCheck": {
-            "type": "object",
-            "properties": {
-                "clusterCount": {
-                    "$ref": "#/definitions/structs.CheckRangeInt32"
-                },
-                "clusters": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.ClusterCheck"
-                    }
-                },
-                "cpuRatio": {
-                    "type": "number"
-                },
-                "memoryRatio": {
-                    "type": "number"
-                },
-                "storageRatio": {
-                    "type": "number"
                 }
             }
         },

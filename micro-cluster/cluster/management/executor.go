@@ -1004,14 +1004,20 @@ func recoverSourceClusterGCTime(node *workflowModel.WorkFlowNode, context *workf
 func syncIncrData(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*meta.ClusterMeta)
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
+	backupID := context.GetData(ContextBackupID).(string)
 	cloneStrategy := context.GetData(ContextCloneStrategy).(string)
 
 	if cloneStrategy != string(constants.CDCSyncClone) {
 		return nil
 	}
+	// get backup tso
+	record, err := models.GetBRReaderWriter().GetBackupRecord(context.Context, backupID)
+	if err != nil {
+		return err
+	}
 	// create cdc sync and wait for syncing ready
 	taskID, err := changefeed.GetChangeFeedService().CreateBetweenClusters(context.Context,
-		sourceClusterMeta.Cluster.ID, clusterMeta.Cluster.ID, constants.ClusterRelationStandBy)
+		sourceClusterMeta.Cluster.ID, clusterMeta.Cluster.ID, int64(record.BackupTso), constants.ClusterRelationStandBy)
 	if err != nil {
 		return err
 	}

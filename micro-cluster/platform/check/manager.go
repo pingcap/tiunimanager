@@ -55,6 +55,7 @@ func NewCheckManager() *CheckManager {
 	workflowManager := workflow.GetWorkFlowService()
 
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowCheckPlatform, &checkDefine)
+	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowCheckCluster, &checkClusterDefine)
 
 	return &CheckManager{
 		autoCheckMgr: NewAutoCheckManager(),

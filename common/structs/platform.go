@@ -141,7 +141,7 @@ type SystemInfo struct {
 type ProductWithVersions struct {
 	ProductID   string                   `json:"productId"`
 	ProductName string                   `json:"productName"`
-	Versions    []SpecificVersionProduct "versions"
+	Versions    []SpecificVersionProduct `json:"versions"`
 }
 
 type SpecificVersionProduct struct {

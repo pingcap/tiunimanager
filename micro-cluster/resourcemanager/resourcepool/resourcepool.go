@@ -212,11 +212,16 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 	var flows []*workflow.WorkFlowAggregation
 	flowManager := workflow.GetWorkFlowService()
 	for _, hostId := range hostIds {
-		hosts, _, err := p.QueryHosts(ctx, &structs.Location{}, &structs.HostFilter{HostID: hostId}, &structs.PageRequest{})
+		hosts, count, err := p.QueryHosts(ctx, &structs.Location{}, &structs.HostFilter{HostID: hostId}, &structs.PageRequest{})
 		if err != nil {
 			errMsg := fmt.Sprintf("query host %v failed, %v", hostId, err)
 			framework.LogWithContext(ctx).Errorln(errMsg)
 			return nil, errors.WrapError(errors.TIEM_RESOURCE_DELETE_HOST_ERROR, errMsg, err)
+		}
+		if count == 0 {
+			errMsg := fmt.Sprintf("deleting host %s is not found", hostId)
+			framework.LogWithContext(ctx).Errorln(errMsg)
+			return nil, errors.NewError(errors.TIEM_RESOURCE_DELETE_HOST_ERROR, errMsg)
 		}
 		flowName := p.selectDeleteFlowName(&hosts[0], force)
 		framework.LogWithContext(ctx).Infof("delete host %s select %s", hostId, flowName)

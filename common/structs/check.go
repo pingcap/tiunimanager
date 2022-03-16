@@ -57,6 +57,14 @@ type TenantCheck struct {
 	Clusters     []ClusterCheck  `json:"clusters"`
 }
 
+type ClusterRelationsCheck struct {
+	SourceClusterID string `json:"sourceClusterID"`
+	TargetClusterID string `json:"targetClusterID"`
+	Relation        string `json:"relation"`
+	TaskID          string `json:"taskID"`
+	TaskStatus      string `json:"taskStatus"`
+}
+
 type ClusterCheck struct {
 	ID                string                             `json:"clusterID"`
 	MaintenanceStatus constants.ClusterMaintenanceStatus `json:"maintenanceStatus"`
@@ -72,6 +80,7 @@ type ClusterCheck struct {
 	HealthStatus      CheckStatus                        `json:"healthStatus"`
 	BackupStrategy    CheckString                        `json:"backupStrategy"`
 	BackupRecordValid map[string]bool                    `json:"backupRecordValid"`
+	Relations         []ClusterRelationsCheck            `json:"relations"`
 }
 
 type InstanceCheck struct {

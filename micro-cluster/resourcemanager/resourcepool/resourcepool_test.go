@@ -21,6 +21,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	"github.com/pingcap-inc/tiem/models"
@@ -184,6 +185,31 @@ func Test_DeleteHosts(t *testing.T) {
 	flowIds, err := resourcePool.DeleteHosts(context.TODO(), []string{"hostId1", "hostId2", "hostId3"}, false)
 	assert.Equal(t, 3, len(flowIds))
 	assert.Nil(t, err)
+}
+
+func Test_DeleteHosts_InvalidHostId(t *testing.T) {
+	hostId := "test-fake-host-id"
+
+	models.MockDB()
+	resourcePool := GetResourcePool()
+
+	// Mock host provider
+	ctrl1 := gomock.NewController(t)
+	defer ctrl1.Finish()
+	mockProvider := mock_provider.NewMockHostProvider(ctrl1)
+	mockProvider.EXPECT().QueryHosts(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+		nil,
+		int64(0),
+		nil,
+	)
+	resourcePool.SetHostProvider(mockProvider)
+
+	flowIds, err := resourcePool.DeleteHosts(context.TODO(), []string{hostId}, false)
+	assert.Nil(t, flowIds)
+	assert.NotNil(t, err)
+	emError, ok := err.(errors.EMError)
+	assert.True(t, ok)
+	assert.Equal(t, errors.TIEM_RESOURCE_DELETE_HOST_ERROR, emError.GetCode())
 }
 
 func Test_QueryHosts(t *testing.T) {

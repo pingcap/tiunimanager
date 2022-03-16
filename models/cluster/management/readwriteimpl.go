@@ -51,12 +51,26 @@ func (g *ClusterReadWrite) Delete(ctx context.Context, clusterID string) (err er
 	if err != nil {
 		return
 	}
-	err = g.DB(ctx).Delete(got).Error
-	if err != nil {
-		return dbCommon.WrapDBError(err)
-	}
+	err = g.DB(ctx).Transaction(func(tx *gorm.DB) error {
+		return errors.OfNullable(nil).BreakIf(func() error {
+			return tx.Delete(got).Error
+		}).BreakIf(func() error {
+			return tx.Where("cluster_id = ?", clusterID).Delete(&ClusterInstance{}).Error
+		}).BreakIf(func() error {
+			return tx.Where("subject_cluster_id = ?", clusterID).Delete(&ClusterRelation{}).Error
+		}).BreakIf(func() error {
+			return tx.Where("object_cluster_id = ?", clusterID).Delete(&ClusterRelation{}).Error
+		}).BreakIf(func() error {
+			return tx.Where("cluster_id = ?", clusterID).Delete(&DBUser{}).Error
+		}).BreakIf(func() error {
+			return tx.Where("cluster_id = ?", clusterID).Delete(&ClusterTopologySnapshot{}).Error
+		}).If(func(e error) {
+			framework.LogWithContext(ctx).Errorf("delete cluster %s failed, err = %s", clusterID, e.Error())
+		}).Else(func() {
+			framework.LogWithContext(ctx).Infof("delete cluster %s succeed", clusterID)
+		}).Present()
+	})
 
-	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Delete(&ClusterInstance{}).Error
 	return dbCommon.WrapDBError(err)
 }
 

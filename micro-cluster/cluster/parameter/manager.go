@@ -304,23 +304,83 @@ func (m *Manager) PersistApplyParameterGroup(ctx context.Context, req message.Ap
 		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, err.Error())
 	}
 
-	pgs := make([]*parameter.ClusterParameterMapping, len(params))
-	for i, param := range params {
-		value := ""
-		if !hasEmptyValue {
-			value = param.DefaultValue
-		}
-		realValue := structs.ParameterRealValue{ClusterValue: value}
-		b, err := json.Marshal(realValue)
+	// Define the list of prepared component IDs
+	preCompIDs := []constants.EMProductComponentIDType{constants.ComponentIDTiDB, constants.ComponentIDTiKV,
+		constants.ComponentIDPD, constants.ComponentIDCDC, constants.ComponentIDTiFlash}
+	// Define the list of component IDs that exist
+	existsCompIDs := make([]string, 0)
+
+	// Define modify param grouping by instance type
+	modifyParamContainer := make(map[interface{}][]*ModifyClusterParameterInfo)
+	// Defines the parameters for storing components that are not included in the current cluster
+	otherParamContainer := make(map[interface{}][]*ModifyClusterParameterInfo)
+
+	// Define the cluster mapping parameter object used to store
+	pgs := make([]*parameter.ClusterParameterMapping, 0)
+
+	// If hasEmptyValue is true, get the running value of the cluster by parameter inspection
+	if hasEmptyValue {
+		// Fill by cluster parameter inspect
+		clusterMeta, err := meta.Get(ctx, req.ClusterID)
 		if err != nil {
-			return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, err.Error())
+			return resp, err
 		}
-		pgs[i] = &parameter.ClusterParameterMapping{
-			ClusterID:   req.ClusterID,
-			ParameterID: param.ID,
-			RealValue:   string(b),
+		// Determine which deployment components are included in the takeover cluster
+		for _, compID := range preCompIDs {
+			if _, ok := clusterMeta.Instances[string(compID)]; ok {
+				existsCompIDs = append(existsCompIDs, string(compID))
+			}
+		}
+
+		// Parameter grouping based on existing components
+		existsCompIDStr := strings.Join(existsCompIDs, ",")
+		for _, param := range params {
+			clusterParamInfo := &ModifyClusterParameterInfo{
+				ParamId:      param.ID,
+				Category:     param.Category,
+				Name:         param.Name,
+				InstanceType: param.InstanceType,
+				Type:         param.Type,
+				RealValue:    structs.ParameterRealValue{ClusterValue: ""},
+			}
+			if strings.Contains(existsCompIDStr, param.InstanceType) {
+				putParameterContainer(modifyParamContainer, param.InstanceType, clusterParamInfo)
+			} else {
+				putParameterContainer(otherParamContainer, param.InstanceType, clusterParamInfo)
+			}
+		}
+
+		// Iterate through filled patrol parameter values
+		for compID, modifyParams := range modifyParamContainer {
+			if err := fillParameter(ctx, compID.(string), clusterMeta, modifyParams); err != nil {
+				return resp, err
+			}
+			// Adding cluster parameter mapping object data
+			for _, param := range modifyParams {
+				if err = appendClusterParamMapping(req.ClusterID, param.ParamId, param.RealValue, pgs); err != nil {
+					return resp, err
+				}
+			}
+		}
+
+		// Add cluster parameters other mapped object relationships
+		for _, modifyParams := range otherParamContainer {
+			for _, param := range modifyParams {
+				if err = appendClusterParamMapping(req.ClusterID, param.ParamId, param.RealValue, pgs); err != nil {
+					return resp, err
+				}
+			}
+		}
+	} else {
+		// Fill by default with the parameter group
+		for _, param := range params {
+			realValue := structs.ParameterRealValue{ClusterValue: param.DefaultValue}
+			if err = appendClusterParamMapping(req.ClusterID, param.ID, realValue, pgs); err != nil {
+				return resp, err
+			}
 		}
 	}
+	// Persist cluster parameter mappings record.
 	err = models.GetClusterParameterReaderWriter().ApplyClusterParameter(ctx, req.ParamGroupId, req.ClusterID, pgs)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("apply parameter group convert resp err: %v", err)
@@ -331,6 +391,26 @@ func (m *Manager) PersistApplyParameterGroup(ctx context.Context, req message.Ap
 		ParamGroupID: req.ParamGroupId,
 	}
 	return resp, nil
+}
+
+// appendClusterParamMapping
+// @Description: append cluster parameter mappings
+// @Parameter clusterId
+// @Parameter paramId
+// @Parameter realValue
+// @Parameter pgs
+// @return error
+func appendClusterParamMapping(clusterId, paramId string, realValue structs.ParameterRealValue, pgs []*parameter.ClusterParameterMapping) error {
+	b, err := json.Marshal(realValue)
+	if err != nil {
+		return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, err.Error())
+	}
+	pgs = append(pgs, &parameter.ClusterParameterMapping{
+		ClusterID:   clusterId,
+		ParameterID: paramId,
+		RealValue:   string(b),
+	})
+	return nil
 }
 
 func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.InspectParametersReq) (resp cluster.InspectParametersResp, err error) {

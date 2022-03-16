@@ -29,11 +29,92 @@ import (
 	"testing"
 )
 
+func TestCheckCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	t.Run("normal", func(t *testing.T) {
+		reportCheck := mock_report.NewMockReportInterface(ctrl)
+		reportCheck.EXPECT().ParseFrom(gomock.Any(), "111").Return(nil)
+		reportCheck.EXPECT().CheckCluster(gomock.Any(), "123").Return(nil)
+		reportCheck.EXPECT().Serialize(gomock.Any()).Return("", nil)
+
+		reportRW := mock_check.NewMockReaderWriter(ctrl)
+		models.SetReportReaderWriter(reportRW)
+
+		reportRW.EXPECT().UpdateReport(gomock.Any(), "111", gomock.Any()).Return(nil)
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextCheckID, "111")
+		flowContext.SetData(ContextClusterID, "123")
+		flowContext.SetData(ContextReportInfo, reportCheck)
+		err := checkCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
+
+	t.Run("parse from error", func(t *testing.T) {
+		reportCheck := mock_report.NewMockReportInterface(ctrl)
+		reportCheck.EXPECT().ParseFrom(gomock.Any(), "111").Return(errors.New("parse from error"))
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextCheckID, "111")
+		flowContext.SetData(ContextClusterID, "123")
+		flowContext.SetData(ContextReportInfo, reportCheck)
+		err := checkCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
+
+	t.Run("check error", func(t *testing.T) {
+		reportCheck := mock_report.NewMockReportInterface(ctrl)
+		reportCheck.EXPECT().ParseFrom(gomock.Any(), "111").Return(nil)
+		reportCheck.EXPECT().CheckCluster(gomock.Any(), "123").Return(errors.New("check error"))
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextCheckID, "111")
+		flowContext.SetData(ContextClusterID, "123")
+		flowContext.SetData(ContextReportInfo, reportCheck)
+		err := checkCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
+
+	t.Run("serialize error", func(t *testing.T) {
+		reportCheck := mock_report.NewMockReportInterface(ctrl)
+		reportCheck.EXPECT().ParseFrom(gomock.Any(), "111").Return(nil)
+		reportCheck.EXPECT().CheckCluster(gomock.Any(), "123").Return(nil)
+		reportCheck.EXPECT().Serialize(gomock.Any()).Return("", errors.New("serialize error"))
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextCheckID, "111")
+		flowContext.SetData(ContextClusterID, "123")
+		flowContext.SetData(ContextReportInfo, reportCheck)
+		err := checkCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
+
+	t.Run("update report error", func(t *testing.T) {
+		reportCheck := mock_report.NewMockReportInterface(ctrl)
+		reportCheck.EXPECT().ParseFrom(gomock.Any(), "111").Return(nil)
+		reportCheck.EXPECT().CheckCluster(gomock.Any(), "123").Return(nil)
+		reportCheck.EXPECT().Serialize(gomock.Any()).Return("", nil)
+
+		reportRW := mock_check.NewMockReaderWriter(ctrl)
+		models.SetReportReaderWriter(reportRW)
+
+		reportRW.EXPECT().UpdateReport(gomock.Any(), "111", gomock.Any()).Return(errors.New("update report error"))
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextCheckID, "111")
+		flowContext.SetData(ContextClusterID, "123")
+		flowContext.SetData(ContextReportInfo, reportCheck)
+		err := checkCluster(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
+}
 
 func TestCheckTenants(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	t.Run("normal", func(t *testing.T) {
 		reportCheck := mock_report.NewMockReportInterface(ctrl)
 		reportCheck.EXPECT().ParseFrom(gomock.Any(), "111").Return(nil)
@@ -51,7 +132,7 @@ func TestCheckTenants(t *testing.T) {
 		err := checkTenants(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.NoError(t, err)
 	})
-	
+
 	t.Run("parse from error", func(t *testing.T) {
 		reportCheck := mock_report.NewMockReportInterface(ctrl)
 		reportCheck.EXPECT().ParseFrom(gomock.Any(), "111").Return(errors.New("parse from error"))
@@ -62,7 +143,7 @@ func TestCheckTenants(t *testing.T) {
 		err := checkTenants(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
 	})
-	
+
 	t.Run("check error", func(t *testing.T) {
 		reportCheck := mock_report.NewMockReportInterface(ctrl)
 		reportCheck.EXPECT().ParseFrom(gomock.Any(), "111").Return(nil)
@@ -74,7 +155,7 @@ func TestCheckTenants(t *testing.T) {
 		err := checkTenants(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
 	})
-	
+
 	t.Run("serialize error", func(t *testing.T) {
 		reportCheck := mock_report.NewMockReportInterface(ctrl)
 		reportCheck.EXPECT().ParseFrom(gomock.Any(), "111").Return(nil)
@@ -87,7 +168,7 @@ func TestCheckTenants(t *testing.T) {
 		err := checkTenants(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
 	})
-	
+
 	t.Run("update report error", func(t *testing.T) {
 		reportCheck := mock_report.NewMockReportInterface(ctrl)
 		reportCheck.EXPECT().ParseFrom(gomock.Any(), "111").Return(nil)
@@ -110,7 +191,7 @@ func TestCheckTenants(t *testing.T) {
 func TestCheckHosts(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	t.Run("normal", func(t *testing.T) {
 		reportCheck := mock_report.NewMockReportInterface(ctrl)
 		reportCheck.EXPECT().ParseFrom(gomock.Any(), "111").Return(nil)
@@ -216,7 +297,7 @@ func TestEndCheck(t *testing.T) {
 func TestHandleFail(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	t.Run("normal", func(t *testing.T) {
 		reportRW := mock_check.NewMockReaderWriter(ctrl)
 		models.SetReportReaderWriter(reportRW)

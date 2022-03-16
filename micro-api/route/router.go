@@ -77,6 +77,7 @@ func Route(g *gin.Engine) {
 			platform.Use(interceptor.VerifyIdentity)
 			platform.Use(interceptor.AuditLog)
 			platform.POST("/check", metrics.HandleMetrics(constants.MetricsPlatformCheck), platformApi.Check)
+			platform.POST("/check/:clusterId", metrics.HandleMetrics(constants.MetricsClusterCheck), platformApi.CheckCluster)
 			platform.GET("/report/:checkId", metrics.HandleMetrics(constants.MetricsGetCheckReport), platformApi.GetCheckReport)
 			platform.GET("/reports", metrics.HandleMetrics(constants.MetricsQueryCheckReports), platformApi.QueryCheckReports)
 			platform.GET("/log", metrics.HandleMetrics(constants.MetricsQueryPlatformLog), platformdignose.QueryPlatformLog)

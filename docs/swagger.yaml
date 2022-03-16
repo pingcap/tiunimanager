@@ -1041,6 +1041,14 @@ definitions:
     type: object
   message.BindRolesForUserResp:
     type: object
+  message.CheckClusterRsp:
+    properties:
+      checkId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
   message.CheckPermissionForUserReq:
     properties:
       permissions:
@@ -1057,7 +1065,7 @@ definitions:
     type: object
   message.CheckPlatformRsp:
     properties:
-      checkID:
+      checkId:
         type: string
       workFlowId:
         description: Asynchronous task workflow ID
@@ -1344,7 +1352,7 @@ definitions:
   message.GetCheckReportRsp:
     properties:
       reportInfo:
-        $ref: '#/definitions/structs.CheckReportInfo'
+        type: object
     type: object
   message.GetHierarchyResp:
     properties:
@@ -1908,52 +1916,6 @@ definitions:
       period:
         type: string
     type: object
-  structs.CheckAny:
-    properties:
-      expectedValue:
-        type: object
-      realValue:
-        type: object
-      valid:
-        type: boolean
-    type: object
-  structs.CheckError:
-    properties:
-      message:
-        type: string
-      type:
-        type: string
-    type: object
-  structs.CheckInt32:
-    properties:
-      expectedValue:
-        type: integer
-      realValue:
-        type: integer
-      valid:
-        type: boolean
-    type: object
-  structs.CheckRangeInt32:
-    properties:
-      expectedRange:
-        description: Left closed right closed interval
-        items:
-          type: integer
-        type: array
-      realValue:
-        type: integer
-      valid:
-        type: boolean
-    type: object
-  structs.CheckReportInfo:
-    properties:
-      hosts:
-        $ref: '#/definitions/structs.HostsCheck'
-      tenants:
-        additionalProperties:
-          $ref: '#/definitions/structs.TenantCheck'
-        type: object
-    type: object
   structs.CheckReportMeta:
     properties:
       checkID:
@@ -1962,62 +1924,10 @@ definitions:
         type: string
       creator:
         type: string
-    type: object
-  structs.CheckStatus:
-    properties:
-      health:
-        type: boolean
-      message:
+      status:
         type: string
-    type: object
-  structs.CheckString:
-    properties:
-      expectedValue:
+      type:
         type: string
-      realValue:
-        type: string
-      valid:
-        type: boolean
-    type: object
-  structs.CheckSwitch:
-    properties:
-      enable:
-        type: boolean
-    type: object
-  structs.ClusterCheck:
-    properties:
-      accountStatus:
-        $ref: '#/definitions/structs.CheckStatus'
-      backupRecordValid:
-        additionalProperties:
-          type: boolean
-        type: object
-      backupStrategy:
-        $ref: '#/definitions/structs.CheckString'
-      clusterID:
-        type: string
-      copies:
-        $ref: '#/definitions/structs.CheckInt32'
-      cpu:
-        type: integer
-      healthStatus:
-        $ref: '#/definitions/structs.CheckStatus'
-      instances:
-        items:
-          $ref: '#/definitions/structs.InstanceCheck'
-        type: array
-      maintenanceStatus:
-        type: string
-      memory:
-        type: integer
-      regionStatus:
-        $ref: '#/definitions/structs.CheckStatus'
-      runningStatus:
-        type: string
-      storage:
-        type: integer
-      topology:
-        $ref: '#/definitions/structs.CheckString'
     type: object
   structs.ClusterInfo:
     properties:
@@ -2448,31 +2358,6 @@ definitions:
           $ref: '#/definitions/structs.HierarchyTreeNode'
         type: array
     type: object
-  structs.HostCheck:
-    properties:
-      address:
-        type: string
-      cpuAllocated:
-        $ref: '#/definitions/structs.CheckInt32'
-      diskAllocated:
-        additionalProperties:
-          $ref: '#/definitions/structs.CheckString'
-        type: object
-      errors:
-        items:
-          $ref: '#/definitions/structs.CheckError'
-        type: array
-      firewall:
-        $ref: '#/definitions/structs.CheckSwitch'
-      memoryAllocated:
-        $ref: '#/definitions/structs.CheckInt32'
-      selinux:
-        $ref: '#/definitions/structs.CheckSwitch'
-      storageRatio:
-        type: number
-      swap:
-        $ref: '#/definitions/structs.CheckSwitch'
-    type: object
   structs.HostInfo:
     properties:
       arch:
@@ -2563,29 +2448,6 @@ definitions:
       vendor:
         type: string
     type: object
-  structs.HostsCheck:
-    properties:
-      delay:
-        additionalProperties:
-          $ref: '#/definitions/structs.CheckRangeInt32'
-        type: object
-      hosts:
-        additionalProperties:
-          $ref: '#/definitions/structs.HostCheck'
-        type: object
-      ntp:
-        additionalProperties:
-          $ref: '#/definitions/structs.CheckRangeInt32'
-        type: object
-      ping:
-        additionalProperties:
-          type: boolean
-        type: object
-      timeZoneConsistency:
-        additionalProperties:
-          type: boolean
-        type: object
-    type: object
   structs.Index:
     properties:
       description:
@@ -2595,21 +2457,6 @@ definitions:
       unit:
         type: string
       value:
-        type: object
-    type: object
-  structs.InstanceCheck:
-    properties:
-      address:
-        type: string
-      instanceID:
-        type: string
-      parameters:
-        additionalProperties:
-          $ref: '#/definitions/structs.CheckAny'
-        type: object
-      versions:
-        additionalProperties:
-          $ref: '#/definitions/structs.CheckString'
         type: object
     type: object
   structs.ParameterGroupParameterInfo:
@@ -3077,21 +2924,6 @@ definitions:
         type: string
       versionId:
         type: string
-    type: object
-  structs.TenantCheck:
-    properties:
-      clusterCount:
-        $ref: '#/definitions/structs.CheckRangeInt32'
-      clusters:
-        items:
-          $ref: '#/definitions/structs.ClusterCheck'
-        type: array
-      cpuRatio:
-        type: number
-      memoryRatio:
-        type: number
-      storageRatio:
-        type: number
     type: object
   structs.TenantInfo:
     properties:
@@ -5571,6 +5403,44 @@ paths:
       summary: platform check
       tags:
       - platform
+  /platform/check/{clusterId}:
+    post:
+      consumes:
+      - application/json
+      description: platform check cluster
+      parameters:
+      - in: query
+        name: clusterId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.CheckClusterRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: platform check cluster
+      tags:
+      - platform
   /platform/log:
     get:
       consumes:
@@ -5630,7 +5500,7 @@ paths:
       summary: query platform log
       tags:
       - platform log
-  /platform/report/:checkId:
+  /platform/report/{checkId}:
     get:
       consumes:
       - application/json

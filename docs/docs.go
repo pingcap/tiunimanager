@@ -10452,6 +10452,10 @@ var doc = `{
                     "description": "x86 or arm64",
                     "type": "string"
                 },
+                "availableDiskCount": {
+                    "description": "available disk count which could be used for allocation",
+                    "type": "integer"
+                },
                 "az": {
                     "type": "string"
                 },

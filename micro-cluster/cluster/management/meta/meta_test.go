@@ -248,7 +248,7 @@ func TestClusterMeta_GenerateInstanceResourceRequirements(t *testing.T) {
 					Type:         "PD",
 					Version:      "v5.0.0",
 					Ports:        []int32{30001, 30002, 30003, 30004},
-					HostIP:       []string{"127.0.0.3"},
+					HostIP:       []string{},
 					DiskType:     "SSD",
 					DiskCapacity: 128,
 				},

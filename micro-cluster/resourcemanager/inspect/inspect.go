@@ -78,24 +78,34 @@ func (p *HostInspect) CheckCpuAllocated(ctx context.Context, hosts []structs.Hos
 		return nil, err
 	}
 	if !reflect.DeepEqual(resultFromHostTable, resultFromUsedTable) {
-		// should be a allocation bug in resource module
 		result = p.generateCheckInt32Result(hostIds, resultFromHostTable, resultFromUsedTable)
+		// resultFromUsedTable should have no record for a loadless host, so need to check result
+		mismatch := false
 		for k, v := range result {
 			if !(*v).Valid {
+				// should be a allocation bug in resource module
+				mismatch = true
 				log.Errorf("used cores mismatch between hosts table and used_compute on host %s, expected %d, got %d", k, (*v).ExpectedValue, (*v).RealValue)
 			}
 		}
-		return result, nil
+		if mismatch {
+			return result, nil
+		}
 	}
 	result = p.generateCheckInt32Result(hostIds, resultFromHostTable, resultFromInstTable)
 	if !reflect.DeepEqual(resultFromHostTable, resultFromInstTable) {
-		// should be a resource leak between resource module and cluster module
+		// resultFromInstTable should have no record for a loadless host, so need to check result
+		mismatch := false
 		for k, v := range result {
 			if !(*v).Valid {
+				// should be a resource leak between resource module and cluster module
+				mismatch = true
 				log.Errorf("used cores mismatch between resource module and cluster module on host %s, expected %d, got %d", k, (*v).ExpectedValue, (*v).RealValue)
 			}
 		}
-		return result, nil
+		if mismatch {
+			return result, nil
+		}
 	}
 	return
 }
@@ -111,24 +121,34 @@ func (p *HostInspect) CheckMemAllocated(ctx context.Context, hosts []structs.Hos
 		return nil, err
 	}
 	if !reflect.DeepEqual(resultFromHostTable, resultFromUsedTable) {
-		// should be a allocation bug in resource module
 		result = p.generateCheckInt32Result(hostIds, resultFromHostTable, resultFromUsedTable)
+		// resultFromUsedTable should have no record for a loadless host, so need to check result
+		mismatch := false
 		for k, v := range result {
 			if !(*v).Valid {
+				// should be a allocation bug in resource module
+				mismatch = true
 				log.Errorf("used memory mismatch between hosts table and used_compute on host %s, expected %d, got %d", k, (*v).ExpectedValue, (*v).RealValue)
 			}
 		}
-		return result, nil
+		if mismatch {
+			return result, nil
+		}
 	}
 	result = p.generateCheckInt32Result(hostIds, resultFromHostTable, resultFromInstTable)
 	if !reflect.DeepEqual(resultFromHostTable, resultFromInstTable) {
-		// should be a resource leak between resource module and cluster module
+		// resultFromInstTable should have no record for a loadless host, so need to check result
+		mismatch := false
 		for k, v := range result {
 			if !(*v).Valid {
+				// should be a resource leak between resource module and cluster module
+				mismatch = true
 				log.Errorf("used memory mismatch between resource module and cluster module on host %s, expected %d, got %d", k, (*v).ExpectedValue, (*v).RealValue)
 			}
 		}
-		return result, nil
+		if mismatch {
+			return result, nil
+		}
 	}
 	return
 }
@@ -175,7 +195,7 @@ func (p *HostInspect) CheckDiskAllocated(ctx context.Context, hosts []structs.Ho
 }
 
 func (p *HostInspect) generateCheckInt32Result(hostIds []string, map1 map[string]int, map2 map[string]int) (result map[string]*structs.CheckInt32) {
-	const invalidCount = -1
+	const invalidCount = 0
 	result = make(map[string]*structs.CheckInt32)
 	for _, hostId := range hostIds {
 		v1, ok1 := map1[hostId]

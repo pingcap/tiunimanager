@@ -135,6 +135,7 @@ type ClusterInstanceInfo struct {
 	Version      string          `json:"version"`
 	Status       string          `json:"status"`
 	HostID       string          `json:"hostID"`
+	DiskID       string          `json:"diskId"`
 	Addresses    []string        `json:"addresses"`
 	Ports        []int32         `json:"ports"`
 	CpuUsage     Usage           `json:"cpuUsage"`

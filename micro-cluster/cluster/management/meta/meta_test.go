@@ -84,7 +84,14 @@ func TestClusterMeta_AddInstances(t *testing.T) {
 			},
 		},
 	}
-
+	meta2 := &ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "111",
+			},
+			Version: "v4.1.1",
+		},
+	}
 	t.Run("normal", func(t *testing.T) {
 		err := meta.AddInstances(context.TODO(), []structs.ClusterResourceParameterCompute{
 			{"TiDB", 2, []structs.ClusterResourceParameterComputeResource{
@@ -93,7 +100,27 @@ func TestClusterMeta_AddInstances(t *testing.T) {
 			}},
 			{"TiKV", 2, []structs.ClusterResourceParameterComputeResource{
 				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1, HostIP: "127.0.0.1", DiskID: "aaaaaa"},
+			}},
+		})
+		assert.NoError(t, err)
+
+		assert.Equal(t, 2, len(meta.Instances["TiKV"]))
+		assert.Equal(t, 3, len(meta.Instances["TiDB"]))
+		assert.Equal(t, "111", meta.Instances["TiKV"][0].ClusterID)
+		assert.Equal(t, int32(3), meta.Instances["TiDB"][1].DiskCapacity)
+		assert.Equal(t, "SSD", meta.Instances["TiKV"][1].DiskType)
+		assert.Equal(t, "zone2", meta.Instances["TiDB"][2].Zone)
+	})
+	t.Run("normal", func(t *testing.T) {
+		err := meta2.AddInstances(context.TODO(), []structs.ClusterResourceParameterCompute{
+			{"TiDB", 2, []structs.ClusterResourceParameterComputeResource{
+				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
 				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+			}},
+			{"TiKV", 2, []structs.ClusterResourceParameterComputeResource{
+				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1, HostIP: "127.0.0.1", DiskID: "aaaaaa"},
 			}},
 		})
 		assert.NoError(t, err)
@@ -109,7 +136,20 @@ func TestClusterMeta_AddInstances(t *testing.T) {
 		err := meta.AddInstances(context.TODO(), []structs.ClusterResourceParameterCompute{})
 		assert.Error(t, err)
 	})
-
+	t.Run("empty cluster", func(t *testing.T) {
+		meta3 := &ClusterMeta{}
+		err := meta3.AddInstances(context.TODO(), []structs.ClusterResourceParameterCompute{
+			{"TiDB", 2, []structs.ClusterResourceParameterComputeResource{
+				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+			}},
+			{"TiKV", 2, []structs.ClusterResourceParameterComputeResource{
+				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1, HostIP: "127.0.0.1", DiskID: "aaaaaa"},
+			}},
+		})
+		assert.Error(t, err)
+	})
 }
 
 func TestClusterMeta_AddDefaultInstances(t *testing.T) {
@@ -176,7 +216,7 @@ func TestClusterMeta_GenerateInstanceResourceRequirements(t *testing.T) {
 					Type:         "TiDB",
 					Version:      "v5.0.0",
 					Ports:        []int32{10001, 10002, 10003, 10004},
-					HostIP:       []string{"127.0.0.1"},
+					HostIP:       []string{"127.0.0.2"},
 					DiskType:     "SSD",
 					DiskCapacity: 128,
 				},
@@ -192,7 +232,7 @@ func TestClusterMeta_GenerateInstanceResourceRequirements(t *testing.T) {
 					Type:         "TiKV",
 					Version:      "v5.0.0",
 					Ports:        []int32{20001, 20002, 20003, 20004},
-					HostIP:       []string{"127.0.0.2"},
+					HostIP:       []string{},
 					DiskType:     "SSD",
 					DiskCapacity: 128,
 				},
@@ -202,7 +242,7 @@ func TestClusterMeta_GenerateInstanceResourceRequirements(t *testing.T) {
 					Entity: common.Entity{
 						Status: string(constants.ClusterInstanceInitializing),
 					},
-					Zone:         "zone1",
+					Zone:         "",
 					CpuCores:     4,
 					Memory:       8,
 					Type:         "PD",

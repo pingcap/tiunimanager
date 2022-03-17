@@ -10171,7 +10171,7 @@
                     "description": "NVMeSSD/SSD/SATA",
                     "type": "string"
                 },
-                "hostId": {
+                "hostIp": {
                     "type": "string"
                 },
                 "specCode": {
@@ -11024,7 +11024,7 @@
                 "enough": {
                     "type": "boolean"
                 },
-                "hostId": {
+                "hostIp": {
                     "type": "string"
                 },
                 "specCode": {

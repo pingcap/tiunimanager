@@ -51,6 +51,7 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 	}
 
 	allocInstances := make([]*management.ClusterInstance, 0)
+
 	for _, instance := range instances {
 		var componentInfo product.ProductComponentInfo
 		if Contain(constants.ParasiteComponentIDs, constants.EMProductComponentIDType(instance.Type)) {
@@ -61,11 +62,18 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 		} else {
 			componentInfo = *c
 		}
+
+		ip := ""
+		if len(instance.HostIP) > 0 {
+			ip = instance.HostIP[0]
+		}
 		requirements = append(requirements, resource.AllocRequirement{
 			Location: structs.Location{
 				Region: p.Cluster.Region,
 				Zone:   instance.Zone,
+				HostIp: ip,
 			},
+
 			Require: resource.Requirement{
 				Exclusive: p.Cluster.Exclusive,
 				PortReq: []resource.PortRequirement{
@@ -79,6 +87,7 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 					NeedDisk: true,
 					Capacity: instance.DiskCapacity,
 					DiskType: instance.DiskType,
+					DiskSpecify: instance.DiskID,
 				},
 				ComputeReq: resource.ComputeRequirement{
 					ComputeResource: resource.ComputeResource{
@@ -91,11 +100,22 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 			HostFilter: resource.Filter{
 				Arch: string(p.Cluster.CpuArchitecture),
 			},
-			Strategy: resource.RandomRack,
+			Strategy: chooseStrategy(instance),
 		})
 		allocInstances = append(allocInstances, instance)
 	}
 	return requirements, allocInstances, nil
+}
+
+func chooseStrategy(instance *management.ClusterInstance) resource.AllocStrategy {
+	if len(instance.HostIP) > 0 {
+		return resource.UserSpecifyHost
+	} else if len(instance.Zone) > 0 {
+		return resource.RandomRack
+	} else {
+		// default strategy or panic ?
+		return resource.RandomRack
+	}
 }
 
 func (p *ClusterMeta) GenerateTakeoverResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance) {

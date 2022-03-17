@@ -10185,7 +10185,7 @@ var doc = `{
                     "description": "NVMeSSD/SSD/SATA",
                     "type": "string"
                 },
-                "hostId": {
+                "hostIp": {
                     "type": "string"
                 },
                 "specCode": {
@@ -11038,7 +11038,7 @@ var doc = `{
                 "enough": {
                     "type": "boolean"
                 },
-                "hostId": {
+                "hostIp": {
                     "type": "string"
                 },
                 "specCode": {

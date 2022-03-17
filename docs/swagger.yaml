@@ -2258,7 +2258,7 @@ definitions:
       diskType:
         description: NVMeSSD/SSD/SATA
         type: string
-      hostId:
+      hostIp:
         type: string
       specCode:
         description: 4C8G/8C16G ?
@@ -2863,7 +2863,7 @@ definitions:
         type: string
       enough:
         type: boolean
-      hostId:
+      hostIp:
         type: string
       specCode:
         description: 4C8G/8C16G ?

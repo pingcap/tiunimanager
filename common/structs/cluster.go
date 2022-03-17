@@ -36,7 +36,7 @@ type ClusterResourceParameterComputeResource struct {
 	DiskCapacity int    `json:"diskCapacity"`
 	Spec         string `json:"specCode"` //4C8G/8C16G ?
 	Count        int    `json:"count"`
-	HostID       string `json:"hostId"`
+	HostIP       string `json:"hostIp"`
 	DiskID       string `json:"diskId"`
 }
 

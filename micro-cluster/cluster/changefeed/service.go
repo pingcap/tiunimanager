@@ -110,7 +110,7 @@ func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID str
 		Name:        fmt.Sprintf("from-%s-to-%s", sourceCluster.Cluster.Name, targetCluster.Cluster.Name),
 		ClusterId:   sourceClusterID,
 		StartTS:     startTS,
-		FilterRules: []string{},
+		FilterRules: constants.DefaultFilterRules,
 		Type:        constants.DownstreamTypeTiDB,
 		Downstream: &changefeed.TiDBDownstream{
 			Ip:              address.IP,

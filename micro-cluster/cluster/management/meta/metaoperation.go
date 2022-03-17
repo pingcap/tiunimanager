@@ -54,6 +54,10 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 	for _, compute := range computes {
 		for _, item := range compute.Resource {
 			for i := 0; i < item.Count; i++ {
+				ips := make([]string, 0)
+				if len(item.HostIP) > 0 {
+					ips = append(ips, item.HostIP)
+				}
 				instance := &management.ClusterInstance{
 					Entity: dbCommon.Entity{
 						TenantId: p.Cluster.TenantId,
@@ -67,6 +71,8 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 					Zone:         structs.GetDomainNameFromCode(item.Zone),
 					DiskType:     item.DiskType,
 					DiskCapacity: int32(item.DiskCapacity),
+					DiskID:       item.DiskID,
+					HostIP:       ips,
 				}
 				p.Instances[compute.Type] = append(p.Instances[compute.Type], instance)
 			}

@@ -632,6 +632,10 @@ definitions:
           $ref: '#/definitions/structs.ClusterResourceParameterCompute'
         type: array
       requestResourceMode:
+        default: SpecificZone
+        enum:
+        - SpecificZone
+        - SpecificHost
         type: string
       topology:
         items:
@@ -797,6 +801,10 @@ definitions:
           $ref: '#/definitions/structs.ClusterResourceParameterCompute'
         type: array
       requestResourceMode:
+        default: SpecificZone
+        enum:
+        - SpecificZone
+        - SpecificHost
         type: string
     type: object
   cluster.ScaleOutClusterResp:
@@ -2021,6 +2029,8 @@ definitions:
         type: array
       cpuUsage:
         $ref: '#/definitions/structs.Usage'
+      diskId:
+        type: string
       hostID:
         type: string
       id:
@@ -2219,6 +2229,10 @@ definitions:
           $ref: '#/definitions/structs.ClusterResourceParameterCompute'
         type: array
       requestResourceMode:
+        default: SpecificZone
+        enum:
+        - SpecificZone
+        - SpecificHost
         type: string
     type: object
   structs.ClusterResourceParameterCompute:
@@ -2408,7 +2422,7 @@ definitions:
       kernel:
         type: string
       loadStat:
-        description: Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
+        description: Host load stat, Loadless, Inused, Exhaust, etc
         type: string
       memory:
         description: Host memory, init while importing
@@ -2436,7 +2450,7 @@ definitions:
       sshPort:
         type: integer
       status:
-        description: Host Status, 0 for Online, 1 for offline
+        description: Host status, Online, Offline, Failed, Deleted, etc
         type: string
       sysLabels:
         items:

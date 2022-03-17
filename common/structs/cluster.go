@@ -56,7 +56,7 @@ type ClusterResourceParameterCompute struct {
 
 //ClusterResourceInfo Resource information for creating database cluster input
 type ClusterResourceInfo struct {
-	RequestResourceMode string                            `json:"requestResourceMode"`
+	RequestResourceMode string                            `json:"requestResourceMode" enums:"SpecificZone,SpecificHost" default:"SpecificZone"`
 	InstanceResource    []ClusterResourceParameterCompute `json:"instanceResource"`
 }
 

@@ -1,38 +1,19 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
-
+name: "\U0001F41B Bug Report"
+about: As a User, I want to report a Bug.
+labels: type/bug
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## Bug Report
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+Please answer these questions before submitting your issue. Thanks!
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+### 1. Minimal reproduce step (Required)
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+<!-- a step by step guide for reproducing the bug. -->
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+### 2. What did you expect to see? (Required)
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+### 3. What did you see instead (Required)
 
-**Additional context**
-Add any other context about the problem here.
+### 4. What is your EM version (execute `su - tidb` then `TIUP_HOME=/home/tidb/.em tiup em --version`)? (Required)

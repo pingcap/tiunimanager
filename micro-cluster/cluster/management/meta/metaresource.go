@@ -195,7 +195,9 @@ func (p *ClusterMeta) ApplyGlobalPortResource(nodeExporterPort, blackboxExporter
 func (p *ClusterMeta) ApplyInstanceResource(resource *resource.AllocRsp, instances []*management.ClusterInstance) {
 	for i, instance := range instances {
 		instance.HostID = resource.Results[i].HostId
-		instance.HostIP = append(instance.HostIP, resource.Results[i].HostIp)
+		if !Contain(instance.HostIP, resource.Results[i].HostIp) {
+			instance.HostIP = append(instance.HostIP, resource.Results[i].HostIp)
+		}
 		instance.Ports = resource.Results[i].PortRes[0].Ports
 		instance.DiskID = resource.Results[i].DiskRes.DiskId
 		instance.DiskPath = resource.Results[i].DiskRes.Path
@@ -209,6 +211,8 @@ func (p *ClusterMeta) ApplyInstanceResource(resource *resource.AllocRsp, instanc
 			instance.HostIP = pd.HostIP
 			instance.DiskID = pd.DiskID
 			instance.DiskPath = pd.DiskPath
+			instance.Zone = pd.Zone
+			instance.Rack = pd.Rack
 			switch t {
 			case constants.ComponentIDGrafana:
 				instance.Ports = pd.Ports[3:4]

@@ -19,6 +19,7 @@ import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
+	resource "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	"github.com/pingcap-inc/tiem/models/platform/config"
 	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
@@ -322,6 +323,115 @@ func TestClusterMeta_ApplyGlobalPortResource(t *testing.T) {
 	})
 }
 
+func TestClusterMeta_ApplyInstanceResource(t *testing.T) {
+	pd := &management.ClusterInstance{
+		HostIP: []string{"127.0.0.1"},
+	}
+	tidb := &management.ClusterInstance{
+		HostIP: []string{},
+	}
+	tikv := &management.ClusterInstance{
+		HostIP: []string{},
+	}
+	prometheus := &management.ClusterInstance{
+		HostIP: []string{},
+	}
+	grafana := &management.ClusterInstance{
+		HostIP: []string{},
+	}
+	alertManager := &management.ClusterInstance{
+		HostIP: []string{},
+	}
+	meta := &ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				Status: string(constants.ClusterInitializing),
+			},
+		},
+		Instances: map[string][]*management.ClusterInstance{
+			string(constants.ComponentIDPD): {
+				pd,
+			},
+			string(constants.ComponentIDTiDB): {
+				tidb,
+			},
+			string(constants.ComponentIDTiKV): {
+				tikv,
+			},
+			string(constants.ComponentIDPrometheus): {
+				prometheus,
+			},
+			string(constants.ComponentIDAlertManger): {
+				alertManager,
+			},
+			string(constants.ComponentIDGrafana): {
+				grafana,
+			},
+		},
+	}
+
+	meta.ApplyInstanceResource(&resource.AllocRsp{
+		Results: []resource.Compute{
+			{
+				HostId: "1111",
+				HostIp: "127.0.0.1",
+				PortRes: []resource.PortResource{
+					{
+						Ports: []int32{1,2,3,4,5,6,7,8},
+					},
+				},
+				DiskRes: resource.DiskResource{
+					DiskId: "1111",
+					Path: "path1111",
+				},
+				Location: structs.Location{
+					Rack: "rack1",
+				},
+			},
+			{
+				HostId: "2222",
+				HostIp: "127.0.02",
+				PortRes: []resource.PortResource{
+					{
+						Ports: []int32{1,2,3,4},
+					},
+				},
+				DiskRes: resource.DiskResource{
+					DiskId: "2222",
+					Path: "path2222",
+				},
+				Location: structs.Location{
+					Rack: "rack2",
+				},
+			},
+			{
+				HostId: "3333",
+				HostIp: "127.0.0.3",
+				PortRes: []resource.PortResource{
+					{
+						Ports: []int32{1,2,3,4,5,6,7,8},
+					},
+				},
+				DiskRes: resource.DiskResource{
+					DiskId: "3333",
+					Path: "path3333",
+				},
+				Location: structs.Location{
+					Rack: "rack3",
+				},
+			},
+		},
+		Applicant: resource.Applicant{},
+	}, []*management.ClusterInstance{
+		pd,tidb,tikv,
+	})
+
+	assert.Equal(t, "path1111", meta.Instances["PD"][0].DiskPath)
+	assert.Equal(t, []string{"127.0.0.1"}, meta.Instances["PD"][0].HostIP)
+	assert.Equal(t, 1, len(meta.Instances["PD"][0].HostIP))
+	assert.Equal(t, "127.0.0.3", meta.Instances["TiKV"][0].HostIP[0])
+	assert.Equal(t, "rack1", meta.Instances["AlertManger"][0].Rack)
+}
 func TestClusterMeta_GetInstanceByStatus(t *testing.T) {
 	meta := &ClusterMeta{
 		Instances: map[string][]*management.ClusterInstance{

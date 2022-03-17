@@ -24,6 +24,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/framework"
 	allocrecycle "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/allocator_recycler"
 	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	host_provider "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
@@ -176,6 +177,8 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 
 	assert.Equal(t, fake_hostId, hostIds[0])
 	assert.Equal(t, "flow01", flowIds[0])
+	// UnsetInEmTiup in case the background import routine is not finished
+	framework.UnsetInEmTiupProcess()
 }
 
 func Test_ImportHosts_Failed(t *testing.T) {

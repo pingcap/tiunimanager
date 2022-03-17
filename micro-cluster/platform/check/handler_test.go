@@ -43,34 +43,75 @@ func TestReport_ParseFrom(t *testing.T) {
 	defer ctrl.Finish()
 	models.MockDB()
 
-	t.Run("normal", func(t *testing.T) {
+	t.Run("parse platform normal", func(t *testing.T) {
 		reportRW := mock_check.NewMockReaderWriter(ctrl)
 		models.SetReportReaderWriter(reportRW)
 
-		reportRW.EXPECT().GetReport(gomock.Any(), "111").Return(structs.CheckReportInfo{}, nil)
+		var info interface{}
+		info = &structs.CheckPlatformReportInfo{}
+		reportRW.EXPECT().GetReport(gomock.Any(), "111").Return(info, string(constants.PlatformReport), nil)
 
 		report := &Report{}
 		err := report.ParseFrom(ctx.TODO(), "111")
 		assert.NoError(t, err)
-		assert.NotNil(t, report.Info)
+		assert.NotNil(t, report.PlatformInfo)
+		assert.Nil(t, report.ClusterInfo)
+	})
+
+	t.Run("parse cluster normal", func(t *testing.T) {
+		reportRW := mock_check.NewMockReaderWriter(ctrl)
+		models.SetReportReaderWriter(reportRW)
+
+		var info interface{}
+		info = &structs.CheckClusterReportInfo{}
+		reportRW.EXPECT().GetReport(gomock.Any(), "111").Return(info, string(constants.ClusterReport), nil)
+
+		report := &Report{}
+		err := report.ParseFrom(ctx.TODO(), "111")
+		assert.NoError(t, err)
+		assert.Nil(t, report.PlatformInfo)
+		assert.NotNil(t, report.ClusterInfo)
 	})
 
 	t.Run("error", func(t *testing.T) {
 		reportRW := mock_check.NewMockReaderWriter(ctrl)
 		models.SetReportReaderWriter(reportRW)
 
-		reportRW.EXPECT().GetReport(gomock.Any(), "111").Return(structs.CheckReportInfo{}, errors.New("parse from error"))
+		reportRW.EXPECT().GetReport(gomock.Any(), "111").Return(nil, "", errors.New("parse from error"))
 
 		report := &Report{}
 		err := report.ParseFrom(ctx.TODO(), "111")
 		assert.Error(t, err)
-		assert.Nil(t, report.Info)
+		assert.Nil(t, report.PlatformInfo)
+		assert.Nil(t, report.ClusterInfo)
+	})
+}
+
+func TestReport_CheckCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	models.MockDB()
+
+	t.Run("normal", func(t *testing.T) {
+		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(clusterRW)
+
+		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(
+			&management.Cluster{
+				Entity: common.Entity{ID: "111",
+					Status: string(constants.ClusterInitializing)}, MaintenanceStatus: "Create"},
+					make([]*management.ClusterInstance, 0), make([]*management.DBUser, 0), nil)
+
+		report := &Report{}
+		err := report.CheckCluster(ctx.TODO(), "111")
+		assert.NoError(t, err)
+		assert.NotNil(t, report.ClusterInfo)
 	})
 }
 
 func TestReport_Serialize(t *testing.T) {
-	t.Run("normal", func(t *testing.T) {
-		report := &Report{Info: &structs.CheckReportInfo{
+	t.Run("serialize platform normal", func(t *testing.T) {
+		report := &Report{PlatformInfo: &structs.CheckPlatformReportInfo{
 			Tenants: map[string]structs.TenantCheck{
 				"tenant01": {
 					CPURatio: 0.8,
@@ -90,8 +131,20 @@ func TestReport_Serialize(t *testing.T) {
 		assert.NotEmpty(t, got)
 	})
 
+	t.Run("serialize cluster normal", func(t *testing.T) {
+		report := &Report{ClusterInfo: &structs.CheckClusterReportInfo{
+			ClusterCheck: structs.ClusterCheck{
+				ID: "123",
+			},
+		}}
+
+		got, err := report.Serialize(ctx.TODO())
+		assert.NoError(t, err)
+		assert.NotEmpty(t, got)
+	})
+
 	t.Run("error", func(t *testing.T) {
-		report := &Report{Info: &structs.CheckReportInfo{
+		report := &Report{PlatformInfo: &structs.CheckPlatformReportInfo{
 			Tenants: map[string]structs.TenantCheck{
 				"tenant01": {
 					CPURatio: float32(math.Inf(1)),
@@ -161,8 +214,8 @@ func TestReport_CheckHosts(t *testing.T) {
 		report := &Report{}
 		err := report.CheckHosts(ctx.TODO())
 		assert.NoError(t, err)
-		assert.Equal(t, 2, len(report.Info.Hosts.Hosts))
-		assert.Equal(t, false, report.Info.Hosts.Hosts["01"].CPUAllocated.Valid)
+		assert.Equal(t, 2, len(report.PlatformInfo.Hosts.Hosts))
+		assert.Equal(t, false, report.PlatformInfo.Hosts.Hosts["01"].CPUAllocated.Valid)
 	})
 
 	t.Run("query hosts error", func(t *testing.T) {
@@ -349,7 +402,7 @@ func TestReport_CheckTenant(t *testing.T) {
 		report := &Report{}
 		err := report.CheckTenant(ctx.TODO(), "tenant01")
 		assert.NoError(t, err)
-		assert.Equal(t, report.Info.Tenants["tenant01"].ClusterCount.Valid, true)
+		assert.Equal(t, report.PlatformInfo.Tenants["tenant01"].ClusterCount.Valid, true)
 	})
 
 	t.Run("query clusters error", func(t *testing.T) {
@@ -642,4 +695,3 @@ func TestReport_GetClusterHealthStatus(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
-

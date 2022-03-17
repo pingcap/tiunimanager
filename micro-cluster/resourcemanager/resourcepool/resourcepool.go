@@ -193,6 +193,8 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 		framework.GetMicroEndpointNameFromContext(ctx),
 	)
 	framework.StartBackgroundTask(ctx, operationName, func(ctx context.Context) error {
+		// Unset EmTiup Using flag after all flows in this task done
+		defer framework.UnsetInEmTiupProcess()
 		for i, flow := range flows {
 			if err = flowManager.Start(ctx, flow); err != nil {
 				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for host %s %s, %s", rp_consts.FlowImportHosts, i, flow.Flow.ID, hosts[i].HostName, hosts[i].IP, err.Error())
@@ -251,6 +253,8 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 		framework.GetMicroEndpointNameFromContext(ctx),
 	)
 	framework.StartBackgroundTask(ctx, operationName, func(ctx context.Context) error {
+		// Unset EmTiup Using flag after all flows in this task done
+		defer framework.UnsetInEmTiupProcess()
 		for i, flow := range flows {
 			if err = flowManager.Start(ctx, flow); err != nil {
 				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for delete host %s, %s", rp_consts.FlowDeleteHosts, i, flow.Flow.ID, hostIds[i], err.Error())

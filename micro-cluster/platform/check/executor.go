@@ -24,6 +24,45 @@ import (
 	"github.com/pingcap-inc/tiem/workflow"
 )
 
+func checkCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	checkID := context.GetData(ContextCheckID).(string)
+	clusterID := context.GetData(ContextClusterID).(string)
+
+	var report ReportInterface
+	if context.GetData(ContextReportInfo) != nil { // for ut
+		report = context.GetData(ContextReportInfo).(ReportInterface)
+	} else {
+		report = &Report{}
+	}
+
+	err := report.ParseFrom(context.Context, checkID)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf("parse from report %s error: %s", checkID, err.Error())
+		return err
+	}
+
+	err = report.CheckCluster(context.Context, clusterID)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf("check cluster %s error: %s", clusterID, err.Error())
+		return err
+	}
+
+	info, err := report.Serialize(context.Context)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf("serialize check report %s error: %s", checkID, err.Error())
+		return err
+	}
+
+	err = models.GetReportReaderWriter().UpdateReport(context.Context, checkID, info)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"update check report %s error: %s", checkID, err.Error())
+		return err
+	}
+
+	return nil
+}
+
 func checkTenants(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	checkID := context.GetData(ContextCheckID).(string)
 

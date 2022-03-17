@@ -295,7 +295,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_TASK_TIMEOUT:          {"task timeout", 500},
 	TIEM_FLOW_NOT_FOUND:        {"flow not found", 500},
 	TIEM_TASK_FAILED:           {"task failed", 500},
-	TIEM_TASK_CONFLICT:         {"task polling time out", 500},
+	TIEM_TASK_CONFLICT:         {"task conflict", 400},
 	TIEM_TASK_CANCELED:         {"task canceled", 500},
 	TIEM_TASK_POLLING_TIME_OUT: {"task polling time out", 500},
 

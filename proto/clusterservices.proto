@@ -129,6 +129,7 @@ service ClusterService {
 
     // platform
     rpc CheckPlatform(RpcRequest) returns(RpcResponse);
+    rpc CheckCluster(RpcRequest) returns(RpcResponse);
     rpc QueryCheckReports(RpcRequest) returns(RpcResponse);
     rpc GetCheckReport(RpcRequest) returns(RpcResponse);
     rpc QueryPlatformLog(RpcRequest) returns(RpcResponse);

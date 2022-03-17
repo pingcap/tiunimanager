@@ -1,3 +1,18 @@
+/******************************************************************************
+ * Copyright (c)  2022 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ ******************************************************************************/
+
 /*******************************************************************************
  * @File: report_read_writer
  * @Description:
@@ -11,6 +26,7 @@ package check
 import (
 	"context"
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -21,7 +37,7 @@ import (
 type ReaderWriter interface {
 	CreateReport(ctx context.Context, report *CheckReport) (*CheckReport, error)
 	DeleteReport(ctx context.Context, checkID string) error
-	GetReport(ctx context.Context, checkID string) (structs.CheckReportInfo, error)
+	GetReport(ctx context.Context, checkID string) (interface{}, string, error)
 	QueryReports(ctx context.Context) (map[string]structs.CheckReportMeta, error)
 	UpdateReport(ctx context.Context, checkID, report string) error
 	UpdateStatus(ctx context.Context, checkID, status string) error
@@ -55,25 +71,34 @@ func (rrw *ReportReadWrite) DeleteReport(ctx context.Context, checkID string) er
 	return rrw.DB(ctx).Where("id = ?", checkID).Unscoped().Delete(&CheckReport{}).Error
 }
 
-func (rrw *ReportReadWrite) GetReport(ctx context.Context, checkID string) (structs.CheckReportInfo, error) {
-	info := structs.CheckReportInfo{}
+func (rrw *ReportReadWrite) GetReport(ctx context.Context, checkID string) (interface{}, string, error) {
 	if "" == checkID {
 		framework.LogWithContext(ctx).Errorf("get report checkID %s, parameter invalid", checkID)
-		return info, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "get report checkID %s, parameter invalid", checkID)
+		return nil, "", errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "get report checkID %s, parameter invalid", checkID)
 	}
 
 	report := &CheckReport{}
 	err := rrw.DB(ctx).First(report, "id = ?", checkID).Error
 	if err != nil {
-		return info, err
+		return nil, "", err
 	}
-
-	err = json.Unmarshal([]byte(report.Report), &info)
-	if err != nil {
-		return info, err
+	var info interface{}
+	if report.Type == string(constants.PlatformReport) {
+		info = &structs.CheckPlatformReportInfo{}
+		err = json.Unmarshal([]byte(report.Report), info)
+		if err != nil {
+			return nil, "", err
+		}
+	} else if report.Type == string(constants.ClusterReport) {
+		info = &structs.CheckClusterReportInfo{}
+		err = json.Unmarshal([]byte(report.Report), info)
+		if err != nil {
+			return nil, "", err
+		}
+	} else {
+		return nil, "", errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "report type %s not supported", report.Type)
 	}
-
-	return info, nil
+	return info, report.Type, nil
 }
 
 func (rrw *ReportReadWrite) QueryReports(ctx context.Context) (map[string]structs.CheckReportMeta, error) {
@@ -96,6 +121,8 @@ func (rrw *ReportReadWrite) QueryReports(ctx context.Context) (map[string]struct
 			reportMetas[report.ID] = structs.CheckReportMeta{
 				ID:        report.ID,
 				Creator:   report.Creator,
+				Type:      report.Type,
+				Status:    report.Status,
 				CreatedAt: report.CreatedAt,
 			}
 		}
@@ -113,7 +140,7 @@ func (rrw *ReportReadWrite) UpdateReport(ctx context.Context, checkID, report st
 }
 
 func (rrw *ReportReadWrite) UpdateStatus(ctx context.Context, checkID, status string) error {
-	if "" ==checkID || "" == status {
+	if "" == checkID || "" == status {
 		framework.LogWithContext(ctx).Errorf("update %s check report status %s, parameter invalid", checkID, status)
 		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "update %s check report status %s, parameter invalid", checkID, status)
 	}

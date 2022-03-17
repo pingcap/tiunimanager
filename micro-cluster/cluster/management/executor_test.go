@@ -18,6 +18,8 @@ package management
 import (
 	"context"
 	"fmt"
+	backuprestore2 "github.com/pingcap-inc/tiem/models/cluster/backuprestore"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockbr"
 	"strconv"
 
 	utilsql "github.com/pingcap-inc/tiem/util/api/tidb/sql"
@@ -2389,13 +2391,18 @@ func Test_syncIncrData(t *testing.T) {
 		},
 	})
 	flowContext.SetData(ContextCloneStrategy, string(constants.CDCSyncClone))
+	flowContext.SetData(ContextBackupID, "123")
 
 	t.Run("normal", func(t *testing.T) {
 		service := mockchangefeed.NewMockService(ctrl)
 		changefeed.MockChangeFeedService(service)
 
 		service.EXPECT().CreateBetweenClusters(gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any()).Return("task01", nil)
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil)
+		backupRW := mockbr.NewMockReaderWriter(ctrl)
+		models.SetBRReaderWriter(backupRW)
+		backupRW.EXPECT().GetBackupRecord(gomock.Any(), gomock.Any()).Return(&backuprestore2.BackupRecord{BackupTso: 123}, nil)
+
 		rw := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(rw)
 

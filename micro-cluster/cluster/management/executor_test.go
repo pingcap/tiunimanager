@@ -1532,8 +1532,8 @@ func TestClearCDCLinks(t *testing.T) {
 			{RelationType: constants.ClusterRelationStandBy, SubjectClusterID: "22", SyncChangeFeedTaskID: "2222"},
 		}, nil).Times(1)
 
-		service.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil, errors.Error(errors.TIEM_CLUSTER_NOT_FOUND)).Times(1)
-		service.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil, nil).Times(1)
+		service.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(cluster.DeleteChangeFeedTaskResp{}, errors.Error(errors.TIEM_CLUSTER_NOT_FOUND)).Times(1)
+		service.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(cluster.DeleteChangeFeedTaskResp{}, nil).Times(1)
 
 		flowContext := workflow.NewFlowContext(context.TODO())
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{

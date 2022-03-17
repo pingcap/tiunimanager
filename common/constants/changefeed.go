@@ -77,5 +77,5 @@ const (
 
 var DefaultFilterRules = []string{
 	"*.*",
-	"!__TiDB_BR_Temporary*",
+	"!__TiDB_BR_Temporary*.*",
 }

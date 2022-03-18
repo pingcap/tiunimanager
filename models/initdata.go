@@ -25,11 +25,12 @@ package models
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/models/platform/product"
 	"io/ioutil"
 	"os"
 	"strings"
 	"syscall"
+
+	"github.com/pingcap-inc/tiem/models/platform/product"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -94,6 +95,20 @@ var allVersionInitializers = []system.VersionInitializer{
 					return initDefaultProductsAndVendors(tx)
 				}
 				return nil
+			}).Present()
+		})
+	}},
+	{"v1.0.0-beta.13", func() error {
+		return defaultDb.base.WithContext(context.TODO()).Transaction(func(tx *gorm.DB) error {
+			return errors.OfNullable(nil).BreakIf(func() error {
+				return tx.Create(&system.VersionInfo{
+					ID:          "v1.0.0-beta.13",
+					Desc:        "beta 13",
+					ReleaseNote: "release note",
+				}).Error
+			}).BreakIf(func() error {
+				parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters_v1.0.0-beta.13.sql"
+				return initBySql(tx, parameterSqlFile, "parameters")
 			}).Present()
 		})
 	}},

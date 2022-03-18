@@ -231,7 +231,7 @@ definitions:
   cluster.DeleteMetadataPhysicallyReq:
     properties:
       reason:
-        type: boolean
+        type: string
     required:
     - reason
     type: object

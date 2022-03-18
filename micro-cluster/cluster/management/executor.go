@@ -1222,7 +1222,7 @@ func clearCDCLinks(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 // @Description: delete cluster physically, If you don't know why you should use it, then don't use it
 func takeoverRevertMeta(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
-	return clusterMeta.ClearClusterPhysically(context, "takeover failed")
+	return models.GetClusterReaderWriter().ClearClusterPhysically(context, clusterMeta.Cluster.ID, "takeover failed")
 }
 
 // freedClusterResource

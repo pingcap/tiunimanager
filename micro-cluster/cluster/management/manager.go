@@ -18,6 +18,8 @@ package management
 import (
 	"context"
 	"fmt"
+	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
+	resourceStructs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	"net"
 	"strconv"
 	"strings"
@@ -728,10 +730,6 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 	return
 }
 
-func (p *Manager) DeleteMetadataPhysically(ctx context.Context, req cluster.DeleteMetadataPhysicallyReq) (resp cluster.DeleteMetadataPhysicallyResp, err error) {
-	return
-}
-
 // asyncMaintenance
 // @Description: common asynchronous process for cluster maintenance
 // @Parameter ctx
@@ -772,6 +770,29 @@ func asyncMaintenance(ctx context.Context, meta *meta.ClusterMeta,
 				"create flow %s succeed, cluster %s", flowID, meta.Cluster.ID)
 		}).Present()
 	})
+	return
+}
+
+// DeleteMetadataPhysically
+// @Description: delete cluster metadata physically, for handling exceptions only
+// @Receiver p
+// @Parameter ctx
+// @Parameter req
+// @return resp
+// @return err
+func (p *Manager) DeleteMetadataPhysically(ctx context.Context, req cluster.DeleteMetadataPhysicallyReq) (resp cluster.DeleteMetadataPhysicallyResp, err error) {
+	if err = models.GetClusterReaderWriter().ClearClusterPhysically(ctx, req.ClusterID, req.Reason); err != nil {
+		return
+	}
+	request := &resourceStructs.RecycleRequest{
+		RecycleReqs: []resourceStructs.RecycleRequire{
+			{
+				RecycleType: resourceStructs.RecycleHolder,
+				HolderID:    req.ClusterID,
+			},
+		},
+	}
+	err = resourceManagement.GetManagement().GetAllocatorRecycler().RecycleResources(ctx, request)
 	return
 }
 

@@ -552,6 +552,12 @@ func (g *ClusterReadWrite) UpdateTopologySnapshotConfig(ctx context.Context, clu
 }
 
 func (g *ClusterReadWrite) ClearClusterPhysically(ctx context.Context, clusterID string, reason string) error {
+	if len(clusterID) == 0 {
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "clusterId is empty")
+	}
+	if len(reason) == 0 {
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "reason is empty")
+	}
 	err := g.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		return errors.OfNullable(nil).BreakIf(func() error {
 			return g.DB(ctx).Unscoped().Where("id = ?", clusterID).Delete(&Cluster{}).Error

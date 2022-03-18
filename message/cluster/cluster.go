@@ -180,8 +180,8 @@ type TakeoverClusterResp struct {
 
 // DeleteMetadataPhysicallyReq Message for delete a cluster metadata
 type DeleteMetadataPhysicallyReq struct {
-	ClusterID                string `json:"clusterID" swaggerignore:"true" validate:"required,min=4,max=64"`
-	Reason               bool   `json:"reason" form:"reason" validate:"required,min=4"`
+	ClusterID string `json:"clusterId" swaggerignore:"true" validate:"required,min=4,max=64"`
+	Reason    string `json:"reason" form:"reason" validate:"required,min=8"`
 }
 
 // DeleteMetadataPhysicallyResp Reply message for delete a new cluster

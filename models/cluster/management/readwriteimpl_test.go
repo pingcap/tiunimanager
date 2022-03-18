@@ -259,10 +259,10 @@ func TestGormClusterReadWrite_ClearClusterPhysically(t *testing.T) {
 		assert.NoError(t, testRW.DB(context.TODO()).Where("id = ?", cluster2.ID).First(cluster2).Error)
 	})
 
-	t.Run("not found", func(t *testing.T) {
-		err := testRW.ClearClusterPhysically(context.TODO(), "whatever", "empty")
+	t.Run("parameter", func(t *testing.T) {
+		err := testRW.ClearClusterPhysically(context.TODO(), "whatever", "")
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_CLUSTER_NOT_FOUND, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 
 		err = testRW.ClearClusterPhysically(context.TODO(), "", "empty")
 		assert.Error(t, err)

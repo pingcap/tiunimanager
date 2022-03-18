@@ -19,6 +19,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
+	mock_allocator_recycler "github.com/pingcap-inc/tiem/test/mockresource"
 	"testing"
 	"time"
 
@@ -1907,6 +1909,34 @@ func TestManager_InPlaceUpgradeCluster(t *testing.T) {
 		_, err := manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
 			ClusterID: "111",
 		})
+		assert.Error(t, err)
+	})
+}
+
+func TestManager_DeleteMetadataPhysically(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "", gomock.Any()).Return(em_errors.Error(em_errors.TIEM_PARAMETER_INVALID)).AnyTimes()
+	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "111", gomock.Any()).Return(em_errors.Error(em_errors.TIEM_PARAMETER_INVALID)).AnyTimes()
+
+	resourceManager := mock_allocator_recycler.NewMockAllocatorRecycler(ctrl)
+	resourceManager.EXPECT().RecycleResources(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	resourceManagement.GetManagement().SetAllocatorRecycler(resourceManager)
+
+	manager := &Manager{}
+	t.Run("normal", func(t *testing.T) {
+		_, err := manager.DeleteMetadataPhysically(context.TODO(), cluster.DeleteMetadataPhysicallyReq{
+			ClusterID: "111",
+			Reason: "no why",
+		})
+		assert.NoError(t, err)
+	})
+
+	t.Run("failed", func(t *testing.T) {
+		_, err := manager.DeleteMetadataPhysically(context.TODO(), cluster.DeleteMetadataPhysicallyReq{})
 		assert.Error(t, err)
 	})
 }

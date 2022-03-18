@@ -927,37 +927,6 @@ func TestClusterMeta_Delete(t *testing.T) {
 	})
 }
 
-func TestClusterMeta_ClearClusterPhysically(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
-	models.SetClusterReaderWriter(rw)
-
-	rw.EXPECT().ClearClusterPhysically(gomock.Any(), "111").Return(nil)
-	rw.EXPECT().ClearClusterPhysically(gomock.Any(), "").Return(errors.Error(errors.TIEM_UNSUPPORT_PRODUCT))
-
-	meta := &ClusterMeta{
-		Cluster: &management.Cluster{
-			Entity: common.Entity{
-				ID: "111",
-			},
-			MaintenanceStatus: constants.ClusterMaintenanceNone,
-		},
-	}
-
-	t.Run("normal", func(t *testing.T) {
-		meta.Cluster.ID = "111"
-		err := meta.ClearClusterPhysically(context.TODO())
-		assert.NoError(t, err)
-	})
-
-	t.Run("error", func(t *testing.T) {
-		meta.Cluster.ID = ""
-		err := meta.ClearClusterPhysically(context.TODO())
-		assert.Error(t, err)
-	})
-}
-
 func TestClusterMeta_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

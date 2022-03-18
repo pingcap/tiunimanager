@@ -7333,7 +7333,7 @@ var doc = `{
             ],
             "properties": {
                 "reason": {
-                    "type": "boolean"
+                    "type": "string"
                 }
             }
         },

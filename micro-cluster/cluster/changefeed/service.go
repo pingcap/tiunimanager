@@ -62,6 +62,15 @@ type Service interface {
 	// @return err
 	//
 	Detail(ctx context.Context, request cluster.DetailChangeFeedTaskReq) (resp cluster.DetailChangeFeedTaskResp, err error)
+	//
+	// Delete
+	// @Description: delete change feed task
+	// @param ctx
+	// @param request
+	// @return resp
+	// @return err
+	//
+	Delete(ctx context.Context, request cluster.DeleteChangeFeedTaskReq) (resp cluster.DeleteChangeFeedTaskResp, err error)
 }
 
 func GetChangeFeedService() Service {
@@ -101,7 +110,7 @@ func (p *Manager) CreateBetweenClusters(ctx context.Context, sourceClusterID str
 		Name:        fmt.Sprintf("from-%s-to-%s", sourceCluster.Cluster.Name, targetCluster.Cluster.Name),
 		ClusterId:   sourceClusterID,
 		StartTS:     startTS,
-		FilterRules: []string{},
+		FilterRules: constants.DefaultFilterRules,
 		Type:        constants.DownstreamTypeTiDB,
 		Downstream: &changefeed.TiDBDownstream{
 			Ip:              address.IP,

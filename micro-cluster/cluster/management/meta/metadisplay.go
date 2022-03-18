@@ -404,6 +404,7 @@ func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterT
 				Version:   instance.Version,
 				Status:    instance.Status,
 				HostID:    instance.HostID,
+				DiskID:    instance.DiskID,
 				Addresses: instance.HostIP,
 				Ports:     instance.Ports,
 				Spec: structs.ProductSpecInfo{

@@ -1504,6 +1504,53 @@ func TestDeleteCluster(t *testing.T) {
 
 }
 
+func TestClearCDCLinks(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+
+	service := mockchangefeed.NewMockService(ctrl)
+	changefeed.MockChangeFeedService(service)
+
+	t.Run("query error", func(t *testing.T) {
+		clusterRW.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return(nil, errors.Error(errors.TIEM_CLUSTER_NOT_FOUND)).Times(1)
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "111",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		err := clearCDCLinks(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
+	t.Run("normal", func(t *testing.T) {
+		clusterRW.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return([]*management.ClusterRelation{
+			{RelationType: constants.ClusterRelationStandBy, SubjectClusterID: "22", SyncChangeFeedTaskID: "1111"},
+			{RelationType: constants.ClusterRelationStandBy, SubjectClusterID: "22", SyncChangeFeedTaskID: "2222"},
+		}, nil).Times(1)
+
+		service.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(cluster.DeleteChangeFeedTaskResp{}, errors.Error(errors.TIEM_CLUSTER_NOT_FOUND)).Times(1)
+		service.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(cluster.DeleteChangeFeedTaskResp{}, nil).Times(1)
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "111",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		err := clearCDCLinks(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
+}
+
 func TestDeleteClusterPhysically(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

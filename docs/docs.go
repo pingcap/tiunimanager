@@ -7813,6 +7813,14 @@ var doc = `{
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
                     }
                 },
+                "requestResourceMode": {
+                    "type": "string",
+                    "default": "SpecificZone",
+                    "enum": [
+                        "SpecificZone",
+                        "SpecificHost"
+                    ]
+                },
                 "topology": {
                     "type": "array",
                     "items": {
@@ -8047,6 +8055,14 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
                     }
+                },
+                "requestResourceMode": {
+                    "type": "string",
+                    "default": "SpecificZone",
+                    "enum": [
+                        "SpecificZone",
+                        "SpecificHost"
+                    ]
                 }
             }
         },
@@ -9847,6 +9863,9 @@ var doc = `{
                 "cpuUsage": {
                     "$ref": "#/definitions/structs.Usage"
                 },
+                "diskId": {
+                    "type": "string"
+                },
                 "hostID": {
                     "type": "string"
                 },
@@ -10121,6 +10140,14 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
                     }
+                },
+                "requestResourceMode": {
+                    "type": "string",
+                    "default": "SpecificZone",
+                    "enum": [
+                        "SpecificZone",
+                        "SpecificHost"
+                    ]
                 }
             }
         },
@@ -10151,8 +10178,14 @@ var doc = `{
                 "diskCapacity": {
                     "type": "integer"
                 },
+                "diskId": {
+                    "type": "string"
+                },
                 "diskType": {
                     "description": "NVMeSSD/SSD/SATA",
+                    "type": "string"
+                },
+                "hostIp": {
                     "type": "string"
                 },
                 "specCode": {
@@ -10390,7 +10423,7 @@ var doc = `{
                     "type": "string"
                 },
                 "loadStat": {
-                    "description": "Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust",
+                    "description": "Host load stat, Loadless, Inused, Exhaust, etc",
                     "type": "string"
                 },
                 "memory": {
@@ -10429,7 +10462,7 @@ var doc = `{
                     "type": "integer"
                 },
                 "status": {
-                    "description": "Host Status, 0 for Online, 1 for offline",
+                    "description": "Host status, Online, Offline, Failed, Deleted, etc",
                     "type": "string"
                 },
                 "sysLabels": {
@@ -10995,12 +11028,18 @@ var doc = `{
                 "diskCapacity": {
                     "type": "integer"
                 },
+                "diskId": {
+                    "type": "string"
+                },
                 "diskType": {
                     "description": "NVMeSSD/SSD/SATA",
                     "type": "string"
                 },
                 "enough": {
                     "type": "boolean"
+                },
+                "hostIp": {
+                    "type": "string"
                 },
                 "specCode": {
                     "description": "4C8G/8C16G ?",

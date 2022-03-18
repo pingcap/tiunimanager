@@ -670,6 +670,7 @@ func inspectInstancesByApiAndConfig(ctx context.Context, instance *management.Cl
 	inspectParameterInfos := make([]cluster.InspectParameterInfo, 0)
 
 	// Inspect api parameter
+	framework.LogWithContext(ctx).Infof("request %s api show config response: %v", instance.Type, string(apiContent))
 	inspectApiParams, instDiffParams, err := inspectApiParameter(ctx, instance, apiContent, compParams)
 	if err != nil {
 		return inspectParams, err

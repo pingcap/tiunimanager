@@ -1,0 +1,2 @@
+update parameter_group_mappings set default_value = '' where default_value = ' ';
+update parameter_group_mappings set default_value = '' where parameter_id in ('62', '74', '86', '98', '110', '111', '117', '186', '209', '240', '271');

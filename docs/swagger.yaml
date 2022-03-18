@@ -1135,6 +1135,11 @@ definitions:
           $ref: '#/definitions/structs.ParameterGroupParameterSampleInfo'
         type: array
     required:
+    - clusterSpec
+    - clusterVersion
+    - dbType
+    - groupType
+    - name
     - params
     type: object
   message.CreateParameterGroupResp:
@@ -1789,10 +1794,10 @@ definitions:
           type: string
         type: array
       name:
-        example: 8C16GV4_default
+        example: 8C16GV4_new
         type: string
       note:
-        example: default param group
+        example: update param group
         type: string
       params:
         items:

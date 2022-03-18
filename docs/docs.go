@@ -8495,6 +8495,11 @@ var doc = `{
         "message.CreateParameterGroupReq": {
             "type": "object",
             "required": [
+                "clusterSpec",
+                "clusterVersion",
+                "dbType",
+                "groupType",
+                "name",
                 "params"
             ],
             "properties": {
@@ -9512,11 +9517,11 @@ var doc = `{
                 },
                 "name": {
                     "type": "string",
-                    "example": "8C16GV4_default"
+                    "example": "8C16GV4_new"
                 },
                 "note": {
                     "type": "string",
-                    "example": "default param group"
+                    "example": "update param group"
                 },
                 "params": {
                     "type": "array",

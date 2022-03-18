@@ -996,6 +996,15 @@ func TestManager_fillParameters(t *testing.T) {
 					Type:         0,
 					RealValue:    structs.ParameterRealValue{ClusterValue: "102400"},
 				},
+				{
+					ParamId:      "5",
+					Category:     "basic",
+					Name:         "quota-backend-bytes",
+					InstanceType: "PD",
+					HasApply:     1,
+					Type:         0,
+					RealValue:    structs.ParameterRealValue{ClusterValue: ""},
+				},
 			},
 			"TiFlash": {
 				{

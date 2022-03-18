@@ -73,6 +73,7 @@ var apiContent = []byte(`
 			"max-size": 102400
 		}
 	},
+	"quota-backend-bytes": "8GiB",
 	"coprocessor": {
 		"region-max-size": "144MiB",
 		"region-max-keys": "1.44e+06"

@@ -524,7 +524,7 @@ func (m *Manager) clusterCheckNoRelation(ctx context.Context, clusterId string) 
 		return err
 	}
 	if len(mRels) > 0 {
-		return fmt.Errorf("cluster should have no masters, clusterID:%s, mastersCount:%d", clusterId, len(mRels))
+		return fmt.Errorf("cluster should have no master, clusterID:%s, mastersCount:%d", clusterId, len(mRels))
 	}
 	sRels, err := models.GetClusterReaderWriter().GetSlaves(ctx, clusterId)
 	framework.LogWithContext(ctx).Infof("%s: GetSlaves len:%d err:%v", funcName, len(sRels), err)
@@ -532,7 +532,7 @@ func (m *Manager) clusterCheckNoRelation(ctx context.Context, clusterId string) 
 		return err
 	}
 	if len(sRels) > 0 {
-		return fmt.Errorf("cluster should have no slaves, clusterID:%s, slavesCount:%d", clusterId, len(sRels))
+		return fmt.Errorf("cluster should have no slave, clusterID:%s, slavesCount:%d", clusterId, len(sRels))
 	}
 	return nil
 }
@@ -540,7 +540,7 @@ func (m *Manager) clusterCheckNoRelation(ctx context.Context, clusterId string) 
 func (m *Manager) clusterCheckNoCDCs(ctx context.Context, clusterId string) error {
 	funcName := "clusterCheckNoCDCs"
 	tasks, err := mgr.getAllChangeFeedTasksOnCluster(ctx, clusterId)
-	framework.LogWithContext(ctx).Infof("%s: getAllChangeFeedTasksOnCluster len:%d err:%v", funcName, len(tasks), err)
+	framework.LogWithContext(ctx).Infof("%s: getAllChangeFeedTasksOnCluster clusterID:%s len:%d err:%v", funcName, clusterId, len(tasks), err)
 	if err != nil {
 		return err
 	}

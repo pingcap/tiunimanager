@@ -94,7 +94,7 @@ func TestManager_CreateParameterGroup(t *testing.T) {
 					HasDefault:     1,
 					DBType:         1,
 					GroupType:      1,
-					ClusterVersion: "5.0",
+					ClusterVersion: "v5.0",
 					Note:           "test parameter group",
 					CreatedAt:      time.Time{},
 					UpdatedAt:      time.Time{},
@@ -115,30 +115,37 @@ func TestManager_CreateParameterGroup(t *testing.T) {
 					Note:         "test param",
 				},
 			},
-			AddParams: []message.ParameterInfo{
-				{
-					Category:       "log",
-					Name:           "binlog_cache",
-					InstanceType:   "TiDB",
-					SystemVariable: "log.binlog_cache",
-					Type:           0,
-					Range:          []string{"0", "1024"},
-					RangeType:      1,
-					Unit:           "MB",
-					UnitOptions:    []string{"KB", "MB", "GB"},
-					HasReboot:      0,
-					HasApply:       1,
-					UpdateSource:   0,
-					ReadOnly:       0,
-					Description:    "binlog cache",
-					DefaultValue:   "512",
-					Note:           "binlog cache",
-				},
-			},
 		})
 		assert.NotEmpty(t, resp)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, resp.ParamGroupID)
+	})
+
+	t.Run("check group type fail", func(t *testing.T) {
+		_, err := manager.CreateParameterGroup(context.TODO(), message.CreateParameterGroupReq{
+			Name:      "test_parameter_group",
+			GroupType: -1,
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("check db type fail", func(t *testing.T) {
+		_, err := manager.CreateParameterGroup(context.TODO(), message.CreateParameterGroupReq{
+			Name:      "test_parameter_group",
+			GroupType: 1,
+			DBType:    -1,
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("check params len fail", func(t *testing.T) {
+		_, err := manager.CreateParameterGroup(context.TODO(), message.CreateParameterGroupReq{
+			Name:      "test_parameter_group",
+			GroupType: 1,
+			DBType:    1,
+			Params:    nil,
+		})
+		assert.Error(t, err)
 	})
 
 	t.Run("check add parameters fail", func(t *testing.T) {
@@ -149,6 +156,8 @@ func TestManager_CreateParameterGroup(t *testing.T) {
 				resp := []*parametergroup.Parameter{
 					{
 						ID:          "1",
+						Category:    "log",
+						Name:        "backup-size",
 						Type:        0,
 						Unit:        "",
 						Range:       "[\"0\", \"10\"]",
@@ -162,7 +171,15 @@ func TestManager_CreateParameterGroup(t *testing.T) {
 			Return(nil, errors.New("exists parameter fail"))
 
 		_, err := manager.CreateParameterGroup(context.TODO(), message.CreateParameterGroupReq{
-			Name: "test_parameter_group",
+			Name:      "test_parameter_group",
+			DBType:    1,
+			GroupType: 1,
+			Params: []structs.ParameterGroupParameterSampleInfo{
+				{
+					ID:           "1",
+					DefaultValue: "10",
+				},
+			},
 			AddParams: []message.ParameterInfo{
 				{
 					Category:       "log",
@@ -184,6 +201,8 @@ func TestManager_CreateParameterGroup(t *testing.T) {
 				resp := []*parametergroup.Parameter{
 					{
 						ID:          "1",
+						Category:    "log",
+						Name:        "backup-size",
 						Type:        0,
 						Unit:        "",
 						Range:       "[\"0\", \"10\"]",
@@ -200,6 +219,13 @@ func TestManager_CreateParameterGroup(t *testing.T) {
 			Name:           "test_parameter_group",
 			DBType:         1,
 			ClusterVersion: "v5.0",
+			GroupType:      1,
+			Params: []structs.ParameterGroupParameterSampleInfo{
+				{
+					ID:           "1",
+					DefaultValue: "10",
+				},
+			},
 			AddParams: []message.ParameterInfo{
 				{
 					Category:     "log",
@@ -282,60 +308,79 @@ func TestManager_UpdateParameterGroup_Success(t *testing.T) {
 	assert.NotEmpty(t, resp.ParamGroupID)
 }
 
-func TestManager_UpdateParameterGroup_Error1(t *testing.T) {
+func TestManager_UpdateParameterGroup_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
-	models.SetParameterGroupReaderWriter(parameterGroupRW)
-	parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName, instanceType string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
-			return &parametergroup.ParameterGroup{ID: "1", HasDefault: 1}, nil, nil
-		})
-	_, err := manager.UpdateParameterGroup(context.TODO(), message.UpdateParameterGroupReq{
-		ParamGroupID:   "1",
-		Name:           "test_parameter_group",
-		ClusterVersion: "5.0",
-		ClusterSpec:    "8C16G",
-		Note:           "test parameter group",
-		Params: []structs.ParameterGroupParameterSampleInfo{
-			{
-				ID:           "1",
-				DefaultValue: "10",
-				Note:         "test param",
+	t.Run("error1", func(t *testing.T) {
+		parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+		models.SetParameterGroupReaderWriter(parameterGroupRW)
+		parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return([]*parametergroup.Parameter{{ID: "1"}}, int64(1), nil)
+		parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(&parametergroup.ParameterGroup{ID: "1", HasDefault: 1}, nil, nil)
+		_, err := manager.UpdateParameterGroup(context.TODO(), message.UpdateParameterGroupReq{
+			ParamGroupID:   "1",
+			Name:           "test_parameter_group",
+			ClusterVersion: "5.0",
+			ClusterSpec:    "8C16G",
+			Note:           "test parameter group",
+			Params: []structs.ParameterGroupParameterSampleInfo{
+				{
+					ID:           "1",
+					DefaultValue: "10",
+					Note:         "test param",
+				},
 			},
-		},
-	})
-	assert.Error(t, err)
-}
-
-func TestManager_UpdateParameterGroup_Error2(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
-	models.SetParameterGroupReaderWriter(parameterGroupRW)
-	parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, parameterGroupId, paramName, instanceType string) (group *parametergroup.ParameterGroup, params []*parametergroup.ParamDetail, err error) {
-			return &parametergroup.ParameterGroup{ID: "", HasDefault: 1}, nil, nil
 		})
-	_, err := manager.UpdateParameterGroup(context.TODO(), message.UpdateParameterGroupReq{
-		ParamGroupID:   "1",
-		Name:           "test_parameter_group",
-		ClusterVersion: "5.0",
-		ClusterSpec:    "8C16G",
-		Note:           "test parameter group",
-		Params: []structs.ParameterGroupParameterSampleInfo{
-			{
-				ID:           "1",
-				DefaultValue: "10",
-				Note:         "test param",
-			},
-		},
+		assert.Error(t, err)
 	})
-	assert.Error(t, err)
+
+	t.Run("error2", func(t *testing.T) {
+		parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+		models.SetParameterGroupReaderWriter(parameterGroupRW)
+		parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return([]*parametergroup.Parameter{{ID: "1"}}, int64(1), nil)
+		parameterGroupRW.EXPECT().GetParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(&parametergroup.ParameterGroup{ID: "", HasDefault: 1}, nil, nil)
+		_, err := manager.UpdateParameterGroup(context.TODO(), message.UpdateParameterGroupReq{
+			ParamGroupID:   "1",
+			Name:           "test_parameter_group",
+			ClusterVersion: "5.0",
+			ClusterSpec:    "8C16G",
+			Note:           "test parameter group",
+			Params: []structs.ParameterGroupParameterSampleInfo{
+				{
+					ID:           "1",
+					DefaultValue: "10",
+					Note:         "test param",
+				},
+			},
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("error3", func(t *testing.T) {
+		parameterGroupRW := mockparametergroup.NewMockReaderWriter(ctrl)
+		models.SetParameterGroupReaderWriter(parameterGroupRW)
+		parameterGroupRW.EXPECT().QueryParameters(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return([]*parametergroup.Parameter{{ID: "2"}}, int64(1), nil)
+		_, err := manager.UpdateParameterGroup(context.TODO(), message.UpdateParameterGroupReq{
+			ParamGroupID:   "1",
+			Name:           "test_parameter_group",
+			ClusterVersion: "5.0",
+			ClusterSpec:    "8C16G",
+			Note:           "test parameter group",
+			Params: []structs.ParameterGroupParameterSampleInfo{
+				{
+					ID:           "1",
+					DefaultValue: "10",
+					Note:         "test param",
+				},
+			},
+		})
+		assert.Error(t, err)
+	})
 }
 
 func TestManager_DeleteParameterGroup_Success(t *testing.T) {
@@ -575,7 +620,7 @@ func TestManager_validateParameter(t *testing.T) {
 				}
 				return resp, 1, nil
 			})
-		err := validateParameter(context.TODO(), []structs.ParameterGroupParameterSampleInfo{
+		err := validateParameterRange(context.TODO(), []structs.ParameterGroupParameterSampleInfo{
 			{
 				ID:           "1",
 				DefaultValue: "5",
@@ -589,7 +634,7 @@ func TestManager_validateParameter(t *testing.T) {
 			DoAndReturn(func(ctx context.Context, offset, size int) (params []*parametergroup.Parameter, total int64, err error) {
 				return nil, 1, errors.New("query parameters error")
 			})
-		err := validateParameter(context.TODO(), []structs.ParameterGroupParameterSampleInfo{
+		err := validateParameterRange(context.TODO(), []structs.ParameterGroupParameterSampleInfo{
 			{
 				ID:           "1",
 				DefaultValue: "5",
@@ -612,7 +657,7 @@ func TestManager_validateParameter(t *testing.T) {
 				}
 				return resp, 1, nil
 			})
-		err := validateParameter(context.TODO(), []structs.ParameterGroupParameterSampleInfo{
+		err := validateParameterRange(context.TODO(), []structs.ParameterGroupParameterSampleInfo{
 			{
 				ID:           "1",
 				DefaultValue: "20",
@@ -635,7 +680,7 @@ func TestManager_validateParameter(t *testing.T) {
 				}
 				return resp, 1, nil
 			})
-		err := validateParameter(context.TODO(), []structs.ParameterGroupParameterSampleInfo{
+		err := validateParameterRange(context.TODO(), []structs.ParameterGroupParameterSampleInfo{
 			{
 				ID:           "1",
 				DefaultValue: "20",

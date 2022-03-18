@@ -44,26 +44,22 @@ func NewManager() *Manager {
 	return &Manager{}
 }
 
-type DBType int
-
-const (
-	TiDB DBType = 1
-	DM   DBType = 2
-)
-
-type ParamGroupType int
-
-const (
-	DEFAULT ParamGroupType = 1
-	CUSTOM  ParamGroupType = 2
-)
-
 func (m *Manager) CreateParameterGroup(ctx context.Context, req message.CreateParameterGroupReq) (resp message.CreateParameterGroupResp, err error) {
-	// validation parameters
-	if err = validateParameter(ctx, req.Params); err != nil {
-		return resp, err
+	// validate parameter
+	if req.GroupType != int(Cluster) && req.GroupType != int(Instance) {
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "The groupType value can only be 1 or 2")
+	}
+	if req.DBType != int(TiDB) && req.DBType != int(DM) {
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "The dbType value can only be 1 or 2")
+	}
+	if req.Params == nil || len(req.Params) == 0 {
+		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "The params cannot be empty")
 	}
 
+	// validation parameter range
+	if err = validateParameterRange(ctx, req.Params); err != nil {
+		return resp, err
+	}
 	pg := &parametergroup.ParameterGroup{
 		Name:           req.Name,
 		ClusterSpec:    req.ClusterSpec,
@@ -98,11 +94,10 @@ func (m *Manager) CreateParameterGroup(ctx context.Context, req message.CreatePa
 }
 
 func (m *Manager) UpdateParameterGroup(ctx context.Context, req message.UpdateParameterGroupReq) (resp message.UpdateParameterGroupResp, err error) {
-	// validation parameters
-	if err = validateParameter(ctx, req.Params); err != nil {
+	// validation parameters range
+	if err = validateParameterRange(ctx, req.Params); err != nil {
 		return resp, err
 	}
-
 	group, _, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID, "", "")
 	if err != nil || group.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
@@ -285,12 +280,12 @@ func checkAddParametersExists(ctx context.Context, addParams []message.Parameter
 	return nil
 }
 
-// validateParameter
+// validateParameterRange
 // @Description: validate parameter by range
 // @Parameter ctx
 // @Parameter reqParams
 // @return err
-func validateParameter(ctx context.Context, reqParams []structs.ParameterGroupParameterSampleInfo) (err error) {
+func validateParameterRange(ctx context.Context, reqParams []structs.ParameterGroupParameterSampleInfo) (err error) {
 	// query parameters list
 	params, total, err := models.GetParameterGroupReaderWriter().QueryParameters(ctx, 0, 0)
 	if err != nil {
@@ -298,41 +293,46 @@ func validateParameter(ctx context.Context, reqParams []structs.ParameterGroupPa
 		return errors.NewErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, errors.TIEM_PARAMETER_QUERY_ERROR.Explain(), err)
 	}
 	framework.LogWithContext(ctx).Debugf("validate parameters query count: %v", total)
-	// Iterate through the range of parameters to check if they are legal
-	for _, queryParam := range params {
-		for _, reqParam := range reqParams {
-			if queryParam.ID == reqParam.ID {
-				ranges, err := parameter.UnmarshalCovertArray(queryParam.Range)
-				if err != nil {
-					framework.LogWithContext(ctx).Errorf("failed to convert parameter range. range: %v, err: %v", queryParam.Range, err)
-					return err
-				}
-				// convert unitOptions
-				unitOptions, err := parameter.UnmarshalCovertArray(queryParam.UnitOptions)
-				if err != nil {
-					return err
-				}
 
-				if !parameter.ValidateRange(&parameter.ModifyClusterParameterInfo{
-					ParamId:     reqParam.ID,
-					Type:        queryParam.Type,
-					Range:       ranges,
-					RangeType:   queryParam.RangeType,
-					Unit:        queryParam.Unit,
-					UnitOptions: unitOptions,
-					RealValue:   structs.ParameterRealValue{ClusterValue: reqParam.DefaultValue},
-				}, false) {
-					if queryParam.RangeType == int(parameter.ContinuousRange) && len(queryParam.Range) == 2 {
-						return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
-							fmt.Sprintf("Validation %s parameter `%s` failed, update value: %s, can take a range of values: %v",
-								queryParam.InstanceType, parameter.DisplayFullParameterName(queryParam.Category, queryParam.Name), reqParam.DefaultValue, ranges))
-					} else {
-						return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
-							fmt.Sprintf("Validation %s parameter `%s` failed, update value: %s, optional values: %v",
-								queryParam.InstanceType, parameter.DisplayFullParameterName(queryParam.Category, queryParam.Name), reqParam.DefaultValue, ranges))
-					}
+	queryParamContainer := make(map[string]*parametergroup.Parameter)
+	for _, queryParam := range params {
+		queryParamContainer[queryParam.ID] = queryParam
+	}
+	// Iterate through the range of parameters to check if they are legal
+	for _, reqParam := range reqParams {
+		if queryParam, ok := queryParamContainer[reqParam.ID]; ok {
+			ranges, err := parameter.UnmarshalCovertArray(queryParam.Range)
+			if err != nil {
+				framework.LogWithContext(ctx).Errorf("failed to convert parameter range. range: %v, err: %v", queryParam.Range, err)
+				return err
+			}
+			// convert unitOptions
+			unitOptions, err := parameter.UnmarshalCovertArray(queryParam.UnitOptions)
+			if err != nil {
+				return err
+			}
+
+			if !parameter.ValidateRange(&parameter.ModifyClusterParameterInfo{
+				ParamId:     reqParam.ID,
+				Type:        queryParam.Type,
+				Range:       ranges,
+				RangeType:   queryParam.RangeType,
+				Unit:        queryParam.Unit,
+				UnitOptions: unitOptions,
+				RealValue:   structs.ParameterRealValue{ClusterValue: reqParam.DefaultValue},
+			}, false) {
+				if queryParam.RangeType == int(parameter.ContinuousRange) && len(queryParam.Range) == 2 {
+					return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+						fmt.Sprintf("Validation %s parameter `%s` failed, update value: %s, can take a range of values: %v",
+							queryParam.InstanceType, parameter.DisplayFullParameterName(queryParam.Category, queryParam.Name), reqParam.DefaultValue, ranges))
+				} else {
+					return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+						fmt.Sprintf("Validation %s parameter `%s` failed, update value: %s, optional values: %v",
+							queryParam.InstanceType, parameter.DisplayFullParameterName(queryParam.Category, queryParam.Name), reqParam.DefaultValue, ranges))
 				}
 			}
+		} else {
+			return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "No record found for parameter ID: %v", reqParam.ID)
 		}
 	}
 	return nil

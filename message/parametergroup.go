@@ -52,11 +52,11 @@ type DetailParameterGroupResp struct {
 }
 
 type CreateParameterGroupReq struct {
-	Name           string                                      `json:"name" example:"8C16GV4_default"`
-	DBType         int                                         `json:"dbType" example:"1" enums:"1,2"`
-	ClusterVersion string                                      `json:"clusterVersion" example:"v5.0"`
-	ClusterSpec    string                                      `json:"clusterSpec" example:"8C16G"`
-	GroupType      int                                         `json:"groupType" example:"1" enums:"1,2"`
+	Name           string                                      `json:"name" validate:"required" example:"8C16GV4_default"`
+	DBType         int                                         `json:"dbType" validate:"required" example:"1" enums:"1,2"`
+	ClusterVersion string                                      `json:"clusterVersion" validate:"required" example:"v5.0"`
+	ClusterSpec    string                                      `json:"clusterSpec" validate:"required" example:"8C16G"`
+	GroupType      int                                         `json:"groupType" validate:"required" example:"1" enums:"1,2"`
 	Note           string                                      `json:"note" example:"default param group"`
 	Params         []structs.ParameterGroupParameterSampleInfo `json:"params" validate:"required"`
 	AddParams      []ParameterInfo                             `json:"addParams"`
@@ -76,10 +76,10 @@ type DeleteParameterGroupResp struct {
 
 type UpdateParameterGroupReq struct {
 	ParamGroupID   string                                      `json:"paramGroupId" swaggerignore:"true" validate:"required,min=1,max=64"`
-	Name           string                                      `json:"name" example:"8C16GV4_default"`
+	Name           string                                      `json:"name" example:"8C16GV4_new"`
 	ClusterVersion string                                      `json:"clusterVersion" example:"v5.0"`
 	ClusterSpec    string                                      `json:"clusterSpec" example:"8C16G"`
-	Note           string                                      `json:"note" example:"default param group"`
+	Note           string                                      `json:"note" example:"update param group"`
 	Params         []structs.ParameterGroupParameterSampleInfo `json:"params" validate:"required"`
 	AddParams      []ParameterInfo                             `json:"addParams"`
 	DelParams      []string                                    `json:"delParams" example:"1"`

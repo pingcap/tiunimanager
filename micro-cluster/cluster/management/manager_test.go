@@ -1920,7 +1920,7 @@ func TestManager_DeleteMetadataPhysically(t *testing.T) {
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
 	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "", gomock.Any()).Return(em_errors.Error(em_errors.TIEM_PARAMETER_INVALID)).AnyTimes()
-	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "111", gomock.Any()).Return(em_errors.Error(em_errors.TIEM_PARAMETER_INVALID)).AnyTimes()
+	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "111", gomock.Any()).Return(nil).AnyTimes()
 
 	resourceManager := mock_allocator_recycler.NewMockAllocatorRecycler(ctrl)
 	resourceManager.EXPECT().RecycleResources(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()

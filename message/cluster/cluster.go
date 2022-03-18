@@ -96,7 +96,6 @@ type PreviewScaleOutClusterReq struct {
 // ScaleOutClusterReq Message for cluster expansion operation
 type ScaleOutClusterReq struct {
 	ClusterID string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=4,max=64"`
-
 	structs.ClusterResourceInfo
 }
 

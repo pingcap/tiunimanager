@@ -72,8 +72,8 @@ func Test_generateCheckInt32Result_Both_Nil(t *testing.T) {
 	assert.Equal(t, true, result["test_host1"].Valid)
 	assert.Equal(t, true, result["test_host2"].Valid)
 	assert.Equal(t, true, result["test_host3"].Valid)
-	assert.Equal(t, int32(-1), result["test_host3"].ExpectedValue)
-	assert.Equal(t, int32(-1), result["test_host3"].RealValue)
+	assert.Equal(t, int32(0), result["test_host3"].ExpectedValue)
+	assert.Equal(t, int32(0), result["test_host3"].RealValue)
 }
 
 func Test_generateCheckInt32Result_Either_Nil(t *testing.T) {
@@ -87,7 +87,7 @@ func Test_generateCheckInt32Result_Either_Nil(t *testing.T) {
 	assert.Equal(t, true, result["test_host1"].Valid)
 	assert.Equal(t, true, result["test_host2"].Valid)
 	assert.Equal(t, false, result["test_host3"].Valid)
-	assert.Equal(t, int32(-1), result["test_host3"].ExpectedValue)
+	assert.Equal(t, int32(0), result["test_host3"].ExpectedValue)
 	assert.Equal(t, int32(17), result["test_host3"].RealValue)
 }
 func Test_generateCheckStatusResult_Normal_Succeed(t *testing.T) {

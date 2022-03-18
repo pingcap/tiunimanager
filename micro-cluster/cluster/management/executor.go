@@ -1195,6 +1195,28 @@ func deleteCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 	return clusterMeta.Delete(context)
 }
 
+// clearCDCLinks
+// @Description: delete cdc tasks from other clusters to deleted cluster
+func clearCDCLinks(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
+	relations, err := models.GetClusterReaderWriter().GetMasters(context, clusterMeta.Cluster.ID)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"clear cdc link of cluster %s error: %s", clusterMeta.Cluster.ID, err.Error())
+		return err
+	}
+	for _, r := range relations {
+		_, e := changefeed.GetChangeFeedService().Delete(context, cluster.DeleteChangeFeedTaskReq{ID: r.SyncChangeFeedTaskID})
+		if e != nil {
+			// efforts to delete but not required
+			node.Record(fmt.Sprintf("delete cdc task failed, upstream cluster = %s, relation type = %s, cdc task = %s, err = %s", r.SubjectClusterID, r.RelationType, r.SyncChangeFeedTaskID, e.Error()))
+		} else {
+			node.Record(fmt.Sprintf("delete cdc task, upstream cluster = %s, relation type = %s, cdc task = %s", r.SubjectClusterID, r.RelationType, r.SyncChangeFeedTaskID))
+		}
+	}
+	return nil
+}
+
 // clearClusterPhysically
 // @Description: delete cluster physically, If you don't know why you should use it, then don't use it
 func clearClusterPhysically(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
@@ -1471,6 +1493,8 @@ func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
 	req := context.GetData(ContextTakeoverRequest).(cluster.TakeoverClusterReq)
 	clusterHome := fmt.Sprintf("%s/storage/cluster/clusters/%s/", req.TiUPPath, clusterMeta.Cluster.ID)
+
+	node.Record("try to get meta.yaml from " + clusterHome)
 
 	var sshClient *ssh.Client
 	var sftpClient *sftp.Client

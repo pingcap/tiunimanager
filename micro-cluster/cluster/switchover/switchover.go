@@ -614,6 +614,19 @@ func (m *Manager) createChangeFeedTask(ctx context.Context, task *cluster.Change
 		DownstreamType: task.DownstreamType,
 		Downstream:     task.Downstream,
 	}
+	{ //add default FilterRules and uniq
+		defaultFilterRules := []string{"*.*", "!__TiDB_BR_Temporary*.*"}
+		oldRulesM := make(map[string]bool)
+		for _, v := range req.FilterRules {
+			oldRulesM[v] = true
+		}
+		for _, v := range defaultFilterRules {
+			if oldRulesM[v] {
+			} else {
+				req.FilterRules = append(req.FilterRules, v)
+			}
+		}
+	}
 	resp, err := mgr.changefeedMgr.Create(ctx, req)
 	framework.LogWithContext(ctx).Infof("createChangeFeedTask clusterID:%s", task.ClusterID)
 	if err != nil {

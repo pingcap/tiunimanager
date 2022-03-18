@@ -491,8 +491,17 @@ func handleFillParamResult(ctx context.Context, reqConfigParams map[string]inter
 					break
 				}
 			}
-			// If integer or float type, compatible with scientific notation, e.g.: 1.048576e+07
 			if param.Type == int(Integer) || param.Type == int(Float) {
+				// If the value of the numeric type contains units, the units need to be converted to the int value of the base unit
+				for srcUnit, _ := range units {
+					if strings.HasSuffix(instValue, srcUnit) {
+						if cvtInstValue, ok := convertUnitValue([]string{srcUnit}, instValue); ok {
+							instValue = fmt.Sprintf("%d", cvtInstValue)
+							break
+						}
+					}
+				}
+				// If integer or float type, compatible with scientific notation, e.g.: 1.048576e+07
 				cvtInstValue, err := convertRealParameterType(ctx, param.Type, instValue)
 				if err != nil {
 					return err

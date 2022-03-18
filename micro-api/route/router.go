@@ -184,6 +184,9 @@ func Route(g *gin.Engine) {
 
 		metadata := apiV1.Group("/metadata")
 		{
+			cluster.Use(interceptor.SystemRunning)
+			cluster.Use(interceptor.VerifyIdentity)
+			cluster.Use(interceptor.AuditLog)
 			metadata.DELETE("/:clusterId", metrics.HandleMetrics(constants.MetricsMetadataDeletePhysically), clusterApi.DeleteMetaDataPhysically)
 		}
 

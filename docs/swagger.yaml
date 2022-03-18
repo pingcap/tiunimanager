@@ -466,6 +466,11 @@ definitions:
         type: boolean
       checkSlaveReadOnlyFlag:
         type: boolean
+      checkStandaloneClusterFlag:
+        description: |-
+          check if cluster specified in `SourceClusterID` is standalone, i.e. no cluster relation and no cdc
+          if this flag is true, always only check
+        type: boolean
       force:
         type: boolean
       onlyCheck:

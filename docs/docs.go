@@ -7586,6 +7586,10 @@ var doc = `{
                 "checkSlaveReadOnlyFlag": {
                     "type": "boolean"
                 },
+                "checkStandaloneClusterFlag": {
+                    "description": "check if cluster specified in ` + "`" + `SourceClusterID` + "`" + ` is standalone, i.e. no cluster relation and no cdc\nif this flag is true, always only check",
+                    "type": "boolean"
+                },
                 "force": {
                     "type": "boolean"
                 },

@@ -551,20 +551,26 @@ func (g *ClusterReadWrite) UpdateTopologySnapshotConfig(ctx context.Context, clu
 	return dbCommon.WrapDBError(g.DB(ctx).Save(snapshot).Error)
 }
 
-func (g *ClusterReadWrite) ClearClusterPhysically(ctx context.Context, clusterID string) error {
-	got, err := g.Get(ctx, clusterID)
-	if err != nil {
-		return err
-	}
-	err = g.DB(ctx).Unscoped().Delete(got).Error
-	if err != nil {
-		return dbCommon.WrapDBError(err)
-	}
-
-	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&ClusterInstance{}).Error
-	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&ClusterTopologySnapshot{}).Error
-	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&DBUser{}).Error
-
+func (g *ClusterReadWrite) ClearClusterPhysically(ctx context.Context, clusterID string, reason string) error {
+	err := g.DB(ctx).Transaction(func(tx *gorm.DB) error {
+		return errors.OfNullable(nil).BreakIf(func() error {
+			return g.DB(ctx).Unscoped().Where("id = ?", clusterID).Delete(&Cluster{}).Error
+		}).BreakIf(func() error {
+			return g.DB(ctx).Unscoped().Where("cluster_id = ?", clusterID).Delete(&ClusterInstance{}).Error
+		}).BreakIf(func() error {
+			return g.DB(ctx).Unscoped().Where("cluster_id = ?", clusterID).Delete(&ClusterTopologySnapshot{}).Error
+		}).BreakIf(func() error {
+			return g.DB(ctx).Unscoped().Where("cluster_id = ?", clusterID).Delete(&DBUser{}).Error
+		}).BreakIf(func() error {
+			return g.DB(ctx).Unscoped().Where("subject_cluster_id = ?", clusterID).Delete(&ClusterRelation{}).Error
+		}).BreakIf(func() error {
+			return g.DB(ctx).Unscoped().Where("object_cluster_id = ?", clusterID).Delete(&ClusterRelation{}).Error
+		}).If(func(err error) {
+			framework.LogWithContext(ctx).Errorf("clear cluster data physically failed, clusterId = %s, err = %s", clusterID, err.Error())
+		}).Else(func() {
+			framework.LogWithContext(ctx).Warnf("clear data of cluster %s physically, operatorId = %s, reason = %s", clusterID, framework.GetUserIDFromContext(ctx), reason)
+		}).Present()
+	})
 	return dbCommon.WrapDBError(err)
 }
 

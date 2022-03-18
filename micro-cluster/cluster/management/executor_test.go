@@ -1568,7 +1568,7 @@ func TestDeleteClusterPhysically(t *testing.T) {
 			Version: "v5.0.0",
 		},
 	})
-	err := clearClusterPhysically(&workflowModel.WorkFlowNode{}, flowContext)
+	err := takeoverRevertMeta(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.NoError(t, err)
 
 }

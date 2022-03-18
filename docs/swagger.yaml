@@ -228,6 +228,15 @@ definitions:
         description: Asynchronous task workflow ID
         type: string
     type: object
+  cluster.DeleteMetadataPhysicallyReq:
+    properties:
+      reason:
+        type: boolean
+    required:
+    - reason
+    type: object
+  cluster.DeleteMetadataPhysicallyResp:
+    type: object
   cluster.DetailChangeFeedTaskResp:
     properties:
       clusterId:
@@ -5054,6 +5063,52 @@ paths:
       summary: unused, just display downstream config
       tags:
       - change feed
+  /metadata/{clusterId}/:
+    delete:
+      consumes:
+      - application/json
+      description: for handling exceptions only
+      parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: delete request
+        in: body
+        name: deleteReq
+        schema:
+          $ref: '#/definitions/cluster.DeleteMetadataPhysicallyReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.DeleteMetadataPhysicallyResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: delete cluster metadata in this system physically, but keep the real
+        cluster alive
+      tags:
+      - cluster
   /param-groups/:
     get:
       consumes:

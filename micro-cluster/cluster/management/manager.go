@@ -652,12 +652,12 @@ var takeoverClusterFlow = workflow.WorkFlowDefine{
 		"built":                   {"testConnectivity", "testConnectivityPassed", "revert", workflow.SyncFuncNode, testConnectivity},
 		"testConnectivityPassed":  {"validateHostsStatus", "hostReady", "revert", workflow.SyncFuncNode, validateHostsStatus},
 		"hostReady":               {"takeoverResource", "resourceDone", "revert", workflow.SyncFuncNode, takeoverResource},
-		"resourceDone":            {"rebuildTiupSpaceForCluster", "workingSpaceDone", "fail", workflow.SyncFuncNode, rebuildTiupSpaceForCluster},
-		"workingSpaceDone":        {"applyParameterGroup", "applyParameterGroupDone", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroupForTakeover)},
-		"applyParameterGroupDone": {"initDatabaseAccount", "success", "fail", workflow.SyncFuncNode, initDatabaseAccount},
+		"resourceDone":            {"rebuildTiupSpaceForCluster", "workingSpaceDone", "revertWithResource", workflow.SyncFuncNode, rebuildTiupSpaceForCluster},
+		"workingSpaceDone":        {"applyParameterGroup", "applyParameterGroupDone", "revertWithResource", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroupForTakeover)},
+		"applyParameterGroupDone": {"initDatabaseAccount", "success", "revertWithResource", workflow.SyncFuncNode, initDatabaseAccount},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
-		"revert":                  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(clearClusterPhysically)},
+		"revert":                  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(takeoverRevertMeta)},
+		"revertWithResource":      {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, takeoverRevertMeta)},
 	},
 }
 
@@ -725,6 +725,10 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 
 	resp.ClusterID = meta.Cluster.ID
 	resp.WorkFlowID = flowID
+	return
+}
+
+func (p *Manager) DeleteMetadataPhysically(ctx context.Context, req cluster.DeleteMetadataPhysicallyReq) (resp cluster.DeleteMetadataPhysicallyResp, err error) {
 	return
 }
 

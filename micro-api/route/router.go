@@ -182,6 +182,11 @@ func Route(g *gin.Engine) {
 			cluster.POST("/:clusterId/upgrade", metrics.HandleMetrics(constants.MetricsClusterUpgrade), upgrade.Upgrade)
 		}
 
+		metadata := apiV1.Group("/metadata")
+		{
+			metadata.DELETE("/:clusterId", metrics.HandleMetrics(constants.MetricsMetadataDeletePhysically), clusterApi.DeleteMetaDataPhysically)
+		}
+
 		backup := apiV1.Group("/backups")
 		{
 			backup.Use(interceptor.SystemRunning)

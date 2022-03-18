@@ -116,6 +116,32 @@ func Delete(c *gin.Context) {
 	}
 }
 
+// DeleteMetaDataPhysically delete cluster metadata in this system physically, but keep the real cluster alive
+// @Summary delete cluster metadata in this system physically, but keep the real cluster alive
+// @Description for handling exceptions only
+// @Tags cluster
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
+// @Param deleteReq body cluster.DeleteMetadataPhysicallyReq false "delete request"
+// @Success 200 {object} controller.CommonResult{data=cluster.DeleteMetadataPhysicallyResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /metadata/{clusterId}/ [delete]
+func DeleteMetaDataPhysically(c *gin.Context) {
+	req := cluster.DeleteMetadataPhysicallyReq{
+		ClusterID: c.Param("clusterId"),
+	}
+
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteMetadataPhysically, &cluster.DeleteMetadataPhysicallyResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
 // Restart restart a cluster
 // @Summary restart a cluster
 // @Description restart a cluster

@@ -606,6 +606,7 @@ func setClusterOffline(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 // @Description: revert allocated resource after creating, scaling out
 func revertResourceAfterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	if context.GetData(ContextAllocResource) == nil {
+		node.Record("no allocated resource found")
 		framework.LogWithContext(context.Context).Infof(
 			"when recycle resource, not found alloc resource")
 		return nil
@@ -1217,11 +1218,11 @@ func clearCDCLinks(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 	return nil
 }
 
-// clearClusterPhysically
+// takeoverRevertMeta
 // @Description: delete cluster physically, If you don't know why you should use it, then don't use it
-func clearClusterPhysically(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+func takeoverRevertMeta(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
-	return clusterMeta.ClearClusterPhysically(context)
+	return clusterMeta.ClearClusterPhysically(context, "takeover failed")
 }
 
 // freedClusterResource
@@ -1735,6 +1736,7 @@ func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 			"cluster %s alloc resource error: %s", clusterMeta.Cluster.ID, err.Error())
 		return err
 	}
+	context.SetData(ContextAllocResource, allocResponse)
 
 	resourceResult := allocResponse.BatchResults[0]
 	clusterMeta.Cluster.Region = resourceResult.Results[0].Location.Region

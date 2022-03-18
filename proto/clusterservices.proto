@@ -15,6 +15,8 @@ service ClusterService {
     rpc ScaleInCluster(RpcRequest) returns (RpcResponse);
     rpc CloneCluster(RpcRequest) returns (RpcResponse);
 
+    rpc DeleteMetadataPhysically(RpcRequest) returns (RpcResponse);
+
     rpc PreviewCluster(RpcRequest) returns (RpcResponse);
     rpc PreviewScaleOutCluster(RpcRequest) returns (RpcResponse);
 

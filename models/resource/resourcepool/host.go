@@ -133,6 +133,32 @@ func (h *Host) AfterFind(tx *gorm.DB) (err error) {
 	return
 }
 
+func (h *Host) BeforeUpdate(tx *gorm.DB) (err error) {
+	if tx.Statement.Changed("IP") {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update ip on host %d is not allowed", h.ID)
+	}
+	if tx.Statement.Changed("FreeCpuCores", "FreeMemory") {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update free cpu cores or free memory on host %s is not allowed", h.ID)
+	}
+	if tx.Statement.Changed("DiskType", "Stat") {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update disk type or load stat on host %s is not allowed", h.ID)
+	}
+	if tx.Statement.Changed("Vendor", "Region", "AZ", "Rack") {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update vendor/region/zone/rack info on host %s is not allowed", h.ID)
+	}
+	return
+}
+
+func (h *Host) PrepareForUpdate(newHost *Host) (err error) {
+	h.prepareForUpdateName(newHost.HostName, newHost.IP)
+	h.prepareForUpdateLoginInfo(newHost.UserName, newHost.Passwd)
+	h.prepareForUpdateKernel(newHost.OS, newHost.Kernel)
+	h.prepareForUpdateNic(newHost.Nic)
+	h.prepareForUpdateSpec(newHost.CpuCores, newHost.Memory)
+	err = h.prepareForUpdatePurpose(newHost.Purpose)
+	return err
+}
+
 func (h *Host) ConstructFromHostInfo(src *structs.HostInfo) error {
 	h.HostName = src.HostName
 	h.IP = src.IP
@@ -248,4 +274,62 @@ func (h *Host) BuildDefaultTraits() (err error) {
 		return err
 	}
 	return nil
+}
+
+func (h *Host) prepareForUpdateName(hostName, ip string) {
+	if hostName != "" && hostName != h.HostName {
+		h.HostName = hostName
+	}
+	if ip != "" && ip != h.IP {
+		h.IP = ip
+	}
+}
+
+func (h *Host) prepareForUpdateLoginInfo(userName string, password common.Password) {
+	if userName != "" && userName != h.UserName {
+		h.UserName = userName
+	}
+	if password != "" && password != h.Passwd {
+		h.Passwd = password
+	}
+}
+
+func (h *Host) prepareForUpdateSpec(cpuCores, memory int32) {
+	if (cpuCores == 0 && memory == 0) || (cpuCores == h.CpuCores && memory == h.Memory) {
+		// no need to update
+		return
+	}
+	if cpuCores != 0 {
+		h.CpuCores = cpuCores
+	}
+	if memory != 0 {
+		h.Memory = memory
+	}
+	h.Spec = (&structs.HostInfo{CpuCores: h.CpuCores, Memory: h.Memory}).GetSpecString()
+}
+
+func (h *Host) prepareForUpdateKernel(os, kernel string) {
+	if os != "" && os != h.OS {
+		h.OS = os
+	}
+	if kernel != "" && kernel != h.Kernel {
+		h.Kernel = kernel
+	}
+}
+
+func (h *Host) prepareForUpdateNic(nic string) {
+	if nic != "" && nic != h.Nic {
+		h.Nic = nic
+	}
+}
+
+func (h *Host) prepareForUpdatePurpose(purpose string) error {
+	if purpose == "" || purpose == h.Purpose {
+		// no need to update
+		return nil
+	}
+	h.Purpose = purpose
+	// update traits number if purpose is updated
+	err := h.BuildDefaultTraits()
+	return err
 }

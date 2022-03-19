@@ -137,6 +137,9 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 				if host.Disks[i].Type == "" {
 					host.Disks[i].Type = host.DiskType
 				}
+				if err = host.Disks[i].ValidateDisk("", host.DiskType); err != nil {
+					return nil, err
+				}
 			}
 			hosts = append(hosts, host)
 		}

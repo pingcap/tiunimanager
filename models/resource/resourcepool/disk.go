@@ -16,9 +16,12 @@
 package resourcepool
 
 import (
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"errors"
 	"time"
 
+	"github.com/pingcap-inc/tiem/common/constants"
+	em_errors "github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"gorm.io/gorm"
 )
 
@@ -35,7 +38,76 @@ type Disk struct {
 	DeletedAt gorm.DeletedAt `json:"-"`
 }
 
+func (d Disk) IsInused() bool {
+	return d.Status == string(constants.DiskExhaust) || d.Status == string(constants.DiskInUsed)
+}
+
 func (d *Disk) BeforeCreate(tx *gorm.DB) (err error) {
 	d.ID = uuidutil.GenerateID()
+	return nil
+}
+
+func (d *Disk) BeforeDelete(tx *gorm.DB) (err error) {
+	err = tx.Where("ID = ?", d.ID).First(d).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_DELETE_DISK_ERROR, "disk %s is not found", d.ID)
+		}
+	} else {
+		if d.IsInused() {
+			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_HOST_STILL_INUSED, "disk %s is still in used", d.ID)
+		}
+	}
+
+	return err
+}
+
+func (d *Disk) BeforeUpdate(tx *gorm.DB) (err error) {
+	if tx.Statement.Changed("Path") {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "update path for disk %s is not allowed", d.ID)
+	}
+	if tx.Statement.Changed("Type") {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "update type for disk %s is not allowed", d.ID)
+	}
+	if tx.Statement.Changed("HostID") {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "update host id for disk %s is not allowed", d.ID)
+	}
+	return
+}
+
+func (d *Disk) PrepareForUpdate(newDisk *Disk) (err error) {
+	if newDisk.Name != "" && newDisk.Name != d.Name {
+		d.Name = newDisk.Name
+	}
+	if newDisk.Capacity != 0 && newDisk.Capacity != d.Capacity {
+		d.Capacity = newDisk.Capacity
+	}
+	if newDisk.Status != "" && newDisk.Status != d.Status {
+		d.Status = newDisk.Status
+	}
+	return nil
+}
+
+func (d *Disk) ValidateDisk(hostId string, hostDiskType string) (err error) {
+	if d.Name == "" || d.Path == "" || d.Capacity <= 0 {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%s) invalid",
+			hostId, d.Name, d.Path, d.Capacity)
+	}
+
+	if d.HostID != "" && d.HostID != hostId {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk %s %s failed, host id conflict %s vs %s",
+			d.Name, d.Path, d.HostID, hostId)
+	}
+
+	if d.Status != "" && !constants.DiskStatus(d.Status).IsValidStatus() {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk %s %s for host %s specified a invalid status %s, [Available|Reserved]",
+			d.Name, d.Path, hostId, d.Status)
+	}
+
+	if d.Type != "" && d.Type != hostDiskType {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk %s %s for host %s failed, disk type conflict %s vs %s",
+			d.Name, d.Path, hostId, d.Type, hostDiskType)
+	}
+
 	return nil
 }

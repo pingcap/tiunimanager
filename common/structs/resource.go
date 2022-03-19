@@ -31,6 +31,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 )
 
 func GenDomainCodeByName(pre string, name string) string {
@@ -136,6 +137,30 @@ func ParseMemory(specCode string) int {
 
 func GenSpecCode(cpuCores int32, mem int32) string {
 	return fmt.Sprintf("%dC%dG", cpuCores, mem)
+}
+
+func (d *DiskInfo) ValidateDisk(hostId string, hostDiskType string) (err error) {
+	if d.Name == "" || d.Path == "" || d.Capacity <= 0 {
+		return errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%s) invalid",
+			hostId, d.Name, d.Path, d.Capacity)
+	}
+
+	if d.HostId != "" && d.HostId != hostId {
+		return errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk %s %s failed, host id conflict %s vs %s",
+			d.Name, d.Path, d.HostId, hostId)
+	}
+
+	if d.Status != "" && !constants.DiskStatus(d.Status).IsValidStatus() {
+		return errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk %s %s for host %s specified a invalid status %s, [Available|Reserved]",
+			d.Name, d.Path, hostId, d.Status)
+	}
+
+	if d.Type != "" && d.Type != hostDiskType {
+		return errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk %s %s for host %s failed, disk type conflict %s vs %s",
+			d.Name, d.Path, hostId, d.Type, hostDiskType)
+	}
+
+	return nil
 }
 
 func (h *HostInfo) GetPurposes() []string {

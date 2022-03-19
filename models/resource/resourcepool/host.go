@@ -93,11 +93,11 @@ func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 func (h *Host) AfterCreate(tx *gorm.DB) (err error) {
-	for _, disk := range h.Disks {
-		disk.HostID = h.ID
-		err = tx.Create(&disk).Error
+	for i := range h.Disks {
+		h.Disks[i].HostID = h.ID
+		err = tx.Create(&(h.Disks[i])).Error
 		if err != nil {
-			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_CREATE_DISK_ERROR, "create disk %s for host %s(%s) failed, %v", disk.Name, h.HostName, h.IP, err)
+			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_CREATE_DISK_ERROR, "create disk %s for host %s(%s) failed, %v", h.Disks[i].Name, h.HostName, h.IP, err)
 		}
 	}
 	return nil
@@ -119,9 +119,16 @@ func (h *Host) BeforeDelete(tx *gorm.DB) (err error) {
 }
 
 func (h *Host) AfterDelete(tx *gorm.DB) (err error) {
-	err = tx.Where("host_id = ?", h.ID).Delete(&Disk{}).Error
+	var disks []Disk
+	err = tx.Find(&disks, "host_id = ?", h.ID).Error
 	if err != nil {
 		return
+	}
+	for i := range disks {
+		err = tx.Delete(&disks[i]).Error
+		if err != nil {
+			return
+		}
 	}
 	h.Status = string(constants.HostDeleted)
 	err = tx.Model(&h).Update("Status", h.Status).Error
@@ -135,7 +142,7 @@ func (h *Host) AfterFind(tx *gorm.DB) (err error) {
 
 func (h *Host) BeforeUpdate(tx *gorm.DB) (err error) {
 	if tx.Statement.Changed("IP") {
-		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update ip on host %d is not allowed", h.ID)
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update ip on host %s is not allowed", h.ID)
 	}
 	if tx.Statement.Changed("FreeCpuCores", "FreeMemory") {
 		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update free cpu cores or free memory on host %s is not allowed", h.ID)
@@ -261,6 +268,7 @@ func (h *Host) addTraits(p string) (err error) {
 }
 
 func (h *Host) BuildDefaultTraits() (err error) {
+	h.Traits = 0
 	if err := h.addTraits(h.ClusterType); err != nil {
 		return err
 	}

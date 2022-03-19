@@ -90,7 +90,7 @@ func (d *Disk) PrepareForUpdate(newDisk *Disk) (err error) {
 
 func (d *Disk) ValidateDisk(hostId string, hostDiskType string) (err error) {
 	if d.Name == "" || d.Path == "" || d.Capacity <= 0 {
-		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%s) invalid",
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
 			hostId, d.Name, d.Path, d.Capacity)
 	}
 

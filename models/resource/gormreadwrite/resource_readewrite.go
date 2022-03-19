@@ -220,12 +220,13 @@ func (rw *GormResourceReadWrite) UpdateHostInfo(ctx context.Context, host rp.Hos
 		tx.Rollback()
 		return errors.NewErrorf(errors.TIEM_SQL_ERROR, "get origin host info before update (%s) error, %v", originHost.ID, err)
 	}
-	err = (&originHost).PrepareForUpdate(&host)
+	patch := originHost
+	err = (&patch).PrepareForUpdate(&host)
 	if err != nil {
 		tx.Rollback()
 		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "prepare for update host %s %s failed, %v", originHost.HostName, originHost.IP, err)
 	}
-	result := tx.Model(&originHost).Updates(originHost)
+	result := tx.Model(&originHost).Omit("Reserved", "Status", "Stat").Updates(patch)
 	if result.Error != nil {
 		tx.Rollback()
 		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update host %s %s info failed, %v", originHost.HostName, originHost.IP, result.Error)
@@ -365,11 +366,12 @@ func (rw *GormResourceReadWrite) UpdateDisk(ctx context.Context, disk rp.Disk) (
 		tx.Rollback()
 		return errors.NewErrorf(errors.TIEM_SQL_ERROR, "get origin disk info before update (%s) error, %v", originDisk.ID, err)
 	}
-	if err = (&originDisk).PrepareForUpdate(&disk); err != nil {
+	patch := originDisk
+	if err = (&patch).PrepareForUpdate(&disk); err != nil {
 		tx.Rollback()
 		return err
 	}
-	result := tx.Model(&originDisk).Updates(originDisk)
+	result := tx.Model(&originDisk).Omit("HostID").Updates(patch)
 	if result.Error != nil {
 		tx.Rollback()
 		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "update disk %s %s info failed, %v", originDisk.Name, originDisk.Path, result.Error)

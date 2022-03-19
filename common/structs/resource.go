@@ -141,7 +141,7 @@ func GenSpecCode(cpuCores int32, mem int32) string {
 
 func (d *DiskInfo) ValidateDisk(hostId string, hostDiskType string) (err error) {
 	if d.Name == "" || d.Path == "" || d.Capacity <= 0 {
-		return errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%s) invalid",
+		return errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
 			hostId, d.Name, d.Path, d.Capacity)
 	}
 

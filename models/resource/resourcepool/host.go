@@ -147,8 +147,8 @@ func (h *Host) BeforeUpdate(tx *gorm.DB) (err error) {
 	if tx.Statement.Changed("FreeCpuCores", "FreeMemory") {
 		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update free cpu cores or free memory on host %s is not allowed", h.ID)
 	}
-	if tx.Statement.Changed("DiskType", "Stat") {
-		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update disk type or load stat on host %s is not allowed", h.ID)
+	if tx.Statement.Changed("DiskType", "Arch", "ClusterType", "Stat") {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update disk type or arch type or cluster type or load stat on host %s is not allowed", h.ID)
 	}
 	if tx.Statement.Changed("Vendor", "Region", "AZ", "Rack") {
 		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update vendor/region/zone/rack info on host %s is not allowed", h.ID)
@@ -159,9 +159,14 @@ func (h *Host) BeforeUpdate(tx *gorm.DB) (err error) {
 func (h *Host) PrepareForUpdate(newHost *Host) (err error) {
 	h.prepareForUpdateName(newHost.HostName, newHost.IP)
 	h.prepareForUpdateLoginInfo(newHost.UserName, newHost.Passwd)
+	h.prepareForUpdateLocation(newHost.Region, newHost.AZ, newHost.Rack)
 	h.prepareForUpdateKernel(newHost.OS, newHost.Kernel)
 	h.prepareForUpdateNic(newHost.Nic)
 	h.prepareForUpdateSpec(newHost.CpuCores, newHost.Memory)
+	err = h.prepareForUpdateType(newHost.Arch, newHost.DiskType, newHost.ClusterType)
+	if err != nil {
+		return err
+	}
 	err = h.prepareForUpdatePurpose(newHost.Purpose)
 	return err
 }
@@ -340,4 +345,30 @@ func (h *Host) prepareForUpdatePurpose(purpose string) error {
 	// update traits number if purpose is updated
 	err := h.BuildDefaultTraits()
 	return err
+}
+
+// update region/zone/rack is not allowed by now, and it will be terminated in update hook
+func (h *Host) prepareForUpdateLocation(region, zone, rack string) {
+	if region != "" && region != h.Region {
+		h.Region = region
+	}
+	if zone != "" && zone != h.AZ {
+		h.AZ = zone
+	}
+	if rack != "" && rack != h.Rack {
+		h.Rack = rack
+	}
+}
+
+func (h *Host) prepareForUpdateType(arch, diskType, clusterType string) (err error) {
+	if arch != "" && arch != h.Arch {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update arch on host %s is not allowed", h.ID)
+	}
+	if diskType != "" && diskType != h.DiskType {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update disk type on host %s is not allowed", h.ID)
+	}
+	if clusterType != "" && clusterType != h.ClusterType {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update cluster type on host %s is not allowed", h.ID)
+	}
+	return nil
 }

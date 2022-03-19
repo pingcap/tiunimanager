@@ -992,3 +992,92 @@ func TestAllocResources_Request3Count_SpecifyHost_Strategy(t *testing.T) {
 	err = GormRW.Delete(context.TODO(), id3)
 	assert.Nil(t, err)
 }
+
+func Test_Update_Host(t *testing.T) {
+	id1, err := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
+	assert.Nil(t, err)
+	h := resourcepool.Host{
+		ID:       id1[0],
+		HostName: "NewHostName",
+		IP:       "192.168.192.168", // omit by update
+		UserName: "root",
+		Passwd:   "admin4",
+		Status:   string(constants.HostOffline),            // omit by update info api
+		Stat:     string(constants.HostLoadComputeExhaust), // omit by update
+		Arch:     string(constants.ArchX8664),              // omit by update
+		OS:       "Ubuntu",
+		Kernel:   "5.2.0",
+		CpuCores: 40,
+		Memory:   40,
+		Nic:      "10GE",
+		Purpose:  fmt.Sprintf("%s,%s", string(constants.PurposeSchedule), string(constants.PurposeStorage)),
+	}
+	err = GormRW.UpdateHostInfo(context.TODO(), h)
+	assert.Nil(t, err)
+	hosts, total, err := GormRW.Query(context.TODO(), &structs.Location{}, &structs.HostFilter{HostID: id1[0]}, 0, 3)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(hosts))
+	assert.Equal(t, int64(1), total)
+
+	assert.Equal(t, "NewHostName", hosts[0].HostName)
+	assert.Equal(t, "admin4", string(hosts[0].Passwd))
+	assert.Equal(t, "192.168.192.168", hosts[0].IP)
+	assert.Equal(t, "40C40G", hosts[0].Spec)
+	assert.Equal(t, fmt.Sprintf("%s,%s", string(constants.PurposeSchedule), string(constants.PurposeStorage)), hosts[0].Purpose)
+	assert.Equal(t, int64(177), hosts[0].Traits)
+	assert.Equal(t, "Ubuntu", hosts[0].OS)
+	assert.Equal(t, "5.2.0", hosts[0].Kernel)
+	assert.Equal(t, int32(40), hosts[0].CpuCores)
+	assert.Equal(t, int32(40), hosts[0].Memory)
+	assert.Equal(t, "10GE", hosts[0].Nic)
+
+	h.Region = "TEST_REGION_X"
+	err = GormRW.UpdateHostInfo(context.TODO(), h)
+	assert.NotNil(t, err)
+	h.Region = ""
+
+	h.DiskType = string(constants.SATA)
+	err = GormRW.UpdateHostInfo(context.TODO(), h)
+	assert.NotNil(t, err)
+	h.DiskType = ""
+
+	h.Arch = string(constants.ArchArm64)
+	err = GormRW.UpdateHostInfo(context.TODO(), h)
+	assert.NotNil(t, err)
+	h.Arch = ""
+}
+
+func Test_CreateDisk(t *testing.T) {
+	id1, err := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
+	assert.Nil(t, err)
+
+	disk := resourcepool.Disk{
+		Name:     "sdk",
+		Path:     "/mnt/sdk",
+		Type:     string(constants.SSD),
+		Capacity: 256,
+		Status:   string(constants.DiskAvailable),
+	}
+
+	diskIds, err := GormRW.CreateDisks(context.TODO(), id1[0], []resourcepool.Disk{disk})
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(diskIds))
+
+	hosts, total, err := GormRW.Query(context.TODO(), &structs.Location{}, &structs.HostFilter{HostID: id1[0]}, 0, 3)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(hosts))
+	assert.Equal(t, int64(1), total)
+	assert.Equal(t, 4, len(hosts[0].Disks))
+	for i := range hosts[0].Disks {
+		if hosts[0].Disks[i].ID == diskIds[0] {
+			assert.Equal(t, id1[0], hosts[0].Disks[i].HostID)
+			assert.Equal(t, "sdk", hosts[0].Disks[i].Name)
+			assert.Equal(t, "/mnt/sdk", hosts[0].Disks[i].Path)
+			break
+		}
+	}
+}

@@ -240,7 +240,7 @@ func Test_UpdateHost(t *testing.T) {
 
 	err = db.Model(&Host{ID: hostId}).Update("disk_type", string(constants.SSD)).Error
 	assert.NotNil(t, err)
-	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update disk type or load stat on host %s is not allowed", hostId).GetMsg())
+	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update disk type or arch type or cluster type or load stat on host %s is not allowed", hostId).GetMsg())
 
 	err = db.Model(&Host{ID: hostId}).Update("region", "NewRegion").Error
 	assert.NotNil(t, err)

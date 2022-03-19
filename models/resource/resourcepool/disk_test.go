@@ -22,7 +22,6 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
-	em_errors "github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"github.com/stretchr/testify/assert"
 )
@@ -50,12 +49,12 @@ func Test_UpdateDisk(t *testing.T) {
 
 	err = db.Delete(&Disk{ID: host.Disks[2].ID}).Error
 	assert.NotNil(t, err)
-	assert.Equal(t, em_errors.NewErrorf(em_errors.TIEM_RESOURCE_HOST_STILL_INUSED, "disk %s is still in used", host.Disks[2].ID).GetMsg(), err.(errors.EMError).GetMsg())
+	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_HOST_STILL_INUSED, "disk %s is still in used", host.Disks[2].ID).GetMsg(), err.(errors.EMError).GetMsg())
 
 	newDisk := Disk{Name: "sdg", Path: "/mnt/sdg"}
 	err = db.Model(&(host.Disks[2])).Updates(newDisk).Error
 	assert.NotNil(t, err)
-	assert.Equal(t, em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "update path for disk %s is not allowed", host.Disks[2].ID).GetMsg(), err.(em_errors.EMError).GetMsg())
+	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "update path for disk %s is not allowed", host.Disks[2].ID).GetMsg(), err.(errors.EMError).GetMsg())
 
 	newDisk = Disk{Name: "sdg", Status: string(constants.DiskError)}
 	err = db.Model(&(host.Disks[2])).Updates(newDisk).Error
@@ -80,6 +79,28 @@ func Test_UpdateDisk(t *testing.T) {
 	err = db.Find(&disks, "host_id = ?", host.ID).Error
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(disks))
+}
+
+func Test_PrepareForUpdate(t *testing.T) {
+	disk1 := Disk{
+		Name:     "sdk",
+		Path:     "/mnt/sdk",
+		Type:     string(constants.NVMeSSD),
+		Capacity: 256,
+		Status:   string(constants.DiskExhaust),
+	}
+	disk2 := Disk{
+		Name:     "sdz",
+		Path:     "/mnt/sdz",
+		Type:     string(constants.NVMeSSD),
+		Capacity: 512,
+		Status:   string(constants.DiskError),
+	}
+	err := disk1.PrepareForUpdate(&disk2)
+	assert.Nil(t, err)
+	assert.Equal(t, "sdz", disk1.Name)
+	assert.Equal(t, int32(512), disk1.Capacity)
+	assert.Equal(t, string(constants.DiskError), disk1.Status)
 }
 
 func Test_ValidateDisk(t *testing.T) {

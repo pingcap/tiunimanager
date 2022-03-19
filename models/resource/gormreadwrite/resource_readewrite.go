@@ -310,8 +310,9 @@ func (rw *GormResourceReadWrite) CreateDisks(ctx context.Context, hostId string,
 	tx := rw.DB(ctx).Begin()
 	var total int64
 	var host rp.Host
+	host.ID = hostId
 	// get host info
-	err = tx.Where("id = ?", hostId).Count(&total).First(&host).Error
+	err = tx.Model(&host).First(&host).Count(&total).Error
 	if err != nil || total == 0 {
 		tx.Rollback()
 		return nil, errors.NewErrorf(errors.TIEM_RESOURCE_HOST_NOT_FOUND, "query host(%d) %s failed before creating disks, %v", total, hostId, err)

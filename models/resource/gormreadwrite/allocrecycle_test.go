@@ -1081,3 +1081,72 @@ func Test_CreateDisk(t *testing.T) {
 		}
 	}
 }
+
+func Test_DeleteDisk(t *testing.T) {
+	id1, err := createTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
+		string(constants.EMProductIDTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
+	assert.Nil(t, err)
+
+	disk := resourcepool.Disk{
+		Name:     "sdk",
+		Path:     "/mnt/sdk",
+		Type:     string(constants.SSD),
+		Capacity: 256,
+		Status:   string(constants.DiskExhaust),
+	}
+
+	diskIds, err := GormRW.CreateDisks(context.TODO(), id1[0], []resourcepool.Disk{disk})
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(diskIds))
+
+	hosts, total, err := GormRW.Query(context.TODO(), &structs.Location{}, &structs.HostFilter{HostID: id1[0]}, 0, 3)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(hosts))
+	assert.Equal(t, int64(1), total)
+	assert.Equal(t, 4, len(hosts[0].Disks))
+	for i := range hosts[0].Disks {
+		if hosts[0].Disks[i].ID == diskIds[0] {
+			assert.Equal(t, id1[0], hosts[0].Disks[i].HostID)
+			assert.Equal(t, "sdk", hosts[0].Disks[i].Name)
+			assert.Equal(t, "/mnt/sdk", hosts[0].Disks[i].Path)
+			assert.Equal(t, string(constants.DiskExhaust), hosts[0].Disks[i].Status)
+			break
+		}
+	}
+
+	// can not delete a inusing disk
+	err = GormRW.DeleteDisks(context.TODO(), diskIds)
+	assert.NotNil(t, err)
+	assert.Equal(t, errors.TIEM_RESOURCE_DELETE_DISK_ERROR, err.(errors.EMError).GetCode())
+
+	disk.Status = string(constants.DiskAvailable)
+	disk.ID = diskIds[0]
+	err = GormRW.UpdateDisk(context.TODO(), disk)
+	assert.NotNil(t, err)
+	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "disk status %s is not supported for update, only support set to %s by now",
+		disk.Status, string(constants.DiskError)).GetMsg(), err.(errors.EMError).GetMsg())
+
+	disk.Status = string(constants.DiskError)
+	err = GormRW.UpdateDisk(context.TODO(), disk)
+	assert.Nil(t, err)
+
+	hosts, _, err = GormRW.Query(context.TODO(), &structs.Location{}, &structs.HostFilter{HostID: id1[0]}, 0, 3)
+	assert.Nil(t, err)
+	assert.Equal(t, 4, len(hosts[0].Disks))
+	for i := range hosts[0].Disks {
+		if hosts[0].Disks[i].ID == diskIds[0] {
+			assert.Equal(t, id1[0], hosts[0].Disks[i].HostID)
+			assert.Equal(t, string(constants.DiskError), hosts[0].Disks[i].Status)
+			break
+		}
+	}
+
+	// delete a failed disk
+	err = GormRW.DeleteDisks(context.TODO(), diskIds)
+	assert.Nil(t, err)
+
+	hosts, _, err = GormRW.Query(context.TODO(), &structs.Location{}, &structs.HostFilter{HostID: id1[0]}, 0, 3)
+	assert.Nil(t, err)
+	assert.Equal(t, 3, len(hosts[0].Disks))
+}

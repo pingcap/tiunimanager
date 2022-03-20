@@ -139,6 +139,10 @@ const (
 	MetricsResourceImportHosts              MetricsType = "resource/import_host"
 	MetricsResourceDeleteHost               MetricsType = "resource/delete_host"
 	MetricsResourceQueryHosts               MetricsType = "resource/query"
+	MetricsResourceUpdateHost               MetricsType = "resource/update_host"
+	MetricsResourceCreateDisks              MetricsType = "resource/create_disk"
+	MetricsResourceDeleteDisks              MetricsType = "resource/delete_disk"
+	MetricsResourceUpdateDisk               MetricsType = "resource/update_disk"
 
 	// MetricsProductUpdate define product metrics
 	MetricsProductUpdate         MetricsType = "product/update_products"
@@ -222,6 +226,10 @@ var EMMetrics = []MetricsType{
 	MetricsResourceDeleteHost,
 	MetricsResourceQueryHosts,
 	MetricsResourceReservedHost,
+	MetricsResourceUpdateHost,
+	MetricsResourceCreateDisks,
+	MetricsResourceDeleteDisks,
+	MetricsResourceUpdateDisk,
 
 	// define product metrics
 	MetricsProductUpdate,

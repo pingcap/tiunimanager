@@ -61,6 +61,10 @@ service ClusterService {
     rpc UpdateHostStatus(RpcRequest) returns (RpcResponse);
     rpc GetHierarchy(RpcRequest) returns (RpcResponse);
     rpc GetStocks(RpcRequest) returns (RpcResponse);
+    rpc UpdateHostInfo(RpcRequest) returns (RpcResponse);
+    rpc CreateDisks(RpcRequest) returns (RpcResponse);
+    rpc DeleteDisks(RpcRequest) returns (RpcResponse);
+    rpc UpdateDisk(RpcRequest) returns (RpcResponse);
 
     // workflow
     rpc ListFlows(RpcRequest) returns (RpcResponse);

@@ -1193,13 +1193,80 @@ func (handler *ClusterServiceHandler) UpdateHostReserved(ctx context.Context, re
 func (handler *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "UpdateHostStatus", int(resp.GetCode()))
-	defer handlePanic(ctx, "UpdateHostReserved", resp)
+	defer handlePanic(ctx, "UpdateHostStatus", resp)
 
 	reqStruct := message.UpdateHostStatusReq{}
 
 	if handleRequest(ctx, req, resp, &reqStruct, []structs.RbacPermission{{Resource: string(constants.RbacResourceResource), Action: string(constants.RbacActionUpdate)}}) {
 		err := handler.resourceManager.UpdateHostStatus(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.HostIDs, reqStruct.Status)
 		var rsp message.UpdateHostStatusResp
+		handleResponse(ctx, resp, err, rsp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) UpdateHostInfo(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "UpdateHostInfo", int(resp.GetCode()))
+	defer handlePanic(ctx, "UpdateHostInfo", resp)
+
+	reqStruct := message.UpdateHostInfoReq{}
+
+	if handleRequest(ctx, req, resp, &reqStruct, []structs.RbacPermission{{Resource: string(constants.RbacResourceResource), Action: string(constants.RbacActionUpdate)}}) {
+		err := handler.resourceManager.UpdateHostInfo(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.NewHostInfo)
+		var rsp message.UpdateHostInfoResp
+		handleResponse(ctx, resp, err, rsp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) CreateDisks(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "CreateDisks", int(resp.GetCode()))
+	defer handlePanic(ctx, "CreateDisks", resp)
+
+	reqStruct := message.CreateDisksReq{}
+
+	if handleRequest(ctx, req, resp, &reqStruct, []structs.RbacPermission{{Resource: string(constants.RbacResourceResource), Action: string(constants.RbacActionUpdate)}}) {
+		diskIds, err := handler.resourceManager.CreateDisks(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.HostID, reqStruct.Disks)
+		var rsp message.CreateDisksResp
+		if err == nil {
+			rsp.DiskIDs = diskIds
+		}
+		handleResponse(ctx, resp, err, rsp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) DeleteDisks(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "DeleteDisks", int(resp.GetCode()))
+	defer handlePanic(ctx, "DeleteDisks", resp)
+
+	reqStruct := message.DeleteDisksReq{}
+
+	if handleRequest(ctx, req, resp, &reqStruct, []structs.RbacPermission{{Resource: string(constants.RbacResourceResource), Action: string(constants.RbacActionUpdate)}}) {
+		err := handler.resourceManager.DeleteDisks(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.DiskIDs)
+		var rsp message.DeleteDisksResp
+		handleResponse(ctx, resp, err, rsp, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) UpdateDisk(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "UpdateDisk", int(resp.GetCode()))
+	defer handlePanic(ctx, "UpdateDisk", resp)
+
+	reqStruct := message.UpdateDiskReq{}
+
+	if handleRequest(ctx, req, resp, &reqStruct, []structs.RbacPermission{{Resource: string(constants.RbacResourceResource), Action: string(constants.RbacActionUpdate)}}) {
+		err := handler.resourceManager.UpdateDisk(framework.NewBackgroundMicroCtx(ctx, false), reqStruct.NewDiskInfo)
+		var rsp message.UpdateDiskResp
 		handleResponse(ctx, resp, err, rsp, nil)
 	}
 

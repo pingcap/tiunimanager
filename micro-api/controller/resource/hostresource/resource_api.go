@@ -365,3 +365,107 @@ func UpdateHostStatus(c *gin.Context) {
 			controller.DefaultTimeout)
 	}
 }
+
+// UpdateHost godoc
+// @Summary Update host info
+// @Description update host information
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param updateReq body message.UpdateHostInfoReq true "update host information"
+// @Success 200 {object} controller.CommonResult{data=message.UpdateHostInfoResp}
+// @Router /resources/host [put]
+func UpdateHost(c *gin.Context) {
+	var req message.UpdateHostInfoReq
+
+	requestBody, ok := controller.HandleJsonRequestFromBody(c, &req)
+	if ok {
+		if req.NewHostInfo.ID == "" {
+			setGinContextForInvalidParam(c, "host id should be specified")
+			return
+		}
+
+		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateHostInfo, &message.UpdateHostInfoResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// CreateDisks godoc
+// @Summary Add disks to the specified host
+// @Description add disks to the specified host
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param createDisksReq body message.CreateDisksReq true "specify the hostId and disks"
+// @Success 200 {object} controller.CommonResult{data=message.CreateDisksResp}
+// @Router /resources/disks [post]
+func CreateDisks(c *gin.Context) {
+	var req message.CreateDisksReq
+
+	requestBody, ok := controller.HandleJsonRequestFromBody(c, &req)
+	if ok {
+		if req.HostID == "" {
+			setGinContextForInvalidParam(c, "host id should be specified")
+			return
+		}
+
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateDisks, &message.CreateDisksResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// RemoveDisks godoc
+// @Summary Remove a batch of disks
+// @Description remove disks by a list
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param diskIds body message.DeleteDisksReq true "list of disk IDs"
+// @Success 200 {object} controller.CommonResult{data=message.DeleteDisksResp}
+// @Router /resources/disks [delete]
+func RemoveDisks(c *gin.Context) {
+	var req message.DeleteDisksReq
+
+	requestBody, ok := controller.HandleJsonRequestFromBody(c, &req)
+	if ok {
+		if str, dup := detectDuplicateElement(req.DiskIDs); dup {
+			setGinContextForInvalidParam(c, str+" is duplicated in request")
+			return
+		}
+
+		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteDisks, &message.DeleteDisksResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// UpdateDisk godoc
+// @Summary Update disk info
+// @Description update disk information
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param updateReq body message.UpdateDiskReq true "update disk information"
+// @Success 200 {object} controller.CommonResult{data=message.UpdateDiskResp}
+// @Router /resources/disk [put]
+func UpdateDisk(c *gin.Context) {
+	var req message.UpdateDiskReq
+
+	requestBody, ok := controller.HandleJsonRequestFromBody(c, &req)
+	if ok {
+		if req.NewDiskInfo.ID == "" {
+			setGinContextForInvalidParam(c, "disk id should be specified")
+			return
+		}
+
+		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateDisk, &message.UpdateDiskResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}

@@ -372,7 +372,7 @@ func (rw *GormResourceReadWrite) UpdateDisk(ctx context.Context, disk rp.Disk) (
 		tx.Rollback()
 		return err
 	}
-	result := tx.Model(&originDisk).Omit("HostID").Updates(patch)
+	result := tx.Model(&originDisk).Updates(patch)
 	if result.Error != nil {
 		tx.Rollback()
 		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "update disk %s %s info failed, %v", originDisk.Name, originDisk.Path, result.Error)

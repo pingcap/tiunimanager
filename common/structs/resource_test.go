@@ -36,6 +36,7 @@ func Test_GenDomainCodeByName(t *testing.T) {
 		{"ZoneCode", "Test_Region1", "Test_Zone1", want{"Test_Region1,Test_Zone1"}},
 		{"RackCode", "Test_Region1,Test_Zone1", "Test_Rack1", want{"Test_Region1,Test_Zone1,Test_Rack1"}},
 		{"IpCode", "Test_Host1", "192.168.168.168", want{"Test_Host1,192.168.168.168"}},
+		{"Empty", "", "", want{""}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {

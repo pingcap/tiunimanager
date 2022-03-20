@@ -159,7 +159,7 @@ func (h *Host) BeforeUpdate(tx *gorm.DB) (err error) {
 func (h *Host) PrepareForUpdate(newHost *Host) (err error) {
 	h.prepareForUpdateName(newHost.HostName, newHost.IP)
 	h.prepareForUpdateLoginInfo(newHost.UserName, newHost.Passwd)
-	h.prepareForUpdateLocation(newHost.Region, newHost.AZ, newHost.Rack)
+	h.prepareForUpdateLocation(newHost.Vendor, newHost.Region, newHost.AZ, newHost.Rack)
 	h.prepareForUpdateKernel(newHost.OS, newHost.Kernel)
 	h.prepareForUpdateNic(newHost.Nic)
 	h.prepareForUpdateSpec(newHost.CpuCores, newHost.Memory)
@@ -339,7 +339,10 @@ func (h *Host) prepareForUpdatePurpose(purpose string) error {
 }
 
 // update region/zone/rack is not allowed by now, and it will be terminated in update hook
-func (h *Host) prepareForUpdateLocation(region, zone, rack string) {
+func (h *Host) prepareForUpdateLocation(vendor, region, zone, rack string) {
+	if vendor != "" && vendor != h.Vendor {
+		h.Vendor = vendor
+	}
 	if region != "" && region != h.Region {
 		h.Region = region
 	}

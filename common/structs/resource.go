@@ -35,6 +35,9 @@ import (
 )
 
 func GenDomainCodeByName(pre string, name string) string {
+	if pre == "" && name == "" {
+		return ""
+	}
 	return fmt.Sprintf("%s,%s", pre, name)
 }
 

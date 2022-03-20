@@ -77,6 +77,15 @@ func (d *Disk) BeforeUpdate(tx *gorm.DB) (err error) {
 }
 
 func (d *Disk) PrepareForUpdate(newDisk *Disk) (err error) {
+	if newDisk.HostID != "" && newDisk.HostID != d.HostID {
+		d.HostID = newDisk.HostID
+	}
+	if newDisk.Path != "" && newDisk.Path != d.Path {
+		d.Path = newDisk.Path
+	}
+	if newDisk.Type != "" && newDisk.Type != d.Type {
+		d.Type = newDisk.Type
+	}
 	if newDisk.Name != "" && newDisk.Name != d.Name {
 		d.Name = newDisk.Name
 	}

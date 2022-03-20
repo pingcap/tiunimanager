@@ -1100,6 +1100,22 @@ definitions:
         example: "1"
         type: string
     type: object
+  message.CreateDisksReq:
+    properties:
+      disks:
+        items:
+          $ref: '#/definitions/structs.DiskInfo'
+        type: array
+      hostId:
+        type: string
+    type: object
+  message.CreateDisksResp:
+    properties:
+      diskIds:
+        items:
+          type: string
+        type: array
+    type: object
   message.CreateParameterGroupReq:
     properties:
       addParams:
@@ -1266,6 +1282,15 @@ definitions:
       workFlowId:
         description: Asynchronous task workflow ID
         type: string
+    type: object
+  message.DeleteDisksReq:
+    properties:
+      diskIds:
+        items:
+          type: string
+        type: array
+    type: object
+  message.DeleteDisksResp:
     type: object
   message.DeleteHostsReq:
     properties:
@@ -1752,6 +1777,20 @@ definitions:
         type: string
     type: object
   message.UnbindRoleForUserResp:
+    type: object
+  message.UpdateDiskReq:
+    properties:
+      newDiskInfo:
+        $ref: '#/definitions/structs.DiskInfo'
+    type: object
+  message.UpdateDiskResp:
+    type: object
+  message.UpdateHostInfoReq:
+    properties:
+      newHostInfo:
+        $ref: '#/definitions/structs.HostInfo'
+    type: object
+  message.UpdateHostInfoResp:
     type: object
   message.UpdateHostReservedReq:
     properties:
@@ -6155,6 +6194,92 @@ paths:
       summary: unbind rbac role from user
       tags:
       - rbac UnbindRoleForUser
+  /resources/disk:
+    put:
+      consumes:
+      - application/json
+      description: update disk information
+      parameters:
+      - description: update disk information
+        in: body
+        name: updateReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateDiskReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateDiskResp'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update disk info
+      tags:
+      - resource
+  /resources/disks:
+    delete:
+      consumes:
+      - application/json
+      description: remove disks by a list
+      parameters:
+      - description: list of disk IDs
+        in: body
+        name: diskIds
+        required: true
+        schema:
+          $ref: '#/definitions/message.DeleteDisksReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.DeleteDisksResp'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Remove a batch of disks
+      tags:
+      - resource
+    post:
+      consumes:
+      - application/json
+      description: add disks to the specified host
+      parameters:
+      - description: specify the hostId and disks
+        in: body
+        name: createDisksReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.CreateDisksReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.CreateDisksResp'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Add disks to the specified host
+      tags:
+      - resource
   /resources/hierarchy:
     get:
       consumes:
@@ -6198,6 +6323,35 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Show the resources hierarchy
+      tags:
+      - resource
+  /resources/host:
+    put:
+      consumes:
+      - application/json
+      description: update host information
+      parameters:
+      - description: update host information
+        in: body
+        name: updateReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateHostInfoReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateHostInfoResp'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update host info
       tags:
       - resource
   /resources/host-reserved:

@@ -21,6 +21,7 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	em_errors "github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"gorm.io/gorm"
 )
@@ -110,4 +111,22 @@ func (d *Disk) ValidateDisk(hostId string, hostDiskType string) (err error) {
 	}
 
 	return nil
+}
+
+func (d *Disk) ConstructFromDiskInfo(src *structs.DiskInfo) {
+	d.HostID = src.HostId
+	d.Name = src.Name
+	d.Path = src.Path
+	d.Capacity = src.Capacity
+	d.Status = src.Status
+	d.Type = src.Type
+}
+
+func (d *Disk) ToDiskInfo(dst *structs.DiskInfo) {
+	dst.ID = d.ID
+	dst.Name = d.Name
+	dst.Path = d.Path
+	dst.Capacity = d.Capacity
+	dst.Status = d.Status
+	dst.Type = d.Type
 }

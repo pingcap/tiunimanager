@@ -197,13 +197,9 @@ func (h *Host) ConstructFromHostInfo(src *structs.HostInfo) error {
 	h.Reserved = src.Reserved
 	h.Traits = src.Traits
 	for _, disk := range src.Disks {
-		h.Disks = append(h.Disks, Disk{
-			Name:     disk.Name,
-			Path:     disk.Path,
-			Capacity: disk.Capacity,
-			Status:   disk.Status,
-			Type:     disk.Type,
-		})
+		var dbDisk Disk
+		dbDisk.ConstructFromDiskInfo(&disk)
+		h.Disks = append(h.Disks, dbDisk)
 	}
 	return nil
 }
@@ -237,14 +233,9 @@ func (h *Host) ToHostInfo(dst *structs.HostInfo) {
 
 	dst.AvailableDiskCount = 0
 	for _, disk := range h.Disks {
-		dst.Disks = append(dst.Disks, structs.DiskInfo{
-			ID:       disk.ID,
-			Name:     disk.Name,
-			Path:     disk.Path,
-			Capacity: disk.Capacity,
-			Status:   disk.Status,
-			Type:     disk.Type,
-		})
+		var diskInfo structs.DiskInfo
+		disk.ToDiskInfo(&diskInfo)
+		dst.Disks = append(dst.Disks, diskInfo)
 		if disk.Status == string(constants.DiskAvailable) {
 			dst.AvailableDiskCount++
 		}

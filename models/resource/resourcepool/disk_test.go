@@ -22,6 +22,7 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/util/uuidutil"
 	"github.com/stretchr/testify/assert"
 )
@@ -157,4 +158,41 @@ func Test_ValidateDisk(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_ConstructFromDiskInfo(t *testing.T) {
+	diskInfo := structs.DiskInfo{
+		Name:     "sdx",
+		Path:     "/mnt/sdx",
+		Capacity: 1024,
+		Status:   string(constants.DiskReserved),
+		Type:     string(constants.SATA),
+	}
+
+	var dbDisk Disk
+	dbDisk.ConstructFromDiskInfo(&diskInfo)
+	assert.Equal(t, "sdx", dbDisk.Name)
+	assert.Equal(t, "/mnt/sdx", dbDisk.Path)
+	assert.Equal(t, int32(1024), dbDisk.Capacity)
+	assert.Equal(t, string(constants.DiskReserved), dbDisk.Status)
+	assert.Equal(t, string(constants.SATA), dbDisk.Type)
+}
+
+func TEST_ToDiskInfo(t *testing.T) {
+	var dbDisk Disk = Disk{
+		ID:       "disk-id",
+		Name:     "sdx",
+		Path:     "/mnt/sdx",
+		Capacity: 1024,
+		Status:   string(constants.DiskReserved),
+		Type:     string(constants.SATA),
+	}
+	var diskInfo structs.DiskInfo
+	dbDisk.ToDiskInfo(&diskInfo)
+	assert.Equal(t, "disk-id", diskInfo.ID)
+	assert.Equal(t, "sdx", diskInfo.Name)
+	assert.Equal(t, "/mnt/sdx", diskInfo.Path)
+	assert.Equal(t, int32(1024), diskInfo.Capacity)
+	assert.Equal(t, string(constants.DiskReserved), diskInfo.Status)
+	assert.Equal(t, string(constants.SATA), diskInfo.Type)
 }

@@ -612,3 +612,64 @@ func Test_RecycleResources_Succeed(t *testing.T) {
 	err := resourceManager.RecycleResources(context.TODO(), &req)
 	assert.Nil(t, err)
 }
+
+func Test_UpdateHostInfo(t *testing.T) {
+	fake_hostId1 := "xxxx-xxxx-yyyy-yyyy"
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_resource.NewMockReaderWriter(ctrl)
+	host1 := genHostInfo("TEST_HOST1")
+	mockClient.EXPECT().UpdateHostInfo(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, host resourcepool.Host) error {
+		if host.ID == fake_hostId1 {
+			return nil
+		} else {
+			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+		}
+	})
+	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
+	file_hostprovider, ok := (hostprovider).(*(host_provider.FileHostProvider))
+	assert.True(t, ok)
+	file_hostprovider.SetResourceReaderWriter(mockClient)
+
+	err := resourceManager.UpdateHostInfo(context.TODO(), *host1)
+	assert.NotNil(t, err)
+	assert.Equal(t, errors.NewError(errors.TIEM_PARAMETER_INVALID, "update host failed without host id").GetMsg(), err.(errors.EMError).GetMsg())
+
+	host1.ID = fake_hostId1
+	err = resourceManager.UpdateHostInfo(context.TODO(), *host1)
+	assert.Nil(t, err)
+}
+
+func Test_CUD_Disk(t *testing.T) {
+	fake_hostId1 := "xxxx-xxxx-yyyy-yyyy"
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_resource.NewMockReaderWriter(ctrl)
+
+	mockClient.EXPECT().CreateDisks(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
+	mockClient.EXPECT().DeleteDisks(gomock.Any(), gomock.Any()).Return(nil)
+	mockClient.EXPECT().UpdateDisk(gomock.Any(), gomock.Any()).Return(nil)
+	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
+	file_hostprovider, ok := (hostprovider).(*(host_provider.FileHostProvider))
+	assert.True(t, ok)
+	file_hostprovider.SetResourceReaderWriter(mockClient)
+
+	var disk structs.DiskInfo
+	_, err := resourceManager.CreateDisks(context.TODO(), fake_hostId1, []structs.DiskInfo{disk})
+	assert.NotNil(t, err)
+	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+		fake_hostId1, disk.Name, disk.Path, disk.Capacity).GetMsg(), err.(errors.EMError).GetMsg())
+
+	_, err = resourceManager.CreateDisks(context.TODO(), fake_hostId1, nil)
+	assert.Nil(t, err)
+
+	err = resourceManager.DeleteDisks(context.TODO(), nil)
+	assert.Nil(t, err)
+
+	err = resourceManager.UpdateDisk(context.TODO(), disk)
+	assert.NotNil(t, err)
+	assert.Equal(t, errors.NewError(errors.TIEM_PARAMETER_INVALID, "update disk failed without disk id").GetMsg(), err.(errors.EMError).GetMsg())
+	disk.ID = "fake-disk-id"
+	err = resourceManager.UpdateDisk(context.TODO(), disk)
+	assert.Nil(t, err)
+}

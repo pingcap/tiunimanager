@@ -40,7 +40,7 @@ type ClusterMaintenanceStatus string
 const (
 	ClusterMaintenanceCreating                     ClusterMaintenanceStatus = "Creating"
 	ClusterMaintenanceCloning                      ClusterMaintenanceStatus = "Cloning"
-	ClusterMaintenanceCloned                       ClusterMaintenanceStatus = "Cloned"
+	ClusterMaintenanceBeingCloned                  ClusterMaintenanceStatus = "BeingCloned"
 	ClusterMaintenanceDeleting                     ClusterMaintenanceStatus = "Deleting"
 	ClusterMaintenanceStopping                     ClusterMaintenanceStatus = "Stopping"
 	ClusterMaintenanceRestarting                   ClusterMaintenanceStatus = "Restarting"

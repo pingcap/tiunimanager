@@ -265,7 +265,7 @@ func (p *Manager) Clone(ctx context.Context, request cluster.CloneClusterReq) (r
 		ContextClusterMeta:                    clusterMeta,
 		ContextSourceClusterMeta:              sourceClusterMeta,
 		ContextCloneStrategy:                  request.CloneStrategy,
-		ContextSourceClusterMaintenanceStatus: constants.ClusterMaintenanceCloned,
+		ContextSourceClusterMaintenanceStatus: constants.ClusterMaintenanceBeingCloned,
 	}
 	flowID, err := asyncMaintenance(ctx, clusterMeta, constants.ClusterMaintenanceCloning, cloneDefine.FlowName, data)
 	if err != nil {

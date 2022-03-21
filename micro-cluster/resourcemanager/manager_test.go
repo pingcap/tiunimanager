@@ -657,7 +657,7 @@ func Test_CUD_Disk(t *testing.T) {
 	var disk structs.DiskInfo
 	_, err := resourceManager.CreateDisks(context.TODO(), fake_hostId1, []structs.DiskInfo{disk})
 	assert.NotNil(t, err)
-	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
 		fake_hostId1, disk.Name, disk.Path, disk.Capacity).GetMsg(), err.(errors.EMError).GetMsg())
 
 	_, err = resourceManager.CreateDisks(context.TODO(), fake_hostId1, nil)

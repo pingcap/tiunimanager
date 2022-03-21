@@ -542,7 +542,7 @@ func Test_CreateDisks(t *testing.T) {
 	var disk structs.DiskInfo
 	_, err := hostprovider.CreateDisks(context.TODO(), fakeHostId1, []structs.DiskInfo{disk})
 	assert.NotNil(t, err)
-	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
 		fakeHostId1, disk.Name, disk.Path, disk.Capacity).GetMsg(), err.(errors.EMError).GetMsg())
 
 	_, err = hostprovider.CreateDisks(context.TODO(), fakeHostId1, nil)

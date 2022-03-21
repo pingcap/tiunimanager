@@ -154,6 +154,9 @@ type MasterSlaveClusterSwitchoverReq struct {
 	OnlyCheck               bool `json:"onlyCheck"`
 	CheckSlaveReadOnlyFlag  bool `json:"checkSlaveReadOnlyFlag"`
 	CheckMasterWritableFlag bool `json:"checkMasterWritableFlag"`
+	// check if cluster specified in `SourceClusterID` is standalone, i.e. no cluster relation and no cdc
+	// if this flag is true, always only check
+	CheckStandaloneClusterFlag bool `json:"checkStandaloneClusterFlag"`
 }
 
 // MasterSlaveClusterSwitchoverResp Master and slave cluster switchover reply message

@@ -188,11 +188,14 @@ func (h *HostInfo) GetSpecString() string {
 }
 
 func (h *HostInfo) AddTraits(p string) (err error) {
-	if trait, err := GetTraitByName(p); err == nil {
-		h.Traits = h.Traits | trait
-	} else {
+	if p == "" {
+		return nil
+	}
+	trait, err := GetTraitByName(p)
+	if err != nil {
 		return err
 	}
+	h.Traits = h.Traits | trait
 	return nil
 }
 

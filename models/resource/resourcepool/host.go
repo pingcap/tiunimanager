@@ -257,11 +257,14 @@ func (h *Host) getPurposes() []string {
 }
 
 func (h *Host) addTraits(p string) (err error) {
-	if trait, err := structs.GetTraitByName(p); err == nil {
-		h.Traits = h.Traits | trait
-	} else {
+	if p == "" {
+		return nil
+	}
+	trait, err := structs.GetTraitByName(p)
+	if err != nil {
 		return err
 	}
+	h.Traits = h.Traits | trait
 	return nil
 }
 

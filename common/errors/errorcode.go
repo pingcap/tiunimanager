@@ -165,6 +165,8 @@ const (
 	TIEM_RESOURCE_VALIDATE_DISK_ERROR       EM_ERROR_CODE = 30141
 	TIEM_RESOURCE_UPDATE_DISK_ERROR         EM_ERROR_CODE = 30142
 	TIEM_RESOURCE_DELETE_DISK_ERROR         EM_ERROR_CODE = 30143
+	TIEM_RESOURCE_DISK_STILL_INUSED         EM_ERROR_CODE = 30144
+	TIEM_RESOURCE_DISK_ALREADY_EXIST        EM_ERROR_CODE = 30145
 
 	TIEM_MONITOR_NOT_FOUND EM_ERROR_CODE = 614
 
@@ -391,6 +393,8 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_RESOURCE_VALIDATE_DISK_ERROR:       {"validate disk info failed", 400},
 	TIEM_RESOURCE_UPDATE_DISK_ERROR:         {"update disk failed", 500},
 	TIEM_RESOURCE_DELETE_DISK_ERROR:         {"delete disk failed", 500},
+	TIEM_RESOURCE_DISK_STILL_INUSED:         {"disk is still in used", 409},
+	TIEM_RESOURCE_DISK_ALREADY_EXIST:        {"disk is already existed", 409},
 
 	// param group & cluster param
 	TIEM_DEFAULT_PARAM_GROUP_NOT_DEL:                 {"Not allow to deleted the default parameter group", 409},

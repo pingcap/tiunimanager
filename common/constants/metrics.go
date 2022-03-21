@@ -136,12 +136,12 @@ const (
 	MetricsResourceDownloadHostTemplateFile MetricsType = "resource/download_host_template_file"
 	MetricsResourceReservedHost             MetricsType = "resource/reserved_host"
 	MetricsResourceModifyHostStatus         MetricsType = "resource/modify_host_status"
-	MetricsResourceImportHosts              MetricsType = "resource/import_host"
-	MetricsResourceDeleteHost               MetricsType = "resource/delete_host"
-	MetricsResourceQueryHosts               MetricsType = "resource/query"
+	MetricsResourceImportHosts              MetricsType = "resource/import_hosts"
+	MetricsResourceDeleteHosts              MetricsType = "resource/delete_hosts"
+	MetricsResourceQueryHosts               MetricsType = "resource/query_hosts"
 	MetricsResourceUpdateHost               MetricsType = "resource/update_host"
-	MetricsResourceCreateDisks              MetricsType = "resource/create_disk"
-	MetricsResourceDeleteDisks              MetricsType = "resource/delete_disk"
+	MetricsResourceCreateDisks              MetricsType = "resource/create_disks"
+	MetricsResourceDeleteDisks              MetricsType = "resource/delete_disks"
 	MetricsResourceUpdateDisk               MetricsType = "resource/update_disk"
 
 	// MetricsProductUpdate define product metrics
@@ -223,7 +223,7 @@ var EMMetrics = []MetricsType{
 	MetricsResourceDownloadHostTemplateFile,
 	MetricsResourceModifyHostStatus,
 	MetricsResourceImportHosts,
-	MetricsResourceDeleteHost,
+	MetricsResourceDeleteHosts,
 	MetricsResourceQueryHosts,
 	MetricsResourceReservedHost,
 	MetricsResourceUpdateHost,

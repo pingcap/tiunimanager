@@ -281,10 +281,10 @@ func (p *FileHostProvider) UpdateHostInfo(ctx context.Context, host structs.Host
 	}
 	var dbHost resourcepool.Host
 	err = dbHost.ConstructFromHostInfo(&host)
-	dbHost.ID = host.ID
 	if err != nil {
 		return err
 	}
+	dbHost.ID = host.ID
 	return p.rw.UpdateHostInfo(ctx, dbHost)
 }
 

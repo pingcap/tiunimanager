@@ -44,8 +44,16 @@ func (d Disk) IsInused() bool {
 }
 
 func (d *Disk) BeforeCreate(tx *gorm.DB) (err error) {
-	d.ID = uuidutil.GenerateID()
-	return nil
+	err = tx.Where("host_id = ? and name = ? and path = ?", d.HostID, d.Name, d.Path).First(&Disk{}).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			d.ID = uuidutil.GenerateID()
+			return nil
+		}
+		return err
+	}
+
+	return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_DISK_ALREADY_EXIST, "disk %s(%s) is existed on host %s", d.Name, d.Path, d.HostID)
 }
 
 func (d *Disk) BeforeDelete(tx *gorm.DB) (err error) {
@@ -54,10 +62,10 @@ func (d *Disk) BeforeDelete(tx *gorm.DB) (err error) {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_DELETE_DISK_ERROR, "disk %s is not found", d.ID)
 		}
-	} else {
-		if d.IsInused() {
-			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_HOST_STILL_INUSED, "disk %s is still in used", d.ID)
-		}
+		return err
+	}
+	if d.IsInused() {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_DISK_STILL_INUSED, "disk %s is still in used", d.ID)
 	}
 
 	return err

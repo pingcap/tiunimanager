@@ -503,14 +503,14 @@ func mockQueryLocalFromDB(expect *mock_product.MockReaderWriterMockRecorder) {
 }
 
 func Test_UpdateHost(t *testing.T) {
-	fake_hostId1 := "xxxx-xxxx-yyyy-yyyy"
+	fakeHostId1 := "xxxx-xxxx-yyyy-yyyy"
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_resource.NewMockReaderWriter(ctrl)
 	host := genHostInfo("TEST_HOST1")
 
 	mockClient.EXPECT().UpdateHostInfo(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, host resourcepool.Host) error {
-		if host.ID == fake_hostId1 {
+		if host.ID == fakeHostId1 {
 			return nil
 		} else {
 			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
@@ -522,35 +522,35 @@ func Test_UpdateHost(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Equal(t, "update host failed without host id", err.(errors.EMError).GetMsg())
 
-	host.ID = fake_hostId1
+	host.ID = fakeHostId1
 	err = hostprovider.UpdateHostInfo(context.TODO(), *host)
 	assert.Nil(t, err)
 }
 
 func Test_CreateDisks(t *testing.T) {
-	fake_hostId1 := "xxxx-xxxx-yyyy-yyyy"
+	fakeHostId1 := "xxxx-xxxx-yyyy-yyyy"
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_resource.NewMockReaderWriter(ctrl)
 	host := genHostInfo("TEST_HOST1")
-	host.ID = fake_hostId1
+	host.ID = fakeHostId1
 	mockClient.EXPECT().CreateDisks(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hostId string, disks []resourcepool.Disk) ([]string, error) {
 		return nil, nil
 	})
 	hostprovider := mockFileHostProvider(mockClient)
 
 	var disk structs.DiskInfo
-	_, err := hostprovider.CreateDisks(context.TODO(), fake_hostId1, []structs.DiskInfo{disk})
+	_, err := hostprovider.CreateDisks(context.TODO(), fakeHostId1, []structs.DiskInfo{disk})
 	assert.NotNil(t, err)
 	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
-		fake_hostId1, disk.Name, disk.Path, disk.Capacity).GetMsg(), err.(errors.EMError).GetMsg())
+		fakeHostId1, disk.Name, disk.Path, disk.Capacity).GetMsg(), err.(errors.EMError).GetMsg())
 
-	_, err = hostprovider.CreateDisks(context.TODO(), fake_hostId1, nil)
+	_, err = hostprovider.CreateDisks(context.TODO(), fakeHostId1, nil)
 	assert.Nil(t, err)
 }
 
 func Test_UpdateDisks(t *testing.T) {
-	fake_diskId1 := "xxxx-xxxx-yyyy-yyyy"
+	fakeDiskId1 := "xxxx-xxxx-yyyy-yyyy"
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_resource.NewMockReaderWriter(ctrl)
@@ -565,7 +565,7 @@ func Test_UpdateDisks(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Equal(t, "update disk failed without disk id", err.(errors.EMError).GetMsg())
 
-	disk.ID = fake_diskId1
+	disk.ID = fakeDiskId1
 	err = hostprovider.UpdateDisk(context.TODO(), disk)
 	assert.Nil(t, err)
 }

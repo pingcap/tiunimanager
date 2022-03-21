@@ -221,7 +221,7 @@ func (rw *GormResourceReadWrite) UpdateHostInfo(ctx context.Context, host rp.Hos
 		return errors.NewErrorf(errors.TIEM_SQL_ERROR, "get origin host info before update (%s) error, %v", originHost.ID, err)
 	}
 	patch := originHost
-	err = (&patch).PrepareForUpdate(&host)
+	err = patch.PrepareForUpdate(&host)
 	if err != nil {
 		tx.Rollback()
 		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "prepare for update host %s %s failed, %v", originHost.HostName, originHost.IP, err)
@@ -233,7 +233,7 @@ func (rw *GormResourceReadWrite) UpdateHostInfo(ctx context.Context, host rp.Hos
 	}
 	if result.RowsAffected != 1 {
 		tx.Rollback()
-		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update host %s %s not affected, rows affected %d", originHost.HostName, originHost.IP, result.RowsAffected)
+		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update host %s %s not affected one row, rows affected %d", originHost.HostName, originHost.IP, result.RowsAffected)
 	}
 	err = tx.Commit().Error
 	return
@@ -368,7 +368,7 @@ func (rw *GormResourceReadWrite) UpdateDisk(ctx context.Context, disk rp.Disk) (
 		return errors.NewErrorf(errors.TIEM_SQL_ERROR, "get origin disk info before update (%s) error, %v", originDisk.ID, err)
 	}
 	patch := originDisk
-	if err = (&patch).PrepareForUpdate(&disk); err != nil {
+	if err = patch.PrepareForUpdate(&disk); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -379,7 +379,7 @@ func (rw *GormResourceReadWrite) UpdateDisk(ctx context.Context, disk rp.Disk) (
 	}
 	if result.RowsAffected != 1 {
 		tx.Rollback()
-		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "update host %s %s not affected, rows affected %d", originDisk.Name, originDisk.Path, result.RowsAffected)
+		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "update host %s %s not affected one row, rows affected %d", originDisk.Name, originDisk.Path, result.RowsAffected)
 	}
 	err = tx.Commit().Error
 	return

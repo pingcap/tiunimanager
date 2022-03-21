@@ -1106,8 +1106,9 @@ func (c *ClusterServiceHandler) QueryRoles(ctx context.Context, req *clusterserv
 
 func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "ImportHosts", int(resp.GetCode()))
-	defer handlePanic(ctx, "ImportHosts", resp)
+	metricsFuncName := "ImportHosts"
+	defer metrics.HandleClusterMetrics(start, metricsFuncName, int(resp.GetCode()))
+	defer handlePanic(ctx, metricsFuncName, resp)
 
 	reqStruct := message.ImportHostsReq{}
 
@@ -1128,8 +1129,9 @@ func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, req *clus
 
 func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "DeleteHosts", int(resp.GetCode()))
-	defer handlePanic(ctx, "DeleteHosts", resp)
+	metricsFuncName := "DeleteHosts"
+	defer metrics.HandleClusterMetrics(start, metricsFuncName, int(resp.GetCode()))
+	defer handlePanic(ctx, metricsFuncName, resp)
 
 	reqStruct := message.DeleteHostsReq{}
 
@@ -1149,8 +1151,9 @@ func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, req *clus
 
 func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "QueryHosts", int(resp.GetCode()))
-	defer handlePanic(ctx, "QueryHosts", resp)
+	metricsFuncName := "QueryHosts"
+	defer metrics.HandleClusterMetrics(start, metricsFuncName, int(resp.GetCode()))
+	defer handlePanic(ctx, metricsFuncName, resp)
 
 	reqStruct := message.QueryHostsReq{}
 
@@ -1176,8 +1179,9 @@ func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, req *clust
 
 func (handler *ClusterServiceHandler) UpdateHostReserved(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "UpdateHostReserved", int(resp.GetCode()))
-	defer handlePanic(ctx, "UpdateHostReserved", resp)
+	metricsFuncName := "UpdateHostReserved"
+	defer metrics.HandleClusterMetrics(start, metricsFuncName, int(resp.GetCode()))
+	defer handlePanic(ctx, metricsFuncName, resp)
 
 	reqStruct := message.UpdateHostReservedReq{}
 
@@ -1192,8 +1196,9 @@ func (handler *ClusterServiceHandler) UpdateHostReserved(ctx context.Context, re
 
 func (handler *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "UpdateHostStatus", int(resp.GetCode()))
-	defer handlePanic(ctx, "UpdateHostStatus", resp)
+	metricsFuncName := "UpdateHostStatus"
+	defer metrics.HandleClusterMetrics(start, metricsFuncName, int(resp.GetCode()))
+	defer handlePanic(ctx, metricsFuncName, resp)
 
 	reqStruct := message.UpdateHostStatusReq{}
 
@@ -1208,8 +1213,9 @@ func (handler *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, req 
 
 func (handler *ClusterServiceHandler) UpdateHostInfo(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "UpdateHostInfo", int(resp.GetCode()))
-	defer handlePanic(ctx, "UpdateHostInfo", resp)
+	metricsFuncName := "UpdateHostInfo"
+	defer metrics.HandleClusterMetrics(start, metricsFuncName, int(resp.GetCode()))
+	defer handlePanic(ctx, metricsFuncName, resp)
 
 	reqStruct := message.UpdateHostInfoReq{}
 
@@ -1224,8 +1230,9 @@ func (handler *ClusterServiceHandler) UpdateHostInfo(ctx context.Context, req *c
 
 func (handler *ClusterServiceHandler) CreateDisks(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "CreateDisks", int(resp.GetCode()))
-	defer handlePanic(ctx, "CreateDisks", resp)
+	metricsFuncName := "CreateDisks"
+	defer metrics.HandleClusterMetrics(start, metricsFuncName, int(resp.GetCode()))
+	defer handlePanic(ctx, metricsFuncName, resp)
 
 	reqStruct := message.CreateDisksReq{}
 
@@ -1243,8 +1250,9 @@ func (handler *ClusterServiceHandler) CreateDisks(ctx context.Context, req *clus
 
 func (handler *ClusterServiceHandler) DeleteDisks(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "DeleteDisks", int(resp.GetCode()))
-	defer handlePanic(ctx, "DeleteDisks", resp)
+	metricsFuncName := "DeleteDisks"
+	defer metrics.HandleClusterMetrics(start, metricsFuncName, int(resp.GetCode()))
+	defer handlePanic(ctx, metricsFuncName, resp)
 
 	reqStruct := message.DeleteDisksReq{}
 
@@ -1259,8 +1267,9 @@ func (handler *ClusterServiceHandler) DeleteDisks(ctx context.Context, req *clus
 
 func (handler *ClusterServiceHandler) UpdateDisk(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "UpdateDisk", int(resp.GetCode()))
-	defer handlePanic(ctx, "UpdateDisk", resp)
+	metricsFuncName := "UpdateDisk"
+	defer metrics.HandleClusterMetrics(start, metricsFuncName, int(resp.GetCode()))
+	defer handlePanic(ctx, metricsFuncName, resp)
 
 	reqStruct := message.UpdateDiskReq{}
 
@@ -1275,8 +1284,9 @@ func (handler *ClusterServiceHandler) UpdateDisk(ctx context.Context, req *clust
 
 func (handler *ClusterServiceHandler) GetHierarchy(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "GetHierarchy", int(resp.GetCode()))
-	defer handlePanic(ctx, "GetHierarchy", resp)
+	metricsFuncName := "GetHierarchy"
+	defer metrics.HandleClusterMetrics(start, metricsFuncName, int(resp.GetCode()))
+	defer handlePanic(ctx, metricsFuncName, resp)
 
 	reqStruct := message.GetHierarchyReq{}
 
@@ -1296,8 +1306,9 @@ func (handler *ClusterServiceHandler) GetHierarchy(ctx context.Context, req *clu
 
 func (handler *ClusterServiceHandler) GetStocks(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
-	defer metrics.HandleClusterMetrics(start, "GetStocks", int(resp.GetCode()))
-	defer handlePanic(ctx, "GetStocks", resp)
+	metricsFuncName := "GetStocks"
+	defer metrics.HandleClusterMetrics(start, metricsFuncName, int(resp.GetCode()))
+	defer handlePanic(ctx, metricsFuncName, resp)
 
 	reqStruct := message.GetStocksReq{}
 

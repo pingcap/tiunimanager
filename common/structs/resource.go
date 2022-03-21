@@ -34,9 +34,11 @@ import (
 	"github.com/pingcap-inc/tiem/common/errors"
 )
 
+// generate code by names, for example:
+// region name "Region1" and zone name "Zone1" will get zoneID "Region1,Zone1"
 func GenDomainCodeByName(pre string, name string) string {
-	if pre == "" && name == "" {
-		return ""
+	if pre == "" {
+		return name
 	}
 	return fmt.Sprintf("%s,%s", pre, name)
 }
@@ -142,12 +144,14 @@ func GenSpecCode(cpuCores int32, mem int32) string {
 	return fmt.Sprintf("%dC%dG", cpuCores, mem)
 }
 
+// validate the disk info before create disk
 func (d *DiskInfo) ValidateDisk(hostId string, hostDiskType string) (err error) {
+	// disk name, disk path, disk capacity is required
 	if d.Name == "" || d.Path == "" || d.Capacity <= 0 {
 		return errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
 			hostId, d.Name, d.Path, d.Capacity)
 	}
-
+	// disk's host id is optional, if specified, should be equal to the existed host id
 	if d.HostId != "" && d.HostId != hostId {
 		return errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk %s %s failed, host id conflict %s vs %s",
 			d.Name, d.Path, d.HostId, hostId)
@@ -167,7 +171,16 @@ func (d *DiskInfo) ValidateDisk(hostId string, hostDiskType string) (err error) 
 }
 
 func (h *HostInfo) GetPurposes() []string {
-	return strings.Split(h.Purpose, ",")
+	purposes := strings.Split(h.Purpose, ",")
+	for i := range purposes {
+		purposes[i] = strings.TrimSpace(purposes[i])
+	}
+	return purposes
+}
+
+func (h *HostInfo) FormatPurpose() {
+	purposes := h.GetPurposes()
+	h.Purpose = strings.Join(purposes, ",")
 }
 
 func (h *HostInfo) GetSpecString() string {

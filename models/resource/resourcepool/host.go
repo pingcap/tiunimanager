@@ -192,6 +192,8 @@ func (h *Host) ConstructFromHostInfo(src *structs.HostInfo) error {
 	h.Status = src.Status
 	h.Stat = src.Stat
 	h.ClusterType = src.ClusterType
+	// make sure purpose store in db is a normal string
+	src.FormatPurpose()
 	h.Purpose = src.Purpose
 	h.DiskType = src.DiskType
 	h.Reserved = src.Reserved

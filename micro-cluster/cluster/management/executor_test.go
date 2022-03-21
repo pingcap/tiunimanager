@@ -675,7 +675,7 @@ func TestBackupSourceCluster(t *testing.T) {
 		brService := mock_br_service.NewMockBRService(ctrl)
 		backuprestore.MockBRService(brService)
 		brService.EXPECT().BackupCluster(gomock.Any(),
-			gomock.Any(), true).Return(
+			gomock.Any(), false).Return(
 			cluster.BackupClusterDataResp{
 				AsyncTaskWorkFlowInfo: structs2.AsyncTaskWorkFlowInfo{
 					WorkFlowID: "111",
@@ -690,7 +690,7 @@ func TestBackupSourceCluster(t *testing.T) {
 		brService := mock_br_service.NewMockBRService(ctrl)
 		backuprestore.MockBRService(brService)
 		brService.EXPECT().BackupCluster(gomock.Any(),
-			gomock.Any(), true).Return(
+			gomock.Any(), false).Return(
 			cluster.BackupClusterDataResp{}, fmt.Errorf("backup fail"))
 		err := backupSourceCluster(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)

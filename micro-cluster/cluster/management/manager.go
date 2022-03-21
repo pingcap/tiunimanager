@@ -45,24 +45,25 @@ import (
 )
 
 const (
-	ContextClusterMeta       = "ClusterMeta"
-	ContextTopology          = "Topology"
-	ContextAllocResource     = "AllocResource"
-	ContextInstanceID        = "InstanceID"
-	ContextSourceClusterMeta = "SourceClusterMeta"
-	ContextCloneStrategy     = "CloneStrategy"
-	ContextBackupID          = "BackupID"
-	ContextOriginalVersion   = "OriginalVersion"
-	ContextUpgradeVersion    = "UpgradeVersion"
-	ContextUpgradeWay        = "UpgradeWay"
-	ContextWorkflowID        = "WorkflowID"
-	ContextTopologyConfig    = "TopologyConfig"
-	ContextPublicKey         = "PublicKey"
-	ContextPrivateKey        = "PrivateKey"
-	ContextDeleteRequest     = "DeleteRequest"
-	ContextTakeoverRequest   = "TakeoverRequest"
-	ContextGCLifeTime        = "GCLifeTime"
-	ContextInstanceTypes     = "InstanceTypes"
+	ContextClusterMeta                    = "ClusterMeta"
+	ContextTopology                       = "Topology"
+	ContextAllocResource                  = "AllocResource"
+	ContextInstanceID                     = "InstanceID"
+	ContextSourceClusterMeta              = "SourceClusterMeta"
+	ContextSourceClusterMaintenanceStatus = "SourceClusterMaintenanceStatus"
+	ContextCloneStrategy                  = "CloneStrategy"
+	ContextBackupID                       = "BackupID"
+	ContextOriginalVersion                = "OriginalVersion"
+	ContextUpgradeVersion                 = "UpgradeVersion"
+	ContextUpgradeWay                     = "UpgradeWay"
+	ContextWorkflowID                     = "WorkflowID"
+	ContextTopologyConfig                 = "TopologyConfig"
+	ContextPublicKey                      = "PublicKey"
+	ContextPrivateKey                     = "PrivateKey"
+	ContextDeleteRequest                  = "DeleteRequest"
+	ContextTakeoverRequest                = "TakeoverRequest"
+	ContextGCLifeTime                     = "GCLifeTime"
+	ContextInstanceTypes                  = "InstanceTypes"
 )
 
 type Manager struct{}
@@ -251,26 +252,20 @@ func (p *Manager) Clone(ctx context.Context, request cluster.CloneClusterReq) (r
 	}
 
 	// Clone source cluster meta to get cluster topology
-	clusterMeta, err := sourceClusterMeta.CloneMeta(ctx, request.CreateClusterParameter, request.ResourceParameter.InstanceResource)
+	clusterMeta, err := sourceClusterMeta.CloneMeta(ctx, request.CreateClusterParameter,
+		request.ResourceParameter.InstanceResource, request.CloneStrategy)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"clone cluster %s meta error: %s", sourceClusterMeta.Cluster.ID, err.Error())
 		return
 	}
 
-	// When use CDCSyncClone strategy to clone cluster, source cluster must have CDC
-	err = meta.ClonePreCheck(ctx, sourceClusterMeta, clusterMeta, request.CloneStrategy)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf(
-			"check cluster %s clone error: %s", sourceClusterMeta.Cluster.ID, err.Error())
-		return
-	}
-
 	// Update cluster maintenance status and async start workflow
 	data := map[string]interface{}{
-		ContextClusterMeta:       clusterMeta,
-		ContextSourceClusterMeta: sourceClusterMeta,
-		ContextCloneStrategy:     request.CloneStrategy,
+		ContextClusterMeta:                    clusterMeta,
+		ContextSourceClusterMeta:              sourceClusterMeta,
+		ContextCloneStrategy:                  request.CloneStrategy,
+		ContextSourceClusterMaintenanceStatus: constants.ClusterMaintenanceCloned,
 	}
 	flowID, err := asyncMaintenance(ctx, clusterMeta, constants.ClusterMaintenanceCloning, cloneDefine.FlowName, data)
 	if err != nil {
@@ -736,18 +731,25 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 // @Parameter flowName
 // @return flowID
 // @return err
-func asyncMaintenance(ctx context.Context, meta *meta.ClusterMeta,
+func asyncMaintenance(ctx context.Context, clusterMeta *meta.ClusterMeta,
 	status constants.ClusterMaintenanceStatus, flowName string, data map[string]interface{}) (flowID string, err error) {
 
 	var flow *workflow.WorkFlowAggregation
 	err = models.Transaction(ctx, func(transactionCtx context.Context) error {
 		return errors.OfNullable(nil).BreakIf(func() error {
 			// update maintenance statue
-			return meta.StartMaintenance(transactionCtx, status)
+			if data[ContextSourceClusterMeta] != nil {
+				sourceClusterMeta := (data[ContextSourceClusterMeta]).(*meta.ClusterMeta)
+				sourceClusterMaintenanceStatus := data[ContextSourceClusterMaintenanceStatus].(constants.ClusterMaintenanceStatus)
+				if err := sourceClusterMeta.StartMaintenance(transactionCtx, sourceClusterMaintenanceStatus); err != nil {
+					return err
+				}
+			}
+			return clusterMeta.StartMaintenance(transactionCtx, status)
 		}).BreakIf(func() error {
 			// create flow
 			if newFlow, flowError := workflow.GetWorkFlowService().
-				CreateWorkFlow(transactionCtx, meta.Cluster.ID, workflow.BizTypeCluster, flowName); flowError == nil {
+				CreateWorkFlow(transactionCtx, clusterMeta.Cluster.ID, workflow.BizTypeCluster, flowName); flowError == nil {
 				flow = newFlow
 				flowID = newFlow.Flow.ID
 				for key, value := range data {
@@ -762,10 +764,10 @@ func asyncMaintenance(ctx context.Context, meta *meta.ClusterMeta,
 			return workflow.GetWorkFlowService().AsyncStart(transactionCtx, flow)
 		}).If(func(err error) {
 			framework.LogWithContext(ctx).Errorf(
-				"maintenance cluster %s failed", meta.Cluster.ID)
+				"maintenance cluster %s failed", clusterMeta.Cluster.ID)
 		}).Else(func() {
 			framework.LogWithContext(ctx).Infof(
-				"create flow %s succeed, cluster %s", flowID, meta.Cluster.ID)
+				"create flow %s succeed, cluster %s", flowID, clusterMeta.Cluster.ID)
 		}).Present()
 	})
 	return

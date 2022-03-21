@@ -42,7 +42,8 @@ import (
 // @Receiver p
 // @Parameter ctx
 // @return *ClusterMeta
-func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClusterParameter, computes []structs.ClusterResourceParameterCompute) (*ClusterMeta, error) {
+func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClusterParameter,
+	computes []structs.ClusterResourceParameterCompute, cloneStrategy string) (*ClusterMeta, error) {
 	meta := &ClusterMeta{}
 	// clone cluster info
 	meta.Cluster = &management.Cluster{
@@ -103,21 +104,8 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 		meta.Cluster.CpuArchitecture = constants.ArchType(parameter.CpuArchitecture)
 	}
 
-	// write cluster into db
-	got, err := models.GetClusterReaderWriter().Create(ctx, meta.Cluster)
-	if err != nil {
-		return nil, err
-	}
-	// set root user
-	meta.DBUsers = make(map[string]*management.DBUser)
-	meta.DBUsers[string(constants.Root)] = &management.DBUser{
-		ClusterID: got.ID,
-		Name:      constants.DBUserName[constants.Root],
-		Password:  dbCommon.PasswordInExpired{Val: parameter.DBPassword, UpdateTime: time.Now()},
-		RoleType:  string(constants.Root),
-	}
 	// add instances
-	err = meta.AddInstances(ctx, computes)
+	err := meta.AddInstances(ctx, computes)
 	if err != nil {
 		return nil, err
 	}
@@ -125,6 +113,27 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 	// add default instances
 	if err = meta.AddDefaultInstances(ctx); err != nil {
 		return nil, err
+	}
+
+	// When use CDCSyncClone strategy to clone cluster, source cluster must have CDC
+	err = ClonePreCheck(ctx, p, meta, cloneStrategy)
+	if err != nil {
+		return nil, err
+	}
+
+	// write cluster into db
+	got, err := models.GetClusterReaderWriter().Create(ctx, meta.Cluster)
+	if err != nil {
+		return nil, err
+	}
+
+	// set root user
+	meta.DBUsers = make(map[string]*management.DBUser)
+	meta.DBUsers[string(constants.Root)] = &management.DBUser{
+		ClusterID: got.ID,
+		Name:      constants.DBUserName[constants.Root],
+		Password:  dbCommon.PasswordInExpired{Val: parameter.DBPassword, UpdateTime: time.Now()},
+		RoleType:  string(constants.Root),
 	}
 
 	return meta, nil

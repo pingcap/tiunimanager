@@ -560,7 +560,7 @@ func (g *ClusterReadWrite) ClearClusterPhysically(ctx context.Context, clusterID
 	}
 	err := g.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		return errors.OfNullable(nil).BreakIf(func() error {
-			return g.DB(ctx).Unscoped().Where("id = ?", clusterID).Delete(&Cluster{}).Error
+			return g.DB(ctx).Unscoped().Delete(&Cluster{Entity: dbCommon.Entity{ID: clusterID}}).Error
 		}).BreakIf(func() error {
 			return g.DB(ctx).Unscoped().Where("cluster_id = ?", clusterID).Delete(&ClusterInstance{}).Error
 		}).BreakIf(func() error {

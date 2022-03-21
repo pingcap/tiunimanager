@@ -250,13 +250,13 @@ func TestGormClusterReadWrite_ClearClusterPhysically(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		err := testRW.DB(context.TODO()).Where("id = ?", cluster.ID).First(cluster).Error
 		assert.NoError(t, err)
-		err = testRW.ClearClusterPhysically(context.TODO(), cluster.ID, "empty")
+		err = testRW.ClearClusterPhysically(context.TODO(), cluster.ID, "deleteIt")
 		assert.NoError(t, err)
-		err = testRW.DB(context.TODO()).Where("id = ?", cluster.ID).First(cluster).Error
+		err = testRW.DB(context.TODO()).First(&Cluster{}, "id = ?", cluster.ID).Error
 		assert.Error(t, err)
-		err = testRW.DB(context.TODO()).Where("cluster_id = ?", cluster.ID).First(&ClusterInstance{}).Error
+		err = testRW.DB(context.TODO()).First(&ClusterInstance{}, "cluster_id = ?", cluster.ID).Error
 		assert.Error(t, err)
-		assert.NoError(t, testRW.DB(context.TODO()).Where("id = ?", cluster2.ID).First(cluster2).Error)
+		assert.NoError(t, testRW.DB(context.TODO()).First(cluster2, "id = ?", cluster2.ID).Error)
 	})
 
 	t.Run("parameter", func(t *testing.T) {

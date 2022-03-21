@@ -17,6 +17,11 @@ package models
 
 import (
 	"context"
+	"io/ioutil"
+	"os"
+	"strings"
+	"syscall"
+
 	"github.com/asim/go-micro/v3/util/file"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -32,10 +37,6 @@ import (
 	"github.com/pingcap-inc/tiem/models/user/identification"
 	"github.com/pingcap-inc/tiem/models/user/rbac"
 	gormopentracing "gorm.io/plugin/opentracing"
-	"io/ioutil"
-	"os"
-	"strings"
-	"syscall"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
@@ -96,6 +97,19 @@ func Open(fw *framework.BaseFramework) error {
 		return err
 	} else {
 		logins.Infof("open database succeed, filepath: %s", dbFilePath)
+	}
+	{
+		sqlDB, err := db.DB()
+		if err != nil {
+			logins.Fatalf("get *sql.DB failed, filepath: %s error: %s", dbFilePath, err)
+			return err
+		}
+		// fix sqlite3 `database is locked` problem
+		// references:
+		//    https://github.com/mattn/go-sqlite3/issues/274
+		//    https://github.com/mattn/go-sqlite3#faq
+		sqlDB.SetMaxOpenConns(1)
+		logins.Infof("set *sql.DB max open conns to 1, filepath: %s", dbFilePath)
 	}
 	db.Use(gormopentracing.New(
 		gormopentracing.WithSqlParameters(false),

@@ -477,7 +477,7 @@ func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		cluster.BackupClusterDataReq{
 			ClusterID:  sourceClusterMeta.Cluster.ID,
 			BackupMode: string(constants.BackupModeManual),
-		}, true)
+		}, false)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"do backup for cluster %s error: %s", sourceClusterMeta.Cluster.ID, err.Error())
@@ -640,6 +640,13 @@ func revertResourceAfterFailure(node *workflowModel.WorkFlowNode, context *workf
 // @Description: clear maintenance status after maintenance finished or failed
 func endMaintenance(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
+	if context.GetData(ContextSourceClusterMeta) != nil {
+		sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*meta.ClusterMeta)
+		err := sourceClusterMeta.EndMaintenance(context, sourceClusterMeta.Cluster.MaintenanceStatus)
+		if err != nil {
+			return err
+		}
+	}
 	return clusterMeta.EndMaintenance(context, clusterMeta.Cluster.MaintenanceStatus)
 }
 

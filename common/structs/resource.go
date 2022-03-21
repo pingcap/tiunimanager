@@ -171,6 +171,9 @@ func (d *DiskInfo) ValidateDisk(hostId string, hostDiskType string) (err error) 
 }
 
 func (h *HostInfo) GetPurposes() []string {
+	if h.Purpose == "" {
+		return nil
+	}
 	purposes := strings.Split(h.Purpose, ",")
 	for i := range purposes {
 		purposes[i] = strings.TrimSpace(purposes[i])

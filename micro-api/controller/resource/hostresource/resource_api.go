@@ -109,6 +109,9 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			host.Purpose = row[PURPOSE_FIELD]
 			purposes := host.GetPurposes()
 			for _, p := range purposes {
+				if p == "" {
+					continue
+				}
 				if err = constants.ValidPurposeType(p); err != nil {
 					errMsg := fmt.Sprintf("Row %d get purpose(%s) failed, %v", irow, p, err)
 					return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)

@@ -253,6 +253,9 @@ func (h *Host) ToHostInfo(dst *structs.HostInfo) {
 }
 
 func (h *Host) getPurposes() []string {
+	if h.Purpose == "" {
+		return nil
+	}
 	return strings.Split(h.Purpose, ",")
 }
 

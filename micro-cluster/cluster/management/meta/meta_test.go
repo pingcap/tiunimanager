@@ -377,12 +377,12 @@ func TestClusterMeta_ApplyInstanceResource(t *testing.T) {
 				HostIp: "127.0.0.1",
 				PortRes: []resource.PortResource{
 					{
-						Ports: []int32{1,2,3,4,5,6,7,8},
+						Ports: []int32{1, 2, 3, 4, 5, 6, 7, 8},
 					},
 				},
 				DiskRes: resource.DiskResource{
 					DiskId: "1111",
-					Path: "path1111",
+					Path:   "path1111",
 				},
 				Location: structs.Location{
 					Rack: "rack1",
@@ -393,12 +393,12 @@ func TestClusterMeta_ApplyInstanceResource(t *testing.T) {
 				HostIp: "127.0.02",
 				PortRes: []resource.PortResource{
 					{
-						Ports: []int32{1,2,3,4},
+						Ports: []int32{1, 2, 3, 4},
 					},
 				},
 				DiskRes: resource.DiskResource{
 					DiskId: "2222",
-					Path: "path2222",
+					Path:   "path2222",
 				},
 				Location: structs.Location{
 					Rack: "rack2",
@@ -409,12 +409,12 @@ func TestClusterMeta_ApplyInstanceResource(t *testing.T) {
 				HostIp: "127.0.0.3",
 				PortRes: []resource.PortResource{
 					{
-						Ports: []int32{1,2,3,4,5,6,7,8},
+						Ports: []int32{1, 2, 3, 4, 5, 6, 7, 8},
 					},
 				},
 				DiskRes: resource.DiskResource{
 					DiskId: "3333",
-					Path: "path3333",
+					Path:   "path3333",
 				},
 				Location: structs.Location{
 					Rack: "rack3",
@@ -423,7 +423,7 @@ func TestClusterMeta_ApplyInstanceResource(t *testing.T) {
 		},
 		Applicant: resource.Applicant{},
 	}, []*management.ClusterInstance{
-		pd,tidb,tikv,
+		pd, tidb, tikv,
 	})
 
 	assert.Equal(t, "path1111", meta.Instances["PD"][0].DiskPath)
@@ -720,6 +720,7 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 		got, err := meta.CloneMeta(context.TODO(), structs.CreateClusterParameter{
 			Name:       "cluster01",
 			DBPassword: "1234",
+			Copies:     1,
 			Region:     "Region01",
 		}, []structs.ClusterResourceParameterCompute{
 			{"TiDB", 2, []structs.ClusterResourceParameterComputeResource{
@@ -730,7 +731,7 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
 				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
 			}},
-		})
+		}, string(constants.SnapShotClone))
 		assert.NoError(t, err)
 		assert.Equal(t, 5, len(got.Instances))
 	})
@@ -740,6 +741,7 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 			Name:       "cluster01",
 			DBUser:     "user01",
 			DBPassword: "1234",
+			Copies:     1,
 			Region:     "Region01",
 			Version:    "v3.0.0",
 		}, []structs.ClusterResourceParameterCompute{
@@ -751,7 +753,7 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
 				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
 			}},
-		})
+		}, string(constants.SnapShotClone))
 		assert.Error(t, err)
 	})
 }

@@ -123,28 +123,32 @@ func Test_ValidateDisk(t *testing.T) {
 		{"normal_without_type", fakeHostId, constants.NVMeSSD, Disk{Name: diskName, Path: diskPath, Capacity: capacity, Status: string(constants.DiskAvailable)}, want{nil}},
 		{"normal_without_status", fakeHostId, constants.NVMeSSD, Disk{Name: diskName, Path: diskPath, Capacity: capacity}, want{nil}},
 		{"no_name", fakeHostId, constants.NVMeSSD, Disk{Path: diskPath, Capacity: capacity, Type: string(constants.NVMeSSD), Status: string(constants.DiskAvailable)}, want{
-			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
 				fakeHostId, "", diskPath, capacity),
 		}},
 		{"no_path", fakeHostId, constants.NVMeSSD, Disk{Name: diskName, Capacity: capacity, Type: string(constants.NVMeSSD), Status: string(constants.DiskAvailable)}, want{
-			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
 				fakeHostId, diskName, "", capacity),
 		}},
 		{"no_capacity", fakeHostId, constants.NVMeSSD, Disk{Name: diskName, Path: diskPath, Type: string(constants.NVMeSSD), Status: string(constants.DiskAvailable)}, want{
-			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
 				fakeHostId, diskName, diskPath, 0),
 		}},
 		{"hostId_mismatch", fakeHostId, constants.NVMeSSD, Disk{Name: diskName, Path: diskPath, Capacity: capacity, HostID: "fake-host2", Type: string(constants.NVMeSSD), Status: string(constants.DiskAvailable)}, want{
-			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk %s %s failed, host id conflict %s vs %s",
+			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s failed, host id conflict %s vs %s",
 				diskName, diskPath, "fake-host2", fakeHostId),
 		}},
 		{"diskType_mismatch", fakeHostId, constants.NVMeSSD, Disk{Name: diskName, Path: diskPath, Capacity: capacity, Type: string(constants.SSD), Status: string(constants.DiskAvailable)}, want{
-			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk %s %s for host %s failed, disk type conflict %s vs %s",
+			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s failed, disk type conflict %s vs %s",
 				diskName, diskPath, fakeHostId, string(constants.SSD), string(constants.NVMeSSD)),
 		}},
 		{"status_invalid", fakeHostId, constants.NVMeSSD, Disk{Name: diskName, Path: diskPath, Capacity: capacity, Type: string(constants.NVMeSSD), Status: "bad_status"}, want{
-			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk %s %s for host %s specified a invalid status %s, [Available|Reserved]",
+			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s specified a invalid status %s, [Available|Reserved]",
 				diskName, diskPath, fakeHostId, "bad_status"),
+		}},
+		{"type_invalid", fakeHostId, constants.NVMeSSD, Disk{Name: diskName, Path: diskPath, Capacity: capacity, Type: "bad_disk_type"}, want{
+			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s failed, %v",
+				diskName, diskPath, fakeHostId, constants.ValidDiskType("bad_disk_type")),
 		}},
 	}
 	for _, tt := range tests {

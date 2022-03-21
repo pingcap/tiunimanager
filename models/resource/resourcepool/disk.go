@@ -108,23 +108,30 @@ func (d *Disk) PrepareForUpdate(newDisk *Disk) (err error) {
 
 func (d *Disk) ValidateDisk(hostId string, hostDiskType string) (err error) {
 	if d.Name == "" || d.Path == "" || d.Capacity <= 0 {
-		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
 			hostId, d.Name, d.Path, d.Capacity)
 	}
 
-	if d.HostID != "" && d.HostID != hostId {
-		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk %s %s failed, host id conflict %s vs %s",
-			d.Name, d.Path, d.HostID, hostId)
+	if d.HostID != "" {
+		if hostId != "" && d.HostID != hostId {
+			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s failed, host id conflict %s vs %s",
+				d.Name, d.Path, d.HostID, hostId)
+		}
 	}
 
 	if d.Status != "" && !constants.DiskStatus(d.Status).IsValidStatus() {
-		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk %s %s for host %s specified a invalid status %s, [Available|Reserved]",
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s specified a invalid status %s, [Available|Reserved]",
 			d.Name, d.Path, hostId, d.Status)
 	}
 
-	if d.Type != "" && d.Type != hostDiskType {
-		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "create disk %s %s for host %s failed, disk type conflict %s vs %s",
-			d.Name, d.Path, hostId, d.Type, hostDiskType)
+	if d.Type != "" {
+		if err = constants.ValidDiskType(d.Type); err != nil {
+			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s failed, %v", d.Name, d.Path, hostId, err)
+		}
+		if hostDiskType != "" && d.Type != hostDiskType {
+			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s failed, disk type conflict %s vs %s",
+				d.Name, d.Path, hostId, d.Type, hostDiskType)
+		}
 	}
 
 	return nil

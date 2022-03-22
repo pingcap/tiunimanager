@@ -234,10 +234,6 @@ func Test_UpdateHost(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update ip on host %s is not allowed", hostId).GetMsg())
 
-	err = db.Model(&Host{ID: hostId}).Update("free_memory", 69).Error
-	assert.NotNil(t, err)
-	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update free cpu cores or free memory on host %s is not allowed", hostId).GetMsg())
-
 	err = db.Model(&Host{ID: hostId}).Update("disk_type", string(constants.SSD)).Error
 	assert.NotNil(t, err)
 	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update disk type or arch type or cluster type or load stat on host %s is not allowed", hostId).GetMsg())
@@ -262,6 +258,8 @@ func Test_UpdateHost(t *testing.T) {
 	err = db.Where("id = ?", host.ID).Find(&queryHost).Error
 	assert.Nil(t, err)
 	assert.Equal(t, "48C128G", queryHost.Spec)
+	assert.Equal(t, int32(48), queryHost.FreeCpuCores)
+	assert.Equal(t, int32(128), queryHost.FreeMemory)
 	assert.Equal(t, string(constants.PurposeStorage), queryHost.Purpose)
 	assert.Equal(t, int64(82), queryHost.Traits)
 	assert.Equal(t, "TEST_HOST2", queryHost.HostName)

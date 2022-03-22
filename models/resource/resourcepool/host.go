@@ -144,9 +144,6 @@ func (h *Host) BeforeUpdate(tx *gorm.DB) (err error) {
 	if tx.Statement.Changed("IP") {
 		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update ip on host %s is not allowed", h.ID)
 	}
-	if tx.Statement.Changed("FreeCpuCores", "FreeMemory") {
-		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update free cpu cores or free memory on host %s is not allowed", h.ID)
-	}
 	if tx.Statement.Changed("DiskType", "Arch", "ClusterType", "Stat") {
 		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update disk type or arch type or cluster type or load stat on host %s is not allowed", h.ID)
 	}
@@ -312,9 +309,15 @@ func (h *Host) prepareForUpdateSpec(cpuCores, memory int32) {
 		return
 	}
 	if cpuCores != 0 {
+		alreadyUsedCpuCores := h.CpuCores - h.FreeCpuCores
+		// update free cpu cores after set to the new cpucores
+		h.FreeCpuCores = cpuCores - alreadyUsedCpuCores
 		h.CpuCores = cpuCores
 	}
 	if memory != 0 {
+		alreadyUsedMemory := h.Memory - h.FreeMemory
+		// update free cpu cores after set to the new cpucores
+		h.FreeMemory = memory - alreadyUsedMemory
 		h.Memory = memory
 	}
 	h.Spec = (&structs.HostInfo{CpuCores: h.CpuCores, Memory: h.Memory}).GetSpecString()

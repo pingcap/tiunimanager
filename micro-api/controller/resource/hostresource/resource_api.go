@@ -74,6 +74,10 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			host.Region = row[REGION_FIELD]
 			host.AZ = row[ZONE_FIELD]
 			host.Rack = row[RACK_FIELD]
+			if host.Region == "" || host.AZ == "" || host.Rack == "" {
+				errMsg := fmt.Sprintf("input region (%s) zone (%s) rack (%s) should not be empty", host.Region, host.AZ, host.Rack)
+				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+			}
 			if err = constants.ValidArchType(row[ARCH_FIELD]); err != nil {
 				errMsg := fmt.Sprintf("Row %d get arch(%s) failed, %v", irow, row[ARCH_FIELD], err)
 				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
@@ -86,11 +90,19 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 				errMsg := fmt.Sprintf("Row %d get coreNum(%s) failed, %v", irow, row[CPU_FIELD], err)
 				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 			}
+			if coreNum <= 0 {
+				errMsg := fmt.Sprintf("input cpu core (%d) invalid", coreNum)
+				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+			}
 			host.CpuCores = int32(coreNum)
 			host.UsedCpuCores = 0
 			mem, err := (strconv.Atoi(row[MEM_FIELD]))
 			if err != nil {
 				errMsg := fmt.Sprintf("Row %d get memory(%s) failed, %v", irow, row[MEM_FIELD], err)
+				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+			}
+			if mem <= 0 {
+				errMsg := fmt.Sprintf("input memory size (%d) invalid", mem)
 				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 			}
 			host.Memory = int32(mem)

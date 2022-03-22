@@ -241,6 +241,27 @@ func TestManager_startAsyncOperation(t *testing.T) {
 	})
 }
 
+func TestManager_sensitiveCmd(t *testing.T) {
+	t.Run("dumpling", func(t *testing.T) {
+		m := &Manager{
+			TiUPBinPath: "mock_tiup",
+		}
+		asserts.True(t, m.sensitiveCmd("dumpling sth"))
+	})
+	t.Run("tidb-lightning", func(t *testing.T) {
+		m := &Manager{
+			TiUPBinPath: "mock_tiup",
+		}
+		asserts.True(t, m.sensitiveCmd("tidb-lightning sth"))
+	})
+	t.Run("deploy", func(t *testing.T) {
+		m := &Manager{
+			TiUPBinPath: "mock_tiup",
+		}
+		asserts.False(t, m.sensitiveCmd("deploy sth"))
+	})
+}
+
 func TestManager_ExitStatusZero(t *testing.T) {
 	t.Run("zero", func(t *testing.T) {
 		m := &Manager{

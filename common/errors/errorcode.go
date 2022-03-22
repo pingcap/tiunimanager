@@ -161,6 +161,12 @@ const (
 	TIEM_RESOURCE_CHECK_DISKS_ERROR         EM_ERROR_CODE = 30137
 	TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR    EM_ERROR_CODE = 30138
 	TIEM_RESOURCE_INIT_HOST_AUTH_ERROR      EM_ERROR_CODE = 30139
+	TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR     EM_ERROR_CODE = 30140
+	TIEM_RESOURCE_VALIDATE_DISK_ERROR       EM_ERROR_CODE = 30141
+	TIEM_RESOURCE_UPDATE_DISK_ERROR         EM_ERROR_CODE = 30142
+	TIEM_RESOURCE_DELETE_DISK_ERROR         EM_ERROR_CODE = 30143
+	TIEM_RESOURCE_DISK_STILL_INUSED         EM_ERROR_CODE = 30144
+	TIEM_RESOURCE_DISK_ALREADY_EXIST        EM_ERROR_CODE = 30145
 
 	TIEM_MONITOR_NOT_FOUND EM_ERROR_CODE = 614
 
@@ -366,7 +372,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_RESOURCE_INVALID_DISKTYPE:          {"invalid disk type of host", 400},
 	TIEM_RESOURCE_HOST_ALREADY_EXIST:        {"host already exists in the resource pool", 409},
 	TIEM_RESOURCE_HOST_STILL_INUSED:         {"host is still in use", 409},
-	TIEM_RESOURCE_CREATE_DISK_ERROR:         {"ailed to update disk table", 500},
+	TIEM_RESOURCE_CREATE_DISK_ERROR:         {"failed to create disk", 500},
 	TIEM_RESOURCE_TEMPLATE_FILE_NOT_FOUND:   {"template file is not found", 500},
 	TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR: {"parse template file failed", 400},
 	TIEM_RESOURCE_CONNECT_TO_HOST_ERROR:     {"connect to host failed", 400},
@@ -383,6 +389,12 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_RESOURCE_CHECK_DISKS_ERROR:         {"check disk resource mismatch", 500},
 	TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR:    {"init deploy user failed", 500},
 	TIEM_RESOURCE_INIT_HOST_AUTH_ERROR:      {"init host auth failed", 500},
+	TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR:     {"update host info failed", 400},
+	TIEM_RESOURCE_VALIDATE_DISK_ERROR:       {"validate disk info failed", 400},
+	TIEM_RESOURCE_UPDATE_DISK_ERROR:         {"update disk failed", 500},
+	TIEM_RESOURCE_DELETE_DISK_ERROR:         {"delete disk failed", 500},
+	TIEM_RESOURCE_DISK_STILL_INUSED:         {"disk is still in used", 409},
+	TIEM_RESOURCE_DISK_ALREADY_EXIST:        {"disk is already existed", 409},
 
 	// param group & cluster param
 	TIEM_DEFAULT_PARAM_GROUP_NOT_DEL:                 {"Not allow to deleted the default parameter group", 409},

@@ -31,9 +31,15 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 )
 
+// generate code by names, for example:
+// region name "Region1" and zone name "Zone1" will get zoneID "Region1,Zone1"
 func GenDomainCodeByName(pre string, name string) string {
+	if pre == "" {
+		return name
+	}
 	return fmt.Sprintf("%s,%s", pre, name)
 }
 
@@ -138,8 +144,53 @@ func GenSpecCode(cpuCores int32, mem int32) string {
 	return fmt.Sprintf("%dC%dG", cpuCores, mem)
 }
 
+// validate the disk info before create disk
+func (d *DiskInfo) ValidateDisk(hostId string, hostDiskType string) (err error) {
+	// disk name, disk path, disk capacity is required
+	if d.Name == "" || d.Path == "" || d.Capacity <= 0 {
+		return errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+			hostId, d.Name, d.Path, d.Capacity)
+	}
+	// disk's host id is optional, if specified, should be equal to the existed host id
+	if d.HostId != "" {
+		if hostId != "" && d.HostId != hostId {
+			return errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s failed, host id conflict %s vs %s",
+				d.Name, d.Path, d.HostId, hostId)
+		}
+	}
+
+	if d.Status != "" && !constants.DiskStatus(d.Status).IsValidStatus() {
+		return errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s specified a invalid status %s, [Available|Reserved]",
+			d.Name, d.Path, hostId, d.Status)
+	}
+
+	if d.Type != "" {
+		if err = constants.ValidDiskType(d.Type); err != nil {
+			return errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s failed, %v", d.Name, d.Path, hostId, err)
+		}
+		if hostDiskType != "" && d.Type != hostDiskType {
+			return errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s failed, disk type conflict %s vs %s",
+				d.Name, d.Path, hostId, d.Type, hostDiskType)
+		}
+	}
+
+	return nil
+}
+
 func (h *HostInfo) GetPurposes() []string {
-	return strings.Split(h.Purpose, ",")
+	if h.Purpose == "" {
+		return nil
+	}
+	purposes := strings.Split(h.Purpose, ",")
+	for i := range purposes {
+		purposes[i] = strings.TrimSpace(purposes[i])
+	}
+	return purposes
+}
+
+func (h *HostInfo) FormatPurpose() {
+	purposes := h.GetPurposes()
+	h.Purpose = strings.Join(purposes, ",")
 }
 
 func (h *HostInfo) GetSpecString() string {
@@ -147,11 +198,14 @@ func (h *HostInfo) GetSpecString() string {
 }
 
 func (h *HostInfo) AddTraits(p string) (err error) {
-	if trait, err := GetTraitByName(p); err == nil {
-		h.Traits = h.Traits | trait
-	} else {
+	if p == "" {
+		return nil
+	}
+	trait, err := GetTraitByName(p)
+	if err != nil {
 		return err
 	}
+	h.Traits = h.Traits | trait
 	return nil
 }
 

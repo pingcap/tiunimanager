@@ -159,10 +159,8 @@ func Test_Host_Hooks(t *testing.T) {
 	err = db.Model(&Host{}).Create(host).Error
 	assert.Nil(t, err)
 	hostId := host.ID
-	assert.NotNil(t, hostId)
-	for _, v := range host.Disks {
-		assert.NotNil(t, v)
-	}
+	assert.True(t, hostId != "")
+	assert.Equal(t, 2, len(host.Disks))
 	err = db.Delete(&Host{ID: host.ID}).Error
 	assert.Nil(t, err)
 	var queryHost Host
@@ -216,4 +214,68 @@ func Test_ToHostInfo(t *testing.T) {
 	assert.Equal(t, int32(32), dst.UsedCpuCores)
 	assert.Equal(t, int32(36), dst.UsedMemory)
 	assert.Equal(t, string(constants.HostLoadComputeExhaust), dst.Stat)
+}
+
+func Test_UpdateHost(t *testing.T) {
+	dbPath := "./test_resource_" + uuidutil.ShortId() + ".db"
+	db, err := createDB(dbPath)
+	assert.Nil(t, err)
+	defer func() { _ = os.Remove(dbPath) }()
+
+	host := genFakeHost("Region1", "Region1,Zone1", "Region1,Zone1,Rack1", "TEST_HOST1", "192.168.999.999", 32, 64,
+		string(constants.EMProductIDDataMigration), string(constants.PurposeSchedule), string(constants.NVMeSSD))
+	db.AutoMigrate(&Host{})
+	db.AutoMigrate(&Disk{})
+	err = db.Model(&Host{}).Create(host).Error
+	assert.Nil(t, err)
+	hostId := host.ID
+
+	err = db.Model(&Host{ID: hostId}).Update("ip", "192.168.965.965").Error
+	assert.NotNil(t, err)
+	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update ip on host %s is not allowed", hostId).GetMsg())
+
+	err = db.Model(&Host{ID: hostId}).Update("free_memory", 69).Error
+	assert.NotNil(t, err)
+	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update free cpu cores or free memory on host %s is not allowed", hostId).GetMsg())
+
+	err = db.Model(&Host{ID: hostId}).Update("disk_type", string(constants.SSD)).Error
+	assert.NotNil(t, err)
+	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update disk type or arch type or cluster type or load stat on host %s is not allowed", hostId).GetMsg())
+
+	err = db.Model(&Host{ID: hostId}).Update("region", "NewRegion").Error
+	assert.NotNil(t, err)
+	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update vendor/region/zone/rack info on host %s is not allowed", hostId).GetMsg())
+
+	host2 := genFakeHost("Region1", "Region1,Zone1", "Region1,Zone1,Rack1", "TEST_HOST2", "192.168.999.999", 48, 128,
+		string(constants.EMProductIDDataMigration), string(constants.PurposeStorage), string(constants.NVMeSSD))
+
+	patch := *host
+	err = patch.PrepareForUpdate(host2)
+	assert.Nil(t, err)
+	assert.Equal(t, "TEST_HOST2", patch.HostName)
+	assert.Equal(t, "48C128G", patch.Spec)
+	assert.Equal(t, int64(82), patch.Traits)
+	err = db.Model(&host).Updates(patch).Error
+	assert.Nil(t, err)
+
+	var queryHost Host
+	err = db.Where("id = ?", host.ID).Find(&queryHost).Error
+	assert.Nil(t, err)
+	assert.Equal(t, "48C128G", queryHost.Spec)
+	assert.Equal(t, string(constants.PurposeStorage), queryHost.Purpose)
+	assert.Equal(t, int64(82), queryHost.Traits)
+	assert.Equal(t, "TEST_HOST2", queryHost.HostName)
+
+	host3 := genFakeHost("Region1", "Region1,Zone1", "Region1,Zone1,Rack1", "TEST_HOST2", "192.168.999.998", 48, 128,
+		string(constants.EMProductIDDataMigration), string(constants.PurposeStorage), string(constants.NVMeSSD))
+	patch = *host
+	err = patch.PrepareForUpdate(host3)
+	assert.Nil(t, err)
+	err = db.Model(&host).Updates(patch).Error
+	assert.Equal(t, "192.168.999.998", patch.IP)
+	assert.NotNil(t, err)
+	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update ip on host %s is not allowed", hostId).GetMsg())
+
+	err = db.Delete(&Host{ID: host.ID}).Error
+	assert.Nil(t, err)
 }

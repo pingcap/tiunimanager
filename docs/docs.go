@@ -5027,6 +5027,157 @@ var doc = `{
                 }
             }
         },
+        "/resources/disk": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "update disk information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Update disk info",
+                "parameters": [
+                    {
+                        "description": "update disk information",
+                        "name": "updateReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UpdateDiskReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UpdateDiskResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/disks": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "add disks to the specified host",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Add disks to the specified host",
+                "parameters": [
+                    {
+                        "description": "specify the hostId and disks",
+                        "name": "createDisksReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.CreateDisksReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.CreateDisksResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "remove disks by a list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Remove a batch of disks",
+                "parameters": [
+                    {
+                        "description": "list of disk IDs",
+                        "name": "diskIds",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.DeleteDisksReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.DeleteDisksResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/resources/hierarchy": {
             "get": {
                 "security": [
@@ -5096,6 +5247,57 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/message.GetHierarchyResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/host": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "update host information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Update host info",
+                "parameters": [
+                    {
+                        "description": "update host information",
+                        "name": "updateReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UpdateHostInfoReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UpdateHostInfoResp"
                                         }
                                     }
                                 }
@@ -8496,6 +8698,31 @@ var doc = `{
                 }
             }
         },
+        "message.CreateDisksReq": {
+            "type": "object",
+            "properties": {
+                "disks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.DiskInfo"
+                    }
+                },
+                "hostId": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.CreateDisksResp": {
+            "type": "object",
+            "properties": {
+                "diskIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "message.CreateParameterGroupReq": {
             "type": "object",
             "required": [
@@ -8741,6 +8968,20 @@ var doc = `{
                     "type": "string"
                 }
             }
+        },
+        "message.DeleteDisksReq": {
+            "type": "object",
+            "properties": {
+                "diskIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "message.DeleteDisksResp": {
+            "type": "object"
         },
         "message.DeleteHostsReq": {
             "type": "object",
@@ -9454,6 +9695,28 @@ var doc = `{
             }
         },
         "message.UnbindRoleForUserResp": {
+            "type": "object"
+        },
+        "message.UpdateDiskReq": {
+            "type": "object",
+            "properties": {
+                "newDiskInfo": {
+                    "$ref": "#/definitions/structs.DiskInfo"
+                }
+            }
+        },
+        "message.UpdateDiskResp": {
+            "type": "object"
+        },
+        "message.UpdateHostInfoReq": {
+            "type": "object",
+            "properties": {
+                "newHostInfo": {
+                    "$ref": "#/definitions/structs.HostInfo"
+                }
+            }
+        },
+        "message.UpdateHostInfoResp": {
             "type": "object"
         },
         "message.UpdateHostReservedReq": {

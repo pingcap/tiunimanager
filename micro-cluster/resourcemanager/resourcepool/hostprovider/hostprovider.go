@@ -31,4 +31,9 @@ type HostProvider interface {
 
 	GetHierarchy(ctx context.Context, filter *structs.HostFilter, level int, depth int) (root *structs.HierarchyTreeNode, err error)
 	GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (map[string]*structs.Stocks, error)
+
+	UpdateHostInfo(ctx context.Context, host structs.HostInfo) (err error)
+	CreateDisks(ctx context.Context, hostId string, disks []structs.DiskInfo) (diskIds []string, err error)
+	DeleteDisks(ctx context.Context, diskIds []string) (err error)
+	UpdateDisk(ctx context.Context, disk structs.DiskInfo) (err error)
 }

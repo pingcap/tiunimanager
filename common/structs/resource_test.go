@@ -36,6 +36,7 @@ func Test_GenDomainCodeByName(t *testing.T) {
 		{"ZoneCode", "Test_Region1", "Test_Zone1", want{"Test_Region1,Test_Zone1"}},
 		{"RackCode", "Test_Region1,Test_Zone1", "Test_Rack1", want{"Test_Region1,Test_Zone1,Test_Rack1"}},
 		{"IpCode", "Test_Host1", "192.168.168.168", want{"Test_Host1,192.168.168.168"}},
+		{"Empty", "", "", want{""}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
@@ -245,8 +246,8 @@ func TestGenSpecCode(t *testing.T) {
 		args args
 		want string
 	}{
-		{"normal", args{3,6}, "3C6G"},
-		{"normal", args{999,999}, "999C999G"},
+		{"normal", args{3, 6}, "3C6G"},
+		{"normal", args{999, 999}, "999C999G"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -294,6 +295,66 @@ func TestParseMemory(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := ParseMemory(tt.args.specCode); got != tt.want {
 				t.Errorf("ParseMemory() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_ValidateDisk(t *testing.T) {
+	fakeHostId := "fake-host-id"
+	diskName := "sdb"
+	diskPath := "/mnt/sdb"
+	var capacity int32 = 256
+	type want struct {
+		err error
+	}
+	tests := []struct {
+		name     string
+		hostId   string
+		diskType constants.DiskType
+		disk     DiskInfo
+		want     want
+	}{
+		{"normal", fakeHostId, constants.NVMeSSD, DiskInfo{Name: diskName, Path: diskPath, Capacity: capacity, Type: string(constants.NVMeSSD), Status: string(constants.DiskAvailable)}, want{nil}},
+		{"normal_without_type", fakeHostId, constants.NVMeSSD, DiskInfo{Name: diskName, Path: diskPath, Capacity: capacity, Status: string(constants.DiskAvailable)}, want{nil}},
+		{"normal_without_status", fakeHostId, constants.NVMeSSD, DiskInfo{Name: diskName, Path: diskPath, Capacity: capacity}, want{nil}},
+		{"no_name", fakeHostId, constants.NVMeSSD, DiskInfo{Path: diskPath, Capacity: capacity, Type: string(constants.NVMeSSD), Status: string(constants.DiskAvailable)}, want{
+			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+				fakeHostId, "", diskPath, capacity),
+		}},
+		{"no_path", fakeHostId, constants.NVMeSSD, DiskInfo{Name: diskName, Capacity: capacity, Type: string(constants.NVMeSSD), Status: string(constants.DiskAvailable)}, want{
+			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+				fakeHostId, diskName, "", capacity),
+		}},
+		{"no_capacity", fakeHostId, constants.NVMeSSD, DiskInfo{Name: diskName, Path: diskPath, Type: string(constants.NVMeSSD), Status: string(constants.DiskAvailable)}, want{
+			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+				fakeHostId, diskName, diskPath, 0),
+		}},
+		{"hostId_mismatch", fakeHostId, constants.NVMeSSD, DiskInfo{Name: diskName, Path: diskPath, Capacity: capacity, HostId: "fake-host2", Type: string(constants.NVMeSSD), Status: string(constants.DiskAvailable)}, want{
+			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s failed, host id conflict %s vs %s",
+				diskName, diskPath, "fake-host2", fakeHostId),
+		}},
+		{"diskType_mismatch", fakeHostId, constants.NVMeSSD, DiskInfo{Name: diskName, Path: diskPath, Capacity: capacity, Type: string(constants.SSD), Status: string(constants.DiskAvailable)}, want{
+			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s failed, disk type conflict %s vs %s",
+				diskName, diskPath, fakeHostId, string(constants.SSD), string(constants.NVMeSSD)),
+		}},
+		{"status_invalid", fakeHostId, constants.NVMeSSD, DiskInfo{Name: diskName, Path: diskPath, Capacity: capacity, Type: string(constants.NVMeSSD), Status: "bad_status"}, want{
+			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s specified a invalid status %s, [Available|Reserved]",
+				diskName, diskPath, fakeHostId, "bad_status"),
+		}},
+		{"type_invalid", fakeHostId, constants.NVMeSSD, DiskInfo{Name: diskName, Path: diskPath, Capacity: capacity, Type: "bad_disk_type"}, want{
+			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s failed, %v",
+				diskName, diskPath, fakeHostId, constants.ValidDiskType("bad_disk_type")),
+		}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.disk.ValidateDisk(tt.hostId, string(tt.diskType))
+			if err == nil {
+				assert.Equal(t, err, tt.want.err)
+			} else {
+				assert.Equal(t, tt.want.err.(errors.EMError).GetCode(), err.(errors.EMError).GetCode())
+				assert.Equal(t, tt.want.err.(errors.EMError).GetMsg(), err.(errors.EMError).GetMsg())
 			}
 		})
 	}

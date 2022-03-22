@@ -122,3 +122,33 @@ type DownloadHostTemplateFileReq struct {
 
 type DownloadHostTemplateFileResp struct {
 }
+
+type UpdateHostInfoReq struct {
+	NewHostInfo structs.HostInfo `json:"newHostInfo"`
+}
+
+type UpdateHostInfoResp struct {
+}
+
+type CreateDisksReq struct {
+	HostID string             `json:"hostId"`
+	Disks  []structs.DiskInfo `json:"disks"`
+}
+
+type CreateDisksResp struct {
+	DiskIDs []string `json:"diskIds"`
+}
+
+type DeleteDisksReq struct {
+	DiskIDs []string `json:"diskIds"`
+}
+
+type DeleteDisksResp struct {
+}
+
+type UpdateDiskReq struct {
+	NewDiskInfo structs.DiskInfo `json:"newDiskInfo"`
+}
+
+type UpdateDiskResp struct {
+}

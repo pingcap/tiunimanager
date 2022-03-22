@@ -55,9 +55,11 @@ const (
 	ContextSourceClusterMaintenanceStatus = "SourceClusterMaintenanceStatus"
 	ContextCloneStrategy                  = "CloneStrategy"
 	ContextBackupID                       = "BackupID"
+	ContextOriginalParamGroupId           = "OriginalParamGroupId"
 	ContextOriginalVersion                = "OriginalVersion"
 	ContextUpgradeVersion                 = "UpgradeVersion"
 	ContextUpgradeWay                     = "UpgradeWay"
+	ContextUpgradeConfigs                 = "UpgradeConfigs"
 	ContextWorkflowID                     = "WorkflowID"
 	ContextTopologyConfig                 = "TopologyConfig"
 	ContextPublicKey                      = "PublicKey"
@@ -899,7 +901,8 @@ var onlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
 		"checkUpgradeTimeDone":    {"checkConfig", "checkConfigDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeConfig},
 		"checkConfigDone":         {"checkSystemHealth", "checkSystemHealthDone", "failAfterUpgrade", workflow.SyncFuncNode, checkRegionHealth},
 		"checkSystemHealthDone":   {"applyParameterGroup", "applyParameterGroupDone", "failAfterUpgrade", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
-		"applyParameterGroupDone": {"adjustParameters", "success", "failAfterUpgrade", workflow.SyncFuncNode, adjustParameters},
+		"applyParameterGroupDone": {"adjustParameters", "adjustParametersDone", "failAfterUpgrade", workflow.SyncFuncNode, adjustParametersAfterUpgrade},
+		"adjustParametersDone":    {"syncTopology", "success", "failAfterUpgrade", workflow.SyncFuncNode, syncTopology},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
 		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertConfigAfterFailure, endMaintenance)},
 		"failAfterUpgrade":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
@@ -914,15 +917,18 @@ var offlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
 		"selectTargetVersionDone": {"mergeConfig", "mergeConfigDone", "fail", workflow.SyncFuncNode, mergeUpgradeConfig},
 		"mergeConfigDone":         {"checkRegionHealth", "checkRegionHealthDone", "fail", workflow.SyncFuncNode, checkRegionHealth},
 		"checkRegionHealthDone":   {"stopCluster", "stopClusterDone", "fail", workflow.PollingNode, stopCluster},
-		"stopClusterDone":         {"upgradeCluster", "upgradeDone", "fail", workflow.PollingNode, upgradeCluster},
+		"stopClusterDone":         {"setClusterOffline", "offlineDone", "fail", workflow.SyncFuncNode, setClusterOffline},
+		"offlineDone":             {"upgradeCluster", "upgradeDone", "fail", workflow.PollingNode, upgradeCluster},
 		"upgradeDone":             {"startCluster", "startClusterDone", "fail", workflow.SyncFuncNode, startCluster},
-		"startClusterDone":        {"checkVersion", "checkVersionDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeVersion},
+		"startClusterDone":        {"setClusterOnline", "onlineDone", "failAfterUpgrade", workflow.SyncFuncNode, setClusterOnline},
+		"onlineDone":              {"checkVersion", "checkVersionDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeVersion},
 		"checkVersionDone":        {"checkMD5", "checkMD5Done", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeMD5},
 		"checkMD5Done":            {"checkUpgradeTime", "checkUpgradeTimeDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeTime},
 		"checkUpgradeTimeDone":    {"checkConfig", "checkConfigDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeConfig},
 		"checkConfigDone":         {"checkSystemHealth", "checkSystemHealthDone", "failAfterUpgrade", workflow.SyncFuncNode, checkRegionHealth},
 		"checkSystemHealthDone":   {"applyParameterGroup", "applyParameterGroupDone", "failAfterUpgrade", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
-		"applyParameterGroupDone": {"adjustParameters", "success", "failAfterUpgrade", workflow.SyncFuncNode, adjustParameters},
+		"applyParameterGroupDone": {"adjustParameters", "adjustParametersDone", "failAfterUpgrade", workflow.SyncFuncNode, adjustParametersAfterUpgrade},
+		"adjustParametersDone":    {"syncTopology", "success", "failAfterUpgrade", workflow.SyncFuncNode, syncTopology},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
 		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertConfigAfterFailure, endMaintenance)},
 		"failAfterUpgrade":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
@@ -1105,10 +1111,12 @@ func (p *Manager) InPlaceUpgradeCluster(ctx context.Context, req cluster.Upgrade
 	}
 
 	data := map[string]interface{}{
-		ContextClusterMeta:     clusterMeta,
-		ContextOriginalVersion: clusterMeta.Cluster.Version,
-		ContextUpgradeVersion:  req.TargetVersion,
-		ContextUpgradeWay:      req.UpgradeWay,
+		ContextClusterMeta:          clusterMeta,
+		ContextOriginalParamGroupId: clusterMeta.Cluster.ParameterGroupID,
+		ContextOriginalVersion:      clusterMeta.Cluster.Version,
+		ContextUpgradeVersion:       req.TargetVersion,
+		ContextUpgradeWay:           req.UpgradeWay,
+		ContextUpgradeConfigs:       req.Configs,
 	}
 	var flowID string
 	if req.UpgradeWay == string(constants.UpgradeWayOnline) {

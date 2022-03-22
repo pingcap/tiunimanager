@@ -1498,6 +1498,61 @@ func adjustParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 	return nil
 }
 
+// adjustParametersAfterUpgrade
+// @Description: adjust parameters after upgrade, given user's selection
+func adjustParametersAfterUpgrade(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
+	configs := context.GetData(ContextUpgradeConfigs).([]*structs.ClusterUpgradeVersionConfigItem)
+
+	targetParams := make([]structs.ClusterParameterSampleInfo, 0)
+	paramResp, _, err := parameter.NewManager().QueryClusterParameters(context, cluster.QueryClusterParametersReq{
+		ClusterID: clusterMeta.Cluster.ID,
+		ParamName: "max-replicas",
+	})
+	if err != nil {
+		return err
+	}
+	paramId := ""
+	for _, param := range paramResp.Params {
+		if param.Name == "max-replicas" {
+			paramId = param.ParamId
+		}
+	}
+	if len(paramId) == 0 {
+		return errors.NewError(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, "no parameter found by name max-replicas")
+	}
+	targetParams = append(targetParams, structs.ClusterParameterSampleInfo{
+		ParamId: paramId,
+		RealValue: structs.ParameterRealValue{
+			ClusterValue: strconv.Itoa(clusterMeta.Cluster.Copies),
+		},
+	})
+	for _, config := range configs {
+		targetParams = append(targetParams, structs.ClusterParameterSampleInfo{
+			ParamId: config.ParamId,
+			RealValue: structs.ParameterRealValue{
+				ClusterValue: config.Value,
+			},
+		})
+	}
+
+	resp, err := parameter.NewManager().UpdateClusterParameters(context, cluster.UpdateClusterParametersReq{
+		ClusterID: clusterMeta.Cluster.ID,
+		Params:    targetParams,
+		Reboot:    true,
+	}, false)
+	if err != nil {
+		return err
+	}
+	if err = meta.WaitWorkflow(context.Context, resp.WorkFlowID, 10*time.Second, 30*24*time.Hour); err != nil {
+		framework.LogWithContext(context).Errorf("update parameter workflow error: %s", err)
+		return err
+	}
+	node.Record(fmt.Sprintf("adjust parameter for cluster %s after upgrade", clusterMeta.Cluster.ID))
+
+	return nil
+}
+
 func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
 	req := context.GetData(ContextTakeoverRequest).(cluster.TakeoverClusterReq)
@@ -1911,6 +1966,7 @@ func upgradeCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	node.Record(fmt.Sprintf("upgrade cluster %s version to %s from %s", clusterMeta.Cluster.ID, version, clusterInfo.Version))
 	node.OperationID = operationID
 	clusterInfo.Version = version
+	clusterInfo.ParameterGroupID = ""
 	return nil
 }
 
@@ -1967,5 +2023,7 @@ func revertConfigAfterFailure(node *workflowModel.WorkFlowNode, context *workflo
 	clusterInfo := clusterMeta.Cluster
 	originalVersion := context.GetData(ContextOriginalVersion).(string)
 	clusterInfo.Version = originalVersion
+	originalParameterGroupId := context.GetData(ContextOriginalParamGroupId).(string)
+	clusterInfo.ParameterGroupID = originalParameterGroupId
 	return nil
 }

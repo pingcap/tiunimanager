@@ -51,7 +51,7 @@ type APIServerSpec struct {
 func (s *APIServerSpec) Status(tlsCfg *tls.Config, _ ...string) string {
 	client := utils.NewHTTPClient(statusQueryTimeout, tlsCfg)
 
-	path := "/system/check"
+	path := "/api/v1/system/info"
 	protocol := "https"
 	if s.EnableHttps == "false" {
 		protocol = "http"

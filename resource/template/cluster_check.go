@@ -16,12 +16,12 @@
 package template
 
 var EMClusterCheck = `
-{{ if (len .TemplateItemsForCompute) }}
 global:
   user: {{ .GlobalUser }}
   group: {{ .GlobalGroup }}
   ssh_port: {{ .GlobalSSHPort }}
-
+  arch: {{ .GlobalArch }}
+{{ if (len .TemplateItemsForCompute) }}
 tidb_servers:
 {{ range .TemplateItemsForCompute }}
   - host: {{ .HostIP }}

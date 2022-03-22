@@ -748,27 +748,44 @@ func (m *Manager) startAsyncOperation(ctx context.Context, id, home, tiUPArgs st
 	go func() {
 		cmd, cancelFunc := genCommand(home, m.TiUPBinPath, tiUPArgs, timeoutS)
 		var out bytes.Buffer
-		//var stderr bytes.Buffer
-		//cmd.Stderr = &stderr
+		var stderr bytes.Buffer
 		cmd.Stdout = &out
+		cmd.Stderr = &stderr
 		defer cancelFunc()
 
 		t0 := time.Now()
 		if err := cmd.Start(); err != nil {
-			updateStatus(ctx, id, fmt.Sprintf("operation starts err: %+v, errStr: %s", err, out.String()), Error, t0)
+			var detailInfo string
+			if m.sensitiveCmd(tiUPArgs) {
+				detailInfo = out.String()
+			} else {
+				detailInfo = fmt.Sprintf("%s\n%s", stderr.String(), out.String())
+			}
+			updateStatus(ctx, id, fmt.Sprintf("operation starts err: %+v. \ndetail info: %s", err, detailInfo), Error, t0)
 			return
 		}
 		updateStatus(ctx, id, "operation processing", Processing, time.Time{})
 
 		err := cmd.Wait()
 		if err != nil && !m.ExitStatusZero(err) {
-			updateStatus(ctx, id, fmt.Sprintf("operation failed with err: %+v, errstr: %s", err, out.String()), Error, t0)
+			var detailInfo string
+			if m.sensitiveCmd(tiUPArgs) {
+				detailInfo = out.String()
+			} else {
+				detailInfo = fmt.Sprintf("%s\n%s", stderr.String(), out.String())
+			}
+			updateStatus(ctx, id, fmt.Sprintf("operation failed with err: %+v. \ndetail info: %s", err, detailInfo), Error, t0)
 			return
 		}
 
 		updateStatus(ctx, id, "operation finished", Finished, t0)
 		return
 	}()
+}
+
+func (m *Manager) sensitiveCmd(tiUPArgs string) bool {
+	cmd := strings.Split(tiUPArgs, " ")[0]
+	return cmd == CMDDumpling || cmd == CMDLightning
 }
 
 func (m *Manager) ExitStatusZero(err error) bool {

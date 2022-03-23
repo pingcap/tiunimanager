@@ -227,7 +227,7 @@ func (p *ClusterMeta) GetInstanceByStatus(ctx context.Context, status constants.
 // @return BDUser
 func (p *ClusterMeta) GetDBUserNamePassword(ctx context.Context, roleType constants.DBUserRoleType) (*management.DBUser, error) {
 	// replace br account with root
-	if roleType == constants.DBUserBackupRestore {
+	if roleType == constants.DBUserBackupRestore || roleType == constants.DBUserParameterManagement {
 		if cmp, e := CompareTiDBVersion(p.Cluster.Version, "v5.1.0"); e != nil {
 			return nil, e
 		} else if !cmp {

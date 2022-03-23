@@ -1304,9 +1304,7 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	}
 
 	// create built-in users
-	roleType := []constants.DBUserRoleType{
-		constants.DBUserParameterManagement,
-	}
+	roleType := []constants.DBUserRoleType{}
 
 	if cmp, e := meta.CompareTiDBVersion(clusterMeta.Cluster.Version, "v5.2.2"); e != nil {
 		return e
@@ -1317,7 +1315,7 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	if cmp, e := meta.CompareTiDBVersion(clusterMeta.Cluster.Version, "v5.1.0"); e != nil {
 		return e
 	} else if cmp {
-		roleType = append(roleType, constants.DBUserBackupRestore)
+		roleType = append(roleType, constants.DBUserBackupRestore, constants.DBUserParameterManagement)
 	}
 
 	for _, rt := range roleType {
@@ -1335,13 +1333,10 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 			errMessage := fmt.Sprintf("cluster %s add user %s error: %s", clusterMeta.Cluster.ID, dbUser.Name, err.Error())
 			node.Record(errMessage)
 			framework.LogWithContext(context.Context).Errorf(errMessage)
-
 			return err
 		}
-		node.Record(fmt.Sprintf("init user %s for cluster %s ", dbUser.Name, clusterMeta.Cluster.ID))
+		node.Record(fmt.Sprintf("init user %s succeed", dbUser.Name))
 	}
-	framework.LogWithContext(context.Context).Infof(
-		"cluster %s init database account successfully", clusterMeta.Cluster.ID)
 	return nil
 }
 

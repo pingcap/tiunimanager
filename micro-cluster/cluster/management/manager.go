@@ -21,6 +21,7 @@ import (
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
 	resourceStructs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	"net"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -1045,6 +1046,13 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 	framework.LogWithContext(ctx).Debugf("query paramgroup for version %s result: %v", version, groups)
 
 	configDiffInfos := compareConfigDifference(ctx, paramResp.Params, groups[0].Params, runningInstanceTypes)
+	sort.Slice(configDiffInfos, func(i, j int) bool {
+		if configDiffInfos[i].InstanceType != configDiffInfos[j].InstanceType {
+			return configDiffInfos[i].InstanceType < configDiffInfos[j].InstanceType
+		} else {
+			return configDiffInfos[i].Category < configDiffInfos[j].Category
+		}
+	})
 	resp.ConfigDiffInfos = configDiffInfos
 
 	return

@@ -44,7 +44,7 @@ const ParamClusterID = "clusterId"
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters/:clusterId/upgrade/path [get]
+// @Router /clusters/{clusterId}/upgrade/path [get]
 func QueryUpgradePaths(c *gin.Context) {
 	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &cluster.QueryUpgradePathReq{
 		ClusterID: c.Param(ParamClusterID),
@@ -68,7 +68,7 @@ func QueryUpgradePaths(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters/:clusterId/upgrade/diff [get]
+// @Router /clusters/{clusterId}/upgrade/diff [get]
 func QueryUpgradeVersionDiffInfo(c *gin.Context) {
 	var req cluster.QueryUpgradeVersionDiffInfoReq
 	if requestBody, ok := controller.HandleJsonRequestFromQuery(c,
@@ -97,7 +97,7 @@ func QueryUpgradeVersionDiffInfo(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters/:clusterId/upgrade [post]
+// @Router /clusters/{clusterId}/upgrade [post]
 func Upgrade(c *gin.Context) {
 	// handle upgrade request and call rpc method
 	if body, ok := controller.HandleJsonRequestFromBody(c,

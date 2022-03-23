@@ -27,6 +27,7 @@ package deployment
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -805,7 +806,7 @@ func (m *Manager) startSyncOperation(home, tiUPArgs string, timeoutS int) (resul
 
 	data, err := cmd.Output()
 	if err != nil {
-		return "", err
+		return "", errors.New(fmt.Sprintf("%s.\ndetail info: %s\n%s", err.Error(), stderr.String(), string(data)))
 	}
 	return string(data), nil
 }

@@ -405,6 +405,7 @@ func Test_BuildCheckHostTemplateItems(t *testing.T) {
 	host := genHostInfo("Test_Host1", "Compute,Storage,Schedule")
 	templateInfo := templateCheckHost{}
 	host.SSHPort = 10086
+	host.Arch = string(constants.ArchX8664)
 	(&templateInfo).buildCheckHostTemplateItems(host)
 
 	assert.Equal(t, 2, len(templateInfo.TemplateItemsForCompute))

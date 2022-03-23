@@ -58,6 +58,7 @@ type templateCheckHost struct {
 	GlobalSSHPort            int
 	GlobalUser               string
 	GlobalGroup              string
+	GlobalArch               string
 	TemplateItemsForCompute  []checkHostTemplateItem
 	TemplateItemsForSchedule []checkHostTemplateItem
 	TemplateItemsForStorage  []checkHostTemplateItem
@@ -75,6 +76,7 @@ func (p *templateCheckHost) buildCheckHostTemplateItems(h *structs.HostInfo) {
 	p.GlobalUser = framework.GetCurrentDeployUser()
 	p.GlobalGroup = framework.GetCurrentDeployGroup()
 	p.GlobalSSHPort = int(h.SSHPort)
+	p.GlobalArch = constants.GetArchAlias(constants.ArchType(h.Arch))
 	p.TemplateItemsForCompute = make([]checkHostTemplateItem, 0)
 	p.TemplateItemsForSchedule = make([]checkHostTemplateItem, 0)
 	p.TemplateItemsForStorage = make([]checkHostTemplateItem, 0)

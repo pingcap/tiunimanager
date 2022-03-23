@@ -98,9 +98,7 @@ func GetManager() *Manager {
 				"pauseOldSyncChangeFeedTask": {
 					"pauseOldSyncChangeFeedTask", "createReverseSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfStepPauseOldSyncChangeFeedTask},
 				"createReverseSyncChangeFeedTask": {
-					"createReverseSyncChangeFeedTask", "checkNewMasterReadWriteHealth", "fail", workflow.SyncFuncNode, wfStepCreateReverseSyncChangeFeedTask},
-				"checkNewMasterReadWriteHealth": {
-					"checkNewMasterReadWriteHealth", "checkNewSyncChangeFeedTaskHealth", "fail", workflow.SyncFuncNode, wfStepCheckNewMasterReadWriteHealth},
+					"createReverseSyncChangeFeedTask", "checkNewSyncChangeFeedTaskHealth", "fail", workflow.SyncFuncNode, wfStepCreateReverseSyncChangeFeedTask},
 				"checkNewSyncChangeFeedTaskHealth": {
 					"checkNewSyncChangeFeedTaskHealth", "migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "fail", workflow.SyncFuncNode, wfStepCheckNewSyncChangeFeedTaskHealth},
 				"migrateAllDownStreamSyncChangeFeedTasksToNewMaster": {

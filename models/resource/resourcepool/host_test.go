@@ -216,6 +216,36 @@ func Test_ToHostInfo(t *testing.T) {
 	assert.Equal(t, string(constants.HostLoadComputeExhaust), dst.Stat)
 }
 
+func Test_prepareForUpdateSpec(t *testing.T) {
+	type want struct {
+		freeCpuCores int32
+		freeMemory   int32
+	}
+	tests := []struct {
+		testName   string
+		originHost Host
+		updateHost Host
+		want       want
+	}{
+		{"No_update1", Host{CpuCores: 64, Memory: 128, FreeCpuCores: 24, FreeMemory: 28}, Host{CpuCores: 0, Memory: 0}, want{24, 28}},
+		{"No_update2", Host{CpuCores: 64, Memory: 128, FreeCpuCores: 24, FreeMemory: 28}, Host{CpuCores: 64, Memory: 128}, want{24, 28}},
+		{"ScaleOut_Spec_1", Host{CpuCores: 64, Memory: 128, FreeCpuCores: 24, FreeMemory: 28}, Host{CpuCores: 128, Memory: 256}, want{88, 156}},
+		{"ScaleOut_Spec_2", Host{CpuCores: 30, Memory: 98, FreeCpuCores: -10, FreeMemory: -2}, Host{CpuCores: 64, Memory: 128}, want{24, 28}},
+		{"ScaleOut_Spec_3", Host{CpuCores: 64, Memory: 128, FreeCpuCores: 64, FreeMemory: 128}, Host{CpuCores: 128, Memory: 256}, want{128, 256}},
+		{"ScaleIn_Spec_1", Host{CpuCores: 64, Memory: 128, FreeCpuCores: 24, FreeMemory: 28}, Host{CpuCores: 50, Memory: 101}, want{10, 1}},
+		{"ScaleIn_Spec_2", Host{CpuCores: 64, Memory: 128, FreeCpuCores: 24, FreeMemory: 28}, Host{CpuCores: 30, Memory: 98}, want{-10, -2}},
+		{"ScaleIn_Spec_3", Host{CpuCores: 30, Memory: 98, FreeCpuCores: -10, FreeMemory: -2}, Host{CpuCores: 35, Memory: 105}, want{-5, 5}},
+		{"ScaleIn_Spec_4", Host{CpuCores: 64, Memory: 128, FreeCpuCores: 64, FreeMemory: 128}, Host{CpuCores: 32, Memory: 64}, want{32, 64}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.testName, func(t *testing.T) {
+			tt.originHost.prepareForUpdateSpec(tt.updateHost.CpuCores, tt.updateHost.Memory)
+			assert.Equal(t, tt.want.freeCpuCores, tt.originHost.FreeCpuCores)
+			assert.Equal(t, tt.want.freeMemory, tt.originHost.FreeMemory)
+		})
+	}
+}
+
 func Test_UpdateHost(t *testing.T) {
 	dbPath := "./test_resource_" + uuidutil.ShortId() + ".db"
 	db, err := createDB(dbPath)

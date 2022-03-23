@@ -1009,6 +1009,11 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 		return
 	}
 
+	runningInstanceTypes := make([]string, 0)
+	for instanceType, _ := range clusterMeta.Instances {
+		runningInstanceTypes = append(runningInstanceTypes, instanceType)
+	}
+
 	framework.LogWithContext(ctx).Infof("query config difference between cluster %s version %s and parametergroup of %s", clusterID, clusterMeta.Cluster.Version, version)
 	paramResp, _, err := parameter.NewManager().QueryClusterParameters(ctx, cluster.QueryClusterParametersReq{
 		ClusterID: clusterID,
@@ -1039,7 +1044,7 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 	}
 	framework.LogWithContext(ctx).Debugf("query paramgroup for version %s result: %v", version, groups)
 
-	configDiffInfos := compareConfigDifference(ctx, paramResp.Params, groups[0].Params)
+	configDiffInfos := compareConfigDifference(ctx, paramResp.Params, groups[0].Params, runningInstanceTypes)
 	resp.ConfigDiffInfos = configDiffInfos
 
 	return
@@ -1054,18 +1059,23 @@ func getMinorVersion(version string) string {
 	}
 }
 
-func compareConfigDifference(ctx context.Context, clusterParameterInfos []structs.ClusterParameterInfo, parameterGroupParameterInfos []structs.ParameterGroupParameterInfo) (resp []*structs.ProductUpgradeVersionConfigDiffItem) {
+func compareConfigDifference(ctx context.Context, clusterParameterInfos []structs.ClusterParameterInfo, parameterGroupParameterInfos []structs.ParameterGroupParameterInfo,
+	runningInstanceTypes []string) (resp []*structs.ProductUpgradeVersionConfigDiffItem) {
 	framework.LogWithContext(ctx).Debugf("query config difference between clusterParameterInfos (%v) and parameterGroupParameterInfos (%v)",
 		clusterParameterInfos, parameterGroupParameterInfos)
 
 	clusterParamMap := make(map[string]structs.ClusterParameterInfo)
 	for _, param := range clusterParameterInfos {
-		clusterParamMap[param.ParamId] = param
+		if meta.Contain(runningInstanceTypes, param.InstanceType) {
+			clusterParamMap[param.ParamId] = param
+		}
 	}
 
 	pgParamMap := make(map[string]structs.ParameterGroupParameterInfo)
 	for _, param := range parameterGroupParameterInfos {
-		pgParamMap[param.ID] = param
+		if meta.Contain(runningInstanceTypes, param.InstanceType) {
+			pgParamMap[param.ID] = param
+		}
 	}
 
 	for id, clusterParam := range clusterParamMap {

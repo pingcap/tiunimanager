@@ -1808,7 +1808,7 @@ func Test_compareConfigDifference(t *testing.T) {
 		},
 	}
 
-	resp := compareConfigDifference(context.TODO(), cParamInfos, pgParamInfos)
+	resp := compareConfigDifference(context.TODO(), cParamInfos, pgParamInfos, []string{"tidb", "tikv", "pd"})
 	assert.Equal(t, 1, len(resp))
 	item := structs.ProductUpgradeVersionConfigDiffItem{
 		ParamId:      "1",

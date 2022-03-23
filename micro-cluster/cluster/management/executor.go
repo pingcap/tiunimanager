@@ -1304,38 +1304,39 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	}
 
 	// create built-in users
-	roleType := []constants.DBUserRoleType{
-		constants.DBUserBackupRestore,
-		constants.DBUserParameterManagement,
-	}
-	cmp, err := meta.CompareTiDBVersion(clusterMeta.Cluster.Version, "v5.2.2")
-	if err != nil {
-		return err
-	}
-	if cmp {
+	roleType := []constants.DBUserRoleType{}
+
+	if cmp, e := meta.CompareTiDBVersion(clusterMeta.Cluster.Version, "v5.2.2"); e != nil {
+		return e
+	} else if cmp {
 		roleType = append(roleType, constants.DBUserCDCDataSync)
 	}
 
+	if cmp, e := meta.CompareTiDBVersion(clusterMeta.Cluster.Version, "v5.1.0"); e != nil {
+		return e
+	} else if cmp {
+		roleType = append(roleType, constants.DBUserBackupRestore, constants.DBUserParameterManagement)
+	}
+
 	for _, rt := range roleType {
+		node.Record(fmt.Sprintf("init database account, type: %s", rt))
 		dbUser := GenerateDBUser(context, rt)
 		err = utilsql.CreateDBUser(context, conn, dbUser, node.ID)
 		if err != nil {
-			framework.LogWithContext(context.Context).Errorf(
-				"cluster %s create user %s error: %s", clusterMeta.Cluster.ID, dbUser.Name, err)
+			errMessage := fmt.Sprintf("cluster %s create user %s error: %s", clusterMeta.Cluster.ID, dbUser.Name, err)
+			node.Record(errMessage)
+			framework.LogWithContext(context.Context).Errorf(errMessage)
 			return err
 		}
 		err = models.GetClusterReaderWriter().CreateDBUser(context, dbUser)
 		if err != nil {
-			framework.LogWithContext(context.Context).Errorf(
-				"cluster %s add user %s error: %s", clusterMeta.Cluster.ID, dbUser.Name, err.Error())
+			errMessage := fmt.Sprintf("cluster %s add user %s error: %s", clusterMeta.Cluster.ID, dbUser.Name, err.Error())
+			node.Record(errMessage)
+			framework.LogWithContext(context.Context).Errorf(errMessage)
 			return err
 		}
-		node.Record(fmt.Sprintf("init user %s for cluster %s ", dbUser.Name, clusterMeta.Cluster.ID))
+		node.Record(fmt.Sprintf("init user %s succeed", dbUser.Name))
 	}
-	framework.LogWithContext(context.Context).Infof(
-		"cluster %s init database account successfully", clusterMeta.Cluster.ID)
-
-	node.Record(fmt.Sprintf("cluster %s init database account ", clusterMeta.Cluster.ID))
 	return nil
 }
 

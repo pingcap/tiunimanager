@@ -39,19 +39,25 @@ func TestManager_CreateBetweenClusters(t *testing.T) {
 
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
-	clusterRW.EXPECT().GetMeta(gomock.Any(), "sourceId").Return(&management.Cluster{}, []*management.ClusterInstance{
+	clusterRW.EXPECT().GetMeta(gomock.Any(), "sourceId").Return(&management.Cluster{
+		Version: "v5.2.2",
+	}, []*management.ClusterInstance{
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
 		{Type: "TiDB", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.2"}, Ports: []int32{111}},
 	}, []*management.DBUser{
 		{ClusterID: "sourceId", Name: "root", Password: common.PasswordInExpired{Val: "123455678"}, RoleType: string(constants.DBUserCDCDataSync)},
 	}, nil).AnyTimes()
-	clusterRW.EXPECT().GetMeta(gomock.Any(), "targetId").Return(&management.Cluster{}, []*management.ClusterInstance{
+	clusterRW.EXPECT().GetMeta(gomock.Any(), "targetId").Return(&management.Cluster{
+		Version: "v5.2.2",
+	}, []*management.ClusterInstance{
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.1"}, Ports: []int32{111}},
 		{Type: "TiDB", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.2"}, Ports: []int32{111}},
 	}, []*management.DBUser{
 		{ClusterID: "targetId", Name: "root", Password: common.PasswordInExpired{Val: "123455678"}, RoleType: string(constants.DBUserCDCDataSync)},
 	}, nil).AnyTimes()
-	clusterRW.EXPECT().GetMeta(gomock.Any(), "errorId").Return(&management.Cluster{}, []*management.ClusterInstance{
+	clusterRW.EXPECT().GetMeta(gomock.Any(), "errorId").Return(&management.Cluster{
+		Version: "v5.2.2",
+	}, []*management.ClusterInstance{
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.1"}, Ports: []int32{111}},
 		{Type: "TiDB", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.2"}, Ports: []int32{111}},
 	}, []*management.DBUser{

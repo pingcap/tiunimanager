@@ -174,7 +174,7 @@ func mockCluster() *management.Cluster {
 		Entity:            common.Entity{ID: "123", TenantId: "1", Status: "1"},
 		Name:              "testCluster",
 		Type:              "0",
-		Version:           "5.0",
+		Version:           "v5.2.2",
 		TLS:               false,
 		Tags:              nil,
 		TagInfo:           "",

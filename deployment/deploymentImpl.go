@@ -800,15 +800,13 @@ func (m *Manager) ExitStatusZero(err error) bool {
 
 func (m *Manager) startSyncOperation(home, tiUPArgs string, timeoutS int) (result string, err error) {
 	cmd, cancelFunc := genCommand(home, m.TiUPBinPath, tiUPArgs, timeoutS)
-	var out bytes.Buffer
 	var stderr bytes.Buffer
-	cmd.Stdout = &out
 	cmd.Stderr = &stderr
 	defer cancelFunc()
 
 	data, err := cmd.Output()
 	if err != nil {
-		return "", errors.New(fmt.Sprintf("%s.\ndetail info:%s\n%s", err.Error(), stderr.String(), out.String()))
+		return "", errors.New(fmt.Sprintf("%s.\ndetail info:%s\n%s", err.Error(), stderr.String(), string(data)))
 	}
 	return string(data), nil
 }

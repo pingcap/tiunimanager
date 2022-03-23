@@ -75,17 +75,17 @@ func GetManager() *Manager {
 				"pauseOldSyncChangeFeedTask": {
 					"pauseOldSyncChangeFeedTask", "createReverseSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfStepPauseOldSyncChangeFeedTask},
 				"createReverseSyncChangeFeedTask": {
-					"createReverseSyncChangeFeedTask", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfStepCreateReverseSyncChangeFeedTask},
-				"setNewMasterReadWrite": {
-					"setNewMasterReadWrite", "checkNewSyncChangeFeedTaskHealth", "fail", workflow.SyncFuncNode, wfStepSetNewMasterReadWrite},
+					"createReverseSyncChangeFeedTask", "checkNewSyncChangeFeedTaskHealth", "fail", workflow.SyncFuncNode, wfStepCreateReverseSyncChangeFeedTask},
 				"checkNewSyncChangeFeedTaskHealth": {
 					"checkNewSyncChangeFeedTaskHealth", "migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "fail", workflow.SyncFuncNode, wfStepCheckNewSyncChangeFeedTaskHealth},
 				"migrateAllDownStreamSyncChangeFeedTasksToNewMaster": {
-					"migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "swapMasterSlaveRelationInDB", "fail", workflow.SyncFuncNode, wfStepMigrateAllDownStreamSyncChangeFeedTasksToNewMaster},
+					"migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfStepMigrateAllDownStreamSyncChangeFeedTasksToNewMaster},
+				"setNewMasterReadWrite": {
+					"setNewMasterReadWrite", "swapMasterSlaveRelationInDB", "fail", workflow.SyncFuncNode, wfStepSetNewMasterReadWrite},
 				"swapMasterSlaveRelationInDB": {
 					"swapMasterSlaveRelationInDB", "end", "fail", workflow.SyncFuncNode, wfStepSwapMasterSlaveRelationInDB},
 				"end": {
-					"finish", "", "", workflow.SyncFuncNode, wfStepFinish},
+					"end", "", "", workflow.SyncFuncNode, wfStepFinish},
 				"fail": {
 					"fail", "", "", workflow.SyncFuncNode, wfStepFail},
 			},
@@ -98,19 +98,17 @@ func GetManager() *Manager {
 				"pauseOldSyncChangeFeedTask": {
 					"pauseOldSyncChangeFeedTask", "createReverseSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfStepPauseOldSyncChangeFeedTask},
 				"createReverseSyncChangeFeedTask": {
-					"createReverseSyncChangeFeedTask", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfStepCreateReverseSyncChangeFeedTask},
-				"setNewMasterReadWrite": {
-					"setNewMasterReadWrite", "checkNewMasterReadWriteHealth", "fail", workflow.SyncFuncNode, wfStepSetNewMasterReadWrite},
-				"checkNewMasterReadWriteHealth": {
-					"checkNewMasterReadWriteHealth", "checkNewSyncChangeFeedTaskHealth", "fail", workflow.SyncFuncNode, wfStepCheckNewMasterReadWriteHealth},
+					"createReverseSyncChangeFeedTask", "checkNewSyncChangeFeedTaskHealth", "fail", workflow.SyncFuncNode, wfStepCreateReverseSyncChangeFeedTask},
 				"checkNewSyncChangeFeedTaskHealth": {
 					"checkNewSyncChangeFeedTaskHealth", "migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "fail", workflow.SyncFuncNode, wfStepCheckNewSyncChangeFeedTaskHealth},
 				"migrateAllDownStreamSyncChangeFeedTasksToNewMaster": {
-					"migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "swapMasterSlaveRelationInDB", "fail", workflow.SyncFuncNode, wfStepMigrateAllDownStreamSyncChangeFeedTasksToNewMaster},
+					"migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfStepMigrateAllDownStreamSyncChangeFeedTasksToNewMaster},
+				"setNewMasterReadWrite": {
+					"setNewMasterReadWrite", "swapMasterSlaveRelationInDB", "fail", workflow.SyncFuncNode, wfStepSetNewMasterReadWrite},
 				"swapMasterSlaveRelationInDB": {
 					"swapMasterSlaveRelationInDB", "end", "fail", workflow.SyncFuncNode, wfStepSwapMasterSlaveRelationInDB},
 				"end": {
-					"finish", "", "", workflow.SyncFuncNode, wfStepFinish},
+					"end", "", "", workflow.SyncFuncNode, wfStepFinish},
 				"fail": {
 					"fail", "", "", workflow.SyncFuncNode, wfStepFail},
 			},
@@ -126,7 +124,7 @@ func GetManager() *Manager {
 					"swapMasterSlaveRelationInDB": {
 						"swapMasterSlaveRelationInDB", "end", "fail", workflow.SyncFuncNode, wfStepSwapMasterSlaveRelationInDB},
 					"end": {
-						"finish", "", "", workflow.SyncFuncNode, wfStepFinish},
+						"end", "", "", workflow.SyncFuncNode, wfStepFinish},
 					"fail": {
 						"fail", "", "", workflow.SyncFuncNode, wfStepFail},
 				},

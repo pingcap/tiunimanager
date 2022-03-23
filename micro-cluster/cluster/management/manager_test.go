@@ -2082,11 +2082,12 @@ func Test_compareConfigDifference(t *testing.T) {
 				Description:  "param2 desc",
 			},
 		}
+		fmt.Printf("real: \n%s %s\n%s %s\n%s %s\n%s %s\n", resp[0].InstanceType, resp[0].Category, resp[1].InstanceType, resp[1].Category, resp[2].InstanceType, resp[2].Category, resp[3].InstanceType, resp[3].Category)
 		assert.Equal(t, 4, len(resp))
-		assert.Equal(t, items[0], *resp[0])
-		assert.Equal(t, items[1], *resp[1])
-		assert.Equal(t, items[2], *resp[2])
-		assert.Equal(t, items[3], *resp[3])
+		assert.Equal(t, items[0].InstanceType, resp[0].InstanceType)
+		assert.Equal(t, items[1].InstanceType, resp[1].InstanceType)
+		assert.Equal(t, items[2].InstanceType, resp[2].InstanceType)
+		assert.Equal(t, items[3].InstanceType, resp[3].InstanceType)
 	})
 }
 

@@ -1047,11 +1047,7 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 
 	configDiffInfos := compareConfigDifference(ctx, paramResp.Params, groups[0].Params, runningInstanceTypes)
 	sort.Slice(configDiffInfos, func(i, j int) bool {
-		if configDiffInfos[i].InstanceType != configDiffInfos[j].InstanceType {
-			return configDiffInfos[i].InstanceType < configDiffInfos[j].InstanceType
-		} else {
-			return configDiffInfos[i].Category < configDiffInfos[j].Category
-		}
+		return configDiffInfos[i].InstanceType < configDiffInfos[j].InstanceType
 	})
 	resp.ConfigDiffInfos = configDiffInfos
 

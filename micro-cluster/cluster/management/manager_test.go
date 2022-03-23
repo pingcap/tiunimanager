@@ -1852,6 +1852,7 @@ func Test_compareConfigDifference(t *testing.T) {
 		RangeType:    1,
 		Description:  "param1 desc",
 	}
+	assert.Equal(t, 1, len(resp))
 	assert.Equal(t, item, *resp[0])
 }
 

@@ -24,6 +24,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
+
 	"github.com/pingcap-inc/tiem/models/cluster/upgrade"
 
 	"github.com/golang/mock/gomock"
@@ -1732,6 +1734,7 @@ func Test_compareConfigDifference(t *testing.T) {
 			UnitOptions: []string{"KB", "MB", "GB"},
 			Range:       []string{"1, 100"},
 			RangeType:   1,
+			HasApply:    int(parameter.DirectApply),
 			Description: "param1 desc",
 		},
 		{
@@ -1747,6 +1750,7 @@ func Test_compareConfigDifference(t *testing.T) {
 			UnitOptions: []string{"KB", "MB", "GB"},
 			Range:       []string{"1, 1000"},
 			RangeType:   1,
+			HasApply:    int(parameter.DirectApply),
 			Description: "param2 desc",
 		},
 		{
@@ -1762,6 +1766,7 @@ func Test_compareConfigDifference(t *testing.T) {
 			UnitOptions: []string{"KB", "MB", "GB"},
 			Range:       []string{"1, 10000"},
 			RangeType:   1,
+			HasApply:    int(parameter.DirectApply),
 			Description: "param3 desc",
 		},
 		{
@@ -1777,7 +1782,24 @@ func Test_compareConfigDifference(t *testing.T) {
 			UnitOptions: []string{"KB", "MB", "GB"},
 			Range:       []string{"1, 100000"},
 			RangeType:   1,
+			HasApply:    int(parameter.DirectApply),
 			Description: "param4 desc",
+		},
+		{
+			ParamId:      "5",
+			Category:     "basic5",
+			Name:         "param5",
+			InstanceType: "tidb",
+			RealValue: structs.ParameterRealValue{
+				ClusterValue: "v5_real",
+			},
+			Type:        5,
+			Unit:        "KB",
+			UnitOptions: []string{"KB", "MB", "GB"},
+			Range:       []string{"1, 100000"},
+			RangeType:   1,
+			HasApply:    int(parameter.ModifyApply),
+			Description: "param5 desc",
 		},
 	}
 
@@ -1793,6 +1815,7 @@ func Test_compareConfigDifference(t *testing.T) {
 			UnitOptions:  []string{"KB", "MB", "GB"},
 			Range:        []string{"1, 100"},
 			RangeType:    1,
+			HasApply:     int(parameter.DirectApply),
 			Description:  "param1 desc",
 		},
 		{
@@ -1806,6 +1829,7 @@ func Test_compareConfigDifference(t *testing.T) {
 			UnitOptions:  []string{"KB", "MB", "GB"},
 			Range:        []string{"1, 1000"},
 			RangeType:    1,
+			HasApply:     int(parameter.DirectApply),
 			Description:  "param2 desc",
 		},
 		{
@@ -1819,6 +1843,7 @@ func Test_compareConfigDifference(t *testing.T) {
 			UnitOptions:  []string{"KB", "MB", "GB"},
 			Range:        []string{"1, 10000"},
 			RangeType:    1,
+			HasApply:     int(parameter.DirectApply),
 			Description:  "param3 desc",
 		},
 		{
@@ -1832,7 +1857,22 @@ func Test_compareConfigDifference(t *testing.T) {
 			UnitOptions:  []string{"KB", "MB", "GB"},
 			Range:        []string{"1, 100000"},
 			RangeType:    1,
+			HasApply:     int(parameter.DirectApply),
 			Description:  "param4 desc",
+		},
+		{
+			ID:           "5",
+			Category:     "basic5",
+			Name:         "param5",
+			InstanceType: "tidb",
+			DefaultValue: "v5new",
+			Type:         5,
+			Unit:         "KB",
+			UnitOptions:  []string{"KB", "MB", "GB"},
+			Range:        []string{"1, 100000"},
+			RangeType:    1,
+			HasApply:     int(parameter.ModifyApply),
+			Description:  "param5 desc",
 		},
 	}
 

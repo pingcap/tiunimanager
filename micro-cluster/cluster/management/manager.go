@@ -1066,14 +1066,14 @@ func compareConfigDifference(ctx context.Context, clusterParameterInfos []struct
 
 	clusterParamMap := make(map[string]structs.ClusterParameterInfo)
 	for _, param := range clusterParameterInfos {
-		if meta.Contain(runningInstanceTypes, param.InstanceType) {
+		if meta.Contain(runningInstanceTypes, param.InstanceType) && param.HasApply != int(parameter.ModifyApply) {
 			clusterParamMap[param.ParamId] = param
 		}
 	}
 
 	pgParamMap := make(map[string]structs.ParameterGroupParameterInfo)
 	for _, param := range parameterGroupParameterInfos {
-		if meta.Contain(runningInstanceTypes, param.InstanceType) {
+		if meta.Contain(runningInstanceTypes, param.InstanceType) && param.HasApply != int(parameter.ModifyApply) {
 			pgParamMap[param.ID] = param
 		}
 	}

@@ -143,6 +143,7 @@ func TestExecutor_restoreFromSrcCluster(t *testing.T) {
 				ID: "cls-test",
 			},
 			Name: "cls-test",
+			Version: "v5.2.2",
 		},
 		Instances: map[string][]*management.ClusterInstance{
 			"TiDB": {

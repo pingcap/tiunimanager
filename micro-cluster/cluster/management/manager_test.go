@@ -1764,6 +1764,21 @@ func Test_compareConfigDifference(t *testing.T) {
 			RangeType:   1,
 			Description: "param3 desc",
 		},
+		{
+			ParamId:      "4",
+			Category:     "basic4",
+			Name:         "param4",
+			InstanceType: "tiflash",
+			RealValue: structs.ParameterRealValue{
+				ClusterValue: "v4_real",
+			},
+			Type:        4,
+			Unit:        "KB",
+			UnitOptions: []string{"KB", "MB", "GB"},
+			Range:       []string{"1, 100000"},
+			RangeType:   1,
+			Description: "param4 desc",
+		},
 	}
 
 	pgParamInfos := []structs.ParameterGroupParameterInfo{
@@ -1805,6 +1820,19 @@ func Test_compareConfigDifference(t *testing.T) {
 			Range:        []string{"1, 10000"},
 			RangeType:    1,
 			Description:  "param3 desc",
+		},
+		{
+			ID:           "4",
+			Category:     "basic4",
+			Name:         "param4",
+			InstanceType: "tiflash",
+			DefaultValue: "v4new",
+			Type:         4,
+			Unit:         "KB",
+			UnitOptions:  []string{"KB", "MB", "GB"},
+			Range:        []string{"1, 100000"},
+			RangeType:    1,
+			Description:  "param4 desc",
 		},
 	}
 

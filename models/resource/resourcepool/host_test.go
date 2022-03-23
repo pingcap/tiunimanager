@@ -227,8 +227,8 @@ func Test_prepareForUpdateSpec(t *testing.T) {
 		updateHost Host
 		want       want
 	}{
-		{"No_update1", Host{CpuCores: 64, Memory: 128, FreeCpuCores: 24, FreeMemory: 28}, Host{CpuCores: 0, Memory: 0}, want{24, 28}},
-		{"No_update2", Host{CpuCores: 64, Memory: 128, FreeCpuCores: 24, FreeMemory: 28}, Host{CpuCores: 64, Memory: 128}, want{24, 28}},
+		{"No_update", Host{CpuCores: 64, Memory: 128, FreeCpuCores: 24, FreeMemory: 28}, Host{CpuCores: 0, Memory: 0}, want{24, 28}},
+		{"No_update", Host{CpuCores: 64, Memory: 128, FreeCpuCores: 24, FreeMemory: 28}, Host{CpuCores: 64, Memory: 128}, want{24, 28}},
 		{"ScaleOut_Spec_1", Host{CpuCores: 64, Memory: 128, FreeCpuCores: 24, FreeMemory: 28}, Host{CpuCores: 128, Memory: 256}, want{88, 156}},
 		{"ScaleOut_Spec_2", Host{CpuCores: 30, Memory: 98, FreeCpuCores: -10, FreeMemory: -2}, Host{CpuCores: 64, Memory: 128}, want{24, 28}},
 		{"ScaleOut_Spec_3", Host{CpuCores: 64, Memory: 128, FreeCpuCores: 64, FreeMemory: 128}, Host{CpuCores: 128, Memory: 256}, want{128, 256}},
@@ -239,9 +239,31 @@ func Test_prepareForUpdateSpec(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			tt.originHost.prepareForUpdateSpec(tt.updateHost.CpuCores, tt.updateHost.Memory)
-			assert.Equal(t, tt.want.freeCpuCores, tt.originHost.FreeCpuCores)
-			assert.Equal(t, tt.want.freeMemory, tt.originHost.FreeMemory)
+			updates := make(map[string]interface{})
+			tt.originHost.prepareForUpdateSpec(tt.updateHost.CpuCores, tt.updateHost.Memory, updates)
+			if tt.testName == "No_update" {
+				assert.Equal(t, 0, len(updates))
+			} else {
+				updatedCpu, ok := updates["cpu_cores"]
+				assert.True(t, ok)
+				cores := updatedCpu.(int32)
+				assert.Equal(t, tt.updateHost.CpuCores, cores)
+
+				updatedMem, ok := updates["memory"]
+				assert.True(t, ok)
+				mem := updatedMem.(int32)
+				assert.Equal(t, tt.updateHost.Memory, mem)
+
+				updatedFreeCpu, ok := updates["free_cpu_cores"]
+				assert.True(t, ok)
+				freeCpuCore := updatedFreeCpu.(int32)
+				assert.Equal(t, tt.want.freeCpuCores, freeCpuCore)
+
+				updatedFreeMem, ok := updates["free_memory"]
+				assert.True(t, ok)
+				freeMem := updatedFreeMem.(int32)
+				assert.Equal(t, tt.want.freeMemory, freeMem)
+			}
 		})
 	}
 }
@@ -275,13 +297,21 @@ func Test_UpdateHost(t *testing.T) {
 	host2 := genFakeHost("Region1", "Region1,Zone1", "Region1,Zone1,Rack1", "TEST_HOST2", "192.168.999.999", 48, 128,
 		string(constants.EMProductIDDataMigration), string(constants.PurposeStorage), string(constants.NVMeSSD))
 
-	patch := *host
-	err = patch.PrepareForUpdate(host2)
+	updates, err := host.PrepareForUpdate(host2)
 	assert.Nil(t, err)
-	assert.Equal(t, "TEST_HOST2", patch.HostName)
-	assert.Equal(t, "48C128G", patch.Spec)
-	assert.Equal(t, int64(82), patch.Traits)
-	err = db.Model(&host).Updates(patch).Error
+	value, ok := updates["host_name"]
+	assert.True(t, ok)
+	hostName := value.(string)
+	assert.Equal(t, "TEST_HOST2", hostName)
+	value, ok = updates["spec"]
+	assert.True(t, ok)
+	spec := value.(string)
+	assert.Equal(t, "48C128G", spec)
+	value, ok = updates["traits"]
+	assert.True(t, ok)
+	traits := value.(int64)
+	assert.Equal(t, int64(82), traits)
+	err = db.Model(&host).Updates(updates).Error
 	assert.Nil(t, err)
 
 	var queryHost Host
@@ -296,11 +326,14 @@ func Test_UpdateHost(t *testing.T) {
 
 	host3 := genFakeHost("Region1", "Region1,Zone1", "Region1,Zone1,Rack1", "TEST_HOST2", "192.168.999.998", 48, 128,
 		string(constants.EMProductIDDataMigration), string(constants.PurposeStorage), string(constants.NVMeSSD))
-	patch = *host
-	err = patch.PrepareForUpdate(host3)
+
+	updates, err = host.PrepareForUpdate(host3)
 	assert.Nil(t, err)
-	err = db.Model(&host).Updates(patch).Error
-	assert.Equal(t, "192.168.999.998", patch.IP)
+	value, ok = updates["ip"]
+	assert.True(t, ok)
+	ip := value.(string)
+	assert.Equal(t, "192.168.999.998", ip)
+	err = db.Model(&host).Updates(updates).Error
 	assert.NotNil(t, err)
 	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update ip on host %s is not allowed", hostId).GetMsg())
 

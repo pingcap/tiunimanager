@@ -40,6 +40,7 @@ type ClusterMaintenanceStatus string
 const (
 	ClusterMaintenanceCreating                     ClusterMaintenanceStatus = "Creating"
 	ClusterMaintenanceCloning                      ClusterMaintenanceStatus = "Cloning"
+	ClusterMaintenanceBeingCloned                  ClusterMaintenanceStatus = "BeingCloned"
 	ClusterMaintenanceDeleting                     ClusterMaintenanceStatus = "Deleting"
 	ClusterMaintenanceStopping                     ClusterMaintenanceStatus = "Stopping"
 	ClusterMaintenanceRestarting                   ClusterMaintenanceStatus = "Restarting"
@@ -195,6 +196,7 @@ var DefaultRetainedPortRange = "[11000,12000]"
 
 // RequestResourceMode specifying resource mode, enums : SpecificZone,SpecificHost
 type RequestResourceMode string
+
 const (
 	ResourceModeSpecificZone = "SpecificZone"
 	ResourceModeSpecificHost = "SpecificHost"

@@ -182,6 +182,14 @@ func Route(g *gin.Engine) {
 			cluster.POST("/:clusterId/upgrade", metrics.HandleMetrics(constants.MetricsClusterUpgrade), upgrade.Upgrade)
 		}
 
+		metadata := apiV1.Group("/metadata")
+		{
+			cluster.Use(interceptor.SystemRunning)
+			cluster.Use(interceptor.VerifyIdentity)
+			cluster.Use(interceptor.AuditLog)
+			metadata.DELETE("/:clusterId", metrics.HandleMetrics(constants.MetricsMetadataDeletePhysically), clusterApi.DeleteMetaDataPhysically)
+		}
+
 		backup := apiV1.Group("/backups")
 		{
 			backup.Use(interceptor.SystemRunning)
@@ -227,12 +235,16 @@ func Route(g *gin.Engine) {
 			host.Use(interceptor.AuditLog)
 			host.POST("hosts", metrics.HandleMetrics(constants.MetricsResourceImportHosts), resourceApi.ImportHosts)
 			host.GET("hosts", metrics.HandleMetrics(constants.MetricsResourceQueryHosts), resourceApi.QueryHosts)
-			host.DELETE("hosts", metrics.HandleMetrics(constants.MetricsResourceDeleteHost), resourceApi.RemoveHosts)
+			host.DELETE("hosts", metrics.HandleMetrics(constants.MetricsResourceDeleteHosts), resourceApi.RemoveHosts)
 			host.GET("hosts-template", metrics.HandleMetrics(constants.MetricsResourceDownloadHostTemplateFile), resourceApi.DownloadHostTemplateFile)
 			host.GET("hierarchy", metrics.HandleMetrics(constants.MetricsResourceQueryHierarchy), warehouseApi.GetHierarchy)
 			host.GET("stocks", metrics.HandleMetrics(constants.MetricsResourceQueryStocks), warehouseApi.GetStocks)
 			host.PUT("host-reserved", metrics.HandleMetrics(constants.MetricsResourceReservedHost), resourceApi.UpdateHostReserved)
 			host.PUT("host-status", metrics.HandleMetrics(constants.MetricsResourceModifyHostStatus), resourceApi.UpdateHostStatus)
+			host.PUT("host", metrics.HandleMetrics(constants.MetricsResourceUpdateHost), resourceApi.UpdateHost)
+			host.POST("disks", metrics.HandleMetrics(constants.MetricsResourceCreateDisks), resourceApi.CreateDisks)
+			host.DELETE("disks", metrics.HandleMetrics(constants.MetricsResourceDeleteDisks), resourceApi.RemoveDisks)
+			host.PUT("disk", metrics.HandleMetrics(constants.MetricsResourceUpdateDisk), resourceApi.UpdateDisk)
 		}
 
 		paramGroups := apiV1.Group("/param-groups")

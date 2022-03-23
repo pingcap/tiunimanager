@@ -18,6 +18,8 @@ package management
 import (
 	"context"
 	"fmt"
+	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
+	resourceStructs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	"net"
 	"strconv"
 	"strings"
@@ -45,24 +47,25 @@ import (
 )
 
 const (
-	ContextClusterMeta       = "ClusterMeta"
-	ContextTopology          = "Topology"
-	ContextAllocResource     = "AllocResource"
-	ContextInstanceID        = "InstanceID"
-	ContextSourceClusterMeta = "SourceClusterMeta"
-	ContextCloneStrategy     = "CloneStrategy"
-	ContextBackupID          = "BackupID"
-	ContextOriginalVersion   = "OriginalVersion"
-	ContextUpgradeVersion    = "UpgradeVersion"
-	ContextUpgradeWay        = "UpgradeWay"
-	ContextWorkflowID        = "WorkflowID"
-	ContextTopologyConfig    = "TopologyConfig"
-	ContextPublicKey         = "PublicKey"
-	ContextPrivateKey        = "PrivateKey"
-	ContextDeleteRequest     = "DeleteRequest"
-	ContextTakeoverRequest   = "TakeoverRequest"
-	ContextGCLifeTime        = "GCLifeTime"
-	ContextInstanceTypes     = "InstanceTypes"
+	ContextClusterMeta                    = "ClusterMeta"
+	ContextTopology                       = "Topology"
+	ContextAllocResource                  = "AllocResource"
+	ContextInstanceID                     = "InstanceID"
+	ContextSourceClusterMeta              = "SourceClusterMeta"
+	ContextSourceClusterMaintenanceStatus = "SourceClusterMaintenanceStatus"
+	ContextCloneStrategy                  = "CloneStrategy"
+	ContextBackupID                       = "BackupID"
+	ContextOriginalVersion                = "OriginalVersion"
+	ContextUpgradeVersion                 = "UpgradeVersion"
+	ContextUpgradeWay                     = "UpgradeWay"
+	ContextWorkflowID                     = "WorkflowID"
+	ContextTopologyConfig                 = "TopologyConfig"
+	ContextPublicKey                      = "PublicKey"
+	ContextPrivateKey                     = "PrivateKey"
+	ContextDeleteRequest                  = "DeleteRequest"
+	ContextTakeoverRequest                = "TakeoverRequest"
+	ContextGCLifeTime                     = "GCLifeTime"
+	ContextInstanceTypes                  = "InstanceTypes"
 )
 
 type Manager struct{}
@@ -221,8 +224,7 @@ var cloneDefine = workflow.WorkFlowDefine{
 		"startDone":               {"setClusterOnline", "onlineDone", "failAfterDeploy", workflow.SyncFuncNode, setClusterOnline},
 		"onlineDone":              {"initRootAccount", "initRootAccountDone", "failAfterDeploy", workflow.SyncFuncNode, initRootAccount},
 		"initRootAccountDone":     {"initAccount", "initAccountDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseAccount},
-		"initAccountDone":         {"initGrafanaAccount", "initGrafanaAccountDone", "failAfterDeploy", workflow.SyncFuncNode, initGrafanaAccount},
-		"initGrafanaAccountDone":  {"applyParameterGroup", "applyParameterGroupDone", "failAfterDeploy", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
+		"initAccountDone":         {"applyParameterGroup", "applyParameterGroupDone", "failAfterDeploy", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
 		"applyParameterGroupDone": {"syncBackupStrategy", "syncBackupStrategyDone", "failAfterDeploy", workflow.SyncFuncNode, syncBackupStrategy},
 		"syncBackupStrategyDone":  {"syncParameters", "syncParametersDone", "failAfterDeploy", workflow.SyncFuncNode, syncParameters},
 		"syncParametersDone":      {"waitSyncParam", "waitSyncParamDone", "failAfterDeploy", workflow.SyncFuncNode, waitWorkFlow},
@@ -251,26 +253,20 @@ func (p *Manager) Clone(ctx context.Context, request cluster.CloneClusterReq) (r
 	}
 
 	// Clone source cluster meta to get cluster topology
-	clusterMeta, err := sourceClusterMeta.CloneMeta(ctx, request.CreateClusterParameter, request.ResourceParameter.InstanceResource)
+	clusterMeta, err := sourceClusterMeta.CloneMeta(ctx, request.CreateClusterParameter,
+		request.ResourceParameter.InstanceResource, request.CloneStrategy)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"clone cluster %s meta error: %s", sourceClusterMeta.Cluster.ID, err.Error())
 		return
 	}
 
-	// When use CDCSyncClone strategy to clone cluster, source cluster must have CDC
-	err = meta.ClonePreCheck(ctx, sourceClusterMeta, clusterMeta, request.CloneStrategy)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf(
-			"check cluster %s clone error: %s", sourceClusterMeta.Cluster.ID, err.Error())
-		return
-	}
-
 	// Update cluster maintenance status and async start workflow
 	data := map[string]interface{}{
-		ContextClusterMeta:       clusterMeta,
-		ContextSourceClusterMeta: sourceClusterMeta,
-		ContextCloneStrategy:     request.CloneStrategy,
+		ContextClusterMeta:                    clusterMeta,
+		ContextSourceClusterMeta:              sourceClusterMeta,
+		ContextCloneStrategy:                  request.CloneStrategy,
+		ContextSourceClusterMaintenanceStatus: constants.ClusterMaintenanceBeingCloned,
 	}
 	flowID, err := asyncMaintenance(ctx, clusterMeta, constants.ClusterMaintenanceCloning, cloneDefine.FlowName, data)
 	if err != nil {
@@ -297,8 +293,7 @@ var createClusterFlow = workflow.WorkFlowDefine{
 		"startupDone":             {"setClusterOnline", "onlineDone", "failAfterDeploy", workflow.SyncFuncNode, setClusterOnline},
 		"onlineDone":              {"initRootAccount", "initRootAccountDone", "failAfterDeploy", workflow.SyncFuncNode, initRootAccount},
 		"initRootAccountDone":     {"initDatabaseAccount", "initDatabaseAccountDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseAccount},
-		"initDatabaseAccountDone": {"initGrafanaAccount", "initGrafanaAccountDone", "failAfterDeploy", workflow.SyncFuncNode, initGrafanaAccount},
-		"initGrafanaAccountDone":  {"applyParameterGroup", "applyParameterGroupDone", "failAfterDeploy", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
+		"initDatabaseAccountDone": {"applyParameterGroup", "applyParameterGroupDone", "failAfterDeploy", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
 		"applyParameterGroupDone": {"adjustParameters", "initParametersDone", "failAfterDeploy", workflow.SyncFuncNode, adjustParameters},
 		"initParametersDone":      {"testConnectivity", "testConnectivityDone", "failAfterDeploy", workflow.SyncFuncNode, testConnectivity},
 		"testConnectivityDone":    {"initDatabaseData", "initDataDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseData},
@@ -652,12 +647,12 @@ var takeoverClusterFlow = workflow.WorkFlowDefine{
 		"built":                   {"testConnectivity", "testConnectivityPassed", "revert", workflow.SyncFuncNode, testConnectivity},
 		"testConnectivityPassed":  {"validateHostsStatus", "hostReady", "revert", workflow.SyncFuncNode, validateHostsStatus},
 		"hostReady":               {"takeoverResource", "resourceDone", "revert", workflow.SyncFuncNode, takeoverResource},
-		"resourceDone":            {"rebuildTiupSpaceForCluster", "workingSpaceDone", "fail", workflow.SyncFuncNode, rebuildTiupSpaceForCluster},
-		"workingSpaceDone":        {"applyParameterGroup", "applyParameterGroupDone", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroupForTakeover)},
-		"applyParameterGroupDone": {"initDatabaseAccount", "success", "fail", workflow.SyncFuncNode, initDatabaseAccount},
+		"resourceDone":            {"rebuildTiupSpaceForCluster", "workingSpaceDone", "revertWithResource", workflow.SyncFuncNode, rebuildTiupSpaceForCluster},
+		"workingSpaceDone":        {"applyParameterGroup", "applyParameterGroupDone", "revertWithResource", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroupForTakeover)},
+		"applyParameterGroupDone": {"initDatabaseAccount", "success", "revertWithResource", workflow.SyncFuncNode, initDatabaseAccount},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
-		"revert":                  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(clearClusterPhysically)},
+		"revert":                  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(takeoverRevertMeta)},
+		"revertWithResource":      {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, takeoverRevertMeta)},
 	},
 }
 
@@ -736,18 +731,25 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 // @Parameter flowName
 // @return flowID
 // @return err
-func asyncMaintenance(ctx context.Context, meta *meta.ClusterMeta,
+func asyncMaintenance(ctx context.Context, clusterMeta *meta.ClusterMeta,
 	status constants.ClusterMaintenanceStatus, flowName string, data map[string]interface{}) (flowID string, err error) {
 
 	var flow *workflow.WorkFlowAggregation
 	err = models.Transaction(ctx, func(transactionCtx context.Context) error {
 		return errors.OfNullable(nil).BreakIf(func() error {
 			// update maintenance statue
-			return meta.StartMaintenance(transactionCtx, status)
+			if data[ContextSourceClusterMeta] != nil {
+				sourceClusterMeta := (data[ContextSourceClusterMeta]).(*meta.ClusterMeta)
+				sourceClusterMaintenanceStatus := data[ContextSourceClusterMaintenanceStatus].(constants.ClusterMaintenanceStatus)
+				if err := sourceClusterMeta.StartMaintenance(transactionCtx, sourceClusterMaintenanceStatus); err != nil {
+					return err
+				}
+			}
+			return clusterMeta.StartMaintenance(transactionCtx, status)
 		}).BreakIf(func() error {
 			// create flow
 			if newFlow, flowError := workflow.GetWorkFlowService().
-				CreateWorkFlow(transactionCtx, meta.Cluster.ID, workflow.BizTypeCluster, flowName); flowError == nil {
+				CreateWorkFlow(transactionCtx, clusterMeta.Cluster.ID, workflow.BizTypeCluster, flowName); flowError == nil {
 				flow = newFlow
 				flowID = newFlow.Flow.ID
 				for key, value := range data {
@@ -762,12 +764,35 @@ func asyncMaintenance(ctx context.Context, meta *meta.ClusterMeta,
 			return workflow.GetWorkFlowService().AsyncStart(transactionCtx, flow)
 		}).If(func(err error) {
 			framework.LogWithContext(ctx).Errorf(
-				"maintenance cluster %s failed", meta.Cluster.ID)
+				"maintenance cluster %s failed", clusterMeta.Cluster.ID)
 		}).Else(func() {
 			framework.LogWithContext(ctx).Infof(
-				"create flow %s succeed, cluster %s", flowID, meta.Cluster.ID)
+				"create flow %s succeed, cluster %s", flowID, clusterMeta.Cluster.ID)
 		}).Present()
 	})
+	return
+}
+
+// DeleteMetadataPhysically
+// @Description: delete cluster metadata physically, for handling exceptions only
+// @Receiver p
+// @Parameter ctx
+// @Parameter req
+// @return resp
+// @return err
+func (p *Manager) DeleteMetadataPhysically(ctx context.Context, req cluster.DeleteMetadataPhysicallyReq) (resp cluster.DeleteMetadataPhysicallyResp, err error) {
+	if err = models.GetClusterReaderWriter().ClearClusterPhysically(ctx, req.ClusterID, req.Reason); err != nil {
+		return
+	}
+	request := &resourceStructs.RecycleRequest{
+		RecycleReqs: []resourceStructs.RecycleRequire{
+			{
+				RecycleType: resourceStructs.RecycleHolder,
+				HolderID:    req.ClusterID,
+			},
+		},
+	}
+	err = resourceManagement.GetManagement().GetAllocatorRecycler().RecycleResources(ctx, request)
 	return
 }
 

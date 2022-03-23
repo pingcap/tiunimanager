@@ -293,6 +293,22 @@ func (p *ResourcePool) GetStocks(ctx context.Context, location *structs.Location
 	return p.hostProvider.GetStocks(ctx, location, hostFilter, diskFilter)
 }
 
+func (p *ResourcePool) UpdateHostInfo(ctx context.Context, host structs.HostInfo) (err error) {
+	return p.hostProvider.UpdateHostInfo(ctx, host)
+}
+
+func (p *ResourcePool) CreateDisks(ctx context.Context, hostId string, disks []structs.DiskInfo) (diskIds []string, err error) {
+	return p.hostProvider.CreateDisks(ctx, hostId, disks)
+}
+
+func (p *ResourcePool) DeleteDisks(ctx context.Context, diskIds []string) (err error) {
+	return p.hostProvider.DeleteDisks(ctx, diskIds)
+}
+
+func (p *ResourcePool) UpdateDisk(ctx context.Context, disk structs.DiskInfo) (err error) {
+	return p.hostProvider.UpdateDisk(ctx, disk)
+}
+
 func (p *ResourcePool) selectImportFlowName(condition *structs.ImportCondition) (flowName string) {
 	if framework.Current.GetClientArgs().SkipHostInit || condition.SkipHostInit {
 		flowName = rp_consts.FlowImportHostsWithoutInit

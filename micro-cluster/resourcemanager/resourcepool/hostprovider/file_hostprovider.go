@@ -18,6 +18,7 @@ package hostprovider
 import (
 	"context"
 	"fmt"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -272,4 +273,44 @@ func (p *FileHostProvider) getInstancesOnHosts(ctx context.Context, hosts []stru
 	}
 
 	return nil
+}
+
+func (p *FileHostProvider) UpdateHostInfo(ctx context.Context, host structs.HostInfo) (err error) {
+	if host.ID == "" {
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "update host failed without host id")
+	}
+	var dbHost resourcepool.Host
+	err = dbHost.ConstructFromHostInfo(&host)
+	if err != nil {
+		return err
+	}
+	dbHost.ID = host.ID
+	return p.rw.UpdateHostInfo(ctx, dbHost)
+}
+
+func (p *FileHostProvider) CreateDisks(ctx context.Context, hostId string, disks []structs.DiskInfo) (diskIds []string, err error) {
+	var dbDisks []resourcepool.Disk
+	for i := range disks {
+		if err = disks[i].ValidateDisk(hostId, ""); err != nil {
+			return nil, err
+		}
+		var dbDisk resourcepool.Disk
+		dbDisk.ConstructFromDiskInfo(&disks[i])
+		dbDisks = append(dbDisks, dbDisk)
+	}
+	return p.rw.CreateDisks(ctx, hostId, dbDisks)
+}
+
+func (p *FileHostProvider) DeleteDisks(ctx context.Context, diskIds []string) (err error) {
+	return p.rw.DeleteDisks(ctx, diskIds)
+}
+
+func (p *FileHostProvider) UpdateDisk(ctx context.Context, disk structs.DiskInfo) (err error) {
+	if disk.ID == "" {
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "update disk failed without disk id")
+	}
+	var dbDisk resourcepool.Disk
+	dbDisk.ConstructFromDiskInfo(&disk)
+	dbDisk.ID = disk.ID
+	return p.rw.UpdateDisk(ctx, dbDisk)
 }

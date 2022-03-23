@@ -302,3 +302,39 @@ func Test_getSSHConfigPort_NullString(t *testing.T) {
 	port := resourcePool.getSSHConfigPort(context.TODO())
 	assert.Equal(t, 22, port)
 }
+
+func Test_UpdateHostInfo(t *testing.T) {
+	models.MockDB()
+	resourcePool := GetResourcePool()
+
+	// Mock host provider
+	ctrl1 := gomock.NewController(t)
+	defer ctrl1.Finish()
+	mockProvider := mock_provider.NewMockHostProvider(ctrl1)
+	mockProvider.EXPECT().UpdateHostInfo(gomock.Any(), gomock.Any()).Return(nil)
+	resourcePool.SetHostProvider(mockProvider)
+
+	err := resourcePool.UpdateHostInfo(context.TODO(), structs.HostInfo{})
+	assert.Nil(t, err)
+}
+
+func Test_CUDDisk(t *testing.T) {
+	models.MockDB()
+	resourcePool := GetResourcePool()
+
+	// Mock host provider
+	ctrl1 := gomock.NewController(t)
+	defer ctrl1.Finish()
+	mockProvider := mock_provider.NewMockHostProvider(ctrl1)
+	mockProvider.EXPECT().CreateDisks(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
+	mockProvider.EXPECT().UpdateDisk(gomock.Any(), gomock.Any()).Return(nil)
+	mockProvider.EXPECT().DeleteDisks(gomock.Any(), gomock.Any()).Return(nil)
+	resourcePool.SetHostProvider(mockProvider)
+
+	_, err := resourcePool.CreateDisks(context.TODO(), "fake-host-id", nil)
+	assert.Nil(t, err)
+	err = resourcePool.UpdateDisk(context.TODO(), structs.DiskInfo{})
+	assert.Nil(t, err)
+	err = resourcePool.DeleteDisks(context.TODO(), []string{"fake-disk-id"})
+	assert.Nil(t, err)
+}

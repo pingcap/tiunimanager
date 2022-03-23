@@ -182,7 +182,7 @@ func (rw *GormResourceReadWrite) UpdateHostStatus(ctx context.Context, hostIds [
 		result := tx.Model(&rp.Host{}).Where("id = ?", hostId).Update("status", status)
 		if result.Error != nil {
 			tx.Rollback()
-			return errors.NewErrorf(errors.TIEM_UPDATE_HOST_STATUS_FAIL, "update host %s status to %s fail", hostId, status)
+			return errors.NewErrorf(errors.TIEM_UPDATE_HOST_STATUS_FAIL, "update host %s status to %s fail, %v", hostId, status, result.Error)
 		}
 		if result.RowsAffected == 0 {
 			tx.Rollback()
@@ -198,7 +198,7 @@ func (rw *GormResourceReadWrite) UpdateHostReserved(ctx context.Context, hostIds
 		result := tx.Model(&rp.Host{}).Where("id = ?", hostId).Update("reserved", reserved)
 		if result.Error != nil {
 			tx.Rollback()
-			return errors.NewErrorf(errors.TIEM_RESERVE_HOST_FAIL, "update host %s reserved status to %v fail", hostId, reserved)
+			return errors.NewErrorf(errors.TIEM_RESERVE_HOST_FAIL, "update host %s reserved status to %v fail, %v", hostId, reserved, result.Error)
 		}
 		if result.RowsAffected == 0 {
 			tx.Rollback()
@@ -207,6 +207,36 @@ func (rw *GormResourceReadWrite) UpdateHostReserved(ctx context.Context, hostIds
 	}
 	tx.Commit()
 	return nil
+}
+
+func (rw *GormResourceReadWrite) UpdateHostInfo(ctx context.Context, host rp.Host) (err error) {
+	if host.ID == "" {
+		return errors.NewError(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update host info but no host id specified")
+	}
+	var originHost rp.Host
+	originHost.ID = host.ID
+	tx := rw.DB(ctx).Begin()
+	if err = tx.First(&originHost, "ID = ?", originHost.ID).Error; err != nil {
+		tx.Rollback()
+		return errors.NewErrorf(errors.TIEM_SQL_ERROR, "get origin host info before update (%s) error, %v", originHost.ID, err)
+	}
+	patch := originHost
+	err = patch.PrepareForUpdate(&host)
+	if err != nil {
+		tx.Rollback()
+		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "prepare for update host %s %s failed, %v", originHost.HostName, originHost.IP, err)
+	}
+	result := tx.Model(&originHost).Omit("Reserved", "Status", "Stat").Updates(patch)
+	if result.Error != nil {
+		tx.Rollback()
+		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update host %s %s info failed, %v", originHost.HostName, originHost.IP, result.Error)
+	}
+	if result.RowsAffected != 1 {
+		tx.Rollback()
+		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update host %s %s not affected one row, rows affected %d", originHost.HostName, originHost.IP, result.RowsAffected)
+	}
+	err = tx.Commit().Error
+	return
 }
 
 func (rw *GormResourceReadWrite) GetHostItems(ctx context.Context, filter *structs.HostFilter, level int32, depth int32) (items []resource_models.HostItem, err error) {
@@ -269,5 +299,88 @@ func (rw *GormResourceReadWrite) GetHostStocks(ctx context.Context, location *st
 		return nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "get stocks failed, %v", err)
 	}
 	tx.Commit()
+	return
+}
+
+func (rw *GormResourceReadWrite) CreateDisks(ctx context.Context, hostId string, disks []rp.Disk) (diskIds []string, err error) {
+	if hostId == "" {
+		return nil, errors.NewErrorf(errors.TIEM_RESOURCE_CREATE_DISK_ERROR, "batch create %d disks error, no hostId specified", len(disks))
+	}
+
+	tx := rw.DB(ctx).Begin()
+	var total int64
+	var host rp.Host
+	host.ID = hostId
+	// get host info
+	err = tx.Model(&host).First(&host).Count(&total).Error
+	if err != nil || total == 0 {
+		tx.Rollback()
+		return nil, errors.NewErrorf(errors.TIEM_RESOURCE_HOST_NOT_FOUND, "query host(%d) %s failed before creating disks, %v", total, hostId, err)
+	}
+	for i := range disks {
+		if err = disks[i].ValidateDisk(hostId, host.DiskType); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		if disks[i].HostID == "" {
+			disks[i].HostID = hostId
+		}
+		if disks[i].Type == "" {
+			disks[i].Type = host.DiskType
+		}
+		err = tx.Create(&disks[i]).Error
+		if err != nil {
+			tx.Rollback()
+			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_CREATE_DISK_ERROR, "create disk %s for host %s failed, %v", disks[i].Name, hostId, err)
+		}
+		diskIds = append(diskIds, disks[i].ID)
+	}
+	err = tx.Commit().Error
+	return
+}
+
+func (rw *GormResourceReadWrite) DeleteDisks(ctx context.Context, diskIds []string) (err error) {
+	tx := rw.DB(ctx).Begin()
+	for _, diskId := range diskIds {
+		err = tx.Delete(&rp.Disk{ID: diskId}).Error
+		if err != nil {
+			tx.Rollback()
+			return errors.NewErrorf(errors.TIEM_RESOURCE_DELETE_DISK_ERROR, "delete disk %s error, %v", diskId, err)
+		}
+	}
+	err = tx.Commit().Error
+	return
+}
+
+func (rw *GormResourceReadWrite) UpdateDisk(ctx context.Context, disk rp.Disk) (err error) {
+	if disk.ID == "" {
+		return errors.NewError(errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "update disk failed, no disk id specified")
+	}
+	if disk.Status != "" && disk.Status != string(constants.DiskError) {
+		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "disk status %s is not supported for update, only support set to %s by now",
+			disk.Status, string(constants.DiskError))
+	}
+	var originDisk rp.Disk
+	originDisk.ID = disk.ID
+	tx := rw.DB(ctx).Begin()
+	if err = tx.First(&originDisk, "ID = ?", originDisk.ID).Error; err != nil {
+		tx.Rollback()
+		return errors.NewErrorf(errors.TIEM_SQL_ERROR, "get origin disk info before update (%s) error, %v", originDisk.ID, err)
+	}
+	patch := originDisk
+	if err = patch.PrepareForUpdate(&disk); err != nil {
+		tx.Rollback()
+		return err
+	}
+	result := tx.Model(&originDisk).Updates(patch)
+	if result.Error != nil {
+		tx.Rollback()
+		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "update disk %s %s info failed, %v", originDisk.Name, originDisk.Path, result.Error)
+	}
+	if result.RowsAffected != 1 {
+		tx.Rollback()
+		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "update host %s %s not affected one row, rows affected %d", originDisk.Name, originDisk.Path, result.RowsAffected)
+	}
+	err = tx.Commit().Error
 	return
 }

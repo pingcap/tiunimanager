@@ -41,6 +41,14 @@ type ReaderWriter interface {
 
 	UpdateHostStatus(ctx context.Context, hostIds []string, status string) (err error)
 	UpdateHostReserved(ctx context.Context, hostIds []string, reserved bool) (err error)
+	UpdateHostInfo(ctx context.Context, host rp.Host) (err error)
+
+	// Add disks for a host
+	CreateDisks(ctx context.Context, hostId string, disks []rp.Disk) (diskIds []string, err error)
+	// Delete a batch of disks
+	DeleteDisks(ctx context.Context, diskIds []string) (err error)
+	// Update disk name/capacity or set disk failed
+	UpdateDisk(ctx context.Context, disk rp.Disk) (err error)
 
 	// Get all filtered hosts to build hierarchy tree
 	GetHostItems(ctx context.Context, filter *structs.HostFilter, level int32, depth int32) (items []HostItem, err error)

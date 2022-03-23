@@ -54,6 +54,8 @@ const (
 	MetricsClusterUpgradePath           MetricsType = "cluster/upgrade_path"
 	MetricsClusterUpgradeDiff           MetricsType = "cluster/upgrade_diff"
 
+	MetricsMetadataDeletePhysically     MetricsType = "metadata/delete"
+
 	MetricsPlatformCheck     MetricsType = "platform/check"
 	MetricsClusterCheck      MetricsType = "platform/check/cluster"
 	MetricsQueryCheckReports MetricsType = "platform/reports"
@@ -136,9 +138,13 @@ const (
 	MetricsResourceDownloadHostTemplateFile MetricsType = "resource/download_host_template_file"
 	MetricsResourceReservedHost             MetricsType = "resource/reserved_host"
 	MetricsResourceModifyHostStatus         MetricsType = "resource/modify_host_status"
-	MetricsResourceImportHosts              MetricsType = "resource/import_host"
-	MetricsResourceDeleteHost               MetricsType = "resource/delete_host"
-	MetricsResourceQueryHosts               MetricsType = "resource/query"
+	MetricsResourceImportHosts              MetricsType = "resource/import_hosts"
+	MetricsResourceDeleteHosts              MetricsType = "resource/delete_hosts"
+	MetricsResourceQueryHosts               MetricsType = "resource/query_hosts"
+	MetricsResourceUpdateHost               MetricsType = "resource/update_host"
+	MetricsResourceCreateDisks              MetricsType = "resource/create_disks"
+	MetricsResourceDeleteDisks              MetricsType = "resource/delete_disks"
+	MetricsResourceUpdateDisk               MetricsType = "resource/update_disk"
 
 	// MetricsProductUpdate define product metrics
 	MetricsProductUpdate         MetricsType = "product/update_products"
@@ -171,7 +177,7 @@ var EMMetrics = []MetricsType{
 	MetricsClusterModifyParameter,
 	MetricsClusterInspectParameter,
 	MetricsClusterQueryLogParameter,
-
+	MetricsMetadataDeletePhysically,
 	// MetricsBackupCreate define backup metrics
 	MetricsBackupCreate,
 	MetricsBackupDelete,
@@ -219,9 +225,13 @@ var EMMetrics = []MetricsType{
 	MetricsResourceDownloadHostTemplateFile,
 	MetricsResourceModifyHostStatus,
 	MetricsResourceImportHosts,
-	MetricsResourceDeleteHost,
+	MetricsResourceDeleteHosts,
 	MetricsResourceQueryHosts,
 	MetricsResourceReservedHost,
+	MetricsResourceUpdateHost,
+	MetricsResourceCreateDisks,
+	MetricsResourceDeleteDisks,
+	MetricsResourceUpdateDisk,
 
 	// define product metrics
 	MetricsProductUpdate,

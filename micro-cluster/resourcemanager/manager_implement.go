@@ -152,6 +152,50 @@ func (m *ResourceManager) GetStocks(ctx context.Context, location *structs.Locat
 	return
 }
 
+func (m *ResourceManager) UpdateHostInfo(ctx context.Context, host structs.HostInfo) (err error) {
+	err = m.resourcePool.UpdateHostInfo(ctx, host)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("update host %s failed from db service: %v", host.ID, err)
+	} else {
+		framework.LogWithContext(ctx).Infof("update host %s succeed from db service.", host.ID)
+	}
+
+	return
+}
+
+func (m *ResourceManager) CreateDisks(ctx context.Context, hostId string, disks []structs.DiskInfo) (diskIds []string, err error) {
+	diskIds, err = m.resourcePool.CreateDisks(ctx, hostId, disks)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("create %d disks for host %s failed from db service: %v", len(disks), hostId, err)
+	} else {
+		framework.LogWithContext(ctx).Infof("create %d disks for host %s succeed from db service.", len(disks), hostId)
+	}
+
+	return
+}
+
+func (m *ResourceManager) DeleteDisks(ctx context.Context, diskIds []string) (err error) {
+	err = m.resourcePool.DeleteDisks(ctx, diskIds)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("delete %d disks failed from db service: %v", len(diskIds), err)
+	} else {
+		framework.LogWithContext(ctx).Infof("delete %d disks succeed from db service.", len(diskIds))
+	}
+
+	return
+}
+
+func (m *ResourceManager) UpdateDisk(ctx context.Context, disk structs.DiskInfo) (err error) {
+	err = m.resourcePool.UpdateDisk(ctx, disk)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("update disk %s failed from db service: %v", disk.ID, err)
+	} else {
+		framework.LogWithContext(ctx).Infof("update disk %s succeed from db service.", disk.ID)
+	}
+
+	return
+}
+
 func (m *ResourceManager) AllocResources(ctx context.Context, batchReq *resource_structs.BatchAllocRequest) (results *resource_structs.BatchAllocResponse, err error) {
 	results, err = m.management.AllocResources(ctx, batchReq)
 	if err != nil {

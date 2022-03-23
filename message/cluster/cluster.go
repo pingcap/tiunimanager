@@ -47,7 +47,7 @@ type DeleteClusterReq struct {
 	Force                    bool   `json:"force" form:"force"`
 }
 
-// DeleteClusterResp Reply message for delete a new cluster
+// DeleteClusterResp Reply message for delete a cluster
 type DeleteClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
 	ClusterID string `json:"clusterID"`
@@ -179,6 +179,16 @@ type TakeoverClusterReq struct {
 type TakeoverClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
 	ClusterID string `json:"clusterId"`
+}
+
+// DeleteMetadataPhysicallyReq Message for delete a cluster metadata
+type DeleteMetadataPhysicallyReq struct {
+	ClusterID string `json:"clusterId" swaggerignore:"true" validate:"required,min=4,max=64"`
+	Reason    string `json:"reason" form:"reason" validate:"required,min=8"`
+}
+
+// DeleteMetadataPhysicallyResp Reply message for delete a new cluster
+type DeleteMetadataPhysicallyResp struct {
 }
 
 // QueryClustersReq Query cluster list messages

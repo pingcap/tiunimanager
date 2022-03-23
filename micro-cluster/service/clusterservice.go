@@ -591,6 +591,22 @@ func (handler ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *
 	return nil
 }
 
+func (handler ClusterServiceHandler) DeleteMetadataPhysically(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) (err error) {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "DeleteMetadataPhysically", int(resp.GetCode()))
+	defer handlePanic(ctx, "DeleteMetadataPhysically", resp)
+
+	request := cluster.DeleteMetadataPhysicallyReq{}
+
+	if handleRequest(ctx, req, resp, &request, []structs.RbacPermission{{Resource: string(constants.RbacResourceSystem), Action: string(constants.RbacActionDelete)}}) {
+		result, err := handler.clusterManager.DeleteMetadataPhysically(framework.NewBackgroundMicroCtx(ctx, false), request)
+
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
 func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) (err error) {
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "QueryCluster", int(resp.GetCode()))

@@ -156,9 +156,10 @@ type ReaderWriter interface {
 	// @Description: If you don't know why you should use it, then don't use it
 	// @param ctx
 	// @param clusterID
+	// @param reason
 	// @return err
 	//
-	ClearClusterPhysically(ctx context.Context, clusterID string) (err error)
+	ClearClusterPhysically(ctx context.Context, clusterID string, reason string) (err error)
 	//
 	// CreateDBUser
 	// @Description: create cluster users

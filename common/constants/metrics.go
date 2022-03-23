@@ -54,6 +54,8 @@ const (
 	MetricsClusterUpgradePath           MetricsType = "cluster/upgrade_path"
 	MetricsClusterUpgradeDiff           MetricsType = "cluster/upgrade_diff"
 
+	MetricsMetadataDeletePhysically     MetricsType = "metadata/delete"
+
 	MetricsPlatformCheck     MetricsType = "platform/check"
 	MetricsClusterCheck      MetricsType = "platform/check/cluster"
 	MetricsQueryCheckReports MetricsType = "platform/reports"
@@ -175,7 +177,7 @@ var EMMetrics = []MetricsType{
 	MetricsClusterModifyParameter,
 	MetricsClusterInspectParameter,
 	MetricsClusterQueryLogParameter,
-
+	MetricsMetadataDeletePhysically,
 	// MetricsBackupCreate define backup metrics
 	MetricsBackupCreate,
 	MetricsBackupDelete,

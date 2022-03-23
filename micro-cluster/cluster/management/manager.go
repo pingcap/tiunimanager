@@ -18,6 +18,8 @@ package management
 import (
 	"context"
 	"fmt"
+	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
+	resourceStructs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	"net"
 	"strconv"
 	"strings"
@@ -645,12 +647,12 @@ var takeoverClusterFlow = workflow.WorkFlowDefine{
 		"built":                   {"testConnectivity", "testConnectivityPassed", "revert", workflow.SyncFuncNode, testConnectivity},
 		"testConnectivityPassed":  {"validateHostsStatus", "hostReady", "revert", workflow.SyncFuncNode, validateHostsStatus},
 		"hostReady":               {"takeoverResource", "resourceDone", "revert", workflow.SyncFuncNode, takeoverResource},
-		"resourceDone":            {"rebuildTiupSpaceForCluster", "workingSpaceDone", "fail", workflow.SyncFuncNode, rebuildTiupSpaceForCluster},
-		"workingSpaceDone":        {"applyParameterGroup", "applyParameterGroupDone", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroupForTakeover)},
-		"applyParameterGroupDone": {"initDatabaseAccount", "success", "fail", workflow.SyncFuncNode, initDatabaseAccount},
+		"resourceDone":            {"rebuildTiupSpaceForCluster", "workingSpaceDone", "revertWithResource", workflow.SyncFuncNode, rebuildTiupSpaceForCluster},
+		"workingSpaceDone":        {"applyParameterGroup", "applyParameterGroupDone", "revertWithResource", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroupForTakeover)},
+		"applyParameterGroupDone": {"initDatabaseAccount", "success", "revertWithResource", workflow.SyncFuncNode, initDatabaseAccount},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
-		"revert":                  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(clearClusterPhysically)},
+		"revert":                  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(takeoverRevertMeta)},
+		"revertWithResource":      {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, takeoverRevertMeta)},
 	},
 }
 
@@ -768,6 +770,29 @@ func asyncMaintenance(ctx context.Context, clusterMeta *meta.ClusterMeta,
 				"create flow %s succeed, cluster %s", flowID, clusterMeta.Cluster.ID)
 		}).Present()
 	})
+	return
+}
+
+// DeleteMetadataPhysically
+// @Description: delete cluster metadata physically, for handling exceptions only
+// @Receiver p
+// @Parameter ctx
+// @Parameter req
+// @return resp
+// @return err
+func (p *Manager) DeleteMetadataPhysically(ctx context.Context, req cluster.DeleteMetadataPhysicallyReq) (resp cluster.DeleteMetadataPhysicallyResp, err error) {
+	if err = models.GetClusterReaderWriter().ClearClusterPhysically(ctx, req.ClusterID, req.Reason); err != nil {
+		return
+	}
+	request := &resourceStructs.RecycleRequest{
+		RecycleReqs: []resourceStructs.RecycleRequire{
+			{
+				RecycleType: resourceStructs.RecycleHolder,
+				HolderID:    req.ClusterID,
+			},
+		},
+	}
+	err = resourceManagement.GetManagement().GetAllocatorRecycler().RecycleResources(ctx, request)
 	return
 }
 

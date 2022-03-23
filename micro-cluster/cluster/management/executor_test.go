@@ -1557,7 +1557,7 @@ func TestDeleteClusterPhysically(t *testing.T) {
 
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
-	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "111").Return(nil)
+	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "111", gomock.Any()).Return(nil)
 
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
@@ -1568,7 +1568,7 @@ func TestDeleteClusterPhysically(t *testing.T) {
 			Version: "v5.0.0",
 		},
 	})
-	err := clearClusterPhysically(&workflowModel.WorkFlowNode{}, flowContext)
+	err := takeoverRevertMeta(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.NoError(t, err)
 
 }

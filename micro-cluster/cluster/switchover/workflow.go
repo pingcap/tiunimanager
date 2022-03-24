@@ -882,9 +882,12 @@ func wfStepFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) err
 	err := wfnExecuteDeferStack(node, ctx)
 	err2 := wfnEndMaintenance(node, ctx)
 	if err == nil && err2 == nil {
+		//node.Record("Rollback Successfully.")
 		return nil
 	}
-	return fmt.Errorf("wfStepFail: err:%s err2:%s", err, err2)
+	finalErr := fmt.Errorf("wfStepFail: err:%s err2:%s", err, err2)
+	//node.Record("Rollback Failed:", finalErr)
+	return finalErr
 }
 
 func ifNoErrThenPushDefer(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext,
@@ -1075,4 +1078,35 @@ func wfStepWaitOldMasterCDCsCaughtUp(node *workflowModel.WorkFlowNode, ctx *work
 			"%s wfnCheckCDCsCaughtUp req:%s success", funcName, wfGetReqJson(ctx))
 	}
 	return err
+}
+
+type wfStepCallback func(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error
+
+func wfGenStepWithRollbackCB(fp, rollbackFp wfStepCallback) func(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	return func(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+		funcName := "wfStepWithRollbackCB"
+		framework.LogWithContext(ctx).Infof("enter %s", funcName)
+		defer framework.LogWithContext(ctx).Infof("exit %s", funcName)
+		err0 := fp(node, ctx)
+		if err0 != nil {
+			framework.LogWithContext(ctx).Errorf("%s start rollback, previous err:%v", funcName, err0)
+			err1 := rollbackFp(node, ctx)
+			framework.LogWithContext(ctx).Infof("%s rollback err:%v", funcName, err1)
+			if err1 == nil {
+				err := fmt.Errorf("err:%v \nRollback Successfully.", err0)
+				return err
+			} else {
+				err := fmt.Errorf("err:%v \nRollback Failed:%v", err0, err1)
+				return err
+			}
+		}
+		return nil
+	}
+}
+
+func wfStepNOP(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	funcName := "wfStepNOP"
+	framework.LogWithContext(ctx).Infof("enter %s", funcName)
+	defer framework.LogWithContext(ctx).Infof("exit %s", funcName)
+	return nil
 }

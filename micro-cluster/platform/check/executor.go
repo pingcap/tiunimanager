@@ -28,12 +28,7 @@ func checkCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	checkID := context.GetData(ContextCheckID).(string)
 	clusterID := context.GetData(ContextClusterID).(string)
 
-	var report ReportInterface
-	if context.GetData(ContextReportInfo) != nil { // for ut
-		report = context.GetData(ContextReportInfo).(ReportInterface)
-	} else {
-		report = &Report{}
-	}
+	report := GetReportService()
 
 	err := report.ParseFrom(context.Context, checkID)
 	if err != nil {
@@ -66,12 +61,7 @@ func checkCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 func checkTenants(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	checkID := context.GetData(ContextCheckID).(string)
 
-	var report ReportInterface
-	if context.GetData(ContextReportInfo) != nil { // for ut
-		report = context.GetData(ContextReportInfo).(ReportInterface)
-	} else {
-		report = &Report{}
-	}
+	report := GetReportService()
 
 	err := report.ParseFrom(context.Context, checkID)
 	if err != nil {
@@ -107,12 +97,7 @@ func checkTenants(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 func checkHosts(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	checkID := context.GetData(ContextCheckID).(string)
 
-	var report ReportInterface
-	if context.GetData(ContextReportInfo) != nil { // for ut
-		report = context.GetData(ContextReportInfo).(ReportInterface)
-	} else {
-		report = &Report{}
-	}
+	report := GetReportService()
 
 	err := report.ParseFrom(context.Context, checkID)
 	if err != nil {

@@ -94,7 +94,20 @@ type HealthInfo struct {
 	Health bool   `json:"health"`
 }
 
-type ReportInterface interface {
+var reportService ReportService
+
+func GetReportService() ReportService {
+	if reportService == nil {
+		return &Report{}
+	}
+	return reportService
+}
+
+func MockReportService(service ReportService) {
+	reportService = service
+}
+
+type ReportService interface {
 	ParseFrom(ctx context.Context, checkID string) error
 	CheckTenants(ctx context.Context) error
 	CheckHosts(ctx context.Context) error

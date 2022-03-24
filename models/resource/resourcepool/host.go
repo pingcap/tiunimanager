@@ -144,9 +144,6 @@ func (h *Host) BeforeUpdate(tx *gorm.DB) (err error) {
 	if tx.Statement.Changed("IP") {
 		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update ip on host %s is not allowed", h.ID)
 	}
-	if tx.Statement.Changed("FreeCpuCores", "FreeMemory") {
-		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update free cpu cores or free memory on host %s is not allowed", h.ID)
-	}
 	if tx.Statement.Changed("DiskType", "Arch", "ClusterType", "Stat") {
 		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update disk type or arch type or cluster type or load stat on host %s is not allowed", h.ID)
 	}
@@ -156,19 +153,23 @@ func (h *Host) BeforeUpdate(tx *gorm.DB) (err error) {
 	return
 }
 
-func (h *Host) PrepareForUpdate(newHost *Host) (err error) {
-	h.prepareForUpdateName(newHost.HostName, newHost.IP)
-	h.prepareForUpdateLoginInfo(newHost.UserName, newHost.Passwd)
-	h.prepareForUpdateLocation(newHost.Vendor, newHost.Region, newHost.AZ, newHost.Rack)
-	h.prepareForUpdateKernel(newHost.OS, newHost.Kernel)
-	h.prepareForUpdateNic(newHost.Nic)
-	h.prepareForUpdateSpec(newHost.CpuCores, newHost.Memory)
-	err = h.prepareForUpdateType(newHost.Arch, newHost.DiskType, newHost.ClusterType)
+func (h *Host) PrepareForUpdate(newHost *Host) (updates map[string]interface{}, err error) {
+	updates = make(map[string]interface{})
+	h.prepareForUpdateName(newHost.HostName, newHost.IP, updates)
+	h.prepareForUpdateLoginInfo(newHost.UserName, newHost.Passwd, updates)
+	h.prepareForUpdateLocation(newHost.Vendor, newHost.Region, newHost.AZ, newHost.Rack, updates)
+	h.prepareForUpdateKernel(newHost.OS, newHost.Kernel, updates)
+	h.prepareForUpdateNic(newHost.Nic, updates)
+	h.prepareForUpdateSpec(newHost.CpuCores, newHost.Memory, updates)
+	err = h.prepareForUpdateType(newHost.Arch, newHost.DiskType, newHost.ClusterType, updates)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	err = h.prepareForUpdatePurpose(newHost.Purpose)
-	return err
+	err = h.prepareForUpdatePurpose(newHost.Purpose, updates)
+	if err != nil {
+		return nil, err
+	}
+	return updates, nil
 }
 
 func (h *Host) ConstructFromHostInfo(src *structs.HostInfo) error {
@@ -288,81 +289,112 @@ func (h *Host) BuildDefaultTraits() (err error) {
 	return nil
 }
 
-func (h *Host) prepareForUpdateName(hostName, ip string) {
+func (h *Host) prepareForUpdateName(hostName, ip string, updates map[string]interface{}) {
 	if hostName != "" && hostName != h.HostName {
-		h.HostName = hostName
+		updates["host_name"] = hostName
 	}
 	if ip != "" && ip != h.IP {
-		h.IP = ip
+		updates["ip"] = ip
 	}
 }
 
-func (h *Host) prepareForUpdateLoginInfo(userName string, password common.Password) {
+func (h *Host) prepareForUpdateLoginInfo(userName string, password common.Password, updates map[string]interface{}) {
 	if userName != "" && userName != h.UserName {
-		h.UserName = userName
+		updates["user_name"] = userName
 	}
 	if password != "" && password != h.Passwd {
-		h.Passwd = password
+		updates["passwd"] = password
 	}
 }
 
-func (h *Host) prepareForUpdateSpec(cpuCores, memory int32) {
+func (h *Host) prepareForUpdateSpec(cpuCores, memory int32, updates map[string]interface{}) {
 	if (cpuCores == 0 && memory == 0) || (cpuCores == h.CpuCores && memory == h.Memory) {
 		// no need to update
 		return
 	}
-	if cpuCores != 0 {
-		h.CpuCores = cpuCores
+	updateCpu := false
+	updateMem := false
+	if cpuCores != 0 && cpuCores != h.CpuCores {
+		alreadyUsedCpuCores := h.CpuCores - h.FreeCpuCores
+		// update free cpu cores after set to the new cpucores
+		freeCpuCores := cpuCores - alreadyUsedCpuCores
+		updates["free_cpu_cores"] = freeCpuCores
+		updates["cpu_cores"] = cpuCores
+		updateCpu = true
 	}
-	if memory != 0 {
-		h.Memory = memory
+	if memory != 0 && memory != h.Memory {
+		alreadyUsedMemory := h.Memory - h.FreeMemory
+		// update free memory after set to the new memory
+		freeMemory := memory - alreadyUsedMemory
+		updates["free_memory"] = freeMemory
+		updates["memory"] = memory
+		updateMem = true
 	}
-	h.Spec = (&structs.HostInfo{CpuCores: h.CpuCores, Memory: h.Memory}).GetSpecString()
+
+	if updateCpu || updateMem {
+		// either cpu cores or memory is updated, need to reset spec
+		updatedCpuCores := h.CpuCores
+		updatedMemory := h.Memory
+		if updateCpu {
+			updatedCpuCores = cpuCores
+		}
+		if updateMem {
+			updatedMemory = memory
+		}
+		updates["spec"] = (&structs.HostInfo{CpuCores: updatedCpuCores, Memory: updatedMemory}).GetSpecString()
+	}
 }
 
-func (h *Host) prepareForUpdateKernel(os, kernel string) {
+func (h *Host) prepareForUpdateKernel(os, kernel string, updates map[string]interface{}) {
 	if os != "" && os != h.OS {
-		h.OS = os
+		updates["os"] = os
 	}
 	if kernel != "" && kernel != h.Kernel {
-		h.Kernel = kernel
+		updates["kernel"] = kernel
 	}
 }
 
-func (h *Host) prepareForUpdateNic(nic string) {
+func (h *Host) prepareForUpdateNic(nic string, updates map[string]interface{}) {
 	if nic != "" && nic != h.Nic {
-		h.Nic = nic
+		updates["nic"] = nic
 	}
 }
 
-func (h *Host) prepareForUpdatePurpose(purpose string) error {
+func (h *Host) prepareForUpdatePurpose(purpose string, updates map[string]interface{}) error {
 	if purpose == "" || purpose == h.Purpose {
 		// no need to update
 		return nil
 	}
-	h.Purpose = purpose
-	// update traits number if purpose is updated
-	err := h.BuildDefaultTraits()
-	return err
+	updates["purpose"] = purpose
+	// Not change h in prepareForUpdateXXX function, so we copy to a patch to build traits for update
+	patch := *h
+	patch.Purpose = purpose
+	// rebuild traits
+	err := patch.BuildDefaultTraits()
+	if err != nil {
+		return err
+	}
+	updates["traits"] = patch.Traits
+	return nil
 }
 
 // update region/zone/rack is not allowed by now, and it will be terminated in update hook
-func (h *Host) prepareForUpdateLocation(vendor, region, zone, rack string) {
+func (h *Host) prepareForUpdateLocation(vendor, region, zone, rack string, updates map[string]interface{}) {
 	if vendor != "" && vendor != h.Vendor {
-		h.Vendor = vendor
+		updates["vendor"] = vendor
 	}
 	if region != "" && region != h.Region {
-		h.Region = region
+		updates["region"] = region
 	}
 	if zone != "" && zone != h.AZ {
-		h.AZ = zone
+		updates["az"] = zone
 	}
 	if rack != "" && rack != h.Rack {
-		h.Rack = rack
+		updates["rack"] = rack
 	}
 }
 
-func (h *Host) prepareForUpdateType(arch, diskType, clusterType string) (err error) {
+func (h *Host) prepareForUpdateType(arch, diskType, clusterType string, updates map[string]interface{}) (err error) {
 	if arch != "" && arch != h.Arch {
 		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update arch on host %s is not allowed", h.ID)
 	}

@@ -220,13 +220,12 @@ func (rw *GormResourceReadWrite) UpdateHostInfo(ctx context.Context, host rp.Hos
 		tx.Rollback()
 		return errors.NewErrorf(errors.TIEM_SQL_ERROR, "get origin host info before update (%s) error, %v", originHost.ID, err)
 	}
-	patch := originHost
-	err = patch.PrepareForUpdate(&host)
+	updates, err := originHost.PrepareForUpdate(&host)
 	if err != nil {
 		tx.Rollback()
 		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "prepare for update host %s %s failed, %v", originHost.HostName, originHost.IP, err)
 	}
-	result := tx.Model(&originHost).Omit("Reserved", "Status", "Stat").Updates(patch)
+	result := tx.Model(&originHost).Omit("Reserved", "Status", "Stat").Updates(updates)
 	if result.Error != nil {
 		tx.Rollback()
 		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update host %s %s info failed, %v", originHost.HostName, originHost.IP, result.Error)

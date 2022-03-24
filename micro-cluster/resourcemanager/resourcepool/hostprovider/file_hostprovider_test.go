@@ -18,6 +18,7 @@ package hostprovider
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/pingcap-inc/tiem/models/platform/product"
@@ -523,6 +524,14 @@ func Test_UpdateHost(t *testing.T) {
 	assert.Equal(t, "update host failed without host id", err.(errors.EMError).GetMsg())
 
 	host.ID = fakeHostId1
+	host.UsedCpuCores = 20
+	host.UsedMemory = 20
+	err = hostprovider.UpdateHostInfo(context.TODO(), *host)
+	assert.NotNil(t, err)
+	assert.Equal(t, fmt.Sprintf("used cpu cores or used memory field should not be set while update host %s", host.ID), err.(errors.EMError).GetMsg())
+
+	host.UsedCpuCores = 0
+	host.UsedMemory = 0
 	err = hostprovider.UpdateHostInfo(context.TODO(), *host)
 	assert.Nil(t, err)
 }

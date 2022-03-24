@@ -21,6 +21,7 @@ import (
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
 	resourceStructs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	"net"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -55,9 +56,11 @@ const (
 	ContextSourceClusterMaintenanceStatus = "SourceClusterMaintenanceStatus"
 	ContextCloneStrategy                  = "CloneStrategy"
 	ContextBackupID                       = "BackupID"
+	ContextOriginalParamGroupId           = "OriginalParamGroupId"
 	ContextOriginalVersion                = "OriginalVersion"
 	ContextUpgradeVersion                 = "UpgradeVersion"
 	ContextUpgradeWay                     = "UpgradeWay"
+	ContextUpgradeConfigs                 = "UpgradeConfigs"
 	ContextWorkflowID                     = "WorkflowID"
 	ContextTopologyConfig                 = "TopologyConfig"
 	ContextPublicKey                      = "PublicKey"
@@ -899,7 +902,8 @@ var onlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
 		"checkUpgradeTimeDone":    {"checkConfig", "checkConfigDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeConfig},
 		"checkConfigDone":         {"checkSystemHealth", "checkSystemHealthDone", "failAfterUpgrade", workflow.SyncFuncNode, checkRegionHealth},
 		"checkSystemHealthDone":   {"applyParameterGroup", "applyParameterGroupDone", "failAfterUpgrade", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
-		"applyParameterGroupDone": {"adjustParameters", "success", "failAfterUpgrade", workflow.SyncFuncNode, adjustParameters},
+		"applyParameterGroupDone": {"adjustParameters", "adjustParametersDone", "failAfterUpgrade", workflow.SyncFuncNode, adjustParametersAfterUpgrade},
+		"adjustParametersDone":    {"syncTopology", "success", "failAfterUpgrade", workflow.SyncFuncNode, syncTopology},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
 		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertConfigAfterFailure, endMaintenance)},
 		"failAfterUpgrade":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
@@ -914,15 +918,18 @@ var offlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
 		"selectTargetVersionDone": {"mergeConfig", "mergeConfigDone", "fail", workflow.SyncFuncNode, mergeUpgradeConfig},
 		"mergeConfigDone":         {"checkRegionHealth", "checkRegionHealthDone", "fail", workflow.SyncFuncNode, checkRegionHealth},
 		"checkRegionHealthDone":   {"stopCluster", "stopClusterDone", "fail", workflow.PollingNode, stopCluster},
-		"stopClusterDone":         {"upgradeCluster", "upgradeDone", "fail", workflow.PollingNode, upgradeCluster},
+		"stopClusterDone":         {"setClusterOffline", "offlineDone", "fail", workflow.SyncFuncNode, setClusterOffline},
+		"offlineDone":             {"upgradeCluster", "upgradeDone", "fail", workflow.PollingNode, upgradeCluster},
 		"upgradeDone":             {"startCluster", "startClusterDone", "fail", workflow.SyncFuncNode, startCluster},
-		"startClusterDone":        {"checkVersion", "checkVersionDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeVersion},
+		"startClusterDone":        {"setClusterOnline", "onlineDone", "failAfterUpgrade", workflow.SyncFuncNode, setClusterOnline},
+		"onlineDone":              {"checkVersion", "checkVersionDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeVersion},
 		"checkVersionDone":        {"checkMD5", "checkMD5Done", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeMD5},
 		"checkMD5Done":            {"checkUpgradeTime", "checkUpgradeTimeDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeTime},
 		"checkUpgradeTimeDone":    {"checkConfig", "checkConfigDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeConfig},
 		"checkConfigDone":         {"checkSystemHealth", "checkSystemHealthDone", "failAfterUpgrade", workflow.SyncFuncNode, checkRegionHealth},
 		"checkSystemHealthDone":   {"applyParameterGroup", "applyParameterGroupDone", "failAfterUpgrade", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
-		"applyParameterGroupDone": {"adjustParameters", "success", "failAfterUpgrade", workflow.SyncFuncNode, adjustParameters},
+		"applyParameterGroupDone": {"adjustParameters", "adjustParametersDone", "failAfterUpgrade", workflow.SyncFuncNode, adjustParametersAfterUpgrade},
+		"adjustParametersDone":    {"syncTopology", "success", "failAfterUpgrade", workflow.SyncFuncNode, syncTopology},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
 		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertConfigAfterFailure, endMaintenance)},
 		"failAfterUpgrade":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
@@ -1003,6 +1010,11 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 		return
 	}
 
+	runningInstanceTypes := make([]string, 0)
+	for instanceType, _ := range clusterMeta.Instances {
+		runningInstanceTypes = append(runningInstanceTypes, instanceType)
+	}
+
 	framework.LogWithContext(ctx).Infof("query config difference between cluster %s version %s and parametergroup of %s", clusterID, clusterMeta.Cluster.Version, version)
 	paramResp, _, err := parameter.NewManager().QueryClusterParameters(ctx, cluster.QueryClusterParametersReq{
 		ClusterID: clusterID,
@@ -1033,7 +1045,10 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 	}
 	framework.LogWithContext(ctx).Debugf("query paramgroup for version %s result: %v", version, groups)
 
-	configDiffInfos := compareConfigDifference(ctx, paramResp.Params, groups[0].Params)
+	configDiffInfos := compareConfigDifference(ctx, paramResp.Params, groups[0].Params, runningInstanceTypes)
+	sort.Slice(configDiffInfos, func(i, j int) bool {
+		return configDiffInfos[i].InstanceType < configDiffInfos[j].InstanceType
+	})
 	resp.ConfigDiffInfos = configDiffInfos
 
 	return
@@ -1048,18 +1063,23 @@ func getMinorVersion(version string) string {
 	}
 }
 
-func compareConfigDifference(ctx context.Context, clusterParameterInfos []structs.ClusterParameterInfo, parameterGroupParameterInfos []structs.ParameterGroupParameterInfo) (resp []*structs.ProductUpgradeVersionConfigDiffItem) {
+func compareConfigDifference(ctx context.Context, clusterParameterInfos []structs.ClusterParameterInfo, parameterGroupParameterInfos []structs.ParameterGroupParameterInfo,
+	runningInstanceTypes []string) (resp []*structs.ProductUpgradeVersionConfigDiffItem) {
 	framework.LogWithContext(ctx).Debugf("query config difference between clusterParameterInfos (%v) and parameterGroupParameterInfos (%v)",
 		clusterParameterInfos, parameterGroupParameterInfos)
 
 	clusterParamMap := make(map[string]structs.ClusterParameterInfo)
 	for _, param := range clusterParameterInfos {
-		clusterParamMap[param.ParamId] = param
+		if meta.Contain(runningInstanceTypes, param.InstanceType) && param.HasApply != int(parameter.ModifyApply) {
+			clusterParamMap[param.ParamId] = param
+		}
 	}
 
 	pgParamMap := make(map[string]structs.ParameterGroupParameterInfo)
 	for _, param := range parameterGroupParameterInfos {
-		pgParamMap[param.ID] = param
+		if meta.Contain(runningInstanceTypes, param.InstanceType) && param.HasApply != int(parameter.ModifyApply) {
+			pgParamMap[param.ID] = param
+		}
 	}
 
 	for id, clusterParam := range clusterParamMap {
@@ -1105,10 +1125,12 @@ func (p *Manager) InPlaceUpgradeCluster(ctx context.Context, req cluster.Upgrade
 	}
 
 	data := map[string]interface{}{
-		ContextClusterMeta:     clusterMeta,
-		ContextOriginalVersion: clusterMeta.Cluster.Version,
-		ContextUpgradeVersion:  req.TargetVersion,
-		ContextUpgradeWay:      req.UpgradeWay,
+		ContextClusterMeta:          clusterMeta,
+		ContextOriginalParamGroupId: clusterMeta.Cluster.ParameterGroupID,
+		ContextOriginalVersion:      clusterMeta.Cluster.Version,
+		ContextUpgradeVersion:       req.TargetVersion,
+		ContextUpgradeWay:           req.UpgradeWay,
+		ContextUpgradeConfigs:       req.Configs,
 	}
 	var flowID string
 	if req.UpgradeWay == string(constants.UpgradeWayOnline) {

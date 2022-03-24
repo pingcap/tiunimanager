@@ -29,7 +29,6 @@ import (
 
 const (
 	ContextCheckID    = "CheckID"
-	ContextReportInfo = "ReportInfo"
 	ContextClusterID  = "ClusterID"
 	DefaultCreator    = "System"
 	DefaultTenantID   = "admin"

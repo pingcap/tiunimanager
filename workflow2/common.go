@@ -13,26 +13,21 @@
  *  limitations under the License.                                            *
  ******************************************************************************/
 
-package workflow
+package workflow2
 
-import (
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/models/common"
+type NodeReturnType string
+
+const (
+	SyncFuncNode NodeReturnType = "SyncFuncNode"
+	PollingNode  NodeReturnType = "PollingNode"
 )
 
-// WorkFlow work flow infomation
-type WorkFlow struct {
-	common.Entity
-	Name    string `gorm:"default:null;comment:'name of the workflow'"`
-	BizID   string `gorm:"default:null;<-:create"`
-	BizType string `gorm:"default:null"`
-	Context string `gorm:"default:null"`
-}
+const (
+	BizTypeCluster string = "cluster"
+	BizTypeHost    string = "host"
+)
 
-func (flow *WorkFlow) Finished() bool {
-	return constants.WorkFlowStatusFinished == flow.Status || constants.WorkFlowStatusError == flow.Status || constants.WorkFlowStatusCanceled == flow.Status
-}
-
-func (flow *WorkFlow) Stopped() bool {
-	return constants.WorkFlowStatusStopped == flow.Status
-}
+const (
+	maxPollingSequence int32 = 10 * 24 * 3600
+	defaultPageSize    int   = 10
+)

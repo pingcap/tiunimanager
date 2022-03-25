@@ -27,7 +27,6 @@ import (
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockworkflow"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"time"
 )
 
 var doNodeName1 = func(node *wfModel.WorkFlowNode, context *FlowContext) error {
@@ -89,6 +88,7 @@ func TestFlowManager_Start_case1(t *testing.T) {
 		},
 	}, nil).AnyTimes()
 	mockFlowRW.EXPECT().CreateWorkFlowNode(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	//mockFlowRW.EXPECT().QueryWorkFlows(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return().AnyTimes()
 	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	mockFlowRW.EXPECT().UpdateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	mockFlowRW.EXPECT().GetWorkFlow(gomock.Any(), gomock.Any()).Return(&wfModel.WorkFlow{
@@ -119,6 +119,4 @@ func TestFlowManager_Start_case1(t *testing.T) {
 	assert.NoError(t, errCreate)
 	errStart := manager.Start(context.TODO(), flow)
 	assert.NoError(t, errStart)
-
-	time.Sleep(10 * time.Second)
 }

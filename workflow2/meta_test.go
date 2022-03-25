@@ -25,12 +25,44 @@ import (
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockworkflow"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 var doNode = func(node *workflow.WorkFlowNode, context *FlowContext) error {
 	fmt.Println("doNodeName1")
 	return nil
+}
+
+func TestWorkFlowMeta_GetData(t *testing.T) {
+	meta := &WorkFlowMeta{
+		Flow: &workflow.WorkFlow{
+			Entity: common.Entity{
+				ID:     "test",
+				Status: constants.WorkFlowStatusInitializing,
+			},
+			Name: "test",
+		},
+		CurrentNode: &workflow.WorkFlowNode{
+			Entity: common.Entity{
+				ID:     "test",
+				Status: constants.WorkFlowStatusInitializing,
+			},
+			Name: "test",
+		},
+		CurrentNodeDefine: &NodeDefine{
+			FailEvent:  "",
+			Executor:   doNode,
+			ReturnType: SyncFuncNode,
+		},
+		Context: NewFlowContext(context.Background(), make(map[string]string)),
+	}
+	errSet := meta.Context.SetData("key", "value")
+	var result string
+	errGet := meta.Context.GetData("key", &result)
+	assert.Nil(t, errSet)
+	assert.Nil(t, errGet)
+	assert.Equal(t, result, "value")
 }
 
 func TestWorkFlowMeta_Fail(t *testing.T) {
@@ -86,48 +118,6 @@ func TestWorkFlowMeta_Execute_case1(t *testing.T) {
 			FailEvent:  "",
 			Executor:   doNode,
 			ReturnType: SyncFuncNode,
-		},
-		Context: NewFlowContext(context.Background(), make(map[string]string)),
-	}
-	meta.Execute()
-}
-
-func TestWorkFlowMeta_Execute_case2(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockFlowRW := mockworkflow.NewMockReaderWriter(ctrl)
-	mockFlowRW.EXPECT().CreateWorkFlowNode(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
-	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	mockFlowRW.EXPECT().UpdateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	mockFlowRW.EXPECT().GetWorkFlow(gomock.Any(), gomock.Any()).Return(&workflow.WorkFlow{
-		Entity: common.Entity{
-			Status:   constants.WorkFlowStatusInitializing,
-			TenantId: framework.GetTenantIDFromContext(context.TODO()),
-			ID:       "testflowId",
-		},
-	}, nil).AnyTimes()
-	models.SetWorkFlowReaderWriter(mockFlowRW)
-
-	meta := &WorkFlowMeta{
-		Flow: &workflow.WorkFlow{
-			Entity: common.Entity{
-				ID:     "test",
-				Status: constants.WorkFlowStatusInitializing,
-			},
-			Name: "test",
-		},
-		CurrentNode: &workflow.WorkFlowNode{
-			Entity: common.Entity{
-				ID:     "test",
-				Status: constants.WorkFlowStatusInitializing,
-			},
-			Name: "test",
-		},
-		CurrentNodeDefine: &NodeDefine{
-			FailEvent:  "",
-			Executor:   doNode,
-			ReturnType: PollingNode,
 		},
 		Context: NewFlowContext(context.Background(), make(map[string]string)),
 	}

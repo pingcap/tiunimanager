@@ -17,6 +17,7 @@ package workflow2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -29,6 +30,7 @@ import (
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockworkflow"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 var doNodeName1 = func(node *wfModel.WorkFlowNode, context *FlowContext) error {
@@ -161,7 +163,7 @@ func TestFlowManager_DetailWorkFlow(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestFlowManager_Stop(t *testing.T) {
+func TestFlowManager_Stop_case1(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -180,7 +182,44 @@ func TestFlowManager_Stop(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestFlowManager_Cancel(t *testing.T) {
+func TestFlowManager_Stop_case2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockFlowRW := mockworkflow.NewMockReaderWriter(ctrl)
+	mockFlowRW.EXPECT().UpdateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	mockFlowRW.EXPECT().GetWorkFlow(gomock.Any(), gomock.Any()).Return(&wfModel.WorkFlow{
+		Entity: common.Entity{
+			Status:   constants.WorkFlowStatusFinished,
+			TenantId: framework.GetTenantIDFromContext(context.TODO()),
+			ID:       "testflowId",
+		},
+	}, nil).AnyTimes()
+	models.SetWorkFlowReaderWriter(mockFlowRW)
+	manager := GetWorkFlowService()
+	err := manager.Stop(context.Background(), "testflowId")
+	assert.NotNil(t, err)
+}
+
+func TestFlowManager_Stop_case3(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockFlowRW := mockworkflow.NewMockReaderWriter(ctrl)
+	mockFlowRW.EXPECT().GetWorkFlow(gomock.Any(), gomock.Any()).Return(&wfModel.WorkFlow{
+		Entity: common.Entity{
+			Status:   constants.WorkFlowStatusFinished,
+			TenantId: framework.GetTenantIDFromContext(context.TODO()),
+			ID:       "testflowId",
+		},
+	}, errors.New("error")).AnyTimes()
+	models.SetWorkFlowReaderWriter(mockFlowRW)
+	manager := GetWorkFlowService()
+	err := manager.Stop(context.Background(), "testflowId")
+	assert.NotNil(t, err)
+}
+
+func TestFlowManager_Cancel_case1(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -197,6 +236,43 @@ func TestFlowManager_Cancel(t *testing.T) {
 	manager := GetWorkFlowService()
 	err := manager.Cancel(context.Background(), "testflowId", "")
 	assert.NoError(t, err)
+}
+
+func TestFlowManager_Cancel_case2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockFlowRW := mockworkflow.NewMockReaderWriter(ctrl)
+	mockFlowRW.EXPECT().UpdateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	mockFlowRW.EXPECT().GetWorkFlow(gomock.Any(), gomock.Any()).Return(&wfModel.WorkFlow{
+		Entity: common.Entity{
+			Status:   constants.WorkFlowStatusFinished,
+			TenantId: framework.GetTenantIDFromContext(context.TODO()),
+			ID:       "testflowId",
+		},
+	}, nil).AnyTimes()
+	models.SetWorkFlowReaderWriter(mockFlowRW)
+	manager := GetWorkFlowService()
+	err := manager.Cancel(context.Background(), "testflowId", "")
+	assert.NotNil(t, err)
+}
+
+func TestFlowManager_Cancel_case3(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockFlowRW := mockworkflow.NewMockReaderWriter(ctrl)
+	mockFlowRW.EXPECT().GetWorkFlow(gomock.Any(), gomock.Any()).Return(&wfModel.WorkFlow{
+		Entity: common.Entity{
+			Status:   constants.WorkFlowStatusFinished,
+			TenantId: framework.GetTenantIDFromContext(context.TODO()),
+			ID:       "testflowId",
+		},
+	}, errors.New("error")).AnyTimes()
+	models.SetWorkFlowReaderWriter(mockFlowRW)
+	manager := GetWorkFlowService()
+	err := manager.Cancel(context.Background(), "testflowId", "")
+	assert.NotNil(t, err)
 }
 
 func TestFlowManager_InitContext(t *testing.T) {
@@ -241,4 +317,17 @@ func TestFlowManager_InitContext(t *testing.T) {
 	assert.NoError(t, errCreate)
 	err := manager.InitContext(context.Background(), flowId, "key", "value")
 	assert.NoError(t, err)
+}
+
+func TestFlowManager_loop(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockFlowRW := mockworkflow.NewMockReaderWriter(ctrl)
+	mockFlowRW.EXPECT().QueryWorkFlows(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, int64(0), nil).AnyTimes()
+	models.SetWorkFlowReaderWriter(mockFlowRW)
+
+	manager := GetWorkFlowService()
+	assert.NotNil(t, manager)
+	time.Sleep(10 * time.Second)
 }

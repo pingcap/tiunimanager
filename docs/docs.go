@@ -3849,9 +3849,12 @@ var doc = `{
                 "summary": "platform check",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "displayMode",
-                        "in": "query"
+                        "description": "check platform",
+                        "name": "checkPlatformReq",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/message.CheckPlatformReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -3915,8 +3918,10 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "cluster id",
                         "name": "clusterId",
-                        "in": "query"
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -4076,8 +4081,10 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "name": "id",
-                        "in": "query"
+                        "description": "check id",
+                        "name": "checkId",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -8747,6 +8754,14 @@ var doc = `{
             "properties": {
                 "result": {
                     "type": "boolean"
+                }
+            }
+        },
+        "message.CheckPlatformReq": {
+            "type": "object",
+            "properties": {
+                "displayMode": {
+                    "type": "string"
                 }
             }
         },

@@ -1089,6 +1089,11 @@ definitions:
       result:
         type: boolean
     type: object
+  message.CheckPlatformReq:
+    properties:
+      displayMode:
+        type: string
+    type: object
   message.CheckPlatformRsp:
     properties:
       checkId:
@@ -5503,9 +5508,11 @@ paths:
       - application/json
       description: platform check
       parameters:
-      - in: query
-        name: displayMode
-        type: string
+      - description: check platform
+        in: body
+        name: checkPlatformReq
+        schema:
+          $ref: '#/definitions/message.CheckPlatformReq'
       produces:
       - application/json
       responses:
@@ -5541,8 +5548,10 @@ paths:
       - application/json
       description: platform check cluster
       parameters:
-      - in: query
+      - description: cluster id
+        in: path
         name: clusterId
+        required: true
         type: string
       produces:
       - application/json
@@ -5638,8 +5647,10 @@ paths:
       - application/json
       description: get check report based on checkId
       parameters:
-      - in: query
-        name: id
+      - description: check id
+        in: path
+        name: checkId
+        required: true
         type: string
       produces:
       - application/json

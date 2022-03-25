@@ -166,7 +166,7 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
 	}, nil).AnyTimes()
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(4)
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(3)
 
 	var hosts []structs.HostInfo
 	host := genHostInfo("TEST_HOST1")
@@ -309,7 +309,7 @@ func Test_DeleteHosts_Succeed(t *testing.T) {
 		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
 	}, nil).AnyTimes()
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(6)
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(4)
 
 	var hostIds []string
 	hostIds = append(hostIds, fake_hostId1)

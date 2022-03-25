@@ -180,8 +180,8 @@ func joinEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) 
 		log.Errorf("join em cluster failed for host %s %s, %v", hosts[0].HostName, hosts[0].IP, err)
 		return err
 	}
-
-	node.Record(fmt.Sprintf("joining em cluster for host %s %s in operation %s", hosts[0].HostName, hosts[0].IP, operationID))
+	log.Infof("join em cluster for host %s %s in operation %s", hosts[0].HostName, hosts[0].IP, operationID)
+	node.Record(fmt.Sprintf("joining em cluster for host %s %s", hosts[0].HostName, hosts[0].IP))
 	node.OperationID = operationID
 	return nil
 }
@@ -307,7 +307,8 @@ func leaveEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 			return err
 		}
 		node.OperationID = operationID
-		node.Record(fmt.Sprintf("leaving em cluster for host %s %s in operation %s", host.HostName, host.IP, operationID))
+		log.Infof("leave em cluster for host %s %s in operation %s", host.HostName, host.IP, operationID)
+		node.Record(fmt.Sprintf("leaving em cluster for host %s %s", host.HostName, host.IP))
 	}
 
 	return nil

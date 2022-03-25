@@ -8,6 +8,8 @@ path:
 
 discovery.type: single-node
 
+ingest.geoip.downloader.enabled: false
+
 # xpack.license.self_generated.type: trial
 # xpack.security.enabled: true
 # xpack.monitoring.collection.enabled: true

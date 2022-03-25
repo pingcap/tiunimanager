@@ -29,6 +29,7 @@ type ElasticSearchScript struct {
 	DeployDir string
 	DataDir   string
 	LogDir    string
+	HeapSize  string
 }
 
 // NewElasticSearchScript returns a ElasticSearchScript with given arguments
@@ -45,6 +46,12 @@ func NewElasticSearchScript(ip, deployDir, dataDir, logDir string) *ElasticSearc
 // WithPort set Port field of ElasticSearchScript
 func (c *ElasticSearchScript) WithPort(port int) *ElasticSearchScript {
 	c.Port = port
+	return c
+}
+
+// WithHeapSize set HeapSize field of ElasticSearchScript
+func (c *ElasticSearchScript) WithHeapSize(heapSize string) *ElasticSearchScript {
+	c.HeapSize = heapSize
 	return c
 }
 

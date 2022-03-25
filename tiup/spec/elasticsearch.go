@@ -18,6 +18,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"github.com/google/uuid"
@@ -44,6 +45,7 @@ type ElasticSearchSpec struct {
 	DataDir         string                 `yaml:"data_dir,omitempty"`
 	LogDir          string                 `yaml:"log_dir,omitempty"`
 	JavaHome        string                 `yaml:"java_home,omitempty" validate:"java_home:editable"`
+	HeapSize        string                 `yaml:"heap_size,omitempty" default:"4g"`
 	Config          map[string]interface{} `yaml:"config,omitempty" validate:"config:ignore"`
 	Arch            string                 `yaml:"arch,omitempty"`
 	OS              string                 `yaml:"os,omitempty"`
@@ -199,13 +201,19 @@ func (i *ElasticSearchInstance) InitConfig(
 		return err
 	}
 
+	if spec.HeapSize != "" {
+		if err = validateHeapSize(spec.HeapSize); err != nil {
+			return err
+		}
+	}
 	scpt := scripts.NewElasticSearchScript(
 		i.GetHost(),
 		paths.Deploy,
 		paths.Data[0],
 		paths.Log,
 	).
-		WithPort(spec.Port)
+		WithPort(spec.Port).
+		WithHeapSize(spec.HeapSize)
 
 	fp = filepath.Join(paths.Cache, fmt.Sprintf("run_elasticsearch_%s_%d.sh", i.GetHost(), i.GetPort()))
 	if err := scpt.ScriptToFile(fp); err != nil {
@@ -220,6 +228,17 @@ func (i *ElasticSearchInstance) InitConfig(
 	}
 
 	// no config file needed
+	return nil
+}
+
+func validateHeapSize(heapSize string) error {
+	re, err := regexp.Compile(`^\d[mMgG]$`)
+	if err != nil {
+		return fmt.Errorf("no valid `heap_size` filed in the input topology, please check your config")
+	}
+	if !re.MatchString(heapSize) {
+		return fmt.Errorf("no valid `heap_size` filed in the input topology, please check your config")
+	}
 	return nil
 }
 
@@ -239,13 +258,19 @@ func (i *ElasticSearchInstance) ScaleConfig(
 	}
 
 	spec := i.InstanceSpec.(*ElasticSearchSpec)
+	if spec.HeapSize != "" {
+		if err := validateHeapSize(spec.HeapSize); err != nil {
+			return err
+		}
+	}
 	scpt := scripts.NewElasticSearchScript(
 		i.GetHost(),
 		paths.Deploy,
 		paths.Data[0],
 		paths.Log,
 	).
-		WithPort(spec.Port)
+		WithPort(spec.Port).
+		WithHeapSize(spec.HeapSize)
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_elasticsearch_%s_%d.sh", i.GetHost(), i.GetPort()))
 	log.Infof("script path: %s", fp)

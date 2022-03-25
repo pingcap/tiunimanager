@@ -51,6 +51,7 @@ type ServiceMeta struct {
 	RegistryAddress []string
 	ServiceHost     string
 	ServicePort     int
+	ServiceAddress  string
 }
 
 func (s *ServiceMeta) GetServiceAddress() string {
@@ -63,6 +64,7 @@ func NewServiceMetaFromArgs(serviceName ServiceNameEnum, args *ClientArgs) *Serv
 		RegistryAddress: splitRegistryAddress(args.RegistryAddress),
 		ServicePort:     args.Port,
 		ServiceHost:     args.Host,
+		ServiceAddress:  args.Host + ":" + strconv.Itoa(args.Port),
 	}
 }
 

@@ -27,6 +27,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/metrics"
 	"github.com/pingcap-inc/tiem/models"
 	dbModel "github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/workflow"
@@ -76,6 +77,8 @@ func createFlowWork(ctx context.Context, bizId string, bizType string, define *W
 	flowData := make(map[string]interface{})
 
 	flow := define.getInstance(ctx, bizId, bizType, flowData)
+	handleWorkFlowMetrics(flow)
+
 	_, err := models.GetWorkFlowReaderWriter().CreateWorkFlow(ctx, flow.Flow)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create workflow %+v failed %s", flow.Flow, err.Error())
@@ -84,8 +87,29 @@ func createFlowWork(ctx context.Context, bizId string, bizType string, define *W
 	return flow, nil
 }
 
+func handleWorkFlowMetrics(flow *WorkFlowAggregation) {
+	metrics.HandleWorkFlowMetrics(metrics.WorkFlowLabel{
+		Instance: framework.Current.GetServiceMeta().ServiceAddress,
+		BizType:  flow.Flow.BizType,
+		Name:     flow.Flow.Name,
+		Status:   flow.Flow.Status,
+	})
+}
+
+func handleWorkFlowNodeMetrics(flow *WorkFlowAggregation, node *workflow.WorkFlowNode) {
+	metrics.HandleWorkFlowNodeMetrics(metrics.WorkFlowNodeLabel{
+		Instance: framework.Current.GetServiceMeta().ServiceAddress,
+		BizType:  flow.Flow.BizType,
+		FlowName: flow.Flow.Name,
+		Node:     node.Name,
+		Status:   node.Status,
+	})
+}
+
 func (flow *WorkFlowAggregation) start(ctx context.Context) {
 	flow.Flow.Status = constants.WorkFlowStatusProcessing
+	handleWorkFlowMetrics(flow)
+
 	start := flow.Define.TaskNodes["start"]
 	result := flow.handle(start)
 	flow.complete(result)
@@ -116,9 +140,12 @@ func (flow *WorkFlowAggregation) asyncStart(ctx context.Context) {
 
 func (flow *WorkFlowAggregation) destroy(ctx context.Context, reason string) {
 	flow.Flow.Status = constants.WorkFlowStatusCanceled
+	handleWorkFlowMetrics(flow)
 
 	if flow.CurrentNode != nil {
-		flow.CurrentNode.Fail(errors.NewError(errors.TIEM_TASK_CANCELED, reason))
+		nodeDefine := flow.Define.TaskNodes[flow.CurrentNode.Name]
+		err := errors.NewError(errors.TIEM_TASK_CANCELED, reason)
+		flow.handleTaskError(flow.CurrentNode, nodeDefine, err)
 	}
 	err := models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
 	if err != nil {
@@ -126,12 +153,14 @@ func (flow *WorkFlowAggregation) destroy(ctx context.Context, reason string) {
 	}
 }
 
-func (flow WorkFlowAggregation) complete(success bool) {
+func (flow *WorkFlowAggregation) complete(success bool) {
 	if success {
 		flow.Flow.Status = constants.WorkFlowStatusFinished
 	} else {
 		flow.Flow.Status = constants.WorkFlowStatusError
 	}
+
+	handleWorkFlowMetrics(flow)
 }
 
 func (flow *WorkFlowAggregation) addContext(key string, value interface{}) {
@@ -144,53 +173,7 @@ func (flow *WorkFlowAggregation) addContext(key string, value interface{}) {
 	flow.Flow.Context = string(data)
 }
 
-func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) (execErr error) {
-	defer func() {
-		if r := recover(); r != nil {
-			framework.LogWithContext(flow.Context).Errorf(
-				"recover from workflow %s, node %s, stacktrace %s",
-				flow.Flow.Name, node.Name, string(debug.Stack()))
-			execErr = errors.NewErrorf(errors.TIEM_PANIC, "%v", r)
-			node.Fail(execErr)
-		}
-	}()
-
-	flow.CurrentNode = node
-	flow.Nodes = append(flow.Nodes, node)
-	node.Processing()
-	data, err := json.Marshal(flow.Context.FlowData)
-	if err != nil {
-		framework.LogWithContext(flow.Context).Warnf("json marshal flow context data failed %s", err.Error())
-	}
-	flow.Flow.Context = string(data)
-	err = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
-	if err != nil {
-		framework.LogWithContext(flow.Context).Warnf("update workflow %s detail of bizId %s failed %s", flow.Flow.ID, flow.Flow.BizID, err.Error())
-	}
-
-	err = nodeDefine.Executor(node, &flow.Context)
-	if err != nil {
-		framework.LogWithContext(flow.Context).Infof("workflow %s of bizId %s do node %s failed, %s", flow.Flow.ID, flow.Flow.BizID, node.Name, err.Error())
-		node.Fail(err)
-	}
-
-	return err
-}
-
-func (flow *WorkFlowAggregation) handleTaskError(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) {
-	flow.FlowError = fmt.Errorf(node.Result)
-	if "" != nodeDefine.FailEvent {
-		flow.handle(flow.Define.TaskNodes[nodeDefine.FailEvent])
-	} else {
-		framework.LogWithContext(flow.Context).Warnf("no fail event in flow definition, flowname %s", nodeDefine.Name)
-	}
-}
-
-func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
-	if nodeDefine == nil {
-		flow.Flow.Status = constants.WorkFlowStatusFinished
-		return true
-	}
+func (flow *WorkFlowAggregation) createTask(nodeDefine *NodeDefine) *workflow.WorkFlowNode {
 	node := &workflow.WorkFlowNode{
 		Entity: dbModel.Entity{
 			TenantId: flow.Flow.TenantId,
@@ -203,19 +186,88 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 		StartTime:  time.Now(),
 	}
 
+	handleWorkFlowNodeMetrics(flow, node)
+
+	return node
+}
+
+func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) (execErr errors.EMError) {
+	defer func() {
+		if r := recover(); r != nil {
+			framework.LogWithContext(flow.Context).Errorf(
+				"recover from workflow %s, node %s, stacktrace %s",
+				flow.Flow.Name, node.Name, string(debug.Stack()))
+			execErr = errors.NewErrorf(errors.TIEM_PANIC, "%v", r)
+		}
+	}()
+
+	node.Processing()
+	handleWorkFlowNodeMetrics(flow, node)
+
+	flow.CurrentNode = node
+	flow.Nodes = append(flow.Nodes, node)
+	data, err := json.Marshal(flow.Context.FlowData)
+	if err != nil {
+		framework.LogWithContext(flow.Context).Errorf("json marshal flow context data failed %s", err.Error())
+		return errors.NewErrorf(errors.TIEM_MARSHAL_ERROR, "%v", err)
+	}
+	flow.Flow.Context = string(data)
+	err = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
+	if err != nil {
+		framework.LogWithContext(flow.Context).Warnf("update workflow %s detail of bizId %s failed %s", flow.Flow.ID, flow.Flow.BizID, err.Error())
+	}
+
+	err = nodeDefine.Executor(node, &flow.Context)
+	if err != nil {
+		framework.LogWithContext(flow.Context).Errorf("workflow %s of bizId %s do node %s failed, %s", flow.Flow.ID, flow.Flow.BizID, node.Name, err.Error())
+		if emErr, ok := err.(errors.EMError); ok {
+			return emErr
+		}
+		execErr = errors.NewErrorf(errors.TIEM_UNRECOGNIZED_ERROR, "%v", err)
+		return
+	}
+
+	return
+}
+
+func (flow *WorkFlowAggregation) handleTaskError(node *workflow.WorkFlowNode, nodeDefine *NodeDefine, err errors.EMError) {
+	node.Fail(err)
+	handleWorkFlowNodeMetrics(flow, node)
+	flow.FlowError = fmt.Errorf(node.Result)
+
+	if "" != nodeDefine.FailEvent {
+		flow.handle(flow.Define.TaskNodes[nodeDefine.FailEvent])
+	} else {
+		framework.LogWithContext(flow.Context).Warnf("no fail event in flow definition, flowname %s", nodeDefine.Name)
+	}
+}
+
+func (flow *WorkFlowAggregation) handleTaskSuccess(node *workflow.WorkFlowNode, result ...interface{}) {
+	node.Success(result...)
+	handleWorkFlowNodeMetrics(flow, node)
+}
+
+func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
+	if nodeDefine == nil {
+		flow.Flow.Status = constants.WorkFlowStatusFinished
+		return true
+	}
+
+	node := flow.createTask(nodeDefine)
 	_, err := models.GetWorkFlowReaderWriter().CreateWorkFlowNode(flow.Context, node)
 	if err != nil {
 		framework.LogWithContext(flow.Context).Warnf("create workflow node, node %s failed %s", node.Name, err.Error())
 	}
+
 	handleError := flow.executeTask(node, nodeDefine)
-	if handleError != nil {
-		flow.handleTaskError(node, nodeDefine)
+	if handleError.GetCode() != errors.TIEM_SUCCESS {
+		flow.handleTaskError(node, nodeDefine, handleError)
 		return false
 	}
 
 	switch nodeDefine.ReturnType {
 	case SyncFuncNode:
-		node.Success()
+		flow.handleTaskSuccess(node, nil)
 		return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
 	case PollingNode:
 		if node.Status == constants.WorkFlowStatusFinished {
@@ -226,8 +278,8 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 		for range ticker.C {
 			sequence++
 			if sequence > maxPollingSequence {
-				node.Fail(errors.Error(errors.TIEM_WORKFLOW_NODE_POLLING_TIME_OUT))
-				flow.handleTaskError(node, nodeDefine)
+				err := errors.Error(errors.TIEM_WORKFLOW_NODE_POLLING_TIME_OUT)
+				flow.handleTaskError(node, nodeDefine, err)
 				return false
 			}
 			framework.LogWithContext(flow.Context).Debugf("polling node waiting, sequence %d, nodeId %s, nodeName %s", sequence, node.ID, node.Name)
@@ -235,21 +287,21 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 			op, err := deployment.M.GetStatus(flow.Context, node.OperationID)
 			if err != nil {
 				framework.LogWithContext(flow.Context).Errorf("call deployment GetStatus %s, failed %s", node.OperationID, err.Error())
-				node.Fail(errors.NewError(errors.TIEM_TASK_FAILED, err.Error()))
-				flow.handleTaskError(node, nodeDefine)
+				err := errors.NewError(errors.TIEM_TASK_FAILED, err.Error())
+				flow.handleTaskError(node, nodeDefine, err)
 				return false
 			}
 			if op.Status == deployment.Error {
 				framework.LogWithContext(flow.Context).Errorf("call deployment GetStatus %s, response error %s", node.OperationID, op.ErrorStr)
-				node.Fail(errors.NewError(errors.TIEM_TASK_FAILED, op.ErrorStr))
-				flow.handleTaskError(node, nodeDefine)
+				err := errors.NewError(errors.TIEM_TASK_FAILED, op.ErrorStr)
+				flow.handleTaskError(node, nodeDefine, err)
 				return false
 			}
 			if op.Status == deployment.Finished {
 				if op.Result != "" {
-					node.Success(op.Result)
+					flow.handleTaskSuccess(node, op.Result)
 				} else {
-					node.Success(nil)
+					flow.handleTaskSuccess(node, nil)
 				}
 
 				return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])

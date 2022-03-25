@@ -19,10 +19,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
-	mock_allocator_recycler "github.com/pingcap-inc/tiem/test/mockresource"
 	"testing"
 	"time"
+
+	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
+	mock_allocator_recycler "github.com/pingcap-inc/tiem/test/mockresource"
+
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
 
 	"github.com/pingcap-inc/tiem/models/cluster/upgrade"
 
@@ -1718,113 +1721,375 @@ func Test_getMinorVersion(t *testing.T) {
 }
 
 func Test_compareConfigDifference(t *testing.T) {
-	cParamInfos := []structs.ClusterParameterInfo{
-		{
+	t.Run("normal", func(t *testing.T) {
+		cParamInfos := []structs.ClusterParameterInfo{
+			{
+				ParamId:      "1",
+				Category:     "basic1",
+				Name:         "param1",
+				InstanceType: "tidb",
+				RealValue: structs.ParameterRealValue{
+					ClusterValue: "v1_real",
+				},
+				Type:        1,
+				Unit:        "MB",
+				UnitOptions: []string{"KB", "MB", "GB"},
+				Range:       []string{"1, 100"},
+				RangeType:   1,
+				HasApply:    int(parameter.DirectApply),
+				Description: "param1 desc",
+			},
+			{
+				ParamId:      "2",
+				Category:     "basic2",
+				Name:         "param2",
+				InstanceType: "tikv",
+				RealValue: structs.ParameterRealValue{
+					ClusterValue: "v2",
+				},
+				Type:        2,
+				Unit:        "GB",
+				UnitOptions: []string{"KB", "MB", "GB"},
+				Range:       []string{"1, 1000"},
+				RangeType:   1,
+				HasApply:    int(parameter.DirectApply),
+				Description: "param2 desc",
+			},
+			{
+				ParamId:      "3",
+				Category:     "basic3",
+				Name:         "param3",
+				InstanceType: "pd",
+				RealValue: structs.ParameterRealValue{
+					ClusterValue: "",
+				},
+				Type:        3,
+				Unit:        "KB",
+				UnitOptions: []string{"KB", "MB", "GB"},
+				Range:       []string{"1, 10000"},
+				RangeType:   1,
+				HasApply:    int(parameter.DirectApply),
+				Description: "param3 desc",
+			},
+			{
+				ParamId:      "4",
+				Category:     "basic4",
+				Name:         "param4",
+				InstanceType: "tiflash",
+				RealValue: structs.ParameterRealValue{
+					ClusterValue: "v4_real",
+				},
+				Type:        4,
+				Unit:        "KB",
+				UnitOptions: []string{"KB", "MB", "GB"},
+				Range:       []string{"1, 100000"},
+				RangeType:   1,
+				HasApply:    int(parameter.DirectApply),
+				Description: "param4 desc",
+			},
+			{
+				ParamId:      "5",
+				Category:     "basic5",
+				Name:         "param5",
+				InstanceType: "tidb",
+				RealValue: structs.ParameterRealValue{
+					ClusterValue: "v5_real",
+				},
+				Type:        5,
+				Unit:        "KB",
+				UnitOptions: []string{"KB", "MB", "GB"},
+				Range:       []string{"1, 100000"},
+				RangeType:   1,
+				HasApply:    int(parameter.ModifyApply),
+				Description: "param5 desc",
+			},
+		}
+
+		pgParamInfos := []structs.ParameterGroupParameterInfo{
+			{
+				ID:           "1",
+				Category:     "basic1",
+				Name:         "param1",
+				InstanceType: "tidb",
+				DefaultValue: "v1new",
+				Type:         1,
+				Unit:         "MB",
+				UnitOptions:  []string{"KB", "MB", "GB"},
+				Range:        []string{"1, 100"},
+				RangeType:    1,
+				HasApply:     int(parameter.DirectApply),
+				Description:  "param1 desc",
+			},
+			{
+				ID:           "2",
+				Category:     "basic2",
+				Name:         "param2",
+				InstanceType: "tikv",
+				DefaultValue: "v2",
+				Type:         2,
+				Unit:         "GB",
+				UnitOptions:  []string{"KB", "MB", "GB"},
+				Range:        []string{"1, 1000"},
+				RangeType:    1,
+				HasApply:     int(parameter.DirectApply),
+				Description:  "param2 desc",
+			},
+			{
+				ID:           "3",
+				Category:     "basic3",
+				Name:         "param3",
+				InstanceType: "pd",
+				DefaultValue: " ",
+				Type:         3,
+				Unit:         "KB",
+				UnitOptions:  []string{"KB", "MB", "GB"},
+				Range:        []string{"1, 10000"},
+				RangeType:    1,
+				HasApply:     int(parameter.DirectApply),
+				Description:  "param3 desc",
+			},
+			{
+				ID:           "4",
+				Category:     "basic4",
+				Name:         "param4",
+				InstanceType: "tiflash",
+				DefaultValue: "v4new",
+				Type:         4,
+				Unit:         "KB",
+				UnitOptions:  []string{"KB", "MB", "GB"},
+				Range:        []string{"1, 100000"},
+				RangeType:    1,
+				HasApply:     int(parameter.DirectApply),
+				Description:  "param4 desc",
+			},
+			{
+				ID:           "5",
+				Category:     "basic5",
+				Name:         "param5",
+				InstanceType: "tidb",
+				DefaultValue: "v5new",
+				Type:         5,
+				Unit:         "KB",
+				UnitOptions:  []string{"KB", "MB", "GB"},
+				Range:        []string{"1, 100000"},
+				RangeType:    1,
+				HasApply:     int(parameter.ModifyApply),
+				Description:  "param5 desc",
+			},
+		}
+
+		resp := compareConfigDifference(context.TODO(), cParamInfos, pgParamInfos, []string{"tidb", "tikv", "pd"})
+		assert.Equal(t, 1, len(resp))
+		item := structs.ProductUpgradeVersionConfigDiffItem{
 			ParamId:      "1",
 			Category:     "basic1",
 			Name:         "param1",
 			InstanceType: "tidb",
-			RealValue: structs.ParameterRealValue{
-				ClusterValue: "v1_real",
-			},
-			Type:        1,
-			Unit:        "MB",
-			UnitOptions: []string{"KB", "MB", "GB"},
-			Range:       []string{"1, 100"},
-			RangeType:   1,
-			Description: "param1 desc",
-		},
-		{
-			ParamId:      "2",
-			Category:     "basic2",
-			Name:         "param2",
-			InstanceType: "tikv",
-			RealValue: structs.ParameterRealValue{
-				ClusterValue: "v2",
-			},
-			Type:        2,
-			Unit:        "GB",
-			UnitOptions: []string{"KB", "MB", "GB"},
-			Range:       []string{"1, 1000"},
-			RangeType:   1,
-			Description: "param2 desc",
-		},
-		{
-			ParamId:      "3",
-			Category:     "basic3",
-			Name:         "param3",
-			InstanceType: "pd",
-			RealValue: structs.ParameterRealValue{
-				ClusterValue: "",
-			},
-			Type:        3,
-			Unit:        "KB",
-			UnitOptions: []string{"KB", "MB", "GB"},
-			Range:       []string{"1, 10000"},
-			RangeType:   1,
-			Description: "param3 desc",
-		},
-	}
-
-	pgParamInfos := []structs.ParameterGroupParameterInfo{
-		{
-			ID:           "1",
-			Category:     "basic1",
-			Name:         "param1",
-			InstanceType: "tidb",
-			DefaultValue: "v1new",
+			CurrentValue: "v1_real",
+			SuggestValue: "v1new",
 			Type:         1,
 			Unit:         "MB",
 			UnitOptions:  []string{"KB", "MB", "GB"},
 			Range:        []string{"1, 100"},
 			RangeType:    1,
 			Description:  "param1 desc",
-		},
-		{
-			ID:           "2",
-			Category:     "basic2",
-			Name:         "param2",
-			InstanceType: "tikv",
-			DefaultValue: "v2",
-			Type:         2,
-			Unit:         "GB",
-			UnitOptions:  []string{"KB", "MB", "GB"},
-			Range:        []string{"1, 1000"},
-			RangeType:    1,
-			Description:  "param2 desc",
-		},
-		{
-			ID:           "3",
-			Category:     "basic3",
-			Name:         "param3",
-			InstanceType: "pd",
-			DefaultValue: " ",
-			Type:         3,
-			Unit:         "KB",
-			UnitOptions:  []string{"KB", "MB", "GB"},
-			Range:        []string{"1, 10000"},
-			RangeType:    1,
-			Description:  "param3 desc",
-		},
-	}
-
-	resp := compareConfigDifference(context.TODO(), cParamInfos, pgParamInfos)
-	assert.Equal(t, 1, len(resp))
-	item := structs.ProductUpgradeVersionConfigDiffItem{
-		ParamId:      "1",
-		Category:     "basic1",
-		Name:         "param1",
-		InstanceType: "tidb",
-		CurrentValue: "v1_real",
-		SuggestValue: "v1new",
-		Type:         1,
-		Unit:         "MB",
-		UnitOptions:  []string{"KB", "MB", "GB"},
-		Range:        []string{"1, 100"},
-		RangeType:    1,
-		Description:  "param1 desc",
-	}
-	assert.Equal(t, item, *resp[0])
+		}
+		assert.Equal(t, 1, len(resp))
+		assert.Equal(t, item, *resp[0])
+	})
+	//t.Run("sort", func(t *testing.T) {
+	//	cParamInfos := []structs.ClusterParameterInfo{
+	//		{
+	//			ParamId:      "1",
+	//			Category:     "basic1",
+	//			Name:         "param1",
+	//			InstanceType: "tidb",
+	//			RealValue: structs.ParameterRealValue{
+	//				ClusterValue: "v1_real",
+	//			},
+	//			Type:        1,
+	//			Unit:        "MB",
+	//			UnitOptions: []string{"KB", "MB", "GB"},
+	//			Range:       []string{"1, 100"},
+	//			RangeType:   1,
+	//			HasApply:    int(parameter.DirectApply),
+	//			Description: "param1 desc",
+	//		},
+	//		{
+	//			ParamId:      "2",
+	//			Category:     "basic2",
+	//			Name:         "param2",
+	//			InstanceType: "tikv",
+	//			RealValue: structs.ParameterRealValue{
+	//				ClusterValue: "v2_real",
+	//			},
+	//			Type:        2,
+	//			Unit:        "GB",
+	//			UnitOptions: []string{"KB", "MB", "GB"},
+	//			Range:       []string{"1, 1000"},
+	//			RangeType:   1,
+	//			HasApply:    int(parameter.DirectApply),
+	//			Description: "param2 desc",
+	//		},
+	//		{
+	//			ParamId:      "3",
+	//			Category:     "basicB",
+	//			Name:         "param3",
+	//			InstanceType: "pd",
+	//			RealValue: structs.ParameterRealValue{
+	//				ClusterValue: "v3_real",
+	//			},
+	//			Type:        3,
+	//			Unit:        "KB",
+	//			UnitOptions: []string{"KB", "MB", "GB"},
+	//			Range:       []string{"1, 10000"},
+	//			RangeType:   1,
+	//			HasApply:    int(parameter.DirectApply),
+	//			Description: "param3 desc",
+	//		},
+	//		{
+	//			ParamId:      "4",
+	//			Category:     "basicA",
+	//			Name:         "param4",
+	//			InstanceType: "pd",
+	//			RealValue: structs.ParameterRealValue{
+	//				ClusterValue: "v4_real",
+	//			},
+	//			Type:        4,
+	//			Unit:        "KB",
+	//			UnitOptions: []string{"KB", "MB", "GB"},
+	//			Range:       []string{"1, 100000"},
+	//			RangeType:   1,
+	//			HasApply:    int(parameter.DirectApply),
+	//			Description: "param4 desc",
+	//		},
+	//	}
+	//
+	//	pgParamInfos := []structs.ParameterGroupParameterInfo{
+	//		{
+	//			ID:           "1",
+	//			Category:     "basic1",
+	//			Name:         "param1",
+	//			InstanceType: "tidb",
+	//			DefaultValue: "v1new",
+	//			Type:         1,
+	//			Unit:         "MB",
+	//			UnitOptions:  []string{"KB", "MB", "GB"},
+	//			Range:        []string{"1, 100"},
+	//			RangeType:    1,
+	//			HasApply:     int(parameter.DirectApply),
+	//			Description:  "param1 desc",
+	//		},
+	//		{
+	//			ID:           "2",
+	//			Category:     "basic2",
+	//			Name:         "param2",
+	//			InstanceType: "tikv",
+	//			DefaultValue: "v2new",
+	//			Type:         2,
+	//			Unit:         "GB",
+	//			UnitOptions:  []string{"KB", "MB", "GB"},
+	//			Range:        []string{"1, 1000"},
+	//			RangeType:    1,
+	//			HasApply:     int(parameter.DirectApply),
+	//			Description:  "param2 desc",
+	//		},
+	//		{
+	//			ID:           "3",
+	//			Category:     "basicB",
+	//			Name:         "param3",
+	//			InstanceType: "pd",
+	//			DefaultValue: "v3new",
+	//			Type:         3,
+	//			Unit:         "KB",
+	//			UnitOptions:  []string{"KB", "MB", "GB"},
+	//			Range:        []string{"1, 10000"},
+	//			RangeType:    1,
+	//			HasApply:     int(parameter.DirectApply),
+	//			Description:  "param3 desc",
+	//		},
+	//		{
+	//			ID:           "4",
+	//			Category:     "basicA",
+	//			Name:         "param4",
+	//			InstanceType: "pd",
+	//			DefaultValue: "v4new",
+	//			Type:         4,
+	//			Unit:         "KB",
+	//			UnitOptions:  []string{"KB", "MB", "GB"},
+	//			Range:        []string{"1, 100000"},
+	//			RangeType:    1,
+	//			HasApply:     int(parameter.DirectApply),
+	//			Description:  "param4 desc",
+	//		},
+	//	}
+	//
+	//	resp := compareConfigDifference(context.TODO(), cParamInfos, pgParamInfos, []string{"tidb", "tikv", "pd"})
+	//	items := []structs.ProductUpgradeVersionConfigDiffItem{
+	//		{
+	//			ParamId:      "4",
+	//			Category:     "basicA",
+	//			Name:         "param4",
+	//			InstanceType: "pd",
+	//			CurrentValue: "v4_real",
+	//			SuggestValue: "v4new",
+	//			Type:         4,
+	//			Unit:         "KB",
+	//			UnitOptions:  []string{"KB", "MB", "GB"},
+	//			Range:        []string{"1, 100000"},
+	//			RangeType:    1,
+	//			Description:  "param4 desc",
+	//		},
+	//		{
+	//			ParamId:      "3",
+	//			Category:     "basicB",
+	//			Name:         "param3",
+	//			InstanceType: "pd",
+	//			CurrentValue: "v3_real",
+	//			SuggestValue: "v3new",
+	//			Type:         3,
+	//			Unit:         "KB",
+	//			UnitOptions:  []string{"KB", "MB", "GB"},
+	//			Range:        []string{"1, 10000"},
+	//			RangeType:    1,
+	//			Description:  "param3 desc",
+	//		},
+	//		{
+	//			ParamId:      "1",
+	//			Category:     "basic1",
+	//			Name:         "param1",
+	//			InstanceType: "tidb",
+	//			CurrentValue: "v1_real",
+	//			SuggestValue: "v1new",
+	//			Type:         1,
+	//			Unit:         "MB",
+	//			UnitOptions:  []string{"KB", "MB", "GB"},
+	//			Range:        []string{"1, 100"},
+	//			RangeType:    1,
+	//			Description:  "param1 desc",
+	//		},
+	//		{
+	//			ParamId:      "2",
+	//			Category:     "basic2",
+	//			Name:         "param2",
+	//			InstanceType: "tikv",
+	//			CurrentValue: "v2_real",
+	//			SuggestValue: "v2new",
+	//			Type:         2,
+	//			Unit:         "GB",
+	//			UnitOptions:  []string{"KB", "MB", "GB"},
+	//			Range:        []string{"1, 1000"},
+	//			RangeType:    1,
+	//			Description:  "param2 desc",
+	//		},
+	//	}
+	//	fmt.Printf("real: \n%s %s\n%s %s\n%s %s\n%s %s\n", resp[0].InstanceType, resp[0].Category, resp[1].InstanceType, resp[1].Category, resp[2].InstanceType, resp[2].Category, resp[3].InstanceType, resp[3].Category)
+	//	assert.Equal(t, 4, len(resp))
+	//	assert.Equal(t, items[0].InstanceType, resp[0].InstanceType)
+	//	assert.Equal(t, items[1].InstanceType, resp[1].InstanceType)
+	//	assert.Equal(t, items[2].InstanceType, resp[2].InstanceType)
+	//	assert.Equal(t, items[3].InstanceType, resp[3].InstanceType)
+	//})
 }
 
 func TestManager_InPlaceUpgradeCluster(t *testing.T) {
@@ -1930,7 +2195,7 @@ func TestManager_DeleteMetadataPhysically(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		_, err := manager.DeleteMetadataPhysically(context.TODO(), cluster.DeleteMetadataPhysicallyReq{
 			ClusterID: "111",
-			Reason: "no why",
+			Reason:    "no why",
 		})
 		assert.NoError(t, err)
 	})

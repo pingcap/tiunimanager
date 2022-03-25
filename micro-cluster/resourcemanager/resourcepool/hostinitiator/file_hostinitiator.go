@@ -343,7 +343,8 @@ func (p *FileHostInitiator) passCpuGovernorWarn(ctx context.Context, h *structs.
 func (p *FileHostInitiator) isVirtualMachine(ctx context.Context, h *structs.HostInfo) (isVM bool, err error) {
 	log := framework.LogWithContext(ctx)
 	log.Infof("begin to check host manufacturer on host %s %s", h.HostName, h.IP)
-	vmManufacturer := []string{"QEMU", "XEN", "KVM", "VMWARE", "VIRTUALBOX", "VBOX", "ORACLE", "MICROSOFT", "ZVM", "BOCHS", "PARALLELS", "UML"}
+	// TODO: Add extraVMManufacturer []string read from system config table for user specified env.
+	vmManufacturer := []string{"QEMU", "XEN", "KVM", "VMWARE", "VIRTUALBOX", "ALIBABA", "VBOX", "ORACLE", "MICROSOFT", "ZVM", "BOCHS", "PARALLELS", "UML"}
 	dmidecodeCmd := "dmidecode -s system-manufacturer | tr -d '\n'"
 	authenticate := p.getEMAuthenticateToHost(ctx)
 	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), *authenticate, true, rp_consts.DefaultCopySshIDTimeOut, []string{dmidecodeCmd})

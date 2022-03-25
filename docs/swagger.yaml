@@ -3788,137 +3788,6 @@ paths:
       summary: create a cluster
       tags:
       - cluster
-  /clusters/:clusterId/upgrade:
-    post:
-      consumes:
-      - application/json
-      description: request for upgrade TiDB cluster
-      parameters:
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      - description: upgrade request
-        in: body
-        name: upgradeReq
-        required: true
-        schema:
-          $ref: '#/definitions/cluster.UpgradeClusterReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.UpgradeClusterResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: request for upgrade TiDB cluster
-      tags:
-      - cluster upgrade
-  /clusters/:clusterId/upgrade/diff:
-    get:
-      consumes:
-      - application/json
-      description: query config diff between current cluster and target upgrade version
-      parameters:
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      - example: v5.0.0
-        in: query
-        name: targetVersion
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.QueryUpgradeVersionDiffInfoResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: query config diff between current cluster and target upgrade version
-      tags:
-      - cluster upgrade
-  /clusters/:clusterId/upgrade/path:
-    get:
-      consumes:
-      - application/json
-      description: query upgrade path for given cluster id
-      parameters:
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.QueryUpgradePathRsp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: query upgrade path for given cluster id
-      tags:
-      - cluster upgrade
   /clusters/{clusterId}:
     delete:
       consumes:
@@ -4599,6 +4468,137 @@ paths:
       summary: save the backup strategy of a cluster
       tags:
       - cluster backup
+  /clusters/{clusterId}/upgrade:
+    post:
+      consumes:
+      - application/json
+      description: request for upgrade TiDB cluster
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: upgrade request
+        in: body
+        name: upgradeReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.UpgradeClusterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.UpgradeClusterResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: request for upgrade TiDB cluster
+      tags:
+      - cluster upgrade
+  /clusters/{clusterId}/upgrade/diff:
+    get:
+      consumes:
+      - application/json
+      description: query config diff between current cluster and target upgrade version
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - example: v5.0.0
+        in: query
+        name: targetVersion
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.QueryUpgradeVersionDiffInfoResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query config diff between current cluster and target upgrade version
+      tags:
+      - cluster upgrade
+  /clusters/{clusterId}/upgrade/path:
+    get:
+      consumes:
+      - application/json
+      description: query upgrade path for given cluster id
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.QueryUpgradePathRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query upgrade path for given cluster id
+      tags:
+      - cluster upgrade
   /clusters/clone:
     post:
       consumes:

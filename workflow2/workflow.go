@@ -297,7 +297,7 @@ func (mgr *WorkFlowManager) Stop(ctx context.Context, flowId string) error {
 	}
 	if flow.Finished() {
 		framework.LogWithContext(ctx).Infof("workflow Id %s is finished", flowId)
-		return errors.NewErrorf(errors.TIEM_WORKFLOW_STOP_FAILED, err.Error(), err)
+		return errors.NewErrorf(errors.TIEM_WORKFLOW_STOP_FAILED, "workflow Id %s is finished", flowId)
 	}
 	return models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusStopped, "")
 }
@@ -309,9 +309,9 @@ func (mgr *WorkFlowManager) Cancel(ctx context.Context, flowId string, reason st
 		framework.LogWithContext(ctx).Errorf("get workflow by workflow Id %s, failed %s", flowId, err.Error())
 		return errors.NewErrorf(errors.TIEM_WORKFLOW_QUERY_FAILED, err.Error(), err)
 	}
-	if flow.Finished() || !flow.Stopped() {
+	if flow.Finished() || flow.Stopped() {
 		framework.LogWithContext(ctx).Infof("workflow Id %s is finished", flowId)
-		return errors.NewErrorf(errors.TIEM_WORKFLOW_CANCEL_FAILED, err.Error(), err)
+		return errors.NewErrorf(errors.TIEM_WORKFLOW_CANCEL_FAILED, "workflow Id %s is finished", flowId)
 	}
 	return models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusCanceling, "")
 }

@@ -18,6 +18,7 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/pingcap/errors"
 	tiuplocaldata "github.com/pingcap/tiup/pkg/localdata"
@@ -62,7 +63,11 @@ func Initialize(base string) error {
 		if err != nil {
 			return errors.Trace(err)
 		}
-		profileDir = path.Join(homeDir, ".tiup", tiuplocaldata.StorageParentDir, base)
+		profileHome := homeDir + "/.tiup"
+		if tiupHome := os.Getenv(tiuplocaldata.EnvNameHome); tiupHome != "" {
+			profileHome = strings.TrimRight(tiupHome, "/")
+		}
+		profileDir = path.Join(profileHome, tiuplocaldata.StorageParentDir, base)
 	} else {
 		profileDir = tiupData
 	}

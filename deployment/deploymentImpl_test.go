@@ -288,12 +288,12 @@ func TestManager_startSyncOperation(t *testing.T) {
 		m := &Manager{
 			TiUPBinPath: "mock_tiup",
 		}
-		m.startSyncOperation("", "", 0)
+		m.startSyncOperation("", "", 0, false)
 	})
 	t.Run("right cmd", func(t *testing.T) {
 		m := &Manager{
 			TiUPBinPath: "ls",
 		}
-		m.startSyncOperation("", "-lh", 1)
+		m.startSyncOperation("", "-lh", 1, false)
 	})
 }

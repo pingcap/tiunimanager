@@ -94,9 +94,7 @@ func (mgr *WorkFlowManager) handleUnFinishedWorkFlow(ctx context.Context, status
 						framework.LogWithContext(ctx).Errorf("build workflow meta by flow id %s failed %s", flow.ID, err.Error())
 						return
 					}
-					newCtx, cancelFunc := context.WithCancel(flowMeta.Context)
-					flowMeta.Context = NewFlowContext(newCtx, flowMeta.Context.FlowData)
-					mgr.nodeGoroutineMap.Store(flow.ID, cancelFunc)
+					mgr.nodeGoroutineMap.Store(flow.ID, flow.ID)
 					go func() {
 						//todo: recover
 						defer mgr.nodeGoroutineMap.Delete(flow.ID) //clean node go routine map whether end or stop
@@ -109,28 +107,20 @@ func (mgr *WorkFlowManager) handleUnFinishedWorkFlow(ctx context.Context, status
 					continue
 				}
 			case constants.WorkFlowStatusStopped:
-				cancelFunc, exist := mgr.nodeGoroutineMap.Load(flow.ID)
+				flowId, exist := mgr.nodeGoroutineMap.Load(flow.ID)
 				if !exist {
 					//workflow has no processing goroutine
 					continue
 				} else {
 					//workflow has processing goroutine
-					if cancelFunc != nil {
-						cancelFunc.(context.CancelFunc)()
-						framework.LogWithContext(ctx).Infof("close workflow id %s, name %s stop channel success", flow.ID, flow.Name)
-					}
-					mgr.nodeGoroutineMap.Delete(flow.ID)
+					mgr.nodeGoroutineMap.Delete(flowId)
 					framework.LogWithContext(ctx).Infof("stop workflow id %s, name %s success", flow.ID, flow.Name)
 				}
 			case constants.WorkFlowStatusCanceling:
-				cancelFunc, exist := mgr.nodeGoroutineMap.Load(flow.ID)
+				flowId, exist := mgr.nodeGoroutineMap.Load(flow.ID)
 				if exist {
 					//workflow has processing goroutine
-					if cancelFunc != nil {
-						cancelFunc.(context.CancelFunc)()
-						framework.LogWithContext(ctx).Infof("close workflow id %s, name %s stop channel success", flow.ID, flow.Name)
-					}
-					mgr.nodeGoroutineMap.Delete(flow.ID)
+					mgr.nodeGoroutineMap.Delete(flowId)
 				}
 				//load workflow, cancel flow and node status, update workflow
 				flowMeta, err := NewWorkFlowMeta(ctx, flow.ID)
@@ -283,7 +273,7 @@ func (mgr *WorkFlowManager) Start(ctx context.Context, flowId string) error {
 	}
 	if flow.Finished() {
 		framework.LogWithContext(ctx).Infof("workflow Id %s is finished", flowId)
-		return errors.NewErrorf(errors.TIEM_WORKFLOW_START_FAILED, err.Error(), err)
+		return errors.NewErrorf(errors.TIEM_WORKFLOW_START_FAILED, "workflow Id %s is finished", flowId)
 	}
 	return models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusProcessing, "")
 }

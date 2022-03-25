@@ -142,7 +142,7 @@ func Test_ImportHosts(t *testing.T) {
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, flow *workflow.WorkFlowAggregation) error {
 		return nil
 	}).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(12)
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(9)
 
 	host1 := genHostInfo("Test_Host1")
 	host2 := genHostInfo("Test_Host2")
@@ -180,7 +180,7 @@ func Test_DeleteHosts(t *testing.T) {
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, flow *workflow.WorkFlowAggregation) error {
 		return nil
 	}).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(9)
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(6)
 
 	flowIds, err := resourcePool.DeleteHosts(context.TODO(), []string{"hostId1", "hostId2", "hostId3"}, false)
 	assert.Equal(t, 3, len(flowIds))

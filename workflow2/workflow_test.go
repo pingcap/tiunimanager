@@ -198,3 +198,47 @@ func TestFlowManager_Cancel(t *testing.T) {
 	err := manager.Cancel(context.Background(), "testflowId", "")
 	assert.NoError(t, err)
 }
+
+func TestFlowManager_InitContext(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockFlowRW := mockworkflow.NewMockReaderWriter(ctrl)
+	mockFlowRW.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any()).Return(&wfModel.WorkFlow{
+		Entity: common.Entity{
+			Status:   constants.WorkFlowStatusInitializing,
+			TenantId: framework.GetTenantIDFromContext(context.TODO()),
+			ID:       "testflowId",
+		},
+	}, nil).AnyTimes()
+	mockFlowRW.EXPECT().QueryDetailWorkFlow(gomock.Any(), gomock.Any()).Return(&wfModel.WorkFlow{
+		Name: "flowName",
+	}, nil, nil).AnyTimes()
+	mockFlowRW.EXPECT().CreateWorkFlowNode(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	mockFlowRW.EXPECT().UpdateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	mockFlowRW.EXPECT().GetWorkFlow(gomock.Any(), gomock.Any()).Return(&wfModel.WorkFlow{
+		Entity: common.Entity{
+			Status:   constants.WorkFlowStatusInitializing,
+			TenantId: framework.GetTenantIDFromContext(context.TODO()),
+			ID:       "testflowId",
+		},
+	}, nil).AnyTimes()
+	models.SetWorkFlowReaderWriter(mockFlowRW)
+
+	manager := GetWorkFlowService()
+	manager.RegisterWorkFlow(context.TODO(), "flowName",
+		&WorkFlowDefine{
+			FlowName: "flowName",
+			TaskNodes: map[string]*NodeDefine{
+				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
+				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
+				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
+				"fail":          {"end", "", "", SyncFuncNode, doFail},
+			},
+		})
+	flowId, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", BizTypeCluster, "flowName")
+	assert.NoError(t, errCreate)
+	err := manager.InitContext(context.Background(), flowId, "key", "value")
+	assert.NoError(t, err)
+}

@@ -560,7 +560,7 @@ func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 			}
 		}
 	}
-	if clusterMeta.Cluster.Status == string(constants.ClusterInitializing) {
+	if clusterMeta.Cluster.Status == string(constants.ClusterInitializing) || clusterMeta.Cluster.MaintenanceStatus == constants.ClusterMaintenanceUpgrading {
 		// PD cannot be restarted for a minute, or it will encounter "error.keyvisual.service_stopped"
 		time.Sleep(time.Minute)
 	}

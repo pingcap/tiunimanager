@@ -1943,6 +1943,7 @@ func checkRegionHealth(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 func upgradeCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
 	clusterInfo := clusterMeta.Cluster
+	instances := clusterMeta.Instances
 	version := context.GetData(ContextUpgradeVersion).(string)
 	way := context.GetData(ContextUpgradeWay).(string)
 
@@ -1966,6 +1967,12 @@ func upgradeCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	node.Record(fmt.Sprintf("upgrade cluster %s version to %s from %s", clusterMeta.Cluster.ID, version, clusterInfo.Version))
 	node.OperationID = operationID
 	clusterInfo.Version = version
+	for _, instance := range instances {
+		// each instance like "PD, TiKV" has more than one replica
+		for _, replica := range instance {
+			replica.Version = version
+		}
+	}
 	clusterInfo.ParameterGroupID = ""
 	return nil
 }
@@ -2021,8 +2028,15 @@ func checkSystemHealth(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 func revertConfigAfterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
 	clusterInfo := clusterMeta.Cluster
+	instances := clusterMeta.Instances
 	originalVersion := context.GetData(ContextOriginalVersion).(string)
 	clusterInfo.Version = originalVersion
+	for _, instance := range instances {
+		// each instance like "PD, TiKV" has more than one replica
+		for _, replica := range instance {
+			replica.Version = originalVersion
+		}
+	}
 	originalParameterGroupId := context.GetData(ContextOriginalParamGroupId).(string)
 	clusterInfo.ParameterGroupID = originalParameterGroupId
 	return nil

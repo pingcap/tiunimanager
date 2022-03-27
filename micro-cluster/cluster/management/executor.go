@@ -1968,7 +1968,7 @@ func upgradeCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	node.OperationID = operationID
 	clusterInfo.Version = version
 	for _, instance := range instances {
-		// each instance like "PD, TiKV has more than one replica"
+		// each instance like "PD, TiKV" has more than one replica
 		for _, replica := range instance {
 			replica.Version = version
 		}
@@ -2032,7 +2032,7 @@ func revertConfigAfterFailure(node *workflowModel.WorkFlowNode, context *workflo
 	originalVersion := context.GetData(ContextOriginalVersion).(string)
 	clusterInfo.Version = originalVersion
 	for _, instance := range instances {
-		// each instance like "PD, TiKV has more than one replica"
+		// each instance like "PD, TiKV" has more than one replica
 		for _, replica := range instance {
 			replica.Version = originalVersion
 		}

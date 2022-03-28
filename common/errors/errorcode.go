@@ -88,6 +88,8 @@ const (
 	TIEM_WORKFLOW_START_FAILED          EM_ERROR_CODE = 40103
 	TIEM_WORKFLOW_DEFINE_NOT_FOUND      EM_ERROR_CODE = 40104
 	TIEM_WORKFLOW_NODE_POLLING_TIME_OUT EM_ERROR_CODE = 40105
+	TIEM_WORKFLOW_STOP_FAILED           EM_ERROR_CODE = 40106
+	TIEM_WORKFLOW_CANCEL_FAILED         EM_ERROR_CODE = 40107
 
 	// import && export
 	TIEM_TRANSPORT_SYSTEM_CONFIG_NOT_FOUND EM_ERROR_CODE = 60100
@@ -298,12 +300,14 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_SYSTEM_STATE_CONFLICT:     {"system state conflict", 500},
 	TIEM_SYSTEM_INVALID_VERSION:    {"invalid system version", 500},
 
-	TIEM_TASK_TIMEOUT:          {"task timeout", 500},
-	TIEM_FLOW_NOT_FOUND:        {"flow not found", 500},
-	TIEM_TASK_FAILED:           {"task failed", 500},
-	TIEM_TASK_CONFLICT:         {"task conflict", 400},
-	TIEM_TASK_CANCELED:         {"task canceled", 500},
-	TIEM_TASK_POLLING_TIME_OUT: {"task polling time out", 500},
+	TIEM_TASK_TIMEOUT:           {"task timeout", 500},
+	TIEM_FLOW_NOT_FOUND:         {"flow not found", 500},
+	TIEM_TASK_FAILED:            {"task failed", 500},
+	TIEM_TASK_CONFLICT:          {"task conflict", 400},
+	TIEM_TASK_CANCELED:          {"task canceled", 500},
+	TIEM_TASK_POLLING_TIME_OUT:  {"task polling time out", 500},
+	TIEM_WORKFLOW_STOP_FAILED:   {"workflow stop failed", 500},
+	TIEM_WORKFLOW_CANCEL_FAILED: {"workflow cancel failed", 500},
 
 	TIEM_DUPLICATED_NAME:              {"duplicated cluster name", 400},
 	TIEM_INVALID_TOPOLOGY:             {"invalid cluster topology", 400},

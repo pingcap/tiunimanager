@@ -20,7 +20,6 @@ import "sync"
 
 const (
 	ServiceLabel        = "service"
-	InstanceLabel       = "instance"
 	HandlerLabel        = "handler"
 	MethodLabel         = "method"
 	CodeLabel           = "code"
@@ -103,11 +102,11 @@ var (
 	WorkFlowCounterMetricDef = MetricDef{
 		Name:       "work_flow_total",
 		Help:       "A counter for work flow.",
-		LabelNames: []string{ServiceLabel, InstanceLabel, BizTypeLabel, FlowNameLabel, FlowStatusLabel},
+		LabelNames: []string{ServiceLabel, BizTypeLabel, FlowNameLabel, FlowStatusLabel},
 	}
 	WorkFlowNodeCounterMetricDef = MetricDef{
 		Name:       "work_flow_node_total",
 		Help:       "A counter for work flow node.",
-		LabelNames: []string{ServiceLabel, InstanceLabel, BizTypeLabel, FlowNameLabel, FlowNodeLabel, FlowNodeStatusLabel},
+		LabelNames: []string{ServiceLabel, BizTypeLabel, FlowNameLabel, FlowNodeLabel, FlowNodeStatusLabel},
 	}
 )

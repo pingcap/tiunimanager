@@ -187,16 +187,14 @@ func HandleClusterMetrics(start time.Time, funcName string, code int) {
 }
 
 type WorkFlowLabel struct {
-	Instance string
-	BizType  string
-	Name     string
-	Status   string
+	BizType string
+	Name    string
+	Status  string
 }
 
 func HandleWorkFlowMetrics(label WorkFlowLabel) {
 	GetMetrics().WorkFlowCounterMetric.With(prometheus.Labels{
 		ServiceLabel:    ClusterServer,
-		InstanceLabel:   label.Instance,
 		BizTypeLabel:    label.BizType,
 		FlowNameLabel:   label.Name,
 		FlowStatusLabel: label.Status,
@@ -205,7 +203,6 @@ func HandleWorkFlowMetrics(label WorkFlowLabel) {
 }
 
 type WorkFlowNodeLabel struct {
-	Instance string
 	BizType  string
 	FlowName string
 	Node     string
@@ -215,7 +212,6 @@ type WorkFlowNodeLabel struct {
 func HandleWorkFlowNodeMetrics(label WorkFlowNodeLabel) {
 	GetMetrics().WorkFlowNodeCounterMetric.With(prometheus.Labels{
 		ServiceLabel:        ClusterServer,
-		InstanceLabel:       label.Instance,
 		BizTypeLabel:        label.BizType,
 		FlowNameLabel:       label.FlowName,
 		FlowNodeLabel:       label.Node,

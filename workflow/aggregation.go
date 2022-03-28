@@ -89,16 +89,14 @@ func createFlowWork(ctx context.Context, bizId string, bizType string, define *W
 
 func handleWorkFlowMetrics(flow *WorkFlowAggregation) {
 	metrics.HandleWorkFlowMetrics(metrics.WorkFlowLabel{
-		Instance: framework.Current.GetServiceMeta().ServiceAddress,
-		BizType:  flow.Flow.BizType,
-		Name:     flow.Flow.Name,
-		Status:   flow.Flow.Status,
+		BizType: flow.Flow.BizType,
+		Name:    flow.Flow.Name,
+		Status:  flow.Flow.Status,
 	})
 }
 
 func handleWorkFlowNodeMetrics(flow *WorkFlowAggregation, node *workflow.WorkFlowNode) {
 	metrics.HandleWorkFlowNodeMetrics(metrics.WorkFlowNodeLabel{
-		Instance: framework.Current.GetServiceMeta().ServiceAddress,
 		BizType:  flow.Flow.BizType,
 		FlowName: flow.Flow.Name,
 		Node:     node.Name,

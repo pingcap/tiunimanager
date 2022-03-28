@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/pingcap-inc/tiem/message"
 	"testing"
 	"time"
 
@@ -26,8 +27,6 @@ import (
 	mock_allocator_recycler "github.com/pingcap-inc/tiem/test/mockresource"
 
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
-
-	"github.com/pingcap-inc/tiem/models/cluster/upgrade"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -48,7 +47,6 @@ import (
 	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
-	mock_upgrade "github.com/pingcap-inc/tiem/test/mockmodels/mockupgrade"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/pkg/sftp"
@@ -1624,62 +1622,134 @@ func TestManager_QueryProductUpdatePath(t *testing.T) {
 	defer ctrl.Finish()
 
 	manager := Manager{}
-	t.Run("normal", func(t *testing.T) {
-		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
-		models.SetClusterReaderWriter(clusterRW)
-
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{
-			Version: "v5.2.2",
-		}, []*management.ClusterInstance{
-			{},
-			{},
-		}, make([]*management.DBUser, 0), nil)
-
-		mockUpgrade := mock_upgrade.NewMockReaderWriter(ctrl)
-		mockUpgrade.EXPECT().QueryBySrcVersion(gomock.Any(), gomock.Any()).Return([]*upgrade.ProductUpgradePath{
-			{
-				Type:       "in-place",
-				SrcVersion: "v5.2",
-				DstVersion: "v5.3",
-			},
-			{
-				Type:       "in-place",
-				SrcVersion: "v5.2",
-				DstVersion: "v5.4",
-			},
-		}, nil)
-		models.SetUpgradeReaderWriter(mockUpgrade)
-
-		_, err := manager.QueryProductUpdatePath(context.TODO(), "111")
-		assert.NoError(t, err)
-	})
 	t.Run("not found meta", func(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(nil, nil, nil, errors.New(""))
 
-		_, err := manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
-			ClusterID: "111",
-		})
-		assert.Error(t, err)
-	})
-	t.Run("not found path", func(t *testing.T) {
-		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
-		models.SetClusterReaderWriter(clusterRW)
-
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{
-			Version: "v5.2.2",
-		}, []*management.ClusterInstance{
-			{},
-			{},
-		}, make([]*management.DBUser, 0), nil)
-
-		mockUpgrade := mock_upgrade.NewMockReaderWriter(ctrl)
-		mockUpgrade.EXPECT().QueryBySrcVersion(gomock.Any(), gomock.Any()).Return(nil, errors.New(""))
-		models.SetUpgradeReaderWriter(mockUpgrade)
-
 		_, err := manager.QueryProductUpdatePath(context.TODO(), "111")
 		assert.Error(t, err)
+	})
+}
+
+func Test_generatePaths(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		resp := message.QueryProductsInfoResp{
+			Products: []structs.ProductConfigInfo{
+				{
+					ProductID:   "TiDB",
+					ProductName: "TiDB",
+					Versions: []structs.SpecificVersionProduct{
+						{
+							ProductID: "TiDB",
+							Arch:      "X86_64",
+							Version:   "v5.0.0",
+						},
+						{
+							ProductID: "TiDB",
+							Arch:      "X86_64",
+							Version:   "v5.1.0",
+						},
+						{
+							ProductID: "TiDB",
+							Arch:      "X86_64",
+							Version:   "v5.2.0",
+						},
+						{
+							ProductID: "TiDB",
+							Arch:      "X86_64",
+							Version:   "v5.2.2",
+						},
+						{
+							ProductID: "TiDB",
+							Arch:      "X86_64",
+							Version:   "v5.2.3",
+						},
+						{
+							ProductID: "TiDB",
+							Arch:      "X86_64",
+							Version:   "v5.3.0",
+						},
+						{
+							ProductID: "TiDB",
+							Arch:      "X86_64",
+							Version:   "v5.3.1",
+						},
+						{
+							ProductID: "TiDB",
+							Arch:      "X86_64",
+							Version:   "v5.4.0",
+						},
+					},
+				},
+			},
+		}
+		paths := generatePaths(context.TODO(), resp, "v5.2.2", "X86_64")
+		assert.Equal(t, 1, len(paths))
+		assert.Equal(t, string(constants.UpgradeTypeInPlace), paths[0].UpgradeType)
+		assert.Equal(t, 4, len(paths[0].Versions))
+		assert.True(t, meta.Contain(paths[0].Versions, "5.2.3"))
+		assert.True(t, meta.Contain(paths[0].Versions, "5.3.0"))
+		assert.True(t, meta.Contain(paths[0].Versions, "5.3.1"))
+		assert.True(t, meta.Contain(paths[0].Versions, "5.4.0"))
+		assert.Equal(t, 2, len(paths[0].UpgradeWays))
+	})
+	t.Run("wrong product id", func(t *testing.T) {
+		resp := message.QueryProductsInfoResp{
+			Products: []structs.ProductConfigInfo{
+				{
+					ProductID:   "DM",
+					ProductName: "DM",
+					Versions: []structs.SpecificVersionProduct{
+						{
+							ProductID: "DM",
+							Arch:      "X86_64",
+							Version:   "v5.0.0",
+						},
+						{
+							ProductID: "DM",
+							Arch:      "X86_64",
+							Version:   "v5.1.0",
+						},
+						{
+							ProductID: "DM",
+							Arch:      "X86_64",
+							Version:   "v5.2.0",
+						},
+						{
+							ProductID: "DM",
+							Arch:      "X86_64",
+							Version:   "v5.2.2",
+						},
+						{
+							ProductID: "DM",
+							Arch:      "X86_64",
+							Version:   "v5.2.3",
+						},
+						{
+							ProductID: "DM",
+							Arch:      "X86_64",
+							Version:   "v5.3.0",
+						},
+						{
+							ProductID: "DM",
+							Arch:      "X86_64",
+							Version:   "v5.3.1",
+						},
+						{
+							ProductID: "DM",
+							Arch:      "X86_64",
+							Version:   "v5.4.0",
+						},
+					},
+				},
+			},
+		}
+		paths := generatePaths(context.TODO(), resp, "v5.2.2", "X86_64")
+		assert.Equal(t, 1, len(paths))
+		assert.Equal(t, string(constants.UpgradeTypeInPlace), paths[0].UpgradeType)
+		assert.Equal(t, 0, len(paths[0].Versions))
+		assert.Equal(t, 2, len(paths[0].UpgradeWays))
 	})
 }
 

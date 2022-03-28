@@ -965,15 +965,20 @@ func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) 
 		return
 	}
 
+	resp.Paths = generatePaths(ctx, queryProductsInfoResp, clusterMeta.Cluster.Version, string(clusterMeta.Cluster.CpuArchitecture))
+	return
+}
+
+func generatePaths(ctx context.Context, queryProductsInfoResp message.QueryProductsInfoResp, clusterVersion, clusterCpuArch string) (paths []*structs.ProductUpgradePathItem) {
 	var versions []string
 	for _, p := range queryProductsInfoResp.Products {
 		for _, v := range p.Versions {
-			cmp, e := meta.CompareTiDBVersion(v.Version, clusterMeta.Cluster.Version)
+			cmp, e := meta.CompareTiDBVersion(v.Version, clusterVersion)
 			if e != nil {
-				framework.LogWithContext(ctx).Errorf("failed to compare %s and %s: %s", v.Version, clusterMeta.Cluster.Version, err.Error())
+				framework.LogWithContext(ctx).Errorf("failed to compare %s and %s: %s", v.Version, clusterVersion, e.Error())
 				continue
 			}
-			if v.ProductID == "TiDB" && v.Arch == string(clusterMeta.Cluster.CpuArchitecture) && cmp && v.Version != clusterMeta.Cluster.Version {
+			if v.ProductID == "TiDB" && v.Arch == clusterCpuArch && cmp && v.Version != clusterVersion {
 				versions = append(versions, v.Version)
 			}
 		}
@@ -984,7 +989,7 @@ func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) 
 		Versions:    versions,
 		UpgradeWays: []string{string(constants.UpgradeWayOffline), string(constants.UpgradeWayOnline)},
 	}
-	resp.Paths = append(resp.Paths, &path)
+	paths = append(paths, &path)
 	return
 }
 

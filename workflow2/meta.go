@@ -216,8 +216,10 @@ func (flow *WorkFlowMeta) Execute() {
 		}
 	}()
 
-	framework.LogWithContext(flow.Context).Infof("begin execute workflow %s, id %s, node %+v", flow.Flow.Name, flow.Flow.ID, flow.CurrentNode)
-	defer framework.LogWithContext(flow.Context).Infof("end execute workflow %s, id %s, node %+v", flow.Flow.Name, flow.Flow.ID, flow.CurrentNode)
+	if flow.CurrentNode != nil {
+		framework.LogWithContext(flow.Context).Infof("begin execute workflow %s, id %s, node name %s", flow.Flow.Name, flow.Flow.ID, flow.CurrentNode.Name)
+		defer framework.LogWithContext(flow.Context).Infof("end execute workflow %s, id %s, node name %s", flow.Flow.Name, flow.Flow.ID, flow.CurrentNode.Name)
+	}
 
 	if flow.Flow.Status == constants.WorkFlowStatusInitializing {
 		flow.Flow.Status = constants.WorkFlowStatusProcessing

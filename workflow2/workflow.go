@@ -107,20 +107,20 @@ func (mgr *WorkFlowManager) handleUnFinishedWorkFlow(ctx context.Context, status
 					continue
 				}
 			case constants.WorkFlowStatusStopped:
-				flowId, exist := mgr.nodeGoroutineMap.Load(flow.ID)
+				_, exist := mgr.nodeGoroutineMap.Load(flow.ID)
 				if !exist {
 					//workflow has no processing goroutine
 					continue
 				} else {
 					//workflow has processing goroutine
-					mgr.nodeGoroutineMap.Delete(flowId)
+					mgr.nodeGoroutineMap.Delete(flow.ID)
 					framework.LogWithContext(ctx).Infof("stop workflow id %s, name %s success", flow.ID, flow.Name)
 				}
 			case constants.WorkFlowStatusCanceling:
-				flowId, exist := mgr.nodeGoroutineMap.Load(flow.ID)
+				_, exist := mgr.nodeGoroutineMap.Load(flow.ID)
 				if exist {
 					//workflow has processing goroutine
-					mgr.nodeGoroutineMap.Delete(flowId)
+					mgr.nodeGoroutineMap.Delete(flow.ID)
 				}
 				//load workflow, cancel flow and node status, update workflow
 				flowMeta, err := NewWorkFlowMeta(ctx, flow.ID)

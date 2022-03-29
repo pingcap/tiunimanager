@@ -100,12 +100,34 @@ func (rw *GormResourceReadWrite) hostFiltered(db *gorm.DB, filter *structs.HostF
 	if filter.Stat != "" {
 		db = db.Where("stat = ?", filter.Stat)
 	}
+
+	if filter.ClusterType != "" {
+		db = db.Where("cluster_type = ?", filter.ClusterType)
+	}
+
+	if filter.HostName != "" {
+		db = db.Where("host_name = ?", filter.HostName)
+	}
+
+	var labels int64
+	if filter.HostDiskType != "" {
+		label, err := structs.GetTraitByName(filter.HostDiskType)
+		if err != nil {
+			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND, "query host use a invalid diskType name %s, %v", filter.HostDiskType, err)
+		}
+		labels |= label
+	}
+
 	if filter.Purpose != "" {
 		label, err := structs.GetTraitByName(filter.Purpose)
 		if err != nil {
 			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND, "query host use a invalid purpose name %s, %v", filter.Purpose, err)
 		}
-		db = db.Where("traits & ? = ?", label, label)
+		labels |= label
+	}
+
+	if labels != 0 {
+		db = db.Where("traits & ? = ?", labels, labels)
 	}
 	return db, nil
 }

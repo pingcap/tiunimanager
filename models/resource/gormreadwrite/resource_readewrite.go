@@ -101,15 +101,18 @@ func (rw *GormResourceReadWrite) hostFiltered(db *gorm.DB, filter *structs.HostF
 		db = db.Where("stat = ?", filter.Stat)
 	}
 
-	if filter.ClusterType != "" {
-		db = db.Where("cluster_type = ?", filter.ClusterType)
-	}
-
 	if filter.HostName != "" {
 		db = db.Where("host_name = ?", filter.HostName)
 	}
 
 	var labels int64
+	if filter.ClusterType != "" {
+		label, err := structs.GetTraitByName(filter.ClusterType)
+		if err != nil {
+			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND, "query host use a invalid clusterType name %s, %v", filter.ClusterType, err)
+		}
+		labels |= label
+	}
 	if filter.HostDiskType != "" {
 		label, err := structs.GetTraitByName(filter.HostDiskType)
 		if err != nil {

@@ -221,7 +221,7 @@ func initKibana(ctx context.Context, tlsCfg *tls.Config, inst spec.Instance) err
 	fileName := "index_patterns.ndjson"
 	dstPath := "/tmp/" + fileName
 	if err := exec.Transfer(ctx, inst.DeployDir()+"/bin/"+fileName, dstPath, true, 0); err != nil {
-		return err
+		return fmt.Errorf("init kibana transfer file error: %s", err.Error())
 	}
 
 	uploads := make([]utils.UploadFile, 0)

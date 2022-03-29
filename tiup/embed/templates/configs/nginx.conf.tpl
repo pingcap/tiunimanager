@@ -66,12 +66,17 @@ http {
             proxy_pass http://etcdcluster/;
         }
 
+        location /grafana/ {
+            proxy_set_header X-WEBAUTH-USER admin;
+            proxy_pass http://{{.GrafanaAddress}}/;
+        }
+
         location ~ ^/env {
             default_type application/json;
         {{- if ne .KibanaAddress "" }}
-            return 200 '{"protocol": "{{.Protocol}}", "tlsPort": {{.TlsPort}}, "service": {"grafana": "http://{{.GrafanaAddress}}/d/em000001/tiem-server?orgId=1&refresh=10s&kiosk=tv", "kibana": "http://{{.KibanaAddress}}/app/discover", "alert": "http://{{.AlertManagerAddress}}", "tracer": "http://{{.TracerAddress}}"}}';
+            return 200 '{"protocol": "{{.Protocol}}", "tlsPort": {{.TlsPort}}, "service": {"grafana": "http://{{.IP}}:{{.Port}}/grafana/d/em000001/tiem-server?orgId=1&refresh=10s&kiosk=tv", "kibana": "http://{{.KibanaAddress}}/app/discover", "alert": "http://{{.AlertManagerAddress}}", "tracer": "http://{{.TracerAddress}}"}}';
         {{- else}}
-            return 200 '{"protocol": "{{.Protocol}}", "tlsPort": {{.TlsPort}}, "service": {"grafana": "http://{{.GrafanaAddress}}/d/em000001/tiem-server?orgId=1&refresh=10s&kiosk=tv", "kibana": "", "alert": "http://{{.AlertManagerAddress}}", "tracer": "http://{{.TracerAddress}}"}}';
+            return 200 '{"protocol": "{{.Protocol}}", "tlsPort": {{.TlsPort}}, "service": {"grafana": "http://{{.IP}}:{{.Port}}/grafana/d/em000001/tiem-server?orgId=1&refresh=10s&kiosk=tv", "kibana": "", "alert": "http://{{.AlertManagerAddress}}", "tracer": "http://{{.TracerAddress}}"}}';
         {{- end}}
         }
 

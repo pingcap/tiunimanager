@@ -50,8 +50,9 @@ domain = {{.IP}}
 ;enforce_domain = false
 
 # The full public facing url
-{{- if .RootURL}}
-root_url = {{.RootURL}}
+{{- if .RootURLEnable}}
+root_url = %(protocol)s://%(domain)s:%(http_port)s/grafana/
+# Serve Grafana from subpath specified in `root_url` setting. By default it is set to `false` for compatibility reasons.
 server_from_sub_path = true
 {{- end}}
 
@@ -180,10 +181,9 @@ login_cookie_name = grafana_session_{{ if .Domain }}{{.Domain}}_{{ end }}{{.Port
 
 #################################### Anonymous Auth ##########################
 [auth.anonymous]
-#{{- if .AnonymousEnable}}
-#enabled = true
-#{{- end}}
+{{- if .AnonymousEnable}}
 enabled = true
+{{- end}}
 
 # specify organization name that should be used for unauthenticated users
 ;org_name = Main Org.
@@ -194,6 +194,19 @@ enabled = true
 #################################### Basic Auth ##########################
 [auth.basic]
 ;enabled = true
+
+#################################### Auth Proxy ##########################
+[auth.proxy]
+enabled = true
+header_name = X-WEBAUTH-USER
+header_property = username
+auto_sign_up = true
+# Deprecated, use sync_ttl instead
+ldap_sync_ttl = 60
+sync_ttl = 60
+whitelist =
+headers =
+enable_login_token = false
 
 #################################### Auth LDAP ##########################
 [auth.ldap]

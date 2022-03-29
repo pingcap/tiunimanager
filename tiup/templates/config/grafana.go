@@ -30,7 +30,7 @@ type GrafanaConfig struct {
 	Username        string // admin_user
 	Password        string // admin_password
 	AnonymousEnable bool   // anonymous enable
-	RootURL         string // root_url
+	RootURLEnable   bool   // root_url enable
 	Domain          string // domain
 }
 
@@ -61,15 +61,15 @@ func (c *GrafanaConfig) WithPassword(passwd string) *GrafanaConfig {
 	return c
 }
 
-// WithAnonymousenable sets anonymousEnable of anonymousEnable
-func (c *GrafanaConfig) WithAnonymousenable(anonymousEnable bool) *GrafanaConfig {
+// WithAnonymousEnable sets anonymousEnable of anonymousEnable
+func (c *GrafanaConfig) WithAnonymousEnable(anonymousEnable bool) *GrafanaConfig {
 	c.AnonymousEnable = anonymousEnable
 	return c
 }
 
-// WithRootURL sets rootURL of root url
-func (c *GrafanaConfig) WithRootURL(rootURL string) *GrafanaConfig {
-	c.RootURL = rootURL
+// WithRootURLEnable sets rootURLEnable of root url
+func (c *GrafanaConfig) WithRootURLEnable(rootURLEnable bool) *GrafanaConfig {
+	c.RootURLEnable = rootURLEnable
 	return c
 }
 

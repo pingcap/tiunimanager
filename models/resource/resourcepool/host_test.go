@@ -340,3 +340,25 @@ func Test_UpdateHost(t *testing.T) {
 	err = db.Delete(&Host{ID: host.ID}).Error
 	assert.Nil(t, err)
 }
+
+func Test_ConstructLabelRecord(t *testing.T) {
+	type want struct {
+		label Label
+	}
+	tests := []struct {
+		testName string
+		srcLabel structs.Label
+		want     want
+	}{
+		{"Normal", structs.Label{Name: "Compute", Category: 0, Trait: 0x0000000000000001}, want{Label{Name: "Compute", Category: 0, Trait: 0x0000000000000001}}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.testName, func(t *testing.T) {
+			var dstLabel Label
+			dstLabel.ConstructLabelRecord(&tt.srcLabel)
+			assert.Equal(t, tt.want.label.Name, dstLabel.Name)
+			assert.Equal(t, tt.want.label.Category, dstLabel.Category)
+			assert.Equal(t, tt.want.label.Trait, dstLabel.Trait)
+		})
+	}
+}

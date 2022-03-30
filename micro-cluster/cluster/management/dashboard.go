@@ -74,7 +74,7 @@ func GetDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) 
 
 	resp.ClusterID = request.ClusterID
 	resp.Url = url
-	resp.Token = token
+	resp.Token = structs.SensitiveText(token)
 	return resp, nil
 }
 

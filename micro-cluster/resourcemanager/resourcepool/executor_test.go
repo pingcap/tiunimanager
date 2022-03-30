@@ -455,3 +455,26 @@ func Test_LeaveEMCluster_AlreadyRemove(t *testing.T) {
 	err := leaveEmCluster(&node, flowContext)
 	assert.Nil(t, err)
 }
+
+func Test_LeaveEMCluster_AlreadyRemoveFail(t *testing.T) {
+	models.MockDB()
+	resourcePool := GetResourcePool()
+
+	// Mock host initiator
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockInitiator := mock_initiator.NewMockHostInitiator(ctrl)
+	mockInitiator.EXPECT().PreCheckHostInstallFilebeat(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hosts []structs.HostInfo) (bool, error) {
+		return false, errors.EMError{}
+	})
+
+	resourcePool.SetHostInitiator(mockInitiator)
+
+	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
+
+	var node workflowModel.WorkFlowNode
+	node.ID = "Fake-NodeID-1"
+	err := leaveEmCluster(&node, flowContext)
+	assert.NotNil(t, err)
+}

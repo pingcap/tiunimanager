@@ -29,7 +29,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -588,11 +587,7 @@ func (m *Manager) Pull(ctx context.Context, componentType TiUPComponentType, clu
 		return
 	}
 
-	data, err := ioutil.ReadFile(localPath)
-	if err != nil {
-		return
-	}
-	return string(data), nil
+	return disk.ReadFileContent(localPath)
 }
 
 // Ctl

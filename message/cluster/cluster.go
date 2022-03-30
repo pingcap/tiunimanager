@@ -237,9 +237,9 @@ type GetDashboardInfoReq struct {
 
 // GetDashboardInfoResp Reply message for querying the dashboard address information of the cluster
 type GetDashboardInfoResp struct {
-	ClusterID string `json:"clusterId" example:"abc"`
-	Url       string `json:"url" example:"http://127.0.0.1:9093"`
-	Token     string `json:"token"`
+	ClusterID string                `json:"clusterId" example:"abc"`
+	Url       string                `json:"url" example:"http://127.0.0.1:9093"`
+	Token     structs.SensitiveText `json:"token"`
 }
 
 //QueryClusterLogReq Messages that query cluster log information can be filtered based on query criteria

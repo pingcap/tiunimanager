@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	jsoniter "github.com/json-iterator/go"
+	"runtime"
 	"runtime/debug"
 	"time"
 
@@ -97,13 +99,26 @@ func handleRequest(ctx context.Context, req *clusterservices.RpcRequest, resp *c
 	}
 
 	err := json.Unmarshal([]byte(req.GetRequest()), requestBody)
+
 	if err != nil {
-		errMsg := fmt.Sprintf("unmarshal request error, request = %s, err = %s", req.GetRequest(), err.Error())
+		errMsg := fmt.Sprintf("unmarshal request failed, err = %s", err.Error())
 		handleResponse(ctx, resp, errors.NewError(errors.TIEM_UNMARSHAL_ERROR, errMsg), nil, nil)
 		return false
 	} else {
+		if pc, _, _, ok := runtime.Caller(1); ok {
+			desensitizeLog(ctx, runtime.FuncForPC(pc).Name(), "start", requestBody)
+		}
 		return true
 	}
+}
+
+func desensitizeLog(ctx context.Context, methodName, event string, data interface{}) string {
+	info, _ := jsoniter.MarshalToString(data)
+	framework.LogWithContext(ctx).
+		WithField("micro-method", methodName).
+		WithField("event", event).
+		Infof(info)
+	return info
 }
 
 func handleResponse(ctx context.Context, resp *clusterservices.RpcResponse, err error, responseData interface{}, page *clusterservices.RpcPage) {
@@ -111,8 +126,11 @@ func handleResponse(ctx context.Context, resp *clusterservices.RpcResponse, err 
 		data, getDataError := json.Marshal(responseData)
 		if getDataError != nil {
 			// deal with err uniformly later
-			err = errors.WrapError(errors.TIEM_MARSHAL_ERROR, fmt.Sprintf("marshal request data error, data = %v", responseData), getDataError)
+			err = errors.WrapError(errors.TIEM_MARSHAL_ERROR, fmt.Sprintf("marshal response data failed"), getDataError)
 		} else {
+			if pc, _, _, ok := runtime.Caller(1); ok {
+				desensitizeLog(ctx, runtime.FuncForPC(pc).Name(), "end", responseData)
+			}
 			// handle data and page
 			resp.Code = int32(errors.TIEM_SUCCESS)
 			resp.Response = string(data)
@@ -152,6 +170,7 @@ func handlePanic(ctx context.Context, funcName string, resp *clusterservices.Rpc
 }
 
 func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandler {
+	jsoniter.RegisterTypeEncoder("structs.SensitiveText", structs.SensitiveTextEncoder{})
 	handler := new(ClusterServiceHandler)
 	handler.resourceManager = resourcemanager.NewResourceManager()
 	handler.changeFeedManager = changefeed.GetManager()

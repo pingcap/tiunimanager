@@ -28,19 +28,19 @@ import (
 )
 
 type DataExportReq struct {
-	ClusterID       string `json:"clusterId"`
-	UserName        string `json:"userName"`
-	Password        string `json:"password"`
-	FileType        string `json:"fileType"`
-	Filter          string `json:"filter"`
-	Sql             string `json:"sql"`
-	StorageType     string `json:"storageType"`
-	ZipName         string `json:"zipName"`
-	EndpointUrl     string `json:"endpointUrl"`
-	BucketUrl       string `json:"bucketUrl"`
-	AccessKey       string `json:"accessKey"`
-	SecretAccessKey string `json:"secretAccessKey"`
-	Comment         string `json:"comment"`
+	ClusterID       string                `json:"clusterId"`
+	UserName        string                `json:"userName"`
+	Password        structs.SensitiveText `json:"password"`
+	FileType        string                `json:"fileType"`
+	Filter          string                `json:"filter"`
+	Sql             string                `json:"sql"`
+	StorageType     string                `json:"storageType"`
+	ZipName         string                `json:"zipName"`
+	EndpointUrl     string                `json:"endpointUrl"`
+	BucketUrl       string                `json:"bucketUrl"`
+	AccessKey       string                `json:"accessKey"`
+	SecretAccessKey string                `json:"secretAccessKey"`
+	Comment         string                `json:"comment"`
 }
 
 type DataExportResp struct {
@@ -49,16 +49,16 @@ type DataExportResp struct {
 }
 
 type DataImportReq struct {
-	ClusterID       string `json:"clusterId"`
-	UserName        string `json:"userName"`
-	Password        string `json:"password"`
-	RecordId        string `json:"recordId"`
-	StorageType     string `json:"storageType"`
-	EndpointUrl     string `json:"endpointUrl"`
-	BucketUrl       string `json:"bucketUrl"`
-	AccessKey       string `json:"accessKey"`
-	SecretAccessKey string `json:"secretAccessKey"`
-	Comment         string `json:"comment"`
+	ClusterID       string                `json:"clusterId"`
+	UserName        string                `json:"userName"`
+	Password        structs.SensitiveText `json:"password"`
+	RecordId        string                `json:"recordId"`
+	StorageType     string                `json:"storageType"`
+	EndpointUrl     string                `json:"endpointUrl"`
+	BucketUrl       string                `json:"bucketUrl"`
+	AccessKey       string                `json:"accessKey"`
+	SecretAccessKey string                `json:"secretAccessKey"`
+	Comment         string                `json:"comment"`
 }
 
 type DataImportResp struct {

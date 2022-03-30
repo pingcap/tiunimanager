@@ -1681,6 +1681,7 @@ func TestInitDatabaseAccount(t *testing.T) {
 			Password:  common.PasswordInExpired{Val: "123455678"},
 			RoleType:  string(constants.DBUserBackupRestore),
 		}
+		flowContext.SetData(ContextClusterMeta, clusterMeta)
 		err := initDatabaseAccount(&workflowModel.WorkFlowNode{}, flowContext)
 		//assert.NoError(t, err)
 		fmt.Println(err)

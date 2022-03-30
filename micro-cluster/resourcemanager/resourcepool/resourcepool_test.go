@@ -231,6 +231,30 @@ func Test_QueryHosts(t *testing.T) {
 	assert.Equal(t, 1, len(hosts))
 }
 
+func Test_QueryHostsWithFilter(t *testing.T) {
+	models.MockDB()
+	resourcePool := GetResourcePool()
+
+	// Mock host provider
+	ctrl1 := gomock.NewController(t)
+	defer ctrl1.Finish()
+	mockProvider := mock_provider.NewMockHostProvider(ctrl1)
+	mockProvider.EXPECT().QueryHosts(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, location *structs.Location, filter *structs.HostFilter, page *structs.PageRequest) ([]structs.HostInfo, int64, error) {
+		return []structs.HostInfo{{ID: "fake_hostId1", Traits: 313}}, 1, nil
+	}).AnyTimes()
+	resourcePool.SetHostProvider(mockProvider)
+
+	hosts, total, err := resourcePool.QueryHosts(context.TODO(), &structs.Location{}, &structs.HostFilter{ClusterType: "TiDB"}, &structs.PageRequest{})
+	assert.Nil(t, err)
+	assert.Equal(t, 1, int(total))
+	assert.Equal(t, 1, len(hosts))
+
+	hosts, total, err = resourcePool.QueryHosts(context.TODO(), &structs.Location{}, &structs.HostFilter{HostDiskType: "SATA"}, &structs.PageRequest{})
+	assert.Nil(t, err)
+	assert.Equal(t, 1, int(total))
+	assert.Equal(t, 1, len(hosts))
+}
+
 func Test_UpdateHostStatus(t *testing.T) {
 	models.MockDB()
 	resourcePool := GetResourcePool()

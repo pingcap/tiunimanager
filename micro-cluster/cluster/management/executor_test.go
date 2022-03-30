@@ -1673,6 +1673,19 @@ func TestInitDatabaseAccount(t *testing.T) {
 		fmt.Println(err)
 	})
 
+	t.Run("duplicate", func(t *testing.T) {
+		clusterMeta := flowContext.GetData(ContextClusterMeta).(*meta.ClusterMeta)
+		clusterMeta.DBUsers[string(constants.DBUserBackupRestore)] = &management.DBUser{
+			ClusterID: "2145635758",
+			Name:      constants.DBUserName[constants.DBUserBackupRestore],
+			Password:  common.PasswordInExpired{Val: "123455678"},
+			RoleType:  string(constants.DBUserBackupRestore),
+		}
+		err := initDatabaseAccount(&workflowModel.WorkFlowNode{}, flowContext)
+		//assert.NoError(t, err)
+		fmt.Println(err)
+	})
+
 	t.Run("init fail", func(t *testing.T) {
 		//	mockTiupManager := mock_deployment.NewMockInterface(ctrl)
 		//	mockTiupManager.EXPECT().SetClusterDbPassword(gomock.Any(),

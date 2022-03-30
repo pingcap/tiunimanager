@@ -149,6 +149,7 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	if fileTypeCSV == info.FileType && info.Filter == "" && info.Sql != "" {
 		cmd = append(cmd, "--sql", info.Sql)
 	}
+	// todo cmd contains password
 	//framework.LogWithContext(ctx).Infof("call tiupmgr dumpling api, timeout: %d", dumplingTimeout)
 	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	exportTaskId, err := deployment.M.Dumpling(ctx, tiupHomeForTidb, node.ParentID, cmd, dumplingTimeout)

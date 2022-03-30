@@ -475,6 +475,7 @@ func (m *Manager) Dumpling(ctx context.Context, home, workFlowID string, args []
 
 	tiUPArgs := fmt.Sprintf("%s %s", CMDDumpling, strings.Join(args, " "))
 	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	// todo op contains password
 	//logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
@@ -506,6 +507,7 @@ func (m *Manager) Lightning(ctx context.Context, home, workFlowID string, args [
 
 	tiUPArgs := fmt.Sprintf("%s %s", CMDLightning, strings.Join(args, " "))
 	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	// todo op contains password
 	//logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{

@@ -90,21 +90,21 @@ type DiskInfo struct {
 }
 
 type HostInfo struct {
-	ID           string        `json:"hostId"`
-	IP           string        `json:"ip"`
-	SSHPort      int32         `json:"sshPort,omitempty"`
-	UserName     string        `json:"userName,omitempty"`
-	Passwd       SensitiveText `json:"passwd,omitempty"`
-	HostName     string        `json:"hostName"`
-	Status       string        `json:"status"`   // Host status, Online, Offline, Failed, Deleted, etc
-	Stat         string        `json:"loadStat"` // Host load stat, Loadless, Inused, Exhaust, etc
-	Arch         string        `json:"arch"`     // x86 or arm64
-	OS           string        `json:"os"`
-	Kernel       string        `json:"kernel"`
-	Spec         string        `json:"spec"`         // Host Spec, init while importing
-	CpuCores     int32         `json:"cpuCores"`     // Host cpu cores spec, init while importing
-	Memory       int32         `json:"memory"`       // Host memory, init while importing
-	UsedCpuCores int32         `json:"usedCpuCores"` // Unused CpuCore, used for allocation
+	ID                 string              `json:"hostId"`
+	IP                 string              `json:"ip"`
+	SSHPort            int32               `json:"sshPort,omitempty"`
+	UserName           string              `json:"userName,omitempty"`
+	Passwd             SensitiveText       `json:"passwd,omitempty"`
+	HostName           string              `json:"hostName"`
+	Status             string              `json:"status"`   // Host status, Online, Offline, Failed, Deleted, etc
+	Stat               string              `json:"loadStat"` // Host load stat, Loadless, Inused, Exhaust, etc
+	Arch               string              `json:"arch"`     // x86 or arm64
+	OS                 string              `json:"os"`
+	Kernel             string              `json:"kernel"`
+	Spec               string              `json:"spec"`         // Host Spec, init while importing
+	CpuCores           int32               `json:"cpuCores"`     // Host cpu cores spec, init while importing
+	Memory             int32               `json:"memory"`       // Host memory, init while importing
+	UsedCpuCores       int32               `json:"usedCpuCores"` // Unused CpuCore, used for allocation
 	UsedMemory         int32               `json:"usedMemory"`   // Unused memory size, Unit:GiB, used for allocation
 	Nic                string              `json:"nic"`          // Host network type: 1GE or 10GE
 	Vendor             string              `json:"vendor"`

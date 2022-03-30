@@ -49,9 +49,15 @@ func (m *WorkFlowReadWrite) UpdateWorkFlow(ctx context.Context, flowId string, s
 		return errors.NewErrorf(errors.TIEM_FLOW_NOT_FOUND, "flow %s not found", flowId)
 	}
 
-	return m.DB(ctx).Model(flow).
-		Update("status", status).
-		Update("context", flowContext).Error
+	db := m.DB(ctx).Model(flow)
+	if "" != status {
+		db.Update("status", status)
+	}
+	if "" != flowContext {
+		db.Update("context", flowContext)
+	}
+
+	return db.Error
 }
 
 func (m *WorkFlowReadWrite) GetWorkFlow(ctx context.Context, flowId string) (flow *WorkFlow, err error) {

@@ -65,52 +65,52 @@ func GetManager() *Manager {
 			FlowName: constants.FlowMasterSlaveSwitchoverNormal,
 			TaskNodes: map[string]*workflow.NodeDefine{
 				"start": {
-					"checkHealthStatus", "checkSyncChangeFeedTaskMaxLagTime", "fail", workflow.SyncFuncNode, wfStepCheckOldSyncChangeFeedTaskHealth},
+					"checkHealthStatus", "checkSyncChangeFeedTaskMaxLagTime", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepCheckOldSyncChangeFeedTaskHealth, wfStepFail)},
 				"checkSyncChangeFeedTaskMaxLagTime": {
-					"checkSyncChangeFeedTaskMaxLagTime", "setOldMasterReadOnly", "fail", workflow.SyncFuncNode, wfStepCheckSyncChangeFeedTaskMaxLagTime},
+					"checkSyncChangeFeedTaskMaxLagTime", "setOldMasterReadOnly", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepCheckSyncChangeFeedTaskMaxLagTime, wfStepFail)},
 				"setOldMasterReadOnly": {
-					"setOldMasterReadOnly", "waitOldMasterCDCsCaughtUp", "fail", workflow.SyncFuncNode, wfStepSetOldMasterReadOnly},
+					"setOldMasterReadOnly", "waitOldMasterCDCsCaughtUp", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepSetOldMasterReadOnly, wfStepFail)},
 				"waitOldMasterCDCsCaughtUp": {
-					"waitOldMasterCDCsCaughtUp", "pauseOldSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfStepWaitOldMasterCDCsCaughtUp},
+					"waitOldMasterCDCsCaughtUp", "pauseOldSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepWaitOldMasterCDCsCaughtUp, wfStepFail)},
 				"pauseOldSyncChangeFeedTask": {
-					"pauseOldSyncChangeFeedTask", "createReverseSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfStepPauseOldSyncChangeFeedTask},
+					"pauseOldSyncChangeFeedTask", "createReverseSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepPauseOldSyncChangeFeedTask, wfStepFail)},
 				"createReverseSyncChangeFeedTask": {
-					"createReverseSyncChangeFeedTask", "checkNewSyncChangeFeedTaskHealth", "fail", workflow.SyncFuncNode, wfStepCreateReverseSyncChangeFeedTask},
+					"createReverseSyncChangeFeedTask", "checkNewSyncChangeFeedTaskHealth", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepCreateReverseSyncChangeFeedTask, wfStepFail)},
 				"checkNewSyncChangeFeedTaskHealth": {
-					"checkNewSyncChangeFeedTaskHealth", "migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "fail", workflow.SyncFuncNode, wfStepCheckNewSyncChangeFeedTaskHealth},
+					"checkNewSyncChangeFeedTaskHealth", "migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepCheckNewSyncChangeFeedTaskHealth, wfStepFail)},
 				"migrateAllDownStreamSyncChangeFeedTasksToNewMaster": {
-					"migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfStepMigrateAllDownStreamSyncChangeFeedTasksToNewMaster},
+					"migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepMigrateAllDownStreamSyncChangeFeedTasksToNewMaster, wfStepFail)},
 				"setNewMasterReadWrite": {
-					"setNewMasterReadWrite", "swapMasterSlaveRelationInDB", "fail", workflow.SyncFuncNode, wfStepSetNewMasterReadWrite},
+					"setNewMasterReadWrite", "swapMasterSlaveRelationInDB", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepSetNewMasterReadWrite, wfStepFail)},
 				"swapMasterSlaveRelationInDB": {
-					"swapMasterSlaveRelationInDB", "end", "fail", workflow.SyncFuncNode, wfStepSwapMasterSlaveRelationInDB},
+					"swapMasterSlaveRelationInDB", "end", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepSwapMasterSlaveRelationInDB, wfStepFail)},
 				"end": {
 					"end", "", "", workflow.SyncFuncNode, wfStepFinish},
 				"fail": {
-					"fail", "", "", workflow.SyncFuncNode, wfStepFail},
+					"fail", "", "", workflow.SyncFuncNode, wfStepNOP},
 			},
 		})
 		flowManager.RegisterWorkFlow(context.TODO(), constants.FlowMasterSlaveSwitchoverForce, &workflow.WorkFlowDefine{
 			FlowName: constants.FlowMasterSlaveSwitchoverForce,
 			TaskNodes: map[string]*workflow.NodeDefine{
 				"start": {
-					"setOldMasterReadOnly", "pauseOldSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfStepSetOldMasterReadOnly},
+					"setOldMasterReadOnly", "pauseOldSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepSetOldMasterReadOnly, wfStepFail)},
 				"pauseOldSyncChangeFeedTask": {
-					"pauseOldSyncChangeFeedTask", "createReverseSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfStepPauseOldSyncChangeFeedTask},
+					"pauseOldSyncChangeFeedTask", "createReverseSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepPauseOldSyncChangeFeedTask, wfStepFail)},
 				"createReverseSyncChangeFeedTask": {
-					"createReverseSyncChangeFeedTask", "checkNewSyncChangeFeedTaskHealth", "fail", workflow.SyncFuncNode, wfStepCreateReverseSyncChangeFeedTask},
+					"createReverseSyncChangeFeedTask", "checkNewSyncChangeFeedTaskHealth", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepCreateReverseSyncChangeFeedTask, wfStepFail)},
 				"checkNewSyncChangeFeedTaskHealth": {
-					"checkNewSyncChangeFeedTaskHealth", "migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "fail", workflow.SyncFuncNode, wfStepCheckNewSyncChangeFeedTaskHealth},
+					"checkNewSyncChangeFeedTaskHealth", "migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepCheckNewSyncChangeFeedTaskHealth, wfStepFail)},
 				"migrateAllDownStreamSyncChangeFeedTasksToNewMaster": {
-					"migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfStepMigrateAllDownStreamSyncChangeFeedTasksToNewMaster},
+					"migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepMigrateAllDownStreamSyncChangeFeedTasksToNewMaster, wfStepFail)},
 				"setNewMasterReadWrite": {
-					"setNewMasterReadWrite", "swapMasterSlaveRelationInDB", "fail", workflow.SyncFuncNode, wfStepSetNewMasterReadWrite},
+					"setNewMasterReadWrite", "swapMasterSlaveRelationInDB", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepSetNewMasterReadWrite, wfStepFail)},
 				"swapMasterSlaveRelationInDB": {
-					"swapMasterSlaveRelationInDB", "end", "fail", workflow.SyncFuncNode, wfStepSwapMasterSlaveRelationInDB},
+					"swapMasterSlaveRelationInDB", "end", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepSwapMasterSlaveRelationInDB, wfStepFail)},
 				"end": {
 					"end", "", "", workflow.SyncFuncNode, wfStepFinish},
 				"fail": {
-					"fail", "", "", workflow.SyncFuncNode, wfStepFail},
+					"fail", "", "", workflow.SyncFuncNode, wfStepNOP},
 			},
 		})
 		flowManager.RegisterWorkFlow(context.TODO(), constants.FlowMasterSlaveSwitchoverForceWithMasterUnavailable,
@@ -118,15 +118,15 @@ func GetManager() *Manager {
 				FlowName: constants.FlowMasterSlaveSwitchoverForceWithMasterUnavailable,
 				TaskNodes: map[string]*workflow.NodeDefine{
 					"start": {
-						"setOldMasterReadOnly", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfStepSetOldMasterReadOnly},
+						"setOldMasterReadOnly", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepSetOldMasterReadOnly, wfStepFail)},
 					"setNewMasterReadWrite": {
-						"setNewMasterReadWrite", "swapMasterSlaveRelationInDB", "fail", workflow.SyncFuncNode, wfStepSetNewMasterReadWrite},
+						"setNewMasterReadWrite", "swapMasterSlaveRelationInDB", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepSetNewMasterReadWrite, wfStepFail)},
 					"swapMasterSlaveRelationInDB": {
-						"swapMasterSlaveRelationInDB", "end", "fail", workflow.SyncFuncNode, wfStepSwapMasterSlaveRelationInDB},
+						"swapMasterSlaveRelationInDB", "end", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepSwapMasterSlaveRelationInDB, wfStepFail)},
 					"end": {
 						"end", "", "", workflow.SyncFuncNode, wfStepFinish},
 					"fail": {
-						"fail", "", "", workflow.SyncFuncNode, wfStepFail},
+						"fail", "", "", workflow.SyncFuncNode, wfStepNOP},
 				},
 			})
 	})

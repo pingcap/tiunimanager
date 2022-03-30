@@ -27,6 +27,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_DiskIsInUsed(t *testing.T) {
+	type want struct {
+		inused bool
+	}
+	tests := []struct {
+		testName string
+		disk     Disk
+		want     want
+	}{
+		{"Nil", Disk{}, want{false}},
+		{"Available Disk", Disk{Status: string(constants.DiskAvailable)}, want{false}},
+		{"Inused Disk", Disk{Status: string(constants.DiskInUsed)}, want{true}},
+		{"Exhaust Disk", Disk{Status: string(constants.DiskExhaust)}, want{true}},
+		{"Error Disk", Disk{Status: string(constants.DiskError)}, want{false}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.testName, func(t *testing.T) {
+			assert.Equal(t, tt.want.inused, tt.disk.IsInused())
+		})
+	}
+}
+
 func Test_UpdateDisk(t *testing.T) {
 	dbPath := "./test_resource_" + uuidutil.ShortId() + ".db"
 	db, err := createDB(dbPath)
@@ -52,10 +74,25 @@ func Test_UpdateDisk(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_HOST_STILL_INUSED, "disk %s is still in used", host.Disks[2].ID).GetMsg(), err.(errors.EMError).GetMsg())
 
+	// delete a invalid diskId
+	err = db.Delete(&Disk{ID: "fake-disk-id"}).Error
+	assert.NotNil(t, err)
+	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_DELETE_DISK_ERROR, "disk %s is not found", "fake-disk-id").GetMsg(), err.(errors.EMError).GetMsg())
+
 	newDisk := Disk{Name: "sdg", Path: "/mnt/sdg"}
 	err = db.Model(&(host.Disks[2])).Updates(newDisk).Error
 	assert.NotNil(t, err)
 	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "update path for disk %s is not allowed", host.Disks[2].ID).GetMsg(), err.(errors.EMError).GetMsg())
+
+	newDisk = Disk{Name: "sdg", HostID: "fake-host-id"}
+	err = db.Model(&(host.Disks[2])).Updates(newDisk).Error
+	assert.NotNil(t, err)
+	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "update host id for disk %s is not allowed", host.Disks[2].ID).GetMsg(), err.(errors.EMError).GetMsg())
+
+	newDisk = Disk{Name: "sdg", Type: string(constants.SSD)}
+	err = db.Model(&(host.Disks[2])).Updates(newDisk).Error
+	assert.NotNil(t, err)
+	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "update type for disk %s is not allowed", host.Disks[2].ID).GetMsg(), err.(errors.EMError).GetMsg())
 
 	newDisk = Disk{Name: "sdg", Status: string(constants.DiskError)}
 	err = db.Model(&(host.Disks[2])).Updates(newDisk).Error

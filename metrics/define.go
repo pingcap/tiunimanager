@@ -19,10 +19,16 @@ package metrics
 import "sync"
 
 const (
-	ServiceLabel  = "service"
-	HandlerLabel  = "handler"
-	MethodLabel   = "method"
-	CodeLabel     = "code"
+	ServiceLabel        = "service"
+	HandlerLabel        = "handler"
+	MethodLabel         = "method"
+	CodeLabel           = "code"
+	BizTypeLabel        = "biz_type"
+	FlowNameLabel       = "flow_name"
+	FlowStatusLabel     = "flow_status"
+	FlowNodeLabel       = "flow_node"
+	FlowNodeStatusLabel = "flow_node_status"
+
 	OpenApiServer = "openapi-server"
 	ClusterServer = "cluster-server"
 )
@@ -91,5 +97,16 @@ var (
 		Name:       "server_start_time",
 		Help:       "A gauge of micro service start time.",
 		LabelNames: []string{ServiceLabel},
+	}
+
+	WorkFlowCounterMetricDef = MetricDef{
+		Name:       "work_flow_total",
+		Help:       "A counter for work flow.",
+		LabelNames: []string{ServiceLabel, BizTypeLabel, FlowNameLabel, FlowStatusLabel},
+	}
+	WorkFlowNodeCounterMetricDef = MetricDef{
+		Name:       "work_flow_node_total",
+		Help:       "A counter for work flow node.",
+		LabelNames: []string{ServiceLabel, BizTypeLabel, FlowNameLabel, FlowNodeLabel, FlowNodeStatusLabel},
 	}
 )

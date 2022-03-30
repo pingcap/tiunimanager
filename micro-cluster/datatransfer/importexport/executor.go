@@ -149,7 +149,7 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	if fileTypeCSV == info.FileType && info.Filter == "" && info.Sql != "" {
 		cmd = append(cmd, "--sql", info.Sql)
 	}
-	framework.LogWithContext(ctx).Infof("call tiupmgr dumpling api, cmd: %v, timeout: %d", cmd, dumplingTimeout)
+	//framework.LogWithContext(ctx).Infof("call tiupmgr dumpling api, timeout: %d", dumplingTimeout)
 	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	exportTaskId, err := deployment.M.Dumpling(ctx, tiupHomeForTidb, node.ParentID, cmd, dumplingTimeout)
 	if err != nil {

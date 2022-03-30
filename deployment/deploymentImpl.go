@@ -471,11 +471,11 @@ func (m *Manager) ShowConfig(ctx context.Context, componentType TiUPComponentTyp
 // @return ID, operation id to help check the status
 // @return err
 func (m *Manager) Dumpling(ctx context.Context, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+	//logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
 	tiUPArgs := fmt.Sprintf("%s %s", CMDDumpling, strings.Join(args, " "))
 	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
-	logInFunc.Infof("recv operation req: %s", op)
+	//logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDDumpling,
@@ -502,11 +502,11 @@ func (m *Manager) Dumpling(ctx context.Context, home, workFlowID string, args []
 // @return ID, operation id to help check the status
 // @return err
 func (m *Manager) Lightning(ctx context.Context, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+	//logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
 	tiUPArgs := fmt.Sprintf("%s %s", CMDLightning, strings.Join(args, " "))
 	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
-	logInFunc.Infof("recv operation req: %s", op)
+	//logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDLightning,

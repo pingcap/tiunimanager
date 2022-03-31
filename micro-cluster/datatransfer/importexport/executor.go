@@ -128,8 +128,8 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	}
 
 	//tiup dumpling -u root -P 4000 --host 127.0.0.1 --filetype sql -t 8 -o /tmp/test -r 200000 -F 256MiB --filter "db.tb"
-	cmd := []string{"-u", info.UserName,
-		"-p", info.Password,
+	cmd := []string{"-p", info.Password,
+		"-u", info.UserName,
 		"-P", strconv.Itoa(tidbPort),
 		"--host", tidbHost,
 		"--filetype", info.FileType,
@@ -149,8 +149,9 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	if fileTypeCSV == info.FileType && info.Filter == "" && info.Sql != "" {
 		cmd = append(cmd, "--sql", info.Sql)
 	}
-	// todo cmd contains password
-	//framework.LogWithContext(ctx).Infof("call tiupmgr dumpling api, timeout: %d", dumplingTimeout)
+
+	framework.LogWithContext(ctx).Infof("call tiupmgr dumpling api, cmd: +%v, timeout: %d", cmd[1:], dumplingTimeout)
+
 	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	exportTaskId, err := deployment.M.Dumpling(ctx, tiupHomeForTidb, node.ParentID, cmd, dumplingTimeout)
 	if err != nil {

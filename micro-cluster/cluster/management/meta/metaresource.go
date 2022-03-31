@@ -199,7 +199,7 @@ func (p *ClusterMeta) ApplyInstanceResource(resource *resource.AllocRsp, instanc
 			instance.HostIP = append(instance.HostIP, resource.Results[i].HostIp)
 		}
 		instance.Ports = resource.Results[i].PortRes[0].Ports
-		instance.Type = resource.Results[i].DiskRes.Type
+		instance.DiskType = resource.Results[i].DiskRes.Type
 		instance.DiskID = resource.Results[i].DiskRes.DiskId
 		instance.DiskPath = resource.Results[i].DiskRes.Path
 		instance.Rack = resource.Results[i].Location.Rack

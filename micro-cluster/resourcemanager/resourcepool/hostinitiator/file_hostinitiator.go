@@ -22,9 +22,11 @@ import (
 	"strings"
 
 	"github.com/pingcap-inc/tiem/deployment"
+	"github.com/pingcap-inc/tiem/models"
 
 	sshclient "github.com/pingcap-inc/tiem/util/ssh"
 
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -359,6 +361,32 @@ func (p *FileHostInitiator) isVirtualMachine(ctx context.Context, h *structs.Hos
 			break
 		}
 	}
+
+	if !isVM {
+		isVM = p.extraVMManufacturerCheck(ctx, result)
+	}
+
 	log.Infof("host %s [%s] manufacturer is %s, should be VM (%v)", h.HostName, h.IP, result, isVM)
 	return isVM, nil
+}
+
+// Try to match the user specified vm facturer, give a warn if failed
+func (p *FileHostInitiator) extraVMManufacturerCheck(ctx context.Context, facturer string) bool {
+	extraConfig, err := models.GetConfigReaderWriter().GetConfig(ctx, constants.ConfigKeyExtraVMFacturer)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("get config ConfigKeyExtraVMFacturer failed, %v", err)
+		return false
+	}
+
+	extraConfigVMFacturer := extraConfig.ConfigValue
+	if extraConfigVMFacturer == "" {
+		framework.LogWithContext(ctx).Infoln("extra vm facturer is not specified")
+		return false
+	}
+
+	if strings.Contains(strings.ToLower(facturer), strings.ToLower(extraConfigVMFacturer)) {
+		return true
+	}
+
+	return false
 }

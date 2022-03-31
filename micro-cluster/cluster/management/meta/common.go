@@ -195,7 +195,6 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 				return errors.NewError(errors.TIEM_CHECK_PLACEMENT_RULES_ERROR,
 					"enable-placement-rules is false, can not scale out TiFlash, please check it!")
 			}
-			break
 		}
 	}
 

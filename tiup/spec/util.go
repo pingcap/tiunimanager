@@ -38,7 +38,7 @@ func AuditDir() string {
 }
 
 // SaveMetadata saves the cluster meta information to profile directory
-func SaveMetadata(clusterName string, cmeta *TiEMMeta) error {
+func SaveMetadata(clusterName string, cmeta *EMMeta) error {
 	// set the cmd version
 	cmeta.OpsVer = version.NewComponentVersion().String()
 	return GetSpecManager().SaveMeta(clusterName, cmeta)

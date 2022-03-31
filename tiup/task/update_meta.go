@@ -25,7 +25,7 @@ import (
 // UpdateMeta is used to maintain the cluster meta information
 type UpdateMeta struct {
 	cluster        string
-	metadata       *spec.TiEMMeta
+	metadata       *spec.EMMeta
 	deletedNodeIDs []string
 }
 

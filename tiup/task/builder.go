@@ -135,7 +135,7 @@ func (b *Builder) ClusterSSH(
 }
 
 // UpdateMeta maintain the meta information
-func (b *Builder) UpdateMeta(cluster string, metadata *spec.TiEMMeta, deletedNodeIds []string) *Builder {
+func (b *Builder) UpdateMeta(cluster string, metadata *spec.EMMeta, deletedNodeIds []string) *Builder {
 	b.tasks = append(b.tasks, &UpdateMeta{
 		cluster:        cluster,
 		metadata:       metadata,

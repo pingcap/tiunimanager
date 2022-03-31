@@ -158,6 +158,9 @@ func (i *GrafanaInstance) InitConfig(
 		return err
 	}
 
+	webServers := i.topo.BaseTopo().WebServers
+	webServerURL := fmt.Sprintf("%s:%d", webServers[0].Host, webServers[0].Port)
+
 	// transfer config
 	spec := i.InstanceSpec.(*GrafanaSpec)
 	fp = filepath.Join(paths.Cache, fmt.Sprintf("grafana_%s.ini", i.GetHost()))
@@ -168,6 +171,7 @@ func (i *GrafanaInstance) InitConfig(
 		WithAnonymousEnable(spec.AnonymousEnable).
 		WithRootURLEnable(spec.RootURLEnable).
 		WithDomain(spec.Domain).
+		WithWebServerURL(webServerURL).
 		ConfigToFile(fp); err != nil {
 		return err
 	}

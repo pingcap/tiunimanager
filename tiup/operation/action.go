@@ -17,8 +17,10 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	stderrors "errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -125,6 +127,10 @@ func Start(
 		}
 	})
 
+	if len(cluster.BaseTopo().WebServers) <= 0 {
+		return fmt.Errorf("Component web_servers can not empty ")
+	}
+
 	for _, comp := range components {
 		insts := FilterInstance(comp.Instances(), nodeFilter)
 		err := StartComponent(ctx, insts, noAgentHosts, options, tlsCfg)
@@ -144,6 +150,12 @@ func Start(
 			// init kibana index patterns
 			if comp.Name() == spec.ComponentKibana {
 				if err = initKibana(ctx, tlsCfg, inst); err != nil {
+					return err
+				}
+			}
+			// init grafana index patterns
+			if comp.Name() == spec.ComponentGrafana {
+				if err = initGrafana(ctx, tlsCfg, inst, cluster.BaseTopo().WebServers[0]); err != nil {
 					return err
 				}
 			}
@@ -187,14 +199,14 @@ func initElasticSearch(tlsCfg *tls.Config, inst spec.Instance) error {
 	content["index_patterns"] = []string{"em-*"}
 	content["settings"] = params
 	log.Debugf("init elasticsearch index template params: %s", content)
-	resp := utils.PUT(url, content, map[string]string{})
-	log.Debugf("init elasticsearch index template response: %s", resp)
+	code, resp := utils.PUT(url, content, map[string]string{})
+	log.Debugf("init elasticsearch index template response code: %d, content: %s", code, resp)
 	return nil
 }
 
 func initKibana(ctx context.Context, tlsCfg *tls.Config, inst spec.Instance) error {
-	// loop get kibana status
 	startTime := time.Now().Unix()
+	// loop get kibana status
 	for {
 		client := tiuputils.NewHTTPClient(2*time.Second, tlsCfg)
 		_, err := client.Get(context.TODO(), fmt.Sprintf("http://%s:%d/status", inst.GetHost(), inst.GetPort()))
@@ -230,8 +242,103 @@ func initKibana(ctx context.Context, tlsCfg *tls.Config, inst spec.Instance) err
 		Filepath: dstPath,
 	})
 	headers := map[string]string{"kbn-xsrf": "reporting"}
-	resp := utils.PostFile(url, map[string]interface{}{}, uploads, headers)
-	log.Debugf("init kibana index patterns response: %s", resp)
+	code, resp := utils.PostFile(url, map[string]interface{}{}, uploads, headers)
+	log.Debugf("init kibana index patterns response code: %d, content: %s", code, resp)
+	return nil
+}
+
+func initGrafana(ctx context.Context, tlsCfg *tls.Config, inst spec.Instance, webServer *spec.WebServerSpec) error {
+	startTime := time.Now().Unix()
+	baseUrl := fmt.Sprintf("http://%s:%d/grafana", webServer.Host, webServer.Port)
+	log.Debugf("request grafana base url: %s", baseUrl)
+	// loop get grafana status
+	for {
+		client := tiuputils.NewHTTPClient(2*time.Second, tlsCfg)
+		_, err := client.Get(context.TODO(), baseUrl)
+		if err == nil {
+			break
+		}
+		time.Sleep(2 * time.Second)
+		log.Debugf("check grafana status error: %s", err.Error())
+		if time.Now().Unix()-startTime > 180 {
+			return fmt.Errorf("Start compoent %s timeout, more than 180s, please check logs: %s/%s.log ", spec.ComponentGrafana, inst.LogDir(), spec.ComponentGrafana)
+		}
+	}
+
+	folderName := "rules"
+
+	// Determine if initialisation is required
+	code, resp := utils.Get(baseUrl+"/api/folders/"+folderName, map[string]string{}, map[string]string{})
+	log.Debugf("check init grafana response code: %d, content: %s", code, resp)
+	if code == http.StatusOK {
+		// The response status code 200, indicating that it has been initialized, is skipped directly
+		return nil
+	}
+
+	// Copy to remote server
+	exec, found := ctxt.GetInner(ctx).GetExecutor(inst.GetHost())
+	if !found {
+		return stderrors.New("no executor")
+	}
+
+	// alert configuration, include contact points & notification policies
+	path := "/api/alertmanager/grafana/config/api/v1/alerts"
+	url := baseUrl + path
+	log.Debugf("init grafana alert configuration url: %s", url)
+	fileName := "configuration.json"
+	dstPath := "/tmp/" + fileName
+	if err := exec.Transfer(ctx, inst.DeployDir()+"/bin/rules/"+fileName, dstPath, true, 0); err != nil {
+		return fmt.Errorf("init grafana alert configuration transfer file error: %s", err.Error())
+	}
+	content, err := utils.ReadFile(dstPath)
+	if err != nil {
+		return errors.Annotatef(err, "failed to read file %s", dstPath)
+	}
+	data := map[string]interface{}{}
+	if err = json.Unmarshal(content, &data); err != nil {
+		return errors.Annotatef(err, "failed to json unmarshal")
+	}
+	code, resp = utils.PostJSON(url, data, map[string]string{})
+	log.Debugf("init grafana alert configuration response code: %d, content: %s", code, resp)
+
+	// create folder rules.
+	data = map[string]interface{}{}
+	data["title"] = folderName
+	data["uid"] = folderName
+	code, resp = utils.PostJSON(baseUrl+"/api/folders", data, map[string]string{})
+	log.Debugf("init grafana create folder response code: %d, content: %s", code, resp)
+
+	// alert rules
+	path = "/api/ruler/grafana/api/v1/rules/rules"
+	url = baseUrl + path
+	log.Debugf("init grafana alert rules url: %s", url)
+	fileName = "alerts.json"
+	dstPath = "/tmp/" + fileName
+	if err := exec.Transfer(ctx, inst.DeployDir()+"/bin/rules/"+fileName, dstPath, true, 0); err != nil {
+		return fmt.Errorf("init grafana alert rules transfer file error: %s", err.Error())
+	}
+	content, err = utils.ReadFile(dstPath)
+	if err != nil {
+		return errors.Annotatef(err, "failed to read file %s", dstPath)
+	}
+	data = map[string]interface{}{}
+	if err = json.Unmarshal(content, &data); err != nil {
+		return errors.Annotatef(err, "failed to json unmarshal")
+	}
+	for _, v := range data {
+		rules := make([]interface{}, 0)
+		if err := utils.ConvertObj(v, &rules); err != nil {
+			return errors.Annotatef(err, "failed to convert object")
+		}
+		for _, rule := range rules {
+			data = map[string]interface{}{}
+			if err := utils.ConvertObj(rule, &data); err != nil {
+				return errors.Annotatef(err, "failed to convert object")
+			}
+			code, resp = utils.PostJSON(url, data, map[string]string{})
+			log.Debugf("init grafana alert rules response code: %d, content: %s", code, resp)
+		}
+	}
 	return nil
 }
 

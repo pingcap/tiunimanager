@@ -32,6 +32,7 @@ type GrafanaConfig struct {
 	AnonymousEnable bool   // anonymous enable
 	RootURLEnable   bool   // root_url enable
 	Domain          string // domain
+	WebServerURL    string // web server (nginx) url
 }
 
 // NewGrafanaConfig returns a GrafanaConfig
@@ -76,6 +77,12 @@ func (c *GrafanaConfig) WithRootURLEnable(rootURLEnable bool) *GrafanaConfig {
 // WithDomain sets domain of server domain
 func (c *GrafanaConfig) WithDomain(domain string) *GrafanaConfig {
 	c.Domain = domain
+	return c
+}
+
+// WithWebServerURL sets webServerURL of server root_url
+func (c *GrafanaConfig) WithWebServerURL(webServerURL string) *GrafanaConfig {
+	c.WebServerURL = webServerURL
 	return c
 }
 

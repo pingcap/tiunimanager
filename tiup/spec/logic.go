@@ -61,8 +61,8 @@ func (topo *Specification) ComponentsByStopOrder() (comps []Component) {
 
 // ComponentsByStartOrder return component in the order need to start.
 func (topo *Specification) ComponentsByStartOrder() (comps []Component) {
-	// "elasticsearch", "monitor", "tracer", "cluster-server", "api-server", "web", "file-server", "kibana", "filebeat"
-	comps = append(comps, &ElasticSearchComponent{topo})
+	// "nginx", "monitor", "tracer", "cluster-server", "api-server",  "file-server", "elasticsearch", "filebeat", "kibana"
+	comps = append(comps, &WebServerComponent{topo})
 	comps = append(comps, &MonitorComponent{Topology: topo})
 	comps = append(comps, &GrafanaComponent{Topology: topo})
 	comps = append(comps, &AlertManagerComponent{Topology: topo})
@@ -70,7 +70,7 @@ func (topo *Specification) ComponentsByStartOrder() (comps []Component) {
 	comps = append(comps, &ClusterServerComponent{topo})
 	comps = append(comps, &APIServerComponent{topo})
 	comps = append(comps, &FileServerComponent{topo})
-	comps = append(comps, &WebServerComponent{topo})
+	comps = append(comps, &ElasticSearchComponent{topo})
 	comps = append(comps, &FilebeatComponent{topo})
 	comps = append(comps, &KibanaComponent{topo})
 	return

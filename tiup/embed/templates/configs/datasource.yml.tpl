@@ -3,6 +3,8 @@ deleteDatasources:
   - name: {{.ClusterName}}
 datasources:
   - name: {{.ClusterName}}
+    id: 1
+    uid: 1
     type: prometheus
     access: proxy
     url: http://{{.IP}}:{{.Port}}

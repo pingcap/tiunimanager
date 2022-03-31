@@ -74,7 +74,7 @@ func Initialize(base string) error {
 
 	clusterBaseDir := filepath.Join(profileDir, TiUPClusterDir)
 	specManager = NewSpec(clusterBaseDir, func() Metadata {
-		return &TiEMMeta{
+		return &EMMeta{
 			Topology: new(Specification),
 		}
 	})

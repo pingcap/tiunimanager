@@ -38,7 +38,7 @@ func newScaleInCmd() *cobra.Command {
 			clusterName := args[0]
 
 			scale := func(b *task.Builder, imetadata spec.Metadata, tlsCfg *tls.Config) {
-				metadata := imetadata.(*spec.TiEMMeta)
+				metadata := imetadata.(*spec.EMMeta)
 				nodes := gOpt.Nodes
 
 				b.ClusterOperate(metadata.Topology, operator.ScaleInOperation, gOpt, tlsCfg).

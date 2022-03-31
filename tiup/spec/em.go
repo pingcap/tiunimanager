@@ -25,8 +25,8 @@ var (
 	specManager *SpecManager
 )
 
-// TiEMMeta is the specification of generic cluster metadata
-type TiEMMeta struct {
+// EMMeta is the specification of generic cluster metadata
+type EMMeta struct {
 	User    string `yaml:"user"`                   // the user to run and manage cluster on remote
 	Group   string `yaml:"group"`                  // the group to run and manage cluster on remote
 	Version string `yaml:"tiem_version"`           // the version of TiEM
@@ -35,30 +35,30 @@ type TiEMMeta struct {
 	Topology *Specification `yaml:"topology"`
 }
 
-var _ UpgradableMetadata = &TiEMMeta{}
+var _ UpgradableMetadata = &EMMeta{}
 
-// SetVersion implement UpgradableTiEMMeta interface.
-func (m *TiEMMeta) SetVersion(s string) {
+// SetVersion implement UpgradableEMMeta interface.
+func (m *EMMeta) SetVersion(s string) {
 	m.Version = s
 }
 
-// SetUser implement UpgradableTiEMMeta interface.
-func (m *TiEMMeta) SetUser(s string) {
+// SetUser implement UpgradableEMMeta interface.
+func (m *EMMeta) SetUser(s string) {
 	m.User = s
 }
 
-// SetGroup implement UpgradableTiEMMeta interface.
-func (m *TiEMMeta) SetGroup(s string) {
+// SetGroup implement UpgradableEMMeta interface.
+func (m *EMMeta) SetGroup(s string) {
 	m.Group = s
 }
 
-// GetTopology implements TiEMMeta interface.
-func (m *TiEMMeta) GetTopology() Topology {
+// GetTopology implements EMMeta interface.
+func (m *EMMeta) GetTopology() Topology {
 	return m.Topology
 }
 
-// SetTopology implements TiEMMeta interface.
-func (m *TiEMMeta) SetTopology(topo Topology) {
+// SetTopology implements EMMeta interface.
+func (m *EMMeta) SetTopology(topo Topology) {
 	tiemTopo, ok := topo.(*Specification)
 	if !ok {
 		panic(fmt.Sprintln("wrong type: ", reflect.TypeOf(topo)))
@@ -67,8 +67,8 @@ func (m *TiEMMeta) SetTopology(topo Topology) {
 	m.Topology = tiemTopo
 }
 
-// GetBaseMeta implements TiEMMeta interface.
-func (m *TiEMMeta) GetBaseMeta() *BaseMeta {
+// GetBaseMeta implements EMMeta interface.
+func (m *EMMeta) GetBaseMeta() *BaseMeta {
 	return &BaseMeta{
 		Version: m.Version,
 		User:    m.User,
@@ -82,7 +82,7 @@ func GetSpecManager() *SpecManager {
 		specManager = NewSpec(
 			filepath.Join(spec.ProfileDir(), spec.TiUPClusterDir),
 			func() Metadata {
-				return &TiEMMeta{
+				return &EMMeta{
 					Topology: new(Specification),
 				}
 			},

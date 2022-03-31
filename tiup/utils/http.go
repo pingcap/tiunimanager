@@ -1,3 +1,16 @@
+// Copyright 2021 PingCAP, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package utils
 
 import (
@@ -21,7 +34,7 @@ type UploadFile struct {
 var httpClient = &http.Client{}
 
 // Get implement HTTP GET
-func Get(reqURL string, reqParams map[string]string, headers map[string]string) string {
+func Get(reqURL string, reqParams map[string]string, headers map[string]string) (int, string) {
 	urlParams := url.Values{}
 	parsedURL, _ := url.Parse(reqURL)
 	for key, val := range reqParams {
@@ -43,10 +56,10 @@ func Get(reqURL string, reqParams map[string]string, headers map[string]string) 
 	}
 	defer resp.Body.Close()
 	response, _ := io.ReadAll(resp.Body)
-	return string(response)
+	return resp.StatusCode, string(response)
 }
 
-func PUT(reqURL string, reqParams map[string]interface{}, headers map[string]string) string {
+func PUT(reqURL string, reqParams map[string]interface{}, headers map[string]string) (int, string) {
 	requestBody, realContentType := getReader(reqParams, "application/json", nil)
 	httpRequest, _ := http.NewRequest("PUT", reqURL, requestBody)
 	httpRequest.Header.Add("Content-Type", realContentType)
@@ -61,25 +74,25 @@ func PUT(reqURL string, reqParams map[string]interface{}, headers map[string]str
 	}
 	defer resp.Body.Close()
 	response, _ := io.ReadAll(resp.Body)
-	return string(response)
+	return resp.StatusCode, string(response)
 }
 
 // PostForm implements HTTP POST with form
-func PostForm(reqURL string, reqParams map[string]interface{}, headers map[string]string) string {
+func PostForm(reqURL string, reqParams map[string]interface{}, headers map[string]string) (int, string) {
 	return post(reqURL, reqParams, "application/x-www-form-urlencoded", nil, headers)
 }
 
 // PostJSON implements HTTP POST with JSON format
-func PostJSON(reqURL string, reqParams map[string]interface{}, headers map[string]string) string {
+func PostJSON(reqURL string, reqParams map[string]interface{}, headers map[string]string) (int, string) {
 	return post(reqURL, reqParams, "application/json", nil, headers)
 }
 
 // PostFile implements HTTP POST with file
-func PostFile(reqURL string, reqParams map[string]interface{}, files []UploadFile, headers map[string]string) string {
+func PostFile(reqURL string, reqParams map[string]interface{}, files []UploadFile, headers map[string]string) (int, string) {
 	return post(reqURL, reqParams, "multipart/form-data", files, headers)
 }
 
-func post(reqURL string, reqParams map[string]interface{}, contentType string, files []UploadFile, headers map[string]string) string {
+func post(reqURL string, reqParams map[string]interface{}, contentType string, files []UploadFile, headers map[string]string) (int, string) {
 	requestBody, realContentType := getReader(reqParams, contentType, files)
 	httpRequest, _ := http.NewRequest("POST", reqURL, requestBody)
 	httpRequest.Header.Add("Content-Type", realContentType)
@@ -94,7 +107,7 @@ func post(reqURL string, reqParams map[string]interface{}, contentType string, f
 	}
 	defer resp.Body.Close()
 	response, _ := io.ReadAll(resp.Body)
-	return string(response)
+	return resp.StatusCode, string(response)
 }
 
 func getReader(reqParams map[string]interface{}, contentType string, files []UploadFile) (io.Reader, string) {

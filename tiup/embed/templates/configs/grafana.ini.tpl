@@ -51,7 +51,7 @@ domain = {{.IP}}
 
 # The full public facing url
 {{- if .RootURLEnable}}
-root_url = %(protocol)s://%(domain)s:%(http_port)s/grafana/
+root_url = %(protocol)s://{{.WebServerURL}}/grafana/
 # Serve Grafana from subpath specified in `root_url` setting. By default it is set to `false` for compatibility reasons.
 server_from_sub_path = true
 {{- end}}
